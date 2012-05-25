@@ -30,6 +30,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.core.Response.Status;
 
+import com.ning.billing.jaxrs.resources.JaxrsResource;
 import com.ning.billing.util.email.EmailModule;
 import com.ning.billing.util.email.templates.TemplateModule;
 import com.ning.billing.util.glue.GlobalLockerModule;
@@ -65,7 +66,6 @@ import com.ning.billing.invoice.glue.DefaultInvoiceModule;
 import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.BundleJsonNoSubscriptions;
 import com.ning.billing.jaxrs.json.SubscriptionJsonNoEvents;
-import com.ning.billing.jaxrs.resources.BaseJaxrsResource;
 import com.ning.billing.junction.glue.DefaultJunctionModule;
 import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;
 import com.ning.billing.payment.setup.PaymentModule;
@@ -311,7 +311,7 @@ public class TestJaxrsBase {
     protected AccountJson createAccount(String name, String key, String email) throws Exception {
         AccountJson input = getAccountJson(name, key, email);
         String baseJson = mapper.writeValueAsString(input);
-        Response response = doPost(BaseJaxrsResource.ACCOUNTS_PATH, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        Response response = doPost(JaxrsResource.ACCOUNTS_PATH, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
 
         String location = response.getHeader("Location");
@@ -332,7 +332,7 @@ public class TestJaxrsBase {
     protected BundleJsonNoSubscriptions createBundle(String accountId, String key) throws Exception {
         BundleJsonNoSubscriptions input = new BundleJsonNoSubscriptions(null, accountId, key, null);
         String baseJson = mapper.writeValueAsString(input);
-        Response response = doPost(BaseJaxrsResource.BUNDLES_PATH, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        Response response = doPost(JaxrsResource.BUNDLES_PATH, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
 
         String location = response.getHeader("Location");
@@ -355,7 +355,7 @@ public class TestJaxrsBase {
 
 
         Map<String, String> queryParams = waitCompletion ? getQueryParamsForCallCompletion("5") : DEFAULT_EMPTY_QUERY;
-        Response response = doPost(BaseJaxrsResource.SUBSCRIPTIONS_PATH, baseJson, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
+        Response response = doPost(JaxrsResource.SUBSCRIPTIONS_PATH, baseJson, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
 
         String location = response.getHeader("Location");
@@ -374,8 +374,8 @@ public class TestJaxrsBase {
 
     protected Map<String, String> getQueryParamsForCallCompletion(final String timeoutSec) {
         Map<String, String> queryParams = new HashMap<String, String>();
-        queryParams.put(BaseJaxrsResource.QUERY_CALL_COMPLETION, "true");
-        queryParams.put(BaseJaxrsResource.QUERY_CALL_TIMEOUT, timeoutSec);
+        queryParams.put(JaxrsResource.QUERY_CALL_COMPLETION, "true");
+        queryParams.put(JaxrsResource.QUERY_CALL_TIMEOUT, timeoutSec);
         return queryParams;
     }
 
@@ -422,9 +422,9 @@ public class TestJaxrsBase {
     private Response executeAndWait(final BoundRequestBuilder builder, final int timeoutSec, final boolean addContextHeader) {
         
         if (addContextHeader) {
-            builder.addHeader(BaseJaxrsResource.HDR_CREATED_BY, createdBy);
-            builder.addHeader(BaseJaxrsResource.HDR_REASON, reason);
-            builder.addHeader(BaseJaxrsResource.HDR_COMMENT, comment);            
+            builder.addHeader(JaxrsResource.HDR_CREATED_BY, createdBy);
+            builder.addHeader(JaxrsResource.HDR_REASON, reason);
+            builder.addHeader(JaxrsResource.HDR_COMMENT, comment);
         }
         
         Response response = null;
@@ -444,7 +444,7 @@ public class TestJaxrsBase {
         return response;
     }
 
-    private String getUrlFromUri(final String uri) {
+    protected String getUrlFromUri(final String uri) {
         return String.format("http://%s:%d%s", config.getServerHost(), config.getServerPort(), uri);
     }
 

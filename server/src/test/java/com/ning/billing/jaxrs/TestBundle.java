@@ -31,7 +31,7 @@ import org.testng.annotations.Test;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.BundleJsonNoSubscriptions;
-import com.ning.billing.jaxrs.resources.BaseJaxrsResource;
+import com.ning.billing.jaxrs.resources.JaxrsResource;
 import com.ning.http.client.Response;
 
 public class TestBundle extends TestJaxrsBase {
@@ -48,8 +48,8 @@ public class TestBundle extends TestJaxrsBase {
 		
 		// Retrieves by external key
 		Map<String, String> queryParams = new HashMap<String, String>();
-		queryParams.put(BaseJaxrsResource.QUERY_EXTERNAL_KEY, "12345");
-		Response response = doGet(BaseJaxrsResource.BUNDLES_PATH, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
+		queryParams.put(JaxrsResource.QUERY_EXTERNAL_KEY, "12345");
+		Response response = doGet(JaxrsResource.BUNDLES_PATH, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
 		Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
 		String baseJson = response.getResponseBody();
 		BundleJsonNoSubscriptions objFromJson = mapper.readValue(baseJson, BundleJsonNoSubscriptions.class);
@@ -64,7 +64,7 @@ public class TestBundle extends TestJaxrsBase {
 		BundleJsonNoSubscriptions bundleJson1 = createBundle(accountJson.getAccountId(), "156567");
 		BundleJsonNoSubscriptions bundleJson2 = createBundle(accountJson.getAccountId(), "265658");
 
-		String uri = BaseJaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAccountId().toString() + "/" + BaseJaxrsResource.BUNDLES;
+		String uri = JaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAccountId().toString() + "/" + JaxrsResource.BUNDLES;
 		Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
 		Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
 		String baseJson = response.getResponseBody();
@@ -84,19 +84,19 @@ public class TestBundle extends TestJaxrsBase {
 	public void testBundleNonExistent() throws Exception {
 		AccountJson accountJson = createAccount("dfdf", "dfdfgfhkkl", "dfdf@yahoo.com");	
 		
-		String uri = BaseJaxrsResource.BUNDLES_PATH + "/99999999-b103-42f3-8b6e-dd244f1d0747";
+		String uri = JaxrsResource.BUNDLES_PATH + "/99999999-b103-42f3-8b6e-dd244f1d0747";
 		Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
 		Assert.assertEquals(response.getStatusCode(), Status.NO_CONTENT.getStatusCode());
 		
 		
 		// Retrieves by external key
 		Map<String, String> queryParams = new HashMap<String, String>();
-		queryParams.put(BaseJaxrsResource.QUERY_EXTERNAL_KEY, "56566");
-		response = doGet(BaseJaxrsResource.BUNDLES_PATH, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
+		queryParams.put(JaxrsResource.QUERY_EXTERNAL_KEY, "56566");
+		response = doGet(JaxrsResource.BUNDLES_PATH, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
 		Assert.assertEquals(response.getStatusCode(), Status.NO_CONTENT.getStatusCode());
 		
 		
-		uri = BaseJaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAccountId().toString() + "/" + BaseJaxrsResource.BUNDLES;
+		uri = JaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAccountId().toString() + "/" + JaxrsResource.BUNDLES;
 		response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
 		Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
 		String baseJson = response.getResponseBody();
@@ -107,7 +107,7 @@ public class TestBundle extends TestJaxrsBase {
 
 	@Test(groups="slow", enabled=true)
 	public void testAppNonExistent() throws Exception {
-		String uri = BaseJaxrsResource.ACCOUNTS_PATH + "/99999999-b103-42f3-8b6e-dd244f1d0747/" + BaseJaxrsResource.BUNDLES;
+		String uri = JaxrsResource.ACCOUNTS_PATH + "/99999999-b103-42f3-8b6e-dd244f1d0747/" + JaxrsResource.BUNDLES;
 		Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
 		Assert.assertEquals(response.getStatusCode(), Status.NO_CONTENT.getStatusCode());	
 	}

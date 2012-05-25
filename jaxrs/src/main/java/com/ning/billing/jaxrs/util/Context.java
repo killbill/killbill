@@ -19,7 +19,7 @@ import java.util.UUID;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
-import com.ning.billing.jaxrs.resources.BaseJaxrsResource;
+import com.ning.billing.jaxrs.resources.JaxrsResource;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.CallOrigin;
@@ -42,7 +42,7 @@ public class Context {
     public CallContext createContext(final String createdBy, final String reason, final String comment)
     throws IllegalArgumentException {
         try {
-            Preconditions.checkNotNull(createdBy, String.format("Header %s needs to be set", BaseJaxrsResource.HDR_CREATED_BY));
+            Preconditions.checkNotNull(createdBy, String.format("Header %s needs to be set", JaxrsResource.HDR_CREATED_BY));
             return contextFactory.createCallContext(createdBy, origin, userType, UUID.randomUUID());
         } catch (NullPointerException e) {
             throw new IllegalArgumentException(e.getMessage());

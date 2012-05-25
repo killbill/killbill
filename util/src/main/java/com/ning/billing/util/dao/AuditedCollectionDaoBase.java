@@ -20,6 +20,7 @@ import com.ning.billing.util.ChangeType;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.entity.Entity;
 import com.ning.billing.util.entity.collection.dao.UpdatableEntityCollectionSqlDao;
+import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
 import java.util.ArrayList;

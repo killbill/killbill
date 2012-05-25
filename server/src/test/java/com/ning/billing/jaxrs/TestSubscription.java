@@ -23,6 +23,7 @@ import java.util.UUID;
 
 import javax.ws.rs.core.Response.Status;
 
+import com.ning.billing.jaxrs.resources.JaxrsResource;
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
 import org.slf4j.Logger;
@@ -36,7 +37,6 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.BundleJsonNoSubscriptions;
 import com.ning.billing.jaxrs.json.SubscriptionJsonNoEvents;
-import com.ning.billing.jaxrs.resources.BaseJaxrsResource;
 import com.ning.http.client.Response;
 
 public class TestSubscription extends TestJaxrsBase {
@@ -62,7 +62,7 @@ public class TestSubscription extends TestJaxrsBase {
         Assert.assertNotNull(subscriptionJson.getChargedThroughDate());
         Assert.assertEquals(subscriptionJson.getChargedThroughDate(), subscriptionJson.getStartDate().plusDays(30));        
         
-        String uri = BaseJaxrsResource.SUBSCRIPTIONS_PATH + "/" + subscriptionJson.getSubscriptionId().toString();
+        String uri = JaxrsResource.SUBSCRIPTIONS_PATH + "/" + subscriptionJson.getSubscriptionId().toString();
  
         
         // Retrieves with GET
@@ -99,19 +99,19 @@ public class TestSubscription extends TestJaxrsBase {
 
         //      
         // Cancel EOT
-        uri = BaseJaxrsResource.SUBSCRIPTIONS_PATH + "/" + subscriptionJson.getSubscriptionId().toString();
+        uri = JaxrsResource.SUBSCRIPTIONS_PATH + "/" + subscriptionJson.getSubscriptionId().toString();
         response = doDelete(uri, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
 
         // Uncancel
-        uri = BaseJaxrsResource.SUBSCRIPTIONS_PATH + "/" + subscriptionJson.getSubscriptionId().toString() + "/uncancel";
+        uri = JaxrsResource.SUBSCRIPTIONS_PATH + "/" + subscriptionJson.getSubscriptionId().toString() + "/uncancel";
         response = doPut(uri, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
     }
     
     @Test(groups="slow", enabled=true)
     public void testWithNonExistentSubscription() throws Exception {
-        String uri = BaseJaxrsResource.SUBSCRIPTIONS_PATH + "/" + UUID.randomUUID().toString();
+        String uri = JaxrsResource.SUBSCRIPTIONS_PATH + "/" + UUID.randomUUID().toString();
         SubscriptionJsonNoEvents subscriptionJson = new SubscriptionJsonNoEvents(null, UUID.randomUUID().toString(), null, "Pistol", ProductCategory.BASE.toString(), BillingPeriod.MONTHLY.toString(), PriceListSet.DEFAULT_PRICELIST_NAME, null);
         String baseJson = mapper.writeValueAsString(subscriptionJson);
         

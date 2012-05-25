@@ -21,10 +21,8 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import javax.ws.rs.Consumes;
@@ -46,7 +44,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -72,31 +69,25 @@ import com.ning.billing.jaxrs.util.TagHelper;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.PaymentAttempt;
-import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.api.TagUserApi;
-import com.ning.billing.util.customfield.CustomField;
-import com.ning.billing.util.customfield.StringCustomField;
-import com.ning.billing.util.tag.Tag;
-import com.ning.billing.util.tag.TagDefinition;
-
 
 @Singleton
-@Path(BaseJaxrsResource.ACCOUNTS_PATH)
-public class AccountResource implements BaseJaxrsResource {
+@Path(JaxrsResource.ACCOUNTS_PATH)
+public class AccountResource extends JaxRsResourceBase {
 
     private static final Logger log = LoggerFactory.getLogger(AccountResource.class);
+    private static final String ID_PARAM_NAME = "accountId";
+    private static final String CUSTOM_FIELD_URI = JaxrsResource.CUSTOM_FIELDS + "/{" + ID_PARAM_NAME + ":" + UUID_PATTERN + "}";
+    private static final String TAG_URI = JaxrsResource.TAGS + "/{" + ID_PARAM_NAME + ":" + UUID_PATTERN + "}";
 
     private final AccountUserApi accountApi;
     private final EntitlementUserApi entitlementApi;
-    private final CustomFieldUserApi customFieldApi;
     private final EntitlementTimelineApi timelineApi;
     private final InvoiceUserApi invoiceApi;
     private final PaymentApi paymentApi;
     private final Context context;
-    private final TagUserApi tagUserApi;
     private final JaxrsUriBuilder uriBuilder;
-    private final TagHelper tagHelper;
-    
+
     @Inject
     public AccountResource(final JaxrsUriBuilder uriBuilder,
             final AccountUserApi accountApi,
@@ -108,16 +99,14 @@ public class AccountResource implements BaseJaxrsResource {
             final TagUserApi tagUserApi,
             final TagHelper tagHelper,
             final Context context) {
+        super(uriBuilder, tagUserApi, tagHelper, customFieldUserApi);
         this.uriBuilder = uriBuilder;
     	this.accountApi = accountApi;
-    	this.tagUserApi = tagUserApi;
         this.entitlementApi = entitlementApi;
-        this.customFieldApi = customFieldUserApi;
         this.invoiceApi = invoiceApi;
         this.paymentApi = paymentApi;
         this.timelineApi = timelineApi;
         this.context = context;
-        this.tagHelper = tagHelper;
     }
 
     @GET
@@ -187,8 +176,7 @@ public class AccountResource implements BaseJaxrsResource {
         try {
             AccountData data = json.toAccountData();
             final Account account = accountApi.createAccount(data, null, null, context.createContext(createdBy, reason, comment));
-            Response response = uriBuilder.buildResponse(AccountResource.class, "getAccount", account.getId());
-            return response;
+            return uriBuilder.buildResponse(AccountResource.class, "getAccount", account.getId());
         } catch (AccountApiException e) {
             final String error = String.format("Failed to create account %s", json);
             log.info(error, e);
@@ -284,162 +272,75 @@ public class AccountResource implements BaseJaxrsResource {
         }
     }
     
-    
-    /****************************      TAGS     ******************************/
-    
     @GET
-    @Path(BaseJaxrsResource.TAGS + "/{accountId:" + UUID_PATTERN + "}")
+    @Path(CUSTOM_FIELD_URI)
     @Produces(APPLICATION_JSON)
-    public Response getAccountTags(@PathParam("accountId") String accountId) {
-        try {
-            Account account = accountApi.getAccountById(UUID.fromString(accountId));
-            Map<String, Tag> tags = tagUserApi.getTags(account.getId(), ObjectType.ACCOUNT);
-            Collection<String> tagNameList = (tags.size() == 0) ?
-                    Collections.<String>emptyList() :
-                Collections2.transform(tags.values(), new Function<Tag, String>() {
-                @Override
-                public String apply(Tag input) {
-                    return input.getTagDefinitionName();
-                }
-            });
-            return Response.status(Status.OK).entity(tagNameList).build();
-        } catch (AccountApiException e) {
-            return Response.status(Status.NO_CONTENT).build();
-        }
+    public Response getCustomFields(@PathParam(ID_PARAM_NAME) final String id) {
+        return super.getCustomFields(UUID.fromString(id));
     }
 
-    
     @POST
-    @Path(BaseJaxrsResource.TAGS + "/{accountId:" + UUID_PATTERN + "}")    
+    @Path(CUSTOM_FIELD_URI)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    public Response createAccountTag(@PathParam("accountId") final String accountId,
-            @QueryParam(QUERY_TAGS) final String tagList,
+    public Response createCustomFields(@PathParam(ID_PARAM_NAME) final String id,
+            final List<CustomFieldJson> customFields,
             @HeaderParam(HDR_CREATED_BY) final String createdBy,
             @HeaderParam(HDR_REASON) final String reason,
             @HeaderParam(HDR_COMMENT) final String comment) {
-
-        try {
-            Preconditions.checkNotNull(tagList, "Query % list cannot be null", QUERY_TAGS);
-            
-            Account account = accountApi.getAccountById(UUID.fromString(accountId));
-
-            List<TagDefinition> input = tagHelper.getTagDefinitionFromTagList(tagList);
-            tagUserApi.addTags(account.getId(), ObjectType.ACCOUNT, input, context.createContext(createdBy, reason, comment));
-
-            Response response = uriBuilder.buildResponse(AccountResource.class, "getAccountTags", account.getId());
-            return response;
-        } catch (AccountApiException e) {
-            return Response.status(Status.NO_CONTENT).build();
-        } catch (IllegalArgumentException e) {
-            return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
-        } catch (NullPointerException e) {
-            return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
-        } catch (TagDefinitionApiException e) {
-            return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
-        }
+        return super.createCustomFields(UUID.fromString(id), customFields,
+                context.createContext(createdBy, reason, comment));
     }
     
     @DELETE
-    @Path(BaseJaxrsResource.TAGS +  "/{accountId:" + UUID_PATTERN + "}")    
+    @Path(CUSTOM_FIELD_URI)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    public Response deleteAccountTag(@PathParam("accountId") final String accountId,
-            @QueryParam(QUERY_TAGS) final String tagList,
-            @HeaderParam(HDR_CREATED_BY) final String createdBy,
-            @HeaderParam(HDR_REASON) final String reason,
-            @HeaderParam(HDR_COMMENT) final String comment) {
-
-        try {
-            Account account = accountApi.getAccountById(UUID.fromString(accountId));
-
-            List<TagDefinition> input = tagHelper.getTagDefinitionFromTagList(tagList);
-            tagUserApi.removeTags(account.getId(), ObjectType.ACCOUNT, input, context.createContext(createdBy, reason, comment));
-
-            return Response.status(Status.OK).build();
-        } catch (AccountApiException e) {
-            return Response.status(Status.NO_CONTENT).build();
-        } catch (IllegalArgumentException e) {
-            return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
-        } catch (NullPointerException e) {
-            return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
-        } catch (TagDefinitionApiException e) {
-            return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
-        }
-    }
-    
-    /************************   CUSTOM FIELDS   ******************************/
-    
-    @GET
-    @Path(BaseJaxrsResource.CUSTOM_FIELDS + "/{accountId:" + UUID_PATTERN + "}")
-    @Produces(APPLICATION_JSON)
-    public Response getAccountCustomFields(@PathParam("accountId") String accountId) {
-        try {
-            Account account = accountApi.getAccountById(UUID.fromString(accountId));
-            Map<String, CustomField> fields = customFieldApi.getCustomFields(account.getId(), ObjectType.ACCOUNT);
-
-            List<CustomFieldJson> result = new LinkedList<CustomFieldJson>();
-            for (CustomField cur : fields.values()) {
-                result.add(new CustomFieldJson(cur));
-            }
-            return Response.status(Status.OK).entity(result).build();
-        } catch (AccountApiException e) {
-            return Response.status(Status.NO_CONTENT).build();
-        }
-    }
-    
-    
-    @POST
-    @Path(BaseJaxrsResource.CUSTOM_FIELDS + "/{accountId:" + UUID_PATTERN + "}")    
-    @Consumes(APPLICATION_JSON)
-    @Produces(APPLICATION_JSON)
-    public Response createCustomField(@PathParam("accountId") final String accountId,
-            List<CustomFieldJson> customFields,
-            @HeaderParam(HDR_CREATED_BY) final String createdBy,
-            @HeaderParam(HDR_REASON) final String reason,
-            @HeaderParam(HDR_COMMENT) final String comment) {
-
-        try {
-            
-            Account account = accountApi.getAccountById(UUID.fromString(accountId));
-            LinkedList<CustomField> input = new LinkedList<CustomField>();
-            for (CustomFieldJson cur : customFields) {
-                input.add(new StringCustomField(cur.getName(), cur.getValue()));
-            }
-
-            customFieldApi.saveCustomFields(account.getId(), ObjectType.ACCOUNT, input, context.createContext(createdBy, reason, comment));
-            Response response = uriBuilder.buildResponse(AccountResource.class, "getAccountCustomFields", account.getId());            
-            return response;
-        } catch (AccountApiException e) {
-            return Response.status(Status.NO_CONTENT).build();
-        } catch (IllegalArgumentException e) {
-            return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
-        } catch (NullPointerException e) {
-            return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
-        }
-    }
-    
-    @DELETE
-    @Path(BaseJaxrsResource.CUSTOM_FIELDS +  "/{accountId:" + UUID_PATTERN + "}")    
-    @Consumes(APPLICATION_JSON)
-    @Produces(APPLICATION_JSON)
-    public Response deleteCustomFields(@PathParam("accountId") final String accountId,
+    public Response deleteCustomFields(@PathParam(ID_PARAM_NAME) final String id,
             @QueryParam(QUERY_CUSTOM_FIELDS) final String customFieldList,
             @HeaderParam(HDR_CREATED_BY) final String createdBy,
             @HeaderParam(HDR_REASON) final String reason,
             @HeaderParam(HDR_COMMENT) final String comment) {
-
-        try {
-            Account account = accountApi.getAccountById(UUID.fromString(accountId));
-            // STEPH missing API to delete custom fields
-            return Response.status(Status.OK).build();
-        } catch (AccountApiException e) {
-            return Response.status(Status.NO_CONTENT).build();
-        } catch (IllegalArgumentException e) {
-            return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
-        } catch (NullPointerException e) {
-            return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
-        }
+        return super.deleteCustomFields(UUID.fromString(id), customFieldList,
+                context.createContext(createdBy, reason, comment));
     }
-    
+
+    @GET
+    @Path(TAG_URI)
+    @Produces(APPLICATION_JSON)
+    public Response getTags(@PathParam(ID_PARAM_NAME) String id) {
+        return super.getTags(UUID.fromString(id));
+    }
+
+    @POST
+    @Path(TAG_URI)
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    public Response createTags(@PathParam(ID_PARAM_NAME) final String id,
+            @QueryParam(QUERY_TAGS) final String tagList,
+            @HeaderParam(HDR_CREATED_BY) final String createdBy,
+            @HeaderParam(HDR_REASON) final String reason,
+            @HeaderParam(HDR_COMMENT) final String comment) {
+        return super.createTags(UUID.fromString(id), tagList,
+                                context.createContext(createdBy, reason, comment));
+    }
+
+    @DELETE
+    @Path(TAG_URI)
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    public Response deleteTags(@PathParam(ID_PARAM_NAME) final String id,
+            @QueryParam(QUERY_TAGS) final String tagList,
+            @HeaderParam(HDR_CREATED_BY) final String createdBy,
+            @HeaderParam(HDR_REASON) final String reason,
+            @HeaderParam(HDR_COMMENT) final String comment) {
+
+        return super.deleteTags(UUID.fromString(id), tagList,
+                                context.createContext(createdBy, reason, comment));
+    }
+
+    @Override
+    protected ObjectType getObjectType() {
+        return ObjectType.ACCOUNT;
+    }
 }

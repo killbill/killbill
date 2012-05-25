@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.UUID;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
@@ -35,6 +36,11 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import com.ning.billing.jaxrs.json.CustomFieldJson;
+import com.ning.billing.jaxrs.util.TagHelper;
+import com.ning.billing.util.api.CustomFieldUserApi;
+import com.ning.billing.util.api.TagUserApi;
+import com.ning.billing.util.dao.ObjectType;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
@@ -54,11 +60,12 @@ import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
 
 
-@Path(BaseJaxrsResource.INVOICES_PATH)
-public class InvoiceResource implements BaseJaxrsResource {
-
-
+@Path(JaxrsResource.INVOICES_PATH)
+public class InvoiceResource extends JaxRsResourceBase {
     private static final Logger log = LoggerFactory.getLogger(InvoiceResource.class);
+    private static final String ID_PARAM_NAME = "invoiceId";
+    private static final String CUSTOM_FIELD_URI = JaxrsResource.CUSTOM_FIELDS + "/{" + ID_PARAM_NAME + ":" + UUID_PATTERN + "}";
+    private static final String TAG_URI = JaxrsResource.TAGS + "/{" + ID_PARAM_NAME + ":" + UUID_PATTERN + "}";
 
     private final DateTimeFormatter DATE_TIME_FORMATTER = ISODateTimeFormat.dateTime();
     
@@ -71,7 +78,11 @@ public class InvoiceResource implements BaseJaxrsResource {
     public InvoiceResource(final AccountUserApi accountApi,
             final InvoiceUserApi invoiceApi,
             final Context context,
-            final JaxrsUriBuilder uriBuilder) {
+            final JaxrsUriBuilder uriBuilder,
+            final TagUserApi tagUserApi,
+            final TagHelper tagHelper,
+            final CustomFieldUserApi customFieldUserApi) {
+        super(uriBuilder, tagUserApi, tagHelper, customFieldUserApi);
         this.accountApi = accountApi;
         this.invoiceApi = invoiceApi;
         this.context = context;
@@ -140,5 +151,77 @@ public class InvoiceResource implements BaseJaxrsResource {
         } catch (NullPointerException e) {
             return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();            
         }
+    }
+
+    @GET
+    @Path(CUSTOM_FIELD_URI)
+    @Produces(APPLICATION_JSON)
+    public Response getCustomFields(@PathParam(ID_PARAM_NAME) final String id) {
+        return super.getCustomFields(UUID.fromString(id));
+    }
+
+    @POST
+    @Path(CUSTOM_FIELD_URI)
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    public Response createCustomFields(@PathParam(ID_PARAM_NAME) final String id,
+            final List<CustomFieldJson> customFields,
+            @HeaderParam(HDR_CREATED_BY) final String createdBy,
+            @HeaderParam(HDR_REASON) final String reason,
+            @HeaderParam(HDR_COMMENT) final String comment) {
+        return super.createCustomFields(UUID.fromString(id), customFields,
+                context.createContext(createdBy, reason, comment));
+    }
+
+    @DELETE
+    @Path(CUSTOM_FIELD_URI)
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    public Response deleteCustomFields(@PathParam(ID_PARAM_NAME) final String id,
+            @QueryParam(QUERY_CUSTOM_FIELDS) final String customFieldList,
+            @HeaderParam(HDR_CREATED_BY) final String createdBy,
+            @HeaderParam(HDR_REASON) final String reason,
+            @HeaderParam(HDR_COMMENT) final String comment) {
+        return super.deleteCustomFields(UUID.fromString(id), customFieldList,
+                context.createContext(createdBy, reason, comment));
+    }
+
+    @GET
+    @Path(TAG_URI)
+    @Produces(APPLICATION_JSON)
+    public Response getTags(@PathParam(ID_PARAM_NAME) String id) {
+        return super.getTags(UUID.fromString(id));
+    }
+
+    @POST
+    @Path(TAG_URI)
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    public Response createTags(@PathParam(ID_PARAM_NAME) final String id,
+            @QueryParam(QUERY_TAGS) final String tagList,
+            @HeaderParam(HDR_CREATED_BY) final String createdBy,
+            @HeaderParam(HDR_REASON) final String reason,
+            @HeaderParam(HDR_COMMENT) final String comment) {
+        return super.createTags(UUID.fromString(id), tagList,
+                                context.createContext(createdBy, reason, comment));
+    }
+
+    @DELETE
+    @Path(TAG_URI)
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    public Response deleteTags(@PathParam(ID_PARAM_NAME) final String id,
+            @QueryParam(QUERY_TAGS) final String tagList,
+            @HeaderParam(HDR_CREATED_BY) final String createdBy,
+            @HeaderParam(HDR_REASON) final String reason,
+            @HeaderParam(HDR_COMMENT) final String comment) {
+
+        return super.deleteTags(UUID.fromString(id), tagList,
+                                context.createContext(createdBy, reason, comment));
+    }
+
+    @Override
+    protected ObjectType getObjectType() {
+        return ObjectType.INVOICE;
     }
 }
