@@ -216,7 +216,7 @@ public class AuditedEntitlementDao implements EntitlementDao {
                 transactional.insertEvent(nextPhase, context);
 
                 Long recordId = transactional.getRecordId(nextPhase.getId().toString());
-                EntityAudit audit = new EntityAudit(TableName.ENTITLEMENT_EVENTS, recordId, ChangeType.INSERT);
+                EntityAudit audit = new EntityAudit(TableName.SUBSCRIPTION_EVENTS, recordId, ChangeType.INSERT);
                 transactional.insertAuditFromTransaction(audit, context);
 
                 recordFutureNotificationFromTransaction(transactional,
@@ -286,7 +286,7 @@ public class AuditedEntitlementDao implements EntitlementDao {
                 for (final EntitlementEvent cur : initialEvents) {
                     eventsDaoFromSameTransaction.insertEvent(cur, context);
                     Long recordId = eventsDaoFromSameTransaction.getRecordId(cur.getId().toString());
-                    audits.add(new EntityAudit(TableName.ENTITLEMENT_EVENTS, recordId, ChangeType.INSERT));
+                    audits.add(new EntityAudit(TableName.SUBSCRIPTION_EVENTS, recordId, ChangeType.INSERT));
                     recordFutureNotificationFromTransaction(transactional,
                             cur.getEffectiveDate(),
                             new EntitlementNotificationKey(cur.getId()));
@@ -311,7 +311,7 @@ public class AuditedEntitlementDao implements EntitlementDao {
                 for (final EntitlementEvent cur : recreateEvents) {
                     transactional.insertEvent(cur, context);
                     Long recordId = transactional.getRecordId(cur.getId().toString());
-                    audits.add(new EntityAudit(TableName.ENTITLEMENT_EVENTS, recordId, ChangeType.INSERT));
+                    audits.add(new EntityAudit(TableName.SUBSCRIPTION_EVENTS, recordId, ChangeType.INSERT));
                     recordFutureNotificationFromTransaction(transactional,
                             cur.getEffectiveDate(),
                             new EntitlementNotificationKey(cur.getId()));
@@ -338,7 +338,7 @@ public class AuditedEntitlementDao implements EntitlementDao {
                 String cancelEventId = cancelEvent.getId().toString();
 
                 Long recordId = transactional.getRecordId(cancelEventId);
-                EntityAudit audit = new EntityAudit(TableName.ENTITLEMENT_EVENTS, recordId, ChangeType.INSERT);
+                EntityAudit audit = new EntityAudit(TableName.SUBSCRIPTION_EVENTS, recordId, ChangeType.INSERT);
                 transactional.insertAuditFromTransaction(audit, context);
 
                 recordFutureNotificationFromTransaction(transactional,
@@ -377,12 +377,12 @@ public class AuditedEntitlementDao implements EntitlementDao {
                     String cancelledEventId = cancelledEvent.getId().toString();
                     transactional.unactiveEvent(cancelledEventId, context);
                     Long cancelledRecordId = transactional.getRecordId(cancelledEventId);
-                    eventAudits.add(new EntityAudit(TableName.ENTITLEMENT_EVENTS, cancelledRecordId, ChangeType.UPDATE));
+                    eventAudits.add(new EntityAudit(TableName.SUBSCRIPTION_EVENTS, cancelledRecordId, ChangeType.UPDATE));
 
                     for (final EntitlementEvent cur : uncancelEvents) {
                         transactional.insertEvent(cur, context);
                         Long recordId = transactional.getRecordId(cur.getId().toString());
-                        eventAudits.add(new EntityAudit(TableName.ENTITLEMENT_EVENTS, recordId, ChangeType.INSERT));
+                        eventAudits.add(new EntityAudit(TableName.SUBSCRIPTION_EVENTS, recordId, ChangeType.INSERT));
                         recordFutureNotificationFromTransaction(transactional,
                                 cur.getEffectiveDate(),
                                 new EntitlementNotificationKey(cur.getId()));
@@ -407,7 +407,7 @@ public class AuditedEntitlementDao implements EntitlementDao {
                 for (final EntitlementEvent cur : changeEvents) {
                     transactional.insertEvent(cur, context);
                     Long recordId = transactional.getRecordId(cur.getId().toString());
-                    eventAudits.add(new EntityAudit(TableName.ENTITLEMENT_EVENTS, recordId, ChangeType.INSERT));
+                    eventAudits.add(new EntityAudit(TableName.SUBSCRIPTION_EVENTS, recordId, ChangeType.INSERT));
 
                     recordFutureNotificationFromTransaction(transactional,
                             cur.getEffectiveDate(),
@@ -455,7 +455,7 @@ public class AuditedEntitlementDao implements EntitlementDao {
             String eventId = futureEvent.getId().toString();
             dao.unactiveEvent(eventId, context);
             Long recordId = dao.getRecordId(eventId);
-            EntityAudit audit = new EntityAudit(TableName.ENTITLEMENT_EVENTS, recordId, ChangeType.UPDATE);
+            EntityAudit audit = new EntityAudit(TableName.SUBSCRIPTION_EVENTS, recordId, ChangeType.UPDATE);
             dao.insertAuditFromTransaction(audit, context);
         }
     }
@@ -576,7 +576,7 @@ public class AuditedEntitlementDao implements EntitlementDao {
                         for (final EntitlementEvent curEvent : curSubscription.getInitialEvents()) {
                             transactional.insertEvent(curEvent, context);
                             recordId = transactional.getRecordId(curEvent.getId().toString());
-                            audits.add(new EntityAudit(TableName.ENTITLEMENT_EVENTS, recordId, ChangeType.INSERT));
+                            audits.add(new EntityAudit(TableName.SUBSCRIPTION_EVENTS, recordId, ChangeType.INSERT));
 
                             recordFutureNotificationFromTransaction(transactional,
                                     curEvent.getEffectiveDate(),

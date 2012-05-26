@@ -13,7 +13,7 @@
     <parent>
         <groupId>com.ning.billing</groupId>
         <artifactId>killbill</artifactId>
-        <version>0.1.12-SNAPSHOT</version>
+        <version>0.1.13-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>killbill-invoice</artifactId>
@@ -48,19 +48,24 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.codehaus.jackson</groupId>
-            <artifactId>jackson-core-asl</artifactId>
-            <version>1.9.5</version>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.codehaus.jackson</groupId>
-            <artifactId>jackson-jaxrs</artifactId>
-            <version>1.9.5</version>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.codehaus.jackson</groupId>
-            <artifactId>jackson-mapper-asl</artifactId>
-            <version>1.9.5</version>
+            <groupId>joda-time</groupId>
+            <artifactId>joda-time</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.skife.config</groupId>
+            <artifactId>config-magic</artifactId>
         </dependency>
        <!-- TEST SCOPE -->
         <dependency>

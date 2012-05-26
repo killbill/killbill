@@ -42,8 +42,8 @@ import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.tag.TagDefinition;
 
 @Singleton
-@Path(BaseJaxrsResource.TAG_DEFINITIONS_PATH)
-public class TagResource implements BaseJaxrsResource {
+@Path(JaxrsResource.TAG_DEFINITIONS_PATH)
+public class TagResource implements JaxrsResource {
     
     private final TagUserApi tagUserApi;
     private final Context context;

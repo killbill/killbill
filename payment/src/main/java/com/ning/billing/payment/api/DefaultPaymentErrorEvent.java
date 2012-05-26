@@ -17,16 +17,12 @@
 package com.ning.billing.payment.api;
 import java.util.UUID;
 
-import org.codehaus.jackson.annotate.JsonCreator;
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.annotate.JsonTypeInfo;
-import org.codehaus.jackson.annotate.JsonTypeInfo.Id;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-import com.ning.billing.util.bus.BusEvent;
-import com.ning.billing.util.bus.BusEvent.BusEventType;
-
-@JsonTypeInfo(use = Id.NAME, property = "error")
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "error")
 public class DefaultPaymentErrorEvent implements PaymentErrorEvent {
 	
     private final String type;

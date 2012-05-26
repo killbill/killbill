@@ -19,10 +19,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializationConfig;
+import com.ning.billing.util.jackson.ObjectMapper;
 import org.testng.Assert;
-import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.AccountChangeEvent;
@@ -31,14 +29,7 @@ import com.ning.billing.account.api.DefaultChangedField;
 import com.ning.billing.account.api.user.DefaultAccountCreationEvent.DefaultAccountData;
 
 public class TestEventJson {
-    
-    private ObjectMapper mapper = new ObjectMapper();
-    
-    @BeforeTest(groups= {"fast"})
-    public void setup() {
-        mapper = new ObjectMapper();
-        mapper.disable(SerializationConfig.Feature.WRITE_DATES_AS_TIMESTAMPS);
-    }
+    private final ObjectMapper mapper = new ObjectMapper();
 
     @Test(groups= {"fast"})
     public void testDefaultAccountChangeEvent() throws Exception {

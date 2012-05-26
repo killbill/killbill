@@ -72,16 +72,17 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
         }
 
         PaymentInfoEvent payment = new DefaultPaymentInfoEvent.Builder().setId(UUID.randomUUID())
-        .setAmount(invoice.getBalance())
-        .setStatus("Processed")
-        .setBankIdentificationNumber("1234")
-        .setCreatedDate(clock.getUTCNow())
-        .setEffectiveDate(clock.getUTCNow())
-        .setPaymentNumber("12345")
-        .setReferenceId("12345")
-        .setType("Electronic")
-        .setPaymentMethodId("123-456-678-89")
-        .build();
+                .setExternalPaymentId("238957t49regyuihfd")
+                .setAmount(invoice.getBalance())
+                .setStatus("Processed")
+                .setBankIdentificationNumber("1234")
+                .setCreatedDate(clock.getUTCNow())
+                .setEffectiveDate(clock.getUTCNow())
+                .setPaymentNumber("12345")
+                .setReferenceId("12345")
+                .setType("Electronic")
+                .setPaymentMethodId("123-456-678-89")
+                .build();
         
         return new MockPaymentInfoPlugin(payment);
     }

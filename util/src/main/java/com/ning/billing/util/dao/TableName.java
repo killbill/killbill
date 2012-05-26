@@ -22,7 +22,6 @@ public enum TableName {
     ACCOUNT_EMAIL_HISTORY("account_email_history"),
     BUNDLES("bundles"),
     CUSTOM_FIELD_HISTORY("custom_field_history"),
-    ENTITLEMENT_EVENTS("entitlement_events"),
     FIXED_INVOICE_ITEMS("fixed_invoice_items"),
     INVOICE_PAYMENTS("invoice_payments"),
     INVOICES("invoices"),
@@ -31,6 +30,7 @@ public enum TableName {
     PAYMENTS("payments"),
     RECURRING_INVOICE_ITEMS("recurring_invoice_items"),
     SUBSCRIPTIONS("subscriptions"),
+    SUBSCRIPTION_EVENTS("subscription_events"),
     TAG_HISTORY("tag_history");
     
     private final String tableName;

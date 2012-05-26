@@ -18,23 +18,22 @@ package com.ning.billing.jaxrs.json;
 
 import java.util.List;
 
-import org.codehaus.jackson.annotate.JsonCreator;
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.map.annotate.JsonView;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonView;
 
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 
-public class BundleJsonNoSubsciptions  extends BundleJsonSimple {
-
+public class BundleJsonNoSubscriptions extends BundleJsonSimple {
     @JsonView(BundleTimelineViews.Base.class)
     private final String accountId;
 
 
     @JsonCreator
-    public BundleJsonNoSubsciptions(@JsonProperty("bundleId") String bundleId,
-            @JsonProperty("accountId") String accountId,
-            @JsonProperty("externalKey") String externalKey,
-            @JsonProperty("subscriptions") List<SubscriptionJsonWithEvents> subscriptions) {
+    public BundleJsonNoSubscriptions(@JsonProperty("bundleId") String bundleId,
+                                     @JsonProperty("accountId") String accountId,
+                                     @JsonProperty("externalKey") String externalKey,
+                                     @JsonProperty("subscriptions") List<SubscriptionJsonWithEvents> subscriptions) {
         super(bundleId, externalKey);
         this.accountId = accountId;
     }
@@ -44,12 +43,12 @@ public class BundleJsonNoSubsciptions  extends BundleJsonSimple {
     }
 
     
-    public BundleJsonNoSubsciptions(SubscriptionBundle bundle) {
+    public BundleJsonNoSubscriptions(SubscriptionBundle bundle) {
         super(bundle.getId().toString(), bundle.getKey());
         this.accountId = bundle.getAccountId().toString();
     }
     
-    public BundleJsonNoSubsciptions() {
+    public BundleJsonNoSubscriptions() {
         super(null, null);        
         this.accountId = null;
     }
@@ -72,7 +71,7 @@ public class BundleJsonNoSubsciptions  extends BundleJsonSimple {
         if (equalsNoId(obj) == false) {
             return false;
         }
-        BundleJsonNoSubsciptions other = (BundleJsonNoSubsciptions) obj;
+        BundleJsonNoSubscriptions other = (BundleJsonNoSubscriptions) obj;
         if (bundleId == null) {
             if (other.bundleId != null)
                 return false;
@@ -88,7 +87,7 @@ public class BundleJsonNoSubsciptions  extends BundleJsonSimple {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        BundleJsonNoSubsciptions other = (BundleJsonNoSubsciptions) obj;
+        BundleJsonNoSubscriptions other = (BundleJsonNoSubscriptions) obj;
         if (accountId == null) {
             if (other.accountId != null)
                 return false;

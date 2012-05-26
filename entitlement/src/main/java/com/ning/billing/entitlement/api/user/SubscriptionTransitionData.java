@@ -18,8 +18,6 @@ package com.ning.billing.entitlement.api.user;
 
 import java.util.UUID;
 
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.annotate.JsonProperty;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.Plan;

@@ -16,9 +16,8 @@
 
 package com.ning.billing.account.api;
 
-
-import org.codehaus.jackson.annotate.JsonCreator;
-import org.codehaus.jackson.annotate.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.joda.time.DateTime;
 
 public class DefaultChangedField implements ChangedField {

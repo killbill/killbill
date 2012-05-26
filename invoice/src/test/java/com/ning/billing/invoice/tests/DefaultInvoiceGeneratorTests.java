@@ -19,6 +19,7 @@ package com.ning.billing.invoice.tests;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
+import static org.testng.Assert.fail;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -53,6 +54,7 @@ import com.ning.billing.invoice.model.DefaultInvoicePayment;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.invoice.model.InvoiceGenerator;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
+import com.ning.billing.junction.api.BillingEventSet;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.util.clock.Clock;
@@ -710,7 +712,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         assertEquals(invoice.getTotalAmount(), expectedAmount);
     }
 
-    @Test(groups = {"fast", "invoicing"})
+    @Test
     public void testAddOnInvoiceGeneration() throws CatalogApiException, InvoiceApiException {
         DateTime april25 = new DateTime(2012, 4, 25, 0, 0, 0, 0);
 
@@ -773,7 +775,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         assertEquals(invoice3.getTotalAmount().compareTo(FIFTEEN.negate()), 0);
     }
 
-    @Test(enabled = false)
+    @Test
     public void testRepairForPaidInvoice() throws CatalogApiException, InvoiceApiException {
         // create an invoice
         DateTime april25 = new DateTime(2012, 4, 25, 0, 0, 0, 0);
@@ -821,5 +823,40 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
 
     }
 
-    // TODO: Jeff C -- how do we ensure that an annual add-on is properly aligned *at the end* with the base plan?
+    /*
+    test scenario: create invoice, pay invoice, change entitlement (repair)
+
+    test scenario: two subscriptions, one with auto_invoice_off
+
+    test scenario: create invoice, pay invoice, change entitlement, generate invoices to use up credits
+
+    test scenario: create invoice, pay invoice, add account-level credit, generate invoice
+
+
+     */
+
+    @Test
+    public void testAutoInvoiceOff() {
+        BillingEventSet eventSet = new MockBillingEventSet();
+        fail();
+    }
+
+    @Test(enabled = false)
+    public void testAccountCredit() throws CatalogApiException, InvoiceApiException {
+        BillingEventSet billingEventSet = new MockBillingEventSet();
+
+        DateTime startDate = new DateTime(2012, 3, 1, 0, 0, 0, 0);
+        UUID accountId = UUID.randomUUID();
+        UUID subscriptionId = UUID.randomUUID();
+        Plan plan = new MockPlan("original plan");
+        MockInternationalPrice price10 = new MockInternationalPrice(new DefaultPrice(TEN, Currency.USD));
+        PlanPhase planPhase = new MockPlanPhase(price10, null, BillingPeriod.MONTHLY, PhaseType.EVERGREEN);
+        BillingEvent creation = createBillingEvent(subscriptionId, startDate, plan, planPhase, 1);
+        billingEventSet.add(creation);
+
+        Invoice invoice = generator.generateInvoice(accountId, billingEventSet, null, startDate, Currency.USD);
+        assertNotNull(invoice);
+        assertEquals(invoice.getNumberOfItems(), 1);
+        assertEquals(invoice.getTotalAmount().compareTo(TEN), 0);
+    }
 }

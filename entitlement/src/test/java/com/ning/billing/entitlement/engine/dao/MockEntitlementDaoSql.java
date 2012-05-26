@@ -61,7 +61,7 @@ public class MockEntitlementDaoSql extends AuditedEntitlementDao implements Mock
 
     public static interface ResetSqlDao extends Transactional<ResetSqlDao>, CloseMe {
 
-        @SqlUpdate("truncate table entitlement_events")
+        @SqlUpdate("truncate table subscription_events")
         public void resetEvents();
 
         @SqlUpdate("truncate table subscriptions")

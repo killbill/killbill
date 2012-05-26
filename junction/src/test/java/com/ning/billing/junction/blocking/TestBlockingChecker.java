@@ -19,7 +19,6 @@ package com.ning.billing.junction.blocking;
 import java.util.SortedSet;
 import java.util.UUID;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -41,7 +40,6 @@ import com.ning.billing.junction.dao.BlockingStateDao;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.util.clock.Clock;
-
 
 public class TestBlockingChecker {
    
@@ -75,17 +73,17 @@ public class TestBlockingChecker {
 
         @Override
         public SortedSet<BlockingState> getBlockingHistoryFor(Blockable overdueable) {
-            throw new NotImplementedException();
+            throw new UnsupportedOperationException();
         }
 
         @Override
         public SortedSet<BlockingState> getBlockingHistoryFor(UUID overdueableId) {
-            throw new NotImplementedException();
+            throw new UnsupportedOperationException();
         }
 
         @Override
         public <T extends Blockable> void setBlockingState(BlockingState state, Clock clock) {
-            throw new NotImplementedException();
+            throw new UnsupportedOperationException();
         }
         
     };

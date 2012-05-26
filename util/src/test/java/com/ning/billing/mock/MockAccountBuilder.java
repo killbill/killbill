@@ -18,7 +18,6 @@ package com.ning.billing.mock;
 
 import java.util.UUID;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.joda.time.DateTimeZone;
 
 import com.ning.billing.account.api.Account;
@@ -279,7 +278,7 @@ public class MockAccountBuilder {
 
             @Override
             public MutableAccountData toMutableAccountData() {
-                throw new NotImplementedException();
+                throw new UnsupportedOperationException();
             }
         };
     }

@@ -15,15 +15,12 @@
  */
 package com.ning.billing.util.bus;
 
-
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializationConfig;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
@@ -33,15 +30,12 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
-import com.ning.billing.config.PersistentQueueConfig;
 import com.ning.billing.util.Hostname;
 import com.ning.billing.util.bus.dao.BusEventEntry;
 import com.ning.billing.util.bus.dao.PersistentBusSqlDao;
 import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.glue.BusModule;
+import com.ning.billing.util.jackson.ObjectMapper;
 import com.ning.billing.util.queue.PersistentQueueBase;
-
 
 public class PersistentBus extends PersistentQueueBase implements Bus {
 
@@ -52,13 +46,11 @@ public class PersistentBus extends PersistentQueueBase implements Bus {
     
     private final PersistentBusSqlDao dao;
     
-    private final ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper = new ObjectMapper();
     private final EventBusDelegate eventBusDelegate;
     private final Clock clock;
     private final String hostname;
-    
 
-    
     private static final class EventBusDelegate extends EventBus {
         public EventBusDelegate(String busName) {
             super(busName);
@@ -92,8 +84,6 @@ public class PersistentBus extends PersistentQueueBase implements Bus {
         }), config.getNbThreads(), config);
         this.dao = dbi.onDemand(PersistentBusSqlDao.class);
         this.clock = clock;
-        this.objectMapper = new ObjectMapper();
-        this.objectMapper.disable(SerializationConfig.Feature.WRITE_DATES_AS_TIMESTAMPS);
         this.eventBusDelegate = new EventBusDelegate("Killbill EventBus");
         this.hostname = Hostname.get();
     }

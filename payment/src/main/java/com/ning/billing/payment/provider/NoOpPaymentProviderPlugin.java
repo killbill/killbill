@@ -99,6 +99,12 @@ public class NoOpPaymentProviderPlugin implements PaymentProviderPlugin {
             public String getBankIdentificationNumber() {
                 return null;
             }
+
+            @Override
+            public String getExternalPaymentId() {
+                return null;
+            }
+
             @Override
             public BigDecimal getAmount() {
                 return invoice.getBalance();

@@ -18,11 +18,9 @@ package com.ning.billing.invoice.api.user;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializationConfig;
+import com.ning.billing.util.jackson.ObjectMapper;
 import org.joda.time.DateTime;
 import org.testng.Assert;
-import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.api.Currency;
@@ -30,14 +28,7 @@ import com.ning.billing.invoice.api.EmptyInvoiceEvent;
 import com.ning.billing.invoice.api.InvoiceCreationEvent;
 
 public class TestEventJson {
-
-    private ObjectMapper mapper = new ObjectMapper();
-
-    @BeforeTest(groups= {"fast"})
-    public void setup() {
-        mapper = new ObjectMapper();
-        mapper.disable(SerializationConfig.Feature.WRITE_DATES_AS_TIMESTAMPS);
-    }
+    private final ObjectMapper mapper = new ObjectMapper();
 
     @Test(groups= {"fast"})
     public void testInvoiceCreationEvent() throws Exception {

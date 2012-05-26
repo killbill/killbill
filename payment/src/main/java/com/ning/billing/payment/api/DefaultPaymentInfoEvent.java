@@ -19,22 +19,20 @@ package com.ning.billing.payment.api;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ning.billing.util.entity.EntityBase;
-import org.codehaus.jackson.annotate.JsonCreator;
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.annotate.JsonProperty;
 import org.joda.time.DateTime;
 
 import com.google.common.base.Objects;
 
 import com.ning.billing.payment.plugin.api.PaymentInfoPlugin;
-import com.ning.billing.util.bus.BusEvent;
-import com.ning.billing.util.bus.BusEvent.BusEventType;
 
 public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEvent {
-
     private final UUID accountId;
-    private final UUID invoiceId;    
+    private final UUID invoiceId;  
+    private final String externalPaymentId;
     private final BigDecimal amount;
     private final BigDecimal refundAmount;
     private final String paymentNumber;
@@ -55,6 +53,7 @@ public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEv
     public DefaultPaymentInfoEvent(@JsonProperty("id") UUID id,
             @JsonProperty("accountId") UUID accountId,
             @JsonProperty("invoiceId") UUID invoiceId,            
+            @JsonProperty("externalPaymentId") String externalPaymentId,
             @JsonProperty("amount") BigDecimal amount,
             @JsonProperty("refundAmount") BigDecimal refundAmount,
             @JsonProperty("bankIdentificationNumber") String bankIdentificationNumber,
@@ -73,6 +72,7 @@ public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEv
         super(id);
         this.accountId = accountId;
         this.invoiceId = invoiceId;
+        this.externalPaymentId = externalPaymentId;
         this.amount = amount;
         this.refundAmount = refundAmount;
         this.bankIdentificationNumber = bankIdentificationNumber;
@@ -94,6 +94,7 @@ public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEv
         this(src.id,
                 src.accountId,
                 src.invoiceId,
+                src.externalPaymentId,
                 src.amount,
                 src.refundAmount,
                 src.bankIdentificationNumber,
@@ -113,7 +114,7 @@ public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEv
     
 
     public DefaultPaymentInfoEvent(PaymentInfoPlugin info, UUID accountId, UUID invoiceId) {
-        this(UUID.randomUUID(), accountId,  invoiceId, info.getAmount(), info.getRefundAmount(), info.getBankIdentificationNumber(), info.getPaymentNumber(),
+        this(UUID.randomUUID(), accountId,  invoiceId, info.getExternalPaymentId(), info.getAmount(), info.getRefundAmount(), info.getBankIdentificationNumber(), info.getPaymentNumber(),
                 info.getStatus(), info.getCardType(), info.getReferenceId(), info.getPaymentMethodId(), info.getPaymentMethod(), info.getCardType(), info.getCardCountry(),
                 null, info.getEffectiveDate(), info.getCreatedDate(), info.getUpdatedDate());
     }
@@ -150,6 +151,11 @@ public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEv
         return invoiceId;
     }
 
+    @Override
+    public String getExternalPaymentId() {
+        return externalPaymentId;
+    }
+    
     @Override
     public BigDecimal getAmount() {
         return amount;
@@ -220,12 +226,11 @@ public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEv
         return updatedDate;
     }
 
-
     public static class Builder {
-
         private UUID id;
         private UUID accountId;
         private UUID invoiceId;
+        private String externalPaymentId;
         private BigDecimal amount;
         private BigDecimal refundAmount;
         private String paymentNumber;
@@ -249,6 +254,7 @@ public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEv
             this.id = src.id;
             this.accountId = src.accountId;
             this.invoiceId = src.invoiceId;
+            this.externalPaymentId = src.externalPaymentId;
             this.amount = src.amount;
             this.refundAmount = src.refundAmount;
             this.paymentNumber = src.paymentNumber;
@@ -280,6 +286,11 @@ public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEv
 
         public Builder setId(UUID id) {
             this.id = id;
+            return this;
+        }
+
+        public Builder setExternalPaymentId(String externalPaymentId) {
+            this.externalPaymentId = externalPaymentId;
             return this;
         }
 
@@ -362,6 +373,7 @@ public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEv
             return new DefaultPaymentInfoEvent(id,
                     accountId,
                     invoiceId,
+                    externalPaymentId, 
                     amount,
                     refundAmount,
                     bankIdentificationNumber,
@@ -384,6 +396,7 @@ public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEv
     @Override
     public int hashCode() {
         return Objects.hashCode(id,
+                externalPaymentId, 
                 amount,
                 refundAmount,
                 bankIdentificationNumber,
@@ -405,6 +418,7 @@ public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEv
 
         final DefaultPaymentInfoEvent that = (DefaultPaymentInfoEvent) o;
 
+        if (!externalPaymentId.equals(that.externalPaymentId)) return false;
         if (amount != null ? !(amount.compareTo(that.amount) == 0) : that.amount != null) return false;
         if (bankIdentificationNumber != null ? !bankIdentificationNumber.equals(that.bankIdentificationNumber) : that.bankIdentificationNumber != null)
             return false;
