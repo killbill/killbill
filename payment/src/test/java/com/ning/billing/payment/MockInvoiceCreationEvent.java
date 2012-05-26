@@ -19,14 +19,13 @@ package com.ning.billing.payment;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-import org.codehaus.jackson.annotate.JsonCreator;
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.annotate.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceCreationEvent;
-import com.ning.billing.util.bus.BusEvent.BusEventType;
 
 public class MockInvoiceCreationEvent implements InvoiceCreationEvent {
 	

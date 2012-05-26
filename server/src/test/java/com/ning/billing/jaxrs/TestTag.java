@@ -22,13 +22,13 @@ import java.util.List;
 
 import javax.ws.rs.core.Response.Status;
 
+import com.ning.billing.jaxrs.resources.JaxrsResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.ning.billing.jaxrs.json.TagDefinitionJson;
-import com.ning.billing.jaxrs.resources.BaseJaxrsResource;
 import com.ning.http.client.Response;
 
 public class TestTag extends TestJaxrsBase {
@@ -40,7 +40,7 @@ public class TestTag extends TestJaxrsBase {
     
         TagDefinitionJson input = new TagDefinitionJson("blue", "realxing color");
         String baseJson = mapper.writeValueAsString(input);
-        Response response = doPost(BaseJaxrsResource.TAG_DEFINITIONS_PATH, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        Response response = doPost(JaxrsResource.TAG_DEFINITIONS_PATH, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
 
         String location = response.getHeader("Location");
@@ -59,7 +59,7 @@ public class TestTag extends TestJaxrsBase {
     @Test(groups="slow", enabled=true)
     public void testMultipleTagDefinitionOk() throws Exception {
     
-        Response response = doGet(BaseJaxrsResource.TAG_DEFINITIONS_PATH, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        Response response = doGet(JaxrsResource.TAG_DEFINITIONS_PATH, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
         String baseJson = response.getResponseBody();
         
@@ -68,25 +68,25 @@ public class TestTag extends TestJaxrsBase {
         
         TagDefinitionJson input = new TagDefinitionJson("blue", "realxing color");
         baseJson = mapper.writeValueAsString(input);
-        response = doPost(BaseJaxrsResource.TAG_DEFINITIONS_PATH, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        response = doPost(JaxrsResource.TAG_DEFINITIONS_PATH, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
 
         input = new TagDefinitionJson("red", "hot color");
         baseJson = mapper.writeValueAsString(input);
-        response = doPost(BaseJaxrsResource.TAG_DEFINITIONS_PATH, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        response = doPost(JaxrsResource.TAG_DEFINITIONS_PATH, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
 
         input = new TagDefinitionJson("yellow", "vibrant color");
         baseJson = mapper.writeValueAsString(input);
-        response = doPost(BaseJaxrsResource.TAG_DEFINITIONS_PATH, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        response = doPost(JaxrsResource.TAG_DEFINITIONS_PATH, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
 
         input = new TagDefinitionJson("green", "super realxing color");
         baseJson = mapper.writeValueAsString(input);
-        response = doPost(BaseJaxrsResource.TAG_DEFINITIONS_PATH, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        response = doPost(JaxrsResource.TAG_DEFINITIONS_PATH, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
 
-        response = doGet(BaseJaxrsResource.TAG_DEFINITIONS_PATH, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        response = doGet(JaxrsResource.TAG_DEFINITIONS_PATH, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
         baseJson = response.getResponseBody();
         
@@ -97,11 +97,11 @@ public class TestTag extends TestJaxrsBase {
         // STEPH currently broken Tag API does not work as expected...
         
         /*
-        String uri = BaseJaxrsResource.TAG_DEFINITIONS_PATH + "/green"; 
+        String uri = JaxrsResource.TAG_DEFINITIONS_PATH + "/green";
         response = doDelete(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.NO_CONTENT.getStatusCode());
     
-        response = doGet(BaseJaxrsResource.TAG_DEFINITIONS_PATH, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        response = doGet(JaxrsResource.TAG_DEFINITIONS_PATH, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
         baseJson = response.getResponseBody();
         

@@ -19,8 +19,8 @@ package com.ning.billing.jaxrs.json;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-import org.codehaus.jackson.annotate.JsonCreator;
-import org.codehaus.jackson.annotate.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.joda.time.DateTime;
 
 public class PaymentJsonWithBundleKeys extends PaymentJsonSimple {

@@ -16,7 +16,6 @@
 
 package com.ning.billing.overdue.api;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,7 +80,7 @@ public class DefaultOverdueUserApi implements OverdueUserApi {
     @Override
     public <T extends Blockable> void setOverrideBillingStateForAccount(
             T overdueable, BillingState<T> state) {
-        throw new NotImplementedException();
+        throw new UnsupportedOperationException();
     }
 
     public void setOverdueConfig(OverdueConfig config) {

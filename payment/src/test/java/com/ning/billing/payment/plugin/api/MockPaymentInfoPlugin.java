@@ -23,7 +23,7 @@ import org.joda.time.DateTime;
 import com.ning.billing.payment.api.PaymentInfoEvent;
 
 public class MockPaymentInfoPlugin implements PaymentInfoPlugin {
-
+    private final String externalPaymentId;
     private final BigDecimal amount;
     private final String bankIdentificationNumber;
     private final DateTime createdDate;
@@ -42,6 +42,7 @@ public class MockPaymentInfoPlugin implements PaymentInfoPlugin {
     
     public MockPaymentInfoPlugin(PaymentInfoEvent info) {
         super();
+        this.externalPaymentId = info.getExternalPaymentId();
         this.amount = info.getAmount();
         this.bankIdentificationNumber = info.getBankIdentificationNumber();
         this.createdDate = info.getCreatedDate();
@@ -58,6 +59,11 @@ public class MockPaymentInfoPlugin implements PaymentInfoPlugin {
         this.updatedDate = info.getUpdatedDate();
     }
 
+
+    @Override
+    public String getExternalPaymentId() {
+        return externalPaymentId;
+    }
 
     @Override
     public BigDecimal getAmount() {

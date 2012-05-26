@@ -45,18 +45,19 @@ public @interface PaymentHistoryBinder {
 
                     PaymentInfoEvent paymentInfo = history.getEntity();
                     q.bind("id", paymentInfo.getId().toString());
+                    q.bind("externalPaymentId", paymentInfo.getExternalPaymentId());
                     q.bind("amount", paymentInfo.getAmount());
-                    q.bind("refund_amount", paymentInfo.getRefundAmount());
-                    q.bind("payment_number", paymentInfo.getPaymentNumber());
-                    q.bind("bank_identification_number", paymentInfo.getBankIdentificationNumber());
+                    q.bind("refundAmount", paymentInfo.getRefundAmount());
+                    q.bind("paymentNumber", paymentInfo.getPaymentNumber());
+                    q.bind("bankIdentificationNumber", paymentInfo.getBankIdentificationNumber());
                     q.bind("status", paymentInfo.getStatus());
-                    q.bind("payment_type", paymentInfo.getType());
-                    q.bind("reference_id", paymentInfo.getReferenceId());
-                    q.bind("payment_method_id", paymentInfo.getPaymentMethodId());
-                    q.bind("payment_method", paymentInfo.getPaymentMethod());
-                    q.bind("card_type", paymentInfo.getCardType());
-                    q.bind("card_country", paymentInfo.getCardCountry());
-                    q.bind("effective_date", getDate(paymentInfo.getEffectiveDate()));
+                    q.bind("paymentType", paymentInfo.getType());
+                    q.bind("referenceId", paymentInfo.getReferenceId());
+                    q.bind("paymentMethodId", paymentInfo.getPaymentMethodId());
+                    q.bind("paymentMethod", paymentInfo.getPaymentMethod());
+                    q.bind("cardType", paymentInfo.getCardType());
+                    q.bind("cardCountry", paymentInfo.getCardCountry());
+                    q.bind("effectiveDate", getDate(paymentInfo.getEffectiveDate()));
                 }
             };
         }

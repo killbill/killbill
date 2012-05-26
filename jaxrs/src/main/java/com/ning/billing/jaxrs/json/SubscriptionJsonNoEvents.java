@@ -20,9 +20,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
-import org.codehaus.jackson.annotate.JsonCreator;
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.map.annotate.JsonView;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonView;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;

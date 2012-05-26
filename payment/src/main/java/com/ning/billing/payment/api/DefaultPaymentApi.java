@@ -40,8 +40,8 @@ import com.ning.billing.payment.plugin.api.PaymentInfoPlugin;
 import com.ning.billing.payment.plugin.api.PaymentPluginApiException;
 import com.ning.billing.payment.plugin.api.PaymentProviderPlugin;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
-
 import com.ning.billing.payment.retry.FailedPaymentRetryService;
+
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.BusEvent;
 import com.ning.billing.util.bus.Bus.EventBusException;

@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import com.ning.billing.payment.api.DefaultPaymentAttempt;
 import com.ning.billing.util.ChangeType;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.dao.EntityAudit;
@@ -33,6 +32,7 @@ import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.payment.api.DefaultPaymentAttempt;
 import com.ning.billing.payment.api.PaymentAttempt;
 import com.ning.billing.payment.api.PaymentAttempt.PaymentAttemptStatus;
 import com.ning.billing.payment.api.PaymentInfoEvent;

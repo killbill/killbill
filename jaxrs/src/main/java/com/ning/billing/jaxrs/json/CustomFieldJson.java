@@ -15,8 +15,9 @@
  */
 package com.ning.billing.jaxrs.json;
 
-import org.codehaus.jackson.annotate.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonCreator;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ning.billing.util.customfield.CustomField;
 
 public class CustomFieldJson {
@@ -30,7 +31,8 @@ public class CustomFieldJson {
     }
     
     @JsonCreator
-    public CustomFieldJson(String name, String value) {
+    public CustomFieldJson(@JsonProperty("name") String name,
+                           @JsonProperty("value") String value) {
         super();
         this.name = name;
         this.value = value;

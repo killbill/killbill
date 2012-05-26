@@ -16,17 +16,16 @@
 package com.ning.billing.jaxrs.util;
 
 import java.net.URI;
-import java.util.UUID;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
-import com.ning.billing.jaxrs.resources.BaseJaxrsResource;
+import com.ning.billing.jaxrs.resources.JaxrsResource;
 
 public class JaxrsUriBuilder {
 
 	
-	public Response buildResponse(final Class<? extends BaseJaxrsResource> theClass, final String getMethodName, final Object objectId) {
+	public Response buildResponse(final Class<? extends JaxrsResource> theClass, final String getMethodName, final Object objectId) {
 		URI uri = UriBuilder.fromPath(objectId.toString()).build();
 		Response.ResponseBuilder ri = Response.created(uri);
 		return ri.entity(new Object() {

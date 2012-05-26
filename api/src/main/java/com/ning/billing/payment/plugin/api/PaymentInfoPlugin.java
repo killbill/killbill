@@ -21,6 +21,7 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 public interface PaymentInfoPlugin {
+    public String getExternalPaymentId();
     
     public BigDecimal getAmount();
 
