@@ -46,7 +46,7 @@ public class OverdueWrapperFactory {
     private final OverdueStateApplicator<SubscriptionBundle> overdueStateApplicatorBundle;
     private final BlockingApi api;
     private final Clock clock;
-    private OverdueStateSet<SubscriptionBundle> overdueStates;
+    private OverdueConfig config;
 
     @Inject
     public OverdueWrapperFactory(BlockingApi api, Clock clock, 
@@ -64,7 +64,7 @@ public class OverdueWrapperFactory {
     public <T extends Blockable> OverdueWrapper<T> createOverdueWrapperFor(T bloackable) throws OverdueError {
   
         if(bloackable instanceof SubscriptionBundle) {
-            return (OverdueWrapper<T>)new OverdueWrapper<SubscriptionBundle>((SubscriptionBundle)bloackable, api, overdueStates, 
+            return (OverdueWrapper<T>)new OverdueWrapper<SubscriptionBundle>((SubscriptionBundle)bloackable, api, getOverdueStateSetBundle(), 
                     clock, billingStateCalcuatorBundle, overdueStateApplicatorBundle);
         } else {
             throw new OverdueError(ErrorCode.OVERDUE_TYPE_NOT_SUPPORTED, bloackable.getId(), bloackable.getClass());
@@ -79,7 +79,7 @@ public class OverdueWrapperFactory {
             switch (state.getType()) {
             case SUBSCRIPTION_BUNDLE : {
                 SubscriptionBundle bundle = entitlementApi.getBundleFromId(id);
-                return (OverdueWrapper<T>) new OverdueWrapper<SubscriptionBundle>(bundle, api, overdueStates, 
+                return (OverdueWrapper<T>) new OverdueWrapper<SubscriptionBundle>(bundle, api, getOverdueStateSetBundle(), 
                         clock, billingStateCalcuatorBundle, overdueStateApplicatorBundle );
             }
             default : {
@@ -92,11 +92,9 @@ public class OverdueWrapperFactory {
         }
     }
     
-    public void setOverdueConfig(OverdueConfig config) {
-        if(config != null) {
-            overdueStates = config.getBundleStateSet();
-        } else {
-            overdueStates = new DefaultOverdueStateSet<SubscriptionBundle>() {
+    private OverdueStateSet<SubscriptionBundle> getOverdueStateSetBundle() {
+        if(config == null || config.getBundleStateSet() == null) {
+            return new DefaultOverdueStateSet<SubscriptionBundle>() {
 
                 @SuppressWarnings("unchecked")
                 @Override
@@ -104,7 +102,13 @@ public class OverdueWrapperFactory {
                     return new DefaultOverdueState[0];
                 }
             };
+        } else {
+           return config.getBundleStateSet();
         }
+    }
+    
+    public void setOverdueConfig(OverdueConfig config) {   
+        this.config = config;
     }
 
 }

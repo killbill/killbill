@@ -43,7 +43,7 @@ public class DefaultBillingEventSet extends TreeSet<BillingEvent> implements Sor
      * @see com.ning.billing.junction.plumbing.billing.BillingEventSet#getSubscriptionIdsWithAutoInvoiceOff()
      */
     @Override
-    public List<UUID> getSubscriptionAndBundleIdsWithAutoInvoiceOff() {
+    public List<UUID> getSubscriptionIdsWithAutoInvoiceOff() {
         return subscriptionIdsWithAutoInvoiceOff;
     }
 

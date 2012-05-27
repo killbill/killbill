@@ -523,8 +523,8 @@ public class TestBillingApi {
 
         BillingEventSet events = api.getBillingEventsForAccountAndUpdateAccountBCD(account.getId());
         
-        assertEquals(events.getSubscriptionAndBundleIdsWithAutoInvoiceOff().size(), 1);
-        assertEquals(events.getSubscriptionAndBundleIdsWithAutoInvoiceOff().get(0), subId);
+        assertEquals(events.getSubscriptionIdsWithAutoInvoiceOff().size(), 1);
+        assertEquals(events.getSubscriptionIdsWithAutoInvoiceOff().get(0), subId);
         assertEquals(events.size(),0);
     }
 

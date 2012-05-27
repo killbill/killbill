@@ -42,7 +42,7 @@ public class MockBillingEventSet extends TreeSet<BillingEvent> implements Billin
     }
 
     @Override
-    public List<UUID> getSubscriptionAndBundleIdsWithAutoInvoiceOff() {
+    public List<UUID> getSubscriptionIdsWithAutoInvoiceOff() {
         return subscriptionIdsWithAutoInvoiceOff;
     }
 

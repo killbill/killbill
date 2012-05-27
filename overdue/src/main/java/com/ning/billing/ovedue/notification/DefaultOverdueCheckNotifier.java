@@ -29,6 +29,7 @@ import com.ning.billing.overdue.listener.OverdueListener;
 import com.ning.billing.overdue.service.DefaultOverdueService;
 import com.ning.billing.util.notificationq.NotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService;
+import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
 
@@ -94,6 +95,11 @@ public class DefaultOverdueCheckNotifier implements  OverdueCheckNotifier {
     public void stop() {
         if (overdueQueue != null) {
         	overdueQueue.stopQueue();
+        	try {
+        	    notificationQueueService.deleteNotificationQueue(overdueQueue.getServiceName(), overdueQueue.getQueueName());
+        	} catch (NoSuchNotificationQueue e) {
+        	    log.error("Error deleting a queue by its own name - this should never happen", e);
+        	}
         }
     }
 

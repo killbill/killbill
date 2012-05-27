@@ -113,7 +113,7 @@ public class DefaultBillingApi implements BillingApi {
             Map<String,Tag> bundleTags = tagApi.getTags(bundle.getId(), ObjectType.BUNDLE);
             if(bundleTags.get(ControlTagType.AUTO_INVOICING_OFF.name()) != null) {
                  for (final Subscription subscription: subscriptions) { // billing is off so list sub ids in set to be excluded
-                    result.getSubscriptionAndBundleIdsWithAutoInvoiceOff().add(subscription.getId());
+                    result.getSubscriptionIdsWithAutoInvoiceOff().add(subscription.getId());
                 }
             } else { // billing is not off
                 addBillingEventsForSubscription(subscriptions, bundle, account, context, result);                 

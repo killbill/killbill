@@ -65,7 +65,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                                          @Nullable final List<Invoice> existingInvoices,
                                          DateTime targetDate,
                                          final Currency targetCurrency) throws InvoiceApiException {
-        if ((events == null) || (events.size() == 0)) {
+        if ((events == null) || (events.size() == 0) || events.isAccountAutoInvoiceOff()) {
             return null;
         }
 
@@ -77,8 +77,9 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         if (existingInvoices != null) {
             for (Invoice invoice : existingInvoices) {
                 for(InvoiceItem item : invoice.getInvoiceItems()) {
-                    if(!events.getSubscriptionAndBundleIdsWithAutoInvoiceOff()
-                            .contains(item.getBundleId())) { //don't add items with auto_invoice_off tag 
+                    if(item.getSubscriptionId() == null || // Always include migration invoices, credits etc.  
+                      !events.getSubscriptionIdsWithAutoInvoiceOff()
+                            .contains(item.getSubscriptionId())) { //don't add items with auto_invoice_off tag 
                         existingItems.add(item);
                     }
                 }
@@ -263,7 +264,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         while(eventIt.hasNext()) {
             BillingEvent thisEvent = nextEvent;
             nextEvent = eventIt.next();
-            if(!events.getSubscriptionAndBundleIdsWithAutoInvoiceOff().
+            if(!events.getSubscriptionIdsWithAutoInvoiceOff().
                     contains(thisEvent.getSubscription().getId())) { // don't consider events for subscriptions that have auto_invoice_off
                 BillingEvent adjustedNextEvent = (thisEvent.getSubscription().getId() == nextEvent.getSubscription().getId()) ? nextEvent : null;
                 items.addAll(processEvents(invoiceId, accountId, thisEvent, adjustedNextEvent, targetDate, currency));

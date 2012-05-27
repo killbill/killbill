@@ -148,7 +148,7 @@ public class InvoiceDispatcher {
             BillingEventSet billingEvents = billingApi.getBillingEventsForAccountAndUpdateAccountBCD(accountId);
             
             List<Invoice> invoices = new ArrayList<Invoice>();
-            if (billingEvents.isAccountAutoInvoiceOff()) {
+            if (!billingEvents.isAccountAutoInvoiceOff()) {
                 invoices = invoiceDao.getInvoicesByAccount(accountId); //no need to fetch, invoicing is off on this account
             } 
 
