@@ -53,7 +53,7 @@ public abstract class AuditedCollectionDaoBase<T extends Entity> implements Audi
                     entityIterator.remove();
                     existingEntityIterator.remove();
 
-                    // if the entities have the same hashcode (e.g. same data), don't bother updating
+                    // if the entities have the same hash code (e.g. same data), don't bother updating
                     if (entity.hashCode() != existingEntity.hashCode()) {
                         entitiesToUpdate.add(entity);
                     }

@@ -28,6 +28,9 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.invoice.model.CreditInvoiceItem;
+import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.invoice.model.DefaultInvoicePayment;
 import org.joda.time.DateTime;
 import org.testng.annotations.Test;
@@ -774,7 +777,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         assertEquals(invoice3.getTotalAmount().compareTo(FIFTEEN.negate()), 0);
     }
 
-    @Test
+    @Test(enabled=false)
     public void testRepairForPaidInvoice() throws CatalogApiException, InvoiceApiException {
         // create an invoice
         DateTime april25 = new DateTime(2012, 4, 25, 0, 0, 0, 0);
@@ -830,17 +833,15 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
     test scenario: create invoice, pay invoice, change entitlement, generate invoices to use up credits
 
     test scenario: create invoice, pay invoice, add account-level credit, generate invoice
-
-
      */
 
-    @Test
+    @Test(enabled=false)
     public void testAutoInvoiceOff() {
         BillingEventSet eventSet = new BillingEventSet();
         fail();
     }
 
-    @Test(enabled = false)
+    @Test(enabled=true)
     public void testAccountCredit() throws CatalogApiException, InvoiceApiException {
         BillingEventSet billingEventSet = new BillingEventSet();
 
@@ -853,9 +854,23 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         BillingEvent creation = createBillingEvent(subscriptionId, startDate, plan, planPhase, 1);
         billingEventSet.add(creation);
 
-        Invoice invoice = generator.generateInvoice(accountId, billingEventSet, null, startDate, Currency.USD);
-        assertNotNull(invoice);
-        assertEquals(invoice.getNumberOfItems(), 1);
-        assertEquals(invoice.getTotalAmount().compareTo(TEN), 0);
+        List<Invoice> invoices = new ArrayList<Invoice>();
+
+        Invoice initialInvoice = generator.generateInvoice(accountId, billingEventSet, null, startDate, Currency.USD);
+        assertNotNull(initialInvoice);
+        assertEquals(initialInvoice.getNumberOfItems(), 1);
+        assertEquals(initialInvoice.getTotalAmount().compareTo(TEN), 0);
+        invoices.add(initialInvoice);
+
+        // add account-level credit
+        DateTime creditDate = startDate.plusDays(5);
+        Invoice invoiceWithCredit = new DefaultInvoice(accountId, creditDate, creditDate, Currency.USD);
+        InvoiceItem accountCredit = new CreditInvoiceItem(invoiceWithCredit.getId(), accountId, creditDate, FIVE, Currency.USD);
+        invoiceWithCredit.addInvoiceItem(accountCredit);
+        invoices.add(invoiceWithCredit);
+
+        // invoice one month after the initial subscription
+        Invoice finalInvoice = generator.generateInvoice(accountId, billingEventSet, invoices, startDate.plusMonths(1), Currency.USD);
+        assertEquals(finalInvoice.getTotalAmount().compareTo(FIVE), 0);
     }
 }

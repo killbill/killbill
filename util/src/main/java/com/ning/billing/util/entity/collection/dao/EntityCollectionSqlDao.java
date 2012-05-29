@@ -58,7 +58,7 @@ public interface EntityCollectionSqlDao<T extends Entity> {
     @RegisterMapper(RecordIdMapper.class)
     @SqlQuery
     public List<Mapper<UUID, Long>> getRecordIds(@Bind("objectId") final String objectId,
-                                                @ObjectTypeBinder final ObjectType objectType);
+                                                 @ObjectTypeBinder final ObjectType objectType);
 
     @SqlUpdate
     public void test();

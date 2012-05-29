@@ -19,6 +19,7 @@ package com.ning.billing.invoice.model;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+import com.ning.billing.invoice.api.InvoiceItemType;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.Currency;
@@ -28,12 +29,12 @@ public class FixedPriceInvoiceItem extends InvoiceItemBase {
 
     public FixedPriceInvoiceItem(UUID invoiceId, UUID accountId, UUID bundleId, UUID subscriptionId, String planName, String phaseName,
                                  DateTime startDate, DateTime endDate, BigDecimal amount, Currency currency) {
-        super(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency);
+        super(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency, InvoiceItemType.FIXED);
     }
 
     public FixedPriceInvoiceItem(UUID id, UUID invoiceId, UUID accountId, UUID bundleId, UUID subscriptionId, String planName, String phaseName,
                                  DateTime startDate, DateTime endDate, BigDecimal amount, Currency currency) {
-        super(id, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency);
+        super(id, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency, InvoiceItemType.FIXED);
     }
 
     @Override

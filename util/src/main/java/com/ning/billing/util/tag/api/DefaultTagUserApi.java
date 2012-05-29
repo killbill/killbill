@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.tag.dao.TagDao;
 
@@ -84,7 +85,7 @@ public class DefaultTagUserApi implements TagUserApi {
     }
 
     @Override
-    public void removeTags(UUID objectId, ObjectType objectType, List<TagDefinition> tagDefinitions, CallContext context) {
+    public void removeTags(UUID objectId, ObjectType objectType, List<TagDefinition> tagDefinitions, CallContext context)  {
         // TODO: consider making this batch
         for (TagDefinition tagDefinition : tagDefinitions) {
             tagDao.deleteTag(objectId, objectType, tagDefinition, context);

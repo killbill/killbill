@@ -18,6 +18,7 @@ package com.ning.billing.invoice.model;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.invoice.api.InvoiceItemType;
 import org.joda.time.DateTime;
 
 import java.math.BigDecimal;
@@ -29,7 +30,7 @@ public class CreditInvoiceItem extends InvoiceItemBase {
     }
 
     public CreditInvoiceItem(UUID id, UUID invoiceId, UUID accountId, DateTime date, BigDecimal amount, Currency currency) {
-        super(id, invoiceId, accountId, null, null, null, null, date, date, amount, currency);
+        super(id, invoiceId, accountId, null, null, null, null, date, date, amount, currency, InvoiceItemType.CREDIT);
     }
 
     @Override

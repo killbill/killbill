@@ -98,6 +98,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         }
 
         //addCreditItems(accountId, proposedItems, existingInvoices, targetCurrency);
+        useExistingCredits(existingItems, proposedItems);
 
         if (proposedItems == null || proposedItems.size() == 0) {
             return null;
@@ -108,7 +109,20 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         }
     }
 
-   /*
+    private void useExistingCredits(List<InvoiceItem> existingItems, List<InvoiceItem> proposedItems) {
+        BigDecimal totalUnusedCreditAmount = BigDecimal.ZERO;
+
+        if (existingItems.size() > 0) {
+            for (InvoiceItem item : existingItems) {
+                if (item instanceof CreditInvoiceItem) {
+                    CreditInvoiceItem creditInvoiceItem = (CreditInvoiceItem) item;
+
+                }
+            }
+        }
+    }
+
+    /*
     * ensures that the balance of all invoices are zero or positive, adding an adjusting credit item if needed
     */
     private void addCreditItems(UUID accountId, List<InvoiceItem> invoiceItems, List<Invoice> invoices, Currency currency) {

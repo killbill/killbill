@@ -17,6 +17,7 @@
 package com.ning.billing.invoice.dao;
 
 import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.util.callcontext.CallContext;
 import org.joda.time.DateTime;
@@ -54,6 +55,6 @@ public interface InvoiceDao {
 
     void setWrittenOff(UUID invoiceId, CallContext context);
 
-    void removeWrittenOff(UUID invoiceId, CallContext context);
+    void removeWrittenOff(UUID invoiceId, CallContext context) throws InvoiceApiException;
 
 }

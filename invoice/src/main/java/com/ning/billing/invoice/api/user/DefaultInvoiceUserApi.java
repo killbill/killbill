@@ -85,7 +85,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
 
     @Override
-    public void tagInvoiceAsNotWrittenOff(final UUID invoiceId, final CallContext context) {
+    public void tagInvoiceAsNotWrittenOff(final UUID invoiceId, final CallContext context) throws InvoiceApiException {
         dao.removeWrittenOff(invoiceId, context);
     }
 }

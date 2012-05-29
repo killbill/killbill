@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.UserType;
@@ -417,7 +418,7 @@ public class TestTagStore {
 
         Handle handle = dbi.open();
         String query = String.format("select * from audit_log a inner join tag_history th on a.record_id = th.history_record_id where a.table_name = 'tag_history' and th.id='%s' and a.change_type='DELETE'",
-                                     tag.getId().toString());
+                tag.getId().toString());
         List<Map<String, Object>> result = handle.select(query);
         handle.close();
 
@@ -440,7 +441,7 @@ public class TestTagStore {
     }
 
     @Test
-    public void testRemoveTag() {
+    public void testRemoveTag() throws InvoiceApiException {
         UUID objectId = UUID.randomUUID();
         ObjectType objectType = ObjectType.INVOICE;
         TagDefinition tagDefinition = new DefaultTagDefinition("test tag", "test", false);
