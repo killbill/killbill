@@ -46,7 +46,10 @@ public class NoOpPaymentProviderPlugin implements PaymentProviderPlugin {
     @Override
     public PaymentInfoPlugin processInvoice(final Account account, final Invoice invoice)
             throws PaymentPluginApiException {
-        PaymentInfoPlugin payment = new PaymentInfoPlugin() {
+        if (makeAllInvoicesFail) {
+            throw new PaymentPluginApiException("", "test error");
+        }
+       PaymentInfoPlugin payment = new PaymentInfoPlugin() {
             @Override
             public DateTime getUpdatedDate() {
                 return new DateTime(DateTimeZone.UTC);
@@ -102,7 +105,7 @@ public class NoOpPaymentProviderPlugin implements PaymentProviderPlugin {
 
             @Override
             public String getExternalPaymentId() {
-                return null;
+                return "NoOpPayment";
             }
 
             @Override
