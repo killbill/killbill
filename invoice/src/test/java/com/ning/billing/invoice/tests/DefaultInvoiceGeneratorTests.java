@@ -836,9 +836,25 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
      */
 
     @Test
-    public void testAutoInvoiceOff() {
-        BillingEventSet eventSet = new MockBillingEventSet();
-        fail();
+    public void testAutoInvoiceOffAccount() throws Exception {
+        MockBillingEventSet events = new MockBillingEventSet();
+        events.setAccountInvoiceOff(true);
+
+        Subscription sub = createZombieSubscription();
+        DateTime startDate = buildDateTime(2011, 9, 1);
+
+        Plan plan = new MockPlan();
+        BigDecimal rate1 = TEN;
+        PlanPhase phase = createMockMonthlyPlanPhase(rate1);
+
+        BillingEvent event = createBillingEvent(sub.getId(), startDate, plan, phase, 1);
+        events.add(event);
+
+        DateTime targetDate = buildDateTime(2011, 10, 3);
+        UUID accountId = UUID.randomUUID();
+        Invoice invoice = generator.generateInvoice(accountId, events, null, targetDate, Currency.USD);
+
+        assertNull(invoice);
     }
 
     @Test(enabled = false)
