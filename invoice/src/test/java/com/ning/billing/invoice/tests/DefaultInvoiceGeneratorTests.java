@@ -838,10 +838,11 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
     @Test(enabled=false)
     public void testAutoInvoiceOff() {
         BillingEventSet eventSet = new BillingEventSet();
+
         fail();
     }
 
-    @Test(enabled=true)
+    @Test
     public void testAccountCredit() throws CatalogApiException, InvoiceApiException {
         BillingEventSet billingEventSet = new BillingEventSet();
 
@@ -872,5 +873,6 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         // invoice one month after the initial subscription
         Invoice finalInvoice = generator.generateInvoice(accountId, billingEventSet, invoices, startDate.plusMonths(1), Currency.USD);
         assertEquals(finalInvoice.getTotalAmount().compareTo(FIVE), 0);
+        assertEquals(finalInvoice.getNumberOfItems(), 2);
     }
 }

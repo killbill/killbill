@@ -83,7 +83,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
 
         targetDate = adjustTargetDate(existingInvoices, targetDate);
 
-        DefaultInvoice invoice = new DefaultInvoice(accountId, clock.getUTCNow(), targetDate, targetCurrency);
+        Invoice invoice = new DefaultInvoice(accountId, clock.getUTCNow(), targetDate, targetCurrency);
         UUID invoiceId = invoice.getId();
         List<InvoiceItem> proposedItems = generateInvoiceItems(invoiceId, accountId, events, targetDate, targetCurrency);
 
@@ -97,8 +97,10 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
             }
         }
 
-        //addCreditItems(accountId, proposedItems, existingInvoices, targetCurrency);
-        useExistingCredits(existingItems, proposedItems);
+        BigDecimal creditAmount = calculateCreditAmountToUse(existingItems, proposedItems);
+        if (creditAmount.compareTo(BigDecimal.ZERO) > 0) {
+            proposedItems.add(new CreditInvoiceItem(invoiceId, accountId, clock.getUTCNow(), creditAmount.negate(), targetCurrency));
+        }
 
         if (proposedItems == null || proposedItems.size() == 0) {
             return null;
@@ -109,64 +111,30 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         }
     }
 
-    private void useExistingCredits(List<InvoiceItem> existingItems, List<InvoiceItem> proposedItems) {
+    private BigDecimal calculateCreditAmountToUse(List<InvoiceItem> existingItems, List<InvoiceItem> proposedItems) {
         BigDecimal totalUnusedCreditAmount = BigDecimal.ZERO;
-
-        if (existingItems.size() > 0) {
-            for (InvoiceItem item : existingItems) {
-                if (item instanceof CreditInvoiceItem) {
-                    CreditInvoiceItem creditInvoiceItem = (CreditInvoiceItem) item;
-
-                }
-            }
-        }
-    }
-
-    /*
-    * ensures that the balance of all invoices are zero or positive, adding an adjusting credit item if needed
-    */
-    private void addCreditItems(UUID accountId, List<InvoiceItem> invoiceItems, List<Invoice> invoices, Currency currency) {
-        Map<UUID, BigDecimal> invoiceBalances = new HashMap<UUID, BigDecimal>();
-
-        updateInvoiceBalance(invoiceItems, invoiceBalances);
-
-        // add all existing items and payments
-        if (invoices != null) {
-            for (Invoice invoice : invoices) {
-                updateInvoiceBalance(invoice.getInvoiceItems(), invoiceBalances);
-            }
-
-            for (Invoice invoice : invoices) {
-                UUID invoiceId = invoice.getId();
-                invoiceBalances.put(invoiceId, invoiceBalances.get(invoiceId).subtract(invoice.getAmountPaid()));
+        for (InvoiceItem item : existingItems) {
+            if (item instanceof CreditInvoiceItem) {
+                totalUnusedCreditAmount = totalUnusedCreditAmount.add(item.getAmount());
             }
         }
 
-        BigDecimal creditTotal = BigDecimal.ZERO;
-
-        for (UUID invoiceId : invoiceBalances.keySet()) {
-            BigDecimal balance = invoiceBalances.get(invoiceId);
-            if (balance.compareTo(BigDecimal.ZERO) < 0) {
-                creditTotal = creditTotal.add(balance.negate());
-                invoiceItems.add(new CreditInvoiceItem(invoiceId, accountId, clock.getUTCNow(), balance, currency));
+        BigDecimal totalAmountOwed = BigDecimal.ZERO;
+        for (InvoiceItem item : proposedItems) {
+            // there should be no credit items proposed at this point, but remove them anyhow
+            if (!(item instanceof CreditInvoiceItem)) {
+                totalAmountOwed = totalAmountOwed.add(item.getAmount());
             }
         }
 
-        if (creditTotal.compareTo(BigDecimal.ZERO) != 0) {
-            // create a single credit item to cover all credits
-            //invoiceItems.add(new CreditInvoiceItem());
-        }
-    }
-
-    private void updateInvoiceBalance(List<InvoiceItem> items, Map<UUID, BigDecimal> invoiceBalances) {
-        for (InvoiceItem item : items) {
-            UUID invoiceId = item.getInvoiceId();
-
-            if (!invoiceBalances.containsKey(invoiceId)) {
-                invoiceBalances.put(invoiceId, BigDecimal.ZERO);
+        if (totalUnusedCreditAmount.compareTo(BigDecimal.ZERO) == 0) {
+            return BigDecimal.ZERO;
+        } else {
+            if (totalAmountOwed.compareTo(totalUnusedCreditAmount) > 0) {
+                return totalUnusedCreditAmount;
+            } else {
+                return totalAmountOwed;
             }
-
-            invoiceBalances.put(invoiceId, invoiceBalances.get(invoiceId).add(item.getAmount()));
         }
     }
 
