@@ -14,49 +14,36 @@
  * under the License.
  */
 
-package com.ning.billing.junction.plumbing.billing;
+package com.ning.billing.invoice;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.UUID;
 
 import com.ning.billing.entitlement.api.billing.BillingEvent;
 import com.ning.billing.junction.api.BillingEventSet;
 
-public class DefaultBillingEventSet extends TreeSet<BillingEvent> implements SortedSet<BillingEvent>, BillingEventSet {
+public class MockBillingEventSet extends TreeSet<BillingEvent> implements BillingEventSet {
+
     private static final long serialVersionUID = 1L;
 
-    private boolean    accountAutoInvoiceOff           = false;
+    private boolean isAccountInvoiceOff;
     private List<UUID> subscriptionIdsWithAutoInvoiceOff = new ArrayList<UUID>();
     
-    /* (non-Javadoc)
-     * @see com.ning.billing.junction.plumbing.billing.BillingEventSet#isAccountAutoInvoiceOff()
-     */
+    @Override
+    public boolean isLast(BillingEvent event) {
+        return isAccountInvoiceOff;
+    }
+
     @Override
     public boolean isAccountAutoInvoiceOff() {
-        return accountAutoInvoiceOff;
+        return false;
     }
-    
-    /* (non-Javadoc)
-     * @see com.ning.billing.junction.plumbing.billing.BillingEventSet#getSubscriptionIdsWithAutoInvoiceOff()
-     */
+
     @Override
     public List<UUID> getSubscriptionIdsWithAutoInvoiceOff() {
         return subscriptionIdsWithAutoInvoiceOff;
     }
 
-    public void setAccountAutoInvoiceIsOff(boolean accountAutoInvoiceIsOff) {
-        this.accountAutoInvoiceOff = accountAutoInvoiceIsOff;
-    }
-
-    public void setSubscriptionIdsWithAutoInvoiceOff(List<UUID> subscriptionIdsWithAutoInvoiceOff) {
-        this.subscriptionIdsWithAutoInvoiceOff = subscriptionIdsWithAutoInvoiceOff;
-    }
-    
-    public boolean isLast(final BillingEvent event) {
-        return last() == event;
-    }
-    
 }

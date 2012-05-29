@@ -144,20 +144,26 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
 					catalog.getCatalogURI(), DefaultPlanPhase.class, type.toString()));
 		}
 
-		//Validation: if there is no recurring price there should be no billing period
-		if((recurringPrice == null) && billingPeriod != BillingPeriod.NO_BILLING_PERIOD) {
-			errors.add(new ValidationError(String.format("Phase %s of plan %s has no recurring price but does have a billing period. The billing period should be set to '%s'",
-					type.toString(), plan.getName(), BillingPeriod.NO_BILLING_PERIOD), 
-					catalog.getCatalogURI(), DefaultPlanPhase.class, type.toString()));
-		}
-		
+        //Validation: if there is no recurring price there should be no billing period
+        if((recurringPrice == null) && billingPeriod != BillingPeriod.NO_BILLING_PERIOD) {
+            errors.add(new ValidationError(String.format("Phase %s of plan %s has no recurring price but does have a billing period. The billing period should be set to '%s'",
+                    type.toString(), plan.getName(), BillingPeriod.NO_BILLING_PERIOD), 
+                    catalog.getCatalogURI(), DefaultPlanPhase.class, type.toString()));
+        }
+        
+        //Validation: if there BP is set to NO_BILLING_PERIOD there must be a fixed price
+        if((billingPeriod == BillingPeriod.NO_BILLING_PERIOD && fixedPrice == null)) {
+            errors.add(new ValidationError(String.format("Phase %s of plan %s has no billing period. It must have a fixed price set.",
+                    type.toString(), plan.getName()), 
+                    catalog.getCatalogURI(), DefaultPlanPhase.class, type.toString()));
+        }
+        
 		//Validation: there must be at least one of recurringPrice or fixedPrice
 		if((recurringPrice == null) && fixedPrice == null) {
 			errors.add(new ValidationError(String.format("Phase %s of plan %s has neither a recurring price or a fixed price.",
 					type.toString(), plan.getName()), 
 					catalog.getCatalogURI(), DefaultPlanPhase.class, type.toString()));
 		}
-		//TODO : if there BP is set to NO_BILLING_PERIOD there must be a recurring price
         return errors;
 	}
 	

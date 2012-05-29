@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.joda.time.DateTime;
 
@@ -36,12 +37,13 @@ import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.billing.BillingEvent;
 import com.ning.billing.entitlement.api.billing.BillingModeType;
 import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.junction.api.DefaultBlockingState;
 
 public class BlockingCalculator {
+    private static AtomicLong globaltotalOrder = new AtomicLong();
+    
     private final BlockingApi blockingApi;
 
     protected static class DisabledDuration {
@@ -196,7 +198,7 @@ public class BlockingCalculator {
         final BillingModeType billingModeType = previousEvent.getBillingMode();
         final BillingPeriod billingPeriod = previousEvent.getBillingPeriod();
         final SubscriptionTransitionType type = SubscriptionTransitionType.CANCEL;
-        final Long totalOrdering = 0L; //TODO
+        final Long totalOrdering = globaltotalOrder.getAndIncrement(); 
 
         return new DefaultBillingEvent(account, subscription, effectiveDate, plan, planPhase,
                 fixedPrice, recurringPrice, currency,
@@ -218,7 +220,7 @@ public class BlockingCalculator {
         final BillingModeType billingModeType = previousEvent.getBillingMode();
         final BillingPeriod billingPeriod = previousEvent.getBillingPeriod();
         final SubscriptionTransitionType type = SubscriptionTransitionType.RE_CREATE;
-        final Long totalOrdering = 0L; //TODO
+        final Long totalOrdering = globaltotalOrder.getAndIncrement();  
 
         return new DefaultBillingEvent(account, subscription, effectiveDate, plan, planPhase,
                 fixedPrice, recurringPrice, currency,

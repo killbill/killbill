@@ -28,10 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import com.ning.billing.util.dao.ObjectType;
-import com.ning.billing.util.tag.Tag;
-import com.ning.billing.util.tag.dao.AuditedTagDao;
-import com.ning.billing.util.tag.dao.TagDao;
 import org.joda.time.DateTime;
 import org.testng.annotations.Test;
 
@@ -49,17 +45,22 @@ import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.billing.BillingEvent;
 import com.ning.billing.entitlement.api.billing.BillingModeType;
 import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.invoice.MockBillingEventSet;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
-import com.ning.billing.invoice.model.BillingEventSet;
 import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.invoice.model.DefaultInvoicePayment;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
+import com.ning.billing.junction.api.BillingEventSet;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
+import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.tag.ControlTagType;
+import com.ning.billing.util.tag.Tag;
+import com.ning.billing.util.tag.dao.AuditedTagDao;
+import com.ning.billing.util.tag.dao.TagDao;
 
 @Test(groups = {"slow", "invoicing", "invoicing-invoiceDao"})
 public class InvoiceDaoTests extends InvoiceDaoTestBase {
@@ -417,7 +418,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
                 recurringPrice.getPrice(currency), currency, BillingPeriod.MONTHLY, 1, BillingModeType.IN_ADVANCE,
                 "testEvent1", 1L, SubscriptionTransitionType.CREATE);
 
-        BillingEventSet events = new BillingEventSet();
+        BillingEventSet events = new MockBillingEventSet();
         events.add(event1);
 
         Invoice invoice1 = generator.generateInvoice(accountId, events, invoiceList, targetDate, Currency.USD);
@@ -466,7 +467,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         BillingEvent event = createMockBillingEvent(null, subscription, effectiveDate, plan, phase, null,
                 recurringPrice.getPrice(currency), currency, BillingPeriod.MONTHLY, 15, BillingModeType.IN_ADVANCE,
                 "testEvent", 1L, SubscriptionTransitionType.CREATE);
-        BillingEventSet events = new BillingEventSet();
+        BillingEventSet events = new MockBillingEventSet();
         events.add(event);
 
         DateTime targetDate = buildDateTime(2011, 1, 15);
@@ -505,7 +506,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         BillingEvent event1 = createMockBillingEvent(null, subscription, effectiveDate1, plan, phase1, fixedPrice.getPrice(currency),
                 null, currency, BillingPeriod.MONTHLY, 1, BillingModeType.IN_ADVANCE,
                 "testEvent1", 1L, SubscriptionTransitionType.CREATE);
-        BillingEventSet events = new BillingEventSet();
+        BillingEventSet events = new MockBillingEventSet();
         events.add(event1);
 
         UUID accountId = UUID.randomUUID();
@@ -539,7 +540,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
 
     @Test
     public void testInvoiceForEmptyEventSet() throws InvoiceApiException {
-        BillingEventSet events = new BillingEventSet();
+        BillingEventSet events = new MockBillingEventSet();
         Invoice invoice = generator.generateInvoice(UUID.randomUUID(), events, null, new DateTime(), Currency.USD);
         assertNull(invoice);
     }
@@ -565,7 +566,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
                 fixedPrice.getPrice(currency), null, currency,
                 BillingPeriod.MONTHLY, 1, BillingModeType.IN_ADVANCE,
                 "testEvent1", 1L, SubscriptionTransitionType.CREATE);
-        BillingEventSet events = new BillingEventSet();
+        BillingEventSet events = new MockBillingEventSet();
         events.add(event1);
 
         DateTime effectiveDate2 = effectiveDate1.plusDays(30);
@@ -604,7 +605,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         PlanPhase phase2 = BrainDeadProxyFactory.createBrainDeadProxyFor(PlanPhase.class);
         ((ZombieControl) phase2).addResult("getName", "plan-phase2");
 
-        BillingEventSet events = new BillingEventSet();
+        BillingEventSet events = new MockBillingEventSet();
         List<Invoice> invoices = new ArrayList<Invoice>();
 
         BillingEvent event1 = createMockBillingEvent(null, subscription, targetDate1, plan, phase1, null,
@@ -648,7 +649,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
                 TEN, currency,
                 BillingPeriod.MONTHLY, 31, BillingModeType.IN_ADVANCE,
                 "testEvent1", 1L, SubscriptionTransitionType.CHANGE);
-        BillingEventSet events = new BillingEventSet();
+        BillingEventSet events = new MockBillingEventSet();
         events.add(event1);
 
         Invoice invoice = generator.generateInvoice(UUID.randomUUID(), events, null, targetDate1, Currency.USD);
@@ -679,7 +680,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
                 TEN, currency,
                 BillingPeriod.MONTHLY, 31, BillingModeType.IN_ADVANCE,
                 "testEvent1", 1L, SubscriptionTransitionType.CHANGE);
-        BillingEventSet events = new BillingEventSet();
+        BillingEventSet events = new MockBillingEventSet();
         events.add(event1);
 
         Invoice invoice = generator.generateInvoice(UUID.randomUUID(), events, null, targetDate1, Currency.USD);

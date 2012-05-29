@@ -46,57 +46,48 @@ public class MockPlan implements Plan {
 
 	@Override
 	public boolean isRetired() {
-		// TODO Auto-generated method stub
-		return false;
+				return false;
 	}
 
 	@Override
 	public Iterator<PlanPhase> getInitialPhaseIterator() {
-		// TODO Auto-generated method stub
-		return null;
+				return null;
 	}
 
 	@Override
 	public PlanPhase getFinalPhase() {
-		// TODO Auto-generated method stub
-		return null;
+				return null;
 	}
 
 	@Override
 	public BillingPeriod getBillingPeriod() {
-		// TODO Auto-generated method stub
-		return null;
+				return null;
 	}
 
 	@Override
 	public int getPlansAllowedInBundle() {
-		// TODO Auto-generated method stub
-		return 0;
+				return 0;
 	}
 
 	@Override
 	public PlanPhase[] getAllPhases() {
-		// TODO Auto-generated method stub
-		return null;
+				return null;
 	}
 
 	@Override
 	public Date getEffectiveDateForExistingSubscriptons() {
-		// TODO Auto-generated method stub
-		return null;
+				return null;
 	}
 
 	@Override
 	public PlanPhase findPhase(String name) throws CatalogApiException {
-		// TODO Auto-generated method stub
-		return null;
+				return null;
 	}
 
 	@Override
 	public DateTime dateOfFirstRecurringNonZeroCharge(
 			DateTime subscriptionStartDate) {
-		// TODO Auto-generated method stub
-		return null;
+				return null;
 	}
 
 }

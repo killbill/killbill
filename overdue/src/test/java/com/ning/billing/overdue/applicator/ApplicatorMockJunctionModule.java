@@ -48,43 +48,37 @@ public class ApplicatorMockJunctionModule extends MockJunctionModule {
 
                     @Override
                     public Type getType() {
-                        // TODO Auto-generated method stub
+
                         return null;
                     }
 
                     @Override
                     public DateTime getTimestamp() {
-                        // TODO Auto-generated method stub
                         return null;
                     }
 
                     @Override
                     public boolean isBlockChange() {
-                        // TODO Auto-generated method stub
                         return false;
                     }
 
                     @Override
                     public boolean isBlockEntitlement() {
-                        // TODO Auto-generated method stub
                         return false;
                     }
 
                     @Override
                     public boolean isBlockBilling() {
-                        // TODO Auto-generated method stub
                         return false;
                     }
 
                     @Override
                     public int compareTo(BlockingState arg0) {
-                        // TODO Auto-generated method stub
                         return 0;
                     }
 
                     @Override
                     public String getDescription() {
-                        // TODO Auto-generated method stub
                         return null;
                     }
                     
