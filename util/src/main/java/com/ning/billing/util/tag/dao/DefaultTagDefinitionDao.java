@@ -52,6 +52,12 @@ public class DefaultTagDefinitionDao implements TagDefinitionDao {
 
     @Override
     public TagDefinition getByName(final String definitionName) {
+        // add control tag definitions
+        for (ControlTagType controlTag : ControlTagType.values()) {
+            if(definitionName.equals(controlTag.name())) {
+                return new DefaultTagDefinition(controlTag.toString(), controlTag.getDescription(), true);
+            }
+        }
         return dao.getByName(definitionName);
     }
 

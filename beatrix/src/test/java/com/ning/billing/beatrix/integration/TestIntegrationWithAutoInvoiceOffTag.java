@@ -16,13 +16,13 @@
 
 package com.ning.billing.beatrix.integration;
 
+import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.assertEquals;
 
 import java.util.Collection;
-
-import junit.framework.Assert;
+import java.util.Map;
+import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.testng.annotations.BeforeMethod;
@@ -40,6 +40,12 @@ import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceUserApi;
+import com.ning.billing.util.api.TagDefinitionApiException;
+import com.ning.billing.util.api.TagUserApi;
+import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.util.tag.ControlTagType;
+import com.ning.billing.util.tag.Tag;
+import com.ning.billing.util.tag.TagDefinition;
 
 @Guice(modules = {BeatrixModule.class})
 public class TestIntegrationWithAutoInvoiceOffTag extends TestIntegrationBase {
@@ -47,7 +53,9 @@ public class TestIntegrationWithAutoInvoiceOffTag extends TestIntegrationBase {
     @Inject
     private InvoiceUserApi invoiceApi;
 
-    //TODO MDW write this test TestIntegrationWithAutoInvoiceOffTag
+    @Inject
+    private TagUserApi tagApi;
+
     private Account account;
     private SubscriptionBundle bundle;
     private String productName;
@@ -70,21 +78,98 @@ public class TestIntegrationWithAutoInvoiceOffTag extends TestIntegrationBase {
     @Test(groups={"slow"}, enabled = true)
     public void testAutoInvoiceOffAccount() throws Exception {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
-        
+        addTag(account.getId(), ObjectType.ACCOUNT);
+       
         // set next invoice to fail and create network 
-        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.INVOICE);
+        busHandler.pushExpectedEvents(NextEvent.CREATE);
         SubscriptionData baseSubscription = subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(),
                 new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, context));
         assertNotNull(baseSubscription);
         assertTrue(busHandler.isCompleted(DELAY));
 
-        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR);
+ 
+        Collection<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId());       
+        assertEquals(invoices.size(), 0);
+ 
         clock.addDays(10); // DAY 10 still in trial
         assertTrue(busHandler.isCompleted(DELAY));
 
-        Collection<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId());
-        
+        invoices = invoiceApi.getInvoicesByAccount(account.getId());       
         assertEquals(invoices.size(), 0);
 
+        busHandler.pushExpectedEvents(NextEvent.PHASE);
+        clock.addDays(30); // DAY 40 out of trial
+        assertTrue(busHandler.isCompleted(DELAY));
+
+        invoices = invoiceApi.getInvoicesByAccount(account.getId());       
+        assertEquals(invoices.size(), 0);
+
+    }
+    
+    @Test(groups={"slow"}, enabled = true)
+    public void testAutoInvoiceOffSingleSubscription() throws Exception {
+        clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
+       
+        // set next invoice to fail and create network 
+        busHandler.pushExpectedEvents(NextEvent.CREATE,NextEvent.INVOICE);
+        SubscriptionData baseSubscription = subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(),
+                new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, context));
+        assertNotNull(baseSubscription);
+        assertTrue(busHandler.isCompleted(DELAY));
+        
+        Collection<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId());       
+        assertEquals(invoices.size(), 1); // first invoice is generated immediately after creation can't reliably stop it
+ 
+
+        addTag(baseSubscription.getBundleId(), ObjectType.BUNDLE);
+
+        busHandler.pushExpectedEvents(NextEvent.PHASE);
+        clock.addDays(40); // DAY 40 out of trial
+        assertTrue(busHandler.isCompleted(DELAY));
+
+        invoices = invoiceApi.getInvoicesByAccount(account.getId());       
+        assertEquals(invoices.size(), 1); //No additional invoices generated
+
+    }
+
+    
+    @Test(groups={"slow"}, enabled = true)
+    public void testAutoInvoiceOffMultipleSubscriptions() throws Exception {
+        clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
+       
+        // set next invoice to fail and create network 
+        busHandler.pushExpectedEvents(NextEvent.CREATE,NextEvent.INVOICE);
+        SubscriptionData baseSubscription = subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(),
+                new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, context));
+        assertNotNull(baseSubscription);
+        assertTrue(busHandler.isCompleted(DELAY));
+ 
+        SubscriptionBundle bundle2 = entitlementUserApi.createBundleForAccount(account.getId(), "whatever", context);
+
+        busHandler.pushExpectedEvents(NextEvent.CREATE,NextEvent.INVOICE);
+        SubscriptionData baseSubscription2 = subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle2.getId(),
+                new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, context));
+        assertNotNull(baseSubscription2);
+        assertTrue(busHandler.isCompleted(DELAY));
+
+        Collection<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId());       
+        assertEquals(invoices.size(), 2); // first invoice is generated immediately after creation can't reliably stop it
+ 
+        addTag(baseSubscription.getBundleId(), ObjectType.BUNDLE);
+
+        busHandler.pushExpectedEvents(NextEvent.PHASE,NextEvent.PHASE,NextEvent.INVOICE);
+        clock.addDays(40); // DAY 40 out of trial
+        assertTrue(busHandler.isCompleted(DELAY));
+
+        invoices = invoiceApi.getInvoicesByAccount(account.getId());       
+        assertEquals(invoices.size(), 3); // Only one additional invoice generated
+    }
+
+
+    private void addTag(UUID id, ObjectType type) throws TagDefinitionApiException {
+        TagDefinition def = tagApi.getTagDefinition(ControlTagType.AUTO_INVOICING_OFF.name());
+        tagApi.addTag(id, type, def, context);
+        Map<String,Tag> tags = tagApi.getTags(id, type);
+        assertNotNull(tags.get(ControlTagType.AUTO_INVOICING_OFF.name()));
     }
 }
