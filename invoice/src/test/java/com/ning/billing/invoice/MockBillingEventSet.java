@@ -30,7 +30,11 @@ public class MockBillingEventSet extends TreeSet<BillingEvent> implements Billin
 
     private boolean isAccountInvoiceOff;
     private List<UUID> subscriptionIdsWithAutoInvoiceOff = new ArrayList<UUID>();
-    
+
+    public void addSubscriptionWithAutoInvoiceOff(UUID subscriptionId) {
+        subscriptionIdsWithAutoInvoiceOff.add(subscriptionId);
+    }
+
     @Override
     public boolean isLast(BillingEvent event) {
         return event == last();
@@ -54,4 +58,7 @@ public class MockBillingEventSet extends TreeSet<BillingEvent> implements Billin
         this.subscriptionIdsWithAutoInvoiceOff = subscriptionIdsWithAutoInvoiceOff;
     }
 
+    public void clearSubscriptionsWithAutoInvoiceOff() {
+        subscriptionIdsWithAutoInvoiceOff.clear();
+    }
 }

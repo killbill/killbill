@@ -24,10 +24,7 @@ import com.ning.billing.invoice.api.Invoice;
  */
 
 public class InvoiceJsonWithBundleKeys extends InvoiceJsonSimple {
-    
-    
     private final String bundleKeys;
-
 
     public InvoiceJsonWithBundleKeys() {
         super();
@@ -36,13 +33,14 @@ public class InvoiceJsonWithBundleKeys extends InvoiceJsonSimple {
     
     @JsonCreator
     public InvoiceJsonWithBundleKeys(@JsonProperty("amount") BigDecimal amount,
-            @JsonProperty("invoiceId") String invoiceId,
-            @JsonProperty("invoiceDate") DateTime invoiceDate,
-            @JsonProperty("targetDate") DateTime targetDate,            
-            @JsonProperty("invoiceNumber") String invoiceNumber,
-            @JsonProperty("balance") BigDecimal balance,
-            @JsonProperty("externalBundleKeys") String bundleKeys) {
-        super(amount, invoiceId, invoiceDate, targetDate, invoiceNumber, balance);
+                                     @JsonProperty("credit") BigDecimal credit,
+                                     @JsonProperty("invoiceId") String invoiceId,
+                                     @JsonProperty("invoiceDate") DateTime invoiceDate,
+                                     @JsonProperty("targetDate") DateTime targetDate,
+                                     @JsonProperty("invoiceNumber") String invoiceNumber,
+                                     @JsonProperty("balance") BigDecimal balance,
+                                     @JsonProperty("externalBundleKeys") String bundleKeys) {
+        super(amount, credit, invoiceId, invoiceDate, targetDate, invoiceNumber, balance);
         this.bundleKeys = bundleKeys;
     }
 

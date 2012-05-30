@@ -18,6 +18,7 @@ package com.ning.billing.invoice.model;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.util.entity.EntityBase;
 import org.joda.time.DateTime;
 
@@ -36,16 +37,18 @@ public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem 
     protected final DateTime endDate;
     protected final BigDecimal amount;
     protected final Currency currency;
+    protected InvoiceItemType invoiceItemType;
 
     public InvoiceItemBase(UUID invoiceId, UUID accountId, UUID bundleId, UUID subscriptionId, String planName, String phaseName,
-            DateTime startDate, DateTime endDate, BigDecimal amount, Currency currency) {
+            DateTime startDate, DateTime endDate, BigDecimal amount, Currency currency, InvoiceItemType invoiceItemType) {
         this(UUID.randomUUID(), invoiceId, accountId, bundleId, subscriptionId, planName, phaseName,
-                startDate, endDate, amount, currency);
+                startDate, endDate, amount, currency, invoiceItemType);
     }
 
     public InvoiceItemBase(UUID id, UUID invoiceId, UUID accountId, @Nullable UUID bundleId,
                            @Nullable UUID subscriptionId, String planName, String phaseName,
-                           DateTime startDate, DateTime endDate, BigDecimal amount, Currency currency) {
+                           DateTime startDate, DateTime endDate, BigDecimal amount, Currency currency,
+                           InvoiceItemType invoiceItemType) {
         super(id);
         this.invoiceId = invoiceId;
         this.accountId = accountId;
@@ -57,6 +60,7 @@ public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem 
         this.endDate = endDate;
         this.amount = amount;
         this.currency = currency;
+        this.invoiceItemType = invoiceItemType;
     }
 
     @Override
@@ -106,6 +110,11 @@ public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem 
     @Override
     public Currency getCurrency() {
         return currency;
+    }
+
+    @Override
+    public InvoiceItemType getInvoiceItemType() {
+        return invoiceItemType;
     }
 
     @Override

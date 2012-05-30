@@ -34,55 +34,33 @@ public class InvoiceItemList extends ArrayList<InvoiceItem> {
         this.addAll(invoiceItems);
     }
 
-    public BigDecimal getTotalAmount() {
+    public BigDecimal getAmountCharged() {
         // naive implementation, assumes all invoice items share the same currency
         BigDecimal total = BigDecimal.ZERO.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
 
         for (final InvoiceItem item : this) {
-            if (item.getAmount() != null) {
-                total = total.add(item.getAmount());
+            if (!(item instanceof CreditInvoiceItem)) {
+                if (item.getAmount() != null) {
+                    total = total.add(item.getAmount());
+                }
             }
         }
 
         return total.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
     }
 
-//    public void removeCancellingPairs() {
-//        List<InvoiceItem> itemsToRemove = new ArrayList<InvoiceItem>();
-//
-//        for (int firstItemIndex = 0; firstItemIndex < this.size(); firstItemIndex++) {
-//            for (int secondItemIndex = firstItemIndex + 1; secondItemIndex < this.size(); secondItemIndex++) {
-//                InvoiceItem firstItem = this.get(firstItemIndex);
-//                InvoiceItem secondItem = this.get(secondItemIndex);
-//                if (firstItem.cancels(secondItem)) {
-//                    itemsToRemove.add(firstItem);
-//                    itemsToRemove.add(secondItem);
-//                }
-//            }
-//        }
-//
-//        this.removeAll(itemsToRemove);
-//    }
+    public BigDecimal getAmountCredited() {
+        // naive implementation, assumes all invoice items share the same currency
+        BigDecimal total = BigDecimal.ZERO.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
 
-//   /*
-//    * removes recurring items from the list that have a recurring amount of zero, but a recurring rate that is not zero
-//    */
-//    public void cleanupDuplicatedItems() {
-//        Iterator<InvoiceItem> iterator = this.iterator();
-//        while (iterator.hasNext()) {
-//            InvoiceItem item = iterator.next();
-//
-//            if (item instanceof RecurringInvoiceItem) {
-//                RecurringInvoiceItem that = (RecurringInvoiceItem) item;
-//                boolean recurringRateNull = (that.getRate() == null);
-//                boolean recurringAmountZero = (that.getAmount() !=null) && (that.getAmount().compareTo(BigDecimal.ZERO) == 0);
-//
-//                if (recurringRateNull || recurringAmountZero) {
-//                    iterator.remove();
-//                } else if (that.getEndDate() != null && that.getStartDate().compareTo(that.getEndDate()) == 0) {
-//                    iterator.remove();
-//                }
-//            }
-//        }
-//    }
+        for (final InvoiceItem item : this) {
+            if (item instanceof CreditInvoiceItem) {
+                if (item.getAmount() != null) {
+                    total = total.add(item.getAmount());
+                }
+            }
+        }
+
+        return total.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+    }
 }

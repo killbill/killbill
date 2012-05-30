@@ -62,6 +62,7 @@ public abstract class InvoicingTestBase {
     protected static final BigDecimal TWENTY_FOUR = new BigDecimal("24.0").setScale(NUMBER_OF_DECIMALS);
     protected static final BigDecimal TWENTY_FIVE = new BigDecimal("25.0").setScale(NUMBER_OF_DECIMALS);
 
+    protected static final BigDecimal TWENTY_SEVEN = new BigDecimal("27.0").setScale(NUMBER_OF_DECIMALS);
     protected static final BigDecimal TWENTY_EIGHT = new BigDecimal("28.0").setScale(NUMBER_OF_DECIMALS);
     protected static final BigDecimal TWENTY_NINE = new BigDecimal("29.0").setScale(NUMBER_OF_DECIMALS);
     protected static final BigDecimal THIRTY = new BigDecimal("30.0").setScale(NUMBER_OF_DECIMALS);

@@ -23,6 +23,5 @@ public enum InvoiceItemType {
     MIGRATION,
     REFUND,
     CHARGE_BACK,
-    ADD_CREDIT,
-    USE_CREDIT
+    CREDIT
 }

@@ -23,6 +23,7 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import com.ning.billing.invoice.api.InvoiceItemType;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.Currency;
@@ -178,23 +179,37 @@ public class MockInvoice extends EntityBase implements Invoice {
     }
 
     @Override
-    public BigDecimal getTotalAmount() {
+    public BigDecimal getAmountCharged() {
         BigDecimal result = BigDecimal.ZERO;
     
         for(InvoiceItem i : invoiceItems) {
-            result = result.add(i.getAmount());
+            if (!i.getInvoiceItemType().equals(InvoiceItemType.CREDIT)) {
+                result = result.add(i.getAmount());
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public BigDecimal getAmountCredited() {
+        BigDecimal result = BigDecimal.ZERO;
+
+        for(InvoiceItem i : invoiceItems) {
+            if (i.getInvoiceItemType().equals(InvoiceItemType.CREDIT)) {
+                result = result.add(i.getAmount());
+            }
         }
         return result;
     }
 
     @Override
     public BigDecimal getBalance() {
-        return getTotalAmount().subtract(getAmountPaid());
+        return getAmountCharged().subtract(getAmountPaid().subtract(getAmountCredited()));
     }
 
     @Override
     public boolean isDueForPayment(final DateTime targetDate, final int numberOfDays) {
-        if (getTotalAmount().compareTo(BigDecimal.ZERO) == 0) {
+        if (getBalance().compareTo(BigDecimal.ZERO) == 0) {
             return false;
         }
 

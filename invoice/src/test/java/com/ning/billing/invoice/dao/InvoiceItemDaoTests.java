@@ -18,11 +18,15 @@ package com.ning.billing.invoice.dao;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.invoice.model.CreditInvoiceItem;
+import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import org.joda.time.DateTime;
 import org.testng.annotations.Test;
 
@@ -31,9 +35,9 @@ import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
 
-@Test(groups = {"invoicing", "invoicing-invoiceDao"})
+@Test(groups = {"slow", "invoicing", "invoicing-invoiceDao"})
 public class InvoiceItemDaoTests extends InvoiceDaoTestBase {
-    @Test(groups = "slow")
+    @Test
     public void testInvoiceItemCreation() {
         UUID accountId = UUID.randomUUID();
         UUID invoiceId = UUID.randomUUID();
@@ -52,8 +56,8 @@ public class InvoiceItemDaoTests extends InvoiceDaoTestBase {
         assertEquals(thisItem.getId(), item.getId());
         assertEquals(thisItem.getInvoiceId(), item.getInvoiceId());
         assertEquals(thisItem.getSubscriptionId(), item.getSubscriptionId());
-        assertEquals(thisItem.getStartDate(), item.getStartDate());
-        assertEquals(thisItem.getEndDate(), item.getEndDate());
+        assertTrue(thisItem.getStartDate().compareTo(item.getStartDate()) == 0);
+        assertTrue(thisItem.getEndDate().compareTo(item.getEndDate()) == 0);
         assertEquals(thisItem.getAmount().compareTo(item.getRate()), 0);
         assertEquals(thisItem.getRate().compareTo(item.getRate()), 0);
         assertEquals(thisItem.getCurrency(), item.getCurrency());
@@ -61,7 +65,7 @@ public class InvoiceItemDaoTests extends InvoiceDaoTestBase {
         // assertEquals(thisItem.getCreatedDate().compareTo(item.getCreatedDate()), 0);
     }
 
-    @Test(groups = "slow")
+    @Test
     public void testGetInvoiceItemsBySubscriptionId() {
         UUID accountId = UUID.randomUUID();
         UUID subscriptionId = UUID.randomUUID();
@@ -82,7 +86,7 @@ public class InvoiceItemDaoTests extends InvoiceDaoTestBase {
         assertEquals(items.size(), 3);
     }
 
-    @Test(groups = "slow")
+    @Test
     public void testGetInvoiceItemsByInvoiceId() {
         UUID accountId = UUID.randomUUID();
         UUID invoiceId = UUID.randomUUID();
@@ -104,7 +108,7 @@ public class InvoiceItemDaoTests extends InvoiceDaoTestBase {
         assertEquals(items.size(), 5);
     }
 
-    @Test(groups = "slow")
+    @Test
     public void testGetInvoiceItemsByAccountId() {
         UUID accountId = UUID.randomUUID();
         UUID bundleId = UUID.randomUUID();
@@ -126,5 +130,32 @@ public class InvoiceItemDaoTests extends InvoiceDaoTestBase {
 
         List<InvoiceItem> items = recurringInvoiceItemDao.getInvoiceItemsByAccount(accountId.toString());
         assertEquals(items.size(), 1);
+    }
+
+    @Test
+    public void testCreditInvoiceSqlDao() {
+        UUID invoiceId = UUID.randomUUID();
+        UUID accountId = UUID.randomUUID();
+        DateTime creditDate = new DateTime(2012, 4, 1, 0, 10, 22, 0);
+
+        InvoiceItem creditInvoiceItem = new CreditInvoiceItem(invoiceId, accountId, creditDate, TEN, Currency.USD);
+        creditInvoiceItemSqlDao.create(creditInvoiceItem, context);
+
+        InvoiceItem savedItem = creditInvoiceItemSqlDao.getById(creditInvoiceItem.getId().toString());
+        assertEquals(savedItem, creditInvoiceItem);
+    }
+
+    @Test
+    public void testFixedPriceInvoiceSqlDao() {
+        UUID invoiceId = UUID.randomUUID();
+        UUID accountId = UUID.randomUUID();
+        DateTime startDate = new DateTime(2012, 4, 1, 0, 10, 22, 0);
+
+        InvoiceItem fixedPriceInvoiceItem = new FixedPriceInvoiceItem(invoiceId, accountId, UUID.randomUUID(),
+                UUID.randomUUID(), "test plan", "test phase", startDate, startDate.plusMonths(1), TEN, Currency.USD);
+        fixedPriceInvoiceItemSqlDao.create(fixedPriceInvoiceItem, context);
+
+        InvoiceItem savedItem = fixedPriceInvoiceItemSqlDao.getById(fixedPriceInvoiceItem.getId().toString());
+        assertEquals(savedItem, fixedPriceInvoiceItem);
     }
 }

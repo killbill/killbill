@@ -18,6 +18,7 @@ package com.ning.billing.invoice.template.formatters;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.invoice.api.formatters.InvoiceItemFormatter;
 import com.ning.billing.util.template.translation.DefaultCatalogTranslator;
 import com.ning.billing.util.template.translation.Translator;
@@ -52,6 +53,11 @@ public class DefaultInvoiceItemFormatter implements InvoiceItemFormatter {
     @Override
     public Currency getCurrency() {
         return item.getCurrency();
+    }
+
+    @Override
+    public InvoiceItemType getInvoiceItemType() {
+        return item.getInvoiceItemType();
     }
 
     @Override

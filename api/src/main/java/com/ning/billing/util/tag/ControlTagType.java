@@ -48,7 +48,9 @@ public enum ControlTagType {
 
     public TagDefinition toTagDefinition() {
         return new TagDefinition() {
-            @Override public String getName() {return this.toString();}
+            @Override public String getName() {
+                return name();
+            }
 
             @Override public String getDescription() {return description;}
 

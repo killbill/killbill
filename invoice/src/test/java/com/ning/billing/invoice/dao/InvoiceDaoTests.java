@@ -80,7 +80,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         assertTrue(thisInvoice.getInvoiceDate().compareTo(invoiceDate) == 0);
         assertEquals(thisInvoice.getCurrency(), Currency.USD);
         assertEquals(thisInvoice.getNumberOfItems(), 0);
-        assertTrue(thisInvoice.getTotalAmount().compareTo(BigDecimal.ZERO) == 0);
+        assertTrue(thisInvoice.getBalance().compareTo(BigDecimal.ZERO) == 0);
     }
 
     @Test
@@ -100,7 +100,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
 
         Invoice savedInvoice = invoiceDao.getById(invoiceId);
         assertNotNull(savedInvoice);
-        assertEquals(savedInvoice.getTotalAmount().compareTo(new BigDecimal("21.00")), 0);
+        assertEquals(savedInvoice.getBalance().compareTo(new BigDecimal("21.00")), 0);
         assertEquals(savedInvoice.getBalance().compareTo(new BigDecimal("21.00")), 0);
         assertEquals(savedInvoice.getAmountPaid(), BigDecimal.ZERO);
         assertEquals(savedInvoice.getInvoiceItems().size(), 1);
@@ -113,7 +113,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         Invoice retrievedInvoice = invoiceDao.getById(invoiceId);
         assertNotNull(retrievedInvoice);
         assertEquals(retrievedInvoice.getInvoiceItems().size(), 1);
-        assertEquals(retrievedInvoice.getTotalAmount().compareTo(new BigDecimal("21.00")), 0);
+        assertEquals(retrievedInvoice.getAmountCharged().compareTo(new BigDecimal("21.00")), 0);
         assertEquals(retrievedInvoice.getBalance().compareTo(new BigDecimal("10.00")), 0);
         assertEquals(retrievedInvoice.getAmountPaid().compareTo(new BigDecimal("11.00")), 0);
     }
@@ -447,10 +447,10 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         invoiceDao.create(invoice2, context);
 
         Invoice savedInvoice1 = invoiceDao.getById(invoice1.getId());
-        assertEquals(savedInvoice1.getTotalAmount(), ZERO);
+        assertEquals(savedInvoice1.getBalance(), ZERO);
 
         Invoice savedInvoice2 = invoiceDao.getById(invoice2.getId());
-        assertEquals(savedInvoice2.getTotalAmount(), FIFTEEN);
+        assertEquals(savedInvoice2.getBalance(), FIFTEEN);
     }
 
     @Test
@@ -475,7 +475,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
 
         // expect one pro-ration item and one full-period item
         assertEquals(invoice.getNumberOfItems(), 2);
-        assertEquals(invoice.getTotalAmount().compareTo(ZERO), 0);
+        assertEquals(invoice.getBalance().compareTo(ZERO), 0);
     }
 
     private Subscription getZombieSubscription() {
@@ -513,7 +513,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         Invoice invoice1 = generator.generateInvoice(accountId, events, null, effectiveDate1, Currency.USD);
         assertNotNull(invoice1);
         assertEquals(invoice1.getNumberOfItems(), 1);
-        assertEquals(invoice1.getTotalAmount().compareTo(ZERO), 0);
+        assertEquals(invoice1.getBalance().compareTo(ZERO), 0);
 
         List<Invoice> invoiceList = new ArrayList<Invoice>();
         invoiceList.add(invoice1);
@@ -527,7 +527,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         Invoice invoice2 = generator.generateInvoice(accountId, events, invoiceList, effectiveDate2, Currency.USD);
         assertNotNull(invoice2);
         assertEquals(invoice2.getNumberOfItems(), 1);
-        assertEquals(invoice2.getTotalAmount().compareTo(cheapAmount), 0);
+        assertEquals(invoice2.getBalance().compareTo(cheapAmount), 0);
 
         invoiceList.add(invoice2);
 
@@ -535,7 +535,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         Invoice invoice3 = generator.generateInvoice(accountId, events, invoiceList, effectiveDate3, Currency.USD);
         assertNotNull(invoice3);
         assertEquals(invoice3.getNumberOfItems(), 1);
-        assertEquals(invoice3.getTotalAmount().compareTo(cheapAmount), 0);
+        assertEquals(invoice3.getBalance().compareTo(cheapAmount), 0);
     }
 
     @Test
@@ -578,14 +578,14 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         Invoice invoice = generator.generateInvoice(UUID.randomUUID(), events, null, effectiveDate2, Currency.USD);
         assertNotNull(invoice);
         assertEquals(invoice.getNumberOfItems(), 2);
-        assertEquals(invoice.getTotalAmount().compareTo(cheapAmount), 0);
+        assertEquals(invoice.getBalance().compareTo(cheapAmount), 0);
 
         invoiceDao.create(invoice, context);
         Invoice savedInvoice = invoiceDao.getById(invoice.getId());
 
         assertNotNull(savedInvoice);
         assertEquals(savedInvoice.getNumberOfItems(), 2);
-        assertEquals(savedInvoice.getTotalAmount().compareTo(cheapAmount), 0);
+        assertEquals(savedInvoice.getBalance().compareTo(cheapAmount), 0);
     }
 
     @Test

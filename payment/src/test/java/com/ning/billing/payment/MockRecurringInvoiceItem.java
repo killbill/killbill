@@ -18,6 +18,7 @@ package com.ning.billing.payment;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.util.entity.EntityBase;
 
 import org.apache.commons.lang.NotImplementedException;
@@ -151,6 +152,12 @@ public class MockRecurringInvoiceItem extends EntityBase implements InvoiceItem 
     public Currency getCurrency() {
         return currency;
     }
+
+    @Override
+    public InvoiceItemType getInvoiceItemType() {
+        return InvoiceItemType.RECURRING;
+    }
+
     @Override
     public InvoiceItem asReversingItem() {
         throw new NotImplementedException();

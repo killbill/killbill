@@ -20,6 +20,14 @@ import static org.testng.Assert.assertTrue;
 
 import java.io.IOException;
 
+import com.ning.billing.dbi.MysqlTestingHelper;
+import com.ning.billing.invoice.notification.MockNextBillingDatePoster;
+import com.ning.billing.invoice.notification.NextBillingDatePoster;
+import com.ning.billing.util.callcontext.TestCallContext;
+import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.tag.dao.AuditedTagDao;
+import com.ning.billing.util.tag.dao.MockTagDao;
+import com.ning.billing.util.tag.dao.TagDao;
 import org.apache.commons.io.IOUtils;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
@@ -29,28 +37,21 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Stage;
 import com.ning.billing.config.InvoiceConfig;
-import com.ning.billing.invoice.glue.InvoiceModuleWithEmbeddedDb;
 import com.ning.billing.invoice.model.DefaultInvoiceGenerator;
 import com.ning.billing.invoice.model.InvoiceGenerator;
 import com.ning.billing.invoice.tests.InvoicingTestBase;
-import com.ning.billing.util.bus.BusService;
-import com.ning.billing.util.bus.DefaultBusService;
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallOrigin;
-import com.ning.billing.util.callcontext.DefaultCallContextFactory;
-import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
 
 public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
     protected IDBI dbi;
+    private MysqlTestingHelper mysqlTestingHelper;
     protected InvoiceDao invoiceDao;
     protected RecurringInvoiceItemSqlDao recurringInvoiceItemDao;
+    protected FixedPriceInvoiceItemSqlDao fixedPriceInvoiceItemSqlDao;
+    protected CreditInvoiceItemSqlDao creditInvoiceItemSqlDao;
     protected InvoicePaymentSqlDao invoicePaymentDao;
-    protected InvoiceModuleWithEmbeddedDb module;
     protected Clock clock;
     protected CallContext context;
     protected InvoiceGenerator generator;
@@ -66,44 +67,44 @@ public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
 
     @BeforeClass(alwaysRun = true)
     protected void setup() throws IOException {
-        module = new InvoiceModuleWithEmbeddedDb();
-        dbi = module.getDbi();
+        mysqlTestingHelper = new MysqlTestingHelper();
+        dbi = mysqlTestingHelper.getDBI();
 
         final String invoiceDdl = IOUtils.toString(DefaultInvoiceDao.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
         final String utilDdl = IOUtils.toString(DefaultInvoiceDao.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
 
-        module.startDb();
-        module.initDb(invoiceDdl);
-        module.initDb(utilDdl);
+        mysqlTestingHelper.startMysql();
+        mysqlTestingHelper.initDb(invoiceDdl);
+        mysqlTestingHelper.initDb(utilDdl);
 
-        final Injector injector = Guice.createInjector(Stage.DEVELOPMENT, module);
-
-        invoiceDao = injector.getInstance(InvoiceDao.class);
+        NextBillingDatePoster nextBillingDatePoster = new MockNextBillingDatePoster();
+        TagDao tagDao = new AuditedTagDao(dbi);
+        invoiceDao = new DefaultInvoiceDao(dbi, nextBillingDatePoster, tagDao);
         invoiceDao.test();
 
-        recurringInvoiceItemDao = module.getInvoiceItemSqlDao();
+        recurringInvoiceItemDao = dbi.onDemand(RecurringInvoiceItemSqlDao.class);
+        fixedPriceInvoiceItemSqlDao = dbi.onDemand(FixedPriceInvoiceItemSqlDao.class);
+        creditInvoiceItemSqlDao = dbi.onDemand(CreditInvoiceItemSqlDao.class);
+        invoicePaymentDao = dbi.onDemand(InvoicePaymentSqlDao.class);
 
-        invoicePaymentDao = module.getInvoicePaymentSqlDao();
-        clock = injector.getInstance(Clock.class);
-        context = new DefaultCallContextFactory(clock).createCallContext("Count Rogan", CallOrigin.TEST, UserType.TEST);
+        clock = new ClockMock();
+        context = new TestCallContext("Invoice Dao Tests");
         generator = new DefaultInvoiceGenerator(clock, invoiceConfig);
 
-        BusService busService = injector.getInstance(BusService.class);
-        ((DefaultBusService) busService).startBus();
-
         assertTrue(true);
-       
     }
 
     @BeforeMethod(alwaysRun = true)
     public void cleanupData() {
-        module.getDbi().inTransaction(new TransactionCallback<Void>() {
+        dbi.inTransaction(new TransactionCallback<Void>() {
             @Override
             public Void inTransaction(Handle h, TransactionStatus status)
                     throws Exception {
                 h.execute("truncate table invoices");
                 h.execute("truncate table fixed_invoice_items");
                 h.execute("truncate table recurring_invoice_items");
+                h.execute("truncate table credit_invoice_items");
+                h.execute("truncate table invoice_payments");
 
                 return null;
             }
@@ -112,7 +113,7 @@ public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
 
     @AfterClass(alwaysRun = true)
     protected void tearDown() {
-        module.stopDb();
+        mysqlTestingHelper.stopMysql();
         assertTrue(true);
     }
 }

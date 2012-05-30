@@ -173,18 +173,24 @@ public class DefaultInvoice extends EntityBase implements Invoice {
     }
 
     @Override
-    public BigDecimal getTotalAmount() {
-        return invoiceItems.getTotalAmount();
+    public BigDecimal getAmountCharged() {
+        return invoiceItems.getAmountCharged();
+    }
+
+    @Override
+    public BigDecimal getAmountCredited() {
+        return invoiceItems.getAmountCredited();
     }
 
     @Override
     public BigDecimal getBalance() {
-        return getTotalAmount().subtract(getAmountPaid());
+        // credits offset payments
+        return getAmountCharged().subtract(getAmountPaid().subtract(getAmountCredited()));
     }
 
     @Override
     public boolean isDueForPayment(final DateTime targetDate, final int numberOfDays) {
-        if (getTotalAmount().compareTo(BigDecimal.ZERO) == 0) {
+        if (getBalance().compareTo(BigDecimal.ZERO) == 0) {
             return false;
         }
 

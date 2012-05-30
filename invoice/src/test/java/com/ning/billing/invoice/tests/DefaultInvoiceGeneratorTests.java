@@ -19,11 +19,14 @@ package com.ning.billing.invoice.tests;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
-import static org.testng.Assert.fail;
+import static org.testng.Assert.assertTrue;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -49,7 +52,10 @@ import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.invoice.MockBillingEventSet;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
+import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.invoice.model.CreditInvoiceItem;
 import com.ning.billing.invoice.model.DefaultInvoiceGenerator;
+import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.invoice.model.DefaultInvoicePayment;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.invoice.model.InvoiceGenerator;
@@ -97,7 +103,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
 
     @Test
     public void testWithEmptyEventSet() throws InvoiceApiException {
-        MockBillingEventSet events = new MockBillingEventSet();
+        BillingEventSet events = new MockBillingEventSet();
 
         UUID accountId = UUID.randomUUID();
         Invoice invoice = generator.generateInvoice(accountId, events, null, new DateTime(), Currency.USD);
@@ -107,7 +113,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
 
     @Test
     public void testWithSingleMonthlyEvent() throws InvoiceApiException, CatalogApiException {
-        MockBillingEventSet events = new MockBillingEventSet();
+        BillingEventSet events = new MockBillingEventSet();
 
         Subscription sub = createZombieSubscription();
         DateTime startDate = buildDateTime(2011, 9, 1);
@@ -125,7 +131,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
 
         assertNotNull(invoice);
         assertEquals(invoice.getNumberOfItems(), 2);
-        assertEquals(invoice.getTotalAmount(), TWENTY);
+        assertEquals(invoice.getBalance(), TWENTY);
         assertEquals(invoice.getInvoiceItems().get(0).getSubscriptionId(), sub.getId());
     }
 
@@ -143,7 +149,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
 
     @Test
     public void testWithSingleMonthlyEventWithLeadingProRation() throws InvoiceApiException, CatalogApiException {
-        MockBillingEventSet events = new MockBillingEventSet();
+        BillingEventSet events = new MockBillingEventSet();
 
         Subscription sub = createZombieSubscription();
         DateTime startDate = buildDateTime(2011, 9, 1);
@@ -164,12 +170,12 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         BigDecimal expectedNumberOfBillingCycles;
         expectedNumberOfBillingCycles = ONE.add(FOURTEEN.divide(THIRTY_ONE, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD));
         BigDecimal expectedAmount = expectedNumberOfBillingCycles.multiply(rate).setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
-        assertEquals(invoice.getTotalAmount(), expectedAmount);
+        assertEquals(invoice.getBalance(), expectedAmount);
     }
 
     @Test
     public void testTwoMonthlySubscriptionsWithAlignedBillingDates() throws InvoiceApiException, CatalogApiException {
-        MockBillingEventSet events = new MockBillingEventSet();
+        BillingEventSet events = new MockBillingEventSet();
 
         Plan plan1 = new MockPlan();
         BigDecimal rate1 = FIVE;
@@ -193,12 +199,12 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
 
         assertNotNull(invoice);
         assertEquals(invoice.getNumberOfItems(), 2);
-        assertEquals(invoice.getTotalAmount(), rate1.add(rate2).setScale(NUMBER_OF_DECIMALS));
+        assertEquals(invoice.getBalance(), rate1.add(rate2).setScale(NUMBER_OF_DECIMALS));
     }
 
     @Test
     public void testOnePlan_TwoMonthlyPhases_ChangeImmediate() throws InvoiceApiException, CatalogApiException {
-        MockBillingEventSet events = new MockBillingEventSet();
+        BillingEventSet events = new MockBillingEventSet();
 
         Plan plan1 = new MockPlan();
         BigDecimal rate1 = FIVE;
@@ -230,12 +236,12 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         expectedValue = expectedValue.add(numberOfCyclesEvent2.multiply(rate2));
         expectedValue = expectedValue.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
 
-        assertEquals(invoice.getTotalAmount(), expectedValue);
+        assertEquals(invoice.getBalance(), expectedValue);
     }
 
     @Test
     public void testOnePlan_ThreeMonthlyPhases_ChangeEOT() throws InvoiceApiException, CatalogApiException {
-        MockBillingEventSet events = new MockBillingEventSet();
+        BillingEventSet events = new MockBillingEventSet();
 
         Plan plan1 = new MockPlan();
         BigDecimal rate1 = FIVE;
@@ -261,12 +267,12 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
 
         assertNotNull(invoice);
         assertEquals(invoice.getNumberOfItems(), 4);
-        assertEquals(invoice.getTotalAmount(), rate1.add(rate2).add(TWO.multiply(rate3)).setScale(NUMBER_OF_DECIMALS));
+        assertEquals(invoice.getBalance(), rate1.add(rate2).add(TWO.multiply(rate3)).setScale(NUMBER_OF_DECIMALS));
     }
 
     @Test
     public void testSingleEventWithExistingInvoice() throws InvoiceApiException, CatalogApiException {
-        MockBillingEventSet events = new MockBillingEventSet();
+        BillingEventSet events = new MockBillingEventSet();
 
         Subscription sub = createZombieSubscription();
         DateTime startDate = buildDateTime(2011, 9, 1);
@@ -290,6 +296,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         assertNull(invoice2);
     }
 
+    // TODO: modify this test to keep a running total of expected invoice amount over time
     @Test
     public void testMultiplePlansWithUtterChaos() throws InvoiceApiException, CatalogApiException {
         // plan 1: change of phase from trial to discount followed by immediate cancellation; (covers phase change, cancel, pro-ration)
@@ -342,7 +349,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
 
         BigDecimal expectedAmount;
         List<Invoice> invoices = new ArrayList<Invoice>();
-        MockBillingEventSet events = new MockBillingEventSet();
+        BillingEventSet events = new MockBillingEventSet();
 
         // on 1/5/2011, create subscription 1 (trial)
         events.add(createBillingEvent(subscriptionId1, plan1StartDate, plan1, plan1Phase1, 5));
@@ -373,7 +380,8 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
 
         // on 4/29/2011, cancel subscription 1
         events.add(createBillingEvent(subscriptionId1, plan1CancelDate, plan1, plan1Phase3, 5));
-        expectedAmount = TWELVE.multiply(SIX.divide(THIRTY, NUMBER_OF_DECIMALS, ROUNDING_METHOD)).negate().setScale(NUMBER_OF_DECIMALS);
+        // previous invoices are adjusted; this is the pro-ration amount only
+        expectedAmount = TWELVE.multiply(TWENTY_FOUR.divide(THIRTY, NUMBER_OF_DECIMALS, ROUNDING_METHOD)).setScale(NUMBER_OF_DECIMALS);
         testInvoiceGeneration(accountId, events, invoices, plan1CancelDate, 2, expectedAmount);
 
         // on 5/10/2011, invoice subscription 2 (trial)
@@ -418,8 +426,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
 
         // on 7/31/2011, convert subscription 3 to annual
         events.add(createBillingEvent(subscriptionId3, plan3UpgradeToAnnualDate, plan3, plan3Phase2, 31));
-        expectedAmount = ONE_HUNDRED.subtract(TEN);
-        expectedAmount = expectedAmount.add(TEN.multiply(ELEVEN.divide(THIRTY_ONE, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD)));
+        expectedAmount = ONE_HUNDRED.add(TEN.multiply(ELEVEN.divide(THIRTY_ONE, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD)));
         expectedAmount = expectedAmount.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
         testInvoiceGeneration(accountId, events, invoices, plan3UpgradeToAnnualDate, 3, expectedAmount);
 
@@ -443,7 +450,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
 
         // on 10/7/2011, invoice subscription 4 (plan 2), cancel subscription 5
         events.add(createBillingEvent(subscriptionId5, plan5CancelDate, plan5, plan5Phase2, 10));
-        expectedAmount = TWENTY_FOUR.add(TWENTY.multiply(THREE.divide(THIRTY)).negate().setScale(NUMBER_OF_DECIMALS));
+        expectedAmount = TWENTY_FOUR.add(TWENTY.multiply(TWENTY_SEVEN.divide(THIRTY)).setScale(NUMBER_OF_DECIMALS));
         testInvoiceGeneration(accountId, events, invoices, plan5CancelDate, 3, expectedAmount);
 
         // on 10/10/2011, invoice plan 2 (evergreen)
@@ -455,7 +462,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
     public void testZeroDollarEvents() throws InvoiceApiException, CatalogApiException {
         Plan plan = new MockPlan();
         PlanPhase planPhase = createMockMonthlyPlanPhase(ZERO);
-        MockBillingEventSet events = new MockBillingEventSet();
+        BillingEventSet events = new MockBillingEventSet();
         DateTime targetDate = buildDateTime(2011, 1, 1);
         events.add(createBillingEvent(UUID.randomUUID(), targetDate, plan, planPhase, 1));
 
@@ -468,7 +475,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
     public void testEndDateIsCorrect() throws InvoiceApiException, CatalogApiException {
         Plan plan = new MockPlan();
         PlanPhase planPhase = createMockMonthlyPlanPhase(ZERO);
-        MockBillingEventSet events = new MockBillingEventSet();
+        BillingEventSet events = new MockBillingEventSet();
         DateTime targetDate = new DateTime();
         events.add(createBillingEvent(UUID.randomUUID(), targetDate, plan, planPhase, targetDate.getDayOfMonth()));
 
@@ -493,7 +500,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
 
         DateTime changeDate = new DateTime("2012-04-1T00:00:00.000-08:00");
 
-        MockBillingEventSet events = new MockBillingEventSet();
+        BillingEventSet events = new MockBillingEventSet();
 
         BillingEvent event1 = createMockBillingEvent(null, subscription, new DateTime("2012-01-1T00:00:00.000-08:00"),
                 plan, phase1,
@@ -530,7 +537,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         BigDecimal fixedCost = TEN;
         PlanPhase phase1 = createMockMonthlyPlanPhase(monthlyRate, fixedCost, PhaseType.TRIAL);
 
-        MockBillingEventSet events = new MockBillingEventSet();
+        BillingEventSet events = new MockBillingEventSet();
         UUID subscriptionId = UUID.randomUUID();
         UUID accountId = UUID.randomUUID();
 
@@ -542,7 +549,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         Invoice invoice1 = generator.generateInvoice(accountId, events, null, startDate, Currency.USD);
         assertNotNull(invoice1);
         assertEquals(invoice1.getNumberOfItems(), 2);
-        assertEquals(invoice1.getTotalAmount(), FIFTEEN);
+        assertEquals(invoice1.getBalance(), FIFTEEN);
 
         List<Invoice> invoiceList = new ArrayList<Invoice>();
         invoiceList.add(invoice1);
@@ -554,7 +561,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         Invoice invoice2 = generator.generateInvoice(accountId, events, invoiceList, currentDate, Currency.USD);
         assertNotNull(invoice2);
         assertEquals(invoice2.getNumberOfItems(), 1);
-        assertEquals(invoice2.getTotalAmount(), FIVE);
+        assertEquals(invoice2.getBalance(), FIVE);
     }
 
     @Test
@@ -566,7 +573,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         PlanPhase phase1 = createMockMonthlyPlanPhase(null, fixedCost1, PhaseType.TRIAL);
         PlanPhase phase2 = createMockMonthlyPlanPhase(null, fixedCost2, PhaseType.EVERGREEN);
 
-        MockBillingEventSet events = new MockBillingEventSet();
+        BillingEventSet events = new MockBillingEventSet();
         UUID subscriptionId = UUID.randomUUID();
         UUID accountId = UUID.randomUUID();
 
@@ -578,7 +585,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         Invoice invoice1 = generator.generateInvoice(accountId, events, null, startDate, Currency.USD);
         assertNotNull(invoice1);
         assertEquals(invoice1.getNumberOfItems(), 1);
-        assertEquals(invoice1.getTotalAmount(), fixedCost1);
+        assertEquals(invoice1.getBalance(), fixedCost1);
 
         List<Invoice> invoiceList = new ArrayList<Invoice>();
         invoiceList.add(invoice1);
@@ -592,12 +599,12 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         Invoice invoice2 = generator.generateInvoice(accountId, events, invoiceList, phaseChangeDate, Currency.USD);
         assertNotNull(invoice2);
         assertEquals(invoice2.getNumberOfItems(), 1);
-        assertEquals(invoice2.getTotalAmount(), fixedCost2);
+        assertEquals(invoice2.getBalance(), fixedCost2);
     }
 
     @Test
-    public void testNutsFailure() throws InvoiceApiException, CatalogApiException {
-        MockBillingEventSet events = new MockBillingEventSet();
+    public void testInvoiceGenerationFailureScenario() throws InvoiceApiException, CatalogApiException {
+        BillingEventSet events = new MockBillingEventSet();
         UUID subscriptionId = UUID.randomUUID();
         UUID accountId = UUID.randomUUID();
         final int BILL_CYCLE_DAY = 15;
@@ -624,7 +631,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         Invoice invoice1 = generator.generateInvoice(accountId, events, null, creationDate, Currency.USD);
         assertNotNull(invoice1);
         assertEquals(invoice1.getNumberOfItems(), 1);
-        assertEquals(invoice1.getTotalAmount().compareTo(ZERO), 0);
+        assertEquals(invoice1.getBalance().compareTo(ZERO), 0);
 
         List<Invoice> invoiceList = new ArrayList<Invoice>();
         invoiceList.add(invoice1);
@@ -633,7 +640,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         assertNotNull(invoice2);
         assertEquals(invoice2.getNumberOfItems(), 1);
         assertEquals(invoice2.getInvoiceItems().get(0).getStartDate().compareTo(trialPhaseEndDate), 0);
-        assertEquals(invoice2.getTotalAmount().compareTo(new BigDecimal("3.21")), 0);
+        assertEquals(invoice2.getBalance().compareTo(new BigDecimal("3.21")), 0);
 
         invoiceList.add(invoice2);
         DateTime targetDate = trialPhaseEndDate.toMutableDateTime().dayOfMonth().set(BILL_CYCLE_DAY).toDateTime();
@@ -641,7 +648,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         assertNotNull(invoice3);
         assertEquals(invoice3.getNumberOfItems(), 1);
         assertEquals(invoice3.getInvoiceItems().get(0).getStartDate().compareTo(targetDate), 0);
-        assertEquals(invoice3.getTotalAmount().compareTo(DISCOUNT_PRICE), 0);
+        assertEquals(invoice3.getBalance().compareTo(DISCOUNT_PRICE), 0);
 
         invoiceList.add(invoice3);
         targetDate = targetDate.plusMonths(6);
@@ -653,7 +660,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
     @Test(expectedExceptions = {InvoiceApiException.class})
     public void testTargetDateRestrictionFailure() throws InvoiceApiException, CatalogApiException {
         DateTime targetDate = DateTime.now().plusMonths(60);
-        MockBillingEventSet events = new MockBillingEventSet();
+        BillingEventSet events = new MockBillingEventSet();
         Plan plan1 = new MockPlan();
         PlanPhase phase1 = createMockMonthlyPlanPhase(null, ZERO, PhaseType.TRIAL);
         events.add(createBillingEvent(UUID.randomUUID(), DateTime.now(), plan1, phase1, 1));
@@ -700,16 +707,17 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
                 billCycleDay, BillingModeType.IN_ADVANCE, "Test", 1L, SubscriptionTransitionType.CREATE);
     }
 
-    private void testInvoiceGeneration(final UUID accountId, final MockBillingEventSet events, final List<Invoice> existingInvoices,
+    private void testInvoiceGeneration(final UUID accountId, final BillingEventSet events, final List<Invoice> existingInvoices,
                                        final DateTime targetDate, final int expectedNumberOfItems,
                                        final BigDecimal expectedAmount) throws InvoiceApiException {
         Currency currency = Currency.USD;
         Invoice invoice = generator.generateInvoice(accountId, events, existingInvoices, targetDate, currency);
         assertNotNull(invoice);
         assertEquals(invoice.getNumberOfItems(), expectedNumberOfItems);
-
         existingInvoices.add(invoice);
-        assertEquals(invoice.getTotalAmount(), expectedAmount);
+
+        distributeItems(existingInvoices);
+        assertEquals(invoice.getBalance(), expectedAmount);
     }
 
     @Test
@@ -726,14 +734,14 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         MockInternationalPrice price20 = new MockInternationalPrice(new DefaultPrice(TWENTY, Currency.USD));
         PlanPhase basePlanEvergreen = new MockPlanPhase(price10, null, BillingPeriod.MONTHLY, PhaseType.EVERGREEN);
 
-        MockBillingEventSet events = new MockBillingEventSet();
+        BillingEventSet events = new MockBillingEventSet();
         events.add(createBillingEvent(baseSubscription.getId(), april25, basePlan, basePlanEvergreen, 25));
 
         // generate invoice
         Invoice invoice1 = generator.generateInvoice(accountId, events, null, april25, Currency.USD);
         assertNotNull(invoice1);
         assertEquals(invoice1.getNumberOfItems(), 1);
-        assertEquals(invoice1.getTotalAmount().compareTo(TEN), 0);
+        assertEquals(invoice1.getBalance().compareTo(TEN), 0);
 
         List<Invoice> invoices = new ArrayList<Invoice>();
         invoices.add(invoice1);
@@ -755,7 +763,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         invoices.add(invoice2);
         assertNotNull(invoice2);
         assertEquals(invoice2.getNumberOfItems(), 2);
-        assertEquals(invoice2.getTotalAmount().compareTo(TWENTY_FIVE.multiply(new BigDecimal("0.9")).setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD)), 0);
+        assertEquals(invoice2.getBalance().compareTo(TWENTY_FIVE.multiply(new BigDecimal("0.9")).setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD)), 0);
 
         // perform a repair (change base plan; remove one add-on)
         // event stream should include just two plans
@@ -772,7 +780,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         assertNotNull(invoice3);
         assertEquals(invoice3.getNumberOfItems(), 5);
         // -4.50 -18 - 10 (to correct the previous 2 invoices) + 4.50 + 13
-        assertEquals(invoice3.getTotalAmount().compareTo(FIFTEEN.negate()), 0);
+        assertEquals(invoice3.getBalance().compareTo(FIFTEEN.negate()), 0);
     }
 
     @Test
@@ -788,10 +796,11 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         MockInternationalPrice price10 = new MockInternationalPrice(new DefaultPrice(TEN, Currency.USD));
         PlanPhase originalPlanEvergreen = new MockPlanPhase(price10, null, BillingPeriod.MONTHLY, PhaseType.EVERGREEN);
 
-        MockBillingEventSet events = new MockBillingEventSet();
+        BillingEventSet events = new MockBillingEventSet();
         events.add(createBillingEvent(originalSubscription.getId(), april25, originalPlan, originalPlanEvergreen, 25));
 
         Invoice invoice1 = generator.generateInvoice(accountId, events, null, april25, Currency.USD);
+        assertEquals(invoice1.getNumberOfItems(), 1);
         List<Invoice> invoices = new ArrayList<Invoice>();
         invoices.add(invoice1);
 
@@ -809,31 +818,48 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
 
         // generate a new invoice
         Invoice invoice2 = generator.generateInvoice(accountId, events, invoices, april25, Currency.USD);
+        assertEquals(invoice2.getNumberOfItems(), 4);
         invoices.add(invoice2);
 
         // move items to the correct invoice (normally, the dao calls will sort that out)
-        generator.distributeItems(invoices);
+        distributeItems(invoices);
 
         // ensure that the original invoice balance is zero
-
         assertEquals(invoice1.getBalance().compareTo(ZERO), 0);
 
         // ensure that the account balance is correct
-        assertEquals(invoice2.getBalance().compareTo(FIVE.negate()), 0);
+        assertEquals(invoice2.getBalance().compareTo(ZERO), 0);
 
+        // ensure that the account has a credit balance
+        BigDecimal creditBalance = invoice1.getAmountCredited().add(invoice2.getAmountCredited());
+        assertTrue(creditBalance.compareTo(FIVE) == 0);
     }
 
-    /*
-    test scenario: create invoice, pay invoice, change entitlement (repair)
+    private void distributeItems(List<Invoice> invoices) {
+        Map<UUID, Invoice> invoiceMap = new HashMap<UUID, Invoice>();
 
-    test scenario: two subscriptions, one with auto_invoice_off
+        for (Invoice invoice : invoices) {
+            invoiceMap.put(invoice.getId(), invoice);
+        }
 
-    test scenario: create invoice, pay invoice, change entitlement, generate invoices to use up credits
+        for (final Invoice invoice: invoices) {
+            Iterator<InvoiceItem> itemIterator = invoice.getInvoiceItems().iterator();
+            final UUID invoiceId = invoice.getId();
 
-    test scenario: create invoice, pay invoice, add account-level credit, generate invoice
+            while (itemIterator.hasNext()) {
+                InvoiceItem item = itemIterator.next();
 
-
-     */
+                if (!item.getInvoiceId().equals(invoiceId)) {
+                    Invoice thisInvoice = invoiceMap.get(item.getInvoiceId());
+                    if (thisInvoice == null) {
+                        throw new NullPointerException();
+                    }
+                    thisInvoice.addInvoiceItem(item);
+                    itemIterator.remove();
+                }
+            }
+        }
+    }
 
     @Test
     public void testAutoInvoiceOffAccount() throws Exception {
@@ -856,8 +882,54 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
 
         assertNull(invoice);
     }
+    
+    public void testAutoInvoiceOffWithCredits() throws CatalogApiException, InvoiceApiException {
+        Currency currency = Currency.USD;
+        List<Invoice> invoices = new ArrayList<Invoice>();
+        MockBillingEventSet eventSet = new MockBillingEventSet();
+        UUID accountId = UUID.randomUUID();
 
-    @Test(enabled = false)
+        DateTime startDate = new DateTime(2012, 1, 1, 0, 12, 34, 0);
+
+        // add first subscription creation event
+        UUID subscriptionId1 = UUID.randomUUID();
+        Plan plan1 = new MockPlan();
+        PlanPhase plan1phase1 = createMockMonthlyPlanPhase(FIFTEEN, null, PhaseType.DISCOUNT);
+        BillingEvent subscription1creation = createBillingEvent(subscriptionId1, startDate, plan1, plan1phase1, 1);
+        eventSet.add(subscription1creation);
+
+        // add second subscription creation event
+        UUID subscriptionId2 = UUID.randomUUID();
+        Plan plan2 = new MockPlan();
+        PlanPhase plan2phase1 = createMockMonthlyPlanPhase(TWELVE, null, PhaseType.EVERGREEN);
+        eventSet.add(createBillingEvent(subscriptionId2, startDate, plan2, plan2phase1, 1));
+
+        // generate the first invoice
+        Invoice invoice1 = generator.generateInvoice(accountId, eventSet, invoices, startDate, currency);
+        assertNotNull(invoice1);
+        assertTrue(invoice1.getBalance().compareTo(FIFTEEN.add(TWELVE)) == 0);
+        invoices.add(invoice1);
+
+        // set auto invoice off for first subscription (i.e. remove event from BillingEventSet and add subscription id to the list
+        // generate invoice
+        eventSet.remove(subscription1creation);
+        eventSet.addSubscriptionWithAutoInvoiceOff(subscriptionId1);
+
+        DateTime targetDate2 = startDate.plusMonths(1);
+        Invoice invoice2 = generator.generateInvoice(accountId, eventSet, invoices, targetDate2, currency);
+        assertNotNull(invoice2);
+        assertTrue(invoice2.getBalance().compareTo(TWELVE) == 0);
+        invoices.add(invoice2);
+
+        DateTime targetDate3 = targetDate2.plusMonths(1);
+        eventSet.clearSubscriptionsWithAutoInvoiceOff();
+        eventSet.add(subscription1creation);
+        Invoice invoice3 = generator.generateInvoice(accountId, eventSet, invoices, targetDate3, currency);
+        assertNotNull(invoice3);
+        assertTrue(invoice3.getBalance().compareTo(FIFTEEN.multiply(TWO).add(TWELVE)) == 0);
+    }
+
+    @Test
     public void testAccountCredit() throws CatalogApiException, InvoiceApiException {
         BillingEventSet billingEventSet = new MockBillingEventSet();
 
@@ -870,9 +942,24 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         BillingEvent creation = createBillingEvent(subscriptionId, startDate, plan, planPhase, 1);
         billingEventSet.add(creation);
 
-        Invoice invoice = generator.generateInvoice(accountId, billingEventSet, null, startDate, Currency.USD);
-        assertNotNull(invoice);
-        assertEquals(invoice.getNumberOfItems(), 1);
-        assertEquals(invoice.getTotalAmount().compareTo(TEN), 0);
+        List<Invoice> invoices = new ArrayList<Invoice>();
+
+        Invoice initialInvoice = generator.generateInvoice(accountId, billingEventSet, null, startDate, Currency.USD);
+        assertNotNull(initialInvoice);
+        assertEquals(initialInvoice.getNumberOfItems(), 1);
+        assertEquals(initialInvoice.getBalance().compareTo(TEN), 0);
+        invoices.add(initialInvoice);
+
+        // add account-level credit
+        DateTime creditDate = startDate.plusDays(5);
+        Invoice invoiceWithCredit = new DefaultInvoice(accountId, creditDate, creditDate, Currency.USD);
+        InvoiceItem accountCredit = new CreditInvoiceItem(invoiceWithCredit.getId(), accountId, creditDate, FIVE, Currency.USD);
+        invoiceWithCredit.addInvoiceItem(accountCredit);
+        invoices.add(invoiceWithCredit);
+
+        // invoice one month after the initial subscription
+        Invoice finalInvoice = generator.generateInvoice(accountId, billingEventSet, invoices, startDate.plusMonths(1), Currency.USD);
+        assertEquals(finalInvoice.getBalance().compareTo(FIVE), 0);
+        assertEquals(finalInvoice.getNumberOfItems(), 2);
     }
 }

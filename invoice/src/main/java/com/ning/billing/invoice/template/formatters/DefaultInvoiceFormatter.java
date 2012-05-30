@@ -120,8 +120,13 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
     }
 
     @Override
-    public BigDecimal getTotalAmount() {
-        return invoice.getTotalAmount();
+    public BigDecimal getAmountCharged() {
+        return invoice.getAmountCharged();
+    }
+
+    @Override
+    public BigDecimal getAmountCredited() {
+        return invoice.getAmountCredited();
     }
 
     @Override

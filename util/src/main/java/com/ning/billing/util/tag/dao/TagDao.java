@@ -16,6 +16,7 @@
 
 package com.ning.billing.util.tag.dao;
 
+import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.dao.AuditedCollectionDao;
 import com.ning.billing.util.dao.ObjectType;

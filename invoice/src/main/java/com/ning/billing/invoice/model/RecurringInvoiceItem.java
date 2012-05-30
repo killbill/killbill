@@ -18,6 +18,7 @@ package com.ning.billing.invoice.model;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.invoice.api.InvoiceItemType;
 import org.joda.time.DateTime;
 
 import java.math.BigDecimal;
@@ -30,8 +31,8 @@ public class RecurringInvoiceItem extends InvoiceItemBase {
     public RecurringInvoiceItem(UUID invoiceId, UUID accountId, UUID bundleId, UUID subscriptionId, String planName, String phaseName,
                                 DateTime startDate, DateTime endDate,
                                 BigDecimal amount, BigDecimal rate,
-                                Currency currency) { 
-        super(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency);
+                                Currency currency) {
+        super(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency, InvoiceItemType.RECURRING);
         this.rate = rate;
         this.reversedItemId = null;
     }
@@ -41,7 +42,7 @@ public class RecurringInvoiceItem extends InvoiceItemBase {
                                 BigDecimal amount, BigDecimal rate,
                                 Currency currency, UUID reversedItemId) {
         super(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate,
-                amount, currency);
+                amount, currency, InvoiceItemType.REVERSAL);
         this.rate = rate;
         this.reversedItemId = reversedItemId;
     }
@@ -51,7 +52,7 @@ public class RecurringInvoiceItem extends InvoiceItemBase {
                                 DateTime startDate, DateTime endDate,
                                 BigDecimal amount, BigDecimal rate,
                                 Currency currency) {
-        super(id, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency);
+        super(id, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency, InvoiceItemType.RECURRING);
         this.rate = rate;
         this.reversedItemId = null;
     }
@@ -61,7 +62,7 @@ public class RecurringInvoiceItem extends InvoiceItemBase {
                                 DateTime startDate, DateTime endDate,
                                 BigDecimal amount, BigDecimal rate,
                                 Currency currency, UUID reversedItemId) {
-        super(id, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency);
+        super(id, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency, InvoiceItemType.REVERSAL);
         this.rate = rate;
         this.reversedItemId = reversedItemId;
     }
@@ -132,6 +133,7 @@ public class RecurringInvoiceItem extends InvoiceItemBase {
 
         RecurringInvoiceItem that = (RecurringInvoiceItem) o;
 
+        // do not include invoice item type, since a reversing item can be equal to the original item
         if (accountId.compareTo(that.accountId) != 0) return false;
         if (amount.compareTo(that.amount) != 0) return false;
         if (currency != that.currency) return false;
@@ -162,6 +164,7 @@ public class RecurringInvoiceItem extends InvoiceItemBase {
         result = 31 * result + amount.hashCode();
         result = 31 * result + rate.hashCode();
         result = 31 * result + currency.hashCode();
+        result = 31 * result + invoiceItemType.hashCode();
         result = 31 * result + (reversedItemId != null ? reversedItemId.hashCode() : 0);
         return result;
     }

@@ -41,5 +41,5 @@ public interface InvoiceUserApi {
 
     public void tagInvoiceAsWrittenOff(UUID invoiceId, CallContext context);
 
-    public void tagInvoiceAsNotWrittenOff(UUID invoiceId, CallContext context);
+    public void tagInvoiceAsNotWrittenOff(UUID invoiceId, CallContext context) throws InvoiceApiException;
 }
