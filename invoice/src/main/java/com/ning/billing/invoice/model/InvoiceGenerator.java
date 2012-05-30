@@ -31,6 +31,4 @@ import com.ning.billing.junction.api.BillingEventSet;
 public interface InvoiceGenerator {
     public Invoice generateInvoice(UUID accountId, @Nullable BillingEventSet events, @Nullable List<Invoice> existingInvoices,
                                    DateTime targetDate, Currency targetCurrency) throws InvoiceApiException;
-
-    public void distributeItems(List<Invoice> invoices);
 }

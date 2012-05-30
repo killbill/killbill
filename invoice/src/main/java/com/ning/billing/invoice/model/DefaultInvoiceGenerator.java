@@ -97,17 +97,9 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         removeCancellingInvoiceItems(existingItems);
         removeDuplicatedInvoiceItems(proposedItems, existingItems);
 
-        for (InvoiceItem existingItem : existingItems) {
-            if (existingItem instanceof RecurringInvoiceItem) {
-                RecurringInvoiceItem recurringItem = (RecurringInvoiceItem) existingItem;
-                proposedItems.add(recurringItem.asReversingItem());
-            }
-        }
-
-        BigDecimal creditAmount = calculateCreditAmountToUse(existingItems, proposedItems);
-        if (creditAmount.compareTo(BigDecimal.ZERO) > 0) {
-            proposedItems.add(new CreditInvoiceItem(invoiceId, accountId, clock.getUTCNow(), creditAmount.negate(), targetCurrency));
-        }
+        addReversingItems(existingItems, proposedItems);
+        generateCreditsForPastRepairedInvoices(accountId, existingInvoices, proposedItems, targetCurrency);
+        consumeExistingCredit(invoiceId, accountId, existingItems, proposedItems, targetCurrency);
 
         if (proposedItems == null || proposedItems.size() == 0) {
             return null;
@@ -118,53 +110,74 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         }
     }
 
-    private BigDecimal calculateCreditAmountToUse(List<InvoiceItem> existingItems, List<InvoiceItem> proposedItems) {
+    private void generateCreditsForPastRepairedInvoices(UUID accountId, List<Invoice> existingInvoices, List<InvoiceItem> proposedItems, Currency currency) {
+        // determine most accurate invoice balances up to this point
+        Map<UUID, BigDecimal> amountOwedByInvoice = new HashMap<UUID, BigDecimal>();
+
+        if (existingInvoices != null) {
+            for (Invoice invoice : existingInvoices) {
+                amountOwedByInvoice.put(invoice.getId(), invoice.getBalance());
+            }
+        }
+
+        for (InvoiceItem item : proposedItems) {
+            UUID invoiceId = item.getInvoiceId();
+            if (amountOwedByInvoice.containsKey(invoiceId)) {
+                amountOwedByInvoice.put(invoiceId, amountOwedByInvoice.get(invoiceId).add(item.getAmount()));
+            } else {
+                amountOwedByInvoice.put(invoiceId, item.getAmount());
+            }
+        }
+
+        for (UUID invoiceId : amountOwedByInvoice.keySet()) {
+            BigDecimal invoiceBalance = amountOwedByInvoice.get(invoiceId);
+            if (invoiceBalance.compareTo(BigDecimal.ZERO) < 0) {
+                proposedItems.add(new CreditInvoiceItem(invoiceId, accountId, clock.getUTCNow(), invoiceBalance.negate(), currency));
+            }
+        }
+    }
+
+    private void addReversingItems(List<InvoiceItem> existingItems, List<InvoiceItem> proposedItems) {
+        for (InvoiceItem existingItem : existingItems) {
+            if (existingItem instanceof RecurringInvoiceItem) {
+                RecurringInvoiceItem recurringItem = (RecurringInvoiceItem) existingItem;
+                proposedItems.add(recurringItem.asReversingItem());
+            }
+        }
+    }
+
+    private void consumeExistingCredit(UUID invoiceId, UUID accountId, List<InvoiceItem> existingItems,
+                                       List<InvoiceItem> proposedItems, Currency targetCurrency) {
         BigDecimal totalUnusedCreditAmount = BigDecimal.ZERO;
+        BigDecimal totalAmountOwed = BigDecimal.ZERO;
+
         for (InvoiceItem item : existingItems) {
             if (item instanceof CreditInvoiceItem) {
                 totalUnusedCreditAmount = totalUnusedCreditAmount.add(item.getAmount());
             }
         }
 
-        BigDecimal totalAmountOwed = BigDecimal.ZERO;
         for (InvoiceItem item : proposedItems) {
-            // there should be no credit items proposed at this point, but remove them anyhow
-            if (!(item instanceof CreditInvoiceItem)) {
+            if (item instanceof CreditInvoiceItem) {
+                totalUnusedCreditAmount = totalUnusedCreditAmount.add(item.getAmount());
+            } else {
                 totalAmountOwed = totalAmountOwed.add(item.getAmount());
             }
         }
 
-        if (totalUnusedCreditAmount.compareTo(BigDecimal.ZERO) == 0) {
-            return BigDecimal.ZERO;
-        } else {
-            if (totalAmountOwed.compareTo(totalUnusedCreditAmount) > 0) {
-                return totalUnusedCreditAmount;
+        // credits are positive when they reduce the amount owed (since they offset payment)
+        // the credit balance should never be negative
+        BigDecimal creditAmount = BigDecimal.ZERO;
+        if (totalUnusedCreditAmount.compareTo(BigDecimal.ZERO) > 0) {
+            if (totalAmountOwed.abs().compareTo(totalUnusedCreditAmount.abs()) > 0) {
+                creditAmount = totalUnusedCreditAmount.negate();
             } else {
-                return totalAmountOwed;
+                creditAmount = totalAmountOwed;
             }
         }
-    }
 
-    @Override
-    public void distributeItems(List<Invoice> invoices) {
-        Map<UUID, Invoice> invoiceMap = new HashMap<UUID, Invoice>();
-
-        for (Invoice invoice : invoices) {
-            invoiceMap.put(invoice.getId(), invoice);
-        }
-
-        for (final Invoice invoice: invoices) {
-            Iterator<InvoiceItem> itemIterator = invoice.getInvoiceItems().iterator();
-            final UUID invoiceId = invoice.getId();
-
-            while (itemIterator.hasNext()) {
-                InvoiceItem item = itemIterator.next();
-
-                if (!item.getInvoiceId().equals(invoiceId)) {
-                    invoiceMap.get(item.getInvoiceId()).addInvoiceItem(item);
-                    itemIterator.remove();
-                }
-            }
+        if (creditAmount.compareTo(BigDecimal.ZERO) < 0) {
+            proposedItems.add(new CreditInvoiceItem(invoiceId, accountId, clock.getUTCNow(), creditAmount, targetCurrency));
         }
     }
 
