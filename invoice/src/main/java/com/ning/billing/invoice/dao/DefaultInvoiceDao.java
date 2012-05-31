@@ -307,6 +307,16 @@ public class DefaultInvoiceDao implements InvoiceDao {
     }
 
     @Override
+    public InvoicePayment getChargebackById(UUID chargebackId) throws InvoiceApiException {
+        InvoicePayment chargeback = invoicePaymentSqlDao.getById(chargebackId.toString());
+        if (chargeback == null) {
+            throw new InvoiceApiException(ErrorCode.CHARGE_BACK_DOES_NOT_EXIST, chargebackId);
+        } else {
+            return chargeback;
+        }
+    }
+
+    @Override
     public void test() {
         invoiceSqlDao.test();
     }

@@ -55,4 +55,6 @@ public interface InvoicePaymentApi {
     public UUID getAccountIdFromInvoicePaymentId(UUID uuid) throws InvoiceApiException;
 
     public List<InvoicePayment> getChargebacksByPaymentAttemptId(UUID paymentAttemptId);
+
+    public InvoicePayment getChargebackById(UUID chargebackId) throws InvoiceApiException;
 }

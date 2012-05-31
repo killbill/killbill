@@ -66,6 +66,22 @@ public class ChargebackResource implements JaxrsResource {
     }
 
     @GET
+    @Path("/chargebacks/{chargebackId:" + UUID_PATTERN + "}")
+    @Produces(APPLICATION_JSON)
+    public Response getChargeback(@PathParam("chargebackId") String chargebackId) {
+        try {
+            InvoicePayment chargeback = invoicePaymentApi.getChargebackById(UUID.fromString(chargebackId));
+            ChargebackJson chargebackJson = new ChargebackJson(chargeback);
+
+            return Response.status(Response.Status.OK).entity(chargebackJson).build();
+        } catch (InvoiceApiException e) {
+            final String error = String.format("Failed to locate chargeback for id %s", chargebackId);
+            log.info(error, e);
+            return Response.status(Response.Status.NO_CONTENT).build();
+        }
+    }
+
+    @GET
     @Path("/accounts/{accountId:" + UUID_PATTERN + "}/chargebacks")
     @Produces(APPLICATION_JSON)
     public Response getForAccount(@PathParam("accountId") String accountId) {
@@ -114,7 +130,7 @@ public class ChargebackResource implements JaxrsResource {
         try {
             invoicePaymentApi.processChargeback(UUID.fromString(json.getPaymentId()), json.getChargebackAmount(),
                     context.createContext(createdBy, reason, comment));
-            return uriBuilder.buildResponse(ChargebackResource.class, "createChargeback", json.getPaymentId());
+            return uriBuilder.buildResponse(ChargebackResource.class, "getChargeback", json.getPaymentId());
         } catch (InvoiceApiException e) {
             final String error = String.format("Failed to create chargeback %s", json);
             log.info(error, e);

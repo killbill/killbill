@@ -236,4 +236,9 @@ public class MockInvoiceDao implements InvoiceDao {
     public List<InvoicePayment> getChargebacksByPaymentAttemptId(UUID paymentAttemptId) {
         throw new UnsupportedOperationException();
     }
+
+    @Override
+    public InvoicePayment getChargebackById(UUID chargebackId) throws InvoiceApiException {
+        throw new UnsupportedOperationException();
+    }
 }

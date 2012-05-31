@@ -66,4 +66,6 @@ public interface InvoiceDao {
     List<InvoicePayment> getChargebacksByAccountId(final UUID accountId);
 
     List<InvoicePayment> getChargebacksByPaymentAttemptId(final UUID paymentAttemptId);
+
+    InvoicePayment getChargebackById(UUID chargebackId) throws InvoiceApiException;
 }

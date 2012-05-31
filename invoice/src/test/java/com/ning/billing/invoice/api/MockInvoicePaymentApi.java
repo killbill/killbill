@@ -160,4 +160,9 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi
     public List<InvoicePayment> getChargebacksByPaymentAttemptId(UUID paymentAttemptId) {
         throw new UnsupportedOperationException();
     }
+
+    @Override
+    public InvoicePayment getChargebackById(UUID chargebackId) {
+        throw new UnsupportedOperationException();
+    }
 }
