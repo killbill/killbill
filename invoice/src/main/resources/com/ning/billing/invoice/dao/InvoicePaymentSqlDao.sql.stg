@@ -7,18 +7,21 @@ invoicePaymentFields(prefix) ::= <<
   <prefix>payment_attempt_date,
   <prefix>amount,
   <prefix>currency,
+  <prefix>reversed_invoice_payment_id,
   <prefix>created_by,
   <prefix>created_date
 >>
 
 create() ::= <<
   INSERT INTO invoice_payments(<invoicePaymentFields()>)
-  VALUES(:id, :invoiceId, :paymentAttemptId, :paymentAttemptDate, :amount, :currency, :userName, :createdDate);
+  VALUES(:id, :invoiceId, :paymentAttemptId, :paymentAttemptDate, :amount, :currency,
+         :reversedInvoicePaymentId, :userName, :createdDate);
 >>
 
 batchCreateFromTransaction() ::= <<
   INSERT INTO invoice_payments(<invoicePaymentFields()>)
-  VALUES(:id, :invoiceId, :paymentAttemptId, :paymentAttemptDate, :amount, :currency, :userName, :createdDate);
+  VALUES(:id, :invoiceId, :paymentAttemptId, :paymentAttemptDate, :amount, :currency,
+        :reversedInvoicePaymentId, :userName, :createdDate);
 >>
 
 getByPaymentAttemptId() ::= <<
@@ -32,6 +35,12 @@ get() ::= <<
   FROM invoice_payments;
 >>
 
+getById() ::= <<
+  SELECT <invoicePaymentFields()>
+  FROM invoice_payments
+  WHERE id = :id;
+>>
+
 getPaymentsForInvoice() ::= <<
   SELECT <invoicePaymentFields()>
   FROM invoice_payments
@@ -40,7 +49,8 @@ getPaymentsForInvoice() ::= <<
 
 notifyOfPaymentAttempt() ::= <<
   INSERT INTO invoice_payments(<invoicePaymentFields()>)
-  VALUES(:id, :invoiceId, :paymentAttemptId, :paymentAttemptDate, :amount, :currency, :userName, :createdDate);
+  VALUES(:id, :invoiceId, :paymentAttemptId, :paymentAttemptDate, :amount, :currency,
+        :reversedInvoicePaymentId, :userName, :createdDate);
 >>
 
 getInvoicePayment() ::= <<
@@ -78,6 +88,13 @@ insertAuditFromTransaction() ::= <<
 >>
 
 test() ::= <<
-  SELECT 1 FROM invoice_payments;
+    SELECT 1 FROM invoice_payments;
+>>
+
+getRemainingAmountPaid() ::= <<
+    SELECT SUM(amount)
+    FROM invoice_payments
+    WHERE id = :invoicePaymentId
+    OR reversed_invoice_payment_id = :invoicePaymentId;
 >>
 ;

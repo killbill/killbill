@@ -27,6 +27,7 @@ import org.joda.time.DateTime;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.model.DefaultInvoicePayment;
 import com.ning.billing.util.callcontext.CallContext;
+import org.joda.time.DateTimeZone;
 
 public class MockInvoicePaymentApi implements InvoicePaymentApi
 {
@@ -99,6 +100,50 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi
     public void notifyOfPaymentAttempt(UUID invoiceId, UUID paymentAttemptId, DateTime paymentAttemptDate, CallContext context) {
         InvoicePayment invoicePayment = new DefaultInvoicePayment(paymentAttemptId, invoiceId, paymentAttemptDate);
         notifyOfPaymentAttempt(invoicePayment, context);
+    }
+
+    @Override
+    public void processChargeBack(UUID invoicePaymentId, BigDecimal amount, CallContext context) throws InvoiceApiException {
+        InvoicePayment existingPayment = null;
+        for (InvoicePayment payment : invoicePayments) {
+            if (payment.getId()  == invoicePaymentId) {
+                existingPayment = payment;
+            }
+        }
+
+        if (existingPayment != null) {
+            invoicePayments.add(existingPayment.asChargeBack(amount, DateTime.now(DateTimeZone.UTC)));
+        }
+    }
+
+    @Override
+    public void processChargeBack(UUID invoicePaymentId, CallContext context) throws InvoiceApiException {
+        InvoicePayment existingPayment = null;
+        for (InvoicePayment payment : invoicePayments) {
+            if (payment.getId()  == invoicePaymentId) {
+                existingPayment = payment;
+            }
+        }
+
+        if (existingPayment != null) {
+            this.processChargeBack(invoicePaymentId, existingPayment.getAmount(), context);
+        }
+    }
+
+    @Override
+    public BigDecimal getRemainingAmountPaid(UUID invoicePaymentId) {
+        BigDecimal amount = BigDecimal.ZERO;
+        for (InvoicePayment payment : invoicePayments) {
+            if (payment.getId().equals(invoicePaymentId)) {
+                amount = amount.add(payment.getAmount());
+            }
+
+            if (payment.getReversedInvoicePaymentId().equals(invoicePaymentId)) {
+                amount = amount.add(payment.getAmount());
+            }
+        }
+
+        return amount;
     }
 
 }

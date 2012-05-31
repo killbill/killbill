@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.ErrorCode;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.model.CreditInvoiceItem;
 import org.joda.time.DateTime;
@@ -185,7 +186,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
         });
     }
 
-    private List<EntityAudit> createAudits(TableName tableName, List<Long> recordIdList) {
+    private List<EntityAudit> createAudits(final TableName tableName, final List<Long> recordIdList) {
         List<EntityAudit> entityAuditList = new ArrayList<EntityAudit>();
         for (Long recordId : recordIdList) {
             entityAuditList.add(new EntityAudit(tableName, recordId, ChangeType.INSERT));
@@ -245,23 +246,43 @@ public class DefaultInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public UUID getInvoiceIdByPaymentAttemptId(UUID paymentAttemptId) {
+    public UUID getInvoiceIdByPaymentAttemptId(final UUID paymentAttemptId) {
         return invoiceSqlDao.getInvoiceIdByPaymentAttemptId(paymentAttemptId.toString());
     }
 
     @Override
-    public InvoicePayment getInvoicePayment(UUID paymentAttemptId) {
+    public InvoicePayment getInvoicePayment(final UUID paymentAttemptId) {
         return invoicePaymentSqlDao.getInvoicePayment(paymentAttemptId);
     }
 
     @Override
-    public void setWrittenOff(UUID invoiceId, CallContext context) {
+    public void setWrittenOff(final UUID invoiceId, final CallContext context) {
         tagDao.insertTag(invoiceId, ObjectType.INVOICE, ControlTagType.WRITTEN_OFF.toTagDefinition(), context);
     }
 
     @Override
-    public void removeWrittenOff(UUID invoiceId, CallContext context) throws InvoiceApiException {
+    public void removeWrittenOff(final UUID invoiceId, final CallContext context) throws InvoiceApiException {
         tagDao.deleteTag(invoiceId, ObjectType.INVOICE, ControlTagType.WRITTEN_OFF.toTagDefinition(), context);
+    }
+
+    @Override
+    public void postChargeBack(final UUID invoicePaymentId, final BigDecimal amount, final CallContext context) throws InvoiceApiException {
+        InvoicePayment payment = invoicePaymentSqlDao.getById(invoicePaymentId.toString());
+        if (payment == null) {
+            throw new InvoiceApiException(ErrorCode.INVOICE_PAYMENT_NOT_FOUND, invoicePaymentId.toString());
+        } else {
+            if (amount.compareTo(BigDecimal.ZERO) < 0) {
+                throw new InvoiceApiException(ErrorCode.CHARGE_BACK_AMOUNT_IS_NEGATIVE);
+            }
+
+            InvoicePayment chargeBack = payment.asChargeBack(amount, context.getCreatedDate());
+            invoicePaymentSqlDao.create(chargeBack, context);
+        }
+    }
+
+    @Override
+    public BigDecimal getRemainingAmountPaid(UUID invoicePaymentId) {
+        return invoicePaymentSqlDao.getRemainingAmountPaid(invoicePaymentId.toString());
     }
 
     @Override

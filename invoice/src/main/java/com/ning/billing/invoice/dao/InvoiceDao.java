@@ -57,4 +57,7 @@ public interface InvoiceDao {
 
     void removeWrittenOff(UUID invoiceId, CallContext context) throws InvoiceApiException;
 
+    void postChargeBack(UUID invoicePaymentId, BigDecimal amount, CallContext context) throws InvoiceApiException;
+
+    BigDecimal getRemainingAmountPaid(UUID invoicePaymentId);
 }

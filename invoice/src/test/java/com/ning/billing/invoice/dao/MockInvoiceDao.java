@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.ning.billing.invoice.api.InvoiceApiException;
 import org.joda.time.DateTime;
 
 import com.google.inject.Inject;
@@ -208,6 +209,16 @@ public class MockInvoiceDao implements InvoiceDao {
 
     @Override
     public void removeWrittenOff(UUID objectId, CallContext context) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void postChargeBack(UUID invoicePaymentId, BigDecimal amount, CallContext context) throws InvoiceApiException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public BigDecimal getRemainingAmountPaid(UUID invoicePaymentId) {
         throw new UnsupportedOperationException();
     }
 }

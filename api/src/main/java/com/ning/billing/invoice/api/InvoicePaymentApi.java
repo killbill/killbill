@@ -26,7 +26,6 @@ import org.joda.time.DateTime;
 import com.ning.billing.catalog.api.Currency;
 
 public interface InvoicePaymentApi {
-
     /**
      * @param accountId
      * @return All invoices, including migrated invoices
@@ -45,4 +44,9 @@ public interface InvoicePaymentApi {
     
     public void notifyOfPaymentAttempt(UUID invoiceId, UUID paymentAttemptId, DateTime paymentAttemptDate, CallContext context);
 
+    public void processChargeBack(UUID invoicePaymentId, BigDecimal amount, CallContext context) throws InvoiceApiException;
+
+    public void processChargeBack(UUID invoicePaymentId, CallContext context) throws InvoiceApiException;
+
+    public BigDecimal getRemainingAmountPaid(UUID invoicePaymentId);
 }

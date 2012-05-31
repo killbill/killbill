@@ -21,6 +21,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.util.callcontext.CallContext;
 import org.joda.time.DateTime;
 
@@ -78,5 +79,21 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
         dao.notifyOfPaymentAttempt(invoicePayment, context);
     }
 
+    @Override
+    public void processChargeBack(UUID invoicePaymentId, BigDecimal amount, CallContext context) throws InvoiceApiException {
+        dao.postChargeBack(invoicePaymentId, amount, context);
+    }
 
+    @Override
+    public void processChargeBack(UUID invoicePaymentId, CallContext context) throws InvoiceApiException {
+        // use the invoicePaymentId to get the amount remaining on the payment
+        // (preventing charge backs totalling more than the payment)
+        BigDecimal amount = dao.getRemainingAmountPaid(invoicePaymentId);
+        processChargeBack(invoicePaymentId, amount, context);
+    }
+
+    @Override
+    public BigDecimal getRemainingAmountPaid(UUID invoicePaymentId) {
+        return dao.getRemainingAmountPaid(invoicePaymentId);
+    }
 }

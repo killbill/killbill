@@ -28,9 +28,11 @@ import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.invoice.model.DefaultInvoicePayment;
 import com.ning.billing.util.dao.AuditSqlDao;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextBinder;
+import com.ning.billing.util.dao.BinderBase;
 import com.ning.billing.util.dao.MapperBase;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import org.joda.time.DateTime;
@@ -81,7 +83,8 @@ public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePayment>, Tran
     void notifyOfPaymentAttempt(@InvoicePaymentBinder final InvoicePayment invoicePayment,
                                 @CallContextBinder final CallContext context);
 
-
+    @SqlQuery
+    BigDecimal getRemainingAmountPaid(@Bind("invoicePaymentId") final String invoicePaymentId);
 
     public static class InvoicePaymentMapper extends MapperBase implements ResultSetMapper<InvoicePayment> {
         @Override
@@ -93,33 +96,10 @@ public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePayment>, Tran
             final BigDecimal amount = result.getBigDecimal("amount");
             final String currencyString = result.getString("currency");
             final Currency currency = (currencyString == null) ? null : Currency.valueOf(currencyString);
+            final UUID reversedInvoicePaymentId = getUUID(result, "reversed_invoice_Payment_id");
 
-            return new InvoicePayment() {
-                @Override
-                public UUID getId() {
-                    return id;
-                }
-                @Override
-                public UUID getPaymentAttemptId() {
-                    return paymentAttemptId;
-                }
-                @Override
-                public UUID getInvoiceId() {
-                    return invoiceId;
-                }
-                @Override
-                public DateTime getPaymentAttemptDate() {
-                    return paymentAttemptDate;
-                }
-                @Override
-                public BigDecimal getAmount() {
-                    return amount;
-                }
-                @Override
-                public Currency getCurrency() {
-                    return currency;
-                }
-            };
+            return new DefaultInvoicePayment(id, paymentAttemptId, invoiceId, paymentAttemptDate,
+                    amount, currency, reversedInvoicePaymentId);
         }
     }
 
@@ -127,7 +107,7 @@ public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePayment>, Tran
     @Retention(RetentionPolicy.RUNTIME)
     @Target({ElementType.PARAMETER})
     public @interface InvoicePaymentBinder {
-        public static class InvoicePaymentBinderFactory implements BinderFactory {
+        public static class InvoicePaymentBinderFactory extends BinderBase implements BinderFactory {
             @Override
             public Binder build(Annotation annotation) {
                 return new Binder<InvoicePaymentBinder, InvoicePayment>() {
@@ -135,11 +115,12 @@ public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePayment>, Tran
                     public void bind(SQLStatement q, InvoicePaymentBinder bind, InvoicePayment payment) {
                         q.bind("id", payment.getId().toString());
                         q.bind("invoiceId", payment.getInvoiceId().toString());
-                        q.bind("paymentAttemptId", payment.getPaymentAttemptId().toString());
+                        q.bind("paymentAttemptId", uuidToString(payment.getPaymentAttemptId()));
                         q.bind("paymentAttemptDate", payment.getPaymentAttemptDate().toDate());
                         q.bind("amount", payment.getAmount());
                         Currency currency = payment.getCurrency();
                         q.bind("currency", (currency == null) ? null : currency.toString());
+                        q.bind("reversedInvoicePaymentId", uuidToString(payment.getReversedInvoicePaymentId()));
                     }
                 };
             }
