@@ -24,7 +24,6 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.Inject;
 import com.ning.billing.config.PaymentConfig;
 import com.ning.billing.payment.api.PaymentApi;
-import com.ning.billing.payment.api.PaymentAttempt;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.DefaultCallContext;
@@ -86,7 +85,7 @@ public class TimedoutPaymentRetryService implements RetryService {
          }
     }
 
-    public void scheduleRetry(PaymentAttempt paymentAttempt, DateTime timeOfRetry) {
+    public void scheduleRetry(UUID paymentId, DateTime timeOfRetry) {
 
         /*
         final String id = paymentAttempt.getPaymentAttemptId().toString();

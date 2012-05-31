@@ -22,7 +22,6 @@ import java.util.UUID;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.payment.api.PaymentMethodInfo;
-import com.ning.billing.payment.api.PaymentProviderAccount;
 
 public interface PaymentProviderPlugin {
     

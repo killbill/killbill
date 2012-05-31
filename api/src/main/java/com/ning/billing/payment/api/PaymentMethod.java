@@ -1,4 +1,4 @@
-/*
+/* 
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -13,18 +13,18 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+package com.ning.billing.payment.api;
 
-package com.ning.billing.payment.dao;
+import java.util.UUID;
 
-import java.io.IOException;
 
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
-@Test(groups = { "fast" })
-public class TestPaymentDaoWithMock extends TestPaymentDao {
-    @BeforeMethod(groups = { "fast" })
-    public void setUp() throws IOException {
-        paymentDao = new MockPaymentDao();
-    }
+public interface PaymentMethod {
+    
+    public UUID getId();
+    
+    public UUID getAccountId();
+    
+    public Boolean isActive();
+    
+    public String getPluginName();
 }

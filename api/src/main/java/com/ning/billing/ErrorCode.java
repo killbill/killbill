@@ -220,7 +220,8 @@ public enum ErrorCode {
     PAYMENT_CREATE_PAYMENT_FOR_ATTEMPT_WITH_NON_POSITIVE_INV(70010, "Got payment attempt with negative or null invoice for account %s"),                        
     PAYMENT_CREATE_PAYMENT_FOR_ATTEMPT_BAD(7011, "Failed to create payment for attempts %s "),                    
     PAYMENT_CREATE_PAYMENT_PROVIDER_ACCOUNT(7012, "Failed to create payment provider account for account %s : %s"),                
-    PAYMENT_UPD_PAYMENT_PROVIDER_ACCOUNT(7013, "Failed to update payment provider account for account %s : %s"),                    
+    PAYMENT_UPD_PAYMENT_PROVIDER_ACCOUNT(7013, "Failed to update payment provider account for account %s : %s"),
+    PAYMENT_GET_PAYMENT_PROVIDER_ACCOUNT(7014, "Failed to retrieve payment provider account for account %s : %s"),                        
     PAYMENT_CREATE_REFUND(7014, "Failed to create refund for account %s : %s"),                
     
     /*

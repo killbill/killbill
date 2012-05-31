@@ -20,7 +20,6 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.Bind;
@@ -34,7 +33,6 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextBinder;
 import com.ning.billing.util.dao.BinderBase;
@@ -43,56 +41,50 @@ import com.ning.billing.util.dao.MapperBase;
 import com.ning.billing.util.entity.dao.UpdatableEntitySqlDao;
 
 @ExternalizedSqlViaStringTemplate3()
-@RegisterMapper(PaymentAttemptSqlDao.PaymentAttemptModelDaoMapper.class)
-public interface PaymentAttemptSqlDao extends Transactional<PaymentAttemptSqlDao>, UpdatableEntitySqlDao<PaymentAttemptModelDao>, Transmogrifier,  CloseMe {
-
+@RegisterMapper(PaymentMethodSqlDao.PaymentMethodDaoMapper.class)
+public interface PaymentMethodSqlDao extends Transactional<PaymentMethodSqlDao>, UpdatableEntitySqlDao<PaymentMethodModelDao>, Transmogrifier,  CloseMe {
 
     
-
     @SqlUpdate
-    void insertPaymentAttempt(@Bind(binder = PaymentAttemptModelDaoBinder.class) final PaymentAttemptModelDao attempt,
+    void insertPaymentMethod(@Bind(binder = PaymentMethodModelDaoBinder.class) final PaymentMethodModelDao paymentMethod,
                            @CallContextBinder final CallContext context);
     
     @SqlUpdate
-    void updatePaymentAttemptStatus(@Bind("id") final String attemptId,
-            @Bind("processingStatus") final String processingStatus,
-            @Bind("paymentError") final String paymentError);
+    void markPaymentMethodAsDeleted(@Bind("id") final String paymentMethodId);
     
     @SqlQuery
-    PaymentAttemptModelDao getPaymentAttempt(@Bind("id") final String attemptId);
+    PaymentMethodModelDao getPaymentMethod(@Bind("id") final String paymentMethodId);
 
     @SqlQuery
-    List<PaymentAttemptModelDao> getPaymentAttempts(@Bind("paymentId") final String paymentId);
+    List<PaymentMethodModelDao> getPaymentMethods(@Bind("accountId") final String accountId);
 
-   
+
     @Override
     @SqlUpdate
-    void insertHistoryFromTransaction(@PaymentAttemptHistoryBinder final EntityHistory<PaymentAttemptModelDao> payment,
+    public void insertHistoryFromTransaction(@PaymentMethodHistoryBinder final EntityHistory<PaymentMethodModelDao> payment,
                                             @CallContextBinder final CallContext context);
 
-
-    public static final class PaymentAttemptModelDaoBinder extends BinderBase implements Binder<Bind, PaymentAttemptModelDao> {
+    
+    public static final class PaymentMethodModelDaoBinder extends BinderBase implements Binder<Bind, PaymentMethodModelDao> {
         @Override
-        public void bind(@SuppressWarnings("rawtypes") SQLStatement stmt, Bind bind, PaymentAttemptModelDao attempt) {
-            stmt.bind("id", attempt.getId().toString());
-            stmt.bind("paymentId", attempt.getPaymentId().toString());            
-            stmt.bind("processingStatus", attempt.getPaymentStatus().toString());
-            stmt.bind("paymentError", attempt.getPaymentError());            
+        public void bind(@SuppressWarnings("rawtypes") SQLStatement stmt, Bind bind, PaymentMethodModelDao method) {
+            stmt.bind("id", method.getId().toString());
+            stmt.bind("accountId", method.getAccountId().toString());            
+            stmt.bind("pluginName", method.getPluginName());            
+            stmt.bind("isActive", method.isActive());            
         }
     }
-    public static class PaymentAttemptModelDaoMapper extends MapperBase implements ResultSetMapper<PaymentAttemptModelDao> {
+    
+    public static class PaymentMethodDaoMapper extends MapperBase implements ResultSetMapper<PaymentMethodModelDao> {
 
         @Override
-        public PaymentAttemptModelDao map(int index, ResultSet rs, StatementContext ctx)
+        public PaymentMethodModelDao map(int index, ResultSet rs, StatementContext ctx)
                 throws SQLException {
             UUID id = getUUID(rs, "id");
             UUID accountId = getUUID(rs, "account_id");
-            UUID invoiceId = getUUID(rs, "invoice_id");            
-            UUID paymentId = getUUID(rs, "payment_id");  
-            DateTime effectiveDate = getDate(rs, "effective_date");            
-            PaymentStatus processingStatus = PaymentStatus.valueOf(rs.getString("processing_status"));
-            String paymentError = rs.getString("payment_error");
-            return new PaymentAttemptModelDao(id, accountId, invoiceId, paymentId, processingStatus, effectiveDate, paymentError);
+            String pluginName = rs.getString("plugin_name");
+            Boolean isActive = rs.getBoolean("is_active");
+            return new PaymentMethodModelDao(id, accountId, pluginName, isActive);
         }
     }
 }

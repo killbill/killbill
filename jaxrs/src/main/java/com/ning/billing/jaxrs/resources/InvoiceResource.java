@@ -62,6 +62,7 @@ import com.ning.billing.jaxrs.json.InvoiceJsonSimple;
 import com.ning.billing.jaxrs.json.PaymentJsonSimple;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
+import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.PaymentInfoEvent;
@@ -168,9 +169,9 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     public Response getPayments(@PathParam("invoiceId") String invoiceId) {
         try {
-            List<PaymentInfoEvent> payments = paymentApi.getPaymentInfo(Collections.singletonList(UUID.fromString(invoiceId)));
+            List<Payment> payments = paymentApi.getInvoicePayments(UUID.fromString(invoiceId));
             List<PaymentJsonSimple> result =  new ArrayList<PaymentJsonSimple>(payments.size());
-            for (PaymentInfoEvent cur : payments) {
+            for (Payment cur : payments) {
                 result.add(new PaymentJsonSimple(cur));
             }
             return Response.status(Status.OK).entity(result).build();

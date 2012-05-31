@@ -1,107 +1,51 @@
 group PaymentSqlDao;
 
-paymentInfoFields(prefix) ::= <<
+paymentFields(prefix) ::= <<
     <prefix>id,
-    <prefix>external_payment_id,
-    <prefix>amount,
-    <prefix>refund_amount,
-    <prefix>bank_identification_number,
-    <prefix>payment_number,
-    <prefix>payment_type,
-    <prefix>status,
-    <prefix>reference_id,
+    <prefix>account_id,
+    <prefix>invoice_id,   
     <prefix>payment_method_id,
-    <prefix>payment_method,
-    <prefix>card_type,
-    <prefix>card_country,
+    <prefix>amount,
     <prefix>effective_date,
+    <prefix>currency,
+    <prefix>payment_status,
     <prefix>created_by,
     <prefix>created_date,
     <prefix>updated_by,
     <prefix>updated_date
 >>
 
-insertPaymentInfo() ::= <<
-    INSERT INTO payments (<paymentInfoFields()>)
-    VALUES (:id, :externalPaymentId, :amount, :refundAmount, :bankIdentificationNumber, :paymentNumber,
-    :paymentType, :status, :referenceId, :paymentMethodId, :paymentMethod, :cardType,
-    :cardCountry, :effectiveDate, :userName, :createdDate, :userName, :createdDate);
+insertPayment() ::= <<
+    INSERT INTO payments (<paymentFields()>)
+    VALUES (:id, :accountId, :invoiceId, :paymentMethodId, :amount, :effectiveDate, :currency, :paymentStatus, :userName, :createdDate, :userName, :createdDate);
 >>
 
-updatePaymentInfo() ::= <<
+getPayment() ::= <<
+    SELECT <paymentFields()>
+    , record_id as payment_number
+      FROM payments
+    WHERE id = :id;
+>>
+
+getPaymentsForInvoice() ::= <<
+    SELECT <paymentFields()>
+    , record_id as payment_number
+      FROM payments
+    WHERE invoice_id = :invoiceId;
+>>
+
+getPaymentsForAccount() ::= <<
+    SELECT <paymentFields()>
+    , record_id as payment_number
+      FROM payments
+    WHERE account_id = :accountId;
+>>
+
+
+updatePaymentStatus() ::= <<
     UPDATE payments
-       SET payment_method = :paymentMethod,
-           card_type = :cardType,
-           card_country = :cardCountry,
-           updated_by = :userName,
-           updated_date = :updatedDate
-     WHERE id = :id
->>
-
-getPaymentInfoList(invoiceIds) ::= <<
-    SELECT <paymentInfoFields("p.")>
-    , pa.account_id
-    , pa.invoice_id
-      FROM payments p, payment_attempts pa
-    WHERE pa.invoice_id in (<invoiceIds>)
-       AND pa.payment_id = p.id
->>
-
-getLastPaymentInfo(invoiceIds) ::= <<
-    SELECT <paymentInfoFields("p.")>
-    , pa.account_id
-    , pa.invoice_id
-    FROM payments p, payment_attempts pa
-    WHERE pa.invoice_id in (<invoiceIds>)
-    AND pa.payment_id = p.id
-    ORDER BY p.created_date DESC
-    LIMIT 1;
->>
-
-getPaymentInfoForPaymentAttemptId() ::= <<
-    SELECT <paymentInfoFields("p.")>
-    , pa.account_id
-    , pa.invoice_id
-      FROM payments p, payment_attempts pa
-    WHERE pa.id = :paymentAttemptId
-       AND pa.payment_id = p.id
->>
-
-getPaymentInfo() ::= <<
-    SELECT <paymentInfoFields()>
-    , null as account_id
-    , null as invoice_id
-    FROM payments
-    WHERE id = :id
->>
-
-historyFields(prefix) ::= <<
-    record_id,
-    id,
-    external_payment_id,
-    amount,
-    refund_amount,
-    payment_number,
-    bank_identification_number,
-    status,
-    reference_id,
-    payment_type,
-    payment_method_id,
-    payment_method,
-    card_type,
-    card_country,
-    effective_date,
-    created_by,
-    created_date,
-    updated_by,
-    updated_date
->>
-
-insertHistoryFromTransaction() ::= <<
-    INSERT INTO payment_history (<historyFields()>)
-    VALUES (:recordId, :id, :externalPaymentId, :amount, :refundAmount, :bankIdentificationNumber, :paymentNumber,
-    :paymentType, :status, :referenceId, :paymentMethodId, :paymentMethod, :cardType,
-    :cardCountry, :effectiveDate, :userName, :createdDate, :userName, :updatedDate);
+    SET payment_status = :paymentStatus
+    WHERE id = :id;
 >>
 
 getRecordId() ::= <<
@@ -109,6 +53,29 @@ getRecordId() ::= <<
     FROM payments
     WHERE id = :id;
 >>
+
+
+historyFields(prefix) ::= <<
+    <prefix>record_id,
+    <prefix>id,
+    <prefix>account_id,
+    <prefix>invoice_id,   
+    <prefix>payment_method_id,
+    <prefix>amount,
+    <prefix>effective_date,
+    <prefix>currency,
+    <prefix>payment_status,
+    <prefix>created_by,
+    <prefix>created_date,
+    <prefix>updated_by,
+    <prefix>updated_date 
+>>
+
+insertHistoryFromTransaction() ::= <<
+    INSERT INTO payment_history (<historyFields()>)
+    VALUES (:recordId, :id, :accountId, :invoiceId, :paymentMethodId, :amount, :effectiveDate, :currency, :paymentStatus, :userName, :createdDate, :userName, :updatedDate);
+>>
+
 
 getHistoryRecordId() ::= <<
     SELECT MAX(history_record_id)

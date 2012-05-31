@@ -1,15 +1,9 @@
-group paymentAttemptSqlDao;
+group PaymentAttemptSqlDao;
 
 paymentAttemptFields(prefix) ::= <<
     <prefix>id,
-    <prefix>invoice_id,
-    <prefix>account_id,
-    <prefix>amount,
-    <prefix>currency,
-    <prefix>payment_id,
-    <prefix>payment_attempt_date,
-    <prefix>invoice_date,
-    <prefix>retry_count,
+    <prefix>payment_id,    
+    <prefix>payment_error,
     <prefix>processing_status,
     <prefix>created_by,
     <prefix>created_date,
@@ -19,70 +13,59 @@ paymentAttemptFields(prefix) ::= <<
 
 insertPaymentAttempt() ::= <<
     INSERT INTO payment_attempts (<paymentAttemptFields()>)
-    VALUES (:id, :invoiceId, :accountId, :amount, :currency, :paymentId,
-            :paymentAttemptDate, :invoiceDate, :retryCount, :processingStatus, :userName, :createdDate, :userName, :createdDate);
+    VALUES (:id, :paymentId, :paymentError, :processingStatus, :userName, :createdDate, :userName, :createdDate);
 >>
 
-getPaymentAttemptForPaymentId() ::= <<
-    SELECT <paymentAttemptFields()>
-      FROM payment_attempts
-     WHERE payment_id = :paymentId;
+getPaymentAttempt() ::= <<
+    SELECT <paymentAttemptFields("pa.")>
+    , pa.created_date as effective_date
+    , p.account_id as account_id
+    , p.invoice_id as invoice_id
+      FROM payment_attempts pa join payments p
+     WHERE pa.id = :id 
+     AND pa.payment_id = p.id;
 >>
 
-getPaymentAttemptById() ::= <<
-    SELECT <paymentAttemptFields()>
-      FROM payment_attempts
-     WHERE id = :id;
+getPaymentAttempts() ::= <<
+    SELECT <paymentAttemptFields("pa.")>
+    , pa.created_date as effective_date
+    , p.account_id as account_id
+    , p.invoice_id as invoice_id
+      FROM payment_attempts pa join payments p
+     WHERE pa.payment_id = :paymentId
+     AND p.id = :paymentId
+     ORDER BY effective_date ASC;
 >>
 
-getPaymentAttemptsForInvoiceIds(invoiceIds) ::= <<
-    SELECT <paymentAttemptFields()>
-      FROM payment_attempts
-     WHERE invoice_id in (<invoiceIds>);
->>
-
-getPaymentAttemptsForInvoiceId() ::= <<
-    SELECT <paymentAttemptFields()>
-      FROM payment_attempts
-     WHERE invoice_id = :invoiceId;
->>
-
-updatePaymentAttemptWithPaymentId() ::= <<
+updatePaymentAttemptStatus() ::= <<
     UPDATE payment_attempts
-       SET payment_id = :payment_id,
-           updated_by = :userName,
-           updated_date = :updatedDate
-     WHERE id = :id;
+    SET processing_status = :processingStatus,
+        payment_error = :paymentError
+    WHERE  id = :id;
 >>
 
-historyFields(prefix) ::= <<
-    record_id,
-    id,
-    account_id,
-    invoice_id,
-    amount,
-    currency,
-    payment_attempt_date,
-    payment_id,
-    retry_count,
-    processing_status,
-    invoice_date,
-    created_by,
-    created_date,
-    updated_by,
-    updated_date
->>
-
-insertHistoryFromTransaction() ::= <<
-    INSERT INTO payment_attempt_history (<historyFields()>)
-    VALUES (:recordId, :id, :accountId, :invoiceId, :amount, :currency, :paymentAttemptDate, :paymentId,
-            :retryCount, :processingStatus, :invoiceDate, :userName, :createdDate, :userName, :updatedDate);
->>
 
 getRecordId() ::= <<
     SELECT record_id
     FROM payment_attempts
     WHERE id = :id;
+>>
+
+historyFields(prefix) ::= <<
+    <prefix>record_id,
+    <prefix>id,
+    <prefix>payment_id,
+    <prefix>payment_error,
+    <prefix>processing_status,
+    <prefix>created_by,
+    <prefix>created_date,
+    <prefix>updated_by,
+    <prefix>updated_date
+>>
+
+insertHistoryFromTransaction() ::= <<
+    INSERT INTO payment_attempt_history (<historyFields()>)
+    VALUES (:recordId, :id, :paymentId, :paymentError, :processingStatus, :userName, :createdDate, :userName, :updatedDate);
 >>
 
 getHistoryRecordId() ::= <<
@@ -106,3 +89,9 @@ insertAuditFromTransaction() ::= <<
     INSERT INTO audit_log(<auditFields()>)
     VALUES(:tableName, :recordId, :changeType, :createdDate, :userName, :reasonCode, :comment, :userToken);
 >>
+
+
+
+
+
+

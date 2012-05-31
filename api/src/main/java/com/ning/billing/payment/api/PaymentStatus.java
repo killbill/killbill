@@ -1,5 +1,5 @@
-/*
- * Copyright 2010-2012 Ning, Inc.
+/* 
+ * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -13,18 +13,11 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
 package com.ning.billing.payment.api;
 
 public enum PaymentStatus {
-    Pending,
-    Created,
-    Completed,
-    Processed,
-    Incomplete,
-    Error,
-    Reversalerror,
-    Processing,
-    Expired,
-    Unknown
+    UNKNOWN,
+    AUTO_PAY_OFF,
+    ERROR,
+    SUCCESS
 }

@@ -21,11 +21,11 @@ import com.ning.billing.util.bus.BusEvent;
 
 public interface PaymentErrorEvent extends BusEvent {
 
-    public String getType();
-
     public String getMessage();
 
     public UUID getInvoiceId();
 
     public UUID getAccountId();
+    
+    public UUID getPaymentId();
 }

@@ -18,6 +18,7 @@ package com.ning.billing.beatrix.integration.payment;
 
 import static com.jayway.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.MINUTES;
+import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
@@ -48,8 +49,9 @@ import com.ning.billing.invoice.glue.InvoiceModuleWithMocks;
 import com.ning.billing.mock.glue.MockClockModule;
 import com.ning.billing.mock.glue.MockJunctionModule;
 import com.ning.billing.payment.RequestProcessor;
+import com.ning.billing.payment.api.Payment;
+import com.ning.billing.payment.api.Payment.PaymentAttempt;
 import com.ning.billing.payment.api.PaymentApi;
-import com.ning.billing.payment.api.PaymentAttempt;
 import com.ning.billing.payment.api.PaymentErrorEvent;
 import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.payment.glue.PaymentTestModuleWithEmbeddedDb;
@@ -95,7 +97,7 @@ public class TestPaymentInvoiceIntegration {
         if (helper != null) helper.stopMysql();
     }
 
-    @BeforeMethod(alwaysRun = true)
+    @BeforeMethod(groups={"slow"})
     public void setUp() throws EventBusException {
         Injector injector = Guice.createInjector(new PaymentTestModuleWithEmbeddedDb(),
                                                  new InvoiceModuleWithMocks(),
@@ -119,7 +121,7 @@ public class TestPaymentInvoiceIntegration {
         eventBus.register(paymentInfoReceiver);
     }
 
-    @AfterMethod(alwaysRun = true)
+    @AfterMethod(groups={"slow"})
     public void tearDown() throws EventBusException {
         if (eventBus != null) {
             eventBus.unregister(invoiceProcessor);
@@ -128,7 +130,7 @@ public class TestPaymentInvoiceIntegration {
         }
     }
 
-    @Test
+    @Test(groups={"slow"})
     public void testInvoiceIntegration() throws Exception {
         final Account account = testHelper.createTestCreditCardAccount();
         final Invoice invoice = testHelper.createTestInvoice(account);
@@ -146,11 +148,12 @@ public class TestPaymentInvoiceIntegration {
         assertFalse(paymentInfoReceiver.getProcessedPayments().isEmpty());
         assertTrue(paymentInfoReceiver.getErrors().isEmpty());
 
-        List<PaymentInfoEvent> payments = paymentInfoReceiver.getProcessedPayments();
-        PaymentAttempt paymentAttempt = paymentApi.getPaymentAttemptForPaymentId(payments.get(0).getId());
-        Assert.assertNotNull(paymentAttempt);
-
-        Invoice invoiceForPayment = invoicePaymentApi.getInvoiceForPaymentAttemptId(paymentAttempt.getId());
+        List<Payment> payments = paymentApi.getInvoicePayments(invoice.getId());
+        assertEquals(payments.size(), 1);
+        assertEquals(payments.get(0).getAttempts().size(), 1);
+        
+        PaymentAttempt lastAttempt = payments.get(0).getAttempts().get(0);
+        Invoice invoiceForPayment = invoicePaymentApi.getInvoiceForPaymentAttemptId(lastAttempt.getId());
 
         Assert.assertNotNull(invoiceForPayment);
         Assert.assertEquals(invoiceForPayment.getId(), invoice.getId());
@@ -158,7 +161,7 @@ public class TestPaymentInvoiceIntegration {
 
         DateTime invoicePaymentAttempt = invoiceForPayment.getLastPaymentAttempt();
         DateTime correctedDate = invoicePaymentAttempt.minus(invoicePaymentAttempt.millisOfSecond().get());
-        Assert.assertTrue(correctedDate.isEqual(paymentAttempt.getPaymentAttemptDate()));
+        Assert.assertTrue(correctedDate.isEqual(lastAttempt.getEffectiveDate()));
 
         Assert.assertEquals(invoiceForPayment.getBalance().floatValue(), new BigDecimal("0").floatValue());
         Assert.assertEquals(invoiceForPayment.getAmountPaid().floatValue(), invoice.getAmountPaid().floatValue());

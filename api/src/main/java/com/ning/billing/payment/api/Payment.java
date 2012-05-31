@@ -16,24 +16,43 @@
 package com.ning.billing.payment.api;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
-import com.ning.billing.util.entity.Entity;
+
 import org.joda.time.DateTime;
-import com.ning.billing.util.bus.BusEvent;
 
-public interface PaymentInfoEvent extends Entity, BusEvent {
+import com.ning.billing.catalog.api.Currency;
 
-    public UUID getPaymentId();
+public interface Payment {
+
+    public UUID getId();
     
     public UUID getAccountId();
     
-    public UUID getInvoiceId();
-
-    public BigDecimal getAmount();
-
-    public DateTime getEffectiveDate();
-
+    public UUID getInvoiceId();    
+    
+    public UUID getPaymentMethodId();
+    
     public Integer getPaymentNumber();
+    
+    public BigDecimal getAmount();
+    
+    public DateTime getEffectiveDate();
+    
+    public Currency getCurrency();
+    
+    public PaymentStatus getPaymentStatus();
+    
+    public List<PaymentAttempt> getAttempts();
+    
+    public interface PaymentAttempt {
+        
+        public UUID getId();
+        
+        public DateTime getEffectiveDate();
+        
+        public String getErrorMsg();
 
-    public PaymentStatus getStatus();
+        public PaymentStatus getPaymentStatus();
+    }
 }

@@ -28,6 +28,7 @@ public enum TableName {
     PAYMENT_ATTEMPTS("payment_attempts"),
     PAYMENT_HISTORY("payment_history"),
     PAYMENTS("payments"),
+    PAYMENT_METHODS("payment_methods"),    
     RECURRING_INVOICE_ITEMS("recurring_invoice_items"),
     SUBSCRIPTIONS("subscriptions"),
     SUBSCRIPTION_EVENTS("subscription_events"),

@@ -29,25 +29,23 @@ import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
 import com.ning.billing.util.dao.BinderBase;
 import com.ning.billing.util.dao.EntityHistory;
 
-@BindingAnnotation(PaymentAttemptHistoryBinder.PaymentAttemptHistoryBinderFactory.class)
+@BindingAnnotation(PaymentMethodHistoryBinder.PaymentMethodHistoryBinderFactory.class)
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.PARAMETER})
-public @interface PaymentAttemptHistoryBinder {
-
-    
-    public static class PaymentAttemptHistoryBinderFactory extends BinderBase implements BinderFactory {
+public @interface PaymentMethodHistoryBinder {
+    public static class PaymentMethodHistoryBinderFactory extends BinderBase implements BinderFactory {
         @Override
-        public Binder<PaymentAttemptHistoryBinder, EntityHistory<PaymentAttemptModelDao>> build(Annotation annotation) {
-            return new Binder<PaymentAttemptHistoryBinder, EntityHistory<PaymentAttemptModelDao>>() {
+        public Binder<PaymentMethodHistoryBinder, EntityHistory<PaymentMethodModelDao>> build(Annotation annotation) {
+            return new Binder<PaymentMethodHistoryBinder, EntityHistory<PaymentMethodModelDao>>() {
                 @Override
-                public void bind(@SuppressWarnings("rawtypes") SQLStatement q, PaymentAttemptHistoryBinder bind, EntityHistory<PaymentAttemptModelDao> history) {
+                public void bind(@SuppressWarnings("rawtypes") SQLStatement q, PaymentMethodHistoryBinder bind, EntityHistory<PaymentMethodModelDao> history) {
                     q.bind("recordId", history.getValue());
                     q.bind("changeType", history.getChangeType().toString());
-                    PaymentAttemptModelDao payment = history.getEntity();
-                    q.bind("id", payment.getId().toString());
-                    q.bind("paymentId", payment.getPaymentId().toString());            
-                    q.bind("processingStatus", payment.getPaymentStatus().toString());
-                    q.bind("paymentError", payment.getPaymentError());                    
+                    PaymentMethodModelDao paymentMethod = history.getEntity();
+                    q.bind("id", paymentMethod.getId().toString());
+                    q.bind("isActive", paymentMethod.isActive());                    
+                    q.bind("accountId", paymentMethod.getAccountId().toString());            
+                    q.bind("pluginName", paymentMethod.getPluginName());            
                 }
             };
         }

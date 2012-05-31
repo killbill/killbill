@@ -27,8 +27,7 @@ import com.ning.billing.config.PaymentConfig;
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.junction.api.BillingApi;
 import com.ning.billing.mock.BrainDeadProxyFactory;
-import com.ning.billing.payment.dao.MockPaymentDao;
-import com.ning.billing.payment.dao.PaymentDao;
+
 import com.ning.billing.payment.glue.PaymentModule;
 import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;
 import com.ning.billing.util.bus.Bus;
@@ -48,11 +47,6 @@ public class PaymentTestModule extends PaymentModule {
     public PaymentTestModule() {
         super(MapUtils.toProperties(ImmutableMap.of("killbill.payment.provider.default", "my-mock",
                 "killbill.payment.engine.events.off", "false")));
-    }
-
-    @Override
-    protected void installPaymentDao() {
-        bind(PaymentDao.class).to(MockPaymentDao.class).asEagerSingleton();
     }
 
     @Override

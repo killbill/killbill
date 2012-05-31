@@ -24,6 +24,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
 import org.joda.time.DateTime;
 
+import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.util.clock.DefaultClock;
 
@@ -86,17 +87,17 @@ public class PaymentJsonSimple {
         this.status = status;
     }
 
-    public PaymentJsonSimple(PaymentInfoEvent src) {
+    public PaymentJsonSimple(Payment src) {
         this.amount = src.getAmount();
-        this.paidAmount = src.getAmount(); // STEPH ?
+        this.paidAmount = src.getAmount();
         this.invoiceId = src.getInvoiceId().toString();
         this.accountId = src.getAccountId().toString();
         this.paymentId = src.getId().toString();
-        this.requestedDate = src.getCreatedDate();
+        this.requestedDate = src.getEffectiveDate();
         this.effectiveDate = src.getEffectiveDate();
-        this.currency = null; // Should it really be part of the payment object since this is per account?
-        this.retryCount = null; // do we need that?
-        this.status = src.getStatus();
+        this.currency = src.getCurrency().toString();
+        this.retryCount = src.getAttempts().size();
+        this.status = src.getPaymentStatus().toString();
     }
 
     public BigDecimal getPaidAmount() {

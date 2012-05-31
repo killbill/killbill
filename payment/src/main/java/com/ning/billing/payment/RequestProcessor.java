@@ -28,9 +28,11 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.invoice.api.InvoiceCreationEvent;
+
+
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentApiException;
-
+import com.ning.billing.payment.core.PaymentProcessor;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallOrigin;
@@ -51,8 +53,8 @@ public class RequestProcessor {
     private final static String PAYMENT_TH_NAME = "payment-th";
 */
 
+    private final PaymentProcessor paymentProcessor;
     private final AccountUserApi accountUserApi;
-    private final PaymentApi paymentApi;
     private final Clock clock;
     private final TagUserApi tagUserApi;
     
@@ -62,23 +64,12 @@ public class RequestProcessor {
     @Inject
     public RequestProcessor(final Clock clock,
             final AccountUserApi accountUserApi,
-            final PaymentApi paymentApi,
+            final PaymentProcessor paymentProcessor,
             final TagUserApi tagUserApi) {        
         this.clock = clock;
         this.accountUserApi = accountUserApi;
-        this.paymentApi = paymentApi;
         this.tagUserApi = tagUserApi;
-
-        /*
-        this.executor = Executors.newFixedThreadPool(NB_PAYMENT_THREADS, new ThreadFactory() {
-            @Override
-            public Thread newThread(Runnable r) {
-                return new Thread(new ThreadGroup(PAYMENT_GROUP_NAME),
-                        r,
-                        PAYMENT_TH_NAME);
-            }
-        });
-         */
+        this.paymentProcessor = paymentProcessor;
     }
 
 
@@ -95,7 +86,7 @@ public class RequestProcessor {
                 return;
             }
             CallContext context = new DefaultCallContext("PaymentRequestProcessor", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken(), clock);
-            paymentApi.createPayment(account, event.getInvoiceId(), context);
+            paymentProcessor.createPayment(account, event.getInvoiceId(), context);
         } catch(AccountApiException e) {
             log.error("Failed to process invoice payment", e);
         } catch (PaymentApiException e) {

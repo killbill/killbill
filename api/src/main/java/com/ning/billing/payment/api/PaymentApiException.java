@@ -18,11 +18,9 @@ package com.ning.billing.payment.api;
 import com.ning.billing.BillingExceptionBase;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.catalog.api.CatalogApiException;
-import com.ning.billing.payment.plugin.api.PaymentPluginApiException;
 
 public class PaymentApiException extends BillingExceptionBase {
-    
+
     private static final long serialVersionUID = 39445033L;
 
     public PaymentApiException(AccountApiException e) {

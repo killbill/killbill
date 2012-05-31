@@ -21,40 +21,41 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.ning.billing.util.entity.EntityBase;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "error")
-public class DefaultPaymentErrorEvent implements PaymentErrorEvent {
+public class DefaultPaymentErrorEvent extends EntityBase implements PaymentErrorEvent {
 	
-    private final String type;
     private final String message;
     private final UUID accountId;
     private final UUID invoiceId;
+    private final UUID paymentId;
     private final UUID userToken;
 
-    public DefaultPaymentErrorEvent(final DefaultPaymentErrorEvent src, final UUID accountId, final UUID invoiceId) {
-        this.type = src.type;
-        this.message = src.message;
-        this.accountId = accountId;
-        this.invoiceId = invoiceId;
-        this.userToken = src.userToken;
-    }
 
     @JsonCreator
-    public DefaultPaymentErrorEvent(@JsonProperty("type") String type,
-            @JsonProperty("message") String message,
+    public DefaultPaymentErrorEvent(@JsonProperty("id") UUID id,
             @JsonProperty("accountId") UUID accountId,
             @JsonProperty("invoiceId") UUID invoiceId,
+            @JsonProperty("paymentId") UUID paymentId,            
+            @JsonProperty("message") String message,
             @JsonProperty("userToken") UUID userToken) {
-        this.type = type;
+        super(id);
         this.message = message;
         this.accountId = accountId;
         this.invoiceId = invoiceId;
+        this.paymentId = paymentId;
         this.userToken = userToken;        
     }
+    
 
-    public DefaultPaymentErrorEvent(String type, String message) {
-    	this(type, message, null, null, null);
+
+    public DefaultPaymentErrorEvent(UUID accountId,
+            UUID invoiceId, UUID paymentId, String message, UUID userToken) {
+        this(UUID.randomUUID(), accountId, invoiceId, paymentId, message, userToken);
     }
+
+
 
     @JsonIgnore
 	@Override
@@ -65,11 +66,6 @@ public class DefaultPaymentErrorEvent implements PaymentErrorEvent {
     @Override
     public UUID getUserToken() {
     	return userToken;
-    }
-
-    @Override
-    public String getType() {
-        return type;
     }
 
     @Override
@@ -88,15 +84,27 @@ public class DefaultPaymentErrorEvent implements PaymentErrorEvent {
     }
 
     @Override
+    public UUID getPaymentId() {
+        return paymentId;
+    }
+
+
+    @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((accountId == null) ? 0 : accountId.hashCode());
-        result = prime * result + ((invoiceId == null) ? 0 : invoiceId.hashCode());
+        result = prime * result
+                + ((accountId == null) ? 0 : accountId.hashCode());
+        result = prime * result
+                + ((invoiceId == null) ? 0 : invoiceId.hashCode());
         result = prime * result + ((message == null) ? 0 : message.hashCode());
-        result = prime * result + ((type == null) ? 0 : type.hashCode());
+        result = prime * result
+                + ((paymentId == null) ? 0 : paymentId.hashCode());
+        result = prime * result
+                + ((userToken == null) ? 0 : userToken.hashCode());
         return result;
     }
+
 
     @Override
     public boolean equals(Object obj) {
@@ -110,32 +118,36 @@ public class DefaultPaymentErrorEvent implements PaymentErrorEvent {
         if (accountId == null) {
             if (other.accountId != null)
                 return false;
-        }
-        else if (!accountId.equals(other.accountId))
+        } else if (!accountId.equals(other.accountId))
             return false;
         if (invoiceId == null) {
             if (other.invoiceId != null)
                 return false;
-        }
-        else if (!invoiceId.equals(other.invoiceId))
+        } else if (!invoiceId.equals(other.invoiceId))
             return false;
         if (message == null) {
             if (other.message != null)
                 return false;
-        }
-        else if (!message.equals(other.message))
+        } else if (!message.equals(other.message))
             return false;
-        if (type == null) {
-            if (other.type != null)
+        if (paymentId == null) {
+            if (other.paymentId != null)
                 return false;
-        }
-        else if (!type.equals(other.type))
+        } else if (!paymentId.equals(other.paymentId))
+            return false;
+        if (userToken == null) {
+            if (other.userToken != null)
+                return false;
+        } else if (!userToken.equals(other.userToken))
             return false;
         return true;
     }
 
+
     @Override
     public String toString() {
-        return "PaymentError [type=" + type + ", message=" + message + ", accountId=" + accountId + ", invoiceId=" + invoiceId + "]";
+        return "DefaultPaymentErrorEvent [message=" + message + ", accountId="
+                + accountId + ", invoiceId=" + invoiceId + ", paymentId="
+                + paymentId + ", userToken=" + userToken + "]";
     }
 }

@@ -43,6 +43,8 @@ import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.payment.MockRecurringInvoiceItem;
 import com.ning.billing.payment.TestHelper;
+import com.ning.billing.payment.api.Payment.PaymentAttempt;
+import com.ning.billing.payment.plugin.api.PaymentProviderAccount;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
 import com.ning.billing.util.callcontext.CallContext;
@@ -89,6 +91,7 @@ public abstract class TestPaymentApi {
         final UUID subscriptionId = UUID.randomUUID();
         final UUID bundleId = UUID.randomUUID();
 
+
         invoice.addInvoiceItem(new MockRecurringInvoiceItem(invoice.getId(), account.getId(),
                                                        subscriptionId,
                                                        bundleId,
@@ -99,42 +102,20 @@ public abstract class TestPaymentApi {
                                                        new BigDecimal("1.0"),
                                                        Currency.USD));
 
-        PaymentInfoEvent paymentInfo = paymentApi.createPayment(account.getExternalKey(), invoice.getId(), context);
+        Payment paymentInfo =  paymentApi.createPayment(account.getExternalKey(), invoice.getId(), context);
 
         assertNotNull(paymentInfo.getId());
         assertTrue(paymentInfo.getAmount().compareTo(amount.setScale(2, RoundingMode.HALF_EVEN)) == 0);
         assertNotNull(paymentInfo.getPaymentNumber());
-        assertFalse(paymentInfo.getStatus().equals("Error"));
-
-        PaymentAttempt paymentAttempt = paymentApi.getPaymentAttemptForPaymentId(paymentInfo.getId());
+        assertEquals(paymentInfo.getPaymentStatus(), PaymentStatus.SUCCESS);
+        assertEquals(paymentInfo.getAttempts().size(), 1);
+        assertEquals(paymentInfo.getInvoiceId(), invoice.getId());
+        assertTrue(paymentInfo.getAmount().compareTo(amount.setScale(2, RoundingMode.HALF_EVEN)) == 0);
+        assertEquals(paymentInfo.getCurrency(), Currency.USD);
+        
+        PaymentAttempt paymentAttempt = paymentInfo.getAttempts().get(0);
         assertNotNull(paymentAttempt);
         assertNotNull(paymentAttempt.getId());
-        assertEquals(paymentAttempt.getInvoiceId(), invoice.getId());
-        assertTrue(paymentAttempt.getAmount().compareTo(amount.setScale(2, RoundingMode.HALF_EVEN)) == 0);
-        assertEquals(paymentAttempt.getCurrency(), Currency.USD);
-        assertEquals(paymentAttempt.getPaymentId(), paymentInfo.getId());
-        DateTime nowTruncated = now.withMillisOfSecond(0).withSecondOfMinute(0);
-        DateTime paymentAttemptDateTruncated = paymentAttempt.getPaymentAttemptDate().withMillisOfSecond(0).withSecondOfMinute(0);
-        assertEquals(paymentAttemptDateTruncated.compareTo(nowTruncated), 0);
-
-        List<PaymentInfoEvent> paymentInfos = paymentApi.getPaymentInfo(Arrays.asList(invoice.getId()));
-        assertNotNull(paymentInfos);
-        assertTrue(paymentInfos.size() > 0);
-
-        PaymentInfoEvent paymentInfoFromGet = paymentInfos.get(0);
-        assertEquals(paymentInfo.getAmount(), paymentInfoFromGet.getAmount());
-        assertEquals(paymentInfo.getRefundAmount(), paymentInfoFromGet.getRefundAmount());
-        assertEquals(paymentInfo.getId(), paymentInfoFromGet.getId());
-        assertEquals(paymentInfo.getPaymentNumber(), paymentInfoFromGet.getPaymentNumber());
-        assertEquals(paymentInfo.getStatus(), paymentInfoFromGet.getStatus());
-        assertEquals(paymentInfo.getBankIdentificationNumber(), paymentInfoFromGet.getBankIdentificationNumber());
-        assertEquals(paymentInfo.getReferenceId(), paymentInfoFromGet.getReferenceId());
-        assertEquals(paymentInfo.getPaymentMethodId(), paymentInfoFromGet.getPaymentMethodId());
-        assertEquals(paymentInfo.getEffectiveDate(), paymentInfoFromGet.getEffectiveDate());
-
-        List<PaymentAttempt> paymentAttemptsFromGet = paymentApi.getPaymentAttemptsForInvoiceId(invoice.getId());
-        assertEquals(paymentAttempt, paymentAttemptsFromGet.get(0));
-
     }
 
     private PaymentProviderAccount setupAccountWithPaypalPaymentMethod() throws Exception  {
@@ -142,16 +123,6 @@ public abstract class TestPaymentApi {
         paymentApi.createPaymentProviderAccount(account, context);
 
         String accountKey = account.getExternalKey();
-
-        PaypalPaymentMethodInfo paymentMethod = new PaypalPaymentMethodInfo.Builder()
-                                                                           .setBaid("12345")
-                                                                           .setEmail(account.getEmail())
-                                                                           .setDefaultMethod(true)
-                                                                           .build();
-        String paymentMethodId = paymentApi.addPaymentMethod(accountKey, paymentMethod, context);
-
-        PaymentMethodInfo paymentMethodInfo = paymentApi.getPaymentMethod(accountKey, paymentMethodId);
-
         return paymentApi.getPaymentProviderAccount(accountKey);
     }
 

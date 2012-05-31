@@ -1,0 +1,82 @@
+group PaymentMethodSqlDao;
+
+paymentMethodFields(prefix) ::= <<
+    <prefix>id,
+    <prefix>account_id,
+    <prefix>plugin_name,
+    <prefix>is_active,  
+    <prefix>created_by,
+    <prefix>created_date,
+    <prefix>updated_by,
+    <prefix>updated_date
+>>
+
+insertPaymentMethod() ::= <<
+    INSERT INTO payment_methods (<paymentMethodFields()>)
+    VALUES (:id, :accountId, :pluginName , :isActive ,:userName, :createdDate, :userName, :createdDate);
+>>
+
+markPaymentMethodAsDeleted() ::= <<
+    UPDATE payment_methods 
+    SET is_active = false
+    WHERE  id = :id;
+>>
+
+getPaymentMethod() ::= <<
+    SELECT <paymentMethodFields()>
+      FROM payment_methods
+    WHERE id = :id;
+>>
+
+getPaymentMethods() ::= <<
+    SELECT <paymentMethodFields()>
+      FROM payment_methods
+    WHERE account_id = :accountId;
+>>
+
+getRecordId() ::= <<
+    SELECT record_id
+    FROM payment_methods
+    WHERE id = :id;
+>>
+
+historyFields(prefix) ::= <<
+    <prefix>record_id,
+    <prefix>id,
+    <prefix>account_id,
+    <prefix>plugin_name,
+    <prefix>is_active,  
+    <prefix>created_by,
+    <prefix>created_date,
+    <prefix>updated_by,
+    <prefix>updated_date
+>>
+
+insertHistoryFromTransaction() ::= <<
+    INSERT INTO payment_method_history (<historyFields()>)
+    VALUES (:recordId, :id, :accountId, :pluginName , :isActive ,:userName, :createdDate, :userName, :createdDate);
+>>
+
+getHistoryRecordId() ::= <<
+    SELECT MAX(history_record_id)
+    FROM payment_method_history
+    WHERE record_id = :recordId;
+>>
+
+auditFields(prefix) ::= <<
+    <prefix>table_name,
+    <prefix>record_id,
+    <prefix>change_type,
+    <prefix>change_date,
+    <prefix>changed_by,
+    <prefix>reason_code,
+    <prefix>comments,
+    <prefix>user_token
+>>
+
+insertAuditFromTransaction() ::= <<
+    INSERT INTO audit_log(<auditFields()>)
+    VALUES(:tableName, :recordId, :changeType, :createdDate, :userName, :reasonCode, :comment, :userToken);
+>>
+
+

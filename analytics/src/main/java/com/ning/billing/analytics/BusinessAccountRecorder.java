@@ -37,9 +37,9 @@ import com.ning.billing.account.api.ChangedField;
 import com.ning.billing.analytics.dao.BusinessAccountDao;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceUserApi;
+import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentApiException;
-import com.ning.billing.payment.api.PaymentAttempt;
 import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.util.tag.Tag;
 
@@ -95,17 +95,10 @@ public class BusinessAccountRecorder {
      */
     public void accountUpdated(final PaymentInfoEvent paymentInfo) {
         try {
-            final PaymentAttempt paymentAttempt = paymentApi.getPaymentAttemptForPaymentId(paymentInfo.getId());
-            if (paymentAttempt == null) {
-                return;
-            }
-
-            final Account account = accountApi.getAccountById(paymentAttempt.getAccountId());
+            final Account account = accountApi.getAccountById(paymentInfo.getAccountId());
             accountUpdated(account.getId());
         } catch (AccountApiException e) {
             log.warn("Error encountered creating BusinessAccount",e);
-        } catch (PaymentApiException e) {
-            log.warn("Error encountered creating BusinessAccount",e);            
         }
     }
 
@@ -184,30 +177,21 @@ public class BusinessAccountRecorder {
 
                 // Retrieve payments information for these invoices
                 DateTime lastPaymentDate = null;
-                final List<PaymentInfoEvent> payments = paymentApi.getPaymentInfo(invoiceIds);
+                
+                List<Payment> payments = paymentApi.getAccountPayments(account.getId());
                 if (payments != null) {
-                    for (final PaymentInfoEvent payment : payments) {
-                        // Use the last payment method/type/country as the default one for the account
-                        if (lastPaymentDate == null || payment.getCreatedDate().isAfter(lastPaymentDate)) {
-                            lastPaymentDate = payment.getCreatedDate();
-
-                            lastPaymentStatus = payment.getStatus();
-                            paymentMethod = payment.getPaymentMethod();
-                            creditCardType = payment.getCardType();
-                            billingAddressCountry = payment.getCardCountry();
+                    for (Payment cur : payments) {
+                     // Use the last payment method/type/country as the default one for the account
+                        if (lastPaymentDate == null || cur.getEffectiveDate().isAfter(lastPaymentDate)) {
+                            lastPaymentDate = cur.getEffectiveDate();
+                            lastPaymentStatus = cur.getPaymentStatus().toString();
+                            // STEPH talk to Pierre
+                            paymentMethod = null;
+                            creditCardType = null;
+                            billingAddressCountry = null;
                         }
                     }
-
                 }
-            }
-
-            // Retrieve payments information for these invoices
-            final PaymentInfoEvent payment = paymentApi.getLastPaymentInfo(invoiceIds);
-            if (payment != null) {
-                lastPaymentStatus = payment.getStatus();
-                paymentMethod = payment.getPaymentMethod();
-                creditCardType = payment.getCardType();
-                billingAddressCountry = payment.getCardCountry();
             }
             
 

@@ -16,32 +16,44 @@
 package com.ning.billing.payment.plugin.api;
 
 import java.math.BigDecimal;
-import java.util.UUID;
 
 import org.joda.time.DateTime;
 
 public interface PaymentInfoPlugin {
-    public String getExternalPaymentId();
+    
+    public enum PaymentPluginStatus {
+        UNDEFINED,
+        PROCESSED,
+        ERROR
+    };
     
     public BigDecimal getAmount();
-
-    public String getBankIdentificationNumber();
 
     public DateTime getCreatedDate();
 
     public DateTime getEffectiveDate();
 
-    public String getPaymentNumber();
+    public PaymentPluginStatus getStatus();
+    
+    public String getError();
+    
+    
+    /** 
+     * STEPH  
 
+     * Zuora specific
+
+    public String getExternalPaymentId();
+    
     public String getReferenceId();
-
+    
     public String getPaymentMethodId();
 
-    public BigDecimal getRefundAmount();
+    public String getPaymentNumber();
 
     public String getStatus();
 
     public String getType();
-
-    public DateTime getUpdatedDate();
+     *
+     */    
 }

@@ -21,58 +21,42 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import com.ning.billing.payment.api.PaymentInfoEvent;
+import com.ning.billing.payment.plugin.api.PaymentInfoPlugin.PaymentPluginStatus;
 
 public class MockPaymentInfoPlugin implements PaymentInfoPlugin {
-    private final String externalPaymentId;
+    
     private final BigDecimal amount;
-    private final String bankIdentificationNumber;
-    private final DateTime createdDate;
     private final DateTime effectiveDate;
-    private final String paymentNumber;
-    private final String paymentMethod;
-    private final String cardType;
-    private final String cardCountry;
-    private final String referenceId;    
-    private final String paymentMethodId;        
-    private final BigDecimal refundAmount;
-    private final String status;    
-    private final String type;
-    private final DateTime updatedDate;
-    
-    
-    public MockPaymentInfoPlugin(PaymentInfoEvent info) {
+    private final DateTime createdDate;    
+    private final PaymentPluginStatus status; 
+    private final String error;
+   
+
+    public MockPaymentInfoPlugin(BigDecimal amount, DateTime effectiveDate,
+            DateTime createdDate, PaymentPluginStatus status, String error) {
         super();
-        this.externalPaymentId = info.getExternalPaymentId();
-        this.amount = info.getAmount();
-        this.bankIdentificationNumber = info.getBankIdentificationNumber();
-        this.createdDate = info.getCreatedDate();
-        this.effectiveDate = info.getEffectiveDate();
-        this.paymentNumber = info.getPaymentNumber();
-        this.paymentMethod = info.getPaymentMethod();
-        this.cardType = info.getCardType();
-        this.cardCountry = info.getCardCountry();
-        this.referenceId = info.getReferenceId();
-        this.paymentMethodId = info.getPaymentMethodId();
-        this.refundAmount = info.getRefundAmount();
-        this.status = info.getStatus();
-        this.type = info.getType();
-        this.updatedDate = info.getUpdatedDate();
+        this.amount = amount;
+        this.effectiveDate = effectiveDate;
+        this.createdDate = createdDate;
+        this.status = status;
+        this.error = error;
     }
 
-
-    @Override
-    public String getExternalPaymentId() {
-        return externalPaymentId;
-    }
 
     @Override
     public BigDecimal getAmount() {
         return amount;
     }
 
+
     @Override
-    public String getBankIdentificationNumber() {
-        return bankIdentificationNumber;
+    public DateTime getEffectiveDate() {
+        return effectiveDate;
+    }
+
+     @Override
+    public PaymentPluginStatus getStatus() {
+        return status;
     }
 
     @Override
@@ -81,42 +65,7 @@ public class MockPaymentInfoPlugin implements PaymentInfoPlugin {
     }
 
     @Override
-    public DateTime getEffectiveDate() {
-        return effectiveDate;
-    }
-
-    @Override
-    public String getPaymentNumber() {
-        return paymentNumber;
-    }
-
-    @Override
-    public String getReferenceId() {
-        return referenceId;
-    }
-
-    @Override
-    public String getPaymentMethodId() {
-        return paymentMethodId;
-    }
-
-    @Override
-    public BigDecimal getRefundAmount() {
-        return refundAmount;
-    }
-
-    @Override
-    public String getStatus() {
-        return status;
-    }
-
-    @Override
-    public String getType() {
-        return type;
-    }
-
-    @Override
-    public DateTime getUpdatedDate() {
-        return updatedDate;
+    public String getError() {
+        return error;
     }
 }

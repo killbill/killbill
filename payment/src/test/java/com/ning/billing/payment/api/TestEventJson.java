@@ -28,7 +28,7 @@ public class TestEventJson {
 
     @Test(groups= {"fast"})
     public void testPaymentErrorEvent() throws Exception {
-        PaymentErrorEvent e = new DefaultPaymentErrorEvent("credit card", "Failed payment", UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
+        PaymentErrorEvent e = new DefaultPaymentErrorEvent(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "no message", UUID.randomUUID());
         String json = mapper.writeValueAsString(e);
 
         Class<?> claz = Class.forName(DefaultPaymentErrorEvent.class.getName());
@@ -38,9 +38,7 @@ public class TestEventJson {
     
     @Test(groups= {"fast"})
     public void testPaymentInfoEvent() throws Exception {
-        PaymentInfoEvent e = new DefaultPaymentInfoEvent(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "932587sdkjgfh", new BigDecimal(12), new BigDecimal(12.9), "BNP", "eeert", "success",
-                "credit", "ref", "paypal", "paypal", "", "", UUID.randomUUID(), new DateTime(), new DateTime(), new DateTime());
-        
+        PaymentInfoEvent e = new DefaultPaymentInfoEvent(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), new BigDecimal(12.9), new Integer(13), PaymentStatus.SUCCESS, UUID.randomUUID(), new DateTime());
         String json = mapper.writeValueAsString(e);
 
         Class<?> clazz = Class.forName(DefaultPaymentInfoEvent.class.getName());

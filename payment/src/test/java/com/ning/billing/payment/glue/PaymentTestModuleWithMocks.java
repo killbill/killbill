@@ -56,7 +56,7 @@ public class PaymentTestModuleWithMocks extends PaymentModule {
 
     @Override
     protected void installPaymentDao() {
-        bind(PaymentDao.class).to(MockPaymentDao.class).asEagerSingleton();
+       bind(PaymentDao.class).to(MockPaymentDao.class).asEagerSingleton();
     }
 
     @Override

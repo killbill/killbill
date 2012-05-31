@@ -68,10 +68,10 @@ import com.ning.billing.jaxrs.json.PaymentJsonSimple;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
 import com.ning.billing.jaxrs.util.TagHelper;
+
+import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentApiException;
-import com.ning.billing.payment.api.PaymentAttempt;
-
 import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.util.api.TagDefinitionApiException;
 
@@ -244,12 +244,7 @@ public class AccountResource extends JaxRsResourceBase {
             Account account = accountApi.getAccountById(UUID.fromString(accountId));
            
             List<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId());
-            List<PaymentAttempt> payments = new LinkedList<PaymentAttempt>();            
-            if (invoices.size() > 0) {
-                for (Invoice cur : invoices) {
-                    payments.addAll(paymentApi.getPaymentAttemptsForInvoiceId(cur.getId()));
-                }
-            }
+            List<Payment> payments = paymentApi.getAccountPayments(UUID.fromString(accountId));
 
             List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(account.getId());
             List<BundleTimeline> bundlesTimeline = new LinkedList<BundleTimeline>();
@@ -279,16 +274,9 @@ public class AccountResource extends JaxRsResourceBase {
             @QueryParam(QUERY_PAYMENT_LAST4_CC) final String last4CC,
             @QueryParam(QUERY_PAYMENT_NAME_ON_CC) final String nameOnCC) {
         try {
-            List<Invoice> invoices =  invoiceApi.getInvoicesByAccount(UUID.fromString(accountId));
-            List<UUID> invoicesId = new ArrayList<UUID>(Collections2.transform(invoices, new Function<Invoice, UUID>() {
-                @Override
-                public UUID apply(Invoice input) {
-                    return input.getId();
-                }
-            }));
-            List<PaymentInfoEvent> payments = paymentApi.getPaymentInfo(invoicesId); 
+             List<Payment> payments = paymentApi.getAccountPayments(UUID.fromString(accountId));
             List<PaymentJsonSimple> result =  new ArrayList<PaymentJsonSimple>(payments.size());
-            for (PaymentInfoEvent cur : payments) {
+            for (Payment cur : payments) {
                 result.add(new PaymentJsonSimple(cur));
             }
             return Response.status(Status.OK).entity(result).build();

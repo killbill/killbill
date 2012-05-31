@@ -23,9 +23,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
-import com.ning.billing.payment.api.PaymentApi;
-import com.ning.billing.payment.api.PaymentApiException;
-import com.ning.billing.payment.api.PaymentAttempt;
 import com.ning.billing.payment.api.PaymentErrorEvent;
 import com.ning.billing.payment.api.PaymentInfoEvent;
 
@@ -33,25 +30,16 @@ public class OverdueListener {
     OverdueDispatcher dispatcher;
 
     private final static Logger log = LoggerFactory.getLogger(OverdueListener.class);
-    private final PaymentApi paymentApi;
 
     @Inject
-    public OverdueListener(OverdueDispatcher dispatcher, PaymentApi paymentApi) {
+    public OverdueListener(OverdueDispatcher dispatcher) {
         this.dispatcher = dispatcher;
-        this.paymentApi = paymentApi;
     }
 
     @Subscribe
     public void handlePaymentInfoEvent(final PaymentInfoEvent event) {
         log.info(String.format("Received PaymentInfo event %s", event.toString()));
-        try {
-            UUID paymentId = event.getId();
-            PaymentAttempt attempt = paymentApi.getPaymentAttemptForPaymentId(paymentId);
-            UUID accountId = attempt.getAccountId();
-            dispatcher.processOverdueForAccount(accountId);
-        } catch (PaymentApiException e) {
-            log.error("Payment exception encountered when trying process Overdue against payement: " + event.getId(), e);
-        }
+        dispatcher.processOverdueForAccount(event.getAccountId());
     }
  
     @Subscribe

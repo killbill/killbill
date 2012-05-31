@@ -30,7 +30,8 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.entitlement.api.timeline.BundleTimeline;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
-import com.ning.billing.payment.api.PaymentAttempt;
+import com.ning.billing.payment.api.Payment;
+import com.ning.billing.payment.api.PaymentStatus;
 
 public class AccountTimelineJson {
 
@@ -84,7 +85,7 @@ public class AccountTimelineJson {
         return tmp.toString();
     }
     
-    public AccountTimelineJson(Account account, List<Invoice> invoices, List<PaymentAttempt> payments, List<BundleTimeline> bundles) {
+    public AccountTimelineJson(Account account, List<Invoice> invoices, List<Payment> payments, List<BundleTimeline> bundles) {
         this.account = new AccountJsonSimple(account.getId().toString(), account.getExternalKey());
         this.bundles = new LinkedList<BundleJsonWithSubscriptions>();
         for (BundleTimeline cur : bundles) {
@@ -97,16 +98,15 @@ public class AccountTimelineJson {
                     getBundleExternalKey(cur, bundles)));
         }
         this.payments = new LinkedList<PaymentJsonWithBundleKeys>();
-        for (PaymentAttempt cur : payments) {
-            
 
-            String status = cur.getPaymentId() != null ? "Success" : "Failed";
-            BigDecimal paidAmount = cur.getPaymentId() != null ? cur.getAmount() : BigDecimal.ZERO;
-            
+        for (Payment cur : payments) {
+        
+            String status = cur.getPaymentStatus().toString();
+            BigDecimal paidAmount = cur.getPaymentStatus() == PaymentStatus.SUCCESS ? cur.getAmount() : BigDecimal.ZERO;
             this.payments.add(new PaymentJsonWithBundleKeys(cur.getAmount(), paidAmount, account.getId().toString(),
-                    cur.getInvoiceId().toString(), cur.getPaymentId().toString(), 
-                    cur.getCreatedDate(), cur.getUpdatedDate(),
-                    cur.getRetryCount(), cur.getCurrency().toString(), status,
+                    cur.getInvoiceId().toString(), cur.getId().toString(), 
+                    cur.getEffectiveDate(), cur.getEffectiveDate(),
+                    cur.getAttempts().size(), cur.getCurrency().toString(), status,
                     getBundleExternalKey(cur.getInvoiceId(), invoices, bundles)));
           }
     }

@@ -35,11 +35,11 @@ import com.ning.billing.payment.api.CreditCardPaymentMethodInfo;
 import com.ning.billing.payment.api.DefaultPaymentInfoEvent;
 import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.payment.api.PaymentMethodInfo;
-import com.ning.billing.payment.api.PaymentProviderAccount;
 import com.ning.billing.payment.api.PaypalPaymentMethodInfo;
 import com.ning.billing.payment.plugin.api.MockPaymentInfoPlugin;
 import com.ning.billing.payment.plugin.api.PaymentInfoPlugin;
 import com.ning.billing.payment.plugin.api.PaymentPluginApiException;
+import com.ning.billing.payment.plugin.api.PaymentProviderAccount;
 import com.ning.billing.payment.plugin.api.PaymentProviderPlugin;
 import com.ning.billing.util.clock.Clock;
 
@@ -70,7 +70,8 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
         if (makeNextInvoiceFail.getAndSet(false) || makeAllInvoicesFail.get()) {
             throw new PaymentPluginApiException("", "test error");
         }
-
+        // STEPH
+/*
         PaymentInfoEvent payment = new DefaultPaymentInfoEvent.Builder().setId(UUID.randomUUID())
                 .setExternalPaymentId("238957t49regyuihfd")
                 .setAmount(invoice.getBalance())
@@ -85,6 +86,9 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
                 .build();
         
         return new MockPaymentInfoPlugin(payment);
+        *
+        */
+        return null;
     }
 
 
@@ -94,7 +98,8 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
         if (payment == null) {
             throw new PaymentPluginApiException("", "No payment found for id " + paymentId);
         }
-        return new MockPaymentInfoPlugin(payment);
+        /* return new MockPaymentInfoPlugin(payment); */
+        return null;
     }
 
     @Override

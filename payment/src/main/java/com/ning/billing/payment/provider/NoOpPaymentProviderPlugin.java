@@ -26,9 +26,9 @@ import org.joda.time.DateTimeZone;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.payment.api.PaymentMethodInfo;
-import com.ning.billing.payment.api.PaymentProviderAccount;
 import com.ning.billing.payment.plugin.api.PaymentInfoPlugin;
 import com.ning.billing.payment.plugin.api.PaymentPluginApiException;
+import com.ning.billing.payment.plugin.api.PaymentProviderAccount;
 import com.ning.billing.payment.plugin.api.PaymentProviderPlugin;
 
 public class NoOpPaymentProviderPlugin implements PaymentProviderPlugin {
@@ -47,34 +47,7 @@ public class NoOpPaymentProviderPlugin implements PaymentProviderPlugin {
     public PaymentInfoPlugin processInvoice(final Account account, final Invoice invoice)
             throws PaymentPluginApiException {
         PaymentInfoPlugin payment = new PaymentInfoPlugin() {
-            @Override
-            public DateTime getUpdatedDate() {
-                return new DateTime(DateTimeZone.UTC);
-            }
-            @Override
-            public String getType() {
-                return "Electronic";
-            }
-            @Override
-            public String getStatus() {
-                return "Processed";
-            }
-            @Override
-            public BigDecimal getRefundAmount() {
-                return null;
-            }
-            @Override
-            public String getReferenceId() {
-                return null;
-            }
-            @Override
-            public String getPaymentNumber() {
-                return null;
-            }
-            @Override
-            public String getPaymentMethodId() {
-                return null;
-            }
+        
             @Override
             public DateTime getEffectiveDate() {
                 return null;
@@ -84,18 +57,16 @@ public class NoOpPaymentProviderPlugin implements PaymentProviderPlugin {
                 return new DateTime(DateTimeZone.UTC);
             }
             @Override
-            public String getBankIdentificationNumber() {
-                return null;
-            }
-
-            @Override
-            public String getExternalPaymentId() {
-                return null;
-            }
-
-            @Override
             public BigDecimal getAmount() {
                 return invoice.getBalance();
+            }
+            @Override
+            public PaymentPluginStatus getStatus() {
+                return PaymentPluginStatus.PROCESSED;
+            }
+            @Override
+            public String getError() {
+                return null;
             }
         };
         return payment;

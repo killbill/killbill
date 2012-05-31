@@ -1,4 +1,4 @@
-/*
+/* 
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -13,35 +13,43 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
 package com.ning.billing.payment.dao;
 
 import java.util.List;
 import java.util.UUID;
 
-import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.payment.api.PaymentAttempt;
-import com.ning.billing.payment.api.PaymentInfoEvent;
-import com.ning.billing.payment.api.PaymentAttempt.PaymentAttemptStatus;
+import org.skife.jdbi.v2.sqlobject.Bind;
+
+import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.util.callcontext.CallContext;
 
 public interface PaymentDao {
 
-    PaymentAttempt createPaymentAttempt(Invoice invoice, PaymentAttemptStatus status, CallContext context);
-    PaymentAttempt createPaymentAttempt(PaymentAttempt paymentAttempt, PaymentAttemptStatus status, CallContext context);
+    // STEPH do we need object returned?
+    public PaymentModelDao insertPaymentWithAttempt(final PaymentModelDao paymentInfo, final PaymentAttemptModelDao attempt, final CallContext context);
 
-    void insertPaymentInfoWithPaymentAttemptUpdate(PaymentInfoEvent paymentInfo, UUID paymentAttemptId, CallContext context);
+    public PaymentAttemptModelDao insertNewAttemptForPayment(final UUID paymentId, final PaymentAttemptModelDao attempt, final CallContext context);
+
     
+    public void updateStatusForPaymentWithAttempt(final UUID paymentId, final PaymentStatus paymentStatus, final String paymentError, final UUID attemptId, final CallContext context);
     
-    PaymentAttempt getPaymentAttemptForPaymentId(UUID paymentId);
-    List<PaymentAttempt> getPaymentAttemptsForInvoiceIds(List<UUID> invoiceIds);
+    public PaymentAttemptModelDao getPaymentAttempt(final UUID attemptId);
+    
+    public List<PaymentModelDao> getPaymentsForInvoice(final UUID invoiceId);
+    
+    public List<PaymentModelDao> getPaymentsForAccount(final UUID accountId);    
+    
+    public PaymentModelDao getPayment(final UUID paymentId);    
 
-    List<PaymentAttempt> getPaymentAttemptsForInvoiceId(UUID invoiceId);
+    public List<PaymentAttemptModelDao> getAttemptsForPayment(final UUID paymentId);
 
-    List<PaymentInfoEvent> getPaymentInfoList(List<UUID> invoiceIds);
 
-    PaymentInfoEvent getLastPaymentInfo(List<UUID> invoiceIds);
+    
+    public PaymentMethodModelDao insertPaymentMethod(final PaymentMethodModelDao paymentMethod, final CallContext context);
+    
+    public PaymentMethodModelDao getPaymentMethod(final UUID paymentMethodId);
+    
+    public List<PaymentMethodModelDao> getPaymentMethods(final UUID accountId);   
 
-    PaymentAttempt getPaymentAttemptById(UUID paymentAttemptId);
-    PaymentInfoEvent getPaymentInfoForPaymentAttemptId(UUID paymentAttemptId);
+    public void deletedPaymentMethod(final UUID paymentMethodId);
 }

@@ -1,4 +1,4 @@
-/*
+/* 
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -13,16 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
 package com.ning.billing.payment.dao;
-
-import com.ning.billing.payment.api.PaymentInfoEvent;
-import com.ning.billing.util.dao.BinderBase;
-import com.ning.billing.util.dao.EntityHistory;
-import org.skife.jdbi.v2.SQLStatement;
-import org.skife.jdbi.v2.sqlobject.Binder;
-import org.skife.jdbi.v2.sqlobject.BinderFactory;
-import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
 
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
@@ -30,34 +21,35 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.skife.jdbi.v2.SQLStatement;
+import org.skife.jdbi.v2.sqlobject.Binder;
+import org.skife.jdbi.v2.sqlobject.BinderFactory;
+import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
+
+import com.ning.billing.util.dao.BinderBase;
+import com.ning.billing.util.dao.EntityHistory;
+
 @BindingAnnotation(PaymentHistoryBinder.PaymentHistoryBinderFactory.class)
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.PARAMETER})
 public @interface PaymentHistoryBinder {
     public static class PaymentHistoryBinderFactory extends BinderBase implements BinderFactory {
         @Override
-        public Binder<PaymentHistoryBinder, EntityHistory<PaymentInfoEvent>> build(Annotation annotation) {
-            return new Binder<PaymentHistoryBinder, EntityHistory<PaymentInfoEvent>>() {
+        public Binder<PaymentHistoryBinder, EntityHistory<PaymentModelDao>> build(Annotation annotation) {
+            return new Binder<PaymentHistoryBinder, EntityHistory<PaymentModelDao>>() {
                 @Override
-                public void bind(SQLStatement q, PaymentHistoryBinder bind, EntityHistory<PaymentInfoEvent> history) {
+                public void bind(@SuppressWarnings("rawtypes") SQLStatement q, PaymentHistoryBinder bind, EntityHistory<PaymentModelDao> history) {
                     q.bind("recordId", history.getValue());
                     q.bind("changeType", history.getChangeType().toString());
-
-                    PaymentInfoEvent paymentInfo = history.getEntity();
-                    q.bind("id", paymentInfo.getId().toString());
-                    q.bind("externalPaymentId", paymentInfo.getExternalPaymentId());
-                    q.bind("amount", paymentInfo.getAmount());
-                    q.bind("refundAmount", paymentInfo.getRefundAmount());
-                    q.bind("paymentNumber", paymentInfo.getPaymentNumber());
-                    q.bind("bankIdentificationNumber", paymentInfo.getBankIdentificationNumber());
-                    q.bind("status", paymentInfo.getStatus());
-                    q.bind("paymentType", paymentInfo.getType());
-                    q.bind("referenceId", paymentInfo.getReferenceId());
-                    q.bind("paymentMethodId", paymentInfo.getPaymentMethodId());
-                    q.bind("paymentMethod", paymentInfo.getPaymentMethod());
-                    q.bind("cardType", paymentInfo.getCardType());
-                    q.bind("cardCountry", paymentInfo.getCardCountry());
-                    q.bind("effectiveDate", getDate(paymentInfo.getEffectiveDate()));
+                    PaymentModelDao payment = history.getEntity();
+                    q.bind("id", payment.getId().toString());
+                    q.bind("accountId", payment.getAccountId().toString());            
+                    q.bind("invoiceId", payment.getInvoiceId().toString());            
+                    q.bind("paymentMethodId", ""); //payment.getPaymentMethodId().toString());
+                    q.bind("amount", payment.getAmount());
+                    q.bind("currency", payment.getCurrency().toString());
+                    q.bind("paymentStatus", payment.getPaymentStatus().toString());
+                    q.bind("effectiveDate", getDate(payment.getEffectiveDate()));
                 }
             };
         }

@@ -16,6 +16,7 @@
 
 package com.ning.billing.payment.retry;
 
+import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.util.callcontext.CallContext;
@@ -32,11 +33,14 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.config.PaymentConfig;
+import com.ning.billing.payment.api.Payment.PaymentAttempt;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentApiException;
-import com.ning.billing.payment.api.PaymentAttempt;
 import com.ning.billing.payment.api.PaymentInfoEvent;
-import com.ning.billing.payment.api.PaymentStatus;
+import com.ning.billing.payment.core.PaymentProcessor;
+import com.ning.billing.payment.dao.PaymentAttemptModelDao;
+import com.ning.billing.payment.dao.PaymentDao;
+
 
 import com.ning.billing.util.notificationq.NotificationKey;
 import com.ning.billing.util.notificationq.NotificationQueue;
@@ -54,8 +58,7 @@ public class FailedPaymentRetryService implements RetryService {
     private final Clock clock;
     private final NotificationQueueService notificationQueueService;
     private final PaymentConfig config;
-    private final PaymentApi paymentApi;
-    private final AccountUserApi accountUserApi;
+    private final PaymentProcessor paymentProcessor;
     
     private NotificationQueue retryQueue;
     
@@ -64,12 +67,12 @@ public class FailedPaymentRetryService implements RetryService {
             final Clock clock,
             final NotificationQueueService notificationQueueService,
             final PaymentConfig config,
-            final PaymentApi paymentApi) {
-        this.accountUserApi = accountUserApi;
+            final PaymentProcessor paymentProcessor,
+            final PaymentDao paymentDao) {
         this.clock = clock;
         this.notificationQueueService = notificationQueueService;
-        this.paymentApi = paymentApi;
         this.config = config;
+        this.paymentProcessor = paymentProcessor;
     }
 
     @Override
@@ -97,38 +100,20 @@ public class FailedPaymentRetryService implements RetryService {
         }
     }
 
-    public void scheduleRetry(PaymentAttempt paymentAttempt, DateTime timeOfRetry) {
-        final String id = paymentAttempt.getId().toString();
+    public void scheduleRetry(final UUID paymentId, final DateTime timeOfRetry) {
 
         NotificationKey key = new NotificationKey() {
             @Override
             public String toString() {
-                return id;
+                return paymentId.toString();
             }
         };
-
         if (retryQueue != null) {
             retryQueue.recordFutureNotification(timeOfRetry, key);
         }
     }
 
-    private void retry(UUID paymentAttemptId, CallContext context) {
-        try {
-            PaymentInfoEvent paymentInfo = paymentApi.getPaymentInfoForPaymentAttemptId(paymentAttemptId);
-            if (paymentInfo == null) {
-                log.error(String.format("Failed to retry payment for paymentId %s: no such PaymentInfo", paymentAttemptId));
-                return;
-            }
-            if (paymentInfo != null && PaymentStatus.Processed.equals(PaymentStatus.valueOf(paymentInfo.getStatus()))) {
-                return;
-            }
-            
-            Account account = accountUserApi.getAccountById(paymentInfo.getAccountId());
-            paymentApi.createPaymentForPaymentAttempt(account.getExternalKey(), paymentAttemptId, context);
-        } catch (PaymentApiException e) {
-            log.error(String.format("Failed to retry payment for %s", paymentAttemptId), e);
-        } catch (AccountApiException e) {
-            log.error(String.format("Failed to retry payment for %s", paymentAttemptId), e);
-        }
+    private void retry(final UUID paymentId, final CallContext context) {
+        paymentProcessor.retryPayment(paymentId);
     }
 }
