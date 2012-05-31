@@ -78,6 +78,8 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, UpdatableEn
                                             @CallContextBinder final CallContext context);
 
 
+
+
     public static final class PaymentInfoBinder extends BinderBase implements Binder<Bind, PaymentInfoEvent> {
         @Override
         public void bind(@SuppressWarnings("rawtypes") SQLStatement stmt, Bind bind, PaymentInfoEvent paymentInfo) {

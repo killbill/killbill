@@ -445,7 +445,10 @@ public class DefaultPaymentApi implements PaymentApi {
         return paymentDao.getPaymentInfoForPaymentAttemptId(paymentAttemptId);
     }
 
-    
+    @Override
+    public UUID getPaymentAttemptIdFromPaymentId(UUID paymentId) throws PaymentApiException {
+        return paymentDao.getPaymentAttemptIdFromPaymentId(paymentId);
+    }
 
     private PaymentProviderPlugin getPaymentProviderPlugin(String accountKey) {
 

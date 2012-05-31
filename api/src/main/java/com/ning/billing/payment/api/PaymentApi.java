@@ -62,7 +62,7 @@ public interface PaymentApi {
     public String createPaymentProviderAccount(final Account account, final CallContext context)
         throws PaymentApiException;
 
-    public void updatePaymentProviderAccountContact(String accountKey, CallContext context)
+    public void updatePaymentProviderAccountContact(final String accountKey, final CallContext context)
         throws PaymentApiException;
 
     public PaymentAttempt getPaymentAttemptForPaymentId(final UUID id)
@@ -79,4 +79,6 @@ public interface PaymentApi {
 
     public PaymentInfoEvent getPaymentInfoForPaymentAttemptId(final UUID paymentAttemptId)
         throws PaymentApiException;
+
+    public UUID getPaymentAttemptIdFromPaymentId(final UUID paymentId) throws PaymentApiException;
 }

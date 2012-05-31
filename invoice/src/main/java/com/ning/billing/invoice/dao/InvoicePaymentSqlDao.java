@@ -95,7 +95,7 @@ public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePayment>, Tran
     List<InvoicePayment> getChargeBacksByAccountId(@Bind("accountId") final String accountId);
 
     @SqlQuery
-    List<InvoicePayment> getChargebacksByPaymentId(@Bind("invoicePaymentId") final String paymentId);
+    List<InvoicePayment> getChargebacksByAttemptPaymentId(@Bind("paymentAttemptId") final String paymentAttemptId);
 
     public static class InvoicePaymentMapper extends MapperBase implements ResultSetMapper<InvoicePayment> {
         @Override

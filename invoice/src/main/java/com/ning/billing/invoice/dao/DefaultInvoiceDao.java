@@ -302,8 +302,8 @@ public class DefaultInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public List<InvoicePayment> getChargebacksByPaymentId(final UUID paymentId) {
-        return invoicePaymentSqlDao.getChargebacksByPaymentId(paymentId.toString());
+    public List<InvoicePayment> getChargebacksByPaymentAttemptId(final UUID paymentAttemptId) {
+        return invoicePaymentSqlDao.getChargebacksByAttemptPaymentId(paymentAttemptId.toString());
     }
 
     @Override

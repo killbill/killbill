@@ -157,8 +157,8 @@ public class ChargeBackTests {
     }
 
     @Test
-    public void testGetChargeBacksByInvoicePaymentIdWithEmptyReturnSet() throws InvoiceApiException {
-        List<InvoicePayment> chargebacks = invoicePaymentApi.getChargebacksByInvoicePaymentId(UUID.randomUUID());
+    public void testGetChargeBacksByPaymentAttemptIdWithEmptyReturnSet() throws InvoiceApiException {
+        List<InvoicePayment> chargebacks = invoicePaymentApi.getChargebacksByPaymentAttemptId(UUID.randomUUID());
         assertNotNull(chargebacks);
         assertEquals(chargebacks.size(), 0);
     }
@@ -171,7 +171,7 @@ public class ChargeBackTests {
         // create a partial charge back
         invoicePaymentApi.processChargeback(payment.getId(), FIFTEEN, context);
 
-        List<InvoicePayment> chargebacks = invoicePaymentApi.getChargebacksByInvoicePaymentId(payment.getId());
+        List<InvoicePayment> chargebacks = invoicePaymentApi.getChargebacksByPaymentAttemptId(payment.getPaymentAttemptId());
         assertNotNull(chargebacks);
         assertEquals(chargebacks.size(), 1);
         assertEquals(chargebacks.get(0).getReversedInvoicePaymentId(), payment.getId());

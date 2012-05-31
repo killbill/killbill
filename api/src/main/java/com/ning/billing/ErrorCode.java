@@ -227,7 +227,8 @@ public enum ErrorCode {
     PAYMENT_CREATE_PAYMENT_FOR_ATTEMPT_BAD(7011, "Failed to create payment for attempts %s "),                    
     PAYMENT_CREATE_PAYMENT_PROVIDER_ACCOUNT(7012, "Failed to create payment provider account for account %s : %s"),                
     PAYMENT_UPD_PAYMENT_PROVIDER_ACCOUNT(7013, "Failed to update payment provider account for account %s : %s"),                    
-    PAYMENT_CREATE_REFUND(7014, "Failed to create refund for account %s : %s"),                
+    PAYMENT_CREATE_REFUND(7014, "Failed to create refund for account %s : %s"),
+    PAYMENT_ATTEMPT_NOT_FOUND_FOR_PAYMENT_ID(7015, "Failed to find payment attempt for payment id %s."),
     
     /*
     *

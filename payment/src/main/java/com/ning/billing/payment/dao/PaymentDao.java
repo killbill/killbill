@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.PaymentAttempt;
 import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.payment.api.PaymentAttempt.PaymentAttemptStatus;
@@ -47,4 +48,6 @@ public interface PaymentDao {
 
     PaymentAttempt getPaymentAttemptById(UUID paymentAttemptId);
     PaymentInfoEvent getPaymentInfoForPaymentAttemptId(UUID paymentAttemptId);
+
+    UUID getPaymentAttemptIdFromPaymentId(UUID paymentId) throws PaymentApiException;
 }

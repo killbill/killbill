@@ -24,6 +24,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.ning.billing.payment.api.DefaultPaymentAttempt;
+import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.util.callcontext.CallContext;
 import org.apache.commons.collections.CollectionUtils;
 
@@ -163,6 +164,11 @@ public class MockPaymentDao implements PaymentDao {
     public PaymentInfoEvent getPaymentInfoForPaymentAttemptId(UUID paymentAttemptId) {
         // TODO Auto-generated method stub
         return null;
+    }
+
+    @Override
+    public UUID getPaymentAttemptIdFromPaymentId(UUID paymentId) throws PaymentApiException {
+        throw new UnsupportedOperationException();
     }
 
 }

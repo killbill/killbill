@@ -25,6 +25,7 @@ import com.ning.billing.util.callcontext.CallContextBinder;
 import com.ning.billing.util.dao.BinderBase;
 import com.ning.billing.util.dao.EntityHistory;
 import com.ning.billing.util.dao.MapperBase;
+import com.ning.billing.util.dao.UuidMapper;
 import com.ning.billing.util.entity.dao.UpdatableEntitySqlDao;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.SQLStatement;
@@ -80,6 +81,10 @@ public interface PaymentAttemptSqlDao extends Transactional<PaymentAttemptSqlDao
     @SqlUpdate
     public void insertHistoryFromTransaction(@PaymentAttemptHistoryBinder final EntityHistory<PaymentAttempt> account,
                                             @CallContextBinder final CallContext context);
+
+    @SqlQuery
+    @RegisterMapper(UuidMapper.class)
+    UUID getPaymentAttemptIdFromPaymentId(@Bind("paymentId") final String paymentId);
 
     public static class PaymentAttemptMapper extends MapperBase implements ResultSetMapper<PaymentAttempt> {
         @Override

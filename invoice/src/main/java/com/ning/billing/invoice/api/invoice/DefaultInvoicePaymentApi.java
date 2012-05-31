@@ -103,8 +103,8 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
     }
 
     @Override
-    public List<InvoicePayment> getChargebacksByInvoicePaymentId(UUID paymentId) {
-        return dao.getChargebacksByPaymentId(paymentId);
+    public List<InvoicePayment> getChargebacksByPaymentAttemptId(UUID paymentAttemptId) {
+        return dao.getChargebacksByPaymentAttemptId(paymentAttemptId);
     }
 
     @Override

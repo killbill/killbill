@@ -55,6 +55,12 @@ updatePaymentAttemptWithPaymentId() ::= <<
      WHERE id = :id;
 >>
 
+getPaymentAttemptIdFromPaymentId() ::= <<
+    SELECT id
+    FROM payment_attempts
+    WHERE payment_id = :paymentId;
+>>
+
 historyFields(prefix) ::= <<
     record_id,
     id,

@@ -52,7 +52,7 @@ public interface InvoicePaymentApi {
 
     public List<InvoicePayment> getChargebacksByAccountId(UUID accountId);
 
-    public List<InvoicePayment> getChargebacksByInvoicePaymentId(UUID paymentId);
+    public UUID getAccountIdFromInvoicePaymentId(UUID uuid) throws InvoiceApiException;
 
-    UUID getAccountIdFromInvoicePaymentId(UUID uuid) throws InvoiceApiException;
+    public List<InvoicePayment> getChargebacksByPaymentAttemptId(UUID paymentAttemptId);
 }

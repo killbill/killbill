@@ -20,7 +20,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.ErrorCode;
 import com.ning.billing.payment.api.DefaultPaymentAttempt;
+import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.util.ChangeType;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.dao.EntityAudit;
@@ -201,6 +203,16 @@ public class AuditedPaymentDao implements PaymentDao {
     @Override
     public PaymentInfoEvent getPaymentInfoForPaymentAttemptId(UUID paymentAttemptIdStr) {
         return paymentSqlDao.getPaymentInfoForPaymentAttemptId(paymentAttemptIdStr.toString());
+    }
+
+    @Override
+    public UUID getPaymentAttemptIdFromPaymentId(UUID paymentId) throws PaymentApiException {
+        UUID paymentAttemptId = paymentAttemptSqlDao.getPaymentAttemptIdFromPaymentId(paymentId.toString());
+        if (paymentAttemptId == null) {
+            throw new PaymentApiException(ErrorCode.PAYMENT_ATTEMPT_NOT_FOUND_FOR_PAYMENT_ID, paymentId);
+        } else {
+            return paymentAttemptId;
+        }
     }
     
     private static List<String> toUUIDList(List<UUID> input) {

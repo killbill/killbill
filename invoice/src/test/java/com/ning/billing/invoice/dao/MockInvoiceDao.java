@@ -233,7 +233,7 @@ public class MockInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public List<InvoicePayment> getChargebacksByPaymentId(UUID paymentId) {
+    public List<InvoicePayment> getChargebacksByPaymentAttemptId(UUID paymentAttemptId) {
         throw new UnsupportedOperationException();
     }
 }
