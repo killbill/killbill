@@ -22,6 +22,8 @@ import com.google.inject.Inject;
 import com.ning.billing.util.clock.Clock;
 import org.joda.time.DateTime;
 
+import javax.annotation.Nullable;
+
 public class DefaultCallContextFactory implements CallContextFactory {
     private final Clock clock;
 
@@ -31,8 +33,15 @@ public class DefaultCallContextFactory implements CallContextFactory {
     }
 
     @Override
-    public CallContext createCallContext(String userName, CallOrigin callOrigin, UserType userType, UUID userToken) {
+    public CallContext createCallContext(String userName, CallOrigin callOrigin, UserType userType,
+                                         @Nullable UUID userToken) {
         return new DefaultCallContext(userName, callOrigin, userType, userToken, clock);
+    }
+
+    @Override
+    public CallContext createCallContext(String userName, CallOrigin callOrigin, UserType userType,
+                                         String reasonCode, String comment, UUID userToken) {
+        return new DefaultCallContext(userName, callOrigin, userType, reasonCode, comment, userToken, clock);
     }
 
     @Override

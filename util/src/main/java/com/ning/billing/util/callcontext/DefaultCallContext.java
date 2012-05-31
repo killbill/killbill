@@ -22,11 +22,17 @@ import com.ning.billing.util.clock.Clock;
 import org.joda.time.DateTime;
 
 public class DefaultCallContext extends CallContextBase {
-	
     private final Clock clock;
 
     public DefaultCallContext(final String userName, final CallOrigin callOrigin, final UserType userType, final UUID userToken, final Clock clock) {
         super(userName, callOrigin, userType, userToken);
+        this.clock = clock;
+    }
+
+    public DefaultCallContext(final String userName, final CallOrigin callOrigin, final UserType userType,
+                              final String reasonCode, final String comment,
+                              final UUID userToken, final Clock clock) {
+        super(userName, callOrigin, userType, reasonCode, comment, userToken);
         this.clock = clock;
     }
 
