@@ -207,8 +207,8 @@ public class BusinessAccountRecorder {
                 lastPaymentStatus = payment.getStatus();
                 paymentMethod = payment.getPaymentMethod();
                 creditCardType = payment.getCardType();
+                billingAddressCountry = payment.getCardCountry();
             }
-            billingAddressCountry = payment.getCardCountry();
 
             bac.setLastPaymentStatus(lastPaymentStatus);
             bac.setPaymentMethod(paymentMethod);

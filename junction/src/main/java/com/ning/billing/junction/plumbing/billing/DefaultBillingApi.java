@@ -16,8 +16,10 @@
 
 package com.ning.billing.junction.plumbing.billing;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -99,8 +101,22 @@ public class DefaultBillingApi implements BillingApi {
         } catch (AccountApiException e) {
             log.warn("Failed while getting BillingEvent", e);
         }
+        
+        debugLog(result, "********* Billing Events Raw");
         blockCalculator.insertBlockingEvents(result);
+        debugLog(result,"*********  Billing Events After Blocking");
+        
         return result;
+    }
+    
+
+    private void debugLog(SortedSet<BillingEvent> result, String title) {
+        log.debug(title);
+        Iterator<BillingEvent> i = result.iterator();
+        while(i.hasNext()) {
+            log.debug(i.next().toString());
+        }
+        
     }
 
     private void addBillingEventsForBundles(List<SubscriptionBundle> bundles, Account account, CallContext context,

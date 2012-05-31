@@ -33,6 +33,10 @@
         <level value="info"/>
     </logger>
 
+    <logger name="com.ning.billing.junction">
+        <level value="debug"/>
+    </logger>
+
     <root>
         <priority value="info"/>
         <appender-ref ref="stdout"/>
