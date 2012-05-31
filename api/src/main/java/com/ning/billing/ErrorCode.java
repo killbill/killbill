@@ -191,6 +191,7 @@ public enum ErrorCode {
     INVOICE_PAYMENT_NOT_FOUND(4900, "No invoice payment could be found for id %s."),
     CHARGE_BACK_AMOUNT_TOO_HIGH(4901, "Tried to charge back %s of a %s payment."),
     CHARGE_BACK_AMOUNT_IS_NEGATIVE(4902, "Charge backs for negative amounts are not permitted"),
+    CHARGE_BACK_COULD_NOT_FIND_ACCOUNT_ID(4093, "Could not find invoice payment for id %s."),
     /*
      * 
      * Range 5000: Overdue system

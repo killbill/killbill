@@ -97,4 +97,25 @@ getRemainingAmountPaid() ::= <<
     WHERE id = :invoicePaymentId
     OR reversed_invoice_payment_id = :invoicePaymentId;
 >>
+
+getAccountIdFromInvoicePaymentId() ::= <<
+    SELECT account_id
+    FROM invoice_payments ip
+    INNER JOIN invoices i ON i.id = ip.invoice_id
+    WHERE ip.id = :invoicePaymentId;
+>>
+
+getChargeBacksByAccountId() ::= <<
+    SELECT <invoicePaymentFields("ip.")>
+    FROM invoice_payments ip
+    INNER JOIN invoices i ON i.id = ip.invoice_id
+    WHERE i.account_id = :accountId
+    AND reversed_invoice_payment_id IS NOT NULL;
+>>
+
+getChargebacksByPaymentId() ::= <<
+    SELECT <invoicePaymentFields()>
+    FROM invoice_payments
+    WHERE reversed_invoice_payment_id = :invoicePaymentId;
+>>
 ;

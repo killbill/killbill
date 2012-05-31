@@ -103,7 +103,7 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi
     }
 
     @Override
-    public void processChargeBack(UUID invoicePaymentId, BigDecimal amount, CallContext context) throws InvoiceApiException {
+    public void processChargeback(UUID invoicePaymentId, BigDecimal amount, CallContext context) throws InvoiceApiException {
         InvoicePayment existingPayment = null;
         for (InvoicePayment payment : invoicePayments) {
             if (payment.getId()  == invoicePaymentId) {
@@ -117,7 +117,7 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi
     }
 
     @Override
-    public void processChargeBack(UUID invoicePaymentId, CallContext context) throws InvoiceApiException {
+    public void processChargeback(UUID invoicePaymentId, CallContext context) throws InvoiceApiException {
         InvoicePayment existingPayment = null;
         for (InvoicePayment payment : invoicePayments) {
             if (payment.getId()  == invoicePaymentId) {
@@ -126,7 +126,7 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi
         }
 
         if (existingPayment != null) {
-            this.processChargeBack(invoicePaymentId, existingPayment.getAmount(), context);
+            this.processChargeback(invoicePaymentId, existingPayment.getAmount(), context);
         }
     }
 
@@ -146,4 +146,18 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi
         return amount;
     }
 
+    @Override
+    public List<InvoicePayment> getChargebacksByAccountId(UUID accountId) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public List<InvoicePayment> getChargebacksByInvoicePaymentId(UUID paymentId) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public UUID getAccountIdFromInvoicePaymentId(UUID uuid) throws InvoiceApiException {
+        throw new UnsupportedOperationException();
+    }
 }

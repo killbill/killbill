@@ -34,6 +34,7 @@ import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextBinder;
 import com.ning.billing.util.dao.BinderBase;
 import com.ning.billing.util.dao.MapperBase;
+import com.ning.billing.util.dao.UuidMapper;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.SQLStatement;
@@ -85,6 +86,16 @@ public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePayment>, Tran
 
     @SqlQuery
     BigDecimal getRemainingAmountPaid(@Bind("invoicePaymentId") final String invoicePaymentId);
+
+    @SqlQuery
+    @RegisterMapper(UuidMapper.class)
+    UUID getAccountIdFromInvoicePaymentId(@Bind("invoicePaymentId") final String invoicePaymentId);
+
+    @SqlQuery
+    List<InvoicePayment> getChargeBacksByAccountId(@Bind("accountId") final String accountId);
+
+    @SqlQuery
+    List<InvoicePayment> getChargebacksByPaymentId(@Bind("invoicePaymentId") final String paymentId);
 
     public static class InvoicePaymentMapper extends MapperBase implements ResultSetMapper<InvoicePayment> {
         @Override

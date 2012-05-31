@@ -266,7 +266,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public void postChargeBack(final UUID invoicePaymentId, final BigDecimal amount, final CallContext context) throws InvoiceApiException {
+    public void postChargeback(final UUID invoicePaymentId, final BigDecimal amount, final CallContext context) throws InvoiceApiException {
         InvoicePayment payment = invoicePaymentSqlDao.getById(invoicePaymentId.toString());
         if (payment == null) {
             throw new InvoiceApiException(ErrorCode.INVOICE_PAYMENT_NOT_FOUND, invoicePaymentId.toString());
@@ -282,7 +282,28 @@ public class DefaultInvoiceDao implements InvoiceDao {
 
     @Override
     public BigDecimal getRemainingAmountPaid(UUID invoicePaymentId) {
-        return invoicePaymentSqlDao.getRemainingAmountPaid(invoicePaymentId.toString());
+        BigDecimal amount = invoicePaymentSqlDao.getRemainingAmountPaid(invoicePaymentId.toString());
+        return amount == null ? BigDecimal.ZERO : amount;
+    }
+
+    @Override
+    public UUID getAccountIdFromInvoicePaymentId(UUID invoicePaymentId) throws InvoiceApiException {
+        UUID accountId = invoicePaymentSqlDao.getAccountIdFromInvoicePaymentId(invoicePaymentId.toString());
+        if (accountId == null) {
+            throw new InvoiceApiException(ErrorCode.CHARGE_BACK_COULD_NOT_FIND_ACCOUNT_ID, invoicePaymentId);
+        } else {
+            return accountId;
+        }
+    }
+
+    @Override
+    public List<InvoicePayment> getChargebacksByAccountId(UUID accountId) {
+        return invoicePaymentSqlDao.getChargeBacksByAccountId(accountId.toString());
+    }
+
+    @Override
+    public List<InvoicePayment> getChargebacksByPaymentId(final UUID paymentId) {
+        return invoicePaymentSqlDao.getChargebacksByPaymentId(paymentId.toString());
     }
 
     @Override

@@ -80,20 +80,35 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
     }
 
     @Override
-    public void processChargeBack(UUID invoicePaymentId, BigDecimal amount, CallContext context) throws InvoiceApiException {
-        dao.postChargeBack(invoicePaymentId, amount, context);
+    public void processChargeback(UUID invoicePaymentId, BigDecimal amount, CallContext context) throws InvoiceApiException {
+        dao.postChargeback(invoicePaymentId, amount, context);
     }
 
     @Override
-    public void processChargeBack(UUID invoicePaymentId, CallContext context) throws InvoiceApiException {
+    public void processChargeback(UUID invoicePaymentId, CallContext context) throws InvoiceApiException {
         // use the invoicePaymentId to get the amount remaining on the payment
         // (preventing charge backs totalling more than the payment)
         BigDecimal amount = dao.getRemainingAmountPaid(invoicePaymentId);
-        processChargeBack(invoicePaymentId, amount, context);
+        processChargeback(invoicePaymentId, amount, context);
     }
 
     @Override
     public BigDecimal getRemainingAmountPaid(UUID invoicePaymentId) {
         return dao.getRemainingAmountPaid(invoicePaymentId);
+    }
+
+    @Override
+    public List<InvoicePayment> getChargebacksByAccountId(UUID accountId) {
+        return dao.getChargebacksByAccountId(accountId);
+    }
+
+    @Override
+    public List<InvoicePayment> getChargebacksByInvoicePaymentId(UUID paymentId) {
+        return dao.getChargebacksByPaymentId(paymentId);
+    }
+
+    @Override
+    public UUID getAccountIdFromInvoicePaymentId(UUID invoicePaymentId) throws InvoiceApiException {
+        return dao.getAccountIdFromInvoicePaymentId(invoicePaymentId);
     }
 }

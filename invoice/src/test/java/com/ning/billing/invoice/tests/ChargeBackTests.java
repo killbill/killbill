@@ -47,6 +47,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
@@ -82,7 +84,7 @@ public class ChargeBackTests {
         InvoicePayment payment = createAndPersistPayment(invoice.getId(), THIRTY);
 
         // create a full charge back
-        invoicePaymentApi.processChargeBack(payment.getId(), THIRTY, context);
+        invoicePaymentApi.processChargeback(payment.getId(), THIRTY, context);
 
         // check amount owed
         BigDecimal amount = invoicePaymentApi.getRemainingAmountPaid(payment.getId());
@@ -95,7 +97,7 @@ public class ChargeBackTests {
         InvoicePayment payment = createAndPersistPayment(invoice.getId(), THIRTY);
 
         // create a partial charge back
-        invoicePaymentApi.processChargeBack(payment.getId(), FIFTEEN, context);
+        invoicePaymentApi.processChargeback(payment.getId(), FIFTEEN, context);
 
         // check amount owed
         BigDecimal amount = invoicePaymentApi.getRemainingAmountPaid(payment.getId());
@@ -108,7 +110,7 @@ public class ChargeBackTests {
         InvoicePayment payment = createAndPersistPayment(invoice.getId(), THIRTY);
 
         // create a large charge back
-        invoicePaymentApi.processChargeBack(payment.getId(), ONE_MILLION, context);
+        invoicePaymentApi.processChargeback(payment.getId(), ONE_MILLION, context);
     }
 
     @Test(expectedExceptions = InvoiceApiException.class)
@@ -117,7 +119,62 @@ public class ChargeBackTests {
         InvoicePayment payment = createAndPersistPayment(invoice.getId(), THIRTY);
 
         // create a partial charge back
-        invoicePaymentApi.processChargeBack(payment.getId(), BigDecimal.ONE.negate(), context);
+        invoicePaymentApi.processChargeback(payment.getId(), BigDecimal.ONE.negate(), context);
+    }
+
+    @Test
+    public void testGetAccountIdFromPaymentIdHappyPath() throws InvoiceApiException {
+        Invoice invoice = createAndPersistInvoice(THIRTY);
+        InvoicePayment payment = createAndPersistPayment(invoice.getId(), THIRTY);
+        UUID accountId = invoicePaymentApi.getAccountIdFromInvoicePaymentId(payment.getId());
+        assertEquals(accountId, invoice.getAccountId());
+    }
+
+    @Test(expectedExceptions = InvoiceApiException.class)
+    public void testGetAccountIdFromPaymentIdBadPaymentId() throws InvoiceApiException {
+        invoicePaymentApi.getAccountIdFromInvoicePaymentId(UUID.randomUUID());
+    }
+
+    @Test
+    public void testGetChargeBacksByAccountIdWithEmptyReturnSet() throws InvoiceApiException {
+        List<InvoicePayment> chargebacks = invoicePaymentApi.getChargebacksByAccountId(UUID.randomUUID());
+        assertNotNull(chargebacks);
+        assertEquals(chargebacks.size(), 0);
+    }
+
+    @Test
+    public void testGetChargeBacksByAccountIdHappyPath() throws InvoiceApiException {
+        Invoice invoice = createAndPersistInvoice(THIRTY);
+        InvoicePayment payment = createAndPersistPayment(invoice.getId(), THIRTY);
+
+        // create a partial charge back
+        invoicePaymentApi.processChargeback(payment.getId(), FIFTEEN, context);
+
+        List<InvoicePayment> chargebacks = invoicePaymentApi.getChargebacksByAccountId(invoice.getAccountId());
+        assertNotNull(chargebacks);
+        assertEquals(chargebacks.size(), 1);
+        assertEquals(chargebacks.get(0).getReversedInvoicePaymentId(), payment.getId());
+    }
+
+    @Test
+    public void testGetChargeBacksByInvoicePaymentIdWithEmptyReturnSet() throws InvoiceApiException {
+        List<InvoicePayment> chargebacks = invoicePaymentApi.getChargebacksByInvoicePaymentId(UUID.randomUUID());
+        assertNotNull(chargebacks);
+        assertEquals(chargebacks.size(), 0);
+    }
+
+    @Test
+    public void testGetChargeBacksByInvoicePaymentIdHappyPath() throws InvoiceApiException {
+        Invoice invoice = createAndPersistInvoice(THIRTY);
+        InvoicePayment payment = createAndPersistPayment(invoice.getId(), THIRTY);
+
+        // create a partial charge back
+        invoicePaymentApi.processChargeback(payment.getId(), FIFTEEN, context);
+
+        List<InvoicePayment> chargebacks = invoicePaymentApi.getChargebacksByInvoicePaymentId(payment.getId());
+        assertNotNull(chargebacks);
+        assertEquals(chargebacks.size(), 1);
+        assertEquals(chargebacks.get(0).getReversedInvoicePaymentId(), payment.getId());
     }
 
     private Invoice createAndPersistInvoice(BigDecimal amount) {

@@ -53,11 +53,17 @@ public interface InvoiceDao {
 
 	List<Invoice> getAllInvoicesByAccount(final UUID accountId);
 
-    void setWrittenOff(UUID invoiceId, CallContext context);
+    void setWrittenOff(final UUID invoiceId, final CallContext context);
 
-    void removeWrittenOff(UUID invoiceId, CallContext context) throws InvoiceApiException;
+    void removeWrittenOff(final UUID invoiceId, final CallContext context) throws InvoiceApiException;
 
-    void postChargeBack(UUID invoicePaymentId, BigDecimal amount, CallContext context) throws InvoiceApiException;
+    void postChargeback(final UUID invoicePaymentId, final BigDecimal amount, final CallContext context) throws InvoiceApiException;
 
-    BigDecimal getRemainingAmountPaid(UUID invoicePaymentId);
+    BigDecimal getRemainingAmountPaid(final UUID invoicePaymentId);
+
+    UUID getAccountIdFromInvoicePaymentId(final UUID invoicePaymentId) throws InvoiceApiException;
+
+    List<InvoicePayment> getChargebacksByAccountId(final UUID accountId);
+
+    List<InvoicePayment> getChargebacksByPaymentId(final UUID paymentId);
 }
