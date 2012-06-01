@@ -132,12 +132,24 @@ public class AuditedPaymentDao implements PaymentDao {
     
     private void updatePaymentStatusFromTransaction(final UUID paymentId, final PaymentStatus paymentStatus, final CallContext context, final PaymentSqlDao transactional) {
         transactional.updatePaymentStatus(paymentId.toString(), paymentStatus.toString(), context);
-        // STEPH check with Jeff
+        PaymentModelDao savedPayment = transactional.getPayment(paymentId.toString());
+        Long recordId = transactional.getRecordId(savedPayment.getId().toString());
+        EntityHistory<PaymentModelDao> history = new EntityHistory<PaymentModelDao>(savedPayment.getId(), recordId, savedPayment, ChangeType.UPDATE);
+        transactional.insertHistoryFromTransaction(history, context);
+        Long historyRecordId = transactional.getHistoryRecordId(recordId);
+        EntityAudit audit = new EntityAudit(TableName.PAYMENTS, historyRecordId, ChangeType.UPDATE);
+        transactional.insertAuditFromTransaction(audit, context);
     }
     
     private void updatePaymentAttemptStatusFromTransaction(final UUID attemptId, final PaymentStatus processingStatus, final String paymentError, final CallContext context, final PaymentAttemptSqlDao transactional) {
         transactional.updatePaymentAttemptStatus(attemptId.toString(), processingStatus.toString(), paymentError);
-        //STEPH check with Jeff        
+        PaymentAttemptModelDao savedAttempt = transactional.getPaymentAttempt(attemptId.toString());
+        Long recordId = transactional.getRecordId(savedAttempt.getId().toString());
+        EntityHistory<PaymentAttemptModelDao> history = new EntityHistory<PaymentAttemptModelDao>(savedAttempt.getId(), recordId, savedAttempt, ChangeType.UPDATE);
+        transactional.insertHistoryFromTransaction(history, context);
+        Long historyRecordId = transactional.getHistoryRecordId(recordId);
+        EntityAudit audit = new EntityAudit(TableName.PAYMENT_ATTEMPTS, historyRecordId, ChangeType.UPDATE);
+        transactional.insertAuditFromTransaction(audit, context);
     }
     
     @Override

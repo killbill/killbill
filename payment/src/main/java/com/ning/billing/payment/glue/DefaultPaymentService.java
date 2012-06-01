@@ -32,9 +32,11 @@ import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotifi
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
 
 public class DefaultPaymentService implements PaymentService {
+
     private static final Logger log = LoggerFactory.getLogger(DefaultPaymentService.class);
 
-    private static final String SERVICE_NAME = "payment-service";
+    // STEPH for retry crappiness
+    public static final String SERVICE_NAME = "payment-service";
 
     private final RequestProcessor requestProcessor;
     private final Bus eventBus;

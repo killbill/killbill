@@ -42,8 +42,8 @@ public class PaymentAttemptModelDao extends EntityBase {
         this.paymentError = paymentError;
     }
     
-    public PaymentAttemptModelDao(UUID accountId, UUID invoiceId, UUID paymentId) {
-        this(UUID.randomUUID(), accountId, invoiceId, paymentId, PaymentStatus.UNKNOWN, null, null);
+    public PaymentAttemptModelDao(UUID accountId, UUID invoiceId, UUID paymentId, DateTime effectiveDate) {
+        this(UUID.randomUUID(), accountId, invoiceId, paymentId, PaymentStatus.UNKNOWN, effectiveDate, null);
     }
 
     public PaymentAttemptModelDao(PaymentAttemptModelDao src, PaymentStatus newProcessingStatus, String paymentError) {

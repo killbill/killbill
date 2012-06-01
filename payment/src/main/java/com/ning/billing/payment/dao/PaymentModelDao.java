@@ -27,7 +27,7 @@ import com.ning.billing.util.entity.EntityBase;
 
 public class PaymentModelDao extends EntityBase {
 
-    private final static Integer INVALID_PAYMENT_NUMBER = new Integer(-13);
+    public final static Integer INVALID_PAYMENT_NUMBER = new Integer(-13);
     
     private final UUID accountId;
     private final UUID invoiceId;

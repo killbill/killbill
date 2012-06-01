@@ -16,22 +16,22 @@
 
 package com.ning.billing.payment.plugin.api;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.payment.api.PaymentMethodInfo;
 
 public interface PaymentProviderPlugin {
     
-    public PaymentInfoPlugin processInvoice(Account account, Invoice invoice)
+    public PaymentInfoPlugin processPayment(String externalAccountKey, UUID paymentId, BigDecimal amount)
     throws PaymentPluginApiException;
 
     public String createPaymentProviderAccount(Account account)
     throws PaymentPluginApiException;
 
-    public PaymentInfoPlugin getPaymentInfo(String paymentId)
+    public PaymentInfoPlugin getPaymentInfo(UUID paymentId)
     throws PaymentPluginApiException;
 
     public PaymentProviderAccount getPaymentProviderAccount(String accountKey)

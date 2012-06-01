@@ -29,17 +29,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
-import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.config.PaymentConfig;
-import com.ning.billing.payment.api.Payment.PaymentAttempt;
-import com.ning.billing.payment.api.PaymentApi;
-import com.ning.billing.payment.api.PaymentApiException;
-import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.payment.core.PaymentProcessor;
-import com.ning.billing.payment.dao.PaymentAttemptModelDao;
 import com.ning.billing.payment.dao.PaymentDao;
+import com.ning.billing.payment.glue.DefaultPaymentService;
 
 
 import com.ning.billing.util.notificationq.NotificationKey;
@@ -100,20 +94,39 @@ public class FailedPaymentRetryService implements RetryService {
         }
     }
 
-    public void scheduleRetry(final UUID paymentId, final DateTime timeOfRetry) {
-
-        NotificationKey key = new NotificationKey() {
-            @Override
-            public String toString() {
-                return paymentId.toString();
-            }
-        };
-        if (retryQueue != null) {
-            retryQueue.recordFutureNotification(timeOfRetry, key);
-        }
-    }
+    
 
     private void retry(final UUID paymentId, final CallContext context) {
         paymentProcessor.retryPayment(paymentId);
+    }
+    
+    
+    public static class FailedPaymentRetryServiceScheduler {
+        
+        private final NotificationQueueService notificationQueueService;
+        
+        @Inject
+        public FailedPaymentRetryServiceScheduler(final NotificationQueueService notificationQueueService) {
+            this.notificationQueueService = notificationQueueService;
+        }
+    
+        
+        public void scheduleRetry(final UUID paymentId, final DateTime timeOfRetry) {
+
+            try {
+                NotificationQueue retryQueue = notificationQueueService.getNotificationQueue(DefaultPaymentService.SERVICE_NAME, QUEUE_NAME);
+                NotificationKey key = new NotificationKey() {
+                    @Override
+                    public String toString() {
+                        return paymentId.toString();
+                    }
+                };
+                if (retryQueue != null) {
+                    retryQueue.recordFutureNotification(timeOfRetry, key);
+                }
+            } catch (NoSuchNotificationQueue e) {
+                log.error(String.format("Failed to retrieve notification queue %s:%s", DefaultPaymentService.SERVICE_NAME, QUEUE_NAME));
+            }
+        }
     }
 }

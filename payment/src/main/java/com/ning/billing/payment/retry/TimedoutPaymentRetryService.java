@@ -23,7 +23,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.ning.billing.config.PaymentConfig;
-import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.DefaultCallContext;
@@ -46,17 +45,14 @@ public class TimedoutPaymentRetryService implements RetryService {
     private final Clock clock;
     private final NotificationQueueService notificationQueueService;
     private final PaymentConfig config;
-    private final PaymentApi paymentApi;
     private NotificationQueue retryQueue;
 
     @Inject
     public TimedoutPaymentRetryService(Clock clock,
                         NotificationQueueService notificationQueueService,
-                        PaymentConfig config,
-                        PaymentApi paymentApi) {
+                        PaymentConfig config) {
         this.clock = clock;
         this.notificationQueueService = notificationQueueService;
-        this.paymentApi = paymentApi;
         this.config = config;
     }
 

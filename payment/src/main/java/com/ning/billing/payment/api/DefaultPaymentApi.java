@@ -43,7 +43,7 @@ public class DefaultPaymentApi implements PaymentApi {
             final RefundProcessor refundProcessor) {
         this.methodProcessor = methodProcessor;
         this.accountProcessor = accountProcessor;
-        this.paymentProcessor = null;
+        this.paymentProcessor = paymentProcessor;
         this.refundProcessor = refundProcessor;
     }
      
@@ -134,7 +134,6 @@ public class DefaultPaymentApi implements PaymentApi {
     @Override
     public PaymentProviderAccount getPaymentProviderAccount(String accountKey)
             throws PaymentApiException {
-        // TODO Auto-generated method stub
-        return null;
+        return accountProcessor.getPaymentProviderAccount(accountKey);
     }
 }

@@ -26,6 +26,7 @@ import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.IDBI;
+import org.testng.Assert;
 import org.testng.annotations.AfterSuite;
 
 import org.testng.annotations.BeforeSuite;
@@ -36,6 +37,8 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.dbi.DBIProvider;
 import com.ning.billing.dbi.DbiConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
+import com.ning.billing.payment.api.DefaultPayment;
+import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TestCallContext;
@@ -101,7 +104,7 @@ public class TestPaymentDao {
         DateTime effectiveDate = clock.getUTCNow();
         
         PaymentModelDao payment = new PaymentModelDao(accountId, invoiceId, amount, currency, effectiveDate);
-        PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(accountId, invoiceId, payment.getId());
+        PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(accountId, invoiceId, payment.getId(), clock.getUTCNow());
         PaymentModelDao savedPayment = paymentDao.insertPaymentWithAttempt(payment, attempt, context);
         
         PaymentStatus paymentStatus = PaymentStatus.SUCCESS;
@@ -119,7 +122,7 @@ public class TestPaymentDao {
         assertEquals(savedPayment.getAmount().compareTo(amount), 0);        
         assertEquals(savedPayment.getCurrency(), currency);         
         assertEquals(savedPayment.getEffectiveDate().compareTo(effectiveDate), 0); 
-        assertEquals(savedPayment.getPaymentNumber(), new Integer(1));
+        Assert.assertNotEquals(savedPayment.getPaymentNumber(), PaymentModelDao.INVALID_PAYMENT_NUMBER);
         assertEquals(savedPayment.getPaymentStatus(), PaymentStatus.SUCCESS); 
         
         List<PaymentAttemptModelDao> attempts =  paymentDao.getAttemptsForPayment(payment.getId());
@@ -143,7 +146,7 @@ public class TestPaymentDao {
         DateTime effectiveDate = clock.getUTCNow();
         
         PaymentModelDao payment = new PaymentModelDao(accountId, invoiceId, amount, currency, effectiveDate);
-        PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(accountId, invoiceId, payment.getId());
+        PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(accountId, invoiceId, payment.getId(), clock.getUTCNow());
         
         PaymentModelDao savedPayment = paymentDao.insertPaymentWithAttempt(payment, attempt, context);
         assertEquals(savedPayment.getId(), payment.getId());

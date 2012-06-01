@@ -16,6 +16,8 @@
 
 package com.ning.billing.payment.provider;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -33,6 +35,7 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.payment.api.CreditCardPaymentMethodInfo;
 import com.ning.billing.payment.api.DefaultPaymentInfoEvent;
+import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.payment.api.PaymentMethodInfo;
 import com.ning.billing.payment.api.PaypalPaymentMethodInfo;
@@ -41,13 +44,14 @@ import com.ning.billing.payment.plugin.api.PaymentInfoPlugin;
 import com.ning.billing.payment.plugin.api.PaymentPluginApiException;
 import com.ning.billing.payment.plugin.api.PaymentProviderAccount;
 import com.ning.billing.payment.plugin.api.PaymentProviderPlugin;
+import com.ning.billing.payment.plugin.api.PaymentInfoPlugin.PaymentPluginStatus;
 import com.ning.billing.util.clock.Clock;
 
 public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
     
     private final AtomicBoolean makeNextInvoiceFail = new AtomicBoolean(false);
     private final AtomicBoolean makeAllInvoicesFail = new AtomicBoolean(false);
-    private final Map<UUID, PaymentInfoEvent> payments = new ConcurrentHashMap<UUID, PaymentInfoEvent>();
+    private final Map<UUID, PaymentInfoPlugin> payments = new ConcurrentHashMap<UUID, PaymentInfoPlugin>();
     private final Map<String, PaymentProviderAccount> accounts = new ConcurrentHashMap<String, PaymentProviderAccount>();
     private final Map<String, PaymentMethodInfo> paymentMethods = new ConcurrentHashMap<String, PaymentMethodInfo>();
     private final Clock clock;
@@ -57,7 +61,7 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
         this.clock = clock;
     }
 
-    public void makeNextInvoiceFail() {
+    public void makeNextPaymentFail() {
         makeNextInvoiceFail.set(true);
     }
 
@@ -66,49 +70,35 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
     }
 
     @Override
-    public PaymentInfoPlugin processInvoice(Account account, Invoice invoice) throws PaymentPluginApiException {
+    public PaymentInfoPlugin processPayment(String externalKey, UUID paymentId, BigDecimal amount) throws PaymentPluginApiException {
         if (makeNextInvoiceFail.getAndSet(false) || makeAllInvoicesFail.get()) {
             throw new PaymentPluginApiException("", "test error");
         }
-        // STEPH
-/*
-        PaymentInfoEvent payment = new DefaultPaymentInfoEvent.Builder().setId(UUID.randomUUID())
-                .setExternalPaymentId("238957t49regyuihfd")
-                .setAmount(invoice.getBalance())
-                .setStatus("Processed")
-                .setBankIdentificationNumber("1234")
-                .setCreatedDate(clock.getUTCNow())
-                .setEffectiveDate(clock.getUTCNow())
-                .setPaymentNumber("12345")
-                .setReferenceId("12345")
-                .setType("Electronic")
-                .setPaymentMethodId("123-456-678-89")
-                .build();
-        
-        return new MockPaymentInfoPlugin(payment);
-        *
-        */
-        return null;
+
+        PaymentInfoPlugin result = new MockPaymentInfoPlugin(amount, clock.getUTCNow(), clock.getUTCNow(), PaymentPluginStatus.PROCESSED, null);
+        payments.put(paymentId, result);
+        return result;
     }
 
 
     @Override
-    public PaymentInfoPlugin getPaymentInfo(String paymentId) throws PaymentPluginApiException {
-        PaymentInfoEvent payment = payments.get(paymentId);
+    public PaymentInfoPlugin getPaymentInfo(UUID paymentId) throws PaymentPluginApiException {
+        PaymentInfoPlugin payment = payments.get(paymentId);
         if (payment == null) {
             throw new PaymentPluginApiException("", "No payment found for id " + paymentId);
         }
-        /* return new MockPaymentInfoPlugin(payment); */
-        return null;
+        return payment;
     }
 
     @Override
     public String createPaymentProviderAccount(Account account)  throws PaymentPluginApiException {
         if (account != null) {
             String id = String.valueOf(RandomStringUtils.randomAlphanumeric(10));
+            String paymentMethodId = String.valueOf(RandomStringUtils.randomAlphanumeric(10));            
             accounts.put(account.getExternalKey(),
                          new PaymentProviderAccount.Builder().setAccountKey(account.getExternalKey())
                                                              .setId(id)
+                                                             .setDefaultPaymentMethod(paymentMethodId)
                                                              .build());
             return id;
         }

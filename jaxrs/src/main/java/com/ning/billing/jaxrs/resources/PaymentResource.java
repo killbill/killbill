@@ -43,8 +43,9 @@ import com.ning.billing.util.dao.ObjectType;
 import java.util.List;
 import java.util.UUID;
 
-@Path(JaxrsResource.INVOICES_PATH)
+@Path(JaxrsResource.PAYMENTS_PATH)
 public class PaymentResource extends JaxRsResourceBase {
+    
     private static final String ID_PARAM_NAME = "paymentId";
     private static final String CUSTOM_FIELD_URI = JaxrsResource.CUSTOM_FIELDS + "/{" + ID_PARAM_NAME + ":" + UUID_PATTERN + "}";
     private static final String TAG_URI = JaxrsResource.TAGS + "/{" + ID_PARAM_NAME + ":" + UUID_PATTERN + "}";

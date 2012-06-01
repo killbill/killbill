@@ -35,6 +35,8 @@ import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.provider.DefaultPaymentProviderPluginRegistry;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
 import com.ning.billing.payment.retry.FailedPaymentRetryService;
+import com.ning.billing.payment.retry.FailedPaymentRetryService.FailedPaymentRetryServiceScheduler;
+import com.ning.billing.payment.retry.TimedoutPaymentRetryService;
 
 public class PaymentModule extends AbstractModule {
     private final Properties props;
@@ -54,8 +56,17 @@ public class PaymentModule extends AbstractModule {
     protected void installPaymentProviderPlugins(PaymentConfig config) {
     }
 
-    protected void installRetryEngine() {
+    protected void installRetryEngines() {
         bind(FailedPaymentRetryService.class).asEagerSingleton();
+        bind(TimedoutPaymentRetryService.class).asEagerSingleton(); 
+        bind(FailedPaymentRetryServiceScheduler.class).asEagerSingleton();
+    }
+    
+    protected void installProcessors() {
+        bind(AccountProcessor.class).asEagerSingleton();
+        bind(PaymentProcessor.class).asEagerSingleton();
+        bind(RefundProcessor.class).asEagerSingleton();
+        bind(PaymentMethodProcessor.class).asEagerSingleton();
     }
 
     @Override
@@ -68,12 +79,9 @@ public class PaymentModule extends AbstractModule {
         bind(PaymentApi.class).to(DefaultPaymentApi.class).asEagerSingleton();
         bind(RequestProcessor.class).asEagerSingleton();
         bind(PaymentService.class).to(DefaultPaymentService.class).asEagerSingleton();
-        bind(AccountProcessor.class).asEagerSingleton();        
-        bind(PaymentProcessor.class).asEagerSingleton();        
-        bind(RefundProcessor.class).asEagerSingleton();                
-        bind(PaymentMethodProcessor.class).asEagerSingleton();                        
         installPaymentProviderPlugins(paymentConfig);
         installPaymentDao();
-        installRetryEngine();
+        installProcessors();
+        installRetryEngines();
     }
 }

@@ -17,14 +17,11 @@
 package com.ning.billing.payment.api;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.Arrays;
-import java.util.List;
 import java.util.UUID;
 
 import org.apache.commons.lang.RandomStringUtils;
@@ -32,6 +29,7 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import com.google.inject.Inject;
@@ -41,9 +39,12 @@ import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
+import com.ning.billing.mock.glue.MockClockModule;
+import com.ning.billing.mock.glue.MockJunctionModule;
 import com.ning.billing.payment.MockRecurringInvoiceItem;
 import com.ning.billing.payment.TestHelper;
 import com.ning.billing.payment.api.Payment.PaymentAttempt;
+import com.ning.billing.payment.glue.PaymentTestModuleWithMocks;
 import com.ning.billing.payment.plugin.api.PaymentProviderAccount;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
@@ -52,8 +53,11 @@ import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.DefaultCallContext;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.glue.CallContextModule;
 
-public abstract class TestPaymentApi {
+@Guice(modules = { PaymentTestModuleWithMocks.class, MockClockModule.class, MockJunctionModule.class, CallContextModule.class })
+@Test(groups = "fast")
+public class TestPaymentApi {
     @Inject
     private Bus eventBus;
     @Inject
@@ -102,7 +106,7 @@ public abstract class TestPaymentApi {
                                                        new BigDecimal("1.0"),
                                                        Currency.USD));
 
-        Payment paymentInfo =  paymentApi.createPayment(account.getExternalKey(), invoice.getId(), context);
+        Payment paymentInfo = paymentApi.createPayment(account.getExternalKey(), invoice.getId(), context);
 
         assertNotNull(paymentInfo.getId());
         assertTrue(paymentInfo.getAmount().compareTo(amount.setScale(2, RoundingMode.HALF_EVEN)) == 0);

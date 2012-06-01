@@ -36,24 +36,4 @@ public interface PaymentInfoPlugin {
     public PaymentPluginStatus getStatus();
     
     public String getError();
-    
-    
-    /** 
-     * STEPH  
-
-     * Zuora specific
-
-    public String getExternalPaymentId();
-    
-    public String getReferenceId();
-    
-    public String getPaymentMethodId();
-
-    public String getPaymentNumber();
-
-    public String getStatus();
-
-    public String getType();
-     *
-     */    
 }

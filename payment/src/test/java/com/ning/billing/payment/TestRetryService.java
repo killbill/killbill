@@ -81,8 +81,6 @@ public class TestRetryService {
     @Inject
     private PaymentProviderPluginRegistry registry;
     @Inject
-    private PaymentDao paymentDao;
-    @Inject
     private FailedPaymentRetryService retryService;
     @Inject
     private NotificationQueueService notificationQueueService;
@@ -138,7 +136,7 @@ public class TestRetryService {
                                                        new BigDecimal("1.0"),
                                                        Currency.USD));
 
-        mockPaymentProviderPlugin.makeNextInvoiceFail();
+        mockPaymentProviderPlugin.makeNextPaymentFail();
         boolean failed = false;
         try {
             paymentApi.createPayment(account.getExternalKey(), invoice.getId(), context);

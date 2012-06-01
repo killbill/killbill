@@ -25,6 +25,7 @@ import org.joda.time.DateTimeZone;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.api.PaymentMethodInfo;
 import com.ning.billing.payment.plugin.api.PaymentInfoPlugin;
 import com.ning.billing.payment.plugin.api.PaymentPluginApiException;
@@ -44,9 +45,9 @@ public class NoOpPaymentProviderPlugin implements PaymentProviderPlugin {
     } 
 
     @Override
-    public PaymentInfoPlugin processInvoice(final Account account, final Invoice invoice)
+    public PaymentInfoPlugin processPayment(final String externalAccountKey, final UUID paymentId, final BigDecimal amount)
             throws PaymentPluginApiException {
-        PaymentInfoPlugin payment = new PaymentInfoPlugin() {
+        PaymentInfoPlugin paymentResult = new PaymentInfoPlugin() {
         
             @Override
             public DateTime getEffectiveDate() {
@@ -58,7 +59,7 @@ public class NoOpPaymentProviderPlugin implements PaymentProviderPlugin {
             }
             @Override
             public BigDecimal getAmount() {
-                return invoice.getBalance();
+                return amount;
             }
             @Override
             public PaymentPluginStatus getStatus() {
@@ -69,7 +70,7 @@ public class NoOpPaymentProviderPlugin implements PaymentProviderPlugin {
                 return null;
             }
         };
-        return payment;
+        return paymentResult;
     }
 
     @Override
@@ -80,7 +81,7 @@ public class NoOpPaymentProviderPlugin implements PaymentProviderPlugin {
     }
 
     @Override
-    public PaymentInfoPlugin getPaymentInfo(String paymentId)
+    public PaymentInfoPlugin getPaymentInfo(UUID paymentId)
             throws PaymentPluginApiException {
         
         return null;
