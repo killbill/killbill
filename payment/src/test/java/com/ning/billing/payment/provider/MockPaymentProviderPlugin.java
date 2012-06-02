@@ -59,7 +59,15 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
     @Inject
     public MockPaymentProviderPlugin(Clock clock) {
         this.clock = clock;
+        clear();
     }
+    
+    
+    public void clear() {
+        makeNextInvoiceFail.set(false);
+        makeAllInvoicesFail.set(false);
+    }
+    
 
     public void makeNextPaymentFail() {
         makeNextInvoiceFail.set(true);

@@ -43,11 +43,12 @@ public @interface PaymentAttemptHistoryBinder {
                 public void bind(@SuppressWarnings("rawtypes") SQLStatement q, PaymentAttemptHistoryBinder bind, EntityHistory<PaymentAttemptModelDao> history) {
                     q.bind("recordId", history.getValue());
                     q.bind("changeType", history.getChangeType().toString());
-                    PaymentAttemptModelDao payment = history.getEntity();
-                    q.bind("id", payment.getId().toString());
-                    q.bind("paymentId", payment.getPaymentId().toString());            
-                    q.bind("processingStatus", payment.getPaymentStatus().toString());
-                    q.bind("paymentError", payment.getPaymentError());                    
+                    PaymentAttemptModelDao attempt = history.getEntity();
+                    q.bind("id", attempt.getId().toString());
+                    q.bind("paymentId", attempt.getPaymentId().toString());            
+                    q.bind("processingStatus", attempt.getPaymentStatus().toString());
+                    q.bind("paymentError", attempt.getPaymentError());   
+                    q.bind("requestedAmount", attempt.getRequestedAmount());                           
                 }
             };
         }

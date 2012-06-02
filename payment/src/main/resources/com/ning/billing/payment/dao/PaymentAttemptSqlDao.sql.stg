@@ -5,6 +5,7 @@ paymentAttemptFields(prefix) ::= <<
     <prefix>payment_id,    
     <prefix>payment_error,
     <prefix>processing_status,
+    <prefix>requested_amount,
     <prefix>created_by,
     <prefix>created_date,
     <prefix>updated_by,
@@ -13,7 +14,7 @@ paymentAttemptFields(prefix) ::= <<
 
 insertPaymentAttempt() ::= <<
     INSERT INTO payment_attempts (<paymentAttemptFields()>)
-    VALUES (:id, :paymentId, :paymentError, :processingStatus, :userName, :createdDate, :userName, :createdDate);
+    VALUES (:id, :paymentId, :paymentError, :processingStatus, :requestedAmount, :userName, :createdDate, :userName, :createdDate);
 >>
 
 getPaymentAttempt() ::= <<
@@ -57,6 +58,7 @@ historyFields(prefix) ::= <<
     <prefix>payment_id,
     <prefix>payment_error,
     <prefix>processing_status,
+    <prefix>requested_amount,    
     <prefix>created_by,
     <prefix>created_date,
     <prefix>updated_by,
@@ -65,7 +67,7 @@ historyFields(prefix) ::= <<
 
 insertHistoryFromTransaction() ::= <<
     INSERT INTO payment_attempt_history (<historyFields()>)
-    VALUES (:recordId, :id, :paymentId, :paymentError, :processingStatus, :userName, :createdDate, :userName, :updatedDate);
+    VALUES (:recordId, :id, :paymentId, :paymentError, :processingStatus, :requestedAmount, :userName, :createdDate, :userName, :updatedDate);
 >>
 
 getHistoryRecordId() ::= <<

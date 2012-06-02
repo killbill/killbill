@@ -16,6 +16,7 @@
 
 package com.ning.billing.payment.api;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -88,15 +89,15 @@ public class DefaultPaymentApi implements PaymentApi {
      }
    
     @Override
-    public Payment createPayment(final String accountKey, final UUID invoiceId, final CallContext context) 
+    public Payment createPayment(final String accountKey, final UUID invoiceId, final BigDecimal amount, final CallContext context) 
     throws PaymentApiException {
-        return paymentProcessor.createPayment(accountKey, invoiceId, context);
+        return paymentProcessor.createPayment(accountKey, invoiceId, amount, context, true);
      }
     
     @Override
     public Payment createPayment(Account account, UUID invoiceId,
-            CallContext context) throws PaymentApiException {
-        return paymentProcessor.createPayment(account, invoiceId, context);        
+            final BigDecimal amount, CallContext context) throws PaymentApiException {
+        return paymentProcessor.createPayment(account, invoiceId, amount, context, true);        
     }
 
     

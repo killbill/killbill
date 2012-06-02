@@ -48,6 +48,12 @@ updatePaymentStatus() ::= <<
     WHERE id = :id;
 >>
 
+updatePaymentAmount() ::= <<
+    UPDATE payments
+    SET amount = :amount
+    WHERE id = :id;
+>>
+
 getRecordId() ::= <<
     SELECT record_id
     FROM payments

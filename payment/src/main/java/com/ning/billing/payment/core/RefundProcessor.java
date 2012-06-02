@@ -15,10 +15,14 @@
  */
 package com.ning.billing.payment.core;
 
+import static com.ning.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR;
+
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
 
 import javax.inject.Inject;
 
+import com.google.inject.name.Named;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.payment.api.PaymentApiException;
@@ -34,8 +38,9 @@ public class RefundProcessor extends ProcessorBase {
     public RefundProcessor(final PaymentProviderPluginRegistry pluginRegistry,
             final AccountUserApi accountUserApi,
             final Bus eventBus,
-            final GlobalLocker locker) {
-        super(pluginRegistry, accountUserApi, eventBus, locker);        
+            final GlobalLocker locker,
+            @Named(PLUGIN_EXECUTOR)  final ExecutorService executor) {
+        super(pluginRegistry, accountUserApi, eventBus, locker, executor);        
     }
     
     public Refund createRefund(Account account, UUID paymentId, CallContext context)

@@ -17,12 +17,16 @@
 package com.ning.billing.payment.glue;
 
 import java.util.Properties;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
 import org.skife.config.ConfigurationObjectFactory;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.name.Names;
 import com.ning.billing.config.PaymentConfig;
-import com.ning.billing.payment.RequestProcessor;
+import com.ning.billing.payment.InvoiceHandler;
 import com.ning.billing.payment.api.DefaultPaymentApi;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentService;
@@ -39,6 +43,12 @@ import com.ning.billing.payment.retry.FailedPaymentRetryService.FailedPaymentRet
 import com.ning.billing.payment.retry.TimedoutPaymentRetryService;
 
 public class PaymentModule extends AbstractModule {
+    
+    private final static int PLUGIN_NB_THREADS = 3;
+    private final static String PLUGIN_THREAD_PREFIX = "Plugin-th-";
+    public final static String PLUGIN_EXECUTOR = "PluginExecutor";
+    
+
     private final Properties props;
 
     public PaymentModule() {
@@ -62,7 +72,18 @@ public class PaymentModule extends AbstractModule {
         bind(FailedPaymentRetryServiceScheduler.class).asEagerSingleton();
     }
     
+    
     protected void installProcessors() {
+        final ExecutorService pluginExecutorService = Executors.newFixedThreadPool(PLUGIN_NB_THREADS, new ThreadFactory() {
+
+            @Override
+            public Thread newThread(Runnable r) {
+                Thread th = new Thread(r);
+                th.setName(PLUGIN_THREAD_PREFIX + th.getId());
+                return th;
+            }
+        });
+        bind(ExecutorService.class).annotatedWith(Names.named(PLUGIN_EXECUTOR)).toInstance(pluginExecutorService);
         bind(AccountProcessor.class).asEagerSingleton();
         bind(PaymentProcessor.class).asEagerSingleton();
         bind(RefundProcessor.class).asEagerSingleton();
@@ -77,7 +98,7 @@ public class PaymentModule extends AbstractModule {
         bind(PaymentConfig.class).toInstance(paymentConfig);
         bind(PaymentProviderPluginRegistry.class).to(DefaultPaymentProviderPluginRegistry.class).asEagerSingleton();
         bind(PaymentApi.class).to(DefaultPaymentApi.class).asEagerSingleton();
-        bind(RequestProcessor.class).asEagerSingleton();
+        bind(InvoiceHandler.class).asEagerSingleton();
         bind(PaymentService.class).to(DefaultPaymentService.class).asEagerSingleton();
         installPaymentProviderPlugins(paymentConfig);
         installPaymentDao();

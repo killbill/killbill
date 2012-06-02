@@ -19,7 +19,6 @@ package com.ning.billing.jaxrs.resources;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -65,12 +64,13 @@ import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
 import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentApiException;
-import com.ning.billing.payment.api.PaymentInfoEvent;
 
 
 @Path(JaxrsResource.INVOICES_PATH)
 public class InvoiceResource extends JaxRsResourceBase {
+    
     private static final Logger log = LoggerFactory.getLogger(InvoiceResource.class);
+    
     private static final String ID_PARAM_NAME = "invoiceId";
     private static final String CUSTOM_FIELD_URI = JaxrsResource.CUSTOM_FIELDS + "/{" + ID_PARAM_NAME + ":" + UUID_PATTERN + "}";
     private static final String TAG_URI = JaxrsResource.TAGS + "/{" + ID_PARAM_NAME + ":" + UUID_PATTERN + "}";
@@ -191,7 +191,7 @@ public class InvoiceResource extends JaxRsResourceBase {
             @HeaderParam(HDR_COMMENT) final String comment) {
         try {
             Account account = accountApi.getAccountById(UUID.fromString(payment.getAccountId()));
-            paymentApi.createPayment(account, UUID.fromString(payment.getInvoiceId()), context.createContext(createdBy, reason, comment));
+            paymentApi.createPayment(account, UUID.fromString(payment.getInvoiceId()), null, context.createContext(createdBy, reason, comment));
             Response response = uriBuilder.buildResponse(InvoiceResource.class, "getPayments", payment.getInvoiceId());
             return response;
         } catch (PaymentApiException e) {

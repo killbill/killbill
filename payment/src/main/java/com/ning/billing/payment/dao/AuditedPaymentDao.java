@@ -15,6 +15,7 @@
  */
 package com.ning.billing.payment.dao;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -53,7 +54,10 @@ public class AuditedPaymentDao implements PaymentDao {
             @Override
             public PaymentAttemptModelDao inTransaction(PaymentAttemptSqlDao transactional, TransactionStatus status)
             throws Exception {
-                return insertPaymentAttemptFromTransaction(attempt, context, transactional);
+                PaymentAttemptModelDao savedAttempt = insertPaymentAttemptFromTransaction(attempt, context, transactional);
+                PaymentSqlDao transPaymentSqlDao = transactional.become(PaymentSqlDao.class);
+                updatePaymentAmountFromTransaction(paymentId, savedAttempt.getRequestedAmount(), context, transPaymentSqlDao);
+                return savedAttempt;
             }
         });
     }
@@ -114,6 +118,20 @@ public class AuditedPaymentDao implements PaymentDao {
     
 
     @Override
+    public void updateStatusForPayment(final UUID paymentId,
+            final PaymentStatus paymentStatus, final CallContext context) {
+        paymentSqlDao.inTransaction(new Transaction<Void, PaymentSqlDao>() {
+
+            @Override
+            public Void inTransaction(PaymentSqlDao transactional,
+                    TransactionStatus status) throws Exception {
+                updatePaymentStatusFromTransaction(paymentId, paymentStatus, context, transactional);
+                return null;
+            }
+        });
+    }
+
+    @Override
     public void updateStatusForPaymentWithAttempt(final UUID paymentId,
             final PaymentStatus paymentStatus, final String paymentError, final UUID attemptId,
             final CallContext context) {
@@ -129,7 +147,18 @@ public class AuditedPaymentDao implements PaymentDao {
             }
         });
     }
-    
+
+    private void updatePaymentAmountFromTransaction(final UUID paymentId, final BigDecimal amount, final CallContext context, final PaymentSqlDao transactional) {
+        transactional.updatePaymentAmount(paymentId.toString(), amount, context);
+        PaymentModelDao savedPayment = transactional.getPayment(paymentId.toString());
+        Long recordId = transactional.getRecordId(savedPayment.getId().toString());
+        EntityHistory<PaymentModelDao> history = new EntityHistory<PaymentModelDao>(savedPayment.getId(), recordId, savedPayment, ChangeType.UPDATE);
+        transactional.insertHistoryFromTransaction(history, context);
+        Long historyRecordId = transactional.getHistoryRecordId(recordId);
+        EntityAudit audit = new EntityAudit(TableName.PAYMENTS, historyRecordId, ChangeType.UPDATE);
+        transactional.insertAuditFromTransaction(audit, context);
+    }
+
     private void updatePaymentStatusFromTransaction(final UUID paymentId, final PaymentStatus paymentStatus, final CallContext context, final PaymentSqlDao transactional) {
         transactional.updatePaymentStatus(paymentId.toString(), paymentStatus.toString(), context);
         PaymentModelDao savedPayment = transactional.getPayment(paymentId.toString());
@@ -223,4 +252,7 @@ public class AuditedPaymentDao implements PaymentDao {
     public List<PaymentAttemptModelDao> getAttemptsForPayment(UUID paymentId) {
         return paymentAttemptSqlDao.getPaymentAttempts(paymentId.toString());
     }
+
+
+
 }

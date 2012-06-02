@@ -15,6 +15,7 @@
  */
 package com.ning.billing.payment.api;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -57,10 +58,10 @@ public interface PaymentApi {
     public void updatePaymentProviderAccountContact(String accountKey, CallContext context)
     throws PaymentApiException;
     
-    public Payment createPayment(final String accountKey, final UUID invoiceId, final CallContext context)
+    public Payment createPayment(final String accountKey, final UUID invoiceId, final BigDecimal amount, final CallContext context)
     throws PaymentApiException;
 
-    public Payment createPayment(final Account account, final UUID invoiceId, final CallContext context)
+    public Payment createPayment(final Account account, final UUID invoiceId, final BigDecimal amount, final CallContext context)
     throws PaymentApiException;
 
     public Refund createRefund(final Account account, final UUID paymentId, final CallContext context)

@@ -115,7 +115,7 @@ public abstract class PersistentQueueBase implements QueueLifecycle {
             });
         }
         try {
-            boolean success = doneInitialization.await(sleepTimeMs, TimeUnit.MILLISECONDS);
+            boolean success = doneInitialization.await(waitTimeoutMs, TimeUnit.MILLISECONDS);
             if (!success) {
                 
                 log.warn(String.format("%s: Failed to wait for all threads to be started, got %d/%d", svcName, (nbThreads - doneInitialization.getCount()), nbThreads));

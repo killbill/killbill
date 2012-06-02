@@ -55,7 +55,11 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, UpdatableEn
     @SqlUpdate
     void updatePaymentStatus(@Bind("id") final String paymentId, @Bind("paymentStatus") final String paymentStatus,
             @CallContextBinder final CallContext context);
-    
+
+    @SqlUpdate
+    void updatePaymentAmount(@Bind("id") final String paymentId, @Bind("amount") final BigDecimal amount,
+            @CallContextBinder final CallContext context);
+
     @SqlQuery
     PaymentModelDao getPayment(@Bind("id") final String paymentId);
  

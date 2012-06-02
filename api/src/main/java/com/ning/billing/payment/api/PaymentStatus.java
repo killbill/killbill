@@ -19,5 +19,6 @@ public enum PaymentStatus {
     UNKNOWN,
     AUTO_PAY_OFF,
     ERROR,
-    SUCCESS
+    SUCCESS,
+    ABORTED
 }

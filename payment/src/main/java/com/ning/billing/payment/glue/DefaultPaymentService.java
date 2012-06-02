@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.Inject;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
-import com.ning.billing.payment.RequestProcessor;
+import com.ning.billing.payment.InvoiceHandler;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentService;
 import com.ning.billing.payment.retry.FailedPaymentRetryService;
@@ -38,14 +38,14 @@ public class DefaultPaymentService implements PaymentService {
     // STEPH for retry crappiness
     public static final String SERVICE_NAME = "payment-service";
 
-    private final RequestProcessor requestProcessor;
+    private final InvoiceHandler requestProcessor;
     private final Bus eventBus;
     private final PaymentApi api;
     private final FailedPaymentRetryService failedRetryService;
     private final TimedoutPaymentRetryService timedoutRetryService;
 
     @Inject
-    public DefaultPaymentService(final RequestProcessor requestProcessor, final PaymentApi api, final Bus eventBus,
+    public DefaultPaymentService(final InvoiceHandler requestProcessor, final PaymentApi api, final Bus eventBus,
             final FailedPaymentRetryService failedRetryService, final TimedoutPaymentRetryService timedoutRetryService) {
         this.requestProcessor = requestProcessor;
         this.eventBus = eventBus;

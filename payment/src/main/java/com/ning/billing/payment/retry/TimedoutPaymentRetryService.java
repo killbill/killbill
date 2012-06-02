@@ -17,103 +17,62 @@ package com.ning.billing.payment.retry;
 
 import java.util.UUID;
 
-import org.joda.time.DateTime;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
+import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.config.PaymentConfig;
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallOrigin;
-import com.ning.billing.util.callcontext.DefaultCallContext;
-import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.payment.core.PaymentProcessor;
+import com.ning.billing.payment.dao.PaymentDao;
+
 import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.notificationq.NotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService;
-import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotificationQueue;
-import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
-import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
 
-public class TimedoutPaymentRetryService implements RetryService {
+public class TimedoutPaymentRetryService extends BaseRetryService implements RetryService {
 
-    
-    
   private static final Logger log = LoggerFactory.getLogger(TimedoutPaymentRetryService.class);
     
     public static final String QUEUE_NAME = "timedout-retry";
 
-    private final Clock clock;
-    private final NotificationQueueService notificationQueueService;
-    private final PaymentConfig config;
-    private NotificationQueue retryQueue;
+    private final PaymentProcessor paymentProcessor;
 
+    
     @Inject
-    public TimedoutPaymentRetryService(Clock clock,
-                        NotificationQueueService notificationQueueService,
-                        PaymentConfig config) {
-        this.clock = clock;
-        this.notificationQueueService = notificationQueueService;
-        this.config = config;
+    public TimedoutPaymentRetryService(final AccountUserApi accountUserApi,
+            final Clock clock,
+            final NotificationQueueService notificationQueueService,
+            final PaymentConfig config,
+            final PaymentProcessor paymentProcessor,
+            final PaymentDao paymentDao) {
+        super(notificationQueueService, clock, config);
+        this.paymentProcessor = paymentProcessor;
     }
+
+    
 
     @Override
-    public void initialize(final String svcName) throws NotificationQueueAlreadyExists {
-        retryQueue = notificationQueueService.createNotificationQueue(svcName, QUEUE_NAME, new NotificationQueueHandler() {
-            @Override
-            public void handleReadyNotification(String notificationKey, DateTime eventDateTime) {
-                CallContext context = new DefaultCallContext("TimedoutRetryService", CallOrigin.INTERNAL, UserType.SYSTEM, clock);
-                retry(notificationKey, context);
-            }
-        },
-        config);
+    public void retry(final UUID paymentId) {
+        paymentProcessor.retryFailedPayment(paymentId);
     }
-
-    @Override
-    public void start() {
-        retryQueue.startQueue();
-    }
-
-    @Override
-    public void stop() throws NoSuchNotificationQueue {
-        if (retryQueue != null) {
-            retryQueue.stopQueue();
-            notificationQueueService.deleteNotificationQueue(retryQueue.getServiceName(), retryQueue.getQueueName());
-         }
-    }
-
-    public void scheduleRetry(UUID paymentId, DateTime timeOfRetry) {
-
-        /*
-        final String id = paymentAttempt.getPaymentAttemptId().toString();
-=======
-        final String id = paymentAttempt.getId().toString();
->>>>>>> origin/integration:payment/src/main/java/com/ning/billing/payment/RetryService.java
-
-        NotificationKey key = new NotificationKey() {
-            @Override
-            public String toString() {
-                return id;
-            }
-        };
-
-        if (retryQueue != null) {
-            retryQueue.recordFutureNotification(timeOfRetry, key);
-        }
-        */
-    }
-
-    private void retry(String paymentAttemptId, CallContext context) {
+    
+    
+    public static class TimedoutPaymentRetryServiceScheduler extends RetryServiceScheduler {
         
-        /*
-        try {
-            PaymentInfoEvent paymentInfo = paymentApi.getPaymentInfoForPaymentAttemptId(paymentAttemptId);
-            if (paymentInfo != null && PaymentStatus.Processed.equals(PaymentStatus.valueOf(paymentInfo.getStatus()))) {
-                return;
-            }
-            paymentApi.createPaymentForPaymentAttempt(UUID.fromString(paymentAttemptId), context);
-        } catch (PaymentApiException e) {
-            log.error(String.format("Failed to retry payment for %s",paymentAttemptId), e);
+        @Inject
+        public TimedoutPaymentRetryServiceScheduler(final NotificationQueueService notificationQueueService) {
+            super(notificationQueueService);
         }
-        */
+
+        @Override
+        public String getQueueName() {
+            return QUEUE_NAME;
+        }
+    }
+
+    @Override
+    public String getQueueName() {
+        return QUEUE_NAME;
     }
 }

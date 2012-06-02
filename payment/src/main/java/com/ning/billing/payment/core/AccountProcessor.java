@@ -15,7 +15,12 @@
  */
 package com.ning.billing.payment.core;
 
+import static com.ning.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR;
+
+import java.util.concurrent.ExecutorService;
+
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
@@ -36,8 +41,9 @@ public class AccountProcessor extends ProcessorBase {
     public AccountProcessor(final PaymentProviderPluginRegistry pluginRegistry,
             final AccountUserApi accountUserApi,
             final Bus eventBus,
-            final GlobalLocker locker) {
-        super(pluginRegistry, accountUserApi, eventBus, locker);        
+            final GlobalLocker locker,
+            @Named(PLUGIN_EXECUTOR) final ExecutorService executor) {
+        super(pluginRegistry, accountUserApi, eventBus, locker, executor);        
     }
     
     public String createPaymentProviderAccount(Account account, CallContext context) 

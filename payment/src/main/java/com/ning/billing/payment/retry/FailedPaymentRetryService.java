@@ -16,7 +16,6 @@
 
 package com.ning.billing.payment.retry;
 
-import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.util.callcontext.CallContext;
@@ -31,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.Inject;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.config.PaymentConfig;
+import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.core.PaymentProcessor;
 import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.glue.DefaultPaymentService;
@@ -43,18 +43,14 @@ import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotifi
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
 
-public class FailedPaymentRetryService implements RetryService {
+public class FailedPaymentRetryService extends BaseRetryService implements RetryService {
     
     private static final Logger log = LoggerFactory.getLogger(FailedPaymentRetryService.class);
     
     public static final String QUEUE_NAME = "failed-retry";
 
-    private final Clock clock;
-    private final NotificationQueueService notificationQueueService;
-    private final PaymentConfig config;
     private final PaymentProcessor paymentProcessor;
-    
-    private NotificationQueue retryQueue;
+
     
     @Inject
     public FailedPaymentRetryService(final AccountUserApi accountUserApi,
@@ -63,70 +59,33 @@ public class FailedPaymentRetryService implements RetryService {
             final PaymentConfig config,
             final PaymentProcessor paymentProcessor,
             final PaymentDao paymentDao) {
-        this.clock = clock;
-        this.notificationQueueService = notificationQueueService;
-        this.config = config;
+        super(notificationQueueService, clock, config);
         this.paymentProcessor = paymentProcessor;
     }
 
-    @Override
-    public void initialize(final String svcName) throws NotificationQueueAlreadyExists {
-        retryQueue = notificationQueueService.createNotificationQueue(svcName, QUEUE_NAME, new NotificationQueueHandler() {
-            @Override
-            public void handleReadyNotification(String notificationKey, DateTime eventDateTime) {
-                CallContext context = new DefaultCallContext("FailedRetryService", CallOrigin.INTERNAL, UserType.SYSTEM, clock);
-                retry(UUID.fromString(notificationKey), context);
-            }
-        },
-        config);
-    }
-
-    @Override
-    public void start() {
-        retryQueue.startQueue();
-    }
-
-    @Override
-    public void stop() throws NoSuchNotificationQueue {
-        if (retryQueue != null) {
-            retryQueue.stopQueue();
-            notificationQueueService.deleteNotificationQueue(retryQueue.getServiceName(), retryQueue.getQueueName());
-        }
-    }
-
     
 
-    private void retry(final UUID paymentId, final CallContext context) {
-        paymentProcessor.retryPayment(paymentId);
+    @Override
+    public void retry(final UUID paymentId) {
+        paymentProcessor.retryFailedPayment(paymentId);
     }
     
     
-    public static class FailedPaymentRetryServiceScheduler {
-        
-        private final NotificationQueueService notificationQueueService;
+    public static class FailedPaymentRetryServiceScheduler extends RetryServiceScheduler {
         
         @Inject
         public FailedPaymentRetryServiceScheduler(final NotificationQueueService notificationQueueService) {
-            this.notificationQueueService = notificationQueueService;
+            super(notificationQueueService);
         }
-    
-        
-        public void scheduleRetry(final UUID paymentId, final DateTime timeOfRetry) {
 
-            try {
-                NotificationQueue retryQueue = notificationQueueService.getNotificationQueue(DefaultPaymentService.SERVICE_NAME, QUEUE_NAME);
-                NotificationKey key = new NotificationKey() {
-                    @Override
-                    public String toString() {
-                        return paymentId.toString();
-                    }
-                };
-                if (retryQueue != null) {
-                    retryQueue.recordFutureNotification(timeOfRetry, key);
-                }
-            } catch (NoSuchNotificationQueue e) {
-                log.error(String.format("Failed to retrieve notification queue %s:%s", DefaultPaymentService.SERVICE_NAME, QUEUE_NAME));
-            }
+        @Override
+        public String getQueueName() {
+            return QUEUE_NAME;
         }
+    }
+
+    @Override
+    public String getQueueName() {
+        return QUEUE_NAME;
     }
 }

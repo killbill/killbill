@@ -63,6 +63,18 @@ public class MockPaymentDao implements PaymentDao {
             }
         }
     }
+    
+    @Override
+    public void updateStatusForPayment(UUID paymentId,
+            PaymentStatus paymentStatus, CallContext context) {
+        synchronized(this) {
+            PaymentModelDao entry = payments.remove(paymentId);
+            if (entry != null) {
+               payments.put(paymentId, new PaymentModelDao(entry, paymentStatus));
+            }
+        }
+    }
+
 
     @Override
     public PaymentAttemptModelDao getPaymentAttempt(UUID attemptId) {

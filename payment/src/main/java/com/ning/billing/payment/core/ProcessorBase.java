@@ -16,6 +16,9 @@
 package com.ning.billing.payment.core;
 
 import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,18 +46,20 @@ public abstract class ProcessorBase {
     protected final AccountUserApi accountUserApi;
     protected final Bus eventBus;
     protected final GlobalLocker locker;
-    
+    protected final ExecutorService executor;
 
     private static final Logger log = LoggerFactory.getLogger(ProcessorBase.class);
     
     public ProcessorBase(final PaymentProviderPluginRegistry pluginRegistry,
             final AccountUserApi accountUserApi,
             final Bus eventBus,
-            final GlobalLocker locker) {
+            final GlobalLocker locker,
+            final ExecutorService executor) {
         this.pluginRegistry = pluginRegistry;
         this.accountUserApi = accountUserApi;
         this.eventBus= eventBus;
         this.locker = locker;
+        this.executor = executor;
     }
     
     
@@ -100,7 +105,30 @@ public abstract class ProcessorBase {
         public T doOperation() throws PaymentApiException;
     }
     
+    
+
+    public static class WithAccountLockAndTimeout<T> implements Callable<T> {
+        
+        private final GlobalLocker locker;
+        private final String accountExternalKey;
+        private final WithAccountLockCallback<T> callback;
+        
+        public WithAccountLockAndTimeout(final GlobalLocker locker,
+                final String accountExternalKey,
+                final WithAccountLockCallback<T> callback) {
+            this.locker = locker;
+            this.accountExternalKey = accountExternalKey;
+            this.callback = callback;
+        }
+
+        @Override
+        public T call() throws Exception {
+            return new WithAccountLock<T>().processAccountWithLock(locker, accountExternalKey, callback);
+        }
+    }
+    
     public static class WithAccountLock<T> {
+        
         public T processAccountWithLock(final GlobalLocker locker, final String accountExternalKey, final WithAccountLockCallback<T> callback)
          throws PaymentApiException {
             GlobalLock lock = null;

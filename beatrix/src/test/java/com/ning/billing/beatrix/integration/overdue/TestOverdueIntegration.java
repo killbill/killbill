@@ -220,11 +220,11 @@ public class TestOverdueIntegration extends TestIntegrationBase {
         paymentPlugin.makeAllInvoicesFail(false);
         Collection<Invoice> invoices = invoiceApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCNow());
         List<String> invoiceIds = new ArrayList<String>();
-        for(Invoice invoice : invoices) {
+        for (Invoice invoice : invoices) {
             invoiceIds.add(invoice.getId().toString()); 
-            if(invoice.getBalance().compareTo(BigDecimal.ZERO) > 0) {
+            if (invoice.getBalance().compareTo(BigDecimal.ZERO) > 0) {
                 busHandler.pushExpectedEvent(NextEvent.PAYMENT);
-                paymentApi.createPayment(account, invoice.getId(), new DefaultCallContext("test", null, null, clock));
+                paymentApi.createPayment(account, invoice.getId(), invoice.getBalance(), new DefaultCallContext("test", null, null, clock));
                 assertTrue(busHandler.isCompleted(DELAY));
             }
         }

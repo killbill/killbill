@@ -15,6 +15,7 @@
  */
 package com.ning.billing.payment.dao;
 
+import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
@@ -78,6 +79,7 @@ public interface PaymentAttemptSqlDao extends Transactional<PaymentAttemptSqlDao
             stmt.bind("paymentId", attempt.getPaymentId().toString());            
             stmt.bind("processingStatus", attempt.getPaymentStatus().toString());
             stmt.bind("paymentError", attempt.getPaymentError());            
+            stmt.bind("requestedAmount", attempt.getRequestedAmount());            
         }
     }
     public static class PaymentAttemptModelDaoMapper extends MapperBase implements ResultSetMapper<PaymentAttemptModelDao> {
@@ -92,7 +94,8 @@ public interface PaymentAttemptSqlDao extends Transactional<PaymentAttemptSqlDao
             DateTime effectiveDate = getDate(rs, "effective_date");            
             PaymentStatus processingStatus = PaymentStatus.valueOf(rs.getString("processing_status"));
             String paymentError = rs.getString("payment_error");
-            return new PaymentAttemptModelDao(id, accountId, invoiceId, paymentId, processingStatus, effectiveDate, paymentError);
+            BigDecimal requestedAmount = rs.getBigDecimal("requested_amount");
+            return new PaymentAttemptModelDao(id, accountId, invoiceId, paymentId, processingStatus, effectiveDate, requestedAmount, paymentError);
         }
     }
 }

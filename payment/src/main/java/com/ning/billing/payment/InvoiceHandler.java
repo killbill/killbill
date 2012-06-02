@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
+import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
@@ -43,7 +44,7 @@ import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.Tag;
 
-public class RequestProcessor {
+public class InvoiceHandler {
 
     public static final String PAYMENT_PROVIDER_KEY = "paymentProvider";
 
@@ -59,10 +60,10 @@ public class RequestProcessor {
     private final TagUserApi tagUserApi;
     
 
-    private static final Logger log = LoggerFactory.getLogger(RequestProcessor.class);
+    private static final Logger log = LoggerFactory.getLogger(InvoiceHandler.class);
 
     @Inject
-    public RequestProcessor(final Clock clock,
+    public InvoiceHandler(final Clock clock,
             final AccountUserApi accountUserApi,
             final PaymentProcessor paymentProcessor,
             final TagUserApi tagUserApi) {        
@@ -86,11 +87,13 @@ public class RequestProcessor {
                 return;
             }
             CallContext context = new DefaultCallContext("PaymentRequestProcessor", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken(), clock);
-            paymentProcessor.createPayment(account, event.getInvoiceId(), context);
+            paymentProcessor.createPayment(account, event.getInvoiceId(), null, context, false);
         } catch(AccountApiException e) {
             log.error("Failed to process invoice payment", e);
         } catch (PaymentApiException e) {
-            log.error("Failed to process invoice payment", e);            
+            if (e.getCode() != ErrorCode.PAYMENT_NULL_INVOICE.getCode()) {
+                log.error("Failed to process invoice payment", e);
+            }
         }
     }
     
