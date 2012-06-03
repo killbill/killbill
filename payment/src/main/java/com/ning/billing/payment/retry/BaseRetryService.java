@@ -18,6 +18,7 @@ package com.ning.billing.payment.retry;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -86,8 +87,33 @@ public abstract class BaseRetryService implements RetryService {
             this.notificationQueueService = notificationQueueService;
         }
     
+        public boolean scheduleRetryFromTransaction(final UUID paymentId, final DateTime timeOfRetry, final Transmogrifier transactionalDao) {
+            return scheduleRetryInternal(paymentId, timeOfRetry, transactionalDao);
+        }
         
-        public void scheduleRetry(final UUID paymentId, final DateTime timeOfRetry) {
+        public boolean scheduleRetry(final UUID paymentId, final DateTime timeOfRetry) {
+            return scheduleRetryInternal(paymentId, timeOfRetry, null);
+        }
+        
+        // STEPH TimedoutPaymentRetryServiceScheduler
+        public void cancelAllScheduleRetryForKey(final UUID paymentId) {
+            /*
+            try {
+                NotificationQueue retryQueue = notificationQueueService.getNotificationQueue(DefaultPaymentService.SERVICE_NAME, getQueueName());
+                NotificationKey key = new NotificationKey() {
+                    @Override
+                    public String toString() {
+                        return paymentId.toString();
+                    }
+                };
+                retryQueue.removeNotificationsByKey(key);
+            } catch (NoSuchNotificationQueue e) {
+                log.error(String.format("Failed to retrieve notification queue %s:%s", DefaultPaymentService.SERVICE_NAME, getQueueName()));
+            }
+            */
+        }
+        
+        private boolean scheduleRetryInternal(final UUID paymentId, final DateTime timeOfRetry, final Transmogrifier transactionalDao) {
 
             try {
                 NotificationQueue retryQueue = notificationQueueService.getNotificationQueue(DefaultPaymentService.SERVICE_NAME, getQueueName());
@@ -98,11 +124,17 @@ public abstract class BaseRetryService implements RetryService {
                     }
                 };
                 if (retryQueue != null) {
-                    retryQueue.recordFutureNotification(timeOfRetry, key);
+                    if (transactionalDao == null) {
+                        retryQueue.recordFutureNotification(timeOfRetry, key);
+                    } else {
+                        retryQueue.recordFutureNotificationFromTransaction(transactionalDao, timeOfRetry, key);
+                    }
                 }
             } catch (NoSuchNotificationQueue e) {
                 log.error(String.format("Failed to retrieve notification queue %s:%s", DefaultPaymentService.SERVICE_NAME, getQueueName()));
+                return false;
             }
+            return true;
         }
         public abstract String getQueueName();
     }

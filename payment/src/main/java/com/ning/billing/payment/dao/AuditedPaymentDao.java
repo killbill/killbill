@@ -23,8 +23,11 @@ import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
 import com.ning.billing.payment.api.PaymentStatus;
+import com.ning.billing.payment.retry.PluginFailureRetryService.PluginFailureRetryServiceScheduler;
 import com.ning.billing.util.ChangeType;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.dao.EntityAudit;
@@ -36,19 +39,21 @@ public class AuditedPaymentDao implements PaymentDao {
     private final PaymentSqlDao paymentSqlDao;
     private final PaymentAttemptSqlDao paymentAttemptSqlDao;
     private final PaymentMethodSqlDao paymentMethodSqlDao;    
-
+    //private final TimedoutPaymentRetryServiceScheduler timedoutSchduler;
+    
     @Inject
-    public AuditedPaymentDao(IDBI dbi) {
+    public AuditedPaymentDao(IDBI dbi, PluginFailureRetryServiceScheduler timedoutSchduler) {
        this.paymentSqlDao = dbi.onDemand(PaymentSqlDao.class);
        this.paymentAttemptSqlDao = dbi.onDemand(PaymentAttemptSqlDao.class);
        this.paymentMethodSqlDao = dbi.onDemand(PaymentMethodSqlDao.class);
+      // this.timedoutSchduler = timedoutSchduler;
     }
     
 
 
     @Override
     public PaymentAttemptModelDao insertNewAttemptForPayment(final UUID paymentId,
-            final PaymentAttemptModelDao attempt, final CallContext context) {
+            final PaymentAttemptModelDao attempt, final boolean scheduleTimeoutRetry, final CallContext context) {
 
         return paymentAttemptSqlDao.inTransaction(new Transaction<PaymentAttemptModelDao, PaymentAttemptSqlDao>() {
             @Override
@@ -61,9 +66,10 @@ public class AuditedPaymentDao implements PaymentDao {
             }
         });
     }
-
+    
+    
     @Override
-    public PaymentModelDao insertPaymentWithAttempt(final PaymentModelDao payment, final PaymentAttemptModelDao attempt, final CallContext context) {
+    public PaymentModelDao insertPaymentWithAttempt(final PaymentModelDao payment, final PaymentAttemptModelDao attempt, final boolean scheduleTimeoutRetry, final CallContext context) {
         
         return paymentSqlDao.inTransaction(new Transaction<PaymentModelDao, PaymentSqlDao>() {
 
@@ -77,6 +83,27 @@ public class AuditedPaymentDao implements PaymentDao {
             }
         });
     }
+
+    /*
+    private int getNbTimedoutAttemptsFromTransaction(final UUID paymentId, final PaymentAttemptSqlDao transactional) {
+        List<PaymentAttemptModelDao> attempts = transactional.getPaymentAttempts(paymentId.toString());
+        return Collections2.filter(attempts, new Predicate<PaymentAttemptModelDao>() {
+            @Override
+            public boolean apply(PaymentAttemptModelDao input) {
+                return input.getPaymentStatus() == PaymentStatus.TIMEDOUT;
+            }
+        }).size();
+    }
+
+    
+    private void scheduleTimeoutRetryFromTransaction(final UUID paymentId, final PaymentAttemptSqlDao transactional, final boolean scheduleTimeoutRetry) {
+
+        if (scheduleTimeoutRetry) { 
+            int retryAttempt = getNbTimedoutAttemptsFromTransaction(paymentId, transactional) + 1;
+            timedoutSchduler.scheduleRetryFromTransaction(paymentId, retryAttempt, transactional);
+        }
+    }
+*/
     
     
     private PaymentModelDao insertPaymentFromTransaction(final PaymentModelDao payment, final CallContext context, final PaymentSqlDao transactional) {

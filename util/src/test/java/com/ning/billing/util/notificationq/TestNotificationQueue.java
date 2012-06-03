@@ -450,7 +450,7 @@ public class TestNotificationQueue {
         });
     
     
-      queue.removeNotificationsByKey(key); // should remove 2 of the 3
+      queue.removeNotificationsByKey(notificationKey); // should remove 2 of the 3
 
     // Move time in the future after the notification effectiveDate
         ((ClockMock) clock).setDeltaFromReality(4000000 + nextReadyTimeIncrementMs * 3 );

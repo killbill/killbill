@@ -65,8 +65,13 @@ public class NoOpPaymentProviderPlugin implements PaymentProviderPlugin {
             public PaymentPluginStatus getStatus() {
                 return PaymentPluginStatus.PROCESSED;
             }
+
             @Override
-            public String getError() {
+            public String getGatewayError() {
+                return null;
+            }
+            @Override
+            public String getGatewayErrorCode() {
                 return null;
             }
         };

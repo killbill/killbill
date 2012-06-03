@@ -35,5 +35,7 @@ public interface PaymentInfoPlugin {
 
     public PaymentPluginStatus getStatus();
     
-    public String getError();
+    public String getGatewayError();
+    
+    public String getGatewayErrorCode();
 }

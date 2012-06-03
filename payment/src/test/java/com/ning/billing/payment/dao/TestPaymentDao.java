@@ -66,7 +66,7 @@ public class TestPaymentDao {
         helper.initDb(paymentddl);
         helper.initDb(utilddl);
 
-        paymentDao = new AuditedPaymentDao(dbi);
+        paymentDao = new AuditedPaymentDao(dbi, null);
     }
     
     private void setupDb() {
@@ -103,7 +103,7 @@ public class TestPaymentDao {
         
         PaymentModelDao payment = new PaymentModelDao(accountId, invoiceId, amount, currency, effectiveDate);
         PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(accountId, invoiceId, payment.getId(), clock.getUTCNow(), amount);
-        PaymentModelDao savedPayment = paymentDao.insertPaymentWithAttempt(payment, attempt, context);
+        PaymentModelDao savedPayment = paymentDao.insertPaymentWithAttempt(payment, attempt, true, context);
         
         PaymentStatus paymentStatus = PaymentStatus.SUCCESS;
         String paymentError = "No error";
@@ -146,7 +146,7 @@ public class TestPaymentDao {
         PaymentModelDao payment = new PaymentModelDao(accountId, invoiceId, amount, currency, effectiveDate);
         PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(accountId, invoiceId, payment.getId(), clock.getUTCNow(), amount);
         
-        PaymentModelDao savedPayment = paymentDao.insertPaymentWithAttempt(payment, attempt, context);
+        PaymentModelDao savedPayment = paymentDao.insertPaymentWithAttempt(payment, attempt,true, context);
         assertEquals(savedPayment.getId(), payment.getId());
         assertEquals(savedPayment.getAccountId(), accountId);        
         assertEquals(savedPayment.getInvoiceId(), invoiceId);        
@@ -197,11 +197,11 @@ public class TestPaymentDao {
         
         PaymentModelDao payment = new PaymentModelDao(accountId, invoiceId, amount, currency, effectiveDate);
         PaymentAttemptModelDao firstAttempt = new PaymentAttemptModelDao(accountId, invoiceId, payment.getId(), clock.getUTCNow(), amount);
-        PaymentModelDao savedPayment = paymentDao.insertPaymentWithAttempt(payment, firstAttempt, context);
+        PaymentModelDao savedPayment = paymentDao.insertPaymentWithAttempt(payment, firstAttempt, true,context);
         
         BigDecimal newAmount = new BigDecimal(15.23).setScale(2, RoundingMode.HALF_EVEN);
         PaymentAttemptModelDao secondAttempt = new PaymentAttemptModelDao(accountId, invoiceId, payment.getId(), clock.getUTCNow(), newAmount);        
-        paymentDao.insertNewAttemptForPayment(payment.getId(), secondAttempt, context);
+        paymentDao.insertNewAttemptForPayment(payment.getId(), secondAttempt, true, context);
         
         List<PaymentModelDao> payments = paymentDao.getPaymentsForInvoice(invoiceId);
         assertEquals(payments.size(), 1);

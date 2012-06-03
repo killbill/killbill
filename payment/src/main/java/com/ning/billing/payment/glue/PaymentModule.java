@@ -40,13 +40,15 @@ import com.ning.billing.payment.provider.DefaultPaymentProviderPluginRegistry;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
 import com.ning.billing.payment.retry.FailedPaymentRetryService;
 import com.ning.billing.payment.retry.FailedPaymentRetryService.FailedPaymentRetryServiceScheduler;
-import com.ning.billing.payment.retry.TimedoutPaymentRetryService;
+import com.ning.billing.payment.retry.PluginFailureRetryService;
+import com.ning.billing.payment.retry.PluginFailureRetryService.PluginFailureRetryServiceScheduler;
 
 public class PaymentModule extends AbstractModule {
     
     private final static int PLUGIN_NB_THREADS = 3;
     private final static String PLUGIN_THREAD_PREFIX = "Plugin-th-";
-    public final static String PLUGIN_EXECUTOR = "PluginExecutor";
+    
+    public final static String PLUGIN_EXECUTOR_NAMED = "PluginExecutor";
     
 
     private final Properties props;
@@ -68,8 +70,9 @@ public class PaymentModule extends AbstractModule {
 
     protected void installRetryEngines() {
         bind(FailedPaymentRetryService.class).asEagerSingleton();
-        bind(TimedoutPaymentRetryService.class).asEagerSingleton(); 
+        bind(PluginFailureRetryService.class).asEagerSingleton(); 
         bind(FailedPaymentRetryServiceScheduler.class).asEagerSingleton();
+        bind(PluginFailureRetryServiceScheduler.class).asEagerSingleton();        
     }
     
     
@@ -83,7 +86,7 @@ public class PaymentModule extends AbstractModule {
                 return th;
             }
         });
-        bind(ExecutorService.class).annotatedWith(Names.named(PLUGIN_EXECUTOR)).toInstance(pluginExecutorService);
+        bind(ExecutorService.class).annotatedWith(Names.named(PLUGIN_EXECUTOR_NAMED)).toInstance(pluginExecutorService);
         bind(AccountProcessor.class).asEagerSingleton();
         bind(PaymentProcessor.class).asEagerSingleton();
         bind(RefundProcessor.class).asEagerSingleton();

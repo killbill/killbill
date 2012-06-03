@@ -107,13 +107,13 @@ public abstract class ProcessorBase {
     
     
 
-    public static class WithAccountLockAndTimeout<T> implements Callable<T> {
+    public static class CallableWithAccountLock<T> implements Callable<T> {
         
         private final GlobalLocker locker;
         private final String accountExternalKey;
         private final WithAccountLockCallback<T> callback;
         
-        public WithAccountLockAndTimeout(final GlobalLocker locker,
+        public CallableWithAccountLock(final GlobalLocker locker,
                 final String accountExternalKey,
                 final WithAccountLockCallback<T> callback) {
             this.locker = locker;
@@ -127,6 +127,7 @@ public abstract class ProcessorBase {
         }
     }
     
+    // STEPH might not need that anymore
     public static class WithAccountLock<T> {
         
         public T processAccountWithLock(final GlobalLocker locker, final String accountExternalKey, final WithAccountLockCallback<T> callback)

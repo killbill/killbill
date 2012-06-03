@@ -15,10 +15,24 @@
  */
 package com.ning.billing.payment.api;
 
+// STEPH is that the enum we want to export? seems to internal
 public enum PaymentStatus {
-    UNKNOWN,
-    AUTO_PAY_OFF,
-    ERROR,
+    /* Success! */
     SUCCESS,
-    ABORTED
+    /* Initial status for Payment and PaymentAttempt */
+    UNKNOWN,
+    /* Status for Payment when AUTO_PAY_OFF is turned on */
+    AUTO_PAY_OFF,
+    /* Status for Payment and PaymentAttempt when the plugin failed to make the Payment and we will schedule a FailedPaymentRetry */    
+    PAYMENT_FAILURE,
+    /* Payment failure , we already retried a maximum of time */
+    PAYMENT_FAILURE_ABORTED,
+    /* Exception from plugin, state is unknown and needs to be retried */
+    PLUGIN_FAILURE,
+    /* Exception from plugin, we already retried a maximum of time */
+    PLUGIN_FAILURE_ABORTED,    
+    /* PaymentAttenmpt timedout; When TimedoutPaymentRetry kicks in, it check moves the state to TIMEDOUT if this is still in UNKNWON state */    
+    TIMEDOUT,
+    /* Status for Payment and PaymentAttempt all TimedoutPaymentRetry failed */
+    TIMEDOUT_ABORTED,    
 }

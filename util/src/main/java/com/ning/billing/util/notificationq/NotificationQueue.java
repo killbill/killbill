@@ -52,7 +52,7 @@ public interface NotificationQueue extends QueueLifecycle {
      * 
      * @param key
      */
-    public void removeNotificationsByKey(UUID key);
+    public void removeNotificationsByKey(final NotificationKey notificationKey);
 
     /**
      * This is only valid when the queue has been configured with isNotificationProcessingOff is true

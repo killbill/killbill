@@ -26,7 +26,7 @@ import com.ning.billing.payment.InvoiceHandler;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentService;
 import com.ning.billing.payment.retry.FailedPaymentRetryService;
-import com.ning.billing.payment.retry.TimedoutPaymentRetryService;
+import com.ning.billing.payment.retry.PluginFailureRetryService;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
@@ -42,11 +42,11 @@ public class DefaultPaymentService implements PaymentService {
     private final Bus eventBus;
     private final PaymentApi api;
     private final FailedPaymentRetryService failedRetryService;
-    private final TimedoutPaymentRetryService timedoutRetryService;
+    private final PluginFailureRetryService timedoutRetryService;
 
     @Inject
     public DefaultPaymentService(final InvoiceHandler requestProcessor, final PaymentApi api, final Bus eventBus,
-            final FailedPaymentRetryService failedRetryService, final TimedoutPaymentRetryService timedoutRetryService) {
+            final FailedPaymentRetryService failedRetryService, final PluginFailureRetryService timedoutRetryService) {
         this.requestProcessor = requestProcessor;
         this.eventBus = eventBus;
         this.api = api;

@@ -68,7 +68,13 @@ public class DefaultOverdueCheckPoster implements OverdueCheckPoster {
         try {
             checkOverdueQueue = notificationQueueService.getNotificationQueue(DefaultOverdueService.OVERDUE_SERVICE_NAME,
                 DefaultOverdueCheckNotifier.OVERDUE_CHECK_NOTIFIER_QUEUE);
-            checkOverdueQueue.removeNotificationsByKey(overdueable.getId());
+            NotificationKey key = new NotificationKey() {
+                @Override
+                public String toString() {
+                    return overdueable.getId().toString();
+                }
+            };
+            checkOverdueQueue.removeNotificationsByKey(key);
         } catch (NoSuchNotificationQueue e) {
             log.error("Attempting to clear items from a non-existent queue (DefaultOverdueCheck).", e);
         }

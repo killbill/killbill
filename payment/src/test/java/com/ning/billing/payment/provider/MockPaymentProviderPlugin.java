@@ -49,8 +49,9 @@ import com.ning.billing.util.clock.Clock;
 
 public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
     
-    private final AtomicBoolean makeNextInvoiceFail = new AtomicBoolean(false);
-    private final AtomicBoolean makeAllInvoicesFail = new AtomicBoolean(false);
+    private final AtomicBoolean makeNextInvoiceFailWithError = new AtomicBoolean(false);
+    private final AtomicBoolean makeNextInvoiceFailWithException = new AtomicBoolean(false);
+    private final AtomicBoolean makeAllInvoicesFailWithException = new AtomicBoolean(false);
     private final Map<UUID, PaymentInfoPlugin> payments = new ConcurrentHashMap<UUID, PaymentInfoPlugin>();
     private final Map<String, PaymentProviderAccount> accounts = new ConcurrentHashMap<String, PaymentProviderAccount>();
     private final Map<String, PaymentMethodInfo> paymentMethods = new ConcurrentHashMap<String, PaymentMethodInfo>();
@@ -64,26 +65,32 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
     
     
     public void clear() {
-        makeNextInvoiceFail.set(false);
-        makeAllInvoicesFail.set(false);
+        makeNextInvoiceFailWithException.set(false);
+        makeAllInvoicesFailWithException.set(false);
+        makeNextInvoiceFailWithError.set(false);
     }
     
-
-    public void makeNextPaymentFail() {
-        makeNextInvoiceFail.set(true);
+    public void makeNextPaymentFailWithError() {
+        makeNextInvoiceFailWithError.set(true);
     }
 
-    public void makeAllInvoicesFail(boolean failure) {
-        makeAllInvoicesFail.set(failure);
+    
+    public void makeNextPaymentFailWithException() {
+        makeNextInvoiceFailWithException.set(true);
+    }
+
+    public void makeAllInvoicesFailWithException(boolean failure) {
+        makeAllInvoicesFailWithException.set(failure);
     }
 
     @Override
     public PaymentInfoPlugin processPayment(String externalKey, UUID paymentId, BigDecimal amount) throws PaymentPluginApiException {
-        if (makeNextInvoiceFail.getAndSet(false) || makeAllInvoicesFail.get()) {
+        if (makeNextInvoiceFailWithException.getAndSet(false) || makeAllInvoicesFailWithException.get()) {
             throw new PaymentPluginApiException("", "test error");
         }
 
-        PaymentInfoPlugin result = new MockPaymentInfoPlugin(amount, clock.getUTCNow(), clock.getUTCNow(), PaymentPluginStatus.PROCESSED, null);
+        PaymentPluginStatus status = makeNextInvoiceFailWithError.getAndSet(false) ? PaymentPluginStatus.ERROR : PaymentPluginStatus.PROCESSED;
+        PaymentInfoPlugin result = new MockPaymentInfoPlugin(amount, clock.getUTCNow(), clock.getUTCNow(), status, null);
         payments.put(paymentId, result);
         return result;
     }

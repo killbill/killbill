@@ -226,7 +226,7 @@ public enum ErrorCode {
     PAYMENT_NULL_INVOICE(7015, "Invoice %s has a balance <= 0 "),      
     PAYMENT_AMOUNT_DENIED(7016, "Payment amount requested for invoice %s is greater than invoice balance [%f/%f]"),         
     PAYMENT_INTERNAL_ERROR(7017, "Internal payment error : %s"),
-    PAYMENT_PLUGIN_TIMEOUT(7017, "Plugin timeout "),    
+    PAYMENT_PLUGIN_TIMEOUT(7018, "Plugin timeout for account %s and invoice %s"),    
     /*
     *
     * Range 9000: Miscellaneous

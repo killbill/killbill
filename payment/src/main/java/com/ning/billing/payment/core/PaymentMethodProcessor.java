@@ -15,7 +15,7 @@
  */
 package com.ning.billing.payment.core;
 
-import static com.ning.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR;
+import static com.ning.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR_NAMED;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -41,7 +41,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
             final AccountUserApi accountUserApi,
             final Bus eventBus,
             final GlobalLocker locker,
-            @Named(PLUGIN_EXECUTOR)  final ExecutorService executor) {
+            @Named(PLUGIN_EXECUTOR_NAMED)  final ExecutorService executor) {
         super(pluginRegistry, accountUserApi, eventBus, locker, executor);
     }
     

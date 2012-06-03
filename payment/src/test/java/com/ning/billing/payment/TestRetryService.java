@@ -163,7 +163,7 @@ public class TestRetryService {
                                                        new BigDecimal("1.0"),
                                                        Currency.USD));
 
-        mockPaymentProviderPlugin.makeNextPaymentFail();
+        mockPaymentProviderPlugin.makeNextPaymentFailWithError();
         boolean failed = false;
         try {
             paymentProcessor.createPayment(account.getExternalKey(), invoice.getId(), amount, context, false);
@@ -178,7 +178,7 @@ public class TestRetryService {
         for (int curFailure = 0; curFailure < maxTries; curFailure++) {
 
             if (curFailure < maxTries - 1) {
-                mockPaymentProviderPlugin.makeNextPaymentFail();
+                mockPaymentProviderPlugin.makeNextPaymentFailWithError();
             }
 
             if (curFailure < paymentConfig.getPaymentRetryDays().size()) {
@@ -218,13 +218,13 @@ public class TestRetryService {
         for (int i = 0; i < attempts.size(); i++) {
             PaymentAttempt cur = attempts.get(i);
             if (i < attempts.size() - 1) {
-                assertEquals(cur.getPaymentStatus(), PaymentStatus.ERROR);
+                assertEquals(cur.getPaymentStatus(), PaymentStatus.PAYMENT_FAILURE);
             } else if (maxTries <= paymentConfig.getPaymentRetryDays().size()) {
                 assertEquals(cur.getPaymentStatus(), PaymentStatus.SUCCESS);
                 assertEquals(payment.getPaymentStatus(), PaymentStatus.SUCCESS);
             } else {
-                assertEquals(cur.getPaymentStatus(), PaymentStatus.ERROR);      
-                assertEquals(payment.getPaymentStatus(), PaymentStatus.ABORTED);                
+                assertEquals(cur.getPaymentStatus(), PaymentStatus.PAYMENT_FAILURE_ABORTED);      
+                assertEquals(payment.getPaymentStatus(), PaymentStatus.PAYMENT_FAILURE_ABORTED);                
             }
         }
     }

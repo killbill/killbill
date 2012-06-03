@@ -63,9 +63,13 @@ public class MockPaymentInfoPlugin implements PaymentInfoPlugin {
     public DateTime getCreatedDate() {
         return createdDate;
     }
+    @Override
+    public String getGatewayError() {
+        return error;
+    }
 
     @Override
-    public String getError() {
-        return error;
+    public String getGatewayErrorCode() {
+        return null;
     }
 }

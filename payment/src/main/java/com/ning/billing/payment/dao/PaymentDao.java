@@ -26,9 +26,9 @@ import com.ning.billing.util.callcontext.CallContext;
 public interface PaymentDao {
 
     // STEPH do we need object returned?
-    public PaymentModelDao insertPaymentWithAttempt(final PaymentModelDao paymentInfo, final PaymentAttemptModelDao attempt, final CallContext context);
+    public PaymentModelDao insertPaymentWithAttempt(final PaymentModelDao paymentInfo, final PaymentAttemptModelDao attempt, final boolean scheduleTimeoutRetry, final CallContext context);
 
-    public PaymentAttemptModelDao insertNewAttemptForPayment(final UUID paymentId, final PaymentAttemptModelDao attempt, final CallContext context);
+    public PaymentAttemptModelDao insertNewAttemptForPayment(final UUID paymentId, final PaymentAttemptModelDao attempt, final boolean scheduleTimeoutRetry, final CallContext context);
 
 
     public void updateStatusForPayment(final UUID paymentId, final PaymentStatus paymentStatus, final CallContext context);    
