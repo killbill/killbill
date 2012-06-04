@@ -37,7 +37,6 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
-import com.ning.billing.config.PaymentConfig;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.payment.api.DefaultPayment;
@@ -70,7 +69,6 @@ public class PaymentProcessor extends ProcessorBase {
     private final InvoicePaymentApi invoicePaymentApi;
     private final FailedPaymentRetryServiceScheduler failedPaymentRetryService;
     private final PluginFailureRetryServiceScheduler pluginFailureRetryService;
-    private final PaymentConfig config;
     private final PaymentDao paymentDao;
     private final CallContextFactory factory;
     private final Clock clock;
@@ -87,7 +85,6 @@ public class PaymentProcessor extends ProcessorBase {
             final FailedPaymentRetryServiceScheduler failedPaymentRetryService,
             final PluginFailureRetryServiceScheduler pluginFailureRetryService,
             final PaymentDao paymentDao,
-            final PaymentConfig config,
             final Bus eventBus,
             final Clock clock,
             final GlobalLocker locker,
@@ -99,7 +96,6 @@ public class PaymentProcessor extends ProcessorBase {
         this.pluginFailureRetryService = pluginFailureRetryService;
         this.paymentDao = paymentDao;
         this.clock = clock;
-        this.config = config;
         this.factory = factory;
         this.paymentPluginDispatcher = new PluginDispatcher<Payment>(executor);
         this.voidPluginDispatcher = new PluginDispatcher<Void>(executor);
@@ -340,6 +336,7 @@ public class PaymentProcessor extends ProcessorBase {
             //
             paymentStatus = isInstantPayment ? PaymentStatus.PAYMENT_FAILURE_ABORTED : scheduleRetryOnPluginFailure(paymentInput.getId());  
             // STEPH message might need truncation to fit??
+            
             paymentDao.updateStatusForPaymentWithAttempt(paymentInput.getId(), paymentStatus, e.getMessage(), attemptInput.getId(), context);
 
             throw new PaymentApiException(ErrorCode.PAYMENT_CREATE_PAYMENT, account.getId(), e.getMessage());
@@ -354,8 +351,7 @@ public class PaymentProcessor extends ProcessorBase {
     
     private PaymentStatus scheduleRetryOnPluginFailure(UUID paymentId) {
         List<PaymentAttemptModelDao> allAttempts = paymentDao.getAttemptsForPayment(paymentId);
-        // STEPH unknown only?
-        final int retryAttempt = getNumberAttemptsInState(paymentId, allAttempts, PaymentStatus.UNKNOWN);
+        final int retryAttempt = getNumberAttemptsInState(paymentId, allAttempts, PaymentStatus.UNKNOWN, PaymentStatus.PLUGIN_FAILURE);
         final boolean isScheduledForRetry = pluginFailureRetryService.scheduleRetry(paymentId, retryAttempt);
         return isScheduledForRetry ? PaymentStatus.PLUGIN_FAILURE : PaymentStatus.PLUGIN_FAILURE_ABORTED; 
     }

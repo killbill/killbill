@@ -51,7 +51,7 @@ public class PaymentModule extends AbstractModule {
     public final static String PLUGIN_EXECUTOR_NAMED = "PluginExecutor";
     
 
-    private final Properties props;
+    protected final Properties props;
 
     public PaymentModule() {
         this.props = System.getProperties();

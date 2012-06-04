@@ -16,13 +16,16 @@
 
 package com.ning.billing.payment.glue;
 
+import static org.testng.Assert.assertNotNull;
+
+import java.io.IOException;
+import java.net.URL;
+import java.util.Properties;
+
 import org.apache.commons.collections.MapUtils;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.inject.Provider;
 import com.ning.billing.config.PaymentConfig;
-import com.ning.billing.junction.api.BillingApi;
-import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.glue.MockInvoiceModule;
 import com.ning.billing.mock.glue.MockNotificationQueueModule;
 import com.ning.billing.mock.glue.TestDbiModule;
@@ -34,7 +37,7 @@ import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.globallocker.MockGlobalLocker;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.BusModule.BusType;
-import com.ning.billing.util.glue.GlobalLockerModule;
+
 import com.ning.billing.util.glue.TagStoreModule;
 
 public class PaymentTestModuleWithMocks extends PaymentModule {
@@ -48,7 +51,17 @@ public class PaymentTestModuleWithMocks extends PaymentModule {
 	}
 	*/
 
+    private void loadSystemPropertiesFromClasspath(final String resource) {
+        final URL url = PaymentTestModuleWithMocks.class.getResource(resource);
+        assertNotNull(url);
 
+        try {
+            props.load(url.openStream());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
     public PaymentTestModuleWithMocks() {
         super(MapUtils.toProperties(ImmutableMap.of("killbill.payment.provider.default", "my-mock",
                 "killbill.payment.engine.events.off", "false")));
@@ -66,6 +79,7 @@ public class PaymentTestModuleWithMocks extends PaymentModule {
 
     @Override
     protected void configure() {
+        loadSystemPropertiesFromClasspath("/payment.properties");
         super.configure();
         install(new BusModule(BusType.MEMORY));
         install(new MockNotificationQueueModule());

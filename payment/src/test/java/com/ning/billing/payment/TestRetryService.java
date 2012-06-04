@@ -63,6 +63,7 @@ import com.ning.billing.payment.glue.PaymentTestModuleWithMocks;
 import com.ning.billing.payment.provider.MockPaymentProviderPlugin;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
 import com.ning.billing.payment.retry.FailedPaymentRetryService;
+import com.ning.billing.payment.retry.PluginFailureRetryService;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.glue.CallContextModule;
@@ -83,6 +84,8 @@ public class TestRetryService {
     private PaymentProviderPluginRegistry registry;
     @Inject
     private FailedPaymentRetryService retryService;
+    @Inject
+    private PluginFailureRetryService pluginRetryService;
 
     @Inject
     private ClockMock clock;
@@ -98,6 +101,9 @@ public class TestRetryService {
     @BeforeMethod(groups = "fast")
     public void setUp() throws Exception {
 
+        pluginRetryService.initialize(DefaultPaymentService.SERVICE_NAME);
+        pluginRetryService.start();
+        
         retryService.initialize(DefaultPaymentService.SERVICE_NAME);
         retryService.start();
         eventBus.start();
@@ -113,6 +119,7 @@ public class TestRetryService {
     @AfterMethod(groups = "fast")
     public void tearDown() throws Exception {
         retryService.stop();
+        pluginRetryService.stop();
         eventBus.stop();
     }
 
@@ -127,22 +134,38 @@ public class TestRetryService {
 
 
     @Test(groups = "fast")
+    public void testFailedPluginWithOneSuccessfulRetry() throws Exception {
+        testSchedulesRetryInternal(1, FailureType.PLUGIN_EXCEPTION);
+    }
+
+    @Test(groups = "fast")
+    public void testFailedPpluginWithLastRetrySuccess() throws Exception {
+        testSchedulesRetryInternal(paymentConfig.getPluginFailureRetryMaxAttempts(), FailureType.PLUGIN_EXCEPTION);
+    }
+
+    @Test(groups = "fast")
+    public void testAbortedPlugin() throws Exception {
+        testSchedulesRetryInternal(paymentConfig.getPluginFailureRetryMaxAttempts() + 1, FailureType.PLUGIN_EXCEPTION);
+    }
+
+
+    @Test(groups = "fast")
     public void testFailedPaymentWithOneSuccessfulRetry() throws Exception {
-        testSchedulesRetryInternal(1);
+        testSchedulesRetryInternal(1, FailureType.PAYMENT_FAILURE);
     }
 
     @Test(groups = "fast")
     public void testFailedPaymentWithLastRetrySuccess() throws Exception {
-        testSchedulesRetryInternal(paymentConfig.getPaymentRetryDays().size());
+        testSchedulesRetryInternal(paymentConfig.getPaymentRetryDays().size(), FailureType.PAYMENT_FAILURE);
     }
 
     @Test(groups = "fast")
     public void testAbortedPayment() throws Exception {
-        testSchedulesRetryInternal(paymentConfig.getPaymentRetryDays().size() + 1);
+        testSchedulesRetryInternal(paymentConfig.getPaymentRetryDays().size() + 1, FailureType.PAYMENT_FAILURE);
     }
 
 
-    private void testSchedulesRetryInternal(int maxTries) throws Exception {
+    private void testSchedulesRetryInternal(int maxTries, final FailureType failureType) throws Exception {
         
         final Account account = testHelper.createTestCreditCardAccount();
         final Invoice invoice = testHelper.createTestInvoice(account, clock.getUTCNow(), Currency.USD);
@@ -162,8 +185,7 @@ public class TestRetryService {
                                                        amount,
                                                        new BigDecimal("1.0"),
                                                        Currency.USD));
-
-        mockPaymentProviderPlugin.makeNextPaymentFailWithError();
+        setPaymentFailure(failureType);
         boolean failed = false;
         try {
             paymentProcessor.createPayment(account.getExternalKey(), invoice.getId(), amount, context, false);
@@ -172,20 +194,15 @@ public class TestRetryService {
         }
         assertTrue(failed);
 
-
-        //int maxTries = paymentAborted ? paymentConfig.getPaymentRetryDays().size() + 1 : 1;
-        
         for (int curFailure = 0; curFailure < maxTries; curFailure++) {
 
             if (curFailure < maxTries - 1) {
-                mockPaymentProviderPlugin.makeNextPaymentFailWithError();
+                setPaymentFailure(failureType);                
             }
 
-            if (curFailure < paymentConfig.getPaymentRetryDays().size()) {
+            if (curFailure < getMaxRetrySizeForFailureType(failureType)) {
                 
-                int nbDays = paymentConfig.getPaymentRetryDays().get(curFailure);            
-                clock.addDays(nbDays + 1);
-
+                moveClockForFailureType(failureType, curFailure);
                 try {
                     await().atMost(3, SECONDS).until(new Callable<Boolean>() {
                         @Override
@@ -201,12 +218,11 @@ public class TestRetryService {
                 }
             }
         }
-
-
         Payment payment = getPaymentForInvoice(invoice.getId());
         List<PaymentAttempt> attempts = payment.getAttempts();
         
-        int expectedAttempts = maxTries < paymentConfig.getPaymentRetryDays().size() ? maxTries + 1 : paymentConfig.getPaymentRetryDays().size() + 1;
+        int expectedAttempts = maxTries < getMaxRetrySizeForFailureType(failureType) ?
+                maxTries + 1 : getMaxRetrySizeForFailureType(failureType) + 1;
         assertEquals(attempts.size(), expectedAttempts);
         Collections.sort(attempts, new Comparator<PaymentAttempt>() {
             @Override
@@ -218,14 +234,54 @@ public class TestRetryService {
         for (int i = 0; i < attempts.size(); i++) {
             PaymentAttempt cur = attempts.get(i);
             if (i < attempts.size() - 1) {
-                assertEquals(cur.getPaymentStatus(), PaymentStatus.PAYMENT_FAILURE);
-            } else if (maxTries <= paymentConfig.getPaymentRetryDays().size()) {
+                if (failureType == FailureType.PAYMENT_FAILURE) {
+                    assertEquals(cur.getPaymentStatus(), PaymentStatus.PAYMENT_FAILURE);
+                } else {
+                    assertEquals(cur.getPaymentStatus(), PaymentStatus.PLUGIN_FAILURE);                    
+                }
+            } else if (maxTries <= getMaxRetrySizeForFailureType(failureType)) {
                 assertEquals(cur.getPaymentStatus(), PaymentStatus.SUCCESS);
                 assertEquals(payment.getPaymentStatus(), PaymentStatus.SUCCESS);
             } else {
-                assertEquals(cur.getPaymentStatus(), PaymentStatus.PAYMENT_FAILURE_ABORTED);      
-                assertEquals(payment.getPaymentStatus(), PaymentStatus.PAYMENT_FAILURE_ABORTED);                
+                if (failureType == FailureType.PAYMENT_FAILURE) {
+                    assertEquals(cur.getPaymentStatus(), PaymentStatus.PAYMENT_FAILURE_ABORTED);      
+                    assertEquals(payment.getPaymentStatus(), PaymentStatus.PAYMENT_FAILURE_ABORTED);
+                } else {
+                    assertEquals(cur.getPaymentStatus(), PaymentStatus.PLUGIN_FAILURE_ABORTED);      
+                    assertEquals(payment.getPaymentStatus(), PaymentStatus.PLUGIN_FAILURE_ABORTED);
+                }
             }
         }
     }
+    
+    private enum FailureType {
+        PLUGIN_EXCEPTION,
+        PAYMENT_FAILURE
+    }
+    
+    private void setPaymentFailure(FailureType failureType) {
+        if (failureType == FailureType.PAYMENT_FAILURE) {
+            mockPaymentProviderPlugin.makeNextPaymentFailWithError();
+        } else if (failureType == FailureType.PLUGIN_EXCEPTION) {
+            mockPaymentProviderPlugin.makeNextPaymentFailWithException();            
+        }
+    }
+    
+    private void moveClockForFailureType(FailureType failureType, int curFailure) {
+        if (failureType == FailureType.PAYMENT_FAILURE) {
+            int nbDays = paymentConfig.getPaymentRetryDays().get(curFailure);            
+            clock.addDays(nbDays + 1);
+        } else {
+            clock.addDays(1);
+        }
+    }
+    
+    private int getMaxRetrySizeForFailureType(FailureType failureType) {
+        if (failureType == FailureType.PAYMENT_FAILURE) {        
+            return paymentConfig.getPaymentRetryDays().size();
+        } else {
+            return paymentConfig.getPluginFailureRetryMaxAttempts();
+        }
+    }
+     
 }

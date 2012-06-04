@@ -92,13 +92,16 @@ public class PluginFailureRetryService extends BaseRetryService implements Retry
             return scheduleRetryFromTransaction(paymentId, nextRetryDate, transactionalDao);
         }
         
-        private DateTime getNextRetryDate(int retryAttempt) {
-            if (retryAttempt > config.getPaymentFailureRetryMaxAttempts()) {
+        private DateTime getNextRetryDate(final int retryAttempt) {
+            
+
+            if (retryAttempt > config.getPluginFailureRetryMaxAttempts()) {
                 return null;
             }
-            int nbSec = config.getPaymentFailureRetryStart();
-            while (--retryAttempt > 0) {
-                nbSec = nbSec * config.getPaymentFailureRetryMultiplier();
+            int nbSec = config.getPluginFailureRetryStart();
+            int remainingAttempts = retryAttempt;
+            while (--remainingAttempts > 0) {
+                nbSec = nbSec * config.getPluginFailureRetryMultiplier();
             }
             return clock.getUTCNow().plusSeconds(nbSec);
         }
