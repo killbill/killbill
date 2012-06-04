@@ -23,8 +23,6 @@ import java.util.List;
 import javax.ws.rs.core.Response.Status;
 
 import com.ning.billing.jaxrs.resources.JaxrsResource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -32,13 +30,10 @@ import com.ning.billing.jaxrs.json.TagDefinitionJson;
 import com.ning.http.client.Response;
 
 public class TestTag extends TestJaxrsBase {
-
-    private static final Logger log = LoggerFactory.getLogger(TestTag.class);
-
     @Test(groups="slow", enabled=true)
     public void testTagDefinitionOk() throws Exception {
     
-        TagDefinitionJson input = new TagDefinitionJson("blue", "realxing color");
+        TagDefinitionJson input = new TagDefinitionJson("blue", "relaxing color");
         String baseJson = mapper.writeValueAsString(input);
         Response response = doPost(JaxrsResource.TAG_DEFINITIONS_PATH, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
@@ -66,7 +61,7 @@ public class TestTag extends TestJaxrsBase {
         List<TagDefinitionJson> objFromJson = mapper.readValue(baseJson, new TypeReference<List<TagDefinitionJson>>() {});
         int sizeSystemTag = (objFromJson == null || objFromJson.size() == 0) ? 0 : objFromJson.size();
         
-        TagDefinitionJson input = new TagDefinitionJson("blue", "realxing color");
+        TagDefinitionJson input = new TagDefinitionJson("blue", "relaxing color");
         baseJson = mapper.writeValueAsString(input);
         response = doPost(JaxrsResource.TAG_DEFINITIONS_PATH, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
@@ -81,7 +76,7 @@ public class TestTag extends TestJaxrsBase {
         response = doPost(JaxrsResource.TAG_DEFINITIONS_PATH, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
 
-        input = new TagDefinitionJson("green", "super realxing color");
+        input = new TagDefinitionJson("green", "super relaxing color");
         baseJson = mapper.writeValueAsString(input);
         response = doPost(JaxrsResource.TAG_DEFINITIONS_PATH, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());

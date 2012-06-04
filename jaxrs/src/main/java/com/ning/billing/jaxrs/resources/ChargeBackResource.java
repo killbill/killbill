@@ -121,6 +121,7 @@ public class ChargebackResource implements JaxrsResource {
     }
 
     @POST
+    @Path("/chargebacks")
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response createChargeback(final ChargebackJson json,

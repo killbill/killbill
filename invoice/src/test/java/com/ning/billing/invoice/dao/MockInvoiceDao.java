@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import org.joda.time.DateTime;
 
@@ -239,6 +240,16 @@ public class MockInvoiceDao implements InvoiceDao {
 
     @Override
     public InvoicePayment getChargebackById(UUID chargebackId) throws InvoiceApiException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public InvoiceItem getCreditById(UUID creditId) throws InvoiceApiException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public InvoiceItem insertCredit(UUID accountId, BigDecimal amount, DateTime effectiveDate, Currency currency, CallContext context) {
         throw new UnsupportedOperationException();
     }
 }

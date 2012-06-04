@@ -22,8 +22,10 @@ import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.ErrorCode;
+import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.model.CreditInvoiceItem;
+import com.ning.billing.invoice.model.DefaultInvoice;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
@@ -47,6 +49,7 @@ import com.ning.billing.util.tag.dao.TagDao;
 public class DefaultInvoiceDao implements InvoiceDao {
     private final InvoiceSqlDao invoiceSqlDao;
     private final InvoicePaymentSqlDao invoicePaymentSqlDao;
+    private final CreditInvoiceItemSqlDao creditInvoiceItemSqlDao;
     private final TagDao tagDao;
 
 	private final NextBillingDatePoster nextBillingDatePoster;
@@ -57,6 +60,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
                              final TagDao tagDao) {
         this.invoiceSqlDao = dbi.onDemand(InvoiceSqlDao.class);
         this.invoicePaymentSqlDao = dbi.onDemand(InvoicePaymentSqlDao.class);
+        this.creditInvoiceItemSqlDao = dbi.onDemand(CreditInvoiceItemSqlDao.class);
         this.nextBillingDatePoster = nextBillingDatePoster;
         this.tagDao = tagDao;
     }
@@ -314,6 +318,25 @@ public class DefaultInvoiceDao implements InvoiceDao {
         } else {
             return chargeback;
         }
+    }
+
+    @Override
+    public InvoiceItem getCreditById(final UUID creditId) throws InvoiceApiException {
+        return creditInvoiceItemSqlDao.getById(creditId.toString());
+    }
+
+    // TODO: make this transactional
+    @Override
+    public InvoiceItem insertCredit(final UUID accountId, final BigDecimal amount,
+                             final DateTime effectiveDate, final Currency currency,
+                             final CallContext context) {
+        Invoice invoice = new DefaultInvoice(accountId, effectiveDate, effectiveDate, currency);
+        invoiceSqlDao.create(invoice, context);
+
+        InvoiceItem credit = new CreditInvoiceItem(invoice.getId(), accountId, effectiveDate, amount, currency);
+        creditInvoiceItemSqlDao.create(credit, context);
+
+        return credit;
     }
 
     @Override

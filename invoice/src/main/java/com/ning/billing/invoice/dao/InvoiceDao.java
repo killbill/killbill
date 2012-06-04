@@ -16,8 +16,10 @@
 
 package com.ning.billing.invoice.dao;
 
+import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
+import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.util.callcontext.CallContext;
 import org.joda.time.DateTime;
@@ -67,5 +69,11 @@ public interface InvoiceDao {
 
     List<InvoicePayment> getChargebacksByPaymentAttemptId(final UUID paymentAttemptId);
 
-    InvoicePayment getChargebackById(UUID chargebackId) throws InvoiceApiException;
+    InvoicePayment getChargebackById(final UUID chargebackId) throws InvoiceApiException;
+
+    InvoiceItem getCreditById(final UUID creditId) throws InvoiceApiException;
+
+    InvoiceItem insertCredit(final UUID accountId, final BigDecimal amount,
+                             final DateTime effectiveDate, final Currency currency,
+                             final CallContext context);
 }
