@@ -70,7 +70,7 @@ public class PaymentJsonSimple {
             @JsonProperty("retryCount") Integer retryCount,
             @JsonProperty("currency") String currency,
             @JsonProperty("status") String status,
-            @JsonProperty("paymentId") UUID accountId) {
+            @JsonProperty("accountId") UUID accountId) {
         super();
         this.amount = amount;
         this.paidAmount = paidAmount;
