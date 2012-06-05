@@ -95,9 +95,9 @@ public class PaymentMethodInfo {
 
         protected BuilderBase(Class<V> builderClazz, T src) {
             this(builderClazz);
-            this.id = src.id;
-            this.accountId = src.accountId;
-            this.defaultMethod = src.defaultMethod;
+            this.id = src.getId();
+            this.accountId = src.getAccountId();
+            this.defaultMethod = src.getDefaultMethod();
         }
 
         public V setId(String id) {
