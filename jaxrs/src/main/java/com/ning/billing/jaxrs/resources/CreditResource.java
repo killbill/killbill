@@ -16,6 +16,7 @@
 
 package com.ning.billing.jaxrs.resources;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
@@ -52,6 +53,7 @@ public class CreditResource implements JaxrsResource {
     private final AccountUserApi accountUserApi;
     private final Context context;
 
+    @Inject
     public CreditResource(JaxrsUriBuilder uriBuilder, InvoiceUserApi invoiceUserApi, AccountUserApi accountUserApi, Context context) {
         this.uriBuilder = uriBuilder;
         this.invoiceUserApi = invoiceUserApi;
