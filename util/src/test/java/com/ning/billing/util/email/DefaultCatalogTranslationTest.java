@@ -35,7 +35,7 @@ public class DefaultCatalogTranslationTest {
         translation = new DefaultCatalogTranslator(config);
     }
 
-    @Test(groups = {"fast", "email"})
+    @Test(groups = {"fast", "email"}, enabled = false)
     public void testInitialization() {
         String ningPlusText = "ning-plus";
         String ningProText = "ning-pro";
@@ -54,7 +54,7 @@ public class DefaultCatalogTranslationTest {
         assertEquals(translation.getTranslation(Locale.CHINA, badText), badText);
     }
 
-    @Test
+    @Test(enabled = false)
     public void testExistingTranslation() {
         // if the translation exists, return the translation
         String originalText = "ning-plus";
@@ -68,7 +68,7 @@ public class DefaultCatalogTranslationTest {
         assertEquals(translation.getTranslation(Locale.US, originalText), originalText);
     }
 
-    @Test
+    @Test(enabled = false)
     public void testMissingTranslationFileWithEnglishText() {
         // if the translation file doesn't exist, return the "English" translation
         String originalText = "ning-plus";
