@@ -4,3 +4,8 @@ script: mvn clean install -Ptravis
 notifications:
   email:
     - ri-dev@ning.com
+
+jdk:
+  - openjdk6
+  - openjdk7
+  - oraclejdk7
