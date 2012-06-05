@@ -18,11 +18,10 @@ package com.ning.billing.jaxrs.json;
 
 import java.math.BigDecimal;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import org.joda.time.DateTime;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ning.billing.invoice.api.Invoice;
 
 public class InvoiceJsonSimple {
@@ -33,17 +32,19 @@ public class InvoiceJsonSimple {
     private final DateTime targetDate;
     private final String invoiceNumber;
     private final BigDecimal balance;
+    private final String accountId;
 
     public InvoiceJsonSimple() {
         this.amount = BigDecimal.ZERO;
         this.credit = BigDecimal.ZERO;
         this.invoiceId = null;
         this.invoiceDate = null;
-        this.targetDate = null;        
+        this.targetDate = null;
         this.invoiceNumber = null;
         this.balance = BigDecimal.ZERO;
+        this.accountId = null;
     }
-    
+
     @JsonCreator
     public InvoiceJsonSimple(@JsonProperty("amount") BigDecimal amount,
                              @JsonProperty("credit") BigDecimal credit,
@@ -51,7 +52,8 @@ public class InvoiceJsonSimple {
                              @JsonProperty("invoiceDate") DateTime invoiceDate,
                              @JsonProperty("targetDate") DateTime targetDate,
                              @JsonProperty("invoiceNumber") String invoiceNumber,
-                             @JsonProperty("balance") BigDecimal balance) {
+                             @JsonProperty("balance") BigDecimal balance,
+                             @JsonProperty("accountId") String accountId) {
         super();
         this.amount = amount;
         this.credit = credit;
@@ -60,6 +62,7 @@ public class InvoiceJsonSimple {
         this.targetDate = targetDate;
         this.invoiceNumber = invoiceNumber;
         this.balance = balance;
+        this.accountId = accountId;
     }
 
     public InvoiceJsonSimple(Invoice input) {
@@ -70,8 +73,9 @@ public class InvoiceJsonSimple {
         this.targetDate = input.getTargetDate();
         this.invoiceNumber = String.valueOf(input.getInvoiceNumber());
         this.balance = input.getBalance();
+        this.accountId = input.getAccountId().toString();
     }
-    
+
     public BigDecimal getAmount() {
         return amount;
     }
@@ -98,6 +102,10 @@ public class InvoiceJsonSimple {
 
     public BigDecimal getBalance() {
         return balance;
+    }
+
+    public String getAccountId() {
+        return accountId;
     }
 
     @Override
@@ -159,6 +167,12 @@ public class InvoiceJsonSimple {
             if (other.invoiceNumber != null)
                 return false;
         } else if (!invoiceNumber.equals(other.invoiceNumber))
+            return false;
+
+        if (accountId == null) {
+            if (other.accountId != null)
+                return false;
+        } else if (!accountId.equals(other.accountId))
             return false;
 
         return true;

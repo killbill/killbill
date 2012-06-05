@@ -19,11 +19,10 @@ package com.ning.billing.jaxrs.json;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import org.joda.time.DateTime;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ning.billing.util.clock.DefaultClock;
 
 public class PaymentJsonSimple {
@@ -33,19 +32,21 @@ public class PaymentJsonSimple {
     private final BigDecimal amount;
 
     private final UUID invoiceId;
-    
+
     private final UUID paymentId;
-    
+
     private final DateTime requestedDate;
-    
+
     private final DateTime effectiveDate;
-    
+
     private final Integer retryCount;
-    
+
     private final String currency;
-    
+
     private final String status;
-      
+
+    private final UUID accountId;
+
     public PaymentJsonSimple() {
         this.amount = null;
         this.paidAmount = null;
@@ -56,6 +57,7 @@ public class PaymentJsonSimple {
         this.currency = null;
         this.retryCount = null;
         this.status = null;
+        this.accountId = null;
     }
 
     @JsonCreator
@@ -66,8 +68,9 @@ public class PaymentJsonSimple {
             @JsonProperty("requestedDate") DateTime requestedDate,
             @JsonProperty("effectiveDate") DateTime effectiveDate,
             @JsonProperty("retryCount") Integer retryCount,
-            @JsonProperty("currency") String currency,            
-            @JsonProperty("status") String status) {
+            @JsonProperty("currency") String currency,
+            @JsonProperty("status") String status,
+            @JsonProperty("paymentId") UUID accountId) {
         super();
         this.amount = amount;
         this.paidAmount = paidAmount;
@@ -78,6 +81,7 @@ public class PaymentJsonSimple {
         this.currency = currency;
         this.retryCount = retryCount;
         this.status = status;
+        this.accountId = accountId;
     }
 
     public BigDecimal getPaidAmount() {
@@ -114,5 +118,9 @@ public class PaymentJsonSimple {
 
     public String getCurrency() {
         return currency;
+    }
+
+    public UUID getAccountId() {
+        return accountId;
     }
 }

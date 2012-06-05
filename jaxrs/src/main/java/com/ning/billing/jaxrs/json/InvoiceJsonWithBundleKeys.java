@@ -1,13 +1,13 @@
 package com.ning.billing.jaxrs.json;
 import java.math.BigDecimal;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import org.joda.time.DateTime;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ning.billing.invoice.api.Invoice;
 
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -30,7 +30,7 @@ public class InvoiceJsonWithBundleKeys extends InvoiceJsonSimple {
         super();
         this.bundleKeys = null;
     }
-    
+
     @JsonCreator
     public InvoiceJsonWithBundleKeys(@JsonProperty("amount") BigDecimal amount,
                                      @JsonProperty("credit") BigDecimal credit,
@@ -39,8 +39,9 @@ public class InvoiceJsonWithBundleKeys extends InvoiceJsonSimple {
                                      @JsonProperty("targetDate") DateTime targetDate,
                                      @JsonProperty("invoiceNumber") String invoiceNumber,
                                      @JsonProperty("balance") BigDecimal balance,
+                                     @JsonProperty("accountId") String accountId,
                                      @JsonProperty("externalBundleKeys") String bundleKeys) {
-        super(amount, credit, invoiceId, invoiceDate, targetDate, invoiceNumber, balance);
+        super(amount, credit, invoiceId, invoiceDate, targetDate, invoiceNumber, balance, accountId);
         this.bundleKeys = bundleKeys;
     }
 
