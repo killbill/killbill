@@ -210,6 +210,7 @@ public class OverdueTestBase {
         ((ZombieControl)invoice).addResult("getInvoiceDate",dateOfLastUnPaidInvoice);
         ((ZombieControl)invoice).addResult("getBalance",BigDecimal.TEN);
         ((ZombieControl)invoice).addResult("getId",UUID.randomUUID());
+        ((ZombieControl)invoice).addResult("hashCode", UUID.randomUUID().hashCode());
 
         InvoiceItem item = BrainDeadProxyFactory.createBrainDeadProxyFor(InvoiceItem.class);
         ((ZombieControl)item).addResult("getBundleId",bundleId);
