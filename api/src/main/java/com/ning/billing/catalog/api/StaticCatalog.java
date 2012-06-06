@@ -17,6 +17,7 @@
 package com.ning.billing.catalog.api;
 
 import java.util.Date;
+import java.util.List;
 
 
 public interface StaticCatalog {
@@ -75,5 +76,7 @@ public interface StaticCatalog {
 			PlanSpecifier to) throws CatalogApiException;
 
     public abstract boolean canCreatePlan(PlanSpecifier specifier) throws CatalogApiException;
+
+    public abstract List<Listing> getAvailableAddonListings(String baseProductName) throws CatalogApiException;
 
 }

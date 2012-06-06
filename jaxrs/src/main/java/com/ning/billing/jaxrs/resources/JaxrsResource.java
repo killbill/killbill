@@ -15,12 +15,6 @@
  */
 package com.ning.billing.jaxrs.resources;
 
-import com.ning.billing.jaxrs.json.CustomFieldJson;
-import com.ning.billing.util.callcontext.CallContext;
-
-import javax.ws.rs.core.Response;
-import java.util.List;
-import java.util.UUID;
 
 public interface JaxrsResource {
 	
@@ -82,4 +76,8 @@ public interface JaxrsResource {
 
     public static final String TAGS = "tags";
     public static final String CUSTOM_FIELDS = "custom_fields";
+    
+    public static final String CATALOG = "catalog";
+    public static final String CATALOG_PATH = PREFIX + "/" + CATALOG;
+
 }

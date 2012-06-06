@@ -39,6 +39,7 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.catalog.api.Listing;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanAlignmentChange;
 import com.ning.billing.catalog.api.PlanAlignmentCreate;
@@ -444,5 +445,10 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
 			throws CatalogApiException {
 		return versionForDate(clock.getUTCNow()).canCreatePlan(specifier);
 	}
+
+    @Override
+    public List<Listing> getAvailableAddonListings(String baseProductName) throws CatalogApiException {
+        return versionForDate(clock.getUTCNow()).getAvailableAddonListings(baseProductName);
+    }
 
 }

@@ -16,6 +16,9 @@
 
 package com.ning.billing.catalog;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -23,6 +26,7 @@ import javax.xml.bind.annotation.XmlElement;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.CatalogApiException;
+import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.util.config.ValidatingConfig;
@@ -98,6 +102,15 @@ public class DefaultPriceListSet extends ValidatingConfig<StandaloneCatalog> {
 	public DefaultPriceList[] getChildPriceLists() {
 		return childPriceLists;
 	}
+
+    public List<PriceList> getAllPriceLists() {
+        List<PriceList> result = new ArrayList<PriceList> (childPriceLists.length + 1);
+        result.add(getDefaultPricelist());
+        for(PriceList list : getChildPriceLists()) {
+            result.add(list);
+        }
+        return result;
+    }
 
 
 	
