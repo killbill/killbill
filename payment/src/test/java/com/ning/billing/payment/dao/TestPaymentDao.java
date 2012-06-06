@@ -241,8 +241,9 @@ public class TestPaymentDao {
         UUID accountId = UUID.randomUUID();
         String pluginName = "nobody";
         Boolean isActive = Boolean.TRUE;
+        String externalPaymentId = UUID.randomUUID().toString();
         
-        PaymentMethodModelDao method = new PaymentMethodModelDao(paymentMethodId, accountId, pluginName, isActive);
+        PaymentMethodModelDao method = new PaymentMethodModelDao(paymentMethodId, accountId, pluginName, isActive, externalPaymentId);
         
         PaymentMethodModelDao savedMethod = paymentDao.insertPaymentMethod(method, context);
         assertEquals(savedMethod.getId(), paymentMethodId);
@@ -257,6 +258,7 @@ public class TestPaymentDao {
         assertEquals(savedMethod.getAccountId(), accountId);        
         assertEquals(savedMethod.getPluginName(), pluginName);
         assertEquals(savedMethod.isActive(), isActive);
+        assertEquals(savedMethod.getExternalId(), externalPaymentId);
         
     }
 }

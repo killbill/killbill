@@ -28,7 +28,7 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.payment.api.PaymentApiException;
-import com.ning.billing.payment.plugin.api.PaymentProviderPlugin;
+import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.BusEvent;
@@ -63,7 +63,7 @@ public abstract class ProcessorBase {
     }
     
     
-    protected PaymentProviderPlugin getPaymentProviderPlugin(String accountKey) {
+    protected PaymentPluginApi getPaymentProviderPlugin(String accountKey) {
 
         String paymentProviderName = null;
         if (accountKey != null) {
@@ -78,7 +78,7 @@ public abstract class ProcessorBase {
         return pluginRegistry.getPlugin(paymentProviderName);
     }
     
-    protected PaymentProviderPlugin getPaymentProviderPlugin(Account account) {
+    protected PaymentPluginApi getPaymentProviderPlugin(Account account) {
         String paymentProviderName = null;
 
         if (account != null) {

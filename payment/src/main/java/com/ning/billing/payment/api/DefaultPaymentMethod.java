@@ -26,18 +26,34 @@ public class DefaultPaymentMethod extends EntityBase  implements PaymentMethod {
     private final UUID accountId;    
     private final Boolean isActive;
     private final String pluginName;
+    private final PaymentMethodPlugin pluginDetail;
     
-    
-    public DefaultPaymentMethod(UUID paymentMethodId, UUID accountId,
-            Boolean isActive, String pluginName) {
+    public DefaultPaymentMethod(UUID paymentMethodId, UUID accountId, Boolean isActive, String pluginName) {
         super(paymentMethodId);
         this.accountId = accountId;
         this.isActive = isActive;
         this.pluginName = pluginName;
+        this.pluginDetail = null;
     }
     
+    public DefaultPaymentMethod(UUID paymentMethodId, UUID accountId, Boolean isActive, String pluginName, PaymentMethodPlugin pluginDetail) {
+        super(paymentMethodId);
+        this.accountId = accountId;
+        this.isActive = isActive;
+        this.pluginName = pluginName;
+        this.pluginDetail = pluginDetail;
+    }
+
+    public DefaultPaymentMethod(UUID accountId, String pluginName, PaymentMethodPlugin pluginDetail) {
+        this(UUID.randomUUID(), accountId, true, pluginName, pluginDetail);
+    }
+
     public DefaultPaymentMethod(PaymentMethodModelDao input) {
         this(input.getId(), input.getAccountId(), input.isActive(), input.getPluginName());
+    }
+
+    public DefaultPaymentMethod(PaymentMethodModelDao input, PaymentMethodPlugin pluginDetail) {
+        this(input.getId(), input.getAccountId(), input.isActive(), input.getPluginName(), pluginDetail);
     }
 
 
@@ -54,5 +70,10 @@ public class DefaultPaymentMethod extends EntityBase  implements PaymentMethod {
     @Override
     public String getPluginName() {
         return pluginName;
+    }
+
+    @Override
+    public PaymentMethodPlugin getPluginDetail() {
+        return pluginDetail;
     }
 }

@@ -44,8 +44,6 @@ public interface PaymentDao {
     public PaymentModelDao getPayment(final UUID paymentId);    
 
     public List<PaymentAttemptModelDao> getAttemptsForPayment(final UUID paymentId);
-
-
     
     public PaymentMethodModelDao insertPaymentMethod(final PaymentMethodModelDao paymentMethod, final CallContext context);
     

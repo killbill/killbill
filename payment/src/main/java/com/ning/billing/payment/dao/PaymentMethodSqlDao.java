@@ -72,6 +72,7 @@ public interface PaymentMethodSqlDao extends Transactional<PaymentMethodSqlDao>,
             stmt.bind("accountId", method.getAccountId().toString());            
             stmt.bind("pluginName", method.getPluginName());            
             stmt.bind("isActive", method.isActive());            
+            stmt.bind("externalId", method.getExternalId());              
         }
     }
     
@@ -84,7 +85,8 @@ public interface PaymentMethodSqlDao extends Transactional<PaymentMethodSqlDao>,
             UUID accountId = getUUID(rs, "account_id");
             String pluginName = rs.getString("plugin_name");
             Boolean isActive = rs.getBoolean("is_active");
-            return new PaymentMethodModelDao(id, accountId, pluginName, isActive);
+            String externalId = rs.getString("external_id");
+            return new PaymentMethodModelDao(id, accountId, pluginName, isActive, externalId);
         }
     }
 }

@@ -45,7 +45,8 @@ public @interface PaymentMethodHistoryBinder {
                     q.bind("id", paymentMethod.getId().toString());
                     q.bind("isActive", paymentMethod.isActive());                    
                     q.bind("accountId", paymentMethod.getAccountId().toString());            
-                    q.bind("pluginName", paymentMethod.getPluginName());            
+                    q.bind("pluginName", paymentMethod.getPluginName()); 
+                    q.bind("externalId", paymentMethod.getExternalId());
                 }
             };
         }

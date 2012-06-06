@@ -51,7 +51,7 @@ import com.ning.billing.payment.dao.PaymentModelDao;
 import com.ning.billing.payment.dispatcher.PluginDispatcher;
 import com.ning.billing.payment.plugin.api.PaymentInfoPlugin;
 import com.ning.billing.payment.plugin.api.PaymentPluginApiException;
-import com.ning.billing.payment.plugin.api.PaymentProviderPlugin;
+import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
 import com.ning.billing.payment.retry.FailedPaymentRetryService.FailedPaymentRetryServiceScheduler;
 import com.ning.billing.payment.retry.PluginFailureRetryService.PluginFailureRetryServiceScheduler;
@@ -134,7 +134,7 @@ public class PaymentProcessor extends ProcessorBase {
     public Payment createPayment(final Account account, final UUID invoiceId, final BigDecimal inputAmount , final CallContext context,  final boolean isInstantPayment)
     throws PaymentApiException {
 
-        final PaymentProviderPlugin plugin = getPaymentProviderPlugin(account);
+        final PaymentPluginApi plugin = getPaymentProviderPlugin(account);
 
         try {
             return paymentPluginDispatcher.dispatchWithAccountLock(new CallableWithAccountLock<Payment>(locker,
@@ -158,9 +158,10 @@ public class PaymentProcessor extends ProcessorBase {
             if (isInstantPayment) {
                 throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_TIMEOUT, account.getId(), invoiceId);
             } else {
+                log.warn(String.format("Payment from Account %s, Invoice %s timedout", account.getId(), invoiceId));
                 // If we don't crash, plugin thread will complete (and set the correct status)
                 // If we crash before plugin thread completes, we may end up with a UNKNOWN Payment
-                // We would like to return an error so the Bus can retry but limited bu Guava bug
+                // We would like to return an error so the Bus can retry but we are limited bu Guava bug
                 return null;
             }
         }
@@ -203,7 +204,7 @@ public class PaymentProcessor extends ProcessorBase {
             }
 
             final Account account = accountUserApi.getAccountById(payment.getAccountId());
-            final PaymentProviderPlugin plugin = getPaymentProviderPlugin(account);
+            final PaymentPluginApi plugin = getPaymentProviderPlugin(account);
             final CallContext context = factory.createCallContext("PaymentRetry", CallOrigin.INTERNAL, UserType.SYSTEM);
             
             voidPluginDispatcher.dispatchWithAccountLock(new CallableWithAccountLock<Void>(locker,
@@ -245,11 +246,12 @@ public class PaymentProcessor extends ProcessorBase {
         } catch (PaymentApiException e) {
             log.info(String.format("Failed to retry payment for paymentId %s", paymentId));
         } catch (TimeoutException e) {
+            log.warn(String.format("Retry for payment %s timedout", paymentId));
             // STEPH we should throw some exception so NotificationQ does not clear status and retries us
         }
     }
 
-    private Payment processNewPaymentWithAccountLocked(PaymentProviderPlugin plugin, Account account, Invoice invoice,
+    private Payment processNewPaymentWithAccountLocked(PaymentPluginApi plugin, Account account, Invoice invoice,
             BigDecimal requestedAmount, boolean isInstantPayment, CallContext context) throws PaymentApiException {
         
         final boolean scheduleRetryForPayment = !isInstantPayment;
@@ -260,7 +262,7 @@ public class PaymentProcessor extends ProcessorBase {
         return processPaymentWithAccountLocked(plugin, account, invoice, savedPayment, attempt, isInstantPayment, context);
     }
     
-    private Payment processRetryPaymentWithAccountLocked(PaymentProviderPlugin plugin, Account account, Invoice invoice, PaymentModelDao payment,
+    private Payment processRetryPaymentWithAccountLocked(PaymentPluginApi plugin, Account account, Invoice invoice, PaymentModelDao payment,
             BigDecimal requestedAmount, CallContext context) throws PaymentApiException {
         final boolean scheduleRetryForPayment = true;
         PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(account.getId(), invoice.getId(), payment.getId(), clock.getUTCNow(), requestedAmount);
@@ -269,7 +271,7 @@ public class PaymentProcessor extends ProcessorBase {
     }
 
     
-    private Payment processPaymentWithAccountLocked(PaymentProviderPlugin plugin, Account account, Invoice invoice,
+    private Payment processPaymentWithAccountLocked(PaymentPluginApi plugin, Account account, Invoice invoice,
             PaymentModelDao paymentInput, PaymentAttemptModelDao attemptInput, boolean isInstantPayment, CallContext context) throws PaymentApiException {
         
         BusEvent event = null;
@@ -291,7 +293,6 @@ public class PaymentProcessor extends ProcessorBase {
                 lastAttempt = allAttempts.get(allAttempts.size() - 1);
                 payment = paymentDao.getPayment(paymentInput.getId());
                 
-                // STEPH should we notify in failure case scenario as well?
                 invoicePaymentApi.notifyOfPaymentAttempt(invoice.getId(),
                         paymentStatus == PaymentStatus.SUCCESS ? payment.getAmount() : null,
                         paymentStatus == PaymentStatus.SUCCESS ? payment.getCurrency() : null,

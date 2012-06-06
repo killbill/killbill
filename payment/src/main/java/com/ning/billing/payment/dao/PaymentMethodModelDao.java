@@ -24,13 +24,15 @@ public class PaymentMethodModelDao extends EntityBase {
     private final UUID accountId;
     private final String pluginName;
     private final Boolean isActive;
+    private final String externalId;
     
-    public PaymentMethodModelDao(UUID id, UUID accountId, String pluginName,
-            Boolean isActive) {
+    public PaymentMethodModelDao(final UUID id, final UUID accountId, final String pluginName,
+            final Boolean isActive, final String externalId) {
         super(id);
         this.accountId = accountId;
         this.pluginName = pluginName;
         this.isActive = isActive;
+        this.externalId = externalId;
     }
 
     public UUID getAccountId() {
@@ -43,5 +45,9 @@ public class PaymentMethodModelDao extends EntityBase {
 
     public Boolean isActive() {
         return isActive;
+    }
+
+    public String getExternalId() {
+        return externalId;
     }
 }

@@ -28,7 +28,7 @@ import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.plugin.api.PaymentPluginApiException;
 import com.ning.billing.payment.plugin.api.PaymentProviderAccount;
-import com.ning.billing.payment.plugin.api.PaymentProviderPlugin;
+import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.callcontext.CallContext;
@@ -49,7 +49,7 @@ public class AccountProcessor extends ProcessorBase {
     public String createPaymentProviderAccount(Account account, CallContext context) 
     throws PaymentApiException {
         try {
-            final PaymentProviderPlugin plugin = getPaymentProviderPlugin((Account)null);
+            final PaymentPluginApi plugin = getPaymentProviderPlugin((Account)null);
             return plugin.createPaymentProviderAccount(account);
         } catch (PaymentPluginApiException e) {
             throw new PaymentApiException(ErrorCode.PAYMENT_CREATE_PAYMENT_PROVIDER_ACCOUNT, account.getId(), e.getMessage());
@@ -62,7 +62,7 @@ public class AccountProcessor extends ProcessorBase {
         Account account = null;
         try {
             account = accountUserApi.getAccountByKey(externalKey);
-            final PaymentProviderPlugin plugin = getPaymentProviderPlugin(account);
+            final PaymentPluginApi plugin = getPaymentProviderPlugin(account);
             plugin.updatePaymentProviderAccountExistingContact(account);
         } catch (AccountApiException e) {
             throw new PaymentApiException(e);
@@ -76,7 +76,7 @@ public class AccountProcessor extends ProcessorBase {
         Account account = null;
         try {
             account = accountUserApi.getAccountByKey(externalKey);
-            final PaymentProviderPlugin plugin = getPaymentProviderPlugin(account);
+            final PaymentPluginApi plugin = getPaymentProviderPlugin(account);
             return plugin.getPaymentProviderAccount(externalKey);
         } catch (AccountApiException e) {
             throw new PaymentApiException(e);

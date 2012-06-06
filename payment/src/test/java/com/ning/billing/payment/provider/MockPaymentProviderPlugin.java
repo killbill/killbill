@@ -17,9 +17,7 @@
 package com.ning.billing.payment.provider;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -28,33 +26,28 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.lang.RandomStringUtils;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
-import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.payment.api.CreditCardPaymentMethodInfo;
-import com.ning.billing.payment.api.DefaultPaymentInfoEvent;
-import com.ning.billing.payment.api.Payment;
-import com.ning.billing.payment.api.PaymentInfoEvent;
-import com.ning.billing.payment.api.PaymentMethodInfo;
-import com.ning.billing.payment.api.PaypalPaymentMethodInfo;
+import com.ning.billing.payment.api.DefaultPaymentMethodPlugin;
+import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.payment.plugin.api.MockPaymentInfoPlugin;
 import com.ning.billing.payment.plugin.api.PaymentInfoPlugin;
 import com.ning.billing.payment.plugin.api.PaymentPluginApiException;
 import com.ning.billing.payment.plugin.api.PaymentProviderAccount;
-import com.ning.billing.payment.plugin.api.PaymentProviderPlugin;
+import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 import com.ning.billing.payment.plugin.api.PaymentInfoPlugin.PaymentPluginStatus;
 import com.ning.billing.util.clock.Clock;
 
-public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
+public class MockPaymentProviderPlugin implements PaymentPluginApi {
     
     private final AtomicBoolean makeNextInvoiceFailWithError = new AtomicBoolean(false);
     private final AtomicBoolean makeNextInvoiceFailWithException = new AtomicBoolean(false);
     private final AtomicBoolean makeAllInvoicesFailWithException = new AtomicBoolean(false);
     private final Map<UUID, PaymentInfoPlugin> payments = new ConcurrentHashMap<UUID, PaymentInfoPlugin>();
+
+    private final Map<String, List<PaymentMethodPlugin>> paymentMethods = new ConcurrentHashMap<String, List<PaymentMethodPlugin>>();
+
     private final Map<String, PaymentProviderAccount> accounts = new ConcurrentHashMap<String, PaymentProviderAccount>();
-    private final Map<String, PaymentMethodInfo> paymentMethods = new ConcurrentHashMap<String, PaymentMethodInfo>();
     private final Clock clock;
 
     @Inject
@@ -133,52 +126,20 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
     }
 
     @Override
-    public String addPaymentMethod(String accountKey, PaymentMethodInfo paymentMethod)  throws PaymentPluginApiException {
-        if (paymentMethod != null) {
-            PaymentProviderAccount account = accounts.get(accountKey);
-
-            if (account != null && account.getId() != null) {
-                String existingDefaultMethod = account.getDefaultPaymentMethodId();
-
-                String paymentMethodId = "5556-66-77-rr";
-                boolean shouldBeDefault = Boolean.TRUE.equals(paymentMethod.getDefaultMethod()) || existingDefaultMethod == null;
-                PaymentMethodInfo realPaymentMethod = null;
-
-                if (paymentMethod instanceof PaypalPaymentMethodInfo) {
-                    PaypalPaymentMethodInfo paypalPaymentMethod = (PaypalPaymentMethodInfo)paymentMethod;
-
-                    realPaymentMethod = new PaypalPaymentMethodInfo.Builder(paypalPaymentMethod)
-                    .setId(paymentMethodId)
-                    .setAccountId(accountKey)
-                    .setDefaultMethod(shouldBeDefault)
-                    .setBaid(paypalPaymentMethod.getBaid())
-                    .setEmail(paypalPaymentMethod.getEmail())
-                    .build();
-                }
-                else if (paymentMethod instanceof CreditCardPaymentMethodInfo) {
-                    CreditCardPaymentMethodInfo ccPaymentMethod = (CreditCardPaymentMethodInfo)paymentMethod;
-                    realPaymentMethod = new CreditCardPaymentMethodInfo.Builder(ccPaymentMethod).setId(paymentMethodId).build();
-                }
-                if (realPaymentMethod == null) {
-                    throw new PaymentPluginApiException("", "Payment method " + paymentMethod.getType() + " not supported by the plugin");                    
-                }
-                else {
-                    if (shouldBeDefault) {
-                        setDefaultPaymentMethodOnAccount(account, paymentMethodId);
-                    }
-                    paymentMethods.put(paymentMethodId, realPaymentMethod);
-                    return paymentMethodId;
-                }
-            }
-            else {
-                throw new PaymentPluginApiException("", "Could not retrieve account for accountKey " + accountKey);                    
-            }
+    public String addPaymentMethod(String accountKey, PaymentMethodPlugin paymentMethodProps, boolean setDefault)  throws PaymentPluginApiException {
+        PaymentMethodPlugin realWithID = new DefaultPaymentMethodPlugin(paymentMethodProps);
+        List<PaymentMethodPlugin> pms = paymentMethods.get(accountKey);
+        if (pms == null) {
+            pms = new LinkedList<PaymentMethodPlugin>();
+            paymentMethods.put(accountKey, pms);
         }
-        else {
-            throw new PaymentPluginApiException("", "Could not create add payment method " + paymentMethod + " for " + accountKey);
-        }
+        pms.add(realWithID);
+        
+        
+        return realWithID.getExternalPaymentMethodId();
     }
 
+    /*
     public void setDefaultPaymentMethodOnAccount(PaymentProviderAccount account, String paymentMethodId) {
         if (paymentMethodId != null && account != null) {
             accounts.put(account.getAccountKey(),
@@ -204,83 +165,102 @@ public class MockPaymentProviderPlugin implements PaymentProviderPlugin {
             }
         }
     }
+    *
+    *
+    */
 
     @Override
-    public PaymentMethodInfo updatePaymentMethod(String accountKey, PaymentMethodInfo paymentMethod)  throws PaymentPluginApiException {
-        if (paymentMethod != null) {
-            PaymentMethodInfo realPaymentMethod = null;
-
-            if (paymentMethod instanceof PaypalPaymentMethodInfo) {
-                PaypalPaymentMethodInfo paypalPaymentMethod = (PaypalPaymentMethodInfo)paymentMethod;
-                realPaymentMethod = new PaypalPaymentMethodInfo.Builder(paypalPaymentMethod).build();
-            }
-            else if (paymentMethod instanceof CreditCardPaymentMethodInfo) {
-                CreditCardPaymentMethodInfo ccPaymentMethod = (CreditCardPaymentMethodInfo)paymentMethod;
-                realPaymentMethod = new CreditCardPaymentMethodInfo.Builder(ccPaymentMethod).build();
-            }
-            if (realPaymentMethod == null) {
-                throw new PaymentPluginApiException("", "Payment method " + paymentMethod.getType() + " not supported by the plugin");
-            }
-            else {
-                paymentMethods.put(paymentMethod.getId(), paymentMethod);
-                return realPaymentMethod;
-            }
-        }
-        else {
-            throw new PaymentPluginApiException("", "Could not create add payment method " + paymentMethod + " for " + accountKey);            
+    public void updatePaymentMethod(String accountKey, String externalPaymentId, PaymentMethodPlugin paymentMethodProps)
+        throws PaymentPluginApiException {
+        DefaultPaymentMethodPlugin e = getPaymentMethod(accountKey, externalPaymentId);
+        if (e != null) {
+            e.setProps(paymentMethodProps.getProperties());
         }
     }
 
     @Override
     public void deletePaymentMethod(String accountKey, String paymentMethodId)  throws PaymentPluginApiException {
-        PaymentMethodInfo paymentMethodInfo = paymentMethods.get(paymentMethodId);
-        if (paymentMethodInfo != null) {
-            if (Boolean.FALSE.equals(paymentMethodInfo.getDefaultMethod()) || paymentMethodInfo.getDefaultMethod() == null) {
-                if (paymentMethods.remove(paymentMethodId) == null) {
-                    throw new PaymentPluginApiException("", "Did not get any result back");
+
+        PaymentMethodPlugin toBeDeleted = null;
+        List<PaymentMethodPlugin> pms = paymentMethods.get(accountKey);
+        if (pms != null) {
+
+            for (PaymentMethodPlugin cur : pms) {
+                if (cur.getExternalPaymentMethodId().equals(paymentMethodId)) {
+                    toBeDeleted = cur;
+                    break;
                 }
-        } else {
-                throw new PaymentPluginApiException("", "Cannot delete default payment method");                
             }
         }
-        return;
-    }
-
-    @Override
-    public PaymentMethodInfo getPaymentMethodInfo(String paymentMethodId)  throws PaymentPluginApiException {
-        if (paymentMethodId == null) {
-            throw new PaymentPluginApiException("", "Could not retrieve payment method for paymentMethodId " + paymentMethodId);
+        if (toBeDeleted != null) {
+            pms.remove(toBeDeleted);
         }
-        return paymentMethods.get(paymentMethodId);
     }
 
     @Override
-    public List<PaymentMethodInfo> getPaymentMethods(final String accountKey) throws PaymentPluginApiException {
+    public List<PaymentMethodPlugin> getPaymentMethodDetails(String accountKey)
+            throws PaymentPluginApiException {
+        return paymentMethods.get(accountKey);
+    }
 
-        Collection<PaymentMethodInfo> filteredPaymentMethods = Collections2.filter(paymentMethods.values(), new Predicate<PaymentMethodInfo>() {
-            @Override
-            public boolean apply(PaymentMethodInfo input) {
-                return accountKey.equals(input.getAccountId());
+    @Override
+    public PaymentMethodPlugin getPaymentMethodDetail(String accountKey, String externalPaymentId) 
+    throws PaymentPluginApiException {
+        return getPaymentMethodDetail(accountKey, externalPaymentId);
+    }
+    
+    private DefaultPaymentMethodPlugin getPaymentMethod(String accountKey, String externalPaymentId) {
+        List<PaymentMethodPlugin> pms = paymentMethods.get(accountKey);
+        if (pms == null) {
+            return null;
+        }
+        for (PaymentMethodPlugin cur : pms) {
+            if (cur.getExternalPaymentMethodId().equals(externalPaymentId)) {
+                return (DefaultPaymentMethodPlugin) cur;
             }
-        });
-        List<PaymentMethodInfo> result = new ArrayList<PaymentMethodInfo>(filteredPaymentMethods);
-        return result;
-    }
-
-    @Override
-    public void updatePaymentGateway(String accountKey)  throws PaymentPluginApiException {
-    }
-
-    @Override
-    public void updatePaymentProviderAccountExistingContact(Account account)  throws PaymentPluginApiException {
-    }
-
-    @Override
-    public void updatePaymentProviderAccountWithNewContact(Account account)  throws PaymentPluginApiException {
-    }
-
-    @Override
-    public List<PaymentInfoPlugin> processRefund(Account account)  throws PaymentPluginApiException {
+        }
         return null;
+    }
+    
+    @Override
+    public void setDefaultPaymentMethod(String accountKey,
+            String externalPaymentId) throws PaymentPluginApiException {
+    }
+
+
+
+
+
+    @Override
+    public String getName() {
+        return null;
+    }
+
+
+    @Override
+    public List<PaymentInfoPlugin> processRefund(Account account)
+            throws PaymentPluginApiException {
+        return null;
+    }
+
+
+
+
+
+    @Override
+    public void updatePaymentGateway(String accountKey)
+            throws PaymentPluginApiException {
+    }
+
+
+    @Override
+    public void updatePaymentProviderAccountExistingContact(Account account)
+            throws PaymentPluginApiException {
+    }
+
+
+    @Override
+    public void updatePaymentProviderAccountWithNewContact(Account account)
+            throws PaymentPluginApiException {
     }
 }

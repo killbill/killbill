@@ -24,15 +24,13 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.payment.api.Payment;
-import com.ning.billing.payment.api.PaymentMethodInfo;
+import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.payment.plugin.api.PaymentInfoPlugin;
 import com.ning.billing.payment.plugin.api.PaymentPluginApiException;
 import com.ning.billing.payment.plugin.api.PaymentProviderAccount;
-import com.ning.billing.payment.plugin.api.PaymentProviderPlugin;
+import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 
-public class NoOpPaymentProviderPlugin implements PaymentProviderPlugin {
+public class NoOpPaymentProviderPlugin implements PaymentPluginApi {
 
     private boolean makeAllInvoicesFail;
 
@@ -103,30 +101,6 @@ public class NoOpPaymentProviderPlugin implements PaymentProviderPlugin {
             throws PaymentPluginApiException {
     }
 
-    @Override
-    public PaymentMethodInfo getPaymentMethodInfo(String paymentMethodId)
-            throws PaymentPluginApiException {
-        return null;
-    }
-
-    @Override
-    public List<PaymentMethodInfo> getPaymentMethods(String accountKey)
-            throws PaymentPluginApiException {
-        return null;
-    }
-
-    @Override
-    public String addPaymentMethod(String accountKey,
-            PaymentMethodInfo paymentMethod) throws PaymentPluginApiException {
-        return null;
-    }
-
-    @Override
-    public PaymentMethodInfo updatePaymentMethod(String accountKey,
-            PaymentMethodInfo paymentMethodInfo)
-            throws PaymentPluginApiException {
-        return null;
-    }
 
     @Override
     public void deletePaymentMethod(String accountKey, String paymentMethodId)
@@ -151,4 +125,38 @@ public class NoOpPaymentProviderPlugin implements PaymentProviderPlugin {
         return null;
     }
 
+    @Override
+    public String getName() {
+        return null;
+    }
+
+    @Override
+    public List<PaymentMethodPlugin> getPaymentMethodDetails(String accountKey)
+            throws PaymentPluginApiException {
+        return null;
+    }
+
+    @Override
+    public PaymentMethodPlugin getPaymentMethodDetail(String accountKey, String externalPaymentId)
+            throws PaymentPluginApiException {
+        return null;
+    }
+
+    @Override
+    public String addPaymentMethod(String accountKey,
+            PaymentMethodPlugin paymentMethodProps, boolean setDefault)
+            throws PaymentPluginApiException {
+        return null;
+    }
+
+    @Override
+    public void updatePaymentMethod(String accountKey,
+            String externalPaymentId, PaymentMethodPlugin paymentMethodProps)
+            throws PaymentPluginApiException {
+    }
+
+    @Override
+    public void setDefaultPaymentMethod(String accountKey,
+            String externalPaymentId) throws PaymentPluginApiException {
+    }
 }

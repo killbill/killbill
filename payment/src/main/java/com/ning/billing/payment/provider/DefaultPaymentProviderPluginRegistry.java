@@ -17,35 +17,43 @@
 package com.ning.billing.payment.provider;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang.StringUtils;
 
 import com.google.inject.Inject;
 import com.ning.billing.config.PaymentConfig;
-import com.ning.billing.payment.plugin.api.PaymentProviderPlugin;
+import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 
 
 public class DefaultPaymentProviderPluginRegistry implements PaymentProviderPluginRegistry {
     private final String defaultPlugin;
-    private final Map<String, PaymentProviderPlugin> pluginsByName = new ConcurrentHashMap<String, PaymentProviderPlugin>();
+    private final Map<String, PaymentPluginApi> pluginsByName = new ConcurrentHashMap<String, PaymentPluginApi>();
 
     @Inject
     public DefaultPaymentProviderPluginRegistry(PaymentConfig config) {
         this.defaultPlugin = config.getDefaultPaymentProvider();
     }
 
-    public void register(PaymentProviderPlugin plugin, String name) {
+    @Override
+    public void register(PaymentPluginApi plugin, String name) {
         pluginsByName.put(name.toLowerCase(), plugin);
     }
 
-    public PaymentProviderPlugin getPlugin(String name) {
-        PaymentProviderPlugin plugin = pluginsByName.get(StringUtils.defaultIfEmpty(name, defaultPlugin).toLowerCase());
+    @Override
+    public PaymentPluginApi getPlugin(String name) {
+        PaymentPluginApi plugin = pluginsByName.get(StringUtils.defaultIfEmpty(name, defaultPlugin).toLowerCase());
 
         if (plugin == null) {
             throw new IllegalArgumentException("No payment provider plugin is configured for " + name);
         }
 
         return plugin;
+    }
+    
+    @Override
+    public Set<String> getRegisteredPluginNames() {
+        return pluginsByName.keySet();
     }
 }

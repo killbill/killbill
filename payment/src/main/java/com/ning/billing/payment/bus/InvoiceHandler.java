@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.payment;
+package com.ning.billing.payment.bus;
 
 import java.util.Map;
 import java.util.UUID;

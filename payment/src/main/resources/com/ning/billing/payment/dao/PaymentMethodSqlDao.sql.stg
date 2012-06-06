@@ -5,6 +5,7 @@ paymentMethodFields(prefix) ::= <<
     <prefix>account_id,
     <prefix>plugin_name,
     <prefix>is_active,  
+    <prefix>external_id,
     <prefix>created_by,
     <prefix>created_date,
     <prefix>updated_by,
@@ -13,7 +14,7 @@ paymentMethodFields(prefix) ::= <<
 
 insertPaymentMethod() ::= <<
     INSERT INTO payment_methods (<paymentMethodFields()>)
-    VALUES (:id, :accountId, :pluginName , :isActive ,:userName, :createdDate, :userName, :createdDate);
+    VALUES (:id, :accountId, :pluginName , :isActive, :externalId, :userName, :createdDate, :userName, :createdDate);
 >>
 
 markPaymentMethodAsDeleted() ::= <<
@@ -45,7 +46,8 @@ historyFields(prefix) ::= <<
     <prefix>id,
     <prefix>account_id,
     <prefix>plugin_name,
-    <prefix>is_active,  
+    <prefix>is_active,
+    <prefix>external_id,  
     <prefix>created_by,
     <prefix>created_date,
     <prefix>updated_by,
@@ -54,7 +56,7 @@ historyFields(prefix) ::= <<
 
 insertHistoryFromTransaction() ::= <<
     INSERT INTO payment_method_history (<historyFields()>)
-    VALUES (:recordId, :id, :accountId, :pluginName , :isActive ,:userName, :createdDate, :userName, :createdDate);
+    VALUES (:recordId, :id, :accountId, :pluginName , :isActive, :externalId ,:userName, :createdDate, :userName, :createdDate);
 >>
 
 getHistoryRecordId() ::= <<

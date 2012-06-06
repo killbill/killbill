@@ -13,17 +13,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.ning.billing.payment.provider;
+package com.ning.billing.payment.bus;
 
-import java.util.Set;
+public class TagHandler {
 
-import com.ning.billing.payment.plugin.api.PaymentPluginApi;
-
-public interface PaymentProviderPluginRegistry {
-
-    public void register(final PaymentPluginApi plugin, final String name);
-
-    public PaymentPluginApi getPlugin(final String name);
-    
-    public Set<String> getRegisteredPluginNames();
 }

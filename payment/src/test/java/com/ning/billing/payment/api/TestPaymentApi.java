@@ -180,43 +180,5 @@ public class TestPaymentApi {
         }
     }
 
-    private PaymentProviderAccount setupAccountWithPaypalPaymentMethod() throws Exception  {
-        final Account account = testHelper.createTestPayPalAccount();
-        paymentApi.createPaymentProviderAccount(account, context);
-
-        String accountKey = account.getExternalKey();
-        return paymentApi.getPaymentProviderAccount(accountKey);
-    }
-
-    @Test(enabled=true)
-    public void testCreatePaypalPaymentMethod() throws Exception  {
-        PaymentProviderAccount account = setupAccountWithPaypalPaymentMethod();
-        assertNotNull(account);
-        paymentApi.getPaymentMethods(account.getAccountKey());
-    }
-
-    @Test(enabled=true)
-    public void testUpdatePaymentProviderAccountContact() throws Exception {
-        final Account account = testHelper.createTestPayPalAccount();
-        paymentApi.createPaymentProviderAccount(account, context);
-
-        Account updatedAccount = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
-        ZombieControl zombieAccount = (ZombieControl) updatedAccount;
-        zombieAccount.addResult("getId", account.getId());
-        zombieAccount.addResult("getName", "Tester " + RandomStringUtils.randomAlphanumeric(10));
-        zombieAccount.addResult("getFirstNameLength", 6);
-        zombieAccount.addResult("getExternalKey", account.getExternalKey());
-        zombieAccount.addResult("getPhone", "888-888-" + RandomStringUtils.randomNumeric(4));
-        zombieAccount.addResult("getEmail", account.getEmail());
-        zombieAccount.addResult("getCurrency", account.getCurrency());
-        zombieAccount.addResult("getBillCycleDay", account.getBillCycleDay());
-
-        paymentApi.updatePaymentProviderAccountContact(updatedAccount.getExternalKey(), context);
-    }
-
-    @Test(enabled=true)
-    public void testCannotDeleteDefaultPaymentMethod() throws Exception  {
-        PaymentProviderAccount account = setupAccountWithPaypalPaymentMethod();
-        paymentApi.deletePaymentMethod(account.getAccountKey(), account.getDefaultPaymentMethodId(), context);
-    }
+    
 }

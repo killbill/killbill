@@ -21,47 +21,59 @@ import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.payment.api.PaymentMethodInfo;
+import com.ning.billing.payment.api.PaymentMethodPlugin;
 
-public interface PaymentProviderPlugin {
+public interface PaymentPluginApi {
+    
+    public String getName();
     
     public PaymentInfoPlugin processPayment(String externalAccountKey, UUID paymentId, BigDecimal amount)
-    throws PaymentPluginApiException;
-
-    public String createPaymentProviderAccount(Account account)
     throws PaymentPluginApiException;
 
     public PaymentInfoPlugin getPaymentInfo(UUID paymentId)
     throws PaymentPluginApiException;
 
+
+    public List<PaymentInfoPlugin> processRefund(Account account)
+    throws PaymentPluginApiException;
+    
+    
+    public String createPaymentProviderAccount(Account account)
+    throws PaymentPluginApiException;
+
+
+
+    public List<PaymentMethodPlugin> getPaymentMethodDetails(String accountKey) 
+    throws PaymentPluginApiException;
+
+    public PaymentMethodPlugin getPaymentMethodDetail(String accountKey, String externalPaymentMethodId) 
+    throws PaymentPluginApiException;
+
+    public String addPaymentMethod(String accountKey, PaymentMethodPlugin paymentMethodProps, boolean setDefault)
+    throws PaymentPluginApiException;
+
+    public void updatePaymentMethod(String accountKey, String externalPaymentMethodId, PaymentMethodPlugin paymentMethodProps)
+    throws PaymentPluginApiException;
+
+    public void deletePaymentMethod(String accountKey, String externalPaymentMethodId)
+    throws PaymentPluginApiException;    
+
+    public void setDefaultPaymentMethod(String accountKey, String externalPaymentId)
+    throws PaymentPluginApiException;    
+
+    
+    //
+    // STEPH to be deleted
+    //
+    public void updatePaymentGateway(String accountKey)
+    throws PaymentPluginApiException;  
+    
     public PaymentProviderAccount getPaymentProviderAccount(String accountKey)
     throws PaymentPluginApiException;
-
-    public void updatePaymentGateway(String accountKey)
-    throws PaymentPluginApiException;    
-
-    public PaymentMethodInfo getPaymentMethodInfo(String paymentMethodId) 
-    throws PaymentPluginApiException;
-
-    public List<PaymentMethodInfo> getPaymentMethods(String accountKey)
-    throws PaymentPluginApiException;
-
-    public String addPaymentMethod(String accountKey, PaymentMethodInfo paymentMethod)
-    throws PaymentPluginApiException;
-
-    public PaymentMethodInfo updatePaymentMethod(String accountKey, PaymentMethodInfo paymentMethodInfo)
-    throws PaymentPluginApiException;
-
-    public void deletePaymentMethod(String accountKey, String paymentMethodId)
-    throws PaymentPluginApiException;    
-
 
     public void updatePaymentProviderAccountExistingContact(Account account)
     throws PaymentPluginApiException;
 
     public void updatePaymentProviderAccountWithNewContact(Account account)
-    throws PaymentPluginApiException;
-
-    public List<PaymentInfoPlugin> processRefund(Account account)
     throws PaymentPluginApiException;
 }

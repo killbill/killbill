@@ -27,4 +27,6 @@ public interface PaymentMethod {
     public Boolean isActive();
     
     public String getPluginName();
+    
+    public PaymentMethodPlugin getPluginDetail();
 }
