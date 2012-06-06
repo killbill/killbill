@@ -17,8 +17,10 @@
 package com.ning.billing.catalog;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -32,6 +34,7 @@ import com.ning.billing.catalog.api.BillingAlignment;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.catalog.api.Listing;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanAlignmentChange;
 import com.ning.billing.catalog.api.PlanAlignmentCreate;
@@ -303,15 +306,41 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
         return this;
     }
 
-	@Override
-	public boolean canCreatePlan(PlanSpecifier specifier) throws CatalogApiException {
-		Product product = findCurrentProduct(specifier.getProductName());
-		Plan plan = findCurrentPlan(specifier.getProductName(), specifier.getBillingPeriod(), specifier.getPriceListName());
-		DefaultPriceList priceList = findCurrentPriceList(specifier.getPriceListName());
-		
-		return (!product.isRetired()) &&
-				(!plan.isRetired()) &&
-				(!priceList.isRetired());
-	}
+    @Override
+    public boolean canCreatePlan(PlanSpecifier specifier) throws CatalogApiException {
+        Product product = findCurrentProduct(specifier.getProductName());
+        Plan plan = findCurrentPlan(specifier.getProductName(), specifier.getBillingPeriod(), specifier.getPriceListName());
+        DefaultPriceList priceList = findCurrentPriceList(specifier.getPriceListName());
+        
+        return (!product.isRetired()) &&
+                (!plan.isRetired()) &&
+                (!priceList.isRetired());
+    }
+
+    @Override
+    public List<Listing> getAvailableAddonListings(String baseProductName) {
+        List<Listing> availAddons = new ArrayList<Listing>();
+
+        try {
+            Product product = findCurrentProduct(baseProductName);
+            if ( product != null ) {
+                for ( Product availAddon : product.getAvailable() ) {
+                    for ( Plan plan : getCurrentPlans()) {
+                        if( plan.getProduct().equals(availAddon)) {
+                            for( PriceList priceList : getPriceLists().getAllPriceLists()) {
+                                if ( priceList.findPlan(availAddon, plan.getBillingPeriod()) != null &&
+                                     priceList.findPlan(product, plan.getBillingPeriod()).equals(plan)) {
+                                    availAddons.add(new DefaultListing(plan, priceList));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (CatalogApiException e) {
+            // No such product - just return an empty list
+        }
+
+        return availAddons;    }
 
 }
