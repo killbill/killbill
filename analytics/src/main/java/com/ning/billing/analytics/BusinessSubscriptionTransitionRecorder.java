@@ -133,7 +133,7 @@ public class BusinessSubscriptionTransitionRecorder {
     }
 
     // Public for internal reasons
-    void record(final UUID id, final String key, final String accountKey, final DateTime requestedDateTime, final BusinessSubscriptionEvent event, final BusinessSubscription prevSubscription, final BusinessSubscription nextSubscription) {
+    public void record(final UUID id, final String key, final String accountKey, final DateTime requestedDateTime, final BusinessSubscriptionEvent event, final BusinessSubscription prevSubscription, final BusinessSubscription nextSubscription) {
         final BusinessSubscriptionTransition transition = new BusinessSubscriptionTransition(
                 id,
                 key,
