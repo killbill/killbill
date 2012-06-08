@@ -60,4 +60,32 @@ public class BundleJsonWithSubscriptions extends BundleJsonSimple {
     public BundleJsonWithSubscriptions() {
         this(null, null, null);
     }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+
+        final BundleJsonWithSubscriptions that = (BundleJsonWithSubscriptions) o;
+
+        if (subscriptions != null ? !subscriptions.equals(that.subscriptions) : that.subscriptions != null) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (subscriptions != null ? subscriptions.hashCode() : 0);
+        return result;
+    }
 }
