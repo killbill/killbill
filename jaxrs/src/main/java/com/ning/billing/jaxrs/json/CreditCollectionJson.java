@@ -23,7 +23,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class CreditCollectionJson {
-    private final UUID             accountId;
+    private final UUID accountId;
     private final List<CreditJson> credits;
 
     @JsonCreator
@@ -39,5 +39,33 @@ public class CreditCollectionJson {
 
     public List<CreditJson> getCredits() {
         return credits;
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        final CreditCollectionJson that = (CreditCollectionJson) o;
+
+        if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
+            return false;
+        }
+        if (credits != null ? !credits.equals(that.credits) : that.credits != null) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = accountId != null ? accountId.hashCode() : 0;
+        result = 31 * result + (credits != null ? credits.hashCode() : 0);
+        return result;
     }
 }
