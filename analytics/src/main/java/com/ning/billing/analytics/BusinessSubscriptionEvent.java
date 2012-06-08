@@ -67,7 +67,8 @@ public class BusinessSubscriptionEvent {
         throw new IllegalArgumentException("Unable to parse event string: " + eventString);
     }
 
-    private BusinessSubscriptionEvent(final EventType eventType, final ProductCategory category) {
+    // Public for internal reasons
+    public BusinessSubscriptionEvent(final EventType eventType, final ProductCategory category) {
         this.eventType = eventType;
         this.category = category;
     }
