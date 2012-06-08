@@ -102,11 +102,14 @@ public class BusinessSubscriptionTransitionRecorder {
         // The ISubscriptionTransition interface gives us all the prev/next information we need but the start date
         // of the previous plan. We need to retrieve it from our own transitions table
         DateTime previousEffectiveTransitionTime = null;
-        final List<BusinessSubscriptionTransition> transitions = dao.getTransitions(transitionKey);
-        if (transitions != null && transitions.size() > 0) {
-            final BusinessSubscriptionTransition lastTransition = transitions.get(transitions.size() - 1);
-            if (lastTransition != null && lastTransition.getNextSubscription() != null) {
-                previousEffectiveTransitionTime = lastTransition.getNextSubscription().getStartDate();
+        // For creation events, the prev subscription will always be null
+        if (event.getEventType() != BusinessSubscriptionEvent.EventType.ADD) {
+            final List<BusinessSubscriptionTransition> transitions = dao.getTransitions(transitionKey);
+            if (transitions != null && transitions.size() > 0) {
+                final BusinessSubscriptionTransition lastTransition = transitions.get(transitions.size() - 1);
+                if (lastTransition != null && lastTransition.getNextSubscription() != null) {
+                    previousEffectiveTransitionTime = lastTransition.getNextSubscription().getStartDate();
+                }
             }
         }
 
@@ -115,7 +118,6 @@ public class BusinessSubscriptionTransitionRecorder {
         if (previousEffectiveTransitionTime == null) {
             prevSubscription = null;
         } else {
-
             prevSubscription = new BusinessSubscription(transition.getPreviousPriceList(), transition.getPreviousPlan(), transition.getPreviousPhase(), currency, previousEffectiveTransitionTime, transition.getPreviousState(), transition.getSubscriptionId(), transition.getBundleId(), catalogService.getFullCatalog());
         }
         final BusinessSubscription nextSubscription;

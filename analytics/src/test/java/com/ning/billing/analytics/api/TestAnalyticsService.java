@@ -242,7 +242,7 @@ public class TestAnalyticsService extends TestWithEmbeddedDB {
         invoice.addInvoiceItem(invoiceItem);
 
         invoiceDao.create(invoice, context);
-        List<Invoice> invoices = invoiceDao.getInvoicesByAccount(account.getId());
+        final List<Invoice> invoices = invoiceDao.getInvoicesByAccount(account.getId());
         Assert.assertEquals(invoices.size(), 1);
         Assert.assertEquals(invoices.get(0).getInvoiceItems().size(), 1);
 

@@ -123,15 +123,13 @@ public class TestAnalyticsListener extends AnalyticsTestSuite {
         return createExpectedBST(id, event, requestedTransitionTime, effectiveTransitionTime, lastSubscription, subscriptionState);
     }
 
-
     private BusinessSubscriptionTransition createExpectedBST(
             final UUID eventId,
             final BusinessSubscriptionEvent eventType,
             final DateTime requestedTransitionTime,
             final DateTime effectiveTransitionTime,
             @Nullable final BusinessSubscription previousSubscription,
-            @Nullable final Subscription.SubscriptionState nextState
-    ) {
+            @Nullable final Subscription.SubscriptionState nextState) {
         return new BusinessSubscriptionTransition(
                 eventId,
                 KEY,
@@ -177,7 +175,6 @@ public class TestAnalyticsListener extends AnalyticsTestSuite {
         );
     }
 
-
     private SubscriptionTransitionData createCancelSubscriptionTransition(final DateTime requestedTransitionTime, final DateTime effectiveTransitionTime, final Subscription.SubscriptionState previousState) {
         final ApiEventType eventType = ApiEventType.CANCEL;
         // next state is null for canceled events
@@ -218,36 +215,6 @@ public class TestAnalyticsListener extends AnalyticsTestSuite {
                 null,
                 null,
                 null,
-                nextState,
-                plan,
-                phase,
-                priceList,
-                1L,
-                null,
-                true
-        );
-    }
-
-
-    private SubscriptionTransitionData createSubscriptionTransition(
-            final ApiEventType eventType,
-            final DateTime requestedTransitionTime,
-            final DateTime effectiveTransitionTime,
-            final Subscription.SubscriptionState previousState,
-            final Subscription.SubscriptionState nextState
-    ) {
-        return new SubscriptionTransitionData(
-                UUID.randomUUID(),
-                subscriptionId,
-                bundleUUID,
-                EntitlementEvent.EventType.API_USER,
-                eventType,
-                requestedTransitionTime,
-                effectiveTransitionTime,
-                previousState,
-                plan,
-                phase,
-                priceList,
                 nextState,
                 plan,
                 phase,
