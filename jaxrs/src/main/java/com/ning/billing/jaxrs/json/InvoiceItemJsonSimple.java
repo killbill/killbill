@@ -26,17 +26,17 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
 
 public class InvoiceItemJsonSimple {
-    private final UUID       invoiceId;
-    private final UUID       accountId;
-    private final UUID       bundleId;
-    private final UUID       subscriptionId;
-    private final String     planName;
-    private final String     phaseName;
-    private final String     description;
-    private final DateTime   startDate;
-    private final DateTime   endDate;
+    private final UUID invoiceId;
+    private final UUID accountId;
+    private final UUID bundleId;
+    private final UUID subscriptionId;
+    private final String planName;
+    private final String phaseName;
+    private final String description;
+    private final DateTime startDate;
+    private final DateTime endDate;
     private final BigDecimal amount;
-    private final Currency   currency;
+    private final Currency currency;
 
     public InvoiceItemJsonSimple(@JsonProperty("invoiceId") final UUID invoiceId,
                                  @JsonProperty("accountId") final UUID accountId,
@@ -63,17 +63,9 @@ public class InvoiceItemJsonSimple {
     }
 
     public InvoiceItemJsonSimple(final InvoiceItem item) {
-        this.invoiceId = item.getInvoiceId();
-        this.accountId = item.getAccountId();
-        this.bundleId = item.getBundleId();
-        this.subscriptionId = item.getSubscriptionId();
-        this.planName = item.getPlanName();
-        this.phaseName = item.getPhaseName();
-        this.description = item.getDescription();
-        this.startDate = item.getStartDate();
-        this.endDate = item.getEndDate();
-        this.amount = item.getAmount();
-        this.currency = item.getCurrency();
+        this(item.getInvoiceId(), item.getAccountId(), item.getBundleId(), item.getSubscriptionId(),
+             item.getPlanName(), item.getPhaseName(), item.getDescription(), item.getStartDate(), item.getEndDate(),
+             item.getAmount(), item.getCurrency());
     }
 
     public UUID getInvoiceId() {
@@ -118,5 +110,69 @@ public class InvoiceItemJsonSimple {
 
     public Currency getCurrency() {
         return currency;
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        final InvoiceItemJsonSimple that = (InvoiceItemJsonSimple) o;
+
+        if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
+            return false;
+        }
+        if (amount != null ? !amount.equals(that.amount) : that.amount != null) {
+            return false;
+        }
+        if (bundleId != null ? !bundleId.equals(that.bundleId) : that.bundleId != null) {
+            return false;
+        }
+        if (currency != that.currency) {
+            return false;
+        }
+        if (description != null ? !description.equals(that.description) : that.description != null) {
+            return false;
+        }
+        if (endDate != null ? !endDate.equals(that.endDate) : that.endDate != null) {
+            return false;
+        }
+        if (invoiceId != null ? !invoiceId.equals(that.invoiceId) : that.invoiceId != null) {
+            return false;
+        }
+        if (phaseName != null ? !phaseName.equals(that.phaseName) : that.phaseName != null) {
+            return false;
+        }
+        if (planName != null ? !planName.equals(that.planName) : that.planName != null) {
+            return false;
+        }
+        if (startDate != null ? !startDate.equals(that.startDate) : that.startDate != null) {
+            return false;
+        }
+        if (subscriptionId != null ? !subscriptionId.equals(that.subscriptionId) : that.subscriptionId != null) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = invoiceId != null ? invoiceId.hashCode() : 0;
+        result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
+        result = 31 * result + (bundleId != null ? bundleId.hashCode() : 0);
+        result = 31 * result + (subscriptionId != null ? subscriptionId.hashCode() : 0);
+        result = 31 * result + (planName != null ? planName.hashCode() : 0);
+        result = 31 * result + (phaseName != null ? phaseName.hashCode() : 0);
+        result = 31 * result + (description != null ? description.hashCode() : 0);
+        result = 31 * result + (startDate != null ? startDate.hashCode() : 0);
+        result = 31 * result + (endDate != null ? endDate.hashCode() : 0);
+        result = 31 * result + (amount != null ? amount.hashCode() : 0);
+        result = 31 * result + (currency != null ? currency.hashCode() : 0);
+        return result;
     }
 }
