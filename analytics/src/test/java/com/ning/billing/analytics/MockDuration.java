@@ -16,27 +16,23 @@
 
 package com.ning.billing.analytics;
 
-import com.ning.billing.catalog.api.Duration;
-import com.ning.billing.catalog.api.TimeUnit;
 import org.apache.commons.lang.NotImplementedException;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 
-public class MockDuration
-{
-    public static Duration MONHTLY()
-    {
-        return new Duration()
-        {
+import com.ning.billing.catalog.api.Duration;
+import com.ning.billing.catalog.api.TimeUnit;
+
+public class MockDuration {
+    public static Duration MONHTLY() {
+        return new Duration() {
             @Override
-            public TimeUnit getUnit()
-            {
+            public TimeUnit getUnit() {
                 return TimeUnit.MONTHS;
             }
 
             @Override
-            public int getNumber()
-            {
+            public int getNumber() {
                 return 1;
             }
 
@@ -44,6 +40,7 @@ public class MockDuration
             public DateTime addToDateTime(DateTime dateTime) {
                 throw new NotImplementedException();
             }
+
             @Override
             public Period toJodaPeriod() {
                 throw new UnsupportedOperationException();
@@ -51,19 +48,15 @@ public class MockDuration
         };
     }
 
-    public static Duration YEARLY()
-    {
-        return new Duration()
-        {
+    public static Duration YEARLY() {
+        return new Duration() {
             @Override
-            public TimeUnit getUnit()
-            {
+            public TimeUnit getUnit() {
                 return TimeUnit.YEARS;
             }
 
             @Override
-            public int getNumber()
-            {
+            public int getNumber() {
                 return 1;
             }
 
@@ -71,6 +64,7 @@ public class MockDuration
             public DateTime addToDateTime(DateTime dateTime) {
                 throw new NotImplementedException();
             }
+
             @Override
             public Period toJodaPeriod() {
                 throw new UnsupportedOperationException();
@@ -78,19 +72,15 @@ public class MockDuration
         };
     }
 
-    public static Duration UNLIMITED()
-    {
-        return new Duration()
-        {
+    public static Duration UNLIMITED() {
+        return new Duration() {
             @Override
-            public TimeUnit getUnit()
-            {
+            public TimeUnit getUnit() {
                 return TimeUnit.UNLIMITED;
             }
 
             @Override
-            public int getNumber()
-            {
+            public int getNumber() {
                 return 1;
             }
 
@@ -98,6 +88,7 @@ public class MockDuration
             public DateTime addToDateTime(DateTime dateTime) {
                 throw new NotImplementedException();
             }
+
             @Override
             public Period toJodaPeriod() {
                 throw new UnsupportedOperationException();

@@ -16,6 +16,12 @@
 
 package com.ning.billing.analytics;
 
+import java.math.BigDecimal;
+
+import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Duration;
@@ -28,30 +34,22 @@ import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 
-import org.testng.Assert;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
-import java.math.BigDecimal;
-
 import static com.ning.billing.catalog.api.Currency.USD;
 
-public class TestBusinessSubscription
-{
+public class TestBusinessSubscription {
     private final Duration MONTHLY = MockDuration.MONHTLY();
     private final Duration YEARLY = MockDuration.YEARLY();
     final Object[][] catalogMapping = {
-        {MONTHLY, 229.0000, 229.0000},
-        {MONTHLY, 19.9500, 19.9500},
-        {MONTHLY, 14.9500, 14.9500},
-        {MONTHLY, 12.9500, 12.9500},
-        {YEARLY, 19.9500, 1.6625},
-        {YEARLY, 399.0000, 33.2500},
-        {YEARLY, 29.9500, 2.4958},
-        {YEARLY, 59.0000, 4.9167},
-        {YEARLY, 18.2900, 1.5242},
-        {YEARLY, 49.0000, 4.0833}};
+            {MONTHLY, 229.0000, 229.0000},
+            {MONTHLY, 19.9500, 19.9500},
+            {MONTHLY, 14.9500, 14.9500},
+            {MONTHLY, 12.9500, 12.9500},
+            {YEARLY, 19.9500, 1.6625},
+            {YEARLY, 399.0000, 33.2500},
+            {YEARLY, 29.9500, 2.4958},
+            {YEARLY, 59.0000, 4.9167},
+            {YEARLY, 18.2900, 1.5242},
+            {YEARLY, 49.0000, 4.0833}};
 
     private Product product;
     private Plan plan;
@@ -61,26 +59,24 @@ public class TestBusinessSubscription
 
     private final CatalogService catalogService = BrainDeadProxyFactory.createBrainDeadProxyFor(CatalogService.class);
     private final Catalog catalog = BrainDeadProxyFactory.createBrainDeadProxyFor(Catalog.class);
-    
+
 
     @BeforeMethod(alwaysRun = true)
-    public void setUp() throws Exception
-    {
+    public void setUp() throws Exception {
         product = new MockProduct("platinium", "subscription", ProductCategory.BASE);
         plan = new MockPlan("platinum-monthly", product);
         phase = new MockPhase(PhaseType.EVERGREEN, plan, MockDuration.UNLIMITED(), 25.95);
 
         ((ZombieControl) catalog).addResult("findPlan", plan);
-        ((ZombieControl) catalog).addResult("findPhase", phase);        
-        ((ZombieControl) catalogService).addResult("getFullCatalog", catalog);        
+        ((ZombieControl) catalog).addResult("findPhase", phase);
+        ((ZombieControl) catalogService).addResult("getFullCatalog", catalog);
 
         isubscription = new MockSubscription(Subscription.SubscriptionState.ACTIVE, plan, phase);
         subscription = new BusinessSubscription(isubscription, USD, catalog);
     }
 
     @Test(groups = "fast")
-    public void testMrrComputation() throws Exception
-    {
+    public void testMrrComputation() throws Exception {
         int i = 0;
         for (final Object[] object : catalogMapping) {
             final Duration duration = (Duration) object[0];
@@ -94,8 +90,7 @@ public class TestBusinessSubscription
     }
 
     @Test(groups = "fast")
-    public void testConstructor() throws Exception
-    {
+    public void testConstructor() throws Exception {
         Assert.assertEquals(subscription.getRoundedMrr(), 0.0);
         Assert.assertEquals(subscription.getSlug(), phase.getName());
         Assert.assertEquals(subscription.getPhase(), phase.getPhaseType().toString());
@@ -108,8 +103,7 @@ public class TestBusinessSubscription
     }
 
     @Test(groups = "fast")
-    public void testEquals() throws Exception
-    {
+    public void testEquals() throws Exception {
         Assert.assertSame(subscription, subscription);
         Assert.assertEquals(subscription, subscription);
         Assert.assertTrue(subscription.equals(subscription));

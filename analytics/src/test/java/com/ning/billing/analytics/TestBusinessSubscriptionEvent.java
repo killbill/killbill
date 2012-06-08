@@ -16,6 +16,11 @@
 
 package com.ning.billing.analytics;
 
+import org.joda.time.DateTime;
+import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.PhaseType;
@@ -27,14 +32,7 @@ import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 
-import org.joda.time.DateTime;
-import org.testng.Assert;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
-public class TestBusinessSubscriptionEvent
-{
+public class TestBusinessSubscriptionEvent {
     private Product product;
     private Plan plan;
     private PlanPhase phase;
@@ -42,24 +40,22 @@ public class TestBusinessSubscriptionEvent
 
     private final CatalogService catalogService = BrainDeadProxyFactory.createBrainDeadProxyFor(CatalogService.class);
     private final Catalog catalog = BrainDeadProxyFactory.createBrainDeadProxyFor(Catalog.class);
-    
+
     @BeforeMethod(alwaysRun = true)
-    public void setUp() throws Exception
-    {
+    public void setUp() throws Exception {
         product = new MockProduct("platinium", "subscription", ProductCategory.BASE);
         plan = new MockPlan("platinum-monthly", product);
         phase = new MockPhase(PhaseType.EVERGREEN, plan, MockDuration.UNLIMITED(), 25.95);
 
         ((ZombieControl) catalog).addResult("findPlan", plan);
-        ((ZombieControl) catalog).addResult("findPhase", phase);        
-        ((ZombieControl) catalogService).addResult("getFullCatalog", catalog);        
+        ((ZombieControl) catalog).addResult("findPhase", phase);
+        ((ZombieControl) catalogService).addResult("getFullCatalog", catalog);
 
         subscription = new MockSubscription(Subscription.SubscriptionState.ACTIVE, plan, phase);
     }
 
     @Test(groups = "fast")
-    public void testValueOf() throws Exception
-    {
+    public void testValueOf() throws Exception {
         BusinessSubscriptionEvent event;
 
         event = BusinessSubscriptionEvent.valueOf("ADD_ADD_ON");
@@ -76,12 +72,11 @@ public class TestBusinessSubscriptionEvent
     }
 
     @Test(groups = "fast")
-    public void testFromSubscription() throws Exception
-    {
+    public void testFromSubscription() throws Exception {
         BusinessSubscriptionEvent event;
 
         DateTime now = new DateTime();
-        
+
         event = BusinessSubscriptionEvent.subscriptionCreated(subscription.getCurrentPlan().getName(), catalog, now, now);
         Assert.assertEquals(event.getEventType(), BusinessSubscriptionEvent.EventType.ADD);
         Assert.assertEquals(event.getCategory(), product.getCategory());
@@ -112,8 +107,7 @@ public class TestBusinessSubscriptionEvent
     }
 
     @Test(groups = "fast")
-    public void testEquals() throws Exception
-    {
+    public void testEquals() throws Exception {
         DateTime now = new DateTime();
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionChanged(subscription.getCurrentPlan().getName(), catalog, now, now);
         Assert.assertSame(event, event);

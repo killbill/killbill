@@ -22,7 +22,6 @@ import org.slf4j.LoggerFactory;
 
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogApiException;
-import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
@@ -32,15 +31,13 @@ import static com.ning.billing.entitlement.api.user.Subscription.SubscriptionSta
 /**
  * Describe an event associated with a transition between two BusinessSubscription
  */
-public class BusinessSubscriptionEvent
-{
-    
+public class BusinessSubscriptionEvent {
+
     private static final Logger log = LoggerFactory.getLogger(BusinessSubscriptionEvent.class);
-    
+
     private static final String MISC = "MISC";
 
-    public enum EventType
-    {
+    public enum EventType {
         ADD,
         CANCEL,
         RE_ADD,
@@ -52,8 +49,7 @@ public class BusinessSubscriptionEvent
     private final EventType eventType;
     private final ProductCategory category;
 
-    public static BusinessSubscriptionEvent valueOf(final String eventString)
-    {
+    public static BusinessSubscriptionEvent valueOf(final String eventString) {
         for (final EventType possibleEventType : EventType.values()) {
             if (!eventString.startsWith(possibleEventType.toString().toUpperCase())) {
                 continue;
@@ -63,8 +59,7 @@ public class BusinessSubscriptionEvent
 
             if (categoryString.equals(MISC)) {
                 return new BusinessSubscriptionEvent(possibleEventType, null);
-            }
-            else {
+            } else {
                 return new BusinessSubscriptionEvent(possibleEventType, ProductCategory.valueOf(categoryString));
             }
         }
@@ -72,68 +67,57 @@ public class BusinessSubscriptionEvent
         throw new IllegalArgumentException("Unable to parse event string: " + eventString);
     }
 
-    public BusinessSubscriptionEvent(final EventType eventType, final ProductCategory category)
-    {
+    private BusinessSubscriptionEvent(final EventType eventType, final ProductCategory category) {
         this.eventType = eventType;
         this.category = category;
     }
 
-    public ProductCategory getCategory()
-    {
+    public ProductCategory getCategory() {
         return category;
     }
 
-    public EventType getEventType()
-    {
+    public EventType getEventType() {
         return eventType;
     }
 
-    public static BusinessSubscriptionEvent subscriptionCreated(final String plan, Catalog catalog, DateTime eventTime, DateTime subscriptionCreationDate)
-    {
+    public static BusinessSubscriptionEvent subscriptionCreated(final String plan, Catalog catalog, DateTime eventTime, DateTime subscriptionCreationDate) {
         return eventFromType(EventType.ADD, plan, catalog, eventTime, subscriptionCreationDate);
     }
 
-    public static BusinessSubscriptionEvent subscriptionCancelled(final String plan, Catalog catalog, DateTime eventTime, DateTime subscriptionCreationDate)
-    {
+    public static BusinessSubscriptionEvent subscriptionCancelled(final String plan, Catalog catalog, DateTime eventTime, DateTime subscriptionCreationDate) {
         return eventFromType(EventType.CANCEL, plan, catalog, eventTime, subscriptionCreationDate);
     }
 
-    public static BusinessSubscriptionEvent subscriptionChanged(final String plan, Catalog catalog, DateTime eventTime, DateTime subscriptionCreationDate)
-    {
+    public static BusinessSubscriptionEvent subscriptionChanged(final String plan, Catalog catalog, DateTime eventTime, DateTime subscriptionCreationDate) {
         return eventFromType(EventType.CHANGE, plan, catalog, eventTime, subscriptionCreationDate);
     }
 
-    public static BusinessSubscriptionEvent subscriptionRecreated(final String plan, Catalog catalog, DateTime eventTime, DateTime subscriptionCreationDate)
-    {
+    public static BusinessSubscriptionEvent subscriptionRecreated(final String plan, Catalog catalog, DateTime eventTime, DateTime subscriptionCreationDate) {
         return eventFromType(EventType.RE_ADD, plan, catalog, eventTime, subscriptionCreationDate);
     }
 
-    public static BusinessSubscriptionEvent subscriptionPhaseChanged(final String plan, final SubscriptionState state, Catalog catalog, DateTime eventTime, DateTime subscriptionCreationDate)
-    {
+    public static BusinessSubscriptionEvent subscriptionPhaseChanged(final String plan, final SubscriptionState state, Catalog catalog, DateTime eventTime, DateTime subscriptionCreationDate) {
         if (state != null && state.equals(SubscriptionState.CANCELLED)) {
             return eventFromType(EventType.SYSTEM_CANCEL, plan, catalog, eventTime, subscriptionCreationDate);
-        }
-        else {
+        } else {
             return eventFromType(EventType.SYSTEM_CHANGE, plan, catalog, eventTime, subscriptionCreationDate);
         }
     }
 
-    private static BusinessSubscriptionEvent eventFromType(final EventType eventType, final String plan, Catalog catalog, DateTime eventTime, DateTime subscriptionCreationDate)
-    {
+    private static BusinessSubscriptionEvent eventFromType(final EventType eventType, final String plan, Catalog catalog, DateTime eventTime, DateTime subscriptionCreationDate) {
         Plan thePlan = null;
         try {
             thePlan = catalog.findPlan(plan, eventTime, subscriptionCreationDate);
         } catch (CatalogApiException e) {
             log.error(String.format("Failed to retrieve PLan from catalog for %s", plan));
-            
+
         }
         final ProductCategory category = getTypeFromSubscription(thePlan);
         return new BusinessSubscriptionEvent(eventType, category);
     }
 
-    private static ProductCategory getTypeFromSubscription(final Plan plan)
-    {
-        
+    private static ProductCategory getTypeFromSubscription(final Plan plan) {
+
         if (plan != null && plan.getProduct() != null) {
             final Product product = plan.getProduct();
             if (product.getCatalogName() != null && product.getCategory() != null) {
@@ -145,14 +129,12 @@ public class BusinessSubscriptionEvent
     }
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return eventType.toString() + "_" + (category == null ? MISC : category.toString().toUpperCase());
     }
 
     @Override
-    public boolean equals(final Object o)
-    {
+    public boolean equals(final Object o) {
         if (this == o) {
             return true;
         }
@@ -173,8 +155,7 @@ public class BusinessSubscriptionEvent
     }
 
     @Override
-    public int hashCode()
-    {
+    public int hashCode() {
         int result = eventType != null ? eventType.hashCode() : 0;
         result = 31 * result + (category != null ? category.hashCode() : 0);
         return result;

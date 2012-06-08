@@ -16,8 +16,6 @@
 
 package com.ning.billing.analytics.api;
 
-import static org.testng.Assert.fail;
-
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.SQLException;
@@ -26,10 +24,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-import com.ning.billing.payment.api.DefaultPaymentAttempt;
-import com.ning.billing.util.tag.TagDefinition;
-import com.ning.billing.util.tag.dao.AuditedTagDao;
-import com.ning.billing.util.tag.dao.TagDao;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.testng.Assert;
@@ -82,6 +76,7 @@ import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
+import com.ning.billing.payment.api.DefaultPaymentAttempt;
 import com.ning.billing.payment.api.DefaultPaymentInfoEvent;
 import com.ning.billing.payment.api.PaymentAttempt;
 import com.ning.billing.payment.api.PaymentAttempt.PaymentAttemptStatus;
@@ -95,11 +90,16 @@ import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;
 import com.ning.billing.util.tag.DefaultTagDefinition;
+import com.ning.billing.util.tag.TagDefinition;
+import com.ning.billing.util.tag.dao.AuditedTagDao;
+import com.ning.billing.util.tag.dao.TagDao;
 import com.ning.billing.util.tag.dao.TagDefinitionSqlDao;
+
+import static org.testng.Assert.fail;
 
 @Guice(modules = {AnalyticsTestModule.class, MockCatalogModule.class})
 public class TestAnalyticsService {
-    
+
     final Product product = new MockProduct("platinum", "subscription", ProductCategory.BASE);
     final Plan plan = new MockPlan("platinum-monthly", product);
     final PlanPhase phase = new MockPhase(PhaseType.EVERGREEN, plan, MockDuration.UNLIMITED(), 25.95);
@@ -156,22 +156,22 @@ public class TestAnalyticsService {
     private PaymentInfoEvent paymentInfoNotification;
 
     @Inject
-    private  CatalogService catalogService;
-    
+    private CatalogService catalogService;
+
     private Catalog catalog;
- 
+
     @BeforeClass(groups = "slow")
     public void startMysql() throws IOException, ClassNotFoundException, SQLException, EntitlementUserApiException {
 
         catalog = catalogService.getFullCatalog();
         ((ZombieControl) catalog).addResult("findPlan", plan);
-        ((ZombieControl) catalog).addResult("findPhase", phase);        
+        ((ZombieControl) catalog).addResult("findPhase", phase);
 
         // Killbill generic setup
         setupBusAndMySQL();
 
         helper.cleanupAllTables();
-        
+
         tagDao.create(TAG_ONE, context);
         tagDao.create(TAG_TWO, context);
 
@@ -212,7 +212,7 @@ public class TestAnalyticsService {
         helper.initDb(junctionDdl);
 
         helper.cleanupAllTables();
-    	
+
         bus.start();
     }
 
@@ -229,7 +229,7 @@ public class TestAnalyticsService {
         final DateTime requestedTransitionTime = clock.getUTCNow();
         final PriceList priceList = new MockPriceList().setName("something");
 
-        
+
         transition = new DefaultSubscriptionEvent(new SubscriptionTransitionData(
                 ID,
                 subscriptionId,
@@ -294,7 +294,7 @@ public class TestAnalyticsService {
         helper.stopMysql();
     }
 
-    @Test(groups = "slow", enabled=true)
+    @Test(groups = "slow", enabled = true)
     public void testRegisterForNotifications() throws Exception {
         // Make sure the service has been instantiated
         Assert.assertEquals(service.getName(), "analytics-service");

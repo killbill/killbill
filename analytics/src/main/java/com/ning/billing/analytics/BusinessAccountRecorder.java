@@ -22,8 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import com.ning.billing.util.api.TagUserApi;
-import com.ning.billing.util.dao.ObjectType;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,6 +39,8 @@ import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.PaymentAttempt;
 import com.ning.billing.payment.api.PaymentInfoEvent;
+import com.ning.billing.util.api.TagUserApi;
+import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.tag.Tag;
 
 public class BusinessAccountRecorder {
@@ -54,8 +54,8 @@ public class BusinessAccountRecorder {
 
     @Inject
     public BusinessAccountRecorder(final BusinessAccountDao dao, final AccountUserApi accountApi,
-            final InvoiceUserApi invoiceUserApi, final PaymentApi paymentApi,
-            final TagUserApi tagUserApi) {
+                                   final InvoiceUserApi invoiceUserApi, final PaymentApi paymentApi,
+                                   final TagUserApi tagUserApi) {
         this.dao = dao;
         this.accountApi = accountApi;
         this.invoiceUserApi = invoiceUserApi;
@@ -73,7 +73,7 @@ public class BusinessAccountRecorder {
             log.info("ACCOUNT CREATION " + bac);
             dao.createAccount(bac);
         } catch (AccountApiException e) {
-            log.warn("Error encountered creating BusinessAccount",e);
+            log.warn("Error encountered creating BusinessAccount", e);
         }
     }
 
@@ -103,9 +103,9 @@ public class BusinessAccountRecorder {
             final Account account = accountApi.getAccountById(paymentAttempt.getAccountId());
             accountUpdated(account.getId());
         } catch (AccountApiException e) {
-            log.warn("Error encountered creating BusinessAccount",e);
+            log.warn("Error encountered creating BusinessAccount", e);
         } catch (PaymentApiException e) {
-            log.warn("Error encountered creating BusinessAccount",e);            
+            log.warn("Error encountered creating BusinessAccount", e);
         }
     }
 
@@ -135,7 +135,7 @@ public class BusinessAccountRecorder {
                 dao.saveAccount(bac);
             }
         } catch (AccountApiException e) {
-            log.warn("Error encountered creating BusinessAccount",e);
+            log.warn("Error encountered creating BusinessAccount", e);
         }
 
     }
@@ -220,7 +220,7 @@ public class BusinessAccountRecorder {
             bac.setBalance(invoiceUserApi.getAccountBalance(account.getId()));
 
         } catch (PaymentApiException ex) {
-            log.error(String.format("Failed to handle acount update for account %s", account.getId()), ex);
+            log.error(String.format("Failed to handle account update for account %s", account.getId()), ex);
         }
     }
 }

@@ -16,29 +16,27 @@
 
 package com.ning.billing.analytics;
 
-import com.ning.billing.mock.BrainDeadProxyFactory;
-import com.ning.billing.util.tag.Tag;
+import java.math.BigDecimal;
+import java.util.Collections;
+
 import org.joda.time.DateTime;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.math.BigDecimal;
-import java.util.Collections;
+import com.ning.billing.mock.BrainDeadProxyFactory;
+import com.ning.billing.util.tag.Tag;
 
-public class TestBusinessAccount
-{
+public class TestBusinessAccount {
     private BusinessAccount account;
 
     @BeforeMethod(alwaysRun = true)
-    public void setUp() throws Exception
-    {
+    public void setUp() throws Exception {
         account = new BusinessAccount("pierre", BigDecimal.ONE, Collections.singletonList(getMockTag("batch15")), new DateTime(), BigDecimal.TEN, "ERROR_NOT_ENOUGH_FUNDS", "CreditCard", "Visa", "");
     }
 
     @Test(groups = "fast", enabled = false)
-    public void testEquals() throws Exception
-    {
+    public void testEquals() throws Exception {
         Assert.assertSame(account, account);
         Assert.assertEquals(account, account);
         Assert.assertTrue(account.equals(account));

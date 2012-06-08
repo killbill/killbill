@@ -16,6 +16,13 @@
 
 package com.ning.billing.analytics;
 
+import java.util.List;
+import java.util.UUID;
+
+import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
@@ -27,15 +34,8 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionEvent;
-import org.joda.time.DateTime;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.util.List;
-import java.util.UUID;
-
-public class BusinessSubscriptionTransitionRecorder
-{
+public class BusinessSubscriptionTransitionRecorder {
     private static final Logger log = LoggerFactory.getLogger(BusinessSubscriptionTransitionRecorder.class);
 
     private final BusinessSubscriptionTransitionDao dao;
@@ -44,8 +44,7 @@ public class BusinessSubscriptionTransitionRecorder
     private final CatalogService catalogService;
 
     @Inject
-    public BusinessSubscriptionTransitionRecorder(final BusinessSubscriptionTransitionDao dao, final CatalogService catalogService, final EntitlementUserApi entitlementApi, final AccountUserApi accountApi)
-    {
+    public BusinessSubscriptionTransitionRecorder(final BusinessSubscriptionTransitionDao dao, final CatalogService catalogService, final EntitlementUserApi entitlementApi, final AccountUserApi accountApi) {
         this.dao = dao;
         this.catalogService = catalogService;
         this.entitlementApi = entitlementApi;
@@ -53,43 +52,37 @@ public class BusinessSubscriptionTransitionRecorder
     }
 
 
-    public void subscriptionCreated(final SubscriptionEvent created) throws AccountApiException, EntitlementUserApiException
-    {
+    public void subscriptionCreated(final SubscriptionEvent created) throws AccountApiException, EntitlementUserApiException {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionCreated(created.getNextPlan(), catalogService.getFullCatalog(), created.getEffectiveTransitionTime(), created.getSubscriptionStartDate());
         recordTransition(event, created);
     }
 
 
-    public void subscriptionRecreated(final SubscriptionEvent recreated) throws AccountApiException, EntitlementUserApiException
-    {
+    public void subscriptionRecreated(final SubscriptionEvent recreated) throws AccountApiException, EntitlementUserApiException {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionRecreated(recreated.getNextPlan(), catalogService.getFullCatalog(), recreated.getEffectiveTransitionTime(), recreated.getSubscriptionStartDate());
         recordTransition(event, recreated);
     }
 
 
-    public void subscriptionCancelled(final SubscriptionEvent cancelled) throws AccountApiException, EntitlementUserApiException
-    {
+    public void subscriptionCancelled(final SubscriptionEvent cancelled) throws AccountApiException, EntitlementUserApiException {
         // cancelled.getNextPlan() is null here - need to look at the previous one to create the correct event name
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionCancelled(cancelled.getPreviousPlan(), catalogService.getFullCatalog(), cancelled.getEffectiveTransitionTime(), cancelled.getSubscriptionStartDate());
         recordTransition(event, cancelled);
     }
 
 
-    public void subscriptionChanged(final SubscriptionEvent changed) throws AccountApiException, EntitlementUserApiException
-    {
+    public void subscriptionChanged(final SubscriptionEvent changed) throws AccountApiException, EntitlementUserApiException {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionChanged(changed.getNextPlan(), catalogService.getFullCatalog(), changed.getEffectiveTransitionTime(), changed.getSubscriptionStartDate());
         recordTransition(event, changed);
     }
 
-    public void subscriptionPhaseChanged(final SubscriptionEvent phaseChanged) throws AccountApiException, EntitlementUserApiException
-    {
+    public void subscriptionPhaseChanged(final SubscriptionEvent phaseChanged) throws AccountApiException, EntitlementUserApiException {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionPhaseChanged(phaseChanged.getNextPlan(), phaseChanged.getNextState(), catalogService.getFullCatalog(), phaseChanged.getEffectiveTransitionTime(), phaseChanged.getSubscriptionStartDate());
         recordTransition(event, phaseChanged);
     }
 
-    public void recordTransition(final BusinessSubscriptionEvent event, final SubscriptionEvent transition)
-        throws AccountApiException, EntitlementUserApiException
-    {
+    void recordTransition(final BusinessSubscriptionEvent event, final SubscriptionEvent transition)
+            throws AccountApiException, EntitlementUserApiException {
         Currency currency = null;
         String transitionKey = null;
         String accountKey = null;
@@ -98,13 +91,13 @@ public class BusinessSubscriptionTransitionRecorder
         final SubscriptionBundle bundle = entitlementApi.getBundleFromId(transition.getBundleId());
         if (bundle != null) {
             transitionKey = bundle.getKey();
-            
+
             final Account account = accountApi.getAccountById(bundle.getAccountId());
             if (account != null) {
                 accountKey = account.getExternalKey();
                 currency = account.getCurrency();
             }
-        }   
+        }
 
         // The ISubscriptionTransition interface gives us all the prev/next information we need but the start date
         // of the previous plan. We need to retrieve it from our own transitions table
@@ -121,9 +114,8 @@ public class BusinessSubscriptionTransitionRecorder
         final BusinessSubscription prevSubscription;
         if (previousEffectiveTransitionTime == null) {
             prevSubscription = null;
-        }
-        else {
-            
+        } else {
+
             prevSubscription = new BusinessSubscription(transition.getPreviousPriceList(), transition.getPreviousPlan(), transition.getPreviousPhase(), currency, previousEffectiveTransitionTime, transition.getPreviousState(), transition.getSubscriptionId(), transition.getBundleId(), catalogService.getFullCatalog());
         }
         final BusinessSubscription nextSubscription;
@@ -131,8 +123,7 @@ public class BusinessSubscriptionTransitionRecorder
         // next plan is null for CANCEL events
         if (transition.getNextPlan() == null) {
             nextSubscription = null;
-        }
-        else {
+        } else {
             nextSubscription = new BusinessSubscription(transition.getNextPriceList(), transition.getNextPlan(), transition.getNextPhase(), currency, transition.getEffectiveTransitionTime(), transition.getNextState(), transition.getSubscriptionId(), transition.getBundleId(), catalogService.getFullCatalog());
         }
 
@@ -140,16 +131,15 @@ public class BusinessSubscriptionTransitionRecorder
     }
 
     // Public for internal reasons
-    public void record(final UUID id, final String key, final String accountKey, final DateTime requestedDateTime, final BusinessSubscriptionEvent event, final BusinessSubscription prevSubscription, final BusinessSubscription nextSubscription)
-    {
+    void record(final UUID id, final String key, final String accountKey, final DateTime requestedDateTime, final BusinessSubscriptionEvent event, final BusinessSubscription prevSubscription, final BusinessSubscription nextSubscription) {
         final BusinessSubscriptionTransition transition = new BusinessSubscriptionTransition(
-            id,
-            key,
-            accountKey,
-            requestedDateTime,
-            event,
-            prevSubscription,
-            nextSubscription
+                id,
+                key,
+                accountKey,
+                requestedDateTime,
+                event,
+                prevSubscription,
+                nextSubscription
         );
 
         log.info(transition.getEvent() + " " + transition);

@@ -36,11 +36,9 @@ import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.TagStoreModule;
 import com.ning.billing.util.tag.dao.TagDefinitionSqlDao;
 
-public class AnalyticsTestModule extends AnalyticsModule
-{
+public class AnalyticsTestModule extends AnalyticsModule {
     @Override
-    protected void configure()
-    {
+    protected void configure() {
         super.configure();
 
         // Need to configure a few more things for the EventBus

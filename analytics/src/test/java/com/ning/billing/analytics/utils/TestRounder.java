@@ -16,16 +16,14 @@
 
 package com.ning.billing.analytics.utils;
 
+import java.math.BigDecimal;
+
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import java.math.BigDecimal;
-
-public class TestRounder
-{
+public class TestRounder {
     @Test(groups = "fast")
-    public void testRound() throws Exception
-    {
+    public void testRound() throws Exception {
         Assert.assertEquals(Rounder.round(null), 0.0);
         Assert.assertEquals(Rounder.round(BigDecimal.ZERO), 0.0);
         Assert.assertEquals(Rounder.round(BigDecimal.ONE), 1.0);

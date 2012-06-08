@@ -18,21 +18,17 @@ package com.ning.billing.analytics.utils;
 
 import java.math.BigDecimal;
 
-public class Rounder
-{
+public class Rounder {
     public static final int SCALE = 4;
 
     // Static only
-    private Rounder()
-    {
+    private Rounder() {
     }
 
-    public static double round(final BigDecimal decimal)
-    {
+    public static double round(final BigDecimal decimal) {
         if (decimal == null) {
             return 0;
-        }
-        else {
+        } else {
             return decimal.setScale(SCALE, BigDecimal.ROUND_HALF_UP).doubleValue();
         }
     }
