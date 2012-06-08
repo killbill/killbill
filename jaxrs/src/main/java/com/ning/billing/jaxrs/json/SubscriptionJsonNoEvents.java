@@ -16,6 +16,8 @@
 
 package com.ning.billing.jaxrs.json;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -45,16 +47,15 @@ public class SubscriptionJsonNoEvents extends SubscriptionJsonSimple {
     @JsonView(BundleTimelineViews.Base.class)
     private final DateTime chargedThroughDate;
 
-
     @JsonCreator
-    public SubscriptionJsonNoEvents(@JsonProperty("subscriptionId") final String subscriptionId,
-                                    @JsonProperty("bundleId") final String bundleId,
-                                    @JsonProperty("startDate") final DateTime startDate,
-                                    @JsonProperty("productName") final String productName,
-                                    @JsonProperty("productCategory") final String productCategory,
-                                    @JsonProperty("billingPeriod") final String billingPeriod,
-                                    @JsonProperty("priceList") final String priceList,
-                                    @JsonProperty("chargedThroughDate") final DateTime chargedThroughDate) {
+    public SubscriptionJsonNoEvents(@JsonProperty("subscriptionId") @Nullable final String subscriptionId,
+                                    @JsonProperty("bundleId") @Nullable final String bundleId,
+                                    @JsonProperty("startDate") @Nullable final DateTime startDate,
+                                    @JsonProperty("productName") @Nullable final String productName,
+                                    @JsonProperty("productCategory") @Nullable final String productCategory,
+                                    @JsonProperty("billingPeriod") @Nullable final String billingPeriod,
+                                    @JsonProperty("priceList") @Nullable final String priceList,
+                                    @JsonProperty("chargedThroughDate") @Nullable final DateTime chargedThroughDate) {
         super(subscriptionId);
         this.bundleId = bundleId;
         this.startDate = startDate;
@@ -66,27 +67,14 @@ public class SubscriptionJsonNoEvents extends SubscriptionJsonSimple {
     }
 
     public SubscriptionJsonNoEvents() {
-        super(null);
-        this.bundleId = null;
-        this.startDate = null;
-        this.productName = null;
-        this.productCategory = null;
-        this.billingPeriod = null;
-        this.priceList = null;
-        this.chargedThroughDate = null;
+        this(null, null, null, null, null, null, null, null);
     }
 
     public SubscriptionJsonNoEvents(final Subscription data) {
-        super(data.getId().toString());
-        this.bundleId = data.getBundleId().toString();
-        this.startDate = data.getStartDate();
-        this.productName = data.getCurrentPlan().getProduct().getName();
-        this.productCategory = data.getCurrentPlan().getProduct().getCategory().toString();
-        this.billingPeriod = data.getCurrentPlan().getBillingPeriod().toString();
-        this.priceList = data.getCurrentPriceList().getName();
-        this.chargedThroughDate = data.getChargedThroughDate();
+        this(data.getId().toString(), data.getBundleId().toString(), data.getStartDate(), data.getCurrentPlan().getProduct().getName(),
+             data.getCurrentPlan().getProduct().getCategory().toString(), data.getCurrentPlan().getBillingPeriod().toString(),
+             data.getCurrentPriceList().getName(), data.getChargedThroughDate());
     }
-
 
     public String getSubscriptionId() {
         return subscriptionId;
@@ -120,7 +108,6 @@ public class SubscriptionJsonNoEvents extends SubscriptionJsonSimple {
         return chargedThroughDate;
     }
 
-
     @Override
     public String toString() {
         return "SubscriptionJson [subscriptionId=" + subscriptionId
@@ -130,86 +117,55 @@ public class SubscriptionJsonNoEvents extends SubscriptionJsonSimple {
     }
 
     @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result
-                + ((billingPeriod == null) ? 0 : billingPeriod.hashCode());
-        result = prime * result
-                + ((bundleId == null) ? 0 : bundleId.hashCode());
-        result = prime * result
-                + ((priceList == null) ? 0 : priceList.hashCode());
-        result = prime * result
-                + ((productCategory == null) ? 0 : productCategory.hashCode());
-        result = prime * result
-                + ((productName == null) ? 0 : productName.hashCode());
-        result = prime * result
-                + ((subscriptionId == null) ? 0 : subscriptionId.hashCode());
-        return result;
+    public boolean equals(final Object o) {
+        return equalsNoId(o) && super.equals(o);
+    }
+
+    public boolean equalsNoId(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        final SubscriptionJsonNoEvents that = (SubscriptionJsonNoEvents) o;
+
+        if (billingPeriod != null ? !billingPeriod.equals(that.billingPeriod) : that.billingPeriod != null) {
+            return false;
+        }
+        if (bundleId != null ? !bundleId.equals(that.bundleId) : that.bundleId != null) {
+            return false;
+        }
+        if (chargedThroughDate != null ? !chargedThroughDate.equals(that.chargedThroughDate) : that.chargedThroughDate != null) {
+            return false;
+        }
+        if (priceList != null ? !priceList.equals(that.priceList) : that.priceList != null) {
+            return false;
+        }
+        if (productCategory != null ? !productCategory.equals(that.productCategory) : that.productCategory != null) {
+            return false;
+        }
+        if (productName != null ? !productName.equals(that.productName) : that.productName != null) {
+            return false;
+        }
+        if (startDate != null ? !startDate.equals(that.startDate) : that.startDate != null) {
+            return false;
+        }
+
+        return true;
     }
 
     @Override
-    public boolean equals(final Object obj) {
-        if (!equalsNoId(obj)) {
-            return false;
-        }
-        final SubscriptionJsonNoEvents other = (SubscriptionJsonNoEvents) obj;
-        if (subscriptionId == null) {
-            if (other.subscriptionId != null) {
-                return false;
-            }
-        } else if (!subscriptionId.equals(other.subscriptionId)) {
-            return false;
-        }
-        return true;
-    }
-
-    public boolean equalsNoId(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final SubscriptionJsonNoEvents other = (SubscriptionJsonNoEvents) obj;
-        if (billingPeriod == null) {
-            if (other.billingPeriod != null) {
-                return false;
-            }
-        } else if (!billingPeriod.equals(other.billingPeriod)) {
-            return false;
-        }
-        if (bundleId == null) {
-            if (other.bundleId != null) {
-                return false;
-            }
-        } else if (!bundleId.equals(other.bundleId)) {
-            return false;
-        }
-        if (priceList == null) {
-            if (other.priceList != null) {
-                return false;
-            }
-        } else if (!priceList.equals(other.priceList)) {
-            return false;
-        }
-        if (productCategory == null) {
-            if (other.productCategory != null) {
-                return false;
-            }
-        } else if (!productCategory.equals(other.productCategory)) {
-            return false;
-        }
-        if (productName == null) {
-            if (other.productName != null) {
-                return false;
-            }
-        } else if (!productName.equals(other.productName)) {
-            return false;
-        }
-        return true;
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (startDate != null ? startDate.hashCode() : 0);
+        result = 31 * result + (bundleId != null ? bundleId.hashCode() : 0);
+        result = 31 * result + (productName != null ? productName.hashCode() : 0);
+        result = 31 * result + (productCategory != null ? productCategory.hashCode() : 0);
+        result = 31 * result + (billingPeriod != null ? billingPeriod.hashCode() : 0);
+        result = 31 * result + (priceList != null ? priceList.hashCode() : 0);
+        result = 31 * result + (chargedThroughDate != null ? chargedThroughDate.hashCode() : 0);
+        return result;
     }
 }
