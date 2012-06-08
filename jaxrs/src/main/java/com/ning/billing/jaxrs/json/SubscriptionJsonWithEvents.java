@@ -15,6 +15,7 @@
  */
 package com.ning.billing.jaxrs.json;
 
+import javax.annotation.Nullable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -130,7 +131,6 @@ public class SubscriptionJsonWithEvents extends SubscriptionJsonSimple {
             super(eventId, billingPeriod, requestedDate, effectiveDate, product, priceList, eventType, phase);
         }
     }
-
 
     public static class SubscriptionNewEventJson extends SubscriptionBaseEventJson {
         @JsonCreator
@@ -271,10 +271,10 @@ public class SubscriptionJsonWithEvents extends SubscriptionJsonSimple {
     }
 
     @JsonCreator
-    public SubscriptionJsonWithEvents(@JsonProperty("subscription_id") final String subscriptionId,
-                                      @JsonProperty("events") final List<SubscriptionReadEventJson> events,
-                                      @JsonProperty("new_events") final List<SubscriptionNewEventJson> newEvents,
-                                      @JsonProperty("deleted_events") final List<SubscriptionDeletedEventJson> deletedEvents) {
+    public SubscriptionJsonWithEvents(@JsonProperty("subscription_id") @Nullable final String subscriptionId,
+                                      @JsonProperty("events") @Nullable final List<SubscriptionReadEventJson> events,
+                                      @JsonProperty("new_events") @Nullable final List<SubscriptionNewEventJson> newEvents,
+                                      @JsonProperty("deleted_events") @Nullable final List<SubscriptionDeletedEventJson> deletedEvents) {
         super(subscriptionId);
         this.events = events;
         this.deletedEvents = deletedEvents;
@@ -282,21 +282,17 @@ public class SubscriptionJsonWithEvents extends SubscriptionJsonSimple {
     }
 
     public SubscriptionJsonWithEvents() {
-        super(null);
-        this.events = null;
-        this.deletedEvents = null;
-        this.newEvents = null;
+        this((String) null, null, null, null);
     }
 
     public SubscriptionJsonWithEvents(final Subscription data,
-                                      final List<SubscriptionReadEventJson> events, final List<SubscriptionDeletedEventJson> deletedEvents, final List<SubscriptionNewEventJson> newEvents) {
-        super(data.getId().toString());
-        this.events = events;
-        this.deletedEvents = deletedEvents;
-        this.newEvents = newEvents;
+                                      @Nullable final List<SubscriptionReadEventJson> events,
+                                      @Nullable final List<SubscriptionNewEventJson> newEvents,
+                                      @Nullable final List<SubscriptionDeletedEventJson> deletedEvents) {
+        this(data.getId().toString(), events, newEvents, deletedEvents);
     }
 
-    public SubscriptionJsonWithEvents(final UUID bundleId, final SubscriptionTimeline input) {
+    public SubscriptionJsonWithEvents(@Nullable final UUID bundleId, final SubscriptionTimeline input) {
         super(input.getId().toString());
         this.events = new LinkedList<SubscriptionReadEventJson>();
         for (final ExistingEvent cur : input.getExistingEvents()) {
@@ -304,8 +300,8 @@ public class SubscriptionJsonWithEvents extends SubscriptionJsonSimple {
             this.events.add(new SubscriptionReadEventJson(cur.getEventId().toString(), spec.getBillingPeriod().toString(), cur.getRequestedDate(), cur.getEffectiveDate(),
                                                           spec.getProductName(), spec.getPriceListName(), cur.getSubscriptionTransitionType().toString(), spec.getPhaseType().toString()));
         }
-        this.deletedEvents = null;
         this.newEvents = null;
+        this.deletedEvents = null;
     }
 
     public String getSubscriptionId() {
