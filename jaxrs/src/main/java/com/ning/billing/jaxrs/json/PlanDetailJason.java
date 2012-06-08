@@ -22,19 +22,17 @@ import com.ning.billing.catalog.api.InternationalPrice;
 import com.ning.billing.catalog.api.Listing;
 
 public class PlanDetailJason {
-    final String             productName;
-    final String             planName;
-    final BillingPeriod      billingPeriod;
-    final String             priceListName;
+    final String productName;
+    final String planName;
+    final BillingPeriod billingPeriod;
+    final String priceListName;
     final InternationalPrice finalPhasePrice;
 
-    public PlanDetailJason(
-            @JsonProperty("product") final String productName,
-            @JsonProperty("plan") final String planName,
-            @JsonProperty("final_phase_billing_period") final BillingPeriod billingPeriod,
-            @JsonProperty("priceList") final String priceListName,
-            @JsonProperty("final_phase_recurring_price") final InternationalPrice finalPhasePrice
-                          ) {
+    public PlanDetailJason(@JsonProperty("product") final String productName,
+                           @JsonProperty("plan") final String planName,
+                           @JsonProperty("final_phase_billing_period") final BillingPeriod billingPeriod,
+                           @JsonProperty("priceList") final String priceListName,
+                           @JsonProperty("final_phase_recurring_price") final InternationalPrice finalPhasePrice) {
         this.productName = productName;
         this.planName = planName;
         this.billingPeriod = billingPeriod;
@@ -43,11 +41,8 @@ public class PlanDetailJason {
     }
 
     public PlanDetailJason(final Listing listing) {
-        this.productName = listing.getPlan().getProduct().getName();
-        this.planName = listing.getPlan().getName();
-        this.billingPeriod = listing.getPlan().getBillingPeriod();
-        this.priceListName = listing.getPriceList().getName();
-        this.finalPhasePrice = listing.getPlan().getFinalPhase().getRecurringPrice();
+        this(listing.getPlan().getProduct().getName(), listing.getPlan().getName(), listing.getPlan().getBillingPeriod(),
+             listing.getPriceList().getName(), listing.getPlan().getFinalPhase().getRecurringPrice());
     }
 
     public String getProductName() {
@@ -70,5 +65,43 @@ public class PlanDetailJason {
         return finalPhasePrice;
     }
 
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
+        final PlanDetailJason that = (PlanDetailJason) o;
+
+        if (billingPeriod != that.billingPeriod) {
+            return false;
+        }
+        if (finalPhasePrice != null ? !finalPhasePrice.equals(that.finalPhasePrice) : that.finalPhasePrice != null) {
+            return false;
+        }
+        if (planName != null ? !planName.equals(that.planName) : that.planName != null) {
+            return false;
+        }
+        if (priceListName != null ? !priceListName.equals(that.priceListName) : that.priceListName != null) {
+            return false;
+        }
+        if (productName != null ? !productName.equals(that.productName) : that.productName != null) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = productName != null ? productName.hashCode() : 0;
+        result = 31 * result + (planName != null ? planName.hashCode() : 0);
+        result = 31 * result + (billingPeriod != null ? billingPeriod.hashCode() : 0);
+        result = 31 * result + (priceListName != null ? priceListName.hashCode() : 0);
+        result = 31 * result + (finalPhasePrice != null ? finalPhasePrice.hashCode() : 0);
+        return result;
+    }
 }
