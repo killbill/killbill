@@ -52,6 +52,12 @@ getRecordId() ::= <<
     WHERE id = :id;
 >>
 
+getPaymentAttemptIdFromPaymentId() ::= <<
+    SELECT id
+    FROM payment_attempts
+    WHERE payment_id = :paymentId;
+>>
+
 historyFields(prefix) ::= <<
     <prefix>record_id,
     <prefix>id,

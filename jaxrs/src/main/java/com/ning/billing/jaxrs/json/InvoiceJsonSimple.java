@@ -18,64 +18,71 @@ package com.ning.billing.jaxrs.json;
 
 import java.math.BigDecimal;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import org.joda.time.DateTime;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ning.billing.invoice.api.Invoice;
 
 public class InvoiceJsonSimple {
 
     private final BigDecimal amount;
-    
     private final String invoiceId;
-    
     private final DateTime invoiceDate;
-
     private final DateTime targetDate;
-
     private final String invoiceNumber;
-    
+    private final BigDecimal credit;    
     private final BigDecimal balance;
+    private final String accountId;
 
-    
     public InvoiceJsonSimple() {
-        this.amount = null;
+        this.amount = BigDecimal.ZERO;
+        this.credit = BigDecimal.ZERO;
         this.invoiceId = null;
         this.invoiceDate = null;
-        this.targetDate = null;        
+        this.targetDate = null;
         this.invoiceNumber = null;
-        this.balance = null;
+        this.balance = BigDecimal.ZERO;
+        this.accountId = null;
     }
-    
+
     @JsonCreator
     public InvoiceJsonSimple(@JsonProperty("amount") BigDecimal amount,
-            @JsonProperty("invoiceId") String invoiceId,
-            @JsonProperty("invoiceDate") DateTime invoiceDate,
-            @JsonProperty("targetDate") DateTime targetDate,            
-            @JsonProperty("invoiceNumber") String invoiceNumber,
-            @JsonProperty("balance") BigDecimal balance) {
+                             @JsonProperty("credit") BigDecimal credit,
+                             @JsonProperty("invoiceId") String invoiceId,
+                             @JsonProperty("invoiceDate") DateTime invoiceDate,
+                             @JsonProperty("targetDate") DateTime targetDate,
+                             @JsonProperty("invoiceNumber") String invoiceNumber,
+                             @JsonProperty("balance") BigDecimal balance,
+                             @JsonProperty("accountId") String accountId) {
         super();
         this.amount = amount;
+        this.credit = credit;
         this.invoiceId = invoiceId;
         this.invoiceDate = invoiceDate;
         this.targetDate = targetDate;
         this.invoiceNumber = invoiceNumber;
         this.balance = balance;
+        this.accountId = accountId;
     }
 
     public InvoiceJsonSimple(Invoice input) {
-        this.amount = input.getTotalAmount();
+        this.amount = input.getAmountCharged();
+        this.credit = input.getAmountCredited();
         this.invoiceId = input.getId().toString();
         this.invoiceDate = input.getInvoiceDate();
         this.targetDate = input.getTargetDate();
         this.invoiceNumber = String.valueOf(input.getInvoiceNumber());
         this.balance = input.getBalance();
+        this.accountId = input.getAccountId().toString();
     }
-    
+
     public BigDecimal getAmount() {
         return amount;
+    }
+
+    public BigDecimal getCredit() {
+        return credit;
     }
 
     public String getInvoiceId() {
@@ -98,12 +105,17 @@ public class InvoiceJsonSimple {
         return balance;
     }
 
+    public String getAccountId() {
+        return accountId;
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((amount == null) ? 0 : amount.hashCode());
         result = prime * result + ((balance == null) ? 0 : balance.hashCode());
+        result = prime * result + ((credit == null) ? 0 : credit.hashCode());
         result = prime * result
                 + ((invoiceDate == null) ? 0 : invoiceDate.hashCode());
         result = prime * result
@@ -127,26 +139,43 @@ public class InvoiceJsonSimple {
                 return false;
         } else if (!amount.equals(other.amount))
             return false;
+
         if (balance == null) {
             if (other.balance != null)
                 return false;
         } else if (!balance.equals(other.balance))
             return false;
+
+        if (credit == null) {
+            if (other.credit != null)
+                return false;
+        } else if (!credit.equals(other.credit))
+            return false;
+
         if (invoiceDate == null) {
             if (other.invoiceDate != null)
                 return false;
         } else if (!invoiceDate.equals(other.invoiceDate))
             return false;
+
         if (invoiceId == null) {
             if (other.invoiceId != null)
                 return false;
         } else if (!invoiceId.equals(other.invoiceId))
             return false;
+
         if (invoiceNumber == null) {
             if (other.invoiceNumber != null)
                 return false;
         } else if (!invoiceNumber.equals(other.invoiceNumber))
             return false;
+
+        if (accountId == null) {
+            if (other.accountId != null)
+                return false;
+        } else if (!accountId.equals(other.accountId))
+            return false;
+
         return true;
     }
 }

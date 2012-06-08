@@ -42,6 +42,8 @@ public interface PaymentApi {
    public List<Payment> getAccountPayments(final UUID accountId)
     throws PaymentApiException;
    
+   public Payment getPayment(final UUID paymentId)
+   throws PaymentApiException;
    
    /*
     * Payment method Apis
@@ -71,6 +73,5 @@ public interface PaymentApi {
    
    public void setDefaultPaymentMethod(final Account account, final UUID paymentMethodId, final CallContext context)
    throws PaymentApiException;
-   
-  
+
 }

@@ -46,5 +46,7 @@ public interface InvoiceItem extends Entity, Comparable<InvoiceItem> {
 
     Currency getCurrency();
 
+    InvoiceItemType getInvoiceItemType();
+
     InvoiceItem asReversingItem();
 }

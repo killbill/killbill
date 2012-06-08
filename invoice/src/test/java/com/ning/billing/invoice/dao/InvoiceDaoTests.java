@@ -28,10 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import com.ning.billing.util.dao.ObjectType;
-import com.ning.billing.util.tag.Tag;
-import com.ning.billing.util.tag.dao.AuditedTagDao;
-import com.ning.billing.util.tag.dao.TagDao;
 import org.joda.time.DateTime;
 import org.testng.annotations.Test;
 
@@ -49,17 +45,22 @@ import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.billing.BillingEvent;
 import com.ning.billing.entitlement.api.billing.BillingModeType;
 import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.invoice.MockBillingEventSet;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
-import com.ning.billing.invoice.model.BillingEventSet;
 import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.invoice.model.DefaultInvoicePayment;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
+import com.ning.billing.junction.api.BillingEventSet;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
+import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.tag.ControlTagType;
+import com.ning.billing.util.tag.Tag;
+import com.ning.billing.util.tag.dao.AuditedTagDao;
+import com.ning.billing.util.tag.dao.TagDao;
 
 @Test(groups = {"slow", "invoicing", "invoicing-invoiceDao"})
 public class InvoiceDaoTests extends InvoiceDaoTestBase {
@@ -79,7 +80,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         assertTrue(thisInvoice.getInvoiceDate().compareTo(invoiceDate) == 0);
         assertEquals(thisInvoice.getCurrency(), Currency.USD);
         assertEquals(thisInvoice.getNumberOfItems(), 0);
-        assertTrue(thisInvoice.getTotalAmount().compareTo(BigDecimal.ZERO) == 0);
+        assertTrue(thisInvoice.getBalance().compareTo(BigDecimal.ZERO) == 0);
     }
 
     @Test
@@ -99,7 +100,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
 
         Invoice savedInvoice = invoiceDao.getById(invoiceId);
         assertNotNull(savedInvoice);
-        assertEquals(savedInvoice.getTotalAmount().compareTo(new BigDecimal("21.00")), 0);
+        assertEquals(savedInvoice.getBalance().compareTo(new BigDecimal("21.00")), 0);
         assertEquals(savedInvoice.getBalance().compareTo(new BigDecimal("21.00")), 0);
         assertEquals(savedInvoice.getAmountPaid(), BigDecimal.ZERO);
         assertEquals(savedInvoice.getInvoiceItems().size(), 1);
@@ -112,7 +113,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         Invoice retrievedInvoice = invoiceDao.getById(invoiceId);
         assertNotNull(retrievedInvoice);
         assertEquals(retrievedInvoice.getInvoiceItems().size(), 1);
-        assertEquals(retrievedInvoice.getTotalAmount().compareTo(new BigDecimal("21.00")), 0);
+        assertEquals(retrievedInvoice.getAmountCharged().compareTo(new BigDecimal("21.00")), 0);
         assertEquals(retrievedInvoice.getBalance().compareTo(new BigDecimal("10.00")), 0);
         assertEquals(retrievedInvoice.getAmountPaid().compareTo(new BigDecimal("11.00")), 0);
     }
@@ -417,7 +418,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
                 recurringPrice.getPrice(currency), currency, BillingPeriod.MONTHLY, 1, BillingModeType.IN_ADVANCE,
                 "testEvent1", 1L, SubscriptionTransitionType.CREATE);
 
-        BillingEventSet events = new BillingEventSet();
+        BillingEventSet events = new MockBillingEventSet();
         events.add(event1);
 
         Invoice invoice1 = generator.generateInvoice(accountId, events, invoiceList, targetDate, Currency.USD);
@@ -446,10 +447,10 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         invoiceDao.create(invoice2, context);
 
         Invoice savedInvoice1 = invoiceDao.getById(invoice1.getId());
-        assertEquals(savedInvoice1.getTotalAmount(), ZERO);
+        assertEquals(savedInvoice1.getBalance(), ZERO);
 
         Invoice savedInvoice2 = invoiceDao.getById(invoice2.getId());
-        assertEquals(savedInvoice2.getTotalAmount(), FIFTEEN);
+        assertEquals(savedInvoice2.getBalance(), FIFTEEN);
     }
 
     @Test
@@ -466,7 +467,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         BillingEvent event = createMockBillingEvent(null, subscription, effectiveDate, plan, phase, null,
                 recurringPrice.getPrice(currency), currency, BillingPeriod.MONTHLY, 15, BillingModeType.IN_ADVANCE,
                 "testEvent", 1L, SubscriptionTransitionType.CREATE);
-        BillingEventSet events = new BillingEventSet();
+        BillingEventSet events = new MockBillingEventSet();
         events.add(event);
 
         DateTime targetDate = buildDateTime(2011, 1, 15);
@@ -474,7 +475,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
 
         // expect one pro-ration item and one full-period item
         assertEquals(invoice.getNumberOfItems(), 2);
-        assertEquals(invoice.getTotalAmount().compareTo(ZERO), 0);
+        assertEquals(invoice.getBalance().compareTo(ZERO), 0);
     }
 
     private Subscription getZombieSubscription() {
@@ -505,14 +506,14 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         BillingEvent event1 = createMockBillingEvent(null, subscription, effectiveDate1, plan, phase1, fixedPrice.getPrice(currency),
                 null, currency, BillingPeriod.MONTHLY, 1, BillingModeType.IN_ADVANCE,
                 "testEvent1", 1L, SubscriptionTransitionType.CREATE);
-        BillingEventSet events = new BillingEventSet();
+        BillingEventSet events = new MockBillingEventSet();
         events.add(event1);
 
         UUID accountId = UUID.randomUUID();
         Invoice invoice1 = generator.generateInvoice(accountId, events, null, effectiveDate1, Currency.USD);
         assertNotNull(invoice1);
         assertEquals(invoice1.getNumberOfItems(), 1);
-        assertEquals(invoice1.getTotalAmount().compareTo(ZERO), 0);
+        assertEquals(invoice1.getBalance().compareTo(ZERO), 0);
 
         List<Invoice> invoiceList = new ArrayList<Invoice>();
         invoiceList.add(invoice1);
@@ -526,7 +527,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         Invoice invoice2 = generator.generateInvoice(accountId, events, invoiceList, effectiveDate2, Currency.USD);
         assertNotNull(invoice2);
         assertEquals(invoice2.getNumberOfItems(), 1);
-        assertEquals(invoice2.getTotalAmount().compareTo(cheapAmount), 0);
+        assertEquals(invoice2.getBalance().compareTo(cheapAmount), 0);
 
         invoiceList.add(invoice2);
 
@@ -534,12 +535,12 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         Invoice invoice3 = generator.generateInvoice(accountId, events, invoiceList, effectiveDate3, Currency.USD);
         assertNotNull(invoice3);
         assertEquals(invoice3.getNumberOfItems(), 1);
-        assertEquals(invoice3.getTotalAmount().compareTo(cheapAmount), 0);
+        assertEquals(invoice3.getBalance().compareTo(cheapAmount), 0);
     }
 
     @Test
     public void testInvoiceForEmptyEventSet() throws InvoiceApiException {
-        BillingEventSet events = new BillingEventSet();
+        BillingEventSet events = new MockBillingEventSet();
         Invoice invoice = generator.generateInvoice(UUID.randomUUID(), events, null, new DateTime(), Currency.USD);
         assertNull(invoice);
     }
@@ -565,7 +566,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
                 fixedPrice.getPrice(currency), null, currency,
                 BillingPeriod.MONTHLY, 1, BillingModeType.IN_ADVANCE,
                 "testEvent1", 1L, SubscriptionTransitionType.CREATE);
-        BillingEventSet events = new BillingEventSet();
+        BillingEventSet events = new MockBillingEventSet();
         events.add(event1);
 
         DateTime effectiveDate2 = effectiveDate1.plusDays(30);
@@ -577,14 +578,14 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         Invoice invoice = generator.generateInvoice(UUID.randomUUID(), events, null, effectiveDate2, Currency.USD);
         assertNotNull(invoice);
         assertEquals(invoice.getNumberOfItems(), 2);
-        assertEquals(invoice.getTotalAmount().compareTo(cheapAmount), 0);
+        assertEquals(invoice.getBalance().compareTo(cheapAmount), 0);
 
         invoiceDao.create(invoice, context);
         Invoice savedInvoice = invoiceDao.getById(invoice.getId());
 
         assertNotNull(savedInvoice);
         assertEquals(savedInvoice.getNumberOfItems(), 2);
-        assertEquals(savedInvoice.getTotalAmount().compareTo(cheapAmount), 0);
+        assertEquals(savedInvoice.getBalance().compareTo(cheapAmount), 0);
     }
 
     @Test
@@ -604,7 +605,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         PlanPhase phase2 = BrainDeadProxyFactory.createBrainDeadProxyFor(PlanPhase.class);
         ((ZombieControl) phase2).addResult("getName", "plan-phase2");
 
-        BillingEventSet events = new BillingEventSet();
+        BillingEventSet events = new MockBillingEventSet();
         List<Invoice> invoices = new ArrayList<Invoice>();
 
         BillingEvent event1 = createMockBillingEvent(null, subscription, targetDate1, plan, phase1, null,
@@ -648,7 +649,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
                 TEN, currency,
                 BillingPeriod.MONTHLY, 31, BillingModeType.IN_ADVANCE,
                 "testEvent1", 1L, SubscriptionTransitionType.CHANGE);
-        BillingEventSet events = new BillingEventSet();
+        BillingEventSet events = new MockBillingEventSet();
         events.add(event1);
 
         Invoice invoice = generator.generateInvoice(UUID.randomUUID(), events, null, targetDate1, Currency.USD);
@@ -679,7 +680,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
                 TEN, currency,
                 BillingPeriod.MONTHLY, 31, BillingModeType.IN_ADVANCE,
                 "testEvent1", 1L, SubscriptionTransitionType.CHANGE);
-        BillingEventSet events = new BillingEventSet();
+        BillingEventSet events = new MockBillingEventSet();
         events.add(event1);
 
         Invoice invoice = generator.generateInvoice(UUID.randomUUID(), events, null, targetDate1, Currency.USD);

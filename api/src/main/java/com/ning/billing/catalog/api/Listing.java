@@ -14,8 +14,11 @@
  * under the License.
  */
 
-package com.ning.billing.jaxrs.resources;
+package com.ning.billing.catalog.api;
 
-public class ChargedbackResource {
-
+public interface Listing {
+    
+    Plan getPlan();
+    
+    PriceList getPriceList();
 }

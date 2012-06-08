@@ -22,6 +22,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import com.google.inject.Inject;
+import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.payment.core.AccountProcessor;
 import com.ning.billing.payment.core.PaymentMethodProcessor;
@@ -49,9 +50,6 @@ public class DefaultPaymentApi implements PaymentApi {
         this.refundProcessor = refundProcessor;
     }
      
- 
- 
-   
     @Override
     public Payment createPayment(final String accountKey, final UUID invoiceId, final BigDecimal amount, final CallContext context) 
     throws PaymentApiException {
@@ -64,6 +62,14 @@ public class DefaultPaymentApi implements PaymentApi {
         return paymentProcessor.createPayment(account, invoiceId, amount, context, true);        
     }
 
+    @Override
+    public Payment getPayment(UUID paymentId) throws PaymentApiException {
+        Payment payment = paymentProcessor.getPayment(paymentId);
+        if (payment == null) {
+            throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT, paymentId);
+        }
+        return payment;
+    }
     
     @Override
     public List<Payment> getInvoicePayments(UUID invoiceId) {
@@ -144,5 +150,4 @@ public class DefaultPaymentApi implements PaymentApi {
         throws PaymentApiException {
         methodProcessor.setDefaultPaymentMethod(account, paymentMethodId);
     }
-
 }

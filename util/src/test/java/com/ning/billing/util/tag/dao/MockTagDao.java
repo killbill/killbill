@@ -22,6 +22,7 @@ import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -76,6 +77,10 @@ public class MockTagDao implements TagDao {
                 return id;
             }
         };
+
+        if (tagStore.get(objectId) == null) {
+            tagStore.put(objectId, new ArrayList<Tag>());
+        }
 
         tagStore.get(objectId).add(tag);
     }

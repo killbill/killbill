@@ -16,16 +16,18 @@
 
 package com.ning.billing.catalog;
 
-import com.ning.billing.catalog.api.Duration;
-import com.ning.billing.catalog.api.TimeUnit;
-import com.ning.billing.util.config.ValidatingConfig;
-import com.ning.billing.util.config.ValidationErrors;
-import org.joda.time.DateTime;
-import org.joda.time.Period;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
+
+import org.joda.time.DateTime;
+import org.joda.time.Period;
+
+import com.ning.billing.catalog.api.Duration;
+import com.ning.billing.catalog.api.TimeUnit;
+import com.ning.billing.util.config.ValidatingConfig;
+import com.ning.billing.util.config.ValidationError;
+import com.ning.billing.util.config.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultDuration extends ValidatingConfig<StandaloneCatalog> implements Duration {
@@ -71,6 +73,12 @@ public class DefaultDuration extends ValidatingConfig<StandaloneCatalog> impleme
 
     @Override
 	public ValidationErrors validate(StandaloneCatalog catalog, ValidationErrors errors) {
+        //Validation: TimeUnit UNLIMITED iff number == -1
+        if((unit == TimeUnit.UNLIMITED && number != -1)) {
+            errors.add(new ValidationError("Duration can only have 'UNLIMITED' unit if the number is omitted.", 
+                    catalog.getCatalogURI(), DefaultPlanPhase.class, ""));
+        }
+
 		//TODO MDW - Validation TimeUnit UNLIMITED iff number == -1
 		return errors;
 	}

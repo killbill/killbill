@@ -75,7 +75,17 @@ public interface JaxrsResource {
 
     public static final String PAYMENTS = "payments";     
     public static final String PAYMENTS_PATH = PREFIX + "/" + PAYMENTS;    
-    
+
+    public static final String CREDITS = "credits";
+    public static final String CREDITS_PATH = PREFIX + "/" + CREDITS;
+
+    public static final String CHARGEBACKS = "chargebacks";
+    public static final String CHARGEBACKS_PATH = PREFIX + "/" + CHARGEBACKS;
+
     public static final String TAGS = "tags";
     public static final String CUSTOM_FIELDS = "custom_fields";
+    
+    public static final String CATALOG = "catalog";
+    public static final String CATALOG_PATH = PREFIX + "/" + CATALOG;
+
 }

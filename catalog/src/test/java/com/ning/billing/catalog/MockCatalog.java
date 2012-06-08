@@ -184,20 +184,17 @@ public class MockCatalog extends StandaloneCatalog implements Catalog {
 
     @Override
     public ActionPolicy planChangePolicy(PlanPhaseSpecifier from, PlanSpecifier to) throws CatalogApiException {
-        // TODO Auto-generated method stub
         return super.planChangePolicy(from, to);
     }
 
     @Override
     public PlanAlignmentChange planChangeAlignment(PlanPhaseSpecifier from, PlanSpecifier to)
             throws CatalogApiException {
-        // TODO Auto-generated method stub
         return super.planChangeAlignment(from, to);
     }
 
     @Override
     public ActionPolicy planCancelPolicy(PlanPhaseSpecifier planPhase) throws CatalogApiException {
-        // TODO Auto-generated method stub
         return super.planCancelPolicy(planPhase);
     }
 
@@ -208,13 +205,11 @@ public class MockCatalog extends StandaloneCatalog implements Catalog {
 
     @Override
     public BillingAlignment billingAlignment(PlanPhaseSpecifier planPhase) throws CatalogApiException {
-        // TODO Auto-generated method stub
         return billingAlignment;
     }
 
     @Override
     public PlanChangeResult planChange(PlanPhaseSpecifier from, PlanSpecifier to) throws CatalogApiException {
-        // TODO Auto-generated method stub
         return planChange;
     }
 

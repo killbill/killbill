@@ -19,6 +19,7 @@ import static com.ning.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR_NAMED;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -101,7 +102,11 @@ public class PaymentProcessor extends ProcessorBase {
         this.voidPluginDispatcher = new PluginDispatcher<Void>(executor);
     }
   
+    public Payment getPayment(UUID paymentId) {
+        return getPayments(Collections.singletonList(paymentDao.getPayment(paymentId))).get(0);        
+    }
 
+    
     public List<Payment> getInvoicePayments(UUID invoiceId) {
         return getPayments(paymentDao.getPaymentsForInvoice(invoiceId));        
     }

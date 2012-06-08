@@ -19,6 +19,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
+
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
@@ -26,8 +27,11 @@ import org.skife.jdbi.v2.TransactionStatus;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
+import com.ning.billing.payment.api.PaymentApiException;
+import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.payment.retry.PluginFailureRetryService.PluginFailureRetryServiceScheduler;
+
 import com.ning.billing.util.ChangeType;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.dao.EntityAudit;
@@ -273,13 +277,8 @@ public class AuditedPaymentDao implements PaymentDao {
         return paymentSqlDao.getPaymentsForAccount(accountId.toString());
     }
 
-
-
     @Override
     public List<PaymentAttemptModelDao> getAttemptsForPayment(UUID paymentId) {
         return paymentAttemptSqlDao.getPaymentAttempts(paymentId.toString());
     }
-
-
-
 }

@@ -28,6 +28,7 @@ import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 
 
 public class DefaultPaymentProviderPluginRegistry implements PaymentProviderPluginRegistry {
+    
     private final String defaultPlugin;
     private final Map<String, PaymentPluginApi> pluginsByName = new ConcurrentHashMap<String, PaymentPluginApi>();
 

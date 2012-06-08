@@ -19,14 +19,15 @@ package com.ning.billing.jaxrs.json;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.joda.time.DateTime;
 
 public class PaymentJsonWithBundleKeys extends PaymentJsonSimple {
 
     private final String bundleKeys;
-    
+
     public PaymentJsonWithBundleKeys() {
         super();
         this.bundleKeys = null;
@@ -41,13 +42,14 @@ public class PaymentJsonWithBundleKeys extends PaymentJsonSimple {
             @JsonProperty("requestedDt") DateTime requestedDate,
             @JsonProperty("effectiveDt") DateTime effectiveDate,
             @JsonProperty("retryCount") Integer retryCount,
-            @JsonProperty("currency") String currency,            
+            @JsonProperty("currency") String currency,
             @JsonProperty("status") String status,
             @JsonProperty("externalBundleKeys") String bundleKeys) {
         super(amount, paidAmount, accountId, invoiceId, paymentId, requestedDate, effectiveDate, retryCount, currency, status);
+
         this.bundleKeys = bundleKeys;
     }
-    
+
     public String getBundleKeys() {
         return bundleKeys;
     }

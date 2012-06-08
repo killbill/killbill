@@ -187,7 +187,6 @@ public class TestOverdueIntegration extends TestIntegrationBase {
     
         clock.addDays(15); // DAY 45 - 15 days after invoice
         assertTrue(busHandler.isCompleted(DELAY));
-        overdueApi.refreshOverdueStateFor(bundle); // trigger a refresh because there are no events to do it for us
         //should still be in clear state
         checkODState(BlockingApi.CLEAR_STATE_NAME);
 
@@ -200,14 +199,12 @@ public class TestOverdueIntegration extends TestIntegrationBase {
           
         clock.addDays(2); //DAY 67 - 37 days after invoice
         assertTrue(busHandler.isCompleted(DELAY));
-        overdueApi.refreshOverdueStateFor(bundle); // trigger a refresh because there are no events to do it for us
         // should still be in OD1
         checkODState("OD1");
 
         //busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT_ERROR);
         clock.addDays(8); //DAY 75 - 45 days after invoice
         assertTrue(busHandler.isCompleted(DELAY));
-        overdueApi.refreshOverdueStateFor(bundle); // trigger a refresh because there are no events to do it for us
         // should still be in OD1
         checkODState("OD2");
         
@@ -229,7 +226,6 @@ public class TestOverdueIntegration extends TestIntegrationBase {
             }
         }
         
-        overdueApi.refreshOverdueStateFor(bundle);
         checkODState(BlockingApi.CLEAR_STATE_NAME);
 
     }
@@ -240,6 +236,7 @@ public class TestOverdueIntegration extends TestIntegrationBase {
             await().atMost(10, SECONDS).until(new Callable<Boolean>() {
                 @Override
                 public Boolean call() throws Exception {
+                    overdueApi.refreshOverdueStateFor(bundle); 
                     return expected.equals(blockingApi.getBlockingStateFor(bundle).getStateName()) ;
                 }
             });

@@ -14,27 +14,30 @@
  * under the License.
  */
 
-package com.ning.billing.invoice.model;
+package com.ning.billing.catalog;
 
-import com.ning.billing.entitlement.api.billing.BillingEvent;
+import com.ning.billing.catalog.api.Listing;
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.PriceList;
 
-import java.util.ArrayList;
-import java.util.Collection;
+public class DefaultListing implements Listing {
+    private final Plan plan;
+    private final PriceList priceList;
 
-public class BillingEventSet extends ArrayList<BillingEvent> {
-    public BillingEventSet() {
+    public DefaultListing(Plan plan, PriceList priceList) {
         super();
+        this.plan = plan;
+        this.priceList = priceList;
     }
 
-    public BillingEventSet(Collection<BillingEvent> events) {
-        super();
-        if(events != null) {
-            addAll(events);
-            
-        }
+    @Override
+    public Plan getPlan() {
+        return plan;
     }
 
-    public boolean isLast(final BillingEvent event) {
-        return (super.indexOf(event) == size() - 1);
+    @Override
+    public PriceList getPriceList() {
+        return priceList;
     }
+
 }

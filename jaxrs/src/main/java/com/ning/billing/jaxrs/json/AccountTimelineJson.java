@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -25,7 +25,6 @@ import java.util.UUID;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
-
 import com.ning.billing.account.api.Account;
 import com.ning.billing.entitlement.api.timeline.BundleTimeline;
 import com.ning.billing.invoice.api.Invoice;
@@ -40,20 +39,21 @@ public class AccountTimelineJson {
     private final List<InvoiceJsonWithBundleKeys> invoices;
     
     private final AccountJsonSimple account;
-    
+
+
     private final List<BundleJsonWithSubscriptions> bundles;
-    
+
     @JsonCreator
     public AccountTimelineJson(@JsonProperty("account") AccountJsonSimple account,
             @JsonProperty("bundles") List<BundleJsonWithSubscriptions> bundles,
-            @JsonProperty("invoices") List<InvoiceJsonWithBundleKeys> invoices,            
+            @JsonProperty("invoices") List<InvoiceJsonWithBundleKeys> invoices,
             @JsonProperty("payments") List<PaymentJsonWithBundleKeys> payments) {
         this.account = account;
         this.bundles = bundles;
         this.invoices = invoices;
         this.payments = payments;
     }
-    
+
     private String getBundleExternalKey(UUID invoiceId,  List<Invoice> invoices, List<BundleTimeline> bundles) {
         for (Invoice cur : invoices) {
             if (cur.getId().equals(invoiceId)) {
@@ -62,7 +62,7 @@ public class AccountTimelineJson {
         }
         return null;
     }
-    
+
     private String getBundleExternalKey(Invoice invoice, List<BundleTimeline> bundles) {
         Set<UUID> b = new HashSet<UUID>();
         for (final InvoiceItem cur : invoice.getInvoiceItems()) {
@@ -84,21 +84,26 @@ public class AccountTimelineJson {
         }
         return tmp.toString();
     }
-    
+
     public AccountTimelineJson(Account account, List<Invoice> invoices, List<Payment> payments, List<BundleTimeline> bundles) {
         this.account = new AccountJsonSimple(account.getId().toString(), account.getExternalKey());
         this.bundles = new LinkedList<BundleJsonWithSubscriptions>();
         for (BundleTimeline cur : bundles) {
-            this.bundles.add(new BundleJsonWithSubscriptions(account.getId(), cur));            
+            this.bundles.add(new BundleJsonWithSubscriptions(account.getId(), cur));
         }
         this.invoices = new LinkedList<InvoiceJsonWithBundleKeys>();
         for (Invoice cur : invoices) {
-            this.invoices.add(new InvoiceJsonWithBundleKeys(cur.getTotalAmount(), cur.getId().toString(), cur.getInvoiceDate(), cur.getTargetDate(),
-                    Integer.toString(cur.getInvoiceNumber()), cur.getBalance(),
-                    getBundleExternalKey(cur, bundles)));
+            this.invoices.add(new InvoiceJsonWithBundleKeys(cur.getAmountPaid(),
+                                                            cur.getAmountCredited(),
+                                                            cur.getId().toString(),
+                                                            cur.getInvoiceDate(),
+                                                            cur.getTargetDate(),
+                                                            Integer.toString(cur.getInvoiceNumber()),
+                                                            cur.getBalance(),
+                                                            cur.getAccountId().toString(),
+                                                            getBundleExternalKey(cur, bundles)));
         }
         this.payments = new LinkedList<PaymentJsonWithBundleKeys>();
-
         for (Payment cur : payments) {
         
             String status = cur.getPaymentStatus().toString();
@@ -110,7 +115,7 @@ public class AccountTimelineJson {
                     getBundleExternalKey(cur.getInvoiceId(), invoices, bundles)));
           }
     }
-    
+
     public AccountTimelineJson() {
         this.account = null;
         this.bundles = null;

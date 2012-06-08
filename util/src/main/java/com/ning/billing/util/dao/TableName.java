@@ -21,6 +21,7 @@ public enum TableName {
     ACCOUNT_HISTORY("account_history"),
     ACCOUNT_EMAIL_HISTORY("account_email_history"),
     BUNDLES("bundles"),
+    CREDIT_INVOICE_ITEMS("credit_invoice_items"),
     CUSTOM_FIELD_HISTORY("custom_field_history"),
     FIXED_INVOICE_ITEMS("fixed_invoice_items"),
     INVOICE_PAYMENTS("invoice_payments"),

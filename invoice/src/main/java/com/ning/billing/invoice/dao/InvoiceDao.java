@@ -16,7 +16,10 @@
 
 package com.ning.billing.invoice.dao;
 
+import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoiceApiException;
+import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.util.callcontext.CallContext;
 import org.joda.time.DateTime;
@@ -52,8 +55,25 @@ public interface InvoiceDao {
 
 	List<Invoice> getAllInvoicesByAccount(final UUID accountId);
 
-    void setWrittenOff(UUID invoiceId, CallContext context);
+    void setWrittenOff(final UUID invoiceId, final CallContext context);
 
-    void removeWrittenOff(UUID invoiceId, CallContext context);
+    void removeWrittenOff(final UUID invoiceId, final CallContext context) throws InvoiceApiException;
 
+    void postChargeback(final UUID invoicePaymentId, final BigDecimal amount, final CallContext context) throws InvoiceApiException;
+
+    BigDecimal getRemainingAmountPaid(final UUID invoicePaymentId);
+
+    UUID getAccountIdFromInvoicePaymentId(final UUID invoicePaymentId) throws InvoiceApiException;
+
+    List<InvoicePayment> getChargebacksByAccountId(final UUID accountId);
+
+    List<InvoicePayment> getChargebacksByPaymentAttemptId(final UUID paymentAttemptId);
+
+    InvoicePayment getChargebackById(final UUID chargebackId) throws InvoiceApiException;
+
+    InvoiceItem getCreditById(final UUID creditId) throws InvoiceApiException;
+
+    InvoiceItem insertCredit(final UUID accountId, final BigDecimal amount,
+                             final DateTime effectiveDate, final Currency currency,
+                             final CallContext context);
 }

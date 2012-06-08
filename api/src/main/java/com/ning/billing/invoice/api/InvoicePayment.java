@@ -32,4 +32,11 @@ public interface InvoicePayment extends Entity {
     BigDecimal getAmount();
 
     Currency getCurrency();
+
+    UUID getReversedInvoicePaymentId();
+
+    /*
+     * @param chargeBackAmount BigDecimal pass the amount as a positive number
+     */
+    InvoicePayment asChargeBack(BigDecimal chargeBackAmount, DateTime chargeBackDate) throws InvoiceApiException;
 }

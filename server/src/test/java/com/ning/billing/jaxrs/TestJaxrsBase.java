@@ -111,7 +111,7 @@ public class TestJaxrsBase {
     protected ClockMock clock;
     protected TestApiListener busHandler;
 
-    // Context informtation to be passed around
+    // Context information to be passed around
     private static final String createdBy = "Toto";
     private static final String reason = "i am god";
     private static final String comment = "no comment";    

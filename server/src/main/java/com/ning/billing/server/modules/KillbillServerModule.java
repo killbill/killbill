@@ -16,9 +16,6 @@
 
 package com.ning.billing.server.modules;
 
-import com.ning.billing.util.email.EmailModule;
-import com.ning.billing.util.email.templates.TemplateModule;
-import com.ning.billing.util.glue.GlobalLockerModule;
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.IDBI;
 
@@ -31,17 +28,22 @@ import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
 import com.ning.billing.invoice.glue.DefaultInvoiceModule;
 import com.ning.billing.jaxrs.resources.AccountResource;
 import com.ning.billing.jaxrs.resources.BundleResource;
+import com.ning.billing.jaxrs.resources.CatalogResource;
 import com.ning.billing.jaxrs.resources.InvoiceResource;
 import com.ning.billing.jaxrs.resources.SubscriptionResource;
 import com.ning.billing.jaxrs.resources.TagResource;
 import com.ning.billing.jaxrs.util.KillbillEventHandler;
 import com.ning.billing.jaxrs.util.TagHelper;
 import com.ning.billing.junction.glue.DefaultJunctionModule;
+
 import com.ning.billing.payment.glue.PaymentModule;
+import com.ning.billing.util.email.EmailModule;
+import com.ning.billing.util.email.templates.TemplateModule;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.CallContextModule;
 import com.ning.billing.util.glue.ClockModule;
 import com.ning.billing.util.glue.CustomFieldModule;
+import com.ning.billing.util.glue.GlobalLockerModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.TagStoreModule;
 import com.ning.jetty.jdbi.guice.providers.DBIProvider;
@@ -67,6 +69,7 @@ public class KillbillServerModule extends AbstractModule
         bind(SubscriptionResource.class).asEagerSingleton();
         bind(InvoiceResource.class).asEagerSingleton();
         bind(TagResource.class).asEagerSingleton();
+        bind(CatalogResource.class).asEagerSingleton();
         bind(KillbillEventHandler.class).asEagerSingleton();
     }
 

@@ -17,9 +17,6 @@
 package com.ning.billing;
 
 public enum ErrorCode {
-
-
-    
     /*
      * Range 0 : COMMON EXCEPTIONS
      */
@@ -185,7 +182,17 @@ public enum ErrorCode {
     INVOICE_NO_ACCOUNT_ID_FOR_SUBSCRIPTION_ID(4003, "No account id was retrieved for subscription id %s"),
     INVOICE_INVALID_DATE_SEQUENCE(4004, "Date sequence was invalid. Start Date: %s; End Date: %s; Target Date: %s"),
     INVOICE_TARGET_DATE_TOO_FAR_IN_THE_FUTURE(4005, "The target date was too far in the future. Target Date: %s"),
-    
+
+    /*
+     *
+     * Range 4900: Invoice payment
+     *
+     */
+    INVOICE_PAYMENT_NOT_FOUND(4900, "No invoice payment could be found for id %s."),
+    CHARGE_BACK_AMOUNT_TOO_HIGH(4901, "Tried to charge back %s of a %s payment."),
+    CHARGE_BACK_AMOUNT_IS_NEGATIVE(4902, "Charge backs for negative amounts are not permitted"),
+    CHARGE_BACK_COULD_NOT_FIND_ACCOUNT_ID(4093, "Could not find chargeback for id %s."),
+    CHARGE_BACK_DOES_NOT_EXIST(4093, "Could not find chargeback for id %s."),
     /*
      * 
      * Range 5000: Overdue system
@@ -228,9 +235,11 @@ public enum ErrorCode {
     PAYMENT_NULL_INVOICE(7017, "Invoice %s has a balance <= 0 "),      
     PAYMENT_AMOUNT_DENIED(7018, "Payment amount requested for invoice %s is greater than invoice balance [%f/%f]"),         
     PAYMENT_INTERNAL_ERROR(7019, "Internal payment error : %s"),
+    PAYMENT_NO_SUCH_PAYMENT(7020, "Payment %s does not exist"),
     
     PAYMENT_PLUGIN_TIMEOUT(7100, "Plugin timeout for account %s and invoice %s"),    
     PAYMENT_PLUGIN_ACCOUNT_INIT(7101, "Account initialization for account %s and plugin % s failed: %s"),        
+
     
     /*
     *

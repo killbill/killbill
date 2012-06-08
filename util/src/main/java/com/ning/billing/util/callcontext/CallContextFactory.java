@@ -22,7 +22,10 @@ import org.joda.time.DateTime;
 
 public interface CallContextFactory {
     CallContext createCallContext(String userName, CallOrigin callOrigin, UserType userType, UUID userToken);
-    
+
+    CallContext createCallContext(String userName, CallOrigin callOrigin, UserType userType,
+                                  String reasonCode, String comment, UUID userToken);
+
     CallContext createCallContext(String userName, CallOrigin callOrigin, UserType userType);    
 
     CallContext createMigrationCallContext(String userName, CallOrigin callOrigin, UserType userType, DateTime createdDate, DateTime updatedDate);

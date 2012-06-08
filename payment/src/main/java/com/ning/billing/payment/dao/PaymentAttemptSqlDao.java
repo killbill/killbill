@@ -15,11 +15,13 @@
  */
 package com.ning.billing.payment.dao;
 
+
 import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.UUID;
+
 
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.SQLStatement;
@@ -70,7 +72,6 @@ public interface PaymentAttemptSqlDao extends Transactional<PaymentAttemptSqlDao
     @SqlUpdate
     void insertHistoryFromTransaction(@PaymentAttemptHistoryBinder final EntityHistory<PaymentAttemptModelDao> payment,
                                             @CallContextBinder final CallContext context);
-
 
     public static final class PaymentAttemptModelDaoBinder extends BinderBase implements Binder<Bind, PaymentAttemptModelDao> {
         @Override

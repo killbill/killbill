@@ -27,6 +27,7 @@ import org.joda.time.DateTime;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.model.DefaultInvoicePayment;
 import com.ning.billing.util.callcontext.CallContext;
+import org.joda.time.DateTimeZone;
 
 public class MockInvoicePaymentApi implements InvoicePaymentApi
 {
@@ -101,4 +102,67 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi
         notifyOfPaymentAttempt(invoicePayment, context);
     }
 
+    @Override
+    public void processChargeback(UUID invoicePaymentId, BigDecimal amount, CallContext context) throws InvoiceApiException {
+        InvoicePayment existingPayment = null;
+        for (InvoicePayment payment : invoicePayments) {
+            if (payment.getId()  == invoicePaymentId) {
+                existingPayment = payment;
+            }
+        }
+
+        if (existingPayment != null) {
+            invoicePayments.add(existingPayment.asChargeBack(amount, DateTime.now(DateTimeZone.UTC)));
+        }
+    }
+
+    @Override
+    public void processChargeback(UUID invoicePaymentId, CallContext context) throws InvoiceApiException {
+        InvoicePayment existingPayment = null;
+        for (InvoicePayment payment : invoicePayments) {
+            if (payment.getId()  == invoicePaymentId) {
+                existingPayment = payment;
+            }
+        }
+
+        if (existingPayment != null) {
+            this.processChargeback(invoicePaymentId, existingPayment.getAmount(), context);
+        }
+    }
+
+    @Override
+    public BigDecimal getRemainingAmountPaid(UUID invoicePaymentId) {
+        BigDecimal amount = BigDecimal.ZERO;
+        for (InvoicePayment payment : invoicePayments) {
+            if (payment.getId().equals(invoicePaymentId)) {
+                amount = amount.add(payment.getAmount());
+            }
+
+            if (payment.getReversedInvoicePaymentId().equals(invoicePaymentId)) {
+                amount = amount.add(payment.getAmount());
+            }
+        }
+
+        return amount;
+    }
+
+    @Override
+    public List<InvoicePayment> getChargebacksByAccountId(UUID accountId) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public UUID getAccountIdFromInvoicePaymentId(UUID uuid) throws InvoiceApiException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public List<InvoicePayment> getChargebacksByPaymentAttemptId(UUID paymentAttemptId) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public InvoicePayment getChargebackById(UUID chargebackId) {
+        throw new UnsupportedOperationException();
+    }
 }

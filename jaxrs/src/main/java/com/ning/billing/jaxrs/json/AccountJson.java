@@ -181,7 +181,7 @@ public class AccountJson extends AccountJsonSimple {
     public AccountJson(@JsonProperty("accountId") String accountId,
             @JsonProperty("name") String name,
             @JsonProperty("firstNameLength") Integer length,
-            @JsonProperty("external_key") String externalKey,
+            @JsonProperty("externalKey") String externalKey,
             @JsonProperty("email") String email,
             @JsonProperty("billingDay") Integer billCycleDay,
             @JsonProperty("currency") String currency,

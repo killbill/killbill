@@ -19,11 +19,10 @@ package com.ning.billing.jaxrs.json;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import org.joda.time.DateTime;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.util.clock.DefaultClock;
@@ -41,15 +40,15 @@ public class PaymentJsonSimple {
     private final String paymentId;
     
     private final DateTime requestedDate;
-    
+
     private final DateTime effectiveDate;
-    
+
     private final Integer retryCount;
-    
+
     private final String currency;
-    
+
     private final String status;
-      
+
     public PaymentJsonSimple() {
         this.amount = null;
         this.paidAmount = null;
@@ -72,7 +71,7 @@ public class PaymentJsonSimple {
             @JsonProperty("requestedDate") DateTime requestedDate,
             @JsonProperty("effectiveDate") DateTime effectiveDate,
             @JsonProperty("retryCount") Integer retryCount,
-            @JsonProperty("currency") String currency,            
+            @JsonProperty("currency") String currency,
             @JsonProperty("status") String status) {
         super();
         this.amount = amount;

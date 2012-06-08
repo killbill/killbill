@@ -42,12 +42,11 @@ public class TagMapper extends MapperBase implements ResultSetMapper<Tag> {
             }
         }
 
+        UUID id = UUID.fromString(result.getString("id"));
         if (thisTagType == null) {
-            UUID id = UUID.fromString(result.getString("id"));
-
             return new DescriptiveTag(id, name);
         } else {
-            return new DefaultControlTag(thisTagType);
+            return new DefaultControlTag(id, thisTagType);
         }
     }
 }

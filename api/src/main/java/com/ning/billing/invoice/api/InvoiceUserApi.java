@@ -16,6 +16,7 @@
 
 package com.ning.billing.invoice.api;
 
+import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.callcontext.CallContext;
 import org.joda.time.DateTime;
 
@@ -41,5 +42,10 @@ public interface InvoiceUserApi {
 
     public void tagInvoiceAsWrittenOff(UUID invoiceId, CallContext context);
 
-    public void tagInvoiceAsNotWrittenOff(UUID invoiceId, CallContext context);
+    public void tagInvoiceAsNotWrittenOff(UUID invoiceId, CallContext context) throws InvoiceApiException;
+
+    public InvoiceItem getCreditById(UUID creditId) throws InvoiceApiException;
+
+    public InvoiceItem insertCredit( UUID accountId,  BigDecimal amount,  DateTime effectiveDate,
+                              Currency currency,  CallContext context) throws InvoiceApiException;
 }

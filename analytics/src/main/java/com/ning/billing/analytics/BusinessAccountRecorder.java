@@ -193,7 +193,6 @@ public class BusinessAccountRecorder {
                     }
                 }
             }
-            
 
             bac.setLastPaymentStatus(lastPaymentStatus);
             bac.setPaymentMethod(paymentMethod);

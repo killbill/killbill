@@ -49,7 +49,7 @@ public class TestOverdueStateApplicator extends OverdueTestBase {
     @Inject
     OverdueStateApplicator<SubscriptionBundle> applicator;
         
-    @Test( groups={"slow"} , enabled = false)
+    @Test( groups={"slow"} , enabled = true)
      public void testApplicator() throws Exception {
          InputStream is = new ByteArrayInputStream(configXml.getBytes());
          config = XMLLoader.getObjectFromStreamNoValidation(is,  OverdueConfig.class);
@@ -73,9 +73,6 @@ public class TestOverdueStateApplicator extends OverdueTestBase {
          applicator.apply(bundle, BlockingApi.CLEAR_STATE_NAME, state);
          checkStateApplied(state);
         
-         
-        //TODO
-        // Check notification is posted with correct time delay
     }
 
 

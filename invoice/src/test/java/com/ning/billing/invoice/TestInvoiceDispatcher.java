@@ -16,16 +16,10 @@
 
 package com.ning.billing.invoice;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.SortedSet;
-import java.util.TreeSet;
 import java.util.UUID;
 
-import com.ning.billing.invoice.api.InvoiceNotifier;
-import com.ning.billing.invoice.notification.NullInvoiceNotifier;
-import com.ning.billing.invoice.tests.InvoicingTestBase;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -47,18 +41,20 @@ import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
-import com.ning.billing.entitlement.api.billing.BillingEvent;
 import com.ning.billing.entitlement.api.billing.BillingModeType;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
+import com.ning.billing.invoice.api.InvoiceNotifier;
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.model.InvoiceGenerator;
 import com.ning.billing.invoice.notification.NextBillingDateNotifier;
+import com.ning.billing.invoice.notification.NullInvoiceNotifier;
+import com.ning.billing.invoice.tests.InvoicingTestBase;
 import com.ning.billing.junction.api.BillingApi;
+import com.ning.billing.junction.api.BillingEventSet;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
-import com.ning.billing.mock.glue.MockJunctionModule;
 import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.bus.DefaultBusService;
 import com.ning.billing.util.callcontext.CallContext;
@@ -145,7 +141,7 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
 		Subscription subscription =  BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
         ((ZombieControl)subscription).addResult("getId", subscriptionId);
         ((ZombieControl)subscription).addResult("getBundleId", new UUID(0L,0L));
-		SortedSet<BillingEvent> events = new TreeSet<BillingEvent>();
+        BillingEventSet events = new MockBillingEventSet();
 		Plan plan = MockPlan.createBicycleNoTrialEvergreen1USD();
 		PlanPhase planPhase = MockPlanPhase.create1USDMonthlyEvergreen();
 		DateTime effectiveDate = new DateTime().minusDays(1);
@@ -184,5 +180,7 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
 		Assert.assertEquals(invoices.size(),1);
 
 	}
+    
+    //MDW add a test to cover when the account auto-invoice-off tag is present
 
 }

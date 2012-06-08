@@ -1,0 +1,69 @@
+group CreditInvoiceItemSqlDao;
+
+fields(prefix) ::= <<
+  <prefix>id,
+  <prefix>invoice_id,
+  <prefix>account_id,
+  <prefix>credit_date,
+  <prefix>amount,
+  <prefix>currency,
+  <prefix>created_by,
+  <prefix>created_date
+>>
+
+getById() ::= <<
+  SELECT <fields()>
+  FROM credit_invoice_items
+  WHERE id = :id;
+>>
+
+getInvoiceItemsByInvoice() ::= <<
+  SELECT <fields()>
+  FROM credit_invoice_items
+  WHERE invoice_id = :invoiceId;
+>>
+
+getInvoiceItemsByAccount() ::= <<
+  SELECT <fields("cii.")>
+  FROM credit_invoice_items cii
+  INNER JOIN invoices i ON i.id = cii.invoice_id
+  WHERE i.account_id = :accountId;
+>>
+
+create() ::= <<
+  INSERT INTO credit_invoice_items(<fields()>)
+  VALUES(:id, :invoiceId, :accountId, :creditDate, :amount, :currency, :userName, :createdDate);
+>>
+
+batchCreateFromTransaction() ::= <<
+  INSERT INTO credit_invoice_items(<fields()>)
+  VALUES(:id, :invoiceId, :accountId, :creditDate, :amount, :currency, :userName, :createdDate);
+>>
+
+getRecordIds() ::= <<
+    SELECT record_id, id
+    FROM credit_invoice_items
+    WHERE invoice_id = :invoiceId;
+>>
+
+auditFields(prefix) ::= <<
+    <prefix>table_name,
+    <prefix>record_id,
+    <prefix>change_type,
+    <prefix>change_date,
+    <prefix>changed_by,
+    <prefix>reason_code,
+    <prefix>comments,
+    <prefix>user_token
+>>
+
+insertAuditFromTransaction() ::= <<
+    INSERT INTO audit_log(<auditFields()>)
+    VALUES(:tableName, :recordId, :changeType, :createdDate, :userName, :reasonCode, :comment, :userToken);
+>>
+
+test() ::= <<
+  SELECT 1
+  FROM credit_invoice_items;
+>>
+;

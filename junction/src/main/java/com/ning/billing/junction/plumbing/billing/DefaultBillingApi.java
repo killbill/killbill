@@ -16,7 +16,9 @@
 
 package com.ning.billing.junction.plumbing.billing;
 
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.SortedSet;
 import java.util.UUID;
 
@@ -41,10 +43,14 @@ import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionEvent;
 import com.ning.billing.junction.api.BillingApi;
 import com.ning.billing.junction.api.BillingEventSet;
+import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.util.tag.ControlTagType;
+import com.ning.billing.util.tag.Tag;
 
 public class DefaultBillingApi implements BillingApi {
     private static final String API_USER_NAME = "Billing Api";
@@ -56,12 +62,12 @@ public class DefaultBillingApi implements BillingApi {
     private final EntitlementUserApi entitlementUserApi;
     private final CatalogService catalogService;
     private final BlockingCalculator blockCalculator;
-//    private final TagUserApi tagApi;
+    private final TagUserApi tagApi;
 
     @Inject
     public DefaultBillingApi(final ChargeThruApi chargeThruApi, final CallContextFactory factory, final AccountUserApi accountApi, 
             final BillCycleDayCalculator bcdCalculator, final EntitlementUserApi entitlementUserApi, final BlockingCalculator blockCalculator,
-            final CatalogService catalogService) { //, final TagUserApi tagApi) {
+            final CatalogService catalogService, final TagUserApi tagApi) {
 
         this.chargeThruApi = chargeThruApi;
         this.accountApi = accountApi;
@@ -70,53 +76,91 @@ public class DefaultBillingApi implements BillingApi {
         this.entitlementUserApi = entitlementUserApi;
         this.catalogService = catalogService;
         this.blockCalculator = blockCalculator;
-  //      this.tagApi = tagApi;
+        this.tagApi = tagApi;
     }
 
     @Override
-    public SortedSet<BillingEvent> getBillingEventsForAccountAndUpdateAccountBCD(final UUID accountId) {
+    public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(final UUID accountId) {
         CallContext context = factory.createCallContext(API_USER_NAME, CallOrigin.INTERNAL, UserType.SYSTEM);
 
         List<SubscriptionBundle> bundles = entitlementUserApi.getBundlesForAccount(accountId);
-        BillingEventSet result = new DefaultBillingEventSet();
+        DefaultBillingEventSet result = new DefaultBillingEventSet();
 
         try {
             Account account = accountApi.getAccountById(accountId);
-            
 
-            for (final SubscriptionBundle bundle: bundles) {
-                List<Subscription> subscriptions = entitlementUserApi.getSubscriptionsForBundle(bundle.getId());
-
-                for (final Subscription subscription: subscriptions) {
-                    for (final SubscriptionEvent transition : subscription.getBillingTransitions()) {
-                        try {
-                            int bcd = bcdCalculator.calculateBcd(bundle, subscription, transition, account);
-
-                            if(account.getBillCycleDay() == 0) {
-                                MutableAccountData modifiedData = account.toMutableAccountData();
-                                modifiedData.setBillCycleDay(bcd);
-                                accountApi.updateAccount(account.getExternalKey(), modifiedData, context);
-                            }
-
-                            BillingEvent event = new DefaultBillingEvent(account, transition, subscription, bcd, account.getCurrency(), catalogService.getFullCatalog());
-                            result.add(event);
-                        } catch (CatalogApiException e) {
-                            log.error("Failing to identify catalog components while creating BillingEvent from transition: " +
-                                    transition.getId().toString(), e);
-                        } catch (Exception e) {
-                            log.warn("Failed while getting BillingEvent", e);
-                        }
-
-                    }
-                }
+            // Check to see if billing is off for the account
+            Map<String,Tag> accountTags = tagApi.getTags(accountId,ObjectType.ACCOUNT);
+            if(accountTags.get(ControlTagType.AUTO_INVOICING_OFF.name()) != null) {
+                result.setAccountAutoInvoiceIsOff(true);
+                return result; // billing is off, we are done
             }
+
+            addBillingEventsForBundles(bundles, account, context, result);         
+           
         } catch (AccountApiException e) {
             log.warn("Failed while getting BillingEvent", e);
         }
+        
+        debugLog(result, "********* Billing Events Raw");
         blockCalculator.insertBlockingEvents(result);
+        debugLog(result,"*********  Billing Events After Blocking");
+        
         return result;
     }
+    
 
+    private void debugLog(SortedSet<BillingEvent> result, String title) {
+        log.debug(title);
+        Iterator<BillingEvent> i = result.iterator();
+        while(i.hasNext()) {
+            log.debug(i.next().toString());
+        }
+        
+    }
+
+    private void addBillingEventsForBundles(List<SubscriptionBundle> bundles, Account account, CallContext context,
+            DefaultBillingEventSet result) {
+        
+        for (final SubscriptionBundle bundle: bundles) {
+            List<Subscription> subscriptions = entitlementUserApi.getSubscriptionsForBundle(bundle.getId());
+
+            //Check if billing is off for the bundle
+            Map<String,Tag> bundleTags = tagApi.getTags(bundle.getId(), ObjectType.BUNDLE);
+            if(bundleTags.get(ControlTagType.AUTO_INVOICING_OFF.name()) != null) {
+                 for (final Subscription subscription: subscriptions) { // billing is off so list sub ids in set to be excluded
+                    result.getSubscriptionIdsWithAutoInvoiceOff().add(subscription.getId());
+                }
+            } else { // billing is not off
+                addBillingEventsForSubscription(subscriptions, bundle, account, context, result);                 
+            }
+        }        
+    }
+
+    private void addBillingEventsForSubscription(List<Subscription> subscriptions, SubscriptionBundle bundle, Account account, CallContext context, DefaultBillingEventSet result) {
+        for (final Subscription subscription: subscriptions) {
+            for (final SubscriptionEvent transition : subscription.getBillingTransitions()) {
+                try {
+                    int bcd = bcdCalculator.calculateBcd(bundle, subscription, transition, account);
+
+                    if(account.getBillCycleDay() == 0) {
+                        MutableAccountData modifiedData = account.toMutableAccountData();
+                        modifiedData.setBillCycleDay(bcd);
+                        accountApi.updateAccount(account.getExternalKey(), modifiedData, context);
+                    }
+
+                    BillingEvent event = new DefaultBillingEvent(account, transition, subscription, bcd, account.getCurrency(), catalogService.getFullCatalog());
+                    result.add(event);
+                } catch (CatalogApiException e) {
+                    log.error("Failing to identify catalog components while creating BillingEvent from transition: " +
+                            transition.getId().toString(), e);
+                } catch (Exception e) {
+                    log.warn("Failed while getting BillingEvent", e);
+                }
+
+            }
+        }
+    }
 
     @Override
     public UUID getAccountIdFromSubscriptionId(UUID subscriptionId) throws EntitlementBillingApiException {

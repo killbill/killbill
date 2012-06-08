@@ -22,11 +22,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import javax.management.RuntimeErrorException;
+
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Guice;
@@ -50,12 +51,11 @@ import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.mock.glue.MockClockModule;
 import com.ning.billing.mock.glue.MockInvoiceModule;
-import com.ning.billing.mock.glue.MockJunctionModule;
 import com.ning.billing.mock.glue.MockPaymentModule;
 import com.ning.billing.mock.glue.TestDbiModule;
 import com.ning.billing.overdue.applicator.ApplicatorMockJunctionModule;
-import com.ning.billing.overdue.applicator.TestOverdueStateApplicator;
 import com.ning.billing.overdue.applicator.ApplicatorMockJunctionModule.ApplicatorBlockingApi;
+import com.ning.billing.overdue.applicator.TestOverdueStateApplicator;
 import com.ning.billing.overdue.config.OverdueConfig;
 import com.ning.billing.overdue.glue.DefaultOverdueModule;
 import com.ning.billing.overdue.service.DefaultOverdueService;
@@ -64,6 +64,7 @@ import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
+import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
 
 //@Guice(modules = {MockJunctionModule.class, MockInvoiceModule.class, DefaultOverdueModule.class})
 @Guice( modules = {DefaultOverdueModule.class, MockClockModule.class, ApplicatorMockJunctionModule.class, CatalogModule.class, MockInvoiceModule.class, MockPaymentModule.class, BusModule.class, NotificationQueueModule.class, TestDbiModule.class})
@@ -119,14 +120,14 @@ public class OverdueTestBase {
 
     @Inject
     protected BlockingApi blockingApi;
-    
+
     @Inject
     protected OverdueWrapperFactory overdueWrapperFactory;
-    
+
     @Inject
     protected OverdueUserApi overdueApi;
-   
-    
+
+
     @Inject
     protected InvoiceUserApi invoiceApi;
 
@@ -135,7 +136,7 @@ public class OverdueTestBase {
     protected String productName;
     protected BillingPeriod term;
     protected String planSetName;
- 
+
     @Inject
     EntitlementUserApi entitlementApi;
 
@@ -153,13 +154,19 @@ public class OverdueTestBase {
         helper.initDb(utilDdl);
     }
 
-  
+
     @BeforeClass(groups = "slow")
     public void setup() throws Exception{
 
         setupMySQL();
         service.registerForBus();
-        service.initialize();
+        try {
+            service.initialize();
+        }catch (RuntimeException e) {
+            if(!(e.getCause() instanceof NotificationQueueAlreadyExists)) {
+                throw e;
+            } 
+        }
         service.start();
     }
 
@@ -198,11 +205,12 @@ public class OverdueTestBase {
         UUID bundleId = UUID.randomUUID();
         ((ZombieControl)bundle).addResult("getId", bundleId);
         ((ZombieControl)bundle).addResult("getAccountId", UUID.randomUUID());
-        
+
         Invoice invoice = BrainDeadProxyFactory.createBrainDeadProxyFor(Invoice.class);
         ((ZombieControl)invoice).addResult("getInvoiceDate",dateOfLastUnPaidInvoice);
         ((ZombieControl)invoice).addResult("getBalance",BigDecimal.TEN);
         ((ZombieControl)invoice).addResult("getId",UUID.randomUUID());
+        ((ZombieControl)invoice).addResult("hashCode", UUID.randomUUID().hashCode());
 
         InvoiceItem item = BrainDeadProxyFactory.createBrainDeadProxyFor(InvoiceItem.class);
         ((ZombieControl)item).addResult("getBundleId",bundleId);
@@ -210,18 +218,18 @@ public class OverdueTestBase {
         items.add(item);
 
         ((ZombieControl)invoice).addResult("getInvoiceItems",items);
-        
+
         List<Invoice> invoices = new ArrayList<Invoice>();
         invoices.add(invoice);
         ((ZombieControl)invoiceApi).addResult("getUnpaidInvoicesByAccountId", invoices);
-        
-        
+
+
         Subscription base = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
         ((ZombieControl)base).addResult("getCurrentPlan", MockPlan.createBicycleNoTrialEvergreen1USD());
         ((ZombieControl)base).addResult("getCurrentPriceList", new MockPriceList());
         ((ZombieControl)base).addResult("getCurrentPhase", MockPlan.createBicycleNoTrialEvergreen1USD().getFinalPhase());
         ((ZombieControl)entitlementApi).addResult("getBaseSubscription", base);
-       
+
         return bundle;
     }
 }

@@ -39,11 +39,11 @@ getInvoicesByAccountAfterDate() ::= <<
 >>
 
 getInvoicesBySubscription() ::= <<
-  SELECT record_id as invoice_number, <invoiceFields("i.")>
+  SELECT i.record_id as invoice_number, <invoiceFields("i.")>
   FROM invoices i
   LEFT JOIN recurring_invoice_items rii ON i.id = rii.invoice_id
-  WHERE rii.subscription_id = :subscriptionId  AND migrated = 'FALSE'
-  GROUP BY record_id as invoice_number, <invoiceFields("i.")>;
+  WHERE rii.subscription_id = :subscriptionId AND migrated = 'FALSE'
+  GROUP BY i.record_id, <invoiceFields("i.")>;
 >>
 
 getById() ::= <<

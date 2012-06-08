@@ -16,11 +16,11 @@
 
 package com.ning.billing.invoice;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.SortedSet;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -37,18 +37,18 @@ import com.ning.billing.entitlement.api.billing.BillingEvent;
 import com.ning.billing.entitlement.api.billing.EntitlementBillingApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionEvent;
 import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.invoice.api.InvoiceCreationEvent;
-import com.ning.billing.invoice.api.InvoiceNotifier;
 import com.ning.billing.invoice.api.InvoiceApiException;
+import com.ning.billing.invoice.api.InvoiceCreationEvent;
 import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.invoice.api.InvoiceNotifier;
 import com.ning.billing.invoice.api.user.DefaultEmptyInvoiceEvent;
 import com.ning.billing.invoice.api.user.DefaultInvoiceCreationEvent;
 import com.ning.billing.invoice.dao.InvoiceDao;
-import com.ning.billing.invoice.model.BillingEventSet;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.invoice.model.InvoiceGenerator;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.junction.api.BillingApi;
+import com.ning.billing.junction.api.BillingEventSet;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
 import com.ning.billing.util.bus.BusEvent;
@@ -145,17 +145,21 @@ public class InvoiceDispatcher {
             final boolean dryRun, final CallContext context) throws InvoiceApiException {
         try {
             Account account = accountUserApi.getAccountById(accountId);
-            SortedSet<BillingEvent> events = billingApi.getBillingEventsForAccountAndUpdateAccountBCD(accountId);
-            BillingEventSet billingEvents = new BillingEventSet(events);
+            BillingEventSet billingEvents = billingApi.getBillingEventsForAccountAndUpdateAccountBCD(accountId);
+            
+            List<Invoice> invoices = new ArrayList<Invoice>();
+            if (!billingEvents.isAccountAutoInvoiceOff()) {
+                invoices = invoiceDao.getInvoicesByAccount(accountId); //no need to fetch, invoicing is off on this account
+            } 
 
             Currency targetCurrency = account.getCurrency();
 
-            List<Invoice> invoices = invoiceDao.getInvoicesByAccount(accountId);
+            
             Invoice invoice = generator.generateInvoice(accountId, billingEvents, invoices, targetDate, targetCurrency);
 
             if (invoice == null) {
                 log.info("Generated null invoice.");
-                outputDebugData(events, invoices);
+                outputDebugData(billingEvents, invoices);
                 if (!dryRun) {
                     BusEvent event = new DefaultEmptyInvoiceEvent(accountId, clock.getUTCNow(), context.getUserToken());
                     postEvent(event, accountId);
@@ -168,7 +172,7 @@ public class InvoiceDispatcher {
                         log.info(item.toString());
                     }
                 }
-                outputDebugData(events, invoices);
+                outputDebugData(billingEvents, invoices);
                 if (!dryRun) {
                     invoiceDao.create(invoice, context);
 

@@ -55,5 +55,17 @@ public class DefaultBillingEventSet extends TreeSet<BillingEvent> implements Sor
         this.subscriptionIdsWithAutoInvoiceOff = subscriptionIdsWithAutoInvoiceOff;
     }
     
+    public boolean isLast(final BillingEvent event) {
+        return last() == event;
+    }
+
+    @Override
+    public String toString() {
+        return "DefaultBillingEventSet [accountAutoInvoiceOff=" + accountAutoInvoiceOff
+                + ", subscriptionIdsWithAutoInvoiceOff=" + subscriptionIdsWithAutoInvoiceOff + ", Events="
+                + super.toString() + "]";
+    }
+    
+    
     
 }

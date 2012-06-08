@@ -90,7 +90,7 @@ public class HtmlInvoiceGeneratorTest {
         zombie.addResult("getInvoiceDate", startDate);
         zombie.addResult("getInvoiceNumber", 42);
         zombie.addResult("getCurrency", Currency.USD);
-        zombie.addResult("getTotalAmount", price1.add(price2));
+        zombie.addResult("getAmountCharged", price1.add(price2));
         zombie.addResult("getAmountPaid", BigDecimal.ZERO);
         zombie.addResult("getBalance", price1.add(price2));
 

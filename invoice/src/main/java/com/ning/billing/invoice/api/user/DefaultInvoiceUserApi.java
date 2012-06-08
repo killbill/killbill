@@ -20,6 +20,8 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.util.callcontext.CallContext;
 import org.joda.time.DateTime;
 
@@ -85,7 +87,18 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
 
     @Override
-    public void tagInvoiceAsNotWrittenOff(final UUID invoiceId, final CallContext context) {
+    public void tagInvoiceAsNotWrittenOff(final UUID invoiceId, final CallContext context) throws InvoiceApiException {
         dao.removeWrittenOff(invoiceId, context);
+    }
+
+    @Override
+    public InvoiceItem getCreditById(final UUID creditId) throws InvoiceApiException {
+        return dao.getCreditById(creditId);
+    }
+
+    @Override
+    public InvoiceItem insertCredit(final UUID accountId, final BigDecimal amount, final DateTime effectiveDate,
+                             final Currency currency, final CallContext context) throws InvoiceApiException {
+        return dao.insertCredit(accountId, amount, effectiveDate, currency, context);
     }
 }

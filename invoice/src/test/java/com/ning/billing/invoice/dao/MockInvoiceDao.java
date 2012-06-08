@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.invoice.api.InvoiceApiException;
 import org.joda.time.DateTime;
 
 import com.google.inject.Inject;
@@ -208,6 +210,46 @@ public class MockInvoiceDao implements InvoiceDao {
 
     @Override
     public void removeWrittenOff(UUID objectId, CallContext context) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void postChargeback(UUID invoicePaymentId, BigDecimal amount, CallContext context) throws InvoiceApiException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public BigDecimal getRemainingAmountPaid(UUID invoicePaymentId) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public UUID getAccountIdFromInvoicePaymentId(UUID invoicePaymentId) throws InvoiceApiException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public List<InvoicePayment> getChargebacksByAccountId(UUID accountId) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public List<InvoicePayment> getChargebacksByPaymentAttemptId(UUID paymentAttemptId) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public InvoicePayment getChargebackById(UUID chargebackId) throws InvoiceApiException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public InvoiceItem getCreditById(UUID creditId) throws InvoiceApiException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public InvoiceItem insertCredit(UUID accountId, BigDecimal amount, DateTime effectiveDate, Currency currency, CallContext context) {
         throw new UnsupportedOperationException();
     }
 }

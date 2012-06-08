@@ -76,6 +76,7 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, UpdatableEn
                                             @CallContextBinder final CallContext context);
 
 
+
      public static final class PaymentModelDaoBinder extends BinderBase implements Binder<Bind, PaymentModelDao> {
         @Override
         public void bind(@SuppressWarnings("rawtypes") SQLStatement stmt, Bind bind, PaymentModelDao payment) {
@@ -98,7 +99,7 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, UpdatableEn
             UUID id = getUUID(rs, "id");
             UUID accountId = getUUID(rs, "account_id");
             UUID invoiceId = getUUID(rs, "invoice_id");            
-            UUID paymentMethodId = null; //getUUID(rs, "payment_method_id");                        
+            UUID paymentMethodId = null; //getUUID(rs, "payment_method_id"); // STEPH needs to be fixed!                       
             Integer paymentNumber = rs.getInt("payment_number");
             BigDecimal amount = rs.getBigDecimal("amount");
             DateTime effectiveDate = getDate(rs, "effective_date");
@@ -109,3 +110,4 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, UpdatableEn
         }
     }
 }
+

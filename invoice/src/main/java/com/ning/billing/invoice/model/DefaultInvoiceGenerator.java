@@ -41,6 +41,7 @@ import com.ning.billing.entitlement.api.billing.BillingModeType;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.junction.api.BillingEventSet;
 import com.ning.billing.util.clock.Clock;
 
 public class DefaultInvoiceGenerator implements InvoiceGenerator {
@@ -64,18 +65,24 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                                          @Nullable final List<Invoice> existingInvoices,
                                          DateTime targetDate,
                                          final Currency targetCurrency) throws InvoiceApiException {
-        if ((events == null) || (events.size() == 0)) {
+        if ((events == null) || (events.size() == 0) || events.isAccountAutoInvoiceOff()) {
             return null;
         }
 
         validateTargetDate(targetDate);
-
-        Collections.sort(events);
+        //TODO MDW can use subscription Id - not bundle
+        //TODO MDW worry about null sub id
 
         List<InvoiceItem> existingItems = new ArrayList<InvoiceItem>();
         if (existingInvoices != null) {
             for (Invoice invoice : existingInvoices) {
-                existingItems.addAll(invoice.getInvoiceItems());
+                for(InvoiceItem item : invoice.getInvoiceItems()) {
+                    if(item.getSubscriptionId() == null || // Always include migration invoices, credits etc.  
+                      !events.getSubscriptionIdsWithAutoInvoiceOff()
+                            .contains(item.getSubscriptionId())) { //don't add items with auto_invoice_off tag 
+                        existingItems.add(item);
+                    }
+                }
             }
 
             Collections.sort(existingItems);
@@ -83,21 +90,16 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
 
         targetDate = adjustTargetDate(existingInvoices, targetDate);
 
-        DefaultInvoice invoice = new DefaultInvoice(accountId, clock.getUTCNow(), targetDate, targetCurrency);
+        Invoice invoice = new DefaultInvoice(accountId, clock.getUTCNow(), targetDate, targetCurrency);
         UUID invoiceId = invoice.getId();
         List<InvoiceItem> proposedItems = generateInvoiceItems(invoiceId, accountId, events, targetDate, targetCurrency);
 
         removeCancellingInvoiceItems(existingItems);
         removeDuplicatedInvoiceItems(proposedItems, existingItems);
 
-        for (InvoiceItem existingItem : existingItems) {
-            if (existingItem instanceof RecurringInvoiceItem) {
-                RecurringInvoiceItem recurringItem = (RecurringInvoiceItem) existingItem;
-                proposedItems.add(recurringItem.asReversingItem());
-            }
-        }
-
-        //addCreditItems(accountId, proposedItems, existingInvoices, targetCurrency);
+        addReversingItems(existingItems, proposedItems);
+        generateCreditsForPastRepairedInvoices(accountId, existingInvoices, proposedItems, targetCurrency);
+        consumeExistingCredit(invoiceId, accountId, existingItems, proposedItems, targetCurrency);
 
         if (proposedItems == null || proposedItems.size() == 0) {
             return null;
@@ -108,74 +110,74 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         }
     }
 
-   /*
-    * ensures that the balance of all invoices are zero or positive, adding an adjusting credit item if needed
-    */
-    private void addCreditItems(UUID accountId, List<InvoiceItem> invoiceItems, List<Invoice> invoices, Currency currency) {
-        Map<UUID, BigDecimal> invoiceBalances = new HashMap<UUID, BigDecimal>();
+    private void generateCreditsForPastRepairedInvoices(UUID accountId, List<Invoice> existingInvoices, List<InvoiceItem> proposedItems, Currency currency) {
+        // determine most accurate invoice balances up to this point
+        Map<UUID, BigDecimal> amountOwedByInvoice = new HashMap<UUID, BigDecimal>();
 
-        updateInvoiceBalance(invoiceItems, invoiceBalances);
-
-        // add all existing items and payments
-        if (invoices != null) {
-            for (Invoice invoice : invoices) {
-                updateInvoiceBalance(invoice.getInvoiceItems(), invoiceBalances);
-            }
-
-            for (Invoice invoice : invoices) {
-                UUID invoiceId = invoice.getId();
-                invoiceBalances.put(invoiceId, invoiceBalances.get(invoiceId).subtract(invoice.getAmountPaid()));
+        if (existingInvoices != null) {
+            for (Invoice invoice : existingInvoices) {
+                amountOwedByInvoice.put(invoice.getId(), invoice.getBalance());
             }
         }
 
-        BigDecimal creditTotal = BigDecimal.ZERO;
-
-        for (UUID invoiceId : invoiceBalances.keySet()) {
-            BigDecimal balance = invoiceBalances.get(invoiceId);
-            if (balance.compareTo(BigDecimal.ZERO) < 0) {
-                creditTotal = creditTotal.add(balance.negate());
-                invoiceItems.add(new CreditInvoiceItem(invoiceId, accountId, clock.getUTCNow(), balance, currency));
-            }
-        }
-
-        if (creditTotal.compareTo(BigDecimal.ZERO) != 0) {
-            // create a single credit item to cover all credits
-            //invoiceItems.add(new CreditInvoiceItem());
-        }
-    }
-
-    private void updateInvoiceBalance(List<InvoiceItem> items, Map<UUID, BigDecimal> invoiceBalances) {
-        for (InvoiceItem item : items) {
+        for (InvoiceItem item : proposedItems) {
             UUID invoiceId = item.getInvoiceId();
-
-            if (!invoiceBalances.containsKey(invoiceId)) {
-                invoiceBalances.put(invoiceId, BigDecimal.ZERO);
+            if (amountOwedByInvoice.containsKey(invoiceId)) {
+                amountOwedByInvoice.put(invoiceId, amountOwedByInvoice.get(invoiceId).add(item.getAmount()));
+            } else {
+                amountOwedByInvoice.put(invoiceId, item.getAmount());
             }
+        }
 
-            invoiceBalances.put(invoiceId, invoiceBalances.get(invoiceId).add(item.getAmount()));
+        for (UUID invoiceId : amountOwedByInvoice.keySet()) {
+            BigDecimal invoiceBalance = amountOwedByInvoice.get(invoiceId);
+            if (invoiceBalance.compareTo(BigDecimal.ZERO) < 0) {
+                proposedItems.add(new CreditInvoiceItem(invoiceId, accountId, clock.getUTCNow(), invoiceBalance.negate(), currency));
+            }
         }
     }
 
-    @Override
-    public void distributeItems(List<Invoice> invoices) {
-        Map<UUID, Invoice> invoiceMap = new HashMap<UUID, Invoice>();
+    private void addReversingItems(List<InvoiceItem> existingItems, List<InvoiceItem> proposedItems) {
+        for (InvoiceItem existingItem : existingItems) {
+            if (existingItem instanceof RecurringInvoiceItem) {
+                RecurringInvoiceItem recurringItem = (RecurringInvoiceItem) existingItem;
+                proposedItems.add(recurringItem.asReversingItem());
+            }
+        }
+    }
 
-        for (Invoice invoice : invoices) {
-            invoiceMap.put(invoice.getId(), invoice);
+    private void consumeExistingCredit(UUID invoiceId, UUID accountId, List<InvoiceItem> existingItems,
+                                       List<InvoiceItem> proposedItems, Currency targetCurrency) {
+        BigDecimal totalUnusedCreditAmount = BigDecimal.ZERO;
+        BigDecimal totalAmountOwed = BigDecimal.ZERO;
+
+        for (InvoiceItem item : existingItems) {
+            if (item instanceof CreditInvoiceItem) {
+                totalUnusedCreditAmount = totalUnusedCreditAmount.add(item.getAmount());
+            }
         }
 
-        for (final Invoice invoice: invoices) {
-            Iterator<InvoiceItem> itemIterator = invoice.getInvoiceItems().iterator();
-            final UUID invoiceId = invoice.getId();
-
-            while (itemIterator.hasNext()) {
-                InvoiceItem item = itemIterator.next();
-
-                if (!item.getInvoiceId().equals(invoiceId)) {
-                    invoiceMap.get(item.getInvoiceId()).addInvoiceItem(item);
-                    itemIterator.remove();
-                }
+        for (InvoiceItem item : proposedItems) {
+            if (item instanceof CreditInvoiceItem) {
+                totalUnusedCreditAmount = totalUnusedCreditAmount.add(item.getAmount());
+            } else {
+                totalAmountOwed = totalAmountOwed.add(item.getAmount());
             }
+        }
+
+        // credits are positive when they reduce the amount owed (since they offset payment)
+        // the credit balance should never be negative
+        BigDecimal creditAmount = BigDecimal.ZERO;
+        if (totalUnusedCreditAmount.compareTo(BigDecimal.ZERO) > 0) {
+            if (totalAmountOwed.abs().compareTo(totalUnusedCreditAmount.abs()) > 0) {
+                creditAmount = totalUnusedCreditAmount.negate();
+            } else {
+                creditAmount = totalAmountOwed;
+            }
+        }
+
+        if (creditAmount.compareTo(BigDecimal.ZERO) < 0) {
+            proposedItems.add(new CreditInvoiceItem(invoiceId, accountId, clock.getUTCNow(), creditAmount, targetCurrency));
         }
     }
 
@@ -246,16 +248,36 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
     private List<InvoiceItem> generateInvoiceItems(final UUID invoiceId, final UUID accountId, final BillingEventSet events,
                                                    final DateTime targetDate, final Currency currency) throws InvoiceApiException {
         List<InvoiceItem> items = new ArrayList<InvoiceItem>();
-
-        for (int i = 0; i < events.size(); i++) {
-            BillingEvent thisEvent = events.get(i);
-            BillingEvent nextEvent = events.isLast(thisEvent) ? null : events.get(i + 1);
-            if (nextEvent != null) {
-                nextEvent = (thisEvent.getSubscription().getId() == nextEvent.getSubscription().getId()) ? nextEvent : null;
-            }
-
-            items.addAll(processEvents(invoiceId, accountId, thisEvent, nextEvent, targetDate, currency));
+        
+        if(events.size() == 0) {
+            return items;
         }
+
+        Iterator<BillingEvent> eventIt = events.iterator();
+
+        BillingEvent nextEvent = eventIt.next();
+        while(eventIt.hasNext()) {
+            BillingEvent thisEvent = nextEvent;
+            nextEvent = eventIt.next();
+            if(!events.getSubscriptionIdsWithAutoInvoiceOff().
+                    contains(thisEvent.getSubscription().getId())) { // don't consider events for subscriptions that have auto_invoice_off
+                BillingEvent adjustedNextEvent = (thisEvent.getSubscription().getId() == nextEvent.getSubscription().getId()) ? nextEvent : null;
+                items.addAll(processEvents(invoiceId, accountId, thisEvent, adjustedNextEvent, targetDate, currency));
+            }
+        }
+        items.addAll(processEvents(invoiceId, accountId, nextEvent, null, targetDate, currency));
+        
+// The above should reproduce the semantics of the code below using iterator instead of list.
+//
+//        for (int i = 0; i < events.size(); i++) {
+//            BillingEvent thisEvent = events.get(i);
+//            BillingEvent nextEvent = events.isLast(thisEvent) ? null : events.get(i + 1);
+//            if (nextEvent != null) {
+//                nextEvent = (thisEvent.getSubscription().getId() == nextEvent.getSubscription().getId()) ? nextEvent : null;
+//            }
+//
+//            items.addAll(processEvents(invoiceId, accountId, thisEvent, nextEvent, targetDate, currency));
+//        }
 
         return items;
     }

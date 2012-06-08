@@ -45,8 +45,8 @@ public class NoOpPaymentProviderPlugin implements PaymentPluginApi {
     @Override
     public PaymentInfoPlugin processPayment(final String externalAccountKey, final UUID paymentId, final BigDecimal amount)
             throws PaymentPluginApiException {
+
         PaymentInfoPlugin paymentResult = new PaymentInfoPlugin() {
-        
             @Override
             public DateTime getEffectiveDate() {
                 return null;
