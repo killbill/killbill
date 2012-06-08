@@ -27,7 +27,7 @@ import org.testng.annotations.Test;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.util.tag.Tag;
 
-public class TestBusinessAccount {
+public class TestBusinessAccount extends AnalyticsTestSuite {
     private BusinessAccount account;
 
     @BeforeMethod(alwaysRun = true)

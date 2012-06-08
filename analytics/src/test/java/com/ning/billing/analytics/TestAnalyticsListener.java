@@ -43,7 +43,7 @@ import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 
-public class TestAnalyticsListener {
+public class TestAnalyticsListener extends AnalyticsTestSuite {
     private static final String KEY = "1234";
     private static final String ACCOUNT_KEY = "pierre-1234";
     private final Currency CURRENCY = Currency.BRL;

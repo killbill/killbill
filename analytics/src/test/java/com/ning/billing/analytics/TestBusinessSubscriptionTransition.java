@@ -37,7 +37,7 @@ import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 
 import static com.ning.billing.catalog.api.Currency.USD;
 
-public class TestBusinessSubscriptionTransition {
+public class TestBusinessSubscriptionTransition extends AnalyticsTestSuite {
     private BusinessSubscription prevSubscription;
     private BusinessSubscription nextSubscription;
     private BusinessSubscriptionEvent event;

@@ -36,7 +36,7 @@ import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 
 import static com.ning.billing.catalog.api.Currency.USD;
 
-public class TestBusinessSubscription {
+public class TestBusinessSubscription extends AnalyticsTestSuite {
     private final Duration MONTHLY = MockDuration.MONHTLY();
     private final Duration YEARLY = MockDuration.YEARLY();
     final Object[][] catalogMapping = {

@@ -32,7 +32,7 @@ import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 
-public class TestBusinessSubscriptionEvent {
+public class TestBusinessSubscriptionEvent extends AnalyticsTestSuite {
     private Product product;
     private Plan plan;
     private PlanPhase phase;

@@ -21,7 +21,9 @@ import java.math.BigDecimal;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-public class TestRounder {
+import com.ning.billing.analytics.AnalyticsTestSuite;
+
+public class TestRounder extends AnalyticsTestSuite {
     @Test(groups = "fast")
     public void testRound() throws Exception {
         Assert.assertEquals(Rounder.round(null), 0.0);

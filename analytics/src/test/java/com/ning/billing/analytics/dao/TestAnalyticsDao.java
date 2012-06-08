@@ -41,6 +41,7 @@ import com.ning.billing.analytics.MockDuration;
 import com.ning.billing.analytics.MockPhase;
 import com.ning.billing.analytics.MockPlan;
 import com.ning.billing.analytics.MockProduct;
+import com.ning.billing.analytics.TestWithEmbeddedDB;
 import com.ning.billing.analytics.utils.Rounder;
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogService;
@@ -50,18 +51,16 @@ import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.util.tag.Tag;
 
-public class TestAnalyticsDao {
+public class TestAnalyticsDao extends TestWithEmbeddedDB {
     private static final UUID EVENT_ID = UUID.randomUUID();
     private static final String EVENT_KEY = "23456";
     private static final String ACCOUNT_KEY = "pierre-143343-vcc";
 
-    private final MysqlTestingHelper helper = new MysqlTestingHelper();
     private final Product product = new MockProduct("platinium", "subscription", ProductCategory.BASE);
     private final Plan plan = new MockPlan("platinum-monthly", product);
     private final PlanPhase phase = new MockPhase(PhaseType.EVERGREEN, plan, MockDuration.UNLIMITED(), 25.95);
@@ -75,16 +74,10 @@ public class TestAnalyticsDao {
     private final Catalog catalog = BrainDeadProxyFactory.createBrainDeadProxyFor(Catalog.class);
 
     @BeforeClass(alwaysRun = true)
-    public void startMysql() throws IOException, ClassNotFoundException, SQLException {
-
+    public void setup() throws IOException, ClassNotFoundException, SQLException {
         ((ZombieControl) catalog).addResult("findPlan", plan);
         ((ZombieControl) catalog).addResult("findPhase", phase);
         ((ZombieControl) catalogService).addResult("getFullCatalog", catalog);
-
-        final String ddl = IOUtils.toString(BusinessSubscriptionTransitionDao.class.getResourceAsStream("/com/ning/billing/analytics/ddl.sql"));
-
-        helper.startMysql();
-        helper.initDb(ddl);
 
         setupBusinessSubscriptionTransition();
         setupBusinessAccount();
@@ -95,7 +88,6 @@ public class TestAnalyticsDao {
         final BusinessSubscription prevSubscription = new BusinessSubscription(null, plan.getName(), phase.getName(), Currency.USD, new DateTime(DateTimeZone.UTC), Subscription.SubscriptionState.ACTIVE, UUID.randomUUID(), UUID.randomUUID(), catalog);
         final BusinessSubscription nextSubscription = new BusinessSubscription(null, plan.getName(), phase.getName(), Currency.USD, new DateTime(DateTimeZone.UTC), Subscription.SubscriptionState.CANCELLED, UUID.randomUUID(), UUID.randomUUID(), catalog);
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionCancelled(plan.getName(), catalog, requestedTimestamp, requestedTimestamp);
-
 
         transition = new BusinessSubscriptionTransition(EVENT_ID, EVENT_KEY, ACCOUNT_KEY, requestedTimestamp, event, prevSubscription, nextSubscription);
 
@@ -133,17 +125,6 @@ public class TestAnalyticsDao {
         zombie.addResult("getTagDefinitionName", tagDefinitionName);
         zombie.addResult("toString", tagDefinitionName);
         return tag;
-    }
-
-    @AfterClass(groups = "slow")
-    public void stopMysql() {
-        helper.stopMysql();
-    }
-
-    @BeforeMethod(groups = "slow")
-    public void cleanup() throws Exception {
-        helper.cleanupTable("bst");
-        helper.cleanupTable("bac");
     }
 
     @Test(groups = "slow")
