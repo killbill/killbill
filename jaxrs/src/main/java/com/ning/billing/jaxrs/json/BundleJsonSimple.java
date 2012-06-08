@@ -48,4 +48,32 @@ public class BundleJsonSimple {
     public String getExternalKey() {
         return externalKey;
     }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        final BundleJsonSimple that = (BundleJsonSimple) o;
+
+        if (bundleId != null ? !bundleId.equals(that.bundleId) : that.bundleId != null) {
+            return false;
+        }
+        if (externalKey != null ? !externalKey.equals(that.externalKey) : that.externalKey != null) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = bundleId != null ? bundleId.hashCode() : 0;
+        result = 31 * result + (externalKey != null ? externalKey.hashCode() : 0);
+        return result;
+    }
 }
