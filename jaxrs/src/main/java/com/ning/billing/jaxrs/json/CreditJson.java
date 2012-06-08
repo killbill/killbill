@@ -16,15 +16,15 @@
 
 package com.ning.billing.jaxrs.json;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.ning.billing.invoice.api.InvoiceItem;
-import org.joda.time.DateTime;
-
 import java.math.BigDecimal;
 import java.util.UUID;
 
-// TODO: add invoice number, reason and requested date to the json
+import org.joda.time.DateTime;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.ning.billing.invoice.api.InvoiceItem;
+
 public class CreditJson {
     private final BigDecimal creditAmount;
     private final UUID invoiceId;
@@ -32,6 +32,7 @@ public class CreditJson {
     private final DateTime requestedDate;
     private final DateTime effectiveDate;
     private final String reason;
+    private final UUID accountId;
 
     @JsonCreator
     public CreditJson(@JsonProperty("creditAmount") final BigDecimal creditAmount,
@@ -39,13 +40,15 @@ public class CreditJson {
                       @JsonProperty("invoiceNumber") final String invoiceNumber,
                       @JsonProperty("requestedDate") final DateTime requestedDate,
                       @JsonProperty("effectiveDate") final DateTime effectiveDate,
-                      @JsonProperty("reason") final String reason) {
+                      @JsonProperty("reason") final String reason,
+                      @JsonProperty("accountId") final UUID accountId) {
         this.creditAmount = creditAmount;
         this.invoiceId = invoiceId;
         this.invoiceNumber = invoiceNumber;
         this.requestedDate = requestedDate;
         this.effectiveDate = effectiveDate;
         this.reason = reason;
+        this.accountId = accountId;
     }
 
     public CreditJson(InvoiceItem credit) {
@@ -55,6 +58,7 @@ public class CreditJson {
         this.requestedDate = null;
         this.effectiveDate = credit.getStartDate();
         this.reason = null;
+        this.accountId = credit.getAccountId();
     }
 
     public BigDecimal getCreditAmount() {
@@ -79,5 +83,9 @@ public class CreditJson {
 
     public String getReason() {
         return reason;
+    }
+
+    public UUID getAccountId() {
+        return accountId;
     }
 }
