@@ -15,6 +15,7 @@
  */
 package com.ning.billing.jaxrs.json;
 
+import javax.annotation.Nullable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -31,9 +32,9 @@ public class BundleJsonWithSubscriptions extends BundleJsonSimple {
     private final List<SubscriptionJsonWithEvents> subscriptions;
 
     @JsonCreator
-    public BundleJsonWithSubscriptions(@JsonProperty("bundleId") final String bundleId,
-                                       @JsonProperty("externalKey") final String externalKey,
-                                       @JsonProperty("subscriptions") final List<SubscriptionJsonWithEvents> subscriptions) {
+    public BundleJsonWithSubscriptions(@JsonProperty("bundleId") @Nullable final String bundleId,
+                                       @JsonProperty("externalKey") @Nullable final String externalKey,
+                                       @JsonProperty("subscriptions") @Nullable final List<SubscriptionJsonWithEvents> subscriptions) {
         super(bundleId, externalKey);
         this.subscriptions = subscriptions;
     }
@@ -43,7 +44,7 @@ public class BundleJsonWithSubscriptions extends BundleJsonSimple {
         return subscriptions;
     }
 
-    public BundleJsonWithSubscriptions(final UUID accountId, final BundleTimeline bundle) {
+    public BundleJsonWithSubscriptions(@Nullable final UUID accountId, final BundleTimeline bundle) {
         super(bundle.getBundleId().toString(), bundle.getExternalKey());
         this.subscriptions = new LinkedList<SubscriptionJsonWithEvents>();
         for (final SubscriptionTimeline cur : bundle.getSubscriptions()) {
@@ -57,8 +58,6 @@ public class BundleJsonWithSubscriptions extends BundleJsonSimple {
     }
 
     public BundleJsonWithSubscriptions() {
-        super(null, null);
-        this.subscriptions = null;
+        this(null, null, null);
     }
-
 }
