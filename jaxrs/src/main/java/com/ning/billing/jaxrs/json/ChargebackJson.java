@@ -26,11 +26,11 @@ import com.ning.billing.invoice.api.InvoicePayment;
 
 // TODO: populate reason code, requested date from audit log
 public class ChargebackJson {
-    private final DateTime   requestedDate;
-    private final DateTime   effectiveDate;
+    private final DateTime requestedDate;
+    private final DateTime effectiveDate;
     private final BigDecimal chargebackAmount;
-    private final String     paymentId;
-    private final String     reason;
+    private final String paymentId;
+    private final String reason;
 
     @JsonCreator
     public ChargebackJson(@JsonProperty("requestedDate") final DateTime requestedDate,

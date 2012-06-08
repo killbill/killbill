@@ -28,11 +28,11 @@ import com.ning.billing.invoice.api.InvoiceItem;
 // TODO: add invoice number, reason and requested date to the json
 public class CreditJson {
     private final BigDecimal creditAmount;
-    private final UUID       invoiceId;
-    private final String     invoiceNumber;
-    private final DateTime   requestedDate;
-    private final DateTime   effectiveDate;
-    private final String     reason;
+    private final UUID invoiceId;
+    private final String invoiceNumber;
+    private final DateTime requestedDate;
+    private final DateTime effectiveDate;
+    private final String reason;
 
     @JsonCreator
     public CreditJson(@JsonProperty("creditAmount") final BigDecimal creditAmount,
@@ -80,5 +80,49 @@ public class CreditJson {
 
     public String getReason() {
         return reason;
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        final CreditJson that = (CreditJson) o;
+
+        if (creditAmount != null ? !creditAmount.equals(that.creditAmount) : that.creditAmount != null) {
+            return false;
+        }
+        if (effectiveDate != null ? !effectiveDate.equals(that.effectiveDate) : that.effectiveDate != null) {
+            return false;
+        }
+        if (invoiceId != null ? !invoiceId.equals(that.invoiceId) : that.invoiceId != null) {
+            return false;
+        }
+        if (invoiceNumber != null ? !invoiceNumber.equals(that.invoiceNumber) : that.invoiceNumber != null) {
+            return false;
+        }
+        if (reason != null ? !reason.equals(that.reason) : that.reason != null) {
+            return false;
+        }
+        if (requestedDate != null ? !requestedDate.equals(that.requestedDate) : that.requestedDate != null) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = creditAmount != null ? creditAmount.hashCode() : 0;
+        result = 31 * result + (invoiceId != null ? invoiceId.hashCode() : 0);
+        result = 31 * result + (invoiceNumber != null ? invoiceNumber.hashCode() : 0);
+        result = 31 * result + (requestedDate != null ? requestedDate.hashCode() : 0);
+        result = 31 * result + (effectiveDate != null ? effectiveDate.hashCode() : 0);
+        result = 31 * result + (reason != null ? reason.hashCode() : 0);
+        return result;
     }
 }
