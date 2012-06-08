@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -48,9 +49,9 @@ import com.ning.billing.analytics.MockProduct;
 import com.ning.billing.analytics.TestWithEmbeddedDB;
 import com.ning.billing.analytics.dao.BusinessAccountDao;
 import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionDao;
-import com.ning.billing.catalog.MockCatalogModule;
 import com.ning.billing.catalog.MockPriceList;
 import com.ning.billing.catalog.api.Catalog;
+import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PhaseType;
@@ -74,7 +75,6 @@ import com.ning.billing.invoice.api.user.DefaultInvoiceCreationEvent;
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
-import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.payment.api.DefaultPaymentAttempt;
 import com.ning.billing.payment.api.DefaultPaymentInfoEvent;
 import com.ning.billing.payment.api.PaymentAttempt;
@@ -96,7 +96,7 @@ import com.ning.billing.util.tag.dao.TagDefinitionSqlDao;
 
 import static org.testng.Assert.fail;
 
-@Guice(modules = {AnalyticsTestModule.class, MockCatalogModule.class})
+@Guice(modules = {AnalyticsTestModule.class})
 public class TestAnalyticsService extends TestWithEmbeddedDB {
     final Product product = new MockProduct("platinum", "subscription", ProductCategory.BASE);
     final Plan plan = new MockPlan("platinum-monthly", product);
@@ -155,10 +155,10 @@ public class TestAnalyticsService extends TestWithEmbeddedDB {
     private Catalog catalog;
 
     @BeforeClass(groups = "slow")
-    public void setUp() throws IOException, ClassNotFoundException, SQLException, EntitlementUserApiException {
+    public void setUp() throws IOException, ClassNotFoundException, SQLException, EntitlementUserApiException, CatalogApiException {
         catalog = catalogService.getFullCatalog();
-        ((ZombieControl) catalog).addResult("findPlan", plan);
-        ((ZombieControl) catalog).addResult("findPhase", phase);
+        Mockito.when(catalog.findPlan(Mockito.anyString(), Mockito.<DateTime>any())).thenReturn(plan);
+        Mockito.when(catalog.findPhase(Mockito.anyString(), Mockito.<DateTime>any(), Mockito.<DateTime>any())).thenReturn(phase);
 
         // Killbill generic setup
         bus.start();

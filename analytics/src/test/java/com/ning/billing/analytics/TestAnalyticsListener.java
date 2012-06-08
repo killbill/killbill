@@ -21,12 +21,14 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.api.Catalog;
+import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PhaseType;
@@ -40,8 +42,6 @@ import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
-import com.ning.billing.mock.BrainDeadProxyFactory;
-import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 
 public class TestAnalyticsListener extends AnalyticsTestSuite {
     private static final String KEY = "1234";
@@ -56,21 +56,19 @@ public class TestAnalyticsListener extends AnalyticsTestSuite {
     private final PlanPhase phase = new MockPhase(PhaseType.EVERGREEN, plan, MockDuration.UNLIMITED(), 25.95);
     private final PriceList priceList = null;
 
-    private final CatalogService catalogService = BrainDeadProxyFactory.createBrainDeadProxyFor(CatalogService.class);
-    private final Catalog catalog = BrainDeadProxyFactory.createBrainDeadProxyFor(Catalog.class);
-
+    private final CatalogService catalogService = Mockito.mock(CatalogService.class);
+    private final Catalog catalog = Mockito.mock(Catalog.class);
 
     private AnalyticsListener listener;
 
-    @BeforeClass(alwaysRun = true)
-    public void setupCatalog() {
-        ((ZombieControl) catalog).addResult("findPlan", plan);
-        ((ZombieControl) catalog).addResult("findPhase", phase);
-        ((ZombieControl) catalogService).addResult("getFullCatalog", catalog);
-
+    @BeforeClass(groups = "fast")
+    public void setupCatalog() throws CatalogApiException {
+        Mockito.when(catalog.findPlan(Mockito.anyString(), Mockito.<DateTime>any())).thenReturn(plan);
+        Mockito.when(catalog.findPhase(Mockito.anyString(), Mockito.<DateTime>any(), Mockito.<DateTime>any())).thenReturn(phase);
+        Mockito.when(catalogService.getFullCatalog()).thenReturn(catalog);
     }
 
-    @BeforeMethod(alwaysRun = true)
+    @BeforeMethod(groups = "fast")
     public void setUp() throws Exception {
         final BusinessSubscriptionTransitionRecorder recorder = new BusinessSubscriptionTransitionRecorder(dao, catalogService, new MockEntitlementUserApi(bundleUUID, KEY), new MockAccountUserApi(ACCOUNT_KEY, CURRENCY));
         listener = new AnalyticsListener(recorder, null);

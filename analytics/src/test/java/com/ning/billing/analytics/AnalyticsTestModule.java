@@ -16,10 +16,14 @@
 
 package com.ning.billing.analytics;
 
+import org.mockito.Mockito;
 import org.skife.jdbi.v2.IDBI;
 
 import com.ning.billing.account.glue.AccountModule;
 import com.ning.billing.analytics.setup.AnalyticsModule;
+import com.ning.billing.catalog.MockCatalog;
+import com.ning.billing.catalog.api.Catalog;
+import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
 import com.ning.billing.invoice.glue.DefaultInvoiceModule;
@@ -65,5 +69,11 @@ public class AnalyticsTestModule extends AnalyticsModule {
         bind(IDBI.class).toInstance(dbi);
 
         bind(TagDefinitionSqlDao.class).toInstance(dbi.onDemand(TagDefinitionSqlDao.class));
+
+        // Install a mock catalog
+        final CatalogService catalogService = Mockito.mock(CatalogService.class);
+        final Catalog catalog = Mockito.mock(Catalog.class);
+        Mockito.when(catalogService.getFullCatalog()).thenReturn(catalog);
+        bind(CatalogService.class).toInstance(catalogService);
     }
 }

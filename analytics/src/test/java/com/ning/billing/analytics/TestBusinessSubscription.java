@@ -18,6 +18,8 @@ package com.ning.billing.analytics;
 
 import java.math.BigDecimal;
 
+import org.joda.time.DateTime;
+import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -31,8 +33,6 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.mock.BrainDeadProxyFactory;
-import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 
 import static com.ning.billing.catalog.api.Currency.USD;
 
@@ -57,19 +57,19 @@ public class TestBusinessSubscription extends AnalyticsTestSuite {
     private Subscription isubscription;
     private BusinessSubscription subscription;
 
-    private final CatalogService catalogService = BrainDeadProxyFactory.createBrainDeadProxyFor(CatalogService.class);
-    private final Catalog catalog = BrainDeadProxyFactory.createBrainDeadProxyFor(Catalog.class);
+    private final CatalogService catalogService = Mockito.mock(CatalogService.class);
+    private final Catalog catalog = Mockito.mock(Catalog.class);
 
-
-    @BeforeMethod(alwaysRun = true)
+    @BeforeMethod(groups = "fast")
     public void setUp() throws Exception {
         product = new MockProduct("platinium", "subscription", ProductCategory.BASE);
         plan = new MockPlan("platinum-monthly", product);
         phase = new MockPhase(PhaseType.EVERGREEN, plan, MockDuration.UNLIMITED(), 25.95);
 
-        ((ZombieControl) catalog).addResult("findPlan", plan);
-        ((ZombieControl) catalog).addResult("findPhase", phase);
-        ((ZombieControl) catalogService).addResult("getFullCatalog", catalog);
+        Mockito.when(catalog.findPlan(Mockito.anyString(), Mockito.<DateTime>any())).thenReturn(plan);
+        Mockito.when(catalog.findPlan(Mockito.anyString(), Mockito.<DateTime>any(), Mockito.<DateTime>any())).thenReturn(plan);
+        Mockito.when(catalog.findPhase(Mockito.anyString(), Mockito.<DateTime>any(), Mockito.<DateTime>any())).thenReturn(phase);
+        Mockito.when(catalogService.getFullCatalog()).thenReturn(catalog);
 
         isubscription = new MockSubscription(Subscription.SubscriptionState.ACTIVE, plan, phase);
         subscription = new BusinessSubscription(isubscription, USD, catalog);

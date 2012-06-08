@@ -23,14 +23,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.mockito.Mockito;
 import org.skife.jdbi.v2.IDBI;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.ning.billing.analytics.BusinessAccount;
@@ -44,6 +42,7 @@ import com.ning.billing.analytics.MockProduct;
 import com.ning.billing.analytics.TestWithEmbeddedDB;
 import com.ning.billing.analytics.utils.Rounder;
 import com.ning.billing.catalog.api.Catalog;
+import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PhaseType;
@@ -52,8 +51,6 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.mock.BrainDeadProxyFactory;
-import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.util.tag.Tag;
 
 public class TestAnalyticsDao extends TestWithEmbeddedDB {
@@ -70,14 +67,15 @@ public class TestAnalyticsDao extends TestWithEmbeddedDB {
     private BusinessAccountDao businessAccountDao;
     private BusinessAccount account;
 
-    private final CatalogService catalogService = BrainDeadProxyFactory.createBrainDeadProxyFor(CatalogService.class);
-    private final Catalog catalog = BrainDeadProxyFactory.createBrainDeadProxyFor(Catalog.class);
+    private final CatalogService catalogService = Mockito.mock(CatalogService.class);
+    private final Catalog catalog = Mockito.mock(Catalog.class);
 
-    @BeforeClass(alwaysRun = true)
-    public void setup() throws IOException, ClassNotFoundException, SQLException {
-        ((ZombieControl) catalog).addResult("findPlan", plan);
-        ((ZombieControl) catalog).addResult("findPhase", phase);
-        ((ZombieControl) catalogService).addResult("getFullCatalog", catalog);
+    @BeforeClass(groups = "slow")
+    public void setup() throws IOException, ClassNotFoundException, SQLException, CatalogApiException {
+        Mockito.when(catalog.findPlan(Mockito.anyString(), Mockito.<DateTime>any())).thenReturn(plan);
+        Mockito.when(catalog.findPlan(Mockito.anyString(), Mockito.<DateTime>any(), Mockito.<DateTime>any())).thenReturn(plan);
+        Mockito.when(catalog.findPhase(Mockito.anyString(), Mockito.<DateTime>any(), Mockito.<DateTime>any())).thenReturn(phase);
+        Mockito.when(catalogService.getFullCatalog()).thenReturn(catalog);
 
         setupBusinessSubscriptionTransition();
         setupBusinessAccount();
@@ -119,11 +117,10 @@ public class TestAnalyticsDao extends TestWithEmbeddedDB {
         }
     }
 
-    private Tag getMockTag(String tagDefinitionName) {
-        Tag tag = BrainDeadProxyFactory.createBrainDeadProxyFor(Tag.class);
-        ZombieControl zombie = (ZombieControl) tag;
-        zombie.addResult("getTagDefinitionName", tagDefinitionName);
-        zombie.addResult("toString", tagDefinitionName);
+    private Tag getMockTag(final String tagDefinitionName) {
+        final Tag tag = Mockito.mock(Tag.class);
+        Mockito.when(tag.getTagDefinitionName()).thenReturn(tagDefinitionName);
+        Mockito.when(tag.toString()).thenReturn(tagDefinitionName);
         return tag;
     }
 
