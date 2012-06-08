@@ -42,7 +42,7 @@ public class MockPaymentProviderPlugin implements PaymentPluginApi {
     
     private final AtomicBoolean makeNextInvoiceFailWithError = new AtomicBoolean(false);
     private final AtomicBoolean makeNextInvoiceFailWithException = new AtomicBoolean(false);
-    private final AtomicBoolean makeAllInvoicesFailWithException = new AtomicBoolean(false);
+    private final AtomicBoolean makeAllInvoicesFailWithError = new AtomicBoolean(false);
     private final Map<UUID, PaymentInfoPlugin> payments = new ConcurrentHashMap<UUID, PaymentInfoPlugin>();
 
     private final Map<String, List<PaymentMethodPlugin>> paymentMethods = new ConcurrentHashMap<String, List<PaymentMethodPlugin>>();
@@ -59,7 +59,7 @@ public class MockPaymentProviderPlugin implements PaymentPluginApi {
     
     public void clear() {
         makeNextInvoiceFailWithException.set(false);
-        makeAllInvoicesFailWithException.set(false);
+        makeAllInvoicesFailWithError.set(false);
         makeNextInvoiceFailWithError.set(false);
     }
     
@@ -72,17 +72,17 @@ public class MockPaymentProviderPlugin implements PaymentPluginApi {
         makeNextInvoiceFailWithException.set(true);
     }
 
-    public void makeAllInvoicesFailWithException(boolean failure) {
-        makeAllInvoicesFailWithException.set(failure);
+    public void makeAllInvoicesFailWithError(boolean failure) {
+        makeAllInvoicesFailWithError.set(failure);
     }
 
     @Override
     public PaymentInfoPlugin processPayment(String externalKey, UUID paymentId, BigDecimal amount) throws PaymentPluginApiException {
-        if (makeNextInvoiceFailWithException.getAndSet(false) || makeAllInvoicesFailWithException.get()) {
+        if (makeNextInvoiceFailWithException.getAndSet(false)) {
             throw new PaymentPluginApiException("", "test error");
         }
 
-        PaymentPluginStatus status = makeNextInvoiceFailWithError.getAndSet(false) ? PaymentPluginStatus.ERROR : PaymentPluginStatus.PROCESSED;
+        PaymentPluginStatus status = (makeAllInvoicesFailWithError.get() || makeNextInvoiceFailWithError.getAndSet(false)) ? PaymentPluginStatus.ERROR : PaymentPluginStatus.PROCESSED;
         PaymentInfoPlugin result = new MockPaymentInfoPlugin(amount, clock.getUTCNow(), clock.getUTCNow(), status, null);
         payments.put(paymentId, result);
         return result;

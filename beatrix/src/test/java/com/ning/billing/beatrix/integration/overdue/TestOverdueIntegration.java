@@ -165,7 +165,7 @@ public class TestOverdueIntegration extends TestIntegrationBase {
     @Test(groups={"slow"}, enabled = true)
     public void testBasicOverdueState() throws Exception {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
-        paymentPlugin.makeAllInvoicesFailWithException(true);
+        paymentPlugin.makeAllInvoicesFailWithError(true);
         
         // set next invoice to fail and create network 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.INVOICE);
@@ -214,7 +214,7 @@ public class TestOverdueIntegration extends TestIntegrationBase {
         // should now be in OD2 state once the update is processed
         checkODState("OD3");
         
-        paymentPlugin.makeAllInvoicesFailWithException(false);
+        paymentPlugin.makeAllInvoicesFailWithError(false);
         Collection<Invoice> invoices = invoiceApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCNow());
         List<String> invoiceIds = new ArrayList<String>();
         for (Invoice invoice : invoices) {
