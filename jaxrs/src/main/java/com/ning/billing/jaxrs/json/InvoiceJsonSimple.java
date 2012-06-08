@@ -27,12 +27,12 @@ import com.ning.billing.invoice.api.Invoice;
 public class InvoiceJsonSimple {
     private final BigDecimal amount;
     private final BigDecimal credit;
-    private final String invoiceId;
-    private final DateTime invoiceDate;
-    private final DateTime targetDate;
-    private final String invoiceNumber;
+    private final String     invoiceId;
+    private final DateTime   invoiceDate;
+    private final DateTime   targetDate;
+    private final String     invoiceNumber;
     private final BigDecimal balance;
-    private final String accountId;
+    private final String     accountId;
 
     public InvoiceJsonSimple() {
         this.amount = BigDecimal.ZERO;
@@ -46,14 +46,14 @@ public class InvoiceJsonSimple {
     }
 
     @JsonCreator
-    public InvoiceJsonSimple(@JsonProperty("amount") BigDecimal amount,
-                             @JsonProperty("credit") BigDecimal credit,
-                             @JsonProperty("invoiceId") String invoiceId,
-                             @JsonProperty("invoiceDate") DateTime invoiceDate,
-                             @JsonProperty("targetDate") DateTime targetDate,
-                             @JsonProperty("invoiceNumber") String invoiceNumber,
-                             @JsonProperty("balance") BigDecimal balance,
-                             @JsonProperty("accountId") String accountId) {
+    public InvoiceJsonSimple(@JsonProperty("amount") final BigDecimal amount,
+                             @JsonProperty("credit") final BigDecimal credit,
+                             @JsonProperty("invoiceId") final String invoiceId,
+                             @JsonProperty("invoiceDate") final DateTime invoiceDate,
+                             @JsonProperty("targetDate") final DateTime targetDate,
+                             @JsonProperty("invoiceNumber") final String invoiceNumber,
+                             @JsonProperty("balance") final BigDecimal balance,
+                             @JsonProperty("accountId") final String accountId) {
         super();
         this.amount = amount;
         this.credit = credit;
@@ -65,7 +65,7 @@ public class InvoiceJsonSimple {
         this.accountId = accountId;
     }
 
-    public InvoiceJsonSimple(Invoice input) {
+    public InvoiceJsonSimple(final Invoice input) {
         this.amount = input.getAmountCharged();
         this.credit = input.getAmountCredited();
         this.invoiceId = input.getId().toString();
@@ -125,55 +125,72 @@ public class InvoiceJsonSimple {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
+    public boolean equals(final Object obj) {
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
-        InvoiceJsonSimple other = (InvoiceJsonSimple) obj;
+        }
+        final InvoiceJsonSimple other = (InvoiceJsonSimple) obj;
         if (amount == null) {
-            if (other.amount != null)
+            if (other.amount != null) {
                 return false;
-        } else if (!amount.equals(other.amount))
+            }
+        } else if (!amount.equals(other.amount)) {
             return false;
+        }
 
         if (balance == null) {
-            if (other.balance != null)
+            if (other.balance != null) {
                 return false;
-        } else if (!balance.equals(other.balance))
+            }
+        } else if (!balance.equals(other.balance)) {
             return false;
+        }
 
         if (credit == null) {
-            if (other.credit != null)
+            if (other.credit != null) {
                 return false;
-        } else if (!credit.equals(other.credit))
+            }
+        } else if (!credit.equals(other.credit)) {
             return false;
+        }
 
         if (invoiceDate == null) {
-            if (other.invoiceDate != null)
+            if (other.invoiceDate != null) {
                 return false;
-        } else if (!invoiceDate.equals(other.invoiceDate))
+            }
+        } else if (!invoiceDate.equals(other.invoiceDate)) {
             return false;
+        }
 
         if (invoiceId == null) {
-            if (other.invoiceId != null)
+            if (other.invoiceId != null) {
                 return false;
-        } else if (!invoiceId.equals(other.invoiceId))
+            }
+        } else if (!invoiceId.equals(other.invoiceId)) {
             return false;
+        }
 
         if (invoiceNumber == null) {
-            if (other.invoiceNumber != null)
+            if (other.invoiceNumber != null) {
                 return false;
-        } else if (!invoiceNumber.equals(other.invoiceNumber))
+            }
+        } else if (!invoiceNumber.equals(other.invoiceNumber)) {
             return false;
+        }
 
         if (accountId == null) {
-            if (other.accountId != null)
+            if (other.accountId != null) {
                 return false;
-        } else if (!accountId.equals(other.accountId))
+            }
+        } else if (!accountId.equals(other.accountId)) {
             return false;
+        }
 
         return true;
     }

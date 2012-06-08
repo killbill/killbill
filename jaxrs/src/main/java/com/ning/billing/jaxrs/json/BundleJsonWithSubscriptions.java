@@ -22,20 +22,18 @@ import java.util.UUID;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
-
 import com.ning.billing.entitlement.api.timeline.BundleTimeline;
 import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 
 public class BundleJsonWithSubscriptions extends BundleJsonSimple {
-
     @JsonView(BundleTimelineViews.Timeline.class)
     private final List<SubscriptionJsonWithEvents> subscriptions;
 
     @JsonCreator
-    public BundleJsonWithSubscriptions(@JsonProperty("bundleId") String bundleId,
-            @JsonProperty("externalKey") String externalKey,
-            @JsonProperty("subscriptions") List<SubscriptionJsonWithEvents> subscriptions) {
+    public BundleJsonWithSubscriptions(@JsonProperty("bundleId") final String bundleId,
+                                       @JsonProperty("externalKey") final String externalKey,
+                                       @JsonProperty("subscriptions") final List<SubscriptionJsonWithEvents> subscriptions) {
         super(bundleId, externalKey);
         this.subscriptions = subscriptions;
     }
@@ -48,18 +46,18 @@ public class BundleJsonWithSubscriptions extends BundleJsonSimple {
     public BundleJsonWithSubscriptions(final UUID accountId, final BundleTimeline bundle) {
         super(bundle.getBundleId().toString(), bundle.getExternalKey());
         this.subscriptions = new LinkedList<SubscriptionJsonWithEvents>();
-        for (SubscriptionTimeline cur : bundle.getSubscriptions()) {
-            this.subscriptions.add(new SubscriptionJsonWithEvents(bundle.getBundleId(), cur)); 
+        for (final SubscriptionTimeline cur : bundle.getSubscriptions()) {
+            this.subscriptions.add(new SubscriptionJsonWithEvents(bundle.getBundleId(), cur));
         }
     }
-    
-    public BundleJsonWithSubscriptions(SubscriptionBundle bundle) {
+
+    public BundleJsonWithSubscriptions(final SubscriptionBundle bundle) {
         super(bundle.getId().toString(), bundle.getKey());
         this.subscriptions = null;
     }
-    
+
     public BundleJsonWithSubscriptions() {
-        super(null, null);        
+        super(null, null);
         this.subscriptions = null;
     }
 

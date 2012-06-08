@@ -16,13 +16,13 @@
 
 package com.ning.billing.jaxrs.json;
 
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.List;
-
 public class ChargebackCollectionJson {
-    private final String accountId;
+    private final String               accountId;
     private final List<ChargebackJson> chargebacks;
 
     @JsonCreator

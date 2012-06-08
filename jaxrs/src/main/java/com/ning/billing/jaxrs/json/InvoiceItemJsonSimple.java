@@ -26,29 +26,29 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
 
 public class InvoiceItemJsonSimple {
-    private final UUID invoiceId;
-    private final UUID accountId;
-    private final UUID bundleId;
-    private final UUID subscriptionId;
-    private final String planName;
-    private final String phaseName;
-    private final String description;
-    private final DateTime startDate;
-    private final DateTime endDate;
+    private final UUID       invoiceId;
+    private final UUID       accountId;
+    private final UUID       bundleId;
+    private final UUID       subscriptionId;
+    private final String     planName;
+    private final String     phaseName;
+    private final String     description;
+    private final DateTime   startDate;
+    private final DateTime   endDate;
     private final BigDecimal amount;
-    private final Currency currency;
+    private final Currency   currency;
 
-    public InvoiceItemJsonSimple(@JsonProperty("invoiceId") UUID invoiceId,
-                                 @JsonProperty("accountId") UUID accountId,
-                                 @JsonProperty("bundleId") UUID bundleId,
-                                 @JsonProperty("subscriptionId") UUID subscriptionId,
-                                 @JsonProperty("planName") String planName,
-                                 @JsonProperty("phaseName") String phaseName,
-                                 @JsonProperty("description") String description,
-                                 @JsonProperty("startDate") DateTime startDate,
-                                 @JsonProperty("endDate") DateTime endDate,
-                                 @JsonProperty("amount") BigDecimal amount,
-                                 @JsonProperty("currency") Currency currency) {
+    public InvoiceItemJsonSimple(@JsonProperty("invoiceId") final UUID invoiceId,
+                                 @JsonProperty("accountId") final UUID accountId,
+                                 @JsonProperty("bundleId") final UUID bundleId,
+                                 @JsonProperty("subscriptionId") final UUID subscriptionId,
+                                 @JsonProperty("planName") final String planName,
+                                 @JsonProperty("phaseName") final String phaseName,
+                                 @JsonProperty("description") final String description,
+                                 @JsonProperty("startDate") final DateTime startDate,
+                                 @JsonProperty("endDate") final DateTime endDate,
+                                 @JsonProperty("amount") final BigDecimal amount,
+                                 @JsonProperty("currency") final Currency currency) {
         this.invoiceId = invoiceId;
         this.accountId = accountId;
         this.bundleId = bundleId;
@@ -62,7 +62,7 @@ public class InvoiceItemJsonSimple {
         this.currency = currency;
     }
 
-    public InvoiceItemJsonSimple(InvoiceItem item) {
+    public InvoiceItemJsonSimple(final InvoiceItem item) {
         this.invoiceId = item.getInvoiceId();
         this.accountId = item.getAccountId();
         this.bundleId = item.getBundleId();

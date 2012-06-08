@@ -1,4 +1,5 @@
 package com.ning.billing.jaxrs.json;
+
 import java.math.BigDecimal;
 
 import org.joda.time.DateTime;
@@ -32,20 +33,20 @@ public class InvoiceJsonWithBundleKeys extends InvoiceJsonSimple {
     }
 
     @JsonCreator
-    public InvoiceJsonWithBundleKeys(@JsonProperty("amount") BigDecimal amount,
-                                     @JsonProperty("credit") BigDecimal credit,
-                                     @JsonProperty("invoiceId") String invoiceId,
-                                     @JsonProperty("invoiceDate") DateTime invoiceDate,
-                                     @JsonProperty("targetDate") DateTime targetDate,
-                                     @JsonProperty("invoiceNumber") String invoiceNumber,
-                                     @JsonProperty("balance") BigDecimal balance,
-                                     @JsonProperty("accountId") String accountId,
-                                     @JsonProperty("externalBundleKeys") String bundleKeys) {
+    public InvoiceJsonWithBundleKeys(@JsonProperty("amount") final BigDecimal amount,
+                                     @JsonProperty("credit") final BigDecimal credit,
+                                     @JsonProperty("invoiceId") final String invoiceId,
+                                     @JsonProperty("invoiceDate") final DateTime invoiceDate,
+                                     @JsonProperty("targetDate") final DateTime targetDate,
+                                     @JsonProperty("invoiceNumber") final String invoiceNumber,
+                                     @JsonProperty("balance") final BigDecimal balance,
+                                     @JsonProperty("accountId") final String accountId,
+                                     @JsonProperty("externalBundleKeys") final String bundleKeys) {
         super(amount, credit, invoiceId, invoiceDate, targetDate, invoiceNumber, balance, accountId);
         this.bundleKeys = bundleKeys;
     }
 
-    public InvoiceJsonWithBundleKeys(Invoice input, String bundleKeys) {
+    public InvoiceJsonWithBundleKeys(final Invoice input, final String bundleKeys) {
         super(input);
         this.bundleKeys = bundleKeys;
     }

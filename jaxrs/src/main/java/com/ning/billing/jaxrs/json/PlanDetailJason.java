@@ -22,27 +22,27 @@ import com.ning.billing.catalog.api.InternationalPrice;
 import com.ning.billing.catalog.api.Listing;
 
 public class PlanDetailJason {
+    final String             productName;
+    final String             planName;
+    final BillingPeriod      billingPeriod;
+    final String             priceListName;
+    final InternationalPrice finalPhasePrice;
 
-    final String productName;
-    final  String planName;
-    final  BillingPeriod billingPeriod;
-    final  String priceListName;
-    final  InternationalPrice finalPhasePrice;
     public PlanDetailJason(
-            @JsonProperty("product") String productName,
-            @JsonProperty("plan") String planName,
-            @JsonProperty("final_phase_billing_period") BillingPeriod billingPeriod,
-            @JsonProperty("priceList") String priceListName,
-            @JsonProperty("final_phase_recurring_price") InternationalPrice finalPhasePrice
-                ) {
+            @JsonProperty("product") final String productName,
+            @JsonProperty("plan") final String planName,
+            @JsonProperty("final_phase_billing_period") final BillingPeriod billingPeriod,
+            @JsonProperty("priceList") final String priceListName,
+            @JsonProperty("final_phase_recurring_price") final InternationalPrice finalPhasePrice
+                          ) {
         this.productName = productName;
         this.planName = planName;
         this.billingPeriod = billingPeriod;
         this.priceListName = priceListName;
         this.finalPhasePrice = finalPhasePrice;
     }
-    
-    public PlanDetailJason(Listing listing) {
+
+    public PlanDetailJason(final Listing listing) {
         this.productName = listing.getPlan().getProduct().getName();
         this.planName = listing.getPlan().getName();
         this.billingPeriod = listing.getPlan().getBillingPeriod();
@@ -69,6 +69,6 @@ public class PlanDetailJason {
     public InternationalPrice getFinalPhasePrice() {
         return finalPhasePrice;
     }
-    
- 
+
+
 }

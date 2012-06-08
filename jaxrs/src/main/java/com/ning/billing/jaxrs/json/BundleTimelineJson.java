@@ -23,7 +23,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
 
 public class BundleTimelineJson {
-
     @JsonView(BundleTimelineViews.Timeline.class)
     private final String viewId;
 
@@ -37,19 +36,19 @@ public class BundleTimelineJson {
     private final List<InvoiceJsonSimple> invoices;
 
     @JsonView(BundleTimelineViews.WriteTimeline.class)
-    private final String resonForChange;
+    private final String reasonForChange;
 
     @JsonCreator
-    public BundleTimelineJson(@JsonProperty("viewId") String viewId,
-            @JsonProperty("bundle") BundleJsonWithSubscriptions bundle,
-            @JsonProperty("payments") List<PaymentJsonSimple> payments,
-            @JsonProperty("invoices") List<InvoiceJsonSimple> invoices,
-            @JsonProperty("reasonForChange") String reason) {
+    public BundleTimelineJson(@JsonProperty("viewId") final String viewId,
+                              @JsonProperty("bundle") final BundleJsonWithSubscriptions bundle,
+                              @JsonProperty("payments") final List<PaymentJsonSimple> payments,
+                              @JsonProperty("invoices") final List<InvoiceJsonSimple> invoices,
+                              @JsonProperty("reasonForChange") final String reason) {
         this.viewId = viewId;
         this.bundle = bundle;
         this.payments = payments;
         this.invoices = invoices;
-        this.resonForChange = reason;
+        this.reasonForChange = reason;
     }
 
     public String getViewId() {
@@ -68,7 +67,7 @@ public class BundleTimelineJson {
         return invoices;
     }
 
-    public String getResonForChange() {
-        return resonForChange;
+    public String getReasonForChange() {
+        return reasonForChange;
     }
 }

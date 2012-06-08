@@ -16,27 +16,28 @@
 
 package com.ning.billing.jaxrs.json;
 
+import java.math.BigDecimal;
+
+import org.joda.time.DateTime;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ning.billing.invoice.api.InvoicePayment;
-import org.joda.time.DateTime;
-
-import java.math.BigDecimal;
 
 // TODO: populate reason code, requested date from audit log
 public class ChargebackJson {
-    private final DateTime requestedDate;
-    private final DateTime effectiveDate;
+    private final DateTime   requestedDate;
+    private final DateTime   effectiveDate;
     private final BigDecimal chargebackAmount;
-    private final String paymentId;
-    private final String reason;
+    private final String     paymentId;
+    private final String     reason;
 
     @JsonCreator
-    public ChargebackJson(@JsonProperty("requestedDate") DateTime requestedDate,
-                          @JsonProperty("effectiveDate") DateTime effectiveDate,
-                          @JsonProperty("chargebackAmount") BigDecimal chargebackAmount,
-                          @JsonProperty("paymentId") String paymentId,
-                          @JsonProperty("reason") String reason) {
+    public ChargebackJson(@JsonProperty("requestedDate") final DateTime requestedDate,
+                          @JsonProperty("effectiveDate") final DateTime effectiveDate,
+                          @JsonProperty("chargebackAmount") final BigDecimal chargebackAmount,
+                          @JsonProperty("paymentId") final String paymentId,
+                          @JsonProperty("reason") final String reason) {
         this.requestedDate = requestedDate;
         this.effectiveDate = effectiveDate;
         this.chargebackAmount = chargebackAmount;
@@ -44,7 +45,7 @@ public class ChargebackJson {
         this.reason = reason;
     }
 
-    public ChargebackJson(InvoicePayment chargeback) {
+    public ChargebackJson(final InvoicePayment chargeback) {
         this.requestedDate = null;
         this.effectiveDate = chargeback.getPaymentAttemptDate();
         this.chargebackAmount = chargeback.getAmount().negate();

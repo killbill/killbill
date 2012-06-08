@@ -16,22 +16,23 @@
 
 package com.ning.billing.jaxrs.json;
 
+import java.math.BigDecimal;
+import java.util.UUID;
+
+import org.joda.time.DateTime;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ning.billing.invoice.api.InvoiceItem;
-import org.joda.time.DateTime;
-
-import java.math.BigDecimal;
-import java.util.UUID;
 
 // TODO: add invoice number, reason and requested date to the json
 public class CreditJson {
     private final BigDecimal creditAmount;
-    private final UUID invoiceId;
-    private final String invoiceNumber;
-    private final DateTime requestedDate;
-    private final DateTime effectiveDate;
-    private final String reason;
+    private final UUID       invoiceId;
+    private final String     invoiceNumber;
+    private final DateTime   requestedDate;
+    private final DateTime   effectiveDate;
+    private final String     reason;
 
     @JsonCreator
     public CreditJson(@JsonProperty("creditAmount") final BigDecimal creditAmount,
@@ -48,7 +49,7 @@ public class CreditJson {
         this.reason = reason;
     }
 
-    public CreditJson(InvoiceItem credit) {
+    public CreditJson(final InvoiceItem credit) {
         this.creditAmount = credit.getAmount();
         this.invoiceId = credit.getInvoiceId();
         this.invoiceNumber = null;

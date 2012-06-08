@@ -68,7 +68,7 @@ public class AccountJson extends AccountJsonSimple {
     private final String phone;
 
 
-    public AccountJson(Account account) {
+    public AccountJson(final Account account) {
         super(account.getId().toString(), account.getExternalKey());
         this.name = account.getName();
         this.length = account.getFirstNameLength();
@@ -185,7 +185,7 @@ public class AccountJson extends AccountJsonSimple {
     }
 
     // Seems like Jackson (JacksonJsonProvider.readFrom(Class<Object>, Type, Annotation[], MediaType, MultivaluedMap<String,String>, InputStream) line: 443)
-    // needs us to define a default CTOR to instanciate the class first.
+    // needs us to define a default CTOR to instantiate the class first.
     public AccountJson() {
         super();
         this.name = null;
@@ -204,21 +204,21 @@ public class AccountJson extends AccountJsonSimple {
     }
 
     @JsonCreator
-    public AccountJson(@JsonProperty("accountId") String accountId,
-                       @JsonProperty("name") String name,
-                       @JsonProperty("firstNameLength") Integer length,
-                       @JsonProperty("externalKey") String externalKey,
-                       @JsonProperty("email") String email,
-                       @JsonProperty("billingDay") Integer billCycleDay,
-                       @JsonProperty("currency") String currency,
-                       @JsonProperty("paymentProvider") String paymentProvider,
-                       @JsonProperty("timezone") String timeZone,
-                       @JsonProperty("address1") String address1,
-                       @JsonProperty("address2") String address2,
-                       @JsonProperty("company") String company,
-                       @JsonProperty("state") String state,
-                       @JsonProperty("country") String country,
-                       @JsonProperty("phone") String phone) {
+    public AccountJson(@JsonProperty("accountId") final String accountId,
+                       @JsonProperty("name") final String name,
+                       @JsonProperty("firstNameLength") final Integer length,
+                       @JsonProperty("externalKey") final String externalKey,
+                       @JsonProperty("email") final String email,
+                       @JsonProperty("billingDay") final Integer billCycleDay,
+                       @JsonProperty("currency") final String currency,
+                       @JsonProperty("paymentProvider") final String paymentProvider,
+                       @JsonProperty("timezone") final String timeZone,
+                       @JsonProperty("address1") final String address1,
+                       @JsonProperty("address2") final String address2,
+                       @JsonProperty("company") final String company,
+                       @JsonProperty("state") final String state,
+                       @JsonProperty("country") final String country,
+                       @JsonProperty("phone") final String phone) {
         super(accountId, externalKey);
         this.name = name;
         this.length = length;
@@ -318,98 +318,131 @@ public class AccountJson extends AccountJsonSimple {
     }
 
     // Used to check POST versus GET
-    public boolean equalsNoId(Object obj) {
-        if (this == obj)
+    public boolean equalsNoId(final Object obj) {
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
-        AccountJson other = (AccountJson) obj;
+        }
+        final AccountJson other = (AccountJson) obj;
         if (address1 == null) {
-            if (other.address1 != null)
+            if (other.address1 != null) {
                 return false;
-        } else if (!address1.equals(other.address1))
+            }
+        } else if (!address1.equals(other.address1)) {
             return false;
+        }
         if (address2 == null) {
-            if (other.address2 != null)
+            if (other.address2 != null) {
                 return false;
-        } else if (!address2.equals(other.address2))
+            }
+        } else if (!address2.equals(other.address2)) {
             return false;
+        }
         if (billCycleDay == null) {
-            if (other.billCycleDay != null)
+            if (other.billCycleDay != null) {
                 return false;
-        } else if (!billCycleDay.equals(other.billCycleDay))
+            }
+        } else if (!billCycleDay.equals(other.billCycleDay)) {
             return false;
+        }
         if (company == null) {
-            if (other.company != null)
+            if (other.company != null) {
                 return false;
-        } else if (!company.equals(other.company))
+            }
+        } else if (!company.equals(other.company)) {
             return false;
+        }
         if (country == null) {
-            if (other.country != null)
+            if (other.country != null) {
                 return false;
-        } else if (!country.equals(other.country))
+            }
+        } else if (!country.equals(other.country)) {
             return false;
+        }
         if (currency == null) {
-            if (other.currency != null)
+            if (other.currency != null) {
                 return false;
-        } else if (!currency.equals(other.currency))
+            }
+        } else if (!currency.equals(other.currency)) {
             return false;
+        }
         if (email == null) {
-            if (other.email != null)
+            if (other.email != null) {
                 return false;
-        } else if (!email.equals(other.email))
+            }
+        } else if (!email.equals(other.email)) {
             return false;
+        }
         if (externalKey == null) {
-            if (other.externalKey != null)
+            if (other.externalKey != null) {
                 return false;
-        } else if (!externalKey.equals(other.externalKey))
+            }
+        } else if (!externalKey.equals(other.externalKey)) {
             return false;
+        }
         if (length == null) {
-            if (other.length != null)
+            if (other.length != null) {
                 return false;
-        } else if (!length.equals(other.length))
+            }
+        } else if (!length.equals(other.length)) {
             return false;
+        }
         if (name == null) {
-            if (other.name != null)
+            if (other.name != null) {
                 return false;
-        } else if (!name.equals(other.name))
+            }
+        } else if (!name.equals(other.name)) {
             return false;
+        }
         if (paymentProvider == null) {
-            if (other.paymentProvider != null)
+            if (other.paymentProvider != null) {
                 return false;
-        } else if (!paymentProvider.equals(other.paymentProvider))
+            }
+        } else if (!paymentProvider.equals(other.paymentProvider)) {
             return false;
+        }
         if (phone == null) {
-            if (other.phone != null)
+            if (other.phone != null) {
                 return false;
-        } else if (!phone.equals(other.phone))
+            }
+        } else if (!phone.equals(other.phone)) {
             return false;
+        }
         if (state == null) {
-            if (other.state != null)
+            if (other.state != null) {
                 return false;
-        } else if (!state.equals(other.state))
+            }
+        } else if (!state.equals(other.state)) {
             return false;
+        }
         if (timeZone == null) {
-            if (other.timeZone != null)
+            if (other.timeZone != null) {
                 return false;
-        } else if (!timeZone.equals(other.timeZone))
+            }
+        } else if (!timeZone.equals(other.timeZone)) {
             return false;
+        }
         return true;
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(final Object obj) {
         if (!equalsNoId(obj)) {
             return false;
         } else {
-            AccountJson other = (AccountJson) obj;
+            final AccountJson other = (AccountJson) obj;
             if (accountId == null) {
-                if (other.accountId != null)
+                if (other.accountId != null) {
                     return false;
-            } else if (!accountId.equals(other.accountId))
+                }
+            } else if (!accountId.equals(other.accountId)) {
                 return false;
+            }
         }
         return true;
     }

@@ -26,7 +26,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ning.billing.util.clock.DefaultClock;
 
 public class PaymentJsonSimple {
-
     private final BigDecimal paidAmount;
 
     private final BigDecimal amount;
@@ -61,16 +60,16 @@ public class PaymentJsonSimple {
     }
 
     @JsonCreator
-    public PaymentJsonSimple(@JsonProperty("amount") BigDecimal amount,
-            @JsonProperty("paidAmount") BigDecimal paidAmount,
-            @JsonProperty("invoiceId") UUID invoiceId,
-            @JsonProperty("paymentId") UUID paymentId,
-            @JsonProperty("requestedDate") DateTime requestedDate,
-            @JsonProperty("effectiveDate") DateTime effectiveDate,
-            @JsonProperty("retryCount") Integer retryCount,
-            @JsonProperty("currency") String currency,
-            @JsonProperty("status") String status,
-            @JsonProperty("accountId") UUID accountId) {
+    public PaymentJsonSimple(@JsonProperty("amount") final BigDecimal amount,
+                             @JsonProperty("paidAmount") final BigDecimal paidAmount,
+                             @JsonProperty("invoiceId") final UUID invoiceId,
+                             @JsonProperty("paymentId") final UUID paymentId,
+                             @JsonProperty("requestedDate") final DateTime requestedDate,
+                             @JsonProperty("effectiveDate") final DateTime effectiveDate,
+                             @JsonProperty("retryCount") final Integer retryCount,
+                             @JsonProperty("currency") final String currency,
+                             @JsonProperty("status") final String status,
+                             @JsonProperty("accountId") final UUID accountId) {
         super();
         this.amount = amount;
         this.paidAmount = paidAmount;

@@ -15,12 +15,13 @@
  */
 package com.ning.billing.jaxrs.json;
 
+import javax.annotation.Nullable;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
 
 public class BundleJsonSimple {
-    
     @JsonView(BundleTimelineViews.Base.class)
     protected final String bundleId;
 
@@ -28,16 +29,14 @@ public class BundleJsonSimple {
     protected final String externalKey;
 
     @JsonCreator
-    public BundleJsonSimple(@JsonProperty("bundleId") String bundleId,
-            @JsonProperty("externalKey") String externalKey) {
-        super();
+    public BundleJsonSimple(@JsonProperty("bundleId") @Nullable final String bundleId,
+                            @JsonProperty("externalKey") @Nullable final String externalKey) {
         this.bundleId = bundleId;
         this.externalKey = externalKey;
     }
-    
+
     public BundleJsonSimple() {
-        this.bundleId = null;
-        this.externalKey = null;
+        this(null, null);
     }
 
     @JsonProperty("bundleId")

@@ -32,7 +32,6 @@ import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.payment.api.PaymentAttempt;
 
 public class AccountTimelineJson {
-
     @JsonView(BundleTimelineViews.ReadTimeline.class)
     private final List<PaymentJsonWithBundleKeys> payments;
 
@@ -46,18 +45,18 @@ public class AccountTimelineJson {
     private final List<BundleJsonWithSubscriptions> bundles;
 
     @JsonCreator
-    public AccountTimelineJson(@JsonProperty("account") AccountJsonSimple account,
-            @JsonProperty("bundles") List<BundleJsonWithSubscriptions> bundles,
-            @JsonProperty("invoices") List<InvoiceJsonWithBundleKeys> invoices,
-            @JsonProperty("payments") List<PaymentJsonWithBundleKeys> payments) {
+    public AccountTimelineJson(@JsonProperty("account") final AccountJsonSimple account,
+                               @JsonProperty("bundles") final List<BundleJsonWithSubscriptions> bundles,
+                               @JsonProperty("invoices") final List<InvoiceJsonWithBundleKeys> invoices,
+                               @JsonProperty("payments") final List<PaymentJsonWithBundleKeys> payments) {
         this.account = account;
         this.bundles = bundles;
         this.invoices = invoices;
         this.payments = payments;
     }
 
-    private String getBundleExternalKey(UUID invoiceId,  List<Invoice> invoices, List<BundleTimeline> bundles) {
-        for (Invoice cur : invoices) {
+    private String getBundleExternalKey(final UUID invoiceId, final List<Invoice> invoices, final List<BundleTimeline> bundles) {
+        for (final Invoice cur : invoices) {
             if (cur.getId().equals(invoiceId)) {
                 return getBundleExternalKey(cur, bundles);
             }
@@ -65,13 +64,13 @@ public class AccountTimelineJson {
         return null;
     }
 
-    private String getBundleExternalKey(Invoice invoice, List<BundleTimeline> bundles) {
-        Set<UUID> b = new HashSet<UUID>();
+    private String getBundleExternalKey(final Invoice invoice, final List<BundleTimeline> bundles) {
+        final Set<UUID> b = new HashSet<UUID>();
         for (final InvoiceItem cur : invoice.getInvoiceItems()) {
             b.add(cur.getBundleId());
         }
         boolean first = true;
-        StringBuilder tmp = new StringBuilder();
+        final StringBuilder tmp = new StringBuilder();
         for (final UUID cur : b) {
             for (final BundleTimeline bt : bundles) {
                 if (bt.getBundleId().equals(cur)) {
@@ -87,14 +86,14 @@ public class AccountTimelineJson {
         return tmp.toString();
     }
 
-    public AccountTimelineJson(Account account, List<Invoice> invoices, List<PaymentAttempt> payments, List<BundleTimeline> bundles) {
+    public AccountTimelineJson(final Account account, final List<Invoice> invoices, final List<PaymentAttempt> payments, final List<BundleTimeline> bundles) {
         this.account = new AccountJsonSimple(account.getId().toString(), account.getExternalKey());
         this.bundles = new LinkedList<BundleJsonWithSubscriptions>();
-        for (BundleTimeline cur : bundles) {
+        for (final BundleTimeline cur : bundles) {
             this.bundles.add(new BundleJsonWithSubscriptions(account.getId(), cur));
         }
         this.invoices = new LinkedList<InvoiceJsonWithBundleKeys>();
-        for (Invoice cur : invoices) {
+        for (final Invoice cur : invoices) {
             this.invoices.add(new InvoiceJsonWithBundleKeys(cur.getAmountPaid(),
                                                             cur.getAmountCredited(),
                                                             cur.getId().toString(),
@@ -105,12 +104,11 @@ public class AccountTimelineJson {
                                                             cur.getAccountId().toString(),
                                                             getBundleExternalKey(cur, bundles)));
         }
+
         this.payments = new LinkedList<PaymentJsonWithBundleKeys>();
-        for (PaymentAttempt cur : payments) {
-
-
-            String status = cur.getPaymentId() != null ? "Success" : "Failed";
-            BigDecimal paidAmount = cur.getPaymentId() != null ? cur.getAmount() : BigDecimal.ZERO;
+        for (final PaymentAttempt cur : payments) {
+            final String status = cur.getPaymentId() != null ? "Success" : "Failed";
+            final BigDecimal paidAmount = cur.getPaymentId() != null ? cur.getAmount() : BigDecimal.ZERO;
 
             this.payments.add(new PaymentJsonWithBundleKeys(cur.getAmount(),
                                                             paidAmount,
@@ -123,7 +121,7 @@ public class AccountTimelineJson {
                                                             status,
                                                             cur.getAccountId(),
                                                             getBundleExternalKey(cur.getInvoiceId(), invoices, bundles)));
-          }
+        }
     }
 
     public AccountTimelineJson() {

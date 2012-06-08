@@ -15,30 +15,28 @@
  */
 package com.ning.billing.jaxrs.json;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
+import javax.annotation.Nullable;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ning.billing.util.customfield.CustomField;
 
 public class CustomFieldJson {
-
     private final String name;
     private final String value;
-    
+
     public CustomFieldJson() {
-        this.name = null;
-        this.value = null;
+        this(null, null);
     }
-    
+
     @JsonCreator
-    public CustomFieldJson(@JsonProperty("name") String name,
-                           @JsonProperty("value") String value) {
-        super();
+    public CustomFieldJson(@JsonProperty("name") @Nullable final String name,
+                           @JsonProperty("value") @Nullable final String value) {
         this.name = name;
         this.value = value;
     }
-    
-    public CustomFieldJson(CustomField input) {
+
+    public CustomFieldJson(final CustomField input) {
         this.name = input.getName();
         this.value = input.getValue();
     }

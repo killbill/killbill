@@ -19,26 +19,26 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class TagDefinitionJson {
-    
     private final String name;
     private final String description;
 
-    public TagDefinitionJson()  {
+    public TagDefinitionJson() {
         this.name = null;
         this.description = null;
     }
-    
+
     @JsonCreator
-    public TagDefinitionJson(@JsonProperty("name") String name,
-            @JsonProperty("description") String description) {
+    public TagDefinitionJson(@JsonProperty("name") final String name,
+                             @JsonProperty("description") final String description) {
         super();
         this.name = name;
         this.description = description;
     }
-    
+
     public String getName() {
         return name;
     }
+
     public String getDescription() {
         return description;
     }
@@ -54,24 +54,31 @@ public class TagDefinitionJson {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
+    public boolean equals(final Object obj) {
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
-        TagDefinitionJson other = (TagDefinitionJson) obj;
+        }
+        final TagDefinitionJson other = (TagDefinitionJson) obj;
         if (description == null) {
-            if (other.description != null)
+            if (other.description != null) {
                 return false;
-        } else if (!description.equals(other.description))
+            }
+        } else if (!description.equals(other.description)) {
             return false;
+        }
         if (name == null) {
-            if (other.name != null)
+            if (other.name != null) {
                 return false;
-        } else if (!name.equals(other.name))
+            }
+        } else if (!name.equals(other.name)) {
             return false;
+        }
         return true;
     }
 }

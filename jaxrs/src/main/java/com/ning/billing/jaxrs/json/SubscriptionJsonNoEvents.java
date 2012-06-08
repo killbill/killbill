@@ -16,26 +16,17 @@
 
 package com.ning.billing.jaxrs.json;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.UUID;
+import org.joda.time.DateTime;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
-import org.joda.time.DateTime;
-
-import com.ning.billing.catalog.api.PlanPhaseSpecifier;
-import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline;
-import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline.ExistingEvent;
 import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.util.clock.DefaultClock;
 
 public class SubscriptionJsonNoEvents extends SubscriptionJsonSimple {
-
     @JsonView(BundleTimelineViews.Base.class)
     private final DateTime startDate;
-    
+
     @JsonView(BundleTimelineViews.Base.class)
     private final String bundleId;
 
@@ -53,18 +44,17 @@ public class SubscriptionJsonNoEvents extends SubscriptionJsonSimple {
 
     @JsonView(BundleTimelineViews.Base.class)
     private final DateTime chargedThroughDate;
-    
 
 
     @JsonCreator
-    public SubscriptionJsonNoEvents(@JsonProperty("subscriptionId") String subscriptionId,
-            @JsonProperty("bundleId") String bundleId,
-            @JsonProperty("startDate") DateTime startDate,
-            @JsonProperty("productName") String productName,
-            @JsonProperty("productCategory") String productCategory,
-            @JsonProperty("billingPeriod") String billingPeriod,
-            @JsonProperty("priceList") String priceList,
-            @JsonProperty("chargedThroughDate") DateTime chargedThroughDate) {
+    public SubscriptionJsonNoEvents(@JsonProperty("subscriptionId") final String subscriptionId,
+                                    @JsonProperty("bundleId") final String bundleId,
+                                    @JsonProperty("startDate") final DateTime startDate,
+                                    @JsonProperty("productName") final String productName,
+                                    @JsonProperty("productCategory") final String productCategory,
+                                    @JsonProperty("billingPeriod") final String billingPeriod,
+                                    @JsonProperty("priceList") final String priceList,
+                                    @JsonProperty("chargedThroughDate") final DateTime chargedThroughDate) {
         super(subscriptionId);
         this.bundleId = bundleId;
         this.startDate = startDate;
@@ -74,7 +64,7 @@ public class SubscriptionJsonNoEvents extends SubscriptionJsonSimple {
         this.priceList = priceList;
         this.chargedThroughDate = chargedThroughDate;
     }
-    
+
     public SubscriptionJsonNoEvents() {
         super(null);
         this.bundleId = null;
@@ -83,9 +73,9 @@ public class SubscriptionJsonNoEvents extends SubscriptionJsonSimple {
         this.productCategory = null;
         this.billingPeriod = null;
         this.priceList = null;
-        this.chargedThroughDate = null;        
+        this.chargedThroughDate = null;
     }
-    
+
     public SubscriptionJsonNoEvents(final Subscription data) {
         super(data.getId().toString());
         this.bundleId = data.getBundleId().toString();
@@ -96,7 +86,7 @@ public class SubscriptionJsonNoEvents extends SubscriptionJsonSimple {
         this.priceList = data.getCurrentPriceList().getName();
         this.chargedThroughDate = data.getChargedThroughDate();
     }
-   
+
 
     public String getSubscriptionId() {
         return subscriptionId;
@@ -105,7 +95,7 @@ public class SubscriptionJsonNoEvents extends SubscriptionJsonSimple {
     public String getBundleId() {
         return bundleId;
     }
-    
+
     public DateTime getStartDate() {
         return startDate;
     }
@@ -125,7 +115,7 @@ public class SubscriptionJsonNoEvents extends SubscriptionJsonSimple {
     public String getPriceList() {
         return priceList;
     }
-    
+
     public DateTime getChargedThroughDate() {
         return chargedThroughDate;
     }
@@ -159,52 +149,67 @@ public class SubscriptionJsonNoEvents extends SubscriptionJsonSimple {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (equalsNoId(obj) == false) {
+    public boolean equals(final Object obj) {
+        if (!equalsNoId(obj)) {
             return false;
         }
-        SubscriptionJsonNoEvents other = (SubscriptionJsonNoEvents) obj;
+        final SubscriptionJsonNoEvents other = (SubscriptionJsonNoEvents) obj;
         if (subscriptionId == null) {
-            if (other.subscriptionId != null)
+            if (other.subscriptionId != null) {
                 return false;
-        } else if (!subscriptionId.equals(other.subscriptionId))
+            }
+        } else if (!subscriptionId.equals(other.subscriptionId)) {
             return false;
+        }
         return true;
     }
 
-    public boolean equalsNoId(Object obj) {
-        if (this == obj)
+    public boolean equalsNoId(final Object obj) {
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
-        SubscriptionJsonNoEvents other = (SubscriptionJsonNoEvents) obj;
+        }
+        final SubscriptionJsonNoEvents other = (SubscriptionJsonNoEvents) obj;
         if (billingPeriod == null) {
-            if (other.billingPeriod != null)
+            if (other.billingPeriod != null) {
                 return false;
-        } else if (!billingPeriod.equals(other.billingPeriod))
+            }
+        } else if (!billingPeriod.equals(other.billingPeriod)) {
             return false;
+        }
         if (bundleId == null) {
-            if (other.bundleId != null)
+            if (other.bundleId != null) {
                 return false;
-        } else if (!bundleId.equals(other.bundleId))
+            }
+        } else if (!bundleId.equals(other.bundleId)) {
             return false;
+        }
         if (priceList == null) {
-            if (other.priceList != null)
+            if (other.priceList != null) {
                 return false;
-        } else if (!priceList.equals(other.priceList))
+            }
+        } else if (!priceList.equals(other.priceList)) {
             return false;
+        }
         if (productCategory == null) {
-            if (other.productCategory != null)
+            if (other.productCategory != null) {
                 return false;
-        } else if (!productCategory.equals(other.productCategory))
+            }
+        } else if (!productCategory.equals(other.productCategory)) {
             return false;
+        }
         if (productName == null) {
-            if (other.productName != null)
+            if (other.productName != null) {
                 return false;
-        } else if (!productName.equals(other.productName))
+            }
+        } else if (!productName.equals(other.productName)) {
             return false;
+        }
         return true;
     }
 }

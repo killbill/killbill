@@ -32,23 +32,23 @@ public class InvoiceJsonWithItems extends InvoiceJsonSimple {
     private final List<InvoiceItemJsonSimple> items;
 
     @JsonCreator
-    public InvoiceJsonWithItems(@JsonProperty("amount") BigDecimal amount,
-                                @JsonProperty("credit") BigDecimal credit,
-                                @JsonProperty("invoiceId") String invoiceId,
-                                @JsonProperty("invoiceDate") DateTime invoiceDate,
-                                @JsonProperty("targetDate") DateTime targetDate,
-                                @JsonProperty("invoiceNumber") String invoiceNumber,
-                                @JsonProperty("balance") BigDecimal balance,
-                                @JsonProperty("accountId") String accountId,
-            @JsonProperty("items") List<InvoiceItemJsonSimple> items) {
+    public InvoiceJsonWithItems(@JsonProperty("amount") final BigDecimal amount,
+                                @JsonProperty("credit") final BigDecimal credit,
+                                @JsonProperty("invoiceId") final String invoiceId,
+                                @JsonProperty("invoiceDate") final DateTime invoiceDate,
+                                @JsonProperty("targetDate") final DateTime targetDate,
+                                @JsonProperty("invoiceNumber") final String invoiceNumber,
+                                @JsonProperty("balance") final BigDecimal balance,
+                                @JsonProperty("accountId") final String accountId,
+                                @JsonProperty("items") final List<InvoiceItemJsonSimple> items) {
         super(amount, credit, invoiceId, invoiceDate, targetDate, invoiceNumber, balance, accountId);
         this.items = new ArrayList<InvoiceItemJsonSimple>(items);
     }
 
-    public InvoiceJsonWithItems(Invoice input) {
+    public InvoiceJsonWithItems(final Invoice input) {
         super(input);
         this.items = new ArrayList<InvoiceItemJsonSimple>(input.getInvoiceItems().size());
-        for (InvoiceItem item : input.getInvoiceItems()) {
+        for (final InvoiceItem item : input.getInvoiceItems()) {
             this.items.add(new InvoiceItemJsonSimple(item));
         }
     }
