@@ -16,12 +16,13 @@
 
 package com.ning.billing.jaxrs.json;
 
+import java.math.BigDecimal;
+
+import org.joda.time.DateTime;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ning.billing.invoice.api.InvoicePayment;
-import org.joda.time.DateTime;
-
-import java.math.BigDecimal;
 
 // TODO: populate reason code, requested date from audit log
 public class ChargebackJson {
@@ -32,11 +33,11 @@ public class ChargebackJson {
     private final String reason;
 
     @JsonCreator
-    public ChargebackJson(@JsonProperty("requestedDate") DateTime requestedDate,
-                          @JsonProperty("effectiveDate") DateTime effectiveDate,
-                          @JsonProperty("chargebackAmount") BigDecimal chargebackAmount,
-                          @JsonProperty("paymentId") String paymentId,
-                          @JsonProperty("reason") String reason) {
+    public ChargebackJson(@JsonProperty("requestedDate") final DateTime requestedDate,
+                          @JsonProperty("effectiveDate") final DateTime effectiveDate,
+                          @JsonProperty("chargebackAmount") final BigDecimal chargebackAmount,
+                          @JsonProperty("paymentId") final String paymentId,
+                          @JsonProperty("reason") final String reason) {
         this.requestedDate = requestedDate;
         this.effectiveDate = effectiveDate;
         this.chargebackAmount = chargebackAmount;
@@ -44,7 +45,7 @@ public class ChargebackJson {
         this.reason = reason;
     }
 
-    public ChargebackJson(InvoicePayment chargeback) {
+    public ChargebackJson(final InvoicePayment chargeback) {
         this.requestedDate = null;
         this.effectiveDate = chargeback.getPaymentAttemptDate();
         this.chargebackAmount = chargeback.getAmount().negate();
@@ -71,5 +72,45 @@ public class ChargebackJson {
 
     public String getReason() {
         return reason;
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        final ChargebackJson that = (ChargebackJson) o;
+
+        if (chargebackAmount != null ? !chargebackAmount.equals(that.chargebackAmount) : that.chargebackAmount != null) {
+            return false;
+        }
+        if (effectiveDate != null ? !effectiveDate.equals(that.effectiveDate) : that.effectiveDate != null) {
+            return false;
+        }
+        if (paymentId != null ? !paymentId.equals(that.paymentId) : that.paymentId != null) {
+            return false;
+        }
+        if (reason != null ? !reason.equals(that.reason) : that.reason != null) {
+            return false;
+        }
+        if (requestedDate != null ? !requestedDate.equals(that.requestedDate) : that.requestedDate != null) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = requestedDate != null ? requestedDate.hashCode() : 0;
+        result = 31 * result + (effectiveDate != null ? effectiveDate.hashCode() : 0);
+        result = 31 * result + (chargebackAmount != null ? chargebackAmount.hashCode() : 0);
+        result = 31 * result + (paymentId != null ? paymentId.hashCode() : 0);
+        result = 31 * result + (reason != null ? reason.hashCode() : 0);
+        return result;
     }
 }

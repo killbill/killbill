@@ -15,25 +15,49 @@
  */
 package com.ning.billing.jaxrs.json;
 
+import javax.annotation.Nullable;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
 
 public class SubscriptionJsonSimple {
-    
     @JsonView(BundleTimelineViews.Base.class)
     protected final String subscriptionId;
 
     public SubscriptionJsonSimple() {
-        this.subscriptionId = null;
+        this(null);
     }
 
     @JsonCreator
-    public SubscriptionJsonSimple(@JsonProperty("subscriptionId") String subscriptionId) {
+    public SubscriptionJsonSimple(@JsonProperty("subscriptionId") @Nullable final String subscriptionId) {
         this.subscriptionId = subscriptionId;
     }
 
     public String getSubscriptionId() {
         return subscriptionId;
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        final SubscriptionJsonSimple that = (SubscriptionJsonSimple) o;
+
+        if (subscriptionId != null ? !subscriptionId.equals(that.subscriptionId) : that.subscriptionId != null) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return subscriptionId != null ? subscriptionId.hashCode() : 0;
     }
 }

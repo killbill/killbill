@@ -16,71 +16,85 @@
 
 package com.ning.billing.util.dao;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
+import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
+
+import com.google.common.base.Function;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.Sets;
 import com.ning.billing.util.ChangeType;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.entity.Entity;
 import com.ning.billing.util.entity.collection.dao.UpdatableEntityCollectionSqlDao;
-import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
-import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 public abstract class AuditedCollectionDaoBase<T extends Entity> implements AuditedCollectionDao<T> {
+    private static final class IdInSetPredicate<T extends Entity> implements Predicate<T> {
+        private final Set<UUID> ids;
+
+        public IdInSetPredicate(Set<UUID> ids) {
+            this.ids = ids;
+        }
+
+        @Override
+        public boolean apply(T entity) {
+            return ids.contains(entity.getId());
+        }
+    }
+
+    private final Function<T, UUID> entityIdExtractor = new Function<T, UUID>() {
+        @Override
+        public UUID apply(T entity) {
+            return entity.getId();
+        }
+    };
+
     @Override
     public void saveEntitiesFromTransaction(Transmogrifier transactionalDao, UUID objectId, ObjectType objectType, List<T> entities, CallContext context) {
         UpdatableEntityCollectionSqlDao<T> dao = transmogrifyDao(transactionalDao);
 
-        // get list of existing entities
         List<T> existingEntities = dao.load(objectId.toString(), objectType);
-        List<T> entitiesToUpdate = new ArrayList<T>();
 
-        // sort into entities to update (entitiesToUpdate), entities to add (entities), and entities to delete (existingEntities)
-        Iterator<T> entityIterator = entities.iterator();
-        while (entityIterator.hasNext()) {
-            T entity = entityIterator.next();
+        // get list of existing entities
+        Set<UUID> currentObjIds = new HashSet<UUID>(Collections2.transform(existingEntities, entityIdExtractor));
+        Set<UUID> updatedObjIds = new HashSet<UUID>(Collections2.transform(entities, entityIdExtractor));
 
-            Iterator<T> existingEntityIterator = existingEntities.iterator();
-            while (existingEntityIterator.hasNext()) {
-                T existingEntity = existingEntityIterator.next();
-                if (entity.equals(existingEntity)) {
-                    // if the entities match, remove from both lists
-                    // this requires that the id is *not* part of the equals statement
-                    entityIterator.remove();
-                    existingEntityIterator.remove();
+        Set<UUID> idsOfObjsToRemove = Sets.difference(currentObjIds, updatedObjIds);
+        Set<UUID> idsOfObjsToAdd = Sets.difference(updatedObjIds, currentObjIds);
+        Set<UUID> idsOfObjsToUpdate = Sets.intersection(currentObjIds, updatedObjIds);
 
-                    // if the entities have the same hash code (e.g. same data), don't bother updating
-                    if (entity.hashCode() != existingEntity.hashCode()) {
-                        entitiesToUpdate.add(entity);
-                    }
-                }
-            }
+        Collection<T> objsToRemove = Collections2.filter(existingEntities, new IdInSetPredicate<T>(idsOfObjsToRemove));
+        Collection<T> objsToAdd = Collections2.filter(entities, new IdInSetPredicate<T>(idsOfObjsToAdd));
+        Collection<T> objsToUpdate = Collections2.filter(existingEntities, new IdInSetPredicate<T>(idsOfObjsToUpdate));
+
+        if (objsToAdd.size() != 0) {
+            dao.insertFromTransaction(objectId.toString(), objectType, objsToAdd, context);
         }
 
-        if (entities.size() != 0) {
-            dao.insertFromTransaction(objectId.toString(), objectType, entities, context);
-        }
-
-        if (entitiesToUpdate.size() != 0) {
-            dao.updateFromTransaction(objectId.toString(), objectType, entitiesToUpdate, context);
+        if (objsToUpdate.size() != 0) {
+            dao.updateFromTransaction(objectId.toString(), objectType, objsToUpdate, context);
         }
 
         // get all custom entities (including those that are about to be deleted) from the database in order to get the record ids
         List<Mapper<UUID, Long>> recordIds = dao.getRecordIds(objectId.toString(), objectType);
         Map<UUID, Long> recordIdMap = convertToHistoryMap(recordIds);
 
-        if (existingEntities.size() != 0) {
-            dao.deleteFromTransaction(objectId.toString(), objectType, existingEntities, context);
+        if (objsToRemove.size() != 0) {
+            dao.deleteFromTransaction(objectId.toString(), objectType, objsToRemove, context);
         }
 
         List<EntityHistory<T>> entityHistories = new ArrayList<EntityHistory<T>>();
-        entityHistories.addAll(convertToHistory(entities, recordIdMap, ChangeType.INSERT));
-        entityHistories.addAll(convertToHistory(entitiesToUpdate, recordIdMap, ChangeType.UPDATE));
-        entityHistories.addAll(convertToHistory(existingEntities, recordIdMap, ChangeType.DELETE));
+        entityHistories.addAll(convertToHistory(objsToAdd, recordIdMap, ChangeType.INSERT));
+        entityHistories.addAll(convertToHistory(objsToUpdate, recordIdMap, ChangeType.UPDATE));
+        entityHistories.addAll(convertToHistory(objsToRemove, recordIdMap, ChangeType.DELETE));
 
         Long maxHistoryRecordId = dao.getMaxHistoryRecordId();
         dao.addHistoryFromTransaction(objectId.toString(), objectType, entityHistories, context);
@@ -119,7 +133,7 @@ public abstract class AuditedCollectionDaoBase<T extends Entity> implements Audi
         return results;
     }
 
-    protected List<EntityHistory<T>> convertToHistory(List<T> entities, Map<UUID, Long> recordIds, ChangeType changeType) {
+    protected List<EntityHistory<T>> convertToHistory(Collection<T> entities, Map<UUID, Long> recordIds, ChangeType changeType) {
         List<EntityHistory<T>> histories = new ArrayList<EntityHistory<T>>();
 
         for (T entity : entities) {

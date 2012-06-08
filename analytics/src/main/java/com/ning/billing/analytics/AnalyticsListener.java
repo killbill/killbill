@@ -40,7 +40,7 @@ public class AnalyticsListener {
     @Subscribe
     public void handleSubscriptionTransitionChange(final SubscriptionEvent event) throws AccountApiException, EntitlementUserApiException {
         switch (event.getTransitionType()) {
-            // A susbcription enters either through migration or as newly created subscription
+            // A subscription enters either through migration or as newly created subscription
             case MIGRATE_ENTITLEMENT:
             case CREATE:
                 bstRecorder.subscriptionCreated(event);

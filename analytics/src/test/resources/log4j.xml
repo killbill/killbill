@@ -14,7 +14,8 @@
   ~ License for the specific language governing permissions and limitations
   ~ under the License.
   -->
-<!DOCTYPE log4j:configuration SYSTEM "http://logging.apache.org/log4j/1.2/apidocs/org/apache/log4j/xml/doc-files/log4j.dtd">
+<!DOCTYPE log4j:configuration SYSTEM
+        "http://logging.apache.org/log4j/1.2/apidocs/org/apache/log4j/xml/doc-files/log4j.dtd">
 <log4j:configuration debug="false"
                      xmlns:log4j='http://jakarta.apache.org/log4j/'>
     <appender name="CONSOLE" class="org.apache.log4j.ConsoleAppender">

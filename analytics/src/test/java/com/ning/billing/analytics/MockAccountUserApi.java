@@ -19,35 +19,32 @@ package com.ning.billing.analytics;
 import java.util.List;
 import java.util.UUID;
 
-import com.ning.billing.account.api.AccountEmail;
-import com.ning.billing.util.tag.TagDefinition;
 import org.apache.commons.lang.NotImplementedException;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
+import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.account.api.MigrationAccountData;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.customfield.CustomField;
+import com.ning.billing.util.tag.TagDefinition;
 
-public class MockAccountUserApi implements AccountUserApi
-{
+public class MockAccountUserApi implements AccountUserApi {
     private final AccountData account;
     private final UUID id;
 
-    public MockAccountUserApi(final String accountKey, final Currency currency)
-    {
+    public MockAccountUserApi(final String accountKey, final Currency currency) {
         this.id = UUID.randomUUID();
         account = new MockAccount(id, accountKey, currency);
     }
 
     @Override
     public Account createAccount(final AccountData data, final List<CustomField> fields,
-                                 final List<TagDefinition> tagDefinitions, final CallContext context)
-    {
+                                 final List<TagDefinition> tagDefinitions, final CallContext context) {
         throw new UnsupportedOperationException();
     }
 
@@ -57,8 +54,7 @@ public class MockAccountUserApi implements AccountUserApi
     }
 
     @Override
-    public Account getAccountByKey(final String key)
-    {
+    public Account getAccountByKey(final String key) {
         throw new UnsupportedOperationException();
     }
 
@@ -68,8 +64,7 @@ public class MockAccountUserApi implements AccountUserApi
     }
 
     @Override
-    public List<Account> getAccounts()
-    {
+    public List<Account> getAccounts() {
         throw new UnsupportedOperationException();
     }
 
@@ -89,17 +84,17 @@ public class MockAccountUserApi implements AccountUserApi
     }
 
     @Override
-	public Account migrateAccount(MigrationAccountData data,
-			List<CustomField> fields, List<TagDefinition> tagDefinitions, final CallContext context)
-			throws AccountApiException {
-		throw new UnsupportedOperationException();
-	}
+    public Account migrateAccount(MigrationAccountData data,
+                                  List<CustomField> fields, List<TagDefinition> tagDefinitions, final CallContext context)
+            throws AccountApiException {
+        throw new UnsupportedOperationException();
+    }
 
-	@Override
-	public void updateAccount(String key, AccountData accountData, final CallContext context)
-			throws AccountApiException {
-		throw new UnsupportedOperationException();
-	}
+    @Override
+    public void updateAccount(String key, AccountData accountData, final CallContext context)
+            throws AccountApiException {
+        throw new UnsupportedOperationException();
+    }
 
     @Override
     public void updateAccount(UUID accountId, AccountData accountData, CallContext context)

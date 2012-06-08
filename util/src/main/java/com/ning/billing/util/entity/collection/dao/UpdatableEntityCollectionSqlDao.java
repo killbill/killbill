@@ -16,6 +16,17 @@
 
 package com.ning.billing.util.entity.collection.dao;
 
+import java.util.Collection;
+import java.util.List;
+
+import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.BindBean;
+import org.skife.jdbi.v2.sqlobject.SqlBatch;
+import org.skife.jdbi.v2.sqlobject.SqlQuery;
+import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
+import org.skife.jdbi.v2.sqlobject.mixins.CloseMe;
+import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
+
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextBinder;
 import com.ning.billing.util.dao.AuditSqlDao;
@@ -25,15 +36,6 @@ import com.ning.billing.util.dao.Mapper;
 import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.dao.ObjectTypeBinder;
 import com.ning.billing.util.entity.Entity;
-import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.BindBean;
-import org.skife.jdbi.v2.sqlobject.SqlBatch;
-import org.skife.jdbi.v2.sqlobject.SqlQuery;
-import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
-import org.skife.jdbi.v2.sqlobject.mixins.CloseMe;
-import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
-
-import java.util.List;
 
 public interface UpdatableEntityCollectionSqlDao<T extends Entity> extends EntityCollectionSqlDao<T>,
         CollectionHistorySqlDao<T>,
@@ -41,7 +43,7 @@ public interface UpdatableEntityCollectionSqlDao<T extends Entity> extends Entit
     @SqlBatch(transactional=false)
     public void updateFromTransaction(@Bind("objectId") final String objectId,
                                       @ObjectTypeBinder final ObjectType objectType,
-                                      @BindBean final List<T> entities,
+                                      @BindBean final Collection<T> entities,
                                       @CallContextBinder final CallContext context);
 
     @SqlQuery

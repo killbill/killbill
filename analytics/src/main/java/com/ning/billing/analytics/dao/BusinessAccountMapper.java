@@ -16,15 +16,6 @@
 
 package com.ning.billing.analytics.dao;
 
-import com.google.common.base.Splitter;
-import com.google.common.collect.Iterables;
-import com.ning.billing.analytics.BusinessAccount;
-import com.ning.billing.util.tag.Tag;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.skife.jdbi.v2.StatementContext;
-import org.skife.jdbi.v2.tweak.ResultSetMapper;
-
 import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -32,13 +23,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class BusinessAccountMapper implements ResultSetMapper<BusinessAccount>
-{
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.skife.jdbi.v2.StatementContext;
+import org.skife.jdbi.v2.tweak.ResultSetMapper;
+
+import com.google.common.base.Splitter;
+import com.google.common.collect.Iterables;
+import com.ning.billing.analytics.BusinessAccount;
+import com.ning.billing.util.tag.Tag;
+
+public class BusinessAccountMapper implements ResultSetMapper<BusinessAccount> {
     private final Splitter splitter = Splitter.on(";").trimResults().omitEmptyStrings();
 
     @Override
-    public BusinessAccount map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException
-    {
+    public BusinessAccount map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
         final List<String> tagNames = new ArrayList<String>();
         Iterables.addAll(tagNames, splitter.split(r.getString(5)));
 
@@ -46,22 +45,34 @@ public class BusinessAccountMapper implements ResultSetMapper<BusinessAccount>
         for (final String tagName : tagNames) {
             tags.add(new Tag() {
                 private final UUID id = UUID.randomUUID();
-                @Override public String getTagDefinitionName() {return tagName;}
-                @Override public UUID getId() {return id;}
-                @Override public String toString() {return tagName;}
+
+                @Override
+                public String getTagDefinitionName() {
+                    return tagName;
+                }
+
+                @Override
+                public UUID getId() {
+                    return id;
+                }
+
+                @Override
+                public String toString() {
+                    return tagName;
+                }
             });
         }
 
         final BusinessAccount account = new BusinessAccount(
-            r.getString(1),
-            BigDecimal.valueOf(r.getDouble(4)),
-            tags,
-            new DateTime(r.getLong(6), DateTimeZone.UTC),
-            BigDecimal.valueOf(r.getDouble(7)),
-            r.getString(8),
-            r.getString(9),
-            r.getString(10),
-            r.getString(11)
+                r.getString(1),
+                BigDecimal.valueOf(r.getDouble(4)),
+                tags,
+                new DateTime(r.getLong(6), DateTimeZone.UTC),
+                BigDecimal.valueOf(r.getDouble(7)),
+                r.getString(8),
+                r.getString(9),
+                r.getString(10),
+                r.getString(11)
         );
         account.setCreatedDt(new DateTime(r.getLong(2), DateTimeZone.UTC));
         account.setUpdatedDt(new DateTime(r.getLong(3), DateTimeZone.UTC));

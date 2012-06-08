@@ -16,10 +16,10 @@
 
 package com.ning.billing.jaxrs.json;
 
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
-import java.util.List;
 
 public class ChargebackCollectionJson {
     private final String accountId;
@@ -38,5 +38,33 @@ public class ChargebackCollectionJson {
 
     public List<ChargebackJson> getChargebacks() {
         return chargebacks;
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        final ChargebackCollectionJson that = (ChargebackCollectionJson) o;
+
+        if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
+            return false;
+        }
+        if (chargebacks != null ? !chargebacks.equals(that.chargebacks) : that.chargebacks != null) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = accountId != null ? accountId.hashCode() : 0;
+        result = 31 * result + (chargebacks != null ? chargebacks.hashCode() : 0);
+        return result;
     }
 }

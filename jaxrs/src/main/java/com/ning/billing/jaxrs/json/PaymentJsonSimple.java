@@ -26,7 +26,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ning.billing.util.clock.DefaultClock;
 
 public class PaymentJsonSimple {
-
     private final BigDecimal paidAmount;
 
     private final BigDecimal amount;
@@ -61,16 +60,16 @@ public class PaymentJsonSimple {
     }
 
     @JsonCreator
-    public PaymentJsonSimple(@JsonProperty("amount") BigDecimal amount,
-            @JsonProperty("paidAmount") BigDecimal paidAmount,
-            @JsonProperty("invoiceId") UUID invoiceId,
-            @JsonProperty("paymentId") UUID paymentId,
-            @JsonProperty("requestedDate") DateTime requestedDate,
-            @JsonProperty("effectiveDate") DateTime effectiveDate,
-            @JsonProperty("retryCount") Integer retryCount,
-            @JsonProperty("currency") String currency,
-            @JsonProperty("status") String status,
-            @JsonProperty("accountId") UUID accountId) {
+    public PaymentJsonSimple(@JsonProperty("amount") final BigDecimal amount,
+                             @JsonProperty("paidAmount") final BigDecimal paidAmount,
+                             @JsonProperty("invoiceId") final UUID invoiceId,
+                             @JsonProperty("paymentId") final UUID paymentId,
+                             @JsonProperty("requestedDate") final DateTime requestedDate,
+                             @JsonProperty("effectiveDate") final DateTime effectiveDate,
+                             @JsonProperty("retryCount") final Integer retryCount,
+                             @JsonProperty("currency") final String currency,
+                             @JsonProperty("status") final String status,
+                             @JsonProperty("accountId") final UUID accountId) {
         super();
         this.amount = amount;
         this.paidAmount = paidAmount;
@@ -122,5 +121,65 @@ public class PaymentJsonSimple {
 
     public UUID getAccountId() {
         return accountId;
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        final PaymentJsonSimple that = (PaymentJsonSimple) o;
+
+        if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
+            return false;
+        }
+        if (amount != null ? !amount.equals(that.amount) : that.amount != null) {
+            return false;
+        }
+        if (currency != null ? !currency.equals(that.currency) : that.currency != null) {
+            return false;
+        }
+        if (effectiveDate != null ? !effectiveDate.equals(that.effectiveDate) : that.effectiveDate != null) {
+            return false;
+        }
+        if (invoiceId != null ? !invoiceId.equals(that.invoiceId) : that.invoiceId != null) {
+            return false;
+        }
+        if (paidAmount != null ? !paidAmount.equals(that.paidAmount) : that.paidAmount != null) {
+            return false;
+        }
+        if (paymentId != null ? !paymentId.equals(that.paymentId) : that.paymentId != null) {
+            return false;
+        }
+        if (requestedDate != null ? !requestedDate.equals(that.requestedDate) : that.requestedDate != null) {
+            return false;
+        }
+        if (retryCount != null ? !retryCount.equals(that.retryCount) : that.retryCount != null) {
+            return false;
+        }
+        if (status != null ? !status.equals(that.status) : that.status != null) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = paidAmount != null ? paidAmount.hashCode() : 0;
+        result = 31 * result + (amount != null ? amount.hashCode() : 0);
+        result = 31 * result + (invoiceId != null ? invoiceId.hashCode() : 0);
+        result = 31 * result + (paymentId != null ? paymentId.hashCode() : 0);
+        result = 31 * result + (requestedDate != null ? requestedDate.hashCode() : 0);
+        result = 31 * result + (effectiveDate != null ? effectiveDate.hashCode() : 0);
+        result = 31 * result + (retryCount != null ? retryCount.hashCode() : 0);
+        result = 31 * result + (currency != null ? currency.hashCode() : 0);
+        result = 31 * result + (status != null ? status.hashCode() : 0);
+        result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
+        return result;
     }
 }

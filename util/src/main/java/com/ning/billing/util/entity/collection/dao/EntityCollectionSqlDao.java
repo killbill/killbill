@@ -16,13 +16,10 @@
 
 package com.ning.billing.util.entity.collection.dao;
 
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallContextBinder;
-import com.ning.billing.util.dao.Mapper;
-import com.ning.billing.util.dao.ObjectType;
-import com.ning.billing.util.dao.ObjectTypeBinder;
-import com.ning.billing.util.dao.RecordIdMapper;
-import com.ning.billing.util.entity.Entity;
+import java.util.Collection;
+import java.util.List;
+import java.util.UUID;
+
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlBatch;
@@ -30,8 +27,13 @@ import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 
-import java.util.List;
-import java.util.UUID;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallContextBinder;
+import com.ning.billing.util.dao.Mapper;
+import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.util.dao.ObjectTypeBinder;
+import com.ning.billing.util.dao.RecordIdMapper;
+import com.ning.billing.util.entity.Entity;
 
 /**
  * provides consistent semantics for entity collections
@@ -42,13 +44,13 @@ public interface EntityCollectionSqlDao<T extends Entity> {
     @SqlBatch(transactional=false)
     public void insertFromTransaction(@Bind("objectId") final String objectId,
                                       @ObjectTypeBinder final ObjectType objectType,
-                                      @BindBean final List<T> entities,
+                                      @BindBean final Collection<T> entities,
                                       @CallContextBinder final CallContext context);
 
     @SqlBatch(transactional=false)
     public void deleteFromTransaction(@Bind("objectId") final String objectId,
                                       @ObjectTypeBinder final ObjectType objectType,
-                                      @BindBean final List<T> entities,
+                                      @BindBean final Collection<T> entities,
                                       @CallContextBinder final CallContext context);
 
     @SqlQuery

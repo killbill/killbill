@@ -16,21 +16,23 @@
 
 package com.ning.billing.util.customfield.dao;
 
+import java.util.Collection;
 import java.util.List;
 
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallContextBinder;
-import com.ning.billing.util.dao.EntityHistory;
-import com.ning.billing.util.dao.ObjectType;
-import com.ning.billing.util.dao.ObjectTypeBinder;
-import com.ning.billing.util.entity.collection.dao.UpdatableEntityCollectionSqlDao;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlBatch;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
+
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallContextBinder;
 import com.ning.billing.util.customfield.CustomField;
+import com.ning.billing.util.dao.EntityHistory;
+import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.util.dao.ObjectTypeBinder;
+import com.ning.billing.util.entity.collection.dao.UpdatableEntityCollectionSqlDao;
 
 @ExternalizedSqlViaStringTemplate3
 @RegisterMapper(CustomFieldMapper.class)
@@ -40,21 +42,21 @@ public interface CustomFieldSqlDao extends UpdatableEntityCollectionSqlDao<Custo
     @SqlBatch(transactional=false)
     public void insertFromTransaction(@Bind("objectId") final String objectId,
                                       @ObjectTypeBinder final ObjectType objectType,
-                                      @CustomFieldBinder final List<CustomField> entities,
+                                      @CustomFieldBinder final Collection<CustomField> entities,
                                       @CallContextBinder final CallContext context);
 
     @Override
     @SqlBatch(transactional=false)
     public void updateFromTransaction(@Bind("objectId") final String objectId,
                                       @ObjectTypeBinder final ObjectType objectType,
-                                      @CustomFieldBinder final List<CustomField> entities,
+                                      @CustomFieldBinder final Collection<CustomField> entities,
                                       @CallContextBinder final CallContext context);
 
     @Override
     @SqlBatch(transactional=false)
     public void deleteFromTransaction(@Bind("objectId") final String objectId,
                                       @ObjectTypeBinder final ObjectType objectType,
-                                      @CustomFieldBinder final List<CustomField> entities,
+                                      @CustomFieldBinder final Collection<CustomField> entities,
                                       @CallContextBinder final CallContext context);
 
     @Override

@@ -18,8 +18,6 @@ package com.ning.billing.jaxrs.resources;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
-
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -38,8 +36,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import com.ning.billing.util.api.CustomFieldUserApi;
-import com.ning.billing.util.dao.ObjectType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,7 +65,9 @@ import com.ning.billing.jaxrs.util.TagHelper;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.PaymentAttempt;
+import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.api.TagUserApi;
+import com.ning.billing.util.dao.ObjectType;
 
 @Singleton
 @Path(JaxrsResource.ACCOUNTS_PATH)
@@ -91,7 +89,7 @@ public class AccountResource extends JaxRsResourceBase {
     @Inject
     public AccountResource(final JaxrsUriBuilder uriBuilder,
             final AccountUserApi accountApi,
-            final EntitlementUserApi entitlementApi, 
+            final EntitlementUserApi entitlementApi,
             final InvoiceUserApi invoiceApi,
             final PaymentApi paymentApi,
             final EntitlementTimelineApi timelineApi,
@@ -119,9 +117,9 @@ public class AccountResource extends JaxRsResourceBase {
             AccountJson json = new AccountJson(account);
             return Response.status(Status.OK).entity(json).build();
         } catch (AccountApiException e) {
-            return Response.status(Status.NO_CONTENT).build();            
+            return Response.status(Status.NO_CONTENT).build();
         }
-        
+
     }
 
     @GET
@@ -145,7 +143,7 @@ public class AccountResource extends JaxRsResourceBase {
         }
     }
 
-    
+
     @GET
     @Produces(APPLICATION_JSON)
     public Response getAccountByKey(@QueryParam(QUERY_EXTERNAL_KEY) String externalKey) {
@@ -164,7 +162,7 @@ public class AccountResource extends JaxRsResourceBase {
         }
     }
 
-    
+
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
@@ -202,7 +200,7 @@ public class AccountResource extends JaxRsResourceBase {
             return getAccount(accountId);
         } catch (AccountApiException e) {
         	if (e.getCode() == ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID.getCode()) {
-        		return Response.status(Status.NO_CONTENT).build();        		
+        		return Response.status(Status.NO_CONTENT).build();
         	} else {
         		log.info(String.format("Failed to update account %s with %s", accountId, json), e);
         		return Response.status(Status.BAD_REQUEST).build();
@@ -234,11 +232,11 @@ public class AccountResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     public Response getAccountTimeline(@PathParam("accountId") String accountId) {
         try {
-            
+
             Account account = accountApi.getAccountById(UUID.fromString(accountId));
-           
+
             List<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId());
-            List<PaymentAttempt> payments = new LinkedList<PaymentAttempt>();            
+            List<PaymentAttempt> payments = new LinkedList<PaymentAttempt>();
             if (invoices.size() > 0) {
                 for (Invoice cur : invoices) {
                     payments.addAll(paymentApi.getPaymentAttemptsForInvoiceId(cur.getId()));
@@ -262,7 +260,7 @@ public class AccountResource extends JaxRsResourceBase {
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         }
     }
-    
+
     @GET
     @Path(CUSTOM_FIELD_URI)
     @Produces(APPLICATION_JSON)
@@ -282,7 +280,7 @@ public class AccountResource extends JaxRsResourceBase {
         return super.createCustomFields(UUID.fromString(id), customFields,
                 context.createContext(createdBy, reason, comment));
     }
-    
+
     @DELETE
     @Path(CUSTOM_FIELD_URI)
     @Consumes(APPLICATION_JSON)
@@ -305,7 +303,6 @@ public class AccountResource extends JaxRsResourceBase {
 
     @POST
     @Path(TAG_URI)
-    @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response createTags(@PathParam(ID_PARAM_NAME) final String id,
             @QueryParam(QUERY_TAGS) final String tagList,

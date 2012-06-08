@@ -25,14 +25,12 @@ import com.ning.billing.account.api.MutableAccountData;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.junction.api.BlockingState;
 
-public class MockAccount implements Account
-{
+public class MockAccount implements Account {
     private final UUID id;
     private final String accountKey;
     private final Currency currency;
 
-    public MockAccount(final UUID id, final String accountKey, final Currency currency)
-    {
+    public MockAccount(final UUID id, final String accountKey, final Currency currency) {
         this.id = id;
         this.accountKey = accountKey;
         this.currency = currency;
@@ -44,14 +42,12 @@ public class MockAccount implements Account
     }
 
     @Override
-    public String getEmail()
-    {
+    public String getEmail() {
         return "test@test.com";
     }
 
     @Override
-    public String getPhone()
-    {
+    public String getPhone() {
         return "408-555-6665";
     }
 
@@ -66,8 +62,7 @@ public class MockAccount implements Account
     }
 
     @Override
-    public String getExternalKey()
-    {
+    public String getExternalKey() {
         return accountKey;
     }
 
@@ -77,14 +72,12 @@ public class MockAccount implements Account
     }
 
     @Override
-    public int getBillCycleDay()
-    {
+    public int getBillCycleDay() {
         return 12;
     }
 
     @Override
-    public Currency getCurrency()
-    {
+    public Currency getCurrency() {
         return currency;
     }
 
@@ -139,8 +132,7 @@ public class MockAccount implements Account
     }
 
     @Override
-    public UUID getId()
-    {
+    public UUID getId() {
         return id;
     }
 

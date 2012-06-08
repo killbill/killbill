@@ -16,15 +16,6 @@
 
 package com.ning.billing.analytics.dao;
 
-import com.google.common.base.Joiner;
-import com.ning.billing.analytics.BusinessAccount;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.skife.jdbi.v2.SQLStatement;
-import org.skife.jdbi.v2.sqlobject.Binder;
-import org.skife.jdbi.v2.sqlobject.BinderFactory;
-import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
-
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -32,27 +23,31 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.sql.Types;
 
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.skife.jdbi.v2.SQLStatement;
+import org.skife.jdbi.v2.sqlobject.Binder;
+import org.skife.jdbi.v2.sqlobject.BinderFactory;
+import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
+
+import com.google.common.base.Joiner;
+import com.ning.billing.analytics.BusinessAccount;
+
 @BindingAnnotation(BusinessAccountBinder.BacBinderFactory.class)
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.PARAMETER})
-public @interface BusinessAccountBinder
-{
-    public static class BacBinderFactory implements BinderFactory
-    {
+public @interface BusinessAccountBinder {
+    public static class BacBinderFactory implements BinderFactory {
         private final Joiner joiner = Joiner.on(";").skipNulls();
 
-        public Binder build(final Annotation annotation)
-        {
-            return new Binder<BusinessAccountBinder, BusinessAccount>()
-            {
-                public void bind(final SQLStatement q, final BusinessAccountBinder bind, final BusinessAccount account)
-                {
+        public Binder build(final Annotation annotation) {
+            return new Binder<BusinessAccountBinder, BusinessAccount>() {
+                public void bind(final SQLStatement q, final BusinessAccountBinder bind, final BusinessAccount account) {
                     final DateTime dateTimeNow = new DateTime(DateTimeZone.UTC);
 
                     if (account.getCreatedDt() != null) {
                         q.bind("created_date", account.getCreatedDt().getMillis());
-                    }
-                    else {
+                    } else {
                         q.bind("created_date", dateTimeNow.getMillis());
                     }
                     q.bind("updated_date", dateTimeNow.getMillis());
@@ -62,8 +57,7 @@ public @interface BusinessAccountBinder
                     q.bind("tags", joiner.join(account.getTags()));
                     if (account.getLastInvoiceDate() != null) {
                         q.bind("last_invoice_date", account.getLastInvoiceDate().getMillis());
-                    }
-                    else {
+                    } else {
                         q.bindNull("last_invoice_date", Types.BIGINT);
                     }
                     q.bind("total_invoice_balance", account.getRoundedTotalInvoiceBalance());

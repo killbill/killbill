@@ -15,24 +15,23 @@
  */
 package com.ning.billing.jaxrs.json;
 
+import javax.annotation.Nullable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
-import org.joda.time.DateTime;
-
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline;
 import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline.ExistingEvent;
 import com.ning.billing.entitlement.api.user.Subscription;
-
 import com.ning.billing.util.clock.DefaultClock;
 
 public class SubscriptionJsonWithEvents extends SubscriptionJsonSimple {
-    
     @JsonView(BundleTimelineViews.ReadTimeline.class)
     private final List<SubscriptionReadEventJson> events;
 
@@ -42,9 +41,7 @@ public class SubscriptionJsonWithEvents extends SubscriptionJsonSimple {
     @JsonView(BundleTimelineViews.WriteTimeline.class)
     private final List<SubscriptionNewEventJson> newEvents;
 
-
     public static class SubscriptionReadEventJson extends SubscriptionBaseEventJson {
-
         @JsonView(BundleTimelineViews.Timeline.class)
         private final String eventId;
 
@@ -56,16 +53,16 @@ public class SubscriptionJsonWithEvents extends SubscriptionJsonSimple {
             this.eventId = null;
             this.effectiveDate = null;
         }
- 
+
         @JsonCreator
-        public SubscriptionReadEventJson(@JsonProperty("eventId") String eventId,
-                @JsonProperty("billingPeriod") String billingPeriod,
-                @JsonProperty("requestedDt") DateTime requestedDate,
-                @JsonProperty("effectiveDt") DateTime effectiveDate,
-                @JsonProperty("product") String product,
-                @JsonProperty("priceList") String priceList,
-                @JsonProperty("eventType") String eventType,
-                @JsonProperty("phase") String phase) {
+        public SubscriptionReadEventJson(@JsonProperty("eventId") final String eventId,
+                                         @JsonProperty("billingPeriod") final String billingPeriod,
+                                         @JsonProperty("requestedDt") final DateTime requestedDate,
+                                         @JsonProperty("effectiveDt") final DateTime effectiveDate,
+                                         @JsonProperty("product") final String product,
+                                         @JsonProperty("priceList") final String priceList,
+                                         @JsonProperty("eventType") final String eventType,
+                                         @JsonProperty("phase") final String phase) {
             super(billingPeriod, requestedDate, product, priceList, eventType, phase);
             this.eventId = eventId;
             this.effectiveDate = effectiveDate;
@@ -91,32 +88,58 @@ public class SubscriptionJsonWithEvents extends SubscriptionJsonSimple {
                     + getClass() + ", hashCode()=" + hashCode()
                     + ", toString()=" + super.toString() + "]";
         }
+
+        @Override
+        public boolean equals(final Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+
+            final SubscriptionReadEventJson that = (SubscriptionReadEventJson) o;
+
+            if (effectiveDate != null ? !effectiveDate.equals(that.effectiveDate) : that.effectiveDate != null) {
+                return false;
+            }
+            if (eventId != null ? !eventId.equals(that.eventId) : that.eventId != null) {
+                return false;
+            }
+
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = eventId != null ? eventId.hashCode() : 0;
+            result = 31 * result + (effectiveDate != null ? effectiveDate.hashCode() : 0);
+            return result;
+        }
     }
 
     public static class SubscriptionDeletedEventJson extends SubscriptionReadEventJson {
         @JsonCreator
-        public SubscriptionDeletedEventJson(@JsonProperty("event_id") String eventId,
-                @JsonProperty("billing_period") String billingPeriod,
-                @JsonProperty("requested_date") DateTime requestedDate,
-                @JsonProperty("effective_date") DateTime effectiveDate,
-                @JsonProperty("product") String product,
-                @JsonProperty("price_list") String priceList,
-                @JsonProperty("event_type") String eventType,
-                @JsonProperty("phase") String phase) {
+        public SubscriptionDeletedEventJson(@JsonProperty("event_id") final String eventId,
+                                            @JsonProperty("billing_period") final String billingPeriod,
+                                            @JsonProperty("requested_date") final DateTime requestedDate,
+                                            @JsonProperty("effective_date") final DateTime effectiveDate,
+                                            @JsonProperty("product") final String product,
+                                            @JsonProperty("price_list") final String priceList,
+                                            @JsonProperty("event_type") final String eventType,
+                                            @JsonProperty("phase") final String phase) {
             super(eventId, billingPeriod, requestedDate, effectiveDate, product, priceList, eventType, phase);
-
         }
     }
 
-
     public static class SubscriptionNewEventJson extends SubscriptionBaseEventJson {
         @JsonCreator
-        public SubscriptionNewEventJson(@JsonProperty("billing_period") String billingPeriod,
-                @JsonProperty("requested_date") DateTime requestedDate,
-                @JsonProperty("product") String product,
-                @JsonProperty("price_list") String priceList,
-                @JsonProperty("event_type") String eventType,
-                @JsonProperty("phase") String phase) {
+        public SubscriptionNewEventJson(@JsonProperty("billing_period") final String billingPeriod,
+                                        @JsonProperty("requested_date") final DateTime requestedDate,
+                                        @JsonProperty("product") final String product,
+                                        @JsonProperty("price_list") final String priceList,
+                                        @JsonProperty("event_type") final String eventType,
+                                        @JsonProperty("phase") final String phase) {
             super(billingPeriod, requestedDate, product, priceList, eventType, phase);
         }
 
@@ -134,7 +157,6 @@ public class SubscriptionJsonWithEvents extends SubscriptionJsonSimple {
     }
 
     public static class SubscriptionBaseEventJson {
-
         @JsonView(BundleTimelineViews.Timeline.class)
         private final String billingPeriod;
 
@@ -162,14 +184,14 @@ public class SubscriptionJsonWithEvents extends SubscriptionJsonSimple {
             this.eventType = null;
             this.phase = null;
         }
-        
+
         @JsonCreator
-        public SubscriptionBaseEventJson(@JsonProperty("billing_period") String billingPeriod,
-                @JsonProperty("requested_date") DateTime requestedDate,
-                @JsonProperty("product") String product,
-                @JsonProperty("price_list") String priceList,
-                @JsonProperty("event_type") String eventType,
-                @JsonProperty("phase") String phase) {
+        public SubscriptionBaseEventJson(@JsonProperty("billing_period") final String billingPeriod,
+                                         @JsonProperty("requested_date") final DateTime requestedDate,
+                                         @JsonProperty("product") final String product,
+                                         @JsonProperty("price_list") final String priceList,
+                                         @JsonProperty("event_type") final String eventType,
+                                         @JsonProperty("phase") final String phase) {
             super();
             this.billingPeriod = billingPeriod;
             this.requestedDate = DefaultClock.toUTCDateTime(requestedDate);
@@ -202,45 +224,84 @@ public class SubscriptionJsonWithEvents extends SubscriptionJsonSimple {
         public String getPhase() {
             return phase;
         }
+
+        @Override
+        public boolean equals(final Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+
+            final SubscriptionBaseEventJson that = (SubscriptionBaseEventJson) o;
+
+            if (billingPeriod != null ? !billingPeriod.equals(that.billingPeriod) : that.billingPeriod != null) {
+                return false;
+            }
+            if (eventType != null ? !eventType.equals(that.eventType) : that.eventType != null) {
+                return false;
+            }
+            if (phase != null ? !phase.equals(that.phase) : that.phase != null) {
+                return false;
+            }
+            if (priceList != null ? !priceList.equals(that.priceList) : that.priceList != null) {
+                return false;
+            }
+            if (product != null ? !product.equals(that.product) : that.product != null) {
+                return false;
+            }
+            if (requestedDate != null ? !requestedDate.equals(that.requestedDate) : that.requestedDate != null) {
+                return false;
+            }
+
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = billingPeriod != null ? billingPeriod.hashCode() : 0;
+            result = 31 * result + (requestedDate != null ? requestedDate.hashCode() : 0);
+            result = 31 * result + (product != null ? product.hashCode() : 0);
+            result = 31 * result + (priceList != null ? priceList.hashCode() : 0);
+            result = 31 * result + (eventType != null ? eventType.hashCode() : 0);
+            result = 31 * result + (phase != null ? phase.hashCode() : 0);
+            return result;
+        }
     }
 
-
     @JsonCreator
-    public SubscriptionJsonWithEvents(@JsonProperty("subscription_id") String subscriptionId,
-            @JsonProperty("events") List<SubscriptionReadEventJson> events,
-            @JsonProperty("new_events") List<SubscriptionNewEventJson> newEvents,
-            @JsonProperty("deleted_events") List<SubscriptionDeletedEventJson> deletedEvents) {
+    public SubscriptionJsonWithEvents(@JsonProperty("subscription_id") @Nullable final String subscriptionId,
+                                      @JsonProperty("events") @Nullable final List<SubscriptionReadEventJson> events,
+                                      @JsonProperty("new_events") @Nullable final List<SubscriptionNewEventJson> newEvents,
+                                      @JsonProperty("deleted_events") @Nullable final List<SubscriptionDeletedEventJson> deletedEvents) {
         super(subscriptionId);
         this.events = events;
         this.deletedEvents = deletedEvents;
         this.newEvents = newEvents;
     }
-    
+
     public SubscriptionJsonWithEvents() {
-        super(null);        
-        this.events = null;
-        this.deletedEvents = null;
-        this.newEvents = null;
+        this((String) null, null, null, null);
     }
-    
+
     public SubscriptionJsonWithEvents(final Subscription data,
-            List<SubscriptionReadEventJson> events, List<SubscriptionDeletedEventJson> deletedEvents, List<SubscriptionNewEventJson> newEvents) {
-        super(data.getId().toString());
-        this.events = events;
-        this.deletedEvents = deletedEvents;
-        this.newEvents = newEvents;
+                                      @Nullable final List<SubscriptionReadEventJson> events,
+                                      @Nullable final List<SubscriptionNewEventJson> newEvents,
+                                      @Nullable final List<SubscriptionDeletedEventJson> deletedEvents) {
+        this(data.getId().toString(), events, newEvents, deletedEvents);
     }
-    
-    public SubscriptionJsonWithEvents(final UUID bundleId, final SubscriptionTimeline input) {
+
+    public SubscriptionJsonWithEvents(@Nullable final UUID bundleId, final SubscriptionTimeline input) {
         super(input.getId().toString());
         this.events = new LinkedList<SubscriptionReadEventJson>();
-        for (ExistingEvent cur : input.getExistingEvents()) {
-            PlanPhaseSpecifier spec = cur.getPlanPhaseSpecifier();
+        for (final ExistingEvent cur : input.getExistingEvents()) {
+            final PlanPhaseSpecifier spec = cur.getPlanPhaseSpecifier();
             this.events.add(new SubscriptionReadEventJson(cur.getEventId().toString(), spec.getBillingPeriod().toString(), cur.getRequestedDate(), cur.getEffectiveDate(),
-                    spec.getProductName(), spec.getPriceListName(), cur.getSubscriptionTransitionType().toString(), spec.getPhaseType().toString()));
+                                                          spec.getProductName(), spec.getPriceListName(), cur.getSubscriptionTransitionType().toString(), spec.getPhaseType().toString()));
         }
-        this.deletedEvents = null;
         this.newEvents = null;
+        this.deletedEvents = null;
     }
 
     public String getSubscriptionId() {
@@ -257,5 +318,37 @@ public class SubscriptionJsonWithEvents extends SubscriptionJsonSimple {
 
     public List<SubscriptionDeletedEventJson> getDeletedEvents() {
         return deletedEvents;
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        final SubscriptionJsonWithEvents that = (SubscriptionJsonWithEvents) o;
+
+        if (deletedEvents != null ? !deletedEvents.equals(that.deletedEvents) : that.deletedEvents != null) {
+            return false;
+        }
+        if (events != null ? !events.equals(that.events) : that.events != null) {
+            return false;
+        }
+        if (newEvents != null ? !newEvents.equals(that.newEvents) : that.newEvents != null) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = events != null ? events.hashCode() : 0;
+        result = 31 * result + (deletedEvents != null ? deletedEvents.hashCode() : 0);
+        result = 31 * result + (newEvents != null ? newEvents.hashCode() : 0);
+        return result;
     }
 }

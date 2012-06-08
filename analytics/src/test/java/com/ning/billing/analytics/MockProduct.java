@@ -19,51 +19,44 @@ package com.ning.billing.analytics;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
 
-public class MockProduct implements Product
-{
+public class MockProduct implements Product {
     private final String name;
     private final String type;
     private final ProductCategory category;
 
-    public MockProduct(final String name, final String type, final ProductCategory category)
-    {
+    public MockProduct(final String name, final String type, final ProductCategory category) {
         this.name = name;
         this.type = type;
         this.category = category;
     }
 
     @Override
-    public String getCatalogName()
-    {
+    public String getCatalogName() {
         return type;
     }
 
     @Override
-    public String getName()
-    {
+    public String getName() {
         return name;
     }
 
     @Override
-    public ProductCategory getCategory()
-    {
+    public ProductCategory getCategory() {
         return category;
     }
 
     @Override
-    public Product[] getAvailable()
-    {
+    public Product[] getAvailable() {
         return null;
     }
 
     @Override
-    public Product[] getIncluded()
-    {
+    public Product[] getIncluded() {
         return null;
     }
 
-	@Override
-	public boolean isRetired() {
-		return false;
-	}
+    @Override
+    public boolean isRetired() {
+        return false;
+    }
 }

@@ -16,29 +16,27 @@
 
 package com.ning.billing.analytics;
 
-import com.ning.billing.mock.BrainDeadProxyFactory;
-import com.ning.billing.util.tag.Tag;
+import java.math.BigDecimal;
+import java.util.Collections;
+
 import org.joda.time.DateTime;
+import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.math.BigDecimal;
-import java.util.Collections;
+import com.ning.billing.util.tag.Tag;
 
-public class TestBusinessAccount
-{
+public class TestBusinessAccount extends AnalyticsTestSuite {
     private BusinessAccount account;
 
-    @BeforeMethod(alwaysRun = true)
-    public void setUp() throws Exception
-    {
+    @BeforeMethod(groups = "fast")
+    public void setUp() throws Exception {
         account = new BusinessAccount("pierre", BigDecimal.ONE, Collections.singletonList(getMockTag("batch15")), new DateTime(), BigDecimal.TEN, "ERROR_NOT_ENOUGH_FUNDS", "CreditCard", "Visa", "");
     }
 
-    @Test(groups = "fast", enabled = false)
-    public void testEquals() throws Exception
-    {
+    @Test(groups = "fast")
+    public void testEquals() throws Exception {
         Assert.assertSame(account, account);
         Assert.assertEquals(account, account);
         Assert.assertTrue(account.equals(account));
@@ -47,10 +45,10 @@ public class TestBusinessAccount
         Assert.assertFalse(account.equals(otherAccount));
     }
 
-    private Tag getMockTag(String tagDefinitionName) {
-        Tag tag = BrainDeadProxyFactory.createBrainDeadProxyFor(Tag.class);
-        BrainDeadProxyFactory.ZombieControl zombie = (BrainDeadProxyFactory.ZombieControl) tag;
-        zombie.addResult("getTagDefinitionName", tagDefinitionName);
+    private Tag getMockTag(final String tagDefinitionName) {
+        final Tag tag = Mockito.mock(Tag.class);
+        Mockito.when(tag.getTagDefinitionName()).thenReturn(tagDefinitionName);
+        Mockito.when(tag.toString()).thenReturn(tagDefinitionName);
         return tag;
     }
 }

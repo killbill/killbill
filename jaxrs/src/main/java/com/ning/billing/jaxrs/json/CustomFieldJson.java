@@ -15,30 +15,28 @@
  */
 package com.ning.billing.jaxrs.json;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
+import javax.annotation.Nullable;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ning.billing.util.customfield.CustomField;
 
 public class CustomFieldJson {
-
     private final String name;
     private final String value;
-    
+
     public CustomFieldJson() {
-        this.name = null;
-        this.value = null;
+        this(null, null);
     }
-    
+
     @JsonCreator
-    public CustomFieldJson(@JsonProperty("name") String name,
-                           @JsonProperty("value") String value) {
-        super();
+    public CustomFieldJson(@JsonProperty("name") @Nullable final String name,
+                           @JsonProperty("value") @Nullable final String value) {
         this.name = name;
         this.value = value;
     }
-    
-    public CustomFieldJson(CustomField input) {
+
+    public CustomFieldJson(final CustomField input) {
         this.name = input.getName();
         this.value = input.getValue();
     }
@@ -49,5 +47,33 @@ public class CustomFieldJson {
 
     public String getValue() {
         return value;
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        final CustomFieldJson that = (CustomFieldJson) o;
+
+        if (name != null ? !name.equals(that.name) : that.name != null) {
+            return false;
+        }
+        if (value != null ? !value.equals(that.value) : that.value != null) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = name != null ? name.hashCode() : 0;
+        result = 31 * result + (value != null ? value.hashCode() : 0);
+        return result;
     }
 }

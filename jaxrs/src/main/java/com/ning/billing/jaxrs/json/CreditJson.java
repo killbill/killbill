@@ -51,7 +51,7 @@ public class CreditJson {
         this.accountId = accountId;
     }
 
-    public CreditJson(InvoiceItem credit) {
+    public CreditJson(final InvoiceItem credit) {
         this.creditAmount = credit.getAmount();
         this.invoiceId = credit.getInvoiceId();
         this.invoiceNumber = null;
@@ -87,5 +87,49 @@ public class CreditJson {
 
     public UUID getAccountId() {
         return accountId;
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        final CreditJson that = (CreditJson) o;
+
+        if (creditAmount != null ? !creditAmount.equals(that.creditAmount) : that.creditAmount != null) {
+            return false;
+        }
+        if (effectiveDate != null ? !effectiveDate.equals(that.effectiveDate) : that.effectiveDate != null) {
+            return false;
+        }
+        if (invoiceId != null ? !invoiceId.equals(that.invoiceId) : that.invoiceId != null) {
+            return false;
+        }
+        if (invoiceNumber != null ? !invoiceNumber.equals(that.invoiceNumber) : that.invoiceNumber != null) {
+            return false;
+        }
+        if (reason != null ? !reason.equals(that.reason) : that.reason != null) {
+            return false;
+        }
+        if (requestedDate != null ? !requestedDate.equals(that.requestedDate) : that.requestedDate != null) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = creditAmount != null ? creditAmount.hashCode() : 0;
+        result = 31 * result + (invoiceId != null ? invoiceId.hashCode() : 0);
+        result = 31 * result + (invoiceNumber != null ? invoiceNumber.hashCode() : 0);
+        result = 31 * result + (requestedDate != null ? requestedDate.hashCode() : 0);
+        result = 31 * result + (effectiveDate != null ? effectiveDate.hashCode() : 0);
+        result = 31 * result + (reason != null ? reason.hashCode() : 0);
+        return result;
     }
 }

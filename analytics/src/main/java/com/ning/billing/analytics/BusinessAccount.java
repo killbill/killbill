@@ -16,16 +16,16 @@
 
 package com.ning.billing.analytics;
 
-import com.google.common.base.Joiner;
-import com.ning.billing.analytics.utils.Rounder;
-import com.ning.billing.util.tag.Tag;
-import org.joda.time.DateTime;
-
 import java.math.BigDecimal;
 import java.util.List;
 
-public class BusinessAccount
-{
+import org.joda.time.DateTime;
+
+import com.google.common.base.Joiner;
+import com.ning.billing.analytics.utils.Rounder;
+import com.ning.billing.util.tag.Tag;
+
+public class BusinessAccount {
     // Populated by the database
     private DateTime createdDt = null;
     private DateTime updatedDt = null;
@@ -40,8 +40,7 @@ public class BusinessAccount
     private String creditCardType;
     private String billingAddressCountry;
 
-    public BusinessAccount(final String key, final BigDecimal balance, final List<Tag> tags, final DateTime lastInvoiceDate, final BigDecimal totalInvoiceBalance, final String lastPaymentStatus, final String paymentMethod, final String creditCardType, final String billingAddressCountry)
-    {
+    public BusinessAccount(final String key, final BigDecimal balance, final List<Tag> tags, final DateTime lastInvoiceDate, final BigDecimal totalInvoiceBalance, final String lastPaymentStatus, final String paymentMethod, final String creditCardType, final String billingAddressCountry) {
         this.key = key;
         this.balance = balance;
         this.billingAddressCountry = billingAddressCountry;
@@ -53,124 +52,100 @@ public class BusinessAccount
         this.totalInvoiceBalance = totalInvoiceBalance;
     }
 
-    public String getKey()
-    {
+    public String getKey() {
         return key;
     }
 
-    public BigDecimal getBalance()
-    {
+    public BigDecimal getBalance() {
         return balance;
     }
 
-    public Double getRoundedBalance()
-    {
+    public Double getRoundedBalance() {
         return Rounder.round(balance);
     }
 
-    public void setBalance(final BigDecimal balance)
-    {
+    public void setBalance(final BigDecimal balance) {
         this.balance = balance;
     }
 
-    public String getBillingAddressCountry()
-    {
+    public String getBillingAddressCountry() {
         return billingAddressCountry;
     }
 
-    public void setBillingAddressCountry(final String billingAddressCountry)
-    {
+    public void setBillingAddressCountry(final String billingAddressCountry) {
         this.billingAddressCountry = billingAddressCountry;
     }
 
-    public DateTime getCreatedDt()
-    {
+    public DateTime getCreatedDt() {
         return createdDt;
     }
 
-    public void setCreatedDt(final DateTime createdDt)
-    {
+    public void setCreatedDt(final DateTime createdDt) {
         this.createdDt = createdDt;
     }
 
-    public String getCreditCardType()
-    {
+    public String getCreditCardType() {
         return creditCardType;
     }
 
-    public void setCreditCardType(final String creditCardType)
-    {
+    public void setCreditCardType(final String creditCardType) {
         this.creditCardType = creditCardType;
     }
 
-    public DateTime getLastInvoiceDate()
-    {
+    public DateTime getLastInvoiceDate() {
         return lastInvoiceDate;
     }
 
-    public void setLastInvoiceDate(final DateTime lastInvoiceDate)
-    {
+    public void setLastInvoiceDate(final DateTime lastInvoiceDate) {
         this.lastInvoiceDate = lastInvoiceDate;
     }
 
-    public String getLastPaymentStatus()
-    {
+    public String getLastPaymentStatus() {
         return lastPaymentStatus;
     }
 
-    public void setLastPaymentStatus(final String lastPaymentStatus)
-    {
+    public void setLastPaymentStatus(final String lastPaymentStatus) {
         this.lastPaymentStatus = lastPaymentStatus;
     }
 
-    public String getPaymentMethod()
-    {
+    public String getPaymentMethod() {
         return paymentMethod;
     }
 
-    public void setPaymentMethod(final String paymentMethod)
-    {
+    public void setPaymentMethod(final String paymentMethod) {
         this.paymentMethod = paymentMethod;
     }
 
-    public List<Tag> getTags()
-    {
+    public List<Tag> getTags() {
         return tags;
     }
 
-    public void setTags(final List<Tag> tags)
-    {
+    public void setTags(final List<Tag> tags) {
         this.tags = tags;
     }
 
-    public BigDecimal getTotalInvoiceBalance()
-    {
+    public BigDecimal getTotalInvoiceBalance() {
         return totalInvoiceBalance;
     }
 
-    public Double getRoundedTotalInvoiceBalance()
-    {
+    public Double getRoundedTotalInvoiceBalance() {
         return Rounder.round(totalInvoiceBalance);
     }
 
-    public void setTotalInvoiceBalance(final BigDecimal totalInvoiceBalance)
-    {
+    public void setTotalInvoiceBalance(final BigDecimal totalInvoiceBalance) {
         this.totalInvoiceBalance = totalInvoiceBalance;
     }
 
-    public DateTime getUpdatedDt()
-    {
+    public DateTime getUpdatedDt() {
         return updatedDt;
     }
 
-    public void setUpdatedDt(final DateTime updatedDt)
-    {
+    public void setUpdatedDt(final DateTime updatedDt) {
         this.updatedDt = updatedDt;
     }
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         final StringBuilder sb = new StringBuilder();
         sb.append("BusinessAccount");
         sb.append("{balance=").append(balance);
@@ -191,8 +166,7 @@ public class BusinessAccount
     }
 
     @Override
-    public boolean equals(final Object o)
-    {
+    public boolean equals(final Object o) {
         if (this == o) {
             return true;
         }
@@ -240,8 +214,7 @@ public class BusinessAccount
     }
 
     @Override
-    public int hashCode()
-    {
+    public int hashCode() {
         int result = createdDt != null ? createdDt.hashCode() : 0;
         result = 31 * result + (updatedDt != null ? updatedDt.hashCode() : 0);
         result = 31 * result + (key != null ? key.hashCode() : 0);

@@ -23,7 +23,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
 
 public class BundleTimelineJson {
-
     @JsonView(BundleTimelineViews.Timeline.class)
     private final String viewId;
 
@@ -37,19 +36,19 @@ public class BundleTimelineJson {
     private final List<InvoiceJsonSimple> invoices;
 
     @JsonView(BundleTimelineViews.WriteTimeline.class)
-    private final String resonForChange;
+    private final String reasonForChange;
 
     @JsonCreator
-    public BundleTimelineJson(@JsonProperty("viewId") String viewId,
-            @JsonProperty("bundle") BundleJsonWithSubscriptions bundle,
-            @JsonProperty("payments") List<PaymentJsonSimple> payments,
-            @JsonProperty("invoices") List<InvoiceJsonSimple> invoices,
-            @JsonProperty("reasonForChange") String reason) {
+    public BundleTimelineJson(@JsonProperty("viewId") final String viewId,
+                              @JsonProperty("bundle") final BundleJsonWithSubscriptions bundle,
+                              @JsonProperty("payments") final List<PaymentJsonSimple> payments,
+                              @JsonProperty("invoices") final List<InvoiceJsonSimple> invoices,
+                              @JsonProperty("reasonForChange") final String reason) {
         this.viewId = viewId;
         this.bundle = bundle;
         this.payments = payments;
         this.invoices = invoices;
-        this.resonForChange = reason;
+        this.reasonForChange = reason;
     }
 
     public String getViewId() {
@@ -68,7 +67,47 @@ public class BundleTimelineJson {
         return invoices;
     }
 
-    public String getResonForChange() {
-        return resonForChange;
+    public String getReasonForChange() {
+        return reasonForChange;
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        final BundleTimelineJson that = (BundleTimelineJson) o;
+
+        if (bundle != null ? !bundle.equals(that.bundle) : that.bundle != null) {
+            return false;
+        }
+        if (invoices != null ? !invoices.equals(that.invoices) : that.invoices != null) {
+            return false;
+        }
+        if (payments != null ? !payments.equals(that.payments) : that.payments != null) {
+            return false;
+        }
+        if (reasonForChange != null ? !reasonForChange.equals(that.reasonForChange) : that.reasonForChange != null) {
+            return false;
+        }
+        if (viewId != null ? !viewId.equals(that.viewId) : that.viewId != null) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = viewId != null ? viewId.hashCode() : 0;
+        result = 31 * result + (bundle != null ? bundle.hashCode() : 0);
+        result = 31 * result + (payments != null ? payments.hashCode() : 0);
+        result = 31 * result + (invoices != null ? invoices.hashCode() : 0);
+        result = 31 * result + (reasonForChange != null ? reasonForChange.hashCode() : 0);
+        return result;
     }
 }
