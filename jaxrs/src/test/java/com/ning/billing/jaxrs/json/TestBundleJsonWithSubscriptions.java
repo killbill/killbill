@@ -49,7 +49,7 @@ public class TestBundleJsonWithSubscriptions {
     @Test(groups = "fast")
     public void testJson() throws Exception {
         final SubscriptionTimeline.ExistingEvent event = Mockito.mock(SubscriptionTimeline.ExistingEvent.class);
-        final DateTime effectiveDate = new DateTime(DateTimeZone.UTC);
+        final DateTime effectiveDate = DefaultClock.toUTCDateTime(new DateTime(DateTimeZone.UTC));
         final UUID eventId = UUID.randomUUID();
         final PlanPhaseSpecifier planPhaseSpecifier = new PlanPhaseSpecifier(UUID.randomUUID().toString(), ProductCategory.BASE,
                                                                              BillingPeriod.NO_BILLING_PERIOD, UUID.randomUUID().toString(),
@@ -81,7 +81,7 @@ public class TestBundleJsonWithSubscriptions {
                 "\"eventType\":\"" + event.getSubscriptionTransitionType().toString() + "\"," +
                 "\"phase\":\"" + event.getPlanPhaseSpecifier().getPhaseType() + "\"," +
                 "\"requestedDate\":null," +
-                "\"effectiveDate\":\"" + DefaultClock.toUTCDateTime(event.getEffectiveDate()).toDateTimeISO().toString() + "\"}]," +
+                "\"effectiveDate\":\"" + event.getEffectiveDate().toDateTimeISO().toString() + "\"}]," +
                 "\"subscriptionId\":\"" + subscriptionTimeline.getId().toString() + "\",\"deletedEvents\":null,\"newEvents\":null}]}");
 
         final BundleJsonWithSubscriptions fromJson = mapper.readValue(asJson, BundleJsonWithSubscriptions.class);
@@ -91,7 +91,7 @@ public class TestBundleJsonWithSubscriptions {
     @Test(groups = "fast")
     public void testFromBundleTimeline() throws Exception {
         final SubscriptionTimeline.ExistingEvent event = Mockito.mock(SubscriptionTimeline.ExistingEvent.class);
-        final DateTime effectiveDate = new DateTime(DateTimeZone.UTC);
+        final DateTime effectiveDate = DefaultClock.toUTCDateTime(new DateTime(DateTimeZone.UTC));
         final UUID eventId = UUID.randomUUID();
         final PlanPhaseSpecifier planPhaseSpecifier = new PlanPhaseSpecifier(UUID.randomUUID().toString(), ProductCategory.BASE,
                                                                              BillingPeriod.NO_BILLING_PERIOD, UUID.randomUUID().toString(),
