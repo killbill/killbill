@@ -143,7 +143,8 @@ public class PaymentJsonSimple {
         if (currency != null ? !currency.equals(that.currency) : that.currency != null) {
             return false;
         }
-        if (effectiveDate != null ? !effectiveDate.equals(that.effectiveDate) : that.effectiveDate != null) {
+        if (!((effectiveDate == null && that.effectiveDate == null) ||
+                (effectiveDate != null && that.effectiveDate != null && effectiveDate.compareTo(that.effectiveDate) == 0))) {
             return false;
         }
         if (invoiceId != null ? !invoiceId.equals(that.invoiceId) : that.invoiceId != null) {
@@ -155,7 +156,8 @@ public class PaymentJsonSimple {
         if (paymentId != null ? !paymentId.equals(that.paymentId) : that.paymentId != null) {
             return false;
         }
-        if (requestedDate != null ? !requestedDate.equals(that.requestedDate) : that.requestedDate != null) {
+        if (!((requestedDate == null && that.requestedDate == null) ||
+                (requestedDate != null && that.requestedDate != null && requestedDate.compareTo(that.requestedDate) == 0))) {
             return false;
         }
         if (retryCount != null ? !retryCount.equals(that.retryCount) : that.retryCount != null) {

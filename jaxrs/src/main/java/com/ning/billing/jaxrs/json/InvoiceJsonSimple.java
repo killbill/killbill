@@ -118,7 +118,8 @@ public class InvoiceJsonSimple {
         if (credit != null ? !credit.equals(that.credit) : that.credit != null) {
             return false;
         }
-        if (invoiceDate != null ? !invoiceDate.equals(that.invoiceDate) : that.invoiceDate != null) {
+        if (!((invoiceDate == null && that.invoiceDate == null) ||
+                (invoiceDate != null && that.invoiceDate != null && invoiceDate.compareTo(that.invoiceDate) == 0))) {
             return false;
         }
         if (invoiceId != null ? !invoiceId.equals(that.invoiceId) : that.invoiceId != null) {
@@ -127,7 +128,8 @@ public class InvoiceJsonSimple {
         if (invoiceNumber != null ? !invoiceNumber.equals(that.invoiceNumber) : that.invoiceNumber != null) {
             return false;
         }
-        if (targetDate != null ? !targetDate.equals(that.targetDate) : that.targetDate != null) {
+        if (!((targetDate == null && that.targetDate == null) ||
+                (targetDate != null && that.targetDate != null && targetDate.compareTo(that.targetDate) == 0))) {
             return false;
         }
 

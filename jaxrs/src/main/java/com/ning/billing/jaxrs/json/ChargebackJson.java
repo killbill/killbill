@@ -87,7 +87,8 @@ public class ChargebackJson {
         if (chargebackAmount != null ? !chargebackAmount.equals(that.chargebackAmount) : that.chargebackAmount != null) {
             return false;
         }
-        if (effectiveDate != null ? !effectiveDate.equals(that.effectiveDate) : that.effectiveDate != null) {
+        if (!((effectiveDate == null && that.effectiveDate == null) ||
+                (effectiveDate != null && that.effectiveDate != null && effectiveDate.compareTo(that.effectiveDate) == 0))) {
             return false;
         }
         if (paymentId != null ? !paymentId.equals(that.paymentId) : that.paymentId != null) {
@@ -96,7 +97,8 @@ public class ChargebackJson {
         if (reason != null ? !reason.equals(that.reason) : that.reason != null) {
             return false;
         }
-        if (requestedDate != null ? !requestedDate.equals(that.requestedDate) : that.requestedDate != null) {
+        if (!((requestedDate == null && that.requestedDate == null) ||
+                (requestedDate != null && that.requestedDate != null && requestedDate.compareTo(that.requestedDate) == 0))) {
             return false;
         }
 

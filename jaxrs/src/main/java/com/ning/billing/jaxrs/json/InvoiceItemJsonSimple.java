@@ -138,7 +138,8 @@ public class InvoiceItemJsonSimple {
         if (description != null ? !description.equals(that.description) : that.description != null) {
             return false;
         }
-        if (endDate != null ? !endDate.equals(that.endDate) : that.endDate != null) {
+        if (!((endDate == null && that.endDate == null) ||
+                (endDate != null && that.endDate != null && endDate.compareTo(that.endDate) == 0))) {
             return false;
         }
         if (invoiceId != null ? !invoiceId.equals(that.invoiceId) : that.invoiceId != null) {
@@ -150,7 +151,8 @@ public class InvoiceItemJsonSimple {
         if (planName != null ? !planName.equals(that.planName) : that.planName != null) {
             return false;
         }
-        if (startDate != null ? !startDate.equals(that.startDate) : that.startDate != null) {
+        if (!((startDate == null && that.startDate == null) ||
+                (startDate != null && that.startDate != null && startDate.compareTo(that.startDate) == 0))) {
             return false;
         }
         if (subscriptionId != null ? !subscriptionId.equals(that.subscriptionId) : that.subscriptionId != null) {
