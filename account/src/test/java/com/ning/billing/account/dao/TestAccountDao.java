@@ -67,7 +67,7 @@ public class TestAccountDao extends AccountDaoTestBase {
         int firstNameLength = firstName.length();
 
         return new DefaultAccount(UUID.randomUUID(), thisKey, thisEmail, name, firstNameLength, Currency.USD,
-                billCycleDay, null, timeZone, locale,
+                billCycleDay, UUID.randomUUID(), timeZone, locale,
                 null, null, null, null, null, null, null, // add null address fields
                 phone, false, false);
     }

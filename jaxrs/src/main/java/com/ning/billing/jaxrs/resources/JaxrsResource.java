@@ -58,6 +58,12 @@ public interface JaxrsResource {
 	public static final String QUERY_TAGS = "tag_list";    
 	public static final String QUERY_CUSTOM_FIELDS = "custom_field_list";    	
 	
+	public static final String QUERY_PAYMENT_METHOD_PLUGIN_INFO = "plugin_info";
+	public static final String QUERY_PAYMENT_METHOD_IS_DEFAULT = "is_default";
+	
+	
+	
+	
 	public static final String ACCOUNTS = "accounts";  
     public static final String ACCOUNTS_PATH = PREFIX + "/" + ACCOUNTS;
 
@@ -76,6 +82,8 @@ public interface JaxrsResource {
     public static final String PAYMENTS = "payments";     
     public static final String PAYMENTS_PATH = PREFIX + "/" + PAYMENTS;    
 
+    public static final String PAYMENT_METHODS = "paymentMethods";     
+    
     public static final String CREDITS = "credits";
     public static final String CREDITS_PATH = PREFIX + "/" + CREDITS;
 

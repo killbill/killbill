@@ -133,7 +133,7 @@ public class TestInvoice extends TestJaxrsBase  {
 
         clock.setTime(new DateTime(2012, 4, 25, 0, 3, 42, 0));
 
-        AccountJson accountJson = createAccount("nohup", "shtergyhwF", "nohup@yahoo.com");
+        AccountJson accountJson = createAccountWithDefaultPaymentMethod("nohup", "shtergyhwF", "nohup@yahoo.com");
         assertNotNull(accountJson);
 
         BundleJsonNoSubscriptions bundleJson = createBundle(accountJson.getAccountId(), "391193");
@@ -185,7 +185,7 @@ public class TestInvoice extends TestJaxrsBase  {
 
         clock.setTime(new DateTime(2012, 4, 25, 0, 3, 42, 0));
 
-        AccountJson accountJson = createAccount("nohup", "shtergyhwF", "nohup@yahoo.com");
+        AccountJson accountJson = createAccountWithDefaultPaymentMethod("nohup", "shtergyhwF", "nohup@yahoo.com");
         assertNotNull(accountJson);
 
 

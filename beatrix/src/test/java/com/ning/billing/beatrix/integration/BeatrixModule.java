@@ -30,6 +30,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.ning.billing.account.api.AccountService;
+import com.ning.billing.account.glue.AccountModule;
 import com.ning.billing.account.glue.AccountModuleWithMocks;
 import com.ning.billing.beatrix.integration.overdue.IntegrationTestOverdueModule;
 import com.ning.billing.beatrix.lifecycle.DefaultLifecycle;
@@ -64,6 +65,7 @@ import com.ning.billing.util.glue.TagStoreModule;
 
 
 public class BeatrixModule extends AbstractModule {
+    
     public static final String PLUGIN_NAME = "yoyo";
 
     @Override
@@ -94,17 +96,17 @@ public class BeatrixModule extends AbstractModule {
         install(new NotificationQueueModule());
         install(new TagStoreModule());
         install(new CustomFieldModule());
-        install(new AccountModuleWithMocks());
+        install(new AccountModule());
         install(new CatalogModule());
         install(new DefaultEntitlementModule());
         install(new DefaultInvoiceModule());
         install(new TemplateModule());
-        install(new PaymentMockModule());
+        install(new PaymentPluginMockModule());
         install(new DefaultJunctionModule());
         install(new IntegrationTestOverdueModule());
     }
 
-    private static final class PaymentMockModule extends PaymentModule {
+    private static final class PaymentPluginMockModule extends PaymentModule {
         @Override
         protected void installPaymentProviderPlugins(PaymentConfig config) {
             install(new MockPaymentProviderPluginModule(PLUGIN_NAME));

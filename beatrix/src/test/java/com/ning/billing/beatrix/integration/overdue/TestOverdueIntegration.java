@@ -27,6 +27,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.Callable;
 
 import org.joda.time.DateTime;
@@ -55,6 +56,7 @@ import com.ning.billing.overdue.OverdueUserApi;
 import com.ning.billing.overdue.config.OverdueConfig;
 import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
 import com.ning.billing.payment.api.PaymentApi;
+import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.payment.provider.MockPaymentProviderPlugin;
 import com.ning.billing.util.callcontext.DefaultCallContext;
 import com.ning.billing.util.clock.ClockMock;
@@ -142,8 +144,28 @@ public class TestOverdueIntegration extends TestIntegrationBase {
         config = XMLLoader.getObjectFromStreamNoValidation(is,  OverdueConfig.class);
         overdueWrapperFactory.setOverdueConfig(config);
         
-        account = accountUserApi.createAccount(getAccountData(25), null, null, context);
+        account = createAccountWithPaymentMethod(getAccountData(25));
         assertNotNull(account);
+        
+        PaymentMethodPlugin info = new PaymentMethodPlugin() {
+            @Override
+            public boolean isDefaultPaymentMethod() {
+                return false;
+            }
+            @Override
+            public String getValueString(String key) {
+                return null;
+            }
+            @Override
+            public List<PaymentMethodKVInfo> getProperties() {
+                return null;
+            }
+            @Override
+            public String getExternalPaymentMethodId() {
+                return UUID.randomUUID().toString();
+            }
+        };
+        paymentApi.addPaymentMethod(BeatrixModule.PLUGIN_NAME, account, true, info, context);
 
         bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever", context);
 
@@ -167,7 +189,7 @@ public class TestOverdueIntegration extends TestIntegrationBase {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
         paymentPlugin.makeAllInvoicesFailWithError(true);
         
-        // set next invoice to fail and create network 
+        // set next invoice to fail and create subscription 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.INVOICE);
         SubscriptionData baseSubscription = subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(),
                 new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, context));
@@ -176,9 +198,6 @@ public class TestOverdueIntegration extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR);
         clock.addDays(30); // DAY 30 have to get out of trial before first payment
-        
-        // STEPH
-        //Thread.sleep(600000);
         
         assertTrue(busHandler.isCompleted(DELAY));
         

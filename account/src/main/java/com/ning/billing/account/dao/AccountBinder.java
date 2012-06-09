@@ -48,7 +48,7 @@ public @interface AccountBinder {
                     Currency currency = account.getCurrency();
                     q.bind("currency", (currency == null) ? null : currency.toString());
                     q.bind("billingCycleDay", account.getBillCycleDay());
-                    q.bind("paymentMethodId", account.getPaymentMethodId());
+                    q.bind("paymentMethodId", account.getPaymentMethodId() != null ? account.getPaymentMethodId().toString() : null);
                     DateTimeZone timeZone = account.getTimeZone();
                     q.bind("timeZone", (timeZone == null) ? null : timeZone.toString());
                     q.bind("locale", account.getLocale());

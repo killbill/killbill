@@ -40,6 +40,8 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
 import com.google.inject.Inject;
+import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.AccountService;
 import com.ning.billing.account.api.AccountUserApi;
@@ -60,6 +62,10 @@ import com.ning.billing.invoice.api.InvoiceService;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.invoice.model.InvoicingConfiguration;
 import com.ning.billing.junction.plumbing.api.BlockingSubscription;
+import com.ning.billing.payment.api.PaymentApi;
+import com.ning.billing.payment.api.PaymentApiException;
+import com.ning.billing.payment.api.PaymentMethodPlugin;
+import com.ning.billing.payment.api.PaymentMethodPlugin.PaymentMethodKVInfo;
 import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallOrigin;
@@ -117,6 +123,9 @@ public class TestIntegrationBase implements TestListenerStatus {
     @Inject
     protected InvoiceUserApi invoiceUserApi;
 
+    @Inject
+    protected PaymentApi paymentApi;
+    
     @Inject
     protected AccountUserApi accountUserApi;
 
@@ -251,6 +260,33 @@ public class TestIntegrationBase implements TestListenerStatus {
         return (SubscriptionData)((BlockingSubscription)sub).getDelegateSubscription();
     }
     
+    protected Account createAccountWithPaymentMethod(AccountData accountData) throws Exception {
+        Account account = accountUserApi.createAccount(accountData, null, null, context);
+        assertNotNull(account);
+        
+        PaymentMethodPlugin info = new PaymentMethodPlugin() {
+            @Override
+            public boolean isDefaultPaymentMethod() {
+                return false;
+            }
+            @Override
+            public String getValueString(String key) {
+                return null;
+            }
+            @Override
+            public List<PaymentMethodKVInfo> getProperties() {
+                return null;
+            }
+            @Override
+            public String getExternalPaymentMethodId() {
+                return UUID.randomUUID().toString();
+            }
+        };
+        paymentApi.addPaymentMethod(BeatrixModule.PLUGIN_NAME, account, true, info, context);
+        return accountUserApi.getAccountById(account.getId());
+    }
+
+    
     protected AccountData getAccountData(final int billingDay) {
 
         final String someRandomKey = RandomStringUtils.randomAlphanumeric(10);
@@ -296,7 +332,7 @@ public class TestIntegrationBase implements TestListenerStatus {
             }
             @Override
             public UUID getPaymentMethodId() {
-                return UUID.randomUUID();
+                return null;
             }
 
             @Override

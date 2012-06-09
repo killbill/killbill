@@ -20,6 +20,7 @@ import static org.testng.Assert.assertNotNull;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EventListener;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -49,6 +50,7 @@ import org.testng.annotations.BeforeSuite;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
+import com.google.common.collect.Lists;
 import com.google.inject.Module;
 import com.ning.billing.account.glue.AccountModule;
 import com.ning.billing.analytics.setup.AnalyticsModule;
@@ -65,6 +67,9 @@ import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
 import com.ning.billing.invoice.glue.DefaultInvoiceModule;
 import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.BundleJsonNoSubscriptions;
+import com.ning.billing.jaxrs.json.PaymentMethodJson;
+import com.ning.billing.jaxrs.json.PaymentMethodJson.PaymentMethodPluginDetailJson;
+import com.ning.billing.jaxrs.json.PaymentMethodJson.PaymentMethodProperties;
 import com.ning.billing.jaxrs.json.SubscriptionJsonNoEvents;
 import com.ning.billing.junction.glue.DefaultJunctionModule;
 import com.ning.billing.payment.glue.PaymentModule;
@@ -90,6 +95,7 @@ public class TestJaxrsBase {
 
     private final static String PLUGIN_NAME = "noop";
 
+    // STEPH
     protected static final int DEFAULT_HTTP_TIMEOUT_SEC =  500000; // 5;
 
     protected static final Map<String, String> DEFAULT_EMPTY_QUERY = new HashMap<String, String>();
@@ -307,7 +313,39 @@ public class TestJaxrsBase {
         }
     }
 
+    private PaymentMethodJson getPaymentJson(String accountId) {
+        
+        PaymentMethodProperties properties = new PaymentMethodProperties("whatever", "zero", false);
+        PaymentMethodPluginDetailJson info = new PaymentMethodPluginDetailJson(null, Collections.singletonList(properties));
+        return new PaymentMethodJson(null, accountId, true, PLUGIN_NAME, info);
+    }
+    
+    protected AccountJson createAccountWithDefaultPaymentMethod(String name, String key, String email) throws Exception {
+        
+        AccountJson input = createAccount(name, key, email);
+        
+        final String uri = JaxrsResource.ACCOUNTS_PATH + "/" + input.getAccountId() + "/" + JaxrsResource.PAYMENT_METHODS;
+        PaymentMethodJson paymentMethodJson = getPaymentJson(input.getAccountId());
+        String baseJson = mapper.writeValueAsString(paymentMethodJson);
+        Map<String, String> queryParams = new HashMap<String, String>();
+        queryParams.put(JaxrsResource.QUERY_PAYMENT_METHOD_IS_DEFAULT, "true");
+        
+        Response response = doPost(uri, baseJson, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
 
+        
+        
+        queryParams = new HashMap<String, String>();
+        queryParams.put(JaxrsResource.QUERY_EXTERNAL_KEY, input.getExternalKey());
+        response = doGet(JaxrsResource.ACCOUNTS_PATH, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+        baseJson = response.getResponseBody();
+        AccountJson objFromJson = mapper.readValue(baseJson, AccountJson.class);
+        Assert.assertNotNull(objFromJson);
+        Assert.assertNotNull(objFromJson.getPaymentMethodId());
+        return objFromJson;
+    }
+    
     protected AccountJson createAccount(String name, String key, String email) throws Exception {
         AccountJson input = getAccountJson(name, key, email);
         String baseJson = mapper.writeValueAsString(input);
@@ -471,7 +509,6 @@ public class TestJaxrsBase {
         int length = 4;
         int billCycleDay = 12;
         String currency = "USD";
-        String paymentProvider = "noop";
         String timeZone = "UTC";
         String address1 = "12 rue des ecoles";
         String address2 = "Poitier";
@@ -480,7 +517,7 @@ public class TestJaxrsBase {
         String country = "France";
         String phone = "81 53 26 56";
 
-        AccountJson accountJson = new AccountJson(accountId, name, length, externalKey, email, billCycleDay, currency, paymentProvider, timeZone, address1, address2, company, state, country, phone);
+        AccountJson accountJson = new AccountJson(accountId, name, length, externalKey, email, billCycleDay, currency, null, timeZone, address1, address2, company, state, country, phone);
         return accountJson;
     }
     

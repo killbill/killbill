@@ -30,8 +30,6 @@ import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.account.api.AccountData;
 import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
@@ -39,7 +37,6 @@ import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.invoice.api.Invoice;
@@ -94,6 +91,7 @@ public class TestIntegration extends TestIntegrationBase {
             testBasePlanCompleteWithBillingDayInFuture();
         }
     }
+    
 
     // STEPH set to disabled until test written properly and fixed
     @Test(groups = "slow", enabled = false)
@@ -104,7 +102,7 @@ public class TestIntegration extends TestIntegrationBase {
         DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
         
-        Account account = accountUserApi.createAccount(getAccountData(25), null, null, context);
+        Account account = createAccountWithPaymentMethod(getAccountData(25));
         assertNotNull(account);
 
         SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever", context);
@@ -154,11 +152,11 @@ public class TestIntegration extends TestIntegrationBase {
     }
    
     @Test(groups = {"slow"})
-    public void testRepairForInvoicing() throws AccountApiException, EntitlementUserApiException {
+    public void testRepairForInvoicing() throws Exception {
 
         log.info("Starting testRepairForInvoicing");
 
-        Account account = accountUserApi.createAccount(getAccountData(1), null, null, context);
+        Account account = createAccountWithPaymentMethod(getAccountData(1));
         UUID accountId = account.getId();
         assertNotNull(account);
 
@@ -194,7 +192,7 @@ public class TestIntegration extends TestIntegrationBase {
         int billingDay = 2;
 
         log.info("Beginning test with BCD of " + billingDay);
-        Account account = accountUserApi.createAccount(getAccountData(billingDay), null, null, context);
+        Account account = createAccountWithPaymentMethod(getAccountData(billingDay));
         UUID accountId = account.getId();
         assertNotNull(account);
 
@@ -263,11 +261,9 @@ public class TestIntegration extends TestIntegrationBase {
                                       boolean proRationExpected) throws Exception {
 
         log.info("Beginning test with BCD of " + billingDay);
-        AccountData accountData = getAccountData(billingDay);
-        Account account = accountUserApi.createAccount(accountData, null, null, context);
+        Account account = createAccountWithPaymentMethod(getAccountData(billingDay));
         UUID accountId = account.getId();
-        assertNotNull(account);
-
+        
         // set clock to the initial start date
         clock.setDeltaFromReality(initialCreationDate.getMillis() - clock.getUTCNow().getMillis());
         SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever", context);
@@ -283,9 +279,7 @@ public class TestIntegration extends TestIntegrationBase {
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
         SubscriptionData subscription = subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(),
                 new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, context));
-           
         assertNotNull(subscription);
-
         assertTrue(busHandler.isCompleted(DELAY));
 
         //
@@ -464,14 +458,14 @@ public class TestIntegration extends TestIntegrationBase {
 
 
     @Test(groups = "slow")
-    public void testForMultipleRecurringPhases() throws AccountApiException, EntitlementUserApiException, InterruptedException {
+    public void testForMultipleRecurringPhases() throws Exception {
 
         log.info("Starting testForMultipleRecurringPhases");
         
         DateTime initialCreationDate = new DateTime(2012, 2, 1, 0, 3, 42, 0);
         clock.setDeltaFromReality(initialCreationDate.getMillis() - clock.getUTCNow().getMillis());
 
-        Account account = accountUserApi.createAccount(getAccountData(2), null, null, context);
+        Account account = createAccountWithPaymentMethod(getAccountData(2));
         UUID accountId = account.getId();
 
         String productName = "Blowdart";

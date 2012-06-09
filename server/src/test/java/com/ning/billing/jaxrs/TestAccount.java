@@ -71,7 +71,7 @@ public class TestAccount extends TestJaxrsBase {
 		
 		// Update Account
 		AccountJson newInput = new AccountJson(objFromJson.getAccountId(),
-				"zozo", 4, objFromJson.getExternalKey(), "rr@google.com", 18, "EUR", "none", "UTC", "bl1", "bh2", "", "ca", "usa", "415-255-2991");
+				"zozo", 4, objFromJson.getExternalKey(), "rr@google.com", 18, "EUR", null, "UTC", "bl1", "bh2", "", "ca", "usa", "415-255-2991");
 		baseJson = mapper.writeValueAsString(newInput);
 		final String uri = JaxrsResource.ACCOUNTS_PATH + "/" + objFromJson.getAccountId();
 		response = doPut(uri, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
@@ -114,7 +114,7 @@ public class TestAccount extends TestJaxrsBase {
         clock.setTime(new DateTime(2012, 4, 25, 0, 3, 42, 0));
         
         
-	    AccountJson accountJson = createAccount("poney", "shdddqgfhwe", "poney@yahoo.com");
+	    AccountJson accountJson = createAccountWithDefaultPaymentMethod("poney", "shdddqgfhwe", "poney@yahoo.com");
 	    assertNotNull(accountJson);
 	    
 	    BundleJsonNoSubscriptions bundleJson = createBundle(accountJson.getAccountId(), "996599");
@@ -152,7 +152,7 @@ public class TestAccount extends TestJaxrsBase {
         clock.setTime(new DateTime(2012, 4, 25, 0, 3, 42, 0));
 
 
-        AccountJson accountJson = createAccount("ermenehildo", "shtyrgfhwe", "ermenehildo@yahoo.com");
+        AccountJson accountJson = createAccountWithDefaultPaymentMethod("ermenehildo", "shtyrgfhwe", "ermenehildo@yahoo.com");
         assertNotNull(accountJson);
 
         BundleJsonNoSubscriptions bundleJson = createBundle(accountJson.getAccountId(), "396199");
