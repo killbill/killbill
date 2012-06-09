@@ -378,7 +378,7 @@ public class TestJaxrsBase {
 
         baseJson = response.getResponseBody();
         SubscriptionJsonNoEvents objFromJson = mapper.readValue(baseJson, SubscriptionJsonNoEvents.class);
-        Assert.assertTrue(objFromJson.equalsNoId(input));
+        Assert.assertTrue(objFromJson.equalsNoSubscriptionIdNoStartDateNoCTD(input));
         return objFromJson;
     }
 
