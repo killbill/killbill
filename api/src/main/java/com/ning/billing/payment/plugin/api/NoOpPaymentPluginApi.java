@@ -1,4 +1,4 @@
-/*
+/* 
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -13,17 +13,15 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+package com.ning.billing.payment.plugin.api;
 
-package com.ning.billing.payment.provider;
+public interface NoOpPaymentPluginApi extends PaymentPluginApi {
 
-import com.google.inject.Inject;
-import com.ning.billing.payment.plugin.api.PaymentPluginApi;
-import com.ning.billing.util.clock.Clock;
-
-public class MockPaymentProviderPlugin extends DefaultNoOpPaymentProviderPlugin implements PaymentPluginApi {
+    public void clear();
     
-    @Inject
-    public MockPaymentProviderPlugin(Clock clock) {
-        super(clock);
-    }
+    public void makeNextPaymentFailWithError();
+    
+    public void makeNextPaymentFailWithException();
+
+    public void makeAllInvoicesFailWithError(boolean failure);
 }

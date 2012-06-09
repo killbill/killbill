@@ -18,27 +18,31 @@ package com.ning.billing.payment.provider;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import com.ning.billing.util.clock.Clock;
 
-public class NoOpPaymentProviderPluginProvider implements Provider<NoOpPaymentProviderPlugin> {
+public class NoOpPaymentProviderPluginProvider implements Provider<DefaultNoOpPaymentProviderPlugin> {
 
-    private PaymentProviderPluginRegistry registry;
     private final String instanceName;
-
+    
+    private Clock clock;
+    private PaymentProviderPluginRegistry registry;
+    
     public NoOpPaymentProviderPluginProvider(String instanceName) {
         this.instanceName = instanceName;
+
     }
 
     @Inject
-    public void setPaymentProviderPluginRegistry(PaymentProviderPluginRegistry registry) {
+    public void setPaymentProviderPluginRegistry(PaymentProviderPluginRegistry registry, Clock clock) {
+        this.clock = clock;
         this.registry = registry;
     }
 
     @Override
-    public NoOpPaymentProviderPlugin get() {
-        NoOpPaymentProviderPlugin plugin = new NoOpPaymentProviderPlugin();
+    public DefaultNoOpPaymentProviderPlugin get() {
+        DefaultNoOpPaymentProviderPlugin plugin = new DefaultNoOpPaymentProviderPlugin(clock);
 
         registry.register(plugin, instanceName);
         return plugin;
     }
-
 }

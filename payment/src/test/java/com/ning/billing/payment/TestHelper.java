@@ -31,12 +31,12 @@ import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
-import com.ning.billing.payment.api.DefaultPaymentMethodPlugin;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentMethod;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.glue.PaymentTestModuleWithMocks;
+import com.ning.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
 import com.ning.billing.util.callcontext.CallContext;
@@ -130,7 +130,7 @@ public class TestHelper {
         ((ZombieControl)accountUserApi).addResult("updateAccount", BrainDeadProxyFactory.ZOMBIE_VOID);        
         //updateAccount
 
-        PaymentMethodPlugin pm = new DefaultPaymentMethodPlugin(UUID.randomUUID().toString(), true, null);
+        PaymentMethodPlugin pm = new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), true, null);
         addTestPaymentMethod(account, pm);
         return account;
     }

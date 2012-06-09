@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.ning.billing.payment.plugin.api;
+package com.ning.billing.payment.provider;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -21,9 +21,10 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import com.ning.billing.payment.api.PaymentInfoEvent;
+import com.ning.billing.payment.plugin.api.PaymentInfoPlugin;
 import com.ning.billing.payment.plugin.api.PaymentInfoPlugin.PaymentPluginStatus;
 
-public class MockPaymentInfoPlugin implements PaymentInfoPlugin {
+public class DefaultNoOpPaymentInfoPlugin implements PaymentInfoPlugin {
     
     private final BigDecimal amount;
     private final DateTime effectiveDate;
@@ -32,7 +33,7 @@ public class MockPaymentInfoPlugin implements PaymentInfoPlugin {
     private final String error;
    
 
-    public MockPaymentInfoPlugin(BigDecimal amount, DateTime effectiveDate,
+    public DefaultNoOpPaymentInfoPlugin(BigDecimal amount, DateTime effectiveDate,
             DateTime createdDate, PaymentPluginStatus status, String error) {
         super();
         this.amount = amount;

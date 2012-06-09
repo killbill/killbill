@@ -13,24 +13,27 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.ning.billing.payment.api;
+package com.ning.billing.payment.provider;
 
 import java.util.List;
 import java.util.UUID;
 
-public class DefaultPaymentMethodPlugin implements PaymentMethodPlugin {
+import com.ning.billing.payment.api.PaymentMethodPlugin;
+import com.ning.billing.payment.api.PaymentMethodPlugin.PaymentMethodKVInfo;
+
+public class DefaultNoOpPaymentMethodPlugin implements PaymentMethodPlugin {
 
     private String externalId;
     private boolean isDefault;
     private List<PaymentMethodKVInfo> props;
     
-    public DefaultPaymentMethodPlugin(PaymentMethodPlugin src) {
+    public DefaultNoOpPaymentMethodPlugin(PaymentMethodPlugin src) {
         this.externalId = UUID.randomUUID().toString();
         this.isDefault = src.isDefaultPaymentMethod();
         this.props = src.getProperties();
     }
     
-    public DefaultPaymentMethodPlugin(String externalId, boolean isDefault,
+    public DefaultNoOpPaymentMethodPlugin(String externalId, boolean isDefault,
             List<PaymentMethodKVInfo> props) {
         super();
         this.externalId = externalId;

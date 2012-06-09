@@ -28,7 +28,7 @@ public class NoOpPaymentProviderPluginModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(NoOpPaymentProviderPlugin.class)
+        bind(DefaultNoOpPaymentProviderPlugin.class)
             .annotatedWith(Names.named(instanceName))
             .toProvider(new NoOpPaymentProviderPluginProvider(instanceName))
             .asEagerSingleton();
