@@ -16,12 +16,6 @@
 
 package com.ning.billing.jaxrs.resources;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
@@ -30,6 +24,9 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,6 +42,8 @@ import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentApiException;
+
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Singleton
 @Path(JaxrsResource.CHARGEBACKS_PATH)
@@ -70,10 +69,10 @@ public class ChargebackResource implements JaxrsResource {
     @GET
     @Path("/{chargebackId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
-    public Response getChargeback(@PathParam("chargebackId") String chargebackId) {
+    public Response getChargeback(@PathParam("chargebackId") final String chargebackId) {
         try {
-            InvoicePayment chargeback = invoicePaymentApi.getChargebackById(UUID.fromString(chargebackId));
-            ChargebackJson chargebackJson = new ChargebackJson(chargeback);
+            final InvoicePayment chargeback = invoicePaymentApi.getChargebackById(UUID.fromString(chargebackId));
+            final ChargebackJson chargebackJson = new ChargebackJson(chargeback);
 
             return Response.status(Response.Status.OK).entity(chargebackJson).build();
         } catch (InvoiceApiException e) {
@@ -86,19 +85,19 @@ public class ChargebackResource implements JaxrsResource {
     @GET
     @Path("/accounts/{accountId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
-    public Response getForAccount(@PathParam("accountId") String accountId) {
-        List<InvoicePayment> chargebacks = invoicePaymentApi.getChargebacksByAccountId(UUID.fromString(accountId));
-        List<ChargebackJson> chargebacksJson = convertToJson(chargebacks);
+    public Response getForAccount(@PathParam("accountId") final String accountId) {
+        final List<InvoicePayment> chargebacks = invoicePaymentApi.getChargebacksByAccountId(UUID.fromString(accountId));
+        final List<ChargebackJson> chargebacksJson = convertToJson(chargebacks);
 
-        ChargebackCollectionJson json = new ChargebackCollectionJson(accountId, chargebacksJson);
+        final ChargebackCollectionJson json = new ChargebackCollectionJson(accountId, chargebacksJson);
         return Response.status(Response.Status.OK).entity(json).build();
     }
 
     @GET
     @Path("/payments/{paymentId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
-    public Response getForPayment(@PathParam("paymentId") String paymentId) {
-        UUID paymentAttemptId = null;
+    public Response getForPayment(@PathParam("paymentId") final String paymentId) {
+        final UUID paymentAttemptId;
         try {
             paymentAttemptId = paymentApi.getPaymentAttemptIdFromPaymentId(UUID.fromString(paymentId));
         } catch (PaymentApiException e) {
@@ -107,13 +106,13 @@ public class ChargebackResource implements JaxrsResource {
             return Response.status(Response.Status.NO_CONTENT).build();
         }
 
-        List<InvoicePayment> chargebacks = invoicePaymentApi.getChargebacksByPaymentAttemptId(paymentAttemptId);
-        List<ChargebackJson> chargebacksJson = convertToJson(chargebacks);
+        final List<InvoicePayment> chargebacks = invoicePaymentApi.getChargebacksByPaymentAttemptId(paymentAttemptId);
+        final List<ChargebackJson> chargebacksJson = convertToJson(chargebacks);
 
         try {
-            String accountId = invoicePaymentApi.getAccountIdFromInvoicePaymentId(UUID.fromString(paymentId)).toString();
+            final String accountId = invoicePaymentApi.getAccountIdFromInvoicePaymentId(UUID.fromString(paymentId)).toString();
 
-            ChargebackCollectionJson json = new ChargebackCollectionJson(accountId, chargebacksJson);
+            final ChargebackCollectionJson json = new ChargebackCollectionJson(accountId, chargebacksJson);
             return Response.status(Response.Status.OK).entity(json).build();
         } catch (InvoiceApiException e) {
             final String error = String.format("Failed to locate account for payment id %s", paymentId);
@@ -142,9 +141,9 @@ public class ChargebackResource implements JaxrsResource {
         }
     }
 
-    private List<ChargebackJson> convertToJson(List<InvoicePayment> chargebacks) {
-        List<ChargebackJson> result = new ArrayList<ChargebackJson>();
-        for (InvoicePayment chargeback : chargebacks) {
+    private List<ChargebackJson> convertToJson(final List<InvoicePayment> chargebacks) {
+        final List<ChargebackJson> result = new ArrayList<ChargebackJson>();
+        for (final InvoicePayment chargeback : chargebacks) {
             result.add(new ChargebackJson(chargeback));
         }
 

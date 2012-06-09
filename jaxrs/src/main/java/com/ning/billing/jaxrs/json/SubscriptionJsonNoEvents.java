@@ -118,10 +118,17 @@ public class SubscriptionJsonNoEvents extends SubscriptionJsonSimple {
 
     @Override
     public boolean equals(final Object o) {
-        return equalsNoId(o) && super.equals(o);
+        if (equalsNoSubscriptionIdNoStartDateNoCTD(o) && super.equals(o)) {
+            final SubscriptionJsonNoEvents that = (SubscriptionJsonNoEvents) o;
+            return ((startDate == null && that.startDate == null) || (startDate != null && that.startDate != null && startDate.compareTo(that.startDate) == 0)) &&
+                    ((chargedThroughDate == null && that.chargedThroughDate == null) || (chargedThroughDate != null && that.chargedThroughDate != null &&
+                            chargedThroughDate.compareTo(that.chargedThroughDate) == 0));
+        } else {
+            return false;
+        }
     }
 
-    public boolean equalsNoId(final Object o) {
+    public boolean equalsNoSubscriptionIdNoStartDateNoCTD(final Object o) {
         if (this == o) {
             return true;
         }
@@ -137,9 +144,6 @@ public class SubscriptionJsonNoEvents extends SubscriptionJsonSimple {
         if (bundleId != null ? !bundleId.equals(that.bundleId) : that.bundleId != null) {
             return false;
         }
-        if (chargedThroughDate != null ? !chargedThroughDate.equals(that.chargedThroughDate) : that.chargedThroughDate != null) {
-            return false;
-        }
         if (priceList != null ? !priceList.equals(that.priceList) : that.priceList != null) {
             return false;
         }
@@ -147,9 +151,6 @@ public class SubscriptionJsonNoEvents extends SubscriptionJsonSimple {
             return false;
         }
         if (productName != null ? !productName.equals(that.productName) : that.productName != null) {
-            return false;
-        }
-        if (startDate != null ? !startDate.equals(that.startDate) : that.startDate != null) {
             return false;
         }
 

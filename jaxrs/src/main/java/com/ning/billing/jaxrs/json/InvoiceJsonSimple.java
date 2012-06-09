@@ -109,16 +109,20 @@ public class InvoiceJsonSimple {
         if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
             return false;
         }
-        if (amount != null ? !amount.equals(that.amount) : that.amount != null) {
+        if (!((amount == null && that.amount == null) ||
+                (amount != null && that.amount != null && amount.compareTo(that.amount) == 0))) {
             return false;
         }
-        if (balance != null ? !balance.equals(that.balance) : that.balance != null) {
+        if (!((balance == null && that.balance == null) ||
+                (balance != null && that.balance != null && balance.compareTo(that.balance) == 0))) {
             return false;
         }
-        if (credit != null ? !credit.equals(that.credit) : that.credit != null) {
+        if (!((credit == null && that.credit == null) ||
+                (credit != null && that.credit != null && credit.compareTo(that.credit) == 0))) {
             return false;
         }
-        if (invoiceDate != null ? !invoiceDate.equals(that.invoiceDate) : that.invoiceDate != null) {
+        if (!((invoiceDate == null && that.invoiceDate == null) ||
+                (invoiceDate != null && that.invoiceDate != null && invoiceDate.compareTo(that.invoiceDate) == 0))) {
             return false;
         }
         if (invoiceId != null ? !invoiceId.equals(that.invoiceId) : that.invoiceId != null) {
@@ -127,7 +131,8 @@ public class InvoiceJsonSimple {
         if (invoiceNumber != null ? !invoiceNumber.equals(that.invoiceNumber) : that.invoiceNumber != null) {
             return false;
         }
-        if (targetDate != null ? !targetDate.equals(that.targetDate) : that.targetDate != null) {
+        if (!((targetDate == null && that.targetDate == null) ||
+                (targetDate != null && that.targetDate != null && targetDate.compareTo(that.targetDate) == 0))) {
             return false;
         }
 

@@ -100,10 +100,12 @@ public class CreditJson {
 
         final CreditJson that = (CreditJson) o;
 
-        if (creditAmount != null ? !creditAmount.equals(that.creditAmount) : that.creditAmount != null) {
+        if (!((creditAmount == null && that.creditAmount == null) ||
+                (creditAmount != null && that.creditAmount != null && creditAmount.compareTo(that.creditAmount) == 0))) {
             return false;
         }
-        if (effectiveDate != null ? !effectiveDate.equals(that.effectiveDate) : that.effectiveDate != null) {
+        if (!((effectiveDate == null && that.effectiveDate == null) ||
+                (effectiveDate != null && that.effectiveDate != null && effectiveDate.compareTo(that.effectiveDate) == 0))) {
             return false;
         }
         if (invoiceId != null ? !invoiceId.equals(that.invoiceId) : that.invoiceId != null) {
@@ -115,7 +117,8 @@ public class CreditJson {
         if (reason != null ? !reason.equals(that.reason) : that.reason != null) {
             return false;
         }
-        if (requestedDate != null ? !requestedDate.equals(that.requestedDate) : that.requestedDate != null) {
+        if (!((requestedDate == null && that.requestedDate == null) ||
+                (requestedDate != null && that.requestedDate != null && requestedDate.compareTo(that.requestedDate) == 0))) {
             return false;
         }
 

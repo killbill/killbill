@@ -89,7 +89,7 @@ public class TestSubscription extends TestJaxrsBase {
         assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
         baseJson = response.getResponseBody();
         objFromJson = mapper.readValue(baseJson, SubscriptionJsonNoEvents.class);
-        assertTrue(objFromJson.equals(newInput));
+        assertTrue(objFromJson.equalsNoSubscriptionIdNoStartDateNoCTD(newInput));
 
         // MOVE AFTER TRIAL
         Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(3).plusDays(1));
