@@ -126,7 +126,8 @@ public class InvoiceItemJsonSimple {
         if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
             return false;
         }
-        if (amount != null ? !amount.equals(that.amount) : that.amount != null) {
+        if (!((amount == null && that.amount == null) ||
+                (amount != null && that.amount != null && amount.compareTo(that.amount) == 0))) {
             return false;
         }
         if (bundleId != null ? !bundleId.equals(that.bundleId) : that.bundleId != null) {

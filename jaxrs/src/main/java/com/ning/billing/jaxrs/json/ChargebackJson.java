@@ -84,7 +84,8 @@ public class ChargebackJson {
 
         final ChargebackJson that = (ChargebackJson) o;
 
-        if (chargebackAmount != null ? !chargebackAmount.equals(that.chargebackAmount) : that.chargebackAmount != null) {
+        if (!((chargebackAmount == null && that.chargebackAmount == null) ||
+                (chargebackAmount != null && that.chargebackAmount != null && chargebackAmount.compareTo(that.chargebackAmount) == 0))) {
             return false;
         }
         if (!((effectiveDate == null && that.effectiveDate == null) ||

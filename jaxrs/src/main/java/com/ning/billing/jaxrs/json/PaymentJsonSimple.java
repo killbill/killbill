@@ -137,7 +137,8 @@ public class PaymentJsonSimple {
         if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
             return false;
         }
-        if (amount != null ? !amount.equals(that.amount) : that.amount != null) {
+        if (!((amount == null && that.amount == null) ||
+                (amount != null && that.amount != null && amount.compareTo(that.amount) == 0))) {
             return false;
         }
         if (currency != null ? !currency.equals(that.currency) : that.currency != null) {
@@ -150,7 +151,8 @@ public class PaymentJsonSimple {
         if (invoiceId != null ? !invoiceId.equals(that.invoiceId) : that.invoiceId != null) {
             return false;
         }
-        if (paidAmount != null ? !paidAmount.equals(that.paidAmount) : that.paidAmount != null) {
+        if (!((paidAmount == null && that.paidAmount == null) ||
+                (paidAmount != null && that.paidAmount != null && paidAmount.compareTo(that.paidAmount) == 0))) {
             return false;
         }
         if (paymentId != null ? !paymentId.equals(that.paymentId) : that.paymentId != null) {
