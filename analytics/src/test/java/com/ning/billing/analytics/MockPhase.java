@@ -16,6 +16,8 @@
 
 package com.ning.billing.analytics;
 
+import java.math.BigDecimal;
+
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.Duration;
@@ -25,17 +27,13 @@ import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.Price;
 
-import java.math.BigDecimal;
-
-public class MockPhase implements PlanPhase
-{
+public class MockPhase implements PlanPhase {
     private final PhaseType cohort;
     private final Plan plan;
     private final Duration duration;
     private final double price;
 
-    public MockPhase(final PhaseType cohort, final Plan plan, final Duration duration, final double price)
-    {
+    public MockPhase(final PhaseType cohort, final Plan plan, final Duration duration, final double price) {
         this.cohort = cohort;
         this.plan = plan;
         this.duration = duration;
@@ -43,86 +41,72 @@ public class MockPhase implements PlanPhase
     }
 
     @Override
-    public InternationalPrice getRecurringPrice()
-    {
-        return new InternationalPrice()
-        {
+    public InternationalPrice getRecurringPrice() {
+        return new InternationalPrice() {
             @Override
-            public Price[] getPrices()
-            {
+            public Price[] getPrices() {
                 throw new UnsupportedOperationException();
             }
 
             @Override
-            public BigDecimal getPrice(final Currency currency)
-            {
+            public BigDecimal getPrice(final Currency currency) {
                 return BigDecimal.valueOf(price);
             }
 
-			@Override
-			public boolean isZero() {
-				return price == 0.0;
-			}
-
-         };
-    }
-
-    @Override
-    public InternationalPrice getFixedPrice()
-    {
-        return new InternationalPrice()
-        {
             @Override
-            public Price[] getPrices()
-            {
-                throw new UnsupportedOperationException();
+            public boolean isZero() {
+                return price == 0.0;
             }
 
-            @Override
-            public BigDecimal getPrice(final Currency currency)
-            {
-                return BigDecimal.valueOf(price);
-            }
-            
-        	@Override
-			public boolean isZero() {
-				return price == 0.0;
-			}
         };
     }
 
     @Override
-    public BillingPeriod getBillingPeriod()
-    {
+    public InternationalPrice getFixedPrice() {
+        return new InternationalPrice() {
+            @Override
+            public Price[] getPrices() {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public BigDecimal getPrice(final Currency currency) {
+                return BigDecimal.valueOf(price);
+            }
+
+            @Override
+            public boolean isZero() {
+                return price == 0.0;
+            }
+        };
+    }
+
+    @Override
+    public BillingPeriod getBillingPeriod() {
         return null;
     }
 
     @Override
-    public String getName()
-    {
+    public String getName() {
         if (plan == null) {
             return null;
-        }
-        else {
+        } else {
             return plan.getName() + "-" + cohort;
         }
     }
 
     @Override
-    public Plan getPlan()
-    {
+    public Plan getPlan() {
         return plan;
     }
 
     @Override
-    public Duration getDuration()
-    {
+    public Duration getDuration() {
         return duration;
     }
 
     @Override
-    public PhaseType getPhaseType()
-    {
+    public PhaseType getPhaseType() {
         return cohort;
     }
 }

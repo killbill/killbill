@@ -16,8 +16,6 @@
 
 package com.ning.billing.analytics.api;
 
-import static org.testng.Assert.fail;
-
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.SQLException;
@@ -26,15 +24,13 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-import com.ning.billing.payment.api.PaymentInfoEvent;
-import com.ning.billing.util.tag.TagDefinition;
-import com.ning.billing.util.tag.dao.AuditedTagDao;
-import com.ning.billing.util.tag.dao.TagDao;
-import org.apache.commons.io.IOUtils;
+
 import org.joda.time.DateTime;
+import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
@@ -52,11 +48,12 @@ import com.ning.billing.analytics.MockDuration;
 import com.ning.billing.analytics.MockPhase;
 import com.ning.billing.analytics.MockPlan;
 import com.ning.billing.analytics.MockProduct;
+import com.ning.billing.analytics.TestWithEmbeddedDB;
 import com.ning.billing.analytics.dao.BusinessAccountDao;
 import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionDao;
-import com.ning.billing.catalog.MockCatalogModule;
 import com.ning.billing.catalog.MockPriceList;
 import com.ning.billing.catalog.api.Catalog;
+import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PhaseType;
@@ -65,7 +62,6 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.api.user.DefaultSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
@@ -81,8 +77,8 @@ import com.ning.billing.invoice.api.user.DefaultInvoiceCreationEvent;
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
-import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.payment.api.DefaultPaymentInfoEvent;
+import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.callcontext.CallContext;
@@ -92,15 +88,18 @@ import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;
 import com.ning.billing.util.tag.DefaultTagDefinition;
+import com.ning.billing.util.tag.TagDefinition;
+import com.ning.billing.util.tag.dao.AuditedTagDao;
+import com.ning.billing.util.tag.dao.TagDao;
 import com.ning.billing.util.tag.dao.TagDefinitionSqlDao;
 
-@Guice(modules = {AnalyticsTestModule.class, MockCatalogModule.class})
-public class TestAnalyticsService {
-    
+import static org.testng.Assert.fail;
+
+@Guice(modules = {AnalyticsTestModule.class})
+public class TestAnalyticsService extends TestWithEmbeddedDB {
     final Product product = new MockProduct("platinum", "subscription", ProductCategory.BASE);
     final Plan plan = new MockPlan("platinum-monthly", product);
     final PlanPhase phase = new MockPhase(PhaseType.EVERGREEN, plan, MockDuration.UNLIMITED(), 25.95);
-
 
     private static final UUID ID = UUID.randomUUID();
     private static final String KEY = "12345";
@@ -142,9 +141,6 @@ public class TestAnalyticsService {
     @Inject
     private BusinessAccountDao accountDao;
 
-    @Inject
-    private MysqlTestingHelper helper;
-
     private SubscriptionEvent transition;
     private BusinessSubscriptionTransition expectedTransition;
 
@@ -153,22 +149,22 @@ public class TestAnalyticsService {
     private PaymentInfoEvent paymentInfoNotification;
 
     @Inject
-    private  CatalogService catalogService;
-    
-    private Catalog catalog;
- 
-    @BeforeClass(groups = "slow")
-    public void startMysql() throws IOException, ClassNotFoundException, SQLException, EntitlementUserApiException {
+    private CatalogService catalogService;
 
+    private Catalog catalog;
+
+    @BeforeClass(groups = "slow")
+    public void setUp() throws IOException, ClassNotFoundException, SQLException, EntitlementUserApiException, CatalogApiException {
         catalog = catalogService.getFullCatalog();
-        ((ZombieControl) catalog).addResult("findPlan", plan);
-        ((ZombieControl) catalog).addResult("findPhase", phase);        
+        Mockito.when(catalog.findPlan(Mockito.anyString(), Mockito.<DateTime>any())).thenReturn(plan);
+        Mockito.when(catalog.findPhase(Mockito.anyString(), Mockito.<DateTime>any(), Mockito.<DateTime>any())).thenReturn(phase);
 
         // Killbill generic setup
-        setupBusAndMySQL();
+        bus.start();
+    }
 
-        helper.cleanupAllTables();
-        
+    @BeforeMethod(groups = "slow")
+    public void createMocks() {
         tagDao.create(TAG_ONE, context);
         tagDao.create(TAG_TWO, context);
 
@@ -189,30 +185,6 @@ public class TestAnalyticsService {
         }
     }
 
-    private void setupBusAndMySQL() throws IOException {
-
-        final String analyticsDdl = IOUtils.toString(BusinessSubscriptionTransitionDao.class.getResourceAsStream("/com/ning/billing/analytics/ddl.sql"));
-        final String accountDdl = IOUtils.toString(BusinessSubscriptionTransitionDao.class.getResourceAsStream("/com/ning/billing/account/ddl.sql"));
-        final String entitlementDdl = IOUtils.toString(BusinessSubscriptionTransitionDao.class.getResourceAsStream("/com/ning/billing/entitlement/ddl.sql"));
-        final String invoiceDdl = IOUtils.toString(BusinessSubscriptionTransitionDao.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
-        final String paymentDdl = IOUtils.toString(BusinessSubscriptionTransitionDao.class.getResourceAsStream("/com/ning/billing/payment/ddl.sql"));
-        final String utilDdl = IOUtils.toString(BusinessSubscriptionTransitionDao.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
-        final String junctionDdl = IOUtils.toString(BusinessSubscriptionTransitionDao.class.getResourceAsStream("/com/ning/billing/junction/ddl.sql"));
-
-        helper.startMysql();
-        helper.initDb(analyticsDdl);
-        helper.initDb(accountDdl);
-        helper.initDb(entitlementDdl);
-        helper.initDb(invoiceDdl);
-        helper.initDb(paymentDdl);
-        helper.initDb(utilDdl);
-        helper.initDb(junctionDdl);
-
-        helper.cleanupAllTables();
-    	
-        bus.start();
-    }
-
     private void createSubscriptionTransitionEvent(final Account account) throws EntitlementUserApiException {
         final SubscriptionBundle bundle = entitlementApi.createBundleForAccount(account.getId(), KEY, context);
 
@@ -226,7 +198,7 @@ public class TestAnalyticsService {
         final DateTime requestedTransitionTime = clock.getUTCNow();
         final PriceList priceList = new MockPriceList().setName("something");
 
-        
+
         transition = new DefaultSubscriptionEvent(new SubscriptionTransitionData(
                 ID,
                 subscriptionId,
@@ -269,7 +241,7 @@ public class TestAnalyticsService {
         invoice.addInvoiceItem(invoiceItem);
 
         invoiceDao.create(invoice, context);
-        List<Invoice> invoices = invoiceDao.getInvoicesByAccount(account.getId());
+        final List<Invoice> invoices = invoiceDao.getInvoicesByAccount(account.getId());
         Assert.assertEquals(invoices.size(), 1);
         Assert.assertEquals(invoices.get(0).getInvoiceItems().size(), 1);
 
@@ -288,13 +260,14 @@ public class TestAnalyticsService {
     */
     }
 
+
     @AfterClass(groups = "slow")
     public void stopMysql() {
         helper.stopMysql();
     }
 
-    // STEPH disabled until talk to Pierre
-    @Test(groups = "slow", enabled=false)
+
+    @Test(groups = "slow")
     public void testRegisterForNotifications() throws Exception {
         // Make sure the service has been instantiated
         Assert.assertEquals(service.getName(), "analytics-service");

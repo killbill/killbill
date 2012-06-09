@@ -25,7 +25,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class PaymentJsonWithBundleKeys extends PaymentJsonSimple {
-
     private final String bundleKeys;
 
     public PaymentJsonWithBundleKeys() {
@@ -46,7 +45,6 @@ public class PaymentJsonWithBundleKeys extends PaymentJsonSimple {
             @JsonProperty("status") String status,
             @JsonProperty("externalBundleKeys") String bundleKeys) {
         super(amount, paidAmount, accountId, invoiceId, paymentId, requestedDate, effectiveDate, retryCount, currency, status);
-
         this.bundleKeys = bundleKeys;
     }
 

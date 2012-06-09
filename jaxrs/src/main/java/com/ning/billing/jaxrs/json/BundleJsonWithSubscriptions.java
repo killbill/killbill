@@ -15,6 +15,7 @@
  */
 package com.ning.billing.jaxrs.json;
 
+import javax.annotation.Nullable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -22,7 +23,6 @@ import java.util.UUID;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
-
 import com.ning.billing.entitlement.api.timeline.BundleTimeline;
 import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
@@ -32,9 +32,9 @@ public class BundleJsonWithSubscriptions extends BundleJsonSimple {
     private final List<SubscriptionJsonWithEvents> subscriptions;
 
     @JsonCreator
-    public BundleJsonWithSubscriptions(@JsonProperty("bundleId") String bundleId,
-            @JsonProperty("externalKey") String externalKey,
-            @JsonProperty("subscriptions") List<SubscriptionJsonWithEvents> subscriptions) {
+    public BundleJsonWithSubscriptions(@JsonProperty("bundleId") @Nullable final String bundleId,
+                                       @JsonProperty("externalKey") @Nullable final String externalKey,
+                                       @JsonProperty("subscriptions") @Nullable final List<SubscriptionJsonWithEvents> subscriptions) {
         super(bundleId, externalKey);
         this.subscriptions = subscriptions;
     }
@@ -44,22 +44,48 @@ public class BundleJsonWithSubscriptions extends BundleJsonSimple {
         return subscriptions;
     }
 
-    public BundleJsonWithSubscriptions(final UUID accountId, final BundleTimeline bundle) {
+    public BundleJsonWithSubscriptions(@Nullable final UUID accountId, final BundleTimeline bundle) {
         super(bundle.getBundleId().toString(), bundle.getExternalKey());
         this.subscriptions = new LinkedList<SubscriptionJsonWithEvents>();
-        for (SubscriptionTimeline cur : bundle.getSubscriptions()) {
-            this.subscriptions.add(new SubscriptionJsonWithEvents(bundle.getBundleId(), cur)); 
+        for (final SubscriptionTimeline cur : bundle.getSubscriptions()) {
+            this.subscriptions.add(new SubscriptionJsonWithEvents(bundle.getBundleId(), cur));
         }
     }
-    
-    public BundleJsonWithSubscriptions(SubscriptionBundle bundle) {
+
+    public BundleJsonWithSubscriptions(final SubscriptionBundle bundle) {
         super(bundle.getId().toString(), bundle.getKey());
         this.subscriptions = null;
     }
-    
+
     public BundleJsonWithSubscriptions() {
-        super(null, null);        
-        this.subscriptions = null;
+        this(null, null, null);
     }
 
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+
+        final BundleJsonWithSubscriptions that = (BundleJsonWithSubscriptions) o;
+
+        if (subscriptions != null ? !subscriptions.equals(that.subscriptions) : that.subscriptions != null) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (subscriptions != null ? subscriptions.hashCode() : 0);
+        return result;
+    }
 }

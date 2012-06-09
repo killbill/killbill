@@ -16,17 +16,16 @@
 
 package com.ning.billing.analytics;
 
-import org.joda.time.DateTime;
-
 import java.util.UUID;
+
+import org.joda.time.DateTime;
 
 /**
  * Describe a state change between two BusinessSubscription
  * <p/>
  * The key is unique identifier that ties sets of subscriptions together.
  */
-public class BusinessSubscriptionTransition
-{
+public class BusinessSubscriptionTransition {
     private final UUID id;
     private final String key;
     private final String accountKey;
@@ -35,8 +34,7 @@ public class BusinessSubscriptionTransition
     private final BusinessSubscription previousSubscription;
     private final BusinessSubscription nextSubscription;
 
-    public BusinessSubscriptionTransition(final UUID id, final String key, final String accountKey, final DateTime requestedTimestamp, final BusinessSubscriptionEvent event, final BusinessSubscription previousSubscription, final BusinessSubscription nextsubscription)
-    {
+    public BusinessSubscriptionTransition(final UUID id, final String key, final String accountKey, final DateTime requestedTimestamp, final BusinessSubscriptionEvent event, final BusinessSubscription previousSubscription, final BusinessSubscription nextSubscription) {
         if (id == null) {
             throw new IllegalArgumentException("An event must have an id");
         }
@@ -59,47 +57,39 @@ public class BusinessSubscriptionTransition
         this.requestedTimestamp = requestedTimestamp;
         this.event = event;
         this.previousSubscription = previousSubscription;
-        this.nextSubscription = nextsubscription;
+        this.nextSubscription = nextSubscription;
     }
 
-    public UUID getId()
-    {
+    public UUID getId() {
         return id;
     }
 
-    public BusinessSubscriptionEvent getEvent()
-    {
+    public BusinessSubscriptionEvent getEvent() {
         return event;
     }
 
-    public String getKey()
-    {
+    public String getKey() {
         return key;
     }
 
-    public String getAccountKey()
-    {
+    public String getAccountKey() {
         return accountKey;
     }
 
-    public BusinessSubscription getNextSubscription()
-    {
+    public BusinessSubscription getNextSubscription() {
         return nextSubscription;
     }
 
-    public BusinessSubscription getPreviousSubscription()
-    {
+    public BusinessSubscription getPreviousSubscription() {
         return previousSubscription;
     }
 
-    public DateTime getRequestedTimestamp()
-    {
+    public DateTime getRequestedTimestamp() {
         return requestedTimestamp;
     }
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         final StringBuilder sb = new StringBuilder();
         sb.append("BusinessSubscriptionTransition");
         sb.append("{accountKey='").append(accountKey).append('\'');
@@ -114,8 +104,7 @@ public class BusinessSubscriptionTransition
     }
 
     @Override
-    public boolean equals(final Object o)
-    {
+    public boolean equals(final Object o) {
         if (this == o) {
             return true;
         }
@@ -151,8 +140,7 @@ public class BusinessSubscriptionTransition
     }
 
     @Override
-    public int hashCode()
-    {
+    public int hashCode() {
         int result = id != null ? id.hashCode() : 0;
         result = 31 * result + (key != null ? key.hashCode() : 0);
         result = 31 * result + (accountKey != null ? accountKey.hashCode() : 0);

@@ -16,6 +16,14 @@
 
 package com.ning.billing.analytics;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.UUID;
+
+import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.ning.billing.analytics.utils.Rounder;
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogApiException;
@@ -27,21 +35,13 @@ import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.catalog.api.TimeUnit;
 import com.ning.billing.entitlement.api.user.Subscription;
-import org.joda.time.DateTime;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.util.UUID;
 
 import static com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 
 /**
  * Describe a subscription for Analytics purposes
  */
-public class BusinessSubscription
-{
+public class BusinessSubscription {
     private static final Logger log = LoggerFactory.getLogger(BusinessSubscription.class);
 
     private static final BigDecimal DAYS_IN_MONTH = BigDecimal.valueOf(30);
@@ -63,8 +63,7 @@ public class BusinessSubscription
     private final UUID subscriptionId;
     private final UUID bundleId;
 
-    public BusinessSubscription(final String productName, final String productType, final ProductCategory productCategory, final String slug, final String phase, final String billingPeriod, final BigDecimal price, final String priceList, final BigDecimal mrr, final String currency, final DateTime startDate, final SubscriptionState state, final UUID subscriptionId, final UUID bundleId)
-    {
+    public BusinessSubscription(final String productName, final String productType, final ProductCategory productCategory, final String slug, final String phase, final String billingPeriod, final BigDecimal price, final String priceList, final BigDecimal mrr, final String currency, final DateTime startDate, final SubscriptionState state, final UUID subscriptionId, final UUID bundleId) {
         this.productName = productName;
         this.productType = productType;
         this.productCategory = productCategory;
@@ -89,9 +88,9 @@ public class BusinessSubscription
      *
      * @param subscription Subscription to use as a model
      * @param currency     ACCOUNT currency
+     * @param catalog      Catalog to use
      */
-    BusinessSubscription(final Subscription subscription, final Currency currency, Catalog catalog)
-    {
+    BusinessSubscription(final Subscription subscription, final Currency currency, Catalog catalog) {
         this(subscription.getCurrentPriceList() == null ? null : subscription.getCurrentPriceList().getName(), subscription.getCurrentPlan().getName(), subscription.getCurrentPhase().getName(), currency, subscription.getStartDate(), subscription.getState(), subscription.getId(), subscription.getBundleId(), catalog);
     }
 
@@ -102,46 +101,43 @@ public class BusinessSubscription
             thePlan = (currentPlan != null) ? catalog.findPlan(currentPlan, new DateTime(), startDate) : null;
             thePhase = (currentPhase != null) ? catalog.findPhase(currentPhase, new DateTime(), startDate) : null;
         } catch (CatalogApiException e) {
-            log.error(String.format("Failed to retrieve Plan from catalog for plan %s, phase ", currentPlan, currentPhase));
+            log.error("Failed to retrieve Plan from catalog for plan {}, phase {}", currentPlan, currentPhase);
         }
-        
-      this.priceList = priceList;
-        
+
+        this.priceList = priceList;
+
         // Record plan information
-        if (currentPlan != null && thePlan.getProduct() != null) {
+        if (currentPlan != null && thePlan != null && thePlan.getProduct() != null) {
             final Product product = thePlan.getProduct();
             productName = product.getName();
             productCategory = product.getCategory();
             // TODO - we should keep the product type
             productType = product.getCatalogName();
-        }
-        else {
+        } else {
             productName = null;
             productCategory = null;
             productType = null;
         }
 
         // Record phase information
-        if (currentPhase != null) {
+        if (currentPhase != null && thePhase != null) {
             slug = thePhase.getName();
 
             if (thePhase.getPhaseType() != null) {
                 phase = thePhase.getPhaseType().toString();
-            }
-            else {
+            } else {
                 phase = null;
             }
 
             if (thePhase.getBillingPeriod() != null) {
                 billingPeriod = thePhase.getBillingPeriod().toString();
-            }
-            else {
+            } else {
                 billingPeriod = null;
             }
 
             if (thePhase.getRecurringPrice() != null) {
                 //TODO check if this is the right way to handle exception
-                BigDecimal tmpPrice = null;
+                BigDecimal tmpPrice;
                 try {
                     tmpPrice = thePhase.getRecurringPrice().getPrice(USD);
                 } catch (CatalogApiException e) {
@@ -149,13 +145,11 @@ public class BusinessSubscription
                 }
                 price = tmpPrice;
                 mrr = getMrrFromISubscription(thePhase.getDuration(), price);
-            }
-            else {
+            } else {
                 price = BigDecimal.ZERO;
                 mrr = BigDecimal.ZERO;
             }
-        }
-        else {
+        } else {
             slug = null;
             phase = null;
             billingPeriod = null;
@@ -165,8 +159,7 @@ public class BusinessSubscription
 
         if (currency != null) {
             this.currency = currency.toString();
-        }
-        else {
+        } else {
             this.currency = null;
         }
 
@@ -175,11 +168,10 @@ public class BusinessSubscription
         this.subscriptionId = subscriptionId;
         this.bundleId = bundleId;
     }
-    
-    public BusinessSubscription(final String priceList, final Plan currentPlan, final PlanPhase currentPhase, final Currency currency, final DateTime startDate, final SubscriptionState state, final UUID subscriptionId, final UUID bundleId)
-    {
+
+    public BusinessSubscription(final String priceList, final Plan currentPlan, final PlanPhase currentPhase, final Currency currency, final DateTime startDate, final SubscriptionState state, final UUID subscriptionId, final UUID bundleId) {
         this.priceList = priceList;
-        
+
         // Record plan information
         if (currentPlan != null && currentPlan.getProduct() != null) {
             final Product product = currentPlan.getProduct();
@@ -187,8 +179,7 @@ public class BusinessSubscription
             productCategory = product.getCategory();
             // TODO - we should keep the product type
             productType = product.getCatalogName();
-        }
-        else {
+        } else {
             productName = null;
             productCategory = null;
             productType = null;
@@ -200,35 +191,31 @@ public class BusinessSubscription
 
             if (currentPhase.getPhaseType() != null) {
                 phase = currentPhase.getPhaseType().toString();
-            }
-            else {
+            } else {
                 phase = null;
             }
 
             if (currentPhase.getBillingPeriod() != null) {
                 billingPeriod = currentPhase.getBillingPeriod().toString();
-            }
-            else {
+            } else {
                 billingPeriod = null;
             }
 
             if (currentPhase.getRecurringPrice() != null) {
-            	//TODO check if this is the right way to handle exception
-            	BigDecimal tmpPrice = null;
+                //TODO check if this is the right way to handle exception
+                BigDecimal tmpPrice;
                 try {
-                	tmpPrice = currentPhase.getRecurringPrice().getPrice(USD);
-				} catch (CatalogApiException e) {
-					tmpPrice = new BigDecimal(0);
-				}
+                    tmpPrice = currentPhase.getRecurringPrice().getPrice(USD);
+                } catch (CatalogApiException e) {
+                    tmpPrice = new BigDecimal(0);
+                }
                 price = tmpPrice;
                 mrr = getMrrFromISubscription(currentPhase.getDuration(), price);
-            }
-            else {
+            } else {
                 price = BigDecimal.ZERO;
                 mrr = BigDecimal.ZERO;
             }
-        }
-        else {
+        } else {
             slug = null;
             phase = null;
             billingPeriod = null;
@@ -238,8 +225,7 @@ public class BusinessSubscription
 
         if (currency != null) {
             this.currency = currency.toString();
-        }
-        else {
+        } else {
             this.currency = null;
         }
 
@@ -249,113 +235,91 @@ public class BusinessSubscription
         this.bundleId = bundleId;
     }
 
-    public String getBillingPeriod()
-    {
+    public String getBillingPeriod() {
         return billingPeriod;
     }
 
-    public UUID getBundleId()
-    {
+    public UUID getBundleId() {
         return bundleId;
     }
 
-    public String getCurrency()
-    {
+    public String getCurrency() {
         return currency;
     }
 
-    public BigDecimal getMrr()
-    {
+    public BigDecimal getMrr() {
         return mrr;
     }
 
-    public double getRoundedMrr()
-    {
+    public double getRoundedMrr() {
         return Rounder.round(mrr);
     }
 
-    public String getPhase()
-    {
+    public String getPhase() {
         return phase;
     }
 
-    public BigDecimal getPrice()
-    {
+    public BigDecimal getPrice() {
         return price;
     }
 
-    public String getPriceList()
-    {
+    public String getPriceList() {
         return priceList;
     }
 
-    public double getRoundedPrice()
-    {
+    public double getRoundedPrice() {
         return Rounder.round(price);
     }
 
-    public ProductCategory getProductCategory()
-    {
+    public ProductCategory getProductCategory() {
         return productCategory;
     }
 
-    public String getProductName()
-    {
+    public String getProductName() {
         return productName;
     }
 
-    public String getProductType()
-    {
+    public String getProductType() {
         return productType;
     }
 
-    public String getSlug()
-    {
+    public String getSlug() {
         return slug;
     }
 
-    public DateTime getStartDate()
-    {
+    public DateTime getStartDate() {
         return startDate;
     }
 
-    public SubscriptionState getState()
-    {
+    public SubscriptionState getState() {
         return state;
     }
 
-    public UUID getSubscriptionId()
-    {
+    public UUID getSubscriptionId() {
         return subscriptionId;
     }
 
-    static BigDecimal getMrrFromISubscription(final Duration duration, final BigDecimal price)
-    {
+    static BigDecimal getMrrFromISubscription(final Duration duration, final BigDecimal price) {
         if (duration == null || duration.getUnit() == null || duration.getNumber() == 0) {
             return BigDecimal.ZERO;
         }
 
         if (duration.getUnit().equals(TimeUnit.UNLIMITED)) {
             return BigDecimal.ZERO;
-        }
-        else if (duration.getUnit().equals(TimeUnit.DAYS)) {
+        } else if (duration.getUnit().equals(TimeUnit.DAYS)) {
             return price.multiply(DAYS_IN_MONTH).multiply(BigDecimal.valueOf(duration.getNumber()));
-        }
-        else if (duration.getUnit().equals(TimeUnit.MONTHS)) {
+        } else if (duration.getUnit().equals(TimeUnit.MONTHS)) {
             return price.divide(BigDecimal.valueOf(duration.getNumber()), Rounder.SCALE, BigDecimal.ROUND_HALF_UP);
-        }
-        else if (duration.getUnit().equals(TimeUnit.YEARS)) {
+        } else if (duration.getUnit().equals(TimeUnit.YEARS)) {
             return price.divide(BigDecimal.valueOf(duration.getNumber()), Rounder.SCALE, RoundingMode.HALF_UP).divide(MONTHS_IN_YEAR, Rounder.SCALE, RoundingMode.HALF_UP);
-        }
-        else {
+        } else {
             log.error("Unknown duration [" + duration + "], can't compute mrr");
             return null;
         }
     }
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         final StringBuilder sb = new StringBuilder();
         sb.append("BusinessSubscription");
         sb.append("{billingPeriod='").append(billingPeriod).append('\'');
@@ -377,8 +341,7 @@ public class BusinessSubscription
     }
 
     @Override
-    public boolean equals(final Object o)
-    {
+    public boolean equals(final Object o) {
         if (this == o) {
             return true;
         }
@@ -435,8 +398,7 @@ public class BusinessSubscription
     }
 
     @Override
-    public int hashCode()
-    {
+    public int hashCode() {
         int result = productName != null ? productName.hashCode() : 0;
         result = 31 * result + (productType != null ? productType.hashCode() : 0);
         result = 31 * result + (productCategory != null ? productCategory.hashCode() : 0);

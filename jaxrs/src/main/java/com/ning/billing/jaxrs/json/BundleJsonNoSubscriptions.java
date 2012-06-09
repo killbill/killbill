@@ -16,6 +16,7 @@
 
 package com.ning.billing.jaxrs.json;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -27,12 +28,11 @@ public class BundleJsonNoSubscriptions extends BundleJsonSimple {
 
     private final String accountId;
 
-
     @JsonCreator
-    public BundleJsonNoSubscriptions(@JsonProperty("bundleId") String bundleId,
-                                     @JsonProperty("accountId") String accountId,
-                                     @JsonProperty("externalKey") String externalKey,
-                                     @JsonProperty("subscriptions") List<SubscriptionJsonWithEvents> subscriptions) {
+    public BundleJsonNoSubscriptions(@JsonProperty("bundleId") final String bundleId,
+                                     @JsonProperty("accountId") final String accountId,
+                                     @JsonProperty("externalKey") final String externalKey,
+                                     @JsonProperty("subscriptions") @Nullable final List<SubscriptionJsonWithEvents> subscriptions) {
         super(bundleId, externalKey);
         this.accountId = accountId;
     }
@@ -41,14 +41,13 @@ public class BundleJsonNoSubscriptions extends BundleJsonSimple {
         return accountId;
     }
 
-    
-    public BundleJsonNoSubscriptions(SubscriptionBundle bundle) {
+    public BundleJsonNoSubscriptions(final SubscriptionBundle bundle) {
         super(bundle.getId().toString(), bundle.getKey());
         this.accountId = bundle.getAccountId().toString();
     }
-    
+
     public BundleJsonNoSubscriptions() {
-        super(null, null);        
+        super(null, null);
         this.accountId = null;
     }
 
@@ -66,39 +65,46 @@ public class BundleJsonNoSubscriptions extends BundleJsonSimple {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (equalsNoId(obj) == false) {
+    public boolean equals(final Object obj) {
+        if (!equalsNoId(obj)) {
             return false;
         }
-        BundleJsonNoSubscriptions other = (BundleJsonNoSubscriptions) obj;
+        final BundleJsonNoSubscriptions other = (BundleJsonNoSubscriptions) obj;
         if (bundleId == null) {
-            if (other.bundleId != null)
+            if (other.bundleId != null) {
                 return false;
-        } else if (!bundleId.equals(other.bundleId))
+            }
+        } else if (!bundleId.equals(other.bundleId)) {
             return false;
+        }
         return true;
     }
 
-    public boolean equalsNoId(Object obj) {
-        if (this == obj)
+    public boolean equalsNoId(final Object obj) {
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
-        BundleJsonNoSubscriptions other = (BundleJsonNoSubscriptions) obj;
+        }
+        final BundleJsonNoSubscriptions other = (BundleJsonNoSubscriptions) obj;
         if (accountId == null) {
-            if (other.accountId != null)
+            if (other.accountId != null) {
                 return false;
-        } else if (!accountId.equals(other.accountId))
+            }
+        } else if (!accountId.equals(other.accountId)) {
             return false;
+        }
         if (externalKey == null) {
-            if (other.externalKey != null)
+            if (other.externalKey != null) {
                 return false;
-        } else if (!externalKey.equals(other.externalKey))
+            }
+        } else if (!externalKey.equals(other.externalKey)) {
             return false;
+        }
         return true;
     }
-    
-    
 }

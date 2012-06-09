@@ -33,46 +33,38 @@ import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.util.callcontext.CallContext;
 
-public class MockEntitlementUserApi implements EntitlementUserApi
-{
+public class MockEntitlementUserApi implements EntitlementUserApi {
     private final Map<UUID, String> subscriptionBundles = new HashMap<UUID, String>();
 
-    public MockEntitlementUserApi(final UUID bundleUUID, final String key)
-    {
+    public MockEntitlementUserApi(final UUID bundleUUID, final String key) {
         subscriptionBundles.put(bundleUUID, key);
     }
 
     @Override
-    public SubscriptionBundle getBundleFromId(final UUID id)
-    {
+    public SubscriptionBundle getBundleFromId(final UUID id) {
         final String key = subscriptionBundles.get(id);
         if (key == null) {
             return null;
         }
 
-        return new SubscriptionBundle()
-        {
+        return new SubscriptionBundle() {
             @Override
-            public UUID getAccountId()
-            {
+            public UUID getAccountId() {
                 return UUID.randomUUID();
             }
 
             @Override
-            public UUID getId()
-            {
+            public UUID getId() {
                 return id;
             }
 
             @Override
-            public DateTime getStartDate()
-            {
+            public DateTime getStartDate() {
                 throw new UnsupportedOperationException();
             }
 
             @Override
-            public String getKey()
-            {
+            public String getKey() {
                 return key;
             }
 
@@ -89,26 +81,22 @@ public class MockEntitlementUserApi implements EntitlementUserApi
     }
 
     @Override
-    public Subscription getSubscriptionFromId(final UUID id)
-    {
+    public Subscription getSubscriptionFromId(final UUID id) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public List<SubscriptionBundle> getBundlesForAccount(final UUID accountId)
-    {
+    public List<SubscriptionBundle> getBundlesForAccount(final UUID accountId) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public List<Subscription> getSubscriptionsForBundle(final UUID bundleId)
-    {
+    public List<Subscription> getSubscriptionsForBundle(final UUID bundleId) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public SubscriptionBundle createBundleForAccount(final UUID accountId, final String bundleKey, CallContext context) throws EntitlementUserApiException
-    {
+    public SubscriptionBundle createBundleForAccount(final UUID accountId, final String bundleKey, CallContext context) throws EntitlementUserApiException {
         throw new UnsupportedOperationException();
     }
 
@@ -117,21 +105,21 @@ public class MockEntitlementUserApi implements EntitlementUserApi
         throw new UnsupportedOperationException();
     }
 
-	@Override
-	public Subscription createSubscription(UUID bundleId, PlanPhaseSpecifier spec,
-			DateTime requestedDate, CallContext context) throws EntitlementUserApiException {
+    @Override
+    public Subscription createSubscription(UUID bundleId, PlanPhaseSpecifier spec,
+                                           DateTime requestedDate, CallContext context) throws EntitlementUserApiException {
         throw new UnsupportedOperationException();
-	}
+    }
 
     @Override
     public SubscriptionBundle getBundleForKey(String bundleKey) {
         throw new UnsupportedOperationException();
     }
 
-	@Override
-	public DateTime getNextBillingDate(UUID account) {
-		throw new UnsupportedOperationException();
-	}
+    @Override
+    public DateTime getNextBillingDate(UUID account) {
+        throw new UnsupportedOperationException();
+    }
 
     @Override
     public Subscription getBaseSubscription(UUID bundleId) {

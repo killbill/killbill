@@ -16,15 +16,15 @@
 
 package com.ning.billing.jaxrs.json;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.ning.billing.invoice.api.InvoiceItem;
-import org.joda.time.DateTime;
-
 import java.math.BigDecimal;
 import java.util.UUID;
 
-// TODO: add invoice number, reason and requested date to the json
+import org.joda.time.DateTime;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.ning.billing.invoice.api.InvoiceItem;
+
 public class CreditJson {
     private final BigDecimal creditAmount;
     private final UUID invoiceId;
@@ -32,6 +32,7 @@ public class CreditJson {
     private final DateTime requestedDate;
     private final DateTime effectiveDate;
     private final String reason;
+    private final UUID accountId;
 
     @JsonCreator
     public CreditJson(@JsonProperty("creditAmount") final BigDecimal creditAmount,
@@ -39,22 +40,25 @@ public class CreditJson {
                       @JsonProperty("invoiceNumber") final String invoiceNumber,
                       @JsonProperty("requestedDate") final DateTime requestedDate,
                       @JsonProperty("effectiveDate") final DateTime effectiveDate,
-                      @JsonProperty("reason") final String reason) {
+                      @JsonProperty("reason") final String reason,
+                      @JsonProperty("accountId") final UUID accountId) {
         this.creditAmount = creditAmount;
         this.invoiceId = invoiceId;
         this.invoiceNumber = invoiceNumber;
         this.requestedDate = requestedDate;
         this.effectiveDate = effectiveDate;
         this.reason = reason;
+        this.accountId = accountId;
     }
 
-    public CreditJson(InvoiceItem credit) {
+    public CreditJson(final InvoiceItem credit) {
         this.creditAmount = credit.getAmount();
         this.invoiceId = credit.getInvoiceId();
         this.invoiceNumber = null;
         this.requestedDate = null;
         this.effectiveDate = credit.getStartDate();
         this.reason = null;
+        this.accountId = credit.getAccountId();
     }
 
     public BigDecimal getCreditAmount() {
@@ -79,5 +83,56 @@ public class CreditJson {
 
     public String getReason() {
         return reason;
+    }
+
+    public UUID getAccountId() {
+        return accountId;
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        final CreditJson that = (CreditJson) o;
+
+        if (!((creditAmount == null && that.creditAmount == null) ||
+                (creditAmount != null && that.creditAmount != null && creditAmount.compareTo(that.creditAmount) == 0))) {
+            return false;
+        }
+        if (!((effectiveDate == null && that.effectiveDate == null) ||
+                (effectiveDate != null && that.effectiveDate != null && effectiveDate.compareTo(that.effectiveDate) == 0))) {
+            return false;
+        }
+        if (invoiceId != null ? !invoiceId.equals(that.invoiceId) : that.invoiceId != null) {
+            return false;
+        }
+        if (invoiceNumber != null ? !invoiceNumber.equals(that.invoiceNumber) : that.invoiceNumber != null) {
+            return false;
+        }
+        if (reason != null ? !reason.equals(that.reason) : that.reason != null) {
+            return false;
+        }
+        if (!((requestedDate == null && that.requestedDate == null) ||
+                (requestedDate != null && that.requestedDate != null && requestedDate.compareTo(that.requestedDate) == 0))) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = creditAmount != null ? creditAmount.hashCode() : 0;
+        result = 31 * result + (invoiceId != null ? invoiceId.hashCode() : 0);
+        result = 31 * result + (invoiceNumber != null ? invoiceNumber.hashCode() : 0);
+        result = 31 * result + (requestedDate != null ? requestedDate.hashCode() : 0);
+        result = 31 * result + (effectiveDate != null ? effectiveDate.hashCode() : 0);
+        result = 31 * result + (reason != null ? reason.hashCode() : 0);
+        return result;
     }
 }

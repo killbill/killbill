@@ -31,8 +31,8 @@ public class AccountJsonSimple {
     }
 
     @JsonCreator
-    public AccountJsonSimple(@JsonProperty("accountId") String accountId,
-                             @JsonProperty("externalKey") String externalKey) {
+    public AccountJsonSimple(@JsonProperty("accountId") final String accountId,
+                             @JsonProperty("externalKey") final String externalKey) {
         this.accountId = accountId;
         this.externalKey = externalKey;
     }

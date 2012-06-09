@@ -16,6 +16,7 @@
 
 package com.ning.billing.jaxrs.json;
 
+import javax.annotation.Nullable;
 import java.math.BigDecimal;
 
 import org.joda.time.DateTime;
@@ -36,26 +37,18 @@ public class InvoiceJsonSimple {
     private final String accountId;
 
     public InvoiceJsonSimple() {
-        this.amount = BigDecimal.ZERO;
-        this.credit = BigDecimal.ZERO;
-        this.invoiceId = null;
-        this.invoiceDate = null;
-        this.targetDate = null;
-        this.invoiceNumber = null;
-        this.balance = BigDecimal.ZERO;
-        this.accountId = null;
+        this(BigDecimal.ZERO, BigDecimal.ZERO, null, null, null, null, BigDecimal.ZERO, null);
     }
 
     @JsonCreator
-    public InvoiceJsonSimple(@JsonProperty("amount") BigDecimal amount,
-                             @JsonProperty("credit") BigDecimal credit,
-                             @JsonProperty("invoiceId") String invoiceId,
-                             @JsonProperty("invoiceDate") DateTime invoiceDate,
-                             @JsonProperty("targetDate") DateTime targetDate,
-                             @JsonProperty("invoiceNumber") String invoiceNumber,
-                             @JsonProperty("balance") BigDecimal balance,
-                             @JsonProperty("accountId") String accountId) {
-        super();
+    public InvoiceJsonSimple(@JsonProperty("amount") final BigDecimal amount,
+                             @JsonProperty("credit") final BigDecimal credit,
+                             @JsonProperty("invoiceId") @Nullable final String invoiceId,
+                             @JsonProperty("invoiceDate") @Nullable final DateTime invoiceDate,
+                             @JsonProperty("targetDate") @Nullable final DateTime targetDate,
+                             @JsonProperty("invoiceNumber") @Nullable final String invoiceNumber,
+                             @JsonProperty("balance") final BigDecimal balance,
+                             @JsonProperty("accountId") @Nullable final String accountId) {
         this.amount = amount;
         this.credit = credit;
         this.invoiceId = invoiceId;
@@ -66,15 +59,9 @@ public class InvoiceJsonSimple {
         this.accountId = accountId;
     }
 
-    public InvoiceJsonSimple(Invoice input) {
-        this.amount = input.getAmountCharged();
-        this.credit = input.getAmountCredited();
-        this.invoiceId = input.getId().toString();
-        this.invoiceDate = input.getInvoiceDate();
-        this.targetDate = input.getTargetDate();
-        this.invoiceNumber = String.valueOf(input.getInvoiceNumber());
-        this.balance = input.getBalance();
-        this.accountId = input.getAccountId().toString();
+    public InvoiceJsonSimple(final Invoice input) {
+        this(input.getAmountCharged(), input.getAmountCredited(), input.getId().toString(), input.getInvoiceDate(),
+             input.getTargetDate(), String.valueOf(input.getInvoiceNumber()), input.getBalance(), input.getAccountId().toString());
     }
 
     public BigDecimal getAmount() {
@@ -110,72 +97,59 @@ public class InvoiceJsonSimple {
     }
 
     @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((amount == null) ? 0 : amount.hashCode());
-        result = prime * result + ((balance == null) ? 0 : balance.hashCode());
-        result = prime * result + ((credit == null) ? 0 : credit.hashCode());
-        result = prime * result
-                + ((invoiceDate == null) ? 0 : invoiceDate.hashCode());
-        result = prime * result
-                + ((invoiceId == null) ? 0 : invoiceId.hashCode());
-        result = prime * result
-                + ((invoiceNumber == null) ? 0 : invoiceNumber.hashCode());
-        return result;
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        final InvoiceJsonSimple that = (InvoiceJsonSimple) o;
+
+        if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
+            return false;
+        }
+        if (!((amount == null && that.amount == null) ||
+                (amount != null && that.amount != null && amount.compareTo(that.amount) == 0))) {
+            return false;
+        }
+        if (!((balance == null && that.balance == null) ||
+                (balance != null && that.balance != null && balance.compareTo(that.balance) == 0))) {
+            return false;
+        }
+        if (!((credit == null && that.credit == null) ||
+                (credit != null && that.credit != null && credit.compareTo(that.credit) == 0))) {
+            return false;
+        }
+        if (!((invoiceDate == null && that.invoiceDate == null) ||
+                (invoiceDate != null && that.invoiceDate != null && invoiceDate.compareTo(that.invoiceDate) == 0))) {
+            return false;
+        }
+        if (invoiceId != null ? !invoiceId.equals(that.invoiceId) : that.invoiceId != null) {
+            return false;
+        }
+        if (invoiceNumber != null ? !invoiceNumber.equals(that.invoiceNumber) : that.invoiceNumber != null) {
+            return false;
+        }
+        if (!((targetDate == null && that.targetDate == null) ||
+                (targetDate != null && that.targetDate != null && targetDate.compareTo(that.targetDate) == 0))) {
+            return false;
+        }
+
+        return true;
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        InvoiceJsonSimple other = (InvoiceJsonSimple) obj;
-        if (amount == null) {
-            if (other.amount != null)
-                return false;
-        } else if (!amount.equals(other.amount))
-            return false;
-
-        if (balance == null) {
-            if (other.balance != null)
-                return false;
-        } else if (!balance.equals(other.balance))
-            return false;
-
-        if (credit == null) {
-            if (other.credit != null)
-                return false;
-        } else if (!credit.equals(other.credit))
-            return false;
-
-        if (invoiceDate == null) {
-            if (other.invoiceDate != null)
-                return false;
-        } else if (!invoiceDate.equals(other.invoiceDate))
-            return false;
-
-        if (invoiceId == null) {
-            if (other.invoiceId != null)
-                return false;
-        } else if (!invoiceId.equals(other.invoiceId))
-            return false;
-
-        if (invoiceNumber == null) {
-            if (other.invoiceNumber != null)
-                return false;
-        } else if (!invoiceNumber.equals(other.invoiceNumber))
-            return false;
-
-        if (accountId == null) {
-            if (other.accountId != null)
-                return false;
-        } else if (!accountId.equals(other.accountId))
-            return false;
-
-        return true;
+    public int hashCode() {
+        int result = amount != null ? amount.hashCode() : 0;
+        result = 31 * result + (credit != null ? credit.hashCode() : 0);
+        result = 31 * result + (invoiceId != null ? invoiceId.hashCode() : 0);
+        result = 31 * result + (invoiceDate != null ? invoiceDate.hashCode() : 0);
+        result = 31 * result + (targetDate != null ? targetDate.hashCode() : 0);
+        result = 31 * result + (invoiceNumber != null ? invoiceNumber.hashCode() : 0);
+        result = 31 * result + (balance != null ? balance.hashCode() : 0);
+        result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
+        return result;
     }
 }

@@ -16,18 +16,19 @@
 
 package com.ning.billing.analytics;
 
-import java.util.UUID;
-
 import javax.annotation.Nullable;
+import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.api.Catalog;
+import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PhaseType;
@@ -41,11 +42,8 @@ import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
-import com.ning.billing.mock.BrainDeadProxyFactory;
-import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 
-public class TestAnalyticsListener
-{
+public class TestAnalyticsListener extends AnalyticsTestSuite {
     private static final String KEY = "1234";
     private static final String ACCOUNT_KEY = "pierre-1234";
     private final Currency CURRENCY = Currency.BRL;
@@ -58,29 +56,26 @@ public class TestAnalyticsListener
     private final PlanPhase phase = new MockPhase(PhaseType.EVERGREEN, plan, MockDuration.UNLIMITED(), 25.95);
     private final PriceList priceList = null;
 
-    private final CatalogService catalogService = BrainDeadProxyFactory.createBrainDeadProxyFor(CatalogService.class);
-    private final Catalog catalog = BrainDeadProxyFactory.createBrainDeadProxyFor(Catalog.class);
-    
-    
+    private final CatalogService catalogService = Mockito.mock(CatalogService.class);
+    private final Catalog catalog = Mockito.mock(Catalog.class);
+
     private AnalyticsListener listener;
 
-    @BeforeClass(alwaysRun = true) 
-    public void setupCatalog() {
-        ((ZombieControl) catalog).addResult("findPlan", plan);
-        ((ZombieControl) catalog).addResult("findPhase", phase);        
-        ((ZombieControl) catalogService).addResult("getFullCatalog", catalog);        
-        
+    @BeforeClass(groups = "fast")
+    public void setupCatalog() throws CatalogApiException {
+        Mockito.when(catalog.findPlan(Mockito.anyString(), Mockito.<DateTime>any())).thenReturn(plan);
+        Mockito.when(catalog.findPhase(Mockito.anyString(), Mockito.<DateTime>any(), Mockito.<DateTime>any())).thenReturn(phase);
+        Mockito.when(catalogService.getFullCatalog()).thenReturn(catalog);
     }
-    @BeforeMethod(alwaysRun = true)
-    public void setUp() throws Exception
-    {
+
+    @BeforeMethod(groups = "fast")
+    public void setUp() throws Exception {
         final BusinessSubscriptionTransitionRecorder recorder = new BusinessSubscriptionTransitionRecorder(dao, catalogService, new MockEntitlementUserApi(bundleUUID, KEY), new MockAccountUserApi(ACCOUNT_KEY, CURRENCY));
         listener = new AnalyticsListener(recorder, null);
     }
 
     @Test(groups = "fast")
-    public void testSubscriptionLifecycle() throws Exception
-    {
+    public void testSubscriptionLifecycle() throws Exception {
         // Create a subscription
         final DateTime effectiveTransitionTime = new DateTime(DateTimeZone.UTC);
         final DateTime requestedTransitionTime = effectiveTransitionTime;
@@ -99,7 +94,7 @@ public class TestAnalyticsListener
         Assert.assertEquals(dao.getTransitions(KEY).size(), 2);
         Assert.assertEquals(dao.getTransitions(KEY).get(1), cancelledBST);
 
-       // Recreate it
+        // Recreate it
         final DateTime effectiveRecreatedTransitionTime = new DateTime(DateTimeZone.UTC);
         final DateTime requestedRecreatedTransitionTime = effectiveRecreatedTransitionTime;
         final SubscriptionTransitionData recreatedSubscriptionTransition = createRecreatedSubscriptionTransition(requestedRecreatedTransitionTime, effectiveRecreatedTransitionTime, cancelledSubscriptionTransition.getNextState());
@@ -110,164 +105,123 @@ public class TestAnalyticsListener
 
     }
 
-    private BusinessSubscriptionTransition createExpectedFirstBST(final UUID id, final DateTime requestedTransitionTime, final DateTime effectiveTransitionTime)
-    {
+    private BusinessSubscriptionTransition createExpectedFirstBST(final UUID id, final DateTime requestedTransitionTime, final DateTime effectiveTransitionTime) {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionCreated(plan.getName(), catalog, effectiveTransitionTime, effectiveTransitionTime);
-                
+
         final Subscription.SubscriptionState subscriptionState = Subscription.SubscriptionState.ACTIVE;
         return createExpectedBST(id, event, requestedTransitionTime, effectiveTransitionTime, null, subscriptionState);
     }
 
-    private BusinessSubscriptionTransition createExpectedCancelledBST(final UUID id, final DateTime requestedTransitionTime, final DateTime effectiveTransitionTime, final BusinessSubscription lastSubscription)
-    {
+    private BusinessSubscriptionTransition createExpectedCancelledBST(final UUID id, final DateTime requestedTransitionTime, final DateTime effectiveTransitionTime, final BusinessSubscription lastSubscription) {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionCancelled(plan.getName(), catalog, effectiveTransitionTime, effectiveTransitionTime);
         return createExpectedBST(id, event, requestedTransitionTime, effectiveTransitionTime, lastSubscription, null);
     }
 
-    private BusinessSubscriptionTransition createExpectedRecreatedBST(final UUID id, final DateTime requestedTransitionTime, final DateTime effectiveTransitionTime, final BusinessSubscription lastSubscription)
-    {
+    private BusinessSubscriptionTransition createExpectedRecreatedBST(final UUID id, final DateTime requestedTransitionTime, final DateTime effectiveTransitionTime, final BusinessSubscription lastSubscription) {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionRecreated(plan.getName(), catalog, effectiveTransitionTime, effectiveTransitionTime);
         final Subscription.SubscriptionState subscriptionState = Subscription.SubscriptionState.ACTIVE;
         return createExpectedBST(id, event, requestedTransitionTime, effectiveTransitionTime, lastSubscription, subscriptionState);
     }
 
-
     private BusinessSubscriptionTransition createExpectedBST(
-        final UUID eventId,
-        final BusinessSubscriptionEvent eventType,
-        final DateTime requestedTransitionTime,
-        final DateTime effectiveTransitionTime,
-        @Nullable final BusinessSubscription previousSubscription,
-        @Nullable final Subscription.SubscriptionState nextState
-    )
-    {
+            final UUID eventId,
+            final BusinessSubscriptionEvent eventType,
+            final DateTime requestedTransitionTime,
+            final DateTime effectiveTransitionTime,
+            @Nullable final BusinessSubscription previousSubscription,
+            @Nullable final Subscription.SubscriptionState nextState) {
         return new BusinessSubscriptionTransition(
-            eventId,
-            KEY,
-            ACCOUNT_KEY,
-            requestedTransitionTime,
-            eventType,
-            previousSubscription,
-            nextState == null ? null : new BusinessSubscription(
-                null,
-                plan.getName(),
-                phase.getName(),
-                CURRENCY,
-                effectiveTransitionTime,
-                nextState,
-                subscriptionId,
-                bundleUUID, catalog
-            )
+                eventId,
+                KEY,
+                ACCOUNT_KEY,
+                requestedTransitionTime,
+                eventType,
+                previousSubscription,
+                nextState == null ? null : new BusinessSubscription(
+                        null,
+                        plan.getName(),
+                        phase.getName(),
+                        CURRENCY,
+                        effectiveTransitionTime,
+                        nextState,
+                        subscriptionId,
+                        bundleUUID, catalog
+                )
         );
     }
 
-    private SubscriptionTransitionData createFirstSubscriptionTransition(final DateTime requestedTransitionTime, final DateTime effectiveTransitionTime)
-    {
+    private SubscriptionTransitionData createFirstSubscriptionTransition(final DateTime requestedTransitionTime, final DateTime effectiveTransitionTime) {
         final ApiEventType eventType = ApiEventType.CREATE;
         final Subscription.SubscriptionState nextState = Subscription.SubscriptionState.ACTIVE;
         return new SubscriptionTransitionData(
-            UUID.randomUUID(),
-            subscriptionId,
-            bundleUUID,
-            EntitlementEvent.EventType.API_USER,
-            eventType,
-            requestedTransitionTime,
-            effectiveTransitionTime,
-            null,
-            null,
-            null,
-            null,
-            nextState,
-            plan,
-            phase,
-            priceList,
-            1L,
-            null,
-            true
+                UUID.randomUUID(),
+                subscriptionId,
+                bundleUUID,
+                EntitlementEvent.EventType.API_USER,
+                eventType,
+                requestedTransitionTime,
+                effectiveTransitionTime,
+                null,
+                null,
+                null,
+                null,
+                nextState,
+                plan,
+                phase,
+                priceList,
+                1L,
+                null,
+                true
         );
     }
 
-
-    private SubscriptionTransitionData createCancelSubscriptionTransition(final DateTime requestedTransitionTime, final DateTime effectiveTransitionTime, final Subscription.SubscriptionState previousState)
-    {
+    private SubscriptionTransitionData createCancelSubscriptionTransition(final DateTime requestedTransitionTime, final DateTime effectiveTransitionTime, final Subscription.SubscriptionState previousState) {
         final ApiEventType eventType = ApiEventType.CANCEL;
         // next state is null for canceled events
         return new SubscriptionTransitionData(
-            UUID.randomUUID(),
-            subscriptionId,
-            bundleUUID,
-            EntitlementEvent.EventType.API_USER,
-            eventType,
-            requestedTransitionTime,
-            effectiveTransitionTime,
-            previousState,
-            plan,
-            phase,
-            priceList,
-            null,
-            null,
-            null,
-            null,
-            1L,
-            null,
-            true
+                UUID.randomUUID(),
+                subscriptionId,
+                bundleUUID,
+                EntitlementEvent.EventType.API_USER,
+                eventType,
+                requestedTransitionTime,
+                effectiveTransitionTime,
+                previousState,
+                plan,
+                phase,
+                priceList,
+                null,
+                null,
+                null,
+                null,
+                1L,
+                null,
+                true
         );
     }
 
-    private SubscriptionTransitionData createRecreatedSubscriptionTransition(final DateTime requestedTransitionTime, final DateTime effectiveTransitionTime, final Subscription.SubscriptionState previousState)
-    {
+    private SubscriptionTransitionData createRecreatedSubscriptionTransition(final DateTime requestedTransitionTime, final DateTime effectiveTransitionTime, final Subscription.SubscriptionState previousState) {
         final ApiEventType eventType = ApiEventType.RE_CREATE;
         final Subscription.SubscriptionState nextState = Subscription.SubscriptionState.ACTIVE;
         return new SubscriptionTransitionData(
-            UUID.randomUUID(),
-            subscriptionId,
-            bundleUUID,
-            EntitlementEvent.EventType.API_USER,
-            eventType,
-            requestedTransitionTime,
-            effectiveTransitionTime,
-            previousState,
-            null,
-            null,
-            null,
-            nextState,
-            plan,
-            phase,
-            priceList,
-            1L,
-            null,
-            true
-        );
-    }
-
-
-    private SubscriptionTransitionData createSubscriptionTransition(
-        final ApiEventType eventType,
-        final DateTime requestedTransitionTime,
-        final DateTime effectiveTransitionTime,
-        final Subscription.SubscriptionState previousState,
-        final Subscription.SubscriptionState nextState
-    )
-    {
-        return new SubscriptionTransitionData(
-            UUID.randomUUID(),
-            subscriptionId,
-            bundleUUID,
-            EntitlementEvent.EventType.API_USER,
-            eventType,
-            requestedTransitionTime,
-            effectiveTransitionTime,
-            previousState,
-            plan,
-            phase,
-            priceList,
-            nextState,
-            plan,
-            phase,
-            priceList,
-            1L,
-            null,
-            true
+                UUID.randomUUID(),
+                subscriptionId,
+                bundleUUID,
+                EntitlementEvent.EventType.API_USER,
+                eventType,
+                requestedTransitionTime,
+                effectiveTransitionTime,
+                previousState,
+                null,
+                null,
+                null,
+                nextState,
+                plan,
+                phase,
+                priceList,
+                1L,
+                null,
+                true
         );
     }
 }

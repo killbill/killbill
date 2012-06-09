@@ -30,6 +30,7 @@ import com.ning.billing.entitlement.api.timeline.BundleTimeline;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.payment.api.Payment;
+import com.ning.billing.payment.api.Payment.PaymentAttempt;
 import com.ning.billing.payment.api.PaymentStatus;
 
 public class AccountTimelineJson {
@@ -44,18 +45,18 @@ public class AccountTimelineJson {
     private final List<BundleJsonWithSubscriptions> bundles;
 
     @JsonCreator
-    public AccountTimelineJson(@JsonProperty("account") AccountJsonSimple account,
-            @JsonProperty("bundles") List<BundleJsonWithSubscriptions> bundles,
-            @JsonProperty("invoices") List<InvoiceJsonWithBundleKeys> invoices,
-            @JsonProperty("payments") List<PaymentJsonWithBundleKeys> payments) {
+    public AccountTimelineJson(@JsonProperty("account") final AccountJsonSimple account,
+                               @JsonProperty("bundles") final List<BundleJsonWithSubscriptions> bundles,
+                               @JsonProperty("invoices") final List<InvoiceJsonWithBundleKeys> invoices,
+                               @JsonProperty("payments") final List<PaymentJsonWithBundleKeys> payments) {
         this.account = account;
         this.bundles = bundles;
         this.invoices = invoices;
         this.payments = payments;
     }
 
-    private String getBundleExternalKey(UUID invoiceId,  List<Invoice> invoices, List<BundleTimeline> bundles) {
-        for (Invoice cur : invoices) {
+    private String getBundleExternalKey(final UUID invoiceId, final List<Invoice> invoices, final List<BundleTimeline> bundles) {
+        for (final Invoice cur : invoices) {
             if (cur.getId().equals(invoiceId)) {
                 return getBundleExternalKey(cur, bundles);
             }
@@ -63,13 +64,13 @@ public class AccountTimelineJson {
         return null;
     }
 
-    private String getBundleExternalKey(Invoice invoice, List<BundleTimeline> bundles) {
-        Set<UUID> b = new HashSet<UUID>();
+    private String getBundleExternalKey(final Invoice invoice, final List<BundleTimeline> bundles) {
+        final Set<UUID> b = new HashSet<UUID>();
         for (final InvoiceItem cur : invoice.getInvoiceItems()) {
             b.add(cur.getBundleId());
         }
         boolean first = true;
-        StringBuilder tmp = new StringBuilder();
+        final StringBuilder tmp = new StringBuilder();
         for (final UUID cur : b) {
             for (final BundleTimeline bt : bundles) {
                 if (bt.getBundleId().equals(cur)) {
@@ -85,14 +86,14 @@ public class AccountTimelineJson {
         return tmp.toString();
     }
 
-    public AccountTimelineJson(Account account, List<Invoice> invoices, List<Payment> payments, List<BundleTimeline> bundles) {
+    public AccountTimelineJson(final Account account, final List<Invoice> invoices, final List<Payment> payments, final List<BundleTimeline> bundles) {
         this.account = new AccountJsonSimple(account.getId().toString(), account.getExternalKey());
         this.bundles = new LinkedList<BundleJsonWithSubscriptions>();
-        for (BundleTimeline cur : bundles) {
+        for (final BundleTimeline cur : bundles) {
             this.bundles.add(new BundleJsonWithSubscriptions(account.getId(), cur));
         }
         this.invoices = new LinkedList<InvoiceJsonWithBundleKeys>();
-        for (Invoice cur : invoices) {
+        for (final Invoice cur : invoices) {
             this.invoices.add(new InvoiceJsonWithBundleKeys(cur.getAmountPaid(),
                                                             cur.getAmountCredited(),
                                                             cur.getId().toString(),
@@ -103,6 +104,7 @@ public class AccountTimelineJson {
                                                             cur.getAccountId().toString(),
                                                             getBundleExternalKey(cur, bundles)));
         }
+
         this.payments = new LinkedList<PaymentJsonWithBundleKeys>();
         for (Payment cur : payments) {
         

@@ -16,6 +16,21 @@
 
 package com.ning.billing.analytics.dao;
 
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.mockito.Mockito;
+import org.skife.jdbi.v2.IDBI;
+import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
+
 import com.ning.billing.analytics.BusinessAccount;
 import com.ning.billing.analytics.BusinessSubscription;
 import com.ning.billing.analytics.BusinessSubscriptionEvent;
@@ -24,8 +39,10 @@ import com.ning.billing.analytics.MockDuration;
 import com.ning.billing.analytics.MockPhase;
 import com.ning.billing.analytics.MockPlan;
 import com.ning.billing.analytics.MockProduct;
+import com.ning.billing.analytics.TestWithEmbeddedDB;
 import com.ning.billing.analytics.utils.Rounder;
 import com.ning.billing.catalog.api.Catalog;
+import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PhaseType;
@@ -33,36 +50,14 @@ import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.mock.BrainDeadProxyFactory;
-import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
-
 import com.ning.billing.util.tag.Tag;
-import org.apache.commons.io.IOUtils;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.skife.jdbi.v2.IDBI;
-import org.testng.Assert;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
 
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
-public class TestAnalyticsDao
-{
+public class TestAnalyticsDao extends TestWithEmbeddedDB {
     private static final UUID EVENT_ID = UUID.randomUUID();
     private static final String EVENT_KEY = "23456";
     private static final String ACCOUNT_KEY = "pierre-143343-vcc";
 
-    private final MysqlTestingHelper helper = new MysqlTestingHelper();
     private final Product product = new MockProduct("platinium", "subscription", ProductCategory.BASE);
     private final Plan plan = new MockPlan("platinum-monthly", product);
     private final PlanPhase phase = new MockPhase(PhaseType.EVERGREEN, plan, MockDuration.UNLIMITED(), 25.95);
@@ -72,33 +67,25 @@ public class TestAnalyticsDao
     private BusinessAccountDao businessAccountDao;
     private BusinessAccount account;
 
-    private final CatalogService catalogService = BrainDeadProxyFactory.createBrainDeadProxyFor(CatalogService.class);
-    private final Catalog catalog = BrainDeadProxyFactory.createBrainDeadProxyFor(Catalog.class);
-    
-    @BeforeClass(alwaysRun = true)
-    public void startMysql() throws IOException, ClassNotFoundException, SQLException
-    {
+    private final CatalogService catalogService = Mockito.mock(CatalogService.class);
+    private final Catalog catalog = Mockito.mock(Catalog.class);
 
-        ((ZombieControl) catalog).addResult("findPlan", plan);
-        ((ZombieControl) catalog).addResult("findPhase", phase);        
-        ((ZombieControl) catalogService).addResult("getFullCatalog", catalog); 
-        
-        final String ddl = IOUtils.toString(BusinessSubscriptionTransitionDao.class.getResourceAsStream("/com/ning/billing/analytics/ddl.sql"));
-
-        helper.startMysql();
-        helper.initDb(ddl);
+    @BeforeClass(groups = "slow")
+    public void setup() throws IOException, ClassNotFoundException, SQLException, CatalogApiException {
+        Mockito.when(catalog.findPlan(Mockito.anyString(), Mockito.<DateTime>any())).thenReturn(plan);
+        Mockito.when(catalog.findPlan(Mockito.anyString(), Mockito.<DateTime>any(), Mockito.<DateTime>any())).thenReturn(plan);
+        Mockito.when(catalog.findPhase(Mockito.anyString(), Mockito.<DateTime>any(), Mockito.<DateTime>any())).thenReturn(phase);
+        Mockito.when(catalogService.getFullCatalog()).thenReturn(catalog);
 
         setupBusinessSubscriptionTransition();
         setupBusinessAccount();
     }
 
-    private void setupBusinessSubscriptionTransition()
-    {
+    private void setupBusinessSubscriptionTransition() {
         final DateTime requestedTimestamp = new DateTime(DateTimeZone.UTC);
         final BusinessSubscription prevSubscription = new BusinessSubscription(null, plan.getName(), phase.getName(), Currency.USD, new DateTime(DateTimeZone.UTC), Subscription.SubscriptionState.ACTIVE, UUID.randomUUID(), UUID.randomUUID(), catalog);
         final BusinessSubscription nextSubscription = new BusinessSubscription(null, plan.getName(), phase.getName(), Currency.USD, new DateTime(DateTimeZone.UTC), Subscription.SubscriptionState.CANCELLED, UUID.randomUUID(), UUID.randomUUID(), catalog);
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionCancelled(plan.getName(), catalog, requestedTimestamp, requestedTimestamp);
-        
 
         transition = new BusinessSubscriptionTransition(EVENT_ID, EVENT_KEY, ACCOUNT_KEY, requestedTimestamp, event, prevSubscription, nextSubscription);
 
@@ -108,14 +95,12 @@ public class TestAnalyticsDao
         // Healthcheck test to make sure MySQL is setup properly
         try {
             businessSubscriptionTransitionDao.test();
-        }
-        catch (Throwable t) {
+        } catch (Throwable t) {
             Assert.fail(t.toString());
         }
     }
 
-    private void setupBusinessAccount()
-    {
+    private void setupBusinessAccount() {
         final List<Tag> tags = new ArrayList<Tag>();
         tags.add(getMockTag("batch1"));
         tags.add(getMockTag("great,guy"));
@@ -127,44 +112,28 @@ public class TestAnalyticsDao
         // Healthcheck test to make sure MySQL is setup properly
         try {
             businessAccountDao.test();
-        }
-        catch (Throwable t) {
+        } catch (Throwable t) {
             Assert.fail(t.toString());
         }
     }
 
-    private Tag getMockTag(String tagDefinitionName) {
-        Tag tag = BrainDeadProxyFactory.createBrainDeadProxyFor(Tag.class);
-        ZombieControl zombie = (ZombieControl) tag;
-        zombie.addResult("getTagDefinitionName", tagDefinitionName);
-        zombie.addResult("toString", tagDefinitionName);
+    private Tag getMockTag(final String tagDefinitionName) {
+        final Tag tag = Mockito.mock(Tag.class);
+        Mockito.when(tag.getTagDefinitionName()).thenReturn(tagDefinitionName);
+        Mockito.when(tag.toString()).thenReturn(tagDefinitionName);
         return tag;
     }
 
-    @AfterClass(groups = "slow")
-    public void stopMysql()
-    {
-        helper.stopMysql();
-    }
-
-    @BeforeMethod(groups = "slow")
-    public void cleanup() throws Exception
-    {
-        helper.cleanupTable("bst");
-        helper.cleanupTable("bac");
-    }
-
     @Test(groups = "slow")
-    public void testHandleDuplicatedEvents()
-    {
+    public void testHandleDuplicatedEvents() {
         final BusinessSubscriptionTransition transitionWithNullPrev = new BusinessSubscriptionTransition(
-            transition.getId(),
-            transition.getKey(),
-            transition.getAccountKey(),
-            transition.getRequestedTimestamp(),
-            transition.getEvent(),
-            null,
-            transition.getNextSubscription()
+                transition.getId(),
+                transition.getKey(),
+                transition.getAccountKey(),
+                transition.getRequestedTimestamp(),
+                transition.getEvent(),
+                null,
+                transition.getNextSubscription()
         );
 
         businessSubscriptionTransitionDao.createTransition(transitionWithNullPrev);
@@ -179,13 +148,13 @@ public class TestAnalyticsDao
 
         // Try now to store a look-alike transition (same fields except UUID) - we should store it this time
         final BusinessSubscriptionTransition secondTransitionWithNullPrev = new BusinessSubscriptionTransition(
-            UUID.randomUUID(),
-            transition.getKey(),
-            transition.getAccountKey(),
-            transition.getRequestedTimestamp(),
-            transition.getEvent(),
-            null,
-            transition.getNextSubscription()
+                UUID.randomUUID(),
+                transition.getKey(),
+                transition.getAccountKey(),
+                transition.getRequestedTimestamp(),
+                transition.getEvent(),
+                null,
+                transition.getNextSubscription()
         );
         businessSubscriptionTransitionDao.createTransition(secondTransitionWithNullPrev);
         transitions = businessSubscriptionTransitionDao.getTransitions(EVENT_KEY);
@@ -195,16 +164,15 @@ public class TestAnalyticsDao
     }
 
     @Test(groups = "slow")
-    public void testTransitionsWithNullPrevSubscription()
-    {
+    public void testTransitionsWithNullPrevSubscription() {
         final BusinessSubscriptionTransition transitionWithNullPrev = new BusinessSubscriptionTransition(
-            transition.getId(),
-            transition.getKey(),
-            transition.getAccountKey(),
-            transition.getRequestedTimestamp(),
-            transition.getEvent(),
-            null,
-            transition.getNextSubscription()
+                transition.getId(),
+                transition.getKey(),
+                transition.getAccountKey(),
+                transition.getRequestedTimestamp(),
+                transition.getEvent(),
+                null,
+                transition.getNextSubscription()
         );
         businessSubscriptionTransitionDao.createTransition(transitionWithNullPrev);
 
@@ -214,16 +182,15 @@ public class TestAnalyticsDao
     }
 
     @Test(groups = "slow")
-    public void testTransitionsWithNullNextSubscription()
-    {
+    public void testTransitionsWithNullNextSubscription() {
         final BusinessSubscriptionTransition transitionWithNullNext = new BusinessSubscriptionTransition(
-            transition.getId(),
-            transition.getKey(),
-            transition.getAccountKey(),
-            transition.getRequestedTimestamp(),
-            transition.getEvent(),
-            transition.getPreviousSubscription(),
-            null
+                transition.getId(),
+                transition.getKey(),
+                transition.getAccountKey(),
+                transition.getRequestedTimestamp(),
+                transition.getEvent(),
+                transition.getPreviousSubscription(),
+                null
         );
         businessSubscriptionTransitionDao.createTransition(transitionWithNullNext);
 
@@ -233,17 +200,16 @@ public class TestAnalyticsDao
     }
 
     @Test(groups = "slow")
-    public void testTransitionsWithNullFieldsInSubscription()
-    {
+    public void testTransitionsWithNullFieldsInSubscription() {
         final BusinessSubscription subscriptionWithNullFields = new BusinessSubscription(null, plan.getName(), phase.getName(), Currency.USD, null, null, null, null, catalog);
         final BusinessSubscriptionTransition transitionWithNullFields = new BusinessSubscriptionTransition(
-            transition.getId(),
-            transition.getKey(),
-            transition.getAccountKey(),
-            transition.getRequestedTimestamp(),
-            transition.getEvent(),
-            subscriptionWithNullFields,
-            subscriptionWithNullFields
+                transition.getId(),
+                transition.getKey(),
+                transition.getAccountKey(),
+                transition.getRequestedTimestamp(),
+                transition.getEvent(),
+                subscriptionWithNullFields,
+                subscriptionWithNullFields
         );
         businessSubscriptionTransitionDao.createTransition(transitionWithNullFields);
 
@@ -253,17 +219,16 @@ public class TestAnalyticsDao
     }
 
     @Test(groups = "slow")
-    public void testTransitionsWithNullPlanAndPhase() throws Exception
-    {
+    public void testTransitionsWithNullPlanAndPhase() throws Exception {
         final BusinessSubscription subscriptionWithNullPlanAndPhase = new BusinessSubscription(null, null, null, Currency.USD, null, null, null, null, catalog);
         final BusinessSubscriptionTransition transitionWithNullPlanAndPhase = new BusinessSubscriptionTransition(
-            transition.getId(),
-            transition.getKey(),
-            transition.getAccountKey(),
-            transition.getRequestedTimestamp(),
-            transition.getEvent(),
-            subscriptionWithNullPlanAndPhase,
-            subscriptionWithNullPlanAndPhase
+                transition.getId(),
+                transition.getKey(),
+                transition.getAccountKey(),
+                transition.getRequestedTimestamp(),
+                transition.getEvent(),
+                subscriptionWithNullPlanAndPhase,
+                subscriptionWithNullPlanAndPhase
         );
         businessSubscriptionTransitionDao.createTransition(transitionWithNullPlanAndPhase);
 
@@ -277,17 +242,16 @@ public class TestAnalyticsDao
     }
 
     @Test(groups = "slow")
-    public void testTransitionsWithNullPlan() throws Exception
-    {
+    public void testTransitionsWithNullPlan() throws Exception {
         final BusinessSubscription subscriptionWithNullPlan = new BusinessSubscription(null, null, phase.getName(), Currency.USD, null, null, null, null, catalog);
         final BusinessSubscriptionTransition transitionWithNullPlan = new BusinessSubscriptionTransition(
-            transition.getId(),
-            transition.getKey(),
-            transition.getAccountKey(),
-            transition.getRequestedTimestamp(),
-            transition.getEvent(),
-            subscriptionWithNullPlan,
-            subscriptionWithNullPlan
+                transition.getId(),
+                transition.getKey(),
+                transition.getAccountKey(),
+                transition.getRequestedTimestamp(),
+                transition.getEvent(),
+                subscriptionWithNullPlan,
+                subscriptionWithNullPlan
         );
         businessSubscriptionTransitionDao.createTransition(transitionWithNullPlan);
 
@@ -298,17 +262,16 @@ public class TestAnalyticsDao
     }
 
     @Test(groups = "slow")
-    public void testTransitionsWithNullPhase() throws Exception
-    {
+    public void testTransitionsWithNullPhase() throws Exception {
         final BusinessSubscription subscriptionWithNullPhase = new BusinessSubscription(null, plan.getName(), null, Currency.USD, null, null, null, null, catalog);
         final BusinessSubscriptionTransition transitionWithNullPhase = new BusinessSubscriptionTransition(
-            transition.getId(),
-            transition.getKey(),
-            transition.getAccountKey(),
-            transition.getRequestedTimestamp(),
-            transition.getEvent(),
-            subscriptionWithNullPhase,
-            subscriptionWithNullPhase
+                transition.getId(),
+                transition.getKey(),
+                transition.getAccountKey(),
+                transition.getRequestedTimestamp(),
+                transition.getEvent(),
+                subscriptionWithNullPhase,
+                subscriptionWithNullPhase
         );
         businessSubscriptionTransitionDao.createTransition(transitionWithNullPhase);
 
@@ -325,8 +288,7 @@ public class TestAnalyticsDao
     }
 
     @Test(groups = "slow")
-    public void testCreateAndRetrieveTransitions()
-    {
+    public void testCreateAndRetrieveTransitions() {
         businessSubscriptionTransitionDao.createTransition(transition);
 
         final List<BusinessSubscriptionTransition> transitions = businessSubscriptionTransitionDao.getTransitions(EVENT_KEY);
@@ -337,8 +299,7 @@ public class TestAnalyticsDao
     }
 
     @Test(groups = "slow")
-    public void testCreateSaveAndRetrieveAccounts()
-    {
+    public void testCreateSaveAndRetrieveAccounts() {
         // Create and retrieve an account
         businessAccountDao.createAccount(account);
         final BusinessAccount foundAccount = businessAccountDao.getAccount(ACCOUNT_KEY);

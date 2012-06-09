@@ -34,8 +34,7 @@ import com.ning.billing.entitlement.api.user.SubscriptionEvent;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.util.callcontext.CallContext;
 
-public class MockSubscription implements Subscription
-{
+public class MockSubscription implements Subscription {
     private static final UUID ID = UUID.randomUUID();
     private static final UUID BUNDLE_ID = UUID.randomUUID();
     private static final DateTime START_DATE = new DateTime(DateTimeZone.UTC);
@@ -44,71 +43,60 @@ public class MockSubscription implements Subscription
     private final Plan plan;
     private final PlanPhase phase;
 
-    public MockSubscription(final SubscriptionState state, final Plan plan, final PlanPhase phase)
-    {
+    public MockSubscription(final SubscriptionState state, final Plan plan, final PlanPhase phase) {
         this.state = state;
         this.plan = plan;
         this.phase = phase;
     }
 
     @Override
-    public boolean cancel(DateTime requestedDate, boolean eot, CallContext context)
-    {
+    public boolean cancel(DateTime requestedDate, boolean eot, CallContext context) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public boolean changePlan(final String productName, final BillingPeriod term, final String planSet, DateTime requestedDate, CallContext context)
-    {
+    public boolean changePlan(final String productName, final BillingPeriod term, final String planSet, DateTime requestedDate, CallContext context) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public UUID getId()
-    {
+    public UUID getId() {
         return ID;
     }
 
     @Override
-    public UUID getBundleId()
-    {
+    public UUID getBundleId() {
         return BUNDLE_ID;
     }
 
     @Override
-    public SubscriptionState getState()
-    {
+    public SubscriptionState getState() {
         return state;
     }
 
     @Override
-    public DateTime getStartDate()
-    {
+    public DateTime getStartDate() {
         return START_DATE;
     }
 
     @Override
-    public Plan getCurrentPlan()
-    {
+    public Plan getCurrentPlan() {
         return plan;
     }
 
     @Override
-    public PlanPhase getCurrentPhase()
-    {
+    public PlanPhase getCurrentPhase() {
         return phase;
     }
 
 
     @Override
-    public boolean uncancel(CallContext context) throws EntitlementUserApiException
-    {
+    public boolean uncancel(CallContext context) throws EntitlementUserApiException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public PriceList getCurrentPriceList()
-    {
+    public PriceList getCurrentPriceList() {
         return null;
     }
 
@@ -122,15 +110,15 @@ public class MockSubscription implements Subscription
         throw new UnsupportedOperationException();
     }
 
-	@Override
-	public DateTime getChargedThroughDate() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public DateTime getPaidThroughDate() {
+    @Override
+    public DateTime getChargedThroughDate() {
         throw new UnsupportedOperationException();
-	}
+    }
+
+    @Override
+    public DateTime getPaidThroughDate() {
+        throw new UnsupportedOperationException();
+    }
 
     @Override
     public SubscriptionEvent getPreviousTransition() {

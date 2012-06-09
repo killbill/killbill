@@ -17,22 +17,20 @@
 package com.ning.billing.analytics.dao;
 
 import org.skife.jdbi.v2.IDBI;
+
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 
-public class BusinessAccountDaoProvider implements Provider<BusinessAccountDao>
-{
+public class BusinessAccountDaoProvider implements Provider<BusinessAccountDao> {
     private final IDBI dbi;
 
     @Inject
-    public BusinessAccountDaoProvider(final IDBI dbi)
-    {
+    public BusinessAccountDaoProvider(final IDBI dbi) {
         this.dbi = dbi;
     }
 
     @Override
-    public BusinessAccountDao get()
-    {
+    public BusinessAccountDao get() {
         return dbi.onDemand(BusinessAccountDao.class);
     }
 }

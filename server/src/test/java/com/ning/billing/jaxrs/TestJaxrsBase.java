@@ -31,6 +31,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.core.Response.Status;
 
+import com.google.common.io.Resources;
 import com.ning.billing.jaxrs.resources.JaxrsResource;
 import com.ning.billing.util.email.EmailModule;
 import com.ning.billing.util.email.templates.TemplateModule;
@@ -129,6 +130,15 @@ public class TestJaxrsBase {
             System.getProperties().load(url.openStream());
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+
+        // Use the full path for the catalog
+        final String catalogURI = System.getProperty("killbill.catalog.uri");
+        if (catalogURI != null) {
+            try {
+                System.setProperty("killbill.catalog.uri", Resources.getResource(catalogURI).toExternalForm());
+            } catch (IllegalArgumentException ignored) {
+            }
         }
     }
 
@@ -406,7 +416,7 @@ public class TestJaxrsBase {
 
         baseJson = response.getResponseBody();
         SubscriptionJsonNoEvents objFromJson = mapper.readValue(baseJson, SubscriptionJsonNoEvents.class);
-        Assert.assertTrue(objFromJson.equalsNoId(input));
+        Assert.assertTrue(objFromJson.equalsNoSubscriptionIdNoStartDateNoCTD(input));
         return objFromJson;
     }
 

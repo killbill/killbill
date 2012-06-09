@@ -28,7 +28,6 @@ import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.util.clock.DefaultClock;
 
 public class PaymentJsonSimple {
-
     private final BigDecimal paidAmount;
 
     private final BigDecimal amount;
@@ -107,9 +106,6 @@ public class PaymentJsonSimple {
         return invoiceId;
     }
 
-    public String getAccountId() {
-        return accountId;
-    }
 
     public String getPaymentId() {
         return paymentId;
@@ -137,5 +133,73 @@ public class PaymentJsonSimple {
 
     public String getCurrency() {
         return currency;
+    }
+
+    public String getAccountId() {
+        return accountId;
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        final PaymentJsonSimple that = (PaymentJsonSimple) o;
+
+        if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
+            return false;
+        }
+        if (!((amount == null && that.amount == null) ||
+                (amount != null && that.amount != null && amount.compareTo(that.amount) == 0))) {
+            return false;
+        }
+        if (currency != null ? !currency.equals(that.currency) : that.currency != null) {
+            return false;
+        }
+        if (!((effectiveDate == null && that.effectiveDate == null) ||
+                (effectiveDate != null && that.effectiveDate != null && effectiveDate.compareTo(that.effectiveDate) == 0))) {
+            return false;
+        }
+        if (invoiceId != null ? !invoiceId.equals(that.invoiceId) : that.invoiceId != null) {
+            return false;
+        }
+        if (!((paidAmount == null && that.paidAmount == null) ||
+                (paidAmount != null && that.paidAmount != null && paidAmount.compareTo(that.paidAmount) == 0))) {
+            return false;
+        }
+        if (paymentId != null ? !paymentId.equals(that.paymentId) : that.paymentId != null) {
+            return false;
+        }
+        if (!((requestedDate == null && that.requestedDate == null) ||
+                (requestedDate != null && that.requestedDate != null && requestedDate.compareTo(that.requestedDate) == 0))) {
+            return false;
+        }
+        if (retryCount != null ? !retryCount.equals(that.retryCount) : that.retryCount != null) {
+            return false;
+        }
+        if (status != null ? !status.equals(that.status) : that.status != null) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = paidAmount != null ? paidAmount.hashCode() : 0;
+        result = 31 * result + (amount != null ? amount.hashCode() : 0);
+        result = 31 * result + (invoiceId != null ? invoiceId.hashCode() : 0);
+        result = 31 * result + (paymentId != null ? paymentId.hashCode() : 0);
+        result = 31 * result + (requestedDate != null ? requestedDate.hashCode() : 0);
+        result = 31 * result + (effectiveDate != null ? effectiveDate.hashCode() : 0);
+        result = 31 * result + (retryCount != null ? retryCount.hashCode() : 0);
+        result = 31 * result + (currency != null ? currency.hashCode() : 0);
+        result = 31 * result + (status != null ? status.hashCode() : 0);
+        result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
+        return result;
     }
 }

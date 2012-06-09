@@ -16,17 +16,17 @@
 
 package com.ning.billing.analytics.dao;
 
-import com.ning.billing.analytics.BusinessAccount;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 
+import com.ning.billing.analytics.BusinessAccount;
+
 @ExternalizedSqlViaStringTemplate3()
 @RegisterMapper(BusinessAccountMapper.class)
-public interface BusinessAccountDao
-{
+public interface BusinessAccountDao {
     @SqlQuery
     BusinessAccount getAccount(@Bind("account_key") final String key);
 
