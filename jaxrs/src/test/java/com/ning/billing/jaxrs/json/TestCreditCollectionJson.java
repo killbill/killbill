@@ -47,7 +47,7 @@ public class TestCreditCollectionJson {
         final DateTime requestedDate = new DateTime(DateTimeZone.UTC);
         final DateTime effectiveDate = new DateTime(DateTimeZone.UTC);
         final String reason = UUID.randomUUID().toString();
-        final CreditJson creditJson = new CreditJson(creditAmount, invoiceId, invoiceNumber, requestedDate, effectiveDate, reason);
+        final CreditJson creditJson = new CreditJson(creditAmount, invoiceId, invoiceNumber, requestedDate, effectiveDate, reason, accountId);
 
         final CreditCollectionJson creditCollectionJson = new CreditCollectionJson(accountId, ImmutableList.<CreditJson>of(creditJson));
         Assert.assertEquals(creditCollectionJson.getAccountId(), accountId);
@@ -61,7 +61,8 @@ public class TestCreditCollectionJson {
                 "\"invoiceNumber\":\"" + creditJson.getInvoiceNumber() + "\"," +
                 "\"requestedDate\":\"" + creditJson.getRequestedDate() + "\"," +
                 "\"effectiveDate\":\"" + creditJson.getEffectiveDate() + "\"," +
-                "\"reason\":\"" + creditJson.getReason() + "\"}]}");
+                "\"reason\":\"" + creditJson.getReason() + "\"," +
+                "\"accountId\":\"" + creditJson.getAccountId().toString() + "\"}]}");
 
         final CreditCollectionJson fromJson = mapper.readValue(asJson, CreditCollectionJson.class);
         Assert.assertEquals(fromJson, creditCollectionJson);
