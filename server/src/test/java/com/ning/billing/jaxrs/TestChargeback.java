@@ -35,7 +35,6 @@ import com.ning.http.client.Response;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
-@Test(groups = "slow", enabled = false)
 public class TestChargeback extends TestJaxrsBase {
     private final String accountId = UUID.randomUUID().toString();
     private InvoicePayment invoicePayment;
