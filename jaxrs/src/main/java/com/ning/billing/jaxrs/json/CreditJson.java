@@ -100,7 +100,8 @@ public class CreditJson {
 
         final CreditJson that = (CreditJson) o;
 
-        if (creditAmount != null ? !creditAmount.equals(that.creditAmount) : that.creditAmount != null) {
+        if (!((creditAmount == null && that.creditAmount == null) ||
+                (creditAmount != null && that.creditAmount != null && creditAmount.compareTo(that.creditAmount) == 0))) {
             return false;
         }
         if (!((effectiveDate == null && that.effectiveDate == null) ||

@@ -67,9 +67,12 @@ public class CreditResource implements JaxrsResource {
     public Response getCredit(@PathParam("creditId") final String creditId) {
         try {
             final InvoiceItem credit = invoiceUserApi.getCreditById(UUID.fromString(creditId));
-            final CreditJson creditJson = new CreditJson(credit);
-
-            return Response.status(Response.Status.OK).entity(creditJson).build();
+            if (credit == null) {
+                return Response.status(Response.Status.NOT_FOUND).build();
+            } else {
+                final CreditJson creditJson = new CreditJson(credit);
+                return Response.status(Response.Status.OK).entity(creditJson).build();
+            }
         } catch (InvoiceApiException e) {
             final String error = String.format("Failed to locate credit for id %s", creditId);
             log.info(error, e);
@@ -81,12 +84,16 @@ public class CreditResource implements JaxrsResource {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response createCredit(final CreditJson json,
-                                 @PathParam("accountId") final String accountId,
                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                  @HeaderParam(HDR_REASON) final String reason,
                                  @HeaderParam(HDR_COMMENT) final String comment) {
+        final UUID accountId = json.getAccountId();
+        if (accountId == null) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("AccountId cannot be null").build();
+        }
+
         try {
-            final Account account = accountUserApi.getAccountById(UUID.fromString(accountId));
+            final Account account = accountUserApi.getAccountById(accountId);
 
             final InvoiceItem credit = invoiceUserApi.insertCredit(account.getId(), json.getCreditAmount(), json.getEffectiveDate(),
                                                                    account.getCurrency(), context.createContext(createdBy, reason, comment));

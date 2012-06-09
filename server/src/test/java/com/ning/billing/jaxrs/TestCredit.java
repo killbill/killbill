@@ -27,12 +27,12 @@ import org.testng.annotations.Test;
 import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.CreditJson;
 import com.ning.billing.jaxrs.resources.JaxrsResource;
+import com.ning.billing.util.clock.DefaultClock;
 import com.ning.http.client.Response;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
-@Test(groups = "slow", enabled = false)
 public class TestCredit extends TestJaxrsBase {
     AccountJson accountJson;
 
@@ -44,9 +44,11 @@ public class TestCredit extends TestJaxrsBase {
 
     @Test(groups = "slow")
     public void testAddCreditToInvoice() throws Exception {
+        final DateTime requestedDate = DefaultClock.truncateMs(new DateTime(DateTimeZone.UTC));
+        final DateTime effectiveDate = DefaultClock.truncateMs(new DateTime(DateTimeZone.UTC));
         final CreditJson input = new CreditJson(BigDecimal.TEN, UUID.randomUUID(), UUID.randomUUID().toString(),
-                                                new DateTime(DateTimeZone.UTC), new DateTime(DateTimeZone.UTC),
-                                                UUID.randomUUID().toString());
+                                                requestedDate, effectiveDate,
+                                                UUID.randomUUID().toString(), UUID.fromString(accountJson.getAccountId()));
         final String jsonInput = mapper.writeValueAsString(input);
 
         // Create the credit
@@ -60,16 +62,18 @@ public class TestCredit extends TestJaxrsBase {
         response = doGetWithUrl(location, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), javax.ws.rs.core.Response.Status.OK.getStatusCode());
 
+        // We can't just compare the object via .equals() due e.g. to the invoice id
         final CreditJson objFromJson = mapper.readValue(response.getResponseBody(), CreditJson.class);
-        assertNotNull(objFromJson);
-        assertEquals(objFromJson, input);
+        assertEquals(objFromJson.getAccountId(), input.getAccountId());
+        assertEquals(objFromJson.getCreditAmount().compareTo(input.getCreditAmount()), 0);
+        assertEquals(objFromJson.getEffectiveDate().compareTo(input.getEffectiveDate()), 0);
     }
 
     @Test(groups = "slow")
     public void testAccountDoesNotExist() throws Exception {
         final CreditJson input = new CreditJson(BigDecimal.TEN, UUID.randomUUID(), UUID.randomUUID().toString(),
                                                 new DateTime(DateTimeZone.UTC), new DateTime(DateTimeZone.UTC),
-                                                UUID.randomUUID().toString());
+                                                UUID.randomUUID().toString(), UUID.randomUUID());
         final String jsonInput = mapper.writeValueAsString(input);
 
         // Try to create the credit
@@ -79,7 +83,7 @@ public class TestCredit extends TestJaxrsBase {
 
     @Test(groups = "slow")
     public void testBadRequest() throws Exception {
-        final CreditJson input = new CreditJson(null, null, null, null, null, null);
+        final CreditJson input = new CreditJson(null, null, null, null, null, null, null);
         final String jsonInput = mapper.writeValueAsString(input);
 
         // Try to create the credit
