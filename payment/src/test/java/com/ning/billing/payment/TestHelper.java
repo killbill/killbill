@@ -31,6 +31,11 @@ import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
+import com.ning.billing.payment.api.DefaultPaymentMethodPlugin;
+import com.ning.billing.payment.api.PaymentApi;
+import com.ning.billing.payment.api.PaymentMethod;
+import com.ning.billing.payment.api.PaymentMethodPlugin;
+import com.ning.billing.payment.glue.PaymentTestModuleWithMocks;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
 import com.ning.billing.util.callcontext.CallContext;
@@ -40,34 +45,24 @@ import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.entity.EntityPersistenceException;
 
 public class TestHelper {
+
     protected final AccountUserApi accountUserApi;
     protected final InvoicePaymentApi invoicePaymentApi;
+    protected PaymentApi paymentApi;
     private final CallContext context;
     private final Bus eventBus;
 
     @Inject
-    public TestHelper(CallContextFactory factory, AccountUserApi accountUserApi, InvoicePaymentApi invoicePaymentApi, Bus eventBus) {
+    public TestHelper(CallContextFactory factory, AccountUserApi accountUserApi, InvoicePaymentApi invoicePaymentApi, PaymentApi paymentApi, Bus eventBus) {
         this.eventBus = eventBus;
         this.accountUserApi = accountUserApi;
         this.invoicePaymentApi = invoicePaymentApi;
+        this.paymentApi = paymentApi;
         context = factory.createCallContext("Princess Buttercup", CallOrigin.TEST, UserType.TEST);
     }
 
-    // These helper methods can be overridden in a plugin implementation
-    public Account createTestCreditCardAccount() throws EntityPersistenceException {
-        final Account account = createTestAccount("ccuser" + RandomStringUtils.randomAlphanumeric(8) + "@example.com");
-        ((ZombieControl)accountUserApi).addResult("getAccountById", account);
-        ((ZombieControl)accountUserApi).addResult("getAccountByKey", account);
-        return account;
-    }
-
-    public Account createTestPayPalAccount() throws EntityPersistenceException {
-        final Account account = createTestAccount("ppuser@example.com");
-        ((ZombieControl)accountUserApi).addResult("getAccountById", account);
-        ((ZombieControl)accountUserApi).addResult("getAccountByKey", account);
-        return account;
-    }
-
+  
+    
     public Invoice createTestInvoice(Account account,
                                      DateTime targetDate,
                                      Currency currency,
@@ -91,7 +86,6 @@ public class TestHelper {
             }
         }
 
- //       invoiceTestApi.create(invoice, context);
         ((ZombieControl)invoicePaymentApi).addResult("getInvoice", invoice);
         InvoiceCreationEvent event = new MockInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
                 invoice.getBalance(), invoice.getCurrency(),
@@ -102,7 +96,7 @@ public class TestHelper {
         return invoice;
     }
 
-    public Account createTestAccount(String email) {
+    public Account createTestAccount(String email) throws Exception {
         final String name = "First" + RandomStringUtils.randomAlphanumeric(5) + " " + "Last" + RandomStringUtils.randomAlphanumeric(5);
         final String externalKey = RandomStringUtils.randomAlphanumeric(10);
 
@@ -116,8 +110,19 @@ public class TestHelper {
         zombie.addResult("getEmail", email);
         zombie.addResult("getCurrency", Currency.USD);
         zombie.addResult("getBillCycleDay", 1);
-        zombie.addResult("getPaymentProviderName", "");
+        
+        ((ZombieControl)accountUserApi).addResult("getAccountById", account);
+        ((ZombieControl)accountUserApi).addResult("getAccountByKey", account);
 
+        PaymentMethodPlugin pm = new DefaultPaymentMethodPlugin(UUID.randomUUID().toString(), true, null);
+        addTestPaymentMethod(account, pm);
         return account;
     }
+    
+    private void addTestPaymentMethod(Account account, PaymentMethodPlugin paymentMethodInfo) throws Exception {
+        UUID paymentMethodId = paymentApi.addPaymentMethod(PaymentTestModuleWithMocks.PLUGIN_TEST_NAME, account, true, paymentMethodInfo, context);
+        ZombieControl zombie = (ZombieControl) account;
+        zombie.addResult("getPaymentMethodId", paymentMethodId);        
+    }
+
 }

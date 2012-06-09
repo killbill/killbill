@@ -117,7 +117,7 @@ public class DefaultAccountCreationEvent implements AccountCreationEvent {
         private final String email;
         private final Integer billCycleDay;
         private final String currency;
-        private final String paymentProviderName;
+        private final UUID paymentMethodId;
         private final String timeZone;
         private final String locale;
         private final String address1;
@@ -139,7 +139,7 @@ public class DefaultAccountCreationEvent implements AccountCreationEvent {
                     d.getEmail(),
                     d.getBillCycleDay(),
                     d.getCurrency() != null ?  d.getCurrency().name() : null,
-                    d.getPaymentProviderName(), 
+                    d.getPaymentMethodId(), 
                     d.getTimeZone() != null ?  d.getTimeZone().getID() : null,
                     d.getLocale(),
                     d.getAddress1(),
@@ -161,7 +161,7 @@ public class DefaultAccountCreationEvent implements AccountCreationEvent {
                 @JsonProperty("email") String email,
                 @JsonProperty("billCycleDay") Integer billCycleDay,
                 @JsonProperty("currency") String currency,
-                @JsonProperty("paymentProviderName") String paymentProviderName,
+                @JsonProperty("paymentMethodId") UUID paymentMethodId,
                 @JsonProperty("timeZone") String timeZone,
                 @JsonProperty("locale") String locale,
                 @JsonProperty("address1") String address1,
@@ -181,7 +181,7 @@ public class DefaultAccountCreationEvent implements AccountCreationEvent {
             this.email = email;
             this.billCycleDay = billCycleDay;
             this.currency = currency;
-            this.paymentProviderName = paymentProviderName;
+            this.paymentMethodId = paymentMethodId;
             this.timeZone = timeZone;
             this.locale = locale;
             this.address1 = address1;
@@ -224,11 +224,6 @@ public class DefaultAccountCreationEvent implements AccountCreationEvent {
         @Override
         public Currency getCurrency() {
             return Currency.valueOf(currency);
-        }
-
-        @Override
-        public String getPaymentProviderName() {
-            return paymentProviderName;
         }
 
         @JsonIgnore
@@ -288,6 +283,11 @@ public class DefaultAccountCreationEvent implements AccountCreationEvent {
         }
 
         @Override
+        public UUID getPaymentMethodId() {
+            return paymentMethodId;
+        }
+
+        @Override
         @JsonIgnore
         public boolean isMigrated() {
             return isMigrated;
@@ -328,7 +328,7 @@ public class DefaultAccountCreationEvent implements AccountCreationEvent {
             result = prime * result + ((name == null) ? 0 : name.hashCode());
             result = prime
                     * result
-                    + ((paymentProviderName == null) ? 0 : paymentProviderName
+                    + ((paymentMethodId == null) ? 0 : paymentMethodId
                             .hashCode());
             result = prime * result + ((phone == null) ? 0 : phone.hashCode());
             result = prime * result
@@ -411,10 +411,10 @@ public class DefaultAccountCreationEvent implements AccountCreationEvent {
                     return false;
             } else if (!name.equals(other.name))
                 return false;
-            if (paymentProviderName == null) {
-                if (other.paymentProviderName != null)
+            if (paymentMethodId == null) {
+                if (other.paymentMethodId != null)
                     return false;
-            } else if (!paymentProviderName.equals(other.paymentProviderName))
+            } else if (!paymentMethodId.equals(other.paymentMethodId))
                 return false;
             if (phone == null) {
                 if (other.phone != null)

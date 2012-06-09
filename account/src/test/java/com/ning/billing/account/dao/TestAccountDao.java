@@ -232,8 +232,8 @@ public class TestAccountDao extends AccountDaoTestBase {
             }
 
             @Override
-            public String getPaymentProviderName() {
-                return account.getPaymentProviderName();
+            public UUID getPaymentMethodId() {
+                return account.getPaymentMethodId();
             }
             @Override
             public DateTimeZone getTimeZone() {
@@ -288,7 +288,7 @@ public class TestAccountDao extends AccountDaoTestBase {
         assertNotNull(savedAccount);
         assertEquals(savedAccount.getName(), updatedAccount.getName());
         assertEquals(savedAccount.getEmail(), updatedAccount.getEmail());
-        assertEquals(savedAccount.getPaymentProviderName(), updatedAccount.getPaymentProviderName());
+        assertEquals(savedAccount.getPaymentMethodId(), updatedAccount.getPaymentMethodId());
         assertEquals(savedAccount.getBillCycleDay(), updatedAccount.getBillCycleDay());
         assertEquals(savedAccount.getFirstNameLength(), updatedAccount.getFirstNameLength());
         assertEquals(savedAccount.getTimeZone(), updatedAccount.getTimeZone());

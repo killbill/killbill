@@ -16,6 +16,8 @@
 
 package com.ning.billing.account.api;
 
+import java.util.UUID;
+
 import org.joda.time.DateTimeZone;
 
 import com.ning.billing.catalog.api.Currency;
@@ -33,7 +35,7 @@ public interface MutableAccountData extends AccountData {
 
     public void setBillCycleDay(int billCycleDay);
 
-    public void setPaymentProviderName(String paymentProviderName);
+    public void setPaymentMethodId(UUID paymentMethodId);
 
     public void setTimeZone(DateTimeZone timeZone);
 

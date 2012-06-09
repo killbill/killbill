@@ -167,7 +167,7 @@ public class TestRetryService {
 
     private void testSchedulesRetryInternal(int maxTries, final FailureType failureType) throws Exception {
         
-        final Account account = testHelper.createTestCreditCardAccount();
+        final Account account = testHelper.createTestAccount("yiyi.gmail.com");
         final Invoice invoice = testHelper.createTestInvoice(account, clock.getUTCNow(), Currency.USD);
         final BigDecimal amount = new BigDecimal("10.00");
         final UUID subscriptionId = UUID.randomUUID();

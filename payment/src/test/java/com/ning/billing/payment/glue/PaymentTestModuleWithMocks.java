@@ -51,6 +51,8 @@ public class PaymentTestModuleWithMocks extends PaymentModule {
 	}
 	*/
 
+    public final static String PLUGIN_TEST_NAME = "my-mock";
+    
     private void loadSystemPropertiesFromClasspath(final String resource) {
         final URL url = PaymentTestModuleWithMocks.class.getResource(resource);
         assertNotNull(url);
@@ -63,7 +65,7 @@ public class PaymentTestModuleWithMocks extends PaymentModule {
     }
     
     public PaymentTestModuleWithMocks() {
-        super(MapUtils.toProperties(ImmutableMap.of("killbill.payment.provider.default", "my-mock",
+        super(MapUtils.toProperties(ImmutableMap.of("killbill.payment.provider.default", PLUGIN_TEST_NAME,
                 "killbill.payment.engine.events.off", "false")));
     }
 
@@ -74,7 +76,7 @@ public class PaymentTestModuleWithMocks extends PaymentModule {
 
     @Override
     protected void installPaymentProviderPlugins(PaymentConfig config) {
-        install(new MockPaymentProviderPluginModule("my-mock"));
+        install(new MockPaymentProviderPluginModule(PLUGIN_TEST_NAME));
     }
 
     @Override

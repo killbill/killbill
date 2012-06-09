@@ -72,8 +72,8 @@ public class BlockingAccount implements Account {
     }
 
     @Override
-    public String getPaymentProviderName() {
-        return account.getPaymentProviderName();
+    public UUID getPaymentMethodId() {
+        return account.getPaymentMethodId();
     }
 
     @Override
@@ -148,5 +148,4 @@ public class BlockingAccount implements Account {
     public boolean isNotifiedForInvoices() {
         return account.isNotifiedForInvoices();
     }
-
 }

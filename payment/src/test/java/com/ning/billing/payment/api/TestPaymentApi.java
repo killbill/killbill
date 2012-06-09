@@ -25,12 +25,10 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.UUID;
 
-import org.apache.commons.lang.RandomStringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Guice;
@@ -39,6 +37,7 @@ import org.testng.annotations.Test;
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
@@ -50,7 +49,6 @@ import com.ning.billing.payment.MockRecurringInvoiceItem;
 import com.ning.billing.payment.TestHelper;
 import com.ning.billing.payment.api.Payment.PaymentAttempt;
 import com.ning.billing.payment.glue.PaymentTestModuleWithMocks;
-import com.ning.billing.payment.plugin.api.PaymentProviderAccount;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
 import com.ning.billing.util.callcontext.CallContext;
@@ -70,6 +68,8 @@ public class TestPaymentApi {
     private Bus eventBus;
     @Inject
     protected PaymentApi paymentApi;
+    @Inject
+    protected AccountUserApi accountApi;
     @Inject
     protected TestHelper testHelper;
     @Inject
@@ -137,7 +137,7 @@ public class TestPaymentApi {
         ((ZombieControl)invoicePaymentApi).addResult("notifyOfPaymentAttempt", BrainDeadProxyFactory.ZOMBIE_VOID);
 
         final DateTime now = new DateTime(DateTimeZone.UTC);
-        final Account account = testHelper.createTestCreditCardAccount();
+        final Account account = testHelper.createTestAccount("yoyo.yahoo.com");
         final Invoice invoice = testHelper.createTestInvoice(account, now, Currency.USD);
         
         final UUID subscriptionId = UUID.randomUUID();

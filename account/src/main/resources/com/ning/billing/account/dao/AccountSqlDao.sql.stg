@@ -8,7 +8,7 @@ accountFields(prefix) ::= <<
     <prefix>first_name_length,
     <prefix>currency,
     <prefix>billing_cycle_day,
-    <prefix>payment_provider_name,
+    <prefix>payment_method_id,
     <prefix>time_zone, 
     <prefix>locale,
     <prefix>address1, 
@@ -32,7 +32,7 @@ create() ::= <<
       (<accountFields()>)
     VALUES
       (:id, :externalKey, :email, :name, :firstNameLength, :currency, :billingCycleDay,
-      :paymentProviderName, :timeZone, :locale,
+      :paymentMethodId, :timeZone, :locale,
       :address1, :address2, :companyName, :city, :stateOrProvince, :country, :postalCode, :phone,
       :migrated, :isNotifiedForInvoices, :userName, :createdDate, :userName, :updatedDate);
 >>
@@ -40,7 +40,7 @@ create() ::= <<
 update() ::= <<
     UPDATE accounts
     SET external_key = :externalKey, email = :email, name = :name, first_name_length = :firstNameLength,
-        currency = :currency, billing_cycle_day = :billingCycleDay, payment_provider_name = :paymentProviderName,
+        currency = :currency, billing_cycle_day = :billingCycleDay, payment_method_id = :paymentMethodId,
         time_zone = :timeZone, locale = :locale,
         address1 = :address1, address2 = :address2, company_name = :companyName, city = :city, state_or_province = :stateOrProvince,
         country = :country, postal_code = :postalCode, phone = :phone,
@@ -57,7 +57,7 @@ historyFields() ::= <<
     first_name_length,
     currency,
     billing_cycle_day,
-    payment_provider_name,
+    payment_method_id,
     time_zone,
     locale,
     address1,
@@ -91,7 +91,7 @@ insertHistoryFromTransaction() ::= <<
     INSERT INTO account_history(<historyFields()>)
     VALUES
     (:recordId, :id, :externalKey, :email, :name, :firstNameLength, :currency,
-     :billingCycleDay, :paymentProviderName, :timeZone, :locale,
+     :billingCycleDay, :paymentMethodId, :timeZone, :locale,
      :address1, :address2, :companyName, :city, :stateOrProvince,
      :country, :postalCode, :phone, :migrated, :isNotifiedForInvoices, :changeType, :userName, :createdDate);
 >>

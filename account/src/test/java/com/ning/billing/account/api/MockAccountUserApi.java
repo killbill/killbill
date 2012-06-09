@@ -31,27 +31,27 @@ import com.ning.billing.util.customfield.CustomField;
 public class MockAccountUserApi implements AccountUserApi {
     private final CopyOnWriteArrayList<Account> accounts = new CopyOnWriteArrayList<Account>();
 
-    public Account createAccount(UUID id,
-                                 String externalKey,
-                                 String email,
-                                 String name,
-                                 int firstNameLength,
-                                 Currency currency,
-                                 int billCycleDay,
-                                 String paymentProviderName,
-                                 final DateTimeZone timeZone, 
-                                 final String locale,
-                                 final String address1, 
-                                 final String address2, 
-                                 final String companyName,
-                                 final String city,
-                                 final String stateOrProvince, 
-                                 final String country, 
-                                 final String postalCode, 
-                                 final String phone) {
+    public Account createAccount(final UUID id,
+            final String externalKey,
+            final String email,
+            final String name,
+            final int firstNameLength,
+            final Currency currency,
+            final int billCycleDay,
+            final UUID paymentMethodId,
+            final DateTimeZone timeZone, 
+            final String locale,
+            final String address1, 
+            final String address2, 
+            final String companyName,
+            final String city,
+            final String stateOrProvince, 
+            final String country, 
+            final String postalCode, 
+            final String phone) {
 
 		Account result = new DefaultAccount(id, externalKey, email, name,
-                                firstNameLength, currency, billCycleDay, paymentProviderName,
+                                firstNameLength, currency, billCycleDay, paymentMethodId,
                                 timeZone, locale, address1, address2, companyName, city,
                                 stateOrProvince, country, postalCode, phone, false, false);
 		accounts.add(result);

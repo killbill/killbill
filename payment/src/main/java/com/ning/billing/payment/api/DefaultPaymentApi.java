@@ -24,11 +24,9 @@ import java.util.UUID;
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
-import com.ning.billing.payment.core.AccountProcessor;
 import com.ning.billing.payment.core.PaymentMethodProcessor;
 import com.ning.billing.payment.core.PaymentProcessor;
 import com.ning.billing.payment.core.RefundProcessor;
-import com.ning.billing.payment.plugin.api.PaymentProviderAccount;
 import com.ning.billing.util.callcontext.CallContext;
 
 public class DefaultPaymentApi implements PaymentApi {
@@ -37,15 +35,12 @@ public class DefaultPaymentApi implements PaymentApi {
     private final PaymentMethodProcessor methodProcessor;
     private final PaymentProcessor paymentProcessor;
     private final RefundProcessor refundProcessor;
-    private final AccountProcessor accountProcessor;
-  
+      
     @Inject
     public DefaultPaymentApi(final PaymentMethodProcessor methodProcessor,
-            final AccountProcessor accountProcessor,
             final PaymentProcessor paymentProcessor,
             final RefundProcessor refundProcessor) {
         this.methodProcessor = methodProcessor;
-        this.accountProcessor = accountProcessor;
         this.paymentProcessor = paymentProcessor;
         this.refundProcessor = refundProcessor;
     }
@@ -89,10 +84,6 @@ public class DefaultPaymentApi implements PaymentApi {
         return refundProcessor.createRefund(account, paymentId, context);
     }
 
-    
-  
-
-
     @Override
     public Set<String> getAvailablePlugins() {
         return methodProcessor.getAvailablePlugins();
@@ -116,7 +107,7 @@ public class DefaultPaymentApi implements PaymentApi {
  
     @Override
     public List<PaymentMethod> refreshPaymentMethods(String pluginName,
-            Account account, PaymentMethodPlugin paymentMethodInfo, final CallContext context) 
+            Account account, final CallContext context) 
             throws PaymentApiException {
         return methodProcessor.refreshPaymentMethods(pluginName, account, context);
     }
@@ -148,6 +139,6 @@ public class DefaultPaymentApi implements PaymentApi {
     @Override
     public void setDefaultPaymentMethod(Account account, UUID paymentMethodId, final CallContext context)
         throws PaymentApiException {
-        methodProcessor.setDefaultPaymentMethod(account, paymentMethodId);
+        methodProcessor.setDefaultPaymentMethod(account, paymentMethodId, context);
     }
 }

@@ -30,7 +30,6 @@ import com.ning.billing.payment.api.DefaultPaymentApi;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentService;
 import com.ning.billing.payment.bus.InvoiceHandler;
-import com.ning.billing.payment.core.AccountProcessor;
 import com.ning.billing.payment.core.PaymentMethodProcessor;
 import com.ning.billing.payment.core.PaymentProcessor;
 import com.ning.billing.payment.core.RefundProcessor;
@@ -87,7 +86,6 @@ public class PaymentModule extends AbstractModule {
             }
         });
         bind(ExecutorService.class).annotatedWith(Names.named(PLUGIN_EXECUTOR_NAMED)).toInstance(pluginExecutorService);
-        bind(AccountProcessor.class).asEagerSingleton();
         bind(PaymentProcessor.class).asEagerSingleton();
         bind(RefundProcessor.class).asEagerSingleton();
         bind(PaymentMethodProcessor.class).asEagerSingleton();

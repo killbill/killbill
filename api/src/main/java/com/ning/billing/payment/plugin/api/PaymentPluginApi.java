@@ -33,15 +33,11 @@ public interface PaymentPluginApi {
     public PaymentInfoPlugin getPaymentInfo(UUID paymentId)
     throws PaymentPluginApiException;
 
-
     public List<PaymentInfoPlugin> processRefund(Account account)
     throws PaymentPluginApiException;
     
-    
     public String createPaymentProviderAccount(Account account)
     throws PaymentPluginApiException;
-
-
 
     public List<PaymentMethodPlugin> getPaymentMethodDetails(String accountKey) 
     throws PaymentPluginApiException;
@@ -60,20 +56,4 @@ public interface PaymentPluginApi {
 
     public void setDefaultPaymentMethod(String accountKey, String externalPaymentId)
     throws PaymentPluginApiException;    
-
-    
-    //
-    // STEPH to be deleted
-    //
-    public void updatePaymentGateway(String accountKey)
-    throws PaymentPluginApiException;  
-    
-    public PaymentProviderAccount getPaymentProviderAccount(String accountKey)
-    throws PaymentPluginApiException;
-
-    public void updatePaymentProviderAccountExistingContact(Account account)
-    throws PaymentPluginApiException;
-
-    public void updatePaymentProviderAccountWithNewContact(Account account)
-    throws PaymentPluginApiException;
 }

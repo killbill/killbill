@@ -89,8 +89,8 @@ public class MockAccount implements Account
     }
 
     @Override
-    public String getPaymentProviderName() {
-        return "PayPal";
+    public UUID getPaymentMethodId() {
+        return UUID.randomUUID();
     }
 
     @Override

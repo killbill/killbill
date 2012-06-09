@@ -33,7 +33,7 @@ public class MockAccountBuilder {
     private int firstNameLength;
     private Currency currency;
     private int billingCycleDay;
-    private String paymentProviderName;
+    private UUID paymentMethodId;
     private DateTimeZone timeZone;
     private String locale;
     private String address1;
@@ -85,8 +85,8 @@ public class MockAccountBuilder {
         return this;
     }
 
-    public MockAccountBuilder paymentProviderName(final String paymentProviderName) {
-        this.paymentProviderName = paymentProviderName;
+    public MockAccountBuilder paymentMethodId(final UUID paymentMethodId) {
+        this.paymentMethodId = paymentMethodId;
         return this;
     }
 
@@ -189,9 +189,9 @@ public class MockAccountBuilder {
             }
 
             @Override
-            public String getPaymentProviderName() {
+            public UUID getPaymentMethodId() {
                
-                return paymentProviderName;
+                return paymentMethodId;
             }
 
             @Override

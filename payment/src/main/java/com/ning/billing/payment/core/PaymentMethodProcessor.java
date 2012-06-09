@@ -25,12 +25,14 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 
-
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
+import com.ning.billing.account.api.DefaultMutableAccountData;
+import com.ning.billing.account.api.MutableAccountData;
 import com.ning.billing.payment.api.DefaultPaymentMethod;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.PaymentMethod;
@@ -67,7 +69,8 @@ public class PaymentMethodProcessor extends ProcessorBase {
     public String initializeAccountPlugin(String pluginName, Account account) throws PaymentApiException {
         PaymentPluginApi pluginApi = null;
         try {
-            pluginApi = getPaymentProviderPlugin(account.getExternalKey());
+            // STEPH do we want to really have a default or fail?? probably fail
+            pluginApi = pluginRegistry.getPlugin(pluginName);
             return pluginApi.createPaymentProviderAccount(account);
         } catch (PaymentPluginApiException e) {
             throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_ACCOUNT_INIT,
@@ -83,20 +86,26 @@ public class PaymentMethodProcessor extends ProcessorBase {
         PaymentMethod pm = null;
         PaymentPluginApi pluginApi = null;
         try {
-            pluginApi = getPaymentProviderPlugin(account.getExternalKey());
+            pluginApi = pluginRegistry.getPlugin(pluginName);
             pm = new DefaultPaymentMethod(account.getId(), pluginName, paymentMethodProps);
             String externalId = pluginApi.addPaymentMethod(account.getExternalKey(), paymentMethodProps, setDefault);
             PaymentMethodModelDao pmModel = new PaymentMethodModelDao(pm.getId(), pm.getAccountId(), pm.getPluginName(), pm.isActive(), externalId);
             paymentDao.insertPaymentMethod(pmModel, context);
             
-            // STEPH setDefault
+            if (setDefault) {
+                MutableAccountData updateAccountData = new DefaultMutableAccountData(account);
+                updateAccountData.setPaymentMethodId(pm.getId());
+                accountUserApi.updateAccount(account.getId(), updateAccountData, context);
+            }
         } catch (PaymentPluginApiException e) {
             // STEPH all errors should also take a pluginName
             throw new PaymentApiException(ErrorCode.PAYMENT_ADD_PAYMENT_METHOD, account.getId(), e.getErrorMessage());
+        } catch (AccountApiException e) {
+            throw new PaymentApiException(e);            
         }
         return pm.getId();
     }
-
+  
 
     public List<PaymentMethod> refreshPaymentMethods(String pluginName,
             Account account, final CallContext context)
@@ -105,13 +114,12 @@ public class PaymentMethodProcessor extends ProcessorBase {
         List<PaymentMethod> result = new LinkedList<PaymentMethod>();
         PaymentPluginApi pluginApi = null;
         try {
-            pluginApi = getPaymentProviderPlugin(account.getExternalKey());
-            
+            pluginApi = pluginRegistry.getPlugin(pluginName);            
             List<PaymentMethodPlugin> pluginPms = pluginApi.getPaymentMethodDetails(account.getExternalKey());
             for (PaymentMethodPlugin cur : pluginPms) {
                 PaymentMethod input = new DefaultPaymentMethod(account.getId(), pluginName, cur);
                 PaymentMethodModelDao pmModel = new PaymentMethodModelDao(input.getId(), input.getAccountId(), input.getPluginName(), input.isActive(), input.getPluginDetail().getExternalPaymentMethodId());
-                // STEPH we should insert iwithin one batch
+                // STEPH we should insert within one batch
                 paymentDao.insertPaymentMethod(pmModel, context);
                 result.add(input);
             }
@@ -151,14 +159,14 @@ public class PaymentMethodProcessor extends ProcessorBase {
 
         PaymentPluginApi pluginApi = null;
         try {
-            List<PaymentMethodPlugin> pluginDetails = null;
-
-            if (withPluginDetail) {
-                pluginApi = getPaymentProviderPlugin(accountKey);
-                pluginDetails = pluginApi.getPaymentMethodDetails(accountKey); 
-            }
-            
+            List<PaymentMethodPlugin> pluginDetails = null;            
             for (PaymentMethodModelDao cur : paymentMethodModels) {
+                
+                if (withPluginDetail) {
+                    pluginApi = pluginRegistry.getPlugin(cur.getPluginName());
+                    pluginDetails = pluginApi.getPaymentMethodDetails(accountKey); 
+                }
+                
                 PaymentMethod pm = new DefaultPaymentMethod(cur, getPaymentMethodDetail(pluginDetails, cur.getExternalId()));
                 result.add(pm);
             }
@@ -182,11 +190,8 @@ public class PaymentMethodProcessor extends ProcessorBase {
         return null;
     }
 
-
-
-
-    public void updatePaymentMethod(Account account, UUID paymentMethodId,
-            PaymentMethodPlugin paymentMethodProps) 
+    public void updatePaymentMethod(final Account account, final UUID paymentMethodId,
+            final PaymentMethodPlugin paymentMethodProps) 
     throws PaymentApiException {
         
         PaymentMethodModelDao paymentMethodModel = paymentDao.getPaymentMethod(paymentMethodId);
@@ -194,10 +199,8 @@ public class PaymentMethodProcessor extends ProcessorBase {
             throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, account.getId(), paymentMethodId);
         }
 
-        PaymentPluginApi pluginApi = null;
         try {
-            pluginApi = getPaymentProviderPlugin(account.getExternalKey());
-            
+            PaymentPluginApi pluginApi = getPluginApi(paymentMethodId, account.getId());    
             pluginApi.updatePaymentMethod(account.getExternalKey(), paymentMethodModel.getExternalId(), paymentMethodProps);
         } catch (PaymentPluginApiException e) {
             throw new PaymentApiException(ErrorCode.PAYMENT_UPD_PAYMENT_METHOD, account.getId(), e.getErrorMessage());
@@ -213,9 +216,12 @@ public class PaymentMethodProcessor extends ProcessorBase {
             throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, account.getId(), paymentMethodId);
         }
 
-        PaymentPluginApi pluginApi = null;
         try {
-            pluginApi = getPaymentProviderPlugin(account.getExternalKey());
+            if (account.getPaymentMethodId().equals(paymentMethodId)) {
+                throw new PaymentApiException(ErrorCode.PAYMENT_DEL_DEFAULT_PAYMENT_METHOD, account.getId());                
+            }
+            
+            PaymentPluginApi pluginApi = getPluginApi(paymentMethodId, account.getId());                
 
             pluginApi.deletePaymentMethod(account.getExternalKey(), paymentMethodModel.getExternalId());
         } catch (PaymentPluginApiException e) {
@@ -224,7 +230,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
         
     }
 
-    public void setDefaultPaymentMethod(Account account, UUID paymentMethodId) 
+    public void setDefaultPaymentMethod(Account account, UUID paymentMethodId, final CallContext context) 
     throws PaymentApiException {
         
         PaymentMethodModelDao paymentMethodModel = paymentDao.getPaymentMethod(paymentMethodId);
@@ -232,15 +238,25 @@ public class PaymentMethodProcessor extends ProcessorBase {
             throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, account.getId(), paymentMethodId);
         }
 
-        PaymentPluginApi pluginApi = null;
         try {
-            pluginApi = getPaymentProviderPlugin(account.getExternalKey());
-            
+            PaymentPluginApi pluginApi = getPluginApi(paymentMethodId, account.getId());                            
             pluginApi.setDefaultPaymentMethod(account.getExternalKey(), paymentMethodModel.getExternalId());
-            
+            MutableAccountData updateAccountData = new DefaultMutableAccountData(account);
+            updateAccountData.setPaymentMethodId(paymentMethodId);
+            accountUserApi.updateAccount(account.getId(), updateAccountData, context);
         } catch (PaymentPluginApiException e) {
             throw new PaymentApiException(ErrorCode.PAYMENT_UPD_PAYMENT_METHOD, account.getId(), e.getErrorMessage());
+        } catch (AccountApiException e) {
+            throw new PaymentApiException(e);            
         }
     }
     
+    private PaymentPluginApi getPluginApi(UUID paymentMethodId, UUID accountId)
+        throws PaymentApiException {
+        PaymentMethodModelDao paymentMethod = paymentDao.getPaymentMethod(paymentMethodId);
+        if (paymentMethod == null) {
+            throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, accountId, "");                
+        }
+        return pluginRegistry.getPlugin(paymentMethod.getPluginName());
+    }
 }

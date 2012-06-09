@@ -63,28 +63,25 @@ public abstract class ProcessorBase {
     }
     
     
-    protected PaymentPluginApi getPaymentProviderPlugin(String accountKey) {
+    protected PaymentPluginApi getPaymentProviderPlugin(String accountKey)
+        throws AccountApiException, PaymentApiException {
 
         String paymentProviderName = null;
         if (accountKey != null) {
-            Account account;
-            try {
-                account = accountUserApi.getAccountByKey(accountKey);
-                return getPaymentProviderPlugin(account);
-            } catch (AccountApiException e) {
-                log.error("Error getting payment provider plugin.", e);
-            }
+            Account account = accountUserApi.getAccountByKey(accountKey);
+            return getPaymentProviderPlugin(account);
         }
         return pluginRegistry.getPlugin(paymentProviderName);
     }
     
-    protected PaymentPluginApi getPaymentProviderPlugin(Account account) {
+    protected PaymentPluginApi getPaymentProviderPlugin(Account account) throws PaymentApiException {
         String paymentProviderName = null;
-
         if (account != null) {
-            paymentProviderName = account.getPaymentProviderName();
+            UUID paymentMethodId = account.getPaymentMethodId();
+            if (paymentMethodId == null) {
+                throw new PaymentApiException(ErrorCode.PAYMENT_NO_DEFAULT_PAYMENT_METHOD, account.getId());
+            }
         }
-
         return pluginRegistry.getPlugin(paymentProviderName);
     }
 

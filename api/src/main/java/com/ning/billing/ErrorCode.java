@@ -236,7 +236,9 @@ public enum ErrorCode {
     PAYMENT_AMOUNT_DENIED(7018, "Payment amount requested for invoice %s is greater than invoice balance [%f/%f]"),         
     PAYMENT_INTERNAL_ERROR(7019, "Internal payment error : %s"),
     PAYMENT_NO_SUCH_PAYMENT(7020, "Payment %s does not exist"),
-    
+    PAYMENT_NO_DEFAULT_PAYMENT_METHOD(7021, "Account %s does not have a default payment method set"),
+    PAYMENT_DEL_DEFAULT_PAYMENT_METHOD(7022, "Cannot delete default payment method for account %s"),            
+
     PAYMENT_PLUGIN_TIMEOUT(7100, "Plugin timeout for account %s and invoice %s"),    
     PAYMENT_PLUGIN_ACCOUNT_INIT(7101, "Account initialization for account %s and plugin % s failed: %s"),        
 

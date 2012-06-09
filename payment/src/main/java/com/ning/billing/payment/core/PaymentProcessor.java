@@ -166,7 +166,8 @@ public class PaymentProcessor extends ProcessorBase {
                 log.warn(String.format("Payment from Account %s, Invoice %s timedout", account.getId(), invoiceId));
                 // If we don't crash, plugin thread will complete (and set the correct status)
                 // If we crash before plugin thread completes, we may end up with a UNKNOWN Payment
-                // We would like to return an error so the Bus can retry but we are limited bu Guava bug
+                // We would like to return an error so the Bus can retry but we are limited by Guava bug
+                // swallowing exception
                 return null;
             }
         }

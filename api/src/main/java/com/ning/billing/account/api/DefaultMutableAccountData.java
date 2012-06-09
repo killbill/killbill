@@ -16,6 +16,8 @@
 
 package com.ning.billing.account.api;
 
+import java.util.UUID;
+
 import org.joda.time.DateTimeZone;
 
 import com.ning.billing.catalog.api.Currency;
@@ -28,7 +30,7 @@ public class DefaultMutableAccountData implements MutableAccountData {
     private int firstNameLength;
     private Currency currency;
     private int billCycleDay;
-    private String paymentProviderName;
+    private UUID paymentMethodId;
     private DateTimeZone timeZone;
     private String locale;
     private String address1;
@@ -44,7 +46,7 @@ public class DefaultMutableAccountData implements MutableAccountData {
     
     public DefaultMutableAccountData(String externalKey, String email, String name,
             int firstNameLength, Currency currency, int billCycleDay,
-            String paymentProviderName, TagStore tags, DateTimeZone timeZone,
+            UUID paymentMethodId, TagStore tags, DateTimeZone timeZone,
             String locale, String address1, String address2,
             String companyName, String city, String stateOrProvince,
             String country, String postalCode, String phone,
@@ -56,7 +58,7 @@ public class DefaultMutableAccountData implements MutableAccountData {
         this.firstNameLength = firstNameLength;
         this.currency = currency;
         this.billCycleDay = billCycleDay;
-        this.paymentProviderName = paymentProviderName;
+        this.paymentMethodId = paymentMethodId;
         this.timeZone = timeZone;
         this.locale = locale;
         this.address1 = address1;
@@ -79,7 +81,7 @@ public class DefaultMutableAccountData implements MutableAccountData {
         this.firstNameLength = accountData.getFirstNameLength();
         this.currency = accountData.getCurrency();
         this.billCycleDay = accountData.getBillCycleDay();
-        this.paymentProviderName = accountData.getPaymentProviderName();
+        this.paymentMethodId = accountData.getPaymentMethodId();
         this.timeZone = accountData.getTimeZone();
         this.locale = accountData.getLocale();
         this.address1 = accountData.getAddress1();
@@ -140,8 +142,8 @@ public class DefaultMutableAccountData implements MutableAccountData {
      * @see com.ning.billing.account.api.MutableAccountData#getPaymentProviderName()
      */
     @Override
-    public String getPaymentProviderName() {
-        return paymentProviderName;
+    public UUID getPaymentMethodId() {
+        return paymentMethodId;
     }
     /* (non-Javadoc)
      * @see com.ning.billing.account.api.MutableAccountData#getTimeZone()
@@ -273,8 +275,8 @@ public class DefaultMutableAccountData implements MutableAccountData {
      * @see com.ning.billing.account.api.MutableAccountData#setPaymentProviderName(java.lang.String)
      */
     @Override
-    public void setPaymentProviderName(String paymentProviderName) {
-        this.paymentProviderName = paymentProviderName;
+    public void setPaymentMethodId(UUID paymentMethodId) {
+        this.paymentMethodId = paymentMethodId;
     }
     /* (non-Javadoc)
      * @see com.ning.billing.account.api.MutableAccountData#setTimeZone(org.joda.time.DateTimeZone)

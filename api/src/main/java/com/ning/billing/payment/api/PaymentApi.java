@@ -56,7 +56,7 @@ public interface PaymentApi {
    public UUID addPaymentMethod(final String pluginName, final Account account, boolean setDefault, final PaymentMethodPlugin paymentMethodInfo, final CallContext context)
    throws PaymentApiException;
    
-   public List<PaymentMethod> refreshPaymentMethods(final String pluginName, final Account account, final PaymentMethodPlugin paymentMethodInfo, final CallContext context)
+   public List<PaymentMethod> refreshPaymentMethods(final String pluginName, final Account account, final CallContext context)
     throws PaymentApiException;
    
    public List<PaymentMethod> getPaymentMethods(final Account account, final boolean withPluginDetail)

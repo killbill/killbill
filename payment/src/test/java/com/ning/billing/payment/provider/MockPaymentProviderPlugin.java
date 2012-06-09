@@ -76,6 +76,13 @@ public class MockPaymentProviderPlugin implements PaymentPluginApi {
         makeAllInvoicesFailWithError.set(failure);
     }
 
+    
+    @Override
+    public String getName() {
+        return null;
+    }
+
+
     @Override
     public PaymentInfoPlugin processPayment(String externalKey, UUID paymentId, BigDecimal amount) throws PaymentPluginApiException {
         if (makeNextInvoiceFailWithException.getAndSet(false)) {
@@ -112,16 +119,6 @@ public class MockPaymentProviderPlugin implements PaymentPluginApi {
         }
         else {
             throw new PaymentPluginApiException("", "Did not get account to create payment provider account");
-        }
-    }
-
-    @Override
-    public PaymentProviderAccount getPaymentProviderAccount(String accountKey)  throws PaymentPluginApiException {
-        if (accountKey != null) {
-            return accounts.get(accountKey);
-        }
-        else {
-            throw new PaymentPluginApiException("", "Did not get account for accountKey " + accountKey);
         }
     }
 
@@ -227,40 +224,9 @@ public class MockPaymentProviderPlugin implements PaymentPluginApi {
             String externalPaymentId) throws PaymentPluginApiException {
     }
 
-
-
-
-
-    @Override
-    public String getName() {
-        return null;
-    }
-
-
     @Override
     public List<PaymentInfoPlugin> processRefund(Account account)
             throws PaymentPluginApiException {
         return null;
-    }
-
-
-
-
-
-    @Override
-    public void updatePaymentGateway(String accountKey)
-            throws PaymentPluginApiException {
-    }
-
-
-    @Override
-    public void updatePaymentProviderAccountExistingContact(Account account)
-            throws PaymentPluginApiException {
-    }
-
-
-    @Override
-    public void updatePaymentProviderAccountWithNewContact(Account account)
-            throws PaymentPluginApiException {
     }
 }

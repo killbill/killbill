@@ -91,35 +91,6 @@ public class NoOpPaymentProviderPlugin implements PaymentPluginApi {
     }
 
     @Override
-    public PaymentProviderAccount getPaymentProviderAccount(String accountKey)
-            throws PaymentPluginApiException {
-        return null;
-    }
-
-    @Override
-    public void updatePaymentGateway(String accountKey)
-            throws PaymentPluginApiException {
-    }
-
-
-    @Override
-    public void deletePaymentMethod(String accountKey, String paymentMethodId)
-    throws PaymentPluginApiException {
-    }
-
-    @Override
-    public void updatePaymentProviderAccountExistingContact(Account account)
-            throws PaymentPluginApiException {
-
-    }
-
-    @Override
-    public void updatePaymentProviderAccountWithNewContact(Account account)
-            throws PaymentPluginApiException {
-
-    }
-
-    @Override
     public List<PaymentInfoPlugin> processRefund(Account account)
             throws PaymentPluginApiException {
         return null;
@@ -158,5 +129,12 @@ public class NoOpPaymentProviderPlugin implements PaymentPluginApi {
     @Override
     public void setDefaultPaymentMethod(String accountKey,
             String externalPaymentId) throws PaymentPluginApiException {
+    }
+
+    @Override
+    public void deletePaymentMethod(String accountKey,
+            String externalPaymentMethodId) throws PaymentPluginApiException {
+        // TODO Auto-generated method stub
+        
     }
 }

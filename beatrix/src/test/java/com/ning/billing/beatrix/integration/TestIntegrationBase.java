@@ -295,8 +295,8 @@ public class TestIntegrationBase implements TestListenerStatus {
                 return Currency.USD;
             }
             @Override
-            public String getPaymentProviderName() {
-                return BeatrixModule.PLUGIN_NAME;
+            public UUID getPaymentMethodId() {
+                return UUID.randomUUID();
             }
 
             @Override
