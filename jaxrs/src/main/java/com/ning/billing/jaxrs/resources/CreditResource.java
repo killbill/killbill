@@ -16,10 +16,6 @@
 
 package com.ning.billing.jaxrs.resources;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-
-import java.util.UUID;
-
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
@@ -28,6 +24,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +41,8 @@ import com.ning.billing.jaxrs.json.CreditJson;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
 
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+
 @Singleton
 @Path(JaxrsResource.CREDITS_PATH)
 public class CreditResource implements JaxrsResource {
@@ -55,7 +54,7 @@ public class CreditResource implements JaxrsResource {
     private final Context context;
 
     @Inject
-    public CreditResource(JaxrsUriBuilder uriBuilder, InvoiceUserApi invoiceUserApi, AccountUserApi accountUserApi, Context context) {
+    public CreditResource(final JaxrsUriBuilder uriBuilder, final InvoiceUserApi invoiceUserApi, final AccountUserApi accountUserApi, final Context context) {
         this.uriBuilder = uriBuilder;
         this.invoiceUserApi = invoiceUserApi;
         this.accountUserApi = accountUserApi;
@@ -65,10 +64,10 @@ public class CreditResource implements JaxrsResource {
     @GET
     @Path("/{creditId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
-    public Response getCredit(@PathParam("creditId") String creditId) {
+    public Response getCredit(@PathParam("creditId") final String creditId) {
         try {
-            InvoiceItem credit = invoiceUserApi.getCreditById(UUID.fromString(creditId));
-            CreditJson creditJson = new CreditJson(credit);
+            final InvoiceItem credit = invoiceUserApi.getCreditById(UUID.fromString(creditId));
+            final CreditJson creditJson = new CreditJson(credit);
 
             return Response.status(Response.Status.OK).entity(creditJson).build();
         } catch (InvoiceApiException e) {
@@ -88,12 +87,12 @@ public class CreditResource implements JaxrsResource {
                                  @HeaderParam(HDR_REASON) final String reason,
                                  @HeaderParam(HDR_COMMENT) final String comment) {
         try {
-            Account account = accountUserApi.getAccountById(UUID.fromString(accountId));
+            final Account account = accountUserApi.getAccountById(UUID.fromString(accountId));
 
-            InvoiceItem credit = invoiceUserApi.insertCredit(account.getId(), json.getCreditAmount(), json.getEffectiveDate(),
-                                                             account.getCurrency(), context.createContext(createdBy, reason, comment));
+            final InvoiceItem credit = invoiceUserApi.insertCredit(account.getId(), json.getCreditAmount(), json.getEffectiveDate(),
+                                                                   account.getCurrency(), context.createContext(createdBy, reason, comment));
 
-            return uriBuilder.buildResponse(ChargebackResource.class, "getCredit", credit.getId());
+            return uriBuilder.buildResponse(CreditResource.class, "getCredit", credit.getId());
         } catch (InvoiceApiException e) {
             final String error = String.format("Failed to create credit %s", json);
             log.info(error, e);
@@ -106,8 +105,6 @@ public class CreditResource implements JaxrsResource {
             return Response.status(Response.Status.BAD_REQUEST).entity(error).build();
         }
     }
-
-
 }
 
 

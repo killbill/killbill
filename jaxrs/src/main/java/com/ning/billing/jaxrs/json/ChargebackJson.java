@@ -51,7 +51,6 @@ public class ChargebackJson {
         this.chargebackAmount = chargeback.getAmount().negate();
         this.paymentId = chargeback.getReversedInvoicePaymentId().toString();
         this.reason = null;
-
     }
 
     public DateTime getRequestedDate() {
