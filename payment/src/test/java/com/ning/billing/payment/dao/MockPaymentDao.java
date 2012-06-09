@@ -17,6 +17,8 @@ package com.ning.billing.payment.dao;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -125,24 +127,44 @@ public class MockPaymentDao implements PaymentDao {
         return result;
     }
 
+    private final List<PaymentMethodModelDao> paymentMethods = new LinkedList<PaymentMethodModelDao>();
+    
     @Override
-    public PaymentMethodModelDao insertPaymentMethod(
-            PaymentMethodModelDao paymentMethod, CallContext context) {
-        return null;
+    public PaymentMethodModelDao insertPaymentMethod(PaymentMethodModelDao paymentMethod, CallContext context) {
+        paymentMethods.add(paymentMethod);
+        return paymentMethod;
     }
 
     @Override
     public PaymentMethodModelDao getPaymentMethod(UUID paymentMethodId) {
+        for (PaymentMethodModelDao cur : paymentMethods) {
+            if (cur.getId().equals(paymentMethodId)) {
+                return cur;
+            }
+        }
         return null;
     }
 
     @Override
     public List<PaymentMethodModelDao> getPaymentMethods(UUID accountId) {
-        return null;
+        List<PaymentMethodModelDao> result = new ArrayList<PaymentMethodModelDao>();
+        for (PaymentMethodModelDao cur : paymentMethods) {
+            if (cur.getAccountId().equals(accountId)) {
+                result.add(cur);
+            }
+        }
+        return result;
     }
 
     @Override
     public void deletedPaymentMethod(UUID paymentMethodId) {
-
+        Iterator<PaymentMethodModelDao> it = paymentMethods.iterator();
+        while (it.hasNext()) {
+            PaymentMethodModelDao cur = it.next();
+            if (cur.getId().equals(paymentMethodId)) {
+                it.remove();
+                break;
+            }
+        }
     }
 }

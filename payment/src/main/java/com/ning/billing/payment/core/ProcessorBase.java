@@ -28,6 +28,8 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.payment.api.PaymentApiException;
+import com.ning.billing.payment.dao.PaymentDao;
+import com.ning.billing.payment.dao.PaymentMethodModelDao;
 import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
 import com.ning.billing.util.bus.Bus;
@@ -47,17 +49,20 @@ public abstract class ProcessorBase {
     protected final Bus eventBus;
     protected final GlobalLocker locker;
     protected final ExecutorService executor;
+    protected final PaymentDao paymentDao;
 
     private static final Logger log = LoggerFactory.getLogger(ProcessorBase.class);
     
     public ProcessorBase(final PaymentProviderPluginRegistry pluginRegistry,
             final AccountUserApi accountUserApi,
             final Bus eventBus,
+            final PaymentDao paymentDao,
             final GlobalLocker locker,
             final ExecutorService executor) {
         this.pluginRegistry = pluginRegistry;
         this.accountUserApi = accountUserApi;
         this.eventBus= eventBus;
+        this.paymentDao = paymentDao;
         this.locker = locker;
         this.executor = executor;
     }
@@ -81,6 +86,12 @@ public abstract class ProcessorBase {
             if (paymentMethodId == null) {
                 throw new PaymentApiException(ErrorCode.PAYMENT_NO_DEFAULT_PAYMENT_METHOD, account.getId());
             }
+            PaymentMethodModelDao methodDao = paymentDao.getPaymentMethod(paymentMethodId);
+            if (methodDao == null) {
+                log.error("Account {} has a non existent default payment method {}!!!", account.getId(), paymentMethodId);
+                throw new PaymentApiException(ErrorCode.PAYMENT_NO_DEFAULT_PAYMENT_METHOD, account.getId());                
+            }
+            paymentProviderName = methodDao.getPluginName();
         }
         return pluginRegistry.getPlugin(paymentProviderName);
     }

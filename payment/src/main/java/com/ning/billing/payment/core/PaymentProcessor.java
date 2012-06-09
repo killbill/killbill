@@ -70,7 +70,6 @@ public class PaymentProcessor extends ProcessorBase {
     private final InvoicePaymentApi invoicePaymentApi;
     private final FailedPaymentRetryServiceScheduler failedPaymentRetryService;
     private final PluginFailureRetryServiceScheduler pluginFailureRetryService;
-    private final PaymentDao paymentDao;
     private final CallContextFactory factory;
     private final Clock clock;
     
@@ -91,11 +90,10 @@ public class PaymentProcessor extends ProcessorBase {
             final GlobalLocker locker,
             @Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor,            
             final CallContextFactory factory) {
-        super(pluginRegistry, accountUserApi, eventBus, locker, executor);
+        super(pluginRegistry, accountUserApi, eventBus, paymentDao, locker, executor);
         this.invoicePaymentApi = invoicePaymentApi;
         this.failedPaymentRetryService = failedPaymentRetryService;
         this.pluginFailureRetryService = pluginFailureRetryService;
-        this.paymentDao = paymentDao;
         this.clock = clock;
         this.factory = factory;
         this.paymentPluginDispatcher = new PluginDispatcher<Payment>(executor);

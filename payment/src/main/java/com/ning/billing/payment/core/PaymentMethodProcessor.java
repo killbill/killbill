@@ -48,8 +48,7 @@ import com.ning.billing.util.globallocker.GlobalLocker;
 
 public class PaymentMethodProcessor extends ProcessorBase {
 
-    private final PaymentDao paymentDao;
-    
+
     @Inject
     public PaymentMethodProcessor(final PaymentProviderPluginRegistry pluginRegistry,
             final AccountUserApi accountUserApi,
@@ -57,8 +56,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
             final PaymentDao paymentDao,
             final GlobalLocker locker,
             @Named(PLUGIN_EXECUTOR_NAMED)  final ExecutorService executor) {
-        super(pluginRegistry, accountUserApi, eventBus, locker, executor);
-        this.paymentDao = paymentDao;
+        super(pluginRegistry, accountUserApi, eventBus, paymentDao, locker, executor);
     }
     
     public Set<String> getAvailablePlugins() {

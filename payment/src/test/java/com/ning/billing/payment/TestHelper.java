@@ -35,6 +35,7 @@ import com.ning.billing.payment.api.DefaultPaymentMethodPlugin;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentMethod;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
+import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.glue.PaymentTestModuleWithMocks;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
@@ -110,9 +111,24 @@ public class TestHelper {
         zombie.addResult("getEmail", email);
         zombie.addResult("getCurrency", Currency.USD);
         zombie.addResult("getBillCycleDay", 1);
+        zombie.addResult("isMigrated", false);
+        zombie.addResult("isNotifiedForInvoices", false);        
+        zombie.addResult("getTimeZone", BrainDeadProxyFactory.ZOMBIE_VOID);
+        zombie.addResult("getLocale", BrainDeadProxyFactory.ZOMBIE_VOID);        
+        zombie.addResult("getAddress1", BrainDeadProxyFactory.ZOMBIE_VOID);
+        zombie.addResult("getAddress2", BrainDeadProxyFactory.ZOMBIE_VOID);        
+        zombie.addResult("getCompanyName", BrainDeadProxyFactory.ZOMBIE_VOID);
+        zombie.addResult("getCity", BrainDeadProxyFactory.ZOMBIE_VOID);        
+        zombie.addResult("getStateOrProvince", BrainDeadProxyFactory.ZOMBIE_VOID);
+        zombie.addResult("getCountry", BrainDeadProxyFactory.ZOMBIE_VOID);        
+        zombie.addResult("getPostalCode", BrainDeadProxyFactory.ZOMBIE_VOID);
+        zombie.addResult("getPhone", BrainDeadProxyFactory.ZOMBIE_VOID);        
+        zombie.addResult("getPaymentMethodId", BrainDeadProxyFactory.ZOMBIE_VOID);
         
         ((ZombieControl)accountUserApi).addResult("getAccountById", account);
         ((ZombieControl)accountUserApi).addResult("getAccountByKey", account);
+        ((ZombieControl)accountUserApi).addResult("updateAccount", BrainDeadProxyFactory.ZOMBIE_VOID);        
+        //updateAccount
 
         PaymentMethodPlugin pm = new DefaultPaymentMethodPlugin(UUID.randomUUID().toString(), true, null);
         addTestPaymentMethod(account, pm);
@@ -122,7 +138,7 @@ public class TestHelper {
     private void addTestPaymentMethod(Account account, PaymentMethodPlugin paymentMethodInfo) throws Exception {
         UUID paymentMethodId = paymentApi.addPaymentMethod(PaymentTestModuleWithMocks.PLUGIN_TEST_NAME, account, true, paymentMethodInfo, context);
         ZombieControl zombie = (ZombieControl) account;
-        zombie.addResult("getPaymentMethodId", paymentMethodId);        
+        zombie.addResult("getPaymentMethodId", paymentMethodId); 
     }
 
 }
