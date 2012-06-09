@@ -78,7 +78,6 @@ public class CreditResource implements JaxrsResource {
     }
 
     @POST
-    @Path("/accounts/{accountId:" + UUID_PATTERN + "}")
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response createCredit(final CreditJson json,
@@ -106,30 +105,3 @@ public class CreditResource implements JaxrsResource {
         }
     }
 }
-
-
-//POST /1.0/accounts/<account_id>/credits	 	 Creates a credit for that account	 201 (CREATED), 400 (BAD_REQUEST), 404 (NOT_FOUND)
-//Semantics:
-//
-//All operations are synchronous
-//JSON Credit GET:
-// {
-//   "accountId" : "theAccountId",
-//   "credits" : [{
-//      "requestedDate" : "2012-05-12T15:34:22.000Z",
-//      "effectiveDate" : "2012-05-12T15:34:22.000Z",
-//      "creditAmount" : 54.32,
-//      "invoiceId" : "theInvoiceId",
-//      "invoiceNumber" : "TheInvoiceNumber",
-//      "reason" : "whatever"
-//   }]
-// }
-//
-//JSON Credit POST:
-// {
-//   "creditAmount" : 54.32,
-//   "reason" : "whatever",
-//   "requestedDate" : "2012-05-12T15:34:22.000Z",
-//   "invoiceId" : "theInvoiceId",
-//   "invoiceNumber" : "TheInvoiceNumber"
-// }
