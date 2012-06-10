@@ -85,14 +85,14 @@ public class TestBundleTimelineJson {
                 "\"newEvents\":null}]}," +
                 "\"payments\":[{\"amount\":" + payment.getAmount() + "," +
                 "\"paidAmount\":" + payment.getPaidAmount() + "," +
+                "\"accountId\":\"" + payment.getAccountId() + "\"," +
                 "\"invoiceId\":\"" + payment.getInvoiceId() + "\"," +
                 "\"paymentId\":\"" + payment.getPaymentId() + "\"," +
                 "\"requestedDate\":\"" + payment.getRequestedDate().toDateTimeISO().toString() + "\"," +
                 "\"effectiveDate\":\"" + payment.getEffectiveDate().toDateTimeISO().toString() + "\"," +
                 "\"retryCount\":" + payment.getRetryCount() + "," +
                 "\"currency\":\"" + payment.getCurrency() + "\"," +
-                "\"status\":\"" + payment.getStatus() + "\"," +
-                "\"accountId\":\"" + payment.getAccountId() + "\"}]," +
+                "\"status\":\"" + payment.getStatus() + "\"}]," +
                 "\"invoices\":[{\"amount\":" + invoice.getAmount() + "," +
                 "\"credit\":" + invoice.getCredit() + "," +
                 "\"invoiceId\":\"" + invoice.getInvoiceId() + "\"," +

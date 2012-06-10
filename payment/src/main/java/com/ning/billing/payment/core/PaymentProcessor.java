@@ -101,7 +101,11 @@ public class PaymentProcessor extends ProcessorBase {
     }
   
     public Payment getPayment(UUID paymentId) {
-        return getPayments(Collections.singletonList(paymentDao.getPayment(paymentId))).get(0);        
+        PaymentModelDao model = paymentDao.getPayment(paymentId);
+        if (model == null) {
+            return null;
+        }
+        return getPayments(Collections.singletonList(model)).get(0);        
     }
 
     
@@ -115,6 +119,9 @@ public class PaymentProcessor extends ProcessorBase {
     }
     
     private List<Payment> getPayments(List<PaymentModelDao> payments) {
+        if (payments == null) {
+            return Collections.emptyList();
+        }
         List<Payment> result = new LinkedList<Payment>();
         for (PaymentModelDao cur : payments) {
             List<PaymentAttemptModelDao> attempts =  paymentDao.getAttemptsForPayment(cur.getId());
