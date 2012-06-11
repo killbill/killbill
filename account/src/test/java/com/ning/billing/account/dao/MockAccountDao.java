@@ -67,9 +67,9 @@ public class MockAccountDao implements AccountDao {
     }
 
     @Override
-    public Account getAccountByKey(String key) {
+    public Account getAccountByKey(String externalKey) {
         for (Account account : accounts.values()) {
-            if (key.equals(account.getExternalKey())) {
+            if (externalKey.equals(account.getExternalKey())) {
                 return account;
             }
         }
