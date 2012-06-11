@@ -31,7 +31,7 @@ public class DefaultAccount extends EntityBase implements Account {
 	private final int firstNameLength;
 	private final Currency currency;
 	private final int billCycleDay;
-	private final String paymentProviderName;
+	private final UUID paymentMethodId;
 	private final DateTimeZone timeZone;
 	private final String locale;
 	private final String address1;
@@ -57,7 +57,7 @@ public class DefaultAccount extends EntityBase implements Account {
 	 */
 	public DefaultAccount(final UUID id, final AccountData data) {
 		this(id, data.getExternalKey(), data.getEmail(), data.getName(), data.getFirstNameLength(),
-				data.getCurrency(), data.getBillCycleDay(), data.getPaymentProviderName(),
+				data.getCurrency(), data.getBillCycleDay(), data.getPaymentMethodId(),
 				data.getTimeZone(), data.getLocale(),
 				data.getAddress1(), data.getAddress2(), data.getCompanyName(),
 				data.getCity(), data.getStateOrProvince(), data.getCountry(),
@@ -69,7 +69,7 @@ public class DefaultAccount extends EntityBase implements Account {
      */
 	public DefaultAccount(final UUID id, final String externalKey, final String email,
                           final String name, final int firstNameLength,
-                          final Currency currency, final int billCycleDay, final String paymentProviderName,
+                          final Currency currency, final int billCycleDay, final UUID paymentMethodId,
                           final DateTimeZone timeZone, final String locale,
                           final String address1, final String address2, final String companyName,
                           final String city, final String stateOrProvince, final String country,
@@ -82,7 +82,7 @@ public class DefaultAccount extends EntityBase implements Account {
 		this.firstNameLength = firstNameLength;
 		this.currency = currency;
 		this.billCycleDay = billCycleDay;
-		this.paymentProviderName = paymentProviderName;
+		this.paymentMethodId = paymentMethodId;
 		this.timeZone = timeZone;
 		this.locale = locale;
 		this.address1 = address1;
@@ -128,8 +128,8 @@ public class DefaultAccount extends EntityBase implements Account {
 	}
 
 	@Override
-	public String getPaymentProviderName() {
-		return paymentProviderName;
+	public UUID getPaymentMethodId() {
+		return paymentMethodId;
 	}
 
 	@Override
@@ -206,7 +206,7 @@ public class DefaultAccount extends EntityBase implements Account {
 				", phone=" + phone +
 				", currency=" + currency +
 				", billCycleDay=" + billCycleDay +
-				", paymentProviderName=" + paymentProviderName +
+				", paymentMethodId=" + paymentMethodId +
 				", timezone=" + timeZone +
 				", locale=" +  locale +
 				", address1=" + address1 +

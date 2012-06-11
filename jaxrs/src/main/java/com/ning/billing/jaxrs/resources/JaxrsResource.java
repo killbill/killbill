@@ -48,10 +48,21 @@ public interface JaxrsResource {
 	public static final String QUERY_CALL_TIMEOUT = "call_timeout_sec";    
 	public static final String QUERY_DRY_RUN = "dry_run";      
 	public static final String QUERY_TARGET_DATE = "target_date";          
-	public static final String QUERY_ACCOUNT_ID = "account_id";           	
+	
+	public static final String QUERY_ACCOUNT_ID = "account_id";
+
+	public static final String QUERY_PAYMENT_EXTERNAL = "external_payment";
+	public static final String QUERY_PAYMENT_LAST4_CC = "last4_cc";
+	public static final String QUERY_PAYMENT_NAME_ON_CC= "name_on_cc";	
 	
 	public static final String QUERY_TAGS = "tag_list";    
 	public static final String QUERY_CUSTOM_FIELDS = "custom_field_list";    	
+	
+	public static final String QUERY_PAYMENT_METHOD_PLUGIN_INFO = "plugin_info";
+	public static final String QUERY_PAYMENT_METHOD_IS_DEFAULT = "is_default";
+	
+	
+	
 	
 	public static final String ACCOUNTS = "accounts";  
     public static final String ACCOUNTS_PATH = PREFIX + "/" + ACCOUNTS;
@@ -68,6 +79,11 @@ public interface JaxrsResource {
     public static final String INVOICES = "invoices";     
     public static final String INVOICES_PATH = PREFIX + "/" + INVOICES;
 
+    public static final String PAYMENTS = "payments";     
+    public static final String PAYMENTS_PATH = PREFIX + "/" + PAYMENTS;    
+
+    public static final String PAYMENT_METHODS = "paymentMethods";     
+    
     public static final String CREDITS = "credits";
     public static final String CREDITS_PATH = PREFIX + "/" + CREDITS;
 

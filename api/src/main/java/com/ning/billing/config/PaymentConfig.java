@@ -29,10 +29,21 @@ public interface PaymentConfig extends NotificationConfig, KillbillConfig  {
     @Default("noop")
     public String getDefaultPaymentProvider();
 
-
     @Config("killbill.payment.retry.days")
     @Default("8,8,8")
     public List<Integer> getPaymentRetryDays();
+
+    @Config("killbill.payment.failure.retry.start.sec")
+    @Default("300")
+    public int getPluginFailureRetryStart();
+
+    @Config("killbill.payment.failure.retry.multiplier")
+    @Default("2")
+    public int getPluginFailureRetryMultiplier();
+
+    @Config("killbill.payment.failure.retry.max.attempts")
+    @Default("8")
+    public int getPluginFailureRetryMaxAttempts();
 
 	@Override
     @Config("killbill.payment.engine.notifications.sleep")

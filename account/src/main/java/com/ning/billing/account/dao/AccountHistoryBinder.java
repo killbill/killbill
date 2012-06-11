@@ -53,7 +53,7 @@ public @interface AccountHistoryBinder {
                     Currency currency = account.getCurrency();
                     q.bind("currency", (currency == null) ? null : currency.toString());
                     q.bind("billingCycleDay", account.getBillCycleDay());
-                    q.bind("paymentProviderName", account.getPaymentProviderName());
+                    q.bind("paymentMethodId", account.getPaymentMethodId() !=  null ? account.getPaymentMethodId().toString() : null);
                     DateTimeZone timeZone = account.getTimeZone();
                     q.bind("timeZone", (timeZone == null) ? null : timeZone.toString());
                     q.bind("locale", account.getLocale());

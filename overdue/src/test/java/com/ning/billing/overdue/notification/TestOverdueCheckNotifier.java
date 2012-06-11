@@ -88,7 +88,7 @@ public class TestOverdueCheckNotifier {
 		UUID latestSubscriptionId = null;
 
 		public OverdueListenerMock() {
-			super(null,null);
+			super(null);
 		}
 
 		@Override

@@ -33,18 +33,18 @@ public class PaymentJsonWithBundleKeys extends PaymentJsonSimple {
     }
 
     @JsonCreator
-    public PaymentJsonWithBundleKeys(@JsonProperty("amount") final BigDecimal amount,
-                                     @JsonProperty("paidAmount") final BigDecimal paidAmount,
-                                     @JsonProperty("invoiceId") final UUID invoiceId,
-                                     @JsonProperty("paymentId") final UUID paymentId,
-                                     @JsonProperty("requestedDt") final DateTime requestedDate,
-                                     @JsonProperty("effectiveDt") final DateTime effectiveDate,
-                                     @JsonProperty("retryCount") final Integer retryCount,
-                                     @JsonProperty("currency") final String currency,
-                                     @JsonProperty("status") final String status,
-                                     @JsonProperty("accountId") final UUID accountId,
-                                     @JsonProperty("externalBundleKeys") final String bundleKeys) {
-        super(amount, paidAmount, invoiceId, paymentId, requestedDate, effectiveDate, retryCount, currency, status, accountId);
+    public PaymentJsonWithBundleKeys(@JsonProperty("amount") BigDecimal amount,
+            @JsonProperty("paidAmount") BigDecimal paidAmount,
+            @JsonProperty("accountId") String accountId,
+            @JsonProperty("invoiceId") String invoiceId,
+            @JsonProperty("paymentId") String paymentId,
+            @JsonProperty("requestedDt") DateTime requestedDate,
+            @JsonProperty("effectiveDt") DateTime effectiveDate,
+            @JsonProperty("retryCount") Integer retryCount,
+            @JsonProperty("currency") String currency,
+            @JsonProperty("status") String status,
+            @JsonProperty("externalBundleKeys") String bundleKeys) {
+        super(amount, paidAmount, accountId, invoiceId, paymentId, requestedDate, effectiveDate, retryCount, currency, status);
         this.bundleKeys = bundleKeys;
     }
 

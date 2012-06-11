@@ -16,6 +16,8 @@
 
 package com.ning.billing.jaxrs.json;
 
+import java.util.UUID;
+
 import org.joda.time.DateTimeZone;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -28,43 +30,30 @@ import com.ning.billing.catalog.api.Currency;
 public class AccountJson extends AccountJsonSimple {
     // STEPH Missing city, locale, postalCode from https://home.ninginc.com:8443/display/REVINFRA/Killbill+1.0+APIs
 
-    @JsonView(BundleTimelineViews.Base.class)
     private final String name;
-
-    @JsonView(BundleTimelineViews.Base.class)
+    
     private final Integer length;
-
-    @JsonView(BundleTimelineViews.Base.class)
+        
     private final String email;
-
-    @JsonView(BundleTimelineViews.Base.class)
+    
     private final Integer billCycleDay;
-
-    @JsonView(BundleTimelineViews.Base.class)
+    
     private final String currency;
-
-    @JsonView(BundleTimelineViews.Base.class)
-    private final String paymentProvider;
-
-    @JsonView(BundleTimelineViews.Base.class)
+    
+    private final String paymentMethodId;
+    
     private final String timeZone;
-
-    @JsonView(BundleTimelineViews.Base.class)
+    
     private final String address1;
-
-    @JsonView(BundleTimelineViews.Base.class)
+    
     private final String address2;
-
-    @JsonView(BundleTimelineViews.Base.class)
+    
     private final String company;
-
-    @JsonView(BundleTimelineViews.Base.class)
+    
     private final String state;
-
-    @JsonView(BundleTimelineViews.Base.class)
+    
     private final String country;
-
-    @JsonView(BundleTimelineViews.Base.class)
+    
     private final String phone;
 
 
@@ -74,8 +63,8 @@ public class AccountJson extends AccountJsonSimple {
         this.length = account.getFirstNameLength();
         this.email = account.getEmail();
         this.billCycleDay = account.getBillCycleDay();
-        this.currency = account.getCurrency().toString();
-        this.paymentProvider = account.getPaymentProviderName();
+        this.currency = account.getCurrency() != null ? account.getCurrency().toString() : null;
+        this.paymentMethodId = account.getPaymentMethodId() != null ? account.getPaymentMethodId().toString() : null;
         this.timeZone = account.getTimeZone().toString();
         this.address1 = account.getAddress1();
         this.address2 = account.getAddress2();
@@ -118,8 +107,8 @@ public class AccountJson extends AccountJsonSimple {
             }
 
             @Override
-            public String getPaymentProviderName() {
-                return paymentProvider;
+            public UUID getPaymentMethodId() {
+                return paymentMethodId != null ?  UUID.fromString(paymentMethodId) : null;
             }
 
             @Override
@@ -193,7 +182,7 @@ public class AccountJson extends AccountJsonSimple {
         this.email = null;
         this.billCycleDay = null;
         this.currency = null;
-        this.paymentProvider = null;
+        this.paymentMethodId = null;
         this.timeZone = null;
         this.address1 = null;
         this.address2 = null;
@@ -211,7 +200,7 @@ public class AccountJson extends AccountJsonSimple {
                        @JsonProperty("email") final String email,
                        @JsonProperty("billingDay") final Integer billCycleDay,
                        @JsonProperty("currency") final String currency,
-                       @JsonProperty("paymentProvider") final String paymentProvider,
+                       @JsonProperty("paymentMethodId") final String paymentMethodId,
                        @JsonProperty("timezone") final String timeZone,
                        @JsonProperty("address1") final String address1,
                        @JsonProperty("address2") final String address2,
@@ -225,7 +214,7 @@ public class AccountJson extends AccountJsonSimple {
         this.email = email;
         this.billCycleDay = billCycleDay;
         this.currency = currency;
-        this.paymentProvider = paymentProvider;
+        this.paymentMethodId = paymentMethodId;
         this.timeZone = timeZone;
         this.address1 = address1;
         this.address2 = address2;
@@ -255,8 +244,8 @@ public class AccountJson extends AccountJsonSimple {
         return currency;
     }
 
-    public String getPaymentProvider() {
-        return paymentProvider;
+    public String getPaymentMethodId() {
+        return paymentMethodId;
     }
 
     public String getTimeZone() {
@@ -309,7 +298,7 @@ public class AccountJson extends AccountJsonSimple {
         result = prime * result + ((length == null) ? 0 : length.hashCode());
         result = prime * result + ((name == null) ? 0 : name.hashCode());
         result = prime * result
-                + ((paymentProvider == null) ? 0 : paymentProvider.hashCode());
+                + ((paymentMethodId == null) ? 0 : paymentMethodId.hashCode());
         result = prime * result + ((phone == null) ? 0 : phone.hashCode());
         result = prime * result + ((state == null) ? 0 : state.hashCode());
         result = prime * result
@@ -399,11 +388,10 @@ public class AccountJson extends AccountJsonSimple {
         } else if (!name.equals(other.name)) {
             return false;
         }
-        if (paymentProvider == null) {
-            if (other.paymentProvider != null) {
+        if (paymentMethodId == null) {
+            if (other.paymentMethodId != null)
                 return false;
-            }
-        } else if (!paymentProvider.equals(other.paymentProvider)) {
+        } else if (!paymentMethodId.equals(other.paymentMethodId)) {
             return false;
         }
         if (phone == null) {

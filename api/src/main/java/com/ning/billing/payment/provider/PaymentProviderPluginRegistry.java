@@ -15,11 +15,15 @@
  */
 package com.ning.billing.payment.provider;
 
-import com.ning.billing.payment.plugin.api.PaymentProviderPlugin;
+import java.util.Set;
+
+import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 
 public interface PaymentProviderPluginRegistry {
 
-    public void register(final PaymentProviderPlugin plugin, final String name);
+    public void register(final PaymentPluginApi plugin, final String name);
 
-    public PaymentProviderPlugin getPlugin(final String name);
+    public PaymentPluginApi getPlugin(final String name);
+    
+    public Set<String> getRegisteredPluginNames();
 }

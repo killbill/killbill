@@ -143,8 +143,9 @@ public class DefaultAccountChangeEvent implements AccountChangeEvent {
                 "billCycleDay",
                 Integer.toString(oldData.getBillCycleDay()), Integer.toString(newData.getBillCycleDay()));
 
-        addIfValueChanged(tmpChangedFields,"paymentProviderName",
-                oldData.getPaymentProviderName(), newData.getPaymentProviderName());
+        addIfValueChanged(tmpChangedFields,"paymentMethodId",
+                (oldData.getPaymentMethodId() != null) ? oldData.getPaymentMethodId().toString() : null,
+                (newData.getPaymentMethodId() != null) ? newData.getPaymentMethodId().toString(): null);
 
         addIfValueChanged(tmpChangedFields, "locale", oldData.getLocale(), newData.getLocale());
 

@@ -38,7 +38,7 @@ public class TestAccountJson {
         final String email = UUID.randomUUID().toString();
         final Integer billCycleDay = 6;
         final String currency = UUID.randomUUID().toString();
-        final String paymentProvider = UUID.randomUUID().toString();
+        final String paymentMethodId = UUID.randomUUID().toString();
         final String timeZone = UUID.randomUUID().toString();
         final String address1 = UUID.randomUUID().toString();
         final String address2 = UUID.randomUUID().toString();
@@ -48,7 +48,7 @@ public class TestAccountJson {
         final String phone = UUID.randomUUID().toString();
 
         final AccountJson accountJson = new AccountJson(accountId, name, length, externalKey,
-                                                        email, billCycleDay, currency, paymentProvider,
+                                                        email, billCycleDay, currency, paymentMethodId,
                                                         timeZone, address1, address2, company, state,
                                                         country, phone);
         Assert.assertEquals(accountJson.getAccountId(), accountId);
@@ -58,7 +58,7 @@ public class TestAccountJson {
         Assert.assertEquals(accountJson.getEmail(), email);
         Assert.assertEquals(accountJson.getBillCycleDay(), billCycleDay);
         Assert.assertEquals(accountJson.getCurrency(), currency);
-        Assert.assertEquals(accountJson.getPaymentProvider(), paymentProvider);
+        Assert.assertEquals(accountJson.getPaymentMethodId(), paymentMethodId);
         Assert.assertEquals(accountJson.getTimeZone(), timeZone);
         Assert.assertEquals(accountJson.getAddress1(), address1);
         Assert.assertEquals(accountJson.getAddress2(), address2);
@@ -70,7 +70,7 @@ public class TestAccountJson {
         final String asJson = mapper.writeValueAsString(accountJson);
         Assert.assertEquals(asJson, "{\"accountId\":\"" + accountJson.getAccountId() + "\",\"name\":\"" + accountJson.getName() + "\"," +
                 "\"externalKey\":\"" + accountJson.getExternalKey() + "\",\"email\":\"" + accountJson.getEmail() + "\"," +
-                "\"currency\":\"" + accountJson.getCurrency() + "\",\"paymentProvider\":\"" + accountJson.getPaymentProvider() + "\"," +
+                "\"currency\":\"" + accountJson.getCurrency() + "\",\"paymentMethodId\":\"" + accountJson.getPaymentMethodId() + "\"," +
                 "\"address1\":\"" + accountJson.getAddress1() + "\",\"address2\":\"" + accountJson.getAddress2() + "\"," +
                 "\"company\":\"" + accountJson.getCompany() + "\",\"state\":\"" + accountJson.getState() + "\"," +
                 "\"country\":\"" + accountJson.getCountry() + "\",\"phone\":\"" + accountJson.getPhone() + "\"," +
@@ -98,7 +98,7 @@ public class TestAccountJson {
         accountBuilder.locale(UUID.randomUUID().toString());
         accountBuilder.migrated(true);
         accountBuilder.name(UUID.randomUUID().toString());
-        accountBuilder.paymentProviderName(UUID.randomUUID().toString());
+        accountBuilder.paymentMethodId(UUID.randomUUID());
         accountBuilder.phone(UUID.randomUUID().toString());
         accountBuilder.postalCode(UUID.randomUUID().toString());
         accountBuilder.stateOrProvince(UUID.randomUUID().toString());
@@ -115,7 +115,7 @@ public class TestAccountJson {
         Assert.assertEquals(accountJson.getEmail(), account.getEmail());
         Assert.assertEquals(accountJson.getExternalKey(), account.getExternalKey());
         Assert.assertEquals(accountJson.getName(), account.getName());
-        Assert.assertEquals(accountJson.getPaymentProvider(), account.getPaymentProviderName());
+        Assert.assertEquals(accountJson.getPaymentMethodId(), account.getPaymentMethodId().toString());
         Assert.assertEquals(accountJson.getPhone(), account.getPhone());
         Assert.assertEquals(accountJson.getState(), account.getStateOrProvince());
         Assert.assertEquals(accountJson.getTimeZone(), account.getTimeZone().toString());

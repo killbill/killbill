@@ -26,12 +26,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ning.billing.invoice.api.Invoice;
 
 public class InvoiceJsonSimple {
+
     private final BigDecimal amount;
-    private final BigDecimal credit;
     private final String invoiceId;
     private final DateTime invoiceDate;
     private final DateTime targetDate;
     private final String invoiceNumber;
+    private final BigDecimal credit;    
     private final BigDecimal balance;
     private final String accountId;
 

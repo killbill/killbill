@@ -18,6 +18,7 @@ package com.ning.billing.jaxrs.resources;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -43,6 +44,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
+import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.invoice.api.Invoice;
@@ -51,9 +53,13 @@ import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
 import com.ning.billing.jaxrs.json.InvoiceJsonSimple;
 import com.ning.billing.jaxrs.json.InvoiceJsonWithItems;
+import com.ning.billing.jaxrs.json.PaymentJsonSimple;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
 import com.ning.billing.jaxrs.util.TagHelper;
+import com.ning.billing.payment.api.Payment;
+import com.ning.billing.payment.api.PaymentApi;
+import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.dao.ObjectType;
@@ -61,7 +67,9 @@ import com.ning.billing.util.dao.ObjectType;
 
 @Path(JaxrsResource.INVOICES_PATH)
 public class InvoiceResource extends JaxRsResourceBase {
+    
     private static final Logger log = LoggerFactory.getLogger(InvoiceResource.class);
+    
     private static final String ID_PARAM_NAME = "invoiceId";
     private static final String CUSTOM_FIELD_URI = JaxrsResource.CUSTOM_FIELDS + "/{" + ID_PARAM_NAME + ":" + UUID_PATTERN + "}";
     private static final String TAG_URI = JaxrsResource.TAGS + "/{" + ID_PARAM_NAME + ":" + UUID_PATTERN + "}";
@@ -70,12 +78,14 @@ public class InvoiceResource extends JaxRsResourceBase {
 
     private final AccountUserApi accountApi;
     private final InvoiceUserApi invoiceApi;
+    private final PaymentApi paymentApi;
     private final Context context;
     private final JaxrsUriBuilder uriBuilder;
 
     @Inject
     public InvoiceResource(final AccountUserApi accountApi,
             final InvoiceUserApi invoiceApi,
+            final PaymentApi paymentApi,            
             final Context context,
             final JaxrsUriBuilder uriBuilder,
             final TagUserApi tagUserApi,
@@ -84,6 +94,7 @@ public class InvoiceResource extends JaxRsResourceBase {
         super(uriBuilder, tagUserApi, tagHelper, customFieldUserApi);
         this.accountApi = accountApi;
         this.invoiceApi = invoiceApi;
+        this.paymentApi = paymentApi;
         this.context = context;
         this.uriBuilder = uriBuilder;
     }
@@ -113,14 +124,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     public Response getInvoice(@PathParam("invoiceId") String invoiceId, @QueryParam("withItems") @DefaultValue("false") boolean withItems) {
         Invoice invoice = invoiceApi.getInvoice(UUID.fromString(invoiceId));
-        InvoiceJsonSimple json;
-
-        if (withItems) {
-            json = new InvoiceJsonWithItems(invoice);
-        }
-        else {
-            json = new InvoiceJsonSimple(invoice);
-        }
+        InvoiceJsonSimple json = withItems ? new InvoiceJsonWithItems(invoice) : new InvoiceJsonSimple(invoice);  
         return Response.status(Status.OK).entity(json).build();
     }
 
@@ -155,6 +159,47 @@ public class InvoiceResource extends JaxRsResourceBase {
         } catch (InvoiceApiException e) {
             return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
         } catch (NullPointerException e) {
+            return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+        }
+    }
+
+    @GET
+    @Path("/{invoiceId:\\w+-\\w+-\\w+-\\w+-\\w+}/" + PAYMENTS)
+    @Produces(APPLICATION_JSON)
+    public Response getPayments(@PathParam("invoiceId") String invoiceId) {
+        try {
+            List<Payment> payments = paymentApi.getInvoicePayments(UUID.fromString(invoiceId));
+            List<PaymentJsonSimple> result =  new ArrayList<PaymentJsonSimple>(payments.size());
+            for (Payment cur : payments) {
+                result.add(new PaymentJsonSimple(cur));
+            }
+            return Response.status(Status.OK).entity(result).build();
+        } catch (PaymentApiException e) {
+            return Response.status(Status.NOT_FOUND).build();     
+        }
+    }
+
+    @POST
+    @Produces(APPLICATION_JSON)
+    @Consumes(APPLICATION_JSON)
+    @Path("/{invoiceId:\\w+-\\w+-\\w+-\\w+-\\w+}/" + PAYMENTS)
+    public Response createInstantPayment(PaymentJsonSimple payment,
+            @QueryParam(QUERY_PAYMENT_EXTERNAL) @DefaultValue("false") final Boolean externalPayment,
+            @HeaderParam(HDR_CREATED_BY) final String createdBy,
+            @HeaderParam(HDR_REASON) final String reason,
+            @HeaderParam(HDR_COMMENT) final String comment) {
+        try {
+            Account account = accountApi.getAccountById(UUID.fromString(payment.getAccountId()));
+            paymentApi.createPayment(account, UUID.fromString(payment.getInvoiceId()), null, context.createContext(createdBy, reason, comment));
+            Response response = uriBuilder.buildResponse(InvoiceResource.class, "getPayments", payment.getInvoiceId());
+            return response;
+        } catch (PaymentApiException e) {
+            final String error = String.format("Failed to create payment %s", e.getMessage());
+            return Response.status(Status.BAD_REQUEST).entity(error).build();
+        } catch (AccountApiException e) {
+            final String error = String.format("Failed to create payment, can't find account %s", payment.getAccountId());
+            return Response.status(Status.BAD_REQUEST).entity(error).build();
+        } catch (IllegalArgumentException e) {
             return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
         }
     }

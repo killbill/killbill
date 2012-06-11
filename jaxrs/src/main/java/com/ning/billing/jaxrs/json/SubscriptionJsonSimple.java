@@ -22,7 +22,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
 
 public class SubscriptionJsonSimple {
-    @JsonView(BundleTimelineViews.Base.class)
+
     protected final String subscriptionId;
 
     public SubscriptionJsonSimple() {

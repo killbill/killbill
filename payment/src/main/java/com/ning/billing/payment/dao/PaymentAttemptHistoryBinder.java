@@ -1,4 +1,4 @@
-/*
+/* 
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -13,16 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
 package com.ning.billing.payment.dao;
-
-import com.ning.billing.payment.api.PaymentAttempt;
-import com.ning.billing.util.dao.BinderBase;
-import com.ning.billing.util.dao.EntityHistory;
-import org.skife.jdbi.v2.SQLStatement;
-import org.skife.jdbi.v2.sqlobject.Binder;
-import org.skife.jdbi.v2.sqlobject.BinderFactory;
-import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
 
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
@@ -30,30 +21,34 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.skife.jdbi.v2.SQLStatement;
+import org.skife.jdbi.v2.sqlobject.Binder;
+import org.skife.jdbi.v2.sqlobject.BinderFactory;
+import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
+
+import com.ning.billing.util.dao.BinderBase;
+import com.ning.billing.util.dao.EntityHistory;
+
 @BindingAnnotation(PaymentAttemptHistoryBinder.PaymentAttemptHistoryBinderFactory.class)
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.PARAMETER})
 public @interface PaymentAttemptHistoryBinder {
+
+    
     public static class PaymentAttemptHistoryBinderFactory extends BinderBase implements BinderFactory {
         @Override
-        public Binder<PaymentAttemptHistoryBinder, EntityHistory<PaymentAttempt>> build(Annotation annotation) {
-            return new Binder<PaymentAttemptHistoryBinder, EntityHistory<PaymentAttempt>>() {
+        public Binder<PaymentAttemptHistoryBinder, EntityHistory<PaymentAttemptModelDao>> build(Annotation annotation) {
+            return new Binder<PaymentAttemptHistoryBinder, EntityHistory<PaymentAttemptModelDao>>() {
                 @Override
-                public void bind(SQLStatement q, PaymentAttemptHistoryBinder bind, EntityHistory<PaymentAttempt> history) {
+                public void bind(@SuppressWarnings("rawtypes") SQLStatement q, PaymentAttemptHistoryBinder bind, EntityHistory<PaymentAttemptModelDao> history) {
                     q.bind("recordId", history.getValue());
                     q.bind("changeType", history.getChangeType().toString());
-
-                    PaymentAttempt paymentAttempt = history.getEntity();
-                    q.bind("id", paymentAttempt.getId().toString());
-                    q.bind("invoiceId", paymentAttempt.getInvoiceId().toString());
-                    q.bind("accountId", paymentAttempt.getAccountId().toString());
-                    q.bind("amount", paymentAttempt.getAmount());
-                    q.bind("currency", paymentAttempt.getCurrency().toString());
-                    q.bind("invoiceDate", getDate(paymentAttempt.getInvoiceDate()));
-                    q.bind("paymentAttemptDate", getDate(paymentAttempt.getPaymentAttemptDate()));
-                    q.bind("paymentId", paymentAttempt.getPaymentId() == null ? null : paymentAttempt.getPaymentId().toString());
-                    q.bind("retryCount", paymentAttempt.getRetryCount());
-                    q.bind("processingStatus", paymentAttempt.getPaymentAttemptStatus().toString());
+                    PaymentAttemptModelDao attempt = history.getEntity();
+                    q.bind("id", attempt.getId().toString());
+                    q.bind("paymentId", attempt.getPaymentId().toString());            
+                    q.bind("processingStatus", attempt.getPaymentStatus().toString());
+                    q.bind("paymentError", attempt.getPaymentError());   
+                    q.bind("requestedAmount", attempt.getRequestedAmount());                           
                 }
             };
         }

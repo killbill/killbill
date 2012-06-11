@@ -23,6 +23,8 @@ import org.joda.time.DateTime;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.ning.billing.payment.api.Payment;
+import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.util.clock.DefaultClock;
 
 public class PaymentJsonSimple {
@@ -30,10 +32,12 @@ public class PaymentJsonSimple {
 
     private final BigDecimal amount;
 
-    private final UUID invoiceId;
-
-    private final UUID paymentId;
-
+    private final String accountId;
+    
+    private final String invoiceId;
+    
+    private final String paymentId;
+    
     private final DateTime requestedDate;
 
     private final DateTime effectiveDate;
@@ -44,54 +48,66 @@ public class PaymentJsonSimple {
 
     private final String status;
 
-    private final UUID accountId;
-
     public PaymentJsonSimple() {
         this.amount = null;
         this.paidAmount = null;
         this.invoiceId = null;
+        this.accountId = null;
         this.paymentId = null;
         this.requestedDate = null;
         this.effectiveDate = null;
         this.currency = null;
         this.retryCount = null;
         this.status = null;
-        this.accountId = null;
     }
 
     @JsonCreator
-    public PaymentJsonSimple(@JsonProperty("amount") final BigDecimal amount,
-                             @JsonProperty("paidAmount") final BigDecimal paidAmount,
-                             @JsonProperty("invoiceId") final UUID invoiceId,
-                             @JsonProperty("paymentId") final UUID paymentId,
-                             @JsonProperty("requestedDate") final DateTime requestedDate,
-                             @JsonProperty("effectiveDate") final DateTime effectiveDate,
-                             @JsonProperty("retryCount") final Integer retryCount,
-                             @JsonProperty("currency") final String currency,
-                             @JsonProperty("status") final String status,
-                             @JsonProperty("accountId") final UUID accountId) {
+    public PaymentJsonSimple(@JsonProperty("amount") BigDecimal amount,
+            @JsonProperty("paidAmount") BigDecimal paidAmount,
+            @JsonProperty("accountId") String accountId,            
+            @JsonProperty("invoiceId") String invoiceId,
+            @JsonProperty("paymentId") String paymentId,
+            @JsonProperty("requestedDate") DateTime requestedDate,
+            @JsonProperty("effectiveDate") DateTime effectiveDate,
+            @JsonProperty("retryCount") Integer retryCount,
+            @JsonProperty("currency") String currency,
+            @JsonProperty("status") String status) {
         super();
         this.amount = amount;
         this.paidAmount = paidAmount;
         this.invoiceId = invoiceId;
+        this.accountId = accountId;        
         this.paymentId = paymentId;
         this.requestedDate = DefaultClock.toUTCDateTime(requestedDate);
         this.effectiveDate = DefaultClock.toUTCDateTime(effectiveDate);
         this.currency = currency;
         this.retryCount = retryCount;
         this.status = status;
-        this.accountId = accountId;
+    }
+
+    public PaymentJsonSimple(Payment src) {
+        this.amount = src.getAmount();
+        this.paidAmount = src.getAmount();
+        this.invoiceId = src.getInvoiceId().toString();
+        this.accountId = src.getAccountId().toString();
+        this.paymentId = src.getId().toString();
+        this.requestedDate = src.getEffectiveDate();
+        this.effectiveDate = src.getEffectiveDate();
+        this.currency = src.getCurrency().toString();
+        this.retryCount = src.getAttempts().size();
+        this.status = src.getPaymentStatus().toString();
     }
 
     public BigDecimal getPaidAmount() {
         return paidAmount;
     }
 
-    public UUID getInvoiceId() {
+    public String getInvoiceId() {
         return invoiceId;
     }
 
-    public UUID getPaymentId() {
+
+    public String getPaymentId() {
         return paymentId;
     }
 
@@ -119,7 +135,7 @@ public class PaymentJsonSimple {
         return currency;
     }
 
-    public UUID getAccountId() {
+    public String getAccountId() {
         return accountId;
     }
 

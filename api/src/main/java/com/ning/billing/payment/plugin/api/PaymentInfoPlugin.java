@@ -16,38 +16,26 @@
 package com.ning.billing.payment.plugin.api;
 
 import java.math.BigDecimal;
-import java.util.UUID;
 
 import org.joda.time.DateTime;
 
 public interface PaymentInfoPlugin {
-    public String getExternalPaymentId();
+    
+    public enum PaymentPluginStatus {
+        UNDEFINED,
+        PROCESSED,
+        ERROR
+    };
     
     public BigDecimal getAmount();
-
-    public String getBankIdentificationNumber();
 
     public DateTime getCreatedDate();
 
     public DateTime getEffectiveDate();
 
-    public String getPaymentNumber();
-
-    public String getPaymentMethod();
-
-    public String getCardType();
-
-    public String getCardCountry();
-
-    public String getReferenceId();
-
-    public String getPaymentMethodId();
-
-    public BigDecimal getRefundAmount();
-
-    public String getStatus();
-
-    public String getType();
-
-    public DateTime getUpdatedDate();
+    public PaymentPluginStatus getStatus();
+    
+    public String getGatewayError();
+    
+    public String getGatewayErrorCode();
 }

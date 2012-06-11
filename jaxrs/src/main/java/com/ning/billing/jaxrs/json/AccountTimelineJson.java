@@ -29,19 +29,19 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.entitlement.api.timeline.BundleTimeline;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
-import com.ning.billing.payment.api.PaymentAttempt;
+import com.ning.billing.payment.api.Payment;
+import com.ning.billing.payment.api.Payment.PaymentAttempt;
+import com.ning.billing.payment.api.PaymentStatus;
 
 public class AccountTimelineJson {
-    @JsonView(BundleTimelineViews.ReadTimeline.class)
+
     private final List<PaymentJsonWithBundleKeys> payments;
 
-    @JsonView(BundleTimelineViews.ReadTimeline.class)
     private final List<InvoiceJsonWithBundleKeys> invoices;
-
-    @JsonView(BundleTimelineViews.ReadTimeline.class)
+    
     private final AccountJsonSimple account;
 
-    @JsonView(BundleTimelineViews.Timeline.class)
+
     private final List<BundleJsonWithSubscriptions> bundles;
 
     @JsonCreator
@@ -86,7 +86,7 @@ public class AccountTimelineJson {
         return tmp.toString();
     }
 
-    public AccountTimelineJson(final Account account, final List<Invoice> invoices, final List<PaymentAttempt> payments, final List<BundleTimeline> bundles) {
+    public AccountTimelineJson(final Account account, final List<Invoice> invoices, final List<Payment> payments, final List<BundleTimeline> bundles) {
         this.account = new AccountJsonSimple(account.getId().toString(), account.getExternalKey());
         this.bundles = new LinkedList<BundleJsonWithSubscriptions>();
         for (final BundleTimeline cur : bundles) {
@@ -106,22 +106,16 @@ public class AccountTimelineJson {
         }
 
         this.payments = new LinkedList<PaymentJsonWithBundleKeys>();
-        for (final PaymentAttempt cur : payments) {
-            final String status = cur.getPaymentId() != null ? "Success" : "Failed";
-            final BigDecimal paidAmount = cur.getPaymentId() != null ? cur.getAmount() : BigDecimal.ZERO;
-
-            this.payments.add(new PaymentJsonWithBundleKeys(cur.getAmount(),
-                                                            paidAmount,
-                                                            cur.getInvoiceId(),
-                                                            cur.getPaymentId(),
-                                                            cur.getCreatedDate(),
-                                                            cur.getUpdatedDate(),
-                                                            cur.getRetryCount(),
-                                                            cur.getCurrency().toString(),
-                                                            status,
-                                                            cur.getAccountId(),
-                                                            getBundleExternalKey(cur.getInvoiceId(), invoices, bundles)));
-        }
+        for (Payment cur : payments) {
+        
+            String status = cur.getPaymentStatus().toString();
+            BigDecimal paidAmount = cur.getPaymentStatus() == PaymentStatus.SUCCESS ? cur.getAmount() : BigDecimal.ZERO;
+            this.payments.add(new PaymentJsonWithBundleKeys(cur.getAmount(), paidAmount, account.getId().toString(),
+                    cur.getInvoiceId().toString(), cur.getId().toString(), 
+                    cur.getEffectiveDate(), cur.getEffectiveDate(),
+                    cur.getAttempts().size(), cur.getCurrency().toString(), status,
+                    getBundleExternalKey(cur.getInvoiceId(), invoices, bundles)));
+          }
     }
 
     public AccountTimelineJson() {

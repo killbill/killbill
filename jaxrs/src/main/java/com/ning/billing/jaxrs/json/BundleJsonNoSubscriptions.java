@@ -21,11 +21,11 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
+
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 
 public class BundleJsonNoSubscriptions extends BundleJsonSimple {
-    @JsonView(BundleTimelineViews.Base.class)
+
     private final String accountId;
 
     @JsonCreator

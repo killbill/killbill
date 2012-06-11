@@ -32,20 +32,17 @@ import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.util.clock.DefaultClock;
 
 public class SubscriptionJsonWithEvents extends SubscriptionJsonSimple {
-    @JsonView(BundleTimelineViews.ReadTimeline.class)
+
     private final List<SubscriptionReadEventJson> events;
 
-    @JsonView(BundleTimelineViews.WriteTimeline.class)
     private final List<SubscriptionDeletedEventJson> deletedEvents;
 
-    @JsonView(BundleTimelineViews.WriteTimeline.class)
     private final List<SubscriptionNewEventJson> newEvents;
 
     public static class SubscriptionReadEventJson extends SubscriptionBaseEventJson {
-        @JsonView(BundleTimelineViews.Timeline.class)
+
         private final String eventId;
 
-        @JsonView(BundleTimelineViews.Timeline.class)
         private final DateTime effectiveDate;
 
         public SubscriptionReadEventJson() {
@@ -56,13 +53,13 @@ public class SubscriptionJsonWithEvents extends SubscriptionJsonSimple {
 
         @JsonCreator
         public SubscriptionReadEventJson(@JsonProperty("eventId") final String eventId,
-                                         @JsonProperty("billingPeriod") final String billingPeriod,
-                                         @JsonProperty("requestedDt") final DateTime requestedDate,
-                                         @JsonProperty("effectiveDt") final DateTime effectiveDate,
-                                         @JsonProperty("product") final String product,
-                                         @JsonProperty("priceList") final String priceList,
-                                         @JsonProperty("eventType") final String eventType,
-                                         @JsonProperty("phase") final String phase) {
+                @JsonProperty("billingPeriod") final String billingPeriod,
+                @JsonProperty("requestedDt") final DateTime requestedDate,
+                @JsonProperty("effectiveDt") final DateTime effectiveDate,
+                @JsonProperty("product") final String product,
+                @JsonProperty("priceList") final String priceList,
+                @JsonProperty("eventType") final String eventType,
+                @JsonProperty("phase") final String phase) {
             super(billingPeriod, requestedDate, product, priceList, eventType, phase);
             this.eventId = eventId;
             this.effectiveDate = effectiveDate;
@@ -79,14 +76,14 @@ public class SubscriptionJsonWithEvents extends SubscriptionJsonSimple {
         @Override
         public String toString() {
             return "SubscriptionReadEventJson [eventId=" + eventId
-                    + ", effectiveDate=" + effectiveDate
-                    + ", getBillingPeriod()=" + getBillingPeriod()
-                    + ", getRequestedDate()=" + getRequestedDate()
-                    + ", getProduct()=" + getProduct() + ", getPriceList()="
-                    + getPriceList() + ", getEventType()=" + getEventType()
-                    + ", getPhase()=" + getPhase() + ", getClass()="
-                    + getClass() + ", hashCode()=" + hashCode()
-                    + ", toString()=" + super.toString() + "]";
+            + ", effectiveDate=" + effectiveDate
+            + ", getBillingPeriod()=" + getBillingPeriod()
+            + ", getRequestedDate()=" + getRequestedDate()
+            + ", getProduct()=" + getProduct() + ", getPriceList()="
+            + getPriceList() + ", getEventType()=" + getEventType()
+            + ", getPhase()=" + getPhase() + ", getClass()="
+            + getClass() + ", hashCode()=" + hashCode()
+            + ", toString()=" + super.toString() + "]";
         }
 
         @Override
@@ -121,13 +118,13 @@ public class SubscriptionJsonWithEvents extends SubscriptionJsonSimple {
     public static class SubscriptionDeletedEventJson extends SubscriptionReadEventJson {
         @JsonCreator
         public SubscriptionDeletedEventJson(@JsonProperty("event_id") final String eventId,
-                                            @JsonProperty("billing_period") final String billingPeriod,
-                                            @JsonProperty("requested_date") final DateTime requestedDate,
-                                            @JsonProperty("effective_date") final DateTime effectiveDate,
-                                            @JsonProperty("product") final String product,
-                                            @JsonProperty("price_list") final String priceList,
-                                            @JsonProperty("event_type") final String eventType,
-                                            @JsonProperty("phase") final String phase) {
+                @JsonProperty("billing_period") final String billingPeriod,
+                @JsonProperty("requested_date") final DateTime requestedDate,
+                @JsonProperty("effective_date") final DateTime effectiveDate,
+                @JsonProperty("product") final String product,
+                @JsonProperty("price_list") final String priceList,
+                @JsonProperty("event_type") final String eventType,
+                @JsonProperty("phase") final String phase) {
             super(eventId, billingPeriod, requestedDate, effectiveDate, product, priceList, eventType, phase);
         }
     }
@@ -135,45 +132,39 @@ public class SubscriptionJsonWithEvents extends SubscriptionJsonSimple {
     public static class SubscriptionNewEventJson extends SubscriptionBaseEventJson {
         @JsonCreator
         public SubscriptionNewEventJson(@JsonProperty("billing_period") final String billingPeriod,
-                                        @JsonProperty("requested_date") final DateTime requestedDate,
-                                        @JsonProperty("product") final String product,
-                                        @JsonProperty("price_list") final String priceList,
-                                        @JsonProperty("event_type") final String eventType,
-                                        @JsonProperty("phase") final String phase) {
+                @JsonProperty("requested_date") final DateTime requestedDate,
+                @JsonProperty("product") final String product,
+                @JsonProperty("price_list") final String priceList,
+                @JsonProperty("event_type") final String eventType,
+                @JsonProperty("phase") final String phase) {
             super(billingPeriod, requestedDate, product, priceList, eventType, phase);
         }
 
         @Override
         public String toString() {
             return "SubscriptionNewEventJson [getBillingPeriod()="
-                    + getBillingPeriod() + ", getRequestedDate()="
-                    + getRequestedDate() + ", getProduct()=" + getProduct()
-                    + ", getPriceList()=" + getPriceList()
-                    + ", getEventType()=" + getEventType() + ", getPhase()="
-                    + getPhase() + ", getClass()=" + getClass()
-                    + ", hashCode()=" + hashCode() + ", toString()="
-                    + super.toString() + "]";
+            + getBillingPeriod() + ", getRequestedDate()="
+            + getRequestedDate() + ", getProduct()=" + getProduct()
+            + ", getPriceList()=" + getPriceList()
+            + ", getEventType()=" + getEventType() + ", getPhase()="
+            + getPhase() + ", getClass()=" + getClass()
+            + ", hashCode()=" + hashCode() + ", toString()="
+            + super.toString() + "]";
         }
     }
 
     public static class SubscriptionBaseEventJson {
-        @JsonView(BundleTimelineViews.Timeline.class)
+
         private final String billingPeriod;
 
-        @JsonView(BundleTimelineViews.Timeline.class)
         private final DateTime requestedDate;
 
-
-        @JsonView(BundleTimelineViews.Timeline.class)
         private final String product;
 
-        @JsonView(BundleTimelineViews.Timeline.class)
         private final String priceList;
 
-        @JsonView(BundleTimelineViews.Timeline.class)
         private final String eventType;
 
-        @JsonView(BundleTimelineViews.Timeline.class)
         private final String phase;
 
         public SubscriptionBaseEventJson() {
@@ -187,11 +178,11 @@ public class SubscriptionJsonWithEvents extends SubscriptionJsonSimple {
 
         @JsonCreator
         public SubscriptionBaseEventJson(@JsonProperty("billing_period") final String billingPeriod,
-                                         @JsonProperty("requested_date") final DateTime requestedDate,
-                                         @JsonProperty("product") final String product,
-                                         @JsonProperty("price_list") final String priceList,
-                                         @JsonProperty("event_type") final String eventType,
-                                         @JsonProperty("phase") final String phase) {
+                @JsonProperty("requested_date") final DateTime requestedDate,
+                @JsonProperty("product") final String product,
+                @JsonProperty("price_list") final String priceList,
+                @JsonProperty("event_type") final String eventType,
+                @JsonProperty("phase") final String phase) {
             super();
             this.billingPeriod = billingPeriod;
             this.requestedDate = DefaultClock.toUTCDateTime(requestedDate);
@@ -272,9 +263,9 @@ public class SubscriptionJsonWithEvents extends SubscriptionJsonSimple {
 
     @JsonCreator
     public SubscriptionJsonWithEvents(@JsonProperty("subscription_id") @Nullable final String subscriptionId,
-                                      @JsonProperty("events") @Nullable final List<SubscriptionReadEventJson> events,
-                                      @JsonProperty("new_events") @Nullable final List<SubscriptionNewEventJson> newEvents,
-                                      @JsonProperty("deleted_events") @Nullable final List<SubscriptionDeletedEventJson> deletedEvents) {
+            @JsonProperty("events") @Nullable final List<SubscriptionReadEventJson> events,
+            @JsonProperty("new_events") @Nullable final List<SubscriptionNewEventJson> newEvents,
+            @JsonProperty("deleted_events") @Nullable final List<SubscriptionDeletedEventJson> deletedEvents) {
         super(subscriptionId);
         this.events = events;
         this.deletedEvents = deletedEvents;
@@ -286,9 +277,9 @@ public class SubscriptionJsonWithEvents extends SubscriptionJsonSimple {
     }
 
     public SubscriptionJsonWithEvents(final Subscription data,
-                                      @Nullable final List<SubscriptionReadEventJson> events,
-                                      @Nullable final List<SubscriptionNewEventJson> newEvents,
-                                      @Nullable final List<SubscriptionDeletedEventJson> deletedEvents) {
+            @Nullable final List<SubscriptionReadEventJson> events,
+            @Nullable final List<SubscriptionNewEventJson> newEvents,
+            @Nullable final List<SubscriptionDeletedEventJson> deletedEvents) {
         this(data.getId().toString(), events, newEvents, deletedEvents);
     }
 
@@ -298,7 +289,7 @@ public class SubscriptionJsonWithEvents extends SubscriptionJsonSimple {
         for (final ExistingEvent cur : input.getExistingEvents()) {
             final PlanPhaseSpecifier spec = cur.getPlanPhaseSpecifier();
             this.events.add(new SubscriptionReadEventJson(cur.getEventId().toString(), spec.getBillingPeriod().toString(), cur.getRequestedDate(), cur.getEffectiveDate(),
-                                                          spec.getProductName(), spec.getPriceListName(), cur.getSubscriptionTransitionType().toString(), spec.getPhaseType().toString()));
+                    spec.getProductName(), spec.getPriceListName(), cur.getSubscriptionTransitionType().toString(), spec.getPhaseType().toString()));
         }
         this.newEvents = null;
         this.deletedEvents = null;

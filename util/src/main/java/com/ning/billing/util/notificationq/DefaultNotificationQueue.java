@@ -122,8 +122,8 @@ public class DefaultNotificationQueue extends NotificationQueueBase {
     }
 
     @Override
-    public void removeNotificationsByKey(UUID key) {
-        dao.removeNotificationsByKey(key.toString());
+    public void removeNotificationsByKey(NotificationKey notificationKey) {
+        dao.removeNotificationsByKey(notificationKey.toString());
         
     }
 }

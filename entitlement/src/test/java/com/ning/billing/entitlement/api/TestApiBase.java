@@ -440,8 +440,8 @@ public abstract class TestApiBase implements TestListenerStatus {
             }
 
             @Override
-            public String getPaymentProviderName() {
-                return "Paypal";
+            public UUID getPaymentMethodId() {
+                return UUID.randomUUID();
             }
             @Override
             public DateTimeZone getTimeZone() {

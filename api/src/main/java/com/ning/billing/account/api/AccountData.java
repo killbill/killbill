@@ -16,6 +16,8 @@
 
 package com.ning.billing.account.api;
 
+import java.util.UUID;
+
 import org.joda.time.DateTimeZone;
 
 import com.ning.billing.catalog.api.Currency;
@@ -34,7 +36,7 @@ public interface AccountData {
 
     public Currency getCurrency();
 
-    public String getPaymentProviderName();
+    public UUID getPaymentMethodId();
 
     public DateTimeZone getTimeZone();
 

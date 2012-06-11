@@ -22,7 +22,8 @@ import org.joda.time.DateTime;
 import com.ning.billing.util.bus.BusEvent;
 
 public interface PaymentInfoEvent extends Entity, BusEvent {
-    public String getExternalPaymentId();
+
+    public UUID getPaymentId();
     
     public UUID getAccountId();
     
@@ -30,29 +31,9 @@ public interface PaymentInfoEvent extends Entity, BusEvent {
 
     public BigDecimal getAmount();
 
-    public String getBankIdentificationNumber();
-
     public DateTime getEffectiveDate();
 
-    public String getPaymentNumber();
+    public Integer getPaymentNumber();
 
-    public String getPaymentMethod();
-
-    public String getCardType();
-
-    public String getCardCountry();
-
-    public String getReferenceId();
-
-    public String getPaymentMethodId();
-
-    public BigDecimal getRefundAmount();
-
-    public String getStatus();
-
-    public String getType();
-    
-    public DateTime getCreatedDate();
-    
-    public DateTime getUpdatedDate();
+    public PaymentStatus getStatus();
 }

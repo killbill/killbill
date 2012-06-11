@@ -17,32 +17,38 @@
 package com.ning.billing.payment.api;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.Arrays;
-import java.util.List;
 import java.util.UUID;
 
-import org.apache.commons.lang.RandomStringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import com.google.inject.Inject;
+import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
+import com.ning.billing.mock.glue.MockClockModule;
+import com.ning.billing.mock.glue.MockJunctionModule;
 import com.ning.billing.payment.MockRecurringInvoiceItem;
 import com.ning.billing.payment.TestHelper;
+import com.ning.billing.payment.api.Payment.PaymentAttempt;
+import com.ning.billing.payment.glue.PaymentTestModuleWithMocks;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
 import com.ning.billing.util.callcontext.CallContext;
@@ -50,12 +56,20 @@ import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.DefaultCallContext;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.glue.CallContextModule;
 
-public abstract class TestPaymentApi {
+@Guice(modules = { PaymentTestModuleWithMocks.class, MockClockModule.class, MockJunctionModule.class, CallContextModule.class })
+@Test(groups = "fast")
+public class TestPaymentApi {
+    
+    private static final Logger log = LoggerFactory.getLogger(TestPaymentApi.class);
+    
     @Inject
     private Bus eventBus;
     @Inject
     protected PaymentApi paymentApi;
+    @Inject
+    protected AccountUserApi accountApi;
     @Inject
     protected TestHelper testHelper;
     @Inject
@@ -78,16 +92,57 @@ public abstract class TestPaymentApi {
         eventBus.stop();
     }
 
+    
     @Test(enabled=true)
-    public void testCreateCreditCardPayment() throws Exception {
+    public void testSimplePaymentWithNoAmount() throws Exception {
+        final BigDecimal invoiceAmount = new BigDecimal("10.0011");
+        final BigDecimal requestedAmount = null;
+        final BigDecimal expectedAmount = invoiceAmount;        
+        
+        testSimplePayment(invoiceAmount, requestedAmount, expectedAmount);
+    }
+
+    @Test(enabled=true)
+    public void testSimplePaymentWithInvoiceAmount() throws Exception {
+        final BigDecimal invoiceAmount = new BigDecimal("10.0011");
+        final BigDecimal requestedAmount = invoiceAmount;
+        final BigDecimal expectedAmount = invoiceAmount;        
+        
+        testSimplePayment(invoiceAmount, requestedAmount, expectedAmount);
+    }
+
+    @Test(enabled=true)
+    public void testSimplePaymentWithLowerAmount() throws Exception {
+        final BigDecimal invoiceAmount = new BigDecimal("10.0011");
+        final BigDecimal requestedAmount = new BigDecimal("8.0091");
+        final BigDecimal expectedAmount = requestedAmount;        
+        
+        testSimplePayment(invoiceAmount, requestedAmount, expectedAmount);
+    }
+
+    @Test(enabled=true)
+    public void testSimplePaymentWithInvalidAmount() throws Exception {
+        final BigDecimal invoiceAmount = new BigDecimal("10.0011");
+        final BigDecimal requestedAmount = new BigDecimal("80.0091");
+        final BigDecimal expectedAmount = null;        
+        
+        testSimplePayment(invoiceAmount, requestedAmount, expectedAmount);
+
+    }
+
+    
+
+    private void testSimplePayment(BigDecimal invoiceAmount, BigDecimal requestedAmount, BigDecimal expectedAmount) throws Exception {
+        
         ((ZombieControl)invoicePaymentApi).addResult("notifyOfPaymentAttempt", BrainDeadProxyFactory.ZOMBIE_VOID);
 
         final DateTime now = new DateTime(DateTimeZone.UTC);
-        final Account account = testHelper.createTestCreditCardAccount();
+        final Account account = testHelper.createTestAccount("yoyo.yahoo.com");
         final Invoice invoice = testHelper.createTestInvoice(account, now, Currency.USD);
-        final BigDecimal amount = new BigDecimal("10.0011");
+        
         final UUID subscriptionId = UUID.randomUUID();
         final UUID bundleId = UUID.randomUUID();
+
 
         invoice.addInvoiceItem(new MockRecurringInvoiceItem(invoice.getId(), account.getId(),
                                                        subscriptionId,
@@ -95,95 +150,35 @@ public abstract class TestPaymentApi {
                                                        "test plan", "test phase",
                                                        now,
                                                        now.plusMonths(1),
-                                                       amount,
+                                                       invoiceAmount,
                                                        new BigDecimal("1.0"),
                                                        Currency.USD));
 
-        PaymentInfoEvent paymentInfo = paymentApi.createPayment(account.getExternalKey(), invoice.getId(), context);
+        try {
+            Payment paymentInfo = paymentApi.createPayment(account.getExternalKey(), invoice.getId(), requestedAmount, context);
+            if (expectedAmount == null) {
+                fail("Expected to fail because requested amount > invoice amount");
+            }
+            assertNotNull(paymentInfo.getId());
+            assertTrue(paymentInfo.getAmount().compareTo(expectedAmount.setScale(2, RoundingMode.HALF_EVEN)) == 0);
+            assertNotNull(paymentInfo.getPaymentNumber());
+            assertEquals(paymentInfo.getPaymentStatus(), PaymentStatus.SUCCESS);
+            assertEquals(paymentInfo.getAttempts().size(), 1);
+            assertEquals(paymentInfo.getInvoiceId(), invoice.getId());
+            assertEquals(paymentInfo.getCurrency(), Currency.USD);
 
-        assertNotNull(paymentInfo.getId());
-        assertTrue(paymentInfo.getAmount().compareTo(amount.setScale(2, RoundingMode.HALF_EVEN)) == 0);
-        assertNotNull(paymentInfo.getPaymentNumber());
-        assertFalse(paymentInfo.getStatus().equals("Error"));
-
-        PaymentAttempt paymentAttempt = paymentApi.getPaymentAttemptForPaymentId(paymentInfo.getId());
-        assertNotNull(paymentAttempt);
-        assertNotNull(paymentAttempt.getId());
-        assertEquals(paymentAttempt.getInvoiceId(), invoice.getId());
-        assertTrue(paymentAttempt.getAmount().compareTo(amount.setScale(2, RoundingMode.HALF_EVEN)) == 0);
-        assertEquals(paymentAttempt.getCurrency(), Currency.USD);
-        assertEquals(paymentAttempt.getPaymentId(), paymentInfo.getId());
-        DateTime nowTruncated = now.withMillisOfSecond(0).withSecondOfMinute(0);
-        DateTime paymentAttemptDateTruncated = paymentAttempt.getPaymentAttemptDate().withMillisOfSecond(0).withSecondOfMinute(0);
-        assertEquals(paymentAttemptDateTruncated.compareTo(nowTruncated), 0);
-
-        List<PaymentInfoEvent> paymentInfos = paymentApi.getPaymentInfo(Arrays.asList(invoice.getId()));
-        assertNotNull(paymentInfos);
-        assertTrue(paymentInfos.size() > 0);
-
-        PaymentInfoEvent paymentInfoFromGet = paymentInfos.get(0);
-        assertEquals(paymentInfo.getAmount(), paymentInfoFromGet.getAmount());
-        assertEquals(paymentInfo.getRefundAmount(), paymentInfoFromGet.getRefundAmount());
-        assertEquals(paymentInfo.getId(), paymentInfoFromGet.getId());
-        assertEquals(paymentInfo.getPaymentNumber(), paymentInfoFromGet.getPaymentNumber());
-        assertEquals(paymentInfo.getStatus(), paymentInfoFromGet.getStatus());
-        assertEquals(paymentInfo.getBankIdentificationNumber(), paymentInfoFromGet.getBankIdentificationNumber());
-        assertEquals(paymentInfo.getReferenceId(), paymentInfoFromGet.getReferenceId());
-        assertEquals(paymentInfo.getPaymentMethodId(), paymentInfoFromGet.getPaymentMethodId());
-        assertEquals(paymentInfo.getEffectiveDate(), paymentInfoFromGet.getEffectiveDate());
-
-        List<PaymentAttempt> paymentAttemptsFromGet = paymentApi.getPaymentAttemptsForInvoiceId(invoice.getId());
-        assertEquals(paymentAttempt, paymentAttemptsFromGet.get(0));
-
+            PaymentAttempt paymentAttempt = paymentInfo.getAttempts().get(0);
+            assertNotNull(paymentAttempt);
+            assertNotNull(paymentAttempt.getId());
+        } catch (PaymentApiException e) {
+            if (expectedAmount != null) {
+                fail("Failed to create payment", e);
+            } else {
+                log.info(e.getMessage());
+                assertEquals(e.getCode(), ErrorCode.PAYMENT_AMOUNT_DENIED.getCode());
+            }
+        }
     }
 
-    private PaymentProviderAccount setupAccountWithPaypalPaymentMethod() throws Exception  {
-        final Account account = testHelper.createTestPayPalAccount();
-        paymentApi.createPaymentProviderAccount(account, context);
-
-        String accountKey = account.getExternalKey();
-
-        PaypalPaymentMethodInfo paymentMethod = new PaypalPaymentMethodInfo.Builder()
-                                                                           .setBaid("12345")
-                                                                           .setEmail(account.getEmail())
-                                                                           .setDefaultMethod(true)
-                                                                           .build();
-        String paymentMethodId = paymentApi.addPaymentMethod(accountKey, paymentMethod, context);
-
-        PaymentMethodInfo paymentMethodInfo = paymentApi.getPaymentMethod(accountKey, paymentMethodId);
-
-        return paymentApi.getPaymentProviderAccount(accountKey);
-    }
-
-    @Test(enabled=true)
-    public void testCreatePaypalPaymentMethod() throws Exception  {
-        PaymentProviderAccount account = setupAccountWithPaypalPaymentMethod();
-        assertNotNull(account);
-        paymentApi.getPaymentMethods(account.getAccountKey());
-    }
-
-    @Test(enabled=true)
-    public void testUpdatePaymentProviderAccountContact() throws Exception {
-        final Account account = testHelper.createTestPayPalAccount();
-        paymentApi.createPaymentProviderAccount(account, context);
-
-        Account updatedAccount = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
-        ZombieControl zombieAccount = (ZombieControl) updatedAccount;
-        zombieAccount.addResult("getId", account.getId());
-        zombieAccount.addResult("getName", "Tester " + RandomStringUtils.randomAlphanumeric(10));
-        zombieAccount.addResult("getFirstNameLength", 6);
-        zombieAccount.addResult("getExternalKey", account.getExternalKey());
-        zombieAccount.addResult("getPhone", "888-888-" + RandomStringUtils.randomNumeric(4));
-        zombieAccount.addResult("getEmail", account.getEmail());
-        zombieAccount.addResult("getCurrency", account.getCurrency());
-        zombieAccount.addResult("getBillCycleDay", account.getBillCycleDay());
-
-        paymentApi.updatePaymentProviderAccountContact(updatedAccount.getExternalKey(), context);
-    }
-
-    @Test(enabled=true)
-    public void testCannotDeleteDefaultPaymentMethod() throws Exception  {
-        PaymentProviderAccount account = setupAccountWithPaypalPaymentMethod();
-        paymentApi.deletePaymentMethod(account.getAccountKey(), account.getDefaultPaymentMethodId(), context);
-    }
+    
 }

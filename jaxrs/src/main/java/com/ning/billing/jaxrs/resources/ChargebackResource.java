@@ -16,6 +16,7 @@
 
 package com.ning.billing.jaxrs.resources;
 
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
@@ -25,12 +26,15 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.ning.billing.invoice.api.InvoiceApiException;
@@ -40,8 +44,11 @@ import com.ning.billing.jaxrs.json.ChargebackCollectionJson;
 import com.ning.billing.jaxrs.json.ChargebackJson;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
+import com.ning.billing.payment.api.Payment;
+import com.ning.billing.payment.api.Payment.PaymentAttempt;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentApiException;
+import com.ning.billing.payment.api.PaymentStatus;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
@@ -96,28 +103,37 @@ public class ChargebackResource implements JaxrsResource {
     @GET
     @Path("/payments/{paymentId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
-    public Response getForPayment(@PathParam("paymentId") final String paymentId) {
-        final UUID paymentAttemptId;
+    public Response getForPayment(@PathParam("paymentId") String paymentId) {
+        
         try {
-            paymentAttemptId = paymentApi.getPaymentAttemptIdFromPaymentId(UUID.fromString(paymentId));
-        } catch (PaymentApiException e) {
-            final String error = String.format("Failed to locate payment attempt for payment id %s", paymentId);
-            log.info(error, e);
-            return Response.status(Response.Status.NO_CONTENT).build();
-        }
+            Payment payment = paymentApi.getPayment(UUID.fromString(paymentId));
+            Collection<PaymentAttempt> attempts = Collections2.filter(payment.getAttempts(), new Predicate<PaymentAttempt>() {
+                @Override
+                public boolean apply(PaymentAttempt input) {
+                    return input.getPaymentStatus() == PaymentStatus.SUCCESS;
+                }
+            });
+            if (attempts.size() == 0) {
+                final String error = String.format("Failed to locate succesful payment attempts for paymentId %s", paymentId);
+                return Response.status(Response.Status.NO_CONTENT).entity(error).build();
+            }
+            UUID paymentAttemptId = attempts.iterator().next().getId();
+            
+            List<InvoicePayment> chargebacks = invoicePaymentApi.getChargebacksByPaymentAttemptId(paymentAttemptId);
+            List<ChargebackJson> chargebacksJson = convertToJson(chargebacks);
 
-        final List<InvoicePayment> chargebacks = invoicePaymentApi.getChargebacksByPaymentAttemptId(paymentAttemptId);
-        final List<ChargebackJson> chargebacksJson = convertToJson(chargebacks);
+            String accountId = invoicePaymentApi.getAccountIdFromInvoicePaymentId(UUID.fromString(paymentId)).toString();
 
-        try {
-            final String accountId = invoicePaymentApi.getAccountIdFromInvoicePaymentId(UUID.fromString(paymentId)).toString();
 
             final ChargebackCollectionJson json = new ChargebackCollectionJson(accountId, chargebacksJson);
             return Response.status(Response.Status.OK).entity(json).build();
+        
+        } catch (PaymentApiException e) {
+            final String error = String.format("Failed to locate payment attempt for payment id %s", paymentId);
+            return Response.status(Response.Status.NO_CONTENT).entity(error).build();
         } catch (InvoiceApiException e) {
             final String error = String.format("Failed to locate account for payment id %s", paymentId);
-            log.info(error, e);
-            return Response.status(Response.Status.NO_CONTENT).build();
+            return Response.status(Response.Status.NO_CONTENT).entity(error).build();
         }
     }
 

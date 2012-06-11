@@ -113,7 +113,7 @@ public class MockNotificationQueue extends NotificationQueueBase implements Noti
     }
 
     @Override
-    public void removeNotificationsByKey(UUID key) {
+    public void removeNotificationsByKey(NotificationKey key) {
         List<Notification> toClearNotifications = new ArrayList<Notification>();
         for (Notification notification : notifications) {
             if (notification.getNotificationKey().equals(key.toString())) {

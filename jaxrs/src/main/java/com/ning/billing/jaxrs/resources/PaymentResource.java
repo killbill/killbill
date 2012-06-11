@@ -43,8 +43,9 @@ import com.ning.billing.util.dao.ObjectType;
 import java.util.List;
 import java.util.UUID;
 
-@Path("/1.0/payment")
+@Path(JaxrsResource.PAYMENTS_PATH)
 public class PaymentResource extends JaxRsResourceBase {
+    
     private static final String ID_PARAM_NAME = "paymentId";
     private static final String CUSTOM_FIELD_URI = JaxrsResource.CUSTOM_FIELDS + "/{" + ID_PARAM_NAME + ":" + UUID_PATTERN + "}";
     private static final String TAG_URI = JaxrsResource.TAGS + "/{" + ID_PARAM_NAME + ":" + UUID_PATTERN + "}";
@@ -57,31 +58,6 @@ public class PaymentResource extends JaxRsResourceBase {
                            final Context context) {
         super(uriBuilder, tagUserApi, tagHelper, customFieldUserApi);
         this.context = context;
-    }
-
-    @GET
-    @Path("/{invoiceId:\\w+-\\w+-\\w+-\\w+-\\w+}")
-    @Produces(APPLICATION_JSON)
-    public Response getPayments(@PathParam("invoiceId") String invoiceId) {
-        return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-    }
-
-    @GET
-    @Path("/account/{accountId:\\w+-\\w+-\\w+-\\w+-\\w+}")
-    @Produces(APPLICATION_JSON)
-    public Response getAllPayments(@PathParam("accountId") String accountId) {
-        return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-    }
-
-    @POST
-    @Produces(APPLICATION_JSON)
-    @Consumes(APPLICATION_JSON)
-    @Path("/{invoiceId:\\w+-\\w+-\\w+-\\w+-\\w+}")
-    public Response createInstantPayment(PaymentJsonSimple payment,
-            @PathParam("invoiceId") String invoiceId,
-            @QueryParam("last4CC") String last4CC,
-            @QueryParam("nameOnCC") String nameOnCC) {
-        return Response.status(Status.INTERNAL_SERVER_ERROR).build();
     }
 
     @GET

@@ -65,7 +65,7 @@ public class TestIntegrationWithAutoInvoiceOffTag extends TestIntegrationBase {
     @BeforeMethod(groups = {"slow"})
     public void setupOverdue() throws Exception {
         
-        account = accountUserApi.createAccount(getAccountData(25), null, null, context);
+        account = createAccountWithPaymentMethod(getAccountData(25));
         assertNotNull(account);
 
         bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever", context);

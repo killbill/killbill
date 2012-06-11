@@ -37,18 +37,22 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.AccountTimelineJson;
 import com.ning.billing.jaxrs.json.BundleJsonNoSubscriptions;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
+import com.ning.billing.jaxrs.json.InvoiceJsonSimple;
+import com.ning.billing.jaxrs.json.PaymentJsonSimple;
 import com.ning.billing.jaxrs.json.SubscriptionJsonNoEvents;
 import com.ning.billing.jaxrs.json.TagDefinitionJson;
 import com.ning.http.client.Response;
 
 
 public class TestAccount extends TestJaxrsBase {
+
 	private static final Logger log = LoggerFactory.getLogger(TestAccount.class);
 	
 	@Test(groups="slow", enabled=true)
@@ -67,7 +71,7 @@ public class TestAccount extends TestJaxrsBase {
 		
 		// Update Account
 		AccountJson newInput = new AccountJson(objFromJson.getAccountId(),
-				"zozo", 4, objFromJson.getExternalKey(), "rr@google.com", 18, "EUR", "none", "UTC", "bl1", "bh2", "", "ca", "usa", "415-255-2991");
+				"zozo", 4, objFromJson.getExternalKey(), "rr@google.com", 18, "EUR", null, "UTC", "bl1", "bh2", "", "ca", "usa", "415-255-2991");
 		baseJson = mapper.writeValueAsString(newInput);
 		final String uri = JaxrsResource.ACCOUNTS_PATH + "/" + objFromJson.getAccountId();
 		response = doPut(uri, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
@@ -110,36 +114,69 @@ public class TestAccount extends TestJaxrsBase {
         clock.setTime(new DateTime(2012, 4, 25, 0, 3, 42, 0));
         
         
-	    AccountJson accountJson = createAccount("poney", "shdddqgfhwe", "poney@yahoo.com");
+	    AccountJson accountJson = createAccountWithDefaultPaymentMethod("poney", "shdddqgfhwe", "poney@yahoo.com");
 	    assertNotNull(accountJson);
 	    
 	    BundleJsonNoSubscriptions bundleJson = createBundle(accountJson.getAccountId(), "996599");
 	    assertNotNull(bundleJson);
 	    
+
         SubscriptionJsonNoEvents subscriptionJson = createSubscription(bundleJson.getBundleId(), "Shotgun", ProductCategory.BASE.toString(), BillingPeriod.MONTHLY.toString(), true);
         assertNotNull(subscriptionJson);
-        
+
         // MOVE AFTER TRIAL
         clock.addMonths(3);
 
         crappyWaitForLackOfProperSynchonization();
         
-        
         final String uri = JaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAccountId() + "/" + JaxrsResource.TIMELINE;
-        
+
         Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
         String baseJson = response.getResponseBody();
         AccountTimelineJson objFromJson = mapper.readValue(baseJson, AccountTimelineJson.class);
         assertNotNull(objFromJson);
         log.info(baseJson);
-        
-            Assert.assertEquals(objFromJson.getPayments().size(), 3);
+
+        Assert.assertEquals(objFromJson.getPayments().size(), 3);
         Assert.assertEquals(objFromJson.getInvoices().size(), 4);   
         Assert.assertEquals(objFromJson.getBundles().size(), 1); 
         Assert.assertEquals(objFromJson.getBundles().get(0).getSubscriptions().size(), 1);
         Assert.assertEquals(objFromJson.getBundles().get(0).getSubscriptions().get(0).getEvents().size(), 2);        
- 	}
+    }
+
+
+    @Test(groups="slow", enabled=true)
+    public void testAccountPayments() throws Exception {
+
+        clock.setTime(new DateTime(2012, 4, 25, 0, 3, 42, 0));
+
+
+        AccountJson accountJson = createAccountWithDefaultPaymentMethod("ermenehildo", "shtyrgfhwe", "ermenehildo@yahoo.com");
+        assertNotNull(accountJson);
+
+        BundleJsonNoSubscriptions bundleJson = createBundle(accountJson.getAccountId(), "396199");
+        assertNotNull(bundleJson);
+
+        SubscriptionJsonNoEvents subscriptionJson = createSubscription(bundleJson.getBundleId(), "Shotgun", ProductCategory.BASE.toString(), BillingPeriod.MONTHLY.toString(), true);
+        assertNotNull(subscriptionJson);
+
+        // MOVE AFTER TRIAL
+        clock.addMonths(3);
+
+        crappyWaitForLackOfProperSynchonization();
+
+
+        final String uri = JaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAccountId() + "/" + JaxrsResource.PAYMENTS;
+
+        Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+        String baseJson = response.getResponseBody();
+        List<PaymentJsonSimple> objFromJson = mapper.readValue(baseJson, new TypeReference<List<PaymentJsonSimple>>() {});
+        Assert.assertEquals(objFromJson.size(), 3);
+    }
+
+
 
 
 
@@ -161,6 +198,7 @@ public class TestAccount extends TestJaxrsBase {
         queryParams.put(JaxrsResource.QUERY_TAGS, input.getName());
         String uri = getRootPath() + "/" + JaxrsResource.TAGS + "/" + UUID.randomUUID().toString();
 	    response = doPost(uri, null, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
+
         assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
 
         /*
@@ -172,12 +210,12 @@ public class TestAccount extends TestJaxrsBase {
         String url = getUrlFromUri(uri);
         response = doGetWithUrl(url, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+    }
 
-
-	}
 
     @Test(groups="slow", enabled=true)
 	public void testCustomFields() throws Exception {
+
         List<CustomFieldJson> customFields =  new LinkedList<CustomFieldJson>();
         customFields.add(new CustomFieldJson("1", "value1"));
         customFields.add(new CustomFieldJson("2", "value2"));
@@ -192,5 +230,5 @@ public class TestAccount extends TestJaxrsBase {
         String url = getUrlFromUri(uri);
         response = doGetWithUrl(url, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
-	}
+    }
 }

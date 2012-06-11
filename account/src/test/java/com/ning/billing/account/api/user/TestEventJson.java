@@ -49,7 +49,7 @@ public class TestEventJson {
     @Test(groups= {"fast"})
     public void testAccountCreationEvent() throws Exception {
         
-        DefaultAccountData data = new DefaultAccountData("dsfdsf", "bobo", 3, "bobo@yahoo.com", 12, "USD", "paypal", 
+        DefaultAccountData data = new DefaultAccountData("dsfdsf", "bobo", 3, "bobo@yahoo.com", 12, "USD", UUID.randomUUID(), 
                 "UTC", "US", "21 avenue", "", "Gling", "San Franciso", "CA", "94110", "USA", "4126789887", false, false);
         DefaultAccountCreationEvent e = new DefaultAccountCreationEvent(data, UUID.randomUUID(), UUID.randomUUID());
         

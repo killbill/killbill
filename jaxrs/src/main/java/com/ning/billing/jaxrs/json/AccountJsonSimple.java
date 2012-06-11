@@ -20,10 +20,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
 
 public class AccountJsonSimple {
-    @JsonView(BundleTimelineViews.Base.class)
+
     protected final String accountId;
 
-    @JsonView(BundleTimelineViews.Base.class)
     protected final String externalKey;
 
     public AccountJsonSimple() {

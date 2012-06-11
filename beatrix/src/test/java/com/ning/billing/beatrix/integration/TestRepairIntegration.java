@@ -71,8 +71,7 @@ public class TestRepairIntegration extends TestIntegrationBase {
         DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
         
-        Account account = accountUserApi.createAccount(getAccountData(25), null, null, context);
-        assertNotNull(account);
+        Account account = createAccountWithPaymentMethod(getAccountData(25));
 
         SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever", context);
 

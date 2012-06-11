@@ -20,7 +20,6 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.dao.MapperBase;
-import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
@@ -42,7 +41,7 @@ public class AccountMapper extends MapperBase implements ResultSetMapper<Account
         String currencyString = result.getString("currency");
         Currency currency = (currencyString == null) ? null : Currency.valueOf(currencyString);
 
-        String paymentProviderName = result.getString("payment_provider_name");
+        UUID paymentMethodId = result.getString("payment_method_id") != null ? UUID.fromString(result.getString("payment_method_id")) : null;
 
         String timeZoneId = result.getString("time_zone");
         DateTimeZone timeZone = (timeZoneId == null) ? null : DateTimeZone.forID(timeZoneId);
@@ -62,7 +61,7 @@ public class AccountMapper extends MapperBase implements ResultSetMapper<Account
         Boolean isNotifiedForInvoices = result.getBoolean("is_notified_for_invoices");
 
         return new DefaultAccount(id, externalKey, email, name,firstNameLength, currency,
-                billingCycleDay, paymentProviderName, timeZone, locale,
+                billingCycleDay, paymentMethodId, timeZone, locale,
                 address1, address2, companyName, city, stateOrProvince, country, postalCode, phone,
                 isMigrated, isNotifiedForInvoices);
     }
