@@ -48,24 +48,34 @@ public class DescriptiveTag extends EntityBase implements Tag {
 
     @Override
     public String toString() {
-        return tagDefinitionName;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        DescriptiveTag that = (DescriptiveTag) o;
-
-        if (tagDefinitionName != null ? !tagDefinitionName.equals(that.tagDefinitionName) : that.tagDefinitionName != null)
-            return false;
-
-        return true;
+        return "DescriptiveTag [tagDefinitionName=" + tagDefinitionName + ", id=" + id + "]";
     }
 
     @Override
     public int hashCode() {
-        return tagDefinitionName != null ? tagDefinitionName.hashCode() : 0;
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((tagDefinitionName == null) ? 0
+                                                              : tagDefinitionName.hashCode());
+        return result;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        DescriptiveTag other = (DescriptiveTag) obj;
+        if (tagDefinitionName == null) {
+            if (other.tagDefinitionName != null)
+                return false;
+        }
+        else if (!tagDefinitionName.equals(other.tagDefinitionName))
+            return false;
+        return true;
+    }
+
 }

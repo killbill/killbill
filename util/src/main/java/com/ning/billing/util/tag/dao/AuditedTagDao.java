@@ -16,6 +16,17 @@
 
 package com.ning.billing.util.tag.dao;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import org.skife.jdbi.v2.IDBI;
+import org.skife.jdbi.v2.Transaction;
+import org.skife.jdbi.v2.TransactionStatus;
+import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
+
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.invoice.api.InvoiceApiException;
@@ -33,22 +44,18 @@ import com.ning.billing.util.tag.DefaultControlTag;
 import com.ning.billing.util.tag.DescriptiveTag;
 import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;
-import org.skife.jdbi.v2.IDBI;
-import org.skife.jdbi.v2.Transaction;
-import org.skife.jdbi.v2.TransactionStatus;
-import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-public class AuditedTagDao extends AuditedCollectionDaoBase<Tag> implements TagDao {
+public class AuditedTagDao extends AuditedCollectionDaoBase<Tag, Tag> implements TagDao {
     private final TagSqlDao tagSqlDao;
 
     @Inject
     public AuditedTagDao(final IDBI dbi) {
         this.tagSqlDao = dbi.onDemand(TagSqlDao.class);
+    }
+
+    @Override
+    protected Tag getEquivalenceObjectFor(Tag obj) {
+        return obj;
     }
 
     @Override
@@ -113,8 +120,7 @@ public class AuditedTagDao extends AuditedCollectionDaoBase<Tag> implements TagD
                     throw new InvoiceApiException(ErrorCode.TAG_DOES_NOT_EXIST, tagName);
                 }
 
-                List<Tag> tagList = new ArrayList<Tag>();
-                tagList.add(tag);
+                List<Tag> tagList = Arrays.asList(tag);
 
                 List<Mapper<UUID, Long>> recordIds = tagSqlDao.getRecordIds(objectId.toString(), objectType);
                 Map<UUID, Long> recordIdMap = convertToHistoryMap(recordIds);

@@ -16,13 +16,9 @@
 
 package com.ning.billing.account.dao;
 
-import com.ning.billing.account.api.AccountEmail;
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallContextBinder;
-import com.ning.billing.util.dao.EntityHistory;
-import com.ning.billing.util.dao.ObjectType;
-import com.ning.billing.util.dao.ObjectTypeBinder;
-import com.ning.billing.util.entity.collection.dao.UpdatableEntityCollectionSqlDao;
+import java.util.Collection;
+import java.util.List;
+
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlBatch;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
@@ -30,7 +26,13 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 
-import java.util.List;
+import com.ning.billing.account.api.AccountEmail;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallContextBinder;
+import com.ning.billing.util.dao.EntityHistory;
+import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.util.dao.ObjectTypeBinder;
+import com.ning.billing.util.entity.collection.dao.UpdatableEntityCollectionSqlDao;
 
 @ExternalizedSqlViaStringTemplate3
 @RegisterMapper(AccountEmailMapper.class)
@@ -39,21 +41,21 @@ public interface AccountEmailSqlDao extends UpdatableEntityCollectionSqlDao<Acco
     @SqlBatch(transactional=false)
     public void insertFromTransaction(@Bind("objectId") final String objectId,
                                       @ObjectTypeBinder final ObjectType objectType,
-                                      @AccountEmailBinder final List<AccountEmail> entities,
+                                      @AccountEmailBinder final Collection<AccountEmail> entities,
                                       @CallContextBinder final CallContext context);
 
     @Override
     @SqlBatch(transactional=false)
     public void updateFromTransaction(@Bind("objectId") final String objectId,
                                       @ObjectTypeBinder final ObjectType objectType,
-                                      @AccountEmailBinder final List<AccountEmail> entities,
+                                      @AccountEmailBinder final Collection<AccountEmail> entities,
                                       @CallContextBinder final CallContext context);
 
     @Override
     @SqlBatch(transactional=false)
     public void deleteFromTransaction(@Bind("objectId") final String objectId,
                                       @ObjectTypeBinder final ObjectType objectType,
-                                      @AccountEmailBinder final List<AccountEmail> entities,
+                                      @AccountEmailBinder final Collection<AccountEmail> entities,
                                       @CallContextBinder final CallContext context);
 
     @Override

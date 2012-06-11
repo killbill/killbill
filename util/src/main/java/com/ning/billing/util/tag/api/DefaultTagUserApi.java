@@ -20,16 +20,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import com.ning.billing.invoice.api.InvoiceApiException;
-import com.ning.billing.util.dao.ObjectType;
-import com.ning.billing.util.tag.dao.TagDao;
-
 import com.google.inject.Inject;
-import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.api.TagUserApi;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;
+import com.ning.billing.util.tag.dao.TagDao;
 import com.ning.billing.util.tag.dao.TagDefinitionDao;
 
 public class DefaultTagUserApi implements TagUserApi {

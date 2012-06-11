@@ -40,23 +40,30 @@ public class DefaultControlTag extends DescriptiveTag implements ControlTag {
 
     @Override
     public String toString() {
-        return controlTagType.toString();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        DefaultControlTag that = (DefaultControlTag) o;
-
-        if (controlTagType != that.controlTagType) return false;
-
-        return true;
+        return "DefaultControlTag [controlTagType=" + controlTagType + ", id=" + id + "]";
     }
 
     @Override
     public int hashCode() {
-        return controlTagType != null ? controlTagType.hashCode() : 0;
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result + ((controlTagType == null) ? 0
+                                                           : controlTagType.hashCode());
+        return result;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (!super.equals(obj))
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        DefaultControlTag other = (DefaultControlTag) obj;
+        if (controlTagType != other.controlTagType)
+            return false;
+        return true;
+    }
+
 }

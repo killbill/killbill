@@ -16,71 +16,96 @@
 
 package com.ning.billing.util.dao;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
+import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
+
+import com.google.common.collect.Sets;
 import com.ning.billing.util.ChangeType;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.entity.Entity;
 import com.ning.billing.util.entity.collection.dao.UpdatableEntityCollectionSqlDao;
-import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
-import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+public abstract class AuditedCollectionDaoBase<T extends Entity, V> implements AuditedCollectionDao<T> {
+    /**
+     * Returns equivalence object for the entities, so that dao
+     * can figure out if entities have changed (UPDATE statement) or
+     * are new (INSERT statement).
+     * If two entities return the equivalence objects that are equal themselves
+     * (and have the same hashCode), then the entities are equivalent.
+     * For example, two custom field instances are equivalent (describe the same
+     * custom field) if their name is the same (the equivalence object is the
+     * name string). The instances can still have different custom field values
+     * (represent two different 'assignments' to that
+     * field), which should result in UPDATE statements in the dao.
+     */
+    protected abstract V getEquivalenceObjectFor(T obj);
 
-public abstract class AuditedCollectionDaoBase<T extends Entity> implements AuditedCollectionDao<T> {
     @Override
-    public void saveEntitiesFromTransaction(Transmogrifier transactionalDao, UUID objectId, ObjectType objectType, List<T> entities, CallContext context) {
+    public void saveEntitiesFromTransaction(Transmogrifier transactionalDao, UUID objectId, ObjectType objectType, List<T> newEntities, CallContext context) {
         UpdatableEntityCollectionSqlDao<T> dao = transmogrifyDao(transactionalDao);
 
         // get list of existing entities
-        List<T> existingEntities = dao.load(objectId.toString(), objectType);
-        List<T> entitiesToUpdate = new ArrayList<T>();
+        List<T> currentEntities = dao.load(objectId.toString(), objectType);
 
-        // sort into entities to update (entitiesToUpdate), entities to add (entities), and entities to delete (existingEntities)
-        Iterator<T> entityIterator = entities.iterator();
-        while (entityIterator.hasNext()) {
-            T entity = entityIterator.next();
+        Map<V, T> currentObjs = new HashMap<V, T>(currentEntities.size());
+        Map<V, T> updatedObjs = new HashMap<V, T>(newEntities.size());
 
-            Iterator<T> existingEntityIterator = existingEntities.iterator();
-            while (existingEntityIterator.hasNext()) {
-                T existingEntity = existingEntityIterator.next();
-                if (entity.equals(existingEntity)) {
-                    // if the entities match, remove from both lists
-                    // this requires that the id is *not* part of the equals statement
-                    entityIterator.remove();
-                    existingEntityIterator.remove();
+        for (T currentObj : currentEntities) {
+            currentObjs.put(getEquivalenceObjectFor(currentObj), currentObj);
+        }
+        for (T updatedObj : newEntities) {
+            updatedObjs.put(getEquivalenceObjectFor(updatedObj), updatedObj);
+        }
 
-                    // if the entities have the same hash code (e.g. same data), don't bother updating
-                    if (entity.hashCode() != existingEntity.hashCode()) {
-                        entitiesToUpdate.add(entity);
-                    }
-                }
+        Set<V> equivToRemove = Sets.difference(currentObjs.keySet(), updatedObjs.keySet());
+        Set<V> equivToAdd = Sets.difference(updatedObjs.keySet(), currentObjs.keySet());
+        Set<V> equivToCheckForUpdate = Sets.intersection(updatedObjs.keySet(), currentObjs.keySet());
+
+        List<T> objsToAdd = new ArrayList<T>(equivToAdd.size());
+        List<T> objsToRemove = new ArrayList<T>(equivToRemove.size());
+        List<T> objsToUpdate = new ArrayList<T>(equivToCheckForUpdate.size());
+
+        for (V equiv : equivToAdd) {
+            objsToAdd.add(updatedObjs.get(equiv));
+        }
+        for (V equiv : equivToRemove) {
+            objsToRemove.add(currentObjs.get(equiv));
+        }
+        for (V equiv : equivToCheckForUpdate) {
+            T currentObj = currentObjs.get(equiv);
+            T updatedObj = updatedObjs.get(equiv);
+            if (!currentObj.equals(updatedObj)) {
+                objsToUpdate.add(updatedObj);
             }
         }
 
-        if (entities.size() != 0) {
-            dao.insertFromTransaction(objectId.toString(), objectType, entities, context);
+        if (objsToAdd.size() != 0) {
+            dao.insertFromTransaction(objectId.toString(), objectType, objsToAdd, context);
         }
 
-        if (entitiesToUpdate.size() != 0) {
-            dao.updateFromTransaction(objectId.toString(), objectType, entitiesToUpdate, context);
+        if (objsToUpdate.size() != 0) {
+            dao.updateFromTransaction(objectId.toString(), objectType, objsToUpdate, context);
         }
 
         // get all custom entities (including those that are about to be deleted) from the database in order to get the record ids
         List<Mapper<UUID, Long>> recordIds = dao.getRecordIds(objectId.toString(), objectType);
         Map<UUID, Long> recordIdMap = convertToHistoryMap(recordIds);
 
-        if (existingEntities.size() != 0) {
-            dao.deleteFromTransaction(objectId.toString(), objectType, existingEntities, context);
+        if (objsToRemove.size() != 0) {
+            dao.deleteFromTransaction(objectId.toString(), objectType, objsToRemove, context);
         }
 
         List<EntityHistory<T>> entityHistories = new ArrayList<EntityHistory<T>>();
-        entityHistories.addAll(convertToHistory(entities, recordIdMap, ChangeType.INSERT));
-        entityHistories.addAll(convertToHistory(entitiesToUpdate, recordIdMap, ChangeType.UPDATE));
-        entityHistories.addAll(convertToHistory(existingEntities, recordIdMap, ChangeType.DELETE));
+        entityHistories.addAll(convertToHistory(objsToAdd, recordIdMap, ChangeType.INSERT));
+        entityHistories.addAll(convertToHistory(objsToUpdate, recordIdMap, ChangeType.UPDATE));
+        entityHistories.addAll(convertToHistory(objsToRemove, recordIdMap, ChangeType.DELETE));
 
         Long maxHistoryRecordId = dao.getMaxHistoryRecordId();
         dao.addHistoryFromTransaction(objectId.toString(), objectType, entityHistories, context);
@@ -119,7 +144,7 @@ public abstract class AuditedCollectionDaoBase<T extends Entity> implements Audi
         return results;
     }
 
-    protected List<EntityHistory<T>> convertToHistory(List<T> entities, Map<UUID, Long> recordIds, ChangeType changeType) {
+    protected List<EntityHistory<T>> convertToHistory(Collection<T> entities, Map<UUID, Long> recordIds, ChangeType changeType) {
         List<EntityHistory<T>> histories = new ArrayList<EntityHistory<T>>();
 
         for (T entity : entities) {

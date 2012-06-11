@@ -16,6 +16,13 @@
 
 package com.ning.billing.account.dao;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+import org.skife.jdbi.v2.IDBI;
+import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
+
 import com.google.inject.Inject;
 import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.util.callcontext.CallContext;
@@ -23,19 +30,18 @@ import com.ning.billing.util.dao.AuditedCollectionDaoBase;
 import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.collection.dao.UpdatableEntityCollectionSqlDao;
-import org.skife.jdbi.v2.IDBI;
-import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
-public class AuditedAccountEmailDao extends AuditedCollectionDaoBase<AccountEmail> implements AccountEmailDao {
+public class AuditedAccountEmailDao extends AuditedCollectionDaoBase<AccountEmail, AccountEmail> implements AccountEmailDao {
     private final AccountEmailSqlDao accountEmailSqlDao;
 
     @Inject
     public AuditedAccountEmailDao(IDBI dbi) {
         this.accountEmailSqlDao = dbi.onDemand(AccountEmailSqlDao.class);
+    }
+
+    @Override
+    protected AccountEmail getEquivalenceObjectFor(AccountEmail obj) {
+        return obj;
     }
 
     @Override
@@ -53,6 +59,7 @@ public class AuditedAccountEmailDao extends AuditedCollectionDaoBase<AccountEmai
         return entity.getEmail();
     }
 
+    @Override
     public void test() {
         accountEmailSqlDao.test();
     }
