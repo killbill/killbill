@@ -16,13 +16,10 @@
 
 package com.ning.billing.account.api.user;
 
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.UUID;
 
-import com.ning.billing.account.dao.AccountEmailDao;
-import com.ning.billing.util.customfield.dao.CustomFieldDao;
-import com.ning.billing.util.dao.ObjectType;
-import com.ning.billing.util.tag.dao.TagDao;
 import org.joda.time.DateTime;
 
 import com.google.inject.Inject;
@@ -35,11 +32,15 @@ import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.account.api.MigrationAccountData;
 import com.ning.billing.account.dao.AccountDao;
+import com.ning.billing.account.dao.AccountEmailDao;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.customfield.CustomField;
+import com.ning.billing.util.customfield.dao.CustomFieldDao;
+import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.entity.EntityPersistenceException;
 import com.ning.billing.util.tag.TagDefinition;
+import com.ning.billing.util.tag.dao.TagDao;
 
 public class DefaultAccountUserApi implements AccountUserApi {
     private final CallContextFactory factory;
@@ -60,9 +61,9 @@ public class DefaultAccountUserApi implements AccountUserApi {
     }
 
     @Override
-    public Account createAccount(final AccountData data, final List<CustomField> fields,
-                                 final List<TagDefinition> tagDefinitions, final CallContext context) throws AccountApiException {
-        Account account = new DefaultAccount(data);
+    public Account createAccount(final AccountData data, @Nullable final List<CustomField> fields,
+                                 @Nullable final List<TagDefinition> tagDefinitions, final CallContext context) throws AccountApiException {
+        final Account account = new DefaultAccount(data);
 
         try {
             // TODO: move this into a transaction?
@@ -83,8 +84,8 @@ public class DefaultAccountUserApi implements AccountUserApi {
 
     @Override
     public Account getAccountByKey(final String key) throws AccountApiException {
-        Account account = accountDao.getAccountByKey(key);
-        if(account == null) {
+        final Account account = accountDao.getAccountByKey(key);
+        if (account == null) {
             throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_KEY, key);
         }
         return account;
@@ -92,8 +93,8 @@ public class DefaultAccountUserApi implements AccountUserApi {
 
     @Override
     public Account getAccountById(final UUID id) throws AccountApiException {
-        Account account = accountDao.getById(id);
-        if(account == null) {
+        final Account account = accountDao.getById(id);
+        if (account == null) {
             throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID, id);
         }
         return account;
@@ -117,11 +118,11 @@ public class DefaultAccountUserApi implements AccountUserApi {
             throw new AccountApiException(e, ErrorCode.ACCOUNT_UPDATE_FAILED);
         }
     }
-    
+
     @Override
     public void updateAccount(final UUID accountId, final AccountData accountData, final CallContext context)
             throws AccountApiException {
-        Account account = new DefaultAccount(accountId, accountData);
+        final Account account = new DefaultAccount(accountId, accountData);
 
         try {
             accountDao.update(account, context);
@@ -132,21 +133,21 @@ public class DefaultAccountUserApi implements AccountUserApi {
 
     @Override
     public void updateAccount(final String externalKey, final AccountData accountData, final CallContext context) throws AccountApiException {
-    	UUID accountId = getIdFromKey(externalKey);
-    	if (accountId == null) {
-    		throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_KEY, externalKey);
-    	}
-    	updateAccount(accountId, accountData, context);
-     }
+        final UUID accountId = getIdFromKey(externalKey);
+        if (accountId == null) {
+            throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_KEY, externalKey);
+        }
+        updateAccount(accountId, accountData, context);
+    }
 
-	@Override
-	public Account migrateAccount(final MigrationAccountData data, final List<CustomField> fields,
+    @Override
+    public Account migrateAccount(final MigrationAccountData data, final List<CustomField> fields,
                                   final List<TagDefinition> tagDefinitions, final CallContext context)
             throws AccountApiException {
-        DateTime createdDate = data.getCreatedDate() == null ? context.getCreatedDate() : data.getCreatedDate();
-        DateTime updatedDate = data.getUpdatedDate() == null ? context.getUpdatedDate() : data.getUpdatedDate();
-        CallContext migrationContext = factory.toMigrationCallContext(context, createdDate, updatedDate);
-		Account account = new DefaultAccount(data);
+        final DateTime createdDate = data.getCreatedDate() == null ? context.getCreatedDate() : data.getCreatedDate();
+        final DateTime updatedDate = data.getUpdatedDate() == null ? context.getUpdatedDate() : data.getUpdatedDate();
+        final CallContext migrationContext = factory.toMigrationCallContext(context, createdDate, updatedDate);
+        final Account account = new DefaultAccount(data);
 
         try {
             // TODO: move this into a transaction?
@@ -158,7 +159,7 @@ public class DefaultAccountUserApi implements AccountUserApi {
         }
 
         return account;
-	}
+    }
 
     @Override
     public List<AccountEmail> getEmails(final UUID accountId) {

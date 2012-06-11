@@ -1,0 +1,121 @@
+/*
+ * Copyright 2010-2012 Ning, Inc.
+ *
+ * Ning licenses this file to you under the Apache License, version 2.0
+ * (the "License"); you may not use this file except in compliance with the
+ * License.  You may obtain a copy of the License at:
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+package com.ning.billing.account.api.user;
+
+import java.util.Map;
+import java.util.UUID;
+
+import org.joda.time.DateTimeZone;
+import org.mockito.Mockito;
+import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
+import com.google.common.collect.ImmutableList;
+import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountData;
+import com.ning.billing.account.api.DefaultAccount;
+import com.ning.billing.account.dao.AccountDao;
+import com.ning.billing.account.dao.AccountEmailDao;
+import com.ning.billing.account.dao.MockAccountDao;
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallContextFactory;
+import com.ning.billing.util.customfield.dao.CustomFieldDao;
+import com.ning.billing.util.customfield.dao.MockCustomFieldDao;
+import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.util.tag.DefaultTagDefinition;
+import com.ning.billing.util.tag.Tag;
+import com.ning.billing.util.tag.TagDefinition;
+import com.ning.billing.util.tag.dao.MockTagDao;
+import com.ning.billing.util.tag.dao.TagDao;
+
+public class TestDefaultAccountUserApi {
+    private final CallContextFactory factory = Mockito.mock(CallContextFactory.class);
+    private final CallContext callContext = Mockito.mock(CallContext.class);
+    private final AccountEmailDao accountEmailDao = Mockito.mock(AccountEmailDao.class);
+
+    private AccountDao accountDao;
+    private TagDao tagDao;
+    private DefaultAccountUserApi accountUserApi;
+
+    @BeforeMethod(groups = "fast")
+    public void setUp() throws Exception {
+        accountDao = new MockAccountDao(Mockito.mock(Bus.class));
+        tagDao = new MockTagDao();
+        final CustomFieldDao customFieldDao = new MockCustomFieldDao();
+        accountUserApi = new DefaultAccountUserApi(factory, accountDao, accountEmailDao, tagDao, customFieldDao);
+    }
+
+    @Test(groups = "fast")
+    public void testCreateWithTag() throws Exception {
+        final UUID id = UUID.randomUUID();
+        final String externalKey = UUID.randomUUID().toString();
+        final String email = UUID.randomUUID().toString();
+        final String name = UUID.randomUUID().toString();
+        final int firstNameLength = Integer.MAX_VALUE;
+        final Currency currency = Currency.BRL;
+        final int billCycleDay = Integer.MIN_VALUE;
+        final UUID paymentMethodId = UUID.randomUUID();
+        final DateTimeZone timeZone = DateTimeZone.UTC;
+        final String locale = UUID.randomUUID().toString();
+        final String address1 = UUID.randomUUID().toString();
+        final String address2 = UUID.randomUUID().toString();
+        final String companyName = UUID.randomUUID().toString();
+        final String city = UUID.randomUUID().toString();
+        final String stateOrProvince = UUID.randomUUID().toString();
+        final String country = UUID.randomUUID().toString();
+        final String postalCode = UUID.randomUUID().toString();
+        final String phone = UUID.randomUUID().toString();
+        final boolean isMigrated = true;
+        final boolean isNotifiedForInvoices = false;
+        final AccountData data = new DefaultAccount(id, externalKey, email, name, firstNameLength, currency, billCycleDay,
+                                                    paymentMethodId, timeZone, locale, address1, address2, companyName,
+                                                    city, stateOrProvince, country, postalCode, phone, isMigrated, isNotifiedForInvoices);
+
+        final String tagName = UUID.randomUUID().toString();
+        final String tagDescription = UUID.randomUUID().toString();
+        final TagDefinition tagDefinition = new DefaultTagDefinition(tagName, tagDescription, true);
+        accountUserApi.createAccount(data, null, ImmutableList.<TagDefinition>of(tagDefinition), callContext);
+
+        final Account account = accountDao.getAccountByKey(externalKey);
+        Assert.assertEquals(account.getExternalKey(), externalKey);
+        Assert.assertEquals(account.getEmail(), email);
+        Assert.assertEquals(account.getName(), name);
+        Assert.assertEquals(account.getFirstNameLength(), firstNameLength);
+        Assert.assertEquals(account.getCurrency(), currency);
+        Assert.assertEquals(account.getBillCycleDay(), billCycleDay);
+        Assert.assertEquals(account.getPaymentMethodId(), paymentMethodId);
+        Assert.assertEquals(account.getTimeZone(), timeZone);
+        Assert.assertEquals(account.getLocale(), locale);
+        Assert.assertEquals(account.getAddress1(), address1);
+        Assert.assertEquals(account.getAddress2(), address2);
+        Assert.assertEquals(account.getCompanyName(), companyName);
+        Assert.assertEquals(account.getCity(), city);
+        Assert.assertEquals(account.getStateOrProvince(), stateOrProvince);
+        Assert.assertEquals(account.getCountry(), country);
+        Assert.assertEquals(account.getPostalCode(), postalCode);
+        Assert.assertEquals(account.getPhone(), phone);
+        Assert.assertEquals(account.isMigrated(), isMigrated);
+        Assert.assertEquals(account.isNotifiedForInvoices(), isNotifiedForInvoices);
+
+        final Map<String, Tag> tags = tagDao.loadEntities(account.getId(), ObjectType.ACCOUNT);
+        Assert.assertEquals(tags.keySet().size(), 1);
+        Assert.assertEquals(tags.get(tagName).getTagDefinitionName(), tagName);
+    }
+}
