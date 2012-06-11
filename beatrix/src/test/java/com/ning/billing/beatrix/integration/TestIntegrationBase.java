@@ -261,7 +261,7 @@ public class TestIntegrationBase implements TestListenerStatus {
     }
     
     protected Account createAccountWithPaymentMethod(AccountData accountData) throws Exception {
-        Account account = accountUserApi.createAccount(accountData, null, null, context);
+        Account account = accountUserApi.createAccount(accountData, context);
         assertNotNull(account);
         
         PaymentMethodPlugin info = new PaymentMethodPlugin() {

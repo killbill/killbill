@@ -19,11 +19,8 @@ package com.ning.billing.analytics.api;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
-
 
 import org.joda.time.DateTime;
 import org.mockito.Mockito;
@@ -88,11 +85,6 @@ import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;
-import com.ning.billing.util.tag.DefaultTagDefinition;
-import com.ning.billing.util.tag.TagDefinition;
-import com.ning.billing.util.tag.dao.AuditedTagDao;
-import com.ning.billing.util.tag.dao.TagDao;
-import com.ning.billing.util.tag.dao.TagDefinitionSqlDao;
 
 import static org.testng.Assert.fail;
 
@@ -106,11 +98,7 @@ public class TestAnalyticsService extends TestWithEmbeddedDB {
     private static final String KEY = "12345";
     private static final String ACCOUNT_KEY = "pierre-12345";
     private static final Currency ACCOUNT_CURRENCY = Currency.EUR;
-    private static final DefaultTagDefinition TAG_ONE = new DefaultTagDefinition("batch20", "something", false);
-    private static final DefaultTagDefinition TAG_TWO = new DefaultTagDefinition("awesome", "something", false);
     private static final BigDecimal INVOICE_AMOUNT = BigDecimal.valueOf(1243.11);
-    private static final String PAYMENT_METHOD = "Paypal";
-    private static final String CARD_COUNTRY = "France";
 
     private final Clock clock = new DefaultClock();
     private final CallContext context = new DefaultCallContextFactory(clock).createCallContext("Analytics Test", CallOrigin.TEST, UserType.TEST);
@@ -120,9 +108,6 @@ public class TestAnalyticsService extends TestWithEmbeddedDB {
 
     @Inject
     private EntitlementUserApi entitlementApi;
-
-    @Inject
-    private TagDefinitionSqlDao tagDao;
 
     @Inject
     private InvoiceDao invoiceDao;
@@ -166,16 +151,9 @@ public class TestAnalyticsService extends TestWithEmbeddedDB {
 
     @BeforeMethod(groups = "slow")
     public void createMocks() {
-        tagDao.create(TAG_ONE, context);
-        tagDao.create(TAG_TWO, context);
-
         final MockAccount account = new MockAccount(UUID.randomUUID(), ACCOUNT_KEY, ACCOUNT_CURRENCY);
         try {
-            final List<TagDefinition> tagDefinitions = new ArrayList<TagDefinition>();
-            tagDefinitions.add(TAG_ONE);
-            tagDefinitions.add(TAG_TWO);
-
-            final Account storedAccount = accountApi.createAccount(account, null, tagDefinitions, context);
+            final Account storedAccount = accountApi.createAccount(account, context);
 
             // Create events for the bus and expected results
             createSubscriptionTransitionEvent(storedAccount);
@@ -248,10 +226,10 @@ public class TestAnalyticsService extends TestWithEmbeddedDB {
 
         // It doesn't really matter what the events contain - the listener will go back to the db
         invoiceCreationNotification = new DefaultInvoiceCreationEvent(invoice.getId(), account.getId(),
-                INVOICE_AMOUNT, ACCOUNT_CURRENCY, clock.getUTCNow(), null);
+                                                                      INVOICE_AMOUNT, ACCOUNT_CURRENCY, clock.getUTCNow(), null);
 
         paymentInfoNotification = new DefaultPaymentInfoEvent(account.getId(), invoices.get(0).getId(), null, invoices.get(0).getBalance(), -1, PaymentStatus.UNKNOWN, null, new DateTime());
-        
+
         //STEPH talk to Pierre
         /*
         paymentInfoNotification = new DefaultPaymentInfoEvent.Builder().setId(UUID.randomUUID()).setExternalPaymentId("12345abcdef").setPaymentMethod(PAYMENT_METHOD).setCardCountry(CARD_COUNTRY).build();
@@ -271,7 +249,7 @@ public class TestAnalyticsService extends TestWithEmbeddedDB {
 
 
     // STEPH talk to Pierre -- see previous remark hence disable test
-    @Test(groups = "slow", enabled=true)
+    @Test(groups = "slow", enabled = true)
     public void testRegisterForNotifications() throws Exception {
         // Make sure the service has been instantiated
         Assert.assertEquals(service.getName(), "analytics-service");
@@ -292,12 +270,6 @@ public class TestAnalyticsService extends TestWithEmbeddedDB {
 
         Assert.assertEquals(subscriptionDao.getTransitions(KEY).size(), 1);
         Assert.assertEquals(subscriptionDao.getTransitions(KEY).get(0), expectedTransition);
-
-//        Assert.assertEquals(accountDao.getAccount(ACCOUNT_KEY).getKey(), ACCOUNT_KEY);
-//        Assert.assertEquals(accountDao.getAccount(ACCOUNT_KEY).getTags().size(), 2);
-//        Assert.assertTrue(accountDao.getAccount(ACCOUNT_KEY).getTags().indexOf(TAG_ONE.getName()) != -1);
-//        Assert.assertTrue(accountDao.getAccount(ACCOUNT_KEY).getTags().indexOf(TAG_TWO.getName()) != -1);
-        TagDao tagDao = new AuditedTagDao(helper.getDBI());
 
         // Test invoice integration - the account creation notification has triggered a BAC update
         Assert.assertTrue(accountDao.getAccount(ACCOUNT_KEY).getTotalInvoiceBalance().compareTo(INVOICE_AMOUNT) == 0);

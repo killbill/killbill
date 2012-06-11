@@ -26,11 +26,9 @@ import com.ning.billing.util.tag.TagDefinition;
 import javax.annotation.Nullable;
 
 public interface AccountUserApi {
-    public Account createAccount(AccountData data, @Nullable List<CustomField> fields,
-                                 @Nullable List<TagDefinition> tagDefinitions, CallContext context) throws AccountApiException;
+    public Account createAccount(AccountData data, CallContext context) throws AccountApiException;
 
-    public Account migrateAccount(MigrationAccountData data, @Nullable List<CustomField> fields,
-                                  @Nullable List<TagDefinition> tagDefinitions, CallContext context) throws AccountApiException;
+    public Account migrateAccount(MigrationAccountData data, CallContext context) throws AccountApiException;
 
     /***
      *

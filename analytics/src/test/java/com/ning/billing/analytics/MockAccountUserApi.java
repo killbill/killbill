@@ -43,8 +43,7 @@ public class MockAccountUserApi implements AccountUserApi {
     }
 
     @Override
-    public Account createAccount(final AccountData data, final List<CustomField> fields,
-                                 final List<TagDefinition> tagDefinitions, final CallContext context) {
+    public Account createAccount(final AccountData data, final CallContext context) {
         throw new UnsupportedOperationException();
     }
 
@@ -84,8 +83,7 @@ public class MockAccountUserApi implements AccountUserApi {
     }
 
     @Override
-    public Account migrateAccount(MigrationAccountData data,
-                                  List<CustomField> fields, List<TagDefinition> tagDefinitions, final CallContext context)
+    public Account migrateAccount(MigrationAccountData data, final CallContext context)
             throws AccountApiException {
         throw new UnsupportedOperationException();
     }

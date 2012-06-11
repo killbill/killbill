@@ -59,8 +59,7 @@ public class MockAccountUserApi implements AccountUserApi {
 	}
 
     @Override
-    public Account createAccount(final AccountData data, final List<CustomField> fields,
-                                 final List<TagDefinition> tagDefinitions, final CallContext context) throws AccountApiException {
+    public Account createAccount(final AccountData data, final CallContext context) throws AccountApiException {
         Account result = new DefaultAccount(data);
         accounts.add(result);
         return result;
@@ -117,8 +116,7 @@ public class MockAccountUserApi implements AccountUserApi {
     }
 
 	@Override
-	public Account migrateAccount(final MigrationAccountData data,
-			final List<CustomField> fields, final List<TagDefinition> tagDefinitions, final CallContext context)
+	public Account migrateAccount(final MigrationAccountData data, final CallContext context)
 			throws AccountApiException {
 		Account result = new DefaultAccount(data);
         accounts.add(result);

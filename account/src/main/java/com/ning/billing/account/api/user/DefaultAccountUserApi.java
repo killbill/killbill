@@ -16,7 +16,6 @@
 
 package com.ning.billing.account.api.user;
 
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.UUID;
 
@@ -35,46 +34,26 @@ import com.ning.billing.account.dao.AccountDao;
 import com.ning.billing.account.dao.AccountEmailDao;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextFactory;
-import com.ning.billing.util.customfield.CustomField;
-import com.ning.billing.util.customfield.dao.CustomFieldDao;
-import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.entity.EntityPersistenceException;
-import com.ning.billing.util.tag.TagDefinition;
-import com.ning.billing.util.tag.dao.TagDao;
 
 public class DefaultAccountUserApi implements AccountUserApi {
     private final CallContextFactory factory;
     private final AccountDao accountDao;
     private final AccountEmailDao accountEmailDao;
-    private final TagDao tagDao;
-    private final CustomFieldDao customFieldDao;
 
     @Inject
-    public DefaultAccountUserApi(final CallContextFactory factory, final AccountDao accountDao,
-                                 final AccountEmailDao accountEmailDao, final TagDao tagDao,
-                                 final CustomFieldDao customFieldDao) {
+    public DefaultAccountUserApi(final CallContextFactory factory, final AccountDao accountDao, final AccountEmailDao accountEmailDao) {
         this.factory = factory;
         this.accountDao = accountDao;
         this.accountEmailDao = accountEmailDao;
-        this.tagDao = tagDao;
-        this.customFieldDao = customFieldDao;
     }
 
     @Override
-    public Account createAccount(final AccountData data, @Nullable final List<CustomField> fields,
-                                 @Nullable final List<TagDefinition> tagDefinitions, final CallContext context) throws AccountApiException {
+    public Account createAccount(final AccountData data, final CallContext context) throws AccountApiException {
         final Account account = new DefaultAccount(data);
 
         try {
-            // TODO: move this into a transaction?
             accountDao.create(account, context);
-            if (tagDefinitions != null) {
-                tagDao.insertTags(account.getId(), ObjectType.ACCOUNT, tagDefinitions, context);
-            }
-
-            if (fields != null) {
-                customFieldDao.saveEntities(account.getId(), ObjectType.ACCOUNT, fields, context);
-            }
         } catch (EntityPersistenceException e) {
             throw new AccountApiException(e, ErrorCode.ACCOUNT_CREATION_FAILED);
         }
@@ -141,8 +120,7 @@ public class DefaultAccountUserApi implements AccountUserApi {
     }
 
     @Override
-    public Account migrateAccount(final MigrationAccountData data, final List<CustomField> fields,
-                                  final List<TagDefinition> tagDefinitions, final CallContext context)
+    public Account migrateAccount(final MigrationAccountData data, final CallContext context)
             throws AccountApiException {
         final DateTime createdDate = data.getCreatedDate() == null ? context.getCreatedDate() : data.getCreatedDate();
         final DateTime updatedDate = data.getUpdatedDate() == null ? context.getUpdatedDate() : data.getUpdatedDate();
@@ -150,10 +128,7 @@ public class DefaultAccountUserApi implements AccountUserApi {
         final Account account = new DefaultAccount(data);
 
         try {
-            // TODO: move this into a transaction?
             accountDao.create(account, migrationContext);
-            tagDao.insertTags(account.getId(), ObjectType.ACCOUNT, tagDefinitions, context);
-            customFieldDao.saveEntities(account.getId(), ObjectType.ACCOUNT, fields, context);
         } catch (EntityPersistenceException e) {
             throw new AccountApiException(e, ErrorCode.ACCOUNT_CREATION_FAILED);
         }

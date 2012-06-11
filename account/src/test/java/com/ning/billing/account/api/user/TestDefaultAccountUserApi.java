@@ -16,7 +16,6 @@
 
 package com.ning.billing.account.api.user;
 
-import java.util.Map;
 import java.util.UUID;
 
 import org.joda.time.DateTimeZone;
@@ -25,7 +24,6 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableList;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.DefaultAccount;
@@ -36,14 +34,6 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextFactory;
-import com.ning.billing.util.customfield.dao.CustomFieldDao;
-import com.ning.billing.util.customfield.dao.MockCustomFieldDao;
-import com.ning.billing.util.dao.ObjectType;
-import com.ning.billing.util.tag.DefaultTagDefinition;
-import com.ning.billing.util.tag.Tag;
-import com.ning.billing.util.tag.TagDefinition;
-import com.ning.billing.util.tag.dao.MockTagDao;
-import com.ning.billing.util.tag.dao.TagDao;
 
 public class TestDefaultAccountUserApi {
     private final CallContextFactory factory = Mockito.mock(CallContextFactory.class);
@@ -51,19 +41,16 @@ public class TestDefaultAccountUserApi {
     private final AccountEmailDao accountEmailDao = Mockito.mock(AccountEmailDao.class);
 
     private AccountDao accountDao;
-    private TagDao tagDao;
     private DefaultAccountUserApi accountUserApi;
 
     @BeforeMethod(groups = "fast")
     public void setUp() throws Exception {
         accountDao = new MockAccountDao(Mockito.mock(Bus.class));
-        tagDao = new MockTagDao();
-        final CustomFieldDao customFieldDao = new MockCustomFieldDao();
-        accountUserApi = new DefaultAccountUserApi(factory, accountDao, accountEmailDao, tagDao, customFieldDao);
+        accountUserApi = new DefaultAccountUserApi(factory, accountDao, accountEmailDao);
     }
 
     @Test(groups = "fast")
-    public void testCreateWithTag() throws Exception {
+    public void testCreateAccount() throws Exception {
         final UUID id = UUID.randomUUID();
         final String externalKey = UUID.randomUUID().toString();
         final String email = UUID.randomUUID().toString();
@@ -88,10 +75,7 @@ public class TestDefaultAccountUserApi {
                                                     paymentMethodId, timeZone, locale, address1, address2, companyName,
                                                     city, stateOrProvince, country, postalCode, phone, isMigrated, isNotifiedForInvoices);
 
-        final String tagName = UUID.randomUUID().toString();
-        final String tagDescription = UUID.randomUUID().toString();
-        final TagDefinition tagDefinition = new DefaultTagDefinition(tagName, tagDescription, true);
-        accountUserApi.createAccount(data, null, ImmutableList.<TagDefinition>of(tagDefinition), callContext);
+        accountUserApi.createAccount(data, callContext);
 
         final Account account = accountDao.getAccountByKey(externalKey);
         Assert.assertEquals(account.getExternalKey(), externalKey);
@@ -113,9 +97,5 @@ public class TestDefaultAccountUserApi {
         Assert.assertEquals(account.getPhone(), phone);
         Assert.assertEquals(account.isMigrated(), isMigrated);
         Assert.assertEquals(account.isNotifiedForInvoices(), isNotifiedForInvoices);
-
-        final Map<String, Tag> tags = tagDao.loadEntities(account.getId(), ObjectType.ACCOUNT);
-        Assert.assertEquals(tags.keySet().size(), 1);
-        Assert.assertEquals(tags.get(tagName).getTagDefinitionName(), tagName);
     }
 }

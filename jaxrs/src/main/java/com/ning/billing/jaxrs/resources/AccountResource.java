@@ -185,7 +185,7 @@ public class AccountResource extends JaxRsResourceBase {
 
         try {
             AccountData data = json.toAccountData();
-            final Account account = accountApi.createAccount(data, null, null, context.createContext(createdBy, reason, comment));
+            final Account account = accountApi.createAccount(data, context.createContext(createdBy, reason, comment));
             return uriBuilder.buildResponse(AccountResource.class, "getAccount", account.getId());
         } catch (AccountApiException e) {
             final String error = String.format("Failed to create account %s", json);

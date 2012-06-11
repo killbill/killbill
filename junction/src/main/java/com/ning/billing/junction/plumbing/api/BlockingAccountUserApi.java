@@ -43,15 +43,14 @@ public class BlockingAccountUserApi implements AccountUserApi {
     }
 
     @Override
-    public Account createAccount(AccountData data, List<CustomField> fields, List<TagDefinition> tagDefinitions, CallContext context)
+    public Account createAccount(AccountData data, CallContext context)
             throws AccountApiException {
-        return userApi.createAccount(data, fields, tagDefinitions, context);
+        return userApi.createAccount(data, context);
     }
 
     @Override
-    public Account migrateAccount(MigrationAccountData data, List<CustomField> fields, List<TagDefinition> tagDefinitions,
-            CallContext context) throws AccountApiException {
-        return userApi.migrateAccount(data, fields, tagDefinitions, context);
+    public Account migrateAccount(MigrationAccountData data, CallContext context) throws AccountApiException {
+        return userApi.migrateAccount(data, context);
     }
 
     @Override
