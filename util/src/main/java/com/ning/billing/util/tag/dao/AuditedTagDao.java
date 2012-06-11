@@ -45,12 +45,17 @@ import com.ning.billing.util.tag.DescriptiveTag;
 import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;
 
-public class AuditedTagDao extends AuditedCollectionDaoBase<Tag> implements TagDao {
+public class AuditedTagDao extends AuditedCollectionDaoBase<Tag, Tag> implements TagDao {
     private final TagSqlDao tagSqlDao;
 
     @Inject
     public AuditedTagDao(final IDBI dbi) {
         this.tagSqlDao = dbi.onDemand(TagSqlDao.class);
+    }
+
+    @Override
+    protected Tag getEquivalenceObjectFor(Tag obj) {
+        return obj;
     }
 
     @Override

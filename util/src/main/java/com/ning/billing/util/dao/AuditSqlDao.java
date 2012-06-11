@@ -16,15 +16,16 @@
 
 package com.ning.billing.util.dao;
 
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallContextBinder;
+import java.util.List;
+
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlBatch;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 
-import java.util.List;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallContextBinder;
 
 @ExternalizedSqlViaStringTemplate3
 public interface AuditSqlDao {
@@ -41,4 +42,5 @@ public interface AuditSqlDao {
 
     @SqlQuery
     public Long getHistoryRecordId(@Bind("recordId") final Long recordId);
+
 }

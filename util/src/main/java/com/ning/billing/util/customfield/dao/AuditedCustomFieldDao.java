@@ -16,15 +16,16 @@
 
 package com.ning.billing.util.customfield.dao;
 
+import org.skife.jdbi.v2.IDBI;
+import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
+
 import com.google.inject.Inject;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.dao.AuditedCollectionDaoBase;
 import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.collection.dao.UpdatableEntityCollectionSqlDao;
-import org.skife.jdbi.v2.IDBI;
-import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
-public class AuditedCustomFieldDao extends AuditedCollectionDaoBase<CustomField> implements CustomFieldDao {
+public class AuditedCustomFieldDao extends AuditedCollectionDaoBase<CustomField, String> implements CustomFieldDao {
     private final CustomFieldSqlDao dao;
 
     @Inject
@@ -35,6 +36,11 @@ public class AuditedCustomFieldDao extends AuditedCollectionDaoBase<CustomField>
     @Override
     protected TableName getTableName() {
         return TableName.CUSTOM_FIELD_HISTORY;
+    }
+
+    @Override
+    protected String getEquivalenceObjectFor(CustomField obj) {
+        return obj.getName();
     }
 
     @Override

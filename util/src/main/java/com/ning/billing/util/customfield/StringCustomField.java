@@ -52,6 +52,11 @@ public class StringCustomField extends UpdatableEntityBase implements CustomFiel
     }
 
     @Override
+    public String toString() {
+        return "StringCustomField [name=" + name + ", value=" + value + ", id=" + id + "]";
+    }
+
+    @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;

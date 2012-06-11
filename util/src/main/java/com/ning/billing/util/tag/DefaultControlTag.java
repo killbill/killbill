@@ -40,7 +40,7 @@ public class DefaultControlTag extends DescriptiveTag implements ControlTag {
 
     @Override
     public String toString() {
-        return controlTagType.toString();
+        return "DefaultControlTag [controlTagType=" + controlTagType + ", id=" + id + "]";
     }
 
     @Override
