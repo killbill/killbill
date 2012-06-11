@@ -124,8 +124,13 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     public Response getInvoice(@PathParam("invoiceId") String invoiceId, @QueryParam("withItems") @DefaultValue("false") boolean withItems) {
         Invoice invoice = invoiceApi.getInvoice(UUID.fromString(invoiceId));
-        InvoiceJsonSimple json = withItems ? new InvoiceJsonWithItems(invoice) : new InvoiceJsonSimple(invoice);  
-        return Response.status(Status.OK).entity(json).build();
+        if (invoice == null) {
+            return Response.status(Status.NO_CONTENT).build();
+        }
+        else {
+            InvoiceJsonSimple json = withItems ? new InvoiceJsonWithItems(invoice) : new InvoiceJsonSimple(invoice);
+            return Response.status(Status.OK).entity(json).build();
+        }
     }
 
     @POST
