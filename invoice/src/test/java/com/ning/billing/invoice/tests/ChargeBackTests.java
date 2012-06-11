@@ -32,12 +32,17 @@ import com.ning.billing.invoice.notification.MockNextBillingDatePoster;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
+import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TestCallContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.tag.api.DefaultTagUserApi;
 import com.ning.billing.util.tag.dao.MockTagDao;
+import com.ning.billing.util.tag.dao.MockTagDefinitionDao;
 import com.ning.billing.util.tag.dao.TagDao;
+import com.ning.billing.util.tag.dao.TagDefinitionDao;
+
 import org.skife.jdbi.v2.IDBI;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -71,8 +76,10 @@ public class ChargeBackTests {
         invoiceSqlDao.test();
 
         NextBillingDatePoster nextBillingDatePoster = new MockNextBillingDatePoster();
-        TagDao tagDao = new MockTagDao();
-        InvoiceDao invoiceDao = new DefaultInvoiceDao(dbi, nextBillingDatePoster, tagDao);
+        final TagDefinitionDao tagDefinitionDao = new MockTagDefinitionDao();
+        final TagDao tagDao = new MockTagDao();
+        final TagUserApi tagUserApi = new DefaultTagUserApi(tagDefinitionDao, tagDao);
+        InvoiceDao invoiceDao = new DefaultInvoiceDao(dbi, nextBillingDatePoster, tagUserApi);
         invoicePaymentApi = new DefaultInvoicePaymentApi(invoiceDao);
 
         context = new TestCallContext("Charge back tests");

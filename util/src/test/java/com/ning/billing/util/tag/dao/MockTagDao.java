@@ -16,6 +16,8 @@
 
 package com.ning.billing.util.tag.dao;
 
+import javax.annotation.Nullable;
+
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.tag.Tag;
@@ -53,10 +55,12 @@ public class MockTagDao implements TagDao {
         return getMap(tagStore.get(objectId));
     }
 
-    private Map<String, Tag> getMap(List<Tag> tags) {
+    private Map<String, Tag> getMap(@Nullable final List<Tag> tags) {
         Map<String, Tag> map = new HashMap<String, Tag>();
-        for (Tag tag : tags) {
-            map.put(tag.getTagDefinitionName(), tag);
+        if (tags != null) {
+            for (Tag tag : tags) {
+                map.put(tag.getTagDefinitionName(), tag);
+            }
         }
         return map;
     }

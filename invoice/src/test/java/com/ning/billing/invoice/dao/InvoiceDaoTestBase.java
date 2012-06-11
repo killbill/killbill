@@ -23,10 +23,13 @@ import java.io.IOException;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.invoice.notification.MockNextBillingDatePoster;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
+import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.callcontext.TestCallContext;
 import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.tag.api.DefaultTagUserApi;
 import com.ning.billing.util.tag.dao.AuditedTagDao;
 import com.ning.billing.util.tag.dao.MockTagDao;
+import com.ning.billing.util.tag.dao.MockTagDefinitionDao;
 import com.ning.billing.util.tag.dao.TagDao;
 import org.apache.commons.io.IOUtils;
 import org.skife.jdbi.v2.Handle;
@@ -43,6 +46,7 @@ import com.ning.billing.invoice.model.InvoiceGenerator;
 import com.ning.billing.invoice.tests.InvoicingTestBase;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.tag.dao.TagDefinitionDao;
 
 public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
     protected IDBI dbi;
@@ -78,8 +82,10 @@ public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
         mysqlTestingHelper.initDb(utilDdl);
 
         NextBillingDatePoster nextBillingDatePoster = new MockNextBillingDatePoster();
-        TagDao tagDao = new AuditedTagDao(dbi);
-        invoiceDao = new DefaultInvoiceDao(dbi, nextBillingDatePoster, tagDao);
+        final TagDefinitionDao tagDefinitionDao = new MockTagDefinitionDao();
+        final TagDao tagDao = new AuditedTagDao(dbi);
+        final TagUserApi tagUserApi = new DefaultTagUserApi(tagDefinitionDao, tagDao);
+        invoiceDao = new DefaultInvoiceDao(dbi, nextBillingDatePoster, tagUserApi);
         invoiceDao.test();
 
         recurringInvoiceItemDao = dbi.onDemand(RecurringInvoiceItemSqlDao.class);
