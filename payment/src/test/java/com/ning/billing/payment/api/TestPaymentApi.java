@@ -23,6 +23,7 @@ import static org.testng.Assert.fail;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -30,6 +31,7 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
@@ -49,6 +51,7 @@ import com.ning.billing.payment.MockRecurringInvoiceItem;
 import com.ning.billing.payment.TestHelper;
 import com.ning.billing.payment.api.Payment.PaymentAttempt;
 import com.ning.billing.payment.glue.PaymentTestModuleWithMocks;
+import com.ning.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
 import com.ning.billing.util.callcontext.CallContext;
@@ -77,9 +80,17 @@ public class TestPaymentApi {
 
     protected CallContext context;
 
+    private Account account; 
+    
+    
     @Inject
     public TestPaymentApi(Clock clock) {
         context = new DefaultCallContext("Payment Tests", CallOrigin.INTERNAL, UserType.SYSTEM, clock);
+    }
+    
+    @BeforeClass
+    public void setupClass() throws Exception {
+        account = testHelper.createTestAccount("yoyo.yahoo.com");        
     }
 
     @BeforeMethod(alwaysRun = true)
@@ -127,9 +138,7 @@ public class TestPaymentApi {
         final BigDecimal expectedAmount = null;        
         
         testSimplePayment(invoiceAmount, requestedAmount, expectedAmount);
-
     }
-
     
 
     private void testSimplePayment(BigDecimal invoiceAmount, BigDecimal requestedAmount, BigDecimal expectedAmount) throws Exception {
@@ -137,7 +146,6 @@ public class TestPaymentApi {
         ((ZombieControl)invoicePaymentApi).addResult("notifyOfPaymentAttempt", BrainDeadProxyFactory.ZOMBIE_VOID);
 
         final DateTime now = new DateTime(DateTimeZone.UTC);
-        final Account account = testHelper.createTestAccount("yoyo.yahoo.com");
         final Invoice invoice = testHelper.createTestInvoice(account, now, Currency.USD);
         
         final UUID subscriptionId = UUID.randomUUID();
@@ -178,6 +186,40 @@ public class TestPaymentApi {
                 assertEquals(e.getCode(), ErrorCode.PAYMENT_AMOUNT_DENIED.getCode());
             }
         }
+    }
+    
+    @Test(enabled=true)
+    public void testPaymentMethods() throws Exception  {
+
+        List<PaymentMethod> methods = paymentApi.getPaymentMethods(account, false);
+        assertEquals(methods.size(), 1);
+        
+        PaymentMethod initDefaultMethod = methods.get(0);
+        assertEquals(initDefaultMethod.getId(), account.getPaymentMethodId());
+        
+
+        
+        //((ZombieControl)accountApi).addResult("updateAccount", );
+        PaymentMethodPlugin newPaymenrMethod = new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), true, null);
+        UUID newPaymentMethodId = paymentApi.addPaymentMethod(PaymentTestModuleWithMocks.PLUGIN_TEST_NAME, account, true, newPaymenrMethod, context);
+        ((ZombieControl)account).addResult("getPaymentMethodId", newPaymentMethodId);
+        
+        methods = paymentApi.getPaymentMethods(account, false);
+        assertEquals(methods.size(), 2);
+        
+        assertEquals(newPaymentMethodId, account.getPaymentMethodId());
+        
+        boolean failed = false;
+        try {
+            paymentApi.deletedPaymentMethod(account, newPaymentMethodId, context);
+        } catch (PaymentApiException e) {
+            failed = true;
+        }
+        assertTrue(failed);
+
+        paymentApi.deletedPaymentMethod(account, initDefaultMethod.getId(), context);
+        methods = paymentApi.getPaymentMethods(account, false);        
+        assertEquals(methods.size(), 1);
     }
 
     

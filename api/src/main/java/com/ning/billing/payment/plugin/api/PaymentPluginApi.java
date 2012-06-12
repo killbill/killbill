@@ -48,7 +48,7 @@ public interface PaymentPluginApi {
     public String addPaymentMethod(String accountKey, PaymentMethodPlugin paymentMethodProps, boolean setDefault)
     throws PaymentPluginApiException;
 
-    public void updatePaymentMethod(String accountKey, String externalPaymentMethodId, PaymentMethodPlugin paymentMethodProps)
+    public void updatePaymentMethod(String accountKey, PaymentMethodPlugin paymentMethodProps)
     throws PaymentPluginApiException;
 
     public void deletePaymentMethod(String accountKey, String externalPaymentMethodId)
