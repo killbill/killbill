@@ -140,9 +140,9 @@ public class DefaultNoOpPaymentProviderPlugin implements NoOpPaymentPluginApi {
 
 
     @Override
-    public void updatePaymentMethod(String accountKey, String externalPaymentId, PaymentMethodPlugin paymentMethodProps)
+    public void updatePaymentMethod(String accountKey, PaymentMethodPlugin paymentMethodProps)
         throws PaymentPluginApiException {
-        DefaultNoOpPaymentMethodPlugin e = getPaymentMethod(accountKey, externalPaymentId);
+        DefaultNoOpPaymentMethodPlugin e = getPaymentMethod(accountKey, paymentMethodProps.getExternalPaymentMethodId());
         if (e != null) {
             e.setProps(paymentMethodProps.getProperties());
         }

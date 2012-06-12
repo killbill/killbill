@@ -135,7 +135,6 @@ public abstract class ProcessorBase {
         }
     }
     
-    // STEPH might not need that anymore
     public static class WithAccountLock<T> {
         
         public T processAccountWithLock(final GlobalLocker locker, final String accountExternalKey, final WithAccountLockCallback<T> callback)
