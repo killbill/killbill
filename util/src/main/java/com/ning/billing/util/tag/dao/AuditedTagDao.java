@@ -54,7 +54,7 @@ public class AuditedTagDao extends AuditedCollectionDaoBase<Tag, Tag> implements
     }
 
     @Override
-    protected Tag getEquivalenceObjectFor(Tag obj) {
+    protected Tag getEquivalenceObjectFor(final Tag obj) {
         return obj;
     }
 
@@ -64,27 +64,27 @@ public class AuditedTagDao extends AuditedCollectionDaoBase<Tag, Tag> implements
         tagSqlDao.inTransaction(new Transaction<Void, TagSqlDao>() {
             @Override
             public Void inTransaction(final TagSqlDao tagSqlDao, final TransactionStatus status) throws Exception {
-                String tagId = UUID.randomUUID().toString();
-                String tagName = tagDefinition.getName();
+                final String tagId = UUID.randomUUID().toString();
+                final String tagName = tagDefinition.getName();
                 tagSqlDao.addTagFromTransaction(tagId, tagName, objectId.toString(), objectType, context);
 
-                Tag tag = tagSqlDao.findTag(tagName, objectId.toString(), objectType);
-                List<Tag> tagList = new ArrayList<Tag>();
+                final Tag tag = tagSqlDao.findTag(tagName, objectId.toString(), objectType);
+                final List<Tag> tagList = new ArrayList<Tag>();
                 tagList.add(tag);
 
-                List<Mapper<UUID, Long>> recordIds = tagSqlDao.getRecordIds(objectId.toString(), objectType);
-                Map<UUID, Long> recordIdMap = convertToHistoryMap(recordIds);
+                final List<Mapper<UUID, Long>> recordIds = tagSqlDao.getRecordIds(objectId.toString(), objectType);
+                final Map<UUID, Long> recordIdMap = convertToHistoryMap(recordIds);
 
-                List<EntityHistory<Tag>> entityHistories = new ArrayList<EntityHistory<Tag>>();
+                final List<EntityHistory<Tag>> entityHistories = new ArrayList<EntityHistory<Tag>>();
                 entityHistories.addAll(convertToHistory(tagList, recordIdMap, ChangeType.INSERT));
 
-                Long maxHistoryRecordId = tagSqlDao.getMaxHistoryRecordId();
+                final Long maxHistoryRecordId = tagSqlDao.getMaxHistoryRecordId();
                 tagSqlDao.addHistoryFromTransaction(objectId.toString(), objectType, entityHistories, context);
 
                 // have to fetch history record ids to update audit log
-                List<Mapper<Long, Long>> historyRecordIds = tagSqlDao.getHistoryRecordIds(maxHistoryRecordId);
-                Map<Long, Long> historyRecordIdMap = convertToAuditMap(historyRecordIds);
-                List<EntityAudit> entityAudits = convertToAudits(entityHistories, historyRecordIdMap);
+                final List<Mapper<Long, Long>> historyRecordIds = tagSqlDao.getHistoryRecordIds(maxHistoryRecordId);
+                final Map<Long, Long> historyRecordIdMap = convertToAuditMap(historyRecordIds);
+                final List<EntityAudit> entityAudits = convertToAudits(entityHistories, historyRecordIdMap);
                 tagSqlDao.insertAuditFromTransaction(entityAudits, context);
 
                 return null;
@@ -93,11 +93,11 @@ public class AuditedTagDao extends AuditedCollectionDaoBase<Tag, Tag> implements
     }
 
     @Override
-    public void insertTags(UUID objectId, ObjectType objectType, List<TagDefinition> tagDefinitions, CallContext context) {
-        List<Tag> tags = new ArrayList<Tag>();
-        for (TagDefinition tagDefinition : tagDefinitions) {
+    public void insertTags(final UUID objectId, final ObjectType objectType, final List<TagDefinition> tagDefinitions, final CallContext context) {
+        final List<Tag> tags = new ArrayList<Tag>();
+        for (final TagDefinition tagDefinition : tagDefinitions) {
             if (tagDefinition.isControlTag()) {
-                ControlTagType controlTagType = ControlTagType.valueOf(tagDefinition.getName());
+                final ControlTagType controlTagType = ControlTagType.valueOf(tagDefinition.getName());
                 tags.add(new DefaultControlTag(controlTagType));
             } else {
                 tags.add(new DescriptiveTag(tagDefinition));
@@ -113,30 +113,30 @@ public class AuditedTagDao extends AuditedCollectionDaoBase<Tag, Tag> implements
         tagSqlDao.inTransaction(new Transaction<Void, TagSqlDao>() {
             @Override
             public Void inTransaction(final TagSqlDao tagSqlDao, final TransactionStatus status) throws Exception {
-                String tagName = tagDefinition.getName();
-                Tag tag = tagSqlDao.findTag(tagName, objectId.toString(), objectType);
+                final String tagName = tagDefinition.getName();
+                final Tag tag = tagSqlDao.findTag(tagName, objectId.toString(), objectType);
 
                 if (tag == null) {
                     throw new InvoiceApiException(ErrorCode.TAG_DOES_NOT_EXIST, tagName);
                 }
 
-                List<Tag> tagList = Arrays.asList(tag);
+                final List<Tag> tagList = Arrays.asList(tag);
 
-                List<Mapper<UUID, Long>> recordIds = tagSqlDao.getRecordIds(objectId.toString(), objectType);
-                Map<UUID, Long> recordIdMap = convertToHistoryMap(recordIds);
+                final List<Mapper<UUID, Long>> recordIds = tagSqlDao.getRecordIds(objectId.toString(), objectType);
+                final Map<UUID, Long> recordIdMap = convertToHistoryMap(recordIds);
 
                 tagSqlDao.deleteFromTransaction(objectId.toString(), objectType, tagList, context);
 
-                List<EntityHistory<Tag>> entityHistories = new ArrayList<EntityHistory<Tag>>();
+                final List<EntityHistory<Tag>> entityHistories = new ArrayList<EntityHistory<Tag>>();
                 entityHistories.addAll(convertToHistory(tagList, recordIdMap, ChangeType.DELETE));
 
-                Long maxHistoryRecordId = tagSqlDao.getMaxHistoryRecordId();
+                final Long maxHistoryRecordId = tagSqlDao.getMaxHistoryRecordId();
                 tagSqlDao.addHistoryFromTransaction(objectId.toString(), objectType, entityHistories, context);
 
                 // have to fetch history record ids to update audit log
-                List<Mapper<Long, Long>> historyRecordIds = tagSqlDao.getHistoryRecordIds(maxHistoryRecordId);
-                Map<Long, Long> historyRecordIdMap = convertToAuditMap(historyRecordIds);
-                List<EntityAudit> entityAudits = convertToAudits(entityHistories, historyRecordIdMap);
+                final List<Mapper<Long, Long>> historyRecordIds = tagSqlDao.getHistoryRecordIds(maxHistoryRecordId);
+                final Map<Long, Long> historyRecordIdMap = convertToAuditMap(historyRecordIds);
+                final List<EntityAudit> entityAudits = convertToAudits(entityHistories, historyRecordIdMap);
                 tagSqlDao.insertAuditFromTransaction(entityAudits, context);
 
                 return null;
@@ -150,7 +150,7 @@ public class AuditedTagDao extends AuditedCollectionDaoBase<Tag, Tag> implements
     }
 
     @Override
-    protected UpdatableEntityCollectionSqlDao<Tag> transmogrifyDao(Transmogrifier transactionalDao) {
+    protected UpdatableEntityCollectionSqlDao<Tag> transmogrifyDao(final Transmogrifier transactionalDao) {
         return transactionalDao.become(TagSqlDao.class);
     }
 
@@ -160,7 +160,7 @@ public class AuditedTagDao extends AuditedCollectionDaoBase<Tag, Tag> implements
     }
 
     @Override
-    protected String getKey(Tag entity) {
+    protected String getKey(final Tag entity) {
         return entity.getTagDefinitionName();
     }
 }
