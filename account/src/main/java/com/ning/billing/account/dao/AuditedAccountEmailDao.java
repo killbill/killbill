@@ -35,12 +35,12 @@ public class AuditedAccountEmailDao extends AuditedCollectionDaoBase<AccountEmai
     private final AccountEmailSqlDao accountEmailSqlDao;
 
     @Inject
-    public AuditedAccountEmailDao(IDBI dbi) {
+    public AuditedAccountEmailDao(final IDBI dbi) {
         this.accountEmailSqlDao = dbi.onDemand(AccountEmailSqlDao.class);
     }
 
     @Override
-    protected AccountEmail getEquivalenceObjectFor(AccountEmail obj) {
+    protected AccountEmail getEquivalenceObjectFor(final AccountEmail obj) {
         return obj;
     }
 
@@ -55,7 +55,7 @@ public class AuditedAccountEmailDao extends AuditedCollectionDaoBase<AccountEmai
     }
 
     @Override
-    public String getKey(AccountEmail entity) {
+    public String getKey(final AccountEmail entity) {
         return entity.getEmail();
     }
 
@@ -63,72 +63,6 @@ public class AuditedAccountEmailDao extends AuditedCollectionDaoBase<AccountEmai
     public void test() {
         accountEmailSqlDao.test();
     }
-
-//    @Override
-//    public List<AccountEmail> getEmails(final UUID accountId) {
-//        return accountEmailSqlDao.load(accountId.toString(), null);
-//        //return accountEmailSqlDao.getByAccountId(accountId.toString());
-//    }
-
-//    @Override
-//    public void saveEmails(final UUID accountId, final List<AccountEmail> emails, final CallContext context) {
-//        final List<AccountEmail> existingEmails = accountEmailSqlDao.getByAccountId(accountId.toString());
-//        final List<AccountEmail> updatedEmails = new ArrayList<AccountEmail>();
-//
-//        Iterator<AccountEmail> existingEmailIterator = existingEmails.iterator();
-//        while (existingEmailIterator.hasNext()) {
-//            AccountEmail existingEmail = existingEmailIterator.next();
-//
-//            Iterator<AccountEmail> newEmailIterator = emails.iterator();
-//            while (newEmailIterator.hasNext()) {
-//                AccountEmail newEmail = newEmailIterator.next();
-//                if (newEmail.getId().equals(existingEmail.getId())) {
-//                    // check equality; if not equal, add to updated
-//                    if (!newEmail.equals(existingEmail)) {
-//                        updatedEmails.add(newEmail);
-//                    }
-//
-//                    // remove from both
-//                    newEmailIterator.remove();
-//                    existingEmailIterator.remove();
-//                }
-//            }
-//        }
-//
-//        // remaining emails in newEmail are inserts; remaining emails in existingEmail are deletes
-//        accountEmailSqlDao.inTransaction(new Transaction<Void, AccountEmailSqlDao>() {
-//            @Override
-//            public Void inTransaction(AccountEmailSqlDao dao, TransactionStatus transactionStatus) throws Exception {
-//                dao.create(emails, context);
-//                dao.update(updatedEmails, context);
-//                dao.delete(existingEmails, context);
-//
-//                List<String> insertHistoryIdList = getIdList(emails.size());
-//                List<String> updateHistoryIdList = getIdList(updatedEmails.size());
-//                List<String> deleteHistoryIdList = getIdList(existingEmails.size());
-//
-//                // insert histories
-//                dao.insertAccountEmailHistoryFromTransaction(insertHistoryIdList, emails, ChangeType.INSERT, context);
-//                dao.insertAccountEmailHistoryFromTransaction(updateHistoryIdList, updatedEmails, ChangeType.UPDATE, context);
-//                dao.insertAccountEmailHistoryFromTransaction(deleteHistoryIdList, existingEmails, ChangeType.DELETE, context);
-//
-//                // insert audits
-//                auditSqlDao.insertAuditFromTransaction(TableName.ACCOUNT_EMAIL_HISTORY, insertHistoryIdList, ChangeType.INSERT, context);
-//                auditSqlDao.insertAuditFromTransaction(TableName.ACCOUNT_EMAIL_HISTORY, updateHistoryIdList, ChangeType.UPDATE, context);
-//                auditSqlDao.insertAuditFromTransaction(TableName.ACCOUNT_EMAIL_HISTORY, deleteHistoryIdList, ChangeType.DELETE, context);
-//
-//                return null;
-//            }
-//        });
-//    }
-//
-//    private List<String> getIdList(int size) {
-//        List<String> results = new ArrayList<String>();
-//        for (int i = 0; i < size; i++) {
-//            results.add(UUID.randomUUID().toString());
-//        }
-//        return results;
-//    }
 
     @Override
     protected TableName getTableName() {
