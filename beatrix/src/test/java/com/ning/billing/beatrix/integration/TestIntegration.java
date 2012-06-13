@@ -94,7 +94,7 @@ public class TestIntegration extends TestIntegrationBase {
     
 
     // STEPH set to disabled until test written properly and fixed
-    @Test(groups = "slow", enabled = false)
+    @Test(groups = "slow", enabled = true)
     public void testRepairChangeBPWithAddonIncluded() throws Exception {
         
         log.info("Starting testRepairChangeBPWithAddonIncluded");
