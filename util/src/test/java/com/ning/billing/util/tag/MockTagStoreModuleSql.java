@@ -23,6 +23,8 @@ import org.skife.jdbi.v2.tweak.HandleCallback;
 
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.mock.glue.MockClockModule;
+import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.bus.InMemoryBus;
 import com.ning.billing.util.glue.TagStoreModule;
 
 public class MockTagStoreModuleSql extends TagStoreModule {
@@ -34,6 +36,7 @@ public class MockTagStoreModuleSql extends TagStoreModule {
         bind(IDBI.class).toInstance(helper.getDBI());
         bind(MysqlTestingHelper.class).toInstance(helper);
         install(new MockClockModule());
+        bind(Bus.class).toInstance(new InMemoryBus());
         super.configure();
     }
 

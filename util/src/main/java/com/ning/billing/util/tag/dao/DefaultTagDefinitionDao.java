@@ -24,16 +24,22 @@ import org.skife.jdbi.v2.IDBI;
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.util.api.TagDefinitionApiException;
+import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.DefaultTagDefinition;
 import com.ning.billing.util.tag.TagDefinition;
+import com.ning.billing.util.tag.api.user.TagEventBuilder;
 
 public class DefaultTagDefinitionDao implements TagDefinitionDao {
     private final TagDefinitionSqlDao dao;
+    private final TagEventBuilder tagEventBuilder;
+    private final Bus bus;
 
     @Inject
-    public DefaultTagDefinitionDao(final IDBI dbi) {
+    public DefaultTagDefinitionDao(final IDBI dbi, final TagEventBuilder tagEventBuilder, final Bus bus) {
+        this.tagEventBuilder = tagEventBuilder;
+        this.bus = bus;
         this.dao = dbi.onDemand(TagDefinitionSqlDao.class);
     }
 

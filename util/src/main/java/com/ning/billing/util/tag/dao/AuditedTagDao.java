@@ -31,6 +31,7 @@ import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.util.ChangeType;
+import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.dao.AuditedCollectionDaoBase;
 import com.ning.billing.util.dao.EntityAudit;
@@ -44,12 +45,17 @@ import com.ning.billing.util.tag.DefaultControlTag;
 import com.ning.billing.util.tag.DescriptiveTag;
 import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;
+import com.ning.billing.util.tag.api.user.TagEventBuilder;
 
 public class AuditedTagDao extends AuditedCollectionDaoBase<Tag, Tag> implements TagDao {
     private final TagSqlDao tagSqlDao;
+    private final TagEventBuilder tagEventBuilder;
+    private final Bus bus;
 
     @Inject
-    public AuditedTagDao(final IDBI dbi) {
+    public AuditedTagDao(final IDBI dbi, final TagEventBuilder tagEventBuilder, final Bus bus) {
+        this.tagEventBuilder = tagEventBuilder;
+        this.bus = bus;
         this.tagSqlDao = dbi.onDemand(TagSqlDao.class);
     }
 

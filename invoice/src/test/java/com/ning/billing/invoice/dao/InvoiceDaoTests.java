@@ -656,7 +656,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         invoiceDao.create(invoice, context);
         invoiceDao.setWrittenOff(invoice.getId(), context);
 
-        TagDao tagDao = new AuditedTagDao(dbi);
+        TagDao tagDao = new AuditedTagDao(dbi, tagEventBuilder, bus);
         Map<String, Tag> tags = tagDao.loadEntities(invoice.getId(), ObjectType.INVOICE);
         assertEquals(tags.size(), 1);
         assertTrue(tags.containsKey(ControlTagType.WRITTEN_OFF.toString()));
@@ -687,7 +687,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         invoiceDao.create(invoice, context);
         invoiceDao.setWrittenOff(invoice.getId(), context);
 
-        TagDao tagDao = new AuditedTagDao(dbi);
+        TagDao tagDao = new AuditedTagDao(dbi, tagEventBuilder, bus);
         Map<String, Tag> tags = tagDao.loadEntities(invoice.getId(), ObjectType.INVOICE);
         assertEquals(tags.size(), 1);
         assertTrue(tags.containsKey(ControlTagType.WRITTEN_OFF.toString()));

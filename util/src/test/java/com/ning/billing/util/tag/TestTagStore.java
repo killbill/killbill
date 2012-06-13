@@ -39,6 +39,7 @@ import com.google.inject.Inject;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.util.api.TagDefinitionApiException;
+import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.DefaultCallContextFactory;
@@ -72,6 +73,9 @@ public class TestTagStore {
     @Inject
     private Clock clock;
 
+    @Inject
+    private Bus bus;
+
     private TagDefinition testTag;
 
     private final Logger log = LoggerFactory.getLogger(TestTagStore.class);
@@ -87,6 +91,7 @@ public class TestTagStore {
             helper.initDb(utilDdl);
 
             context = new DefaultCallContextFactory(clock).createCallContext("Tag store test", CallOrigin.TEST, UserType.TEST);
+            bus.start();
 
             cleanupTags();
             tagDefinitionDao.create("tag1", "First tag", context);
@@ -99,6 +104,7 @@ public class TestTagStore {
 
     @AfterClass(groups = "slow")
     public void stopMysql() {
+        bus.stop();
         if (helper != null) {
             helper.stopMysql();
         }
