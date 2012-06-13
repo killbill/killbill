@@ -18,23 +18,29 @@ package com.ning.billing.util.tag.api.user;
 
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ning.billing.util.tag.TagDefinition;
 import com.ning.billing.util.tag.api.ControlTagDefinitionDeletionEvent;
 
 public class DefaultControlTagDefinitionDeletionEvent implements ControlTagDefinitionDeletionEvent {
-    private final UUID tagId;
+    private final UUID tagDefinitionId;
     private final TagDefinition tagDefinition;
     private final UUID userToken;
 
-    public DefaultControlTagDefinitionDeletionEvent(final UUID tagId, final TagDefinition tagDefinition, final UUID userToken) {
-        this.tagId = tagId;
+    @JsonCreator
+    public DefaultControlTagDefinitionDeletionEvent(@JsonProperty("tagDefinitionId") final UUID tagDefinitionId,
+                                                    @JsonProperty("tagDefinition") final TagDefinition tagDefinition,
+                                                    @JsonProperty("userToken") final UUID userToken) {
+        this.tagDefinitionId = tagDefinitionId;
         this.tagDefinition = tagDefinition;
         this.userToken = userToken;
     }
 
     @Override
     public UUID getTagDefinitionId() {
-        return tagId;
+        return tagDefinitionId;
     }
 
     @Override
@@ -42,6 +48,7 @@ public class DefaultControlTagDefinitionDeletionEvent implements ControlTagDefin
         return tagDefinition;
     }
 
+    @JsonIgnore
     @Override
     public BusEventType getBusEventType() {
         return BusEventType.CONTROL_TAGDEFINITION_DELETION;
@@ -57,7 +64,7 @@ public class DefaultControlTagDefinitionDeletionEvent implements ControlTagDefin
         final StringBuilder sb = new StringBuilder();
         sb.append("DefaultControlTagDefinitionDeletionEvent");
         sb.append("{tagDefinition=").append(tagDefinition);
-        sb.append(", tagId=").append(tagId);
+        sb.append(", tagDefinitionId=").append(tagDefinitionId);
         sb.append(", userToken=").append(userToken);
         sb.append('}');
         return sb.toString();
@@ -77,7 +84,7 @@ public class DefaultControlTagDefinitionDeletionEvent implements ControlTagDefin
         if (tagDefinition != null ? !tagDefinition.equals(that.tagDefinition) : that.tagDefinition != null) {
             return false;
         }
-        if (tagId != null ? !tagId.equals(that.tagId) : that.tagId != null) {
+        if (tagDefinitionId != null ? !tagDefinitionId.equals(that.tagDefinitionId) : that.tagDefinitionId != null) {
             return false;
         }
         if (userToken != null ? !userToken.equals(that.userToken) : that.userToken != null) {
@@ -89,7 +96,7 @@ public class DefaultControlTagDefinitionDeletionEvent implements ControlTagDefin
 
     @Override
     public int hashCode() {
-        int result = tagId != null ? tagId.hashCode() : 0;
+        int result = tagDefinitionId != null ? tagDefinitionId.hashCode() : 0;
         result = 31 * result + (tagDefinition != null ? tagDefinition.hashCode() : 0);
         result = 31 * result + (userToken != null ? userToken.hashCode() : 0);
         return result;

@@ -18,6 +18,9 @@ package com.ning.billing.util.tag.api.user;
 
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.tag.TagDefinition;
 import com.ning.billing.util.tag.api.UserTagCreationEvent;
@@ -29,7 +32,12 @@ public class DefaultUserTagCreationEvent implements UserTagCreationEvent {
     private final TagDefinition tagDefinition;
     private final UUID userToken;
 
-    public DefaultUserTagCreationEvent(final UUID tagId, final UUID objectId, final ObjectType objectType, final TagDefinition tagDefinition, final UUID userToken) {
+    @JsonCreator
+    public DefaultUserTagCreationEvent(@JsonProperty("tagId") final UUID tagId,
+                                       @JsonProperty("objectId") final UUID objectId,
+                                       @JsonProperty("objectType") final ObjectType objectType,
+                                       @JsonProperty("tagDefinition") final TagDefinition tagDefinition,
+                                       @JsonProperty("userToken") final UUID userToken) {
         this.tagId = tagId;
         this.objectId = objectId;
         this.objectType = objectType;
@@ -57,6 +65,7 @@ public class DefaultUserTagCreationEvent implements UserTagCreationEvent {
         return tagDefinition;
     }
 
+    @JsonIgnore
     @Override
     public BusEventType getBusEventType() {
         return BusEventType.USER_TAG_CREATION;
