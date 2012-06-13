@@ -25,6 +25,7 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -142,7 +143,7 @@ public class TestDefaultBillingEvent {
 		return new DefaultBillingEvent(null, sub , effectiveDate,
 				shotgun, shotgunMonthly,
 				BigDecimal.ZERO, null, Currency.USD, BillingPeriod.NO_BILLING_PERIOD, billCycleDay,
-				BillingModeType.IN_ADVANCE, "Test Event 1", totalOrdering, type);
+				BillingModeType.IN_ADVANCE, "Test Event 1", totalOrdering, type, DateTimeZone.UTC);
 	}
 
 	private MockPlanPhase createMockMonthlyPlanPhase(@Nullable final BigDecimal recurringRate,

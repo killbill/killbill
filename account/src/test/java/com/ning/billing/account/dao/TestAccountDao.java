@@ -28,6 +28,7 @@ import java.util.UUID;
 
 import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.account.api.DefaultAccountEmail;
+import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.customfield.StringCustomField;
 import com.ning.billing.util.customfield.dao.AuditedCustomFieldDao;
@@ -146,13 +147,13 @@ public class TestAccountDao extends AccountDaoTestBase {
     }
 
     @Test
-    public void testTags() throws EntityPersistenceException {
+    public void testTags() throws EntityPersistenceException, TagApiException {
         Account account = createTestAccount(1);
         TagDefinition definition = new DefaultTagDefinition("Test Tag", "For testing only", false);
         TagDefinitionSqlDao tagDescriptionDao = dbi.onDemand(TagDefinitionSqlDao.class);
         tagDescriptionDao.create(definition, context);
 
-        TagDao tagDao = new AuditedTagDao(dbi);
+        TagDao tagDao = new AuditedTagDao(dbi, tagEventBuilder, bus);
         tagDao.insertTag(account.getId(), ObjectType.ACCOUNT, definition, context);
 
         Map<String, Tag> tagMap = tagDao.loadEntities(account.getId(), ObjectType.ACCOUNT);

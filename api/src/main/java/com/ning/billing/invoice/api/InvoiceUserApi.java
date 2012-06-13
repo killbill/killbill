@@ -17,6 +17,7 @@
 package com.ning.billing.invoice.api;
 
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.callcontext.CallContext;
 import org.joda.time.DateTime;
 
@@ -40,9 +41,9 @@ public interface InvoiceUserApi {
     
     public Invoice triggerInvoiceGeneration(UUID accountId, DateTime targetDate, boolean dryRun, CallContext context) throws InvoiceApiException;
 
-    public void tagInvoiceAsWrittenOff(UUID invoiceId, CallContext context);
+    public void tagInvoiceAsWrittenOff(UUID invoiceId, CallContext context) throws TagApiException;
 
-    public void tagInvoiceAsNotWrittenOff(UUID invoiceId, CallContext context) throws InvoiceApiException;
+    public void tagInvoiceAsNotWrittenOff(UUID invoiceId, CallContext context) throws TagApiException;
 
     public InvoiceItem getCreditById(UUID creditId) throws InvoiceApiException;
 

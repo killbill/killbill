@@ -93,13 +93,71 @@ public class TestIntegration extends TestIntegrationBase {
     }
     
 
+//    // STEPH set to disabled until test written properly and fixed
+//    @Test(groups = "slow", enabled = true)
+//    public void testRepairChangeBPWithAddonIncluded() throws Exception {
+//        
+//        log.info("Starting testRepairChangeBPWithAddonIncluded");
+//        
+//        DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
+//        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+//        
+//        Account account = createAccountWithPaymentMethod(getAccountData(25));
+//        assertNotNull(account);
+//
+//        SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever", context);
+//
+//        String productName = "Shotgun";
+//        BillingPeriod term = BillingPeriod.MONTHLY;
+//        String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
+//
+//        busHandler.pushExpectedEvent(NextEvent.CREATE);
+//        busHandler.pushExpectedEvent(NextEvent.INVOICE);
+//        SubscriptionData baseSubscription = subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(),
+//                new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, context));
+//        assertNotNull(baseSubscription);
+//        assertTrue(busHandler.isCompleted(DELAY));
+//   
+//        // MOVE CLOCK A LITTLE BIT-- STILL IN TRIAL
+//        Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(3));
+//        clock.addDeltaFromReality(it.toDurationMillis());
+//
+//        busHandler.pushExpectedEvent(NextEvent.CREATE);
+//        busHandler.pushExpectedEvent(NextEvent.INVOICE);
+//        busHandler.pushExpectedEvent(NextEvent.PAYMENT);
+//        subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(),
+//                new PlanPhaseSpecifier("Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null), null, context));
+//        assertTrue(busHandler.isCompleted(DELAY));
+//        
+//        busHandler.pushExpectedEvent(NextEvent.CREATE);
+//        busHandler.pushExpectedEvent(NextEvent.INVOICE);
+//        busHandler.pushExpectedEvent(NextEvent.PAYMENT);
+//        subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(),
+//                new PlanPhaseSpecifier("Laser-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null), null, context)); 
+//        assertTrue(busHandler.isCompleted(DELAY));
+//        
+//
+//        // 26 / 5
+//        int duration = 28;
+//        it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(duration));
+//        busHandler.pushExpectedEvent(NextEvent.PHASE);
+//        busHandler.pushExpectedEvent(NextEvent.PHASE);
+//        busHandler.pushExpectedEvent(NextEvent.PHASE);            
+//        busHandler.pushExpectedEvent(NextEvent.INVOICE);
+//        busHandler.pushExpectedEvent(NextEvent.PAYMENT);
+//        clock.addDeltaFromReality(it.toDurationMillis());
+//        assertTrue(busHandler.isCompleted(DELAY));
+//        
+//        assertListenerStatus();
+//    }
+   
     // STEPH set to disabled until test written properly and fixed
     @Test(groups = "slow", enabled = false)
     public void testRepairChangeBPWithAddonIncluded() throws Exception {
         
         log.info("Starting testRepairChangeBPWithAddonIncluded");
         
-        DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
+        DateTime initialDate = new DateTime(2012, 4, 25, 0, 13, 42, 0);
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
         
         Account account = createAccountWithPaymentMethod(getAccountData(25));
@@ -117,10 +175,12 @@ public class TestIntegration extends TestIntegrationBase {
                 new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, context));
         assertNotNull(baseSubscription);
         assertTrue(busHandler.isCompleted(DELAY));
+        assertListenerStatus();
    
         // MOVE CLOCK A LITTLE BIT-- STILL IN TRIAL
         Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(3));
-        clock.addDeltaFromReality(it.toDurationMillis());
+        log.info("Moving clock from" + clock.getUTCNow() + " to " + clock.getUTCNow().plusDays(3));
+        clock.addDays(3);
 
         busHandler.pushExpectedEvent(NextEvent.CREATE);
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
@@ -128,6 +188,8 @@ public class TestIntegration extends TestIntegrationBase {
         subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(),
                 new PlanPhaseSpecifier("Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null), null, context));
         assertTrue(busHandler.isCompleted(DELAY));
+        assertListenerStatus();
+
         
         busHandler.pushExpectedEvent(NextEvent.CREATE);
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
@@ -135,22 +197,53 @@ public class TestIntegration extends TestIntegrationBase {
         SubscriptionData aoSubscription2 = subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(),
                 new PlanPhaseSpecifier("Laser-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null), null, context)); 
         assertTrue(busHandler.isCompleted(DELAY));
-        
+        assertListenerStatus();
 
         // MOVE CLOCK A LITTLE BIT MORE -- EITHER STAY IN TRIAL OR GET OUT   
-        int duration = 35;
-        it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(duration));
         busHandler.pushExpectedEvent(NextEvent.PHASE);
-        busHandler.pushExpectedEvent(NextEvent.PHASE);
-        busHandler.pushExpectedEvent(NextEvent.PHASE);            
+        busHandler.pushExpectedEvent(NextEvent.PHASE);          
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
         busHandler.pushExpectedEvent(NextEvent.PAYMENT);
-        clock.addDeltaFromReality(it.toDurationMillis());
+        busHandler.pushExpectedEvent(NextEvent.INVOICE);
+        busHandler.pushExpectedEvent(NextEvent.PAYMENT);
+        log.info("Moving clock from" + clock.getUTCNow() + " to " + clock.getUTCNow().plusDays(28));
+        clock.addDays(28);// 26 / 5
         assertTrue(busHandler.isCompleted(DELAY));
-        
         assertListenerStatus();
+        
+        
+        busHandler.pushExpectedEvent(NextEvent.PHASE);       
+        busHandler.pushExpectedEvent(NextEvent.INVOICE);
+        busHandler.pushExpectedEvent(NextEvent.PAYMENT);
+        log.info("Moving clock from" + clock.getUTCNow() + " to " + clock.getUTCNow().plusDays(3));
+        clock.addDays(3);// 29 / 5
+        assertTrue(busHandler.isCompleted(DELAY));
+        assertListenerStatus();
+       
+        
+        log.info("Moving clock from" + clock.getUTCNow() + " to " + clock.getUTCNow().plusDays(10));
+        clock.addDays(10);// 8 / 6
+        assertTrue(busHandler.isCompleted(DELAY));
+        assertListenerStatus();
+       
+        
+       
+        busHandler.pushExpectedEvent(NextEvent.INVOICE);
+        busHandler.pushExpectedEvent(NextEvent.PAYMENT);
+        log.info("Moving clock from" + clock.getUTCNow() + " to " + clock.getUTCNow().plusDays(18));
+        clock.addDays(18);// 26 / 6
+        assertTrue(busHandler.isCompleted(DELAY));
+        assertListenerStatus();
+        
+        log.info("Moving clock from" + clock.getUTCNow() + " to " + clock.getUTCNow().plusDays(3));
+        clock.addDays(3);
+        assertTrue(busHandler.isCompleted(DELAY));
+        assertListenerStatus();
+        
+
     }
-   
+    
+    
     @Test(groups = {"slow"})
     public void testRepairForInvoicing() throws Exception {
 

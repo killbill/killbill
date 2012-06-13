@@ -40,6 +40,7 @@ import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceUserApi;
+import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.dao.ObjectType;
@@ -166,7 +167,7 @@ public class TestIntegrationWithAutoInvoiceOffTag extends TestIntegrationBase {
     }
 
 
-    private void addTag(UUID id, ObjectType type) throws TagDefinitionApiException {
+    private void addTag(UUID id, ObjectType type) throws TagDefinitionApiException, TagApiException {
         TagDefinition def = tagApi.getTagDefinition(ControlTagType.AUTO_INVOICING_OFF.name());
         tagApi.addTag(id, type, def, context);
         Map<String,Tag> tags = tagApi.getTags(id, type);

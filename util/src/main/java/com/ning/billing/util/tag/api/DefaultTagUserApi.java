@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.google.inject.Inject;
+import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.callcontext.CallContext;
@@ -35,7 +36,7 @@ public class DefaultTagUserApi implements TagUserApi {
     private final TagDao tagDao;
 
     @Inject
-    public DefaultTagUserApi(TagDefinitionDao tagDefinitionDao, TagDao tagDao) {
+    public DefaultTagUserApi(final TagDefinitionDao tagDefinitionDao, final TagDao tagDao) {
         this.tagDefinitionDao = tagDefinitionDao;
         this.tagDao = tagDao;
     }
@@ -51,41 +52,38 @@ public class DefaultTagUserApi implements TagUserApi {
     }
 
     @Override
-    public void deleteAllTagsForDefinition(final String definitionName, final CallContext context)
-            throws TagDefinitionApiException {
-        tagDefinitionDao.deleteAllTagsForDefinition(definitionName, context);
-    }
-
-    @Override
     public void deleteTagDefinition(final String definitionName, final CallContext context) throws TagDefinitionApiException {
-        tagDefinitionDao.deleteAllTagsForDefinition(definitionName, context);
-    }
-
-	@Override
-	public TagDefinition getTagDefinition(final String name)
-			throws TagDefinitionApiException {
-		return tagDefinitionDao.getByName(name);
-	}
-
-    @Override
-    public void addTags(UUID objectId, ObjectType objectType, List<TagDefinition> tagDefinitions, CallContext context) {
-        tagDao.insertTags(objectId, objectType, tagDefinitions, context);
+        tagDefinitionDao.deleteTagDefinition(definitionName, context);
     }
 
     @Override
-    public void addTag(UUID objectId, ObjectType objectType, TagDefinition tagDefinition, CallContext context) {
+    public TagDefinition getTagDefinition(final String name)
+            throws TagDefinitionApiException {
+        return tagDefinitionDao.getByName(name);
+    }
+
+    @Override
+    public void addTags(final UUID objectId, final ObjectType objectType, final List<TagDefinition> tagDefinitions, final CallContext context) throws TagApiException {
+        // TODO: consider making this batch
+        for (final TagDefinition tagDefinition : tagDefinitions) {
+            tagDao.insertTag(objectId, objectType, tagDefinition, context);
+        }
+    }
+
+    @Override
+    public void addTag(final UUID objectId, final ObjectType objectType, final TagDefinition tagDefinition, final CallContext context) throws TagApiException {
         tagDao.insertTag(objectId, objectType, tagDefinition, context);
     }
 
     @Override
-    public void removeTag(UUID objectId, ObjectType objectType, TagDefinition tagDefinition, CallContext context) {
+    public void removeTag(final UUID objectId, final ObjectType objectType, final TagDefinition tagDefinition, final CallContext context) throws TagApiException {
         tagDao.deleteTag(objectId, objectType, tagDefinition, context);
     }
 
     @Override
-    public void removeTags(UUID objectId, ObjectType objectType, List<TagDefinition> tagDefinitions, CallContext context)  {
+    public void removeTags(final UUID objectId, final ObjectType objectType, final List<TagDefinition> tagDefinitions, final CallContext context) throws TagApiException {
         // TODO: consider making this batch
-        for (TagDefinition tagDefinition : tagDefinitions) {
+        for (final TagDefinition tagDefinition : tagDefinitions) {
             tagDao.deleteTag(objectId, objectType, tagDefinition, context);
         }
     }
@@ -94,26 +92,4 @@ public class DefaultTagUserApi implements TagUserApi {
     public Map<String, Tag> getTags(final UUID objectId, final ObjectType objectType) {
         return tagDao.loadEntities(objectId, objectType);
     }
-
-//    @Override
-//    public Tag createControlTags(String controlTagName) throws TagDefinitionApiException {
-//        ControlTagType type = null;
-//        for(ControlTagType t : ControlTagType.values()) {
-//            if(t.toString().equals(controlTagName)) {
-//                type = t;
-//            }
-//        }
-//
-//        if(type == null) {
-//            throw new TagDefinitionApiException(ErrorCode.CONTROL_TAG_DOES_NOT_EXIST, controlTagName);
-//        }
-//        return new DefaultControlTag(type);
-//    }
-//
-//    @Override
-//    public Tag createDescriptiveTags(List) throws TagDefinitionApiException {
-//        TagDefinition tagDefinition = getTagDefinition(tagDefinitionName);
-//
-//        return new DescriptiveTag(tagDefinition);
-//    }
 }

@@ -27,53 +27,54 @@ import com.ning.billing.invoice.model.InvalidDateSequenceException;
 public abstract class GenericProRationTestBase extends ProRationInAdvanceTestBase {
     /**
      * used for testing cancellation in less than a single billing period
+     *
      * @return BigDecimal the number of days in the billing period beginning 2011/1/1
      */
     protected abstract BigDecimal getDaysInTestPeriod();
-    
+
     @Test
     public void testSinglePlan_OnStartDate() throws InvalidDateSequenceException {
-        DateTime startDate = buildDateTime(2011, 2, 15);
+        final DateTime startDate = buildDateTime(2011, 2, 15);
 
         testCalculateNumberOfBillingCycles(startDate, startDate, 15, ONE);
     }
 
     @Test
     public void testSinglePlan_LessThanOnePeriod() throws InvalidDateSequenceException {
-        DateTime startDate = buildDateTime(2011, 2, 15);
-        DateTime targetDate = buildDateTime(2011, 3, 1);
+        final DateTime startDate = buildDateTime(2011, 2, 15);
+        final DateTime targetDate = buildDateTime(2011, 3, 1);
 
         testCalculateNumberOfBillingCycles(startDate, targetDate, 15, ONE);
     }
 
     @Test
     public void testSinglePlan_OnePeriodLessADayAfterStart() throws InvalidDateSequenceException {
-        DateTime startDate = buildDateTime(2011, 2, 15);
-        DateTime targetDate = startDate.plusMonths(getBillingPeriod().getNumberOfMonths()).plusDays(-1);
+        final DateTime startDate = buildDateTime(2011, 2, 15);
+        final DateTime targetDate = startDate.plusMonths(getBillingPeriod().getNumberOfMonths()).plusDays(-1);
 
         testCalculateNumberOfBillingCycles(startDate, targetDate, 15, ONE);
     }
 
     @Test
     public void testSinglePlan_ExactlyOnePeriodAfterStart() throws InvalidDateSequenceException {
-        DateTime startDate = buildDateTime(2011, 2, 15);
-        DateTime targetDate = startDate.plusMonths(getBillingPeriod().getNumberOfMonths());
+        final DateTime startDate = buildDateTime(2011, 2, 15);
+        final DateTime targetDate = startDate.plusMonths(getBillingPeriod().getNumberOfMonths());
 
         testCalculateNumberOfBillingCycles(startDate, targetDate, 15, TWO);
     }
 
     @Test
     public void testSinglePlan_SlightlyMoreThanOnePeriodAfterStart() throws InvalidDateSequenceException {
-        DateTime startDate = buildDateTime(2011, 2, 15);
-        DateTime targetDate = startDate.plusMonths(getBillingPeriod().getNumberOfMonths()).plusDays(1);
+        final DateTime startDate = buildDateTime(2011, 2, 15);
+        final DateTime targetDate = startDate.plusMonths(getBillingPeriod().getNumberOfMonths()).plusDays(1);
 
         testCalculateNumberOfBillingCycles(startDate, targetDate, 15, TWO);
     }
 
     @Test
     public void testSinglePlan_CrossingYearBoundary() throws InvalidDateSequenceException {
-        DateTime startDate = buildDateTime(2011, 12, 15);
-        DateTime oneCycleLater = startDate.plusMonths(getBillingPeriod().getNumberOfMonths());
+        final DateTime startDate = buildDateTime(2011, 12, 15);
+        final DateTime oneCycleLater = startDate.plusMonths(getBillingPeriod().getNumberOfMonths());
 
         // test just before the billing cycle day
         testCalculateNumberOfBillingCycles(startDate, oneCycleLater.plusDays(-1), 15, ONE);
@@ -87,27 +88,27 @@ public abstract class GenericProRationTestBase extends ProRationInAdvanceTestBas
 
     @Test
     public void testSinglePlan_StartingMidFebruary() throws InvalidDateSequenceException {
-        DateTime startDate = buildDateTime(2011, 2, 15);
-        DateTime targetDate = startDate.plusMonths(getBillingPeriod().getNumberOfMonths());
+        final DateTime startDate = buildDateTime(2011, 2, 15);
+        final DateTime targetDate = startDate.plusMonths(getBillingPeriod().getNumberOfMonths());
 
         testCalculateNumberOfBillingCycles(startDate, targetDate, 15, TWO);
     }
 
     @Test
     public void testSinglePlan_StartingMidFebruaryOfLeapYear() throws InvalidDateSequenceException {
-        DateTime startDate = buildDateTime(2012, 2, 15);
-        DateTime targetDate = startDate.plusMonths(getBillingPeriod().getNumberOfMonths());
+        final DateTime startDate = buildDateTime(2012, 2, 15);
+        final DateTime targetDate = startDate.plusMonths(getBillingPeriod().getNumberOfMonths());
 
         testCalculateNumberOfBillingCycles(startDate, targetDate, 15, TWO);
     }
 
     @Test
     public void testSinglePlan_MovingForwardThroughTime() throws InvalidDateSequenceException {
-        DateTime startDate = buildDateTime(2011, 1, 31);
+        final DateTime startDate = buildDateTime(2011, 1, 31);
         BigDecimal expectedValue = ONE;
 
         for (int i = 1; i <= 12; i++) {
-            DateTime oneCycleLater = startDate.plusMonths(i * getBillingPeriod().getNumberOfMonths());
+            final DateTime oneCycleLater = startDate.plusMonths(i * getBillingPeriod().getNumberOfMonths());
             // test just before the billing cycle day
             testCalculateNumberOfBillingCycles(startDate, oneCycleLater.plusDays(-1), 31, expectedValue);
 
@@ -120,65 +121,65 @@ public abstract class GenericProRationTestBase extends ProRationInAdvanceTestBas
             testCalculateNumberOfBillingCycles(startDate, oneCycleLater.plusDays(1), 31, expectedValue);
         }
     }
-    
+
     // tests for cancellation in less than one period, beginning Jan 1
     @Test
     public void testCancelledBeforeOnePeriod_TargetDateInStartDate() throws InvalidDateSequenceException {
-        DateTime startDate = buildDateTime(2011, 1, 1);
-        DateTime targetDate = buildDateTime(2011, 1, 1);
-        DateTime endDate = buildDateTime(2011, 1, 15);
+        final DateTime startDate = buildDateTime(2011, 1, 1);
+        final DateTime targetDate = buildDateTime(2011, 1, 1);
+        final DateTime endDate = buildDateTime(2011, 1, 15);
 
-        BigDecimal expectedValue = FOURTEEN.divide(getDaysInTestPeriod(), NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+        final BigDecimal expectedValue = FOURTEEN.divide(getDaysInTestPeriod(), NUMBER_OF_DECIMALS, ROUNDING_METHOD);
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 1, expectedValue);
     }
 
     @Test
     public void testCancelledBeforeOnePeriod_TargetDateInSubscriptionPeriod() throws InvalidDateSequenceException {
-        DateTime startDate = buildDateTime(2011, 1, 1);
-        DateTime targetDate = buildDateTime(2011, 1, 7);
-        DateTime endDate = buildDateTime(2011, 1, 15);
+        final DateTime startDate = buildDateTime(2011, 1, 1);
+        final DateTime targetDate = buildDateTime(2011, 1, 7);
+        final DateTime endDate = buildDateTime(2011, 1, 15);
 
-        BigDecimal expectedValue = FOURTEEN.divide(getDaysInTestPeriod(), NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+        final BigDecimal expectedValue = FOURTEEN.divide(getDaysInTestPeriod(), NUMBER_OF_DECIMALS, ROUNDING_METHOD);
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 1, expectedValue);
     }
 
     @Test
     public void testCancelledBeforeOnePeriod_TargetDateOnEndDate() throws InvalidDateSequenceException {
-        DateTime startDate = buildDateTime(2011, 1, 1);
-        DateTime targetDate = buildDateTime(2011, 1, 15);
-        DateTime endDate = buildDateTime(2011, 1, 15);
+        final DateTime startDate = buildDateTime(2011, 1, 1);
+        final DateTime targetDate = buildDateTime(2011, 1, 15);
+        final DateTime endDate = buildDateTime(2011, 1, 15);
 
-        BigDecimal expectedValue = FOURTEEN.divide(getDaysInTestPeriod(), NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+        final BigDecimal expectedValue = FOURTEEN.divide(getDaysInTestPeriod(), NUMBER_OF_DECIMALS, ROUNDING_METHOD);
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 1, expectedValue);
     }
 
     @Test
     public void testCancelledBeforeOnePeriod_TargetDateAfterEndDateButInFirstBillingPeriod() throws InvalidDateSequenceException {
-        DateTime startDate = buildDateTime(2011, 1, 1);
-        DateTime targetDate = buildDateTime(2011, 1, 17);
-        DateTime endDate = buildDateTime(2011, 1, 15);
+        final DateTime startDate = buildDateTime(2011, 1, 1);
+        final DateTime targetDate = buildDateTime(2011, 1, 17);
+        final DateTime endDate = buildDateTime(2011, 1, 15);
 
-        BigDecimal expectedValue = FOURTEEN.divide(getDaysInTestPeriod(), NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+        final BigDecimal expectedValue = FOURTEEN.divide(getDaysInTestPeriod(), NUMBER_OF_DECIMALS, ROUNDING_METHOD);
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 1, expectedValue);
     }
 
     @Test
     public void testCancelledBeforeOnePeriod_TargetDateAtEndOfFirstBillingPeriod() throws InvalidDateSequenceException {
-        DateTime startDate = buildDateTime(2011, 1, 1);
-        DateTime targetDate = buildDateTime(2011, 2, 1);
-        DateTime endDate = buildDateTime(2011, 1, 15);
+        final DateTime startDate = buildDateTime(2011, 1, 1);
+        final DateTime targetDate = buildDateTime(2011, 2, 1);
+        final DateTime endDate = buildDateTime(2011, 1, 15);
 
-        BigDecimal expectedValue = FOURTEEN.divide(getDaysInTestPeriod(), NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+        final BigDecimal expectedValue = FOURTEEN.divide(getDaysInTestPeriod(), NUMBER_OF_DECIMALS, ROUNDING_METHOD);
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 1, expectedValue);
     }
 
     @Test
     public void testCancelledBeforeOnePeriod_TargetDateAfterFirstBillingPeriod() throws InvalidDateSequenceException {
-        DateTime startDate = buildDateTime(2011, 1, 1);
-        DateTime targetDate = buildDateTime(2011, 4, 5);
-        DateTime endDate = buildDateTime(2011, 1, 15);
+        final DateTime startDate = buildDateTime(2011, 1, 1);
+        final DateTime targetDate = buildDateTime(2011, 4, 5);
+        final DateTime endDate = buildDateTime(2011, 1, 15);
 
-        BigDecimal expectedValue = FOURTEEN.divide(getDaysInTestPeriod(), NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+        final BigDecimal expectedValue = FOURTEEN.divide(getDaysInTestPeriod(), NUMBER_OF_DECIMALS, ROUNDING_METHOD);
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 1, expectedValue);
     }
 }

@@ -25,11 +25,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
 
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallContextBinder;
-import com.ning.billing.util.entity.dao.EntitySqlDao;
-import com.ning.billing.util.tag.DefaultTagDefinition;
-import com.ning.billing.util.tag.TagDefinition;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.Bind;
@@ -39,12 +34,20 @@ import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
+import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
+import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallContextBinder;
+import com.ning.billing.util.entity.dao.EntitySqlDao;
+import com.ning.billing.util.tag.DefaultTagDefinition;
+import com.ning.billing.util.tag.TagDefinition;
+
 @ExternalizedSqlViaStringTemplate3
 @RegisterMapper(TagDefinitionSqlDao.TagDefinitionMapper.class)
-public interface TagDefinitionSqlDao extends EntitySqlDao<TagDefinition> {
+public interface TagDefinitionSqlDao extends EntitySqlDao<TagDefinition>, Transactional<TagDefinitionSqlDao>, Transmogrifier {
     @Override
     @SqlUpdate
     public void create(@TagDefinitionBinder final TagDefinition entity, @CallContextBinder final CallContext context);
@@ -64,9 +67,9 @@ public interface TagDefinitionSqlDao extends EntitySqlDao<TagDefinition> {
     public class TagDefinitionMapper implements ResultSetMapper<TagDefinition> {
         @Override
         public TagDefinition map(final int index, final ResultSet result, final StatementContext context) throws SQLException {
-            UUID id = UUID.fromString(result.getString("id"));
-            String name = result.getString("name");
-            String description = result.getString("description");
+            final UUID id = UUID.fromString(result.getString("id"));
+            final String name = result.getString("name");
+            final String description = result.getString("description");
             return new DefaultTagDefinition(id, name, description, false);
         }
     }

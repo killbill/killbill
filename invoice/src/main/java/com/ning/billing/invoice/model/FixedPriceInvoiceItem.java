@@ -16,24 +16,25 @@
 
 package com.ning.billing.invoice.model;
 
+import javax.annotation.Nullable;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-import com.ning.billing.invoice.api.InvoiceItemType;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.invoice.api.InvoiceItemType;
 
 public class FixedPriceInvoiceItem extends InvoiceItemBase {
 
-    public FixedPriceInvoiceItem(UUID invoiceId, UUID accountId, UUID bundleId, UUID subscriptionId, String planName, String phaseName,
-                                 DateTime startDate, DateTime endDate, BigDecimal amount, Currency currency) {
+    public FixedPriceInvoiceItem(final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId, @Nullable final UUID subscriptionId, final String planName, final String phaseName,
+                                 final DateTime startDate, final DateTime endDate, final BigDecimal amount, final Currency currency) {
         super(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency, InvoiceItemType.FIXED);
     }
 
-    public FixedPriceInvoiceItem(UUID id, UUID invoiceId, UUID accountId, UUID bundleId, UUID subscriptionId, String planName, String phaseName,
-                                 DateTime startDate, DateTime endDate, BigDecimal amount, Currency currency) {
+    public FixedPriceInvoiceItem(final UUID id, final UUID invoiceId, final UUID accountId, final UUID bundleId, final UUID subscriptionId, final String planName, final String phaseName,
+                                 final DateTime startDate, final DateTime endDate, final BigDecimal amount, final Currency currency) {
         super(id, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency, InvoiceItemType.FIXED);
     }
 
@@ -62,17 +63,17 @@ public class FixedPriceInvoiceItem extends InvoiceItemBase {
     }
 
     @Override
-    public int compareTo(InvoiceItem item) {
+    public int compareTo(final InvoiceItem item) {
         if (!(item instanceof FixedPriceInvoiceItem)) {
             return 1;
         }
 
-        FixedPriceInvoiceItem that = (FixedPriceInvoiceItem) item;
-        int compareAccounts = getAccountId().compareTo(that.getAccountId());
+        final FixedPriceInvoiceItem that = (FixedPriceInvoiceItem) item;
+        final int compareAccounts = getAccountId().compareTo(that.getAccountId());
         if (compareAccounts == 0 && bundleId != null) {
-            int compareBundles = getBundleId().compareTo(that.getBundleId());
+            final int compareBundles = getBundleId().compareTo(that.getBundleId());
             if (compareBundles == 0 && subscriptionId != null) {
-                int compareSubscriptions = getSubscriptionId().compareTo(that.getSubscriptionId());
+                final int compareSubscriptions = getSubscriptionId().compareTo(that.getSubscriptionId());
                 if (compareSubscriptions == 0) {
                     return getStartDate().compareTo(that.getStartDate());
                 } else {
@@ -88,7 +89,7 @@ public class FixedPriceInvoiceItem extends InvoiceItemBase {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
+        final StringBuilder sb = new StringBuilder();
         sb.append("InvoiceItem = {").append("id = ").append(id.toString()).append(", ");
         sb.append("invoiceId = ").append(invoiceId.toString()).append(", ");
         sb.append("accountId = ").append(accountId.toString()).append(", ");
@@ -111,22 +112,42 @@ public class FixedPriceInvoiceItem extends InvoiceItemBase {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
-        FixedPriceInvoiceItem that = (FixedPriceInvoiceItem) o;
-        if (accountId.compareTo(that.accountId) != 0) return false;
-        if (subscriptionId != null ? !subscriptionId.equals(that.subscriptionId) : that.subscriptionId != null)
+        final FixedPriceInvoiceItem that = (FixedPriceInvoiceItem) o;
+        if (accountId.compareTo(that.accountId) != 0) {
             return false;
-        if (bundleId != null ? !bundleId.equals(that.bundleId) : that.bundleId != null)
+        }
+        if (subscriptionId != null ? !subscriptionId.equals(that.subscriptionId) : that.subscriptionId != null) {
             return false;
-        if (amount != null ? amount.compareTo(that.amount) != 0 : that.amount != null) return false;
-        if (currency != that.currency) return false;
-        if (startDate != null ? startDate.compareTo(that.startDate) != 0 : that.startDate != null) return false;
-        if (endDate != null ? endDate.compareTo(that.endDate) != 0 : that.endDate != null) return false;
-        if (phaseName != null ? !phaseName.equals(that.phaseName) : that.phaseName != null) return false;
-        if (planName != null ? !planName.equals(that.planName) : that.planName != null) return false;
+        }
+        if (bundleId != null ? !bundleId.equals(that.bundleId) : that.bundleId != null) {
+            return false;
+        }
+        if (amount != null ? amount.compareTo(that.amount) != 0 : that.amount != null) {
+            return false;
+        }
+        if (currency != that.currency) {
+            return false;
+        }
+        if (startDate != null ? startDate.compareTo(that.startDate) != 0 : that.startDate != null) {
+            return false;
+        }
+        if (endDate != null ? endDate.compareTo(that.endDate) != 0 : that.endDate != null) {
+            return false;
+        }
+        if (phaseName != null ? !phaseName.equals(that.phaseName) : that.phaseName != null) {
+            return false;
+        }
+        if (planName != null ? !planName.equals(that.planName) : that.planName != null) {
+            return false;
+        }
 
         return true;
     }

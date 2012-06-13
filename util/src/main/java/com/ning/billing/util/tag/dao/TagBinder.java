@@ -26,6 +26,7 @@ import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.sqlobject.Binder;
 import org.skife.jdbi.v2.sqlobject.BinderFactory;
 import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
+
 import com.ning.billing.util.tag.Tag;
 
 @BindingAnnotation(TagBinder.TagBinderFactory.class)
@@ -33,9 +34,9 @@ import com.ning.billing.util.tag.Tag;
 @Target({ElementType.PARAMETER})
 public @interface TagBinder {
     public static class TagBinderFactory implements BinderFactory {
-        public Binder build(Annotation annotation) {
+        public Binder build(final Annotation annotation) {
             return new Binder<TagBinder, Tag>() {
-                public void bind(SQLStatement q, TagBinder bind, Tag tag) {
+                public void bind(final SQLStatement q, final TagBinder bind, final Tag tag) {
                     q.bind("id", tag.getId().toString());
                     q.bind("tagDefinitionName", tag.getTagDefinitionName());
                 }

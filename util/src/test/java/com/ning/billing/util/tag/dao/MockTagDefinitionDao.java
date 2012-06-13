@@ -21,8 +21,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.api.TagDefinitionApiException;
+import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.tag.DefaultTagDefinition;
 import com.ning.billing.util.tag.TagDefinition;
 
@@ -42,15 +42,10 @@ public class MockTagDefinitionDao implements TagDefinitionDao {
     @Override
     public TagDefinition create(final String definitionName, final String description,
                                 final CallContext context) throws TagDefinitionApiException {
-        TagDefinition tag = new DefaultTagDefinition(definitionName, description, false);
+        final TagDefinition tag = new DefaultTagDefinition(definitionName, description, false);
 
         tags.put(definitionName, tag);
         return tag;
-    }
-
-    @Override
-    public void deleteAllTagsForDefinition(final String definitionName, final CallContext context) throws TagDefinitionApiException {
-        tags.remove(definitionName);
     }
 
     @Override

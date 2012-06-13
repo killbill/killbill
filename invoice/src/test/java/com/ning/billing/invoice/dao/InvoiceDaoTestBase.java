@@ -16,21 +16,8 @@
 
 package com.ning.billing.invoice.dao;
 
-import static org.testng.Assert.assertTrue;
-
 import java.io.IOException;
 
-import com.ning.billing.dbi.MysqlTestingHelper;
-import com.ning.billing.invoice.notification.MockNextBillingDatePoster;
-import com.ning.billing.invoice.notification.NextBillingDatePoster;
-import com.ning.billing.util.api.TagUserApi;
-import com.ning.billing.util.callcontext.TestCallContext;
-import com.ning.billing.util.clock.ClockMock;
-import com.ning.billing.util.tag.api.DefaultTagUserApi;
-import com.ning.billing.util.tag.dao.AuditedTagDao;
-import com.ning.billing.util.tag.dao.MockTagDao;
-import com.ning.billing.util.tag.dao.MockTagDefinitionDao;
-import com.ning.billing.util.tag.dao.TagDao;
 import org.apache.commons.io.IOUtils;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
@@ -41,14 +28,31 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
 import com.ning.billing.config.InvoiceConfig;
+import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.invoice.model.DefaultInvoiceGenerator;
 import com.ning.billing.invoice.model.InvoiceGenerator;
+import com.ning.billing.invoice.notification.MockNextBillingDatePoster;
+import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.invoice.tests.InvoicingTestBase;
+import com.ning.billing.util.api.TagUserApi;
+import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.bus.InMemoryBus;
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.TestCallContext;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.tag.api.DefaultTagUserApi;
+import com.ning.billing.util.tag.api.user.TagEventBuilder;
+import com.ning.billing.util.tag.dao.AuditedTagDao;
+import com.ning.billing.util.tag.dao.MockTagDefinitionDao;
+import com.ning.billing.util.tag.dao.TagDao;
 import com.ning.billing.util.tag.dao.TagDefinitionDao;
 
+import static org.testng.Assert.assertTrue;
+
 public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
+    protected final TagEventBuilder tagEventBuilder = new TagEventBuilder();
+
     protected IDBI dbi;
     private MysqlTestingHelper mysqlTestingHelper;
     protected InvoiceDao invoiceDao;
@@ -59,14 +63,23 @@ public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
     protected Clock clock;
     protected CallContext context;
     protected InvoiceGenerator generator;
+    protected Bus bus;
 
     private final InvoiceConfig invoiceConfig = new InvoiceConfig() {
         @Override
-        public long getSleepTimeMs() {throw new UnsupportedOperationException();}
+        public long getSleepTimeMs() {
+            throw new UnsupportedOperationException();
+        }
+
         @Override
-        public boolean isNotificationProcessingOff() {throw new UnsupportedOperationException();}
+        public boolean isNotificationProcessingOff() {
+            throw new UnsupportedOperationException();
+        }
+
         @Override
-        public int getNumberOfMonthsInFuture() {return 36;}
+        public int getNumberOfMonthsInFuture() {
+            return 36;
+        }
     };
 
     @BeforeClass(alwaysRun = true)
@@ -81,9 +94,9 @@ public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
         mysqlTestingHelper.initDb(invoiceDdl);
         mysqlTestingHelper.initDb(utilDdl);
 
-        NextBillingDatePoster nextBillingDatePoster = new MockNextBillingDatePoster();
+        final NextBillingDatePoster nextBillingDatePoster = new MockNextBillingDatePoster();
         final TagDefinitionDao tagDefinitionDao = new MockTagDefinitionDao();
-        final TagDao tagDao = new AuditedTagDao(dbi);
+        final TagDao tagDao = new AuditedTagDao(dbi, tagEventBuilder, bus);
         final TagUserApi tagUserApi = new DefaultTagUserApi(tagDefinitionDao, tagDao);
         invoiceDao = new DefaultInvoiceDao(dbi, nextBillingDatePoster, tagUserApi);
         invoiceDao.test();
@@ -96,6 +109,8 @@ public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
         clock = new ClockMock();
         context = new TestCallContext("Invoice Dao Tests");
         generator = new DefaultInvoiceGenerator(clock, invoiceConfig);
+        bus = new InMemoryBus();
+        bus.start();
 
         assertTrue(true);
     }
@@ -104,7 +119,7 @@ public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
     public void cleanupData() {
         dbi.inTransaction(new TransactionCallback<Void>() {
             @Override
-            public Void inTransaction(Handle h, TransactionStatus status)
+            public Void inTransaction(final Handle h, final TransactionStatus status)
                     throws Exception {
                 h.execute("truncate table invoices");
                 h.execute("truncate table fixed_invoice_items");
@@ -119,6 +134,7 @@ public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
 
     @AfterClass(alwaysRun = true)
     protected void tearDown() {
+        bus.stop();
         mysqlTestingHelper.stopMysql();
         assertTrue(true);
     }

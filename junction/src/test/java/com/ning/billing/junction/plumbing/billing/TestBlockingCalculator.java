@@ -30,6 +30,7 @@ import java.util.TreeSet;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -557,11 +558,12 @@ public class TestBlockingCalculator {
         final BillingPeriod billingPeriod = BillingPeriod.MONTHLY;
         final SubscriptionTransitionType type = SubscriptionTransitionType.CHANGE;
         final Long totalOrdering = 0L; 
+        final DateTimeZone tz = DateTimeZone.UTC;
 
         return new DefaultBillingEvent(account, subscription, effectiveDate, plan, planPhase,
                 fixedPrice, recurringPrice, currency,
                 billingPeriod, billCycleDay, billingModeType,
-                description, totalOrdering, type);
+                description, totalOrdering, type, tz);
     }
 
 
@@ -629,7 +631,7 @@ public class TestBlockingCalculator {
     private class MockBillingEvent extends DefaultBillingEvent {
         public MockBillingEvent() {
             super(account, subscription1, clock.getUTCNow(), null, null, BigDecimal.ZERO, BigDecimal.TEN, Currency.USD, BillingPeriod.ANNUAL,
-                    4, BillingModeType.IN_ADVANCE, "", 3L, SubscriptionTransitionType.CREATE);
+                    4, BillingModeType.IN_ADVANCE, "", 3L, SubscriptionTransitionType.CREATE, DateTimeZone.UTC);
         }        
     }
 

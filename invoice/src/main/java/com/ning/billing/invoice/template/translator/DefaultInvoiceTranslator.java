@@ -16,21 +16,21 @@
 
 package com.ning.billing.invoice.template.translator;
 
+import java.util.Locale;
+
 import com.google.inject.Inject;
 import com.ning.billing.util.template.translation.DefaultTranslatorBase;
 import com.ning.billing.util.template.translation.TranslatorConfig;
-
-import java.util.Locale;
 
 public class DefaultInvoiceTranslator extends DefaultTranslatorBase implements InvoiceStrings {
     private Locale locale;
 
     @Inject
-    public DefaultInvoiceTranslator(TranslatorConfig config) {
+    public DefaultInvoiceTranslator(final TranslatorConfig config) {
         super(config);
     }
 
-    public void setLocale(Locale locale) {
+    public void setLocale(final Locale locale) {
         this.locale = locale;
     }
 

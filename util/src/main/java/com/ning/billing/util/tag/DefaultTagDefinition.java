@@ -17,24 +17,31 @@
 package com.ning.billing.util.tag;
 
 import java.util.UUID;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ning.billing.util.entity.EntityBase;
 
 public class DefaultTagDefinition extends EntityBase implements TagDefinition {
     private final String name;
     private final String description;
-    private final Boolean isControlTag;
+    private final Boolean controlTag;
 
-    public DefaultTagDefinition(String name, String description, Boolean isControlTag) {
+    public DefaultTagDefinition(final String name, final String description, final Boolean isControlTag) {
         this(UUID.randomUUID(), name, description, isControlTag);
     }
 
-    public DefaultTagDefinition(UUID id, String name, String description, Boolean isControlTag) {
+    @JsonCreator
+    public DefaultTagDefinition(@JsonProperty("id") final UUID id,
+                                @JsonProperty("name") final String name,
+                                @JsonProperty("description") final String description,
+                                @JsonProperty("controlTag") final Boolean controlTag) {
         super(id);
         this.name = name;
         this.description = description;
-        this.isControlTag = isControlTag;
+        this.controlTag = controlTag;
     }
-    
+
     @Override
     public String getName() {
         return name;
@@ -47,6 +54,49 @@ public class DefaultTagDefinition extends EntityBase implements TagDefinition {
 
     @Override
     public Boolean isControlTag() {
-        return isControlTag;
+        return controlTag;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append("DefaultTagDefinition");
+        sb.append("{description='").append(description).append('\'');
+        sb.append(", name='").append(name).append('\'');
+        sb.append(", controlTag=").append(controlTag);
+        sb.append('}');
+        return sb.toString();
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        final DefaultTagDefinition that = (DefaultTagDefinition) o;
+
+        if (description != null ? !description.equals(that.description) : that.description != null) {
+            return false;
+        }
+        if (controlTag != null ? !controlTag.equals(that.controlTag) : that.controlTag != null) {
+            return false;
+        }
+        if (name != null ? !name.equals(that.name) : that.name != null) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = name != null ? name.hashCode() : 0;
+        result = 31 * result + (description != null ? description.hashCode() : 0);
+        result = 31 * result + (controlTag != null ? controlTag.hashCode() : 0);
+        return result;
     }
 }

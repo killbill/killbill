@@ -16,19 +16,19 @@
 
 package com.ning.billing.util.tag.dao;
 
-import com.ning.billing.util.dao.EntityHistory;
-import com.ning.billing.util.dao.MappedEntity;
-import com.ning.billing.util.tag.Tag;
-import org.skife.jdbi.v2.SQLStatement;
-import org.skife.jdbi.v2.sqlobject.Binder;
-import org.skife.jdbi.v2.sqlobject.BinderFactory;
-import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
-
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+
+import org.skife.jdbi.v2.SQLStatement;
+import org.skife.jdbi.v2.sqlobject.Binder;
+import org.skife.jdbi.v2.sqlobject.BinderFactory;
+import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
+
+import com.ning.billing.util.dao.EntityHistory;
+import com.ning.billing.util.tag.Tag;
 
 @BindingAnnotation(TagHistoryBinder.TagHistoryBinderFactory.class)
 @Retention(RetentionPolicy.RUNTIME)
@@ -36,10 +36,10 @@ import java.lang.annotation.Target;
 public @interface TagHistoryBinder {
     public static class TagHistoryBinderFactory implements BinderFactory {
         @Override
-        public Binder build(Annotation annotation) {
+        public Binder build(final Annotation annotation) {
             return new Binder<TagHistoryBinder, EntityHistory<Tag>>() {
                 @Override
-                public void bind(SQLStatement q, TagHistoryBinder bind, EntityHistory<Tag> tagHistory) {
+                public void bind(final SQLStatement q, final TagHistoryBinder bind, final EntityHistory<Tag> tagHistory) {
                     q.bind("recordId", tagHistory.getValue());
                     q.bind("changeType", tagHistory.getChangeType().toString());
                     q.bind("id", tagHistory.getId().toString());

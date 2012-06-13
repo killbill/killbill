@@ -25,7 +25,7 @@ public class DefaultInvoiceTestApi implements InvoiceTestApi {
     private final InvoiceDao invoiceDao;
 
     @Inject
-    public DefaultInvoiceTestApi(InvoiceDao invoiceDao) {
+    public DefaultInvoiceTestApi(final InvoiceDao invoiceDao) {
         this.invoiceDao = invoiceDao;
     }
 

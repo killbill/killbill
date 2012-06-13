@@ -16,9 +16,6 @@
 
 package com.ning.billing.invoice.tests;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.fail;
-
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -29,13 +26,17 @@ import com.ning.billing.invoice.model.BillingMode;
 import com.ning.billing.invoice.model.InvalidDateSequenceException;
 import com.ning.billing.invoice.model.RecurringInvoiceItemData;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.fail;
+
 public abstract class ProRationTestBase extends InvoicingTestBase {
     protected abstract BillingMode getBillingMode();
+
     protected abstract BillingPeriod getBillingPeriod();
 
-    protected void testCalculateNumberOfBillingCycles(DateTime startDate, DateTime targetDate, int billingCycleDay, BigDecimal expectedValue) throws InvalidDateSequenceException {
+    protected void testCalculateNumberOfBillingCycles(final DateTime startDate, final DateTime targetDate, final int billingCycleDay, final BigDecimal expectedValue) throws InvalidDateSequenceException {
         try {
-            BigDecimal numberOfBillingCycles;
+            final BigDecimal numberOfBillingCycles;
             numberOfBillingCycles = calculateNumberOfBillingCycles(startDate, targetDate, billingCycleDay);
 
             assertEquals(numberOfBillingCycles.compareTo(expectedValue), 0, "Actual: " + numberOfBillingCycles.toString() + "; expected: " + expectedValue.toString());
@@ -46,9 +47,9 @@ public abstract class ProRationTestBase extends InvoicingTestBase {
         }
     }
 
-    protected void testCalculateNumberOfBillingCycles(DateTime startDate, DateTime endDate, DateTime targetDate, int billingCycleDay, BigDecimal expectedValue) throws InvalidDateSequenceException {
+    protected void testCalculateNumberOfBillingCycles(final DateTime startDate, final DateTime endDate, final DateTime targetDate, final int billingCycleDay, final BigDecimal expectedValue) throws InvalidDateSequenceException {
         try {
-            BigDecimal numberOfBillingCycles;
+            final BigDecimal numberOfBillingCycles;
             numberOfBillingCycles = calculateNumberOfBillingCycles(startDate, endDate, targetDate, billingCycleDay);
 
             assertEquals(numberOfBillingCycles.compareTo(expectedValue), 0);
@@ -59,22 +60,22 @@ public abstract class ProRationTestBase extends InvoicingTestBase {
         }
     }
 
-    protected BigDecimal calculateNumberOfBillingCycles(DateTime startDate, DateTime endDate, DateTime targetDate, int billingCycleDay) throws InvalidDateSequenceException {
-        List<RecurringInvoiceItemData> items = getBillingMode().calculateInvoiceItemData(startDate, endDate, targetDate, billingCycleDay, getBillingPeriod());
+    protected BigDecimal calculateNumberOfBillingCycles(final DateTime startDate, final DateTime endDate, final DateTime targetDate, final int billingCycleDay) throws InvalidDateSequenceException {
+        final List<RecurringInvoiceItemData> items = getBillingMode().calculateInvoiceItemData(startDate, endDate, targetDate, billingCycleDay, getBillingPeriod());
 
         BigDecimal numberOfBillingCycles = ZERO;
-        for (RecurringInvoiceItemData item : items) {
+        for (final RecurringInvoiceItemData item : items) {
             numberOfBillingCycles = numberOfBillingCycles.add(item.getNumberOfCycles());
         }
 
         return numberOfBillingCycles.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
     }
 
-    protected BigDecimal calculateNumberOfBillingCycles(DateTime startDate, DateTime targetDate, int billingCycleDay) throws InvalidDateSequenceException {
-        List<RecurringInvoiceItemData> items = getBillingMode().calculateInvoiceItemData(startDate, targetDate, billingCycleDay, getBillingPeriod());
+    protected BigDecimal calculateNumberOfBillingCycles(final DateTime startDate, final DateTime targetDate, final int billingCycleDay) throws InvalidDateSequenceException {
+        final List<RecurringInvoiceItemData> items = getBillingMode().calculateInvoiceItemData(startDate, targetDate, billingCycleDay, getBillingPeriod());
 
         BigDecimal numberOfBillingCycles = ZERO;
-        for (RecurringInvoiceItemData item : items) {
+        for (final RecurringInvoiceItemData item : items) {
             numberOfBillingCycles = numberOfBillingCycles.add(item.getNumberOfCycles());
         }
 

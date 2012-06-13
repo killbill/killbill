@@ -22,7 +22,7 @@ import com.ning.billing.invoice.api.InvoiceNotifier;
 
 public class NullInvoiceNotifier implements InvoiceNotifier {
     @Override
-    public void notify(Account account, Invoice invoice) {
+    public void notify(final Account account, final Invoice invoice) {
         // deliberate no-op
     }
 }

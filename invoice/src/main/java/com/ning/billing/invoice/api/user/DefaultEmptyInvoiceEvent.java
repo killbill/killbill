@@ -18,22 +18,22 @@ package com.ning.billing.invoice.api.user;
 
 import java.util.UUID;
 
+import org.joda.time.DateTime;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.joda.time.DateTime;
-
 import com.ning.billing.invoice.api.EmptyInvoiceEvent;
 
 public class DefaultEmptyInvoiceEvent implements EmptyInvoiceEvent {
     private final UUID accountId;
     private final DateTime processingDate;
     private final UUID userToken;
-    
+
     @JsonCreator
     public DefaultEmptyInvoiceEvent(@JsonProperty("accountId") final UUID accountId,
-            @JsonProperty("processingDate") final DateTime processingDate,
-            @JsonProperty("userToken") final UUID userToken) {
+                                    @JsonProperty("processingDate") final DateTime processingDate,
+                                    @JsonProperty("userToken") final UUID userToken) {
         super();
         this.accountId = accountId;
         this.processingDate = processingDate;
@@ -73,31 +73,40 @@ public class DefaultEmptyInvoiceEvent implements EmptyInvoiceEvent {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
+    public boolean equals(final Object obj) {
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
-        DefaultEmptyInvoiceEvent other = (DefaultEmptyInvoiceEvent) obj;
+        }
+        final DefaultEmptyInvoiceEvent other = (DefaultEmptyInvoiceEvent) obj;
         if (accountId == null) {
-            if (other.accountId != null)
+            if (other.accountId != null) {
                 return false;
-        } else if (!accountId.equals(other.accountId))
+            }
+        } else if (!accountId.equals(other.accountId)) {
             return false;
+        }
         if (processingDate == null) {
-            if (other.processingDate != null)
+            if (other.processingDate != null) {
                 return false;
-        } else if (processingDate.compareTo(other.processingDate) != 0)
+            }
+        } else if (processingDate.compareTo(other.processingDate) != 0) {
             return false;
+        }
         if (userToken == null) {
-            if (other.userToken != null)
+            if (other.userToken != null) {
                 return false;
-        } else if (!userToken.equals(other.userToken))
+            }
+        } else if (!userToken.equals(other.userToken)) {
             return false;
+        }
         return true;
     }
-    
-    
+
+
 }

@@ -19,11 +19,13 @@ package com.ning.billing.util.tag;
 
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
+import org.skife.jdbi.v2.tweak.HandleCallback;
 
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.mock.glue.MockClockModule;
+import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.bus.InMemoryBus;
 import com.ning.billing.util.glue.TagStoreModule;
-import org.skife.jdbi.v2.tweak.HandleCallback;
 
 public class MockTagStoreModuleSql extends TagStoreModule {
     private MysqlTestingHelper helper;
@@ -34,13 +36,14 @@ public class MockTagStoreModuleSql extends TagStoreModule {
         bind(IDBI.class).toInstance(helper.getDBI());
         bind(MysqlTestingHelper.class).toInstance(helper);
         install(new MockClockModule());
+        bind(Bus.class).toInstance(new InMemoryBus());
         super.configure();
     }
 
     public void execute(final String ddl) {
         helper.getDBI().withHandle(new HandleCallback<Void>() {
             @Override
-            public Void withHandle(Handle handle) throws Exception {
+            public Void withHandle(final Handle handle) throws Exception {
                 handle.execute(ddl);
                 return null;
             }

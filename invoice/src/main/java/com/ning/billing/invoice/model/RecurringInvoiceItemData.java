@@ -16,16 +16,16 @@
 
 package com.ning.billing.invoice.model;
 
-import org.joda.time.DateTime;
-
 import java.math.BigDecimal;
+
+import org.joda.time.DateTime;
 
 public class RecurringInvoiceItemData {
     private final DateTime startDate;
     private final DateTime endDate;
     private final BigDecimal numberOfCycles;
 
-    public RecurringInvoiceItemData(DateTime startDate, DateTime endDate, BigDecimal numberOfCycles) {
+    public RecurringInvoiceItemData(final DateTime startDate, final DateTime endDate, final BigDecimal numberOfCycles) {
         this.startDate = startDate;
         this.endDate = endDate;
         this.numberOfCycles = numberOfCycles;

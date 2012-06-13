@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2012 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -14,15 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.util.tag.dao;
+package com.ning.billing.util.tag.api;
 
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.tag.ControlTagType;
-
-import java.util.UUID;
-
-public interface TaggableDao {
-    public void addControlTag(ControlTagType controlTagType, UUID objectId, CallContext context);
-
-    public void removeControlTag(ControlTagType controlTagType, UUID objectId, CallContext context);
+public interface ControlTagCreationEvent extends TagEvent {
 }

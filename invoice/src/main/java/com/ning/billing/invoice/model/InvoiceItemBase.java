@@ -16,15 +16,16 @@
 
 package com.ning.billing.invoice.model;
 
+import javax.annotation.Nullable;
+import java.math.BigDecimal;
+import java.util.UUID;
+
+import org.joda.time.DateTime;
+
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.util.entity.EntityBase;
-import org.joda.time.DateTime;
-
-import javax.annotation.Nullable;
-import java.math.BigDecimal;
-import java.util.UUID;
 
 public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem {
     protected final UUID invoiceId;
@@ -37,18 +38,18 @@ public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem 
     protected final DateTime endDate;
     protected final BigDecimal amount;
     protected final Currency currency;
-    protected InvoiceItemType invoiceItemType;
+    protected final InvoiceItemType invoiceItemType;
 
-    public InvoiceItemBase(UUID invoiceId, UUID accountId, UUID bundleId, UUID subscriptionId, String planName, String phaseName,
-            DateTime startDate, DateTime endDate, BigDecimal amount, Currency currency, InvoiceItemType invoiceItemType) {
+    public InvoiceItemBase(final UUID invoiceId, final UUID accountId, final UUID bundleId, final UUID subscriptionId, final String planName, final String phaseName,
+                           final DateTime startDate, final DateTime endDate, final BigDecimal amount, final Currency currency, final InvoiceItemType invoiceItemType) {
         this(UUID.randomUUID(), invoiceId, accountId, bundleId, subscriptionId, planName, phaseName,
-                startDate, endDate, amount, currency, invoiceItemType);
+             startDate, endDate, amount, currency, invoiceItemType);
     }
 
-    public InvoiceItemBase(UUID id, UUID invoiceId, UUID accountId, @Nullable UUID bundleId,
-                           @Nullable UUID subscriptionId, String planName, String phaseName,
-                           DateTime startDate, DateTime endDate, BigDecimal amount, Currency currency,
-                           InvoiceItemType invoiceItemType) {
+    public InvoiceItemBase(final UUID id, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
+                           @Nullable final UUID subscriptionId, @Nullable final String planName, @Nullable final String phaseName,
+                           final DateTime startDate, final DateTime endDate, final BigDecimal amount, final Currency currency,
+                           final InvoiceItemType invoiceItemType) {
         super(id);
         this.invoiceId = invoiceId;
         this.accountId = accountId;
@@ -72,7 +73,7 @@ public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem 
     public UUID getBundleId() {
         return bundleId;
     }
-    
+
     public UUID getAccountId() {
         return accountId;
     }

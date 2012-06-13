@@ -16,17 +16,19 @@
 
 package com.ning.billing.invoice.dao;
 
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.UUID;
+
+import org.joda.time.DateTime;
+
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
+import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.callcontext.CallContext;
-import org.joda.time.DateTime;
-
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.UUID;
 
 public interface InvoiceDao {
     void create(Invoice invoice, CallContext context);
@@ -53,11 +55,11 @@ public interface InvoiceDao {
 
     void test();
 
-	List<Invoice> getAllInvoicesByAccount(final UUID accountId);
+    List<Invoice> getAllInvoicesByAccount(final UUID accountId);
 
-    void setWrittenOff(final UUID invoiceId, final CallContext context);
+    void setWrittenOff(final UUID invoiceId, final CallContext context) throws TagApiException;
 
-    void removeWrittenOff(final UUID invoiceId, final CallContext context) throws InvoiceApiException;
+    void removeWrittenOff(final UUID invoiceId, final CallContext context) throws TagApiException;
 
     void postChargeback(final UUID invoicePaymentId, final BigDecimal amount, final CallContext context) throws InvoiceApiException;
 

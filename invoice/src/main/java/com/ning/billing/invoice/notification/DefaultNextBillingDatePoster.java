@@ -31,34 +31,34 @@ import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotificationQueue;
 
 public class DefaultNextBillingDatePoster implements NextBillingDatePoster {
-    
-    private final static Logger log = LoggerFactory.getLogger(DefaultNextBillingDatePoster.class);
 
-	private final NotificationQueueService notificationQueueService;
+    private static final Logger log = LoggerFactory.getLogger(DefaultNextBillingDatePoster.class);
 
-	@Inject
+    private final NotificationQueueService notificationQueueService;
+
+    @Inject
     public DefaultNextBillingDatePoster(
-			NotificationQueueService notificationQueueService) {
-		super();
-		this.notificationQueueService = notificationQueueService;
-	}
+            final NotificationQueueService notificationQueueService) {
+        super();
+        this.notificationQueueService = notificationQueueService;
+    }
 
-	@Override
-	public void insertNextBillingNotification(final Transmogrifier transactionalDao, final UUID subscriptionId, final DateTime futureNotificationTime) {
-    	NotificationQueue nextBillingQueue;
-		try {
-			nextBillingQueue = notificationQueueService.getNotificationQueue(DefaultInvoiceService.INVOICE_SERVICE_NAME,
-					DefaultNextBillingDateNotifier.NEXT_BILLING_DATE_NOTIFIER_QUEUE);
-			 log.info("Queuing next billing date notification. id: {}, timestamp: {}", subscriptionId.toString(), futureNotificationTime.toString());
+    @Override
+    public void insertNextBillingNotification(final Transmogrifier transactionalDao, final UUID subscriptionId, final DateTime futureNotificationTime) {
+        final NotificationQueue nextBillingQueue;
+        try {
+            nextBillingQueue = notificationQueueService.getNotificationQueue(DefaultInvoiceService.INVOICE_SERVICE_NAME,
+                                                                             DefaultNextBillingDateNotifier.NEXT_BILLING_DATE_NOTIFIER_QUEUE);
+            log.info("Queuing next billing date notification. id: {}, timestamp: {}", subscriptionId.toString(), futureNotificationTime.toString());
 
-	            nextBillingQueue.recordFutureNotificationFromTransaction(transactionalDao, futureNotificationTime, new NotificationKey(){
-	                @Override
-	                public String toString() {
-	                    return subscriptionId.toString();
-	                }
-	    	    });
-		} catch (NoSuchNotificationQueue e) {
-			log.error("Attempting to put items on a non-existent queue (NextBillingDateNotifier).", e);
-		}
+            nextBillingQueue.recordFutureNotificationFromTransaction(transactionalDao, futureNotificationTime, new NotificationKey() {
+                @Override
+                public String toString() {
+                    return subscriptionId.toString();
+                }
+            });
+        } catch (NoSuchNotificationQueue e) {
+            log.error("Attempting to put items on a non-existent queue (NextBillingDateNotifier).", e);
+        }
     }
 }

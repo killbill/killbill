@@ -16,7 +16,11 @@
 
 package com.ning.billing.invoice.tests;
 
+import javax.annotation.Nullable;
 import java.math.BigDecimal;
+
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -27,11 +31,7 @@ import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.billing.BillingEvent;
 import com.ning.billing.entitlement.api.billing.BillingModeType;
 import com.ning.billing.entitlement.api.user.Subscription;
-import org.joda.time.DateTime;
-
 import com.ning.billing.invoice.model.InvoicingConfiguration;
-
-import javax.annotation.Nullable;
 
 public abstract class InvoicingTestBase {
     protected static final int NUMBER_OF_DECIMALS = InvoicingConfiguration.getNumberOfDecimals();
@@ -80,7 +80,7 @@ public abstract class InvoicingTestBase {
     protected static final BigDecimal THREE_HUNDRED_AND_SIXTY_FIVE = new BigDecimal("365.0").setScale(NUMBER_OF_DECIMALS);
     protected static final BigDecimal THREE_HUNDRED_AND_SIXTY_SIX = new BigDecimal("366.0").setScale(NUMBER_OF_DECIMALS);
 
-    protected DateTime buildDateTime(int year, int month, int day) {
+    protected DateTime buildDateTime(final int year, final int month, final int day) {
         return new DateTime(year, month, day, 0, 0, 0, 0);
     }
 
@@ -97,64 +97,83 @@ public abstract class InvoicingTestBase {
             public Account getAccount() {
                 return account;
             }
+
             @Override
             public int getBillCycleDay() {
                 return billCycleDay;
             }
+
             @Override
             public Subscription getSubscription() {
                 return subscription;
             }
+
             @Override
             public DateTime getEffectiveDate() {
                 return effectiveDate;
             }
+
             @Override
             public PlanPhase getPlanPhase() {
                 return planPhase;
             }
+
             @Override
             public Plan getPlan() {
                 return plan;
             }
+
             @Override
             public BillingPeriod getBillingPeriod() {
                 return billingPeriod;
             }
+
             @Override
             public BillingModeType getBillingMode() {
                 return billingModeType;
             }
+
             @Override
             public String getDescription() {
                 return description;
             }
+
             @Override
             public BigDecimal getFixedPrice() {
                 return fixedPrice;
             }
+
             @Override
             public BigDecimal getRecurringPrice() {
                 return recurringPrice;
             }
+
             @Override
             public Currency getCurrency() {
                 return currency;
             }
+
             @Override
             public SubscriptionTransitionType getTransitionType() {
                 return type;
             }
+
             @Override
             public Long getTotalOrdering() {
                 return totalOrdering;
             }
+
             @Override
-            public int compareTo(BillingEvent e1) {
+            public DateTimeZone getTimeZone() {
+                return DateTimeZone.UTC;
+            }
+
+            @Override
+            public int compareTo(final BillingEvent e1) {
                 if (!getSubscription().getId().equals(e1.getSubscription().getId())) { // First order by subscription
                     return getSubscription().getId().compareTo(e1.getSubscription().getId());
                 } else { // subscriptions are the same
-                    if (! getEffectiveDate().equals(e1.getEffectiveDate())) { // Secondly order by date
+                    if (!getEffectiveDate().equals(e1.getEffectiveDate())) { // Secondly order by date
                         return getEffectiveDate().compareTo(e1.getEffectiveDate());
                     } else { // dates and subscriptions are the same
                         return getTotalOrdering().compareTo(e1.getTotalOrdering());

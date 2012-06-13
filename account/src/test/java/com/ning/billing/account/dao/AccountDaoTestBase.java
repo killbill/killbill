@@ -40,14 +40,17 @@ import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.tag.api.user.TagEventBuilder;
 
 public abstract class AccountDaoTestBase {
     private final MysqlTestingHelper helper = new MysqlTestingHelper();
 
+    protected final TagEventBuilder tagEventBuilder = new TagEventBuilder();
+
     protected AccountDao accountDao;
     protected AccountEmailDao accountEmailDao;
     protected IDBI dbi;
-
+    protected Bus bus;
     protected CallContext context;
 
     @BeforeClass(alwaysRun = true)
@@ -63,7 +66,7 @@ public abstract class AccountDaoTestBase {
 
             dbi = helper.getDBI();
 
-            Bus bus = new InMemoryBus();
+            bus = new InMemoryBus();
             BusService busService = new DefaultBusService(bus);
             ((DefaultBusService) busService).startBus();
 

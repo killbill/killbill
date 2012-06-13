@@ -39,6 +39,7 @@ import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.util.ChangeType;
+import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.dao.EntityAudit;
@@ -51,7 +52,6 @@ public class DefaultInvoiceDao implements InvoiceDao {
     private final InvoicePaymentSqlDao invoicePaymentSqlDao;
     private final CreditInvoiceItemSqlDao creditInvoiceItemSqlDao;
     private final TagUserApi tagUserApi;
-
     private final NextBillingDatePoster nextBillingDatePoster;
 
     @Inject
@@ -139,7 +139,6 @@ public class DefaultInvoiceDao implements InvoiceDao {
 
     @Override
     public void create(final Invoice invoice, final CallContext context) {
-
         invoiceSqlDao.inTransaction(new Transaction<Void, InvoiceSqlDao>() {
             @Override
             public Void inTransaction(final InvoiceSqlDao transactional, final TransactionStatus status) throws Exception {
@@ -260,12 +259,12 @@ public class DefaultInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public void setWrittenOff(final UUID invoiceId, final CallContext context) {
+    public void setWrittenOff(final UUID invoiceId, final CallContext context) throws TagApiException {
         tagUserApi.addTag(invoiceId, ObjectType.INVOICE, ControlTagType.WRITTEN_OFF.toTagDefinition(), context);
     }
 
     @Override
-    public void removeWrittenOff(final UUID invoiceId, final CallContext context) throws InvoiceApiException {
+    public void removeWrittenOff(final UUID invoiceId, final CallContext context) throws TagApiException {
         tagUserApi.removeTag(invoiceId, ObjectType.INVOICE, ControlTagType.WRITTEN_OFF.toTagDefinition(), context);
     }
 

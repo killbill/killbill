@@ -27,7 +27,6 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.UUID;
 
-import com.ning.billing.util.dao.MapperBase;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
@@ -47,6 +46,7 @@ import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextBinder;
+import com.ning.billing.util.dao.MapperBase;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 
 @ExternalizedSqlViaStringTemplate3()
@@ -77,10 +77,10 @@ public interface RecurringInvoiceItemSqlDao extends EntitySqlDao<InvoiceItem> {
     public @interface RecurringInvoiceItemBinder {
         public static class InvoiceItemBinderFactory implements BinderFactory {
             @Override
-            public Binder build(Annotation annotation) {
+            public Binder build(final Annotation annotation) {
                 return new Binder<RecurringInvoiceItemBinder, RecurringInvoiceItem>() {
                     @Override
-                    public void bind(SQLStatement q, RecurringInvoiceItemBinder bind, RecurringInvoiceItem item) {
+                    public void bind(final SQLStatement q, final RecurringInvoiceItemBinder bind, final RecurringInvoiceItem item) {
                         q.bind("id", item.getId().toString());
                         q.bind("invoiceId", item.getInvoiceId().toString());
                         q.bind("accountId", item.getAccountId().toString());
@@ -102,23 +102,23 @@ public interface RecurringInvoiceItemSqlDao extends EntitySqlDao<InvoiceItem> {
 
     public static class RecurringInvoiceItemMapper extends MapperBase implements ResultSetMapper<InvoiceItem> {
         @Override
-        public InvoiceItem map(int index, ResultSet result, StatementContext context) throws SQLException {
-            UUID id = getUUID(result, "id");
-            UUID invoiceId = getUUID(result, "invoice_id");
-            UUID accountId = getUUID(result, "account_id");
-            UUID subscriptionId = getUUID(result, "subscription_id");
-            UUID bundleId = getUUID(result, "bundle_id");
-            String planName = result.getString("plan_name");
-            String phaseName = result.getString("phase_name");
-            DateTime startDate = getDate(result, "start_date");
-            DateTime endDate = getDate(result, "end_date");
-            BigDecimal amount = result.getBigDecimal("amount");
-            BigDecimal rate = result.getBigDecimal("rate");
-            Currency currency = Currency.valueOf(result.getString("currency"));
-            UUID reversedItemId = getUUID(result, "reversed_item_id");
+        public InvoiceItem map(final int index, final ResultSet result, final StatementContext context) throws SQLException {
+            final UUID id = getUUID(result, "id");
+            final UUID invoiceId = getUUID(result, "invoice_id");
+            final UUID accountId = getUUID(result, "account_id");
+            final UUID subscriptionId = getUUID(result, "subscription_id");
+            final UUID bundleId = getUUID(result, "bundle_id");
+            final String planName = result.getString("plan_name");
+            final String phaseName = result.getString("phase_name");
+            final DateTime startDate = getDate(result, "start_date");
+            final DateTime endDate = getDate(result, "end_date");
+            final BigDecimal amount = result.getBigDecimal("amount");
+            final BigDecimal rate = result.getBigDecimal("rate");
+            final Currency currency = Currency.valueOf(result.getString("currency"));
+            final UUID reversedItemId = getUUID(result, "reversed_item_id");
 
             return new RecurringInvoiceItem(id, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate,
-                    amount, rate, currency, reversedItemId);
+                                            amount, rate, currency, reversedItemId);
 
         }
     }

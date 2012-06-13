@@ -25,52 +25,42 @@ import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;
 
-// TODO: add ability to create, update and remove tags
 public interface TagUserApi {
-    /***
-     *
+    /**
      * @return the list of all available tag definitions
      */
     public List<TagDefinition> getTagDefinitions();
 
-    /***
-     *
+    /**
      * @param definitionName Identifies the definition.
-     * @param description Describes the use of the definition.
-     * @param context The call context, for auditing purposes
+     * @param description    Describes the use of the definition.
+     * @param context        The call context, for auditing purposes
      * @return the newly created tag definition
      * @throws TagDefinitionApiException
      */
     public TagDefinition create(String definitionName, String description, CallContext context) throws TagDefinitionApiException;
 
-    /***
-     *
+    /**
      * @param definitionName Identifies the definition.
-     * @param context The call context, for auditing purposes
-     * @throws TagDefinitionApiException
-     */
-    public void deleteAllTagsForDefinition(String definitionName, CallContext context) throws TagDefinitionApiException;
-
-    /***
-     *
-     * @param definitionName Identifies the definition.
-     * @param context The call context, for auditing purposes
+     * @param context        The call context, for auditing purposes
      * @throws TagDefinitionApiException
      */
     public void deleteTagDefinition(String definitionName, CallContext context) throws TagDefinitionApiException;
 
-	/**
-	 *
-	 * @param name
-	 * @return the tag with this definition
+    /**
+     * @param name
+     * @return the tag with this definition
      * @throws TagDefinitionApiException
-	 */
-	public TagDefinition getTagDefinition(String name) throws TagDefinitionApiException;
+     */
+    public TagDefinition getTagDefinition(String name) throws TagDefinitionApiException;
 
-    public void addTags(UUID objectId, ObjectType objectType, List<TagDefinition> tagDefinitions, CallContext context);
-    public void addTag(UUID objectId, ObjectType objectType, TagDefinition tagDefinition, CallContext context);
-    public void removeTags(UUID objectId, ObjectType objectType, List<TagDefinition> tagDefinitions, CallContext context);
-    public void removeTag(UUID objectId, ObjectType objectType, TagDefinition tagDefinition, CallContext context);
+    public void addTags(UUID objectId, ObjectType objectType, List<TagDefinition> tagDefinitions, CallContext context) throws TagApiException;
+
+    public void addTag(UUID objectId, ObjectType objectType, TagDefinition tagDefinition, CallContext context) throws TagApiException;
+
+    public void removeTags(UUID objectId, ObjectType objectType, List<TagDefinition> tagDefinitions, CallContext context) throws TagApiException;
+
+    public void removeTag(UUID objectId, ObjectType objectType, TagDefinition tagDefinition, CallContext context) throws TagApiException;
 
     public Map<String, Tag> getTags(UUID objectId, ObjectType objectType);
 }

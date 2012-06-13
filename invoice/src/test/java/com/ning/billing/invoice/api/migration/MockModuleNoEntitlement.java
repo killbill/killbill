@@ -39,24 +39,24 @@ public class MockModuleNoEntitlement extends MockModule {
 //        ((ZombieControl)cta).addResult("setChargedThroughDateFromTransaction", BrainDeadProxyFactory.ZOMBIE_VOID);
 //	}
 
-	@Override
-	protected void installInvoiceModule() {
-		install(new DefaultInvoiceModule(){
+    @Override
+    protected void installInvoiceModule() {
+        install(new DefaultInvoiceModule() {
 
-			@Override
-			protected void installNotifiers() {
-				 bind(NextBillingDateNotifier.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(NextBillingDateNotifier.class));
-				 NextBillingDatePoster poster = BrainDeadProxyFactory.createBrainDeadProxyFor(NextBillingDatePoster.class);
-				 ((ZombieControl)poster).addResult("insertNextBillingNotification",BrainDeadProxyFactory.ZOMBIE_VOID);
-			     bind(NextBillingDatePoster.class).toInstance(poster);
+            @Override
+            protected void installNotifiers() {
+                bind(NextBillingDateNotifier.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(NextBillingDateNotifier.class));
+                final NextBillingDatePoster poster = BrainDeadProxyFactory.createBrainDeadProxyFor(NextBillingDatePoster.class);
+                ((ZombieControl) poster).addResult("insertNextBillingNotification", BrainDeadProxyFactory.ZOMBIE_VOID);
+                bind(NextBillingDatePoster.class).toInstance(poster);
                 bind(InvoiceNotifier.class).to(NullInvoiceNotifier.class).asEagerSingleton();
-			}
-			
-			
-		});
+            }
+
+
+        });
         install(new TemplateModule());
 
-		
-	}
+
+    }
 
 }

@@ -22,17 +22,16 @@ public class DateRange {
     private final DateTime startDate;
     private final DateTime endDate;
 
-    public DateRange(DateTime startDate, DateTime endDate) {
+    public DateRange(final DateTime startDate, final DateTime endDate) {
         this.startDate = startDate;
         this.endDate = endDate;
     }
 
     /**
-     *
      * @param date the DateTime in question
      * @return whether the DateRange contains (inclusively) the DateTime in question
      */
-    public boolean contains(DateTime date) {
+    public boolean contains(final DateTime date) {
         if (endDate == null) {
             return date.compareTo(startDate) >= 0;
         }
@@ -40,11 +39,11 @@ public class DateRange {
         return !date.isBefore(startDate) && !date.isAfter(endDate);
     }
 
-    public boolean overlaps(DateRange range) {
+    public boolean overlaps(final DateRange range) {
         return (this.contains(range.startDate) || this.contains(range.endDate));
     }
 
-    public DateRange calculateUnionWith(DateRange range) {
+    public DateRange calculateUnionWith(final DateRange range) {
         if (this.contains(range.startDate) && this.contains(range.endDate)) {
             return this;
         }

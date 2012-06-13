@@ -43,6 +43,14 @@ getInvoicesBySubscription() ::= <<
   FROM invoices i
   LEFT JOIN recurring_invoice_items rii ON i.id = rii.invoice_id
   WHERE rii.subscription_id = :subscriptionId AND migrated = 'FALSE'
+  GROUP BY i.record_id, <invoiceFields("i.")>
+
+  UNION ALL
+
+  SELECT i.record_id as invoice_number, <invoiceFields("i.")>
+  FROM invoices i
+  LEFT JOIN fixed_invoice_items fii ON i.id = fii.invoice_id
+  WHERE fii.subscription_id = :subscriptionId AND migrated = 'FALSE'
   GROUP BY i.record_id, <invoiceFields("i.")>;
 >>
 

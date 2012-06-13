@@ -19,19 +19,26 @@ package com.ning.billing.util.bus;
 import java.util.UUID;
 
 public interface BusEvent {
-	
-	public enum BusEventType {
-		ACCOUNT_CREATE,
-		ACCOUNT_CHANGE,
-		SUBSCRIPTION_TRANSITION,
-		BUNDLE_REPAIR,
-		INVOICE_EMPTY,
-		INVOICE_CREATION,
-		PAYMENT_INFO,
-		PAYMENT_ERROR
-	}
+    public enum BusEventType {
+        ACCOUNT_CREATE,
+        ACCOUNT_CHANGE,
+        SUBSCRIPTION_TRANSITION,
+        BUNDLE_REPAIR,
+        INVOICE_EMPTY,
+        INVOICE_CREATION,
+        PAYMENT_INFO,
+        PAYMENT_ERROR,
+        CONTROL_TAG_CREATION,
+        CONTROL_TAG_DELETION,
+        USER_TAG_CREATION,
+        USER_TAG_DELETION,
+        CONTROL_TAGDEFINITION_CREATION,
+        CONTROL_TAGDEFINITION_DELETION,
+        USER_TAGDEFINITION_CREATION,
+        USER_TAGDEFINITION_DELETION
+    }
 
-	public BusEventType getBusEventType();
-	
-	public UUID getUserToken();
+    public BusEventType getBusEventType();
+
+    public UUID getUserToken();
 }

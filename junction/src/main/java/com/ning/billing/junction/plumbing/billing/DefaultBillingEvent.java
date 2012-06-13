@@ -19,6 +19,7 @@ package com.ning.billing.junction.plumbing.billing;
 import java.math.BigDecimal;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -27,7 +28,6 @@ import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
-
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.billing.BillingEvent;
 import com.ning.billing.entitlement.api.billing.BillingModeType;
@@ -49,6 +49,7 @@ public class DefaultBillingEvent implements BillingEvent {
     final private BillingPeriod billingPeriod;
     final private SubscriptionTransitionType type;
     final private Long totalOrdering;
+    final private DateTimeZone timeZone;
 
     public DefaultBillingEvent(Account account, SubscriptionEvent transition, Subscription subscription, int billCycleDay, Currency currency, Catalog catalog) throws CatalogApiException {
 
@@ -82,12 +83,13 @@ public class DefaultBillingEvent implements BillingEvent {
                 nextPhase.getBillingPeriod() : prevPhase.getBillingPeriod();
         type = transition.getTransitionType();
         totalOrdering = transition.getTotalOrdering();
+        timeZone = account.getTimeZone();
     }
 
     public DefaultBillingEvent(Account account, Subscription subscription, DateTime effectiveDate, Plan plan, PlanPhase planPhase,
                                BigDecimal fixedPrice, BigDecimal recurringPrice, Currency currency,
                                BillingPeriod billingPeriod, int billCycleDay, BillingModeType billingModeType,
-                               String description, long totalOrdering, SubscriptionTransitionType type) {
+                               String description, long totalOrdering, SubscriptionTransitionType type, DateTimeZone timeZone) {
         this.account = account;
         this.subscription = subscription;
         this.effectiveDate = effectiveDate;
@@ -102,6 +104,7 @@ public class DefaultBillingEvent implements BillingEvent {
         this.description = description;
         this.type = type;
         this.totalOrdering = totalOrdering;
+        this.timeZone = timeZone;
     }
 
 
@@ -264,5 +267,10 @@ public class DefaultBillingEvent implements BillingEvent {
         result = 31 * result + type.hashCode();
         result = 31 * result + totalOrdering.hashCode();
         return result;
+    }
+
+    @Override
+    public DateTimeZone getTimeZone() {
+        return timeZone;
     }
 }

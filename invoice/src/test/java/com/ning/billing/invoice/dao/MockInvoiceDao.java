@@ -23,12 +23,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.invoice.api.InvoiceApiException;
 import org.joda.time.DateTime;
 
 import com.google.inject.Inject;
+import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.user.DefaultInvoiceCreationEvent;
@@ -41,7 +41,7 @@ public class MockInvoiceDao implements InvoiceDao {
     private final Map<UUID, Invoice> invoices = new LinkedHashMap<UUID, Invoice>();
 
     @Inject
-    public MockInvoiceDao(Bus eventBus) {
+    public MockInvoiceDao(final Bus eventBus) {
         this.eventBus = eventBus;
     }
 
@@ -52,16 +52,15 @@ public class MockInvoiceDao implements InvoiceDao {
         }
         try {
             eventBus.post(new DefaultInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
-                                                                 invoice.getBalance(), invoice.getCurrency(),
-                                                                 invoice.getInvoiceDate(), null));
-        }
-        catch (Bus.EventBusException ex) {
+                                                          invoice.getBalance(), invoice.getCurrency(),
+                                                          invoice.getInvoiceDate(), null));
+        } catch (Bus.EventBusException ex) {
             throw new RuntimeException(ex);
         }
     }
 
     @Override
-    public Invoice getById(UUID id) {
+    public Invoice getById(final UUID id) {
         synchronized (monitor) {
             return invoices.get(id);
         }
@@ -75,11 +74,11 @@ public class MockInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public List<Invoice> getInvoicesByAccount(UUID accountId) {
-        List<Invoice> result = new ArrayList<Invoice>();
+    public List<Invoice> getInvoicesByAccount(final UUID accountId) {
+        final List<Invoice> result = new ArrayList<Invoice>();
 
         synchronized (monitor) {
-            for (Invoice invoice : invoices.values()) {
+            for (final Invoice invoice : invoices.values()) {
                 if (accountId.equals(invoice.getAccountId()) && !invoice.isMigrationInvoice()) {
                     result.add(invoice);
                 }
@@ -89,11 +88,11 @@ public class MockInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public List<Invoice> getInvoicesByAccount(UUID accountId, DateTime fromDate) {
-        List<Invoice> invoicesForAccount = new ArrayList<Invoice>();
+    public List<Invoice> getInvoicesByAccount(final UUID accountId, final DateTime fromDate) {
+        final List<Invoice> invoicesForAccount = new ArrayList<Invoice>();
 
         synchronized (monitor) {
-            for (Invoice invoice : get()) {
+            for (final Invoice invoice : get()) {
                 if (accountId.equals(invoice.getAccountId()) && !invoice.getTargetDate().isBefore(fromDate) && !invoice.isMigrationInvoice()) {
                     invoicesForAccount.add(invoice);
                 }
@@ -104,12 +103,12 @@ public class MockInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public List<Invoice> getInvoicesBySubscription(UUID subscriptionId) {
-        List<Invoice> result = new ArrayList<Invoice>();
+    public List<Invoice> getInvoicesBySubscription(final UUID subscriptionId) {
+        final List<Invoice> result = new ArrayList<Invoice>();
 
         synchronized (monitor) {
-            for (Invoice invoice : invoices.values()) {
-                for (InvoiceItem item : invoice.getInvoiceItems()) {
+            for (final Invoice invoice : invoices.values()) {
+                for (final InvoiceItem item : invoice.getInvoiceItems()) {
                     if (subscriptionId.equals(item.getSubscriptionId()) && !invoice.isMigrationInvoice()) {
                         result.add(invoice);
                         break;
@@ -125,10 +124,10 @@ public class MockInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public UUID getInvoiceIdByPaymentAttemptId(UUID paymentAttemptId) {
-        synchronized(monitor) {
-            for (Invoice invoice : invoices.values()) {
-                for (InvoicePayment payment : invoice.getPayments()) {
+    public UUID getInvoiceIdByPaymentAttemptId(final UUID paymentAttemptId) {
+        synchronized (monitor) {
+            for (final Invoice invoice : invoices.values()) {
+                for (final InvoicePayment payment : invoice.getPayments()) {
                     if (paymentAttemptId.equals(payment.getPaymentAttemptId())) {
                         return invoice.getId();
                     }
@@ -139,10 +138,10 @@ public class MockInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public InvoicePayment getInvoicePayment(UUID paymentAttemptId) {
-        synchronized(monitor) {
-            for (Invoice invoice : invoices.values()) {
-                for (InvoicePayment payment : invoice.getPayments()) {
+    public InvoicePayment getInvoicePayment(final UUID paymentAttemptId) {
+        synchronized (monitor) {
+            for (final Invoice invoice : invoices.values()) {
+                for (final InvoicePayment payment : invoice.getPayments()) {
                     if (paymentAttemptId.equals(payment.getPaymentAttemptId())) {
                         return payment;
                     }
@@ -154,9 +153,9 @@ public class MockInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public void notifyOfPaymentAttempt(InvoicePayment invoicePayment, CallContext context) {
+    public void notifyOfPaymentAttempt(final InvoicePayment invoicePayment, final CallContext context) {
         synchronized (monitor) {
-            Invoice invoice = invoices.get(invoicePayment.getInvoiceId());
+            final Invoice invoice = invoices.get(invoicePayment.getInvoiceId());
             if (invoice != null) {
                 invoice.addPayment(invoicePayment);
             }
@@ -164,10 +163,10 @@ public class MockInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public BigDecimal getAccountBalance(UUID accountId) {
+    public BigDecimal getAccountBalance(final UUID accountId) {
         BigDecimal balance = BigDecimal.ZERO;
 
-        for (Invoice invoice : get()) {
+        for (final Invoice invoice : get()) {
             if (accountId.equals(invoice.getAccountId())) {
                 balance = balance.add(invoice.getBalance());
             }
@@ -177,10 +176,10 @@ public class MockInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public List<Invoice> getUnpaidInvoicesByAccountId(UUID accountId, DateTime upToDate) {
-        List<Invoice> unpaidInvoices = new ArrayList<Invoice>();
+    public List<Invoice> getUnpaidInvoicesByAccountId(final UUID accountId, final DateTime upToDate) {
+        final List<Invoice> unpaidInvoices = new ArrayList<Invoice>();
 
-        for (Invoice invoice : get()) {
+        for (final Invoice invoice : get()) {
             if (accountId.equals(invoice.getAccountId()) && (invoice.getBalance().compareTo(BigDecimal.ZERO) > 0) && !invoice.isMigrationInvoice()) {
                 unpaidInvoices.add(invoice);
             }
@@ -189,67 +188,67 @@ public class MockInvoiceDao implements InvoiceDao {
         return unpaidInvoices;
     }
 
-	@Override
-	public List<Invoice> getAllInvoicesByAccount(UUID accountId) {
-		  List<Invoice> result = new ArrayList<Invoice>();
+    @Override
+    public List<Invoice> getAllInvoicesByAccount(final UUID accountId) {
+        final List<Invoice> result = new ArrayList<Invoice>();
 
-	        synchronized (monitor) {
-	            for (Invoice invoice : invoices.values()) {
-	                if (accountId.equals(invoice.getAccountId())) {
-	                    result.add(invoice);
-	                }
-	            }
-	        }
-	        return result;
-	}
+        synchronized (monitor) {
+            for (final Invoice invoice : invoices.values()) {
+                if (accountId.equals(invoice.getAccountId())) {
+                    result.add(invoice);
+                }
+            }
+        }
+        return result;
+    }
 
     @Override
-    public void setWrittenOff(UUID objectId, CallContext context) {
+    public void setWrittenOff(final UUID objectId, final CallContext context) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void removeWrittenOff(UUID objectId, CallContext context) {
+    public void removeWrittenOff(final UUID objectId, final CallContext context) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void postChargeback(UUID invoicePaymentId, BigDecimal amount, CallContext context) throws InvoiceApiException {
+    public void postChargeback(final UUID invoicePaymentId, final BigDecimal amount, final CallContext context) throws InvoiceApiException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public BigDecimal getRemainingAmountPaid(UUID invoicePaymentId) {
+    public BigDecimal getRemainingAmountPaid(final UUID invoicePaymentId) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public UUID getAccountIdFromInvoicePaymentId(UUID invoicePaymentId) throws InvoiceApiException {
+    public UUID getAccountIdFromInvoicePaymentId(final UUID invoicePaymentId) throws InvoiceApiException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public List<InvoicePayment> getChargebacksByAccountId(UUID accountId) {
+    public List<InvoicePayment> getChargebacksByAccountId(final UUID accountId) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public List<InvoicePayment> getChargebacksByPaymentAttemptId(UUID paymentAttemptId) {
+    public List<InvoicePayment> getChargebacksByPaymentAttemptId(final UUID paymentAttemptId) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public InvoicePayment getChargebackById(UUID chargebackId) throws InvoiceApiException {
+    public InvoicePayment getChargebackById(final UUID chargebackId) throws InvoiceApiException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public InvoiceItem getCreditById(UUID creditId) throws InvoiceApiException {
+    public InvoiceItem getCreditById(final UUID creditId) throws InvoiceApiException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public InvoiceItem insertCredit(UUID accountId, BigDecimal amount, DateTime effectiveDate, Currency currency, CallContext context) {
+    public InvoiceItem insertCredit(final UUID accountId, final BigDecimal amount, final DateTime effectiveDate, final Currency currency, final CallContext context) {
         throw new UnsupportedOperationException();
     }
 }

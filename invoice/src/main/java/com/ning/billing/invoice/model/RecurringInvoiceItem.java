@@ -16,52 +16,53 @@
 
 package com.ning.billing.invoice.model;
 
+import java.math.BigDecimal;
+import java.util.UUID;
+
+import org.joda.time.DateTime;
+
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
-import org.joda.time.DateTime;
-
-import java.math.BigDecimal;
-import java.util.UUID;
 
 public class RecurringInvoiceItem extends InvoiceItemBase {
     private final BigDecimal rate;
     private final UUID reversedItemId;
 
-    public RecurringInvoiceItem(UUID invoiceId, UUID accountId, UUID bundleId, UUID subscriptionId, String planName, String phaseName,
-                                DateTime startDate, DateTime endDate,
-                                BigDecimal amount, BigDecimal rate,
-                                Currency currency) {
+    public RecurringInvoiceItem(final UUID invoiceId, final UUID accountId, final UUID bundleId, final UUID subscriptionId, final String planName, final String phaseName,
+                                final DateTime startDate, final DateTime endDate,
+                                final BigDecimal amount, final BigDecimal rate,
+                                final Currency currency) {
         super(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency, InvoiceItemType.RECURRING);
         this.rate = rate;
         this.reversedItemId = null;
     }
 
-    public RecurringInvoiceItem(UUID invoiceId, UUID accountId, UUID bundleId, UUID subscriptionId, String planName, String phaseName,
-                                DateTime startDate, DateTime endDate,
-                                BigDecimal amount, BigDecimal rate,
-                                Currency currency, UUID reversedItemId) {
+    public RecurringInvoiceItem(final UUID invoiceId, final UUID accountId, final UUID bundleId, final UUID subscriptionId, final String planName, final String phaseName,
+                                final DateTime startDate, final DateTime endDate,
+                                final BigDecimal amount, final BigDecimal rate,
+                                final Currency currency, final UUID reversedItemId) {
         super(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate,
-                amount, currency, InvoiceItemType.REVERSAL);
+              amount, currency, InvoiceItemType.REVERSAL);
         this.rate = rate;
         this.reversedItemId = reversedItemId;
     }
 
-    public RecurringInvoiceItem(UUID id, UUID invoiceId, UUID accountId, UUID bundleId, UUID subscriptionId,
-                                String planName, String phaseName,
-                                DateTime startDate, DateTime endDate,
-                                BigDecimal amount, BigDecimal rate,
-                                Currency currency) {
+    public RecurringInvoiceItem(final UUID id, final UUID invoiceId, final UUID accountId, final UUID bundleId, final UUID subscriptionId,
+                                final String planName, final String phaseName,
+                                final DateTime startDate, final DateTime endDate,
+                                final BigDecimal amount, final BigDecimal rate,
+                                final Currency currency) {
         super(id, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency, InvoiceItemType.RECURRING);
         this.rate = rate;
         this.reversedItemId = null;
     }
 
-    public RecurringInvoiceItem(UUID id, UUID invoiceId, UUID accountId, UUID bundleId, UUID subscriptionId,
-                                String planName, String phaseName,
-                                DateTime startDate, DateTime endDate,
-                                BigDecimal amount, BigDecimal rate,
-                                Currency currency, UUID reversedItemId) {
+    public RecurringInvoiceItem(final UUID id, final UUID invoiceId, final UUID accountId, final UUID bundleId, final UUID subscriptionId,
+                                final String planName, final String phaseName,
+                                final DateTime startDate, final DateTime endDate,
+                                final BigDecimal amount, final BigDecimal rate,
+                                final Currency currency, final UUID reversedItemId) {
         super(id, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency, InvoiceItemType.REVERSAL);
         this.rate = rate;
         this.reversedItemId = reversedItemId;
@@ -69,10 +70,10 @@ public class RecurringInvoiceItem extends InvoiceItemBase {
 
     @Override
     public InvoiceItem asReversingItem() {
-        BigDecimal amountNegated = amount == null ? null : amount.negate();
+        final BigDecimal amountNegated = amount == null ? null : amount.negate();
 
         return new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate,
-                amountNegated, rate, currency, id);
+                                        amountNegated, rate, currency, id);
     }
 
     @Override
@@ -93,7 +94,7 @@ public class RecurringInvoiceItem extends InvoiceItemBase {
     }
 
     @Override
-    public int compareTo(InvoiceItem item) {
+    public int compareTo(final InvoiceItem item) {
         if (item == null) {
             return -1;
         }
@@ -101,15 +102,15 @@ public class RecurringInvoiceItem extends InvoiceItemBase {
             return -1;
         }
 
-        RecurringInvoiceItem that = (RecurringInvoiceItem) item;
-        int compareAccounts = getAccountId().compareTo(that.getAccountId());
+        final RecurringInvoiceItem that = (RecurringInvoiceItem) item;
+        final int compareAccounts = getAccountId().compareTo(that.getAccountId());
         if (compareAccounts == 0 && bundleId != null) {
-            int compareBundles = getBundleId().compareTo(that.getBundleId());
+            final int compareBundles = getBundleId().compareTo(that.getBundleId());
             if (compareBundles == 0 && subscriptionId != null) {
 
-                int compareSubscriptions = getSubscriptionId().compareTo(that.getSubscriptionId());
+                final int compareSubscriptions = getSubscriptionId().compareTo(that.getSubscriptionId());
                 if (compareSubscriptions == 0) {
-                    int compareStartDates = getStartDate().compareTo(that.getStartDate());
+                    final int compareStartDates = getStartDate().compareTo(that.getStartDate());
                     if (compareStartDates == 0) {
                         return getEndDate().compareTo(that.getEndDate());
                     } else {
@@ -127,27 +128,50 @@ public class RecurringInvoiceItem extends InvoiceItemBase {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
-        RecurringInvoiceItem that = (RecurringInvoiceItem) o;
+        final RecurringInvoiceItem that = (RecurringInvoiceItem) o;
 
         // do not include invoice item type, since a reversing item can be equal to the original item
-        if (accountId.compareTo(that.accountId) != 0) return false;
-        if (amount.compareTo(that.amount) != 0) return false;
-        if (currency != that.currency) return false;
-        if (startDate.compareTo(that.startDate) != 0) return false;
-        if (endDate.compareTo(that.endDate) != 0) return false;
-        if (!phaseName.equals(that.phaseName)) return false;
-        if (!planName.equals(that.planName)) return false;
-        if (rate.compareTo(that.rate) != 0) return false;
-        if (reversedItemId != null ? !reversedItemId.equals(that.reversedItemId) : that.reversedItemId != null)
+        if (accountId.compareTo(that.accountId) != 0) {
             return false;
-        if (subscriptionId != null ? !subscriptionId.equals(that.subscriptionId) : that.subscriptionId != null)
+        }
+        if (amount.compareTo(that.amount) != 0) {
             return false;
-        if (bundleId != null ? !bundleId.equals(that.bundleId) : that.bundleId != null)
+        }
+        if (currency != that.currency) {
             return false;
+        }
+        if (startDate.compareTo(that.startDate) != 0) {
+            return false;
+        }
+        if (endDate.compareTo(that.endDate) != 0) {
+            return false;
+        }
+        if (!phaseName.equals(that.phaseName)) {
+            return false;
+        }
+        if (!planName.equals(that.planName)) {
+            return false;
+        }
+        if (rate.compareTo(that.rate) != 0) {
+            return false;
+        }
+        if (reversedItemId != null ? !reversedItemId.equals(that.reversedItemId) : that.reversedItemId != null) {
+            return false;
+        }
+        if (subscriptionId != null ? !subscriptionId.equals(that.subscriptionId) : that.subscriptionId != null) {
+            return false;
+        }
+        if (bundleId != null ? !bundleId.equals(that.bundleId) : that.bundleId != null) {
+            return false;
+        }
 
         return true;
     }
@@ -171,7 +195,7 @@ public class RecurringInvoiceItem extends InvoiceItemBase {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
+        final StringBuilder sb = new StringBuilder();
 
         sb.append(phaseName).append(", ");
         sb.append(startDate.toString()).append(", ");

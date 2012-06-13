@@ -16,20 +16,21 @@
 
 package com.ning.billing.invoice.model;
 
-import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.invoice.api.InvoiceItem;
-import com.ning.billing.invoice.api.InvoiceItemType;
-import org.joda.time.DateTime;
-
 import java.math.BigDecimal;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
+
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.invoice.api.InvoiceItemType;
+
 public class CreditInvoiceItem extends InvoiceItemBase {
-    public CreditInvoiceItem(UUID invoiceId, UUID accountId, DateTime date, BigDecimal amount, Currency currency) {
+    public CreditInvoiceItem(final UUID invoiceId, final UUID accountId, final DateTime date, final BigDecimal amount, final Currency currency) {
         this(UUID.randomUUID(), invoiceId, accountId, date, amount, currency);
     }
 
-    public CreditInvoiceItem(UUID id, UUID invoiceId, UUID accountId, DateTime date, BigDecimal amount, Currency currency) {
+    public CreditInvoiceItem(final UUID id, final UUID invoiceId, final UUID accountId, final DateTime date, final BigDecimal amount, final Currency currency) {
         super(id, invoiceId, accountId, null, null, null, null, date, date, amount, currency, InvoiceItemType.CREDIT);
     }
 
@@ -44,17 +45,31 @@ public class CreditInvoiceItem extends InvoiceItemBase {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
-        CreditInvoiceItem that = (CreditInvoiceItem) o;
+        final CreditInvoiceItem that = (CreditInvoiceItem) o;
 
-        if (accountId.compareTo(that.accountId) != 0) return false;
-        if (amount.compareTo(that.amount) != 0) return false;
-        if (currency != that.currency) return false;
-        if (startDate.compareTo(that.startDate) != 0) return false;
-        if (endDate.compareTo(that.endDate) != 0) return false;
+        if (accountId.compareTo(that.accountId) != 0) {
+            return false;
+        }
+        if (amount.compareTo(that.amount) != 0) {
+            return false;
+        }
+        if (currency != that.currency) {
+            return false;
+        }
+        if (startDate.compareTo(that.startDate) != 0) {
+            return false;
+        }
+        if (endDate.compareTo(that.endDate) != 0) {
+            return false;
+        }
 
         return true;
     }
@@ -70,12 +85,12 @@ public class CreditInvoiceItem extends InvoiceItemBase {
     }
 
     @Override
-    public int compareTo(InvoiceItem item) {
+    public int compareTo(final InvoiceItem item) {
         if (!(item instanceof CreditInvoiceItem)) {
             return 1;
         }
 
-        CreditInvoiceItem that = (CreditInvoiceItem) item;
+        final CreditInvoiceItem that = (CreditInvoiceItem) item;
         return id.compareTo(that.getId());
     }
 }

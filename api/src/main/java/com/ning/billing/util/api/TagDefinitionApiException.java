@@ -22,15 +22,15 @@ import com.ning.billing.ErrorCode;
 public class TagDefinitionApiException extends BillingExceptionBase {
     private static final long serialVersionUID = 1L;
 
-    public TagDefinitionApiException(Throwable cause, int code, final String msg) {
+    public TagDefinitionApiException(final Throwable cause, final int code, final String msg) {
         super(cause, code, msg);
     }
 
-    public TagDefinitionApiException(Throwable cause, ErrorCode code, final Object... args) {
+    public TagDefinitionApiException(final Throwable cause, final ErrorCode code, final Object... args) {
         super(cause, code, args);
     }
 
-    public TagDefinitionApiException(ErrorCode code, final Object... args) {
+    public TagDefinitionApiException(final ErrorCode code, final Object... args) {
         super(code, args);
     }
 }

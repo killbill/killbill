@@ -34,58 +34,58 @@ public class TrailingProRationTests extends ProRationInAdvanceTestBase {
 
     @Test
     public void testTargetDateOnStartDate() throws InvalidDateSequenceException {
-        DateTime startDate = buildDateTime(2010, 6, 17);
-        DateTime endDate = buildDateTime(2012, 6, 25);
-        DateTime targetDate = buildDateTime(2010, 6, 17);
+        final DateTime startDate = buildDateTime(2010, 6, 17);
+        final DateTime endDate = buildDateTime(2012, 6, 25);
+        final DateTime targetDate = buildDateTime(2010, 6, 17);
 
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 17, ONE);
     }
 
     @Test
     public void testTargetDateInFirstBillingPeriod() throws InvalidDateSequenceException {
-        DateTime startDate = buildDateTime(2010, 6, 17);
-        DateTime endDate = buildDateTime(2011, 6, 25);
-        DateTime targetDate = buildDateTime(2010, 6, 20);
+        final DateTime startDate = buildDateTime(2010, 6, 17);
+        final DateTime endDate = buildDateTime(2011, 6, 25);
+        final DateTime targetDate = buildDateTime(2010, 6, 20);
 
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 17, ONE);
     }
 
     @Test
     public void testTargetDateAtEndOfFirstBillingCycle() throws InvalidDateSequenceException {
-        DateTime startDate = buildDateTime(2010, 6, 17);
-        DateTime endDate = buildDateTime(2011, 6, 25);
-        DateTime targetDate = buildDateTime(2011, 6, 17);
+        final DateTime startDate = buildDateTime(2010, 6, 17);
+        final DateTime endDate = buildDateTime(2011, 6, 25);
+        final DateTime targetDate = buildDateTime(2011, 6, 17);
 
-        BigDecimal expectedValue = ONE.add(EIGHT.divide(THREE_HUNDRED_AND_SIXTY_FIVE, NUMBER_OF_DECIMALS, ROUNDING_METHOD));
+        final BigDecimal expectedValue = ONE.add(EIGHT.divide(THREE_HUNDRED_AND_SIXTY_FIVE, NUMBER_OF_DECIMALS, ROUNDING_METHOD));
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 17, expectedValue);
     }
 
     @Test
     public void testTargetDateInProRationPeriod() throws InvalidDateSequenceException {
-        DateTime startDate = buildDateTime(2010, 6, 17);
-        DateTime endDate = buildDateTime(2011, 6, 25);
-        DateTime targetDate = buildDateTime(2011, 6, 18);
+        final DateTime startDate = buildDateTime(2010, 6, 17);
+        final DateTime endDate = buildDateTime(2011, 6, 25);
+        final DateTime targetDate = buildDateTime(2011, 6, 18);
 
-        BigDecimal expectedValue = ONE.add(EIGHT.divide(THREE_HUNDRED_AND_SIXTY_SIX, NUMBER_OF_DECIMALS, ROUNDING_METHOD));
+        final BigDecimal expectedValue = ONE.add(EIGHT.divide(THREE_HUNDRED_AND_SIXTY_SIX, NUMBER_OF_DECIMALS, ROUNDING_METHOD));
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 17, expectedValue);
     }
 
     @Test
     public void testTargetDateOnEndDate() throws InvalidDateSequenceException {
-        DateTime startDate = buildDateTime(2010, 6, 17);
-        DateTime endDate = buildDateTime(2011, 6, 25);
+        final DateTime startDate = buildDateTime(2010, 6, 17);
+        final DateTime endDate = buildDateTime(2011, 6, 25);
 
-        BigDecimal expectedValue = ONE.add(EIGHT.divide(THREE_HUNDRED_AND_SIXTY_SIX, NUMBER_OF_DECIMALS, ROUNDING_METHOD));
+        final BigDecimal expectedValue = ONE.add(EIGHT.divide(THREE_HUNDRED_AND_SIXTY_SIX, NUMBER_OF_DECIMALS, ROUNDING_METHOD));
         testCalculateNumberOfBillingCycles(startDate, endDate, endDate, 17, expectedValue);
     }
 
     @Test
     public void testTargetDateAfterEndDate() throws InvalidDateSequenceException {
-        DateTime startDate = buildDateTime(2010, 6, 17);
-        DateTime endDate = buildDateTime(2011, 6, 25);
-        DateTime targetDate = buildDateTime(2011, 7, 30);
+        final DateTime startDate = buildDateTime(2010, 6, 17);
+        final DateTime endDate = buildDateTime(2011, 6, 25);
+        final DateTime targetDate = buildDateTime(2011, 7, 30);
 
-        BigDecimal expectedValue = ONE.add(EIGHT.divide(THREE_HUNDRED_AND_SIXTY_SIX, NUMBER_OF_DECIMALS, ROUNDING_METHOD));
+        final BigDecimal expectedValue = ONE.add(EIGHT.divide(THREE_HUNDRED_AND_SIXTY_SIX, NUMBER_OF_DECIMALS, ROUNDING_METHOD));
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 17, expectedValue);
     }
 }

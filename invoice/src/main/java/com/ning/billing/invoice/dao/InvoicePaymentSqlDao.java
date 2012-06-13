@@ -27,15 +27,6 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.UUID;
 
-import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.invoice.model.DefaultInvoicePayment;
-import com.ning.billing.util.dao.AuditSqlDao;
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallContextBinder;
-import com.ning.billing.util.dao.BinderBase;
-import com.ning.billing.util.dao.MapperBase;
-import com.ning.billing.util.dao.UuidMapper;
-import com.ning.billing.util.entity.dao.EntitySqlDao;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
@@ -52,14 +43,23 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
+import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoicePayment;
+import com.ning.billing.invoice.model.DefaultInvoicePayment;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallContextBinder;
+import com.ning.billing.util.dao.AuditSqlDao;
+import com.ning.billing.util.dao.BinderBase;
+import com.ning.billing.util.dao.MapperBase;
+import com.ning.billing.util.dao.UuidMapper;
+import com.ning.billing.util.entity.dao.EntitySqlDao;
 
 @ExternalizedSqlViaStringTemplate3
 @RegisterMapper(InvoicePaymentSqlDao.InvoicePaymentMapper.class)
 public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePayment>, Transactional<InvoicePaymentSqlDao>, AuditSqlDao, Transmogrifier {
     @SqlQuery
     List<Long> getRecordIds(@Bind("invoiceId") final String invoiceId);
-    
+
     @SqlQuery
     public InvoicePayment getByPaymentAttemptId(@Bind("paymentAttempt") final String paymentAttemptId);
 
@@ -70,7 +70,7 @@ public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePayment>, Tran
     public void create(@InvoicePaymentBinder final InvoicePayment invoicePayment,
                        @CallContextBinder final CallContext context);
 
-    @SqlBatch(transactional=false)
+    @SqlBatch(transactional = false)
     void batchCreateFromTransaction(@InvoicePaymentBinder final List<InvoicePayment> items,
                                     @CallContextBinder final CallContext context);
 
@@ -99,7 +99,7 @@ public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePayment>, Tran
 
     public static class InvoicePaymentMapper extends MapperBase implements ResultSetMapper<InvoicePayment> {
         @Override
-        public InvoicePayment map(int index, ResultSet result, StatementContext context) throws SQLException {
+        public InvoicePayment map(final int index, final ResultSet result, final StatementContext context) throws SQLException {
             final UUID id = getUUID(result, "id");
             final UUID paymentAttemptId = getUUID(result, "payment_attempt_id");
             final UUID invoiceId = getUUID(result, "invoice_id");
@@ -110,7 +110,7 @@ public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePayment>, Tran
             final UUID reversedInvoicePaymentId = getUUID(result, "reversed_invoice_Payment_id");
 
             return new DefaultInvoicePayment(id, paymentAttemptId, invoiceId, paymentAttemptDate,
-                    amount, currency, reversedInvoicePaymentId);
+                                             amount, currency, reversedInvoicePaymentId);
         }
     }
 
@@ -120,16 +120,16 @@ public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePayment>, Tran
     public @interface InvoicePaymentBinder {
         public static class InvoicePaymentBinderFactory extends BinderBase implements BinderFactory {
             @Override
-            public Binder build(Annotation annotation) {
+            public Binder build(final Annotation annotation) {
                 return new Binder<InvoicePaymentBinder, InvoicePayment>() {
                     @Override
-                    public void bind(SQLStatement q, InvoicePaymentBinder bind, InvoicePayment payment) {
+                    public void bind(final SQLStatement q, final InvoicePaymentBinder bind, final InvoicePayment payment) {
                         q.bind("id", payment.getId().toString());
                         q.bind("invoiceId", payment.getInvoiceId().toString());
                         q.bind("paymentAttemptId", uuidToString(payment.getPaymentAttemptId()));
                         q.bind("paymentAttemptDate", payment.getPaymentAttemptDate().toDate());
                         q.bind("amount", payment.getAmount());
-                        Currency currency = payment.getCurrency();
+                        final Currency currency = payment.getCurrency();
                         q.bind("currency", (currency == null) ? null : currency.toString());
                         q.bind("reversedInvoicePaymentId", uuidToString(payment.getReversedInvoicePaymentId()));
                     }
