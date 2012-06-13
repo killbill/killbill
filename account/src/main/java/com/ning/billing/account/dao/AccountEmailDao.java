@@ -16,15 +16,22 @@
 
 package com.ning.billing.account.dao;
 
-import com.ning.billing.account.api.AccountEmail;
-import com.ning.billing.util.callcontext.CallContext;
-
 import java.util.List;
 import java.util.UUID;
+
+import com.ning.billing.account.api.AccountEmail;
+import com.ning.billing.util.callcontext.CallContext;
 
 public interface AccountEmailDao {
     public List<AccountEmail> getEmails(UUID accountId);
 
+    /**
+     * Add, remove or update the list of emails in this account.
+     *
+     * @param accountId id of the account
+     * @param emails    the final list of emails
+     * @param context   the call context
+     */
     public void saveEmails(UUID accountId, List<AccountEmail> emails, CallContext context);
 
     public void test();
