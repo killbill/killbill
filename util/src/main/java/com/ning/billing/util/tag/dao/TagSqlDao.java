@@ -40,32 +40,32 @@ import com.ning.billing.util.tag.Tag;
 @RegisterMapper(TagMapper.class)
 public interface TagSqlDao extends UpdatableEntityCollectionSqlDao<Tag>, Transactional<TagSqlDao>, Transmogrifier {
     @Override
-    @SqlBatch(transactional=false)
+    @SqlBatch(transactional = false)
     public void insertFromTransaction(@Bind("objectId") final String objectId,
                                       @ObjectTypeBinder final ObjectType objectType,
                                       @TagBinder final Collection<Tag> tags,
                                       @CallContextBinder final CallContext context);
 
     @Override
-    @SqlBatch(transactional=false)
+    @SqlBatch(transactional = false)
     public void updateFromTransaction(@Bind("objectId") final String objectId,
                                       @ObjectTypeBinder final ObjectType objectType,
                                       @TagBinder final Collection<Tag> tags,
                                       @CallContextBinder final CallContext context);
 
     @Override
-    @SqlBatch(transactional=false)
+    @SqlBatch(transactional = false)
     public void deleteFromTransaction(@Bind("objectId") final String objectId,
                                       @ObjectTypeBinder final ObjectType objectType,
                                       @TagBinder final Collection<Tag> tags,
                                       @CallContextBinder final CallContext context);
 
     @Override
-    @SqlBatch(transactional=false)
+    @SqlBatch(transactional = false)
     public void addHistoryFromTransaction(@Bind("objectId") final String objectId,
-                                               @ObjectTypeBinder final ObjectType objectType,
-                                               @TagHistoryBinder final List<EntityHistory<Tag>> histories,
-                                               @CallContextBinder final CallContext context);
+                                          @ObjectTypeBinder final ObjectType objectType,
+                                          @TagHistoryBinder final List<EntityHistory<Tag>> histories,
+                                          @CallContextBinder final CallContext context);
 
     @SqlUpdate
     public void addTagFromTransaction(@Bind("id") final String tagId,

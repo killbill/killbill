@@ -24,19 +24,19 @@ public class DescriptiveTag extends EntityBase implements Tag {
     private final String tagDefinitionName;
 
     // use to hydrate objects from the persistence layer
-    public DescriptiveTag(UUID id, String tagDefinitionName) {
+    public DescriptiveTag(final UUID id, final String tagDefinitionName) {
         super(id);
         this.tagDefinitionName = tagDefinitionName;
     }
 
     // use to create new objects
-    public DescriptiveTag(TagDefinition tagDefinition) {
+    public DescriptiveTag(final TagDefinition tagDefinition) {
         super();
         this.tagDefinitionName = tagDefinition.getName();
     }
 
     // use to create new objects
-    public DescriptiveTag(String tagDefinitionName) {
+    public DescriptiveTag(final String tagDefinitionName) {
         super();
         this.tagDefinitionName = tagDefinitionName;
     }
@@ -56,26 +56,29 @@ public class DescriptiveTag extends EntityBase implements Tag {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((tagDefinitionName == null) ? 0
-                                                              : tagDefinitionName.hashCode());
+                : tagDefinitionName.hashCode());
         return result;
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
+    public boolean equals(final Object obj) {
+        if (this == obj) {
             return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        DescriptiveTag other = (DescriptiveTag) obj;
-        if (tagDefinitionName == null) {
-            if (other.tagDefinitionName != null)
-                return false;
         }
-        else if (!tagDefinitionName.equals(other.tagDefinitionName))
+        if (obj == null) {
             return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final DescriptiveTag other = (DescriptiveTag) obj;
+        if (tagDefinitionName == null) {
+            if (other.tagDefinitionName != null) {
+                return false;
+            }
+        } else if (!tagDefinitionName.equals(other.tagDefinitionName)) {
+            return false;
+        }
         return true;
     }
-
 }

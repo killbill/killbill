@@ -152,7 +152,7 @@ public class TestAccountDao extends AccountDaoTestBase {
         TagDefinitionSqlDao tagDescriptionDao = dbi.onDemand(TagDefinitionSqlDao.class);
         tagDescriptionDao.create(definition, context);
 
-        TagDao tagDao = new AuditedTagDao(dbi);
+        TagDao tagDao = new AuditedTagDao(dbi, tagEventBuilder, bus);
         tagDao.insertTag(account.getId(), ObjectType.ACCOUNT, definition, context);
 
         Map<String, Tag> tagMap = tagDao.loadEntities(account.getId(), ObjectType.ACCOUNT);

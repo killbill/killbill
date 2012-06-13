@@ -20,11 +20,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
 
-import com.ning.billing.util.dao.MapperBase;
-import org.joda.time.DateTime;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
+import com.ning.billing.util.dao.MapperBase;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.DefaultControlTag;
 import com.ning.billing.util.tag.DescriptiveTag;
@@ -33,16 +32,16 @@ import com.ning.billing.util.tag.Tag;
 public class TagMapper extends MapperBase implements ResultSetMapper<Tag> {
     @Override
     public Tag map(final int index, final ResultSet result, final StatementContext context) throws SQLException {
-        String name = result.getString("tag_definition_name");
+        final String name = result.getString("tag_definition_name");
 
         ControlTagType thisTagType = null;
-        for (ControlTagType controlTagType : ControlTagType.values()) {
+        for (final ControlTagType controlTagType : ControlTagType.values()) {
             if (name.equals(controlTagType.toString())) {
                 thisTagType = controlTagType;
             }
         }
 
-        UUID id = UUID.fromString(result.getString("id"));
+        final UUID id = UUID.fromString(result.getString("id"));
         if (thisTagType == null) {
             return new DescriptiveTag(id, name);
         } else {

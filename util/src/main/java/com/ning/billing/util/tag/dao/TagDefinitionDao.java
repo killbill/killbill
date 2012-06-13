@@ -18,8 +18,8 @@ package com.ning.billing.util.tag.dao;
 
 import java.util.List;
 
-import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.api.TagDefinitionApiException;
+import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.tag.TagDefinition;
 
 public interface TagDefinitionDao {
@@ -28,8 +28,6 @@ public interface TagDefinitionDao {
     public TagDefinition getByName(String definitionName);
 
     public TagDefinition create(String definitionName, String description, CallContext context) throws TagDefinitionApiException;
-
-    public void deleteAllTagsForDefinition(String definitionName, CallContext context) throws TagDefinitionApiException;
 
     public void deleteTagDefinition(String definitionName, CallContext context) throws TagDefinitionApiException;
 }

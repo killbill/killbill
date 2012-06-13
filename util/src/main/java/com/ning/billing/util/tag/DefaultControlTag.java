@@ -48,21 +48,25 @@ public class DefaultControlTag extends DescriptiveTag implements ControlTag {
         final int prime = 31;
         int result = super.hashCode();
         result = prime * result + ((controlTagType == null) ? 0
-                                                           : controlTagType.hashCode());
+                : controlTagType.hashCode());
         return result;
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
+    public boolean equals(final Object obj) {
+        if (this == obj) {
             return true;
-        if (!super.equals(obj))
+        }
+        if (!super.equals(obj)) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
-        DefaultControlTag other = (DefaultControlTag) obj;
-        if (controlTagType != other.controlTagType)
+        }
+        final DefaultControlTag other = (DefaultControlTag) obj;
+        if (controlTagType != other.controlTagType) {
             return false;
+        }
         return true;
     }
 
