@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.google.inject.Inject;
+import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.callcontext.CallContext;
@@ -62,22 +63,25 @@ public class DefaultTagUserApi implements TagUserApi {
     }
 
     @Override
-    public void addTags(final UUID objectId, final ObjectType objectType, final List<TagDefinition> tagDefinitions, final CallContext context) {
-        tagDao.insertTags(objectId, objectType, tagDefinitions, context);
+    public void addTags(final UUID objectId, final ObjectType objectType, final List<TagDefinition> tagDefinitions, final CallContext context) throws TagApiException {
+        // TODO: consider making this batch
+        for (final TagDefinition tagDefinition : tagDefinitions) {
+            tagDao.insertTag(objectId, objectType, tagDefinition, context);
+        }
     }
 
     @Override
-    public void addTag(final UUID objectId, final ObjectType objectType, final TagDefinition tagDefinition, final CallContext context) {
+    public void addTag(final UUID objectId, final ObjectType objectType, final TagDefinition tagDefinition, final CallContext context) throws TagApiException {
         tagDao.insertTag(objectId, objectType, tagDefinition, context);
     }
 
     @Override
-    public void removeTag(final UUID objectId, final ObjectType objectType, final TagDefinition tagDefinition, final CallContext context) {
+    public void removeTag(final UUID objectId, final ObjectType objectType, final TagDefinition tagDefinition, final CallContext context) throws TagApiException {
         tagDao.deleteTag(objectId, objectType, tagDefinition, context);
     }
 
     @Override
-    public void removeTags(final UUID objectId, final ObjectType objectType, final List<TagDefinition> tagDefinitions, final CallContext context) {
+    public void removeTags(final UUID objectId, final ObjectType objectType, final List<TagDefinition> tagDefinitions, final CallContext context) throws TagApiException {
         // TODO: consider making this batch
         for (final TagDefinition tagDefinition : tagDefinitions) {
             tagDao.deleteTag(objectId, objectType, tagDefinition, context);

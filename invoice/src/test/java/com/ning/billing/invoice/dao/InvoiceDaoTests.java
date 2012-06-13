@@ -56,6 +56,7 @@ import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.junction.api.BillingEventSet;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
+import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.Tag;
@@ -632,7 +633,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
     }
 
     @Test
-    public void testAddingWrittenOffTag() throws InvoiceApiException {
+    public void testAddingWrittenOffTag() throws InvoiceApiException, TagApiException {
         Subscription subscription = getZombieSubscription();
 
         Plan plan = BrainDeadProxyFactory.createBrainDeadProxyFor(Plan.class);
@@ -663,7 +664,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
     }
 
     @Test
-    public void testRemoveWrittenOffTag() throws InvoiceApiException {
+    public void testRemoveWrittenOffTag() throws InvoiceApiException, TagApiException {
         Subscription subscription = getZombieSubscription();
 
         Plan plan = BrainDeadProxyFactory.createBrainDeadProxyFor(Plan.class);

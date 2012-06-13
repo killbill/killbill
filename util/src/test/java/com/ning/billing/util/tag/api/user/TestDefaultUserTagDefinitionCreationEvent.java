@@ -22,6 +22,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.util.bus.BusEvent;
+import com.ning.billing.util.jackson.ObjectMapper;
 import com.ning.billing.util.tag.DefaultTagDefinition;
 import com.ning.billing.util.tag.TagDefinition;
 
@@ -49,5 +50,23 @@ public class TestDefaultUserTagDefinitionCreationEvent {
         Assert.assertEquals(event, new DefaultUserTagDefinitionCreationEvent(tagDefinitionId, tagDefinition, userToken));
         Assert.assertTrue(event.equals(event));
         Assert.assertTrue(event.equals(new DefaultUserTagDefinitionCreationEvent(tagDefinitionId, tagDefinition, userToken)));
+    }
+
+    @Test(groups = "fast")
+    public void testSerialization() throws Exception {
+        final ObjectMapper objectMapper = new ObjectMapper();
+
+        final UUID tagDefinitionId = UUID.randomUUID();
+        final String tagDefinitionName = UUID.randomUUID().toString();
+        final String tagDefinitionDescription = UUID.randomUUID().toString();
+        final boolean controlTag = true;
+        final TagDefinition tagDefinition = new DefaultTagDefinition(tagDefinitionId, tagDefinitionName, tagDefinitionDescription, controlTag);
+        final UUID userToken = UUID.randomUUID();
+
+        final DefaultUserTagDefinitionCreationEvent event = new DefaultUserTagDefinitionCreationEvent(tagDefinitionId, tagDefinition, userToken);
+
+        final String json = objectMapper.writeValueAsString(event);
+        final DefaultUserTagDefinitionCreationEvent fromJson = objectMapper.readValue(json, DefaultUserTagDefinitionCreationEvent.class);
+        Assert.assertEquals(fromJson, event);
     }
 }

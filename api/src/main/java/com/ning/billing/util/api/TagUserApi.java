@@ -54,13 +54,13 @@ public interface TagUserApi {
      */
     public TagDefinition getTagDefinition(String name) throws TagDefinitionApiException;
 
-    public void addTags(UUID objectId, ObjectType objectType, List<TagDefinition> tagDefinitions, CallContext context);
+    public void addTags(UUID objectId, ObjectType objectType, List<TagDefinition> tagDefinitions, CallContext context) throws TagApiException;
 
-    public void addTag(UUID objectId, ObjectType objectType, TagDefinition tagDefinition, CallContext context);
+    public void addTag(UUID objectId, ObjectType objectType, TagDefinition tagDefinition, CallContext context) throws TagApiException;
 
-    public void removeTags(UUID objectId, ObjectType objectType, List<TagDefinition> tagDefinitions, CallContext context);
+    public void removeTags(UUID objectId, ObjectType objectType, List<TagDefinition> tagDefinitions, CallContext context) throws TagApiException;
 
-    public void removeTag(UUID objectId, ObjectType objectType, TagDefinition tagDefinition, CallContext context);
+    public void removeTag(UUID objectId, ObjectType objectType, TagDefinition tagDefinition, CallContext context) throws TagApiException;
 
     public Map<String, Tag> getTags(UUID objectId, ObjectType objectType);
 }

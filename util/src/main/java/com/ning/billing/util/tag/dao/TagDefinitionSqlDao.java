@@ -35,6 +35,7 @@ import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
+import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
@@ -46,7 +47,7 @@ import com.ning.billing.util.tag.TagDefinition;
 
 @ExternalizedSqlViaStringTemplate3
 @RegisterMapper(TagDefinitionSqlDao.TagDefinitionMapper.class)
-public interface TagDefinitionSqlDao extends EntitySqlDao<TagDefinition>, Transactional<TagDefinitionSqlDao> {
+public interface TagDefinitionSqlDao extends EntitySqlDao<TagDefinition>, Transactional<TagDefinitionSqlDao>, Transmogrifier {
     @Override
     @SqlUpdate
     public void create(@TagDefinitionBinder final TagDefinition entity, @CallContextBinder final CallContext context);

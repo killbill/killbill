@@ -90,14 +90,6 @@ public class MockTagDao implements TagDao {
     }
 
     @Override
-    public void insertTags(final UUID objectId, final ObjectType objectType,
-                           final List<TagDefinition> tagDefinitions, final CallContext context) {
-        for (final TagDefinition tagDefinition : tagDefinitions) {
-            insertTag(objectId, objectType, tagDefinition, context);
-        }
-    }
-
-    @Override
     public void deleteTag(final UUID objectId, final ObjectType objectType,
                           final TagDefinition tagDefinition, final CallContext context) {
         final List<Tag> tags = tagStore.get(objectId);

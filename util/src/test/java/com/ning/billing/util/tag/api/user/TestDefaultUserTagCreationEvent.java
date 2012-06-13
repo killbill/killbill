@@ -23,6 +23,7 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.util.bus.BusEvent;
 import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.util.jackson.ObjectMapper;
 import com.ning.billing.util.tag.DefaultTagDefinition;
 import com.ning.billing.util.tag.TagDefinition;
 
@@ -55,5 +56,26 @@ public class TestDefaultUserTagCreationEvent {
         Assert.assertEquals(event, new DefaultUserTagCreationEvent(tagId, objectId, objectType, tagDefinition, userToken));
         Assert.assertTrue(event.equals(event));
         Assert.assertTrue(event.equals(new DefaultUserTagCreationEvent(tagId, objectId, objectType, tagDefinition, userToken)));
+    }
+
+    @Test(groups = "fast")
+    public void testSerialization() throws Exception {
+        final ObjectMapper objectMapper = new ObjectMapper();
+
+        final UUID tagId = UUID.randomUUID();
+        final UUID objectId = UUID.randomUUID();
+        final ObjectType objectType = ObjectType.ACCOUNT_EMAIL;
+        final UUID tagDefinitionId = UUID.randomUUID();
+        final String tagDefinitionName = UUID.randomUUID().toString();
+        final String tagDefinitionDescription = UUID.randomUUID().toString();
+        final boolean controlTag = true;
+        final TagDefinition tagDefinition = new DefaultTagDefinition(tagDefinitionId, tagDefinitionName, tagDefinitionDescription, controlTag);
+        final UUID userToken = UUID.randomUUID();
+
+        final DefaultUserTagCreationEvent event = new DefaultUserTagCreationEvent(tagId, objectId, objectType, tagDefinition, userToken);
+
+        final String json = objectMapper.writeValueAsString(event);
+        final DefaultUserTagCreationEvent fromJson = objectMapper.readValue(json, DefaultUserTagCreationEvent.class);
+        Assert.assertEquals(fromJson, event);
     }
 }
