@@ -15,13 +15,13 @@
  */
 package com.ning.billing.jaxrs.resources;
 
-
 public interface JaxrsResource {
     public static final String API_PREFIX = "";
     public static final String API_VERSION = "/1.0";
     public static final String API_POSTFIX = "/kb";
 
     public static final String PREFIX = API_PREFIX + API_VERSION + API_POSTFIX;
+
 
     public static final String TIMELINE = "timeline";
 
@@ -60,6 +60,7 @@ public interface JaxrsResource {
     public static final String QUERY_PAYMENT_METHOD_PLUGIN_INFO = "plugin_info";
     public static final String QUERY_PAYMENT_METHOD_IS_DEFAULT = "is_default";
 
+
     public static final String ACCOUNTS = "accounts";
     public static final String ACCOUNTS_PATH = PREFIX + "/" + ACCOUNTS;
 
@@ -69,7 +70,7 @@ public interface JaxrsResource {
     public static final String SUBSCRIPTIONS = "subscriptions";
     public static final String SUBSCRIPTIONS_PATH = PREFIX + "/" + SUBSCRIPTIONS;
 
-    public static final String TAG_DEFINITIONS = "tag_definitions";
+    public static final String TAG_DEFINITIONS = "tagDefinitions";
     public static final String TAG_DEFINITIONS_PATH = PREFIX + "/" + TAG_DEFINITIONS;
 
     public static final String INVOICES = "invoices";
@@ -79,6 +80,9 @@ public interface JaxrsResource {
     public static final String PAYMENTS_PATH = PREFIX + "/" + PAYMENTS;
 
     public static final String PAYMENT_METHODS = "paymentMethods";
+    public static final String PAYMENT_METHODS_PATH = PREFIX + "/" + PAYMENT_METHODS;
+    public static final String PAYMENT_METHODS_DEFAULT_PATH_POSTFIX = "setDefault";
+
 
     public static final String CREDITS = "credits";
     public static final String CREDITS_PATH = PREFIX + "/" + CREDITS;
@@ -87,7 +91,7 @@ public interface JaxrsResource {
     public static final String CHARGEBACKS_PATH = PREFIX + "/" + CHARGEBACKS;
 
     public static final String TAGS = "tags";
-    public static final String CUSTOM_FIELDS = "custom_fields";
+    public static final String CUSTOM_FIELDS = "customFields";
     public static final String EMAILS = "emails";
 
     public static final String CATALOG = "catalog";

@@ -19,20 +19,20 @@ insertPaymentMethod() ::= <<
 
 markPaymentMethodAsDeleted() ::= <<
     UPDATE payment_methods 
-    SET is_active = false
+    SET is_active = 0
     WHERE  id = :id;
 >>
 
 getPaymentMethod() ::= <<
     SELECT <paymentMethodFields()>
       FROM payment_methods
-    WHERE id = :id;
+    WHERE id = :id AND is_active = 1;
 >>
 
 getPaymentMethods() ::= <<
     SELECT <paymentMethodFields()>
       FROM payment_methods
-    WHERE account_id = :accountId;
+    WHERE account_id = :accountId AND is_active = 1;
 >>
 
 getRecordId() ::= <<

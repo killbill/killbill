@@ -30,6 +30,8 @@ import com.ning.billing.jaxrs.resources.AccountResource;
 import com.ning.billing.jaxrs.resources.BundleResource;
 import com.ning.billing.jaxrs.resources.CatalogResource;
 import com.ning.billing.jaxrs.resources.InvoiceResource;
+import com.ning.billing.jaxrs.resources.PaymentMethodResource;
+import com.ning.billing.jaxrs.resources.PaymentResource;
 import com.ning.billing.jaxrs.resources.SubscriptionResource;
 import com.ning.billing.jaxrs.resources.TagResource;
 import com.ning.billing.jaxrs.util.KillbillEventHandler;
@@ -70,6 +72,8 @@ public class KillbillServerModule extends AbstractModule
         bind(InvoiceResource.class).asEagerSingleton();
         bind(TagResource.class).asEagerSingleton();
         bind(CatalogResource.class).asEagerSingleton();
+        bind(PaymentMethodResource.class).asEagerSingleton();        
+        bind(PaymentResource.class).asEagerSingleton();                
         bind(KillbillEventHandler.class).asEagerSingleton();
     }
 
