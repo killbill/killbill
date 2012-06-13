@@ -17,6 +17,7 @@
 package com.ning.billing.util.tag;
 
 import java.util.UUID;
+
 import com.ning.billing.util.entity.EntityBase;
 
 public class DefaultTagDefinition extends EntityBase implements TagDefinition {
@@ -24,17 +25,17 @@ public class DefaultTagDefinition extends EntityBase implements TagDefinition {
     private final String description;
     private final Boolean isControlTag;
 
-    public DefaultTagDefinition(String name, String description, Boolean isControlTag) {
+    public DefaultTagDefinition(final String name, final String description, final Boolean isControlTag) {
         this(UUID.randomUUID(), name, description, isControlTag);
     }
 
-    public DefaultTagDefinition(UUID id, String name, String description, Boolean isControlTag) {
+    public DefaultTagDefinition(final UUID id, final String name, final String description, final Boolean isControlTag) {
         super(id);
         this.name = name;
         this.description = description;
         this.isControlTag = isControlTag;
     }
-    
+
     @Override
     public String getName() {
         return name;

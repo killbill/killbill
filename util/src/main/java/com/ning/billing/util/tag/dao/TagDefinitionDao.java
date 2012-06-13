@@ -18,8 +18,8 @@ package com.ning.billing.util.tag.dao;
 
 import java.util.List;
 
-import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.api.TagDefinitionApiException;
+import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.tag.TagDefinition;
 
 public interface TagDefinitionDao {

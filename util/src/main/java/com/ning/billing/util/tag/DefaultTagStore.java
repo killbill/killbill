@@ -37,9 +37,9 @@ public class DefaultTagStore extends EntityCollectionBase<Tag> implements TagSto
      * @return true if no tags contraindicate payment processing
      */
     public boolean processPayment() {
-        for (Tag tag : entities.values()) {
+        for (final Tag tag : entities.values()) {
             if (tag instanceof ControlTag) {
-                ControlTag controlTag = (ControlTag) tag;
+                final ControlTag controlTag = (ControlTag) tag;
                 if (controlTag.getControlTagType() == ControlTagType.AUTO_PAY_OFF) {
                     return false;
                 }
@@ -49,15 +49,16 @@ public class DefaultTagStore extends EntityCollectionBase<Tag> implements TagSto
         return true;
     }
 
-    /***
+    /**
      * Collates the contents of the TagStore to determine if invoices should be generated
+     *
      * @return true if no tags contraindicate invoice generation
      */
     @Override
     public boolean generateInvoice() {
-        for (Tag tag : entities.values()) {
+        for (final Tag tag : entities.values()) {
             if (tag instanceof ControlTag) {
-                ControlTag controlTag = (ControlTag) tag;
+                final ControlTag controlTag = (ControlTag) tag;
                 if (controlTag.getControlTagType() == ControlTagType.AUTO_INVOICING_OFF) {
                     return false;
                 }
@@ -69,7 +70,7 @@ public class DefaultTagStore extends EntityCollectionBase<Tag> implements TagSto
 
     @Override
     public boolean containsTagForDefinition(final TagDefinition tagDefinition) {
-        for (Tag tag : entities.values()) {
+        for (final Tag tag : entities.values()) {
             if (tag.getTagDefinitionName().equals(tagDefinition.getName())) {
                 return true;
             }
@@ -80,7 +81,7 @@ public class DefaultTagStore extends EntityCollectionBase<Tag> implements TagSto
 
     @Override
     public boolean containsTagForControlTagType(final ControlTagType controlTagType) {
-        for (Tag tag : entities.values()) {
+        for (final Tag tag : entities.values()) {
             if (tag.getTagDefinitionName().equals(controlTagType.toString())) {
                 return true;
             }
@@ -90,8 +91,8 @@ public class DefaultTagStore extends EntityCollectionBase<Tag> implements TagSto
     }
 
     @Override
-    public Tag remove(TagDefinition tagDefinition) {
-        Tag tag = entities.get(tagDefinition.getName());
+    public Tag remove(final TagDefinition tagDefinition) {
+        final Tag tag = entities.get(tagDefinition.getName());
         return (tag == null) ? null : entities.remove(tag);
     }
 }

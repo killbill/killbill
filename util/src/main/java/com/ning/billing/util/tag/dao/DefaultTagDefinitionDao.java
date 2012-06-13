@@ -19,12 +19,13 @@ package com.ning.billing.util.tag.dao;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.tag.ControlTagType;
 import org.skife.jdbi.v2.IDBI;
+
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.util.api.TagDefinitionApiException;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.DefaultTagDefinition;
 import com.ning.billing.util.tag.TagDefinition;
 
@@ -32,18 +33,18 @@ public class DefaultTagDefinitionDao implements TagDefinitionDao {
     private final TagDefinitionSqlDao dao;
 
     @Inject
-    public DefaultTagDefinitionDao(IDBI dbi) {
+    public DefaultTagDefinitionDao(final IDBI dbi) {
         this.dao = dbi.onDemand(TagDefinitionSqlDao.class);
     }
 
     @Override
     public List<TagDefinition> getTagDefinitions() {
         // get user definitions from the database
-        List<TagDefinition> definitionList = new ArrayList<TagDefinition>();
+        final List<TagDefinition> definitionList = new ArrayList<TagDefinition>();
         definitionList.addAll(dao.get());
 
         // add control tag definitions
-        for (ControlTagType controlTag : ControlTagType.values()) {
+        for (final ControlTagType controlTag : ControlTagType.values()) {
             definitionList.add(new DefaultTagDefinition(controlTag.toString(), controlTag.getDescription(), true));
         }
 
@@ -53,8 +54,8 @@ public class DefaultTagDefinitionDao implements TagDefinitionDao {
     @Override
     public TagDefinition getByName(final String definitionName) {
         // add control tag definitions
-        for (ControlTagType controlTag : ControlTagType.values()) {
-            if(definitionName.equals(controlTag.name())) {
+        for (final ControlTagType controlTag : ControlTagType.values()) {
+            if (definitionName.equals(controlTag.name())) {
                 return new DefaultTagDefinition(controlTag.toString(), controlTag.getDescription(), true);
             }
         }
@@ -68,19 +69,19 @@ public class DefaultTagDefinitionDao implements TagDefinitionDao {
             throw new TagDefinitionApiException(ErrorCode.TAG_DEFINITION_CONFLICTS_WITH_CONTROL_TAG, definitionName);
         }
 
-        TagDefinition existingDefinition = dao.getByName(definitionName);
+        final TagDefinition existingDefinition = dao.getByName(definitionName);
 
         if (existingDefinition != null) {
             throw new TagDefinitionApiException(ErrorCode.TAG_DEFINITION_ALREADY_EXISTS, definitionName);
         }
 
-        TagDefinition definition = new DefaultTagDefinition(definitionName, description, false);
+        final TagDefinition definition = new DefaultTagDefinition(definitionName, description, false);
         dao.create(definition, context);
         return definition;
     }
 
     private boolean isControlTagName(final String definitionName) {
-        for (ControlTagType controlTagName : ControlTagType.values()) {
+        for (final ControlTagType controlTagName : ControlTagType.values()) {
             if (controlTagName.toString().equals(definitionName)) {
                 return true;
             }
@@ -91,7 +92,7 @@ public class DefaultTagDefinitionDao implements TagDefinitionDao {
 
     @Override
     public void deleteAllTagsForDefinition(final String definitionName, final CallContext context) throws TagDefinitionApiException {
-        TagDefinition existingDefinition = dao.getByName(definitionName);
+        final TagDefinition existingDefinition = dao.getByName(definitionName);
         if (existingDefinition == null) {
             throw new TagDefinitionApiException(ErrorCode.TAG_DEFINITION_DOES_NOT_EXIST, definitionName);
         }
@@ -105,7 +106,7 @@ public class DefaultTagDefinitionDao implements TagDefinitionDao {
             throw new TagDefinitionApiException(ErrorCode.TAG_DEFINITION_IN_USE, definitionName);
         }
 
-        TagDefinition existingDefinition = dao.getByName(definitionName);
+        final TagDefinition existingDefinition = dao.getByName(definitionName);
 
         if (existingDefinition == null) {
             throw new TagDefinitionApiException(ErrorCode.TAG_DEFINITION_DOES_NOT_EXIST, definitionName);
