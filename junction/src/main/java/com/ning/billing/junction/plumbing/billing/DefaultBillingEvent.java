@@ -55,7 +55,7 @@ public class DefaultBillingEvent implements BillingEvent {
         this.account = account;
         this.billCycleDay = billCycleDay;
         this.subscription = subscription;
-        effectiveDate = transition.getEffectiveTransitionTime();
+        effectiveDate = truncateEffectiveDateInTimeZone(transition, account);
         String planPhaseName = (transition.getTransitionType() != SubscriptionTransitionType.CANCEL) ?
                 transition.getNextPhase() : transition.getPreviousPhase();
         planPhase = (planPhaseName != null) ? catalog.findPhase(planPhaseName, transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
@@ -82,6 +82,11 @@ public class DefaultBillingEvent implements BillingEvent {
                 nextPhase.getBillingPeriod() : prevPhase.getBillingPeriod();
         type = transition.getTransitionType();
         totalOrdering = transition.getTotalOrdering();
+    }
+
+    private DateTime truncateEffectiveDateInTimeZone(SubscriptionEvent transition, Account account) {
+        DateTime originalTime = transition.getEffectiveTransitionTime().toDateTime(account.getTimeZone());
+        return new DateTime(originalTime.getYear(), originalTime.getMonthOfYear(), originalTime.getDayOfMonth(),0,0);
     }
 
     public DefaultBillingEvent(Account account, Subscription subscription, DateTime effectiveDate, Plan plan, PlanPhase planPhase,

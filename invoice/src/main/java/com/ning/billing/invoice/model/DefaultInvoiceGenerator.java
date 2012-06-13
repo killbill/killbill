@@ -70,8 +70,6 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         }
 
         validateTargetDate(targetDate);
-        //TODO MDW can use subscription Id - not bundle
-        //TODO MDW worry about null sub id
 
         List<InvoiceItem> existingItems = new ArrayList<InvoiceItem>();
         if (existingInvoices != null) {
