@@ -64,7 +64,10 @@ public class DefaultTagUserApi implements TagUserApi {
 
     @Override
     public void addTags(final UUID objectId, final ObjectType objectType, final List<TagDefinition> tagDefinitions, final CallContext context) throws TagApiException {
-        tagDao.insertTags(objectId, objectType, tagDefinitions, context);
+        // TODO: consider making this batch
+        for (final TagDefinition tagDefinition : tagDefinitions) {
+            tagDao.insertTag(objectId, objectType, tagDefinition, context);
+        }
     }
 
     @Override
