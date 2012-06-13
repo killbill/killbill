@@ -49,11 +49,6 @@ public class MockTagDefinitionDao implements TagDefinitionDao {
     }
 
     @Override
-    public void deleteAllTagsForDefinition(final String definitionName, final CallContext context) throws TagDefinitionApiException {
-        tags.remove(definitionName);
-    }
-
-    @Override
     public void deleteTagDefinition(final String definitionName, final CallContext context) throws TagDefinitionApiException {
         tags.remove(definitionName);
     }

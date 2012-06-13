@@ -29,7 +29,5 @@ public interface TagDefinitionDao {
 
     public TagDefinition create(String definitionName, String description, CallContext context) throws TagDefinitionApiException;
 
-    public void deleteAllTagsForDefinition(String definitionName, CallContext context) throws TagDefinitionApiException;
-
     public void deleteTagDefinition(String definitionName, CallContext context) throws TagDefinitionApiException;
 }

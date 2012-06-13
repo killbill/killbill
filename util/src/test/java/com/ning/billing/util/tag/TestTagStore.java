@@ -285,7 +285,7 @@ public class TestTagStore {
     }
 
     @Test(groups = "slow")
-    public void testDeleteAllTagsForDefinitionInUse() {
+    public void testDeleteTagBeforeDeleteTagDefinition() {
         final String definitionName = "TestTag1234567";
         try {
             tagDefinitionDao.create(definitionName, "Some test tag", context);
@@ -306,58 +306,9 @@ public class TestTagStore {
         final Map<String, Tag> tagMap = tagDao.loadEntities(objectId, ObjectType.ACCOUNT);
         assertEquals(tagMap.size(), 1);
 
-        try {
-            tagDefinitionDao.deleteAllTagsForDefinition(definitionName, context);
-        } catch (TagDefinitionApiException e) {
-            fail("Could not delete tagStore for tag definition", e);
-        }
-
-        try {
-            tagDefinitionDao.deleteTagDefinition(definitionName, context);
-        } catch (TagDefinitionApiException e) {
-            fail("Could not delete tag definition", e);
-        }
-    }
-
-    @Test(groups = "slow")
-    public void testDeleteAllTagsForDefinitionNotInUse() {
-        final String definitionName = "TestTag4321";
-        try {
-            tagDefinitionDao.create(definitionName, "Some test tag", context);
-        } catch (TagDefinitionApiException e) {
-            fail("Could not create tag definition", e);
-        }
-
-        final TagDefinition tagDefinition = tagDefinitionDao.getByName(definitionName);
-        assertNotNull(tagDefinition);
-
-        try {
-            tagDefinitionDao.deleteAllTagsForDefinition(definitionName, context);
-        } catch (TagDefinitionApiException e) {
-            fail("Could not delete tagStore for tag definition", e);
-        }
-
-        try {
-            tagDefinitionDao.deleteTagDefinition(definitionName, context);
-        } catch (TagDefinitionApiException e) {
-            fail("Could not delete tag definition", e);
-        }
-    }
-
-    @Test(groups = "slow", expectedExceptions = TagDefinitionApiException.class)
-    public void testDeleteAllTagsForDefinitionWithWrongName() throws TagDefinitionApiException {
-        final String definitionName = "TestTag654321";
-        final String wrongDefinitionName = "TestTag564321";
-        try {
-            tagDefinitionDao.create(definitionName, "Some test tag", context);
-        } catch (TagDefinitionApiException e) {
-            fail("Could not create tag definition", e);
-        }
-
-        final TagDefinition tagDefinition = tagDefinitionDao.getByName(definitionName);
-        assertNotNull(tagDefinition);
-
-        tagDefinitionDao.deleteAllTagsForDefinition(wrongDefinitionName, context);
+        tagDao.deleteTag(objectId, ObjectType.ACCOUNT, tagDefinition, context);
+        final Map<String, Tag> tagMapAfterDeletion = tagDao.loadEntities(objectId, ObjectType.ACCOUNT);
+        assertEquals(tagMapAfterDeletion.size(), 0);
 
         try {
             tagDefinitionDao.deleteTagDefinition(definitionName, context);

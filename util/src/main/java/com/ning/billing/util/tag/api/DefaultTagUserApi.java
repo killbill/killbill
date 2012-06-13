@@ -51,14 +51,8 @@ public class DefaultTagUserApi implements TagUserApi {
     }
 
     @Override
-    public void deleteAllTagsForDefinition(final String definitionName, final CallContext context)
-            throws TagDefinitionApiException {
-        tagDefinitionDao.deleteAllTagsForDefinition(definitionName, context);
-    }
-
-    @Override
     public void deleteTagDefinition(final String definitionName, final CallContext context) throws TagDefinitionApiException {
-        tagDefinitionDao.deleteAllTagsForDefinition(definitionName, context);
+        tagDefinitionDao.deleteTagDefinition(definitionName, context);
     }
 
     @Override
