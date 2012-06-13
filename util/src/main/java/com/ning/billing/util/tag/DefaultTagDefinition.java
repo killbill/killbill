@@ -50,4 +50,47 @@ public class DefaultTagDefinition extends EntityBase implements TagDefinition {
     public Boolean isControlTag() {
         return isControlTag;
     }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append("DefaultTagDefinition");
+        sb.append("{description='").append(description).append('\'');
+        sb.append(", name='").append(name).append('\'');
+        sb.append(", isControlTag=").append(isControlTag);
+        sb.append('}');
+        return sb.toString();
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        final DefaultTagDefinition that = (DefaultTagDefinition) o;
+
+        if (description != null ? !description.equals(that.description) : that.description != null) {
+            return false;
+        }
+        if (isControlTag != null ? !isControlTag.equals(that.isControlTag) : that.isControlTag != null) {
+            return false;
+        }
+        if (name != null ? !name.equals(that.name) : that.name != null) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = name != null ? name.hashCode() : 0;
+        result = 31 * result + (description != null ? description.hashCode() : 0);
+        result = 31 * result + (isControlTag != null ? isControlTag.hashCode() : 0);
+        return result;
+    }
 }
