@@ -19,6 +19,7 @@ package com.ning.billing.util.tag.dao;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.dao.AuditedCollectionDao;
 import com.ning.billing.util.dao.ObjectType;
@@ -26,9 +27,9 @@ import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;
 
 public interface TagDao extends AuditedCollectionDao<Tag> {
-    void insertTag(UUID objectId, ObjectType objectType, TagDefinition tagDefinition, CallContext context);
+    void insertTag(UUID objectId, ObjectType objectType, TagDefinition tagDefinition, CallContext context) throws TagApiException;
 
-    void insertTags(UUID objectId, ObjectType objectType, List<TagDefinition> tagDefinitions, CallContext context);
+    void insertTags(UUID objectId, ObjectType objectType, List<TagDefinition> tagDefinitions, CallContext context) throws TagApiException;
 
-    void deleteTag(UUID objectId, ObjectType objectType, TagDefinition tagDefinition, CallContext context);
+    void deleteTag(UUID objectId, ObjectType objectType, TagDefinition tagDefinition, CallContext context) throws TagApiException;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2012 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -19,18 +19,18 @@ package com.ning.billing.util.api;
 import com.ning.billing.BillingExceptionBase;
 import com.ning.billing.ErrorCode;
 
-public class TagDefinitionApiException extends BillingExceptionBase {
+public class TagApiException extends BillingExceptionBase {
     private static final long serialVersionUID = 1L;
 
-    public TagDefinitionApiException(final Throwable cause, final int code, final String msg) {
+    public TagApiException(final Throwable cause, final int code, final String msg) {
         super(cause, code, msg);
     }
 
-    public TagDefinitionApiException(final Throwable cause, final ErrorCode code, final Object... args) {
+    public TagApiException(final Throwable cause, final ErrorCode code, final Object... args) {
         super(cause, code, args);
     }
 
-    public TagDefinitionApiException(final ErrorCode code, final Object... args) {
+    public TagApiException(final ErrorCode code, final Object... args) {
         super(code, args);
     }
 }

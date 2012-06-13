@@ -21,6 +21,7 @@ import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
+import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.callcontext.CallContext;
 import org.joda.time.DateTime;
 
@@ -55,9 +56,9 @@ public interface InvoiceDao {
 
 	List<Invoice> getAllInvoicesByAccount(final UUID accountId);
 
-    void setWrittenOff(final UUID invoiceId, final CallContext context);
+    void setWrittenOff(final UUID invoiceId, final CallContext context) throws TagApiException;
 
-    void removeWrittenOff(final UUID invoiceId, final CallContext context) throws InvoiceApiException;
+    void removeWrittenOff(final UUID invoiceId, final CallContext context) throws TagApiException;
 
     void postChargeback(final UUID invoicePaymentId, final BigDecimal amount, final CallContext context) throws InvoiceApiException;
 

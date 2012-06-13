@@ -22,6 +22,7 @@ import java.util.UUID;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.callcontext.CallContext;
 import org.joda.time.DateTime;
 
@@ -82,12 +83,12 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
 	}
 
     @Override
-    public void tagInvoiceAsWrittenOff(final UUID invoiceId, final CallContext context) {
+    public void tagInvoiceAsWrittenOff(final UUID invoiceId, final CallContext context) throws TagApiException {
         dao.setWrittenOff(invoiceId, context);
     }
 
     @Override
-    public void tagInvoiceAsNotWrittenOff(final UUID invoiceId, final CallContext context) throws InvoiceApiException {
+    public void tagInvoiceAsNotWrittenOff(final UUID invoiceId, final CallContext context) throws TagApiException {
         dao.removeWrittenOff(invoiceId, context);
     }
 

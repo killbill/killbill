@@ -37,7 +37,7 @@ import org.testng.annotations.Test;
 
 import com.google.inject.Inject;
 import com.ning.billing.dbi.MysqlTestingHelper;
-import com.ning.billing.invoice.api.InvoiceApiException;
+import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.callcontext.CallContext;
@@ -285,7 +285,7 @@ public class TestTagStore {
     }
 
     @Test(groups = "slow")
-    public void testDeleteTagBeforeDeleteTagDefinition() {
+    public void testDeleteTagBeforeDeleteTagDefinition() throws TagApiException {
         final String definitionName = "TestTag1234567";
         try {
             tagDefinitionDao.create(definitionName, "Some test tag", context);
@@ -342,7 +342,7 @@ public class TestTagStore {
 
         final Handle handle = dbi.open();
         final String query = String.format("select * from audit_log a inner join tag_history th on a.record_id = th.history_record_id where a.table_name = 'tag_history' and th.id='%s' and a.change_type='INSERT'",
-                                     tag.getId().toString());
+                                           tag.getId().toString());
         final List<Map<String, Object>> result = handle.select(query);
         handle.close();
 
@@ -373,7 +373,7 @@ public class TestTagStore {
 
         final Handle handle = dbi.open();
         final String query = String.format("select * from audit_log a inner join tag_history th on a.record_id = th.history_record_id where a.table_name = 'tag_history' and th.id='%s' and a.change_type='DELETE'",
-                                     tag.getId().toString());
+                                           tag.getId().toString());
         final List<Map<String, Object>> result = handle.select(query);
         handle.close();
 
@@ -386,7 +386,7 @@ public class TestTagStore {
     }
 
     @Test
-    public void testAddTag() {
+    public void testAddTag() throws TagApiException {
         final UUID objectId = UUID.randomUUID();
         final ObjectType objectType = ObjectType.INVOICE;
         final TagDefinition tagDefinition = new DefaultTagDefinition("test tag", "test", false);
@@ -396,7 +396,7 @@ public class TestTagStore {
     }
 
     @Test
-    public void testRemoveTag() throws InvoiceApiException {
+    public void testRemoveTag() throws TagApiException {
         final UUID objectId = UUID.randomUUID();
         final ObjectType objectType = ObjectType.INVOICE;
         final TagDefinition tagDefinition = new DefaultTagDefinition("test tag", "test", false);
