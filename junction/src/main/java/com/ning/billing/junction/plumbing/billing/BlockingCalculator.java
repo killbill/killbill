@@ -26,6 +26,7 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
@@ -199,11 +200,12 @@ public class BlockingCalculator {
         final BillingPeriod billingPeriod = previousEvent.getBillingPeriod();
         final SubscriptionTransitionType type = SubscriptionTransitionType.CANCEL;
         final Long totalOrdering = globaltotalOrder.getAndIncrement(); 
+        final DateTimeZone tz = previousEvent.getTimeZone();
 
         return new DefaultBillingEvent(account, subscription, effectiveDate, plan, planPhase,
                 fixedPrice, recurringPrice, currency,
                 billingPeriod, billCycleDay, billingModeType,
-                description, totalOrdering, type);
+                description, totalOrdering, type, tz);
     }
 
     protected BillingEvent createNewReenableEvent(DateTime odEventTime, BillingEvent previousEvent) {
@@ -221,11 +223,12 @@ public class BlockingCalculator {
         final BillingPeriod billingPeriod = previousEvent.getBillingPeriod();
         final SubscriptionTransitionType type = SubscriptionTransitionType.RE_CREATE;
         final Long totalOrdering = globaltotalOrder.getAndIncrement();  
+        final DateTimeZone tz = previousEvent.getTimeZone();
 
         return new DefaultBillingEvent(account, subscription, effectiveDate, plan, planPhase,
                 fixedPrice, recurringPrice, currency,
                 billingPeriod, billCycleDay, billingModeType,
-                description, totalOrdering, type);
+                description, totalOrdering, type, tz);
     }
 
     protected Hashtable<UUID,List<Subscription>> createBundleSubscriptionMap(SortedSet<BillingEvent> billingEvents) {

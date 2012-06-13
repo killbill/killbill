@@ -29,6 +29,8 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.Months;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
@@ -45,6 +47,7 @@ import com.ning.billing.junction.api.BillingEventSet;
 import com.ning.billing.util.clock.Clock;
 
 public class DefaultInvoiceGenerator implements InvoiceGenerator {
+    private static final Logger log = LoggerFactory.getLogger(DefaultInvoiceGenerator.class);
     private static final int ROUNDING_MODE = InvoicingConfiguration.getRoundingMode();
     private static final int NUMBER_OF_DECIMALS = InvoicingConfiguration.getNumberOfDecimals();
 
@@ -292,9 +295,13 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
 
         BillingPeriod billingPeriod = thisEvent.getBillingPeriod();
         if (billingPeriod != BillingPeriod.NO_BILLING_PERIOD) {
+            
             BillingMode billingMode = instantiateBillingMode(thisEvent.getBillingMode());
             DateTime startDate = thisEvent.getEffectiveDate();
-            if (!startDate.isAfter(targetDate)) {
+            DateTime tzAdjustedStartDate = startDate.toDateTime(thisEvent.getTimeZone());
+            DateTime roundedStartDate = new DateTime(tzAdjustedStartDate.getYear(), tzAdjustedStartDate.getMonthOfYear(), tzAdjustedStartDate.getDayOfMonth(),0,0);
+            log.info(String.format("start = %s, rounded = %s, target = %s, in = %s", startDate, roundedStartDate, targetDate, (!roundedStartDate.isAfter(targetDate)) ? "in" : "out"));
+            if (!roundedStartDate.isAfter(targetDate)) {
                 DateTime endDate = (nextEvent == null) ? null : nextEvent.getEffectiveDate();
                 int billCycleDay = thisEvent.getBillCycleDay();
 

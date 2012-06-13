@@ -28,6 +28,7 @@ import com.ning.billing.entitlement.api.billing.BillingEvent;
 import com.ning.billing.entitlement.api.billing.BillingModeType;
 import com.ning.billing.entitlement.api.user.Subscription;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 import com.ning.billing.invoice.model.InvoicingConfiguration;
 
@@ -148,6 +149,10 @@ public abstract class InvoicingTestBase {
             @Override
             public Long getTotalOrdering() {
                 return totalOrdering;
+            }
+            @Override
+            public DateTimeZone getTimeZone() {
+                return DateTimeZone.UTC;
             }
             @Override
             public int compareTo(BillingEvent e1) {

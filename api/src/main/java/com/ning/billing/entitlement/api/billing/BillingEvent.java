@@ -19,6 +19,7 @@ package com.ning.billing.entitlement.api.billing;
 import java.math.BigDecimal;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -113,4 +114,10 @@ public interface BillingEvent extends Comparable<BillingEvent> {
 	 * @return a unique long indicating the ordering on which events got inserted on disk-- used for sorting only
 	 */
 	public Long getTotalOrdering();
+	
+	/**
+	 * 
+	 * @return The TimeZone of the account
+	 */
+    public DateTimeZone getTimeZone();
  }

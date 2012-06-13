@@ -253,6 +253,7 @@ public class TestBillingApi {
         ((ZombieControl)account).addResult("getBillCycleDay", 32);
         ((ZombieControl)account).addResult("getCurrency", Currency.USD);
         ((ZombieControl)account).addResult("getId", UUID.randomUUID());
+        ((ZombieControl)account).addResult("getTimeZone", DateTimeZone.UTC);
         ((ZombieControl)accountApi).addResult("getAccountById", account);
 		       
         BillCycleDayCalculator bcdCalculator = new BillCycleDayCalculator(catalogService, entitlementApi);
@@ -318,6 +319,7 @@ public class TestBillingApi {
         ((ZombieControl)account).addResult("getBillCycleDay", 32);
         ((ZombieControl)account).addResult("getCurrency", Currency.USD);
         ((ZombieControl)account).addResult("getId", UUID.randomUUID());
+        ((ZombieControl)account).addResult("getTimeZone", DateTimeZone.UTC);
         ((ZombieControl)accountApi).addResult("getAccountById", account);
 
         ((MockCatalog)catalogService.getFullCatalog()).setBillingAlignment(BillingAlignment.ACCOUNT);
@@ -351,6 +353,7 @@ public class TestBillingApi {
 		((ZombieControl)account).addResult("getBillCycleDay", 1).addResult("getTimeZone", DateTimeZone.UTC);
         ((ZombieControl)account).addResult("getCurrency", Currency.USD);
         ((ZombieControl)account).addResult("getId", UUID.randomUUID());
+        ((ZombieControl)account).addResult("getTimeZone", DateTimeZone.UTC);
 
         AccountUserApi accountApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
         ((ZombieControl)accountApi).addResult("getAccountById", account);
@@ -389,6 +392,7 @@ public class TestBillingApi {
         Account account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
         ((ZombieControl)account).addResult("getBillCycleDay", 32);
         ((ZombieControl)account).addResult("getCurrency", Currency.USD);
+        ((ZombieControl)account).addResult("getTimeZone", DateTimeZone.UTC);
         ((ZombieControl)accountApi).addResult("getAccountById", account);
         ((ZombieControl)account).addResult("getId", UUID.randomUUID());
 
@@ -551,7 +555,7 @@ public class TestBillingApi {
 
 		Assert.assertEquals(BCD, event.getBillCycleDay());
 		Assert.assertEquals(id, event.getSubscription().getId());
-		Assert.assertEquals(time, event.getEffectiveDate());
+		Assert.assertEquals(time.getDayOfMonth(), event.getEffectiveDate().getDayOfMonth());
 		Assert.assertEquals(nextPhase, event.getPlanPhase());
 		Assert.assertEquals(nextPlan, event.getPlan());
 		Assert.assertEquals(nextPhase.getBillingPeriod(), event.getBillingPeriod());
