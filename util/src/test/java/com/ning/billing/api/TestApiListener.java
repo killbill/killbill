@@ -225,7 +225,7 @@ public class TestApiListener {
             }
             if (!foundIt && !nonExpectedMode) {
                 Joiner joiner = Joiner.on(" ");
-                log.error("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++                   TestApiListener Received event " + received + "; expecting " + joiner.join(nextExpectedEvent) + "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+                log.error("TestApiListener Received event " + received + "; expecting " + joiner.join(nextExpectedEvent));
                 if (testStatus != null) {
                     testStatus.failed("TestApiListener [ApiListenerStatus]: Received event " + received + "; expecting " + joiner.join(nextExpectedEvent));
                 }
