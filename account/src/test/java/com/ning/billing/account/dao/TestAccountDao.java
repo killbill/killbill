@@ -16,27 +16,11 @@
 
 package com.ning.billing.account.dao;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.fail;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import com.ning.billing.account.api.AccountEmail;
-import com.ning.billing.account.api.DefaultAccountEmail;
-import com.ning.billing.util.api.TagApiException;
-import com.ning.billing.util.customfield.CustomField;
-import com.ning.billing.util.customfield.StringCustomField;
-import com.ning.billing.util.customfield.dao.AuditedCustomFieldDao;
-import com.ning.billing.util.customfield.dao.CustomFieldDao;
-import com.ning.billing.util.dao.ObjectType;
-import com.ning.billing.util.entity.EntityPersistenceException;
-import com.ning.billing.util.tag.dao.AuditedTagDao;
-import com.ning.billing.util.tag.dao.TagDao;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.Handle;
 import org.testng.annotations.Test;
@@ -44,40 +28,56 @@ import org.testng.annotations.Test;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
+import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.account.api.DefaultAccount;
+import com.ning.billing.account.api.DefaultAccountEmail;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.util.api.TagApiException;
+import com.ning.billing.util.customfield.CustomField;
+import com.ning.billing.util.customfield.StringCustomField;
+import com.ning.billing.util.customfield.dao.AuditedCustomFieldDao;
+import com.ning.billing.util.customfield.dao.CustomFieldDao;
+import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.util.entity.EntityPersistenceException;
 import com.ning.billing.util.tag.DefaultTagDefinition;
 import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;
+import com.ning.billing.util.tag.dao.AuditedTagDao;
+import com.ning.billing.util.tag.dao.TagDao;
 import com.ning.billing.util.tag.dao.TagDefinitionSqlDao;
+
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 @Test(groups = {"slow", "account-dao"})
 public class TestAccountDao extends AccountDaoTestBase {
-    private Account createTestAccount(int billCycleDay) {
+    private Account createTestAccount(final int billCycleDay) {
         return createTestAccount(billCycleDay, "123-456-7890");
     }
 
-    private Account createTestAccount(int billCycleDay, String phone) {
-        String thisKey = "test" + UUID.randomUUID().toString();
-        String lastName = UUID.randomUUID().toString();
-        String thisEmail = "me@me.com" + " " + UUID.randomUUID();
-        String firstName = "Bob";
-        String name = firstName + " " + lastName;
-        String locale = "EN-US";
-        DateTimeZone timeZone = DateTimeZone.forID("America/Los_Angeles");
-        int firstNameLength = firstName.length();
+    private Account createTestAccount(final int billCycleDay, final String phone) {
+        final String thisKey = "test" + UUID.randomUUID().toString();
+        final String lastName = UUID.randomUUID().toString();
+        final String thisEmail = "me@me.com" + " " + UUID.randomUUID();
+        final String firstName = "Bob";
+        final String name = firstName + " " + lastName;
+        final String locale = "EN-US";
+        final DateTimeZone timeZone = DateTimeZone.forID("America/Los_Angeles");
+        final int firstNameLength = firstName.length();
 
         return new DefaultAccount(UUID.randomUUID(), thisKey, thisEmail, name, firstNameLength, Currency.USD,
-                billCycleDay, UUID.randomUUID(), timeZone, locale,
-                null, null, null, null, null, null, null, // add null address fields
-                phone, false, false);
+                                  billCycleDay, UUID.randomUUID(), timeZone, locale,
+                                  null, null, null, null, null, null, null, // add null address fields
+                                  phone, false, false);
     }
 
     @Test
     public void testBasic() throws EntityPersistenceException {
-        Account a = createTestAccount(5);
+        final Account a = createTestAccount(5);
         accountDao.create(a, context);
-        String key = a.getExternalKey();
+        final String key = a.getExternalKey();
 
         Account r = accountDao.getAccountByKey(key);
         assertNotNull(r);
@@ -87,7 +87,7 @@ public class TestAccountDao extends AccountDaoTestBase {
         assertNotNull(r);
         assertEquals(r.getExternalKey(), a.getExternalKey());
 
-        List<Account> all = accountDao.get();
+        final List<Account> all = accountDao.get();
         assertNotNull(all);
         assertTrue(all.size() >= 1);
     }
@@ -95,27 +95,27 @@ public class TestAccountDao extends AccountDaoTestBase {
     // simple test to ensure long phone numbers can be stored
     @Test
     public void testLongPhoneNumber() throws EntityPersistenceException {
-        Account account = createTestAccount(1, "123456789012345678901234");
+        final Account account = createTestAccount(1, "123456789012345678901234");
         accountDao.create(account, context);
 
-        Account saved = accountDao.getAccountByKey(account.getExternalKey());
+        final Account saved = accountDao.getAccountByKey(account.getExternalKey());
         assertNotNull(saved);
     }
 
     // simple test to ensure excessively long phone numbers cannot be stored
     @Test(expectedExceptions = {EntityPersistenceException.class})
     public void testOverlyLongPhoneNumber() throws EntityPersistenceException {
-        Account account = createTestAccount(1, "12345678901234567890123456");
+        final Account account = createTestAccount(1, "12345678901234567890123456");
         accountDao.create(account, context);
     }
 
     @Test
     public void testGetById() throws EntityPersistenceException {
         Account account = createTestAccount(1);
-        UUID id = account.getId();
-        String key = account.getExternalKey();
-        String name = account.getName();
-        int firstNameLength = account.getFirstNameLength();
+        final UUID id = account.getId();
+        final String key = account.getExternalKey();
+        final String name = account.getName();
+        final int firstNameLength = account.getFirstNameLength();
 
         accountDao.create(account, context);
 
@@ -130,45 +130,45 @@ public class TestAccountDao extends AccountDaoTestBase {
 
     @Test
     public void testCustomFields() throws EntityPersistenceException {
-        String fieldName = "testField1";
-        String fieldValue = "testField1_value";
+        final String fieldName = "testField1";
+        final String fieldValue = "testField1_value";
 
-        UUID accountId = UUID.randomUUID();
-        List<CustomField> customFields = new ArrayList<CustomField>();
+        final UUID accountId = UUID.randomUUID();
+        final List<CustomField> customFields = new ArrayList<CustomField>();
         customFields.add(new StringCustomField(fieldName, fieldValue));
-        CustomFieldDao customFieldDao = new AuditedCustomFieldDao(dbi);
+        final CustomFieldDao customFieldDao = new AuditedCustomFieldDao(dbi);
         customFieldDao.saveEntities(accountId, ObjectType.ACCOUNT, customFields, context);
 
-        Map<String, CustomField> customFieldMap = customFieldDao.loadEntities(accountId, ObjectType.ACCOUNT);
+        final Map<String, CustomField> customFieldMap = customFieldDao.loadEntities(accountId, ObjectType.ACCOUNT);
         assertEquals(customFieldMap.size(), 1);
-        CustomField customField = customFieldMap.get(fieldName);
+        final CustomField customField = customFieldMap.get(fieldName);
         assertEquals(customField.getName(), fieldName);
         assertEquals(customField.getValue(), fieldValue);
     }
 
     @Test
     public void testTags() throws EntityPersistenceException, TagApiException {
-        Account account = createTestAccount(1);
-        TagDefinition definition = new DefaultTagDefinition("Test Tag", "For testing only", false);
-        TagDefinitionSqlDao tagDescriptionDao = dbi.onDemand(TagDefinitionSqlDao.class);
+        final Account account = createTestAccount(1);
+        final TagDefinition definition = new DefaultTagDefinition("Test Tag", "For testing only", false);
+        final TagDefinitionSqlDao tagDescriptionDao = dbi.onDemand(TagDefinitionSqlDao.class);
         tagDescriptionDao.create(definition, context);
 
-        TagDao tagDao = new AuditedTagDao(dbi, tagEventBuilder, bus);
+        final TagDao tagDao = new AuditedTagDao(dbi, tagEventBuilder, bus);
         tagDao.insertTag(account.getId(), ObjectType.ACCOUNT, definition, context);
 
-        Map<String, Tag> tagMap = tagDao.loadEntities(account.getId(), ObjectType.ACCOUNT);
+        final Map<String, Tag> tagMap = tagDao.loadEntities(account.getId(), ObjectType.ACCOUNT);
         assertEquals(tagMap.size(), 1);
-        Tag tag = tagMap.get(definition.getName());
+        final Tag tag = tagMap.get(definition.getName());
         assertEquals(tag.getTagDefinitionName(), definition.getName());
     }
 
     @Test
     public void testGetIdFromKey() throws EntityPersistenceException {
-        Account account = createTestAccount(1);
+        final Account account = createTestAccount(1);
         accountDao.create(account, context);
 
         try {
-            UUID accountId = accountDao.getIdFromKey(account.getExternalKey());
+            final UUID accountId = accountDao.getIdFromKey(account.getExternalKey());
             assertEquals(accountId, account.getId());
         } catch (AccountApiException a) {
             fail("Retrieving account failed.");
@@ -177,7 +177,7 @@ public class TestAccountDao extends AccountDaoTestBase {
 
     @Test(expectedExceptions = AccountApiException.class)
     public void testGetIdFromKeyForNullKey() throws AccountApiException {
-        String key = null;
+        final String key = null;
         accountDao.getIdFromKey(key);
     }
 
@@ -186,7 +186,7 @@ public class TestAccountDao extends AccountDaoTestBase {
         final Account account = createTestAccount(1);
         accountDao.create(account, context);
 
-        AccountData accountData = new AccountData() {
+        final AccountData accountData = new AccountData() {
             @Override
             public String getExternalKey() {
                 return account.getExternalKey();
@@ -236,6 +236,7 @@ public class TestAccountDao extends AccountDaoTestBase {
             public UUID getPaymentMethodId() {
                 return account.getPaymentMethodId();
             }
+
             @Override
             public DateTimeZone getTimeZone() {
                 return DateTimeZone.forID("Australia/Darwin");
@@ -245,6 +246,7 @@ public class TestAccountDao extends AccountDaoTestBase {
             public String getLocale() {
                 return "FR-CA";
             }
+
             @Override
             public String getAddress1() {
                 return null;
@@ -281,10 +283,10 @@ public class TestAccountDao extends AccountDaoTestBase {
             }
         };
 
-        Account updatedAccount = new DefaultAccount(account.getId(), accountData);
+        final Account updatedAccount = new DefaultAccount(account.getId(), accountData);
         accountDao.update(updatedAccount, context);
 
-        Account savedAccount = accountDao.getAccountByKey(account.getExternalKey());
+        final Account savedAccount = accountDao.getAccountByKey(account.getExternalKey());
 
         assertNotNull(savedAccount);
         assertEquals(savedAccount.getName(), updatedAccount.getName());
@@ -305,31 +307,31 @@ public class TestAccountDao extends AccountDaoTestBase {
 
     @Test
     public void testAddingContactInformation() throws Exception {
-        UUID accountId = UUID.randomUUID();
-        DefaultAccount account = new DefaultAccount(accountId, "extKey123456", "myemail123456@glam.com",
-                                                    "John Smith", 4, Currency.USD, 15, null,
-                                                    DateTimeZone.forID("America/Cambridge_Bay"), "EN-CA",
-                                                    null, null, null, null, null, null, null, null, false, false);
+        final UUID accountId = UUID.randomUUID();
+        final DefaultAccount account = new DefaultAccount(accountId, "extKey123456", "myemail123456@glam.com",
+                                                          "John Smith", 4, Currency.USD, 15, null,
+                                                          DateTimeZone.forID("America/Cambridge_Bay"), "EN-CA",
+                                                          null, null, null, null, null, null, null, null, false, false);
         accountDao.create(account, context);
 
-        String address1 = "123 address 1";
-        String address2 = "456 address 2";
-        String companyName = "Some Company";
-        String city = "Cambridge Bay";
-        String stateOrProvince = "Nunavut";
-        String country = "Canada";
-        String postalCode = "X0B 0C0";
-        String phone = "18001112222";
+        final String address1 = "123 address 1";
+        final String address2 = "456 address 2";
+        final String companyName = "Some Company";
+        final String city = "Cambridge Bay";
+        final String stateOrProvince = "Nunavut";
+        final String country = "Canada";
+        final String postalCode = "X0B 0C0";
+        final String phone = "18001112222";
 
-        DefaultAccount updatedAccount = new DefaultAccount(accountId, "extKey123456", "myemail123456@glam.com",
-                                                    "John Smith", 4, Currency.USD, 15, null,
-                                                    DateTimeZone.forID("America/Cambridge_Bay"), "EN-CA",
-                                                    address1, address2, companyName, city, stateOrProvince, country,
-                                                    postalCode, phone, false, false);
+        final DefaultAccount updatedAccount = new DefaultAccount(accountId, "extKey123456", "myemail123456@glam.com",
+                                                                 "John Smith", 4, Currency.USD, 15, null,
+                                                                 DateTimeZone.forID("America/Cambridge_Bay"), "EN-CA",
+                                                                 address1, address2, companyName, city, stateOrProvince, country,
+                                                                 postalCode, phone, false, false);
 
         accountDao.update(updatedAccount, context);
 
-        Account savedAccount = accountDao.getById(accountId);
+        final Account savedAccount = accountDao.getById(accountId);
 
         assertNotNull(savedAccount);
         assertEquals(savedAccount.getId(), accountId);
@@ -345,25 +347,25 @@ public class TestAccountDao extends AccountDaoTestBase {
 
     @Test
     public void testRemovingContactInformation() throws Exception {
-        UUID accountId = UUID.randomUUID();
+        final UUID accountId = UUID.randomUUID();
 
-        DefaultAccount account = new DefaultAccount(accountId, "extKey654321", "myemail654321@glam.com",
-                                                    "John Smith", 4, Currency.USD, 15, null,
-                                                    DateTimeZone.forID("America/Cambridge_Bay"), "EN-CA",
-                                                    "123 address 1", "456 address 2", null, "Cambridge Bay",
-                                                    "Nunavut", "Canada", "X0B 0C0", "18001112222",
-                                                    false, false);
+        final DefaultAccount account = new DefaultAccount(accountId, "extKey654321", "myemail654321@glam.com",
+                                                          "John Smith", 4, Currency.USD, 15, null,
+                                                          DateTimeZone.forID("America/Cambridge_Bay"), "EN-CA",
+                                                          "123 address 1", "456 address 2", null, "Cambridge Bay",
+                                                          "Nunavut", "Canada", "X0B 0C0", "18001112222",
+                                                          false, false);
         accountDao.create(account, context);
 
-        DefaultAccount updatedAccount = new DefaultAccount(accountId, "extKey654321", "myemail654321@glam.com",
-                                                    "John Smith", 4, Currency.USD, 15, null,
-                                                    DateTimeZone.forID("America/Cambridge_Bay"), "EN-CA",
-                                                    null, null, null, null, null, null, null, null,
-                                                    false, false);
+        final DefaultAccount updatedAccount = new DefaultAccount(accountId, "extKey654321", "myemail654321@glam.com",
+                                                                 "John Smith", 4, Currency.USD, 15, null,
+                                                                 DateTimeZone.forID("America/Cambridge_Bay"), "EN-CA",
+                                                                 null, null, null, null, null, null, null, null,
+                                                                 false, false);
 
         accountDao.update(updatedAccount, context);
 
-        Account savedAccount = accountDao.getById(accountId);
+        final Account savedAccount = accountDao.getById(accountId);
 
         assertNotNull(savedAccount);
         assertEquals(savedAccount.getId(), accountId);
@@ -379,19 +381,19 @@ public class TestAccountDao extends AccountDaoTestBase {
 
     @Test(expectedExceptions = EntityPersistenceException.class)
     public void testExternalKeyCannotBeUpdated() throws Exception {
-        UUID accountId = UUID.randomUUID();
-        String originalExternalKey = "extKey1337";
+        final UUID accountId = UUID.randomUUID();
+        final String originalExternalKey = "extKey1337";
 
-        DefaultAccount account = new DefaultAccount(accountId, originalExternalKey, "myemail1337@glam.com",
-                                                    "John Smith", 4, Currency.USD, 15, null,
-                                                    null, null, null, null, null, null, null, null, null, null,
-                                                    false, false);
+        final DefaultAccount account = new DefaultAccount(accountId, originalExternalKey, "myemail1337@glam.com",
+                                                          "John Smith", 4, Currency.USD, 15, null,
+                                                          null, null, null, null, null, null, null, null, null, null,
+                                                          false, false);
         accountDao.create(account, context);
 
-        DefaultAccount updatedAccount = new DefaultAccount(accountId, "extKey1338", "myemail1337@glam.com",
-                                                    "John Smith", 4, Currency.USD, 15, null,
-                                                    null, null, null, null, null, null, null, null, null, null,
-                                                    false, false);
+        final DefaultAccount updatedAccount = new DefaultAccount(accountId, "extKey1338", "myemail1337@glam.com",
+                                                                 "John Smith", 4, Currency.USD, 15, null,
+                                                                 null, null, null, null, null, null, null, null, null, null,
+                                                                 false, false);
         accountDao.update(updatedAccount, context);
     }
 
@@ -400,7 +402,7 @@ public class TestAccountDao extends AccountDaoTestBase {
         List<AccountEmail> emails = new ArrayList<AccountEmail>();
 
         // generate random account id
-        UUID accountId = UUID.randomUUID();
+        final UUID accountId = UUID.randomUUID();
 
         // add a new e-mail
         final AccountEmail email = new DefaultAccountEmail(accountId, "test@gmail.com");
@@ -413,7 +415,7 @@ public class TestAccountDao extends AccountDaoTestBase {
         verifyAccountEmailAuditAndHistoryCount(accountId, 1);
 
         // update e-mail
-        AccountEmail updatedEmail = new DefaultAccountEmail(email, "test2@gmail.com");
+        final AccountEmail updatedEmail = new DefaultAccountEmail(email, "test2@gmail.com");
         emails.clear();
         emails.add(updatedEmail);
         accountEmailDao.saveEmails(accountId, emails, context);
@@ -433,8 +435,46 @@ public class TestAccountDao extends AccountDaoTestBase {
         verifyAccountEmailAuditAndHistoryCount(accountId, 4);
     }
 
-    private void verifyAccountEmailAuditAndHistoryCount(UUID accountId, int expectedCount) {
-        Handle handle = dbi.open();
+    @Test
+    public void testAddAndRemoveAccountEmail() {
+        final UUID accountId = UUID.randomUUID();
+        final String email1 = UUID.randomUUID().toString();
+        final String email2 = UUID.randomUUID().toString();
+
+        // Verify the original state
+        assertEquals(accountEmailDao.getEmails(accountId).size(), 0);
+
+        // Add a new e-mail
+        final AccountEmail accountEmail1 = new DefaultAccountEmail(accountId, email1);
+        accountEmailDao.addEmail(accountId, accountEmail1, context);
+        final List<AccountEmail> firstEmails = accountEmailDao.getEmails(accountId);
+        assertEquals(firstEmails.size(), 1);
+        assertEquals(firstEmails.get(0).getAccountId(), accountId);
+        assertEquals(firstEmails.get(0).getEmail(), email1);
+
+        // Add a second e-mail
+        final AccountEmail accountEmail2 = new DefaultAccountEmail(accountId, email2);
+        accountEmailDao.addEmail(accountId, accountEmail2, context);
+        final List<AccountEmail> secondEmails = accountEmailDao.getEmails(accountId);
+        assertEquals(secondEmails.size(), 2);
+        assertTrue(secondEmails.get(0).getAccountId().equals(accountId));
+        assertTrue(secondEmails.get(1).getAccountId().equals(accountId));
+        assertTrue(secondEmails.get(0).getEmail().equals(email1) || secondEmails.get(0).getEmail().equals(email2));
+        assertTrue(secondEmails.get(1).getEmail().equals(email1) || secondEmails.get(1).getEmail().equals(email2));
+
+        // Delete the first e-mail
+        accountEmailDao.removeEmail(accountId, accountEmail1, context);
+        final List<AccountEmail> thirdEmails = accountEmailDao.getEmails(accountId);
+        assertEquals(thirdEmails.size(), 1);
+        assertEquals(thirdEmails.get(0).getAccountId(), accountId);
+        assertEquals(thirdEmails.get(0).getEmail(), email2);
+
+        // Verify that history and audit contain three entries (2 inserts and one delete)
+        verifyAccountEmailAuditAndHistoryCount(accountId, 3);
+    }
+
+    private void verifyAccountEmailAuditAndHistoryCount(final UUID accountId, final int expectedCount) {
+        final Handle handle = dbi.open();
 
         // verify audit
         StringBuilder sb = new StringBuilder();

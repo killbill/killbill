@@ -88,6 +88,7 @@ public interface JaxrsResource {
 
     public static final String TAGS = "tags";
     public static final String CUSTOM_FIELDS = "custom_fields";
+    public static final String EMAILS = "emails";
 
     public static final String CATALOG = "catalog";
     public static final String CATALOG_PATH = PREFIX + "/" + CATALOG;

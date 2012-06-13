@@ -527,6 +527,7 @@ public class TestJaxrsBase {
         String country = "France";
         String phone = "81 53 26 56";
 
+        // Note: the accountId payload is ignored on account creation
         AccountJson accountJson = new AccountJson(accountId, name, length, externalKey, email, billCycleDay, currency, null, timeZone, address1, address2, company, state, country, phone);
         return accountJson;
     }

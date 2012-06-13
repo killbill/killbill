@@ -34,5 +34,9 @@ public interface AccountEmailDao {
      */
     public void saveEmails(UUID accountId, List<AccountEmail> emails, CallContext context);
 
+    public void addEmail(UUID accountId, AccountEmail email, CallContext context);
+
+    public void removeEmail(UUID accountId, AccountEmail email, CallContext context);
+
     public void test();
 }

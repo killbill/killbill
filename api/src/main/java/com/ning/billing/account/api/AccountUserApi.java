@@ -50,4 +50,8 @@ public interface AccountUserApi {
     public List<AccountEmail> getEmails(UUID accountId);
 
     public void saveEmails(UUID accountId, List<AccountEmail> emails, CallContext context);
+
+    public void addEmail(UUID accountId, AccountEmail email, CallContext context);
+
+    public void removeEmail(UUID accountId, AccountEmail email, CallContext context);
 }

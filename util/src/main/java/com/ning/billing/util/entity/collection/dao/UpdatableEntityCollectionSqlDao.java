@@ -40,7 +40,7 @@ import com.ning.billing.util.entity.Entity;
 public interface UpdatableEntityCollectionSqlDao<T extends Entity> extends EntityCollectionSqlDao<T>,
         CollectionHistorySqlDao<T>,
         AuditSqlDao, CloseMe, Transmogrifier {
-    @SqlBatch(transactional=false)
+    @SqlBatch
     public void updateFromTransaction(@Bind("objectId") final String objectId,
                                       @ObjectTypeBinder final ObjectType objectType,
                                       @BindBean final Collection<T> entities,

@@ -46,6 +46,7 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
+import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.entitlement.api.timeline.BundleTimeline;
 import com.ning.billing.entitlement.api.timeline.EntitlementRepairException;
@@ -54,6 +55,7 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceUserApi;
+import com.ning.billing.jaxrs.json.AccountEmailJson;
 import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.AccountTimelineJson;
 import com.ning.billing.jaxrs.json.BundleJsonNoSubscriptions;
@@ -80,6 +82,7 @@ public class AccountResource extends JaxRsResourceBase {
     private static final String ID_PARAM_NAME = "accountId";
     private static final String CUSTOM_FIELD_URI = JaxrsResource.CUSTOM_FIELDS + "/{" + ID_PARAM_NAME + ":" + UUID_PATTERN + "}";
     private static final String TAG_URI = JaxrsResource.TAGS + "/{" + ID_PARAM_NAME + ":" + UUID_PATTERN + "}";
+    private static final String EMAIL_URI = JaxrsResource.EMAILS + "/{" + ID_PARAM_NAME + ":" + UUID_PATTERN + "}";
 
     private final AccountUserApi accountApi;
     private final EntitlementUserApi entitlementApi;
@@ -259,8 +262,7 @@ public class AccountResource extends JaxRsResourceBase {
         }
     }
 
-
-    /**
+    /*
      * **************************  PAYMENTS ********************************
      */
 
@@ -313,7 +315,6 @@ public class AccountResource extends JaxRsResourceBase {
         }
     }
 
-
     @GET
     @Path("/{accountId:\\w+-\\w+-\\w+-\\w+-\\w+}/" + PAYMENT_METHODS)
     @Produces(APPLICATION_JSON)
@@ -332,9 +333,10 @@ public class AccountResource extends JaxRsResourceBase {
         }
     }
 
-    /**
-     * *************************      TAGS     *****************************
+    /*
+     * *************************      CUSTOM FIELDS     *****************************
      */
+
     @GET
     @Path(CUSTOM_FIELD_URI)
     @Produces(APPLICATION_JSON)
@@ -368,6 +370,10 @@ public class AccountResource extends JaxRsResourceBase {
                                         context.createContext(createdBy, reason, comment));
     }
 
+    /*
+     * *************************      TAGS     *****************************
+     */
+
     @GET
     @Path(TAG_URI)
     @Produces(APPLICATION_JSON)
@@ -400,6 +406,71 @@ public class AccountResource extends JaxRsResourceBase {
 
         return super.deleteTags(UUID.fromString(id), tagList,
                                 context.createContext(createdBy, reason, comment));
+    }
+
+    /*
+     * *************************      EMAILS     *****************************
+     */
+
+    @GET
+    @Path(EMAIL_URI)
+    @Produces(APPLICATION_JSON)
+    public Response getEmails(@PathParam(ID_PARAM_NAME) final String id) {
+        final UUID accountId = UUID.fromString(id);
+        final List<AccountEmail> emails = accountApi.getEmails(accountId);
+
+        final List<AccountEmailJson> emailsJson = new ArrayList<AccountEmailJson>();
+        for (final AccountEmail email : emails) {
+            emailsJson.add(new AccountEmailJson(email.getAccountId().toString(), email.getEmail()));
+        }
+        return Response.status(Response.Status.OK).entity(emailsJson).build();
+    }
+
+    @POST
+    @Path(EMAIL_URI)
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    public Response addEmail(final AccountEmailJson json,
+                             @PathParam(ID_PARAM_NAME) final String id,
+                             @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                             @HeaderParam(HDR_REASON) final String reason,
+                             @HeaderParam(HDR_COMMENT) final String comment) {
+        try {
+            final UUID accountId = UUID.fromString(id);
+
+            // Make sure the account exist or we will confuse the history and auditing code
+            if (accountApi.getAccountById(accountId) == null) {
+                return Response.status(Response.Status.BAD_REQUEST).entity("Account id " + accountId + " does not exist").build();
+            }
+
+            accountApi.addEmail(accountId, json.toAccountEmail(), context.createContext(createdBy, reason, comment));
+
+            return uriBuilder.buildResponse(AccountResource.class, "getEmails", json.getAccountId());
+        } catch (RuntimeException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        } catch (AccountApiException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        }
+    }
+
+    @DELETE
+    @Path(EMAIL_URI + "/{email}")
+    @Produces(APPLICATION_JSON)
+    public Response removeEmail(@PathParam(ID_PARAM_NAME) final String id,
+                                @PathParam("email") final String email,
+                                @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                @HeaderParam(HDR_REASON) final String reason,
+                                @HeaderParam(HDR_COMMENT) final String comment) {
+        try {
+            final UUID accountId = UUID.fromString(id);
+            final AccountEmailJson accountEmailJson = new AccountEmailJson(id, email);
+            final AccountEmail accountEmail = accountEmailJson.toAccountEmail();
+            accountApi.removeEmail(accountId, accountEmail, context.createContext(createdBy, reason, comment));
+
+            return Response.status(Response.Status.OK).build();
+        } catch (RuntimeException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        }
     }
 
     @Override

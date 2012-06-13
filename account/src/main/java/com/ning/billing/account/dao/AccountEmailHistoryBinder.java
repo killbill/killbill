@@ -16,18 +16,19 @@
 
 package com.ning.billing.account.dao;
 
-import com.ning.billing.account.api.AccountEmail;
-import com.ning.billing.util.dao.EntityHistory;
-import org.skife.jdbi.v2.SQLStatement;
-import org.skife.jdbi.v2.sqlobject.Binder;
-import org.skife.jdbi.v2.sqlobject.BinderFactory;
-import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
-
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+
+import org.skife.jdbi.v2.SQLStatement;
+import org.skife.jdbi.v2.sqlobject.Binder;
+import org.skife.jdbi.v2.sqlobject.BinderFactory;
+import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
+
+import com.ning.billing.account.api.AccountEmail;
+import com.ning.billing.util.dao.EntityHistory;
 
 @BindingAnnotation(AccountEmailHistoryBinder.AccountEmailHistoryBinderFactory.class)
 @Retention(RetentionPolicy.RUNTIME)
@@ -35,14 +36,14 @@ import java.lang.annotation.Target;
 public @interface AccountEmailHistoryBinder {
     public static class AccountEmailHistoryBinderFactory implements BinderFactory {
         @Override
-        public Binder<AccountEmailHistoryBinder, EntityHistory<AccountEmail>> build(Annotation annotation) {
+        public Binder<AccountEmailHistoryBinder, EntityHistory<AccountEmail>> build(final Annotation annotation) {
             return new Binder<AccountEmailHistoryBinder, EntityHistory<AccountEmail>>() {
                 @Override
-                public void bind(SQLStatement q, AccountEmailHistoryBinder bind, EntityHistory<AccountEmail> history) {
+                public void bind(SQLStatement q, final AccountEmailHistoryBinder bind, final EntityHistory<AccountEmail> history) {
                     q.bind("recordId", history.getValue());
                     q.bind("changeType", history.getChangeType().toString());
 
-                    AccountEmail accountEmail = history.getEntity();
+                    final AccountEmail accountEmail = history.getEntity();
                     q.bind("id", accountEmail.getId().toString());
                     q.bind("accountId", accountEmail.getAccountId().toString());
                     q.bind("email", accountEmail.getEmail());

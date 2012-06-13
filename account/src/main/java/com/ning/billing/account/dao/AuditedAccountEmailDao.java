@@ -17,12 +17,17 @@
 package com.ning.billing.account.dao;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.skife.jdbi.v2.IDBI;
+import org.skife.jdbi.v2.Transaction;
+import org.skife.jdbi.v2.TransactionStatus;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.util.callcontext.CallContext;
@@ -55,6 +60,50 @@ public class AuditedAccountEmailDao extends AuditedCollectionDaoBase<AccountEmai
     }
 
     @Override
+    public void addEmail(final UUID accountId, final AccountEmail email, final CallContext context) {
+        accountEmailSqlDao.inTransaction(new Transaction<Object, AccountEmailSqlDao>() {
+            @Override
+            public Object inTransaction(final AccountEmailSqlDao transactional, final TransactionStatus status) throws Exception {
+                // Compute the final list of emails by looking up the current ones and adding the new one
+                // We can use a simple set here as the supplied email may not have its id field populated
+                final List<AccountEmail> currentEmails = accountEmailSqlDao.load(accountId.toString(), ObjectType.ACCOUNT_EMAIL);
+                final Map<String, AccountEmail> newEmails = new HashMap<String, AccountEmail>();
+                for (final AccountEmail currentEmail : currentEmails) {
+                    newEmails.put(currentEmail.getEmail(), currentEmail);
+                }
+                newEmails.put(email.getEmail(), email);
+
+                saveEntitiesFromTransaction(getSqlDao(), accountId, ObjectType.ACCOUNT_EMAIL,
+                                            ImmutableList.<AccountEmail>copyOf(newEmails.values()), context);
+
+                return null;
+            }
+        });
+    }
+
+    @Override
+    public void removeEmail(final UUID accountId, final AccountEmail email, final CallContext context) {
+        accountEmailSqlDao.inTransaction(new Transaction<Object, AccountEmailSqlDao>() {
+            @Override
+            public Object inTransaction(final AccountEmailSqlDao transactional, final TransactionStatus status) throws Exception {
+                // Compute the final list of emails by looking up the current ones and removing the new one
+                // We can use a simple set here as the supplied email may not have its id field populated
+                final List<AccountEmail> currentEmails = accountEmailSqlDao.load(accountId.toString(), ObjectType.ACCOUNT_EMAIL);
+                final Map<String, AccountEmail> newEmails = new HashMap<String, AccountEmail>();
+                for (final AccountEmail currentEmail : currentEmails) {
+                    newEmails.put(currentEmail.getEmail(), currentEmail);
+                }
+                newEmails.remove(email.getEmail());
+
+                saveEntitiesFromTransaction(getSqlDao(), accountId, ObjectType.ACCOUNT_EMAIL,
+                                            ImmutableList.<AccountEmail>copyOf(newEmails.values()), context);
+
+                return null;
+            }
+        });
+    }
+
+    @Override
     public String getKey(final AccountEmail entity) {
         return entity.getEmail();
     }
@@ -70,7 +119,7 @@ public class AuditedAccountEmailDao extends AuditedCollectionDaoBase<AccountEmai
     }
 
     @Override
-    protected UpdatableEntityCollectionSqlDao<AccountEmail> transmogrifyDao(Transmogrifier transactionalDao) {
+    protected UpdatableEntityCollectionSqlDao<AccountEmail> transmogrifyDao(final Transmogrifier transactionalDao) {
         return transactionalDao.become(AccountEmailSqlDao.class);
     }
 

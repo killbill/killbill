@@ -30,8 +30,6 @@ import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.account.api.MigrationAccountData;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.customfield.CustomField;
-import com.ning.billing.util.tag.TagDefinition;
 
 public class MockAccountUserApi implements AccountUserApi {
     private final AccountData account;
@@ -79,6 +77,16 @@ public class MockAccountUserApi implements AccountUserApi {
 
     @Override
     public void saveEmails(UUID accountId, List<AccountEmail> emails, CallContext context) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void addEmail(final UUID accountId, final AccountEmail email, final CallContext context) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void removeEmail(final UUID accountId, final AccountEmail email, final CallContext context) {
         throw new UnsupportedOperationException();
     }
 

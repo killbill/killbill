@@ -27,9 +27,11 @@ import org.testng.annotations.Test;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.DefaultAccount;
+import com.ning.billing.account.api.DefaultAccountEmail;
 import com.ning.billing.account.dao.AccountDao;
 import com.ning.billing.account.dao.AccountEmailDao;
 import com.ning.billing.account.dao.MockAccountDao;
+import com.ning.billing.account.dao.MockAccountEmailDao;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.callcontext.CallContext;
@@ -38,14 +40,15 @@ import com.ning.billing.util.callcontext.CallContextFactory;
 public class TestDefaultAccountUserApi {
     private final CallContextFactory factory = Mockito.mock(CallContextFactory.class);
     private final CallContext callContext = Mockito.mock(CallContext.class);
-    private final AccountEmailDao accountEmailDao = Mockito.mock(AccountEmailDao.class);
 
     private AccountDao accountDao;
+    private AccountEmailDao accountEmailDao;
     private DefaultAccountUserApi accountUserApi;
 
     @BeforeMethod(groups = "fast")
     public void setUp() throws Exception {
         accountDao = new MockAccountDao(Mockito.mock(Bus.class));
+        accountEmailDao = new MockAccountEmailDao();
         accountUserApi = new DefaultAccountUserApi(factory, accountDao, accountEmailDao);
     }
 
@@ -97,5 +100,27 @@ public class TestDefaultAccountUserApi {
         Assert.assertEquals(account.getPhone(), phone);
         Assert.assertEquals(account.isMigrated(), isMigrated);
         Assert.assertEquals(account.isNotifiedForInvoices(), isNotifiedForInvoices);
+    }
+
+    @Test(groups = "fast")
+    public void testAddEmail() throws Exception {
+        final UUID accountId = UUID.randomUUID();
+
+        // Verify the initial state
+        Assert.assertEquals(accountEmailDao.getEmails(accountId).size(), 0);
+
+        // Add the first email
+        final String email1 = UUID.randomUUID().toString();
+        accountUserApi.addEmail(accountId, new DefaultAccountEmail(accountId, email1), callContext);
+        Assert.assertEquals(accountEmailDao.getEmails(accountId).size(), 1);
+
+        // Add a second one
+        final String email2 = UUID.randomUUID().toString();
+        accountUserApi.addEmail(accountId, new DefaultAccountEmail(accountId, email2), callContext);
+        Assert.assertEquals(accountEmailDao.getEmails(accountId).size(), 2);
+
+        // Remove the first second one
+        accountUserApi.removeEmail(accountId, new DefaultAccountEmail(accountId, email1), callContext);
+        Assert.assertEquals(accountEmailDao.getEmails(accountId).size(), 1);
     }
 }

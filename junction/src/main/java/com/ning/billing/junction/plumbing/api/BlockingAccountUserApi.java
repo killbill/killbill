@@ -95,4 +95,14 @@ public class BlockingAccountUserApi implements AccountUserApi {
     public void saveEmails(final UUID accountId, final List<AccountEmail> emails, final CallContext context) {
         userApi.saveEmails(accountId, emails, context);
     }
+
+    @Override
+    public void addEmail(final UUID accountId, final AccountEmail email, final CallContext context) {
+        userApi.addEmail(accountId, email, context);
+    }
+
+    @Override
+    public void removeEmail(final UUID accountId, final AccountEmail email, final CallContext context) {
+        userApi.removeEmail(accountId, email, context);
+    }
 }
