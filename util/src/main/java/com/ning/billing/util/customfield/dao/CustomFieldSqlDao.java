@@ -37,32 +37,32 @@ import com.ning.billing.util.entity.collection.dao.UpdatableEntityCollectionSqlD
 @ExternalizedSqlViaStringTemplate3
 @RegisterMapper(CustomFieldMapper.class)
 public interface CustomFieldSqlDao extends UpdatableEntityCollectionSqlDao<CustomField>,
-                                           Transactional<CustomFieldSqlDao>, Transmogrifier {
+        Transactional<CustomFieldSqlDao>, Transmogrifier {
     @Override
-    @SqlBatch(transactional=false)
+    @SqlBatch
     public void insertFromTransaction(@Bind("objectId") final String objectId,
                                       @ObjectTypeBinder final ObjectType objectType,
                                       @CustomFieldBinder final Collection<CustomField> entities,
                                       @CallContextBinder final CallContext context);
 
     @Override
-    @SqlBatch(transactional=false)
+    @SqlBatch
     public void updateFromTransaction(@Bind("objectId") final String objectId,
                                       @ObjectTypeBinder final ObjectType objectType,
                                       @CustomFieldBinder final Collection<CustomField> entities,
                                       @CallContextBinder final CallContext context);
 
     @Override
-    @SqlBatch(transactional=false)
+    @SqlBatch
     public void deleteFromTransaction(@Bind("objectId") final String objectId,
                                       @ObjectTypeBinder final ObjectType objectType,
                                       @CustomFieldBinder final Collection<CustomField> entities,
                                       @CallContextBinder final CallContext context);
 
     @Override
-    @SqlBatch(transactional=false)
+    @SqlBatch
     public void addHistoryFromTransaction(@Bind("objectId") final String objectId,
-                                               @ObjectTypeBinder final ObjectType objectType,
-                                               @CustomFieldHistoryBinder final List<EntityHistory<CustomField>> entities,
-                                               @CallContextBinder final CallContext context);
+                                          @ObjectTypeBinder final ObjectType objectType,
+                                          @CustomFieldHistoryBinder final List<EntityHistory<CustomField>> entities,
+                                          @CallContextBinder final CallContext context);
 }
