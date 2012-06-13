@@ -107,9 +107,12 @@ public class PaymentMethodJson {
                     }
                     @Override
                     public List<PaymentMethodKVInfo> getProperties() {
-                        List<PaymentMethodKVInfo> result = new LinkedList<PaymentMethodPlugin.PaymentMethodKVInfo>();
-                        for (PaymentMethodProperties cur : pluginInfo.getProperties()) {
-                            result.add(new PaymentMethodKVInfo(cur.getKey(), cur.getValue(), cur.isUpdatable));
+                        if (pluginInfo.getProperties() != null) {
+                            List<PaymentMethodKVInfo> result = new LinkedList<PaymentMethodPlugin.PaymentMethodKVInfo>();
+                            for (PaymentMethodProperties cur : pluginInfo.getProperties()) {
+                                result.add(new PaymentMethodKVInfo(cur.getKey(), cur.getValue(), cur.isUpdatable));
+                            }
+                            return result;
                         }
                         return null;
                     }
