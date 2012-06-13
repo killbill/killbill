@@ -56,7 +56,7 @@ public class MockModule extends AbstractModule {
             final DbiConfig config = new ConfigurationObjectFactory(System.getProperties()).build(DbiConfig.class);
             bind(DbiConfig.class).toInstance(config);
         } else {
-            final IDBI dbi = helper.getDBI(); 
+            final IDBI dbi = helper.getDBI();
             bind(IDBI.class).toInstance(dbi);
         }
 
@@ -74,6 +74,6 @@ public class MockModule extends AbstractModule {
     }
 
     protected void installInvoiceModule() {
-    	install(new DefaultInvoiceModule());
+        install(new DefaultInvoiceModule());
     }
 }

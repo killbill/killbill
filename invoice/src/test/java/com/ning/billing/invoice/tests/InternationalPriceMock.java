@@ -16,18 +16,18 @@
 
 package com.ning.billing.invoice.tests;
 
-import static org.testng.Assert.fail;
-
 import java.math.BigDecimal;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.InternationalPrice;
 import com.ning.billing.catalog.api.Price;
 
+import static org.testng.Assert.fail;
+
 public class InternationalPriceMock implements InternationalPrice {
     private final BigDecimal rate;
 
-    public InternationalPriceMock(BigDecimal rate) {
+    public InternationalPriceMock(final BigDecimal rate) {
         this.rate = rate;
     }
 
@@ -39,13 +39,13 @@ public class InternationalPriceMock implements InternationalPrice {
     }
 
     @Override
-    public BigDecimal getPrice(Currency currency) {
+    public BigDecimal getPrice(final Currency currency) {
         return rate;
     }
 
-	@Override
-	public boolean isZero() {
-		return rate.compareTo(BigDecimal.ZERO) == 0;
-	}
+    @Override
+    public boolean isZero() {
+        return rate.compareTo(BigDecimal.ZERO) == 0;
+    }
 
 }

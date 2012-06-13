@@ -18,7 +18,6 @@ package com.ning.billing.invoice.api.user;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-import com.ning.billing.util.jackson.ObjectMapper;
 import org.joda.time.DateTime;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -26,31 +25,32 @@ import org.testng.annotations.Test;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.EmptyInvoiceEvent;
 import com.ning.billing.invoice.api.InvoiceCreationEvent;
+import com.ning.billing.util.jackson.ObjectMapper;
 
 public class TestEventJson {
     private final ObjectMapper mapper = new ObjectMapper();
 
-    @Test(groups= {"fast"})
+    @Test(groups = {"fast"})
     public void testInvoiceCreationEvent() throws Exception {
 
-        InvoiceCreationEvent e = new DefaultInvoiceCreationEvent(UUID.randomUUID(), UUID.randomUUID(), new BigDecimal(12.0), Currency.USD, new DateTime(), UUID.randomUUID());
+        final InvoiceCreationEvent e = new DefaultInvoiceCreationEvent(UUID.randomUUID(), UUID.randomUUID(), new BigDecimal(12.0), Currency.USD, new DateTime(), UUID.randomUUID());
 
-        String json = mapper.writeValueAsString(e);
+        final String json = mapper.writeValueAsString(e);
 
-        Class<?> claz = Class.forName(DefaultInvoiceCreationEvent.class.getName());
-        Object obj =  mapper.readValue(json, claz);
+        final Class<?> claz = Class.forName(DefaultInvoiceCreationEvent.class.getName());
+        final Object obj = mapper.readValue(json, claz);
         Assert.assertTrue(obj.equals(e));
     }
 
-    @Test(groups= {"fast"})
+    @Test(groups = {"fast"})
     public void testEmptyInvoiceEvent() throws Exception {
 
-        EmptyInvoiceEvent e = new DefaultEmptyInvoiceEvent(UUID.randomUUID(), new DateTime(), UUID.randomUUID());
+        final EmptyInvoiceEvent e = new DefaultEmptyInvoiceEvent(UUID.randomUUID(), new DateTime(), UUID.randomUUID());
 
-        String json = mapper.writeValueAsString(e);
+        final String json = mapper.writeValueAsString(e);
 
-        Class<?> claz = Class.forName(DefaultEmptyInvoiceEvent.class.getName());
-        Object obj =  mapper.readValue(json, claz);
+        final Class<?> claz = Class.forName(DefaultEmptyInvoiceEvent.class.getName());
+        final Object obj = mapper.readValue(json, claz);
         Assert.assertTrue(obj.equals(e));
     }
 }

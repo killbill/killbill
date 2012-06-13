@@ -58,10 +58,10 @@ public class DefaultInvoiceModule extends AbstractModule implements InvoiceModul
     public void installInvoiceUserApi() {
         bind(InvoiceUserApi.class).to(DefaultInvoiceUserApi.class).asEagerSingleton();
     }
-    
+
     /* (non-Javadoc)
-     * @see com.ning.billing.invoice.glue.InvoiceModule#installInvoiceUserApi()
-     */
+    * @see com.ning.billing.invoice.glue.InvoiceModule#installInvoiceUserApi()
+    */
     @Override
     public void installInvoiceTestApi() {
         bind(InvoiceTestApi.class).to(DefaultInvoiceTestApi.class).asEagerSingleton();
@@ -83,19 +83,19 @@ public class DefaultInvoiceModule extends AbstractModule implements InvoiceModul
     protected void installInvoiceService() {
         bind(InvoiceService.class).to(DefaultInvoiceService.class).asEagerSingleton();
     }
-    
+
     /* (non-Javadoc)
-     * @see com.ning.billing.invoice.glue.InvoiceModule#installInvoiceMigrationApi()
-     */
+    * @see com.ning.billing.invoice.glue.InvoiceModule#installInvoiceMigrationApi()
+    */
     @Override
     public void installInvoiceMigrationApi() {
-    	bind(InvoiceMigrationApi.class).to(DefaultInvoiceMigrationApi.class).asEagerSingleton();
-	}
+        bind(InvoiceMigrationApi.class).to(DefaultInvoiceMigrationApi.class).asEagerSingleton();
+    }
 
     protected void installNotifiers() {
         bind(NextBillingDateNotifier.class).to(DefaultNextBillingDateNotifier.class).asEagerSingleton();
         bind(NextBillingDatePoster.class).to(DefaultNextBillingDatePoster.class).asEagerSingleton();
-        TranslatorConfig config = new ConfigurationObjectFactory(System.getProperties()).build(TranslatorConfig.class);
+        final TranslatorConfig config = new ConfigurationObjectFactory(System.getProperties()).build(TranslatorConfig.class);
         bind(TranslatorConfig.class).toInstance(config);
         bind(InvoiceFormatterFactory.class).to(DefaultInvoiceFormatterFactory.class).asEagerSingleton();
         bind(InvoiceNotifier.class).to(NullInvoiceNotifier.class).asEagerSingleton();

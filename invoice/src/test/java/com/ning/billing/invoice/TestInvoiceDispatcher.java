@@ -67,22 +67,22 @@ import com.ning.billing.util.globallocker.GlobalLocker;
 @Test(groups = "slow")
 @Guice(modules = {MockModule.class})
 public class TestInvoiceDispatcher extends InvoicingTestBase {
-	private Logger log = LoggerFactory.getLogger(TestInvoiceDispatcher.class);
+    private final Logger log = LoggerFactory.getLogger(TestInvoiceDispatcher.class);
 
-	@Inject
-	private InvoiceGenerator generator;
+    @Inject
+    private InvoiceGenerator generator;
 
-	@Inject
-	private InvoiceDao invoiceDao;
+    @Inject
+    private InvoiceDao invoiceDao;
 
-	@Inject
-	private GlobalLocker locker;
+    @Inject
+    private GlobalLocker locker;
 
-	@Inject
-	private MysqlTestingHelper helper;
+    @Inject
+    private MysqlTestingHelper helper;
 
-	@Inject
-	private NextBillingDateNotifier notifier;
+    @Inject
+    private NextBillingDateNotifier notifier;
 
     @Inject
     private BusService busService;
@@ -96,91 +96,90 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
     private CallContext context;
 
     @BeforeSuite(groups = "slow")
-    public void setup() throws Exception
-    {
-		final String invoiceDdl = IOUtils.toString(TestInvoiceDispatcher.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
-		final String utilDdl = IOUtils.toString(TestInvoiceDispatcher.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
+    public void setup() throws Exception {
+        final String invoiceDdl = IOUtils.toString(TestInvoiceDispatcher.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
+        final String utilDdl = IOUtils.toString(TestInvoiceDispatcher.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
 
-		helper.startMysql();
+        helper.startMysql();
 
-		helper.initDb(invoiceDdl);
-		helper.initDb(utilDdl);
-		notifier.initialize();
-		notifier.start();
+        helper.initDb(invoiceDdl);
+        helper.initDb(utilDdl);
+        notifier.initialize();
+        notifier.start();
 
         context = new DefaultCallContextFactory(clock).createCallContext("Miracle Max", CallOrigin.TEST, UserType.TEST);
 
-		busService.getBus().start();
-		((ZombieControl)billingApi).addResult("setChargedThroughDate", BrainDeadProxyFactory.ZOMBIE_VOID);
-	}
-
-	@AfterClass(alwaysRun = true)
-	public void tearDown() {
-		try {
-			((DefaultBusService) busService).stopBus();
-			notifier.stop();
-			helper.stopMysql();
-		} catch (Exception e) {
-			log.warn("Failed to tearDown test properly ", e);
-		}
+        busService.getBus().start();
+        ((ZombieControl) billingApi).addResult("setChargedThroughDate", BrainDeadProxyFactory.ZOMBIE_VOID);
     }
-	    
-    @Test(groups={"slow"}, enabled=true)
+
+    @AfterClass(alwaysRun = true)
+    public void tearDown() {
+        try {
+            ((DefaultBusService) busService).stopBus();
+            notifier.stop();
+            helper.stopMysql();
+        } catch (Exception e) {
+            log.warn("Failed to tearDown test properly ", e);
+        }
+    }
+
+    @Test(groups = {"slow"}, enabled = true)
     public void testDryRunInvoice() throws InvoiceApiException {
-        UUID accountId = UUID.randomUUID();
-        UUID subscriptionId = UUID.randomUUID();
+        final UUID accountId = UUID.randomUUID();
+        final UUID subscriptionId = UUID.randomUUID();
 
-		AccountUserApi accountUserApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
-		Account account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
+        final AccountUserApi accountUserApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
+        final Account account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
 
-		((ZombieControl)accountUserApi).addResult("getAccountById", account);
-		((ZombieControl)account).addResult("getCurrency", Currency.USD);
-		((ZombieControl)account).addResult("getId", accountId);
-        ((ZombieControl)account).addResult(("isNotifiedForInvoices"), true);
+        ((ZombieControl) accountUserApi).addResult("getAccountById", account);
+        ((ZombieControl) account).addResult("getCurrency", Currency.USD);
+        ((ZombieControl) account).addResult("getId", accountId);
+        ((ZombieControl) account).addResult(("isNotifiedForInvoices"), true);
 
-		Subscription subscription =  BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
-        ((ZombieControl)subscription).addResult("getId", subscriptionId);
-        ((ZombieControl)subscription).addResult("getBundleId", new UUID(0L,0L));
-        BillingEventSet events = new MockBillingEventSet();
-		Plan plan = MockPlan.createBicycleNoTrialEvergreen1USD();
-		PlanPhase planPhase = MockPlanPhase.create1USDMonthlyEvergreen();
-		DateTime effectiveDate = new DateTime().minusDays(1);
-		Currency currency = Currency.USD;
-		BigDecimal fixedPrice = null;
-		events.add(createMockBillingEvent(account, subscription, effectiveDate, plan, planPhase,
-                fixedPrice, BigDecimal.ONE, currency, BillingPeriod.MONTHLY, 1,
-                BillingModeType.IN_ADVANCE, "", 1L, SubscriptionTransitionType.CREATE));
+        final Subscription subscription = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
+        ((ZombieControl) subscription).addResult("getId", subscriptionId);
+        ((ZombieControl) subscription).addResult("getBundleId", new UUID(0L, 0L));
+        final BillingEventSet events = new MockBillingEventSet();
+        final Plan plan = MockPlan.createBicycleNoTrialEvergreen1USD();
+        final PlanPhase planPhase = MockPlanPhase.create1USDMonthlyEvergreen();
+        final DateTime effectiveDate = new DateTime().minusDays(1);
+        final Currency currency = Currency.USD;
+        final BigDecimal fixedPrice = null;
+        events.add(createMockBillingEvent(account, subscription, effectiveDate, plan, planPhase,
+                                          fixedPrice, BigDecimal.ONE, currency, BillingPeriod.MONTHLY, 1,
+                                          BillingModeType.IN_ADVANCE, "", 1L, SubscriptionTransitionType.CREATE));
 
-		((ZombieControl) billingApi).addResult("getBillingEventsForAccountAndUpdateAccountBCD", events);
+        ((ZombieControl) billingApi).addResult("getBillingEventsForAccountAndUpdateAccountBCD", events);
 
-		DateTime target = new DateTime();
+        final DateTime target = new DateTime();
 
-        InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
-		InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountUserApi, billingApi, invoiceDao,
-                                                             invoiceNotifier, locker, busService.getBus(), clock);
+        final InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
+        final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountUserApi, billingApi, invoiceDao,
+                                                                   invoiceNotifier, locker, busService.getBus(), clock);
 
-		Invoice invoice = dispatcher.processAccount(accountId, target, true, context);
-		Assert.assertNotNull(invoice);
+        Invoice invoice = dispatcher.processAccount(accountId, target, true, context);
+        Assert.assertNotNull(invoice);
 
-		List<Invoice> invoices = invoiceDao.getInvoicesByAccount(accountId);
-		Assert.assertEquals(invoices.size(), 0);
+        List<Invoice> invoices = invoiceDao.getInvoicesByAccount(accountId);
+        Assert.assertEquals(invoices.size(), 0);
 
-		// Try it again to double check
-		invoice = dispatcher.processAccount(accountId, target, true, context);
-		Assert.assertNotNull(invoice);
+        // Try it again to double check
+        invoice = dispatcher.processAccount(accountId, target, true, context);
+        Assert.assertNotNull(invoice);
 
-		invoices = invoiceDao.getInvoicesByAccount(accountId);
-		Assert.assertEquals(invoices.size(), 0);
+        invoices = invoiceDao.getInvoicesByAccount(accountId);
+        Assert.assertEquals(invoices.size(), 0);
 
-		// This time no dry run
-		invoice = dispatcher.processAccount(accountId, target, false, context);
-		Assert.assertNotNull(invoice);
+        // This time no dry run
+        invoice = dispatcher.processAccount(accountId, target, false, context);
+        Assert.assertNotNull(invoice);
 
-		invoices = invoiceDao.getInvoicesByAccount(accountId);
-		Assert.assertEquals(invoices.size(),1);
+        invoices = invoiceDao.getInvoicesByAccount(accountId);
+        Assert.assertEquals(invoices.size(), 1);
 
-	}
-    
+    }
+
     //MDW add a test to cover when the account auto-invoice-off tag is present
 
 }

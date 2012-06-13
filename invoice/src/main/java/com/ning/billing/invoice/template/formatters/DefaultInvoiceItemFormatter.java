@@ -16,6 +16,13 @@
 
 package com.ning.billing.invoice.template.formatters;
 
+import java.math.BigDecimal;
+import java.util.Locale;
+import java.util.UUID;
+
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormatter;
+
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
@@ -23,12 +30,6 @@ import com.ning.billing.invoice.api.formatters.InvoiceItemFormatter;
 import com.ning.billing.util.template.translation.DefaultCatalogTranslator;
 import com.ning.billing.util.template.translation.Translator;
 import com.ning.billing.util.template.translation.TranslatorConfig;
-import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormatter;
-
-import java.math.BigDecimal;
-import java.util.Locale;
-import java.util.UUID;
 
 public class DefaultInvoiceItemFormatter implements InvoiceItemFormatter {
     private final Translator translator;
@@ -37,7 +38,7 @@ public class DefaultInvoiceItemFormatter implements InvoiceItemFormatter {
     private final DateTimeFormatter dateFormatter;
     private final Locale locale;
 
-    public DefaultInvoiceItemFormatter(TranslatorConfig config, InvoiceItem item, DateTimeFormatter dateFormatter, Locale locale) {
+    public DefaultInvoiceItemFormatter(final TranslatorConfig config, final InvoiceItem item, final DateTimeFormatter dateFormatter, final Locale locale) {
         this.item = item;
         this.dateFormatter = dateFormatter;
         this.locale = locale;
@@ -121,7 +122,7 @@ public class DefaultInvoiceItemFormatter implements InvoiceItemFormatter {
     }
 
     @Override
-    public int compareTo(InvoiceItem invoiceItem) {
+    public int compareTo(final InvoiceItem invoiceItem) {
         return item.compareTo(invoiceItem);
     }
 

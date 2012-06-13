@@ -34,9 +34,9 @@ public class DoubleProRationTests extends ProRationInAdvanceTestBase {
 
     @Test
     public void testDoubleProRation_TargetDateOnStartDate() throws InvalidDateSequenceException {
-        DateTime startDate = buildDateTime(2011, 1, 1);
-        DateTime targetDate = buildDateTime(2011, 1, 1);
-        DateTime endDate = buildDateTime(2011, 4, 27);
+        final DateTime startDate = buildDateTime(2011, 1, 1);
+        final DateTime targetDate = buildDateTime(2011, 1, 1);
+        final DateTime endDate = buildDateTime(2011, 4, 27);
 
         BigDecimal expectedValue = FOURTEEN.divide(NINETY_TWO, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD);
         expectedValue = expectedValue.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
@@ -45,9 +45,9 @@ public class DoubleProRationTests extends ProRationInAdvanceTestBase {
 
     @Test
     public void testDoubleProRation_TargetDateInFirstProRationPeriod() throws InvalidDateSequenceException {
-        DateTime startDate = buildDateTime(2011, 1, 1);
-        DateTime targetDate = buildDateTime(2011, 1, 7);
-        DateTime endDate = buildDateTime(2011, 4, 27);
+        final DateTime startDate = buildDateTime(2011, 1, 1);
+        final DateTime targetDate = buildDateTime(2011, 1, 7);
+        final DateTime endDate = buildDateTime(2011, 4, 27);
 
         BigDecimal expectedValue = FOURTEEN.divide(NINETY_TWO, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD);
         expectedValue = expectedValue.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
@@ -56,9 +56,9 @@ public class DoubleProRationTests extends ProRationInAdvanceTestBase {
 
     @Test
     public void testDoubleProRation_TargetDateOnFirstBillingCycleDate() throws InvalidDateSequenceException {
-        DateTime startDate = buildDateTime(2011, 1, 1);
-        DateTime targetDate = buildDateTime(2011, 1, 15);
-        DateTime endDate = buildDateTime(2011, 4, 27);
+        final DateTime startDate = buildDateTime(2011, 1, 1);
+        final DateTime targetDate = buildDateTime(2011, 1, 15);
+        final DateTime endDate = buildDateTime(2011, 4, 27);
 
         BigDecimal expectedValue = ONE.add(FOURTEEN.divide(NINETY_TWO, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD));
         expectedValue = expectedValue.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
@@ -67,9 +67,9 @@ public class DoubleProRationTests extends ProRationInAdvanceTestBase {
 
     @Test
     public void testDoubleProRation_TargetDateInFullBillingPeriod() throws InvalidDateSequenceException {
-        DateTime startDate = buildDateTime(2011, 1, 1);
-        DateTime targetDate = buildDateTime(2011, 1, 22);
-        DateTime endDate = buildDateTime(2011, 4, 27);
+        final DateTime startDate = buildDateTime(2011, 1, 1);
+        final DateTime targetDate = buildDateTime(2011, 1, 22);
+        final DateTime endDate = buildDateTime(2011, 4, 27);
 
         BigDecimal expectedValue;
         expectedValue = FOURTEEN.divide(NINETY_TWO, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD);
@@ -81,9 +81,9 @@ public class DoubleProRationTests extends ProRationInAdvanceTestBase {
 
     @Test
     public void testDoubleProRation_TargetDateOnSecondBillingCycleDate() throws InvalidDateSequenceException {
-        DateTime startDate = buildDateTime(2011, 1, 1);
-        DateTime targetDate = buildDateTime(2011, 4, 15);
-        DateTime endDate = buildDateTime(2011, 4, 27);
+        final DateTime startDate = buildDateTime(2011, 1, 1);
+        final DateTime targetDate = buildDateTime(2011, 4, 15);
+        final DateTime endDate = buildDateTime(2011, 4, 27);
 
         BigDecimal expectedValue;
         expectedValue = FOURTEEN.divide(NINETY_TWO, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD);
@@ -96,9 +96,9 @@ public class DoubleProRationTests extends ProRationInAdvanceTestBase {
 
     @Test
     public void testDoubleProRation_TargetDateInSecondProRationPeriod() throws InvalidDateSequenceException {
-        DateTime startDate = buildDateTime(2011, 1, 1);
-        DateTime targetDate = buildDateTime(2011, 4, 26);
-        DateTime endDate = buildDateTime(2011, 4, 27);
+        final DateTime startDate = buildDateTime(2011, 1, 1);
+        final DateTime targetDate = buildDateTime(2011, 4, 26);
+        final DateTime endDate = buildDateTime(2011, 4, 27);
 
         BigDecimal expectedValue;
         expectedValue = FOURTEEN.divide(NINETY_TWO, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD);
@@ -111,9 +111,9 @@ public class DoubleProRationTests extends ProRationInAdvanceTestBase {
 
     @Test
     public void testDoubleProRation_TargetDateOnEndDate() throws InvalidDateSequenceException {
-        DateTime startDate = buildDateTime(2011, 1, 1);
-        DateTime targetDate = buildDateTime(2011, 4, 27);
-        DateTime endDate = buildDateTime(2011, 4, 27);
+        final DateTime startDate = buildDateTime(2011, 1, 1);
+        final DateTime targetDate = buildDateTime(2011, 4, 27);
+        final DateTime endDate = buildDateTime(2011, 4, 27);
 
         BigDecimal expectedValue;
         expectedValue = FOURTEEN.divide(NINETY_TWO, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD);
@@ -126,9 +126,9 @@ public class DoubleProRationTests extends ProRationInAdvanceTestBase {
 
     @Test
     public void testDoubleProRation_TargetDateAfterEndDate() throws InvalidDateSequenceException {
-        DateTime startDate = buildDateTime(2011, 1, 1);
-        DateTime targetDate = buildDateTime(2011, 5, 7);
-        DateTime endDate = buildDateTime(2011, 4, 27);
+        final DateTime startDate = buildDateTime(2011, 1, 1);
+        final DateTime targetDate = buildDateTime(2011, 5, 7);
+        final DateTime endDate = buildDateTime(2011, 4, 27);
 
         BigDecimal expectedValue;
         expectedValue = FOURTEEN.divide(NINETY_TWO, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD);
@@ -141,9 +141,9 @@ public class DoubleProRationTests extends ProRationInAdvanceTestBase {
 
     @Test
     public void testDoubleProRationWithMultiplePeriods_TargetDateInSecondFullBillingPeriod() throws InvalidDateSequenceException {
-        DateTime startDate = buildDateTime(2011, 1, 1);
-        DateTime targetDate = buildDateTime(2011, 6, 26);
-        DateTime endDate = buildDateTime(2011, 8, 27);
+        final DateTime startDate = buildDateTime(2011, 1, 1);
+        final DateTime targetDate = buildDateTime(2011, 6, 26);
+        final DateTime endDate = buildDateTime(2011, 8, 27);
 
         BigDecimal expectedValue;
         expectedValue = FOURTEEN.divide(NINETY_TWO, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD);

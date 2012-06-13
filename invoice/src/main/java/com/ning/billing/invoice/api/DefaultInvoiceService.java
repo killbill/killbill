@@ -33,7 +33,7 @@ public class DefaultInvoiceService implements InvoiceService {
     private final Bus eventBus;
 
     @Inject
-    public DefaultInvoiceService(InvoiceListener invoiceListener, Bus eventBus, NextBillingDateNotifier dateNotifier) {
+    public DefaultInvoiceService(final InvoiceListener invoiceListener, final Bus eventBus, final NextBillingDateNotifier dateNotifier) {
         this.invoiceListener = invoiceListener;
         this.eventBus = eventBus;
         this.dateNotifier = dateNotifier;

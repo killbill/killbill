@@ -16,11 +16,6 @@
 
 package com.ning.billing.invoice.model;
 
-import com.ning.billing.catalog.api.BillingPeriod;
-import org.joda.time.DateTime;
-
-import java.math.BigDecimal;
-
 public abstract class BillingModeBase {
 //    public BigDecimal calculateNumberOfBillingCycles(final DateTime startDate, final DateTime endDate, final DateTime targetDate, final int billingCycleDay, final BillingPeriod billingPeriod) throws InvalidDateSequenceException {
 //        if (endDate.isBefore(startDate)) {throw new InvalidDateSequenceException();}

@@ -16,6 +16,10 @@
 
 package com.ning.billing.invoice.notification;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
@@ -30,34 +34,30 @@ import com.ning.billing.util.email.EmailApiException;
 import com.ning.billing.util.email.EmailConfig;
 import com.ning.billing.util.email.EmailSender;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
 public class EmailInvoiceNotifier implements InvoiceNotifier {
     private final AccountUserApi accountUserApi;
     private final HtmlInvoiceGenerator generator;
     private final EmailConfig config;
 
     @Inject
-    public EmailInvoiceNotifier(AccountUserApi accountUserApi, HtmlInvoiceGenerator generator, EmailConfig config) {
+    public EmailInvoiceNotifier(final AccountUserApi accountUserApi, final HtmlInvoiceGenerator generator, final EmailConfig config) {
         this.accountUserApi = accountUserApi;
         this.generator = generator;
         this.config = config;
     }
 
     @Override
-    public void notify(Account account, Invoice invoice) throws InvoiceApiException {
-        List<String> to = new ArrayList<String>();
+    public void notify(final Account account, final Invoice invoice) throws InvoiceApiException {
+        final List<String> to = new ArrayList<String>();
         to.add(account.getEmail());
 
-        List<AccountEmail> accountEmailList = accountUserApi.getEmails(account.getId());
-        List<String> cc = new ArrayList<String>();
-        for (AccountEmail email : accountEmailList) {
+        final List<AccountEmail> accountEmailList = accountUserApi.getEmails(account.getId());
+        final List<String> cc = new ArrayList<String>();
+        for (final AccountEmail email : accountEmailList) {
             cc.add(email.getEmail());
         }
 
-        String htmlBody = null;
+        final String htmlBody;
         try {
             htmlBody = generator.generateInvoice(account, invoice, "HtmlInvoiceTemplate");
         } catch (IOException e) {
@@ -65,9 +65,9 @@ public class EmailInvoiceNotifier implements InvoiceNotifier {
         }
 
         // TODO: get subject
-        String subject = "";
+        final String subject = "";
 
-        EmailSender sender = new DefaultEmailSender(config);
+        final EmailSender sender = new DefaultEmailSender(config);
         try {
             sender.sendSecureEmail(to, cc, subject, htmlBody);
         } catch (EmailApiException e) {

@@ -16,8 +16,6 @@
 
 package com.ning.billing.invoice.glue;
 
-import static org.testng.Assert.assertNotNull;
-
 import java.io.IOException;
 import java.net.URL;
 
@@ -51,6 +49,8 @@ import com.ning.billing.util.glue.GlobalLockerModule;
 import com.ning.billing.util.glue.TagStoreModule;
 import com.ning.billing.util.notificationq.MockNotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService;
+
+import static org.testng.Assert.assertNotNull;
 
 public class InvoiceModuleWithEmbeddedDb extends DefaultInvoiceModule {
     private final MysqlTestingHelper helper = new MysqlTestingHelper();
@@ -107,7 +107,7 @@ public class InvoiceModuleWithEmbeddedDb extends DefaultInvoiceModule {
 //      install(new AccountModule());
         bind(AccountUserApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class));
 
-        BillingApi billingApi = BrainDeadProxyFactory.createBrainDeadProxyFor(BillingApi.class);
+        final BillingApi billingApi = BrainDeadProxyFactory.createBrainDeadProxyFor(BillingApi.class);
         ((ZombieControl) billingApi).addResult("setChargedThroughDateFromTransaction", BrainDeadProxyFactory.ZOMBIE_VOID);
         bind(BillingApi.class).toInstance(billingApi);
 
@@ -127,7 +127,7 @@ public class InvoiceModuleWithEmbeddedDb extends DefaultInvoiceModule {
         final URL url = InvoiceModuleWithEmbeddedDb.class.getResource(resource);
         assertNotNull(url);
         try {
-            System.getProperties().load( url.openStream() );
+            System.getProperties().load(url.openStream());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

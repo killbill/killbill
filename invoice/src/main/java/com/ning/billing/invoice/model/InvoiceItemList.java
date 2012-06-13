@@ -19,6 +19,7 @@ package com.ning.billing.invoice.model;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+
 import com.ning.billing.invoice.api.InvoiceItem;
 
 public class InvoiceItemList extends ArrayList<InvoiceItem> {

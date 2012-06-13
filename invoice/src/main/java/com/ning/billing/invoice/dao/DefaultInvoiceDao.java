@@ -52,7 +52,6 @@ public class DefaultInvoiceDao implements InvoiceDao {
     private final InvoicePaymentSqlDao invoicePaymentSqlDao;
     private final CreditInvoiceItemSqlDao creditInvoiceItemSqlDao;
     private final TagUserApi tagUserApi;
-
     private final NextBillingDatePoster nextBillingDatePoster;
 
     @Inject
@@ -140,7 +139,6 @@ public class DefaultInvoiceDao implements InvoiceDao {
 
     @Override
     public void create(final Invoice invoice, final CallContext context) {
-
         invoiceSqlDao.inTransaction(new Transaction<Void, InvoiceSqlDao>() {
             @Override
             public Void inTransaction(final InvoiceSqlDao transactional, final TransactionStatus status) throws Exception {

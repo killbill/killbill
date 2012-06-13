@@ -20,19 +20,19 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
-import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.invoice.api.InvoiceItem;
-import com.ning.billing.util.api.TagApiException;
-import com.ning.billing.util.callcontext.CallContext;
 import org.joda.time.DateTime;
 
 import com.google.inject.Inject;
+import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.InvoiceDispatcher;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
+import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.invoice.dao.InvoiceDao;
+import com.ning.billing.util.api.TagApiException;
+import com.ning.billing.util.callcontext.CallContext;
 
 public class DefaultInvoiceUserApi implements InvoiceUserApi {
     private final InvoiceDao dao;
@@ -55,15 +55,15 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
 
     @Override
-    public void notifyOfPaymentAttempt(InvoicePayment invoicePayment, CallContext context) {
+    public void notifyOfPaymentAttempt(final InvoicePayment invoicePayment, final CallContext context) {
         dao.notifyOfPaymentAttempt(invoicePayment, context);
     }
 
     @Override
-	public BigDecimal getAccountBalance(UUID accountId) {
-		BigDecimal result = dao.getAccountBalance(accountId);
-		return result == null ? BigDecimal.ZERO : result;
-	}
+    public BigDecimal getAccountBalance(final UUID accountId) {
+        final BigDecimal result = dao.getAccountBalance(accountId);
+        return result == null ? BigDecimal.ZERO : result;
+    }
 
     @Override
     public Invoice getInvoice(final UUID invoiceId) {
@@ -75,12 +75,12 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         return dao.getUnpaidInvoicesByAccountId(accountId, upToDate);
     }
 
-	@Override
-	public Invoice triggerInvoiceGeneration(final UUID accountId,
-			final DateTime targetDate, final boolean dryRun,
-            final CallContext context) throws InvoiceApiException {
-		return dispatcher.processAccount(accountId, targetDate, dryRun, context);
-	}
+    @Override
+    public Invoice triggerInvoiceGeneration(final UUID accountId,
+                                            final DateTime targetDate, final boolean dryRun,
+                                            final CallContext context) throws InvoiceApiException {
+        return dispatcher.processAccount(accountId, targetDate, dryRun, context);
+    }
 
     @Override
     public void tagInvoiceAsWrittenOff(final UUID invoiceId, final CallContext context) throws TagApiException {
@@ -99,7 +99,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
 
     @Override
     public InvoiceItem insertCredit(final UUID accountId, final BigDecimal amount, final DateTime effectiveDate,
-                             final Currency currency, final CallContext context) throws InvoiceApiException {
+                                    final Currency currency, final CallContext context) throws InvoiceApiException {
         return dao.insertCredit(accountId, amount, effectiveDate, currency, context);
     }
 }

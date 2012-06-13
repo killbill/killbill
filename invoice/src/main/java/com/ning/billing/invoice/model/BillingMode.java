@@ -16,12 +16,14 @@
 
 package com.ning.billing.invoice.model;
 
-import com.ning.billing.catalog.api.BillingPeriod;
+import java.util.List;
+
 import org.joda.time.DateTime;
 
-import java.util.List;
+import com.ning.billing.catalog.api.BillingPeriod;
 
 public interface BillingMode {
     List<RecurringInvoiceItemData> calculateInvoiceItemData(DateTime startDate, DateTime endDate, DateTime targetDate, int billingCycleDay, BillingPeriod billingPeriod) throws InvalidDateSequenceException;
+
     List<RecurringInvoiceItemData> calculateInvoiceItemData(DateTime startDate, DateTime targetDate, int billingCycleDay, BillingPeriod billingPeriod) throws InvalidDateSequenceException;
 }

@@ -31,21 +31,22 @@
  */
 package com.ning.billing.invoice.template.formatters;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.UUID;
+
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
+
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.formatters.InvoiceFormatter;
 import com.ning.billing.util.template.translation.TranslatorConfig;
-import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
-
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.UUID;
 
 public class DefaultInvoiceFormatter implements InvoiceFormatter {
     private final TranslatorConfig config;
@@ -53,7 +54,7 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
     private final DateTimeFormatter dateFormatter;
     private final Locale locale;
 
-    public DefaultInvoiceFormatter(TranslatorConfig config, Invoice invoice, Locale locale) {
+    public DefaultInvoiceFormatter(final TranslatorConfig config, final Invoice invoice, final Locale locale) {
         this.config = config;
         this.invoice = invoice;
         dateFormatter = DateTimeFormat.mediumDate().withLocale(locale);
@@ -67,25 +68,25 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
 
     @Override
     public List<InvoiceItem> getInvoiceItems() {
-        List<InvoiceItem> formatters = new ArrayList<InvoiceItem>();
-        for (InvoiceItem item : invoice.getInvoiceItems()) {
+        final List<InvoiceItem> formatters = new ArrayList<InvoiceItem>();
+        for (final InvoiceItem item : invoice.getInvoiceItems()) {
             formatters.add(new DefaultInvoiceItemFormatter(config, item, dateFormatter, locale));
         }
         return formatters;
     }
 
     @Override
-    public boolean addInvoiceItem(InvoiceItem item) {
+    public boolean addInvoiceItem(final InvoiceItem item) {
         return invoice.addInvoiceItem(item);
     }
 
     @Override
-    public boolean addInvoiceItems(List<InvoiceItem> items) {
+    public boolean addInvoiceItems(final List<InvoiceItem> items) {
         return invoice.addInvoiceItems(items);
     }
 
     @Override
-    public <T extends InvoiceItem> List<InvoiceItem> getInvoiceItems(Class<T> clazz) {
+    public <T extends InvoiceItem> List<InvoiceItem> getInvoiceItems(final Class<T> clazz) {
         return invoice.getInvoiceItems(clazz);
     }
 
@@ -95,12 +96,12 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
     }
 
     @Override
-    public boolean addPayment(InvoicePayment payment) {
+    public boolean addPayment(final InvoicePayment payment) {
         return invoice.addPayment(payment);
     }
 
     @Override
-    public boolean addPayments(List<InvoicePayment> payments) {
+    public boolean addPayments(final List<InvoicePayment> payments) {
         return invoice.addPayments(payments);
     }
 
@@ -135,7 +136,7 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
     }
 
     @Override
-    public boolean isDueForPayment(DateTime targetDate, int numberOfDays) {
+    public boolean isDueForPayment(final DateTime targetDate, final int numberOfDays) {
         return invoice.isDueForPayment(targetDate, numberOfDays);
     }
 

@@ -60,8 +60,8 @@ import com.ning.billing.util.globallocker.GlobalLocker.LockerService;
 import com.ning.billing.util.globallocker.LockFailedException;
 
 public class InvoiceDispatcher {
-    private final static Logger log = LoggerFactory.getLogger(InvoiceDispatcher.class);
-    private final static int NB_LOCK_TRY = 5;
+    private static final Logger log = LoggerFactory.getLogger(InvoiceDispatcher.class);
+    private static final int NB_LOCK_TRY = 5;
 
     private final InvoiceGenerator generator;
     private final BillingApi billingApi;
@@ -76,12 +76,12 @@ public class InvoiceDispatcher {
 
     @Inject
     public InvoiceDispatcher(final InvoiceGenerator generator, final AccountUserApi accountUserApi,
-            final BillingApi billingApi,
-            final InvoiceDao invoiceDao,
-            final InvoiceNotifier invoiceNotifier,
-            final GlobalLocker locker,
-            final Bus eventBus,
-            final Clock clock) {
+                             final BillingApi billingApi,
+                             final InvoiceDao invoiceDao,
+                             final InvoiceNotifier invoiceNotifier,
+                             final GlobalLocker locker,
+                             final Bus eventBus,
+                             final Clock clock) {
         this.generator = generator;
         this.billingApi = billingApi;
         this.accountUserApi = accountUserApi;
@@ -91,37 +91,36 @@ public class InvoiceDispatcher {
         this.eventBus = eventBus;
         this.clock = clock;
 
-        String verboseOutputValue = System.getProperty("VERBOSE_OUTPUT");
+        final String verboseOutputValue = System.getProperty("VERBOSE_OUTPUT");
         VERBOSE_OUTPUT = (verboseOutputValue != null) && Boolean.parseBoolean(verboseOutputValue);
     }
 
     public void processSubscription(final SubscriptionEvent transition,
-            final CallContext context) throws InvoiceApiException {
-        UUID subscriptionId = transition.getSubscriptionId();
-        DateTime targetDate = transition.getEffectiveTransitionTime();
+                                    final CallContext context) throws InvoiceApiException {
+        final UUID subscriptionId = transition.getSubscriptionId();
+        final DateTime targetDate = transition.getEffectiveTransitionTime();
         log.info("Got subscription transition from InvoiceListener. id: " + subscriptionId.toString() + "; targetDate: " + targetDate.toString());
         log.info("Transition type: " + transition.getTransitionType().toString());
         processSubscription(subscriptionId, targetDate, context);
     }
 
     public void processSubscription(final UUID subscriptionId, final DateTime targetDate,
-            final CallContext context) throws InvoiceApiException {
+                                    final CallContext context) throws InvoiceApiException {
         try {
             if (subscriptionId == null) {
                 log.error("Failed handling entitlement change.", new InvoiceApiException(ErrorCode.INVOICE_INVALID_TRANSITION));
                 return;
             }
-            UUID accountId = billingApi.getAccountIdFromSubscriptionId(subscriptionId);
+            final UUID accountId = billingApi.getAccountIdFromSubscriptionId(subscriptionId);
             processAccount(accountId, targetDate, false, context);
         } catch (EntitlementBillingApiException e) {
             log.error("Failed handling entitlement change.",
-                    new InvoiceApiException(ErrorCode.INVOICE_NO_ACCOUNT_ID_FOR_SUBSCRIPTION_ID, subscriptionId.toString()));
+                      new InvoiceApiException(ErrorCode.INVOICE_NO_ACCOUNT_ID_FOR_SUBSCRIPTION_ID, subscriptionId.toString()));
         }
-        return;
     }
 
     public Invoice processAccount(final UUID accountId, final DateTime targetDate,
-            final boolean dryRun, final CallContext context) throws InvoiceApiException {
+                                  final boolean dryRun, final CallContext context) throws InvoiceApiException {
         GlobalLock lock = null;
         try {
             lock = locker.lockWithNumberOfTries(LockerService.INVOICE, accountId.toString(), NB_LOCK_TRY);
@@ -131,7 +130,7 @@ public class InvoiceDispatcher {
         } catch (LockFailedException e) {
             // Not good!
             log.error(String.format("Failed to process invoice for account %s, targetDate %s",
-                    accountId.toString(), targetDate), e);
+                                    accountId.toString(), targetDate), e);
         } finally {
             if (lock != null) {
                 lock.release();
@@ -140,35 +139,35 @@ public class InvoiceDispatcher {
         return null;
     }
 
-   
+
     private Invoice processAccountWithLock(final UUID accountId, final DateTime targetDate,
-            final boolean dryRun, final CallContext context) throws InvoiceApiException {
+                                           final boolean dryRun, final CallContext context) throws InvoiceApiException {
         try {
-            Account account = accountUserApi.getAccountById(accountId);
-            BillingEventSet billingEvents = billingApi.getBillingEventsForAccountAndUpdateAccountBCD(accountId);
-            
+            final Account account = accountUserApi.getAccountById(accountId);
+            final BillingEventSet billingEvents = billingApi.getBillingEventsForAccountAndUpdateAccountBCD(accountId);
+
             List<Invoice> invoices = new ArrayList<Invoice>();
             if (!billingEvents.isAccountAutoInvoiceOff()) {
                 invoices = invoiceDao.getInvoicesByAccount(accountId); //no need to fetch, invoicing is off on this account
-            } 
+            }
 
-            Currency targetCurrency = account.getCurrency();
+            final Currency targetCurrency = account.getCurrency();
 
-            
-            Invoice invoice = generator.generateInvoice(accountId, billingEvents, invoices, targetDate, targetCurrency);
+
+            final Invoice invoice = generator.generateInvoice(accountId, billingEvents, invoices, targetDate, targetCurrency);
 
             if (invoice == null) {
                 log.info("Generated null invoice.");
                 outputDebugData(billingEvents, invoices);
                 if (!dryRun) {
-                    BusEvent event = new DefaultEmptyInvoiceEvent(accountId, clock.getUTCNow(), context.getUserToken());
+                    final BusEvent event = new DefaultEmptyInvoiceEvent(accountId, clock.getUTCNow(), context.getUserToken());
                     postEvent(event, accountId);
                 }
             } else {
                 log.info("Generated invoice {} with {} items.", invoice.getId().toString(), invoice.getNumberOfItems());
                 if (VERBOSE_OUTPUT) {
                     log.info("New items");
-                    for (InvoiceItem item : invoice.getInvoiceItems()) {
+                    for (final InvoiceItem item : invoice.getInvoiceItems()) {
                         log.info(item.toString());
                     }
                 }
@@ -176,14 +175,14 @@ public class InvoiceDispatcher {
                 if (!dryRun) {
                     invoiceDao.create(invoice, context);
 
-                    List<InvoiceItem> fixedPriceInvoiceItems = invoice.getInvoiceItems(FixedPriceInvoiceItem.class);
-                    List<InvoiceItem> recurringInvoiceItems = invoice.getInvoiceItems(RecurringInvoiceItem.class);
+                    final List<InvoiceItem> fixedPriceInvoiceItems = invoice.getInvoiceItems(FixedPriceInvoiceItem.class);
+                    final List<InvoiceItem> recurringInvoiceItems = invoice.getInvoiceItems(RecurringInvoiceItem.class);
                     setChargedThroughDates(fixedPriceInvoiceItems, recurringInvoiceItems, context);
 
                     final InvoiceCreationEvent event = new DefaultInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
-                            invoice.getBalance(), invoice.getCurrency(),
-                            invoice.getInvoiceDate(),
-                            context.getUserToken());
+                                                                                       invoice.getBalance(), invoice.getCurrency(),
+                                                                                       invoice.getInvoiceDate(),
+                                                                                       context.getUserToken());
 
                     postEvent(event, accountId);
                 }
@@ -194,41 +193,41 @@ public class InvoiceDispatcher {
             }
 
             return invoice;
-        } catch(AccountApiException e) {
-            log.error("Failed handling entitlement change.",e);
-            return null;    
+        } catch (AccountApiException e) {
+            log.error("Failed handling entitlement change.", e);
+            return null;
         }
     }
 
     private void setChargedThroughDates(final Collection<InvoiceItem> fixedPriceItems,
-            final Collection<InvoiceItem> recurringItems, CallContext context) {
+                                        final Collection<InvoiceItem> recurringItems, final CallContext context) {
 
-        Map<UUID, DateTime> chargeThroughDates = new HashMap<UUID, DateTime>();
+        final Map<UUID, DateTime> chargeThroughDates = new HashMap<UUID, DateTime>();
         addInvoiceItemsToChargeThroughDates(chargeThroughDates, fixedPriceItems);
         addInvoiceItemsToChargeThroughDates(chargeThroughDates, recurringItems);
 
-        for (UUID subscriptionId : chargeThroughDates.keySet()) {
-            if(subscriptionId != null) {
-                DateTime chargeThroughDate = chargeThroughDates.get(subscriptionId);
+        for (final UUID subscriptionId : chargeThroughDates.keySet()) {
+            if (subscriptionId != null) {
+                final DateTime chargeThroughDate = chargeThroughDates.get(subscriptionId);
                 log.info("Setting CTD for subscription {} to {}", subscriptionId.toString(), chargeThroughDate.toString());
                 billingApi.setChargedThroughDate(subscriptionId, chargeThroughDate, context);
             }
         }
     }
-    
+
     private void postEvent(final BusEvent event, final UUID accountId) {
         try {
             eventBus.post(event);
-        } catch (EventBusException e){
-            log.error(String.format("Failed to post event {} for account {} ", event.getBusEventType(), accountId), e);
+        } catch (EventBusException e) {
+            log.error(String.format("Failed to post event %s for account %s", event.getBusEventType(), accountId), e);
         }
     }
 
 
-    private void addInvoiceItemsToChargeThroughDates(Map<UUID, DateTime> chargeThroughDates, Collection<InvoiceItem> items) {
-        for (InvoiceItem item : items) {
-            UUID subscriptionId = item.getSubscriptionId();
-            DateTime endDate = item.getEndDate();
+    private void addInvoiceItemsToChargeThroughDates(final Map<UUID, DateTime> chargeThroughDates, final Collection<InvoiceItem> items) {
+        for (final InvoiceItem item : items) {
+            final UUID subscriptionId = item.getSubscriptionId();
+            final DateTime endDate = item.getEndDate();
 
             if (chargeThroughDates.containsKey(subscriptionId)) {
                 if (chargeThroughDates.get(subscriptionId).isBefore(endDate)) {
@@ -241,16 +240,16 @@ public class InvoiceDispatcher {
     }
 
 
-    private void outputDebugData(Collection<BillingEvent> events, Collection<Invoice> invoices) {
+    private void outputDebugData(final Collection<BillingEvent> events, final Collection<Invoice> invoices) {
         if (VERBOSE_OUTPUT) {
             log.info("Events");
-            for (BillingEvent event : events) {
+            for (final BillingEvent event : events) {
                 log.info(event.toString());
             }
 
             log.info("Existing items");
-            for (Invoice invoice : invoices) {
-                for (InvoiceItem item : invoice.getInvoiceItems()) {
+            for (final Invoice invoice : invoices) {
+                for (final InvoiceItem item : invoice.getInvoiceItems()) {
                     log.info(item.toString());
                 }
             }

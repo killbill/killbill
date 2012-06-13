@@ -27,7 +27,6 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.UUID;
 
-import com.ning.billing.util.entity.dao.EntitySqlDao;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
@@ -47,6 +46,7 @@ import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextBinder;
+import com.ning.billing.util.entity.dao.EntitySqlDao;
 
 @ExternalizedSqlViaStringTemplate3()
 @RegisterMapper(FixedPriceInvoiceItemSqlDao.FixedPriceInvoiceItemMapper.class)
@@ -70,7 +70,7 @@ public interface FixedPriceInvoiceItemSqlDao extends EntitySqlDao<InvoiceItem> {
     @SqlBatch
     void create(@FixedPriceInvoiceItemBinder final List<InvoiceItem> items, @CallContextBinder final CallContext context);
 
-    @SqlBatch(transactional=false)
+    @SqlBatch(transactional = false)
     void batchCreateFromTransaction(@FixedPriceInvoiceItemBinder final List<InvoiceItem> items, @CallContextBinder final CallContext context);
 
     @BindingAnnotation(FixedPriceInvoiceItemBinder.FixedPriceInvoiceItemBinderFactory.class)
@@ -78,9 +78,9 @@ public interface FixedPriceInvoiceItemSqlDao extends EntitySqlDao<InvoiceItem> {
     @Target({ElementType.PARAMETER})
     public @interface FixedPriceInvoiceItemBinder {
         public static class FixedPriceInvoiceItemBinderFactory implements BinderFactory {
-            public Binder build(Annotation annotation) {
+            public Binder build(final Annotation annotation) {
                 return new Binder<FixedPriceInvoiceItemBinder, FixedPriceInvoiceItem>() {
-                    public void bind(SQLStatement q, FixedPriceInvoiceItemBinder bind, FixedPriceInvoiceItem item) {
+                    public void bind(final SQLStatement q, final FixedPriceInvoiceItemBinder bind, final FixedPriceInvoiceItem item) {
                         q.bind("id", item.getId().toString());
                         q.bind("accountId", item.getAccountId().toString());
                         q.bind("invoiceId", item.getInvoiceId().toString());
@@ -100,21 +100,21 @@ public interface FixedPriceInvoiceItemSqlDao extends EntitySqlDao<InvoiceItem> {
 
     public static class FixedPriceInvoiceItemMapper implements ResultSetMapper<InvoiceItem> {
         @Override
-        public FixedPriceInvoiceItem map(int index, ResultSet result, StatementContext context) throws SQLException {
-            UUID id = UUID.fromString(result.getString("id"));
-            UUID invoiceId = UUID.fromString(result.getString("invoice_id"));
-            UUID accountId = UUID.fromString(result.getString("account_id"));
-            UUID bundleId = result.getString("bundle_id") == null ? null :UUID.fromString(result.getString("bundle_id"));
-            UUID subscriptionId = result.getString("subscription_id") == null ? null : UUID.fromString(result.getString("subscription_id"));
-            String planName = result.getString("plan_name");
-            String phaseName = result.getString("phase_name");
-            DateTime startDate = new DateTime(result.getTimestamp("start_date"));
-            DateTime endDate = new DateTime(result.getTimestamp("end_date"));
-            BigDecimal amount = result.getBigDecimal("amount");
-            Currency currency = Currency.valueOf(result.getString("currency"));
+        public FixedPriceInvoiceItem map(final int index, final ResultSet result, final StatementContext context) throws SQLException {
+            final UUID id = UUID.fromString(result.getString("id"));
+            final UUID invoiceId = UUID.fromString(result.getString("invoice_id"));
+            final UUID accountId = UUID.fromString(result.getString("account_id"));
+            final UUID bundleId = result.getString("bundle_id") == null ? null : UUID.fromString(result.getString("bundle_id"));
+            final UUID subscriptionId = result.getString("subscription_id") == null ? null : UUID.fromString(result.getString("subscription_id"));
+            final String planName = result.getString("plan_name");
+            final String phaseName = result.getString("phase_name");
+            final DateTime startDate = new DateTime(result.getTimestamp("start_date"));
+            final DateTime endDate = new DateTime(result.getTimestamp("end_date"));
+            final BigDecimal amount = result.getBigDecimal("amount");
+            final Currency currency = Currency.valueOf(result.getString("currency"));
 
             return new FixedPriceInvoiceItem(id, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName,
-                                            startDate, endDate, amount, currency);
+                                             startDate, endDate, amount, currency);
         }
     }
 }

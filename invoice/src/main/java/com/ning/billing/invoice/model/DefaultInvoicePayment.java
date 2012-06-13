@@ -16,16 +16,17 @@
 
 package com.ning.billing.invoice.model;
 
+import javax.annotation.Nullable;
+import java.math.BigDecimal;
+import java.util.UUID;
+
+import org.joda.time.DateTime;
+
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.util.entity.EntityBase;
-import org.joda.time.DateTime;
-
-import javax.annotation.Nullable;
-import java.math.BigDecimal;
-import java.util.UUID;
 
 public class DefaultInvoicePayment extends EntityBase implements InvoicePayment {
     private final UUID paymentAttemptId;
@@ -87,7 +88,7 @@ public class DefaultInvoicePayment extends EntityBase implements InvoicePayment 
     }
 
     @Override
-    public InvoicePayment asChargeBack(BigDecimal chargeBackAmount, DateTime chargeBackDate) throws InvoiceApiException {
+    public InvoicePayment asChargeBack(final BigDecimal chargeBackAmount, final DateTime chargeBackDate) throws InvoiceApiException {
         if (chargeBackAmount.compareTo(amount) > 0) {
             throw new InvoiceApiException(ErrorCode.CHARGE_BACK_AMOUNT_TOO_HIGH, chargeBackAmount, amount);
         }

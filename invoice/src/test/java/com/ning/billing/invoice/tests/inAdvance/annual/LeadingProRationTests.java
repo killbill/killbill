@@ -34,10 +34,10 @@ public class LeadingProRationTests extends ProRationInAdvanceTestBase {
 
     @Test
     public void testLeadingProRation_Evergreen_TargetDateOnStartDate() throws InvalidDateSequenceException {
-        DateTime startDate = buildDateTime(2011, 2, 1);
-        DateTime targetDate = buildDateTime(2011, 2, 1);
+        final DateTime startDate = buildDateTime(2011, 2, 1);
+        final DateTime targetDate = buildDateTime(2011, 2, 1);
 
-        BigDecimal expectedValue;
+        final BigDecimal expectedValue;
         expectedValue = TWELVE.divide(THREE_HUNDRED_AND_SIXTY_FIVE, NUMBER_OF_DECIMALS, ROUNDING_METHOD);
 
         testCalculateNumberOfBillingCycles(startDate, targetDate, 13, expectedValue);
@@ -45,10 +45,10 @@ public class LeadingProRationTests extends ProRationInAdvanceTestBase {
 
     @Test
     public void testLeadingProRation_Evergreen_TargetDateInProRationPeriod() throws InvalidDateSequenceException {
-        DateTime startDate = buildDateTime(2011, 2, 1);
-        DateTime targetDate = buildDateTime(2011, 2, 4);
+        final DateTime startDate = buildDateTime(2011, 2, 1);
+        final DateTime targetDate = buildDateTime(2011, 2, 4);
 
-        BigDecimal expectedValue;
+        final BigDecimal expectedValue;
         expectedValue = TWELVE.divide(THREE_HUNDRED_AND_SIXTY_FIVE, NUMBER_OF_DECIMALS, ROUNDING_METHOD);
 
         testCalculateNumberOfBillingCycles(startDate, targetDate, 13, expectedValue);
@@ -56,10 +56,10 @@ public class LeadingProRationTests extends ProRationInAdvanceTestBase {
 
     @Test
     public void testLeadingProRation_Evergreen_TargetDateOnFirstBillingDate() throws InvalidDateSequenceException {
-        DateTime startDate = buildDateTime(2011, 2, 1);
-        DateTime targetDate = buildDateTime(2011, 2, 13);
+        final DateTime startDate = buildDateTime(2011, 2, 1);
+        final DateTime targetDate = buildDateTime(2011, 2, 13);
 
-        BigDecimal expectedValue;
+        final BigDecimal expectedValue;
         expectedValue = TWELVE.divide(THREE_HUNDRED_AND_SIXTY_FIVE, NUMBER_OF_DECIMALS, ROUNDING_METHOD).add(ONE);
 
         testCalculateNumberOfBillingCycles(startDate, targetDate, 13, expectedValue);
@@ -67,10 +67,10 @@ public class LeadingProRationTests extends ProRationInAdvanceTestBase {
 
     @Test
     public void testLeadingProRation_Evergreen_TargetDateAfterFirstBillingPeriod() throws InvalidDateSequenceException {
-        DateTime startDate = buildDateTime(2011, 2, 1);
-        DateTime targetDate = buildDateTime(2011, 4, 13);
+        final DateTime startDate = buildDateTime(2011, 2, 1);
+        final DateTime targetDate = buildDateTime(2011, 4, 13);
 
-        BigDecimal expectedValue;
+        final BigDecimal expectedValue;
         expectedValue = TWELVE.divide(THREE_HUNDRED_AND_SIXTY_FIVE, NUMBER_OF_DECIMALS, ROUNDING_METHOD).add(ONE);
 
         testCalculateNumberOfBillingCycles(startDate, targetDate, 13, expectedValue);
@@ -78,11 +78,11 @@ public class LeadingProRationTests extends ProRationInAdvanceTestBase {
 
     @Test
     public void testLeadingProRation_WithEndDate_TargetDateOnStartDate() throws InvalidDateSequenceException {
-        DateTime startDate = buildDateTime(2011, 2, 1);
-        DateTime targetDate = buildDateTime(2011, 2, 1);
-        DateTime endDate = buildDateTime(2012, 2, 13);
+        final DateTime startDate = buildDateTime(2011, 2, 1);
+        final DateTime targetDate = buildDateTime(2011, 2, 1);
+        final DateTime endDate = buildDateTime(2012, 2, 13);
 
-        BigDecimal expectedValue;
+        final BigDecimal expectedValue;
         expectedValue = TWELVE.divide(THREE_HUNDRED_AND_SIXTY_FIVE, NUMBER_OF_DECIMALS, ROUNDING_METHOD);
 
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 13, expectedValue);
@@ -90,11 +90,11 @@ public class LeadingProRationTests extends ProRationInAdvanceTestBase {
 
     @Test
     public void testLeadingProRation_WithEndDate_TargetDateInProRationPeriod() throws InvalidDateSequenceException {
-        DateTime startDate = buildDateTime(2011, 2, 1);
-        DateTime targetDate = buildDateTime(2011, 2, 4);
-        DateTime endDate = buildDateTime(2012, 2, 13);
+        final DateTime startDate = buildDateTime(2011, 2, 1);
+        final DateTime targetDate = buildDateTime(2011, 2, 4);
+        final DateTime endDate = buildDateTime(2012, 2, 13);
 
-        BigDecimal expectedValue;
+        final BigDecimal expectedValue;
         expectedValue = TWELVE.divide(THREE_HUNDRED_AND_SIXTY_FIVE, NUMBER_OF_DECIMALS, ROUNDING_METHOD);
 
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 13, expectedValue);
@@ -102,11 +102,11 @@ public class LeadingProRationTests extends ProRationInAdvanceTestBase {
 
     @Test
     public void testLeadingProRation_WithEndDate_TargetDateOnFirstBillingDate() throws InvalidDateSequenceException {
-        DateTime startDate = buildDateTime(2011, 2, 1);
-        DateTime targetDate = buildDateTime(2011, 2, 13);
-        DateTime endDate = buildDateTime(2012, 2, 13);
+        final DateTime startDate = buildDateTime(2011, 2, 1);
+        final DateTime targetDate = buildDateTime(2011, 2, 13);
+        final DateTime endDate = buildDateTime(2012, 2, 13);
 
-        BigDecimal expectedValue;
+        final BigDecimal expectedValue;
         expectedValue = TWELVE.divide(THREE_HUNDRED_AND_SIXTY_FIVE, NUMBER_OF_DECIMALS, ROUNDING_METHOD).add(ONE);
 
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 13, expectedValue);
@@ -114,11 +114,11 @@ public class LeadingProRationTests extends ProRationInAdvanceTestBase {
 
     @Test
     public void testLeadingProRation_WithEndDate_TargetDateInFinalBillingPeriod() throws InvalidDateSequenceException {
-        DateTime startDate = buildDateTime(2011, 2, 1);
-        DateTime targetDate = buildDateTime(2011, 4, 10);
-        DateTime endDate = buildDateTime(2012, 2, 13);
+        final DateTime startDate = buildDateTime(2011, 2, 1);
+        final DateTime targetDate = buildDateTime(2011, 4, 10);
+        final DateTime endDate = buildDateTime(2012, 2, 13);
 
-        BigDecimal expectedValue;
+        final BigDecimal expectedValue;
         expectedValue = TWELVE.divide(THREE_HUNDRED_AND_SIXTY_FIVE, NUMBER_OF_DECIMALS, ROUNDING_METHOD).add(ONE);
 
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 13, expectedValue);
@@ -126,11 +126,11 @@ public class LeadingProRationTests extends ProRationInAdvanceTestBase {
 
     @Test
     public void testLeadingProRation_WithEndDate_TargetDateOnEndDate() throws InvalidDateSequenceException {
-        DateTime startDate = buildDateTime(2011, 2, 1);
-        DateTime targetDate = buildDateTime(2012, 2, 13);
-        DateTime endDate = buildDateTime(2012, 2, 13);
+        final DateTime startDate = buildDateTime(2011, 2, 1);
+        final DateTime targetDate = buildDateTime(2012, 2, 13);
+        final DateTime endDate = buildDateTime(2012, 2, 13);
 
-        BigDecimal expectedValue;
+        final BigDecimal expectedValue;
         expectedValue = TWELVE.divide(THREE_HUNDRED_AND_SIXTY_FIVE, NUMBER_OF_DECIMALS, ROUNDING_METHOD).add(ONE);
 
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 13, expectedValue);
@@ -138,11 +138,11 @@ public class LeadingProRationTests extends ProRationInAdvanceTestBase {
 
     @Test
     public void testLeadingProRation_WithEndDate_TargetDateAfterEndDate() throws InvalidDateSequenceException {
-        DateTime startDate = buildDateTime(2011, 2, 1);
-        DateTime targetDate = buildDateTime(2012, 4, 10);
-        DateTime endDate = buildDateTime(2012, 2, 13);
+        final DateTime startDate = buildDateTime(2011, 2, 1);
+        final DateTime targetDate = buildDateTime(2012, 4, 10);
+        final DateTime endDate = buildDateTime(2012, 2, 13);
 
-        BigDecimal expectedValue;
+        final BigDecimal expectedValue;
         expectedValue = TWELVE.divide(THREE_HUNDRED_AND_SIXTY_FIVE, NUMBER_OF_DECIMALS, ROUNDING_METHOD).add(ONE);
 
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 13, expectedValue);
