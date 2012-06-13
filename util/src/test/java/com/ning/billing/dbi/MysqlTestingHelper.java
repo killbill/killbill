@@ -53,6 +53,7 @@ public class MysqlTestingHelper
     // Discover dynamically list of all tables in that database;
     private List<String> allTables;    
     private File dbDir;
+    private File dataDir;
     private MysqldResource mysqldResource;
     private int port;
 
@@ -85,10 +86,15 @@ public class MysqlTestingHelper
             return;
         }
 
-        dbDir = File.createTempFile("mysql", "");
-        dbDir.delete();
-        dbDir.mkdir();
-        mysqldResource = new MysqldResource(dbDir);
+        dbDir = File.createTempFile("mysqldb", "");
+        Assert.assertTrue(dbDir.delete());
+        Assert.assertTrue(dbDir.mkdir());
+
+        dataDir = File.createTempFile("mysqldata", "");
+        Assert.assertTrue(dataDir.delete());
+        Assert.assertTrue(dataDir.mkdir());
+
+        mysqldResource = new MysqldResource(dbDir, dataDir);
 
         final Map<String, String> dbOpts = new HashMap<String, String>();
         dbOpts.put(MysqldResourceI.PORT, Integer.toString(port));
@@ -103,6 +109,7 @@ public class MysqlTestingHelper
         }
         else {
             log.info("MySQL running on port " + mysqldResource.getPort());
+            log.info(String.format("To connect to it: mysql -u%s -p%s -P%s -S%s/mysql.sock %s", USERNAME, PASSWORD, port, dataDir, DB_NAME));
         }
     }
 
@@ -161,6 +168,7 @@ public class MysqlTestingHelper
         try {
             if (mysqldResource != null) {
                 mysqldResource.shutdown();
+                FileUtils.deleteQuietly(dataDir);
                 FileUtils.deleteQuietly(dbDir);
                 log.info("MySQLd stopped");
             }
