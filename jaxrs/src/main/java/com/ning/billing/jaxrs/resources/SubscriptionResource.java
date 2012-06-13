@@ -235,7 +235,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
     public Response cancelSubscriptionPlan(final @PathParam("subscriptionId") String subscriptionId,
             @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
             @QueryParam(QUERY_CALL_COMPLETION) @DefaultValue("false") final Boolean callCompletion,
-            @QueryParam(QUERY_CALL_TIMEOUT) @DefaultValue("3") final long timeoutSec,
+            @QueryParam(QUERY_CALL_TIMEOUT) @DefaultValue("5") final long timeoutSec,
             @HeaderParam(HDR_CREATED_BY) final String createdBy,
             @HeaderParam(HDR_REASON) final String reason,
             @HeaderParam(HDR_COMMENT) final String comment) {

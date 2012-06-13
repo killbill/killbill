@@ -159,11 +159,20 @@ public class PaymentMethodProcessor extends ProcessorBase {
         return getPaymentMethodInternal(paymentMethodModels, account.getId(), account.getExternalKey(), withPluginDetail);
     }
 
+    public PaymentMethod getPaymentMethodById(UUID paymentMethodId)
+    throws PaymentApiException {
+        PaymentMethodModelDao paymentMethodModel = paymentDao.getPaymentMethod(paymentMethodId);
+        if (paymentMethodModel == null) {
+            throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, paymentMethodId); 
+        }
+        return new DefaultPaymentMethod(paymentMethodModel, null);
+    }
+    
     public PaymentMethod getPaymentMethod(Account account, UUID paymentMethodId, boolean withPluginDetail) 
     throws PaymentApiException {
         PaymentMethodModelDao paymentMethodModel = paymentDao.getPaymentMethod(paymentMethodId);
         if (paymentMethodModel == null) {
-            return null;
+            throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, paymentMethodId);             
         }
         List<PaymentMethod> result =  getPaymentMethodInternal(Collections.singletonList(paymentMethodModel), account.getId(), account.getExternalKey(), withPluginDetail);
         return (result.size() == 0) ? null : result.get(0); 

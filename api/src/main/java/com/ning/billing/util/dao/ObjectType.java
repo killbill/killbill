@@ -23,7 +23,8 @@ public enum ObjectType {
     INVOICE("invoice"),
     PAYMENT("payment"),
     RECURRING_INVOICE_ITEM("recurring_invoice_item"),
-    SUBSCRIPTION("subscription");
+    SUBSCRIPTION("subscription"),
+    PAYMENT_METHOD("payment method");
 
     private final String objectName;
     ObjectType(String objectName) {

@@ -15,6 +15,7 @@
  */
 package com.ning.billing.payment.dao;
 
+import static junit.framework.Assert.assertNull;
 import static org.testng.Assert.assertEquals;
 
 import java.io.IOException;
@@ -22,6 +23,8 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
 import java.util.UUID;
+
+import junit.framework.Assert;
 
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
@@ -259,6 +262,12 @@ public class TestPaymentDao {
         assertEquals(savedMethod.getPluginName(), pluginName);
         assertEquals(savedMethod.isActive(), isActive);
         assertEquals(savedMethod.getExternalId(), externalPaymentId);
+        
+        paymentDao.deletedPaymentMethod(paymentMethodId);
+        
+        PaymentMethodModelDao deletedPaymentMethod = paymentDao.getPaymentMethod(paymentMethodId);
+        assertNull(deletedPaymentMethod);
+        
         
     }
 }

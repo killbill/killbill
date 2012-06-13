@@ -61,7 +61,10 @@ public interface PaymentApi {
    
    public List<PaymentMethod> getPaymentMethods(final Account account, final boolean withPluginDetail)
     throws PaymentApiException;
-   
+
+   public PaymentMethod getPaymentMethodById(final UUID paymentMethodId)
+   throws PaymentApiException;
+
    public PaymentMethod getPaymentMethod(final Account account, final UUID paymentMethodId, final boolean withPluginDetail)
    throws PaymentApiException;
    

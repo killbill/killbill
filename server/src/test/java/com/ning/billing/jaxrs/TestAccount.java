@@ -17,7 +17,9 @@ package com.ning.billing.jaxrs;
 
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -46,8 +48,11 @@ import com.ning.billing.jaxrs.json.BundleJsonNoSubscriptions;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
 import com.ning.billing.jaxrs.json.InvoiceJsonSimple;
 import com.ning.billing.jaxrs.json.PaymentJsonSimple;
+import com.ning.billing.jaxrs.json.PaymentMethodJson;
+import com.ning.billing.jaxrs.json.PaymentMethodJson.PaymentMethodPluginDetailJson;
 import com.ning.billing.jaxrs.json.SubscriptionJsonNoEvents;
 import com.ning.billing.jaxrs.json.TagDefinitionJson;
+import com.ning.billing.payment.api.PaymentMethod;
 import com.ning.http.client.Response;
 
 
@@ -145,12 +150,99 @@ public class TestAccount extends TestJaxrsBase {
         Assert.assertEquals(objFromJson.getBundles().get(0).getSubscriptions().get(0).getEvents().size(), 2);        
     }
 
+	
+
+    @Test(groups="slow", enabled=true)
+    public void testAccountPaymentMethods() throws Exception {
+
+        AccountJson accountJson = createAccount("qwerty", "ytrewq", "qwerty@yahoo.com");
+        assertNotNull(accountJson);
+        
+        String uri = JaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAccountId() + "/" + JaxrsResource.PAYMENT_METHODS;
+        PaymentMethodJson paymentMethodJson = getPaymentMethodJson(accountJson.getAccountId(), getPaymentMethodCCProperties());
+        String baseJson = mapper.writeValueAsString(paymentMethodJson);
+        Map<String, String> queryParams = new HashMap<String, String>();
+        queryParams.put(JaxrsResource.QUERY_PAYMENT_METHOD_IS_DEFAULT, "true");
+    
+        Response response = doPost(uri, baseJson, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
+        assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
+
+        String locationCC = response.getHeader("Location");
+        Assert.assertNotNull(locationCC);
+
+        // Retrieves by Id based on Location returned
+        response = doGetWithUrl(locationCC, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+        baseJson = response.getResponseBody();
+        PaymentMethodJson paymentMethodCC = mapper.readValue(baseJson, PaymentMethodJson.class);
+        assertTrue(paymentMethodCC.isDefault());
+        //
+        // Add another payment method
+        //
+        uri = JaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAccountId() + "/" + JaxrsResource.PAYMENT_METHODS;
+        paymentMethodJson = getPaymentMethodJson(accountJson.getAccountId(), getPaymentMethodPaypalProperties());
+        baseJson = mapper.writeValueAsString(paymentMethodJson);
+    
+        response = doPost(uri, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
+
+        String locationPP = response.getHeader("Location");
+        assertNotNull(locationPP);
+        response = doGetWithUrl(locationPP, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+        baseJson = response.getResponseBody();
+        PaymentMethodJson paymentMethodPP = mapper.readValue(baseJson, PaymentMethodJson.class);
+        assertFalse(paymentMethodPP.isDefault());
+        
+        //
+        // FETCH ALL PAYMENT METHODS
+        //
+        queryParams = new HashMap<String, String>();
+        queryParams.put(JaxrsResource.QUERY_PAYMENT_METHOD_PLUGIN_INFO, "true");
+        response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+        baseJson = response.getResponseBody();
+        List<PaymentMethodJson> paymentMethods = mapper.readValue(baseJson, new TypeReference<List<PaymentMethodJson>>() {});
+        assertEquals(paymentMethods.size(), 2);
+        
+        
+        //
+        // CHANGE DEFAULT
+        //
+        uri = JaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAccountId() + "/" + JaxrsResource.PAYMENT_METHODS +  "/" + paymentMethodPP.getPaymentMethodId() + "/" + JaxrsResource.PAYMENT_METHODS_DEFAULT_PATH_POSTFIX;      
+        response = doPut(uri, "{}", DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+
+        response = doGetWithUrl(locationPP, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+        baseJson = response.getResponseBody();
+        PaymentMethodJson paymentMethodPPDefault = mapper.readValue(baseJson, PaymentMethodJson.class);
+        assertTrue(paymentMethodPPDefault.isDefault());
+        
+        //
+        // DELETE NON DEFAULT PM
+        //
+        uri = JaxrsResource.PAYMENT_METHODS_PATH  + "/" + paymentMethodCC.getPaymentMethodId();
+        response = doDelete(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+
+        //
+        // FETCH ALL PAYMENT METHODS
+        //
+        uri = JaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAccountId() + "/" + JaxrsResource.PAYMENT_METHODS;        
+        queryParams = new HashMap<String, String>();
+        queryParams.put(JaxrsResource.QUERY_PAYMENT_METHOD_PLUGIN_INFO, "true");
+        response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+        baseJson = response.getResponseBody();
+        paymentMethods = mapper.readValue(baseJson, new TypeReference<List<PaymentMethodJson>>() {});
+        assertEquals(paymentMethods.size(), 1);
+    }
 
     @Test(groups="slow", enabled=true)
     public void testAccountPayments() throws Exception {
 
         clock.setTime(new DateTime(2012, 4, 25, 0, 3, 42, 0));
-
 
         AccountJson accountJson = createAccountWithDefaultPaymentMethod("ermenehildo", "shtyrgfhwe", "ermenehildo@yahoo.com");
         assertNotNull(accountJson);
@@ -176,16 +268,6 @@ public class TestAccount extends TestJaxrsBase {
         Assert.assertEquals(objFromJson.size(), 3);
     }
 
-
-
-
-
-
-
-    protected String getRootPath() {
-        return JaxrsResource.ACCOUNTS_PATH;
-    }
-
 	@Test(groups="slow", enabled=true)
 	public void testTags() throws Exception {
 	    //Create Tag definition
@@ -196,7 +278,7 @@ public class TestAccount extends TestJaxrsBase {
 	        
 	    Map<String, String> queryParams = new HashMap<String, String>();
         queryParams.put(JaxrsResource.QUERY_TAGS, input.getName());
-        String uri = getRootPath() + "/" + JaxrsResource.TAGS + "/" + UUID.randomUUID().toString();
+        String uri = JaxrsResource.ACCOUNTS_PATH + "/" + JaxrsResource.TAGS + "/" + UUID.randomUUID().toString();
 	    response = doPost(uri, null, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
 
         assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
@@ -222,7 +304,7 @@ public class TestAccount extends TestJaxrsBase {
         customFields.add(new CustomFieldJson("3", "value3"));  
         String baseJson = mapper.writeValueAsString(customFields);
 
-        String uri = getRootPath() + "/" + JaxrsResource.CUSTOM_FIELDS + "/" + UUID.randomUUID().toString();
+        String uri = JaxrsResource.ACCOUNTS_PATH + "/" + JaxrsResource.CUSTOM_FIELDS + "/" + UUID.randomUUID().toString();
         Response response = doPost(uri, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
 

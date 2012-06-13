@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.EventListener;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
@@ -51,7 +52,7 @@ import org.testng.annotations.BeforeSuite;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
-import com.google.common.collect.Lists;
+
 import com.google.inject.Module;
 import com.ning.billing.account.glue.AccountModule;
 import com.ning.billing.analytics.setup.AnalyticsModule;
@@ -87,6 +88,7 @@ import com.ning.billing.util.glue.TagStoreModule;
 import com.ning.http.client.AsyncCompletionHandler;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
+import com.ning.http.client.AsyncHttpClientConfig;
 import com.ning.http.client.ListenableFuture;
 import com.ning.http.client.Response;
 import com.ning.jetty.core.CoreConfig;
@@ -94,10 +96,10 @@ import com.ning.jetty.core.server.HttpServer;
 
 public class TestJaxrsBase {
 
-    private final static String PLUGIN_NAME = "noop";
+    protected final static String PLUGIN_NAME = "noop";
 
     // STEPH
-    protected static final int DEFAULT_HTTP_TIMEOUT_SEC =  500000; // 5;
+    protected static final int DEFAULT_HTTP_TIMEOUT_SEC =  6000; // 5;
 
     protected static final Map<String, String> DEFAULT_EMPTY_QUERY = new HashMap<String, String>();
 
@@ -245,7 +247,7 @@ public class TestJaxrsBase {
     @BeforeClass(groups="slow")
     public void setupClass() throws IOException {
         loadConfig();
-        httpClient = new AsyncHttpClient();
+        httpClient = new AsyncHttpClient(new AsyncHttpClientConfig.Builder().setRequestTimeoutInMs(DEFAULT_HTTP_TIMEOUT_SEC * 1000).build());
         mapper = new ObjectMapper();
         mapper.registerModule(new JodaModule());
         mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
@@ -323,10 +325,35 @@ public class TestJaxrsBase {
         }
     }
 
-    private PaymentMethodJson getPaymentJson(String accountId) {
-        
-        PaymentMethodProperties properties = new PaymentMethodProperties("whatever", "zero", false);
-        PaymentMethodPluginDetailJson info = new PaymentMethodPluginDetailJson(null, Collections.singletonList(properties));
+    
+    protected List<PaymentMethodProperties> getPaymentMethodCCProperties() {
+        List<PaymentMethodProperties> properties = new ArrayList<PaymentMethodJson.PaymentMethodProperties>();
+        properties.add(new PaymentMethodProperties("type", "CreditCard", false));
+        properties.add(new PaymentMethodProperties("cardType", "Visa", false));
+        properties.add(new PaymentMethodProperties("cardHolderName", "Mr Sniff", false));
+        properties.add(new PaymentMethodProperties("expirationDate", "2015-08", false));        
+        properties.add(new PaymentMethodProperties("maskNumber", "3451", false));
+        properties.add(new PaymentMethodProperties("address1", "23, rue des cerisiers", false));
+        properties.add(new PaymentMethodProperties("address2", "", false));
+        properties.add(new PaymentMethodProperties("city", "Toulouse", false));        
+        properties.add(new PaymentMethodProperties("country", "France", false));
+        properties.add(new PaymentMethodProperties("postalCode", "31320", false));
+        properties.add(new PaymentMethodProperties("state", "Midi-Pyrenees", false));
+        return properties;
+    }
+    
+    
+  protected List<PaymentMethodProperties> getPaymentMethodPaypalProperties() {
+        List<PaymentMethodProperties> properties = new ArrayList<PaymentMethodJson.PaymentMethodProperties>();
+        properties.add(new PaymentMethodProperties("type", "CreditCard", false));
+        properties.add(new PaymentMethodProperties("email", "zouzou@laposte.fr", false));
+        properties.add(new PaymentMethodProperties("baid", "23-8787d-R", false));
+        return properties;
+    }
+    
+    
+    protected PaymentMethodJson getPaymentMethodJson(String accountId, List<PaymentMethodProperties> properties) {
+        PaymentMethodPluginDetailJson info = new PaymentMethodPluginDetailJson(null, properties);
         return new PaymentMethodJson(null, accountId, true, PLUGIN_NAME, info);
     }
     
@@ -335,7 +362,7 @@ public class TestJaxrsBase {
         AccountJson input = createAccount(name, key, email);
         
         final String uri = JaxrsResource.ACCOUNTS_PATH + "/" + input.getAccountId() + "/" + JaxrsResource.PAYMENT_METHODS;
-        PaymentMethodJson paymentMethodJson = getPaymentJson(input.getAccountId());
+        PaymentMethodJson paymentMethodJson = getPaymentMethodJson(input.getAccountId(), null);
         String baseJson = mapper.writeValueAsString(paymentMethodJson);
         Map<String, String> queryParams = new HashMap<String, String>();
         queryParams.put(JaxrsResource.QUERY_PAYMENT_METHOD_IS_DEFAULT, "true");
@@ -343,7 +370,6 @@ public class TestJaxrsBase {
         Response response = doPost(uri, baseJson, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
 
-        
         
         queryParams = new HashMap<String, String>();
         queryParams.put(JaxrsResource.QUERY_EXTERNAL_KEY, input.getExternalKey());
@@ -511,6 +537,8 @@ public class TestJaxrsBase {
         for (Entry<String, String> q : queryParams.entrySet()) {
             builder.addQueryParameter(q.getKey(), q.getValue());
         }
+        
+
         return builder;
     }
 

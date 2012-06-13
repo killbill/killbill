@@ -118,6 +118,11 @@ public class DefaultPaymentApi implements PaymentApi {
         return methodProcessor.getPaymentMethods(account, withPluginDetail);
     }
 
+    public PaymentMethod getPaymentMethodById(final UUID paymentMethodId)
+    throws PaymentApiException {
+        return methodProcessor.getPaymentMethodById(paymentMethodId);        
+    }
+
     @Override
     public PaymentMethod getPaymentMethod(final Account account, UUID paymentMethod, boolean withPluginDetail)
         throws PaymentApiException {

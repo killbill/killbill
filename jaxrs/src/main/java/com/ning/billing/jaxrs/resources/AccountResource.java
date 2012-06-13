@@ -38,11 +38,11 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.UriInfo;
 
 import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.dao.ObjectType;
 
-import org.skife.config.Default;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,9 +75,7 @@ import com.ning.billing.jaxrs.util.TagHelper;
 import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentApiException;
-import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.payment.api.PaymentMethod;
-import com.ning.billing.util.api.TagDefinitionApiException;
 
 import com.ning.billing.util.api.TagUserApi;
 
@@ -297,15 +295,16 @@ public class AccountResource extends JaxRsResourceBase {
             @QueryParam(QUERY_PAYMENT_METHOD_IS_DEFAULT) @DefaultValue("false") final Boolean isDefault,
             @HeaderParam(HDR_CREATED_BY) final String createdBy,
             @HeaderParam(HDR_REASON) final String reason,
-            @HeaderParam(HDR_COMMENT) final String comment) {
+            @HeaderParam(HDR_COMMENT) final String comment,
+            @javax.ws.rs.core.Context UriInfo uriInfo) {
 
         try {
+            
             PaymentMethod data = json.toPaymentMethod();
             Account account = accountApi.getAccountById(data.getAccountId());
             
-            // STEPH we might want an API to retrieve a single PaymentMethod based on ID
-            /* UUID paymentMethodId = */ paymentApi.addPaymentMethod(data.getPluginName(), account, isDefault, data.getPluginDetail(), context.createContext(createdBy, reason, comment));
-            return uriBuilder.buildResponse(AccountResource.class, "getPaymentMethods", account.getId());
+            UUID paymentMethodId = paymentApi.addPaymentMethod(data.getPluginName(), account, isDefault, data.getPluginDetail(), context.createContext(createdBy, reason, comment));
+            return uriBuilder.buildResponse(PaymentMethodResource.class, "getPaymentMethod", paymentMethodId, uriInfo.getBaseUri().toString());
         } catch (AccountApiException e) {
             final String error = String.format("Failed to create account %s", json);
             log.info(error, e);
@@ -319,22 +318,50 @@ public class AccountResource extends JaxRsResourceBase {
         }
     }
     
-
     @GET
-    @Path("/{accountId:\\w+-\\w+-\\w+-\\w+-\\w+}/" + PAYMENT_METHODS)
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + PAYMENT_METHODS)
     @Produces(APPLICATION_JSON)
     public Response getPaymentMethods(@PathParam("accountId") String accountId,
             @QueryParam(QUERY_PAYMENT_METHOD_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
             @QueryParam(QUERY_PAYMENT_LAST4_CC) final String last4CC,
             @QueryParam(QUERY_PAYMENT_NAME_ON_CC) final String nameOnCC) {
+            
         try {
-            Account account = accountApi.getAccountById(UUID.fromString(accountId));
+            final Account account = accountApi.getAccountById(UUID.fromString(accountId));
             List<PaymentMethod> methods = paymentApi.getPaymentMethods(account, withPluginInfo);
-            return Response.status(Status.OK).entity(methods).build();
+            List<PaymentMethodJson> json = new ArrayList<PaymentMethodJson>(Collections2.transform(methods, new Function<PaymentMethod, PaymentMethodJson>() {
+                @Override
+                public PaymentMethodJson apply(PaymentMethod input) {
+                    return PaymentMethodJson.toPaymentMethodJson(account, input);
+                }
+            }));
+            return Response.status(Status.OK).entity(json).build();
         } catch (PaymentApiException e) {
             return Response.status(Status.NOT_FOUND).build();
         } catch (AccountApiException e) {
             return Response.status(Status.NOT_FOUND).build();            
+        }
+    }
+    
+    @PUT
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + PAYMENT_METHODS + "/{paymentMethodId:" + UUID_PATTERN + "}/" + PAYMENT_METHODS_DEFAULT_PATH_POSTFIX)    
+    public Response setDefaultPaymentMethod(@PathParam("accountId") final String accountId,
+            @PathParam("paymentMethodId") final String paymentMethodId,            
+            @HeaderParam(HDR_CREATED_BY) final String createdBy,
+            @HeaderParam(HDR_REASON) final String reason,
+            @HeaderParam(HDR_COMMENT) final String comment) {
+        try {
+            final Account account = accountApi.getAccountById(UUID.fromString(accountId));
+            paymentApi.setDefaultPaymentMethod(account, UUID.fromString(paymentMethodId), context.createContext(createdBy, reason, comment));
+            return Response.status(Status.OK).build();
+        } catch (AccountApiException e) {
+            return Response.status(Status.BAD_REQUEST).build();
+        } catch (PaymentApiException e) {
+            return Response.status(Status.NOT_FOUND).build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
         }
     }
     
