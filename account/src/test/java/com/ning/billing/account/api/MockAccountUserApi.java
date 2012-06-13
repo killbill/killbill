@@ -21,53 +21,51 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.tag.TagDefinition;
 import org.joda.time.DateTimeZone;
 
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.util.customfield.CustomField;
+import com.ning.billing.util.callcontext.CallContext;
 
 public class MockAccountUserApi implements AccountUserApi {
     private final CopyOnWriteArrayList<Account> accounts = new CopyOnWriteArrayList<Account>();
 
     public Account createAccount(final UUID id,
-            final String externalKey,
-            final String email,
-            final String name,
-            final int firstNameLength,
-            final Currency currency,
-            final int billCycleDay,
-            final UUID paymentMethodId,
-            final DateTimeZone timeZone, 
-            final String locale,
-            final String address1, 
-            final String address2, 
-            final String companyName,
-            final String city,
-            final String stateOrProvince, 
-            final String country, 
-            final String postalCode, 
-            final String phone) {
+                                 final String externalKey,
+                                 final String email,
+                                 final String name,
+                                 final int firstNameLength,
+                                 final Currency currency,
+                                 final int billCycleDay,
+                                 final UUID paymentMethodId,
+                                 final DateTimeZone timeZone,
+                                 final String locale,
+                                 final String address1,
+                                 final String address2,
+                                 final String companyName,
+                                 final String city,
+                                 final String stateOrProvince,
+                                 final String country,
+                                 final String postalCode,
+                                 final String phone) {
 
-		Account result = new DefaultAccount(id, externalKey, email, name,
-                                firstNameLength, currency, billCycleDay, paymentMethodId,
-                                timeZone, locale, address1, address2, companyName, city,
-                                stateOrProvince, country, postalCode, phone, false, false);
-		accounts.add(result);
-		return result;
-	}
-
-    @Override
-    public Account createAccount(final AccountData data, final CallContext context) throws AccountApiException {
-        Account result = new DefaultAccount(data);
+        final Account result = new DefaultAccount(id, externalKey, email, name,
+                                                  firstNameLength, currency, billCycleDay, paymentMethodId,
+                                                  timeZone, locale, address1, address2, companyName, city,
+                                                  stateOrProvince, country, postalCode, phone, false, false);
         accounts.add(result);
         return result;
     }
 
     @Override
-    public Account getAccountByKey(String key) {
-        for (Account account : accounts) {
+    public Account createAccount(final AccountData data, final CallContext context) throws AccountApiException {
+        final Account result = new DefaultAccount(data);
+        accounts.add(result);
+        return result;
+    }
+
+    @Override
+    public Account getAccountByKey(final String key) {
+        for (final Account account : accounts) {
             if (key.equals(account.getExternalKey())) {
                 return account;
             }
@@ -76,8 +74,8 @@ public class MockAccountUserApi implements AccountUserApi {
     }
 
     @Override
-    public Account getAccountById(UUID uid) {
-        for (Account account : accounts) {
+    public Account getAccountById(final UUID uid) {
+        for (final Account account : accounts) {
             if (uid.equals(account.getId())) {
                 return account;
             }
@@ -91,8 +89,8 @@ public class MockAccountUserApi implements AccountUserApi {
     }
 
     @Override
-    public UUID getIdFromKey(String externalKey) {
-        for (Account account : accounts) {
+    public UUID getIdFromKey(final String externalKey) {
+        for (final Account account : accounts) {
             if (externalKey.equals(account.getExternalKey())) {
                 return account.getId();
             }
@@ -101,12 +99,12 @@ public class MockAccountUserApi implements AccountUserApi {
     }
 
     @Override
-    public List<AccountEmail> getEmails(UUID accountId) {
+    public List<AccountEmail> getEmails(final UUID accountId) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void saveEmails(UUID accountId, List<AccountEmail> emails, CallContext context) {
+    public void saveEmails(final UUID accountId, final List<AccountEmail> emails, final CallContext context) {
         throw new UnsupportedOperationException();
     }
 
@@ -115,19 +113,19 @@ public class MockAccountUserApi implements AccountUserApi {
         throw new UnsupportedOperationException();
     }
 
-	@Override
-	public Account migrateAccount(final MigrationAccountData data, final CallContext context)
-			throws AccountApiException {
-		Account result = new DefaultAccount(data);
+    @Override
+    public Account migrateAccount(final MigrationAccountData data, final CallContext context)
+            throws AccountApiException {
+        final Account result = new DefaultAccount(data);
         accounts.add(result);
         return result;
-	}
+    }
 
-	@Override
-	public void updateAccount(final String key, final AccountData accountData, final CallContext context)
-			throws AccountApiException {
-		throw new UnsupportedOperationException();
-	}
+    @Override
+    public void updateAccount(final String key, final AccountData accountData, final CallContext context)
+            throws AccountApiException {
+        throw new UnsupportedOperationException();
+    }
 
     @Override
     public void updateAccount(final UUID accountId, final AccountData accountData, final CallContext context)
