@@ -36,20 +36,20 @@ import java.lang.annotation.Target;
 public @interface AccountBinder {
     public static class AccountBinderFactory implements BinderFactory {
         @Override
-        public Binder<AccountBinder, Account> build(Annotation annotation) {
+        public Binder<AccountBinder, Account> build(final Annotation annotation) {
             return new Binder<AccountBinder, Account>() {
                 @Override
-                public void bind(@SuppressWarnings("rawtypes") SQLStatement q, AccountBinder bind, Account account) {
+                public void bind(@SuppressWarnings("rawtypes") final SQLStatement q, final AccountBinder bind, final Account account) {
                     q.bind("id", account.getId().toString());
                     q.bind("externalKey", account.getExternalKey());
                     q.bind("email", account.getEmail());
                     q.bind("name", account.getName());
                     q.bind("firstNameLength", account.getFirstNameLength());
-                    Currency currency = account.getCurrency();
+                    final Currency currency = account.getCurrency();
                     q.bind("currency", (currency == null) ? null : currency.toString());
                     q.bind("billingCycleDay", account.getBillCycleDay());
                     q.bind("paymentMethodId", account.getPaymentMethodId() != null ? account.getPaymentMethodId().toString() : null);
-                    DateTimeZone timeZone = account.getTimeZone();
+                    final DateTimeZone timeZone = account.getTimeZone();
                     q.bind("timeZone", (timeZone == null) ? null : timeZone.toString());
                     q.bind("locale", account.getLocale());
                     q.bind("address1", account.getAddress1());
