@@ -49,6 +49,7 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.account.api.AccountUserApi;
+import com.ning.billing.account.api.MutableAccountData;
 import com.ning.billing.entitlement.api.timeline.BundleTimeline;
 import com.ning.billing.entitlement.api.timeline.EntitlementRepairException;
 import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
@@ -61,6 +62,7 @@ import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.AccountTimelineJson;
 import com.ning.billing.jaxrs.json.BundleJsonNoSubscriptions;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
+import com.ning.billing.jaxrs.json.InvoiceEmailJson;
 import com.ning.billing.jaxrs.json.PaymentJsonSimple;
 import com.ning.billing.jaxrs.json.PaymentMethodJson;
 import com.ning.billing.jaxrs.util.Context;
@@ -261,7 +263,48 @@ public class AccountResource extends JaxRsResourceBase {
     }
 
     /*
-     * **************************  PAYMENTS ********************************
+     * ************************** EMAIL NOTIFICATIONS FOR INVOICES ********************************
+     */
+
+    @GET
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + EMAIL_NOTIFICATIONS)
+    @Produces(APPLICATION_JSON)
+    public Response getEmailNotificationsForAccount(@PathParam("accountId") final String accountId) {
+        try {
+            final Account account = accountApi.getAccountById(UUID.fromString(accountId));
+            final InvoiceEmailJson invoiceEmailJson = new InvoiceEmailJson(accountId, account.isNotifiedForInvoices());
+
+            return Response.status(Status.OK).entity(invoiceEmailJson).build();
+        } catch (AccountApiException e) {
+            return Response.status(Status.NOT_FOUND).build();
+        }
+    }
+
+    @PUT
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + EMAIL_NOTIFICATIONS)
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    public Response getEmailNotificationsForAccount(final InvoiceEmailJson json,
+                                                    @PathParam("accountId") final String accountIdString,
+                                                    @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                                    @HeaderParam(HDR_REASON) final String reason,
+                                                    @HeaderParam(HDR_COMMENT) final String comment) {
+        try {
+            final UUID accountId = UUID.fromString(accountIdString);
+            final Account account = accountApi.getAccountById(accountId);
+
+            final MutableAccountData mutableAccountData = account.toMutableAccountData();
+            mutableAccountData.setIsNotifiedForInvoices(json.isNotifiedForInvoices());
+            accountApi.updateAccount(accountId, mutableAccountData, context.createContext(createdBy, reason, comment));
+
+            return Response.status(Status.OK).build();
+        } catch (AccountApiException e) {
+            return Response.status(Status.NOT_FOUND).build();
+        }
+    }
+
+    /*
+     * ************************** PAYMENTS ********************************
      */
 
     @GET
@@ -397,7 +440,7 @@ public class AccountResource extends JaxRsResourceBase {
     }
 
     /*
-     * *************************      TAGS     *****************************
+     * *************************     TAGS     *****************************
      */
 
     @GET
@@ -435,7 +478,7 @@ public class AccountResource extends JaxRsResourceBase {
     }
 
     /*
-     * *************************      EMAILS     *****************************
+     * *************************     EMAILS     *****************************
      */
 
     @GET

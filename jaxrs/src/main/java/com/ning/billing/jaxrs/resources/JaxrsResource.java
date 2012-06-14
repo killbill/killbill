@@ -83,7 +83,6 @@ public interface JaxrsResource {
     public static final String PAYMENT_METHODS_PATH = PREFIX + "/" + PAYMENT_METHODS;
     public static final String PAYMENT_METHODS_DEFAULT_PATH_POSTFIX = "setDefault";
 
-
     public static final String CREDITS = "credits";
     public static final String CREDITS_PATH = PREFIX + "/" + CREDITS;
 
@@ -93,6 +92,7 @@ public interface JaxrsResource {
     public static final String TAGS = "tags";
     public static final String CUSTOM_FIELDS = "customFields";
     public static final String EMAILS = "emails";
+    public static final String EMAIL_NOTIFICATIONS = "emailNotifications";
 
     public static final String CATALOG = "catalog";
     public static final String CATALOG_PATH = PREFIX + "/" + CATALOG;
