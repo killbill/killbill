@@ -167,7 +167,6 @@ public class AccountResource extends JaxRsResourceBase {
         }
     }
 
-
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
@@ -292,14 +291,12 @@ public class AccountResource extends JaxRsResourceBase {
                                         @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                         @HeaderParam(HDR_REASON) final String reason,
                                         @HeaderParam(HDR_COMMENT) final String comment,
-                                        @javax.ws.rs.core.Context UriInfo uriInfo) {
-
+                                        @javax.ws.rs.core.Context final UriInfo uriInfo) {
         try {
+            final PaymentMethod data = json.toPaymentMethod();
+            final Account account = accountApi.getAccountById(data.getAccountId());
 
-            PaymentMethod data = json.toPaymentMethod();
-            Account account = accountApi.getAccountById(data.getAccountId());
-
-            UUID paymentMethodId = paymentApi.addPaymentMethod(data.getPluginName(), account, isDefault, data.getPluginDetail(), context.createContext(createdBy, reason, comment));
+            final UUID paymentMethodId = paymentApi.addPaymentMethod(data.getPluginName(), account, isDefault, data.getPluginDetail(), context.createContext(createdBy, reason, comment));
             return uriBuilder.buildResponse(PaymentMethodResource.class, "getPaymentMethod", paymentMethodId, uriInfo.getBaseUri().toString());
         } catch (AccountApiException e) {
             final String error = String.format("Failed to create account %s", json);
@@ -317,17 +314,17 @@ public class AccountResource extends JaxRsResourceBase {
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + PAYMENT_METHODS)
     @Produces(APPLICATION_JSON)
-    public Response getPaymentMethods(@PathParam("accountId") String accountId,
+    public Response getPaymentMethods(@PathParam("accountId") final String accountId,
                                       @QueryParam(QUERY_PAYMENT_METHOD_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
                                       @QueryParam(QUERY_PAYMENT_LAST4_CC) final String last4CC,
                                       @QueryParam(QUERY_PAYMENT_NAME_ON_CC) final String nameOnCC) {
 
         try {
             final Account account = accountApi.getAccountById(UUID.fromString(accountId));
-            List<PaymentMethod> methods = paymentApi.getPaymentMethods(account, withPluginInfo);
-            List<PaymentMethodJson> json = new ArrayList<PaymentMethodJson>(Collections2.transform(methods, new Function<PaymentMethod, PaymentMethodJson>() {
+            final List<PaymentMethod> methods = paymentApi.getPaymentMethods(account, withPluginInfo);
+            final List<PaymentMethodJson> json = new ArrayList<PaymentMethodJson>(Collections2.transform(methods, new Function<PaymentMethod, PaymentMethodJson>() {
                 @Override
-                public PaymentMethodJson apply(PaymentMethod input) {
+                public PaymentMethodJson apply(final PaymentMethod input) {
                     return PaymentMethodJson.toPaymentMethodJson(account, input);
                 }
             }));
