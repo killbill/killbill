@@ -83,7 +83,6 @@ public class AccountResource extends JaxRsResourceBase {
     private static final String ID_PARAM_NAME = "accountId";
     private static final String CUSTOM_FIELD_URI = JaxrsResource.CUSTOM_FIELDS + "/{" + ID_PARAM_NAME + ":" + UUID_PATTERN + "}";
     private static final String TAG_URI = JaxrsResource.TAGS + "/{" + ID_PARAM_NAME + ":" + UUID_PATTERN + "}";
-    private static final String EMAIL_URI = JaxrsResource.EMAILS + "/{" + ID_PARAM_NAME + ":" + UUID_PATTERN + "}";
 
     private final AccountUserApi accountApi;
     private final EntitlementUserApi entitlementApi;
@@ -443,7 +442,7 @@ public class AccountResource extends JaxRsResourceBase {
      */
 
     @GET
-    @Path(EMAIL_URI)
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + EMAILS)
     @Produces(APPLICATION_JSON)
     public Response getEmails(@PathParam(ID_PARAM_NAME) final String id) {
         final UUID accountId = UUID.fromString(id);
@@ -457,7 +456,7 @@ public class AccountResource extends JaxRsResourceBase {
     }
 
     @POST
-    @Path(EMAIL_URI)
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + EMAILS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response addEmail(final AccountEmailJson json,
@@ -484,7 +483,7 @@ public class AccountResource extends JaxRsResourceBase {
     }
 
     @DELETE
-    @Path(EMAIL_URI + "/{email}")
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + EMAILS + "/{email}")
     @Produces(APPLICATION_JSON)
     public Response removeEmail(@PathParam(ID_PARAM_NAME) final String id,
                                 @PathParam("email") final String email,

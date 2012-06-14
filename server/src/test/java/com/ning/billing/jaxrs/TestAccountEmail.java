@@ -31,7 +31,7 @@ import com.ning.http.client.Response;
 import static org.testng.Assert.assertEquals;
 
 public class TestAccountEmail extends TestJaxrsBase {
-    @Test(groups = "slow", enabled = true)
+    @Test(groups = "slow")
     public void testAddAndRemoveAccountEmail() throws Exception {
         final AccountJson input = createAccount(UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString());
         final String accountId = input.getAccountId();
@@ -41,7 +41,7 @@ public class TestAccountEmail extends TestJaxrsBase {
         final AccountEmailJson accountEmailJson1 = new AccountEmailJson(accountId, email1);
         final AccountEmailJson accountEmailJson2 = new AccountEmailJson(accountId, email2);
 
-        final String baseUri = JaxrsResource.ACCOUNTS_PATH + "/" + JaxrsResource.EMAILS + "/" + accountId;
+        final String baseUri = JaxrsResource.ACCOUNTS_PATH + "/" + accountId + "/" + JaxrsResource.EMAILS;
 
         // Verify the initial state
         final Response firstResponse = doGet(baseUri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
