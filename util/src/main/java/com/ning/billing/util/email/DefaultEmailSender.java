@@ -41,9 +41,12 @@ public class DefaultEmailSender implements EmailSender {
             email = new HtmlEmail();
 
             email.setSmtpPort(config.getSmtpPort());
-            email.setAuthentication(config.getSmtpUserName(), config.getSmtpPassword());
+            if (config.useSmtpAuth()) {
+                email.setAuthentication(config.getSmtpUserName(), config.getSmtpPassword());
+            }
             email.setHostName(config.getSmtpServerName());
-            email.setFrom(config.getSmtpUserName());
+            email.setFrom(config.getDefaultFrom());
+
             email.setSubject(subject);
             email.setHtmlMsg(htmlBody);
 

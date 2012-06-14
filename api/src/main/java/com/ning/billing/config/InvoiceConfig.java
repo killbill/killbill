@@ -19,9 +19,8 @@ package com.ning.billing.config;
 import org.skife.config.Config;
 import org.skife.config.Default;
 
-public interface InvoiceConfig extends NotificationConfig, KillbillConfig  {
-
-    @Override    
+public interface InvoiceConfig extends NotificationConfig, KillbillConfig {
+    @Override
     @Config("killbill.invoice.engine.notifications.sleep")
     @Default("500")
     public long getSleepTimeMs();
@@ -34,4 +33,8 @@ public interface InvoiceConfig extends NotificationConfig, KillbillConfig  {
     @Config("killbill.invoice.maxNumberOfMonthsInFuture")
     @Default("36")
     public int getNumberOfMonthsInFuture();
+
+    @Config("killbill.invoice.emailNotificationsEnabled")
+    @Default("false")
+    public boolean isEmailNotificationsEnabled();
 }

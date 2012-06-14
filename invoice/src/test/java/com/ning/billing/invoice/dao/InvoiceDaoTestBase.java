@@ -80,6 +80,11 @@ public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
         public int getNumberOfMonthsInFuture() {
             return 36;
         }
+
+        @Override
+        public boolean isEmailNotificationsEnabled() {
+            return false;
+        }
     };
 
     @BeforeClass(alwaysRun = true)

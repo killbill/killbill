@@ -16,26 +16,34 @@
 
 package com.ning.billing.util.email;
 
-import com.ning.billing.config.KillbillConfig;
 import org.skife.config.Config;
 import org.skife.config.Default;
+import org.skife.config.DefaultNull;
 
-import java.util.Locale;
+import com.ning.billing.config.KillbillConfig;
 
 public interface EmailConfig extends KillbillConfig {
-    @Config("mail.smtp.host")
-    @Default("smtp.gmail.com")
+    @Config("killbill.mail.smtp.host")
+    @DefaultNull
     public String getSmtpServerName();
 
-    @Config("mail.smtp.port")
-    @Default("465")
+    @Config("killbill.mail.smtp.port")
+    @DefaultNull
     public int getSmtpPort();
 
-    @Config("mail.smtp.user")
-    @Default("killbill.ning@gmail.com")
+    @Config("killbill.mail.smtp.auth")
+    @Default("false")
+    public boolean useSmtpAuth();
+
+    @Config("killbill.mail.smtp.user")
+    @DefaultNull
     public String getSmtpUserName();
 
-    @Config("mail.smtp.password")
-    @Default("killbill@ning!")
+    @Config("killbill.mail.smtp.password")
+    @DefaultNull
     public String getSmtpPassword();
+
+    @Config("killbill.mail.from")
+    @Default("support@example.com")
+    String getDefaultFrom();
 }

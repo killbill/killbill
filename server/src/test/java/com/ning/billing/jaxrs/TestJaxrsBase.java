@@ -18,6 +18,7 @@ package com.ning.billing.jaxrs;
 import static org.testng.Assert.assertNotNull;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -30,9 +31,13 @@ import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import javax.annotation.Nullable;
 import javax.ws.rs.core.Response.Status;
 
 import com.google.common.io.Resources;
+import com.ning.billing.invoice.api.InvoiceNotifier;
+import com.ning.billing.invoice.notification.EmailInvoiceNotifier;
+import com.ning.billing.invoice.notification.NullInvoiceNotifier;
 import com.ning.billing.jaxrs.resources.JaxrsResource;
 import com.ning.billing.util.email.EmailModule;
 import com.ning.billing.util.email.templates.TemplateModule;
@@ -44,6 +49,7 @@ import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -109,13 +115,12 @@ public class TestJaxrsBase {
     public static final String CONTENT_TYPE = "application/json";
 
     private static TestKillbillGuiceListener listener;
-    
-    
+
     private MysqlTestingHelper helper;
     private HttpServer server;
 
     protected CoreConfig config;
-    protected AsyncHttpClient httpClient;	
+    protected AsyncHttpClient httpClient;
     protected ObjectMapper mapper;
     protected ClockMock clock;
     protected TestApiListener busHandler;
@@ -123,8 +128,8 @@ public class TestJaxrsBase {
     // Context information to be passed around
     private static final String createdBy = "Toto";
     private static final String reason = "i am god";
-    private static final String comment = "no comment";    
-    
+    private static final String comment = "no comment";
+
     public static void loadSystemPropertiesFromClasspath(final String resource) {
         final URL url = TestJaxrsBase.class.getResource(resource);
         assertNotNull(url);
@@ -145,10 +150,10 @@ public class TestJaxrsBase {
     }
 
     public static class TestKillbillGuiceListener extends KillbillGuiceListener {
-        
+
         private final MysqlTestingHelper helper;
         private final Clock clock;
-        
+
         public TestKillbillGuiceListener(final MysqlTestingHelper helper, final Clock clock) {
             super();
             this.helper = helper;
@@ -158,7 +163,7 @@ public class TestJaxrsBase {
         protected Module getModule() {
             return new TestKillbillServerModule(helper, clock);
         }
-        
+
         //
         // Listener is created once before Suite and keeps pointer to helper and clock so they can get
         // reset for each test Class-- needed in order to ONLY start Jetty once across all the test classes
@@ -167,9 +172,16 @@ public class TestJaxrsBase {
         public MysqlTestingHelper getMysqlTestingHelper() {
             return helper;
         }
-        
+
         public Clock getClock() {
             return clock;
+        }
+    }
+
+    public static class InvoiceModuleWithMockSender extends DefaultInvoiceModule {
+        @Override
+        protected void installInvoiceNotifier() {
+            bind(InvoiceNotifier.class).to(NullInvoiceNotifier.class).asEagerSingleton();
         }
     }
 
@@ -177,13 +189,13 @@ public class TestJaxrsBase {
 
         private final MysqlTestingHelper helper;
         private final Clock clock;
-        
+
         public TestKillbillServerModule(final MysqlTestingHelper helper, final Clock clock) {
             super();
             this.helper = helper;
             this.clock = clock;
         }
-        
+
         @Override
         protected void installClock() {
             bind(Clock.class).toInstance(clock);
@@ -214,7 +226,7 @@ public class TestJaxrsBase {
             install(new NotificationQueueModule());
             install(new CallContextModule());
             install(new AccountModule());
-            install(new DefaultInvoiceModule());
+            install(new InvoiceModuleWithMockSender());
             install(new TemplateModule());
             install(new DefaultEntitlementModule());
             install(new AnalyticsModule());
@@ -238,10 +250,21 @@ public class TestJaxrsBase {
         }
     }
 
-    @BeforeMethod(groups="slow")
-    public void cleanupBeforeMethod() {
+    @BeforeMethod(groups = "slow")
+    public void cleanupBeforeMethod(final Method method) {
+        log.info("***************************************************************************************************");
+        log.info("*** Starting test {}:{}", method.getDeclaringClass().getName(), method.getName());
+        log.info("***************************************************************************************************");
+
         busHandler.reset();
         helper.cleanupAllTables();
+    }
+
+    @AfterMethod(groups = "slow")
+    public void endTest(final Method method) throws Exception {
+        log.info("***************************************************************************************************");
+        log.info("***   Ending test {}:{}", method.getDeclaringClass().getName(), method.getName());
+        log.info("***************************************************************************************************");
     }
 
     @BeforeClass(groups="slow")
@@ -456,7 +479,7 @@ public class TestJaxrsBase {
     //
     // HTTP CLIENT HELPERS
     //
-    protected Response doPost(final String uri, final String body, final Map<String, String> queryParams, final int timeoutSec) {
+    protected Response doPost(final String uri, @Nullable final String body, final Map<String, String> queryParams, final int timeoutSec) {
         BoundRequestBuilder builder = getBuilderWithHeaderAndQuery("POST", getUrlFromUri(uri), queryParams);
         if (body != null) {
             builder.setBody(body);
