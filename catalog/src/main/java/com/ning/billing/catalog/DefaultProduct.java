@@ -29,6 +29,7 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlID;
 import javax.xml.bind.annotation.XmlIDREF;
 import java.net.URI;
+import java.util.Arrays;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implements Product {
@@ -158,4 +159,10 @@ public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implemen
 		return this;
 	}
 
+    @Override
+    public String toString() {
+        return "DefaultProduct [name=" + name + ", retired=" + retired + ", category=" + category + ", included="
+                + Arrays.toString(included) + ", available=" + Arrays.toString(available) + ", catalogName="
+                + catalogName + "]";
+    }
 }

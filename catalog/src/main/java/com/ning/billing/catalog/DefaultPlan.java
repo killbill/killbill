@@ -18,6 +18,7 @@ package com.ning.billing.catalog;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
 
@@ -34,7 +35,6 @@ import org.joda.time.DateTime;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.CatalogApiException;
-import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.Product;
@@ -243,6 +243,15 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
 		}
 		return result;
 	}
+
+	@Override
+    public String toString() {
+        return "DefaultPlan [name=" + name + ", retired=" + retired + ", effectiveDateForExistingSubscriptons="
+                + effectiveDateForExistingSubscriptons + ", product=" + product + ", initialPhases="
+                + Arrays.toString(initialPhases) + ", finalPhase=" + finalPhase + ", plansAllowedInBundle="
+                + plansAllowedInBundle + "]";
+    }
+	
 	
 	
 }
