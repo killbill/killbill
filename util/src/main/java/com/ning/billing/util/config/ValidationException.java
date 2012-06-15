@@ -19,21 +19,22 @@ package com.ning.billing.util.config;
 import java.io.PrintStream;
 
 public class ValidationException extends Exception {
-	private final ValidationErrors errors;
-	
-	ValidationException(ValidationErrors errors) {
-		this.errors = errors;
-	}
-	public ValidationErrors getErrors() {
-		return errors;
-	}
+    private final ValidationErrors errors;
 
-	@Override
-	public void printStackTrace(PrintStream arg0) {
-		arg0.print(errors.toString());
-		super.printStackTrace(arg0);
-	}
+    ValidationException(final ValidationErrors errors) {
+        this.errors = errors;
+    }
 
-	
+    public ValidationErrors getErrors() {
+        return errors;
+    }
+
+    @Override
+    public void printStackTrace(final PrintStream arg0) {
+        arg0.print(errors.toString());
+        super.printStackTrace(arg0);
+    }
+
+
 }
 

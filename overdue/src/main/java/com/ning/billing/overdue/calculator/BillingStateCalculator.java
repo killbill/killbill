@@ -39,28 +39,28 @@ public abstract class BillingStateCalculator<T extends Blockable> {
 
     private final InvoiceUserApi invoiceApi;
     private final Clock clock;
-    
+
     protected class InvoiceDateComparator implements Comparator<Invoice> {
         @Override
-        public int compare(Invoice i1, Invoice i2) {
-            DateTime d1 = i1.getInvoiceDate();
-            DateTime d2 = i2.getInvoiceDate();
-            if(d1.compareTo(d2) == 0) {
+        public int compare(final Invoice i1, final Invoice i2) {
+            final DateTime d1 = i1.getInvoiceDate();
+            final DateTime d2 = i2.getInvoiceDate();
+            if (d1.compareTo(d2) == 0) {
                 return i1.hashCode() - i2.hashCode(); // consistent (arbitrary) resolution for tied dates
             }
             return d1.compareTo(d2);
         }
     }
 
-    @Inject 
-    public BillingStateCalculator(InvoiceUserApi invoiceApi, Clock clock) {
+    @Inject
+    public BillingStateCalculator(final InvoiceUserApi invoiceApi, final Clock clock) {
         this.invoiceApi = invoiceApi;
         this.clock = clock;
     }
-    
+
     public abstract BillingState<T> calculateBillingState(T overdueable) throws OverdueError;
-    
-    protected Invoice earliest(SortedSet<Invoice> unpaidInvoices) {
+
+    protected Invoice earliest(final SortedSet<Invoice> unpaidInvoices) {
         try {
             return unpaidInvoices.first();
         } catch (NoSuchElementException e) {
@@ -68,18 +68,18 @@ public abstract class BillingStateCalculator<T extends Blockable> {
         }
     }
 
-    protected BigDecimal sumBalance(SortedSet<Invoice> unpaidInvoices) {
+    protected BigDecimal sumBalance(final SortedSet<Invoice> unpaidInvoices) {
         BigDecimal sum = BigDecimal.ZERO;
-        Iterator<Invoice> it = unpaidInvoices.iterator();
-        while(it.hasNext()) {
+        final Iterator<Invoice> it = unpaidInvoices.iterator();
+        while (it.hasNext()) {
             sum = sum.add(it.next().getBalance());
         }
         return sum;
     }
 
-    protected SortedSet<Invoice> unpaidInvoicesForAccount(UUID accountId) {
-        Collection<Invoice> invoices = invoiceApi.getUnpaidInvoicesByAccountId(accountId, clock.getUTCNow());
-        SortedSet<Invoice> sortedInvoices = new TreeSet<Invoice>(new InvoiceDateComparator());
+    protected SortedSet<Invoice> unpaidInvoicesForAccount(final UUID accountId) {
+        final Collection<Invoice> invoices = invoiceApi.getUnpaidInvoicesByAccountId(accountId, clock.getUTCNow());
+        final SortedSet<Invoice> sortedInvoices = new TreeSet<Invoice>(new InvoiceDateComparator());
         sortedInvoices.addAll(invoices);
         return sortedInvoices;
     }

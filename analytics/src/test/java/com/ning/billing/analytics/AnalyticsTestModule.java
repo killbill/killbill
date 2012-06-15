@@ -21,7 +21,6 @@ import org.skife.jdbi.v2.IDBI;
 
 import com.ning.billing.account.glue.AccountModule;
 import com.ning.billing.analytics.setup.AnalyticsModule;
-import com.ning.billing.catalog.MockCatalog;
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.dbi.MysqlTestingHelper;

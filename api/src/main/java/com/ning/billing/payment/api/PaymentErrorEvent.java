@@ -26,6 +26,6 @@ public interface PaymentErrorEvent extends BusEvent {
     public UUID getInvoiceId();
 
     public UUID getAccountId();
-    
+
     public UUID getPaymentId();
 }

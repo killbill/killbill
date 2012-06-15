@@ -16,14 +16,15 @@
 
 package com.ning.billing.util.clock;
 
-import com.ning.billing.catalog.api.Duration;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.ning.billing.catalog.api.Duration;
 
 // STEPH should really be in tests but not accessible from other sub modules
 public class OldClockMock extends DefaultClock {
@@ -49,7 +50,7 @@ public class OldClockMock extends DefaultClock {
     }
 
     @Override
-    public synchronized DateTime getNow(DateTimeZone tz) {
+    public synchronized DateTime getNow(final DateTimeZone tz) {
         return adjust(super.getNow(tz));
     }
 
@@ -58,12 +59,12 @@ public class OldClockMock extends DefaultClock {
         return getNow(DateTimeZone.UTC);
     }
 
-    private void logClockAdjustment(DateTime prev, DateTime next) {
+    private void logClockAdjustment(final DateTime prev, final DateTime next) {
         log.info(String.format("            ************      ADJUSTING CLOCK FROM %s to %s     ********************", prev, next));
     }
 
-    public synchronized void setDeltaFromReality(Duration delta, long epsilon) {
-        DateTime prev = getUTCNow();
+    public synchronized void setDeltaFromReality(final Duration delta, final long epsilon) {
+        final DateTime prev = getUTCNow();
         deltaType = DeltaType.DELTA_DURATION;
         deltaFromRealityDuration = new ArrayList<Duration>();
         deltaFromRealityDuration.add(delta);
@@ -72,8 +73,8 @@ public class OldClockMock extends DefaultClock {
         logClockAdjustment(prev, getUTCNow());
     }
 
-    public synchronized void addDeltaFromReality(Duration delta) {
-        DateTime prev = getUTCNow();
+    public synchronized void addDeltaFromReality(final Duration delta) {
+        final DateTime prev = getUTCNow();
         if (deltaType != DeltaType.DELTA_DURATION) {
             throw new RuntimeException("ClockMock should be set with type DELTA_DURATION");
         }
@@ -81,8 +82,8 @@ public class OldClockMock extends DefaultClock {
         logClockAdjustment(prev, getUTCNow());
     }
 
-    public synchronized void setDeltaFromReality(long delta) {
-        DateTime prev = getUTCNow();
+    public synchronized void setDeltaFromReality(final long delta) {
+        final DateTime prev = getUTCNow();
         deltaType = DeltaType.DELTA_ABS;
         deltaFromRealityDuration = null;
         deltaFromRealityDurationEpsilon = 0;
@@ -90,8 +91,8 @@ public class OldClockMock extends DefaultClock {
         logClockAdjustment(prev, getUTCNow());
     }
 
-    public synchronized void addDeltaFromReality(long delta) {
-        DateTime prev = getUTCNow();
+    public synchronized void addDeltaFromReality(final long delta) {
+        final DateTime prev = getUTCNow();
         if (deltaType != DeltaType.DELTA_ABS) {
             throw new RuntimeException("ClockMock should be set with type DELTA_ABS");
         }
@@ -108,8 +109,8 @@ public class OldClockMock extends DefaultClock {
         deltaFromRealityMs = 0;
     }
 
-    private DateTime adjust(DateTime realNow) {
-        switch(deltaType) {
+    private DateTime adjust(final DateTime realNow) {
+        switch (deltaType) {
             case DELTA_NONE:
                 return realNow;
             case DELTA_ABS:
@@ -121,26 +122,26 @@ public class OldClockMock extends DefaultClock {
         }
     }
 
-    private DateTime adjustFromDuration(DateTime input) {
+    private DateTime adjustFromDuration(final DateTime input) {
 
         DateTime result = input;
-        for (Duration cur : deltaFromRealityDuration) {
+        for (final Duration cur : deltaFromRealityDuration) {
             switch (cur.getUnit()) {
-            case DAYS:
-                result = result.plusDays(cur.getNumber());
-                break;
+                case DAYS:
+                    result = result.plusDays(cur.getNumber());
+                    break;
 
-            case MONTHS:
-                result = result.plusMonths(cur.getNumber());
-                break;
+                case MONTHS:
+                    result = result.plusMonths(cur.getNumber());
+                    break;
 
-            case YEARS:
-                result = result.plusYears(cur.getNumber());
-                break;
+                case YEARS:
+                    result = result.plusYears(cur.getNumber());
+                    break;
 
-            case UNLIMITED:
-            default:
-                throw new RuntimeException("ClockMock is adjusting an unlimited time period");
+                case UNLIMITED:
+                default:
+                    throw new RuntimeException("ClockMock is adjusting an unlimited time period");
             }
         }
         if (deltaFromRealityDurationEpsilon != 0) {
@@ -149,7 +150,7 @@ public class OldClockMock extends DefaultClock {
         return result;
     }
 
-    private DateTime adjustFromAbsolute(DateTime input) {
+    private DateTime adjustFromAbsolute(final DateTime input) {
         return truncateMs(input.plus(deltaFromRealityMs));
     }
 
@@ -158,5 +159,5 @@ public class OldClockMock extends DefaultClock {
         return getUTCNow().toString();
     }
 
-    
+
 }

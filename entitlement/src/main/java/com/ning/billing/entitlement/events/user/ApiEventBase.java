@@ -16,9 +16,9 @@
 
 package com.ning.billing.entitlement.events.user;
 
-import com.ning.billing.entitlement.events.EventBase;
-
 import java.util.UUID;
+
+import com.ning.billing.entitlement.events.EventBase;
 
 public class ApiEventBase extends EventBase implements ApiEvent {
 
@@ -30,7 +30,7 @@ public class ApiEventBase extends EventBase implements ApiEvent {
     private final UUID userToken;
     private final boolean fromDisk;
 
-    public ApiEventBase(ApiEventBuilder builder) {
+    public ApiEventBase(final ApiEventBuilder builder) {
         super(builder);
         this.eventType = builder.getEventType();
         this.eventPriceList = builder.getEventPriceList();
@@ -64,11 +64,11 @@ public class ApiEventBase extends EventBase implements ApiEvent {
     public String getPriceList() {
         return eventPriceList;
     }
-    
-	@Override
-	public UUID getUserToken() {
-		return userToken;
-	}
+
+    @Override
+    public UUID getUserToken() {
+        return userToken;
+    }
 
 
     @Override
@@ -80,8 +80,8 @@ public class ApiEventBase extends EventBase implements ApiEvent {
     @Override
     public String toString() {
         return "ApiEventBase [ getId()= " + getId()
-        		+ " eventType=" + eventType
-        		+ ", eventPlan=" + eventPlan
+                + " eventType=" + eventType
+                + ", eventPlan=" + eventPlan
                 + ", eventPlanPhase=" + eventPlanPhase
                 + ", getEventType()=" + getEventType()
                 + ", getEventPlan()=" + getEventPlan()

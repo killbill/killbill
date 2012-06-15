@@ -28,13 +28,13 @@ import com.ning.billing.util.callcontext.CallContext;
 
 public class MockPaymentDao implements PaymentDao {
 
-    private final Map<UUID, PaymentModelDao> payments =  new HashMap<UUID, PaymentModelDao>();
-    private final Map<UUID, PaymentAttemptModelDao> attempts =  new HashMap<UUID, PaymentAttemptModelDao>();
-    
+    private final Map<UUID, PaymentModelDao> payments = new HashMap<UUID, PaymentModelDao>();
+    private final Map<UUID, PaymentAttemptModelDao> attempts = new HashMap<UUID, PaymentAttemptModelDao>();
+
     @Override
-    public PaymentModelDao insertPaymentWithAttempt(PaymentModelDao paymentInfo, PaymentAttemptModelDao attempt,
-            final boolean scheduleTimeoutRetry, CallContext context) {
-        synchronized(this) {
+    public PaymentModelDao insertPaymentWithAttempt(final PaymentModelDao paymentInfo, final PaymentAttemptModelDao attempt,
+                                                    final boolean scheduleTimeoutRetry, final CallContext context) {
+        synchronized (this) {
             payments.put(paymentInfo.getId(), paymentInfo);
             attempts.put(attempt.getId(), attempt);
         }
@@ -42,52 +42,52 @@ public class MockPaymentDao implements PaymentDao {
     }
 
     @Override
-    public PaymentAttemptModelDao insertNewAttemptForPayment(UUID paymentId,
-            PaymentAttemptModelDao attempt, final boolean scheduleTimeoutRetry, CallContext context) {
-        synchronized(this) {
+    public PaymentAttemptModelDao insertNewAttemptForPayment(final UUID paymentId,
+                                                             final PaymentAttemptModelDao attempt, final boolean scheduleTimeoutRetry, final CallContext context) {
+        synchronized (this) {
             attempts.put(attempt.getId(), attempt);
         }
         return attempt;
     }
 
     @Override
-    public void updateStatusForPaymentWithAttempt(UUID paymentId,
-            PaymentStatus paymentStatus, String paymentError, UUID attemptId,
-            CallContext context) {
-        synchronized(this) {
-            PaymentModelDao entry = payments.remove(paymentId);
+    public void updateStatusForPaymentWithAttempt(final UUID paymentId,
+                                                  final PaymentStatus paymentStatus, final String paymentError, final UUID attemptId,
+                                                  final CallContext context) {
+        synchronized (this) {
+            final PaymentModelDao entry = payments.remove(paymentId);
             if (entry != null) {
-               payments.put(paymentId, new PaymentModelDao(entry, paymentStatus));
+                payments.put(paymentId, new PaymentModelDao(entry, paymentStatus));
             }
-            PaymentAttemptModelDao tmp = attempts.remove(attemptId);
+            final PaymentAttemptModelDao tmp = attempts.remove(attemptId);
             if (tmp != null) {
                 attempts.put(attemptId, new PaymentAttemptModelDao(tmp, paymentStatus, paymentError));
             }
         }
     }
-    
+
     @Override
-    public void updateStatusForPayment(UUID paymentId,
-            PaymentStatus paymentStatus, CallContext context) {
-        synchronized(this) {
-            PaymentModelDao entry = payments.remove(paymentId);
+    public void updateStatusForPayment(final UUID paymentId,
+                                       final PaymentStatus paymentStatus, final CallContext context) {
+        synchronized (this) {
+            final PaymentModelDao entry = payments.remove(paymentId);
             if (entry != null) {
-               payments.put(paymentId, new PaymentModelDao(entry, paymentStatus));
+                payments.put(paymentId, new PaymentModelDao(entry, paymentStatus));
             }
         }
     }
 
 
     @Override
-    public PaymentAttemptModelDao getPaymentAttempt(UUID attemptId) {
+    public PaymentAttemptModelDao getPaymentAttempt(final UUID attemptId) {
         return attempts.get(attemptId);
     }
 
     @Override
-    public List<PaymentModelDao> getPaymentsForInvoice(UUID invoiceId) {
-        List<PaymentModelDao> result = new ArrayList<PaymentModelDao>();
-        synchronized(this) {
-            for (PaymentModelDao cur :payments.values()) {
+    public List<PaymentModelDao> getPaymentsForInvoice(final UUID invoiceId) {
+        final List<PaymentModelDao> result = new ArrayList<PaymentModelDao>();
+        synchronized (this) {
+            for (final PaymentModelDao cur : payments.values()) {
                 if (cur.getInvoiceId().equals(invoiceId)) {
                     result.add(cur);
                 }
@@ -97,10 +97,10 @@ public class MockPaymentDao implements PaymentDao {
     }
 
     @Override
-    public List<PaymentModelDao> getPaymentsForAccount(UUID accountId) {
-        List<PaymentModelDao> result = new ArrayList<PaymentModelDao>();
-        synchronized(this) {
-            for (PaymentModelDao cur :payments.values()) {
+    public List<PaymentModelDao> getPaymentsForAccount(final UUID accountId) {
+        final List<PaymentModelDao> result = new ArrayList<PaymentModelDao>();
+        synchronized (this) {
+            for (final PaymentModelDao cur : payments.values()) {
                 if (cur.getAccountId().equals(accountId)) {
                     result.add(cur);
                 }
@@ -110,15 +110,15 @@ public class MockPaymentDao implements PaymentDao {
     }
 
     @Override
-    public PaymentModelDao getPayment(UUID paymentId) {
+    public PaymentModelDao getPayment(final UUID paymentId) {
         return payments.get(paymentId);
     }
 
     @Override
-    public List<PaymentAttemptModelDao> getAttemptsForPayment(UUID paymentId) {
-        List<PaymentAttemptModelDao> result = new ArrayList<PaymentAttemptModelDao>();
-        synchronized(this) {
-            for (PaymentAttemptModelDao cur : attempts.values()) {
+    public List<PaymentAttemptModelDao> getAttemptsForPayment(final UUID paymentId) {
+        final List<PaymentAttemptModelDao> result = new ArrayList<PaymentAttemptModelDao>();
+        synchronized (this) {
+            for (final PaymentAttemptModelDao cur : attempts.values()) {
                 if (cur.getPaymentId().equals(paymentId)) {
                     result.add(cur);
                 }
@@ -128,16 +128,16 @@ public class MockPaymentDao implements PaymentDao {
     }
 
     private final List<PaymentMethodModelDao> paymentMethods = new LinkedList<PaymentMethodModelDao>();
-    
+
     @Override
-    public PaymentMethodModelDao insertPaymentMethod(PaymentMethodModelDao paymentMethod, CallContext context) {
+    public PaymentMethodModelDao insertPaymentMethod(final PaymentMethodModelDao paymentMethod, final CallContext context) {
         paymentMethods.add(paymentMethod);
         return paymentMethod;
     }
 
     @Override
-    public PaymentMethodModelDao getPaymentMethod(UUID paymentMethodId) {
-        for (PaymentMethodModelDao cur : paymentMethods) {
+    public PaymentMethodModelDao getPaymentMethod(final UUID paymentMethodId) {
+        for (final PaymentMethodModelDao cur : paymentMethods) {
             if (cur.getId().equals(paymentMethodId)) {
                 return cur;
             }
@@ -146,9 +146,9 @@ public class MockPaymentDao implements PaymentDao {
     }
 
     @Override
-    public List<PaymentMethodModelDao> getPaymentMethods(UUID accountId) {
-        List<PaymentMethodModelDao> result = new ArrayList<PaymentMethodModelDao>();
-        for (PaymentMethodModelDao cur : paymentMethods) {
+    public List<PaymentMethodModelDao> getPaymentMethods(final UUID accountId) {
+        final List<PaymentMethodModelDao> result = new ArrayList<PaymentMethodModelDao>();
+        for (final PaymentMethodModelDao cur : paymentMethods) {
             if (cur.getAccountId().equals(accountId)) {
                 result.add(cur);
             }
@@ -157,10 +157,10 @@ public class MockPaymentDao implements PaymentDao {
     }
 
     @Override
-    public void deletedPaymentMethod(UUID paymentMethodId) {
-        Iterator<PaymentMethodModelDao> it = paymentMethods.iterator();
+    public void deletedPaymentMethod(final UUID paymentMethodId) {
+        final Iterator<PaymentMethodModelDao> it = paymentMethods.iterator();
         while (it.hasNext()) {
-            PaymentMethodModelDao cur = it.next();
+            final PaymentMethodModelDao cur = it.next();
             if (cur.getId().equals(paymentMethodId)) {
                 it.remove();
                 break;

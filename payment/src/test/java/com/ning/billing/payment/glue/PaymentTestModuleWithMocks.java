@@ -16,11 +16,8 @@
 
 package com.ning.billing.payment.glue;
 
-import static org.testng.Assert.assertNotNull;
-
 import java.io.IOException;
 import java.net.URL;
-import java.util.Properties;
 
 import org.apache.commons.collections.MapUtils;
 
@@ -31,14 +28,14 @@ import com.ning.billing.mock.glue.MockNotificationQueueModule;
 import com.ning.billing.mock.glue.TestDbiModule;
 import com.ning.billing.payment.dao.MockPaymentDao;
 import com.ning.billing.payment.dao.PaymentDao;
-import com.ning.billing.payment.glue.PaymentModule;
 import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;
 import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.globallocker.MockGlobalLocker;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.BusModule.BusType;
-
 import com.ning.billing.util.glue.TagStoreModule;
+
+import static org.testng.Assert.assertNotNull;
 
 public class PaymentTestModuleWithMocks extends PaymentModule {
     /*
@@ -51,8 +48,8 @@ public class PaymentTestModuleWithMocks extends PaymentModule {
 	}
 	*/
 
-    public final static String PLUGIN_TEST_NAME = "my-mock";
-    
+    public static final String PLUGIN_TEST_NAME = "my-mock";
+
     private void loadSystemPropertiesFromClasspath(final String resource) {
         final URL url = PaymentTestModuleWithMocks.class.getResource(resource);
         assertNotNull(url);
@@ -63,19 +60,19 @@ public class PaymentTestModuleWithMocks extends PaymentModule {
             throw new RuntimeException(e);
         }
     }
-    
+
     public PaymentTestModuleWithMocks() {
         super(MapUtils.toProperties(ImmutableMap.of("killbill.payment.provider.default", PLUGIN_TEST_NAME,
-                "killbill.payment.engine.events.off", "false")));
+                                                    "killbill.payment.engine.events.off", "false")));
     }
 
     @Override
     protected void installPaymentDao() {
-       bind(PaymentDao.class).to(MockPaymentDao.class).asEagerSingleton();
+        bind(PaymentDao.class).to(MockPaymentDao.class).asEagerSingleton();
     }
 
     @Override
-    protected void installPaymentProviderPlugins(PaymentConfig config) {
+    protected void installPaymentProviderPlugins(final PaymentConfig config) {
         install(new MockPaymentProviderPluginModule(PLUGIN_TEST_NAME));
     }
 

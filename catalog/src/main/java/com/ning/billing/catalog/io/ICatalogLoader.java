@@ -21,7 +21,7 @@ import com.ning.billing.lifecycle.KillbillService.ServiceException;
 
 public interface ICatalogLoader {
 
-	public abstract VersionedCatalog load(String urlString)
-			throws ServiceException;
+    public abstract VersionedCatalog load(String urlString)
+            throws ServiceException;
 
 }

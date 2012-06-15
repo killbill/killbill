@@ -16,10 +16,10 @@
 
 package com.ning.billing.invoice.api.formatters;
 
+import java.util.Locale;
+
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.util.template.translation.TranslatorConfig;
-
-import java.util.Locale;
 
 public interface InvoiceFormatterFactory {
     public InvoiceFormatter createInvoiceFormatter(TranslatorConfig config, Invoice invoice, Locale locale);

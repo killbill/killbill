@@ -19,21 +19,17 @@ package com.ning.billing.payment.api;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ning.billing.util.entity.EntityBase;
-import org.joda.time.DateTime;
-
-import com.google.common.base.Objects;
-
-import com.ning.billing.payment.plugin.api.PaymentInfoPlugin;
-import com.ning.billing.payment.plugin.api.PaymentInfoPlugin.PaymentPluginStatus;
 
 public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEvent {
-    
+
     private final UUID accountId;
-    private final UUID invoiceId;  
+    private final UUID invoiceId;
     private final UUID paymentId;
     private final BigDecimal amount;
     private final Integer paymentNumber;
@@ -42,15 +38,15 @@ public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEv
     private final DateTime effectiveDate;
 
     @JsonCreator
-    public DefaultPaymentInfoEvent(@JsonProperty("id") UUID id,
-            @JsonProperty("accountId") UUID accountId,
-            @JsonProperty("invoiceId") UUID invoiceId,            
-            @JsonProperty("paymentId") UUID paymentId,
-            @JsonProperty("amount") BigDecimal amount,
-            @JsonProperty("paymentNumber") Integer paymentNumber,
-            @JsonProperty("status") PaymentStatus status,
-            @JsonProperty("userToken") UUID userToken,
-            @JsonProperty("effectiveDate") DateTime effectiveDate) {
+    public DefaultPaymentInfoEvent(@JsonProperty("id") final UUID id,
+                                   @JsonProperty("accountId") final UUID accountId,
+                                   @JsonProperty("invoiceId") final UUID invoiceId,
+                                   @JsonProperty("paymentId") final UUID paymentId,
+                                   @JsonProperty("amount") final BigDecimal amount,
+                                   @JsonProperty("paymentNumber") final Integer paymentNumber,
+                                   @JsonProperty("status") final PaymentStatus status,
+                                   @JsonProperty("userToken") final UUID userToken,
+                                   @JsonProperty("effectiveDate") final DateTime effectiveDate) {
         super(id);
         this.accountId = accountId;
         this.invoiceId = invoiceId;
@@ -62,25 +58,25 @@ public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEv
         this.effectiveDate = effectiveDate;
     }
 
-    
-    public DefaultPaymentInfoEvent(UUID accountId, UUID invoiceId,
-            UUID paymentId, BigDecimal amount, Integer paymentNumber,
-            PaymentStatus status, UUID userToken, DateTime effectiveDate) {
+
+    public DefaultPaymentInfoEvent(final UUID accountId, final UUID invoiceId,
+                                   final UUID paymentId, final BigDecimal amount, final Integer paymentNumber,
+                                   final PaymentStatus status, final UUID userToken, final DateTime effectiveDate) {
         this(UUID.randomUUID(), accountId, invoiceId, paymentId, amount, paymentNumber, status, userToken, effectiveDate);
     }
 
-    public DefaultPaymentInfoEvent(DefaultPaymentInfoEvent src) {
+    public DefaultPaymentInfoEvent(final DefaultPaymentInfoEvent src) {
         this(src.id,
-                src.accountId,
-                src.invoiceId,
-                src.paymentId,
-                src.amount,
-                src.paymentNumber,
-                src.status,
-                src.userToken,
-                src.effectiveDate);
+             src.accountId,
+             src.invoiceId,
+             src.paymentId,
+             src.amount,
+             src.paymentNumber,
+             src.status,
+             src.userToken,
+             src.effectiveDate);
     }
-      
+
 
     @JsonIgnore
     @Override
@@ -160,51 +156,69 @@ public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEv
 
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
+    public boolean equals(final Object obj) {
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
-        DefaultPaymentInfoEvent other = (DefaultPaymentInfoEvent) obj;
+        }
+        final DefaultPaymentInfoEvent other = (DefaultPaymentInfoEvent) obj;
         if (accountId == null) {
-            if (other.accountId != null)
+            if (other.accountId != null) {
                 return false;
-        } else if (!accountId.equals(other.accountId))
+            }
+        } else if (!accountId.equals(other.accountId)) {
             return false;
+        }
         if (amount == null) {
-            if (other.amount != null)
+            if (other.amount != null) {
                 return false;
-        } else if (amount.compareTo(other.amount) != 0)
+            }
+        } else if (amount.compareTo(other.amount) != 0) {
             return false;
+        }
         if (effectiveDate == null) {
-            if (other.effectiveDate != null)
+            if (other.effectiveDate != null) {
                 return false;
-        } else if (effectiveDate.compareTo(other.effectiveDate) != 0)
+            }
+        } else if (effectiveDate.compareTo(other.effectiveDate) != 0) {
             return false;
+        }
         if (invoiceId == null) {
-            if (other.invoiceId != null)
+            if (other.invoiceId != null) {
                 return false;
-        } else if (!invoiceId.equals(other.invoiceId))
+            }
+        } else if (!invoiceId.equals(other.invoiceId)) {
             return false;
+        }
         if (paymentId == null) {
-            if (other.paymentId != null)
+            if (other.paymentId != null) {
                 return false;
-        } else if (!paymentId.equals(other.paymentId))
+            }
+        } else if (!paymentId.equals(other.paymentId)) {
             return false;
+        }
         if (paymentNumber == null) {
-            if (other.paymentNumber != null)
+            if (other.paymentNumber != null) {
                 return false;
-        } else if (!paymentNumber.equals(other.paymentNumber))
+            }
+        } else if (!paymentNumber.equals(other.paymentNumber)) {
             return false;
-        if (status != other.status)
+        }
+        if (status != other.status) {
             return false;
+        }
         if (userToken == null) {
-            if (other.userToken != null)
+            if (other.userToken != null) {
                 return false;
-        } else if (!userToken.equals(other.userToken))
+            }
+        } else if (!userToken.equals(other.userToken)) {
             return false;
+        }
         return true;
     }
 }

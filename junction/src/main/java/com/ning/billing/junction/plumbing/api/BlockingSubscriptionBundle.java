@@ -27,11 +27,11 @@ import com.ning.billing.overdue.OverdueState;
 
 public class BlockingSubscriptionBundle implements SubscriptionBundle {
     private final SubscriptionBundle subscriptionBundle;
-    private final BlockingApi blockingApi; 
-    
+    private final BlockingApi blockingApi;
+
     private BlockingState blockingState = null;
 
-    public BlockingSubscriptionBundle(SubscriptionBundle subscriptionBundle, BlockingApi blockingApi) {
+    public BlockingSubscriptionBundle(final SubscriptionBundle subscriptionBundle, final BlockingApi blockingApi) {
         this.subscriptionBundle = subscriptionBundle;
         this.blockingApi = blockingApi;
     }
@@ -58,7 +58,7 @@ public class BlockingSubscriptionBundle implements SubscriptionBundle {
 
     @Override
     public BlockingState getBlockingState() {
-        if(blockingState == null) {
+        if (blockingState == null) {
             blockingState = blockingApi.getBlockingStateFor(this);
         }
         return blockingState;

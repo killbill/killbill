@@ -21,12 +21,12 @@ import javax.xml.bind.annotation.XmlEnum;
 
 @XmlEnum
 public enum Currency {
-	GBP,
-	MXN,
-	BRL,
-	EUR,
-	AUD,
-	USD;
+    GBP,
+    MXN,
+    BRL,
+    EUR,
+    AUD,
+    USD;
 // Unsupported
 //	CAD,
 //	JPY

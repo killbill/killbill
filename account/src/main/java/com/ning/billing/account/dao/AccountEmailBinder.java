@@ -16,17 +16,18 @@
 
 package com.ning.billing.account.dao;
 
-import com.ning.billing.account.api.AccountEmail;
-import org.skife.jdbi.v2.SQLStatement;
-import org.skife.jdbi.v2.sqlobject.Binder;
-import org.skife.jdbi.v2.sqlobject.BinderFactory;
-import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
-
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+
+import org.skife.jdbi.v2.SQLStatement;
+import org.skife.jdbi.v2.sqlobject.Binder;
+import org.skife.jdbi.v2.sqlobject.BinderFactory;
+import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
+
+import com.ning.billing.account.api.AccountEmail;
 
 @BindingAnnotation(AccountEmailBinder.AccountEmailBinderFactory.class)
 @Retention(RetentionPolicy.RUNTIME)
@@ -34,10 +35,10 @@ import java.lang.annotation.Target;
 public @interface AccountEmailBinder {
     public static class AccountEmailBinderFactory implements BinderFactory {
         @Override
-        public Binder<AccountEmailBinder, AccountEmail> build(Annotation annotation) {
+        public Binder<AccountEmailBinder, AccountEmail> build(final Annotation annotation) {
             return new Binder<AccountEmailBinder, AccountEmail>() {
                 @Override
-                public void bind(@SuppressWarnings("rawtypes") SQLStatement q, AccountEmailBinder bind, AccountEmail accountEmail) {
+                public void bind(@SuppressWarnings("rawtypes") final SQLStatement q, final AccountEmailBinder bind, final AccountEmail accountEmail) {
                     q.bind("id", accountEmail.getId().toString());
                     q.bind("accountId", accountEmail.getAccountId().toString());
                     q.bind("email", accountEmail.getEmail());

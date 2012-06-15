@@ -18,22 +18,24 @@ package com.ning.billing.util.glue;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import static java.lang.annotation.ElementType.PARAMETER;
-import static java.lang.annotation.ElementType.FIELD;
-import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.ElementType.LOCAL_VARIABLE;
 
 import com.google.inject.BindingAnnotation;
 
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.LOCAL_VARIABLE;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.PARAMETER;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
 /**
  * This annotation is used to bing classes that are being intercepted in junction.
- * 
+ * <p/>
  * The real implementation of the class is bound in Guice with this parameter, the Blocking implementation
  * is left unannotated.
- *
  */
-@BindingAnnotation @Target({ FIELD, PARAMETER, METHOD,LOCAL_VARIABLE }) @Retention(RUNTIME)
+@BindingAnnotation
+@Target({FIELD, PARAMETER, METHOD, LOCAL_VARIABLE})
+@Retention(RUNTIME)
 public @interface RealImplementation {
 
 }

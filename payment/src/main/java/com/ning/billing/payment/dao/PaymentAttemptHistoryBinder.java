@@ -34,21 +34,21 @@ import com.ning.billing.util.dao.EntityHistory;
 @Target({ElementType.PARAMETER})
 public @interface PaymentAttemptHistoryBinder {
 
-    
+
     public static class PaymentAttemptHistoryBinderFactory extends BinderBase implements BinderFactory {
         @Override
-        public Binder<PaymentAttemptHistoryBinder, EntityHistory<PaymentAttemptModelDao>> build(Annotation annotation) {
+        public Binder<PaymentAttemptHistoryBinder, EntityHistory<PaymentAttemptModelDao>> build(final Annotation annotation) {
             return new Binder<PaymentAttemptHistoryBinder, EntityHistory<PaymentAttemptModelDao>>() {
                 @Override
-                public void bind(@SuppressWarnings("rawtypes") SQLStatement q, PaymentAttemptHistoryBinder bind, EntityHistory<PaymentAttemptModelDao> history) {
+                public void bind(@SuppressWarnings("rawtypes") final SQLStatement q, final PaymentAttemptHistoryBinder bind, final EntityHistory<PaymentAttemptModelDao> history) {
                     q.bind("recordId", history.getValue());
                     q.bind("changeType", history.getChangeType().toString());
-                    PaymentAttemptModelDao attempt = history.getEntity();
+                    final PaymentAttemptModelDao attempt = history.getEntity();
                     q.bind("id", attempt.getId().toString());
-                    q.bind("paymentId", attempt.getPaymentId().toString());            
+                    q.bind("paymentId", attempt.getPaymentId().toString());
                     q.bind("processingStatus", attempt.getPaymentStatus().toString());
-                    q.bind("paymentError", attempt.getPaymentError());   
-                    q.bind("requestedAmount", attempt.getRequestedAmount());                           
+                    q.bind("paymentError", attempt.getPaymentError());
+                    q.bind("requestedAmount", attempt.getRequestedAmount());
                 }
             };
         }

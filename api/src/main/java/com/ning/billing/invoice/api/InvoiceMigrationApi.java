@@ -26,15 +26,14 @@ import com.ning.billing.catalog.api.Currency;
 public interface InvoiceMigrationApi {
 
 
-	/**
-	 * @param accountId
-	 * @param targetDate
-	 * @param balance
-	 * @param currency
-	 * 
-	 * @return The UUID of the created invoice
-	 */
-	public UUID createMigrationInvoice(UUID accountId, DateTime targetDate,
-			BigDecimal balance, Currency currency);
+    /**
+     * @param accountId
+     * @param targetDate
+     * @param balance
+     * @param currency
+     * @return The UUID of the created invoice
+     */
+    public UUID createMigrationInvoice(UUID accountId, DateTime targetDate,
+                                       BigDecimal balance, Currency currency);
 
 }

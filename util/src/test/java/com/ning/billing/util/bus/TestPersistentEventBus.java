@@ -16,12 +16,9 @@
 package com.ning.billing.util.bus;
 
 
-import java.io.IOException;
-
 import org.apache.commons.io.IOUtils;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.IDBI;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Guice;
@@ -39,10 +36,10 @@ import com.ning.billing.util.glue.BusModule.BusType;
 
 @Guice(modules = TestPersistentEventBus.PersistentBusModuleTest.class)
 public class TestPersistentEventBus extends TestEventBusBase {
-    
+
     @Inject
     private MysqlTestingHelper helper;
-    
+
     @BeforeClass(groups = {"slow"})
     public void setup() throws Exception {
         helper.startMysql();
@@ -51,18 +48,18 @@ public class TestPersistentEventBus extends TestEventBusBase {
         cleanup();
         super.setup();
     }
-    
+
     @BeforeMethod(groups = {"slow"})
     public void cleanup() {
         helper.cleanupTable("bus_events");
         helper.cleanupTable("claimed_bus_events");
     }
-    
+
     public static class PersistentBusModuleTest extends AbstractModule {
 
         @Override
         protected void configure() {
-            
+
             //System.setProperty("com.ning.billing.dbi.test.useLocalDb", "true");
 
             bind(Clock.class).to(ClockMock.class).asEagerSingleton();
@@ -81,17 +78,17 @@ public class TestPersistentEventBus extends TestEventBusBase {
             install(new BusModule(BusType.PERSISTENT));
         }
     }
-    
+
     @Test(groups = {"slow"})
     public void testSimple() {
         super.testSimple();
     }
-    
+
     // Until Guava fixes exception handling, r13?
-    @Test(groups={"slow"}, enabled=false)
+    @Test(groups = {"slow"}, enabled = false)
     public void testSimpleWithException() {
         super.testSimpleWithException();
-        
+
     }
- 
+
 }

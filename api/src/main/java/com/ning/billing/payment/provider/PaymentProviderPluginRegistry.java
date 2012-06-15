@@ -24,6 +24,6 @@ public interface PaymentProviderPluginRegistry {
     public void register(final PaymentPluginApi plugin, final String name);
 
     public PaymentPluginApi getPlugin(final String name);
-    
+
     public Set<String> getRegisteredPluginNames();
 }

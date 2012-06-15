@@ -17,29 +17,29 @@
 package com.ning.billing.catalog.api;
 
 public class PlanChangeResult {
- 
-	private final PriceList newPriceList;
-	private final ActionPolicy policy;
-	private final PlanAlignmentChange alignment;
-	
-	public PlanChangeResult(PriceList newPriceList, ActionPolicy policy, PlanAlignmentChange alignment) {
-		super();
-		this.newPriceList = newPriceList;
-		this.policy = policy;
-		this.alignment = alignment;
-	}
 
-	public PriceList getNewPriceList() {
-		return newPriceList;
-	}
+    private final PriceList newPriceList;
+    private final ActionPolicy policy;
+    private final PlanAlignmentChange alignment;
 
-	public ActionPolicy getPolicy() {
-		return policy;
-	}
+    public PlanChangeResult(final PriceList newPriceList, final ActionPolicy policy, final PlanAlignmentChange alignment) {
+        super();
+        this.newPriceList = newPriceList;
+        this.policy = policy;
+        this.alignment = alignment;
+    }
 
-	public PlanAlignmentChange getAlignment() {
-		return alignment;
-	}	
-	 
-	
+    public PriceList getNewPriceList() {
+        return newPriceList;
+    }
+
+    public ActionPolicy getPolicy() {
+        return policy;
+    }
+
+    public PlanAlignmentChange getAlignment() {
+        return alignment;
+    }
+
+
 }

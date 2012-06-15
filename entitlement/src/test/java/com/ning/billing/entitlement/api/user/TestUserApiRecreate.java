@@ -16,10 +16,6 @@
 
 package com.ning.billing.entitlement.api.user;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
-
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,9 +26,13 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.entitlement.api.TestApiBase;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
+
 public abstract class TestUserApiRecreate extends TestApiBase {
 
-    private static Logger log = LoggerFactory.getLogger(TestUserApiRecreate.class);
+    private static final Logger log = LoggerFactory.getLogger(TestUserApiRecreate.class);
 
 
     protected void testRecreateWithBPCanceledThroughSubscription() {
@@ -41,7 +41,7 @@ public abstract class TestUserApiRecreate extends TestApiBase {
             testCreateAndRecreate(false);
             assertListenerStatus();
         } catch (EntitlementUserApiException e) {
-            log.error("Unexpected exception",e);
+            log.error("Unexpected exception", e);
             Assert.fail(e.getMessage());
         }
     }
@@ -52,16 +52,16 @@ public abstract class TestUserApiRecreate extends TestApiBase {
             testCreateAndRecreate(true);
             assertListenerStatus();
         } catch (EntitlementUserApiException e) {
-            log.error("Unexpected exception",e);
+            log.error("Unexpected exception", e);
             Assert.fail(e.getMessage());
         }
     }
 
 
-    private SubscriptionData testCreateAndRecreate(boolean fromUserAPi) throws EntitlementUserApiException {
+    private SubscriptionData testCreateAndRecreate(final boolean fromUserAPi) throws EntitlementUserApiException {
 
-        DateTime init = clock.getUTCNow();
-        DateTime requestedDate = init.minusYears(1);
+        final DateTime init = clock.getUTCNow();
+        final DateTime requestedDate = init.minusYears(1);
 
         String productName = "Shotgun";
         BillingPeriod term = BillingPeriod.MONTHLY;
@@ -70,7 +70,7 @@ public abstract class TestUserApiRecreate extends TestApiBase {
         testListener.pushExpectedEvent(NextEvent.PHASE);
         testListener.pushExpectedEvent(NextEvent.CREATE);
         SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
-                getProductSpecifier(productName, planSetName, term, null), requestedDate, context);
+                                                                                             getProductSpecifier(productName, planSetName, term, null), requestedDate, context);
         assertNotNull(subscription);
         assertEquals(subscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
         assertEquals(subscription.getBundleId(), bundle.getId());
@@ -87,7 +87,7 @@ public abstract class TestUserApiRecreate extends TestApiBase {
 
             if (fromUserAPi) {
                 subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
-                        getProductSpecifier(productName, planSetName, term, null), requestedDate, context);
+                                                                                    getProductSpecifier(productName, planSetName, term, null), requestedDate, context);
             } else {
                 subscription.recreate(getProductSpecifier(productName, planSetName, term, null), requestedDate, context);
             }
@@ -113,7 +113,7 @@ public abstract class TestUserApiRecreate extends TestApiBase {
 
         if (fromUserAPi) {
             subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
-                    getProductSpecifier(productName, planSetName, term, null), requestedDate, context);
+                                                                                getProductSpecifier(productName, planSetName, term, null), requestedDate, context);
         } else {
             subscription.recreate(getProductSpecifier(productName, planSetName, term, null), clock.getUTCNow(), context);
         }

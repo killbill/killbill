@@ -31,15 +31,14 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.payment.plugin.api.NoOpPaymentPluginApi;
 import com.ning.billing.payment.plugin.api.PaymentInfoPlugin;
+import com.ning.billing.payment.plugin.api.PaymentInfoPlugin.PaymentPluginStatus;
 import com.ning.billing.payment.plugin.api.PaymentPluginApiException;
 import com.ning.billing.payment.plugin.api.PaymentProviderAccount;
-import com.ning.billing.payment.plugin.api.PaymentPluginApi;
-import com.ning.billing.payment.plugin.api.PaymentInfoPlugin.PaymentPluginStatus;
 import com.ning.billing.util.clock.Clock;
 
 public class DefaultNoOpPaymentProviderPlugin implements NoOpPaymentPluginApi {
 
-    
+
     private final AtomicBoolean makeNextInvoiceFailWithError = new AtomicBoolean(false);
     private final AtomicBoolean makeNextInvoiceFailWithException = new AtomicBoolean(false);
     private final AtomicBoolean makeAllInvoicesFailWithError = new AtomicBoolean(false);
@@ -51,18 +50,18 @@ public class DefaultNoOpPaymentProviderPlugin implements NoOpPaymentPluginApi {
     private final Clock clock;
 
     @Inject
-    public DefaultNoOpPaymentProviderPlugin(Clock clock) {
+    public DefaultNoOpPaymentProviderPlugin(final Clock clock) {
         this.clock = clock;
         clear();
     }
-    
+
     @Override
     public void clear() {
         makeNextInvoiceFailWithException.set(false);
         makeAllInvoicesFailWithError.set(false);
         makeNextInvoiceFailWithError.set(false);
     }
-    
+
     @Override
     public void makeNextPaymentFailWithError() {
         makeNextInvoiceFailWithError.set(true);
@@ -74,11 +73,11 @@ public class DefaultNoOpPaymentProviderPlugin implements NoOpPaymentPluginApi {
     }
 
     @Override
-    public void makeAllInvoicesFailWithError(boolean failure) {
+    public void makeAllInvoicesFailWithError(final boolean failure) {
         makeAllInvoicesFailWithError.set(failure);
     }
 
-    
+
     @Override
     public String getName() {
         return null;
@@ -86,21 +85,21 @@ public class DefaultNoOpPaymentProviderPlugin implements NoOpPaymentPluginApi {
 
 
     @Override
-    public PaymentInfoPlugin processPayment(String externalKey, UUID paymentId, BigDecimal amount) throws PaymentPluginApiException {
+    public PaymentInfoPlugin processPayment(final String externalKey, final UUID paymentId, final BigDecimal amount) throws PaymentPluginApiException {
         if (makeNextInvoiceFailWithException.getAndSet(false)) {
             throw new PaymentPluginApiException("", "test error");
         }
 
-        PaymentPluginStatus status = (makeAllInvoicesFailWithError.get() || makeNextInvoiceFailWithError.getAndSet(false)) ? PaymentPluginStatus.ERROR : PaymentPluginStatus.PROCESSED;
-        PaymentInfoPlugin result = new DefaultNoOpPaymentInfoPlugin(amount, clock.getUTCNow(), clock.getUTCNow(), status, null);
+        final PaymentPluginStatus status = (makeAllInvoicesFailWithError.get() || makeNextInvoiceFailWithError.getAndSet(false)) ? PaymentPluginStatus.ERROR : PaymentPluginStatus.PROCESSED;
+        final PaymentInfoPlugin result = new DefaultNoOpPaymentInfoPlugin(amount, clock.getUTCNow(), clock.getUTCNow(), status, null);
         payments.put(paymentId, result);
         return result;
     }
 
 
     @Override
-    public PaymentInfoPlugin getPaymentInfo(UUID paymentId) throws PaymentPluginApiException {
-        PaymentInfoPlugin payment = payments.get(paymentId);
+    public PaymentInfoPlugin getPaymentInfo(final UUID paymentId) throws PaymentPluginApiException {
+        final PaymentInfoPlugin payment = payments.get(paymentId);
         if (payment == null) {
             throw new PaymentPluginApiException("", "No payment found for id " + paymentId);
         }
@@ -108,54 +107,53 @@ public class DefaultNoOpPaymentProviderPlugin implements NoOpPaymentPluginApi {
     }
 
     @Override
-    public String createPaymentProviderAccount(Account account)  throws PaymentPluginApiException {
+    public String createPaymentProviderAccount(final Account account) throws PaymentPluginApiException {
         if (account != null) {
-            String id = String.valueOf(RandomStringUtils.randomAlphanumeric(10));
-            String paymentMethodId = String.valueOf(RandomStringUtils.randomAlphanumeric(10));            
+            final String id = String.valueOf(RandomStringUtils.randomAlphanumeric(10));
+            final String paymentMethodId = String.valueOf(RandomStringUtils.randomAlphanumeric(10));
             accounts.put(account.getExternalKey(),
                          new PaymentProviderAccount.Builder().setAccountKey(account.getExternalKey())
                                                              .setId(id)
                                                              .setDefaultPaymentMethod(paymentMethodId)
                                                              .build());
             return id;
-        }
-        else {
+        } else {
             throw new PaymentPluginApiException("", "Did not get account to create payment provider account");
         }
     }
 
     @Override
-    public String addPaymentMethod(String accountKey, PaymentMethodPlugin paymentMethodProps, boolean setDefault)  throws PaymentPluginApiException {
-        PaymentMethodPlugin realWithID = new DefaultNoOpPaymentMethodPlugin(paymentMethodProps);
+    public String addPaymentMethod(final String accountKey, final PaymentMethodPlugin paymentMethodProps, final boolean setDefault) throws PaymentPluginApiException {
+        final PaymentMethodPlugin realWithID = new DefaultNoOpPaymentMethodPlugin(paymentMethodProps);
         List<PaymentMethodPlugin> pms = paymentMethods.get(accountKey);
         if (pms == null) {
             pms = new LinkedList<PaymentMethodPlugin>();
             paymentMethods.put(accountKey, pms);
         }
         pms.add(realWithID);
-        
-        
+
+
         return realWithID.getExternalPaymentMethodId();
     }
 
 
     @Override
-    public void updatePaymentMethod(String accountKey, PaymentMethodPlugin paymentMethodProps)
-        throws PaymentPluginApiException {
-        DefaultNoOpPaymentMethodPlugin e = getPaymentMethod(accountKey, paymentMethodProps.getExternalPaymentMethodId());
+    public void updatePaymentMethod(final String accountKey, final PaymentMethodPlugin paymentMethodProps)
+            throws PaymentPluginApiException {
+        final DefaultNoOpPaymentMethodPlugin e = getPaymentMethod(accountKey, paymentMethodProps.getExternalPaymentMethodId());
         if (e != null) {
             e.setProps(paymentMethodProps.getProperties());
         }
     }
 
     @Override
-    public void deletePaymentMethod(String accountKey, String paymentMethodId)  throws PaymentPluginApiException {
+    public void deletePaymentMethod(final String accountKey, final String paymentMethodId) throws PaymentPluginApiException {
 
         PaymentMethodPlugin toBeDeleted = null;
-        List<PaymentMethodPlugin> pms = paymentMethods.get(accountKey);
+        final List<PaymentMethodPlugin> pms = paymentMethods.get(accountKey);
         if (pms != null) {
 
-            for (PaymentMethodPlugin cur : pms) {
+            for (final PaymentMethodPlugin cur : pms) {
                 if (cur.getExternalPaymentMethodId().equals(paymentMethodId)) {
                     toBeDeleted = cur;
                     break;
@@ -168,37 +166,37 @@ public class DefaultNoOpPaymentProviderPlugin implements NoOpPaymentPluginApi {
     }
 
     @Override
-    public List<PaymentMethodPlugin> getPaymentMethodDetails(String accountKey)
+    public List<PaymentMethodPlugin> getPaymentMethodDetails(final String accountKey)
             throws PaymentPluginApiException {
         return paymentMethods.get(accountKey);
     }
 
     @Override
-    public PaymentMethodPlugin getPaymentMethodDetail(String accountKey, String externalPaymentId) 
-    throws PaymentPluginApiException {
+    public PaymentMethodPlugin getPaymentMethodDetail(final String accountKey, final String externalPaymentId)
+            throws PaymentPluginApiException {
         return getPaymentMethodDetail(accountKey, externalPaymentId);
     }
-    
-    private DefaultNoOpPaymentMethodPlugin getPaymentMethod(String accountKey, String externalPaymentId) {
-        List<PaymentMethodPlugin> pms = paymentMethods.get(accountKey);
+
+    private DefaultNoOpPaymentMethodPlugin getPaymentMethod(final String accountKey, final String externalPaymentId) {
+        final List<PaymentMethodPlugin> pms = paymentMethods.get(accountKey);
         if (pms == null) {
             return null;
         }
-        for (PaymentMethodPlugin cur : pms) {
+        for (final PaymentMethodPlugin cur : pms) {
             if (cur.getExternalPaymentMethodId().equals(externalPaymentId)) {
                 return (DefaultNoOpPaymentMethodPlugin) cur;
             }
         }
         return null;
     }
-    
+
     @Override
-    public void setDefaultPaymentMethod(String accountKey,
-            String externalPaymentId) throws PaymentPluginApiException {
+    public void setDefaultPaymentMethod(final String accountKey,
+                                        final String externalPaymentId) throws PaymentPluginApiException {
     }
 
     @Override
-    public List<PaymentInfoPlugin> processRefund(Account account)
+    public List<PaymentInfoPlugin> processRefund(final Account account)
             throws PaymentPluginApiException {
         return null;
     }

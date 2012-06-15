@@ -24,15 +24,15 @@ public class EntitlementError extends Error {
         super();
     }
 
-    public EntitlementError(String msg, Throwable arg1) {
+    public EntitlementError(final String msg, final Throwable arg1) {
         super(msg, arg1);
     }
 
-    public EntitlementError(String msg) {
+    public EntitlementError(final String msg) {
         super(msg);
     }
 
-    public EntitlementError(Throwable msg) {
+    public EntitlementError(final Throwable msg) {
         super(msg);
     }
 }

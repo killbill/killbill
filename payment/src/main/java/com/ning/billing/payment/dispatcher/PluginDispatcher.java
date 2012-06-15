@@ -29,28 +29,28 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.payment.api.PaymentApiException;
 
 public class PluginDispatcher<T> {
-    
+
     private static final Logger log = LoggerFactory.getLogger(PluginDispatcher.class);
-    
-    private final long DEFAULT_PLUGIN_TIMEOUT_SEC = 30;
+
     private final TimeUnit DEEFAULT_PLUGIN_TIMEOUT_UNIT = TimeUnit.SECONDS;
-    
+
     private final ExecutorService executor;
-    
-    public PluginDispatcher(ExecutorService executor) {
+
+    public PluginDispatcher(final ExecutorService executor) {
         this.executor = executor;
     }
-    
-    public T dispatchWithAccountLock(Callable<T> task) 
-        throws PaymentApiException, TimeoutException {
+
+    public T dispatchWithAccountLock(final Callable<T> task)
+            throws PaymentApiException, TimeoutException {
+        final long DEFAULT_PLUGIN_TIMEOUT_SEC = 30;
         return dispatchWithAccountLockAndTimeout(task, DEFAULT_PLUGIN_TIMEOUT_SEC, DEEFAULT_PLUGIN_TIMEOUT_UNIT);
     }
-    
-    public T dispatchWithAccountLockAndTimeout(Callable<T> task, long timeout, TimeUnit unit)
-    throws PaymentApiException, TimeoutException  {
+
+    public T dispatchWithAccountLockAndTimeout(final Callable<T> task, final long timeout, final TimeUnit unit)
+            throws PaymentApiException, TimeoutException {
 
         try {
-            Future<T> future = executor.submit(task);
+            final Future<T> future = executor.submit(task);
             return future.get(timeout, unit);
         } catch (ExecutionException e) {
             if (e.getCause() instanceof PaymentApiException) {
@@ -61,8 +61,8 @@ public class PluginDispatcher<T> {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, e.getMessage());
-        } 
+        }
     }
-    
-  
+
+
 }

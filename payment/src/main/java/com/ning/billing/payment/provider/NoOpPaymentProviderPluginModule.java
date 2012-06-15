@@ -22,15 +22,15 @@ import com.google.inject.name.Names;
 public class NoOpPaymentProviderPluginModule extends AbstractModule {
     private final String instanceName;
 
-    public NoOpPaymentProviderPluginModule(String instanceName) {
+    public NoOpPaymentProviderPluginModule(final String instanceName) {
         this.instanceName = instanceName;
     }
 
     @Override
     protected void configure() {
         bind(DefaultNoOpPaymentProviderPlugin.class)
-            .annotatedWith(Names.named(instanceName))
-            .toProvider(new NoOpPaymentProviderPluginProvider(instanceName))
-            .asEagerSingleton();
+                .annotatedWith(Names.named(instanceName))
+                .toProvider(new NoOpPaymentProviderPluginProvider(instanceName))
+                .asEagerSingleton();
     }
 }

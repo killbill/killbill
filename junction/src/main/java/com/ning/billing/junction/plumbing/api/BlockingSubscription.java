@@ -38,12 +38,12 @@ import com.ning.billing.util.callcontext.CallContext;
 
 public class BlockingSubscription implements Subscription {
     private final Subscription subscription;
-    private final BlockingApi blockingApi; 
+    private final BlockingApi blockingApi;
     private final BlockingChecker checker;
-    
+
     private BlockingState blockingState = null;
 
-    public BlockingSubscription(Subscription subscription, BlockingApi blockingApi, BlockingChecker checker) {
+    public BlockingSubscription(final Subscription subscription, final BlockingApi blockingApi, final BlockingChecker checker) {
         this.subscription = subscription;
         this.blockingApi = blockingApi;
         this.checker = checker;
@@ -53,25 +53,25 @@ public class BlockingSubscription implements Subscription {
         return subscription.getId();
     }
 
-    public boolean cancel(DateTime requestedDate, boolean eot, CallContext context) throws EntitlementUserApiException {
+    public boolean cancel(final DateTime requestedDate, final boolean eot, final CallContext context) throws EntitlementUserApiException {
         return subscription.cancel(requestedDate, eot, context);
     }
 
-    public boolean uncancel(CallContext context) throws EntitlementUserApiException {
+    public boolean uncancel(final CallContext context) throws EntitlementUserApiException {
         return subscription.uncancel(context);
     }
 
-    public boolean changePlan(String productName, BillingPeriod term, String planSet, DateTime requestedDate,
-            CallContext context) throws EntitlementUserApiException {
+    public boolean changePlan(final String productName, final BillingPeriod term, final String planSet, final DateTime requestedDate,
+                              final CallContext context) throws EntitlementUserApiException {
         try {
             checker.checkBlockedChange(this);
         } catch (BlockingApiException e) {
-            throw new EntitlementUserApiException(e, e.getCode(), e.getMessage()); 
+            throw new EntitlementUserApiException(e, e.getCode(), e.getMessage());
         }
         return subscription.changePlan(productName, term, planSet, requestedDate, context);
     }
 
-    public boolean recreate(PlanPhaseSpecifier spec, DateTime requestedDate, CallContext context)
+    public boolean recreate(final PlanPhaseSpecifier spec, final DateTime requestedDate, final CallContext context)
             throws EntitlementUserApiException {
         return subscription.recreate(spec, requestedDate, context);
     }
@@ -129,12 +129,12 @@ public class BlockingSubscription implements Subscription {
     }
 
     public BlockingState getBlockingState() {
-        if(blockingState == null) {
+        if (blockingState == null) {
             blockingState = blockingApi.getBlockingStateFor(this);
         }
         return blockingState;
     }
-    
+
     public Subscription getDelegateSubscription() {
         return subscription;
     }

@@ -18,7 +18,7 @@ package com.ning.billing.lifecycle;
 
 public interface KillbillService {
 
-    public static class ServiceException extends Exception  {
+    public static class ServiceException extends Exception {
 
         private static final long serialVersionUID = 176191207L;
 
@@ -26,21 +26,20 @@ public interface KillbillService {
             super();
         }
 
-        public ServiceException(String msg, Throwable e) {
+        public ServiceException(final String msg, final Throwable e) {
             super(msg, e);
         }
 
-        public ServiceException(String msg) {
+        public ServiceException(final String msg) {
             super(msg);
         }
 
-        public ServiceException(Throwable msg) {
+        public ServiceException(final Throwable msg) {
             super(msg);
         }
     }
 
     /**
-     *
      * @return the name of the service
      */
     public String getName();

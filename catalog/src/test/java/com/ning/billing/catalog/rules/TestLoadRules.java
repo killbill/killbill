@@ -23,7 +23,6 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.StandaloneCatalog;
 import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanAlignmentCreate;
 import com.ning.billing.catalog.api.PlanSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
@@ -33,20 +32,20 @@ public class TestLoadRules {
 
     @Test
     public void test() throws Exception {
-        StandaloneCatalog catalog = XMLLoader.getObjectFromUri(new File("src/test/resources/WeaponsHireSmall.xml").toURI(), StandaloneCatalog.class);
+        final StandaloneCatalog catalog = XMLLoader.getObjectFromUri(new File("src/test/resources/WeaponsHireSmall.xml").toURI(), StandaloneCatalog.class);
         Assert.assertNotNull(catalog);
-        PlanRules rules = catalog.getPlanRules();
-        
-        PlanSpecifier specifier = new PlanSpecifier("Laser-Scope", ProductCategory.ADD_ON , BillingPeriod.MONTHLY,
-                "DEFAULT");
-        
-        PlanAlignmentCreate alignment=  rules.getPlanCreateAlignment(specifier, catalog);
+        final PlanRules rules = catalog.getPlanRules();
+
+        final PlanSpecifier specifier = new PlanSpecifier("Laser-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY,
+                                                    "DEFAULT");
+
+        final PlanAlignmentCreate alignment = rules.getPlanCreateAlignment(specifier, catalog);
         Assert.assertEquals(alignment, PlanAlignmentCreate.START_OF_SUBSCRIPTION);
-        
-        PlanSpecifier specifier2 = new PlanSpecifier("Extra-Ammo", ProductCategory.ADD_ON , BillingPeriod.MONTHLY,
-                "DEFAULT");
-        
-        PlanAlignmentCreate alignment2 = rules.getPlanCreateAlignment(specifier2, catalog);
+
+        final PlanSpecifier specifier2 = new PlanSpecifier("Extra-Ammo", ProductCategory.ADD_ON, BillingPeriod.MONTHLY,
+                                                     "DEFAULT");
+
+        final PlanAlignmentCreate alignment2 = rules.getPlanCreateAlignment(specifier2, catalog);
         Assert.assertEquals(alignment2, PlanAlignmentCreate.START_OF_BUNDLE);
     }
 }

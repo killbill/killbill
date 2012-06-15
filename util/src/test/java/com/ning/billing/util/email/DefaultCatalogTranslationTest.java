@@ -14,14 +14,15 @@ package com.ning.billing.util.email;/*
  * under the License.
  */
 
-import com.ning.billing.util.template.translation.DefaultCatalogTranslator;
-import com.ning.billing.util.template.translation.Translator;
-import com.ning.billing.util.template.translation.TranslatorConfig;
+import java.util.Locale;
+
 import org.skife.config.ConfigurationObjectFactory;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import java.util.Locale;
+import com.ning.billing.util.template.translation.DefaultCatalogTranslator;
+import com.ning.billing.util.template.translation.Translator;
+import com.ning.billing.util.template.translation.TranslatorConfig;
 
 import static org.testng.Assert.assertEquals;
 
@@ -29,7 +30,7 @@ import static org.testng.Assert.assertEquals;
 public class DefaultCatalogTranslationTest {
     private Translator translation;
 
-    @BeforeClass(groups={"fast", "email"})
+    @BeforeClass(groups = {"fast", "email"})
     public void setup() {
         final TranslatorConfig config = new ConfigurationObjectFactory(System.getProperties()).build(TranslatorConfig.class);
         translation = new DefaultCatalogTranslator(config);
@@ -37,9 +38,9 @@ public class DefaultCatalogTranslationTest {
 
     @Test(groups = {"fast", "email"}, enabled = false)
     public void testInitialization() {
-        String ningPlusText = "ning-plus";
-        String ningProText = "ning-pro";
-        String badText = "Bad text";
+        final String ningPlusText = "ning-plus";
+        final String ningProText = "ning-pro";
+        final String badText = "Bad text";
 
         assertEquals(translation.getTranslation(Locale.US, ningPlusText), "Plus");
         assertEquals(translation.getTranslation(Locale.US, ningProText), "Pro");
@@ -57,28 +58,28 @@ public class DefaultCatalogTranslationTest {
     @Test(enabled = false)
     public void testExistingTranslation() {
         // if the translation exists, return the translation
-        String originalText = "ning-plus";
-        assertEquals(translation.getTranslation(Locale.US,  originalText), "Plus");
+        final String originalText = "ning-plus";
+        assertEquals(translation.getTranslation(Locale.US, originalText), "Plus");
     }
 
     @Test
     public void testMissingTranslation() {
         // if the translation is missing from the file, return the original text
-        String originalText = "missing translation";
+        final String originalText = "missing translation";
         assertEquals(translation.getTranslation(Locale.US, originalText), originalText);
     }
 
     @Test(enabled = false)
     public void testMissingTranslationFileWithEnglishText() {
         // if the translation file doesn't exist, return the "English" translation
-        String originalText = "ning-plus";
+        final String originalText = "ning-plus";
         assertEquals(translation.getTranslation(Locale.CHINA, originalText), "Plus");
     }
 
     @Test
     public void testMissingFileAndText() {
         // if the file is missing, and the "English" translation is missing, return the original text
-        String originalText = "missing translation";
+        final String originalText = "missing translation";
         assertEquals(translation.getTranslation(Locale.CHINA, originalText), originalText);
     }
 }

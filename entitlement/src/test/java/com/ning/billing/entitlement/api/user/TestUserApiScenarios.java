@@ -16,10 +16,6 @@
 
 package com.ning.billing.entitlement.api.user;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertTrue;
-
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
 import org.testng.Assert;
@@ -38,6 +34,10 @@ import com.ning.billing.entitlement.api.billing.EntitlementBillingApiException;
 import com.ning.billing.entitlement.glue.MockEngineModuleSql;
 import com.ning.billing.util.clock.DefaultClock;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
+
 public class TestUserApiScenarios extends TestApiBase {
 
     @Override
@@ -45,14 +45,14 @@ public class TestUserApiScenarios extends TestApiBase {
         return Guice.createInjector(Stage.DEVELOPMENT, new MockEngineModuleSql());
     }
 
-    @Test(groups={"slow"}, enabled=true)
+    @Test(groups = {"slow"}, enabled = true)
     public void testChangeIMMCancelUncancelChangeEOT() throws EntitlementBillingApiException {
 
         log.info("Starting testChangeIMMCancelUncancelChangeEOT");
 
         try {
             SubscriptionData subscription = createSubscription("Assault-Rifle", BillingPeriod.MONTHLY, "gunclubDiscount");
-            PlanPhase trialPhase = subscription.getCurrentPhase();
+            final PlanPhase trialPhase = subscription.getCurrentPhase();
             assertEquals(trialPhase.getPhaseType(), PhaseType.TRIAL);
 
             testListener.pushExpectedEvent(NextEvent.CHANGE);
@@ -66,9 +66,9 @@ public class TestUserApiScenarios extends TestApiBase {
             assertTrue(testListener.isCompleted(5000));
 
             // SET CTD
-            Duration ctd = getDurationMonth(1);
-            DateTime expectedPhaseTrialChange = DefaultClock.addDuration(subscription.getStartDate(), trialPhase.getDuration());
-            DateTime newChargedThroughDate = DefaultClock.addDuration(expectedPhaseTrialChange, ctd);
+            final Duration ctd = getDurationMonth(1);
+            final DateTime expectedPhaseTrialChange = DefaultClock.addDuration(subscription.getStartDate(), trialPhase.getDuration());
+            final DateTime newChargedThroughDate = DefaultClock.addDuration(expectedPhaseTrialChange, ctd);
             billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate, context);
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId());
 
@@ -83,12 +83,12 @@ public class TestUserApiScenarios extends TestApiBase {
             subscription.uncancel(context);
 
             // CHANGE EOT
-            testListener.setNonExpectedMode();            
+            testListener.setNonExpectedMode();
             testListener.pushExpectedEvent(NextEvent.CHANGE);
             subscription.changePlan("Pistol", BillingPeriod.MONTHLY, "gunclubDiscount", clock.getUTCNow(), context);
             assertFalse(testListener.isCompleted(5000));
             testListener.reset();
-            
+
             testListener.pushExpectedEvent(NextEvent.CHANGE);
             it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(1));
             clock.addDeltaFromReality(it.toDurationMillis());

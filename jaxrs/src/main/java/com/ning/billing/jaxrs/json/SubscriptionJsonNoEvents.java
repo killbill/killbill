@@ -22,12 +22,11 @@ import org.joda.time.DateTime;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.ning.billing.entitlement.api.user.Subscription;
 
 public class SubscriptionJsonNoEvents extends SubscriptionJsonSimple {
     private final DateTime startDate;
-    
+
     private final String bundleId;
 
     private final String productName;

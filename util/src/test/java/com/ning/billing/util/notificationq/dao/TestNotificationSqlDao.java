@@ -33,6 +33,7 @@ import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
+
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.ning.billing.dbi.MysqlTestingHelper;
@@ -48,8 +49,8 @@ import static org.testng.Assert.assertNotNull;
 @Guice(modules = TestNotificationSqlDao.TestNotificationSqlDaoModule.class)
 public class TestNotificationSqlDao {
 
-    private final static String hostname = "Yop";
-    
+    private static final String hostname = "Yop";
+
     @Inject
     private IDBI dbi;
 
@@ -65,7 +66,7 @@ public class TestNotificationSqlDao {
     }
 
     @BeforeSuite(groups = "slow")
-    public void setup()  {
+    public void setup() {
         try {
             startMysql();
             dao = dbi.onDemand(NotificationSqlDao.class);
@@ -75,8 +76,7 @@ public class TestNotificationSqlDao {
     }
 
     @AfterSuite(groups = "slow")
-    public void stopMysql()
-    {
+    public void stopMysql() {
         if (helper != null) {
             helper.stopMysql();
         }
@@ -88,7 +88,7 @@ public class TestNotificationSqlDao {
         dbi.withHandle(new HandleCallback<Void>() {
 
             @Override
-            public Void withHandle(Handle handle) throws Exception {
+            public Void withHandle(final Handle handle) throws Exception {
                 handle.execute("delete from notifications");
                 handle.execute("delete from claimed_notifications");
                 return null;
@@ -101,14 +101,14 @@ public class TestNotificationSqlDao {
 
         final String ownerId = UUID.randomUUID().toString();
 
-        String notificationKey = UUID.randomUUID().toString();
-        DateTime effDt = new DateTime();
-        Notification notif = new DefaultNotification("testBasic", hostname, notificationKey, effDt);
+        final String notificationKey = UUID.randomUUID().toString();
+        final DateTime effDt = new DateTime();
+        final Notification notif = new DefaultNotification("testBasic", hostname, notificationKey, effDt);
         dao.insertNotification(notif);
 
         Thread.sleep(1000);
-        DateTime now = new DateTime();
-        List<Notification> notifications = dao.getReadyNotifications(now.toDate(), hostname, 3, "testBasic");
+        final DateTime now = new DateTime();
+        final List<Notification> notifications = dao.getReadyNotifications(now.toDate(), hostname, 3, "testBasic");
         assertNotNull(notifications);
         assertEquals(notifications.size(), 1);
 
@@ -119,8 +119,8 @@ public class TestNotificationSqlDao {
         assertEquals(notification.getProcessingState(), PersistentQueueEntryLifecycleState.AVAILABLE);
         assertEquals(notification.getNextAvailableDate(), null);
 
-        DateTime nextAvailable = now.plusMinutes(5);
-        int res = dao.claimNotification(ownerId, nextAvailable.toDate(), notification.getId().toString(), now.toDate());
+        final DateTime nextAvailable = now.plusMinutes(5);
+        final int res = dao.claimNotification(ownerId, nextAvailable.toDate(), notification.getId().toString(), now.toDate());
         assertEquals(res, 1);
         dao.insertClaimedHistory(ownerId, now.toDate(), notification.getId().toString());
 
@@ -143,26 +143,26 @@ public class TestNotificationSqlDao {
     }
 
     private Notification fetchNotification(final String notificationId) {
-        Notification res =  dbi.withHandle(new HandleCallback<Notification>() {
+        final Notification res = dbi.withHandle(new HandleCallback<Notification>() {
 
             @Override
-            public Notification withHandle(Handle handle) throws Exception {
-                Notification res = handle.createQuery("   select" +
-                        " record_id " +
-                		", id" +
-                		", notification_key" +
-                		", created_date" +
-                		", creating_owner" +
-                		", effective_date" +
-                		", queue_name" +
-                		", processing_owner" +
-                		", processing_available_date" +
-                		", processing_state" +
-                		"    from notifications " +
-                		" where " +
-                		" id = '" + notificationId + "';")
-                		.map(new NotificationSqlMapper())
-                		.first();
+            public Notification withHandle(final Handle handle) throws Exception {
+                final Notification res = handle.createQuery("   select" +
+                                                              " record_id " +
+                                                              ", id" +
+                                                              ", notification_key" +
+                                                              ", created_date" +
+                                                              ", creating_owner" +
+                                                              ", effective_date" +
+                                                              ", queue_name" +
+                                                              ", processing_owner" +
+                                                              ", processing_available_date" +
+                                                              ", processing_state" +
+                                                              "    from notifications " +
+                                                              " where " +
+                                                              " id = '" + notificationId + "';")
+                                         .map(new NotificationSqlMapper())
+                                         .first();
                 return res;
             }
         });
@@ -181,11 +181,11 @@ public class TestNotificationSqlDao {
         Assert.assertEquals(input, expected);
     }
 
-    private DateTime truncateAndUTC(DateTime input) {
+    private DateTime truncateAndUTC(final DateTime input) {
         if (input == null) {
             return null;
         }
-        DateTime result = input.minus(input.getMillisOfSecond());
+        final DateTime result = input.minus(input.getMillisOfSecond());
         return result.toDateTime(DateTimeZone.UTC);
     }
 
@@ -195,7 +195,7 @@ public class TestNotificationSqlDao {
 
             final MysqlTestingHelper helper = new MysqlTestingHelper();
             bind(MysqlTestingHelper.class).toInstance(helper);
-            IDBI dbi = helper.getDBI();
+            final IDBI dbi = helper.getDBI();
             bind(IDBI.class).toInstance(dbi);
         }
     }

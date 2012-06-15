@@ -15,18 +15,17 @@
  */
 package com.ning.billing.jaxrs.util;
 
-import java.net.URI;
-
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
+import java.net.URI;
 
 import com.ning.billing.jaxrs.resources.JaxrsResource;
 
 public class JaxrsUriBuilder {
 
     public Response buildResponse(final Class<? extends JaxrsResource> theClass, final String getMethodName, final Object objectId) {
-        URI uri = UriBuilder.fromPath(objectId.toString()).build();
-        Response.ResponseBuilder ri = Response.created(uri);
+        final URI uri = UriBuilder.fromPath(objectId.toString()).build();
+        final Response.ResponseBuilder ri = Response.created(uri);
         return ri.entity(new Object() {
             @SuppressWarnings(value = "all")
             public URI getUri() {
@@ -36,19 +35,19 @@ public class JaxrsUriBuilder {
         }).build();
     }
 
-	
-    public Response buildResponse(final Class<? extends JaxrsResource> theClass, final String getMethodName, final Object objectId, String baseUri) {
-        
+
+    public Response buildResponse(final Class<? extends JaxrsResource> theClass, final String getMethodName, final Object objectId, final String baseUri) {
+
         // Let's build a n absolute location for cross resources
         // See Jersey ContainerResponse.setHeaders
-        StringBuilder tmp  = new StringBuilder(baseUri.substring(0, baseUri.length() - 1));
+        final StringBuilder tmp = new StringBuilder(baseUri.substring(0, baseUri.length() - 1));
         tmp.append(UriBuilder.fromResource(theClass).path(theClass, getMethodName).build(objectId).toString());
         final URI newUriFromResource = UriBuilder.fromUri(tmp.toString()).build();
-        Response.ResponseBuilder ri = Response.created(newUriFromResource);
+        final Response.ResponseBuilder ri = Response.created(newUriFromResource);
         return ri.entity(new Object() {
             @SuppressWarnings(value = "all")
             public URI getUri() {
-                
+
                 return newUriFromResource;
             }
         }).build();

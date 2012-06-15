@@ -16,7 +16,6 @@
 
 package com.ning.billing.server.config;
 
-public interface KillbillServerConfig
-{
-	
+public interface KillbillServerConfig {
+
 }

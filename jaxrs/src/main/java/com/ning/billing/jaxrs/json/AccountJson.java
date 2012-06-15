@@ -22,7 +22,6 @@ import org.joda.time.DateTimeZone;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.catalog.api.Currency;
@@ -31,29 +30,29 @@ public class AccountJson extends AccountJsonSimple {
     // STEPH Missing city, locale, postalCode from https://home.ninginc.com:8443/display/REVINFRA/Killbill+1.0+APIs
 
     private final String name;
-    
+
     private final Integer length;
-        
+
     private final String email;
-    
+
     private final Integer billCycleDay;
-    
+
     private final String currency;
-    
+
     private final String paymentMethodId;
-    
+
     private final String timeZone;
-    
+
     private final String address1;
-    
+
     private final String address2;
-    
+
     private final String company;
-    
+
     private final String state;
-    
+
     private final String country;
-    
+
     private final String phone;
 
 
@@ -108,7 +107,7 @@ public class AccountJson extends AccountJsonSimple {
 
             @Override
             public UUID getPaymentMethodId() {
-                return paymentMethodId != null ?  UUID.fromString(paymentMethodId) : null;
+                return paymentMethodId != null ? UUID.fromString(paymentMethodId) : null;
             }
 
             @Override
@@ -389,8 +388,9 @@ public class AccountJson extends AccountJsonSimple {
             return false;
         }
         if (paymentMethodId == null) {
-            if (other.paymentMethodId != null)
+            if (other.paymentMethodId != null) {
                 return false;
+            }
         } else if (!paymentMethodId.equals(other.paymentMethodId)) {
             return false;
         }

@@ -22,8 +22,8 @@ import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
-import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.catalog.api.PriceList;
+import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
 import com.ning.billing.entitlement.events.user.ApiEventType;
@@ -53,24 +53,24 @@ public class SubscriptionTransitionData /* implements SubscriptionEvent */ {
     private final UUID userToken;
 
 
-    public SubscriptionTransitionData(UUID eventId,
-            UUID subscriptionId,
-            UUID bundleId,
-            EventType eventType,
-            ApiEventType apiEventType,
-            DateTime requestedTransitionTime,
-            DateTime effectiveTransitionTime,
-            SubscriptionState previousState,
-            Plan previousPlan,
-            PlanPhase previousPhase,
-            PriceList previousPriceList,
-            SubscriptionState nextState,
-            Plan nextPlan,
-            PlanPhase nextPhase,
-            PriceList nextPriceList,
-            Long totalOrdering,
-            UUID userToken,
-            Boolean isFromDisk) {
+    public SubscriptionTransitionData(final UUID eventId,
+                                      final UUID subscriptionId,
+                                      final UUID bundleId,
+                                      final EventType eventType,
+                                      final ApiEventType apiEventType,
+                                      final DateTime requestedTransitionTime,
+                                      final DateTime effectiveTransitionTime,
+                                      final SubscriptionState previousState,
+                                      final Plan previousPlan,
+                                      final PlanPhase previousPhase,
+                                      final PriceList previousPriceList,
+                                      final SubscriptionState nextState,
+                                      final Plan nextPlan,
+                                      final PlanPhase nextPhase,
+                                      final PriceList nextPriceList,
+                                      final Long totalOrdering,
+                                      final UUID userToken,
+                                      final Boolean isFromDisk) {
         super();
         this.eventId = eventId;
         this.subscriptionId = subscriptionId;
@@ -92,7 +92,7 @@ public class SubscriptionTransitionData /* implements SubscriptionEvent */ {
         this.userToken = userToken;
         this.remainingEventsForUserOperation = 0;
     }
-    
+
     public SubscriptionTransitionData(final SubscriptionTransitionData input, final int remainingEventsForUserOperation) {
         super();
         this.eventId = input.getId();
@@ -161,28 +161,28 @@ public class SubscriptionTransitionData /* implements SubscriptionEvent */ {
     public PriceList getNextPriceList() {
         return nextPriceList;
     }
-    
-	public UUID getUserToken() {
-		return userToken;
-	}
-	
-	public Integer getRemainingEventsForUserOperation() {
-		return remainingEventsForUserOperation;
-	}
+
+    public UUID getUserToken() {
+        return userToken;
+    }
+
+    public Integer getRemainingEventsForUserOperation() {
+        return remainingEventsForUserOperation;
+    }
 
 
     public SubscriptionTransitionType getTransitionType() {
         return toSubscriptionTransitionType(eventType, apiEventType);
     }
-    
-    public static SubscriptionTransitionType toSubscriptionTransitionType(EventType eventType, ApiEventType apiEventType) {
-        switch(eventType) {
-        case API_USER:
-            return apiEventType.getSubscriptionTransitionType();
-        case PHASE:
-            return SubscriptionTransitionType.PHASE;
-        default:
-            throw new EntitlementError("Unexpected event type " + eventType);
+
+    public static SubscriptionTransitionType toSubscriptionTransitionType(final EventType eventType, final ApiEventType apiEventType) {
+        switch (eventType) {
+            case API_USER:
+                return apiEventType.getSubscriptionTransitionType();
+            case PHASE:
+                return SubscriptionTransitionType.PHASE;
+            default:
+                throw new EntitlementError("Unexpected event type " + eventType);
         }
     }
 
@@ -215,17 +215,17 @@ public class SubscriptionTransitionData /* implements SubscriptionEvent */ {
     @Override
     public String toString() {
         return "SubscriptionTransition [eventId=" + eventId
-            + ", subscriptionId=" + subscriptionId
-            + ", eventType=" + eventType + ", apiEventType="
-            + apiEventType + ", requestedTransitionTime=" + requestedTransitionTime
-            + ", effectiveTransitionTime=" + effectiveTransitionTime
-            + ", previousState=" + previousState + ", previousPlan="
-            + ((previousPlan != null) ? previousPlan.getName()  : null)
-            + ", previousPhase=" + ((previousPhase != null) ? previousPhase.getName() : null)
-            + ", previousPriceList " + previousPriceList
-            + ", nextState=" + nextState
-            + ", nextPlan=" + ((nextPlan != null) ? nextPlan.getName() : null)
-            + ", nextPriceList " + nextPriceList
-            + ", nextPhase=" + ((nextPhase != null) ? nextPhase.getName() : null) + "]";
+                + ", subscriptionId=" + subscriptionId
+                + ", eventType=" + eventType + ", apiEventType="
+                + apiEventType + ", requestedTransitionTime=" + requestedTransitionTime
+                + ", effectiveTransitionTime=" + effectiveTransitionTime
+                + ", previousState=" + previousState + ", previousPlan="
+                + ((previousPlan != null) ? previousPlan.getName() : null)
+                + ", previousPhase=" + ((previousPhase != null) ? previousPhase.getName() : null)
+                + ", previousPriceList " + previousPriceList
+                + ", nextState=" + nextState
+                + ", nextPlan=" + ((nextPlan != null) ? nextPlan.getName() : null)
+                + ", nextPriceList " + nextPriceList
+                + ", nextPhase=" + ((nextPhase != null) ? nextPhase.getName() : null) + "]";
     }
 }

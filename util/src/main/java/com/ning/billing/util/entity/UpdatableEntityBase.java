@@ -23,7 +23,7 @@ public abstract class UpdatableEntityBase extends EntityBase implements Updatabl
         super();
     }
 
-    public UpdatableEntityBase(UUID id) {
+    public UpdatableEntityBase(final UUID id) {
         super(id);
     }
 }

@@ -23,19 +23,19 @@ public class PaymentApiException extends BillingExceptionBase {
 
     private static final long serialVersionUID = 39445033L;
 
-    public PaymentApiException(AccountApiException e) {
+    public PaymentApiException(final AccountApiException e) {
         super(e, e.getCode(), e.getMessage());
     }
 
-    public PaymentApiException(Throwable e, ErrorCode code, Object...args) {
+    public PaymentApiException(final Throwable e, final ErrorCode code, final Object... args) {
         super(e, code, args);
     }
 
-    public PaymentApiException(Throwable e, int code, String message) {
+    public PaymentApiException(final Throwable e, final int code, final String message) {
         super(e, code, message);
     }
 
-    public PaymentApiException(ErrorCode code, Object...args) {
+    public PaymentApiException(final ErrorCode code, final Object... args) {
         super(code, args);
     }
 }

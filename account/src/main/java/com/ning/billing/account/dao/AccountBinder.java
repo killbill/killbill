@@ -16,19 +16,20 @@
 
 package com.ning.billing.account.dao;
 
-import com.ning.billing.account.api.Account;
-import com.ning.billing.catalog.api.Currency;
+import java.lang.annotation.Annotation;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.sqlobject.Binder;
 import org.skife.jdbi.v2.sqlobject.BinderFactory;
 import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
 
-import java.lang.annotation.Annotation;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import com.ning.billing.account.api.Account;
+import com.ning.billing.catalog.api.Currency;
 
 @BindingAnnotation(AccountBinder.AccountBinderFactory.class)
 @Retention(RetentionPolicy.RUNTIME)

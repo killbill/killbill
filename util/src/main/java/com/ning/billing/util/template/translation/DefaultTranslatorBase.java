@@ -16,21 +16,22 @@
 
 package com.ning.billing.util.template.translation;
 
-import com.google.inject.Inject;
-import com.ning.billing.ErrorCode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.inject.Inject;
+import com.ning.billing.ErrorCode;
 
 public abstract class DefaultTranslatorBase implements Translator {
     protected final TranslatorConfig config;
     protected final Logger log = LoggerFactory.getLogger(DefaultTranslatorBase.class);
 
     @Inject
-    public DefaultTranslatorBase(TranslatorConfig config) {
+    public DefaultTranslatorBase(final TranslatorConfig config) {
         this.config = config;
     }
 
@@ -42,7 +43,7 @@ public abstract class DefaultTranslatorBase implements Translator {
     protected abstract String getTranslationType();
 
     @Override
-    public String getTranslation(Locale locale, String originalText) {
+    public String getTranslation(final Locale locale, final String originalText) {
         ResourceBundle bundle = null;
         try {
             bundle = ResourceBundle.getBundle(getBundlePath(), locale);
@@ -54,7 +55,7 @@ public abstract class DefaultTranslatorBase implements Translator {
             return bundle.getString(originalText);
         } else {
             try {
-                Locale defaultLocale = new Locale(config.getDefaultLocale());
+                final Locale defaultLocale = new Locale(config.getDefaultLocale());
                 bundle = ResourceBundle.getBundle(getBundlePath(), defaultLocale);
 
                 if ((bundle != null) && (bundle.containsKey(originalText))) {

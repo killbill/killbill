@@ -15,11 +15,6 @@
  */
 package com.ning.billing.entitlement.api.timeline;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertNull;
-import static org.testng.Assert.assertTrue;
-
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -52,6 +47,11 @@ import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.api.user.SubscriptionEvents;
 import com.ning.billing.entitlement.glue.MockEngineModuleSql;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
+import static org.testng.Assert.assertTrue;
+
 public class TestRepairBP extends TestApiBaseRepair {
 
     @Override
@@ -59,294 +59,294 @@ public class TestRepairBP extends TestApiBaseRepair {
         return Guice.createInjector(Stage.DEVELOPMENT, new MockEngineModuleSql());
     }
 
-    @Test(groups={"slow"})
-    public void testFetchBundleRepair() throws Exception  {
+    @Test(groups = {"slow"})
+    public void testFetchBundleRepair() throws Exception {
 
         log.info("Starting testFetchBundleRepair");
-        
-        String baseProduct = "Shotgun";
-        BillingPeriod baseTerm = BillingPeriod.MONTHLY;
-        String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
+
+        final String baseProduct = "Shotgun";
+        final BillingPeriod baseTerm = BillingPeriod.MONTHLY;
+        final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
         // CREATE BP
-        Subscription baseSubscription = createSubscription(baseProduct, baseTerm, basePriceList);
+        final Subscription baseSubscription = createSubscription(baseProduct, baseTerm, basePriceList);
 
-        String aoProduct = "Telescopic-Scope";
-        BillingPeriod aoTerm = BillingPeriod.MONTHLY;
-        String aoPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
+        final String aoProduct = "Telescopic-Scope";
+        final BillingPeriod aoTerm = BillingPeriod.MONTHLY;
+        final String aoPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
-        SubscriptionData aoSubscription = createSubscription(aoProduct, aoTerm, aoPriceList);
+        final SubscriptionData aoSubscription = createSubscription(aoProduct, aoTerm, aoPriceList);
 
-        BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
-        List<SubscriptionTimeline> subscriptionRepair = bundleRepair.getSubscriptions();
+        final BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
+        final List<SubscriptionTimeline> subscriptionRepair = bundleRepair.getSubscriptions();
         assertEquals(subscriptionRepair.size(), 2);
 
-        for (SubscriptionTimeline cur : subscriptionRepair) {
+        for (final SubscriptionTimeline cur : subscriptionRepair) {
             assertNull(cur.getDeletedEvents());
-            assertNull(cur.getNewEvents());                
+            assertNull(cur.getNewEvents());
 
-            List<ExistingEvent> events = cur.getExistingEvents();
+            final List<ExistingEvent> events = cur.getExistingEvents();
             assertEquals(events.size(), 2);
             sortExistingEvent(events);
 
             assertEquals(events.get(0).getSubscriptionTransitionType(), SubscriptionTransitionType.CREATE);
-            assertEquals(events.get(1).getSubscriptionTransitionType(), SubscriptionTransitionType.PHASE);                    
+            assertEquals(events.get(1).getSubscriptionTransitionType(), SubscriptionTransitionType.PHASE);
             final boolean isBP = cur.getId().equals(baseSubscription.getId());
             if (isBP) {
                 assertEquals(cur.getId(), baseSubscription.getId());
 
                 assertEquals(events.get(0).getPlanPhaseSpecifier().getProductName(), baseProduct);
                 assertEquals(events.get(0).getPlanPhaseSpecifier().getPhaseType(), PhaseType.TRIAL);
-                assertEquals(events.get(0).getPlanPhaseSpecifier().getProductCategory(),ProductCategory.BASE);                    
-                assertEquals(events.get(0).getPlanPhaseSpecifier().getPriceListName(), basePriceList);                    
+                assertEquals(events.get(0).getPlanPhaseSpecifier().getProductCategory(), ProductCategory.BASE);
+                assertEquals(events.get(0).getPlanPhaseSpecifier().getPriceListName(), basePriceList);
                 assertEquals(events.get(0).getPlanPhaseSpecifier().getBillingPeriod(), BillingPeriod.NO_BILLING_PERIOD);
 
                 assertEquals(events.get(1).getPlanPhaseSpecifier().getProductName(), baseProduct);
                 assertEquals(events.get(1).getPlanPhaseSpecifier().getPhaseType(), PhaseType.EVERGREEN);
-                assertEquals(events.get(1).getPlanPhaseSpecifier().getProductCategory(),ProductCategory.BASE);                    
-                assertEquals(events.get(1).getPlanPhaseSpecifier().getPriceListName(), basePriceList);                    
+                assertEquals(events.get(1).getPlanPhaseSpecifier().getProductCategory(), ProductCategory.BASE);
+                assertEquals(events.get(1).getPlanPhaseSpecifier().getPriceListName(), basePriceList);
                 assertEquals(events.get(1).getPlanPhaseSpecifier().getBillingPeriod(), baseTerm);
             } else {
                 assertEquals(cur.getId(), aoSubscription.getId());
 
                 assertEquals(events.get(0).getPlanPhaseSpecifier().getProductName(), aoProduct);
-                assertEquals(events.get(0).getPlanPhaseSpecifier().getPhaseType(), PhaseType.DISCOUNT);                    
-                assertEquals(events.get(0).getPlanPhaseSpecifier().getProductCategory(),ProductCategory.ADD_ON); 
-                assertEquals(events.get(0).getPlanPhaseSpecifier().getPriceListName(), aoPriceList); 
-                assertEquals(events.get(1).getPlanPhaseSpecifier().getBillingPeriod(), aoTerm);                    
+                assertEquals(events.get(0).getPlanPhaseSpecifier().getPhaseType(), PhaseType.DISCOUNT);
+                assertEquals(events.get(0).getPlanPhaseSpecifier().getProductCategory(), ProductCategory.ADD_ON);
+                assertEquals(events.get(0).getPlanPhaseSpecifier().getPriceListName(), aoPriceList);
+                assertEquals(events.get(1).getPlanPhaseSpecifier().getBillingPeriod(), aoTerm);
 
                 assertEquals(events.get(1).getPlanPhaseSpecifier().getProductName(), aoProduct);
-                assertEquals(events.get(1).getPlanPhaseSpecifier().getPhaseType(), PhaseType.EVERGREEN);                    
-                assertEquals(events.get(1).getPlanPhaseSpecifier().getProductCategory(),ProductCategory.ADD_ON); 
-                assertEquals(events.get(1).getPlanPhaseSpecifier().getPriceListName(), aoPriceList);  
-                assertEquals(events.get(1).getPlanPhaseSpecifier().getBillingPeriod(), aoTerm);                    
+                assertEquals(events.get(1).getPlanPhaseSpecifier().getPhaseType(), PhaseType.EVERGREEN);
+                assertEquals(events.get(1).getPlanPhaseSpecifier().getProductCategory(), ProductCategory.ADD_ON);
+                assertEquals(events.get(1).getPlanPhaseSpecifier().getPriceListName(), aoPriceList);
+                assertEquals(events.get(1).getPlanPhaseSpecifier().getBillingPeriod(), aoTerm);
             }
         }
         assertListenerStatus();
     }
-    
+
     //TODO MDW: Temporary disable need to look at this with Stephane
-    @Test(groups={"slow"}, enabled = false)
+    @Test(groups = {"slow"}, enabled = false)
     public void testBPRepairWithCancellationOnstart() throws Exception {
 
         log.info("Starting testBPRepairWithCancellationOnstart");
-        
-        String baseProduct = "Shotgun";
-        DateTime startDate = clock.getUTCNow();
-         
+
+        final String baseProduct = "Shotgun";
+        final DateTime startDate = clock.getUTCNow();
+
         // CREATE BP
-        Subscription baseSubscription = createSubscription(baseProduct, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, startDate);
+        final Subscription baseSubscription = createSubscription(baseProduct, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, startDate);
 
         // Stays in trial-- for instance
-        Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(10));
+        final Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(10));
         clock.addDeltaFromReality(it.toDurationMillis());
 
-        BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
+        final BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
         sortEventsOnBundle(bundleRepair);
 
-        List<DeletedEvent> des = new LinkedList<SubscriptionTimeline.DeletedEvent>();
+        final List<DeletedEvent> des = new LinkedList<SubscriptionTimeline.DeletedEvent>();
         des.add(createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(1).getEventId()));
-        NewEvent ne = createNewEvent(SubscriptionTransitionType.CANCEL, baseSubscription.getStartDate(), null);
+        final NewEvent ne = createNewEvent(SubscriptionTransitionType.CANCEL, baseSubscription.getStartDate(), null);
 
-        SubscriptionTimeline sRepair = createSubscriptionRepair(baseSubscription.getId(), des, Collections.singletonList(ne));
-        
+        final SubscriptionTimeline sRepair = createSubscriptionRepair(baseSubscription.getId(), des, Collections.singletonList(ne));
+
         // FIRST ISSUE DRY RUN
-        BundleTimeline bRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
-        
+        final BundleTimeline bRepair = createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
+
         boolean dryRun = true;
-        BundleTimeline dryRunBundleRepair = repairApi.repairBundle(bRepair, dryRun, context);
+        final BundleTimeline dryRunBundleRepair = repairApi.repairBundle(bRepair, dryRun, context);
         sortEventsOnBundle(dryRunBundleRepair);
         List<SubscriptionTimeline> subscriptionRepair = dryRunBundleRepair.getSubscriptions();
         assertEquals(subscriptionRepair.size(), 1);
         SubscriptionTimeline cur = subscriptionRepair.get(0);
         int index = 0;
-        List<ExistingEvent> events = subscriptionRepair.get(0).getExistingEvents();
+        final List<ExistingEvent> events = subscriptionRepair.get(0).getExistingEvents();
         assertEquals(events.size(), 2);
-        List<ExistingEvent> expected = new LinkedList<SubscriptionTimeline.ExistingEvent>();
+        final List<ExistingEvent> expected = new LinkedList<SubscriptionTimeline.ExistingEvent>();
         expected.add(createExistingEventForAssertion(SubscriptionTransitionType.CREATE, baseProduct, PhaseType.TRIAL,
-                ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.NO_BILLING_PERIOD, baseSubscription.getStartDate()));
+                                                     ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.NO_BILLING_PERIOD, baseSubscription.getStartDate()));
         expected.add(createExistingEventForAssertion(SubscriptionTransitionType.CANCEL, baseProduct, PhaseType.TRIAL,
-                ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.NO_BILLING_PERIOD,baseSubscription.getStartDate()));
+                                                     ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.NO_BILLING_PERIOD, baseSubscription.getStartDate()));
 
-        for (ExistingEvent e : expected) {
-           validateExistingEventForAssertion(e, events.get(index++));           
+        for (final ExistingEvent e : expected) {
+            validateExistingEventForAssertion(e, events.get(index++));
         }
-        
-        SubscriptionData dryRunBaseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId());
-        
+
+        final SubscriptionData dryRunBaseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId());
+
         assertEquals(dryRunBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
         assertEquals(dryRunBaseSubscription.getBundleId(), bundle.getId());
         assertEquals(dryRunBaseSubscription.getStartDate(), baseSubscription.getStartDate());
 
-        Plan currentPlan = dryRunBaseSubscription.getCurrentPlan();
+        final Plan currentPlan = dryRunBaseSubscription.getCurrentPlan();
         assertNotNull(currentPlan);
         assertEquals(currentPlan.getProduct().getName(), baseProduct);
         assertEquals(currentPlan.getProduct().getCategory(), ProductCategory.BASE);
         assertEquals(currentPlan.getBillingPeriod(), BillingPeriod.MONTHLY);
 
-        PlanPhase currentPhase = dryRunBaseSubscription.getCurrentPhase();
+        final PlanPhase currentPhase = dryRunBaseSubscription.getCurrentPhase();
         assertNotNull(currentPhase);
         assertEquals(currentPhase.getPhaseType(), PhaseType.TRIAL);
-        
-       // SECOND RE-ISSUE CALL-- NON DRY RUN
+
+        // SECOND RE-ISSUE CALL-- NON DRY RUN
         dryRun = false;
         testListener.pushExpectedEvent(NextEvent.REPAIR_BUNDLE);
-        BundleTimeline realRunBundleRepair = repairApi.repairBundle(bRepair, dryRun, context);
+        final BundleTimeline realRunBundleRepair = repairApi.repairBundle(bRepair, dryRun, context);
         assertTrue(testListener.isCompleted(5000));
-        
+
         subscriptionRepair = realRunBundleRepair.getSubscriptions();
         assertEquals(subscriptionRepair.size(), 1);
         cur = subscriptionRepair.get(0);
         assertEquals(cur.getId(), baseSubscription.getId());
         index = 0;
-        for (ExistingEvent e : expected) {
-           validateExistingEventForAssertion(e, events.get(index++));           
+        for (final ExistingEvent e : expected) {
+            validateExistingEventForAssertion(e, events.get(index++));
         }
-        SubscriptionData realRunBaseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId());
+        final SubscriptionData realRunBaseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId());
         assertEquals(realRunBaseSubscription.getAllTransitions().size(), 2);
-        
-        
+
+
         assertEquals(realRunBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
         assertEquals(realRunBaseSubscription.getBundleId(), bundle.getId());
         assertEquals(realRunBaseSubscription.getStartDate(), startDate);
 
         assertEquals(realRunBaseSubscription.getState(), SubscriptionState.CANCELLED);
-        
+
         assertListenerStatus();
     }
-    
-    @Test(groups={"slow"})
+
+    @Test(groups = {"slow"})
     public void testBPRepairReplaceCreateBeforeTrial() throws Exception {
-        
+
         log.info("Starting testBPRepairReplaceCreateBeforeTrial");
-        
-        String baseProduct = "Shotgun";
-        String newBaseProduct = "Assault-Rifle";
-        
-        DateTime startDate = clock.getUTCNow();
-        int clockShift = -1;
-        DateTime restartDate =  startDate.plusDays(clockShift).minusDays(1);
-        LinkedList<ExistingEvent> expected = new LinkedList<SubscriptionTimeline.ExistingEvent>();
-        
+
+        final String baseProduct = "Shotgun";
+        final String newBaseProduct = "Assault-Rifle";
+
+        final DateTime startDate = clock.getUTCNow();
+        final int clockShift = -1;
+        final DateTime restartDate = startDate.plusDays(clockShift).minusDays(1);
+        final LinkedList<ExistingEvent> expected = new LinkedList<SubscriptionTimeline.ExistingEvent>();
+
         expected.add(createExistingEventForAssertion(SubscriptionTransitionType.CREATE, newBaseProduct, PhaseType.TRIAL,
-                ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.NO_BILLING_PERIOD, restartDate));
+                                                     ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.NO_BILLING_PERIOD, restartDate));
         expected.add(createExistingEventForAssertion(SubscriptionTransitionType.PHASE, newBaseProduct, PhaseType.EVERGREEN,
-                    ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, restartDate.plusDays(30)));
+                                                     ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, restartDate.plusDays(30)));
 
         testBPRepairCreate(true, startDate, clockShift, baseProduct, newBaseProduct, expected);
         assertListenerStatus();
     }
 
-    @Test(groups={"slow"}, enabled=true)
+    @Test(groups = {"slow"}, enabled = true)
     public void testBPRepairReplaceCreateInTrial() throws Exception {
-        
-        log.info("Starting testBPRepairReplaceCreateInTrial");
-        
-        String baseProduct = "Shotgun";
-        String newBaseProduct = "Assault-Rifle";
-        
-        DateTime startDate = clock.getUTCNow();
-        int clockShift = 10;
-        DateTime restartDate =  startDate.plusDays(clockShift).minusDays(1);
-        LinkedList<ExistingEvent> expected = new LinkedList<SubscriptionTimeline.ExistingEvent>();
-        
-        expected.add(createExistingEventForAssertion(SubscriptionTransitionType.CREATE, newBaseProduct, PhaseType.TRIAL,
-                ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.NO_BILLING_PERIOD, restartDate));
-        expected.add(createExistingEventForAssertion(SubscriptionTransitionType.PHASE, newBaseProduct, PhaseType.EVERGREEN,
-                    ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, restartDate.plusDays(30)));
 
-        UUID baseSubscriptionId = testBPRepairCreate(true, startDate, clockShift, baseProduct, newBaseProduct, expected);
-        
+        log.info("Starting testBPRepairReplaceCreateInTrial");
+
+        final String baseProduct = "Shotgun";
+        final String newBaseProduct = "Assault-Rifle";
+
+        final DateTime startDate = clock.getUTCNow();
+        final int clockShift = 10;
+        final DateTime restartDate = startDate.plusDays(clockShift).minusDays(1);
+        final LinkedList<ExistingEvent> expected = new LinkedList<SubscriptionTimeline.ExistingEvent>();
+
+        expected.add(createExistingEventForAssertion(SubscriptionTransitionType.CREATE, newBaseProduct, PhaseType.TRIAL,
+                                                     ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.NO_BILLING_PERIOD, restartDate));
+        expected.add(createExistingEventForAssertion(SubscriptionTransitionType.PHASE, newBaseProduct, PhaseType.EVERGREEN,
+                                                     ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, restartDate.plusDays(30)));
+
+        final UUID baseSubscriptionId = testBPRepairCreate(true, startDate, clockShift, baseProduct, newBaseProduct, expected);
+
         testListener.pushExpectedEvent(NextEvent.PHASE);
-        Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(32));
+        final Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(32));
         clock.addDeltaFromReality(it.toDurationMillis());
         assertTrue(testListener.isCompleted(5000));
-        
+
         // CHECK WHAT"S GOING ON AFTER WE MOVE CLOCK-- FUTURE MOTIFICATION SHOULD KICK IN
-        SubscriptionData subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscriptionId);
-        
+        final SubscriptionData subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscriptionId);
+
         assertEquals(subscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
         assertEquals(subscription.getBundleId(), bundle.getId());
         assertEquals(subscription.getStartDate(), restartDate);
-        assertEquals(subscription.getBundleStartDate(), restartDate);        
+        assertEquals(subscription.getBundleStartDate(), restartDate);
 
-        Plan currentPlan = subscription.getCurrentPlan();
+        final Plan currentPlan = subscription.getCurrentPlan();
         assertNotNull(currentPlan);
         assertEquals(currentPlan.getProduct().getName(), newBaseProduct);
         assertEquals(currentPlan.getProduct().getCategory(), ProductCategory.BASE);
         assertEquals(currentPlan.getBillingPeriod(), BillingPeriod.MONTHLY);
 
-        PlanPhase currentPhase = subscription.getCurrentPhase();
+        final PlanPhase currentPhase = subscription.getCurrentPhase();
         assertNotNull(currentPhase);
         assertEquals(currentPhase.getPhaseType(), PhaseType.EVERGREEN);
-        
+
         assertListenerStatus();
     }
 
-    
-    @Test(groups={"slow"})
+
+    @Test(groups = {"slow"})
     public void testBPRepairReplaceCreateAfterTrial() throws Exception {
-        
+
         log.info("Starting testBPRepairReplaceCreateAfterTrial");
-        
-        String baseProduct = "Shotgun";
-        String newBaseProduct = "Assault-Rifle";
-        
-        DateTime startDate = clock.getUTCNow();
-        int clockShift = 40;
-        DateTime restartDate =  startDate.plusDays(clockShift).minusDays(1);
-        LinkedList<ExistingEvent> expected = new LinkedList<SubscriptionTimeline.ExistingEvent>();
-        
+
+        final String baseProduct = "Shotgun";
+        final String newBaseProduct = "Assault-Rifle";
+
+        final DateTime startDate = clock.getUTCNow();
+        final int clockShift = 40;
+        final DateTime restartDate = startDate.plusDays(clockShift).minusDays(1);
+        final LinkedList<ExistingEvent> expected = new LinkedList<SubscriptionTimeline.ExistingEvent>();
+
         expected.add(createExistingEventForAssertion(SubscriptionTransitionType.CREATE, newBaseProduct, PhaseType.TRIAL,
-                ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.NO_BILLING_PERIOD, restartDate));
+                                                     ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.NO_BILLING_PERIOD, restartDate));
         expected.add(createExistingEventForAssertion(SubscriptionTransitionType.PHASE, newBaseProduct, PhaseType.EVERGREEN,
-                    ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, restartDate.plusDays(30)));
+                                                     ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, restartDate.plusDays(30)));
 
         testBPRepairCreate(false, startDate, clockShift, baseProduct, newBaseProduct, expected);
         assertListenerStatus();
     }
-    
-    
-    private UUID testBPRepairCreate(boolean inTrial, DateTime startDate, int clockShift, 
-            String baseProduct, String newBaseProduct, List<ExistingEvent> expectedEvents) throws Exception {
+
+
+    private UUID testBPRepairCreate(final boolean inTrial, final DateTime startDate, final int clockShift,
+                                    final String baseProduct, final String newBaseProduct, final List<ExistingEvent> expectedEvents) throws Exception {
 
         log.info("Starting testBPRepairCreate");
-        
+
         // CREATE BP
-        Subscription baseSubscription = createSubscription(baseProduct, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, startDate);
+        final Subscription baseSubscription = createSubscription(baseProduct, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, startDate);
 
         // MOVE CLOCK
         if (clockShift > 0) {
             if (!inTrial) {
                 testListener.pushExpectedEvent(NextEvent.PHASE);
-            }               
-            
-            Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(clockShift));
+            }
+
+            final Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(clockShift));
             clock.addDeltaFromReality(it.toDurationMillis());
             if (!inTrial) {
                 assertTrue(testListener.isCompleted(5000));
             }
         }
 
-        BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
+        final BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
         sortEventsOnBundle(bundleRepair);
-        
-        DateTime newCreateTime = baseSubscription.getStartDate().plusDays(clockShift - 1);
 
-        PlanPhaseSpecifier spec = new PlanPhaseSpecifier(newBaseProduct, ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.TRIAL);
+        final DateTime newCreateTime = baseSubscription.getStartDate().plusDays(clockShift - 1);
 
-        NewEvent ne = createNewEvent(SubscriptionTransitionType.CREATE, newCreateTime, spec);
-        List<DeletedEvent> des = new LinkedList<SubscriptionTimeline.DeletedEvent>();
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(newBaseProduct, ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.TRIAL);
+
+        final NewEvent ne = createNewEvent(SubscriptionTransitionType.CREATE, newCreateTime, spec);
+        final List<DeletedEvent> des = new LinkedList<SubscriptionTimeline.DeletedEvent>();
         des.add(createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(0).getEventId()));
         des.add(createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(1).getEventId()));
 
-        SubscriptionTimeline sRepair = createSubscriptionRepair(baseSubscription.getId(), des, Collections.singletonList(ne));
-        
+        final SubscriptionTimeline sRepair = createSubscriptionRepair(baseSubscription.getId(), des, Collections.singletonList(ne));
+
         // FIRST ISSUE DRY RUN
-        BundleTimeline bRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
-        
-        boolean dryRun = true;        
-        BundleTimeline dryRunBundleRepair = repairApi.repairBundle(bRepair, dryRun, context);
+        final BundleTimeline bRepair = createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
+
+        boolean dryRun = true;
+        final BundleTimeline dryRunBundleRepair = repairApi.repairBundle(bRepair, dryRun, context);
         List<SubscriptionTimeline> subscriptionRepair = dryRunBundleRepair.getSubscriptions();
         assertEquals(subscriptionRepair.size(), 1);
         SubscriptionTimeline cur = subscriptionRepair.get(0);
@@ -355,11 +355,11 @@ public class TestRepairBP extends TestApiBaseRepair {
         List<ExistingEvent> events = cur.getExistingEvents();
         assertEquals(expectedEvents.size(), events.size());
         int index = 0;
-        for (ExistingEvent e : expectedEvents) {
-           validateExistingEventForAssertion(e, events.get(index++));           
+        for (final ExistingEvent e : expectedEvents) {
+            validateExistingEventForAssertion(e, events.get(index++));
         }
-        SubscriptionData dryRunBaseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId());
-        
+        final SubscriptionData dryRunBaseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId());
+
         assertEquals(dryRunBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
         assertEquals(dryRunBaseSubscription.getBundleId(), bundle.getId());
         assertEquals(dryRunBaseSubscription.getStartDate(), baseSubscription.getStartDate());
@@ -377,11 +377,11 @@ public class TestRepairBP extends TestApiBaseRepair {
         } else {
             assertEquals(currentPhase.getPhaseType(), PhaseType.EVERGREEN);
         }
-        
-       // SECOND RE-ISSUE CALL-- NON DRY RUN
+
+        // SECOND RE-ISSUE CALL-- NON DRY RUN
         dryRun = false;
         testListener.pushExpectedEvent(NextEvent.REPAIR_BUNDLE);
-        BundleTimeline realRunBundleRepair = repairApi.repairBundle(bRepair, dryRun, context);
+        final BundleTimeline realRunBundleRepair = repairApi.repairBundle(bRepair, dryRun, context);
         assertTrue(testListener.isCompleted(5000));
         subscriptionRepair = realRunBundleRepair.getSubscriptions();
         assertEquals(subscriptionRepair.size(), 1);
@@ -389,18 +389,18 @@ public class TestRepairBP extends TestApiBaseRepair {
         assertEquals(cur.getId(), baseSubscription.getId());
 
         events = cur.getExistingEvents();
-        for (ExistingEvent e : events) {
-            log.info(String.format("%s, %s, %s, %s", e.getSubscriptionTransitionType(), e.getEffectiveDate(), e.getPlanPhaseSpecifier().getProductName(),  e.getPlanPhaseSpecifier().getPhaseType()));
+        for (final ExistingEvent e : events) {
+            log.info(String.format("%s, %s, %s, %s", e.getSubscriptionTransitionType(), e.getEffectiveDate(), e.getPlanPhaseSpecifier().getProductName(), e.getPlanPhaseSpecifier().getPhaseType()));
         }
         assertEquals(events.size(), expectedEvents.size());
         index = 0;
-        for (ExistingEvent e : expectedEvents) {
-           validateExistingEventForAssertion(e, events.get(index++));           
+        for (final ExistingEvent e : expectedEvents) {
+            validateExistingEventForAssertion(e, events.get(index++));
         }
-        SubscriptionData realRunBaseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId());
+        final SubscriptionData realRunBaseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId());
         assertEquals(realRunBaseSubscription.getAllTransitions().size(), 2);
-        
-        
+
+
         assertEquals(realRunBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
         assertEquals(realRunBaseSubscription.getBundleId(), bundle.getId());
         assertEquals(realRunBaseSubscription.getStartDate(), newCreateTime);
@@ -414,133 +414,133 @@ public class TestRepairBP extends TestApiBaseRepair {
         currentPhase = realRunBaseSubscription.getCurrentPhase();
         assertNotNull(currentPhase);
         assertEquals(currentPhase.getPhaseType(), PhaseType.TRIAL);
-        
+
         return baseSubscription.getId();
     }
 
-    @Test(groups={"slow"})
+    @Test(groups = {"slow"})
     public void testBPRepairAddChangeInTrial() throws Exception {
-        
-        log.info("Starting testBPRepairAddChangeInTrial");
-        
-        String baseProduct = "Shotgun";
-        String newBaseProduct = "Assault-Rifle";
-        
-        DateTime startDate = clock.getUTCNow();
-        int clockShift = 10;
-        DateTime changeDate =  startDate.plusDays(clockShift).minusDays(1);
-        LinkedList<ExistingEvent> expected = new LinkedList<SubscriptionTimeline.ExistingEvent>();
-        
-        expected.add(createExistingEventForAssertion(SubscriptionTransitionType.CREATE, baseProduct, PhaseType.TRIAL,
-                ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.NO_BILLING_PERIOD, startDate));
-        expected.add(createExistingEventForAssertion(SubscriptionTransitionType.CHANGE, newBaseProduct, PhaseType.TRIAL,
-                    ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.NO_BILLING_PERIOD, changeDate));
-        expected.add(createExistingEventForAssertion(SubscriptionTransitionType.PHASE, newBaseProduct, PhaseType.EVERGREEN,
-                    ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, startDate.plusDays(30)));
 
-        UUID baseSubscriptionId = testBPRepairAddChange(true, startDate, clockShift, baseProduct, newBaseProduct, expected, 3);
-        
+        log.info("Starting testBPRepairAddChangeInTrial");
+
+        final String baseProduct = "Shotgun";
+        final String newBaseProduct = "Assault-Rifle";
+
+        final DateTime startDate = clock.getUTCNow();
+        final int clockShift = 10;
+        final DateTime changeDate = startDate.plusDays(clockShift).minusDays(1);
+        final LinkedList<ExistingEvent> expected = new LinkedList<SubscriptionTimeline.ExistingEvent>();
+
+        expected.add(createExistingEventForAssertion(SubscriptionTransitionType.CREATE, baseProduct, PhaseType.TRIAL,
+                                                     ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.NO_BILLING_PERIOD, startDate));
+        expected.add(createExistingEventForAssertion(SubscriptionTransitionType.CHANGE, newBaseProduct, PhaseType.TRIAL,
+                                                     ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.NO_BILLING_PERIOD, changeDate));
+        expected.add(createExistingEventForAssertion(SubscriptionTransitionType.PHASE, newBaseProduct, PhaseType.EVERGREEN,
+                                                     ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, startDate.plusDays(30)));
+
+        final UUID baseSubscriptionId = testBPRepairAddChange(true, startDate, clockShift, baseProduct, newBaseProduct, expected, 3);
+
         // CHECK WHAT"S GOING ON AFTER WE MOVE CLOCK-- FUTURE MOTIFICATION SHOULD KICK IN
         testListener.pushExpectedEvent(NextEvent.PHASE);
-        Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(32));
+        final Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(32));
         clock.addDeltaFromReality(it.toDurationMillis());
         assertTrue(testListener.isCompleted(5000));
-        SubscriptionData subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscriptionId);
-        
+        final SubscriptionData subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscriptionId);
+
         assertEquals(subscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
         assertEquals(subscription.getBundleId(), bundle.getId());
         assertEquals(subscription.getStartDate(), startDate);
-        assertEquals(subscription.getBundleStartDate(), startDate);        
+        assertEquals(subscription.getBundleStartDate(), startDate);
 
-        Plan currentPlan = subscription.getCurrentPlan();
+        final Plan currentPlan = subscription.getCurrentPlan();
         assertNotNull(currentPlan);
         assertEquals(currentPlan.getProduct().getName(), newBaseProduct);
         assertEquals(currentPlan.getProduct().getCategory(), ProductCategory.BASE);
         assertEquals(currentPlan.getBillingPeriod(), BillingPeriod.MONTHLY);
 
-        PlanPhase currentPhase = subscription.getCurrentPhase();
+        final PlanPhase currentPhase = subscription.getCurrentPhase();
         assertNotNull(currentPhase);
         assertEquals(currentPhase.getPhaseType(), PhaseType.EVERGREEN);
-        
+
         assertListenerStatus();
     }
 
-    @Test(groups={"slow"})
+    @Test(groups = {"slow"})
     public void testBPRepairAddChangeAfterTrial() throws Exception {
-        
+
         log.info("Starting testBPRepairAddChangeAfterTrial");
-        
-        String baseProduct = "Shotgun";
-        String newBaseProduct = "Assault-Rifle";
-        
-        DateTime startDate = clock.getUTCNow();
-        int clockShift = 40;
-        DateTime changeDate =  startDate.plusDays(clockShift).minusDays(1);
-        
-        LinkedList<ExistingEvent> expected = new LinkedList<SubscriptionTimeline.ExistingEvent>();
+
+        final String baseProduct = "Shotgun";
+        final String newBaseProduct = "Assault-Rifle";
+
+        final DateTime startDate = clock.getUTCNow();
+        final int clockShift = 40;
+        final DateTime changeDate = startDate.plusDays(clockShift).minusDays(1);
+
+        final LinkedList<ExistingEvent> expected = new LinkedList<SubscriptionTimeline.ExistingEvent>();
         expected.add(createExistingEventForAssertion(SubscriptionTransitionType.CREATE, baseProduct, PhaseType.TRIAL,
-                ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.NO_BILLING_PERIOD, startDate));
+                                                     ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.NO_BILLING_PERIOD, startDate));
         expected.add(createExistingEventForAssertion(SubscriptionTransitionType.PHASE, baseProduct, PhaseType.EVERGREEN,
-                ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, startDate.plusDays(30)));
+                                                     ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, startDate.plusDays(30)));
         expected.add(createExistingEventForAssertion(SubscriptionTransitionType.CHANGE, newBaseProduct, PhaseType.EVERGREEN,
-                ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, changeDate));
+                                                     ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, changeDate));
         testBPRepairAddChange(false, startDate, clockShift, baseProduct, newBaseProduct, expected, 3);
-    
+
         assertListenerStatus();
     }
-    
 
-    private UUID testBPRepairAddChange(boolean inTrial, DateTime startDate, int clockShift, 
-            String baseProduct, String newBaseProduct, List<ExistingEvent> expectedEvents, int expectedTransitions) throws Exception {
 
-        
+    private UUID testBPRepairAddChange(final boolean inTrial, final DateTime startDate, final int clockShift,
+                                       final String baseProduct, final String newBaseProduct, final List<ExistingEvent> expectedEvents, final int expectedTransitions) throws Exception {
+
+
         // CREATE BP
-        Subscription baseSubscription = createSubscription(baseProduct, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, startDate);
+        final Subscription baseSubscription = createSubscription(baseProduct, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, startDate);
 
         // MOVE CLOCK
         if (!inTrial) {
             testListener.pushExpectedEvent(NextEvent.PHASE);
-        }               
-        
-        Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(clockShift));
+        }
+
+        final Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(clockShift));
         clock.addDeltaFromReality(it.toDurationMillis());
         if (!inTrial) {
             assertTrue(testListener.isCompleted(5000));
         }
 
-        BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
+        final BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
         sortEventsOnBundle(bundleRepair);
-        
-        DateTime changeTime = baseSubscription.getStartDate().plusDays(clockShift - 1);
 
-        PlanPhaseSpecifier spec = new PlanPhaseSpecifier(newBaseProduct, ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.TRIAL);
+        final DateTime changeTime = baseSubscription.getStartDate().plusDays(clockShift - 1);
 
-        NewEvent ne = createNewEvent(SubscriptionTransitionType.CHANGE, changeTime, spec);
-        List<DeletedEvent> des = new LinkedList<SubscriptionTimeline.DeletedEvent>();
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(newBaseProduct, ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.TRIAL);
+
+        final NewEvent ne = createNewEvent(SubscriptionTransitionType.CHANGE, changeTime, spec);
+        final List<DeletedEvent> des = new LinkedList<SubscriptionTimeline.DeletedEvent>();
         if (inTrial) {
             des.add(createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(1).getEventId()));
         }
-        SubscriptionTimeline sRepair = createSubscriptionRepair(baseSubscription.getId(), des, Collections.singletonList(ne));
-        
+        final SubscriptionTimeline sRepair = createSubscriptionRepair(baseSubscription.getId(), des, Collections.singletonList(ne));
+
         // FIRST ISSUE DRY RUN
-        BundleTimeline bRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
-        
+        final BundleTimeline bRepair = createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
+
         boolean dryRun = true;
-        BundleTimeline dryRunBundleRepair = repairApi.repairBundle(bRepair, dryRun, context);
-        
+        final BundleTimeline dryRunBundleRepair = repairApi.repairBundle(bRepair, dryRun, context);
+
         List<SubscriptionTimeline> subscriptionRepair = dryRunBundleRepair.getSubscriptions();
         assertEquals(subscriptionRepair.size(), 1);
         SubscriptionTimeline cur = subscriptionRepair.get(0);
         assertEquals(cur.getId(), baseSubscription.getId());
 
         List<ExistingEvent> events = cur.getExistingEvents();
-       assertEquals(expectedEvents.size(), events.size());
-       int index = 0;
-       for (ExistingEvent e : expectedEvents) {
-           validateExistingEventForAssertion(e, events.get(index++));           
-       }
-        SubscriptionData dryRunBaseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId());
-        
+        assertEquals(expectedEvents.size(), events.size());
+        int index = 0;
+        for (final ExistingEvent e : expectedEvents) {
+            validateExistingEventForAssertion(e, events.get(index++));
+        }
+        final SubscriptionData dryRunBaseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId());
+
         assertEquals(dryRunBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
         assertEquals(dryRunBaseSubscription.getBundleId(), bundle.getId());
         assertEquals(dryRunBaseSubscription.getStartDate(), baseSubscription.getStartDate());
@@ -558,12 +558,12 @@ public class TestRepairBP extends TestApiBaseRepair {
         } else {
             assertEquals(currentPhase.getPhaseType(), PhaseType.EVERGREEN);
         }
-        
-        
-       // SECOND RE-ISSUE CALL-- NON DRY RUN
+
+
+        // SECOND RE-ISSUE CALL-- NON DRY RUN
         dryRun = false;
         testListener.pushExpectedEvent(NextEvent.REPAIR_BUNDLE);
-        BundleTimeline realRunBundleRepair = repairApi.repairBundle(bRepair, dryRun, context);
+        final BundleTimeline realRunBundleRepair = repairApi.repairBundle(bRepair, dryRun, context);
         assertTrue(testListener.isCompleted(5000));
 
         subscriptionRepair = realRunBundleRepair.getSubscriptions();
@@ -574,13 +574,13 @@ public class TestRepairBP extends TestApiBaseRepair {
         events = cur.getExistingEvents();
         assertEquals(expectedEvents.size(), events.size());
         index = 0;
-        for (ExistingEvent e : expectedEvents) {
-           validateExistingEventForAssertion(e, events.get(index++));           
+        for (final ExistingEvent e : expectedEvents) {
+            validateExistingEventForAssertion(e, events.get(index++));
         }
-        SubscriptionData realRunBaseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId());
+        final SubscriptionData realRunBaseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId());
         assertEquals(realRunBaseSubscription.getAllTransitions().size(), expectedTransitions);
-        
-        
+
+
         assertEquals(realRunBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
         assertEquals(realRunBaseSubscription.getBundleId(), bundle.getId());
         assertEquals(realRunBaseSubscription.getStartDate(), baseSubscription.getStartDate());
@@ -600,64 +600,64 @@ public class TestRepairBP extends TestApiBaseRepair {
         }
         return baseSubscription.getId();
     }
-    
-    @Test(groups={"slow"})
+
+    @Test(groups = {"slow"})
     public void testRepairWithFurureCancelEvent() throws Exception {
-      
+
         log.info("Starting testRepairWithFurureCancelEvent");
-        
-        DateTime startDate = clock.getUTCNow();
-        
+
+        final DateTime startDate = clock.getUTCNow();
+
         // CREATE BP
         Subscription baseSubscription = createSubscription("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, startDate);
 
         // MOVE CLOCK -- OUT OF TRIAL
         testListener.pushExpectedEvent(NextEvent.PHASE);
-        
-        Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(35));
+
+        final Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(35));
         clock.addDeltaFromReality(it.toDurationMillis());
         assertTrue(testListener.isCompleted(5000));
-        
+
         // SET CTD to BASE SUBSCRIPTION SP CANCEL OCCURS EOT
-        DateTime newChargedThroughDate = baseSubscription.getStartDate().plusDays(30).plusMonths(1);
+        final DateTime newChargedThroughDate = baseSubscription.getStartDate().plusDays(30).plusMonths(1);
         billingApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate, context);
         baseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId());
 
-        
-        DateTime requestedChange = clock.getUTCNow();
+
+        final DateTime requestedChange = clock.getUTCNow();
         baseSubscription.changePlan("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, requestedChange, context);
-        
-        
+
+
         // CHECK CHANGE DID NOT OCCUR YET
         Plan currentPlan = baseSubscription.getCurrentPlan();
         assertNotNull(currentPlan);
         assertEquals(currentPlan.getProduct().getName(), "Shotgun");
         assertEquals(currentPlan.getProduct().getCategory(), ProductCategory.BASE);
         assertEquals(currentPlan.getBillingPeriod(), BillingPeriod.MONTHLY);
-        
-        
-        DateTime repairTime = clock.getUTCNow().minusDays(1);
-        BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
-        sortEventsOnBundle(bundleRepair);
-        
-        PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
 
-        NewEvent ne = createNewEvent(SubscriptionTransitionType.CHANGE, repairTime, spec);
-        List<DeletedEvent> des = new LinkedList<SubscriptionTimeline.DeletedEvent>();
+
+        final DateTime repairTime = clock.getUTCNow().minusDays(1);
+        final BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
+        sortEventsOnBundle(bundleRepair);
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
+
+        final NewEvent ne = createNewEvent(SubscriptionTransitionType.CHANGE, repairTime, spec);
+        final List<DeletedEvent> des = new LinkedList<SubscriptionTimeline.DeletedEvent>();
         des.add(createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(2).getEventId()));
 
-        SubscriptionTimeline sRepair = createSubscriptionRepair(baseSubscription.getId(), des, Collections.singletonList(ne));
-        
+        final SubscriptionTimeline sRepair = createSubscriptionRepair(baseSubscription.getId(), des, Collections.singletonList(ne));
+
         // SKIP DRY RUN AND DO REPAIR...
-        BundleTimeline bRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
-        
-        boolean dryRun = false;
+        final BundleTimeline bRepair = createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
+
+        final boolean dryRun = false;
         testListener.pushExpectedEvent(NextEvent.REPAIR_BUNDLE);
         repairApi.repairBundle(bRepair, dryRun, context);
         assertTrue(testListener.isCompleted(5000));
-     
+
         baseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId());
-        
+
         assertEquals(((SubscriptionData) baseSubscription).getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
         assertEquals(baseSubscription.getBundleId(), bundle.getId());
         assertEquals(baseSubscription.getStartDate(), baseSubscription.getStartDate());
@@ -668,82 +668,82 @@ public class TestRepairBP extends TestApiBaseRepair {
         assertEquals(currentPlan.getProduct().getCategory(), ProductCategory.BASE);
         assertEquals(currentPlan.getBillingPeriod(), BillingPeriod.MONTHLY);
 
-        PlanPhase currentPhase = baseSubscription.getCurrentPhase();
+        final PlanPhase currentPhase = baseSubscription.getCurrentPhase();
         assertNotNull(currentPhase);
         assertEquals(currentPhase.getPhaseType(), PhaseType.EVERGREEN);
-        
+
         assertListenerStatus();
     }
-    
-    
+
+
     // Needs real SQL backend to be tested properly
-    @Test(groups={"slow"})
+    @Test(groups = {"slow"})
     public void testENT_REPAIR_VIEW_CHANGED_newEvent() throws Exception {
-       
+
         log.info("Starting testENT_REPAIR_VIEW_CHANGED_newEvent");
-        
-        TestWithException test = new TestWithException();
-        DateTime startDate = clock.getUTCNow();
-        
+
+        final TestWithException test = new TestWithException();
+        final DateTime startDate = clock.getUTCNow();
+
         final Subscription baseSubscription = createSubscription("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, startDate);
-        
+
         test.withException(new TestWithExceptionCallback() {
             @Override
             public void doTest() throws EntitlementRepairException, EntitlementUserApiException {
 
-                BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
+                final BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
                 sortEventsOnBundle(bundleRepair);
-                PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
-                NewEvent ne = createNewEvent(SubscriptionTransitionType.CHANGE, baseSubscription.getStartDate().plusDays(10), spec);
-                List<DeletedEvent> des = new LinkedList<SubscriptionTimeline.DeletedEvent>();
-                des.add(createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(0).getEventId()));                
-                des.add(createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(1).getEventId()));                                
-                SubscriptionTimeline sRepair = createSubscriptionRepair(baseSubscription.getId(), des, Collections.singletonList(ne));
+                final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
+                final NewEvent ne = createNewEvent(SubscriptionTransitionType.CHANGE, baseSubscription.getStartDate().plusDays(10), spec);
+                final List<DeletedEvent> des = new LinkedList<SubscriptionTimeline.DeletedEvent>();
+                des.add(createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(0).getEventId()));
+                des.add(createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(1).getEventId()));
+                final SubscriptionTimeline sRepair = createSubscriptionRepair(baseSubscription.getId(), des, Collections.singletonList(ne));
 
-                BundleTimeline bRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
+                final BundleTimeline bRepair = createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
 
                 testListener.pushExpectedEvent(NextEvent.CHANGE);
-                DateTime changeTime = clock.getUTCNow();
+                final DateTime changeTime = clock.getUTCNow();
                 baseSubscription.changePlan("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, changeTime, context);
                 assertTrue(testListener.isCompleted(5000));
-                
+
                 repairApi.repairBundle(bRepair, true, context);
                 assertListenerStatus();
             }
         }, ErrorCode.ENT_REPAIR_VIEW_CHANGED);
     }
 
-    @Test(groups={"slow"}, enabled=false)
+    @Test(groups = {"slow"}, enabled = false)
     public void testENT_REPAIR_VIEW_CHANGED_ctd() throws Exception {
-       
+
         log.info("Starting testENT_REPAIR_VIEW_CHANGED_ctd");
-        
-        TestWithException test = new TestWithException();
-        DateTime startDate = clock.getUTCNow();
-        
+
+        final TestWithException test = new TestWithException();
+        final DateTime startDate = clock.getUTCNow();
+
         final Subscription baseSubscription = createSubscription("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, startDate);
-        
+
         test.withException(new TestWithExceptionCallback() {
             @Override
             public void doTest() throws EntitlementRepairException, EntitlementUserApiException {
 
-                BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
+                final BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
                 sortEventsOnBundle(bundleRepair);
-                PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
-                NewEvent ne = createNewEvent(SubscriptionTransitionType.CHANGE, baseSubscription.getStartDate().plusDays(10), spec);
-                List<DeletedEvent> des = new LinkedList<SubscriptionTimeline.DeletedEvent>();
-                des.add(createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(0).getEventId()));                
-                des.add(createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(1).getEventId()));                                
-                SubscriptionTimeline sRepair = createSubscriptionRepair(baseSubscription.getId(), des, Collections.singletonList(ne));
+                final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
+                final NewEvent ne = createNewEvent(SubscriptionTransitionType.CHANGE, baseSubscription.getStartDate().plusDays(10), spec);
+                final List<DeletedEvent> des = new LinkedList<SubscriptionTimeline.DeletedEvent>();
+                des.add(createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(0).getEventId()));
+                des.add(createDeletedEvent(bundleRepair.getSubscriptions().get(0).getExistingEvents().get(1).getEventId()));
+                final SubscriptionTimeline sRepair = createSubscriptionRepair(baseSubscription.getId(), des, Collections.singletonList(ne));
 
-                BundleTimeline bRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
+                final BundleTimeline bRepair = createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
 
-                DateTime newChargedThroughDate = baseSubscription.getStartDate().plusDays(30).plusMonths(1);
+                final DateTime newChargedThroughDate = baseSubscription.getStartDate().plusDays(30).plusMonths(1);
                 billingApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate, context);
                 entitlementApi.getSubscriptionFromId(baseSubscription.getId());
 
                 repairApi.repairBundle(bRepair, true, context);
-                
+
                 assertListenerStatus();
             }
         }, ErrorCode.ENT_REPAIR_VIEW_CHANGED);

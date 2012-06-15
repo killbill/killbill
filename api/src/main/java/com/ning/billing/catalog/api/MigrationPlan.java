@@ -17,6 +17,6 @@
 package com.ning.billing.catalog.api;
 
 public interface MigrationPlan extends Plan {
-	public static final String MIGRATION_PLAN_NAME = "__KILLBILL_MIGRATION_PLAN__";
-	public static final String MIGRATION_PLAN_PHASE_NAME = "__KILLBILL_MIGRATION_PLAN_PHASE__";
+    public static final String MIGRATION_PLAN_NAME = "__KILLBILL_MIGRATION_PLAN__";
+    public static final String MIGRATION_PLAN_PHASE_NAME = "__KILLBILL_MIGRATION_PLAN_PHASE__";
 }

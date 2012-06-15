@@ -20,7 +20,10 @@ import org.joda.time.DateTime;
 
 public interface ChangedField {
     public DateTime getChangeDate();
+
     public String getFieldName();
+
     public String getOldValue();
+
     public String getNewValue();
 }

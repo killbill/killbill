@@ -21,60 +21,58 @@ import java.util.Set;
 import java.util.UUID;
 
 import com.ning.billing.account.api.Account;
-
-import com.ning.billing.payment.plugin.api.PaymentProviderAccount;
 import com.ning.billing.util.callcontext.CallContext;
 
 public interface PaymentApi {
-  
+
     public Payment createPayment(final String accountKey, final UUID invoiceId, final BigDecimal amount, final CallContext context)
-    throws PaymentApiException;
+            throws PaymentApiException;
 
     public Payment createPayment(final Account account, final UUID invoiceId, final BigDecimal amount, final CallContext context)
-    throws PaymentApiException;
+            throws PaymentApiException;
 
     public Refund createRefund(final Account account, final UUID paymentId, final CallContext context)
-    throws PaymentApiException;
+            throws PaymentApiException;
 
     public List<Payment> getInvoicePayments(final UUID invoiceId)
-    throws PaymentApiException;
+            throws PaymentApiException;
 
-   public List<Payment> getAccountPayments(final UUID accountId)
-    throws PaymentApiException;
-   
-   public Payment getPayment(final UUID paymentId)
-   throws PaymentApiException;
-   
-   /*
+    public List<Payment> getAccountPayments(final UUID accountId)
+            throws PaymentApiException;
+
+    public Payment getPayment(final UUID paymentId)
+            throws PaymentApiException;
+
+    /*
     * Payment method Apis
     */
-   public Set<String> getAvailablePlugins();
-   
-   public String initializeAccountPlugin(final String pluginName, final Account account)
-   throws PaymentApiException;
-   
-   public UUID addPaymentMethod(final String pluginName, final Account account, boolean setDefault, final PaymentMethodPlugin paymentMethodInfo, final CallContext context)
-   throws PaymentApiException;
-   
-   public List<PaymentMethod> refreshPaymentMethods(final String pluginName, final Account account, final CallContext context)
-    throws PaymentApiException;
-   
-   public List<PaymentMethod> getPaymentMethods(final Account account, final boolean withPluginDetail)
-    throws PaymentApiException;
+    public Set<String> getAvailablePlugins();
 
-   public PaymentMethod getPaymentMethodById(final UUID paymentMethodId)
-   throws PaymentApiException;
+    public String initializeAccountPlugin(final String pluginName, final Account account)
+            throws PaymentApiException;
 
-   public PaymentMethod getPaymentMethod(final Account account, final UUID paymentMethodId, final boolean withPluginDetail)
-   throws PaymentApiException;
-   
-   public void updatePaymentMethod(final Account account, final UUID paymentMethodId, final PaymentMethodPlugin paymentMetghodInfo)
-   throws PaymentApiException;
-   
-   public void deletedPaymentMethod(final Account account, final UUID paymentMethodId, final CallContext context)
-   throws PaymentApiException;
-   
-   public void setDefaultPaymentMethod(final Account account, final UUID paymentMethodId, final CallContext context)
-   throws PaymentApiException;
+    public UUID addPaymentMethod(final String pluginName, final Account account, boolean setDefault, final PaymentMethodPlugin paymentMethodInfo, final CallContext context)
+            throws PaymentApiException;
+
+    public List<PaymentMethod> refreshPaymentMethods(final String pluginName, final Account account, final CallContext context)
+            throws PaymentApiException;
+
+    public List<PaymentMethod> getPaymentMethods(final Account account, final boolean withPluginDetail)
+            throws PaymentApiException;
+
+    public PaymentMethod getPaymentMethodById(final UUID paymentMethodId)
+            throws PaymentApiException;
+
+    public PaymentMethod getPaymentMethod(final Account account, final UUID paymentMethodId, final boolean withPluginDetail)
+            throws PaymentApiException;
+
+    public void updatePaymentMethod(final Account account, final UUID paymentMethodId, final PaymentMethodPlugin paymentMetghodInfo)
+            throws PaymentApiException;
+
+    public void deletedPaymentMethod(final Account account, final UUID paymentMethodId, final CallContext context)
+            throws PaymentApiException;
+
+    public void setDefaultPaymentMethod(final Account account, final UUID paymentMethodId, final CallContext context)
+            throws PaymentApiException;
 
 }

@@ -46,18 +46,18 @@ public class DefaultOverdueService implements ExtendedOverdueService {
     private final BusService busService;
     private final OverdueListener listener;
     private final OverdueWrapperFactory factory;
-    
+
     private OverdueConfig overdueConfig;
     private boolean isInitialized;
 
     @Inject
     public DefaultOverdueService(
-            OverdueUserApi userApi, 
-            OverdueProperties properties, 
-            OverdueCheckNotifier notifier, 
-            BusService busService,
-            OverdueListener listener,
-            OverdueWrapperFactory factory){
+            final OverdueUserApi userApi,
+            final OverdueProperties properties,
+            final OverdueCheckNotifier notifier,
+            final BusService busService,
+            final OverdueListener listener,
+            final OverdueWrapperFactory factory) {
         this.userApi = userApi;
         this.properties = properties;
         this.notifier = notifier;
@@ -86,7 +86,7 @@ public class DefaultOverdueService implements ExtendedOverdueService {
         if (!isInitialized) {
             try {
                 System.out.println("Overdue config URI" + properties.getConfigURI());
-                URI u = new URI(properties.getConfigURI());
+                final URI u = new URI(properties.getConfigURI());
                 overdueConfig = XMLLoader.getObjectFromUri(u, OverdueConfig.class);
 
                 isInitialized = true;
@@ -97,9 +97,9 @@ public class DefaultOverdueService implements ExtendedOverdueService {
             } catch (Exception e) {
                 throw new ServiceException(e);
             }
-            
+
             factory.setOverdueConfig(overdueConfig);
-            ((DefaultOverdueUserApi)userApi).setOverdueConfig(overdueConfig);
+            ((DefaultOverdueUserApi) userApi).setOverdueConfig(overdueConfig);
         }
     }
 

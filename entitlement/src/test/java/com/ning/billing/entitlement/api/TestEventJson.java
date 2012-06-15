@@ -17,7 +17,6 @@ package com.ning.billing.entitlement.api;
 
 import java.util.UUID;
 
-import com.ning.billing.util.jackson.ObjectMapper;
 import org.joda.time.DateTime;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -27,37 +26,36 @@ import com.ning.billing.entitlement.api.timeline.RepairEntitlementEvent;
 import com.ning.billing.entitlement.api.user.DefaultSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.api.user.SubscriptionEvent;
+import com.ning.billing.util.jackson.ObjectMapper;
 
 public class TestEventJson {
     private final ObjectMapper mapper = new ObjectMapper();
 
-    @Test(groups= {"fast"})
+    @Test(groups = {"fast"})
     public void testSubscriptionEvent() throws Exception {
-        
 
-        SubscriptionEvent e = new DefaultSubscriptionEvent(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), new DateTime(), new DateTime(),
-                SubscriptionState.ACTIVE, "pro", "TRIAL", "DEFAULT", SubscriptionState.CANCELLED, null, null, null, 3L, UUID.randomUUID(), SubscriptionTransitionType.CANCEL, 0, new DateTime());
-            
-        String json = mapper.writeValueAsString(e);
 
-        Class<?> claz = Class.forName(DefaultSubscriptionEvent.class.getName());
-        Object obj =  mapper.readValue(json, claz);
+        final SubscriptionEvent e = new DefaultSubscriptionEvent(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), new DateTime(), new DateTime(),
+                                                           SubscriptionState.ACTIVE, "pro", "TRIAL", "DEFAULT", SubscriptionState.CANCELLED, null, null, null, 3L, UUID.randomUUID(), SubscriptionTransitionType.CANCEL, 0, new DateTime());
+
+        final String json = mapper.writeValueAsString(e);
+
+        final Class<?> claz = Class.forName(DefaultSubscriptionEvent.class.getName());
+        final Object obj = mapper.readValue(json, claz);
         Assert.assertTrue(obj.equals(e));
 
     }
-    
-    @Test(groups= {"fast"})
+
+    @Test(groups = {"fast"})
     public void testRepairEntitlementEvent() throws Exception {
-        RepairEntitlementEvent e = new DefaultRepairEntitlementEvent(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), new DateTime());
-        
-        String json = mapper.writeValueAsString(e);
+        final RepairEntitlementEvent e = new DefaultRepairEntitlementEvent(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), new DateTime());
 
-        Class<?> claz = Class.forName(DefaultRepairEntitlementEvent.class.getName());
-        Object obj =  mapper.readValue(json, claz);
+        final String json = mapper.writeValueAsString(e);
+
+        final Class<?> claz = Class.forName(DefaultRepairEntitlementEvent.class.getName());
+        final Object obj = mapper.readValue(json, claz);
         Assert.assertTrue(obj.equals(e));
     }
-        
 
-    
-    
+
 }

@@ -16,20 +16,21 @@
 
 package com.ning.billing.account.dao;
 
-import com.ning.billing.account.api.Account;
-import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.util.dao.EntityHistory;
+import java.lang.annotation.Annotation;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.sqlobject.Binder;
 import org.skife.jdbi.v2.sqlobject.BinderFactory;
 import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
 
-import java.lang.annotation.Annotation;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import com.ning.billing.account.api.Account;
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.util.dao.EntityHistory;
 
 @BindingAnnotation(AccountHistoryBinder.AccountHistoryBinderFactory.class)
 @Retention(RetentionPolicy.RUNTIME)
@@ -37,24 +38,24 @@ import java.lang.annotation.Target;
 public @interface AccountHistoryBinder {
     public static class AccountHistoryBinderFactory implements BinderFactory {
         @Override
-        public Binder<AccountHistoryBinder, EntityHistory<Account>> build(Annotation annotation) {
+        public Binder<AccountHistoryBinder, EntityHistory<Account>> build(final Annotation annotation) {
             return new Binder<AccountHistoryBinder, EntityHistory<Account>>() {
                 @Override
-                public void bind(SQLStatement q, AccountHistoryBinder bind, EntityHistory<Account> history) {
+                public void bind(final SQLStatement q, final AccountHistoryBinder bind, final EntityHistory<Account> history) {
                     q.bind("recordId", history.getValue());
                     q.bind("changeType", history.getChangeType().toString());
 
-                    Account account = history.getEntity();
+                    final Account account = history.getEntity();
                     q.bind("id", account.getId().toString());
                     q.bind("externalKey", account.getExternalKey());
                     q.bind("email", account.getEmail());
                     q.bind("name", account.getName());
                     q.bind("firstNameLength", account.getFirstNameLength());
-                    Currency currency = account.getCurrency();
+                    final Currency currency = account.getCurrency();
                     q.bind("currency", (currency == null) ? null : currency.toString());
                     q.bind("billingCycleDay", account.getBillCycleDay());
-                    q.bind("paymentMethodId", account.getPaymentMethodId() !=  null ? account.getPaymentMethodId().toString() : null);
-                    DateTimeZone timeZone = account.getTimeZone();
+                    q.bind("paymentMethodId", account.getPaymentMethodId() != null ? account.getPaymentMethodId().toString() : null);
+                    final DateTimeZone timeZone = account.getTimeZone();
                     q.bind("timeZone", (timeZone == null) ? null : timeZone.toString());
                     q.bind("locale", account.getLocale());
                     q.bind("address1", account.getAddress1());

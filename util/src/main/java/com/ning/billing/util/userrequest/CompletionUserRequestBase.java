@@ -53,7 +53,7 @@ public abstract class CompletionUserRequestBase implements CompletionUserRequest
 
         this.timeoutMilliSec = timeoutMilliSec;
         initialTimeMilliSec = currentTimeMillis();
-        synchronized(this) {
+        synchronized (this) {
             long remainingTimeMillisSec = getRemainingTimeMillis();
             while (!isCompleted && remainingTimeMillisSec > 0) {
                 wait(remainingTimeMillisSec);
@@ -71,7 +71,7 @@ public abstract class CompletionUserRequestBase implements CompletionUserRequest
 
     @Override
     public void notifyForCompletion() {
-        synchronized(this) {
+        synchronized (this) {
             isCompleted = true;
             notify();
         }
@@ -86,39 +86,39 @@ public abstract class CompletionUserRequestBase implements CompletionUserRequest
     }
 
     @Override
-    public void onBusEvent(BusEvent curEvent) {
+    public void onBusEvent(final BusEvent curEvent) {
         // Check if this is for us..
         if (curEvent.getUserToken() == null ||
-                ! curEvent.getUserToken().equals(userToken)) {
+                !curEvent.getUserToken().equals(userToken)) {
             return;
         }
-        
+
         events.add(curEvent);
-        
-        switch(curEvent.getBusEventType()) {
-        case ACCOUNT_CREATE:
-            onAccountCreation((AccountCreationEvent) curEvent);
-            break;
-        case ACCOUNT_CHANGE:
-            onAccountChange((AccountChangeEvent) curEvent);
-            break;
-        case SUBSCRIPTION_TRANSITION:
-            onSubscriptionTransition((SubscriptionEvent) curEvent);
-            break;
-        case INVOICE_EMPTY:
-            onEmptyInvoice((EmptyInvoiceEvent) curEvent);
-            break;
-        case INVOICE_CREATION:
-            onInvoiceCreation((InvoiceCreationEvent) curEvent);
-            break;
-        case PAYMENT_INFO:
-            onPaymentInfo((PaymentInfoEvent) curEvent);
-            break;
-        case PAYMENT_ERROR:
-            onPaymentError((PaymentErrorEvent) curEvent);
-            break;
-        default:
-            throw new RuntimeException("Unexpected event type " + curEvent.getBusEventType());
+
+        switch (curEvent.getBusEventType()) {
+            case ACCOUNT_CREATE:
+                onAccountCreation((AccountCreationEvent) curEvent);
+                break;
+            case ACCOUNT_CHANGE:
+                onAccountChange((AccountChangeEvent) curEvent);
+                break;
+            case SUBSCRIPTION_TRANSITION:
+                onSubscriptionTransition((SubscriptionEvent) curEvent);
+                break;
+            case INVOICE_EMPTY:
+                onEmptyInvoice((EmptyInvoiceEvent) curEvent);
+                break;
+            case INVOICE_CREATION:
+                onInvoiceCreation((InvoiceCreationEvent) curEvent);
+                break;
+            case PAYMENT_INFO:
+                onPaymentInfo((PaymentInfoEvent) curEvent);
+                break;
+            case PAYMENT_ERROR:
+                onPaymentError((PaymentErrorEvent) curEvent);
+                break;
+            default:
+                throw new RuntimeException("Unexpected event type " + curEvent.getBusEventType());
         }
     }
 
@@ -141,7 +141,7 @@ public abstract class CompletionUserRequestBase implements CompletionUserRequest
     @Override
     public void onEmptyInvoice(final EmptyInvoiceEvent curEvent) {
     }
-    
+
     @Override
     public void onInvoiceCreation(final InvoiceCreationEvent curEvent) {
     }

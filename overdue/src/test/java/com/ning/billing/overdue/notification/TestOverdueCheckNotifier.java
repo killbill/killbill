@@ -16,9 +16,6 @@
 
 package com.ning.billing.overdue.notification;
 
-import static com.jayway.awaitility.Awaitility.await;
-import static java.util.concurrent.TimeUnit.MINUTES;
-
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.UUID;
@@ -58,7 +55,6 @@ import com.ning.billing.overdue.OverdueProperties;
 import com.ning.billing.overdue.glue.DefaultOverdueModule;
 import com.ning.billing.overdue.listener.OverdueListener;
 import com.ning.billing.util.bus.Bus;
-import com.ning.billing.util.bus.InMemoryBus;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.clock.Clock;
@@ -74,45 +70,48 @@ import com.ning.billing.util.notificationq.dao.NotificationSqlDao;
 import com.ning.billing.util.tag.dao.AuditedTagDao;
 import com.ning.billing.util.tag.dao.TagDao;
 
+import static com.jayway.awaitility.Awaitility.await;
+import static java.util.concurrent.TimeUnit.MINUTES;
+
 public class TestOverdueCheckNotifier {
-	private Clock clock;
-	private DefaultOverdueCheckNotifier notifier;
+    private Clock clock;
+    private DefaultOverdueCheckNotifier notifier;
 
-	private Bus eventBus;
-	private MysqlTestingHelper helper;
-	private OverdueListenerMock listener;
-	private NotificationQueueService notificationQueueService;
+    private Bus eventBus;
+    private MysqlTestingHelper helper;
+    private OverdueListenerMock listener;
+    private NotificationQueueService notificationQueueService;
 
-	private static final class OverdueListenerMock extends OverdueListener {
-		int eventCount = 0;
-		UUID latestSubscriptionId = null;
+    private static final class OverdueListenerMock extends OverdueListener {
+        int eventCount = 0;
+        UUID latestSubscriptionId = null;
 
-		public OverdueListenerMock() {
-			super(null);
-		}
+        public OverdueListenerMock() {
+            super(null);
+        }
 
-		@Override
-		public void handleNextOverdueCheck(UUID subscriptionId) {
-			eventCount++;
-			latestSubscriptionId=subscriptionId;
-		}
+        @Override
+        public void handleNextOverdueCheck(final UUID subscriptionId) {
+            eventCount++;
+            latestSubscriptionId = subscriptionId;
+        }
 
-		public int getEventCount() {
-			return eventCount;
-		}
+        public int getEventCount() {
+            return eventCount;
+        }
 
-		public UUID getLatestSubscriptionId(){
-			return latestSubscriptionId;
-		}
+        public UUID getLatestSubscriptionId() {
+            return latestSubscriptionId;
+        }
 
-	}
+    }
 
 
-	@BeforeClass(groups={"slow"})
-	public void setup() throws ServiceException, IOException, ClassNotFoundException, SQLException {
-		//TestApiBase.loadSystemPropertiesFromClasspath("/entitlement.properties");
-        final Injector g = Guice.createInjector(Stage.PRODUCTION,  new MockInvoiceModule(), new MockPaymentModule(), new BusModule(), new DefaultOverdueModule() {
-			
+    @BeforeClass(groups = {"slow"})
+    public void setup() throws ServiceException, IOException, ClassNotFoundException, SQLException {
+        //TestApiBase.loadSystemPropertiesFromClasspath("/entitlement.properties");
+        final Injector g = Guice.createInjector(Stage.PRODUCTION, new MockInvoiceModule(), new MockPaymentModule(), new BusModule(), new DefaultOverdueModule() {
+
             protected void configure() {
                 super.configure();
                 bind(Clock.class).to(ClockMock.class).asEagerSingleton();
@@ -125,7 +124,7 @@ public class TestOverdueCheckNotifier {
                 bind(CatalogService.class).to(DefaultCatalogService.class).asEagerSingleton();
                 final MysqlTestingHelper helper = new MysqlTestingHelper();
                 bind(MysqlTestingHelper.class).toInstance(helper);
-                IDBI dbi = helper.getDBI();
+                final IDBI dbi = helper.getDBI();
                 bind(IDBI.class).toInstance(dbi);
                 bind(TagDao.class).to(AuditedTagDao.class).asEagerSingleton();
                 bind(CustomFieldDao.class).to(AuditedCustomFieldDao.class).asEagerSingleton();
@@ -136,70 +135,70 @@ public class TestOverdueCheckNotifier {
         });
 
         clock = g.getInstance(Clock.class);
-        IDBI dbi = g.getInstance(IDBI.class);
+        final IDBI dbi = g.getInstance(IDBI.class);
 
         eventBus = g.getInstance(Bus.class);
         helper = g.getInstance(MysqlTestingHelper.class);
         notificationQueueService = g.getInstance(NotificationQueueService.class);
-        
-        OverdueProperties properties = g.getInstance(OverdueProperties.class);
 
-        Subscription subscription = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
-        EntitlementUserApi entitlementUserApi = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementUserApi.class);
+        final OverdueProperties properties = g.getInstance(OverdueProperties.class);
+
+        final Subscription subscription = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
+        final EntitlementUserApi entitlementUserApi = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementUserApi.class);
         ((ZombieControl) entitlementUserApi).addResult("getSubscriptionFromId", subscription);
 
 //        CallContextFactory factory = new DefaultCallContextFactory(clock);
         listener = new OverdueListenerMock();
         notifier = new DefaultOverdueCheckNotifier(notificationQueueService,
-                 properties, listener);
-        
+                                                   properties, listener);
+
         startMysql();
         eventBus.start();
         notifier.initialize();
         notifier.start();
-	}
+    }
 
-	private void startMysql() throws IOException, ClassNotFoundException, SQLException {
-		final String ddl = IOUtils.toString(NotificationSqlDao.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
-		final String testDdl = IOUtils.toString(NotificationSqlDao.class.getResourceAsStream("/com/ning/billing/util/ddl_test.sql"));
+    private void startMysql() throws IOException, ClassNotFoundException, SQLException {
+        final String ddl = IOUtils.toString(NotificationSqlDao.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
+        final String testDdl = IOUtils.toString(NotificationSqlDao.class.getResourceAsStream("/com/ning/billing/util/ddl_test.sql"));
 
-		helper.startMysql();
-		helper.initDb(ddl);
-		helper.initDb(testDdl);
-	}
+        helper.startMysql();
+        helper.initDb(ddl);
+        helper.initDb(testDdl);
+    }
 
-	@Test(enabled=true, groups="slow")
-	public void test() throws Exception {
-		final UUID subscriptionId = new UUID(0L,1L);
-		final Blockable blockable = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
-		((ZombieControl)blockable).addResult("getId", subscriptionId);
-		final DateTime now = new DateTime();
-		final DateTime readyTime = now.plusMillis(2000);
-		final OverdueCheckPoster poster = new DefaultOverdueCheckPoster(notificationQueueService);
-
-
-		poster.insertOverdueCheckNotification(blockable, readyTime);
+    @Test(enabled = true, groups = "slow")
+    public void test() throws Exception {
+        final UUID subscriptionId = new UUID(0L, 1L);
+        final Blockable blockable = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
+        ((ZombieControl) blockable).addResult("getId", subscriptionId);
+        final DateTime now = new DateTime();
+        final DateTime readyTime = now.plusMillis(2000);
+        final OverdueCheckPoster poster = new DefaultOverdueCheckPoster(notificationQueueService);
 
 
-		// Move time in the future after the notification effectiveDate
-		((ClockMock) clock).setDeltaFromReality(3000);
+        poster.insertOverdueCheckNotification(blockable, readyTime);
 
 
-	    await().atMost(1, MINUTES).until(new Callable<Boolean>() {
-	            @Override
-	            public Boolean call() throws Exception {
-	                return listener.getEventCount() == 1;
-	            }
-	        });
+        // Move time in the future after the notification effectiveDate
+        ((ClockMock) clock).setDeltaFromReality(3000);
 
-		Assert.assertEquals(listener.getEventCount(), 1);
-		Assert.assertEquals(listener.getLatestSubscriptionId(), subscriptionId);
-        
-	}
 
-	@AfterClass(groups="slow")
+        await().atMost(1, MINUTES).until(new Callable<Boolean>() {
+            @Override
+            public Boolean call() throws Exception {
+                return listener.getEventCount() == 1;
+            }
+        });
+
+        Assert.assertEquals(listener.getEventCount(), 1);
+        Assert.assertEquals(listener.getLatestSubscriptionId(), subscriptionId);
+
+    }
+
+    @AfterClass(groups = "slow")
     public void tearDown() {
-	    eventBus.stop();
+        eventBus.stop();
         notifier.stop();
         helper.stopMysql();
     }

@@ -20,10 +20,10 @@ package com.ning.billing.glue;
 public interface JunctionModule {
 
     public void installBillingApi();
-   
-    public void installAccountUserApi() ;
-    
-    public void installBlockingApi() ;
+
+    public void installAccountUserApi();
+
+    public void installBlockingApi();
 
     public void installEntitlementUserApi();
 

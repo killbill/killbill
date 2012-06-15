@@ -28,44 +28,44 @@ import com.ning.billing.junction.dao.BlockingStateDao;
 import com.ning.billing.util.clock.Clock;
 
 public class DefaultBlockingApi implements BlockingApi {
-    private BlockingStateDao dao;
-    private Clock clock;
+    private final BlockingStateDao dao;
+    private final Clock clock;
 
     @Inject
-    public DefaultBlockingApi(BlockingStateDao dao, Clock clock) {
+    public DefaultBlockingApi(final BlockingStateDao dao, final Clock clock) {
         this.dao = dao;
         this.clock = clock;
     }
-    
+
     @Override
-    public BlockingState getBlockingStateFor(Blockable overdueable) {
+    public BlockingState getBlockingStateFor(final Blockable overdueable) {
         BlockingState state = dao.getBlockingStateFor(overdueable);
-        if(state == null) {
+        if (state == null) {
             state = DefaultBlockingState.getClearState();
         }
         return state;
-        
+
     }
 
     @Override
-    public BlockingState getBlockingStateFor(UUID overdueableId) {
+    public BlockingState getBlockingStateFor(final UUID overdueableId) {
         return dao.getBlockingStateFor(overdueableId);
     }
 
     @Override
-    public SortedSet<BlockingState> getBlockingHistory(Blockable overdueable) {
-        return dao.getBlockingHistoryFor(overdueable); 
+    public SortedSet<BlockingState> getBlockingHistory(final Blockable overdueable) {
+        return dao.getBlockingHistoryFor(overdueable);
     }
 
     @Override
-    public SortedSet<BlockingState> getBlockingHistory(UUID overdueableId) {
+    public SortedSet<BlockingState> getBlockingHistory(final UUID overdueableId) {
         return dao.getBlockingHistoryFor(overdueableId);
     }
 
     @Override
-    public <T extends Blockable> void setBlockingState(BlockingState state) {
-       dao.setBlockingState(state, clock);
-        
+    public <T extends Blockable> void setBlockingState(final BlockingState state) {
+        dao.setBlockingState(state, clock);
+
     }
 
 }

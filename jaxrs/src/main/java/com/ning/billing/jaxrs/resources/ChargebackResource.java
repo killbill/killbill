@@ -103,13 +103,13 @@ public class ChargebackResource implements JaxrsResource {
     @GET
     @Path("/payments/{paymentId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
-    public Response getForPayment(@PathParam("paymentId") String paymentId) {
-        
+    public Response getForPayment(@PathParam("paymentId") final String paymentId) {
+
         try {
-            Payment payment = paymentApi.getPayment(UUID.fromString(paymentId));
-            Collection<PaymentAttempt> attempts = Collections2.filter(payment.getAttempts(), new Predicate<PaymentAttempt>() {
+            final Payment payment = paymentApi.getPayment(UUID.fromString(paymentId));
+            final Collection<PaymentAttempt> attempts = Collections2.filter(payment.getAttempts(), new Predicate<PaymentAttempt>() {
                 @Override
-                public boolean apply(PaymentAttempt input) {
+                public boolean apply(final PaymentAttempt input) {
                     return input.getPaymentStatus() == PaymentStatus.SUCCESS;
                 }
             });
@@ -117,17 +117,17 @@ public class ChargebackResource implements JaxrsResource {
                 final String error = String.format("Failed to locate succesful payment attempts for paymentId %s", paymentId);
                 return Response.status(Response.Status.NO_CONTENT).entity(error).build();
             }
-            UUID paymentAttemptId = attempts.iterator().next().getId();
-            
-            List<InvoicePayment> chargebacks = invoicePaymentApi.getChargebacksByPaymentAttemptId(paymentAttemptId);
-            List<ChargebackJson> chargebacksJson = convertToJson(chargebacks);
+            final UUID paymentAttemptId = attempts.iterator().next().getId();
 
-            String accountId = invoicePaymentApi.getAccountIdFromInvoicePaymentId(UUID.fromString(paymentId)).toString();
+            final List<InvoicePayment> chargebacks = invoicePaymentApi.getChargebacksByPaymentAttemptId(paymentAttemptId);
+            final List<ChargebackJson> chargebacksJson = convertToJson(chargebacks);
+
+            final String accountId = invoicePaymentApi.getAccountIdFromInvoicePaymentId(UUID.fromString(paymentId)).toString();
 
 
             final ChargebackCollectionJson json = new ChargebackCollectionJson(accountId, chargebacksJson);
             return Response.status(Response.Status.OK).entity(json).build();
-        
+
         } catch (PaymentApiException e) {
             final String error = String.format("Failed to locate payment attempt for payment id %s", paymentId);
             return Response.status(Response.Status.NO_CONTENT).entity(error).build();

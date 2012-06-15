@@ -18,8 +18,9 @@ package com.ning.billing.util.callcontext;
 
 import java.util.UUID;
 
-import com.ning.billing.util.clock.Clock;
 import org.joda.time.DateTime;
+
+import com.ning.billing.util.clock.Clock;
 
 public class DefaultCallContext extends CallContextBase {
     private final Clock clock;
@@ -36,8 +37,8 @@ public class DefaultCallContext extends CallContextBase {
         this.clock = clock;
     }
 
-    public DefaultCallContext(String userName, CallOrigin callOrigin, UserType userType, Clock clock) {
-    	this(userName, callOrigin, userType, null, clock);
+    public DefaultCallContext(final String userName, final CallOrigin callOrigin, final UserType userType, final Clock clock) {
+        this(userName, callOrigin, userType, null, clock);
     }
 
     @Override

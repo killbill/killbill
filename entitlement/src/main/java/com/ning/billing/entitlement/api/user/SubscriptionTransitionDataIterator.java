@@ -55,10 +55,10 @@ public class SubscriptionTransitionDataIterator implements Iterator<Subscription
         ALL
     }
 
-    public SubscriptionTransitionDataIterator(Clock clock, LinkedList<SubscriptionTransitionData> transitions,
-            Order order, Kind kind, Visibility visibility, TimeLimit timeLimit) {
+    public SubscriptionTransitionDataIterator(final Clock clock, final LinkedList<SubscriptionTransitionData> transitions,
+                                              final Order order, final Kind kind, final Visibility visibility, final TimeLimit timeLimit) {
         this.it = (order == Order.DESC_FROM_FUTURE) ? transitions.descendingIterator() : transitions.iterator();
-        this. clock = clock;
+        this.clock = clock;
         this.kind = kind;
         this.timeLimit = timeLimit;
         this.visibility = visibility;
@@ -68,16 +68,16 @@ public class SubscriptionTransitionDataIterator implements Iterator<Subscription
     @Override
     public boolean hasNext() {
         do {
-            boolean hasNext = it.hasNext();
+            final boolean hasNext = it.hasNext();
             if (!hasNext) {
                 return false;
             }
             next = it.next();
-        }  while (shouldSkip(next));
+        } while (shouldSkip(next));
         return true;
     }
 
-    private boolean shouldSkip(SubscriptionTransitionData input) {
+    private boolean shouldSkip(final SubscriptionTransitionData input) {
         if (visibility == Visibility.FROM_DISK_ONLY && !input.isFromDisk()) {
             return true;
         }
@@ -85,7 +85,7 @@ public class SubscriptionTransitionDataIterator implements Iterator<Subscription
                 (kind == Kind.BILLING && input.getTransitionType() == SubscriptionTransitionType.MIGRATE_ENTITLEMENT)) {
             return true;
         }
-        if ((timeLimit == TimeLimit.FUTURE_ONLY && ! input.getEffectiveTransitionTime().isAfter(clock.getUTCNow())) ||
+        if ((timeLimit == TimeLimit.FUTURE_ONLY && !input.getEffectiveTransitionTime().isAfter(clock.getUTCNow())) ||
                 ((timeLimit == TimeLimit.PAST_OR_PRESENT_ONLY && input.getEffectiveTransitionTime().isAfter(clock.getUTCNow())))) {
             return true;
         }

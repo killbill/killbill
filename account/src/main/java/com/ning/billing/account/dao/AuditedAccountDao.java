@@ -34,9 +34,9 @@ import com.ning.billing.account.api.AccountChangeEvent;
 import com.ning.billing.account.api.AccountCreationEvent;
 import com.ning.billing.account.api.user.DefaultAccountChangeEvent;
 import com.ning.billing.account.api.user.DefaultAccountCreationEvent;
+import com.ning.billing.util.ChangeType;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
-import com.ning.billing.util.ChangeType;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.dao.EntityAudit;
 import com.ning.billing.util.dao.EntityHistory;
@@ -44,13 +44,13 @@ import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.EntityPersistenceException;
 
 public class AuditedAccountDao implements AccountDao {
-    private final static Logger log = LoggerFactory.getLogger(AuditedAccountDao.class);
-    
+    private static final Logger log = LoggerFactory.getLogger(AuditedAccountDao.class);
+
     private final AccountSqlDao accountSqlDao;
     private final Bus eventBus;
 
     @Inject
-    public AuditedAccountDao(IDBI dbi, Bus eventBus) {
+    public AuditedAccountDao(final IDBI dbi, final Bus eventBus) {
         this.eventBus = eventBus;
         this.accountSqlDao = dbi.onDemand(AccountSqlDao.class);
     }
@@ -85,23 +85,23 @@ public class AuditedAccountDao implements AccountDao {
             accountSqlDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
                 @Override
                 public Void inTransaction(final AccountSqlDao transactionalDao, final TransactionStatus status) throws AccountApiException, Bus.EventBusException {
-                    Account currentAccount = transactionalDao.getAccountByKey(key);
+                    final Account currentAccount = transactionalDao.getAccountByKey(key);
                     if (currentAccount != null) {
                         throw new AccountApiException(ErrorCode.ACCOUNT_ALREADY_EXISTS, key);
                     }
                     transactionalDao.create(account, context);
 
                     // insert history
-                    Long recordId = accountSqlDao.getRecordId(account.getId().toString());
-                    EntityHistory<Account> history = new EntityHistory<Account>(account.getId(), recordId, account, ChangeType.INSERT);
+                    final Long recordId = accountSqlDao.getRecordId(account.getId().toString());
+                    final EntityHistory<Account> history = new EntityHistory<Account>(account.getId(), recordId, account, ChangeType.INSERT);
                     accountSqlDao.insertHistoryFromTransaction(history, context);
 
                     // insert audit
-                    Long historyRecordId = accountSqlDao.getHistoryRecordId(recordId);
-                    EntityAudit audit = new EntityAudit(TableName.ACCOUNT_HISTORY, historyRecordId, ChangeType.INSERT);
+                    final Long historyRecordId = accountSqlDao.getHistoryRecordId(recordId);
+                    final EntityAudit audit = new EntityAudit(TableName.ACCOUNT_HISTORY, historyRecordId, ChangeType.INSERT);
                     accountSqlDao.insertAuditFromTransaction(audit, context);
 
-                    AccountCreationEvent creationEvent = new DefaultAccountCreationEvent(account, context.getUserToken());
+                    final AccountCreationEvent creationEvent = new DefaultAccountCreationEvent(account, context.getUserToken());
                     try {
                         eventBus.postFromTransaction(creationEvent, transactionalDao);
                     } catch (EventBusException e) {
@@ -127,28 +127,28 @@ public class AuditedAccountDao implements AccountDao {
             accountSqlDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
                 @Override
                 public Void inTransaction(final AccountSqlDao transactional, final TransactionStatus status) throws EntityPersistenceException, Bus.EventBusException {
-                    String accountId = account.getId().toString();
-                    Account currentAccount = transactional.getById(accountId);
+                    final String accountId = account.getId().toString();
+                    final Account currentAccount = transactional.getById(accountId);
                     if (currentAccount == null) {
                         throw new EntityPersistenceException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID, accountId);
                     }
 
-                    String currentKey = currentAccount.getExternalKey();
+                    final String currentKey = currentAccount.getExternalKey();
                     if (!currentKey.equals(account.getExternalKey())) {
                         throw new EntityPersistenceException(ErrorCode.ACCOUNT_CANNOT_CHANGE_EXTERNAL_KEY, currentKey);
                     }
 
                     transactional.update(account, context);
 
-                    Long recordId = accountSqlDao.getRecordId(account.getId().toString());
-                    EntityHistory<Account> history = new EntityHistory<Account>(account.getId(), recordId, account, ChangeType.INSERT);
+                    final Long recordId = accountSqlDao.getRecordId(account.getId().toString());
+                    final EntityHistory<Account> history = new EntityHistory<Account>(account.getId(), recordId, account, ChangeType.INSERT);
                     accountSqlDao.insertHistoryFromTransaction(history, context);
 
-                    Long historyRecordId = accountSqlDao.getHistoryRecordId(recordId);
-                    EntityAudit audit = new EntityAudit(TableName.ACCOUNT_HISTORY, historyRecordId, ChangeType.INSERT);
+                    final Long historyRecordId = accountSqlDao.getHistoryRecordId(recordId);
+                    final EntityAudit audit = new EntityAudit(TableName.ACCOUNT_HISTORY, historyRecordId, ChangeType.INSERT);
                     accountSqlDao.insertAuditFromTransaction(audit, context);
 
-                    AccountChangeEvent changeEvent = new DefaultAccountChangeEvent(account.getId(), context.getUserToken(), currentAccount, account);
+                    final AccountChangeEvent changeEvent = new DefaultAccountChangeEvent(account.getId(), context.getUserToken(), currentAccount, account);
                     if (changeEvent.hasChanges()) {
                         try {
                             eventBus.postFromTransaction(changeEvent, transactional);

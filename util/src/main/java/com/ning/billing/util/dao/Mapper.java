@@ -20,7 +20,7 @@ public class Mapper<K, V> {
     private final K key;
     private final V value;
 
-    public Mapper(K key, V value) {
+    public Mapper(final K key, final V value) {
         this.key = key;
         this.value = value;
     }

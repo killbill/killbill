@@ -60,8 +60,8 @@ public abstract class AuditedCollectionDaoBase<T extends Entity, V> implements A
      * @param context          the current content
      */
     @Override
-    public void saveEntitiesFromTransaction(Transmogrifier transactionalDao, UUID objectId, ObjectType objectType, List<T> newEntities, CallContext context) {
-        UpdatableEntityCollectionSqlDao<T> dao = transmogrifyDao(transactionalDao);
+    public void saveEntitiesFromTransaction(final Transmogrifier transactionalDao, final UUID objectId, final ObjectType objectType, final List<T> newEntities, final CallContext context) {
+        final UpdatableEntityCollectionSqlDao<T> dao = transmogrifyDao(transactionalDao);
 
         // Get list of all existing entities for this parent object, e.g. find all email addresses for this account
         final List<T> currentEntities = dao.load(objectId.toString(), objectType);
@@ -139,48 +139,48 @@ public abstract class AuditedCollectionDaoBase<T extends Entity, V> implements A
     }
 
     @Override
-    public void saveEntities(UUID objectId, ObjectType objectType, List<T> entities, CallContext context) {
+    public void saveEntities(final UUID objectId, final ObjectType objectType, final List<T> entities, final CallContext context) {
         this.saveEntitiesFromTransaction(getSqlDao(), objectId, objectType, entities, context);
     }
 
     @Override
     public Map<String, T> loadEntities(final UUID objectId, final ObjectType objectType) {
-        UpdatableEntityCollectionSqlDao<T> thisDao = getSqlDao();
+        final UpdatableEntityCollectionSqlDao<T> thisDao = getSqlDao();
         return getMap(thisDao, objectId, objectType);
     }
 
     @Override
     public Map<String, T> loadEntitiesFromTransaction(final Transmogrifier dao, final UUID objectId, final ObjectType objectType) {
-        UpdatableEntityCollectionSqlDao<T> thisDao = transmogrifyDao(dao);
+        final UpdatableEntityCollectionSqlDao<T> thisDao = transmogrifyDao(dao);
         return getMap(thisDao, objectId, objectType);
     }
 
     private Map<String, T> getMap(final UpdatableEntityCollectionSqlDao<T> dao, final UUID objectId, final ObjectType objectType) {
-        List<T> entities = dao.load(objectId.toString(), objectType);
-        Map<String, T> results = new HashMap<String, T>();
-        for (T entity : entities) {
+        final List<T> entities = dao.load(objectId.toString(), objectType);
+        final Map<String, T> results = new HashMap<String, T>();
+        for (final T entity : entities) {
             results.put(getKey(entity), entity);
         }
         return results;
     }
 
-    protected List<EntityHistory<T>> convertToHistory(Collection<T> entities, Map<UUID, Long> recordIds, ChangeType changeType) {
-        List<EntityHistory<T>> histories = new ArrayList<EntityHistory<T>>();
+    protected List<EntityHistory<T>> convertToHistory(final Collection<T> entities, final Map<UUID, Long> recordIds, final ChangeType changeType) {
+        final List<EntityHistory<T>> histories = new ArrayList<EntityHistory<T>>();
 
-        for (T entity : entities) {
-            UUID id = entity.getId();
+        for (final T entity : entities) {
+            final UUID id = entity.getId();
             histories.add(new EntityHistory<T>(id, recordIds.get(id), entity, changeType));
         }
 
         return histories;
     }
 
-    protected List<EntityAudit> convertToAudits(List<EntityHistory<T>> histories, Map<Long, Long> historyRecordIds) {
-        List<EntityAudit> audits = new ArrayList<EntityAudit>();
+    protected List<EntityAudit> convertToAudits(final List<EntityHistory<T>> histories, final Map<Long, Long> historyRecordIds) {
+        final List<EntityAudit> audits = new ArrayList<EntityAudit>();
 
-        for (EntityHistory<T> history : histories) {
-            Long recordId = history.getValue();
-            Long historyRecordId = historyRecordIds.get(recordId);
+        for (final EntityHistory<T> history : histories) {
+            final Long recordId = history.getValue();
+            final Long historyRecordId = historyRecordIds.get(recordId);
             audits.add(new EntityAudit(getTableName(), historyRecordId, history.getChangeType()));
         }
 
@@ -196,9 +196,9 @@ public abstract class AuditedCollectionDaoBase<T extends Entity, V> implements A
         return recordIdMap;
     }
 
-    protected Map<Long, Long> convertToAuditMap(List<Mapper<Long, Long>> historyRecordIds) {
-        Map<Long, Long> historyRecordIdMap = new HashMap<Long, Long>();
-        for (Mapper<Long, Long> historyRecordId : historyRecordIds) {
+    protected Map<Long, Long> convertToAuditMap(final List<Mapper<Long, Long>> historyRecordIds) {
+        final Map<Long, Long> historyRecordIdMap = new HashMap<Long, Long>();
+        for (final Mapper<Long, Long> historyRecordId : historyRecordIds) {
             historyRecordIdMap.put(historyRecordId.getKey(), historyRecordId.getValue());
         }
         return historyRecordIdMap;

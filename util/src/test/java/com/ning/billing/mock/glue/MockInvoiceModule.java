@@ -28,7 +28,7 @@ public class MockInvoiceModule extends AbstractModule implements InvoiceModule {
 
     @Override
     public void installInvoiceUserApi() {
-       bind(InvoiceUserApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(InvoiceUserApi.class));
+        bind(InvoiceUserApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(InvoiceUserApi.class));
     }
 
     @Override

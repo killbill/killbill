@@ -26,12 +26,10 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import bsh.This;
-
 public class BrainDeadProxyFactory {
     private static final Logger log = LoggerFactory.getLogger(BrainDeadProxyFactory.class);
-    
-    public static final Object ZOMBIE_VOID = new Object(); 
+
+    public static final Object ZOMBIE_VOID = new Object();
 
     public static interface ZombieControl {
 
@@ -42,47 +40,47 @@ public class BrainDeadProxyFactory {
     }
 
     @SuppressWarnings("unchecked")
-    public static <T> T createBrainDeadProxyFor(final Class<T> clazz, final Class<?> ... others) {
-        Class<?>[] clazzes = Arrays.copyOf(others, others.length + 2);
+    public static <T> T createBrainDeadProxyFor(final Class<T> clazz, final Class<?>... others) {
+        final Class<?>[] clazzes = Arrays.copyOf(others, others.length + 2);
         clazzes[others.length] = ZombieControl.class;
         clazzes[others.length + 1] = clazz;
         return (T) Proxy.newProxyInstance(clazz.getClassLoader(),
-                clazzes,
-                new InvocationHandler() {
-            private final Map<String,Object> results = new HashMap<String,Object>();
+                                          clazzes,
+                                          new InvocationHandler() {
+                                              private final Map<String, Object> results = new HashMap<String, Object>();
 
-            @Override
-            public Object invoke(Object proxy, Method method, Object[] args)
-                throws Throwable {
+                                              @Override
+                                              public Object invoke(final Object proxy, final Method method, final Object[] args)
+                                                      throws Throwable {
 
-                if (method.getDeclaringClass().equals(ZombieControl.class)) {
-                    if(method.getName().equals("addResult")) {
-                        results.put((String) args[0], args[1]);
-                        return proxy;
-                    } else if(method.getName().equals("clearResults")) {
-                        results.clear();
-                        return proxy;
-                    }
+                                                  if (method.getDeclaringClass().equals(ZombieControl.class)) {
+                                                      if (method.getName().equals("addResult")) {
+                                                          results.put((String) args[0], args[1]);
+                                                          return proxy;
+                                                      } else if (method.getName().equals("clearResults")) {
+                                                          results.clear();
+                                                          return proxy;
+                                                      }
 
-                } else {
+                                                  } else {
 
-                    Object result = results.get(method.getName());
-                    if (result == ZOMBIE_VOID) {
-                    	return (Void) null;
-                    } else if (result != null) {
-                    	if(result instanceof Throwable) {
-                    		throw ((Throwable) result);
-                    	}
-                        return result;
-                    } else if (method.getName().equals("equals")){
-                       return proxy == args[0];
-                    } else {
-                        log.error(String.format("No result for Method: '%s' on Class '%s'",method.getName(), method.getDeclaringClass().getName()));
-                        throw new UnsupportedOperationException();
-                    }
-                }
-                return null;
-            }
-        });
+                                                      final Object result = results.get(method.getName());
+                                                      if (result == ZOMBIE_VOID) {
+                                                          return (Void) null;
+                                                      } else if (result != null) {
+                                                          if (result instanceof Throwable) {
+                                                              throw ((Throwable) result);
+                                                          }
+                                                          return result;
+                                                      } else if (method.getName().equals("equals")) {
+                                                          return proxy == args[0];
+                                                      } else {
+                                                          log.error(String.format("No result for Method: '%s' on Class '%s'", method.getName(), method.getDeclaringClass().getName()));
+                                                          throw new UnsupportedOperationException();
+                                                      }
+                                                  }
+                                                  return null;
+                                              }
+                                          });
     }
 }

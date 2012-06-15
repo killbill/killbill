@@ -21,11 +21,11 @@ import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 public class MockOverdueStatesBundle extends OverdueStatesBundle {
 
     public MockOverdueStatesBundle() {
-        
+
     }
-    
-   public MockOverdueStatesBundle(DefaultOverdueState<SubscriptionBundle>[] states) {
-       setBundleOverdueStates(states);
+
+    public MockOverdueStatesBundle(final DefaultOverdueState<SubscriptionBundle>[] states) {
+        setBundleOverdueStates(states);
     }
 
 }

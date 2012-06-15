@@ -18,7 +18,7 @@ package com.ning.billing.entitlement.events.user;
 
 public class ApiEventUncancel extends ApiEventBase {
 
-    public ApiEventUncancel(ApiEventBuilder builder) {
+    public ApiEventUncancel(final ApiEventBuilder builder) {
         super(builder.setEventType(ApiEventType.UNCANCEL));
     }
 }

@@ -23,24 +23,24 @@ import com.ning.billing.util.clock.Clock;
 public class NoOpPaymentProviderPluginProvider implements Provider<DefaultNoOpPaymentProviderPlugin> {
 
     private final String instanceName;
-    
+
     private Clock clock;
     private PaymentProviderPluginRegistry registry;
-    
-    public NoOpPaymentProviderPluginProvider(String instanceName) {
+
+    public NoOpPaymentProviderPluginProvider(final String instanceName) {
         this.instanceName = instanceName;
 
     }
 
     @Inject
-    public void setPaymentProviderPluginRegistry(PaymentProviderPluginRegistry registry, Clock clock) {
+    public void setPaymentProviderPluginRegistry(final PaymentProviderPluginRegistry registry, final Clock clock) {
         this.clock = clock;
         this.registry = registry;
     }
 
     @Override
     public DefaultNoOpPaymentProviderPlugin get() {
-        DefaultNoOpPaymentProviderPlugin plugin = new DefaultNoOpPaymentProviderPlugin(clock);
+        final DefaultNoOpPaymentProviderPlugin plugin = new DefaultNoOpPaymentProviderPlugin(clock);
 
         registry.register(plugin, instanceName);
         return plugin;

@@ -20,7 +20,7 @@ import com.google.inject.Inject;
 
 public class DefaultCatalogTranslator extends DefaultTranslatorBase {
     @Inject
-    public DefaultCatalogTranslator(TranslatorConfig config) {
+    public DefaultCatalogTranslator(final TranslatorConfig config) {
         super(config);
     }
 

@@ -46,52 +46,53 @@ public class DefaultJunctionModule extends AbstractModule implements JunctionMod
         installBillingApi();
         installEntitlementUserApi();
         installBlockingChecker();
-        
+
         // Internal
         installBlockingCalculator();
         installBlockingStateDao();
-     }
+    }
 
     public void installBlockingChecker() {
         bind(BlockingChecker.class).to(DefaultBlockingChecker.class).asEagerSingleton();
-        
+
     }
 
     public void installBillingApi() {
         bind(BillingApi.class).to(DefaultBillingApi.class).asEagerSingleton();
     }
-    
+
     public void installBlockingStateDao() {
         bind(BlockingStateDao.class).toProvider(BlockingDaoProvider.class);
     }
-    
+
     public void installAccountUserApi() {
         bind(AccountUserApi.class).to(BlockingAccountUserApi.class).asEagerSingleton();
     }
-    
+
     public void installEntitlementUserApi() {
         bind(EntitlementUserApi.class).to(BlockingEntitlementUserApi.class).asEagerSingleton();
     }
-    
+
     public void installBlockingApi() {
         bind(BlockingApi.class).to(DefaultBlockingApi.class).asEagerSingleton();
     }
-    
+
     public void installBlockingCalculator() {
         bind(BlockingCalculator.class).asEagerSingleton();
     }
 
-    public static class BlockingDaoProvider implements Provider<BlockingStateDao>{        
-        private IDBI dbi;
+    public static class BlockingDaoProvider implements Provider<BlockingStateDao> {
+        private final IDBI dbi;
 
 
         @Inject
-        public BlockingDaoProvider(IDBI dbi){
+        public BlockingDaoProvider(final IDBI dbi) {
             this.dbi = dbi;
         }
+
         @Override
         public BlockingStateDao get() {
             return dbi.onDemand(BlockingStateSqlDao.class);
-        }   
+        }
     }
 }

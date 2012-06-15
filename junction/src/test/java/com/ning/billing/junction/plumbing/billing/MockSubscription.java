@@ -41,20 +41,20 @@ public class MockSubscription implements Subscription {
         return sub.getId();
     }
 
-    public boolean cancel(DateTime requestedDate, boolean eot, CallContext context) throws EntitlementUserApiException {
+    public boolean cancel(final DateTime requestedDate, final boolean eot, final CallContext context) throws EntitlementUserApiException {
         return sub.cancel(requestedDate, eot, context);
     }
 
-    public boolean uncancel(CallContext context) throws EntitlementUserApiException {
+    public boolean uncancel(final CallContext context) throws EntitlementUserApiException {
         return sub.uncancel(context);
     }
 
-    public boolean changePlan(String productName, BillingPeriod term, String planSet, DateTime requestedDate,
-            CallContext context) throws EntitlementUserApiException {
+    public boolean changePlan(final String productName, final BillingPeriod term, final String planSet, final DateTime requestedDate,
+                              final CallContext context) throws EntitlementUserApiException {
         return sub.changePlan(productName, term, planSet, requestedDate, context);
     }
 
-    public boolean recreate(PlanPhaseSpecifier spec, DateTime requestedDate, CallContext context)
+    public boolean recreate(final PlanPhaseSpecifier spec, final DateTime requestedDate, final CallContext context)
             throws EntitlementUserApiException {
         return sub.recreate(spec, requestedDate, context);
     }
@@ -114,6 +114,6 @@ public class MockSubscription implements Subscription {
     public List<SubscriptionEvent> getBillingTransitions() {
         return sub.getBillingTransitions();
     }
-    
-    
+
+
 }

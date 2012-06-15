@@ -20,8 +20,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import com.ning.billing.util.callcontext.CallContext;
-
 import com.ning.billing.entitlement.api.SubscriptionFactory;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData;
 import com.ning.billing.entitlement.api.timeline.SubscriptionDataRepair;
@@ -30,6 +28,7 @@ import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.events.EntitlementEvent;
+import com.ning.billing.util.callcontext.CallContext;
 
 public interface EntitlementDao {
     // Bundle apis
@@ -62,7 +61,7 @@ public interface EntitlementDao {
     public EntitlementEvent getEventById(final UUID eventId);
 
     public Map<UUID, List<EntitlementEvent>> getEventsForBundle(final UUID bundleId);
-    
+
     public List<EntitlementEvent> getEventsForSubscription(final UUID subscriptionId);
 
     public List<EntitlementEvent> getPendingEventsForSubscription(final UUID subscriptionId);
@@ -73,7 +72,7 @@ public interface EntitlementDao {
     public void recreateSubscription(final UUID subscriptionId, final List<EntitlementEvent> recreateEvents, final CallContext context);
 
     public void cancelSubscription(final UUID subscriptionId, final EntitlementEvent cancelEvent, final CallContext context, final int cancelSeq);
-    
+
     public void uncancelSubscription(final UUID subscriptionId, final List<EntitlementEvent> uncancelEvents, final CallContext context);
 
     public void changePlan(final UUID subscriptionId, final List<EntitlementEvent> changeEvents, final CallContext context);

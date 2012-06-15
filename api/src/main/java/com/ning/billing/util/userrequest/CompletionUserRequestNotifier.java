@@ -20,6 +20,6 @@ import com.ning.billing.util.bus.BusEvent;
 public interface CompletionUserRequestNotifier {
 
     public void notifyForCompletion();
-    
+
     public void onBusEvent(BusEvent curEvent);
 }

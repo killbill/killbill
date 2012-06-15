@@ -24,13 +24,11 @@ import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.entitlement.api.timeline.BundleTimeline;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.payment.api.Payment;
-import com.ning.billing.payment.api.Payment.PaymentAttempt;
 import com.ning.billing.payment.api.PaymentStatus;
 
 public class AccountTimelineJson {
@@ -38,7 +36,7 @@ public class AccountTimelineJson {
     private final List<PaymentJsonWithBundleKeys> payments;
 
     private final List<InvoiceJsonWithBundleKeys> invoices;
-    
+
     private final AccountJsonSimple account;
 
 
@@ -106,16 +104,16 @@ public class AccountTimelineJson {
         }
 
         this.payments = new LinkedList<PaymentJsonWithBundleKeys>();
-        for (Payment cur : payments) {
-        
-            String status = cur.getPaymentStatus().toString();
-            BigDecimal paidAmount = cur.getPaymentStatus() == PaymentStatus.SUCCESS ? cur.getAmount() : BigDecimal.ZERO;
+        for (final Payment cur : payments) {
+
+            final String status = cur.getPaymentStatus().toString();
+            final BigDecimal paidAmount = cur.getPaymentStatus() == PaymentStatus.SUCCESS ? cur.getAmount() : BigDecimal.ZERO;
             this.payments.add(new PaymentJsonWithBundleKeys(cur.getAmount(), paidAmount, account.getId().toString(),
-                    cur.getInvoiceId().toString(), cur.getId().toString(), 
-                    cur.getEffectiveDate(), cur.getEffectiveDate(),
-                    cur.getAttempts().size(), cur.getCurrency().toString(), status,
-                    getBundleExternalKey(cur.getInvoiceId(), invoices, bundles)));
-          }
+                                                            cur.getInvoiceId().toString(), cur.getId().toString(),
+                                                            cur.getEffectiveDate(), cur.getEffectiveDate(),
+                                                            cur.getAttempts().size(), cur.getCurrency().toString(), status,
+                                                            getBundleExternalKey(cur.getInvoiceId(), invoices, bundles)));
+        }
     }
 
     public AccountTimelineJson() {

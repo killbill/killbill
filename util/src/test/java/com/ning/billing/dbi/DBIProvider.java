@@ -16,31 +16,26 @@
 
 package com.ning.billing.dbi;
 
+import org.skife.jdbi.v2.DBI;
+import org.skife.jdbi.v2.IDBI;
+import org.skife.jdbi.v2.logging.Log4JLog;
+import org.skife.jdbi.v2.tweak.SQLLog;
+
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.jolbox.bonecp.BoneCPConfig;
 import com.jolbox.bonecp.BoneCPDataSource;
-import org.skife.jdbi.v2.DBI;
-import org.skife.jdbi.v2.IDBI;
-import org.skife.jdbi.v2.TimingCollector;
-import org.skife.jdbi.v2.logging.Log4JLog;
-import org.skife.jdbi.v2.tweak.SQLLog;
 
-import java.util.concurrent.TimeUnit;
-
-public class DBIProvider implements Provider<IDBI>
-{
+public class DBIProvider implements Provider<IDBI> {
     private final DbiConfig config;
 
     @Inject
-    public DBIProvider(final DbiConfig config)
-    {
+    public DBIProvider(final DbiConfig config) {
         this.config = config;
     }
 
     @Override
-    public IDBI get()
-    {
+    public IDBI get() {
         final BoneCPConfig dbConfig = new BoneCPConfig();
         dbConfig.setJdbcUrl(config.getJdbcUrl());
         dbConfig.setUsername(config.getUsername());

@@ -21,19 +21,19 @@ import com.ning.billing.analytics.BusinessAccount;
 public class MockBusinessAccountDao implements BusinessAccountDao {
 
     @Override
-    public BusinessAccount getAccount(String key) {
+    public BusinessAccount getAccount(final String key) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public int createAccount(BusinessAccount account) {
+    public int createAccount(final BusinessAccount account) {
         // TODO Auto-generated method stub
         return 0;
     }
 
     @Override
-    public int saveAccount(BusinessAccount account) {
+    public int saveAccount(final BusinessAccount account) {
         // TODO Auto-generated method stub
         return 0;
     }

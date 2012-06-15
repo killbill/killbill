@@ -28,33 +28,33 @@ import com.ning.billing.junction.api.BillingEventSet;
 public class DefaultBillingEventSet extends TreeSet<BillingEvent> implements SortedSet<BillingEvent>, BillingEventSet {
     private static final long serialVersionUID = 1L;
 
-    private boolean    accountAutoInvoiceOff           = false;
+    private boolean accountAutoInvoiceOff = false;
     private List<UUID> subscriptionIdsWithAutoInvoiceOff = new ArrayList<UUID>();
-    
+
     /* (non-Javadoc)
-     * @see com.ning.billing.junction.plumbing.billing.BillingEventSet#isAccountAutoInvoiceOff()
-     */
+    * @see com.ning.billing.junction.plumbing.billing.BillingEventSet#isAccountAutoInvoiceOff()
+    */
     @Override
     public boolean isAccountAutoInvoiceOff() {
         return accountAutoInvoiceOff;
     }
-    
+
     /* (non-Javadoc)
-     * @see com.ning.billing.junction.plumbing.billing.BillingEventSet#getSubscriptionIdsWithAutoInvoiceOff()
-     */
+    * @see com.ning.billing.junction.plumbing.billing.BillingEventSet#getSubscriptionIdsWithAutoInvoiceOff()
+    */
     @Override
     public List<UUID> getSubscriptionIdsWithAutoInvoiceOff() {
         return subscriptionIdsWithAutoInvoiceOff;
     }
 
-    public void setAccountAutoInvoiceIsOff(boolean accountAutoInvoiceIsOff) {
+    public void setAccountAutoInvoiceIsOff(final boolean accountAutoInvoiceIsOff) {
         this.accountAutoInvoiceOff = accountAutoInvoiceIsOff;
     }
 
-    public void setSubscriptionIdsWithAutoInvoiceOff(List<UUID> subscriptionIdsWithAutoInvoiceOff) {
+    public void setSubscriptionIdsWithAutoInvoiceOff(final List<UUID> subscriptionIdsWithAutoInvoiceOff) {
         this.subscriptionIdsWithAutoInvoiceOff = subscriptionIdsWithAutoInvoiceOff;
     }
-    
+
     public boolean isLast(final BillingEvent event) {
         return last() == event;
     }
@@ -65,7 +65,6 @@ public class DefaultBillingEventSet extends TreeSet<BillingEvent> implements Sor
                 + ", subscriptionIdsWithAutoInvoiceOff=" + subscriptionIdsWithAutoInvoiceOff + ", Events="
                 + super.toString() + "]";
     }
-    
-    
-    
+
+
 }

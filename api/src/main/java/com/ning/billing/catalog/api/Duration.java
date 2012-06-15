@@ -21,9 +21,9 @@ import org.joda.time.Period;
 
 public interface Duration {
 
-	public abstract TimeUnit getUnit();
+    public abstract TimeUnit getUnit();
 
-	public abstract int getNumber();
+    public abstract int getNumber();
 
     public DateTime addToDateTime(DateTime dateTime);
 

@@ -21,10 +21,10 @@ import java.math.BigDecimal;
 
 public interface InternationalPrice {
 
-	public abstract Price[] getPrices();
+    public abstract Price[] getPrices();
 
-	public abstract BigDecimal getPrice(Currency currency) throws CatalogApiException;
+    public abstract BigDecimal getPrice(Currency currency) throws CatalogApiException;
 
-	public abstract boolean isZero();
+    public abstract boolean isZero();
 
 }

@@ -21,7 +21,7 @@ public class DefaultAccountService implements AccountService {
 
     private static final String ACCOUNT_SERVICE_NAME = "account-service";
 
-   @Override
+    @Override
     public String getName() {
         return ACCOUNT_SERVICE_NAME;
     }

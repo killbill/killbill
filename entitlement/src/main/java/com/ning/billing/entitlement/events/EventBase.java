@@ -16,10 +16,11 @@
 
 package com.ning.billing.entitlement.events;
 
-import com.ning.billing.entitlement.events.user.ApiEvent;
+import java.util.UUID;
+
 import org.joda.time.DateTime;
 
-import java.util.UUID;
+import com.ning.billing.entitlement.events.user.ApiEvent;
 
 public abstract class EventBase implements EntitlementEvent {
 
@@ -33,7 +34,7 @@ public abstract class EventBase implements EntitlementEvent {
     private long activeVersion;
     private boolean isActive;
 
-    public EventBase(EventBaseBuilder<?> builder) {
+    public EventBase(final EventBaseBuilder<?> builder) {
         this.totalOrdering = builder.getTotalOrdering();
         this.uuid = builder.getUuid();
         this.subscriptionId = builder.getSubscriptionId();
@@ -102,7 +103,7 @@ public abstract class EventBase implements EntitlementEvent {
     }
 
     @Override
-    public void setActiveVersion(long activeVersion) {
+    public void setActiveVersion(final long activeVersion) {
         this.activeVersion = activeVersion;
     }
 
@@ -122,7 +123,6 @@ public abstract class EventBase implements EntitlementEvent {
     }
 
 
-
     //
     // Really used for unit tests only as the sql implementation relies on date first and then event insertion
     //
@@ -133,7 +133,7 @@ public abstract class EventBase implements EntitlementEvent {
     // - If all that is not enough return consistent by random ordering based on UUID
     //
     @Override
-    public int compareTo(EntitlementEvent other) {
+    public int compareTo(final EntitlementEvent other) {
         if (other == null) {
             throw new NullPointerException("IEvent is compared to a null instance");
         }
@@ -161,11 +161,11 @@ public abstract class EventBase implements EntitlementEvent {
 
 
     @Override
-    public boolean equals(Object other) {
-      if (! (other instanceof EntitlementEvent)) {
-          return false;
-      }
-      return (this.compareTo((EntitlementEvent) other) == 0);
+    public boolean equals(final Object other) {
+        if (!(other instanceof EntitlementEvent)) {
+            return false;
+        }
+        return (this.compareTo((EntitlementEvent) other) == 0);
     }
 
     @Override

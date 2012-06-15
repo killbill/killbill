@@ -18,21 +18,22 @@ package com.ning.billing.util.callcontext;
 
 import java.util.UUID;
 
-import com.ning.billing.util.clock.DefaultClock;
 import org.joda.time.DateTime;
 
+import com.ning.billing.util.clock.DefaultClock;
+
 public class TestCallContext implements CallContext {
-	
+
     private final String userName;
     private final DateTime updatedDate;
     private final DateTime createdDate;
     private final UUID userToken;
-    
-    public TestCallContext(String userName) {
-    	this(userName, new DefaultClock().getUTCNow(), new DefaultClock().getUTCNow());
+
+    public TestCallContext(final String userName) {
+        this(userName, new DefaultClock().getUTCNow(), new DefaultClock().getUTCNow());
     }
 
-    public TestCallContext(String userName, DateTime createdDate, DateTime updatedDate) {
+    public TestCallContext(final String userName, final DateTime createdDate, final DateTime updatedDate) {
         this.userName = userName;
         this.createdDate = createdDate;
         this.updatedDate = updatedDate;
@@ -74,8 +75,8 @@ public class TestCallContext implements CallContext {
         return updatedDate;
     }
 
-	@Override
-	public UUID getUserToken() {
-		return userToken;
-	}
+    @Override
+    public UUID getUserToken() {
+        return userToken;
+    }
 }

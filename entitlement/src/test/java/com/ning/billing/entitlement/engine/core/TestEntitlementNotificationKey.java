@@ -22,24 +22,24 @@ import org.testng.annotations.Test;
 
 public class TestEntitlementNotificationKey {
 
-	@Test(groups="fast")
-	public void testKeyWithSeqId() {
-		UUID id = UUID.randomUUID();
-		int seq = 4;
-		EntitlementNotificationKey input = new EntitlementNotificationKey(id, seq);
-		Assert.assertEquals(id.toString() + ":" + seq, input.toString());
-		EntitlementNotificationKey output = new EntitlementNotificationKey(input.toString());
-		Assert.assertEquals(output, input);
-	}
+    @Test(groups = "fast")
+    public void testKeyWithSeqId() {
+        final UUID id = UUID.randomUUID();
+        final int seq = 4;
+        final EntitlementNotificationKey input = new EntitlementNotificationKey(id, seq);
+        Assert.assertEquals(id.toString() + ":" + seq, input.toString());
+        final EntitlementNotificationKey output = new EntitlementNotificationKey(input.toString());
+        Assert.assertEquals(output, input);
+    }
 
-	@Test(groups="fast")
-	public void testKeyWithoutSeqId() {
-		UUID id = UUID.randomUUID();
-		int seq = 0;
-		EntitlementNotificationKey input = new EntitlementNotificationKey(id, seq);
-		Assert.assertEquals(input.toString(), id.toString());
-		EntitlementNotificationKey output = new EntitlementNotificationKey(input.toString());
-		Assert.assertEquals(output, input);
-	}
+    @Test(groups = "fast")
+    public void testKeyWithoutSeqId() {
+        final UUID id = UUID.randomUUID();
+        final int seq = 0;
+        final EntitlementNotificationKey input = new EntitlementNotificationKey(id, seq);
+        Assert.assertEquals(input.toString(), id.toString());
+        final EntitlementNotificationKey output = new EntitlementNotificationKey(input.toString());
+        Assert.assertEquals(output, input);
+    }
 
 }

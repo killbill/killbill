@@ -16,13 +16,12 @@
 
 package com.ning.billing.overdue.config;
 
-import java.math.BigDecimal;
-import java.net.URI;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
+import java.math.BigDecimal;
+import java.net.URI;
 
 import org.joda.time.DateTime;
 
@@ -40,72 +39,76 @@ import com.ning.billing.util.tag.Tag;
 @XmlAccessorType(XmlAccessType.NONE)
 
 public class DefaultCondition<T extends Blockable> extends ValidatingConfig<OverdueConfig> implements Condition<T> {
-	@XmlElement(required=false, name="numberOfUnpaidInvoicesEqualsOrExceeds")
-	private Integer numberOfUnpaidInvoicesEqualsOrExceeds;
+    @XmlElement(required = false, name = "numberOfUnpaidInvoicesEqualsOrExceeds")
+    private Integer numberOfUnpaidInvoicesEqualsOrExceeds;
 
-	@XmlElement(required=false, name="totalUnpaidInvoiceBalanceEqualsOrExceeds")
-	private BigDecimal totalUnpaidInvoiceBalanceEqualsOrExceeds;
+    @XmlElement(required = false, name = "totalUnpaidInvoiceBalanceEqualsOrExceeds")
+    private BigDecimal totalUnpaidInvoiceBalanceEqualsOrExceeds;
 
-	@XmlElement(required=false, name="timeSinceEarliestUnpaidInvoiceEqualsOrExceeds")
-	private DefaultDuration timeSinceEarliestUnpaidInvoiceEqualsOrExceeds;
+    @XmlElement(required = false, name = "timeSinceEarliestUnpaidInvoiceEqualsOrExceeds")
+    private DefaultDuration timeSinceEarliestUnpaidInvoiceEqualsOrExceeds;
 
-	@XmlElementWrapper(required=false, name="responseForLastFailedPaymentIn")
-	@XmlElement(required=false, name="response")
-	private PaymentResponse[] responseForLastFailedPayment;
+    @XmlElementWrapper(required = false, name = "responseForLastFailedPaymentIn")
+    @XmlElement(required = false, name = "response")
+    private PaymentResponse[] responseForLastFailedPayment;
 
-	@XmlElement(required=false, name="controlTag")
-	private ControlTagType controlTag;
-	
-	/* (non-Javadoc)
-     * @see com.ning.billing.catalog.overdue.Condition#evaluate(com.ning.billing.catalog.api.overdue.BillingState, org.joda.time.DateTime)
-     */
-	@Override
-    public boolean evaluate(BillingState<T> state, DateTime now) {
-	    DateTime unpaidInvoiceTriggerDate = null;
-	    if( timeSinceEarliestUnpaidInvoiceEqualsOrExceeds != null && state.getDateOfEarliestUnpaidInvoice() != null) {  // no date => no unpaid invoices
-	        unpaidInvoiceTriggerDate = state.getDateOfEarliestUnpaidInvoice().plus(timeSinceEarliestUnpaidInvoiceEqualsOrExceeds.toJodaPeriod());
-	    }
-        
-		return 
-				(numberOfUnpaidInvoicesEqualsOrExceeds == null || state.getNumberOfUnpaidInvoices() >= numberOfUnpaidInvoicesEqualsOrExceeds.intValue() ) &&
-				(totalUnpaidInvoiceBalanceEqualsOrExceeds == null || totalUnpaidInvoiceBalanceEqualsOrExceeds.compareTo(state.getBalanceOfUnpaidInvoices()) <= 0) &&
-				(timeSinceEarliestUnpaidInvoiceEqualsOrExceeds == null ||
-				    (unpaidInvoiceTriggerDate != null && !unpaidInvoiceTriggerDate.isAfter(now))) &&
-				(responseForLastFailedPayment == null || responseIsIn(state.getResponseForLastFailedPayment(), responseForLastFailedPayment)) &&
-				(controlTag == null || isTagIn(controlTag, state.getTags()));
-	}
-	
-	private boolean responseIsIn(PaymentResponse actualResponse,
-			PaymentResponse[] responseForLastFailedPayment) {
-		for(PaymentResponse response: responseForLastFailedPayment) {
-			if(response.equals(actualResponse)) return true;
-		}
-		return false;
-	}
+    @XmlElement(required = false, name = "controlTag")
+    private ControlTagType controlTag;
 
-	private boolean isTagIn(ControlTagType tag, Tag[] tags) {
-		for(Tag t : tags) {
-			if (t.getTagDefinitionName().equals(tag.toString())) return true;
-		}
-		return false;
-	}
+    /* (non-Javadoc)
+    * @see com.ning.billing.catalog.overdue.Condition#evaluate(com.ning.billing.catalog.api.overdue.BillingState, org.joda.time.DateTime)
+    */
+    @Override
+    public boolean evaluate(final BillingState<T> state, final DateTime now) {
+        DateTime unpaidInvoiceTriggerDate = null;
+        if (timeSinceEarliestUnpaidInvoiceEqualsOrExceeds != null && state.getDateOfEarliestUnpaidInvoice() != null) {  // no date => no unpaid invoices
+            unpaidInvoiceTriggerDate = state.getDateOfEarliestUnpaidInvoice().plus(timeSinceEarliestUnpaidInvoiceEqualsOrExceeds.toJodaPeriod());
+        }
 
-	@Override
-	public ValidationErrors validate(OverdueConfig root,
-			ValidationErrors errors) {
-		return errors;
-	}
+        return
+                (numberOfUnpaidInvoicesEqualsOrExceeds == null || state.getNumberOfUnpaidInvoices() >= numberOfUnpaidInvoicesEqualsOrExceeds.intValue()) &&
+                        (totalUnpaidInvoiceBalanceEqualsOrExceeds == null || totalUnpaidInvoiceBalanceEqualsOrExceeds.compareTo(state.getBalanceOfUnpaidInvoices()) <= 0) &&
+                        (timeSinceEarliestUnpaidInvoiceEqualsOrExceeds == null ||
+                                (unpaidInvoiceTriggerDate != null && !unpaidInvoiceTriggerDate.isAfter(now))) &&
+                        (responseForLastFailedPayment == null || responseIsIn(state.getResponseForLastFailedPayment(), responseForLastFailedPayment)) &&
+                        (controlTag == null || isTagIn(controlTag, state.getTags()));
+    }
 
-	@Override
-	public void initialize(OverdueConfig root, URI uri) {
-	}
+    private boolean responseIsIn(final PaymentResponse actualResponse,
+                                 final PaymentResponse[] responseForLastFailedPayment) {
+        for (final PaymentResponse response : responseForLastFailedPayment) {
+            if (response.equals(actualResponse)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isTagIn(final ControlTagType tag, final Tag[] tags) {
+        for (final Tag t : tags) {
+            if (t.getTagDefinitionName().equals(tag.toString())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public ValidationErrors validate(final OverdueConfig root,
+                                     final ValidationErrors errors) {
+        return errors;
+    }
+
+    @Override
+    public void initialize(final OverdueConfig root, final URI uri) {
+    }
 
     public Duration getTimeOffset() {
         if (timeSinceEarliestUnpaidInvoiceEqualsOrExceeds != null) {
             return timeSinceEarliestUnpaidInvoiceEqualsOrExceeds;
-        } else { 
+        } else {
             return new DefaultDuration().setUnit(TimeUnit.DAYS).setNumber(0); // zero time
         }
-        
+
     }
 }

@@ -42,195 +42,194 @@ import com.ning.billing.catalog.rules.CaseCreateAlignment;
 import com.ning.billing.catalog.rules.PlanRules;
 
 public class MockCatalog extends StandaloneCatalog implements Catalog {
-	private static final String[] PRODUCT_NAMES = new String[]{ "TestProduct1", "TestProduct2", "TestProduct3"};
+    private static final String[] PRODUCT_NAMES = new String[]{"TestProduct1", "TestProduct2", "TestProduct3"};
     private boolean canCreatePlan;
     private PlanChangeResult planChange;
     private BillingAlignment billingAlignment;
     private PlanAlignmentCreate planCreateAlignment;
-	
-	public MockCatalog() {
-		setEffectiveDate(new Date());
-		setProducts(MockProduct.createAll());
-		setPlans((DefaultPlan[])MockPlan.createAll());
-		populateRules();
-		populatePriceLists();
-	}
 
-    public void populateRules(){
-		setPlanRules(new PlanRules());
-	}
+    public MockCatalog() {
+        setEffectiveDate(new Date());
+        setProducts(MockProduct.createAll());
+        setPlans((DefaultPlan[]) MockPlan.createAll());
+        populateRules();
+        populatePriceLists();
+    }
 
-	public void setRules( 
-			CaseChangePlanPolicy[] caseChangePlanPolicy,
-			CaseChangePlanAlignment[] caseChangePlanAlignment,
-			CaseCancelPolicy[] caseCancelPolicy,
-			CaseCreateAlignment[] caseCreateAlignment
-			){
-		
-	}
-	
-	
+    public void populateRules() {
+        setPlanRules(new PlanRules());
+    }
 
-	public void populatePriceLists() {
-		DefaultPlan[] plans = getCurrentPlans();
-		
-		DefaultPriceList[] priceList = new DefaultPriceList[plans.length - 1];
-		for(int i = 1; i < plans.length; i++) {
-			priceList[i-1] = new DefaultPriceList(new DefaultPlan[]{plans[i]},plans[i].getName()+ "-pl");
-		}
-		
-		DefaultPriceListSet set = new DefaultPriceListSet(new PriceListDefault(new DefaultPlan[]{plans[0]}),priceList);
-		setPriceLists(set);
-	}
-	
-	public String[] getProductNames() {
-		return PRODUCT_NAMES;
-	}
+    public void setRules(
+            final CaseChangePlanPolicy[] caseChangePlanPolicy,
+            final CaseChangePlanAlignment[] caseChangePlanAlignment,
+            final CaseCancelPolicy[] caseCancelPolicy,
+            final CaseCreateAlignment[] caseCreateAlignment
+                        ) {
+
+    }
+
+
+    public void populatePriceLists() {
+        final DefaultPlan[] plans = getCurrentPlans();
+
+        final DefaultPriceList[] priceList = new DefaultPriceList[plans.length - 1];
+        for (int i = 1; i < plans.length; i++) {
+            priceList[i - 1] = new DefaultPriceList(new DefaultPlan[]{plans[i]}, plans[i].getName() + "-pl");
+        }
+
+        final DefaultPriceListSet set = new DefaultPriceListSet(new PriceListDefault(new DefaultPlan[]{plans[0]}), priceList);
+        setPriceLists(set);
+    }
+
+    public String[] getProductNames() {
+        return PRODUCT_NAMES;
+    }
 
     @Override
-    public Currency[] getSupportedCurrencies(DateTime requestedDate) throws CatalogApiException {
+    public Currency[] getSupportedCurrencies(final DateTime requestedDate) throws CatalogApiException {
         return getCurrentSupportedCurrencies();
     }
 
     @Override
-    public Product[] getProducts(DateTime requestedDate) throws CatalogApiException {
-       return getCurrentProducts();
+    public Product[] getProducts(final DateTime requestedDate) throws CatalogApiException {
+        return getCurrentProducts();
     }
 
     @Override
-    public Plan[] getPlans(DateTime requestedDate) throws CatalogApiException {
+    public Plan[] getPlans(final DateTime requestedDate) throws CatalogApiException {
         return getCurrentPlans();
     }
 
     @Override
-    public Plan findPlan(String name, DateTime requestedDate) throws CatalogApiException {
+    public Plan findPlan(final String name, final DateTime requestedDate) throws CatalogApiException {
         return findCurrentPlan(name);
     }
 
     @Override
-    public Plan findPlan(String productName, BillingPeriod term, String priceListName, DateTime requestedDate)
+    public Plan findPlan(final String productName, final BillingPeriod term, final String priceListName, final DateTime requestedDate)
             throws CatalogApiException {
         return findCurrentPlan(productName, term, priceListName);
     }
 
     @Override
-    public Plan findPlan(String name, DateTime effectiveDate, DateTime subscriptionStartDate)
+    public Plan findPlan(final String name, final DateTime effectiveDate, final DateTime subscriptionStartDate)
             throws CatalogApiException {
         return findCurrentPlan(name);
     }
 
     @Override
-    public Plan findPlan(String productName, BillingPeriod term, String priceListName, DateTime requestedDate,
-            DateTime subscriptionStartDate) throws CatalogApiException {
-       return findCurrentPlan(productName, term, priceListName);
+    public Plan findPlan(final String productName, final BillingPeriod term, final String priceListName, final DateTime requestedDate,
+                         final DateTime subscriptionStartDate) throws CatalogApiException {
+        return findCurrentPlan(productName, term, priceListName);
     }
-    
+
     @Override
-    public Product findProduct(String name, DateTime requestedDate) throws CatalogApiException {
+    public Product findProduct(final String name, final DateTime requestedDate) throws CatalogApiException {
         return findCurrentProduct(name);
     }
 
     @Override
-    public PlanPhase findPhase(String name, DateTime requestedDate, DateTime subscriptionStartDate)
+    public PlanPhase findPhase(final String name, final DateTime requestedDate, final DateTime subscriptionStartDate)
             throws CatalogApiException {
         return findCurrentPhase(name);
     }
 
     @Override
-    public PriceList findPriceList(String name, DateTime requestedDate) throws CatalogApiException {
+    public PriceList findPriceList(final String name, final DateTime requestedDate) throws CatalogApiException {
         return findCurrentPricelist(name);
     }
 
     @Override
-    public ActionPolicy planChangePolicy(PlanPhaseSpecifier from, PlanSpecifier to, DateTime requestedDate)
+    public ActionPolicy planChangePolicy(final PlanPhaseSpecifier from, final PlanSpecifier to, final DateTime requestedDate)
             throws CatalogApiException {
         return planChangePolicy(from, to);
     }
 
     @Override
-    public PlanChangeResult planChange(PlanPhaseSpecifier from, PlanSpecifier to, DateTime requestedDate)
+    public PlanChangeResult planChange(final PlanPhaseSpecifier from, final PlanSpecifier to, final DateTime requestedDate)
             throws CatalogApiException {
         return planChange(from, to);
     }
 
     @Override
-    public ActionPolicy planCancelPolicy(PlanPhaseSpecifier planPhase, DateTime requestedDate)
+    public ActionPolicy planCancelPolicy(final PlanPhaseSpecifier planPhase, final DateTime requestedDate)
             throws CatalogApiException {
         return planCancelPolicy(planPhase);
     }
 
     @Override
-    public PlanAlignmentCreate planCreateAlignment(PlanSpecifier specifier, DateTime requestedDate)
+    public PlanAlignmentCreate planCreateAlignment(final PlanSpecifier specifier, final DateTime requestedDate)
             throws CatalogApiException {
-        return planCreateAlignment(specifier);  
+        return planCreateAlignment(specifier);
     }
 
     @Override
-    public BillingAlignment billingAlignment(PlanPhaseSpecifier planPhase, DateTime requestedDate)
+    public BillingAlignment billingAlignment(final PlanPhaseSpecifier planPhase, final DateTime requestedDate)
             throws CatalogApiException {
         return billingAlignment(planPhase);
     }
 
     @Override
-    public PlanAlignmentChange planChangeAlignment(PlanPhaseSpecifier from, PlanSpecifier to, DateTime requestedDate)
+    public PlanAlignmentChange planChangeAlignment(final PlanPhaseSpecifier from, final PlanSpecifier to, final DateTime requestedDate)
             throws CatalogApiException {
         return planChangeAlignment(from, to);
     }
 
     @Override
-    public boolean canCreatePlan(PlanSpecifier specifier, DateTime requestedDate) throws CatalogApiException {
+    public boolean canCreatePlan(final PlanSpecifier specifier, final DateTime requestedDate) throws CatalogApiException {
         return canCreatePlan(specifier);
     }
 
     @Override
-    public ActionPolicy planChangePolicy(PlanPhaseSpecifier from, PlanSpecifier to) throws CatalogApiException {
+    public ActionPolicy planChangePolicy(final PlanPhaseSpecifier from, final PlanSpecifier to) throws CatalogApiException {
         return super.planChangePolicy(from, to);
     }
 
     @Override
-    public PlanAlignmentChange planChangeAlignment(PlanPhaseSpecifier from, PlanSpecifier to)
+    public PlanAlignmentChange planChangeAlignment(final PlanPhaseSpecifier from, final PlanSpecifier to)
             throws CatalogApiException {
         return super.planChangeAlignment(from, to);
     }
 
     @Override
-    public ActionPolicy planCancelPolicy(PlanPhaseSpecifier planPhase) throws CatalogApiException {
+    public ActionPolicy planCancelPolicy(final PlanPhaseSpecifier planPhase) throws CatalogApiException {
         return super.planCancelPolicy(planPhase);
     }
 
     @Override
-    public PlanAlignmentCreate planCreateAlignment(PlanSpecifier specifier) throws CatalogApiException {
+    public PlanAlignmentCreate planCreateAlignment(final PlanSpecifier specifier) throws CatalogApiException {
         return planCreateAlignment;
     }
 
     @Override
-    public BillingAlignment billingAlignment(PlanPhaseSpecifier planPhase) throws CatalogApiException {
+    public BillingAlignment billingAlignment(final PlanPhaseSpecifier planPhase) throws CatalogApiException {
         return billingAlignment;
     }
 
     @Override
-    public PlanChangeResult planChange(PlanPhaseSpecifier from, PlanSpecifier to) throws CatalogApiException {
+    public PlanChangeResult planChange(final PlanPhaseSpecifier from, final PlanSpecifier to) throws CatalogApiException {
         return planChange;
     }
 
     @Override
-    public boolean canCreatePlan(PlanSpecifier specifier) throws CatalogApiException {
+    public boolean canCreatePlan(final PlanSpecifier specifier) throws CatalogApiException {
         return canCreatePlan;
     }
 
-    public void setCanCreatePlan(boolean canCreatePlan) {
+    public void setCanCreatePlan(final boolean canCreatePlan) {
         this.canCreatePlan = canCreatePlan;
     }
 
-    public void setPlanChange(PlanChangeResult planChange) {
+    public void setPlanChange(final PlanChangeResult planChange) {
         this.planChange = planChange;
     }
 
-    public void setBillingAlignment(BillingAlignment billingAlignment) {
+    public void setBillingAlignment(final BillingAlignment billingAlignment) {
         this.billingAlignment = billingAlignment;
     }
 
-    public void setPlanCreateAlignment(PlanAlignmentCreate planCreateAlignment) {
+    public void setPlanCreateAlignment(final PlanAlignmentCreate planCreateAlignment) {
         this.planCreateAlignment = planCreateAlignment;
     }
 

@@ -20,7 +20,8 @@ import com.ning.billing.lifecycle.KillbillService;
 
 public interface CatalogService extends KillbillService {
 
-	public abstract Catalog getFullCatalog();
-	public abstract StaticCatalog getCurrentCatalog();
+    public abstract Catalog getFullCatalog();
+
+    public abstract StaticCatalog getCurrentCatalog();
 
 }

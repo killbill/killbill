@@ -25,8 +25,8 @@ public class ColumnInfo {
     private final int maximumLength;
     private final String dataType;
 
-    public ColumnInfo(String tableName, String columnName, int scale, int precision,
-                      boolean nullable, int maximumLength, String dataType) {
+    public ColumnInfo(final String tableName, final String columnName, final int scale, final int precision,
+                      final boolean nullable, final int maximumLength, final String dataType) {
         this.tableName = tableName;
         this.columnName = columnName;
         this.scale = scale;

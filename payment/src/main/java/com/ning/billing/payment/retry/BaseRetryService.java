@@ -34,32 +34,31 @@ import com.ning.billing.util.notificationq.NotificationQueueService.Notification
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
 
 public abstract class BaseRetryService implements RetryService {
-    
+
     private static final Logger log = LoggerFactory.getLogger(BaseRetryService.class);
-    
+
     private final NotificationQueueService notificationQueueService;
-    private final Clock clock;
     private final PaymentConfig config;
-    
+
     private NotificationQueue retryQueue;
-    
+
     public BaseRetryService(final NotificationQueueService notificationQueueService,
-            final Clock clock, final PaymentConfig config) {
+                            final Clock clock, final PaymentConfig config) {
         this.notificationQueueService = notificationQueueService;
-        this.clock = clock;
+        final Clock clock1 = clock;
         this.config = config;
     }
-   
+
 
     @Override
     public void initialize(final String svcName) throws NotificationQueueAlreadyExists {
         retryQueue = notificationQueueService.createNotificationQueue(svcName, getQueueName(), new NotificationQueueHandler() {
             @Override
-            public void handleReadyNotification(String notificationKey, DateTime eventDateTime) {
+            public void handleReadyNotification(final String notificationKey, final DateTime eventDateTime) {
                 retry(UUID.fromString(notificationKey));
             }
         },
-        config);
+                                                                      config);
     }
 
     @Override
@@ -74,27 +73,27 @@ public abstract class BaseRetryService implements RetryService {
             notificationQueueService.deleteNotificationQueue(retryQueue.getServiceName(), retryQueue.getQueueName());
         }
     }
-    
+
     public abstract String getQueueName();
-    
-    
+
+
     public abstract static class RetryServiceScheduler {
-        
+
         private final NotificationQueueService notificationQueueService;
-        
+
         @Inject
         public RetryServiceScheduler(final NotificationQueueService notificationQueueService) {
             this.notificationQueueService = notificationQueueService;
         }
-    
+
         public boolean scheduleRetryFromTransaction(final UUID paymentId, final DateTime timeOfRetry, final Transmogrifier transactionalDao) {
             return scheduleRetryInternal(paymentId, timeOfRetry, transactionalDao);
         }
-        
+
         public boolean scheduleRetry(final UUID paymentId, final DateTime timeOfRetry) {
             return scheduleRetryInternal(paymentId, timeOfRetry, null);
         }
-        
+
         // STEPH TimedoutPaymentRetryServiceScheduler
         public void cancelAllScheduleRetryForKey(final UUID paymentId) {
             /*
@@ -112,12 +111,12 @@ public abstract class BaseRetryService implements RetryService {
             }
             */
         }
-        
+
         private boolean scheduleRetryInternal(final UUID paymentId, final DateTime timeOfRetry, final Transmogrifier transactionalDao) {
 
             try {
-                NotificationQueue retryQueue = notificationQueueService.getNotificationQueue(DefaultPaymentService.SERVICE_NAME, getQueueName());
-                NotificationKey key = new NotificationKey() {
+                final NotificationQueue retryQueue = notificationQueueService.getNotificationQueue(DefaultPaymentService.SERVICE_NAME, getQueueName());
+                final NotificationKey key = new NotificationKey() {
                     @Override
                     public String toString() {
                         return paymentId.toString();
@@ -136,6 +135,7 @@ public abstract class BaseRetryService implements RetryService {
             }
             return true;
         }
+
         public abstract String getQueueName();
     }
 }

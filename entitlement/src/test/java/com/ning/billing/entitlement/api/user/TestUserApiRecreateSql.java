@@ -31,13 +31,13 @@ public class TestUserApiRecreateSql extends TestUserApiRecreate {
     }
 
     @Override
-    @Test(enabled=true, groups={"slow"})
+    @Test(enabled = true, groups = {"slow"})
     protected void testRecreateWithBPCanceledThroughSubscription() {
         super.testRecreateWithBPCanceledThroughSubscription();
     }
 
     @Override
-    @Test(enabled=true, groups={"slow"})
+    @Test(enabled = true, groups = {"slow"})
     protected void testCreateWithBPCanceledFromUserApi() {
         super.testRecreateWithBPCanceledThroughSubscription();
     }

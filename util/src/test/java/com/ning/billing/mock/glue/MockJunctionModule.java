@@ -25,11 +25,11 @@ import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 
 public class MockJunctionModule extends AbstractModule implements JunctionModule {
-    private BillingApi billingApi = BrainDeadProxyFactory.createBrainDeadProxyFor(BillingApi.class);
-    private BlockingApi blockingApi = BrainDeadProxyFactory.createBrainDeadProxyFor(BlockingApi.class);
-    private AccountUserApi userApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
-    private EntitlementUserApi entUserApi = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementUserApi.class);
-    
+    private final BillingApi billingApi = BrainDeadProxyFactory.createBrainDeadProxyFor(BillingApi.class);
+    private final BlockingApi blockingApi = BrainDeadProxyFactory.createBrainDeadProxyFor(BlockingApi.class);
+    private final AccountUserApi userApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
+    private final EntitlementUserApi entUserApi = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementUserApi.class);
+
     @Override
     protected void configure() {
         installBlockingApi();
@@ -42,18 +42,18 @@ public class MockJunctionModule extends AbstractModule implements JunctionModule
     public void installBillingApi() {
         bind(BillingApi.class).toInstance(billingApi);
     }
-    
-    
+
+
     @Override
     public void installAccountUserApi() {
         bind(AccountUserApi.class).toInstance(userApi);
     }
-    
+
     @Override
     public void installBlockingApi() {
         bind(BlockingApi.class).toInstance(blockingApi);
     }
-    
+
     @Override
     public void installEntitlementUserApi() {
         bind(EntitlementUserApi.class).toInstance(entUserApi);

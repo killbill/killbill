@@ -22,13 +22,12 @@ import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.payment.api.PaymentStatus;
-import com.ning.billing.util.entity.Entity;
 import com.ning.billing.util.entity.EntityBase;
 
 public class PaymentModelDao extends EntityBase {
 
-    public final static Integer INVALID_PAYMENT_NUMBER = new Integer(-13);
-    
+    public static final Integer INVALID_PAYMENT_NUMBER = new Integer(-13);
+
     private final UUID accountId;
     private final UUID invoiceId;
     private final UUID paymentMethodId;
@@ -36,16 +35,16 @@ public class PaymentModelDao extends EntityBase {
     private final Currency currency;
     private final DateTime effectiveDate;
     private final Integer paymentNumber;
-    private final PaymentStatus paymentStatus;    
+    private final PaymentStatus paymentStatus;
 
-    
-    public PaymentModelDao(UUID id, UUID accountId, UUID invoiceId, UUID paymentMethodId,
-            Integer paymentNumber, BigDecimal amount, Currency currency,
-            PaymentStatus paymentStatus, DateTime effectiveDate) {
+
+    public PaymentModelDao(final UUID id, final UUID accountId, final UUID invoiceId, final UUID paymentMethodId,
+                           final Integer paymentNumber, final BigDecimal amount, final Currency currency,
+                           final PaymentStatus paymentStatus, final DateTime effectiveDate) {
         super(id);
         this.accountId = accountId;
         this.invoiceId = invoiceId;
-        this.paymentMethodId = paymentMethodId; 
+        this.paymentMethodId = paymentMethodId;
         this.paymentNumber = paymentNumber;
         this.amount = amount;
         this.currency = currency;
@@ -53,15 +52,16 @@ public class PaymentModelDao extends EntityBase {
         this.effectiveDate = effectiveDate;
     }
 
-    public PaymentModelDao(UUID accountId, UUID invoiceId,
-            BigDecimal amount, Currency currency, DateTime effectiveDate) {
+    public PaymentModelDao(final UUID accountId, final UUID invoiceId,
+                           final BigDecimal amount, final Currency currency, final DateTime effectiveDate) {
         this(UUID.randomUUID(), accountId, invoiceId, null, INVALID_PAYMENT_NUMBER, amount, currency, PaymentStatus.UNKNOWN, effectiveDate);
     }
 
-    public PaymentModelDao(PaymentModelDao src, PaymentStatus newPaymentStatus) {
+    public PaymentModelDao(final PaymentModelDao src, final PaymentStatus newPaymentStatus) {
         this(src.getId(), src.getAccountId(), src.getInvoiceId(), null, src.getPaymentNumber(), src.getAmount(), src.getCurrency(), newPaymentStatus, src.getEffectiveDate())
-;    }
-    
+        ;
+    }
+
     public UUID getAccountId() {
         return accountId;
     }
@@ -73,7 +73,7 @@ public class PaymentModelDao extends EntityBase {
     public UUID getPaymentMethodId() {
         return paymentMethodId;
     }
-    
+
     public Integer getPaymentNumber() {
         return paymentNumber;
     }
@@ -81,7 +81,7 @@ public class PaymentModelDao extends EntityBase {
     public BigDecimal getAmount() {
         return amount;
     }
-    
+
     public PaymentStatus getPaymentStatus() {
         return paymentStatus;
     }
@@ -92,5 +92,5 @@ public class PaymentModelDao extends EntityBase {
 
     public DateTime getEffectiveDate() {
         return effectiveDate;
-    }    
+    }
 }

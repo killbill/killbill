@@ -16,17 +16,11 @@
 
 package com.ning.billing.entitlement.api;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
-
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 import java.util.UUID;
-
-import javax.annotation.Nullable;
 
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
@@ -82,9 +76,14 @@ import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.glue.RealImplementation;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
+
 
 public abstract class TestApiBase implements TestListenerStatus {
-    
+
     protected static final Logger log = LoggerFactory.getLogger(TestApiBase.class);
 
     protected static final long DAY_IN_MS = (24 * 3600 * 1000);
@@ -111,7 +110,7 @@ public abstract class TestApiBase implements TestListenerStatus {
     protected CallContext context = new TestCallContext("Api Test");
 
     private boolean isListenerFailed;
-    private String listenerFailedMsg;    
+    private String listenerFailedMsg;
 
     //
     // The date on which we make our test start; just to ensure that running tests at different dates does not
@@ -120,13 +119,12 @@ public abstract class TestApiBase implements TestListenerStatus {
     protected DateTime testStartDate = new DateTime(2012, 5, 7, 0, 3, 42, 0);
 
 
-    
     public static void loadSystemPropertiesFromClasspath(final String resource) {
         final URL url = TestApiBase.class.getResource(resource);
         assertNotNull(url);
 
         try {
-            System.getProperties().load( url.openStream() );
+            System.getProperties().load(url.openStream());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -146,7 +144,7 @@ public abstract class TestApiBase implements TestListenerStatus {
         }
     }
 
-    
+
     @Override
     public void failed(final String msg) {
         this.isListenerFailed = true;
@@ -158,7 +156,7 @@ public abstract class TestApiBase implements TestListenerStatus {
         this.isListenerFailed = false;
         this.listenerFailedMsg = null;
     }
-    
+
     @BeforeClass(alwaysRun = true)
     public void setup() throws Exception {
 
@@ -166,7 +164,7 @@ public abstract class TestApiBase implements TestListenerStatus {
         final Injector g = getInjector();
 
         entitlementService = g.getInstance(EntitlementService.class);
-        EntitlementUserApi entApi = (EntitlementUserApi)g.getInstance(Key.get(EntitlementUserApi.class, RealImplementation.class));
+        final EntitlementUserApi entApi = (EntitlementUserApi) g.getInstance(Key.get(EntitlementUserApi.class, RealImplementation.class));
         entitlementApi = entApi;
         billingApi = g.getInstance(ChargeThruApi.class);
         migrationApi = g.getInstance(EntitlementMigrationApi.class);
@@ -184,7 +182,7 @@ public abstract class TestApiBase implements TestListenerStatus {
 
         setupDao();
 
-        ((DefaultCatalogService) catalogService).loadCatalog();        
+        ((DefaultCatalogService) catalogService).loadCatalog();
 
         accountData = getAccountData();
         assertNotNull(accountData);
@@ -203,10 +201,10 @@ public abstract class TestApiBase implements TestListenerStatus {
         }
     }
 
-    private static boolean isSqlTest(EntitlementDao theDao) {
-        return (! (theDao instanceof MockEntitlementDaoMemory));
+    private static boolean isSqlTest(final EntitlementDao theDao) {
+        return (!(theDao instanceof MockEntitlementDaoMemory));
     }
-   
+
     @BeforeMethod(alwaysRun = true)
     public void setupTest() throws Exception {
 
@@ -214,53 +212,53 @@ public abstract class TestApiBase implements TestListenerStatus {
 
         // CLEANUP ALL DB TABLES OR IN MEMORY STRUCTURES
         cleanupDao();
-        
+
         // RESET LIST OF EXPECTED EVENTS
         if (testListener != null) {
             testListener.reset();
             resetTestListenerStatus();
         }
-        
+
         // RESET CLOCK
         clock.resetDeltaFromReality();
 
         // START BUS AND REGISTER LISTENER
         busService.getBus().start();
         busService.getBus().register(testListener);
-        
+
         // START NOTIFICATION QUEUE FOR ENTITLEMENT
         ((Engine) entitlementService).initialize();
-        ((Engine)entitlementService).start();
-        
+        ((Engine) entitlementService).start();
+
         // SETUP START DATE
         clock.setDeltaFromReality(testStartDate.getMillis() - clock.getUTCNow().getMillis());
-        
+
         // CREATE NEW BUNDLE FOR TEST
-        UUID accountId = UUID.randomUUID();
+        final UUID accountId = UUID.randomUUID();
         bundle = entitlementApi.createBundleForAccount(accountId, "myDefaultBundle", context);
         assertNotNull(bundle);
     }
 
     @AfterMethod(alwaysRun = true)
     public void cleanupTest() throws Exception {
-        
+
         // UNREGISTER TEST LISTENER AND STOP BUS
         busService.getBus().unregister(testListener);
         busService.getBus().stop();
-        
+
         // STOP NOTIFICATION QUEUE
-        ((Engine)entitlementService).stop();
+        ((Engine) entitlementService).stop();
 
         log.warn("DONE WITH TEST\n");
     }
-    
+
     protected void assertListenerStatus() {
         if (isListenerFailed) {
             log.error(listenerFailedMsg);
             Assert.fail(listenerFailedMsg);
         }
     }
-    
+
     private void cleanupDao() {
         if (helper != null) {
             helper.cleanupAllTables();
@@ -270,29 +268,30 @@ public abstract class TestApiBase implements TestListenerStatus {
     }
 
     protected SubscriptionData createSubscription(final String productName, final BillingPeriod term, final String planSet, final DateTime requestedDate)
-        throws EntitlementUserApiException {
+            throws EntitlementUserApiException {
         return createSubscriptionWithBundle(bundle.getId(), productName, term, planSet, requestedDate);
     }
+
     protected SubscriptionData createSubscription(final String productName, final BillingPeriod term, final String planSet)
-    throws EntitlementUserApiException {
+            throws EntitlementUserApiException {
         return createSubscriptionWithBundle(bundle.getId(), productName, term, planSet, null);
     }
 
     protected SubscriptionData createSubscriptionWithBundle(final UUID bundleId, final String productName, final BillingPeriod term, final String planSet, final DateTime requestedDate)
-        throws EntitlementUserApiException {
-        
+            throws EntitlementUserApiException {
+
         testListener.pushExpectedEvent(NextEvent.CREATE);
-        SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundleId,
-                new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSet, null),
-                requestedDate == null ? clock.getUTCNow() : requestedDate, context);
+        final SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundleId,
+                                                                                             new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSet, null),
+                                                                                             requestedDate == null ? clock.getUTCNow() : requestedDate, context);
         assertNotNull(subscription);
         assertTrue(testListener.isCompleted(5000));
         return subscription;
     }
 
-    protected void checkNextPhaseChange(SubscriptionData subscription, int expPendingEvents, DateTime expPhaseChange) {
+    protected void checkNextPhaseChange(final SubscriptionData subscription, final int expPendingEvents, final DateTime expPhaseChange) {
 
-        List<EntitlementEvent> events = dao.getPendingEventsForSubscription(subscription.getId());
+        final List<EntitlementEvent> events = dao.getPendingEventsForSubscription(subscription.getId());
         assertNotNull(events);
         printEvents(events);
         assertEquals(events.size(), expPendingEvents);
@@ -300,13 +299,13 @@ public abstract class TestApiBase implements TestListenerStatus {
             boolean foundPhase = false;
             boolean foundChange = false;
 
-            for (EntitlementEvent cur : events) {
+            for (final EntitlementEvent cur : events) {
                 if (cur instanceof PhaseEvent) {
                     assertEquals(foundPhase, false);
                     foundPhase = true;
                     assertEquals(cur.getEffectiveDate(), expPhaseChange);
                 } else if (cur instanceof ApiEvent) {
-                    ApiEvent uEvent = (ApiEvent) cur;
+                    final ApiEvent uEvent = (ApiEvent) cur;
                     assertEquals(ApiEventType.CHANGE, uEvent.getEventType());
                     assertEquals(foundChange, false);
                     foundChange = true;
@@ -317,26 +316,28 @@ public abstract class TestApiBase implements TestListenerStatus {
         }
     }
 
-    protected void assertDateWithin(DateTime in, DateTime lower, DateTime upper) {
+    protected void assertDateWithin(final DateTime in, final DateTime lower, final DateTime upper) {
         assertTrue(in.isEqual(lower) || in.isAfter(lower));
         assertTrue(in.isEqual(upper) || in.isBefore(upper));
     }
 
     protected Duration getDurationDay(final int days) {
-        Duration result = new Duration() {
+        final Duration result = new Duration() {
             @Override
             public TimeUnit getUnit() {
                 return TimeUnit.DAYS;
             }
+
             @Override
             public int getNumber() {
                 return days;
             }
 
             @Override
-            public DateTime addToDateTime(DateTime dateTime) {
+            public DateTime addToDateTime(final DateTime dateTime) {
                 return null;
             }
+
             @Override
             public Period toJodaPeriod() {
                 throw new UnsupportedOperationException();
@@ -346,20 +347,22 @@ public abstract class TestApiBase implements TestListenerStatus {
     }
 
     protected Duration getDurationMonth(final int months) {
-        Duration result = new Duration() {
+        final Duration result = new Duration() {
             @Override
             public TimeUnit getUnit() {
                 return TimeUnit.MONTHS;
             }
+
             @Override
             public int getNumber() {
                 return months;
             }
 
             @Override
-            public DateTime addToDateTime(DateTime dateTime) {
+            public DateTime addToDateTime(final DateTime dateTime) {
                 return null;  //To change body of implemented methods use File | Settings | File Templates.
             }
+
             @Override
             public Period toJodaPeriod() {
                 throw new UnsupportedOperationException();
@@ -370,20 +373,22 @@ public abstract class TestApiBase implements TestListenerStatus {
 
 
     protected Duration getDurationYear(final int years) {
-        Duration result = new Duration() {
+        final Duration result = new Duration() {
             @Override
             public TimeUnit getUnit() {
                 return TimeUnit.YEARS;
             }
+
             @Override
             public int getNumber() {
                 return years;
             }
 
             @Override
-            public DateTime addToDateTime(DateTime dateTime) {
-                return dateTime.plusYears(years);  
+            public DateTime addToDateTime(final DateTime dateTime) {
+                return dateTime.plusYears(years);
             }
+
             @Override
             public Period toJodaPeriod() {
                 throw new UnsupportedOperationException();
@@ -393,7 +398,7 @@ public abstract class TestApiBase implements TestListenerStatus {
     }
 
     protected AccountData getAccountData() {
-        AccountData accountData = new AccountData() {
+        final AccountData accountData = new AccountData() {
             @Override
             public String getName() {
                 return "firstName lastName";
@@ -443,6 +448,7 @@ public abstract class TestApiBase implements TestListenerStatus {
             public UUID getPaymentMethodId() {
                 return UUID.randomUUID();
             }
+
             @Override
             public DateTimeZone getTimeZone() {
                 return DateTimeZone.forID("Europe/Paris");
@@ -497,14 +503,14 @@ public abstract class TestApiBase implements TestListenerStatus {
         return new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, priceList, phaseType);
     }
 
-    protected void printEvents(List<EntitlementEvent> events) {
-        for (EntitlementEvent cur : events) {
+    protected void printEvents(final List<EntitlementEvent> events) {
+        for (final EntitlementEvent cur : events) {
             log.debug("Inspect event " + cur);
         }
     }
 
-    protected void printSubscriptionTransitions(List<SubscriptionEvent> transitions) {
-        for (SubscriptionEvent cur : transitions) {
+    protected void printSubscriptionTransitions(final List<SubscriptionEvent> transitions) {
+        for (final SubscriptionEvent cur : transitions) {
             log.debug("Transition " + cur);
         }
     }

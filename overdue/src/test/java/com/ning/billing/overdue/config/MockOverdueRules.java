@@ -21,12 +21,12 @@ import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 
 
 public class MockOverdueRules extends OverdueConfig {
-    public static final String CLEAR_STATE="Clear";
+    public static final String CLEAR_STATE = "Clear";
 
     @SuppressWarnings("unchecked")
     public MockOverdueRules() {
-        OverdueStatesBundle bundleODS =  new OverdueStatesBundle();
-        bundleODS.setBundleOverdueStates(new DefaultOverdueState[] { new DefaultOverdueState<SubscriptionBundle>().setName(CLEAR_STATE) });
+        final OverdueStatesBundle bundleODS = new OverdueStatesBundle();
+        bundleODS.setBundleOverdueStates(new DefaultOverdueState[]{new DefaultOverdueState<SubscriptionBundle>().setName(CLEAR_STATE)});
         setOverdueStatesBundle(bundleODS);
 
     }

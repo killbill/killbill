@@ -16,10 +16,11 @@
 
 package com.ning.billing.entitlement.events;
 
-import com.ning.billing.util.entity.Entity;
+import java.util.UUID;
+
 import org.joda.time.DateTime;
 
-import java.util.UUID;
+import com.ning.billing.util.entity.Entity;
 
 
 public interface EntitlementEvent extends Comparable<EntitlementEvent>, Entity {

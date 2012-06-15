@@ -23,11 +23,11 @@ import com.ning.billing.junction.api.BlockingApiException;
 
 public interface BlockingChecker {
 
-    public void checkBlockedChange(Blockable blockable)  throws BlockingApiException;
+    public void checkBlockedChange(Blockable blockable) throws BlockingApiException;
 
-    public void checkBlockedEntitlement(Blockable blockable)  throws BlockingApiException;
+    public void checkBlockedEntitlement(Blockable blockable) throws BlockingApiException;
 
-    public void checkBlockedBilling(Blockable blockable)  throws BlockingApiException;
+    public void checkBlockedBilling(Blockable blockable) throws BlockingApiException;
 
     public void checkBlockedChange(UUID bundleId, Blockable.Type type) throws BlockingApiException;
 

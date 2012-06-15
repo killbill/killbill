@@ -22,18 +22,18 @@ import com.ning.billing.catalog.api.BillingAlignment;
 
 public class CaseBillingAlignment extends CasePhase<BillingAlignment> {
 
-	@XmlElement(required=true)
-	private BillingAlignment alignment;
+    @XmlElement(required = true)
+    private BillingAlignment alignment;
 
-	@Override
-	protected BillingAlignment getResult() {
-		return alignment;
-	}
+    @Override
+    protected BillingAlignment getResult() {
+        return alignment;
+    }
 
-	protected CaseBillingAlignment setAlignment(BillingAlignment alignment) {
-		this.alignment = alignment;
-		return this;
-	}
-	
-	
+    protected CaseBillingAlignment setAlignment(final BillingAlignment alignment) {
+        this.alignment = alignment;
+        return this;
+    }
+
+
 }

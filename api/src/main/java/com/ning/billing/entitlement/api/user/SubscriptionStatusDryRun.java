@@ -23,17 +23,17 @@ import com.ning.billing.catalog.api.PhaseType;
 public interface SubscriptionStatusDryRun {
 
     public UUID getId();
-    
+
     public String getProductName();
-    
+
     public BillingPeriod getBillingPeriod();
-    
+
     public String getPriceList();
-    
+
     public PhaseType getPhaseType();
 
     public DryRunChangeReason getReason();
-    
+
     public enum DryRunChangeReason {
         AO_INCLUDED_IN_NEW_PLAN,
         AO_NOT_AVAILABLE_IN_NEW_PLAN,

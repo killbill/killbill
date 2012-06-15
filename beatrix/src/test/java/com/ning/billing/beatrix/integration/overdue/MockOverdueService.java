@@ -27,13 +27,13 @@ import com.ning.billing.util.bus.BusService;
 
 public class MockOverdueService extends DefaultOverdueService {
     @Inject
-    public MockOverdueService(OverdueUserApi userApi, OverdueProperties properties, OverdueCheckNotifier notifier,
-            BusService busService, OverdueListener listener, OverdueWrapperFactory factory) {
+    public MockOverdueService(final OverdueUserApi userApi, final OverdueProperties properties, final OverdueCheckNotifier notifier,
+                              final BusService busService, final OverdueListener listener, final OverdueWrapperFactory factory) {
         super(userApi, properties, notifier, busService, listener, factory);
     }
 
     public synchronized void loadConfig() throws ServiceException {
-       
+
     }
- 
+
 }

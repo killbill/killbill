@@ -24,18 +24,19 @@ public class EntitlementRepairException extends BillingExceptionBase {
 
     private static final long serialVersionUID = 19067233L;
 
-    public EntitlementRepairException(EntitlementUserApiException e) {
+    public EntitlementRepairException(final EntitlementUserApiException e) {
         super(e, e.getCode(), e.getMessage());
     }
-    
-    public EntitlementRepairException(CatalogApiException e) {
+
+    public EntitlementRepairException(final CatalogApiException e) {
         super(e, e.getCode(), e.getMessage());
     }
-    public EntitlementRepairException(Throwable e, ErrorCode code, Object...args) {
+
+    public EntitlementRepairException(final Throwable e, final ErrorCode code, final Object... args) {
         super(e, code, args);
     }
 
-    public EntitlementRepairException(ErrorCode code, Object...args) {
+    public EntitlementRepairException(final ErrorCode code, final Object... args) {
         super(code, args);
     }
 }

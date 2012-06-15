@@ -20,7 +20,6 @@ import java.util.SortedSet;
 import java.util.UUID;
 
 import com.ning.billing.junction.api.Blockable;
-import com.ning.billing.junction.api.Blockable.Type;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.util.clock.Clock;
 
@@ -36,6 +35,6 @@ public interface BlockingStateDao {
     public SortedSet<BlockingState> getBlockingHistoryFor(UUID blockableId);
 
     //Write
-    <T extends Blockable> void  setBlockingState(BlockingState state, Clock clock);
+    <T extends Blockable> void setBlockingState(BlockingState state, Clock clock);
 
 } 

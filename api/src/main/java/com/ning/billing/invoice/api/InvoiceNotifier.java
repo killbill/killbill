@@ -16,10 +16,7 @@
 
 package com.ning.billing.invoice.api;
 
-import com.ning.billing.BillingExceptionBase;
 import com.ning.billing.account.api.Account;
-
-import java.io.IOException;
 
 public interface InvoiceNotifier {
     public void notify(Account account, Invoice invoice) throws InvoiceApiException;

@@ -22,8 +22,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-import com.ning.billing.util.dao.AuditSqlDao;
-import com.ning.billing.util.entity.dao.EntitySqlDao;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
@@ -42,13 +40,15 @@ import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextBinder;
+import com.ning.billing.util.dao.AuditSqlDao;
 import com.ning.billing.util.dao.BinderBase;
 import com.ning.billing.util.dao.MapperBase;
+import com.ning.billing.util.entity.dao.EntitySqlDao;
 
 
 @ExternalizedSqlViaStringTemplate3()
 public interface BundleSqlDao extends Transactional<BundleSqlDao>, EntitySqlDao<SubscriptionBundle>,
-                                      AuditSqlDao, CloseMe, Transmogrifier {
+        AuditSqlDao, CloseMe, Transmogrifier {
 
     @SqlUpdate
     public void insertBundle(@Bind(binder = SubscriptionBundleBinder.class) SubscriptionBundleData bundle,
@@ -56,7 +56,7 @@ public interface BundleSqlDao extends Transactional<BundleSqlDao>, EntitySqlDao<
 
     @SqlUpdate
     public void updateBundleLastSysTime(@Bind("id") String id, @Bind("lastSysUpdateDate") Date lastSysUpdate);
-    
+
     @SqlQuery
     @Mapper(ISubscriptionBundleSqlMapper.class)
     public SubscriptionBundle getBundleFromId(@Bind("id") String id);
@@ -71,7 +71,7 @@ public interface BundleSqlDao extends Transactional<BundleSqlDao>, EntitySqlDao<
 
     public static class SubscriptionBundleBinder extends BinderBase implements Binder<Bind, SubscriptionBundleData> {
         @Override
-        public void bind(@SuppressWarnings("rawtypes") SQLStatement stmt, Bind bind, SubscriptionBundleData bundle) {
+        public void bind(@SuppressWarnings("rawtypes") final SQLStatement stmt, final Bind bind, final SubscriptionBundleData bundle) {
             stmt.bind("id", bundle.getId().toString());
             stmt.bind("startDate", getDate(bundle.getStartDate()));
             stmt.bind("externalKey", bundle.getKey());
@@ -81,16 +81,16 @@ public interface BundleSqlDao extends Transactional<BundleSqlDao>, EntitySqlDao<
     }
 
     public static class ISubscriptionBundleSqlMapper extends MapperBase implements ResultSetMapper<SubscriptionBundle> {
-        
+
         @Override
-        public SubscriptionBundle map(int arg, ResultSet r,
-                StatementContext ctx) throws SQLException {
-            UUID id = UUID.fromString(r.getString("id"));
-            String key = r.getString("external_key");
-            UUID accountId = UUID.fromString(r.getString("account_id"));
-            DateTime startDate = getDate(r, "start_date");
-            DateTime lastSysUpdateDate = getDate(r, "last_sys_update_date");
-            SubscriptionBundleData bundle = new SubscriptionBundleData(id, key, accountId, startDate, lastSysUpdateDate);
+        public SubscriptionBundle map(final int arg, final ResultSet r,
+                                      final StatementContext ctx) throws SQLException {
+            final UUID id = UUID.fromString(r.getString("id"));
+            final String key = r.getString("external_key");
+            final UUID accountId = UUID.fromString(r.getString("account_id"));
+            final DateTime startDate = getDate(r, "start_date");
+            final DateTime lastSysUpdateDate = getDate(r, "last_sys_update_date");
+            final SubscriptionBundleData bundle = new SubscriptionBundleData(id, key, accountId, startDate, lastSysUpdateDate);
             return bundle;
         }
     }

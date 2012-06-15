@@ -16,14 +16,14 @@
 
 package com.ning.billing.util.globallocker;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
-
-import java.sql.ResultSet;
-import java.sql.SQLException;
 
 @RegisterMapper(MySqlGlobalLockerDao.LockMapper.class)
 public interface MySqlGlobalLockerDao {
@@ -38,9 +38,9 @@ public interface MySqlGlobalLockerDao {
     public Boolean isFree(@Bind("lockName") final String lockName);
 
     class LockMapper implements ResultSetMapper<Boolean> {
-         @Override
-         public Boolean map(int index, ResultSet r, StatementContext ctx) throws SQLException {
+        @Override
+        public Boolean map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
             return (r.getByte(1) == 1);
-         }
+        }
     }
 }
