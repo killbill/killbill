@@ -25,45 +25,45 @@ import com.ning.billing.util.userrequest.CompletionUserRequest;
 import com.ning.billing.util.userrequest.CompletionUserRequestNotifier;
 
 public class KillbillEventHandler {
-    
-    
+
+
     private final List<CompletionUserRequest> activeWaiters;
-    
+
     public KillbillEventHandler() {
         activeWaiters = new LinkedList<CompletionUserRequest>();
     }
-    
+
     public void registerCompletionUserRequestWaiter(final CompletionUserRequest waiter) {
         if (waiter == null) {
             return;
         }
-        synchronized(activeWaiters) {
+        synchronized (activeWaiters) {
             activeWaiters.add(waiter);
         }
     }
-    
+
     public void unregisterCompletionUserRequestWaiter(final CompletionUserRequest waiter) {
         if (waiter == null) {
             return;
         }
-        synchronized(activeWaiters) {
+        synchronized (activeWaiters) {
             activeWaiters.remove(waiter);
         }
     }
-    
+
     /*
-     * IRS event handler for killbill entitlement events
-     */
+    * IRS event handler for killbill entitlement events
+    */
     @Subscribe
     public void handleEntitlementevents(final BusEvent event) {
-        List<CompletionUserRequestNotifier> runningWaiters = new ArrayList<CompletionUserRequestNotifier>();
-        synchronized(activeWaiters) {
+        final List<CompletionUserRequestNotifier> runningWaiters = new ArrayList<CompletionUserRequestNotifier>();
+        synchronized (activeWaiters) {
             runningWaiters.addAll(activeWaiters);
         }
         if (runningWaiters.size() == 0) {
             return;
         }
-        for (CompletionUserRequestNotifier cur : runningWaiters) {
+        for (final CompletionUserRequestNotifier cur : runningWaiters) {
             cur.onBusEvent(event);
         }
     }

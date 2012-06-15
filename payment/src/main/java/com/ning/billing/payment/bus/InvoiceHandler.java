@@ -29,9 +29,6 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.invoice.api.InvoiceCreationEvent;
-
-
-import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.core.PaymentProcessor;
 import com.ning.billing.util.api.TagUserApi;
@@ -58,15 +55,15 @@ public class InvoiceHandler {
     private final AccountUserApi accountUserApi;
     private final Clock clock;
     private final TagUserApi tagUserApi;
-    
+
 
     private static final Logger log = LoggerFactory.getLogger(InvoiceHandler.class);
 
     @Inject
     public InvoiceHandler(final Clock clock,
-            final AccountUserApi accountUserApi,
-            final PaymentProcessor paymentProcessor,
-            final TagUserApi tagUserApi) {        
+                          final AccountUserApi accountUserApi,
+                          final PaymentProcessor paymentProcessor,
+                          final TagUserApi tagUserApi) {
         this.clock = clock;
         this.accountUserApi = accountUserApi;
         this.tagUserApi = tagUserApi;
@@ -75,20 +72,20 @@ public class InvoiceHandler {
 
 
     @Subscribe
-    public void processInvoiceEvent(InvoiceCreationEvent event) {
-        
-        log.info("Received invoice creation notification for account {} and invoice {}",
-                    event.getAccountId(), event.getInvoiceId());
+    public void processInvoiceEvent(final InvoiceCreationEvent event) {
 
-        Account account = null;        
+        log.info("Received invoice creation notification for account {} and invoice {}",
+                 event.getAccountId(), event.getInvoiceId());
+
+        Account account = null;
         try {
             account = accountUserApi.getAccountById(event.getAccountId());
             if (isAccountAutoPayOff(account.getId())) {
                 return;
             }
-            CallContext context = new DefaultCallContext("PaymentRequestProcessor", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken(), clock);
+            final CallContext context = new DefaultCallContext("PaymentRequestProcessor", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken(), clock);
             paymentProcessor.createPayment(account, event.getInvoiceId(), null, context, false);
-        } catch(AccountApiException e) {
+        } catch (AccountApiException e) {
             log.error("Failed to process invoice payment", e);
         } catch (PaymentApiException e) {
             if (e.getCode() != ErrorCode.PAYMENT_NULL_INVOICE.getCode()) {
@@ -96,10 +93,10 @@ public class InvoiceHandler {
             }
         }
     }
-    
-    private boolean isAccountAutoPayOff(UUID accountId) {
-        Map<String, Tag> accountTags =  tagUserApi.getTags(accountId, ObjectType.ACCOUNT);
-        for (Tag cur : accountTags.values()) {
+
+    private boolean isAccountAutoPayOff(final UUID accountId) {
+        final Map<String, Tag> accountTags = tagUserApi.getTags(accountId, ObjectType.ACCOUNT);
+        for (final Tag cur : accountTags.values()) {
             if (cur.getTagDefinitionName().equals(ControlTagType.AUTO_PAY_OFF.toString())) {
                 return true;
             }

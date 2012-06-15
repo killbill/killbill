@@ -33,9 +33,9 @@ public class MockModule extends DefaultJunctionModule {
         install(new MockClockModule());
         install(new MockDbHelperModule());
         install(new CallContextModule());
-       install(new CatalogModule());
+        install(new CatalogModule());
     }
-    
+
     @Override
     public void installBillingApi() {
         // no billinggApi
@@ -43,10 +43,8 @@ public class MockModule extends DefaultJunctionModule {
 
     @Override
     public void installAccountUserApi() {
-        
+
     }
 
-    
-    
 
 }

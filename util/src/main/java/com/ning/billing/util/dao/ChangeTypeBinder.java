@@ -16,26 +16,27 @@
 
 package com.ning.billing.util.dao;
 
-import com.ning.billing.util.ChangeType;
-import org.skife.jdbi.v2.SQLStatement;
-import org.skife.jdbi.v2.sqlobject.Binder;
-import org.skife.jdbi.v2.sqlobject.BinderFactory;
-import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
-
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.skife.jdbi.v2.SQLStatement;
+import org.skife.jdbi.v2.sqlobject.Binder;
+import org.skife.jdbi.v2.sqlobject.BinderFactory;
+import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
+
+import com.ning.billing.util.ChangeType;
+
 @BindingAnnotation(ChangeTypeBinder.ChangeTypeBinderFactory.class)
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.PARAMETER})
 public @interface ChangeTypeBinder {
     public static class ChangeTypeBinderFactory implements BinderFactory {
-        public Binder build(Annotation annotation) {
+        public Binder build(final Annotation annotation) {
             return new Binder<ChangeTypeBinder, ChangeType>() {
-                public void bind(SQLStatement q, ChangeTypeBinder bind, ChangeType changeType) {
+                public void bind(final SQLStatement q, final ChangeTypeBinder bind, final ChangeType changeType) {
                     q.bind("changeType", changeType.toString());
                 }
             };

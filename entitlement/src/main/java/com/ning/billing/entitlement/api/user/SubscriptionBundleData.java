@@ -29,18 +29,18 @@ public class SubscriptionBundleData implements SubscriptionBundle {
     private final String key;
     private final UUID accountId;
     private final DateTime startDate;
-    private final DateTime lastSysTimeUpdate; 
+    private final DateTime lastSysTimeUpdate;
     private final OverdueState<SubscriptionBundle> overdueState;
-    
-    public SubscriptionBundleData(String name, UUID accountId, DateTime startDate) {
+
+    public SubscriptionBundleData(final String name, final UUID accountId, final DateTime startDate) {
         this(UUID.randomUUID(), name, accountId, startDate, startDate);
     }
 
-    public SubscriptionBundleData(UUID id, String key, UUID accountId, DateTime startDate, DateTime lastSysUpdate) {
+    public SubscriptionBundleData(final UUID id, final String key, final UUID accountId, final DateTime startDate, final DateTime lastSysUpdate) {
         this(id, key, accountId, startDate, lastSysUpdate, null);
     }
 
-    public SubscriptionBundleData(UUID id, String key, UUID accountId, DateTime startDate, DateTime lastSysUpdate, OverdueState<SubscriptionBundle> overdueState) {
+    public SubscriptionBundleData(final UUID id, final String key, final UUID accountId, final DateTime startDate, final DateTime lastSysUpdate, final OverdueState<SubscriptionBundle> overdueState) {
         super();
         this.id = id;
         this.key = key;
@@ -70,11 +70,11 @@ public class SubscriptionBundleData implements SubscriptionBundle {
     public DateTime getStartDate() {
         return startDate;
     }
-    
+
     public DateTime getLastSysUpdateTime() {
         return lastSysTimeUpdate;
     }
-    
+
     @Override
     public OverdueState<SubscriptionBundle> getOverdueState() {
         return overdueState;

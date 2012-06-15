@@ -25,38 +25,36 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.catalog.api.Duration;
-import com.ning.billing.catalog.api.InternationalPrice;
-import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.util.config.ValidationErrors;
 
 public class TestPlan {
-	private static final Logger log = LoggerFactory.getLogger(TestPlan.class);
-	@Test(groups={"fast"}, enabled = true)
-	public void testDateValidation() {
+    private static final Logger log = LoggerFactory.getLogger(TestPlan.class);
 
-		StandaloneCatalog c = new MockCatalog();
-		c.setSupportedCurrencies(new Currency[]{Currency.GBP, Currency.EUR, Currency.USD, Currency.BRL, Currency.MXN});
-		DefaultPlan p1 =  MockPlan.createBicycleTrialEvergreen1USD();
-		p1.setEffectiveDateForExistingSubscriptons(new Date((new Date().getTime()) - (1000 * 60 * 60 * 24)));
-		ValidationErrors errors = p1.validate(c, new ValidationErrors());
-		Assert.assertEquals(errors.size(), 1);
-		errors.log(log);
+    @Test(groups = {"fast"}, enabled = true)
+    public void testDateValidation() {
 
-	}
-	
-	@Test(groups={"fast"}, enabled = true)
-	public void testDataCalc() {
-		DefaultPlan p0 = MockPlan.createBicycleTrialEvergreen1USD();  
-					
-		DefaultPlan p1 =  MockPlan.createBicycleTrialEvergreen1USD(100);
-		
-		DefaultPlan p2 =  MockPlan.createBicycleNoTrialEvergreen1USD(); 
-		
-		DateTime requestedDate = new DateTime();
-		Assert.assertEquals(p0.dateOfFirstRecurringNonZeroCharge(requestedDate).compareTo(requestedDate.plusDays(30)), 0);
-		Assert.assertEquals(p1.dateOfFirstRecurringNonZeroCharge(requestedDate).compareTo(requestedDate.plusDays(100)), 0);
-		Assert.assertEquals(p2.dateOfFirstRecurringNonZeroCharge(requestedDate).compareTo(requestedDate.plusDays(0)), 0);
+        final StandaloneCatalog c = new MockCatalog();
+        c.setSupportedCurrencies(new Currency[]{Currency.GBP, Currency.EUR, Currency.USD, Currency.BRL, Currency.MXN});
+        final DefaultPlan p1 = MockPlan.createBicycleTrialEvergreen1USD();
+        p1.setEffectiveDateForExistingSubscriptons(new Date((new Date().getTime()) - (1000 * 60 * 60 * 24)));
+        final ValidationErrors errors = p1.validate(c, new ValidationErrors());
+        Assert.assertEquals(errors.size(), 1);
+        errors.log(log);
 
-	}
+    }
+
+    @Test(groups = {"fast"}, enabled = true)
+    public void testDataCalc() {
+        final DefaultPlan p0 = MockPlan.createBicycleTrialEvergreen1USD();
+
+        final DefaultPlan p1 = MockPlan.createBicycleTrialEvergreen1USD(100);
+
+        final DefaultPlan p2 = MockPlan.createBicycleNoTrialEvergreen1USD();
+
+        final DateTime requestedDate = new DateTime();
+        Assert.assertEquals(p0.dateOfFirstRecurringNonZeroCharge(requestedDate).compareTo(requestedDate.plusDays(30)), 0);
+        Assert.assertEquals(p1.dateOfFirstRecurringNonZeroCharge(requestedDate).compareTo(requestedDate.plusDays(100)), 0);
+        Assert.assertEquals(p2.dateOfFirstRecurringNonZeroCharge(requestedDate).compareTo(requestedDate.plusDays(0)), 0);
+
+    }
 }

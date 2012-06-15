@@ -16,19 +16,18 @@
 
 package com.ning.billing.util.bus;
 
-import com.google.common.eventbus.Subscribe;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
+
+import com.google.common.eventbus.Subscribe;
 
 
 /**
- *
  * Bus API based on the guava EventBus API
- *
+ * <p/>
  * The API also provides an API to send events from within a transaction
  * with the guarantee that the event will be delivered if and only if
  * the transaction completes. If the implementation is not based on a
  * DB, this API is behaves the same as the regular post() call.
- *
  */
 public interface Bus {
 
@@ -40,35 +39,32 @@ public interface Bus {
         public EventBusException() {
             super();
         }
-        public EventBusException(String message, Throwable cause) {
+
+        public EventBusException(final String message, final Throwable cause) {
             super(message, cause);
         }
 
-        public EventBusException(String message) {
+        public EventBusException(final String message) {
             super(message);
         }
     }
 
     /**
      * Start accepting events and dispatching them
-     *
      */
     public void start();
 
     /**
      * Stop accepting events and flush event queue before it returns.
-     *
      */
     public void stop();
 
     /**
-     *
      * Registers all handler methods on {@code object} to receive events.
      * Handler methods need to be Annotated with {@link Subscribe}
      *
      * @param handlerInstance
-     *
-     *  @throws EventBusException if bus not been started yet
+     * @throws EventBusException if bus not been started yet
      */
     public void register(Object handlerInstance) throws EventBusException;
 
@@ -86,21 +82,17 @@ public interface Bus {
      * Post an event asynchronously
      *
      * @param event to be posted
-     *
-     *  @throws EventBusException if bus not been started yet
+     * @throws EventBusException if bus not been started yet
      */
     public void post(BusEvent event) throws EventBusException;
 
     /**
-     *
      * Post an event from within a transaction.
      * Guarantees that the event is persisted on disk from within the same transaction
      *
-     *
      * @param event to be posted
-     * @param dao a valid DAO object obtained through the DBI.onDemand() API.
-     *
-     *  @throws EventBusException if bus not been started yet
+     * @param dao   a valid DAO object obtained through the DBI.onDemand() API.
+     * @throws EventBusException if bus not been started yet
      */
     public void postFromTransaction(BusEvent event, Transmogrifier dao) throws EventBusException;
 

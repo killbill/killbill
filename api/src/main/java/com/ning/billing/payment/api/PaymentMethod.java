@@ -19,14 +19,14 @@ import java.util.UUID;
 
 
 public interface PaymentMethod {
-    
+
     public UUID getId();
-    
+
     public UUID getAccountId();
-    
+
     public Boolean isActive();
-    
+
     public String getPluginName();
-    
+
     public PaymentMethodPlugin getPluginDetail();
 }

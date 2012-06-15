@@ -19,16 +19,14 @@ package com.ning.billing.config;
 import org.skife.config.Config;
 import org.skife.config.Default;
 
-import com.google.common.annotations.VisibleForTesting;
+public interface EntitlementConfig extends NotificationConfig, KillbillConfig {
 
-public interface EntitlementConfig extends NotificationConfig, KillbillConfig  {
-
-	@Override
+    @Override
     @Config("killbill.entitlement.engine.notifications.sleep")
     @Default("500")
-    public long getSleepTimeMs();    
+    public long getSleepTimeMs();
 
-	@Override
+    @Override
     @Config("killbill.notifications.off")
     @Default("false")
     public boolean isNotificationProcessingOff();

@@ -82,7 +82,7 @@ public class MockPlan implements Plan {
     }
 
     @Override
-    public PlanPhase findPhase(String name) throws CatalogApiException {
+    public PlanPhase findPhase(final String name) throws CatalogApiException {
         throw new UnsupportedOperationException();
     }
 
@@ -93,7 +93,7 @@ public class MockPlan implements Plan {
 
     @Override
     public DateTime dateOfFirstRecurringNonZeroCharge(
-            DateTime subscriptionStartDate) {
+            final DateTime subscriptionStartDate) {
         throw new UnsupportedOperationException();
     }
 }

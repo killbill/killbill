@@ -24,15 +24,15 @@ public class EntitlementMigrationApiException extends Exception {
         super();
     }
 
-    public EntitlementMigrationApiException(String message, Throwable cause) {
+    public EntitlementMigrationApiException(final String message, final Throwable cause) {
         super(message, cause);
     }
 
-    public EntitlementMigrationApiException(String message) {
+    public EntitlementMigrationApiException(final String message) {
         super(message);
     }
 
-    public EntitlementMigrationApiException(Throwable cause) {
+    public EntitlementMigrationApiException(final Throwable cause) {
         super(cause);
     }
 }

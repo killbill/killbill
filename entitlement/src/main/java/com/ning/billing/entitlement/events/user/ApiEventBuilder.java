@@ -34,7 +34,7 @@ public class ApiEventBuilder extends EventBaseBuilder<ApiEventBuilder> {
         super();
     }
 
-    public ApiEventBuilder(EventBaseBuilder<?> base) {
+    public ApiEventBuilder(final EventBaseBuilder<?> base) {
         super(base);
     }
 
@@ -53,42 +53,42 @@ public class ApiEventBuilder extends EventBaseBuilder<ApiEventBuilder> {
     public String getEventPriceList() {
         return eventPriceList;
     }
-    
+
     public UUID getUserToken() {
-    	return userToken;
+        return userToken;
     }
 
     public boolean isFromDisk() {
         return fromDisk;
     }
 
-    public ApiEventBuilder setUserToken(UUID userToken) {
+    public ApiEventBuilder setUserToken(final UUID userToken) {
         this.userToken = userToken;
         return this;
     }
 
-    
-    public ApiEventBuilder setFromDisk(boolean fromDisk) {
+
+    public ApiEventBuilder setFromDisk(final boolean fromDisk) {
         this.fromDisk = fromDisk;
         return this;
     }
 
-    public ApiEventBuilder setEventType(ApiEventType eventType) {
+    public ApiEventBuilder setEventType(final ApiEventType eventType) {
         this.eventType = eventType;
         return this;
     }
 
-    public ApiEventBuilder setEventPlan(String eventPlan) {
+    public ApiEventBuilder setEventPlan(final String eventPlan) {
         this.eventPlan = eventPlan;
         return this;
     }
 
-    public ApiEventBuilder setEventPlanPhase(String eventPlanPhase) {
+    public ApiEventBuilder setEventPlanPhase(final String eventPlanPhase) {
         this.eventPlanPhase = eventPlanPhase;
         return this;
     }
 
-    public ApiEventBuilder setEventPriceList(String eventPriceList) {
+    public ApiEventBuilder setEventPriceList(final String eventPriceList) {
         this.eventPriceList = eventPriceList;
         return this;
     }

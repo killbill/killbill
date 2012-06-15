@@ -17,10 +17,9 @@
 package com.ning.billing.entitlement.events.user;
 
 
-
 public class ApiEventChange extends ApiEventBase {
 
-    public ApiEventChange(ApiEventBuilder builder) {
+    public ApiEventChange(final ApiEventBuilder builder) {
         super(builder.setEventType(ApiEventType.CHANGE));
     }
 }

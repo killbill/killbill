@@ -16,18 +16,17 @@
 
 package com.ning.billing.payment;
 
-import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.invoice.api.InvoiceItem;
-import com.ning.billing.invoice.api.InvoiceItemType;
-import com.ning.billing.util.entity.EntityBase;
+import javax.annotation.Nullable;
+import java.math.BigDecimal;
+import java.util.UUID;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.joda.time.DateTime;
 
-import java.math.BigDecimal;
-import java.util.UUID;
-
-import javax.annotation.Nullable;
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.invoice.api.InvoiceItemType;
+import com.ning.billing.util.entity.EntityBase;
 
 public class MockRecurringInvoiceItem extends EntityBase implements InvoiceItem {
     private final BigDecimal rate;
@@ -44,46 +43,47 @@ public class MockRecurringInvoiceItem extends EntityBase implements InvoiceItem 
     protected final Currency currency;
 
 
-    public MockRecurringInvoiceItem(UUID invoiceId, UUID accountId, UUID bundleId, UUID subscriptionId, String planName, String phaseName,
-                                DateTime startDate, DateTime endDate,
-                                BigDecimal amount, BigDecimal rate,
-                                Currency currency) { 
+    public MockRecurringInvoiceItem(final UUID invoiceId, final UUID accountId, final UUID bundleId, final UUID subscriptionId, final String planName, final String phaseName,
+                                    final DateTime startDate, final DateTime endDate,
+                                    final BigDecimal amount, final BigDecimal rate,
+                                    final Currency currency) {
         this(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency, rate, null);
 
     }
 
-    public MockRecurringInvoiceItem(UUID invoiceId, UUID accountId, UUID bundleId, UUID subscriptionId, String planName, String phaseName,
-                                DateTime startDate, DateTime endDate,
-                                BigDecimal amount, BigDecimal rate,
-                                Currency currency, UUID reversedItemId) {
+    public MockRecurringInvoiceItem(final UUID invoiceId, final UUID accountId, final UUID bundleId, final UUID subscriptionId, final String planName, final String phaseName,
+                                    final DateTime startDate, final DateTime endDate,
+                                    final BigDecimal amount, final BigDecimal rate,
+                                    final Currency currency, final UUID reversedItemId) {
         this(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate,
-                amount, currency, rate, reversedItemId);
+             amount, currency, rate, reversedItemId);
     }
 
-    public MockRecurringInvoiceItem(UUID id, UUID invoiceId, UUID accountId, UUID bundleId, UUID subscriptionId, String planName, String phaseName,
-                                DateTime startDate, DateTime endDate,
-                                BigDecimal amount, BigDecimal rate,
-                                Currency currency) {
+    public MockRecurringInvoiceItem(final UUID id, final UUID invoiceId, final UUID accountId, final UUID bundleId, final UUID subscriptionId, final String planName, final String phaseName,
+                                    final DateTime startDate, final DateTime endDate,
+                                    final BigDecimal amount, final BigDecimal rate,
+                                    final Currency currency) {
         this(id, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency, rate, null);
 
     }
 
-    public MockRecurringInvoiceItem(UUID id, UUID invoiceId, UUID accountId, UUID bundleId, UUID subscriptionId, String planName, String phaseName,
-                                DateTime startDate, DateTime endDate,
-                                BigDecimal amount, BigDecimal rate,
-                                Currency currency, UUID reversedItemId) {
+    public MockRecurringInvoiceItem(final UUID id, final UUID invoiceId, final UUID accountId, final UUID bundleId, final UUID subscriptionId, final String planName, final String phaseName,
+                                    final DateTime startDate, final DateTime endDate,
+                                    final BigDecimal amount, final BigDecimal rate,
+                                    final Currency currency, final UUID reversedItemId) {
         this(id, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency, rate, reversedItemId);
     }
-    public MockRecurringInvoiceItem(UUID invoiceId, UUID accountId, UUID bundleId, UUID subscriptionId, String planName, String phaseName,
-            DateTime startDate, DateTime endDate, BigDecimal amount, Currency currency, BigDecimal rate, UUID reversedItemId){
+
+    public MockRecurringInvoiceItem(final UUID invoiceId, final UUID accountId, final UUID bundleId, final UUID subscriptionId, final String planName, final String phaseName,
+                                    final DateTime startDate, final DateTime endDate, final BigDecimal amount, final Currency currency, final BigDecimal rate, final UUID reversedItemId) {
         this(UUID.randomUUID(), invoiceId, accountId, bundleId, subscriptionId, planName, phaseName,
-                startDate, endDate, amount, currency, rate, reversedItemId);
+             startDate, endDate, amount, currency, rate, reversedItemId);
     }
 
 
-    public MockRecurringInvoiceItem(UUID id, UUID invoiceId, UUID accountId, @Nullable UUID bundleId, @Nullable UUID subscriptionId, String planName, String phaseName,
-            DateTime startDate, DateTime endDate, BigDecimal amount, Currency currency,
-            BigDecimal rate, UUID reversedItemId) {
+    public MockRecurringInvoiceItem(final UUID id, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId, @Nullable final UUID subscriptionId, final String planName, final String phaseName,
+                                    final DateTime startDate, final DateTime endDate, final BigDecimal amount, final Currency currency,
+                                    final BigDecimal rate, final UUID reversedItemId) {
         super(id);
         this.invoiceId = invoiceId;
         this.accountId = accountId;
@@ -113,7 +113,7 @@ public class MockRecurringInvoiceItem extends EntityBase implements InvoiceItem 
     public UUID getBundleId() {
         return bundleId;
     }
-    
+
     public UUID getAccountId() {
         return accountId;
     }
@@ -181,7 +181,7 @@ public class MockRecurringInvoiceItem extends EntityBase implements InvoiceItem 
     }
 
     @Override
-    public int compareTo(InvoiceItem item) {
+    public int compareTo(final InvoiceItem item) {
         if (item == null) {
             return -1;
         }
@@ -189,15 +189,15 @@ public class MockRecurringInvoiceItem extends EntityBase implements InvoiceItem 
             return -1;
         }
 
-        MockRecurringInvoiceItem that = (MockRecurringInvoiceItem) item;
-        int compareAccounts = getAccountId().compareTo(that.getAccountId());
+        final MockRecurringInvoiceItem that = (MockRecurringInvoiceItem) item;
+        final int compareAccounts = getAccountId().compareTo(that.getAccountId());
         if (compareAccounts == 0 && bundleId != null) {
-            int compareBundles = getBundleId().compareTo(that.getBundleId());
+            final int compareBundles = getBundleId().compareTo(that.getBundleId());
             if (compareBundles == 0 && subscriptionId != null) {
 
-                int compareSubscriptions = getSubscriptionId().compareTo(that.getSubscriptionId());
+                final int compareSubscriptions = getSubscriptionId().compareTo(that.getSubscriptionId());
                 if (compareSubscriptions == 0) {
-                    int compareStartDates = getStartDate().compareTo(that.getStartDate());
+                    final int compareStartDates = getStartDate().compareTo(that.getStartDate());
                     if (compareStartDates == 0) {
                         return getEndDate().compareTo(that.getEndDate());
                     } else {
@@ -215,26 +215,49 @@ public class MockRecurringInvoiceItem extends EntityBase implements InvoiceItem 
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
-        MockRecurringInvoiceItem that = (MockRecurringInvoiceItem) o;
+        final MockRecurringInvoiceItem that = (MockRecurringInvoiceItem) o;
 
-        if (accountId.compareTo(that.accountId) != 0) return false;
-        if (amount.compareTo(that.amount) != 0) return false;
-        if (currency != that.currency) return false;
-        if (startDate.compareTo(that.startDate) != 0) return false;
-        if (endDate.compareTo(that.endDate) != 0) return false;
-        if (!phaseName.equals(that.phaseName)) return false;
-        if (!planName.equals(that.planName)) return false;
-        if (rate.compareTo(that.rate) != 0) return false;
-        if (reversedItemId != null ? !reversedItemId.equals(that.reversedItemId) : that.reversedItemId != null)
+        if (accountId.compareTo(that.accountId) != 0) {
             return false;
-        if (subscriptionId != null ? !subscriptionId.equals(that.subscriptionId) : that.subscriptionId != null)
+        }
+        if (amount.compareTo(that.amount) != 0) {
             return false;
-        if (bundleId != null ? !bundleId.equals(that.bundleId) : that.bundleId != null)
+        }
+        if (currency != that.currency) {
             return false;
+        }
+        if (startDate.compareTo(that.startDate) != 0) {
+            return false;
+        }
+        if (endDate.compareTo(that.endDate) != 0) {
+            return false;
+        }
+        if (!phaseName.equals(that.phaseName)) {
+            return false;
+        }
+        if (!planName.equals(that.planName)) {
+            return false;
+        }
+        if (rate.compareTo(that.rate) != 0) {
+            return false;
+        }
+        if (reversedItemId != null ? !reversedItemId.equals(that.reversedItemId) : that.reversedItemId != null) {
+            return false;
+        }
+        if (subscriptionId != null ? !subscriptionId.equals(that.subscriptionId) : that.subscriptionId != null) {
+            return false;
+        }
+        if (bundleId != null ? !bundleId.equals(that.bundleId) : that.bundleId != null) {
+            return false;
+        }
 
         return true;
     }
@@ -257,7 +280,7 @@ public class MockRecurringInvoiceItem extends EntityBase implements InvoiceItem 
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
+        final StringBuilder sb = new StringBuilder();
 
         sb.append(phaseName).append(", ");
         sb.append(startDate.toString()).append(", ");

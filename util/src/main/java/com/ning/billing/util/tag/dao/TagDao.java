@@ -16,7 +16,6 @@
 
 package com.ning.billing.util.tag.dao;
 
-import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.util.api.TagApiException;

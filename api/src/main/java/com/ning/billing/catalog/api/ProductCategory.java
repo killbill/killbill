@@ -17,7 +17,7 @@
 package com.ning.billing.catalog.api;
 
 public enum ProductCategory {
-	BASE,
-	ADD_ON,
-	STANDALONE
+    BASE,
+    ADD_ON,
+    STANDALONE
 }

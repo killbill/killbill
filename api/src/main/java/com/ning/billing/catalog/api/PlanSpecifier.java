@@ -17,38 +17,41 @@
 package com.ning.billing.catalog.api;
 
 public class PlanSpecifier {
-	private final String productName;
-	private final ProductCategory productCategory;
-	private final BillingPeriod billingPeriod;
-	private final String priceListName;
-	
-	public PlanSpecifier(String productName, ProductCategory productCategory, BillingPeriod billingPeriod,
-			String priceListName) {
-		super();
-		this.productName = productName;
-		this.productCategory = productCategory;
-		this.billingPeriod = billingPeriod;
-		this.priceListName = priceListName;
-	}
-	
-	public PlanSpecifier(PlanPhaseSpecifier planPhase) {
-		super();
-		this.productName = planPhase.getProductName();
-		this.productCategory = planPhase.getProductCategory();
-		this.billingPeriod = planPhase.getBillingPeriod();
-		this.priceListName = planPhase.getPriceListName();
-	}
-	
-	public String getProductName() {
-		return productName;
-	}
-	public ProductCategory getProductCategory() {
-		return productCategory;
-	}
-	public BillingPeriod getBillingPeriod() {
-		return billingPeriod;
-	}
-	public String getPriceListName() {
-		return priceListName;
-	}
+    private final String productName;
+    private final ProductCategory productCategory;
+    private final BillingPeriod billingPeriod;
+    private final String priceListName;
+
+    public PlanSpecifier(final String productName, final ProductCategory productCategory, final BillingPeriod billingPeriod,
+                         final String priceListName) {
+        super();
+        this.productName = productName;
+        this.productCategory = productCategory;
+        this.billingPeriod = billingPeriod;
+        this.priceListName = priceListName;
+    }
+
+    public PlanSpecifier(final PlanPhaseSpecifier planPhase) {
+        super();
+        this.productName = planPhase.getProductName();
+        this.productCategory = planPhase.getProductCategory();
+        this.billingPeriod = planPhase.getBillingPeriod();
+        this.priceListName = planPhase.getPriceListName();
+    }
+
+    public String getProductName() {
+        return productName;
+    }
+
+    public ProductCategory getProductCategory() {
+        return productCategory;
+    }
+
+    public BillingPeriod getBillingPeriod() {
+        return billingPeriod;
+    }
+
+    public String getPriceListName() {
+        return priceListName;
+    }
 }

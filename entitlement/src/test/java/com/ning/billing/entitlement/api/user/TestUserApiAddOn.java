@@ -16,11 +16,6 @@
 
 package com.ning.billing.entitlement.api.user;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertNull;
-import static org.testng.Assert.assertTrue;
-
 import java.util.List;
 
 import org.joda.time.DateTime;
@@ -48,6 +43,11 @@ import com.ning.billing.entitlement.api.user.SubscriptionStatusDryRun.DryRunChan
 import com.ning.billing.entitlement.glue.MockEngineModuleSql;
 import com.ning.billing.util.clock.DefaultClock;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
+import static org.testng.Assert.assertTrue;
+
 public class TestUserApiAddOn extends TestApiBase {
 
     @Override
@@ -55,26 +55,26 @@ public class TestUserApiAddOn extends TestApiBase {
         return Guice.createInjector(Stage.DEVELOPMENT, new MockEngineModuleSql());
     }
 
-    @Test(enabled=true, groups={"slow"})
+    @Test(enabled = true, groups = {"slow"})
     public void testCreateCancelAddon() {
 
         log.info("Starting testCreateCancelAddon");
 
         try {
-            String baseProduct = "Shotgun";
-            BillingPeriod baseTerm = BillingPeriod.MONTHLY;
-            String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
+            final String baseProduct = "Shotgun";
+            final BillingPeriod baseTerm = BillingPeriod.MONTHLY;
+            final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
             createSubscription(baseProduct, baseTerm, basePriceList);
 
-            String aoProduct = "Telescopic-Scope";
-            BillingPeriod aoTerm = BillingPeriod.MONTHLY;
-            String aoPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
+            final String aoProduct = "Telescopic-Scope";
+            final BillingPeriod aoTerm = BillingPeriod.MONTHLY;
+            final String aoPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
-            SubscriptionData aoSubscription = createSubscription(aoProduct, aoTerm, aoPriceList);
+            final SubscriptionData aoSubscription = createSubscription(aoProduct, aoTerm, aoPriceList);
             assertEquals(aoSubscription.getState(), SubscriptionState.ACTIVE);
 
-            DateTime now = clock.getUTCNow();
+            final DateTime now = clock.getUTCNow();
             aoSubscription.cancel(now, false, context);
 
             testListener.reset();
@@ -89,23 +89,23 @@ public class TestUserApiAddOn extends TestApiBase {
         }
     }
 
-    @Test(enabled=true, groups={"slow"})
+    @Test(enabled = true, groups = {"slow"})
     public void testCancelBPWithAddon() {
 
         log.info("Starting testCancelBPWithAddon");
 
         try {
 
-            String baseProduct = "Shotgun";
-            BillingPeriod baseTerm = BillingPeriod.MONTHLY;
-            String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
+            final String baseProduct = "Shotgun";
+            final BillingPeriod baseTerm = BillingPeriod.MONTHLY;
+            final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
             // CREATE BP
             SubscriptionData baseSubscription = createSubscription(baseProduct, baseTerm, basePriceList);
 
-            String aoProduct = "Telescopic-Scope";
-            BillingPeriod aoTerm = BillingPeriod.MONTHLY;
-            String aoPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
+            final String aoProduct = "Telescopic-Scope";
+            final BillingPeriod aoTerm = BillingPeriod.MONTHLY;
+            final String aoPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
             SubscriptionData aoSubscription = createSubscription(aoProduct, aoTerm, aoPriceList);
 
@@ -119,10 +119,10 @@ public class TestUserApiAddOn extends TestApiBase {
             assertTrue(testListener.isCompleted(5000));
 
             // SET CTD TO CANCEL IN FUTURE
-            DateTime now = clock.getUTCNow();
-            Duration ctd = getDurationMonth(1);
+            final DateTime now = clock.getUTCNow();
+            final Duration ctd = getDurationMonth(1);
             // Why not just use clock.getUTCNow().plusMonths(1) ?
-            DateTime newChargedThroughDate = DefaultClock.addDuration(now, ctd);
+            final DateTime newChargedThroughDate = DefaultClock.addDuration(now, ctd);
             billingApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate, context);
             baseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId());
 
@@ -138,7 +138,7 @@ public class TestUserApiAddOn extends TestApiBase {
             testListener.reset();
             testListener.pushExpectedEvent(NextEvent.CANCEL);
             testListener.pushExpectedEvent(NextEvent.CANCEL);
-            
+
             it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(1));
             clock.addDeltaFromReality(it.toDurationMillis());
             assertTrue(testListener.isCompleted(5000));
@@ -155,23 +155,23 @@ public class TestUserApiAddOn extends TestApiBase {
     }
 
 
-    @Test(enabled=true, groups={"slow"})
+    @Test(enabled = true, groups = {"slow"})
     public void testChangeBPWithAddonIncluded() {
 
         log.info("Starting testChangeBPWithAddonIncluded");
 
         try {
 
-            String baseProduct = "Shotgun";
-            BillingPeriod baseTerm = BillingPeriod.MONTHLY;
-            String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
+            final String baseProduct = "Shotgun";
+            final BillingPeriod baseTerm = BillingPeriod.MONTHLY;
+            final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
             // CREATE BP
             SubscriptionData baseSubscription = createSubscription(baseProduct, baseTerm, basePriceList);
 
-            String aoProduct = "Telescopic-Scope";
-            BillingPeriod aoTerm = BillingPeriod.MONTHLY;
-            String aoPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
+            final String aoProduct = "Telescopic-Scope";
+            final BillingPeriod aoTerm = BillingPeriod.MONTHLY;
+            final String aoPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
             SubscriptionData aoSubscription = createSubscription(aoProduct, aoTerm, aoPriceList);
 
@@ -180,31 +180,31 @@ public class TestUserApiAddOn extends TestApiBase {
             testListener.pushExpectedEvent(NextEvent.PHASE);
 
             // MOVE CLOCK AFTER TRIAL + AO DISCOUNT
-            Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(2));
+            final Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(2));
             clock.addDeltaFromReality(it.toDurationMillis());
             assertTrue(testListener.isCompleted(5000));
 
             // SET CTD TO CHANGE IN FUTURE
-            DateTime now = clock.getUTCNow();
-            Duration ctd = getDurationMonth(1);
-            DateTime newChargedThroughDate = DefaultClock.addDuration(now, ctd);
+            final DateTime now = clock.getUTCNow();
+            final Duration ctd = getDurationMonth(1);
+            final DateTime newChargedThroughDate = DefaultClock.addDuration(now, ctd);
             billingApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate, context);
             baseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId());
 
             // CHANGE IMMEDIATELY WITH TO BP WITH NON INCLUDED ADDON
-            String newBaseProduct = "Assault-Rifle";
-            BillingPeriod newBaseTerm = BillingPeriod.MONTHLY;
-            String newBasePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
+            final String newBaseProduct = "Assault-Rifle";
+            final BillingPeriod newBaseTerm = BillingPeriod.MONTHLY;
+            final String newBasePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
-            List<SubscriptionStatusDryRun> aoStatus = entitlementApi.getDryRunChangePlanStatus(baseSubscription.getId(), newBaseProduct, now);
+            final List<SubscriptionStatusDryRun> aoStatus = entitlementApi.getDryRunChangePlanStatus(baseSubscription.getId(), newBaseProduct, now);
             assertEquals(aoStatus.size(), 1);
             assertEquals(aoStatus.get(0).getId(), aoSubscription.getId());
             assertEquals(aoStatus.get(0).getProductName(), aoProduct);
-            assertEquals(aoStatus.get(0).getBillingPeriod(), aoTerm);            
-            assertEquals(aoStatus.get(0).getPhaseType(), aoSubscription.getCurrentPhase().getPhaseType());                        
+            assertEquals(aoStatus.get(0).getBillingPeriod(), aoTerm);
+            assertEquals(aoStatus.get(0).getPhaseType(), aoSubscription.getCurrentPhase().getPhaseType());
             assertEquals(aoStatus.get(0).getPriceList(), aoSubscription.getCurrentPriceList().getName());
-            assertEquals(aoStatus.get(0).getReason(), DryRunChangeReason.AO_INCLUDED_IN_NEW_PLAN);            
-            
+            assertEquals(aoStatus.get(0).getReason(), DryRunChangeReason.AO_INCLUDED_IN_NEW_PLAN);
+
             testListener.reset();
             testListener.pushExpectedEvent(NextEvent.CHANGE);
             testListener.pushExpectedEvent(NextEvent.CANCEL);
@@ -221,23 +221,23 @@ public class TestUserApiAddOn extends TestApiBase {
         }
     }
 
-    @Test(enabled=true, groups={"slow"})
+    @Test(enabled = true, groups = {"slow"})
     public void testChangeBPWithAddonNonAvailable() {
 
         log.info("Starting testChangeBPWithAddonNonAvailable");
 
         try {
 
-            String baseProduct = "Shotgun";
-            BillingPeriod baseTerm = BillingPeriod.MONTHLY;
-            String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
+            final String baseProduct = "Shotgun";
+            final BillingPeriod baseTerm = BillingPeriod.MONTHLY;
+            final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
             // CREATE BP
             SubscriptionData baseSubscription = createSubscription(baseProduct, baseTerm, basePriceList);
 
-            String aoProduct = "Telescopic-Scope";
-            BillingPeriod aoTerm = BillingPeriod.MONTHLY;
-            String aoPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
+            final String aoProduct = "Telescopic-Scope";
+            final BillingPeriod aoTerm = BillingPeriod.MONTHLY;
+            final String aoPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
             SubscriptionData aoSubscription = createSubscription(aoProduct, aoTerm, aoPriceList);
 
@@ -251,26 +251,26 @@ public class TestUserApiAddOn extends TestApiBase {
             assertTrue(testListener.isCompleted(5000));
 
             // SET CTD TO CANCEL IN FUTURE
-            DateTime now = clock.getUTCNow();
-            Duration ctd = getDurationMonth(1);
-            DateTime newChargedThroughDate = DefaultClock.addDuration(now, ctd);
+            final DateTime now = clock.getUTCNow();
+            final Duration ctd = getDurationMonth(1);
+            final DateTime newChargedThroughDate = DefaultClock.addDuration(now, ctd);
             billingApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate, context);
             baseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId());
 
             // CHANGE IMMEDIATELY WITH TO BP WITH NON AVAILABLE ADDON
-            String newBaseProduct = "Pistol";
-            BillingPeriod newBaseTerm = BillingPeriod.MONTHLY;
-            String newBasePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
+            final String newBaseProduct = "Pistol";
+            final BillingPeriod newBaseTerm = BillingPeriod.MONTHLY;
+            final String newBasePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
-            List<SubscriptionStatusDryRun> aoStatus = entitlementApi.getDryRunChangePlanStatus(baseSubscription.getId(), newBaseProduct, now);
+            final List<SubscriptionStatusDryRun> aoStatus = entitlementApi.getDryRunChangePlanStatus(baseSubscription.getId(), newBaseProduct, now);
             assertEquals(aoStatus.size(), 1);
             assertEquals(aoStatus.get(0).getId(), aoSubscription.getId());
             assertEquals(aoStatus.get(0).getProductName(), aoProduct);
-            assertEquals(aoStatus.get(0).getBillingPeriod(), aoTerm);   
-            assertEquals(aoStatus.get(0).getPhaseType(), aoSubscription.getCurrentPhase().getPhaseType());                                    
+            assertEquals(aoStatus.get(0).getBillingPeriod(), aoTerm);
+            assertEquals(aoStatus.get(0).getPhaseType(), aoSubscription.getCurrentPhase().getPhaseType());
             assertEquals(aoStatus.get(0).getPriceList(), aoSubscription.getCurrentPriceList().getName());
-            assertEquals(aoStatus.get(0).getReason(), DryRunChangeReason.AO_NOT_AVAILABLE_IN_NEW_PLAN);            
-            
+            assertEquals(aoStatus.get(0).getReason(), DryRunChangeReason.AO_NOT_AVAILABLE_IN_NEW_PLAN);
+
             baseSubscription.changePlan(newBaseProduct, newBaseTerm, newBasePriceList, now, context);
 
             // REFETCH AO SUBSCRIPTION AND CHECK THIS IS ACTIVE
@@ -298,22 +298,22 @@ public class TestUserApiAddOn extends TestApiBase {
     }
 
 
-    @Test(enabled=true, groups={"slow"})
+    @Test(enabled = true, groups = {"slow"})
     public void testAddonCreateWithBundleAlign() {
 
         log.info("Starting testAddonCreateWithBundleAlign");
 
         try {
-            String aoProduct = "Telescopic-Scope";
-            BillingPeriod aoTerm = BillingPeriod.MONTHLY;
-            String aoPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
+            final String aoProduct = "Telescopic-Scope";
+            final BillingPeriod aoTerm = BillingPeriod.MONTHLY;
+            final String aoPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
             // This is just to double check our test catalog gives us what we want before we start the test
-            PlanSpecifier planSpecifier = new PlanSpecifier(aoProduct,
-                    ProductCategory.ADD_ON,
-                    aoTerm,
-                    aoPriceList);
-            PlanAlignmentCreate alignement = catalog.planCreateAlignment(planSpecifier, clock.getUTCNow());
+            final PlanSpecifier planSpecifier = new PlanSpecifier(aoProduct,
+                                                            ProductCategory.ADD_ON,
+                                                            aoTerm,
+                                                            aoPriceList);
+            final PlanAlignmentCreate alignement = catalog.planCreateAlignment(planSpecifier, clock.getUTCNow());
             assertEquals(alignement, PlanAlignmentCreate.START_OF_BUNDLE);
 
             testAddonCreateInternal(aoProduct, aoTerm, aoPriceList, alignement);
@@ -324,22 +324,22 @@ public class TestUserApiAddOn extends TestApiBase {
         }
     }
 
-    @Test(enabled=true, groups={"slow"})
+    @Test(enabled = true, groups = {"slow"})
     public void testAddonCreateWithSubscriptionAlign() {
 
         log.info("Starting testAddonCreateWithSubscriptionAlign");
 
         try {
-            String aoProduct = "Laser-Scope";
-            BillingPeriod aoTerm = BillingPeriod.MONTHLY;
-            String aoPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
+            final String aoProduct = "Laser-Scope";
+            final BillingPeriod aoTerm = BillingPeriod.MONTHLY;
+            final String aoPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
             // This is just to double check our test catalog gives us what we want before we start the test
-            PlanSpecifier planSpecifier = new PlanSpecifier(aoProduct,
-                    ProductCategory.ADD_ON,
-                    aoTerm,
-                    aoPriceList);
-            PlanAlignmentCreate alignement = catalog.planCreateAlignment(planSpecifier, clock.getUTCNow());
+            final PlanSpecifier planSpecifier = new PlanSpecifier(aoProduct,
+                                                            ProductCategory.ADD_ON,
+                                                            aoTerm,
+                                                            aoPriceList);
+            final PlanAlignmentCreate alignement = catalog.planCreateAlignment(planSpecifier, clock.getUTCNow());
             assertEquals(alignement, PlanAlignmentCreate.START_OF_SUBSCRIPTION);
 
             testAddonCreateInternal(aoProduct, aoTerm, aoPriceList, alignement);
@@ -351,30 +351,30 @@ public class TestUserApiAddOn extends TestApiBase {
     }
 
 
-    private void testAddonCreateInternal(String aoProduct, BillingPeriod aoTerm, String aoPriceList, PlanAlignmentCreate expAlignement) {
+    private void testAddonCreateInternal(final String aoProduct, final BillingPeriod aoTerm, final String aoPriceList, final PlanAlignmentCreate expAlignement) {
 
         try {
 
-            String baseProduct = "Shotgun";
-            BillingPeriod baseTerm = BillingPeriod.MONTHLY;
-            String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
+            final String baseProduct = "Shotgun";
+            final BillingPeriod baseTerm = BillingPeriod.MONTHLY;
+            final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
             // CREATE BP
-            SubscriptionData baseSubscription = createSubscription(baseProduct, baseTerm, basePriceList);
+            final SubscriptionData baseSubscription = createSubscription(baseProduct, baseTerm, basePriceList);
 
             // MOVE CLOCK 14 DAYS LATER
             Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(14));
             clock.addDeltaFromReality(it.toDurationMillis());
-  
+
             // CREATE ADDON
-            DateTime beforeAOCreation = clock.getUTCNow();
+            final DateTime beforeAOCreation = clock.getUTCNow();
             SubscriptionData aoSubscription = createSubscription(aoProduct, aoTerm, aoPriceList);
-            DateTime afterAOCreation = clock.getUTCNow();
+            final DateTime afterAOCreation = clock.getUTCNow();
 
             // CHECK EVERYTHING
             Plan aoCurrentPlan = aoSubscription.getCurrentPlan();
             assertNotNull(aoCurrentPlan);
-            assertEquals(aoCurrentPlan.getProduct().getName(),aoProduct);
+            assertEquals(aoCurrentPlan.getProduct().getName(), aoProduct);
             assertEquals(aoCurrentPlan.getProduct().getCategory(), ProductCategory.ADD_ON);
             assertEquals(aoCurrentPlan.getBillingPeriod(), aoTerm);
 
@@ -410,7 +410,7 @@ public class TestUserApiAddOn extends TestApiBase {
 
             aoCurrentPlan = aoSubscription.getCurrentPlan();
             assertNotNull(aoCurrentPlan);
-            assertEquals(aoCurrentPlan.getProduct().getName(),aoProduct);
+            assertEquals(aoCurrentPlan.getProduct().getName(), aoProduct);
             assertEquals(aoCurrentPlan.getProduct().getCategory(), ProductCategory.ADD_ON);
             assertEquals(aoCurrentPlan.getBillingPeriod(), aoTerm);
 

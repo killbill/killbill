@@ -65,9 +65,9 @@ public class DefaultBillingApi implements BillingApi {
     private final TagUserApi tagApi;
 
     @Inject
-    public DefaultBillingApi(final ChargeThruApi chargeThruApi, final CallContextFactory factory, final AccountUserApi accountApi, 
-            final BillCycleDayCalculator bcdCalculator, final EntitlementUserApi entitlementUserApi, final BlockingCalculator blockCalculator,
-            final CatalogService catalogService, final TagUserApi tagApi) {
+    public DefaultBillingApi(final ChargeThruApi chargeThruApi, final CallContextFactory factory, final AccountUserApi accountApi,
+                             final BillCycleDayCalculator bcdCalculator, final EntitlementUserApi entitlementUserApi, final BlockingCalculator blockCalculator,
+                             final CatalogService catalogService, final TagUserApi tagApi) {
 
         this.chargeThruApi = chargeThruApi;
         this.accountApi = accountApi;
@@ -81,79 +81,79 @@ public class DefaultBillingApi implements BillingApi {
 
     @Override
     public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(final UUID accountId) {
-        CallContext context = factory.createCallContext(API_USER_NAME, CallOrigin.INTERNAL, UserType.SYSTEM);
+        final CallContext context = factory.createCallContext(API_USER_NAME, CallOrigin.INTERNAL, UserType.SYSTEM);
 
-        List<SubscriptionBundle> bundles = entitlementUserApi.getBundlesForAccount(accountId);
-        DefaultBillingEventSet result = new DefaultBillingEventSet();
+        final List<SubscriptionBundle> bundles = entitlementUserApi.getBundlesForAccount(accountId);
+        final DefaultBillingEventSet result = new DefaultBillingEventSet();
 
         try {
-            Account account = accountApi.getAccountById(accountId);
+            final Account account = accountApi.getAccountById(accountId);
 
             // Check to see if billing is off for the account
-            Map<String,Tag> accountTags = tagApi.getTags(accountId,ObjectType.ACCOUNT);
-            if(accountTags.get(ControlTagType.AUTO_INVOICING_OFF.name()) != null) {
+            final Map<String, Tag> accountTags = tagApi.getTags(accountId, ObjectType.ACCOUNT);
+            if (accountTags.get(ControlTagType.AUTO_INVOICING_OFF.name()) != null) {
                 result.setAccountAutoInvoiceIsOff(true);
                 return result; // billing is off, we are done
             }
 
-            addBillingEventsForBundles(bundles, account, context, result);         
-           
+            addBillingEventsForBundles(bundles, account, context, result);
+
         } catch (AccountApiException e) {
             log.warn("Failed while getting BillingEvent", e);
         }
-        
+
         debugLog(result, "********* Billing Events Raw");
         blockCalculator.insertBlockingEvents(result);
-        debugLog(result,"*********  Billing Events After Blocking");
-        
+        debugLog(result, "*********  Billing Events After Blocking");
+
         return result;
     }
-    
 
-    private void debugLog(SortedSet<BillingEvent> result, String title) {
+
+    private void debugLog(final SortedSet<BillingEvent> result, final String title) {
         log.debug(title);
-        Iterator<BillingEvent> i = result.iterator();
-        while(i.hasNext()) {
+        final Iterator<BillingEvent> i = result.iterator();
+        while (i.hasNext()) {
             log.debug(i.next().toString());
         }
-        
+
     }
 
-    private void addBillingEventsForBundles(List<SubscriptionBundle> bundles, Account account, CallContext context,
-            DefaultBillingEventSet result) {
-        
-        for (final SubscriptionBundle bundle: bundles) {
-            List<Subscription> subscriptions = entitlementUserApi.getSubscriptionsForBundle(bundle.getId());
+    private void addBillingEventsForBundles(final List<SubscriptionBundle> bundles, final Account account, final CallContext context,
+                                            final DefaultBillingEventSet result) {
+
+        for (final SubscriptionBundle bundle : bundles) {
+            final List<Subscription> subscriptions = entitlementUserApi.getSubscriptionsForBundle(bundle.getId());
 
             //Check if billing is off for the bundle
-            Map<String,Tag> bundleTags = tagApi.getTags(bundle.getId(), ObjectType.BUNDLE);
-            if(bundleTags.get(ControlTagType.AUTO_INVOICING_OFF.name()) != null) {
-                 for (final Subscription subscription: subscriptions) { // billing is off so list sub ids in set to be excluded
+            final Map<String, Tag> bundleTags = tagApi.getTags(bundle.getId(), ObjectType.BUNDLE);
+            if (bundleTags.get(ControlTagType.AUTO_INVOICING_OFF.name()) != null) {
+                for (final Subscription subscription : subscriptions) { // billing is off so list sub ids in set to be excluded
                     result.getSubscriptionIdsWithAutoInvoiceOff().add(subscription.getId());
                 }
             } else { // billing is not off
-                addBillingEventsForSubscription(subscriptions, bundle, account, context, result);                 
+                addBillingEventsForSubscription(subscriptions, bundle, account, context, result);
             }
-        }        
+        }
     }
 
-    private void addBillingEventsForSubscription(List<Subscription> subscriptions, SubscriptionBundle bundle, Account account, CallContext context, DefaultBillingEventSet result) {
-        for (final Subscription subscription: subscriptions) {
+    private void addBillingEventsForSubscription(final List<Subscription> subscriptions, final SubscriptionBundle bundle, final Account account, final CallContext context, final DefaultBillingEventSet result) {
+        for (final Subscription subscription : subscriptions) {
             for (final SubscriptionEvent transition : subscription.getBillingTransitions()) {
                 try {
-                    int bcd = bcdCalculator.calculateBcd(bundle, subscription, transition, account);
+                    final int bcd = bcdCalculator.calculateBcd(bundle, subscription, transition, account);
 
-                    if(account.getBillCycleDay() == 0) {
-                        MutableAccountData modifiedData = account.toMutableAccountData();
+                    if (account.getBillCycleDay() == 0) {
+                        final MutableAccountData modifiedData = account.toMutableAccountData();
                         modifiedData.setBillCycleDay(bcd);
                         accountApi.updateAccount(account.getExternalKey(), modifiedData, context);
                     }
 
-                    BillingEvent event = new DefaultBillingEvent(account, transition, subscription, bcd, account.getCurrency(), catalogService.getFullCatalog());
+                    final BillingEvent event = new DefaultBillingEvent(account, transition, subscription, bcd, account.getCurrency(), catalogService.getFullCatalog());
                     result.add(event);
                 } catch (CatalogApiException e) {
                     log.error("Failing to identify catalog components while creating BillingEvent from transition: " +
-                            transition.getId().toString(), e);
+                                      transition.getId().toString(), e);
                 } catch (Exception e) {
                     log.warn("Failed while getting BillingEvent", e);
                 }
@@ -163,8 +163,8 @@ public class DefaultBillingApi implements BillingApi {
     }
 
     @Override
-    public UUID getAccountIdFromSubscriptionId(UUID subscriptionId) throws EntitlementBillingApiException {
-        UUID result = chargeThruApi.getAccountIdFromSubscriptionId(subscriptionId);
+    public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId) throws EntitlementBillingApiException {
+        final UUID result = chargeThruApi.getAccountIdFromSubscriptionId(subscriptionId);
         if (result == null) {
             throw new EntitlementBillingApiException(ErrorCode.ENT_INVALID_SUBSCRIPTION_ID, subscriptionId.toString());
         }
@@ -172,7 +172,7 @@ public class DefaultBillingApi implements BillingApi {
     }
 
     @Override
-    public void setChargedThroughDate(UUID subscriptionId, DateTime ctd, CallContext context) {
+    public void setChargedThroughDate(final UUID subscriptionId, final DateTime ctd, final CallContext context) {
         chargeThruApi.setChargedThroughDate(subscriptionId, ctd, context);
     }
 }

@@ -22,15 +22,15 @@ import com.ning.billing.ErrorCode;
 public class EmailApiException extends BillingExceptionBase {
     private static final long serialVersionUID = 1L;
 
-    public EmailApiException(Throwable cause, int code, final String msg) {
+    public EmailApiException(final Throwable cause, final int code, final String msg) {
         super(cause, code, msg);
     }
 
-    public EmailApiException(Throwable cause, ErrorCode code, final Object... args) {
+    public EmailApiException(final Throwable cause, final ErrorCode code, final Object... args) {
         super(cause, code, args);
     }
 
-    public EmailApiException(ErrorCode code, final Object... args) {
+    public EmailApiException(final ErrorCode code, final Object... args) {
         super(code, args);
     }
 }

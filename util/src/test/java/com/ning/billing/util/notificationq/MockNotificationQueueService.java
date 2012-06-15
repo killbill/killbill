@@ -28,9 +28,9 @@ public class MockNotificationQueueService extends NotificationQueueServiceBase {
     }
 
     @Override
-    protected NotificationQueue createNotificationQueueInternal(String svcName,
-            String queueName, NotificationQueueHandler handler,
-            NotificationConfig config) {
+    protected NotificationQueue createNotificationQueueInternal(final String svcName,
+                                                                final String queueName, final NotificationQueueHandler handler,
+                                                                final NotificationConfig config) {
         return new MockNotificationQueue(clock, svcName, queueName, handler, config);
     }
 }

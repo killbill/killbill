@@ -19,10 +19,10 @@ package com.ning.billing.catalog.api;
 
 public interface PriceList {
 
-	public abstract String getName();
+    public abstract String getName();
 
-	public abstract boolean isRetired();
+    public abstract boolean isRetired();
 
-	public abstract Plan findPlan(Product product, BillingPeriod period);
+    public abstract Plan findPlan(Product product, BillingPeriod period);
 
 }

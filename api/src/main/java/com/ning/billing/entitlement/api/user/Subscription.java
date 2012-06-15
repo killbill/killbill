@@ -35,16 +35,16 @@ import com.ning.billing.util.entity.Entity;
 public interface Subscription extends Entity, Blockable {
 
     public boolean cancel(DateTime requestedDate, boolean eot, CallContext context)
-    throws EntitlementUserApiException;
+            throws EntitlementUserApiException;
 
     public boolean uncancel(CallContext context)
-    throws EntitlementUserApiException;
+            throws EntitlementUserApiException;
 
     public boolean changePlan(String productName, BillingPeriod term, String planSet, DateTime requestedDate, CallContext context)
-    throws EntitlementUserApiException;
+            throws EntitlementUserApiException;
 
     public boolean recreate(PlanPhaseSpecifier spec, DateTime requestedDate, CallContext context)
-        throws EntitlementUserApiException;
+            throws EntitlementUserApiException;
 
     public enum SubscriptionState {
         ACTIVE,
@@ -74,6 +74,6 @@ public interface Subscription extends Entity, Blockable {
     public SubscriptionEvent getPendingTransition();
 
     public SubscriptionEvent getPreviousTransition();
-    
+
     public List<SubscriptionEvent> getBillingTransitions();
 }

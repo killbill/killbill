@@ -16,13 +16,6 @@
 
 package com.ning.billing.jaxrs.resources;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.TimeoutException;
-
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -36,12 +29,11 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.TimeoutException;
 
-import com.ning.billing.jaxrs.json.CustomFieldJson;
-import com.ning.billing.jaxrs.util.TagHelper;
-import com.ning.billing.util.api.CustomFieldUserApi;
-import com.ning.billing.util.api.TagUserApi;
-import com.ning.billing.util.dao.ObjectType;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
@@ -59,14 +51,21 @@ import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionEvent;
 import com.ning.billing.invoice.api.EmptyInvoiceEvent;
 import com.ning.billing.invoice.api.InvoiceCreationEvent;
+import com.ning.billing.jaxrs.json.CustomFieldJson;
 import com.ning.billing.jaxrs.json.SubscriptionJsonNoEvents;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
 import com.ning.billing.jaxrs.util.KillbillEventHandler;
+import com.ning.billing.jaxrs.util.TagHelper;
 import com.ning.billing.payment.api.PaymentErrorEvent;
 import com.ning.billing.payment.api.PaymentInfoEvent;
+import com.ning.billing.util.api.CustomFieldUserApi;
+import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.userrequest.CompletionUserRequestBase;
+
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Path(JaxrsResource.SUBSCRIPTIONS_PATH)
 public class SubscriptionResource extends JaxRsResourceBase {
@@ -79,13 +78,13 @@ public class SubscriptionResource extends JaxRsResourceBase {
 
     private final EntitlementUserApi entitlementApi;
     private final Context context;
-    private final JaxrsUriBuilder uriBuilder;	
+    private final JaxrsUriBuilder uriBuilder;
     private final KillbillEventHandler killbillHandler;
-    
+
     @Inject
     public SubscriptionResource(final JaxrsUriBuilder uriBuilder, final EntitlementUserApi entitlementApi,
-            final Context context, final KillbillEventHandler killbillHandler,
-            final TagUserApi tagUserApi, final TagHelper tagHelper, final CustomFieldUserApi customFieldUserApi) {
+                                final Context context, final KillbillEventHandler killbillHandler,
+                                final TagUserApi tagUserApi, final TagHelper tagHelper, final CustomFieldUserApi customFieldUserApi) {
         super(uriBuilder, tagUserApi, tagHelper, customFieldUserApi);
         this.uriBuilder = uriBuilder;
         this.entitlementApi = entitlementApi;
@@ -99,9 +98,9 @@ public class SubscriptionResource extends JaxRsResourceBase {
     public Response getSubscription(@PathParam("subscriptionId") final String subscriptionId) throws EntitlementUserApiException {
 
         try {
-            UUID uuid = UUID.fromString(subscriptionId);
-            Subscription subscription = entitlementApi.getSubscriptionFromId(uuid);
-            SubscriptionJsonNoEvents json = new SubscriptionJsonNoEvents(subscription);
+            final UUID uuid = UUID.fromString(subscriptionId);
+            final Subscription subscription = entitlementApi.getSubscriptionFromId(uuid);
+            final SubscriptionJsonNoEvents json = new SubscriptionJsonNoEvents(subscription);
             return Response.status(Status.OK).entity(json).build();
         } catch (EntitlementUserApiException e) {
             if (e.getCode() == ErrorCode.ENT_INVALID_SUBSCRIPTION_ID.getCode()) {
@@ -111,42 +110,44 @@ public class SubscriptionResource extends JaxRsResourceBase {
             }
         }
     }
-  
+
 
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response createSubscription(final SubscriptionJsonNoEvents subscription,
-            @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
-            @QueryParam(QUERY_CALL_COMPLETION) @DefaultValue("false") final Boolean callCompletion,
-            @QueryParam(QUERY_CALL_TIMEOUT) @DefaultValue("3") final long timeoutSec,
-            @HeaderParam(HDR_CREATED_BY) final String createdBy,
-            @HeaderParam(HDR_REASON) final String reason,
-            @HeaderParam(HDR_COMMENT) final String comment) {
+                                       @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
+                                       @QueryParam(QUERY_CALL_COMPLETION) @DefaultValue("false") final Boolean callCompletion,
+                                       @QueryParam(QUERY_CALL_TIMEOUT) @DefaultValue("3") final long timeoutSec,
+                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                       @HeaderParam(HDR_REASON) final String reason,
+                                       @HeaderParam(HDR_COMMENT) final String comment) {
 
 
-        SubscriptionCallCompletionCallback<Subscription> callback = new SubscriptionCallCompletionCallback<Subscription>() {
+        final SubscriptionCallCompletionCallback<Subscription> callback = new SubscriptionCallCompletionCallback<Subscription>() {
             @Override
             public Subscription doOperation(final CallContext ctx) throws EntitlementUserApiException, InterruptedException, TimeoutException {
 
-                DateTime inputDate = (requestedDate != null) ? DATE_TIME_FORMATTER.parseDateTime(requestedDate) : null;        
-                UUID uuid = UUID.fromString(subscription.getBundleId());
+                final DateTime inputDate = (requestedDate != null) ? DATE_TIME_FORMATTER.parseDateTime(requestedDate) : null;
+                final UUID uuid = UUID.fromString(subscription.getBundleId());
 
-                PlanPhaseSpecifier spec =  new PlanPhaseSpecifier(subscription.getProductName(),
-                        ProductCategory.valueOf(subscription.getProductCategory()),
-                        BillingPeriod.valueOf(subscription.getBillingPeriod()), subscription.getPriceList(), null);
+                final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(subscription.getProductName(),
+                                                                 ProductCategory.valueOf(subscription.getProductCategory()),
+                                                                 BillingPeriod.valueOf(subscription.getBillingPeriod()), subscription.getPriceList(), null);
                 return entitlementApi.createSubscription(uuid, spec, inputDate, ctx);
             }
+
             @Override
             public boolean isImmOperation() {
                 return true;
             }
+
             @Override
             public Response doResponseOk(final Subscription createdSubscription) {
                 return uriBuilder.buildResponse(SubscriptionResource.class, "getSubscription", createdSubscription.getId());
             }
         };
-        SubscriptionCallCompletion<Subscription> callCompletionCreation = new SubscriptionCallCompletion<Subscription>();
+        final SubscriptionCallCompletion<Subscription> callCompletionCreation = new SubscriptionCallCompletion<Subscription>();
         return callCompletionCreation.withSynchronization(callback, timeoutSec, callCompletion, createdBy, reason, comment);
     }
 
@@ -155,39 +156,41 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Path("/{subscriptionId:" + UUID_PATTERN + "}")
     public Response changeSubscriptionPlan(final SubscriptionJsonNoEvents subscription,
-            @PathParam("subscriptionId") final String subscriptionId,
-            @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
-            @QueryParam(QUERY_CALL_COMPLETION) @DefaultValue("false") final Boolean callCompletion,
-            @QueryParam(QUERY_CALL_TIMEOUT) @DefaultValue("3") final long timeoutSec,
-            @HeaderParam(HDR_CREATED_BY) final String createdBy,
-            @HeaderParam(HDR_REASON) final String reason,
-            @HeaderParam(HDR_COMMENT) final String comment) {
+                                           @PathParam("subscriptionId") final String subscriptionId,
+                                           @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
+                                           @QueryParam(QUERY_CALL_COMPLETION) @DefaultValue("false") final Boolean callCompletion,
+                                           @QueryParam(QUERY_CALL_TIMEOUT) @DefaultValue("3") final long timeoutSec,
+                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                           @HeaderParam(HDR_REASON) final String reason,
+                                           @HeaderParam(HDR_COMMENT) final String comment) {
 
-        SubscriptionCallCompletionCallback<Response> callback = new SubscriptionCallCompletionCallback<Response>() {
+        final SubscriptionCallCompletionCallback<Response> callback = new SubscriptionCallCompletionCallback<Response>() {
 
             private boolean isImmediateOp = true;
 
             @Override
-            public Response doOperation(CallContext ctx)
+            public Response doOperation(final CallContext ctx)
                     throws EntitlementUserApiException, InterruptedException,
                     TimeoutException {
                 try {
-                    UUID uuid = UUID.fromString(subscriptionId);
-                    Subscription current = entitlementApi.getSubscriptionFromId(uuid);
-                    DateTime inputDate = (requestedDate != null) ? DATE_TIME_FORMATTER.parseDateTime(requestedDate) : null;
-                    isImmediateOp = current.changePlan(subscription.getProductName(),  BillingPeriod.valueOf(subscription.getBillingPeriod()), subscription.getPriceList(), inputDate, ctx);
+                    final UUID uuid = UUID.fromString(subscriptionId);
+                    final Subscription current = entitlementApi.getSubscriptionFromId(uuid);
+                    final DateTime inputDate = (requestedDate != null) ? DATE_TIME_FORMATTER.parseDateTime(requestedDate) : null;
+                    isImmediateOp = current.changePlan(subscription.getProductName(), BillingPeriod.valueOf(subscription.getBillingPeriod()), subscription.getPriceList(), inputDate, ctx);
                     return Response.status(Status.OK).build();
                 } catch (EntitlementUserApiException e) {
-                    log.warn("Subscription not found: " + subscriptionId , e);
+                    log.warn("Subscription not found: " + subscriptionId, e);
                     return Response.status(Status.NO_CONTENT).build();
                 }
             }
+
             @Override
             public boolean isImmOperation() {
                 return isImmediateOp;
             }
+
             @Override
-            public Response doResponseOk(Response operationResponse) {
+            public Response doResponseOk(final Response operationResponse) {
                 if (operationResponse.getStatus() != Status.OK.getStatusCode()) {
                     return operationResponse;
                 }
@@ -202,7 +205,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                 }
             }
         };
-        SubscriptionCallCompletion<Response> callCompletionCreation = new SubscriptionCallCompletion<Response>();
+        final SubscriptionCallCompletion<Response> callCompletionCreation = new SubscriptionCallCompletion<Response>();
         return callCompletionCreation.withSynchronization(callback, timeoutSec, callCompletion, createdBy, reason, comment);
     }
 
@@ -210,17 +213,17 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @Path("/{subscriptionId:" + UUID_PATTERN + "}/uncancel")
     @Produces(APPLICATION_JSON)
     public Response uncancelSubscriptionPlan(@PathParam("subscriptionId") final String subscriptionId,
-            @HeaderParam(HDR_CREATED_BY) final String createdBy,
-            @HeaderParam(HDR_REASON) final String reason,
-            @HeaderParam(HDR_COMMENT) final String comment) {
+                                             @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                             @HeaderParam(HDR_REASON) final String reason,
+                                             @HeaderParam(HDR_COMMENT) final String comment) {
         try {
-            UUID uuid = UUID.fromString(subscriptionId);
-            Subscription current = entitlementApi.getSubscriptionFromId(uuid);
-        
+            final UUID uuid = UUID.fromString(subscriptionId);
+            final Subscription current = entitlementApi.getSubscriptionFromId(uuid);
+
             current.uncancel(context.createContext(createdBy, reason, comment));
             return Response.status(Status.OK).build();
         } catch (EntitlementUserApiException e) {
-            if(e.getCode() == ErrorCode.ENT_INVALID_SUBSCRIPTION_ID.getCode()) {
+            if (e.getCode() == ErrorCode.ENT_INVALID_SUBSCRIPTION_ID.getCode()) {
                 return Response.status(Status.NO_CONTENT).build();
             } else {
                 log.info(String.format("Failed to uncancel plan for subscription %s", subscriptionId), e);
@@ -232,107 +235,116 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @DELETE
     @Path("/{subscriptionId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
-    public Response cancelSubscriptionPlan(final @PathParam("subscriptionId") String subscriptionId,
-            @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
-            @QueryParam(QUERY_CALL_COMPLETION) @DefaultValue("false") final Boolean callCompletion,
-            @QueryParam(QUERY_CALL_TIMEOUT) @DefaultValue("5") final long timeoutSec,
-            @HeaderParam(HDR_CREATED_BY) final String createdBy,
-            @HeaderParam(HDR_REASON) final String reason,
-            @HeaderParam(HDR_COMMENT) final String comment) {
+    public Response cancelSubscriptionPlan(@PathParam("subscriptionId") final String subscriptionId,
+                                           @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
+                                           @QueryParam(QUERY_CALL_COMPLETION) @DefaultValue("false") final Boolean callCompletion,
+                                           @QueryParam(QUERY_CALL_TIMEOUT) @DefaultValue("5") final long timeoutSec,
+                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                           @HeaderParam(HDR_REASON) final String reason,
+                                           @HeaderParam(HDR_COMMENT) final String comment) {
 
-        SubscriptionCallCompletionCallback<Response> callback = new SubscriptionCallCompletionCallback<Response>() {
+        final SubscriptionCallCompletionCallback<Response> callback = new SubscriptionCallCompletionCallback<Response>() {
 
             private boolean isImmediateOp = true;
 
             @Override
-            public Response doOperation(CallContext ctx)
+            public Response doOperation(final CallContext ctx)
                     throws EntitlementUserApiException, InterruptedException,
                     TimeoutException {
                 try {
-                    UUID uuid = UUID.fromString(subscriptionId);
+                    final UUID uuid = UUID.fromString(subscriptionId);
 
-                    Subscription current = entitlementApi.getSubscriptionFromId(uuid);
+                    final Subscription current = entitlementApi.getSubscriptionFromId(uuid);
 
-                    DateTime inputDate = (requestedDate != null) ? DATE_TIME_FORMATTER.parseDateTime(requestedDate) : null;
+                    final DateTime inputDate = (requestedDate != null) ? DATE_TIME_FORMATTER.parseDateTime(requestedDate) : null;
                     isImmediateOp = current.cancel(inputDate, false, ctx);
                     return Response.status(Status.OK).build();
                 } catch (EntitlementUserApiException e) {
-                    if(e.getCode() == ErrorCode.ENT_INVALID_SUBSCRIPTION_ID.getCode()) {
+                    if (e.getCode() == ErrorCode.ENT_INVALID_SUBSCRIPTION_ID.getCode()) {
                         return Response.status(Status.NO_CONTENT).build();
                     } else {
                         throw e;
                     }
                 }
             }
+
             @Override
             public boolean isImmOperation() {
                 return isImmediateOp;
             }
+
             @Override
-            public Response doResponseOk(Response operationResponse) {
+            public Response doResponseOk(final Response operationResponse) {
                 return operationResponse;
             }
         };
-        SubscriptionCallCompletion<Response> callCompletionCreation = new SubscriptionCallCompletion<Response>();
+        final SubscriptionCallCompletion<Response> callCompletionCreation = new SubscriptionCallCompletion<Response>();
         return callCompletionCreation.withSynchronization(callback, timeoutSec, callCompletion, createdBy, reason, comment);
     }
 
-    private final static class CompletionUserRequestSubscription extends CompletionUserRequestBase {
+    private static final class CompletionUserRequestSubscription extends CompletionUserRequestBase {
 
         public CompletionUserRequestSubscription(final UUID userToken) {
             super(userToken);
         }
+
         @Override
-        public void onSubscriptionTransition(SubscriptionEvent curEvent) {
-            log.debug(String.format("Got event SubscriptionTransition token = %s, type = %s, remaining = %d ", 
-                    curEvent.getUserToken(), curEvent.getTransitionType(),  curEvent.getRemainingEventsForUserOperation())); 
+        public void onSubscriptionTransition(final SubscriptionEvent curEvent) {
+            log.debug(String.format("Got event SubscriptionTransition token = %s, type = %s, remaining = %d ",
+                                    curEvent.getUserToken(), curEvent.getTransitionType(), curEvent.getRemainingEventsForUserOperation()));
         }
+
         @Override
         public void onEmptyInvoice(final EmptyInvoiceEvent curEvent) {
-            log.debug(String.format("Got event EmptyInvoiceNotification token = %s ", curEvent.getUserToken())); 
+            log.debug(String.format("Got event EmptyInvoiceNotification token = %s ", curEvent.getUserToken()));
             notifyForCompletion();
         }
+
         @Override
-        public void onInvoiceCreation(InvoiceCreationEvent curEvent) {
-            log.debug(String.format("Got event InvoiceCreationNotification token = %s ", curEvent.getUserToken())); 
+        public void onInvoiceCreation(final InvoiceCreationEvent curEvent) {
+            log.debug(String.format("Got event InvoiceCreationNotification token = %s ", curEvent.getUserToken()));
             if (curEvent.getAmountOwed().compareTo(BigDecimal.ZERO) <= 0) {
                 notifyForCompletion();
             }
         }
+
         @Override
-        public void onPaymentInfo(PaymentInfoEvent curEvent) {
-            log.debug(String.format("Got event PaymentInfo token = %s ", curEvent.getUserToken()));  
+        public void onPaymentInfo(final PaymentInfoEvent curEvent) {
+            log.debug(String.format("Got event PaymentInfo token = %s ", curEvent.getUserToken()));
             notifyForCompletion();
         }
+
         @Override
-        public void onPaymentError(PaymentErrorEvent curEvent) {
-            log.debug(String.format("Got event PaymentError token = %s ", curEvent.getUserToken())); 
+        public void onPaymentError(final PaymentErrorEvent curEvent) {
+            log.debug(String.format("Got event PaymentError token = %s ", curEvent.getUserToken()));
             notifyForCompletion();
         }
     }
 
     private interface SubscriptionCallCompletionCallback<T> {
         public T doOperation(final CallContext ctx) throws EntitlementUserApiException, InterruptedException, TimeoutException;
+
         public boolean isImmOperation();
+
         public Response doResponseOk(final T operationResponse);
     }
 
     private class SubscriptionCallCompletion<T> {
 
         public Response withSynchronization(final SubscriptionCallCompletionCallback<T> callback,
-                final long timeoutSec,
-                final boolean callCompletion,
-                final String createdBy,
-                final String reason,
-                final String comment) {
+                                            final long timeoutSec,
+                                            final boolean callCompletion,
+                                            final String createdBy,
+                                            final String reason,
+                                            final String comment) {
 
-            CallContext ctx = context.createContext(createdBy, reason, comment);
-            CompletionUserRequestSubscription waiter = callCompletion ? new CompletionUserRequestSubscription(ctx.getUserToken()) : null; 
+            final CallContext ctx = context.createContext(createdBy, reason, comment);
+            final CompletionUserRequestSubscription waiter = callCompletion ? new CompletionUserRequestSubscription(ctx.getUserToken()) : null;
             try {
                 if (waiter != null) {
-                    killbillHandler.registerCompletionUserRequestWaiter(waiter);    
+                    killbillHandler.registerCompletionUserRequestWaiter(waiter);
                 }
-                T operationValue = callback.doOperation(ctx);
+                final T operationValue = callback.doOperation(ctx);
                 if (waiter != null && callback.isImmOperation()) {
                     waiter.waitForCompletion(timeoutSec * 1000);
                 }
@@ -343,10 +355,10 @@ public class SubscriptionResource extends JaxRsResourceBase {
             } catch (InterruptedException e) {
                 return Response.status(Status.INTERNAL_SERVER_ERROR).build();
             } catch (TimeoutException e) {
-                return Response.status(Status.fromStatusCode(408)).build();   
+                return Response.status(Status.fromStatusCode(408)).build();
             } finally {
                 if (waiter != null) {
-                    killbillHandler.unregisterCompletionUserRequestWaiter(waiter);              
+                    killbillHandler.unregisterCompletionUserRequestWaiter(waiter);
                 }
             }
         }
@@ -364,12 +376,12 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response createCustomFields(@PathParam(ID_PARAM_NAME) final String id,
-            final List<CustomFieldJson> customFields,
-            @HeaderParam(HDR_CREATED_BY) final String createdBy,
-            @HeaderParam(HDR_REASON) final String reason,
-            @HeaderParam(HDR_COMMENT) final String comment) {
+                                       final List<CustomFieldJson> customFields,
+                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                       @HeaderParam(HDR_REASON) final String reason,
+                                       @HeaderParam(HDR_COMMENT) final String comment) {
         return super.createCustomFields(UUID.fromString(id), customFields,
-                context.createContext(createdBy, reason, comment));
+                                        context.createContext(createdBy, reason, comment));
     }
 
     @DELETE
@@ -377,18 +389,18 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response deleteCustomFields(@PathParam(ID_PARAM_NAME) final String id,
-            @QueryParam(QUERY_CUSTOM_FIELDS) final String customFieldList,
-            @HeaderParam(HDR_CREATED_BY) final String createdBy,
-            @HeaderParam(HDR_REASON) final String reason,
-            @HeaderParam(HDR_COMMENT) final String comment) {
+                                       @QueryParam(QUERY_CUSTOM_FIELDS) final String customFieldList,
+                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                       @HeaderParam(HDR_REASON) final String reason,
+                                       @HeaderParam(HDR_COMMENT) final String comment) {
         return super.deleteCustomFields(UUID.fromString(id), customFieldList,
-                context.createContext(createdBy, reason, comment));
+                                        context.createContext(createdBy, reason, comment));
     }
 
     @GET
     @Path(TAG_URI)
     @Produces(APPLICATION_JSON)
-    public Response getTags(@PathParam(ID_PARAM_NAME) String id) {
+    public Response getTags(@PathParam(ID_PARAM_NAME) final String id) {
         return super.getTags(UUID.fromString(id));
     }
 
@@ -397,10 +409,10 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response createTags(@PathParam(ID_PARAM_NAME) final String id,
-            @QueryParam(QUERY_TAGS) final String tagList,
-            @HeaderParam(HDR_CREATED_BY) final String createdBy,
-            @HeaderParam(HDR_REASON) final String reason,
-            @HeaderParam(HDR_COMMENT) final String comment) {
+                               @QueryParam(QUERY_TAGS) final String tagList,
+                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                               @HeaderParam(HDR_REASON) final String reason,
+                               @HeaderParam(HDR_COMMENT) final String comment) {
         return super.createTags(UUID.fromString(id), tagList,
                                 context.createContext(createdBy, reason, comment));
     }
@@ -410,10 +422,10 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response deleteTags(@PathParam(ID_PARAM_NAME) final String id,
-            @QueryParam(QUERY_TAGS) final String tagList,
-            @HeaderParam(HDR_CREATED_BY) final String createdBy,
-            @HeaderParam(HDR_REASON) final String reason,
-            @HeaderParam(HDR_COMMENT) final String comment) {
+                               @QueryParam(QUERY_TAGS) final String tagList,
+                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                               @HeaderParam(HDR_REASON) final String reason,
+                               @HeaderParam(HDR_COMMENT) final String comment) {
 
         return super.deleteTags(UUID.fromString(id), tagList,
                                 context.createContext(createdBy, reason, comment));

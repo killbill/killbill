@@ -14,12 +14,12 @@ package com.ning.billing.util.email;/*
  * under the License.
  */
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.skife.config.ConfigurationObjectFactory;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Test(groups = {"slow", "email"})
 public class EmailSenderTest {

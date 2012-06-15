@@ -25,17 +25,17 @@ public class DefaultDeletedEvent implements DeletedEvent {
 
     private final UUID id;
     private final DateTime effectiveDate;
-    
-    public DefaultDeletedEvent(UUID id, DateTime effectiveDate) {
+
+    public DefaultDeletedEvent(final UUID id, final DateTime effectiveDate) {
         this.id = id;
         this.effectiveDate = effectiveDate;
     }
-    
+
     @Override
     public UUID getEventId() {
         return id;
     }
-    
+
     public DateTime getEffectiveDate() {
         return effectiveDate;
     }

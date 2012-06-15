@@ -16,13 +16,13 @@
 
 package com.ning.billing.lifecycle;
 
-import com.google.common.collect.Lists;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.List;
+
+import com.google.common.collect.Lists;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
@@ -81,11 +81,11 @@ public @interface LifecycleHandlerType {
             STARTUP_POST_EVENT_REGISTRATION,
             SHUTDOWN_PRE_EVENT_UNREGISTRATION,
             SHUTDOWN_POST_EVENT_UNREGISTRATION
-        };
+        }
 
-        private Sequence seq;
+        private final Sequence seq;
 
-        LifecycleLevel(Sequence seq) {
+        LifecycleLevel(final Sequence seq) {
             this.seq = seq;
         }
 
@@ -96,9 +96,9 @@ public @interface LifecycleHandlerType {
         //
         // Returns an ordered list of level for a particular sequence
         //
-        public static List<LifecycleLevel> getLevelsForSequence(Sequence seq) {
-            List<LifecycleLevel> result = Lists.newLinkedList();
-            for (LifecycleLevel level : LifecycleLevel.values()) {
+        public static List<LifecycleLevel> getLevelsForSequence(final Sequence seq) {
+            final List<LifecycleLevel> result = Lists.newLinkedList();
+            for (final LifecycleLevel level : LifecycleLevel.values()) {
                 if (level.getSequence() == seq) {
                     result.add(level);
                 }

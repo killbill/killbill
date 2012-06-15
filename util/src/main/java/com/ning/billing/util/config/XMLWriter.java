@@ -16,22 +16,21 @@
 
 package com.ning.billing.util.config;
 
-import java.io.ByteArrayOutputStream;
-
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Marshaller;
+import java.io.ByteArrayOutputStream;
 
 public class XMLWriter<T> {
-	final private static  int MAX_XML_SIZE_IN_BYTES = 100000;
-	
-	public static <T> String writeXML(T object, Class<T> type) throws Exception {
-   	 	JAXBContext context =JAXBContext.newInstance(type);
-        Marshaller marshaller = context.createMarshaller();
-        marshaller.setProperty( Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE );
-        ByteArrayOutputStream output = new ByteArrayOutputStream(MAX_XML_SIZE_IN_BYTES);
-        
+    private static final int MAX_XML_SIZE_IN_BYTES = 100000;
+
+    public static <T> String writeXML(final T object, final Class<T> type) throws Exception {
+        final JAXBContext context = JAXBContext.newInstance(type);
+        final Marshaller marshaller = context.createMarshaller();
+        marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+        final ByteArrayOutputStream output = new ByteArrayOutputStream(MAX_XML_SIZE_IN_BYTES);
+
         marshaller.marshal(object, output);
-        
+
         return new String(output.toByteArray());
-   }
+    }
 }

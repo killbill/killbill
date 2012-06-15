@@ -16,8 +16,9 @@
 
 package com.ning.billing.entitlement.alignment;
 
-import com.ning.billing.catalog.api.PlanPhase;
 import org.joda.time.DateTime;
+
+import com.ning.billing.catalog.api.PlanPhase;
 
 
 public final class TimedPhase {
@@ -25,7 +26,7 @@ public final class TimedPhase {
     private final PlanPhase phase;
     private final DateTime startPhase;
 
-    public TimedPhase(PlanPhase phase, DateTime startPhase) {
+    public TimedPhase(final PlanPhase phase, final DateTime startPhase) {
         super();
         this.phase = phase;
         this.startPhase = startPhase;

@@ -32,18 +32,18 @@ import com.ning.billing.payment.api.PaymentErrorEvent;
 import com.ning.billing.payment.api.PaymentInfoEvent;
 
 public class TestApiListener {
-    
+
     protected static final Logger log = LoggerFactory.getLogger(TestApiListener.class);
 
     private final List<NextEvent> nextExpectedEvent;
 
     private final TestListenerStatus testStatus;
-    
+
     private boolean nonExpectedMode;
-    
+
     private volatile boolean completed;
 
-    public TestApiListener(TestListenerStatus testStatus) {
+    public TestApiListener(final TestListenerStatus testStatus) {
         nextExpectedEvent = new Stack<NextEvent>();
         this.completed = false;
         this.testStatus = testStatus;
@@ -52,9 +52,9 @@ public class TestApiListener {
 
     public enum NextEvent {
         MIGRATE_ENTITLEMENT,
-        MIGRATE_BILLING,        
+        MIGRATE_BILLING,
         CREATE,
-        RE_CREATE,        
+        RE_CREATE,
         CHANGE,
         CANCEL,
         UNCANCEL,
@@ -63,66 +63,66 @@ public class TestApiListener {
         PHASE,
         INVOICE,
         PAYMENT,
-        PAYMENT_ERROR,        
+        PAYMENT_ERROR,
         REPAIR_BUNDLE
     }
-    
+
     public void setNonExpectedMode() {
-        synchronized(this) {
+        synchronized (this) {
             this.nonExpectedMode = true;
         }
     }
-    
+
     @Subscribe
-    public void handleEntitlementEvents(RepairEntitlementEvent event) {
+    public void handleEntitlementEvents(final RepairEntitlementEvent event) {
         log.info(String.format("TestApiListener Got RepairEntitlementEvent event %s", event.toString()));
         assertEqualsNicely(NextEvent.REPAIR_BUNDLE);
         notifyIfStackEmpty();
     }
 
     @Subscribe
-    public void handleEntitlementEvents(SubscriptionEvent event) {
+    public void handleEntitlementEvents(final SubscriptionEvent event) {
         log.info(String.format("TestApiListener Got subscription event %s", event.toString()));
         switch (event.getTransitionType()) {
-        case MIGRATE_ENTITLEMENT:
-            assertEqualsNicely(NextEvent.MIGRATE_ENTITLEMENT);
-            notifyIfStackEmpty();
-            break;
-        case MIGRATE_BILLING:
-            assertEqualsNicely(NextEvent.MIGRATE_BILLING);
-            notifyIfStackEmpty();
-            break;
-        case CREATE:
-            assertEqualsNicely(NextEvent.CREATE);
-            notifyIfStackEmpty();
-            break;
-        case RE_CREATE:
-            assertEqualsNicely(NextEvent.RE_CREATE);
-            notifyIfStackEmpty();
-            break;
-        case CANCEL:
-            assertEqualsNicely(NextEvent.CANCEL);
-            notifyIfStackEmpty();
-            break;
-        case CHANGE:
-            assertEqualsNicely(NextEvent.CHANGE);
-            notifyIfStackEmpty();
-            break;
-        case UNCANCEL:
-            assertEqualsNicely(NextEvent.UNCANCEL);
-            notifyIfStackEmpty();
-            break;
-        case PHASE:
-            assertEqualsNicely(NextEvent.PHASE);
-            notifyIfStackEmpty();
-            break;
-        default:
-            throw new RuntimeException("Unexpected event type " + event.getRequestedTransitionTime());
+            case MIGRATE_ENTITLEMENT:
+                assertEqualsNicely(NextEvent.MIGRATE_ENTITLEMENT);
+                notifyIfStackEmpty();
+                break;
+            case MIGRATE_BILLING:
+                assertEqualsNicely(NextEvent.MIGRATE_BILLING);
+                notifyIfStackEmpty();
+                break;
+            case CREATE:
+                assertEqualsNicely(NextEvent.CREATE);
+                notifyIfStackEmpty();
+                break;
+            case RE_CREATE:
+                assertEqualsNicely(NextEvent.RE_CREATE);
+                notifyIfStackEmpty();
+                break;
+            case CANCEL:
+                assertEqualsNicely(NextEvent.CANCEL);
+                notifyIfStackEmpty();
+                break;
+            case CHANGE:
+                assertEqualsNicely(NextEvent.CHANGE);
+                notifyIfStackEmpty();
+                break;
+            case UNCANCEL:
+                assertEqualsNicely(NextEvent.UNCANCEL);
+                notifyIfStackEmpty();
+                break;
+            case PHASE:
+                assertEqualsNicely(NextEvent.PHASE);
+                notifyIfStackEmpty();
+                break;
+            default:
+                throw new RuntimeException("Unexpected event type " + event.getRequestedTransitionTime());
         }
     }
 
     @Subscribe
-    public void handleInvoiceEvents(InvoiceCreationEvent event) {
+    public void handleInvoiceEvents(final InvoiceCreationEvent event) {
         log.info(String.format("TestApiListener Got Invoice event %s", event.toString()));
         assertEqualsNicely(NextEvent.INVOICE);
         notifyIfStackEmpty();
@@ -130,42 +130,43 @@ public class TestApiListener {
     }
 
     @Subscribe
-    public void handlePaymentEvents(PaymentInfoEvent event) {
+    public void handlePaymentEvents(final PaymentInfoEvent event) {
         log.info(String.format("TestApiListener Got PaymentInfo event %s", event.toString()));
         assertEqualsNicely(NextEvent.PAYMENT);
         notifyIfStackEmpty();
     }
 
     @Subscribe
-    public void handlePaymentErrorEvents(PaymentErrorEvent event) {
+    public void handlePaymentErrorEvents(final PaymentErrorEvent event) {
         log.info(String.format("TestApiListener Got PaymentError event %s", event.toString()));
         assertEqualsNicely(NextEvent.PAYMENT_ERROR);
-        notifyIfStackEmpty();   }
+        notifyIfStackEmpty();
+    }
 
     public void reset() {
-        synchronized(this) {
+        synchronized (this) {
             nextExpectedEvent.clear();
             completed = true;
             nonExpectedMode = false;
         }
     }
 
-    public void pushExpectedEvents(NextEvent ... events) {
-        for(NextEvent event : events) {
+    public void pushExpectedEvents(final NextEvent... events) {
+        for (final NextEvent event : events) {
             pushExpectedEvent(event);
         }
     }
 
-    public void pushExpectedEvent(NextEvent next) {
+    public void pushExpectedEvent(final NextEvent next) {
         synchronized (this) {
-            Joiner joiner = Joiner.on(" ");
+            final Joiner joiner = Joiner.on(" ");
             nextExpectedEvent.add(next);
             log.info("TestListener stacking expected event {}, got [{}]", next, joiner.join(nextExpectedEvent));
             completed = false;
         }
     }
 
-    public boolean isCompleted(long timeout) {
+    public boolean isCompleted(final long timeout) {
         synchronized (this) {
             if (completed) {
                 return completed;
@@ -173,12 +174,12 @@ public class TestApiListener {
             long waitTimeMs = timeout;
             do {
                 try {
-                    DateTime before = new DateTime();
+                    final DateTime before = new DateTime();
                     wait(500);
                     if (completed) {
                         return completed;
                     }
-                    DateTime after = new DateTime();
+                    final DateTime after = new DateTime();
                     waitTimeMs -= after.getMillis() - before.getMillis();
                 } catch (Exception ignore) {
                     log.error("isCompleted got interrupted ", ignore);
@@ -187,7 +188,7 @@ public class TestApiListener {
             } while (waitTimeMs > 0 && !completed);
         }
         if (!completed && !nonExpectedMode) {
-            Joiner joiner = Joiner.on(" ");
+            final Joiner joiner = Joiner.on(" ");
             log.error("TestApiListener did not complete in " + timeout + " ms, remaining events are " + joiner.join(nextExpectedEvent));
         }
         return completed;
@@ -205,26 +206,26 @@ public class TestApiListener {
         log.debug("TestApiListener notifyIfStackEmpty EXIT");
     }
 
-    private void assertEqualsNicely(NextEvent received) {
+    private void assertEqualsNicely(final NextEvent received) {
 
-        synchronized(this) {
+        synchronized (this) {
             boolean foundIt = false;
-            Iterator<NextEvent> it = nextExpectedEvent.iterator();
+            final Iterator<NextEvent> it = nextExpectedEvent.iterator();
             while (it.hasNext()) {
-                NextEvent ev = it.next();
+                final NextEvent ev = it.next();
                 if (ev == received) {
                     it.remove();
                     foundIt = true;
                     if (!nonExpectedMode) {
-                        log.info("TestApiListener found event {}. Yeah!", received);    
+                        log.info("TestApiListener found event {}. Yeah!", received);
                     } else {
-                        log.error("TestApiListener found non expected event {}. Boohh! ", received);    
+                        log.error("TestApiListener found non expected event {}. Boohh! ", received);
                     }
                     break;
                 }
             }
             if (!foundIt && !nonExpectedMode) {
-                Joiner joiner = Joiner.on(" ");
+                final Joiner joiner = Joiner.on(" ");
                 log.error("TestApiListener Received event " + received + "; expecting " + joiner.join(nextExpectedEvent));
                 if (testStatus != null) {
                     testStatus.failed("TestApiListener [ApiListenerStatus]: Received event " + received + "; expecting " + joiner.join(nextExpectedEvent));

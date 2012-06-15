@@ -16,16 +16,16 @@
 
 package com.ning.billing.util.dao;
 
-import org.skife.jdbi.v2.SQLStatement;
-import org.skife.jdbi.v2.sqlobject.Binder;
-import org.skife.jdbi.v2.sqlobject.BinderFactory;
-import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
-
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+
+import org.skife.jdbi.v2.SQLStatement;
+import org.skife.jdbi.v2.sqlobject.Binder;
+import org.skife.jdbi.v2.sqlobject.BinderFactory;
+import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
 
 @BindingAnnotation(AuditBinder.AuditBinderFactory.class)
 @Retention(RetentionPolicy.RUNTIME)
@@ -33,10 +33,10 @@ import java.lang.annotation.Target;
 public @interface AuditBinder {
     public static class AuditBinderFactory implements BinderFactory {
         @Override
-        public Binder build(Annotation annotation) {
+        public Binder build(final Annotation annotation) {
             return new Binder<AuditBinder, EntityAudit>() {
                 @Override
-                public void bind(SQLStatement q, AuditBinder bind, EntityAudit audit) {
+                public void bind(final SQLStatement q, final AuditBinder bind, final EntityAudit audit) {
                     q.bind("tableName", audit.getTableName().toString());
                     q.bind("recordId", audit.getRecordId());
                     q.bind("changeType", audit.getChangeType().toString());

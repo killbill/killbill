@@ -20,17 +20,17 @@ import com.ning.billing.BillingExceptionBase;
 import com.ning.billing.ErrorCode;
 
 public class AccountApiException extends BillingExceptionBase {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	public AccountApiException(Throwable cause, int code, final String msg) {
+    public AccountApiException(final Throwable cause, final int code, final String msg) {
         super(cause, code, msg);
     }
 
-    public AccountApiException(Throwable cause, ErrorCode code, final Object... args) {
+    public AccountApiException(final Throwable cause, final ErrorCode code, final Object... args) {
         super(cause, code, args);
     }
 
-    public AccountApiException(ErrorCode code, final Object... args) {
+    public AccountApiException(final ErrorCode code, final Object... args) {
         super(code, args);
     }
 

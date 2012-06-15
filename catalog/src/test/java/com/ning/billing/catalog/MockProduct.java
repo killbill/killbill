@@ -20,57 +20,56 @@ import com.ning.billing.catalog.api.ProductCategory;
 
 public class MockProduct extends DefaultProduct {
 
-	public MockProduct() {
-		setName("TestProduct");
-		setCatagory(ProductCategory.BASE);
-		setCatalogName("Vehcles");
-	}
-	
-	public MockProduct(String name, ProductCategory category, String catalogName) {
-		setName(name);
-		setCatagory(category);
-		setCatalogName(catalogName);
-	}
-	
-	public static MockProduct createBicycle() {
-		return new MockProduct("Bicycle", ProductCategory.BASE, "Vehcles");
-	}
-	
-	public static MockProduct createPickup() {
-		return new MockProduct("Pickup", ProductCategory.BASE, "Vehcles");
-	}
-	
-	public static MockProduct createSportsCar() {
-		return new MockProduct("SportsCar", ProductCategory.BASE, "Vehcles");
-	}
-	
-	public static MockProduct createJet() {
-		return new MockProduct("Jet", ProductCategory.BASE, "Vehcles");
-	}
-	
-	public static MockProduct createHorn() {
-		return new MockProduct("Horn", ProductCategory.ADD_ON, "Vehcles");
-	}
-	
-	public static MockProduct createSpotlight() {
-		return new MockProduct("spotlight", ProductCategory.ADD_ON, "Vehcles");
-	}
-	
-	public static MockProduct createRedPaintJob() {
-		return new MockProduct("RedPaintJob", ProductCategory.ADD_ON, "Vehcles");
-	}
+    public MockProduct() {
+        setName("TestProduct");
+        setCatagory(ProductCategory.BASE);
+        setCatalogName("Vehcles");
+    }
 
-	public static DefaultProduct[] createAll() {
-		return new MockProduct[]{
-				createBicycle(),
-				createPickup(),
-				createSportsCar(),
-				createJet(),
-				createHorn(),
-				createRedPaintJob()
-		};
-	}
-	
-	
-	
+    public MockProduct(final String name, final ProductCategory category, final String catalogName) {
+        setName(name);
+        setCatagory(category);
+        setCatalogName(catalogName);
+    }
+
+    public static MockProduct createBicycle() {
+        return new MockProduct("Bicycle", ProductCategory.BASE, "Vehcles");
+    }
+
+    public static MockProduct createPickup() {
+        return new MockProduct("Pickup", ProductCategory.BASE, "Vehcles");
+    }
+
+    public static MockProduct createSportsCar() {
+        return new MockProduct("SportsCar", ProductCategory.BASE, "Vehcles");
+    }
+
+    public static MockProduct createJet() {
+        return new MockProduct("Jet", ProductCategory.BASE, "Vehcles");
+    }
+
+    public static MockProduct createHorn() {
+        return new MockProduct("Horn", ProductCategory.ADD_ON, "Vehcles");
+    }
+
+    public static MockProduct createSpotlight() {
+        return new MockProduct("spotlight", ProductCategory.ADD_ON, "Vehcles");
+    }
+
+    public static MockProduct createRedPaintJob() {
+        return new MockProduct("RedPaintJob", ProductCategory.ADD_ON, "Vehcles");
+    }
+
+    public static DefaultProduct[] createAll() {
+        return new MockProduct[]{
+                createBicycle(),
+                createPickup(),
+                createSportsCar(),
+                createJet(),
+                createHorn(),
+                createRedPaintJob()
+        };
+    }
+
+
 }

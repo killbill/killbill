@@ -16,18 +16,14 @@
 
 package com.ning.billing.jaxrs.resources;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -38,15 +34,17 @@ import com.ning.billing.catalog.api.StaticCatalog;
 import com.ning.billing.jaxrs.json.PlanDetailJason;
 import com.ning.billing.util.config.XMLWriter;
 
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+
 @Singleton
 @Path(JaxrsResource.CATALOG_PATH)
 public class CatalogResource implements JaxrsResource {
 
-    private CatalogService catalogService;
+    private final CatalogService catalogService;
 
     @Inject
-    public CatalogResource(final CatalogService catalogService)
-    {
+    public CatalogResource(final CatalogService catalogService) {
         this.catalogService = catalogService;
     }
 
@@ -71,15 +69,14 @@ public class CatalogResource implements JaxrsResource {
     //    }
 
 
-
     @GET
     @Path("/availableAddons")
     @Produces(APPLICATION_JSON)
     public Response getAvailableAddons(@QueryParam("baseProductName") final String baseProductName) throws CatalogApiException {
-        StaticCatalog catalog = catalogService.getCurrentCatalog();
-        List<Listing> listings = catalog.getAvailableAddonListings(baseProductName);
-        List<PlanDetailJason> details = new ArrayList<PlanDetailJason>();
-        for(Listing listing : listings) {
+        final StaticCatalog catalog = catalogService.getCurrentCatalog();
+        final List<Listing> listings = catalog.getAvailableAddonListings(baseProductName);
+        final List<PlanDetailJason> details = new ArrayList<PlanDetailJason>();
+        for (final Listing listing : listings) {
             details.add(new PlanDetailJason(listing));
         }
         return Response.status(Status.OK).entity(details).build();

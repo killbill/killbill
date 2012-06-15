@@ -46,66 +46,65 @@ import com.ning.billing.util.entity.dao.UpdatableEntitySqlDao;
 
 @ExternalizedSqlViaStringTemplate3()
 @RegisterMapper(PaymentSqlDao.PaymentModelDaoMapper.class)
-public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, UpdatableEntitySqlDao<PaymentModelDao>, Transmogrifier,  CloseMe {
+public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, UpdatableEntitySqlDao<PaymentModelDao>, Transmogrifier, CloseMe {
 
     @SqlUpdate
     void insertPayment(@Bind(binder = PaymentModelDaoBinder.class) final PaymentModelDao paymentInfo,
-                           @CallContextBinder final CallContext context);
-    
+                       @CallContextBinder final CallContext context);
+
     @SqlUpdate
     void updatePaymentStatus(@Bind("id") final String paymentId, @Bind("paymentStatus") final String paymentStatus,
-            @CallContextBinder final CallContext context);
+                             @CallContextBinder final CallContext context);
 
     @SqlUpdate
     void updatePaymentAmount(@Bind("id") final String paymentId, @Bind("amount") final BigDecimal amount,
-            @CallContextBinder final CallContext context);
+                             @CallContextBinder final CallContext context);
 
     @SqlQuery
     PaymentModelDao getPayment(@Bind("id") final String paymentId);
- 
+
     @SqlQuery
     List<PaymentModelDao> getPaymentsForInvoice(@Bind("invoiceId") final String invoiceId);
 
     @SqlQuery
     List<PaymentModelDao> getPaymentsForAccount(@Bind("accountId") final String accountId);
 
-    
+
     @Override
     @SqlUpdate
     void insertHistoryFromTransaction(@PaymentHistoryBinder final EntityHistory<PaymentModelDao> payment,
-                                            @CallContextBinder final CallContext context);
+                                      @CallContextBinder final CallContext context);
 
 
-
-     public static final class PaymentModelDaoBinder extends BinderBase implements Binder<Bind, PaymentModelDao> {
+    public static final class PaymentModelDaoBinder extends BinderBase implements Binder<Bind, PaymentModelDao> {
         @Override
-        public void bind(@SuppressWarnings("rawtypes") SQLStatement stmt, Bind bind, PaymentModelDao payment) {
+        public void bind(@SuppressWarnings("rawtypes") final SQLStatement stmt, final Bind bind, final PaymentModelDao payment) {
             stmt.bind("id", payment.getId().toString());
-            stmt.bind("accountId", payment.getAccountId().toString());            
-            stmt.bind("invoiceId", payment.getInvoiceId().toString());            
+            stmt.bind("accountId", payment.getAccountId().toString());
+            stmt.bind("invoiceId", payment.getInvoiceId().toString());
             stmt.bind("paymentMethodId", "");
             stmt.bind("amount", payment.getAmount());
             stmt.bind("currency", payment.getCurrency().toString());
             stmt.bind("effectiveDate", getDate(payment.getEffectiveDate()));
-            stmt.bind("paymentStatus", payment.getPaymentStatus().toString());            
+            stmt.bind("paymentStatus", payment.getPaymentStatus().toString());
         }
     }
-    
+
     public static class PaymentModelDaoMapper extends MapperBase implements ResultSetMapper<PaymentModelDao> {
 
         @Override
-        public PaymentModelDao map(int index, ResultSet rs, StatementContext ctx)
+        public PaymentModelDao map(final int index, final ResultSet rs, final StatementContext ctx)
                 throws SQLException {
-            UUID id = getUUID(rs, "id");
-            UUID accountId = getUUID(rs, "account_id");
-            UUID invoiceId = getUUID(rs, "invoice_id");            
-            UUID paymentMethodId = null; //getUUID(rs, "payment_method_id"); // STEPH needs to be fixed!                       
-            Integer paymentNumber = rs.getInt("payment_number");
-            BigDecimal amount = rs.getBigDecimal("amount");
-            DateTime effectiveDate = getDate(rs, "effective_date");
-            Currency currency = Currency.valueOf(rs.getString("currency"));
-            PaymentStatus paymentStatus = PaymentStatus.valueOf(rs.getString("payment_status"));
-            
+            final UUID id = getUUID(rs, "id");
+            final UUID accountId = getUUID(rs, "account_id");
+            final UUID invoiceId = getUUID(rs, "invoice_id");
+            final UUID paymentMethodId = null; //getUUID(rs, "payment_method_id"); // STEPH needs to be fixed!
+            final Integer paymentNumber = rs.getInt("payment_number");
+            final BigDecimal amount = rs.getBigDecimal("amount");
+            final DateTime effectiveDate = getDate(rs, "effective_date");
+            final Currency currency = Currency.valueOf(rs.getString("currency"));
+            final PaymentStatus paymentStatus = PaymentStatus.valueOf(rs.getString("payment_status"));
+
             return new PaymentModelDao(id, accountId, invoiceId, paymentMethodId, paymentNumber, amount, currency, paymentStatus, effectiveDate);
         }
     }

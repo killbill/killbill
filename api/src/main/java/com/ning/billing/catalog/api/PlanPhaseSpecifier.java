@@ -16,41 +16,44 @@
 
 package com.ning.billing.catalog.api;
 
-public class PlanPhaseSpecifier  {
+public class PlanPhaseSpecifier {
 
-	private final PhaseType phaseType;
-	private final String productName;
-	private final ProductCategory productCategory;
-	private final BillingPeriod billingPeriod;
-	private final String priceListName;
-	
-	public PlanPhaseSpecifier(String productName, ProductCategory productCategory, BillingPeriod billingPeriod,
-			String priceListName, PhaseType phaseType) {
-		this.phaseType = phaseType;
-		this.productName = productName;
-		this.productCategory = productCategory;
-		this.billingPeriod = billingPeriod;
-		this.priceListName = priceListName;
-	}
-	
-	public String getProductName() {
-		return productName;
-	}
-	public ProductCategory getProductCategory() {
-		return productCategory;
-	}
-	public BillingPeriod getBillingPeriod() {
-		return billingPeriod;
-	}
-	public String getPriceListName() {
-		return priceListName;
-	}
+    private final PhaseType phaseType;
+    private final String productName;
+    private final ProductCategory productCategory;
+    private final BillingPeriod billingPeriod;
+    private final String priceListName;
 
-	public PhaseType getPhaseType() {
-		return phaseType;
-	}
+    public PlanPhaseSpecifier(final String productName, final ProductCategory productCategory, final BillingPeriod billingPeriod,
+                              final String priceListName, final PhaseType phaseType) {
+        this.phaseType = phaseType;
+        this.productName = productName;
+        this.productCategory = productCategory;
+        this.billingPeriod = billingPeriod;
+        this.priceListName = priceListName;
+    }
 
-	public PlanSpecifier toPlanSpecifier() {
-		return new PlanSpecifier(productName, productCategory, billingPeriod, priceListName);
-	}
+    public String getProductName() {
+        return productName;
+    }
+
+    public ProductCategory getProductCategory() {
+        return productCategory;
+    }
+
+    public BillingPeriod getBillingPeriod() {
+        return billingPeriod;
+    }
+
+    public String getPriceListName() {
+        return priceListName;
+    }
+
+    public PhaseType getPhaseType() {
+        return phaseType;
+    }
+
+    public PlanSpecifier toPlanSpecifier() {
+        return new PlanSpecifier(productName, productCategory, billingPeriod, priceListName);
+    }
 }

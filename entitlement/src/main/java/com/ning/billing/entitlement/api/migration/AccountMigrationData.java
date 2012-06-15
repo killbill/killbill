@@ -18,9 +18,9 @@ package com.ning.billing.entitlement.api.migration;
 
 import java.util.List;
 
+import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
-import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.user.ApiEventMigrateBilling;
 
@@ -28,7 +28,7 @@ public class AccountMigrationData {
 
     private final List<BundleMigrationData> data;
 
-    public AccountMigrationData(List<BundleMigrationData> data) {
+    public AccountMigrationData(final List<BundleMigrationData> data) {
         super();
         this.data = data;
     }
@@ -42,8 +42,8 @@ public class AccountMigrationData {
         private final SubscriptionBundleData data;
         private final List<SubscriptionMigrationData> subscriptions;
 
-        public BundleMigrationData(SubscriptionBundleData data,
-                List<SubscriptionMigrationData> subscriptions) {
+        public BundleMigrationData(final SubscriptionBundleData data,
+                                   final List<SubscriptionMigrationData> subscriptions) {
             super();
             this.data = data;
             this.subscriptions = subscriptions;
@@ -63,12 +63,12 @@ public class AccountMigrationData {
         private final SubscriptionData data;
         private final List<EntitlementEvent> initialEvents;
 
-        public SubscriptionMigrationData(SubscriptionData data,
-                    List<EntitlementEvent> initialEvents) {
+        public SubscriptionMigrationData(final SubscriptionData data,
+                                         final List<EntitlementEvent> initialEvents) {
             super();
             // Set CTD to subscription object from MIGRATION_BILLING event
-            SubscriptionBuilder builder = new SubscriptionBuilder(data);
-            for (EntitlementEvent cur : initialEvents) {
+            final SubscriptionBuilder builder = new SubscriptionBuilder(data);
+            for (final EntitlementEvent cur : initialEvents) {
                 if (cur instanceof ApiEventMigrateBilling) {
                     builder.setChargedThroughDate(cur.getEffectiveDate());
                 }

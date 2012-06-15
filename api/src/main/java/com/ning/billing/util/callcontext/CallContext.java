@@ -21,12 +21,19 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 public interface CallContext {
-	public UUID getUserToken();
+    public UUID getUserToken();
+
     public String getUserName();
+
     public CallOrigin getCallOrigin();
+
     public UserType getUserType();
+
     public String getReasonCode();
+
     public String getComment();
+
     public DateTime getCreatedDate();
+
     public DateTime getUpdatedDate();
 }

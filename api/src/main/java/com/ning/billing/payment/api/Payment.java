@@ -26,31 +26,31 @@ import com.ning.billing.catalog.api.Currency;
 public interface Payment {
 
     public UUID getId();
-    
+
     public UUID getAccountId();
-    
-    public UUID getInvoiceId();    
-    
+
+    public UUID getInvoiceId();
+
     public UUID getPaymentMethodId();
-    
+
     public Integer getPaymentNumber();
-    
+
     public BigDecimal getAmount();
-    
+
     public DateTime getEffectiveDate();
-    
+
     public Currency getCurrency();
-    
+
     public PaymentStatus getPaymentStatus();
-    
+
     public List<PaymentAttempt> getAttempts();
-    
+
     public interface PaymentAttempt {
-        
+
         public UUID getId();
-        
+
         public DateTime getEffectiveDate();
-        
+
         public String getErrorMsg();
 
         public PaymentStatus getPaymentStatus();

@@ -16,19 +16,19 @@
 
 package com.ning.billing.util.bus;
 
-import com.google.common.eventbus.AsyncEventBus;
-import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.eventbus.AsyncEventBus;
+
 public class InMemoryBus implements Bus {
 
- 
 
     private static final Logger log = LoggerFactory.getLogger(InMemoryBus.class);
 
@@ -40,7 +40,7 @@ public class InMemoryBus implements Bus {
         private final Executor executor;
         private final ThreadGroup grp;
 
-        public EventBusDelegate(String name, ThreadGroup grp, Executor executor) {
+        public EventBusDelegate(final String name, final ThreadGroup grp, final Executor executor) {
             super(name, executor);
             this.executor = executor;
             this.grp = grp;
@@ -63,9 +63,9 @@ public class InMemoryBus implements Bus {
     public InMemoryBus() {
 
         final ThreadGroup group = new ThreadGroup(DefaultBusService.EVENT_BUS_GROUP_NAME);
-        Executor executor = Executors.newCachedThreadPool(new ThreadFactory() {
+        final Executor executor = Executors.newCachedThreadPool(new ThreadFactory() {
             @Override
-            public Thread newThread(Runnable r) {
+            public Thread newThread(final Runnable r) {
                 return new Thread(group, r, DefaultBusService.EVENT_BUS_TH_NAME);
             }
         });
@@ -75,25 +75,25 @@ public class InMemoryBus implements Bus {
     }
 
     @Override
-    public void register(Object handlerInstance) throws EventBusException {
+    public void register(final Object handlerInstance) throws EventBusException {
         checkInitialized("register");
         delegate.register(handlerInstance);
     }
 
     @Override
-    public void unregister(Object handlerInstance) throws EventBusException {
+    public void unregister(final Object handlerInstance) throws EventBusException {
         checkInitialized("unregister");
         delegate.unregister(handlerInstance);
     }
 
     @Override
-    public void post(BusEvent event) throws EventBusException {
+    public void post(final BusEvent event) throws EventBusException {
         checkInitialized("post");
         delegate.post(event);
     }
 
     @Override
-    public void postFromTransaction(BusEvent event, Transmogrifier dao) throws EventBusException {
+    public void postFromTransaction(final BusEvent event, final Transmogrifier dao) throws EventBusException {
         checkInitialized("postFromTransaction");
         delegate.post(event);
     }
@@ -106,12 +106,13 @@ public class InMemoryBus implements Bus {
         }
     }
 
-    private void checkInitialized(String operation) throws EventBusException {
+    private void checkInitialized(final String operation) throws EventBusException {
         if (!isInitialized.get()) {
             throw new EventBusException(String.format("Attempting operation %s on an non initialized bus",
-                    operation));
+                                                      operation));
         }
     }
+
     @Override
     public void stop() {
         if (isInitialized.compareAndSet(true, false)) {

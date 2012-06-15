@@ -19,12 +19,12 @@ package com.ning.billing.overdue.config;
 import com.ning.billing.junction.api.Blockable;
 
 public class MockOverdueState<T extends Blockable> extends DefaultOverdueState<T> {
-    
+
     public MockOverdueState() {
         setName(MockOverdueRules.CLEAR_STATE);
     }
 
-    public MockOverdueState(String name, boolean blockChanges, boolean disableEntitlementAndBlockChanges) {
+    public MockOverdueState(final String name, final boolean blockChanges, final boolean disableEntitlementAndBlockChanges) {
         setName(name);
         setBlockChanges(blockChanges);
         setDisableEntitlement(disableEntitlementAndBlockChanges);

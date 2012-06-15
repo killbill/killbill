@@ -16,7 +16,6 @@
 
 package com.ning.billing.entitlement.engine.dao;
 
-import com.ning.billing.util.bus.Bus;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
@@ -26,8 +25,8 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 
 import com.google.inject.Inject;
 import com.ning.billing.entitlement.engine.addon.AddonUtils;
+import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.clock.Clock;
-
 import com.ning.billing.util.notificationq.NotificationQueueService;
 
 public class MockEntitlementDaoSql extends AuditedEntitlementDao implements MockEntitlementDao {
@@ -35,7 +34,7 @@ public class MockEntitlementDaoSql extends AuditedEntitlementDao implements Mock
     private final ResetSqlDao resetDao;
 
     @Inject
-    public MockEntitlementDaoSql(IDBI dbi, Clock clock, AddonUtils addonUtils, NotificationQueueService notificationQueueService,
+    public MockEntitlementDaoSql(final IDBI dbi, final Clock clock, final AddonUtils addonUtils, final NotificationQueueService notificationQueueService,
                                  final Bus eventBus) {
         super(dbi, clock, addonUtils, notificationQueueService, eventBus);
         this.resetDao = dbi.onDemand(ResetSqlDao.class);
@@ -47,7 +46,7 @@ public class MockEntitlementDaoSql extends AuditedEntitlementDao implements Mock
         resetDao.inTransaction(new Transaction<Void, ResetSqlDao>() {
 
             @Override
-            public Void inTransaction(ResetSqlDao dao, TransactionStatus status)
+            public Void inTransaction(final ResetSqlDao dao, final TransactionStatus status)
                     throws Exception {
                 resetDao.resetEvents();
                 resetDao.resetSubscriptions();

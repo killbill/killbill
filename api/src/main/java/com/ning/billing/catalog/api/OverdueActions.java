@@ -16,7 +16,7 @@
 
 package com.ning.billing.catalog.api;
 
-public enum OverdueActions  {
-	CANCEL,
-	PAYMENT_RETRY
+public enum OverdueActions {
+    CANCEL,
+    PAYMENT_RETRY
 }

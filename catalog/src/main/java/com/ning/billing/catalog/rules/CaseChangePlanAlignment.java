@@ -22,17 +22,17 @@ import com.ning.billing.catalog.api.PlanAlignmentChange;
 
 public class CaseChangePlanAlignment extends CaseChange<PlanAlignmentChange> {
 
-	@XmlElement(required=true)
-	private PlanAlignmentChange alignment;
+    @XmlElement(required = true)
+    private PlanAlignmentChange alignment;
 
-	@Override
-	protected PlanAlignmentChange getResult() {
-		return alignment;
-	}
+    @Override
+    protected PlanAlignmentChange getResult() {
+        return alignment;
+    }
 
-	protected CaseChangePlanAlignment setAlignment(PlanAlignmentChange alignment) {
-		this.alignment = alignment;
-		return this;
-	}
-	
+    protected CaseChangePlanAlignment setAlignment(final PlanAlignmentChange alignment) {
+        this.alignment = alignment;
+        return this;
+    }
+
 }

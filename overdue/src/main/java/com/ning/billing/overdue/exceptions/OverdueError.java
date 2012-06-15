@@ -24,15 +24,15 @@ public class OverdueError extends Error {
         super();
     }
 
-    public OverdueError(String msg, Throwable arg1) {
+    public OverdueError(final String msg, final Throwable arg1) {
         super(msg, arg1);
     }
 
-    public OverdueError(String msg) {
+    public OverdueError(final String msg) {
         super(msg);
     }
 
-    public OverdueError(Throwable msg) {
+    public OverdueError(final Throwable msg) {
         super(msg);
     }
 }

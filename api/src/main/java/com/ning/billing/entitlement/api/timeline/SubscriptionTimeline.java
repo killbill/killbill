@@ -26,24 +26,26 @@ import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 public interface SubscriptionTimeline {
 
     public UUID getId();
-    
+
     public List<DeletedEvent> getDeletedEvents();
 
-    public List<NewEvent> getNewEvents();    
-   
-    public List<ExistingEvent> getExistingEvents();    
-    
+    public List<NewEvent> getNewEvents();
+
+    public List<ExistingEvent> getExistingEvents();
+
     public interface DeletedEvent {
         public UUID getEventId();
     }
-    
+
     public interface NewEvent {
         public PlanPhaseSpecifier getPlanPhaseSpecifier();
+
         public DateTime getRequestedDate();
+
         public SubscriptionTransitionType getSubscriptionTransitionType();
-        
+
     }
-    
+
     public interface ExistingEvent extends DeletedEvent, NewEvent {
         public DateTime getEffectiveDate();
     }

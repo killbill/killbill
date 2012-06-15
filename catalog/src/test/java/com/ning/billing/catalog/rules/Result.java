@@ -17,5 +17,5 @@
 package com.ning.billing.catalog.rules;
 
 enum Result {
-	FOO, BAR, TINKYWINKY,DIPSY,LALA, PO
+    FOO, BAR, TINKYWINKY, DIPSY, LALA, PO
 }

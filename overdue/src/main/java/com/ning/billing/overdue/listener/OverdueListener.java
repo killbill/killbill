@@ -29,10 +29,10 @@ import com.ning.billing.payment.api.PaymentInfoEvent;
 public class OverdueListener {
     OverdueDispatcher dispatcher;
 
-    private final static Logger log = LoggerFactory.getLogger(OverdueListener.class);
+    private static final Logger log = LoggerFactory.getLogger(OverdueListener.class);
 
     @Inject
-    public OverdueListener(OverdueDispatcher dispatcher) {
+    public OverdueListener(final OverdueDispatcher dispatcher) {
         this.dispatcher = dispatcher;
     }
 
@@ -41,15 +41,15 @@ public class OverdueListener {
         log.info(String.format("Received PaymentInfo event %s", event.toString()));
         dispatcher.processOverdueForAccount(event.getAccountId());
     }
- 
+
     @Subscribe
     public void handlePaymentErrorEvent(final PaymentErrorEvent event) {
         log.info(String.format("Received PaymentError event %s", event.toString()));
-        UUID accountId = event.getAccountId();
+        final UUID accountId = event.getAccountId();
         dispatcher.processOverdueForAccount(accountId);
     }
 
-    public void handleNextOverdueCheck(UUID overdueableId) { 
+    public void handleNextOverdueCheck(final UUID overdueableId) {
         log.info(String.format("Received OD checkup notification for %s", overdueableId));
         dispatcher.processOverdue(overdueableId);
     }

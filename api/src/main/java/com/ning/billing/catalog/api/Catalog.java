@@ -19,35 +19,35 @@ package com.ning.billing.catalog.api;
 import org.joda.time.DateTime;
 
 public interface Catalog {
-	//
+    //
     // Simple getters
     //
     public abstract String getCatalogName();
 
     public abstract Currency[] getSupportedCurrencies(DateTime requestedDate) throws CatalogApiException;
 
-	public abstract Product[] getProducts(DateTime requestedDate) throws CatalogApiException;
-	
-	public abstract Plan[] getPlans(DateTime requestedDate) throws CatalogApiException;
+    public abstract Product[] getProducts(DateTime requestedDate) throws CatalogApiException;
 
-	
-	//
-	// Find a plan
-	//
+    public abstract Plan[] getPlans(DateTime requestedDate) throws CatalogApiException;
 
-	public abstract Plan findPlan(String name, DateTime requestedDate) throws CatalogApiException;
 
-	public abstract Plan findPlan(String productName, BillingPeriod term, String priceListName,
-									DateTime requestedDate) throws CatalogApiException;
-	
-	public abstract Plan findPlan(String name, DateTime effectiveDate, DateTime subscriptionStartDate) throws CatalogApiException;
+    //
+    // Find a plan
+    //
 
-	public abstract Plan findPlan(String productName, BillingPeriod term, String priceListName,
-									DateTime requestedDate, DateTime subscriptionStartDate) throws CatalogApiException;
-	
-	//
-	// Find a product
-	//
+    public abstract Plan findPlan(String name, DateTime requestedDate) throws CatalogApiException;
+
+    public abstract Plan findPlan(String productName, BillingPeriod term, String priceListName,
+                                  DateTime requestedDate) throws CatalogApiException;
+
+    public abstract Plan findPlan(String name, DateTime effectiveDate, DateTime subscriptionStartDate) throws CatalogApiException;
+
+    public abstract Plan findPlan(String productName, BillingPeriod term, String priceListName,
+                                  DateTime requestedDate, DateTime subscriptionStartDate) throws CatalogApiException;
+
+    //
+    // Find a product
+    //
     public abstract Product findProduct(String name, DateTime requestedDate) throws CatalogApiException;
 
     //
@@ -63,11 +63,11 @@ public interface Catalog {
     //
     // Rules
     //
-	public abstract ActionPolicy planChangePolicy(PlanPhaseSpecifier from,
-			PlanSpecifier to, DateTime requestedDate) throws CatalogApiException;
+    public abstract ActionPolicy planChangePolicy(PlanPhaseSpecifier from,
+                                                  PlanSpecifier to, DateTime requestedDate) throws CatalogApiException;
 
-	public abstract PlanChangeResult planChange(PlanPhaseSpecifier from,
-			PlanSpecifier to, DateTime requestedDate) throws CatalogApiException;
+    public abstract PlanChangeResult planChange(PlanPhaseSpecifier from,
+                                                PlanSpecifier to, DateTime requestedDate) throws CatalogApiException;
 
     public abstract ActionPolicy planCancelPolicy(PlanPhaseSpecifier planPhase, DateTime requestedDate) throws CatalogApiException;
 
@@ -76,8 +76,8 @@ public interface Catalog {
     public abstract BillingAlignment billingAlignment(PlanPhaseSpecifier planPhase, DateTime requestedDate) throws CatalogApiException;
 
     public abstract PlanAlignmentChange planChangeAlignment(PlanPhaseSpecifier from,
-			PlanSpecifier to, DateTime requestedDate) throws CatalogApiException;
+                                                            PlanSpecifier to, DateTime requestedDate) throws CatalogApiException;
 
     public abstract boolean canCreatePlan(PlanSpecifier specifier, DateTime requestedDate) throws CatalogApiException;
-		
+
 }

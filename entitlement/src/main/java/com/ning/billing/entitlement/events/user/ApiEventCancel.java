@@ -19,7 +19,7 @@ package com.ning.billing.entitlement.events.user;
 public class ApiEventCancel extends ApiEventBase {
 
 
-    public ApiEventCancel(ApiEventBuilder builder) {
+    public ApiEventCancel(final ApiEventBuilder builder) {
         super(builder.setEventType(ApiEventType.CANCEL));
     }
 }

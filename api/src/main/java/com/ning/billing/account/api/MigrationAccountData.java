@@ -20,7 +20,7 @@ import org.joda.time.DateTime;
 
 public interface MigrationAccountData extends AccountData {
 
-	public DateTime getCreatedDate();
-	
-	public DateTime getUpdatedDate();
+    public DateTime getCreatedDate();
+
+    public DateTime getUpdatedDate();
 }

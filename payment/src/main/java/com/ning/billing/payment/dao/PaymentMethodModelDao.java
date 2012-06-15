@@ -20,14 +20,14 @@ import java.util.UUID;
 import com.ning.billing.util.entity.EntityBase;
 
 public class PaymentMethodModelDao extends EntityBase {
-    
+
     private final UUID accountId;
     private final String pluginName;
     private final Boolean isActive;
     private final String externalId;
-    
+
     public PaymentMethodModelDao(final UUID id, final UUID accountId, final String pluginName,
-            final Boolean isActive, final String externalId) {
+                                 final Boolean isActive, final String externalId) {
         super(id);
         this.accountId = accountId;
         this.pluginName = pluginName;

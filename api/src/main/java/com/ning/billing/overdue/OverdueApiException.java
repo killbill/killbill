@@ -20,14 +20,14 @@ import com.ning.billing.BillingExceptionBase;
 import com.ning.billing.ErrorCode;
 
 public class OverdueApiException extends BillingExceptionBase {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	public OverdueApiException(Throwable cause, ErrorCode code, Object... args) {
-		super(cause, code, args);
-	}
+    public OverdueApiException(final Throwable cause, final ErrorCode code, final Object... args) {
+        super(cause, code, args);
+    }
 
-	public OverdueApiException(ErrorCode code, Object... args) {
-		super(code, args);
-	}
+    public OverdueApiException(final ErrorCode code, final Object... args) {
+        super(code, args);
+    }
 
 }

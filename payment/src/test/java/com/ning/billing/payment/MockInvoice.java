@@ -16,19 +16,18 @@
 
 package com.ning.billing.payment;
 
+import javax.annotation.Nullable;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
-
-import com.ning.billing.invoice.api.InvoiceItemType;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.util.entity.EntityBase;
 
@@ -43,13 +42,13 @@ public class MockInvoice extends EntityBase implements Invoice {
     private final boolean migrationInvoice;
 
     // used to create a new invoice
-    public MockInvoice(UUID accountId, DateTime invoiceDate, DateTime targetDate, Currency currency) {
+    public MockInvoice(final UUID accountId, final DateTime invoiceDate, final DateTime targetDate, final Currency currency) {
         this(UUID.randomUUID(), accountId, null, invoiceDate, targetDate, currency, false);
     }
 
     // used to hydrate invoice from persistence layer
-    public MockInvoice(UUID invoiceId, UUID accountId, @Nullable Integer invoiceNumber, DateTime invoiceDate,
-                          DateTime targetDate, Currency currency, boolean isMigrationInvoice) {
+    public MockInvoice(final UUID invoiceId, final UUID accountId, @Nullable final Integer invoiceNumber, final DateTime invoiceDate,
+                       final DateTime targetDate, final Currency currency, final boolean isMigrationInvoice) {
         super(invoiceId);
         this.accountId = accountId;
         this.invoiceNumber = invoiceNumber;
@@ -75,10 +74,10 @@ public class MockInvoice extends EntityBase implements Invoice {
     }
 
     @Override
-    public <T extends InvoiceItem> List<InvoiceItem> getInvoiceItems(Class<T> clazz) {
-        List<InvoiceItem> results = new ArrayList<InvoiceItem>();
-        for (InvoiceItem item : invoiceItems) {
-            if ( clazz.isInstance(item) ) {
+    public <T extends InvoiceItem> List<InvoiceItem> getInvoiceItems(final Class<T> clazz) {
+        final List<InvoiceItem> results = new ArrayList<InvoiceItem>();
+        for (final InvoiceItem item : invoiceItems) {
+            if (clazz.isInstance(item)) {
                 results.add(item);
             }
         }
@@ -122,6 +121,7 @@ public class MockInvoice extends EntityBase implements Invoice {
 
     /**
      * null until retrieved from the database
+     *
      * @return the invoice number
      */
     @Override
@@ -143,18 +143,18 @@ public class MockInvoice extends EntityBase implements Invoice {
     public Currency getCurrency() {
         return currency;
     }
-    
+
     @Override
     public boolean isMigrationInvoice() {
-		return migrationInvoice;
-	}
+        return migrationInvoice;
+    }
 
-	@Override
+    @Override
     public DateTime getLastPaymentAttempt() {
         DateTime lastPaymentAttempt = null;
 
         for (final InvoicePayment paymentAttempt : payments) {
-            DateTime paymentAttemptDate = paymentAttempt.getPaymentAttemptDate();
+            final DateTime paymentAttemptDate = paymentAttempt.getPaymentAttemptDate();
             if (lastPaymentAttempt == null) {
                 lastPaymentAttempt = paymentAttemptDate;
             }
@@ -181,8 +181,8 @@ public class MockInvoice extends EntityBase implements Invoice {
     @Override
     public BigDecimal getAmountCharged() {
         BigDecimal result = BigDecimal.ZERO;
-    
-        for(InvoiceItem i : invoiceItems) {
+
+        for (final InvoiceItem i : invoiceItems) {
             if (!i.getInvoiceItemType().equals(InvoiceItemType.CREDIT)) {
                 result = result.add(i.getAmount());
             }
@@ -194,7 +194,7 @@ public class MockInvoice extends EntityBase implements Invoice {
     public BigDecimal getAmountCredited() {
         BigDecimal result = BigDecimal.ZERO;
 
-        for(InvoiceItem i : invoiceItems) {
+        for (final InvoiceItem i : invoiceItems) {
             if (i.getInvoiceItemType().equals(InvoiceItemType.CREDIT)) {
                 result = result.add(i.getAmount());
             }
@@ -213,7 +213,7 @@ public class MockInvoice extends EntityBase implements Invoice {
             return false;
         }
 
-        DateTime lastPaymentAttempt = getLastPaymentAttempt();
+        final DateTime lastPaymentAttempt = getLastPaymentAttempt();
         if (lastPaymentAttempt == null) {
             return true;
         }

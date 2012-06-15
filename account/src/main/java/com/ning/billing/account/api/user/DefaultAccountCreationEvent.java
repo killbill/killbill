@@ -16,6 +16,10 @@
 
 package com.ning.billing.account.api.user;
 
+import java.util.UUID;
+
+import org.joda.time.DateTimeZone;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -24,41 +28,38 @@ import com.ning.billing.account.api.AccountCreationEvent;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.catalog.api.Currency;
 
-import java.util.UUID;
-
-import org.joda.time.DateTimeZone;
-
 public class DefaultAccountCreationEvent implements AccountCreationEvent {
-	
-	private final UUID userToken;	
+
+    private final UUID userToken;
     private final UUID id;
     private final AccountData data;
 
     @JsonCreator
-    public DefaultAccountCreationEvent(@JsonProperty("data") DefaultAccountData data,
-            @JsonProperty("userToken") UUID userToken,
-            @JsonProperty("id") UUID id) {
+    public DefaultAccountCreationEvent(@JsonProperty("data") final DefaultAccountData data,
+                                       @JsonProperty("userToken") final UUID userToken,
+                                       @JsonProperty("id") final UUID id) {
         this.id = id;
         this.userToken = userToken;
         this.data = data;
     }
-    
-    public DefaultAccountCreationEvent(Account data, UUID userToken) {
+
+    public DefaultAccountCreationEvent(final Account data, final UUID userToken) {
         this.id = data.getId();
         this.data = new DefaultAccountData(data);
         this.userToken = userToken;
     }
 
     @JsonIgnore
-	@Override
-	public BusEventType getBusEventType() {
-		return BusEventType.ACCOUNT_CREATE;
-	}
+    @Override
+    public BusEventType getBusEventType() {
+        return BusEventType.ACCOUNT_CREATE;
+    }
 
     @Override
     public UUID getUserToken() {
-    	return userToken;
+        return userToken;
     }
+
     @Override
     public UUID getId() {
         return id;
@@ -68,8 +69,8 @@ public class DefaultAccountCreationEvent implements AccountCreationEvent {
     public AccountData getData() {
         return data;
     }
-    
-    
+
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -82,29 +83,38 @@ public class DefaultAccountCreationEvent implements AccountCreationEvent {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
+    public boolean equals(final Object obj) {
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
-        DefaultAccountCreationEvent other = (DefaultAccountCreationEvent) obj;
+        }
+        final DefaultAccountCreationEvent other = (DefaultAccountCreationEvent) obj;
         if (data == null) {
-            if (other.data != null)
+            if (other.data != null) {
                 return false;
-        } else if (!data.equals(other.data))
+            }
+        } else if (!data.equals(other.data)) {
             return false;
+        }
         if (id == null) {
-            if (other.id != null)
+            if (other.id != null) {
                 return false;
-        } else if (!id.equals(other.id))
+            }
+        } else if (!id.equals(other.id)) {
             return false;
+        }
         if (userToken == null) {
-            if (other.userToken != null)
+            if (other.userToken != null) {
                 return false;
-        } else if (!userToken.equals(other.userToken))
+            }
+        } else if (!userToken.equals(other.userToken)) {
             return false;
+        }
         return true;
     }
 
@@ -130,50 +140,50 @@ public class DefaultAccountCreationEvent implements AccountCreationEvent {
         private final String phone;
         private final boolean isMigrated;
         private final boolean isNotifiedForInvoices;
-        
-        
-        public DefaultAccountData(Account d) {
-            this(d.getExternalKey() != null ?  d.getExternalKey().toString() : null,
-                    d.getName(),
-                    d.getFirstNameLength(),
-                    d.getEmail(),
-                    d.getBillCycleDay(),
-                    d.getCurrency() != null ?  d.getCurrency().name() : null,
-                    d.getPaymentMethodId(), 
-                    d.getTimeZone() != null ?  d.getTimeZone().getID() : null,
-                    d.getLocale(),
-                    d.getAddress1(),
-                    d.getAddress2(),
-                    d.getCompanyName(),
-                    d.getCity(),
-                    d.getStateOrProvince(),
-                    d.getPostalCode(),
-                    d.getCountry(),
-                    d.getPhone(),
-                    d.isMigrated(),
-                    d.isNotifiedForInvoices());
+
+
+        public DefaultAccountData(final Account d) {
+            this(d.getExternalKey() != null ? d.getExternalKey() : null,
+                 d.getName(),
+                 d.getFirstNameLength(),
+                 d.getEmail(),
+                 d.getBillCycleDay(),
+                 d.getCurrency() != null ? d.getCurrency().name() : null,
+                 d.getPaymentMethodId(),
+                 d.getTimeZone() != null ? d.getTimeZone().getID() : null,
+                 d.getLocale(),
+                 d.getAddress1(),
+                 d.getAddress2(),
+                 d.getCompanyName(),
+                 d.getCity(),
+                 d.getStateOrProvince(),
+                 d.getPostalCode(),
+                 d.getCountry(),
+                 d.getPhone(),
+                 d.isMigrated(),
+                 d.isNotifiedForInvoices());
         }
-        
+
         @JsonCreator
-        public DefaultAccountData(@JsonProperty("externalKey") String externalKey,
-                @JsonProperty("name") String name,
-                @JsonProperty("firstNameLength") Integer firstNameLength,
-                @JsonProperty("email") String email,
-                @JsonProperty("billCycleDay") Integer billCycleDay,
-                @JsonProperty("currency") String currency,
-                @JsonProperty("paymentMethodId") UUID paymentMethodId,
-                @JsonProperty("timeZone") String timeZone,
-                @JsonProperty("locale") String locale,
-                @JsonProperty("address1") String address1,
-                @JsonProperty("address2") String address2,
-                @JsonProperty("companyName") String companyName,
-                @JsonProperty("city") String city,
-                @JsonProperty("stateOrProvince") String stateOrProvince,
-                @JsonProperty("postalCode") String postalCode,
-                @JsonProperty("country") String country,
-                @JsonProperty("phone") String phone,
-                @JsonProperty("isMigrated") boolean isMigrated,
-                @JsonProperty("isNotifiedForInvoices") boolean isNotifiedForInvoices) {
+        public DefaultAccountData(@JsonProperty("externalKey") final String externalKey,
+                                  @JsonProperty("name") final String name,
+                                  @JsonProperty("firstNameLength") final Integer firstNameLength,
+                                  @JsonProperty("email") final String email,
+                                  @JsonProperty("billCycleDay") final Integer billCycleDay,
+                                  @JsonProperty("currency") final String currency,
+                                  @JsonProperty("paymentMethodId") final UUID paymentMethodId,
+                                  @JsonProperty("timeZone") final String timeZone,
+                                  @JsonProperty("locale") final String locale,
+                                  @JsonProperty("address1") final String address1,
+                                  @JsonProperty("address2") final String address2,
+                                  @JsonProperty("companyName") final String companyName,
+                                  @JsonProperty("city") final String city,
+                                  @JsonProperty("stateOrProvince") final String stateOrProvince,
+                                  @JsonProperty("postalCode") final String postalCode,
+                                  @JsonProperty("country") final String country,
+                                  @JsonProperty("phone") final String phone,
+                                  @JsonProperty("isMigrated") final boolean isMigrated,
+                                  @JsonProperty("isNotifiedForInvoices") final boolean isNotifiedForInvoices) {
             super();
             this.externalKey = externalKey;
             this.name = name;
@@ -231,7 +241,7 @@ public class DefaultAccountCreationEvent implements AccountCreationEvent {
         public DateTimeZone getTimeZone() {
             return DateTimeZone.forID(timeZone);
         }
-        
+
         @JsonProperty("timeZone")
         public String getTimeZoneString() {
             return timeZone;
@@ -322,120 +332,157 @@ public class DefaultAccountCreationEvent implements AccountCreationEvent {
             result = prime
                     * result
                     + ((firstNameLength == null) ? 0 : firstNameLength
-                            .hashCode());
+                    .hashCode());
             result = prime * result
                     + ((locale == null) ? 0 : locale.hashCode());
             result = prime * result + ((name == null) ? 0 : name.hashCode());
             result = prime
                     * result
                     + ((paymentMethodId == null) ? 0 : paymentMethodId
-                            .hashCode());
+                    .hashCode());
             result = prime * result + ((phone == null) ? 0 : phone.hashCode());
             result = prime * result
                     + ((postalCode == null) ? 0 : postalCode.hashCode());
             result = prime
                     * result
                     + ((stateOrProvince == null) ? 0 : stateOrProvince
-                            .hashCode());
+                    .hashCode());
             result = prime * result
                     + ((timeZone == null) ? 0 : timeZone.hashCode());
             return result;
         }
 
         @Override
-        public boolean equals(Object obj) {
-            if (this == obj)
+        public boolean equals(final Object obj) {
+            if (this == obj) {
                 return true;
-            if (obj == null)
+            }
+            if (obj == null) {
                 return false;
-            if (getClass() != obj.getClass())
+            }
+            if (getClass() != obj.getClass()) {
                 return false;
-            DefaultAccountData other = (DefaultAccountData) obj;
+            }
+            final DefaultAccountData other = (DefaultAccountData) obj;
             if (address1 == null) {
-                if (other.address1 != null)
+                if (other.address1 != null) {
                     return false;
-            } else if (!address1.equals(other.address1))
+                }
+            } else if (!address1.equals(other.address1)) {
                 return false;
+            }
             if (address2 == null) {
-                if (other.address2 != null)
+                if (other.address2 != null) {
                     return false;
-            } else if (!address2.equals(other.address2))
+                }
+            } else if (!address2.equals(other.address2)) {
                 return false;
+            }
             if (billCycleDay == null) {
-                if (other.billCycleDay != null)
+                if (other.billCycleDay != null) {
                     return false;
-            } else if (!billCycleDay.equals(other.billCycleDay))
+                }
+            } else if (!billCycleDay.equals(other.billCycleDay)) {
                 return false;
+            }
             if (city == null) {
-                if (other.city != null)
+                if (other.city != null) {
                     return false;
-            } else if (!city.equals(other.city))
+                }
+            } else if (!city.equals(other.city)) {
                 return false;
+            }
             if (companyName == null) {
-                if (other.companyName != null)
+                if (other.companyName != null) {
                     return false;
-            } else if (!companyName.equals(other.companyName))
+                }
+            } else if (!companyName.equals(other.companyName)) {
                 return false;
+            }
             if (country == null) {
-                if (other.country != null)
+                if (other.country != null) {
                     return false;
-            } else if (!country.equals(other.country))
+                }
+            } else if (!country.equals(other.country)) {
                 return false;
+            }
             if (currency == null) {
-                if (other.currency != null)
+                if (other.currency != null) {
                     return false;
-            } else if (!currency.equals(other.currency))
+                }
+            } else if (!currency.equals(other.currency)) {
                 return false;
+            }
             if (email == null) {
-                if (other.email != null)
+                if (other.email != null) {
                     return false;
-            } else if (!email.equals(other.email))
+                }
+            } else if (!email.equals(other.email)) {
                 return false;
+            }
             if (externalKey == null) {
-                if (other.externalKey != null)
+                if (other.externalKey != null) {
                     return false;
-            } else if (!externalKey.equals(other.externalKey))
+                }
+            } else if (!externalKey.equals(other.externalKey)) {
                 return false;
+            }
             if (firstNameLength == null) {
-                if (other.firstNameLength != null)
+                if (other.firstNameLength != null) {
                     return false;
-            } else if (!firstNameLength.equals(other.firstNameLength))
+                }
+            } else if (!firstNameLength.equals(other.firstNameLength)) {
                 return false;
+            }
             if (locale == null) {
-                if (other.locale != null)
+                if (other.locale != null) {
                     return false;
-            } else if (!locale.equals(other.locale))
+                }
+            } else if (!locale.equals(other.locale)) {
                 return false;
+            }
             if (name == null) {
-                if (other.name != null)
+                if (other.name != null) {
                     return false;
-            } else if (!name.equals(other.name))
+                }
+            } else if (!name.equals(other.name)) {
                 return false;
+            }
             if (paymentMethodId == null) {
-                if (other.paymentMethodId != null)
+                if (other.paymentMethodId != null) {
                     return false;
-            } else if (!paymentMethodId.equals(other.paymentMethodId))
+                }
+            } else if (!paymentMethodId.equals(other.paymentMethodId)) {
                 return false;
+            }
             if (phone == null) {
-                if (other.phone != null)
+                if (other.phone != null) {
                     return false;
-            } else if (!phone.equals(other.phone))
+                }
+            } else if (!phone.equals(other.phone)) {
                 return false;
+            }
             if (postalCode == null) {
-                if (other.postalCode != null)
+                if (other.postalCode != null) {
                     return false;
-            } else if (!postalCode.equals(other.postalCode))
+                }
+            } else if (!postalCode.equals(other.postalCode)) {
                 return false;
+            }
             if (stateOrProvince == null) {
-                if (other.stateOrProvince != null)
+                if (other.stateOrProvince != null) {
                     return false;
-            } else if (!stateOrProvince.equals(other.stateOrProvince))
+                }
+            } else if (!stateOrProvince.equals(other.stateOrProvince)) {
                 return false;
+            }
             if (timeZone == null) {
-                if (other.timeZone != null)
+                if (other.timeZone != null) {
                     return false;
-            } else if (!timeZone.equals(other.timeZone))
+                }
+            } else if (!timeZone.equals(other.timeZone)) {
                 return false;
+            }
             return true;
         }
     }

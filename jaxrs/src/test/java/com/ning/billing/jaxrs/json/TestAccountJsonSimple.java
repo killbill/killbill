@@ -15,11 +15,12 @@
  */
 package com.ning.billing.jaxrs.json;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.UUID;
+
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import java.util.UUID;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class TestAccountJsonSimple {
     private static final ObjectMapper mapper = new ObjectMapper();

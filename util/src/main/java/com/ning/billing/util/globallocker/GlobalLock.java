@@ -16,7 +16,6 @@
 
 package com.ning.billing.util.globallocker;
 
-public interface GlobalLock
-{
+public interface GlobalLock {
     public void release();
 }

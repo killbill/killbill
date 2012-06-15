@@ -30,25 +30,25 @@ public class TestMigrationSql extends TestMigration {
     }
 
     @Override
-    @Test(enabled=true, groups="slow")
+    @Test(enabled = true, groups = "slow")
     public void testSingleBasePlan() {
         super.testSingleBasePlan();
     }
 
     @Override
-    @Test(enabled=true, groups="slow")
+    @Test(enabled = true, groups = "slow")
     public void testPlanWithAddOn() {
         super.testPlanWithAddOn();
     }
 
     @Override
-    @Test(enabled=true, groups="slow")
+    @Test(enabled = true, groups = "slow")
     public void testSingleBasePlanFutureCancelled() {
         super.testSingleBasePlanFutureCancelled();
     }
 
     @Override
-    @Test(enabled=true, groups="slow")
+    @Test(enabled = true, groups = "slow")
     public void testSingleBasePlanWithPendingPhase() {
         super.testSingleBasePlanWithPendingPhase();
     }

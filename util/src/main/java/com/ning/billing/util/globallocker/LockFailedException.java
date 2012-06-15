@@ -16,6 +16,5 @@
 
 package com.ning.billing.util.globallocker;
 
-public class LockFailedException extends RuntimeException
-{
+public class LockFailedException extends RuntimeException {
 }

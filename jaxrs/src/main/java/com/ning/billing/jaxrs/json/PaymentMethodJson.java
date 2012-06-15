@@ -38,11 +38,11 @@ public class PaymentMethodJson {
     private final PaymentMethodPluginDetailJson pluginInfo;
 
     @JsonCreator
-    public PaymentMethodJson(@JsonProperty("paymentMethodId") String paymentMethodId,
-            @JsonProperty("accountId") String accountId,
-            @JsonProperty("isDefault") Boolean isDefault,
-            @JsonProperty("pluginName") String pluginName,
-            @JsonProperty("pluginInfo") PaymentMethodPluginDetailJson pluginInfo) {
+    public PaymentMethodJson(@JsonProperty("paymentMethodId") final String paymentMethodId,
+                             @JsonProperty("accountId") final String accountId,
+                             @JsonProperty("isDefault") final Boolean isDefault,
+                             @JsonProperty("pluginName") final String pluginName,
+                             @JsonProperty("pluginInfo") final PaymentMethodPluginDetailJson pluginInfo) {
         super();
         this.paymentMethodId = paymentMethodId;
         this.accountId = accountId;
@@ -50,17 +50,17 @@ public class PaymentMethodJson {
         this.pluginName = pluginName;
         this.pluginInfo = pluginInfo;
     }
-    
-    public static PaymentMethodJson toPaymentMethodJson(Account account, PaymentMethod in) {
+
+    public static PaymentMethodJson toPaymentMethodJson(final Account account, final PaymentMethod in) {
 
         final boolean isDefault = account.getPaymentMethodId() != null && account.getPaymentMethodId().equals(in.getId());
         PaymentMethodPluginDetailJson detail = null;
         if (in.getPluginDetail() != null) {
             List<PaymentMethodProperties> properties = null;
             if (in.getPluginDetail().getProperties() != null) {
-                properties = new ArrayList<PaymentMethodJson.PaymentMethodProperties>(Collections2.transform(in.getPluginDetail().getProperties(), new Function<PaymentMethodKVInfo,PaymentMethodProperties>() {
+                properties = new ArrayList<PaymentMethodJson.PaymentMethodProperties>(Collections2.transform(in.getPluginDetail().getProperties(), new Function<PaymentMethodKVInfo, PaymentMethodProperties>() {
                     @Override
-                    public PaymentMethodProperties apply(PaymentMethodKVInfo input) {
+                    public PaymentMethodProperties apply(final PaymentMethodKVInfo input) {
                         return new PaymentMethodProperties(input.getKey(), input.getValue().toString(), input.getIsUpdatable());
                     }
                 }));
@@ -76,18 +76,22 @@ public class PaymentMethodJson {
             public Boolean isActive() {
                 return true;
             }
+
             @Override
             public String getPluginName() {
                 return pluginName;
             }
+
             @Override
             public UUID getId() {
                 return paymentMethodId != null ? UUID.fromString(paymentMethodId) : null;
             }
+
             @Override
             public UUID getAccountId() {
                 return accountId != null ? UUID.fromString(accountId) : null;
             }
+
             @Override
             public PaymentMethodPlugin getPluginDetail() {
                 return new PaymentMethodPlugin() {
@@ -96,20 +100,23 @@ public class PaymentMethodJson {
                         // N/A
                         return false;
                     }
+
                     @Override
-                    public String getValueString(String key) {
+                    public String getValueString(final String key) {
                         // N/A
                         return null;
                     }
+
                     @Override
                     public String getExternalPaymentMethodId() {
                         return pluginInfo.getExternalPaymentId();
                     }
+
                     @Override
                     public List<PaymentMethodKVInfo> getProperties() {
                         if (pluginInfo.getProperties() != null) {
-                            List<PaymentMethodKVInfo> result = new LinkedList<PaymentMethodPlugin.PaymentMethodKVInfo>();
-                            for (PaymentMethodProperties cur : pluginInfo.getProperties()) {
+                            final List<PaymentMethodKVInfo> result = new LinkedList<PaymentMethodPlugin.PaymentMethodKVInfo>();
+                            for (final PaymentMethodProperties cur : pluginInfo.getProperties()) {
                                 result.add(new PaymentMethodKVInfo(cur.getKey(), cur.getValue(), cur.isUpdatable));
                             }
                             return result;
@@ -153,8 +160,8 @@ public class PaymentMethodJson {
 
 
         @JsonCreator
-        public PaymentMethodPluginDetailJson(@JsonProperty("externalPaymentId") String externalPaymentId,
-                @JsonProperty("properties") List<PaymentMethodProperties> properties) {
+        public PaymentMethodPluginDetailJson(@JsonProperty("externalPaymentId") final String externalPaymentId,
+                                             @JsonProperty("properties") final List<PaymentMethodProperties> properties) {
             super();
             this.externalPaymentId = externalPaymentId;
             this.properties = properties;
@@ -172,16 +179,16 @@ public class PaymentMethodJson {
             return properties;
         }
     }
-    
-    public final static class PaymentMethodProperties {
+
+    public static final class PaymentMethodProperties {
         private final String key;
         private final String value;
         private final Boolean isUpdatable;
 
         @JsonCreator
-        public PaymentMethodProperties(@JsonProperty("key") String key,
-                @JsonProperty("value") String value,
-                @JsonProperty("isUpdatable") Boolean isUpdatable) {
+        public PaymentMethodProperties(@JsonProperty("key") final String key,
+                                       @JsonProperty("value") final String value,
+                                       @JsonProperty("isUpdatable") final Boolean isUpdatable) {
             super();
             this.key = key;
             this.value = value;

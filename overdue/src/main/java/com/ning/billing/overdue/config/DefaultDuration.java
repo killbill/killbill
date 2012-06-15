@@ -30,17 +30,17 @@ import com.ning.billing.util.config.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultDuration extends ValidatingConfig<OverdueConfig> implements Duration {
-	@XmlElement(required=true)
+    @XmlElement(required = true)
     private TimeUnit unit;
 
-	@XmlElement(required=false)
+    @XmlElement(required = false)
     private Integer number = -1;
-	
+
     /* (non-Javadoc)
-	 * @see com.ning.billing.catalog.IDuration#getUnit()
-	 */
+      * @see com.ning.billing.catalog.IDuration#getUnit()
+      */
     @Override
-	public TimeUnit getUnit() {
+    public TimeUnit getUnit() {
         return unit;
     }
 
@@ -48,13 +48,15 @@ public class DefaultDuration extends ValidatingConfig<OverdueConfig> implements 
 	 * @see com.ning.billing.catalog.IDuration#getLength()
 	 */
     @Override
-	public int getNumber() {
+    public int getNumber() {
         return number;
     }
 
     @Override
-    public DateTime addToDateTime(DateTime dateTime) {
-        if ((number == null) && (unit != TimeUnit.UNLIMITED)) {return dateTime;}
+    public DateTime addToDateTime(final DateTime dateTime) {
+        if ((number == null) && (unit != TimeUnit.UNLIMITED)) {
+            return dateTime;
+        }
 
         switch (unit) {
             case DAYS:
@@ -72,7 +74,9 @@ public class DefaultDuration extends ValidatingConfig<OverdueConfig> implements 
 
     @Override
     public Period toJodaPeriod() {
-        if ((number == null) && (unit != TimeUnit.UNLIMITED)) {return new Period();}
+        if ((number == null) && (unit != TimeUnit.UNLIMITED)) {
+            return new Period();
+        }
 
         switch (unit) {
             case DAYS:
@@ -89,20 +93,20 @@ public class DefaultDuration extends ValidatingConfig<OverdueConfig> implements 
     }
 
     @Override
-	public ValidationErrors validate(OverdueConfig catalog, ValidationErrors errors) {
-		//TODO MDW - Validation TimeUnit UNLIMITED iff number == -1
-		return errors;
-	}
+    public ValidationErrors validate(final OverdueConfig catalog, final ValidationErrors errors) {
+        //TODO MDW - Validation TimeUnit UNLIMITED iff number == -1
+        return errors;
+    }
 
-	protected DefaultDuration setUnit(TimeUnit unit) {
-		this.unit = unit;
-		return this;
-	}
+    protected DefaultDuration setUnit(final TimeUnit unit) {
+        this.unit = unit;
+        return this;
+    }
 
-	protected DefaultDuration setNumber(Integer number) {
-		this.number = number;
-		return this;
-	}
-	
-	
+    protected DefaultDuration setNumber(final Integer number) {
+        this.number = number;
+        return this;
+    }
+
+
 }

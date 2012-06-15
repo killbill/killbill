@@ -17,15 +17,14 @@
 package com.ning.billing.ovedue.notification;
 
 import org.joda.time.DateTime;
-import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
 import com.ning.billing.junction.api.Blockable;
 
 
 public interface OverdueCheckPoster {
 
-	void insertOverdueCheckNotification(Blockable blockable, DateTime futureNotificationTime);
-	
+    void insertOverdueCheckNotification(Blockable blockable, DateTime futureNotificationTime);
+
     void clearNotificationsFor(Blockable blockable);
 
 }

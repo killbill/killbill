@@ -18,7 +18,7 @@ package com.ning.billing.entitlement.events.user;
 
 public class ApiEventReCreate extends ApiEventBase {
 
-    public ApiEventReCreate(ApiEventBuilder builder) {
+    public ApiEventReCreate(final ApiEventBuilder builder) {
         super(builder.setEventType(ApiEventType.RE_CREATE));
     }
 }

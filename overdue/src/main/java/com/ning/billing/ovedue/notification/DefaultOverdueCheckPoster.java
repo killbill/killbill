@@ -17,7 +17,6 @@
 package com.ning.billing.ovedue.notification;
 
 import org.joda.time.DateTime;
-import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,45 +29,45 @@ import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotificationQueue;
 
 public class DefaultOverdueCheckPoster implements OverdueCheckPoster {
-    private final static Logger log = LoggerFactory.getLogger(DefaultOverdueCheckNotifier.class);
+    private static final Logger log = LoggerFactory.getLogger(DefaultOverdueCheckNotifier.class);
 
-	private final NotificationQueueService notificationQueueService;
+    private final NotificationQueueService notificationQueueService;
 
-	@Inject
+    @Inject
     public DefaultOverdueCheckPoster(
-			NotificationQueueService notificationQueueService) {
-		super();
-		this.notificationQueueService = notificationQueueService;
-	}
-
-	@Override
-	public void insertOverdueCheckNotification(final Blockable overdueable, final DateTime futureNotificationTime) {
-    	NotificationQueue checkOverdueQueue;
-		try {
-			checkOverdueQueue = notificationQueueService.getNotificationQueue(DefaultOverdueService.OVERDUE_SERVICE_NAME,
-					DefaultOverdueCheckNotifier.OVERDUE_CHECK_NOTIFIER_QUEUE);
-			 log.info("Queuing overdue check notification. id: {}, timestamp: {}", overdueable.getId().toString(), futureNotificationTime.toString());
-
-	            checkOverdueQueue.recordFutureNotification(futureNotificationTime, new NotificationKey(){
-	                @Override
-	                public String toString() {
-	                    return overdueable.getId().toString();
-	                }
-	    	    });
-		} catch (NoSuchNotificationQueue e) {
-			log.error("Attempting to put items on a non-existent queue (DefaultOverdueCheck).", e);
-		}
-		
+            final NotificationQueueService notificationQueueService) {
+        super();
+        this.notificationQueueService = notificationQueueService;
     }
-	
-	
-	@Override
-	public void clearNotificationsFor(final Blockable overdueable) {
-	    NotificationQueue checkOverdueQueue;
+
+    @Override
+    public void insertOverdueCheckNotification(final Blockable overdueable, final DateTime futureNotificationTime) {
+        final NotificationQueue checkOverdueQueue;
         try {
             checkOverdueQueue = notificationQueueService.getNotificationQueue(DefaultOverdueService.OVERDUE_SERVICE_NAME,
-                DefaultOverdueCheckNotifier.OVERDUE_CHECK_NOTIFIER_QUEUE);
-            NotificationKey key = new NotificationKey() {
+                                                                              DefaultOverdueCheckNotifier.OVERDUE_CHECK_NOTIFIER_QUEUE);
+            log.info("Queuing overdue check notification. id: {}, timestamp: {}", overdueable.getId().toString(), futureNotificationTime.toString());
+
+            checkOverdueQueue.recordFutureNotification(futureNotificationTime, new NotificationKey() {
+                @Override
+                public String toString() {
+                    return overdueable.getId().toString();
+                }
+            });
+        } catch (NoSuchNotificationQueue e) {
+            log.error("Attempting to put items on a non-existent queue (DefaultOverdueCheck).", e);
+        }
+
+    }
+
+
+    @Override
+    public void clearNotificationsFor(final Blockable overdueable) {
+        final NotificationQueue checkOverdueQueue;
+        try {
+            checkOverdueQueue = notificationQueueService.getNotificationQueue(DefaultOverdueService.OVERDUE_SERVICE_NAME,
+                                                                              DefaultOverdueCheckNotifier.OVERDUE_CHECK_NOTIFIER_QUEUE);
+            final NotificationKey key = new NotificationKey() {
                 @Override
                 public String toString() {
                     return overdueable.getId().toString();
@@ -78,6 +77,6 @@ public class DefaultOverdueCheckPoster implements OverdueCheckPoster {
         } catch (NoSuchNotificationQueue e) {
             log.error("Attempting to clear items from a non-existent queue (DefaultOverdueCheck).", e);
         }
-	}
+    }
 
 }

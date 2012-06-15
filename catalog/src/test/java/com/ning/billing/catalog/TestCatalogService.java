@@ -16,40 +16,41 @@
 
 package com.ning.billing.catalog;
 
+import org.testng.Assert;
+import org.testng.annotations.Test;
+
 import com.ning.billing.catalog.io.VersionedCatalogLoader;
 import com.ning.billing.config.CatalogConfig;
 import com.ning.billing.lifecycle.KillbillService.ServiceException;
 import com.ning.billing.util.clock.DefaultClock;
-import org.testng.Assert;
-import org.testng.annotations.Test;
 
 public class TestCatalogService {
 
-	@Test
-	public void testCatalogServiceDirectory() throws ServiceException {
-		DefaultCatalogService service = new DefaultCatalogService(new CatalogConfig() {
-			@Override
-			public String getCatalogURI() {
-				return "file:src/test/resources/versionedCatalog";
-			}
-			
-		}, new VersionedCatalogLoader(new DefaultClock()));
-		service.loadCatalog();
-		Assert.assertNotNull(service.getFullCatalog());
-		Assert.assertEquals(service.getFullCatalog().getCatalogName(), "WeaponsHireSmall");
-	}
-	
-	@Test
-	public void testCatalogServiceFile() throws ServiceException {
-		DefaultCatalogService service = new DefaultCatalogService(new CatalogConfig() {
-			@Override
-			public String getCatalogURI() {
-				return "file:src/test/resources/WeaponsHire.xml";
-			}
-			
-		}, new VersionedCatalogLoader(new DefaultClock()));
-		service.loadCatalog();
-		Assert.assertNotNull(service.getFullCatalog());
-		Assert.assertEquals(service.getFullCatalog().getCatalogName(), "Firearms");
-	}
+    @Test
+    public void testCatalogServiceDirectory() throws ServiceException {
+        final DefaultCatalogService service = new DefaultCatalogService(new CatalogConfig() {
+            @Override
+            public String getCatalogURI() {
+                return "file:src/test/resources/versionedCatalog";
+            }
+
+        }, new VersionedCatalogLoader(new DefaultClock()));
+        service.loadCatalog();
+        Assert.assertNotNull(service.getFullCatalog());
+        Assert.assertEquals(service.getFullCatalog().getCatalogName(), "WeaponsHireSmall");
+    }
+
+    @Test
+    public void testCatalogServiceFile() throws ServiceException {
+        final DefaultCatalogService service = new DefaultCatalogService(new CatalogConfig() {
+            @Override
+            public String getCatalogURI() {
+                return "file:src/test/resources/WeaponsHire.xml";
+            }
+
+        }, new VersionedCatalogLoader(new DefaultClock()));
+        service.loadCatalog();
+        Assert.assertNotNull(service.getFullCatalog());
+        Assert.assertEquals(service.getFullCatalog().getCatalogName(), "Firearms");
+    }
 }

@@ -28,18 +28,18 @@ public class MockPaymentProviderPluginProvider implements Provider<MockPaymentPr
     @Inject
     private Clock clock;
 
-    public MockPaymentProviderPluginProvider(String instanceName) {
+    public MockPaymentProviderPluginProvider(final String instanceName) {
         this.instanceName = instanceName;
     }
 
     @Inject
-    public void setPaymentProviderPluginRegistry(PaymentProviderPluginRegistry registry) {
+    public void setPaymentProviderPluginRegistry(final PaymentProviderPluginRegistry registry) {
         this.registry = registry;
     }
 
     @Override
     public MockPaymentProviderPlugin get() {
-        MockPaymentProviderPlugin plugin = new MockPaymentProviderPlugin(clock);
+        final MockPaymentProviderPlugin plugin = new MockPaymentProviderPlugin(clock);
 
         registry.register(plugin, instanceName);
         return plugin;

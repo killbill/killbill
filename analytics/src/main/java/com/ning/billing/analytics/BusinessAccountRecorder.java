@@ -64,10 +64,10 @@ public class BusinessAccountRecorder {
     }
 
     public void accountCreated(final AccountData data) {
-        Account account;
+        final Account account;
         try {
             account = accountApi.getAccountByKey(data.getExternalKey());
-            Map<String, Tag> tags = tagUserApi.getTags(account.getId(), ObjectType.ACCOUNT);
+            final Map<String, Tag> tags = tagUserApi.getTags(account.getId(), ObjectType.ACCOUNT);
             final BusinessAccount bac = createBusinessAccountFromAccount(account, new ArrayList<Tag>(tags.values()));
 
             log.info("ACCOUNT CREATION " + bac);
@@ -177,11 +177,11 @@ public class BusinessAccountRecorder {
 
                 // Retrieve payments information for these invoices
                 DateTime lastPaymentDate = null;
-                
-                List<Payment> payments = paymentApi.getAccountPayments(account.getId());
+
+                final List<Payment> payments = paymentApi.getAccountPayments(account.getId());
                 if (payments != null) {
-                    for (Payment cur : payments) {
-                     // Use the last payment method/type/country as the default one for the account
+                    for (final Payment cur : payments) {
+                        // Use the last payment method/type/country as the default one for the account
                         if (lastPaymentDate == null || cur.getEffectiveDate().isAfter(lastPaymentDate)) {
                             lastPaymentDate = cur.getEffectiveDate();
                             lastPaymentStatus = cur.getPaymentStatus().toString();

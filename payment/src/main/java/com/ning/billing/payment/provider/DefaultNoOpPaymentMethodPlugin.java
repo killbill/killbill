@@ -19,22 +19,21 @@ import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.payment.api.PaymentMethodPlugin;
-import com.ning.billing.payment.api.PaymentMethodPlugin.PaymentMethodKVInfo;
 
 public class DefaultNoOpPaymentMethodPlugin implements PaymentMethodPlugin {
 
     private String externalId;
     private boolean isDefault;
     private List<PaymentMethodKVInfo> props;
-    
-    public DefaultNoOpPaymentMethodPlugin(PaymentMethodPlugin src) {
+
+    public DefaultNoOpPaymentMethodPlugin(final PaymentMethodPlugin src) {
         this.externalId = UUID.randomUUID().toString();
         this.isDefault = src.isDefaultPaymentMethod();
         this.props = src.getProperties();
     }
-    
-    public DefaultNoOpPaymentMethodPlugin(String externalId, boolean isDefault,
-            List<PaymentMethodKVInfo> props) {
+
+    public DefaultNoOpPaymentMethodPlugin(final String externalId, final boolean isDefault,
+                                          final List<PaymentMethodKVInfo> props) {
         super();
         this.externalId = externalId;
         this.isDefault = isDefault;
@@ -56,24 +55,24 @@ public class DefaultNoOpPaymentMethodPlugin implements PaymentMethodPlugin {
         return props;
     }
 
-    public void setExternalId(String externalId) {
+    public void setExternalId(final String externalId) {
         this.externalId = externalId;
     }
 
-    public void setDefault(boolean isDefault) {
+    public void setDefault(final boolean isDefault) {
         this.isDefault = isDefault;
     }
 
-    public void setProps(List<PaymentMethodKVInfo> props) {
+    public void setProps(final List<PaymentMethodKVInfo> props) {
         this.props = props;
     }
 
     @Override
-    public String getValueString(String key) {
+    public String getValueString(final String key) {
         if (props == null) {
             return null;
         }
-        for (PaymentMethodKVInfo cur : props) {
+        for (final PaymentMethodKVInfo cur : props) {
             if (cur.getKey().equals(key)) {
                 return cur.getValue().toString();
             }

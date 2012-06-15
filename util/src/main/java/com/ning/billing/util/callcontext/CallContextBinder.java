@@ -16,16 +16,16 @@
 
 package com.ning.billing.util.callcontext;
 
-import org.skife.jdbi.v2.SQLStatement;
-import org.skife.jdbi.v2.sqlobject.Binder;
-import org.skife.jdbi.v2.sqlobject.BinderFactory;
-import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
-
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+
+import org.skife.jdbi.v2.SQLStatement;
+import org.skife.jdbi.v2.sqlobject.Binder;
+import org.skife.jdbi.v2.sqlobject.BinderFactory;
+import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
 
 @BindingAnnotation(CallContextBinder.CallContextBinderFactory.class)
 @Retention(RetentionPolicy.RUNTIME)
@@ -33,16 +33,16 @@ import java.lang.annotation.Target;
 public @interface CallContextBinder {
     public static class CallContextBinderFactory implements BinderFactory {
         @Override
-        public Binder build(Annotation annotation) {
+        public Binder build(final Annotation annotation) {
             return new Binder<CallContextBinder, CallContext>() {
                 @Override
-                public void bind(SQLStatement q, CallContextBinder bind, CallContext callContext) {
-                	q.bind("userName", callContext.getUserName());
+                public void bind(final SQLStatement q, final CallContextBinder bind, final CallContext callContext) {
+                    q.bind("userName", callContext.getUserName());
                     q.bind("createdDate", callContext.getCreatedDate().toDate());
                     q.bind("updatedDate", callContext.getUpdatedDate().toDate());
                     q.bind("reasonCode", callContext.getReasonCode());
                     q.bind("comment", callContext.getComment());
-                	q.bind("userToken", (callContext.getUserToken() != null) ? callContext.getUserToken().toString() : null);                	
+                    q.bind("userToken", (callContext.getUserToken() != null) ? callContext.getUserToken().toString() : null);
                 }
             };
         }

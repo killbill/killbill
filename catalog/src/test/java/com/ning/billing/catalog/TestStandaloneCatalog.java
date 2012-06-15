@@ -23,30 +23,30 @@ import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.PhaseType;
 
 public class TestStandaloneCatalog {
-	
-		@Test
-		public void testFindPhase() throws CatalogApiException{
-			DefaultPlanPhase phaseTrial1 = new MockPlanPhase().setPhaseType(PhaseType.TRIAL);
-			DefaultPlanPhase phaseTrial2 = new MockPlanPhase().setPhaseType(PhaseType.TRIAL);
-			DefaultPlanPhase phaseDiscount1 = new MockPlanPhase().setPhaseType(PhaseType.DISCOUNT);
-			DefaultPlanPhase phaseDiscount2 = new MockPlanPhase().setPhaseType(PhaseType.DISCOUNT);
-			
-			DefaultPlan plan1 = new MockPlan().setName("TestPlan1").setFinalPhase(phaseDiscount1).setInitialPhases(new DefaultPlanPhase[]{phaseTrial1});
-			DefaultPlan plan2 = new MockPlan().setName("TestPlan2").setFinalPhase(phaseDiscount2).setInitialPhases(new DefaultPlanPhase[]{phaseTrial2});
-			phaseTrial1.setPlan(plan1);
-			phaseTrial2.setPlan(plan2);
-			phaseDiscount1.setPlan(plan1);
-			phaseDiscount2.setPlan(plan2);
-			
-			StandaloneCatalog cat = new MockCatalog().setPlans(new DefaultPlan[]{plan1, plan2});
-			
-			Assert.assertEquals(cat.findCurrentPhase("TestPlan1-discount"), phaseDiscount1);
-			Assert.assertEquals(cat.findCurrentPhase("TestPlan2-discount"), phaseDiscount2);
-			Assert.assertEquals(cat.findCurrentPhase("TestPlan1-trial"), phaseTrial1);
-			Assert.assertEquals(cat.findCurrentPhase("TestPlan2-trial"), phaseTrial2);
-			
-			
-		}
-		
-		
+
+    @Test
+    public void testFindPhase() throws CatalogApiException {
+        final DefaultPlanPhase phaseTrial1 = new MockPlanPhase().setPhaseType(PhaseType.TRIAL);
+        final DefaultPlanPhase phaseTrial2 = new MockPlanPhase().setPhaseType(PhaseType.TRIAL);
+        final DefaultPlanPhase phaseDiscount1 = new MockPlanPhase().setPhaseType(PhaseType.DISCOUNT);
+        final DefaultPlanPhase phaseDiscount2 = new MockPlanPhase().setPhaseType(PhaseType.DISCOUNT);
+
+        final DefaultPlan plan1 = new MockPlan().setName("TestPlan1").setFinalPhase(phaseDiscount1).setInitialPhases(new DefaultPlanPhase[]{phaseTrial1});
+        final DefaultPlan plan2 = new MockPlan().setName("TestPlan2").setFinalPhase(phaseDiscount2).setInitialPhases(new DefaultPlanPhase[]{phaseTrial2});
+        phaseTrial1.setPlan(plan1);
+        phaseTrial2.setPlan(plan2);
+        phaseDiscount1.setPlan(plan1);
+        phaseDiscount2.setPlan(plan2);
+
+        final StandaloneCatalog cat = new MockCatalog().setPlans(new DefaultPlan[]{plan1, plan2});
+
+        Assert.assertEquals(cat.findCurrentPhase("TestPlan1-discount"), phaseDiscount1);
+        Assert.assertEquals(cat.findCurrentPhase("TestPlan2-discount"), phaseDiscount2);
+        Assert.assertEquals(cat.findCurrentPhase("TestPlan1-trial"), phaseTrial1);
+        Assert.assertEquals(cat.findCurrentPhase("TestPlan2-trial"), phaseTrial2);
+
+
+    }
+
+
 }

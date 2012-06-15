@@ -39,20 +39,20 @@ import com.ning.billing.util.queue.PersistentQueueBase;
 
 public class PersistentBus extends PersistentQueueBase implements Bus {
 
-    private final static long DELTA_IN_PROCESSING_TIME_MS = 1000L * 60L * 5L; // 5 minutes
-    private final static int MAX_BUS_EVENTS = 1;
-    
+    private static final long DELTA_IN_PROCESSING_TIME_MS = 1000L * 60L * 5L; // 5 minutes
+    private static final int MAX_BUS_EVENTS = 1;
+
     private static final Logger log = LoggerFactory.getLogger(PersistentBus.class);
-    
+
     private final PersistentBusSqlDao dao;
-    
+
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final EventBusDelegate eventBusDelegate;
     private final Clock clock;
     private final String hostname;
 
     private static final class EventBusDelegate extends EventBus {
-        public EventBusDelegate(String busName) {
+        public EventBusDelegate(final String busName) {
             super(busName);
         }
 
@@ -70,16 +70,16 @@ public class PersistentBus extends PersistentQueueBase implements Bus {
           }
           */
     }
-    
+
     @Inject
     public PersistentBus(final IDBI dbi, final Clock clock, final PersistentBusConfig config) {
-        
+
         super("Bus", Executors.newFixedThreadPool(config.getNbThreads(), new ThreadFactory() {
             @Override
-            public Thread newThread(Runnable r) {
+            public Thread newThread(final Runnable r) {
                 return new Thread(new ThreadGroup(DefaultBusService.EVENT_BUS_GROUP_NAME),
-                        r,
-                        DefaultBusService.EVENT_BUS_TH_NAME);
+                                  r,
+                                  DefaultBusService.EVENT_BUS_TH_NAME);
             }
         }), config.getNbThreads(), config);
         this.dao = dbi.onDemand(PersistentBusSqlDao.class);
@@ -87,7 +87,7 @@ public class PersistentBus extends PersistentQueueBase implements Bus {
         this.eventBusDelegate = new EventBusDelegate("Killbill EventBus");
         this.hostname = Hostname.get();
     }
-    
+
     @Override
     public void start() {
         startQueue();
@@ -101,14 +101,14 @@ public class PersistentBus extends PersistentQueueBase implements Bus {
     @Override
     public int doProcessEvents() {
 
-        List<BusEventEntry> events = getNextBusEvent();
+        final List<BusEventEntry> events = getNextBusEvent();
         if (events.size() == 0) {
             return 0;
         }
 
         int result = 0;
         for (final BusEventEntry cur : events) {
-            BusEvent evt = deserializeBusEvent(cur.getBusEventClass(), cur.getBusEventJson());
+            final BusEvent evt = deserializeBusEvent(cur.getBusEventClass(), cur.getBusEventJson());
             result++;
             // STEPH exception handling is done by GUAVA-- logged a bug Issue-780
             eventBusDelegate.post(evt);
@@ -119,7 +119,7 @@ public class PersistentBus extends PersistentQueueBase implements Bus {
 
     private BusEvent deserializeBusEvent(final String className, final String json) {
         try {
-            Class<?> claz = Class.forName(className);
+            final Class<?> claz = Class.forName(className);
             return (BusEvent) objectMapper.readValue(json, claz);
         } catch (Exception e) {
             log.error(String.format("Failed to deserialize json object %s for class %s", json, className), e);
@@ -127,17 +127,17 @@ public class PersistentBus extends PersistentQueueBase implements Bus {
         }
     }
 
-    
+
     private List<BusEventEntry> getNextBusEvent() {
 
         final Date now = clock.getUTCNow().toDate();
         final Date nextAvailable = clock.getUTCNow().plus(DELTA_IN_PROCESSING_TIME_MS).toDate();
 
-        BusEventEntry input = dao.getNextBusEventEntry(MAX_BUS_EVENTS, hostname, now);
+        final BusEventEntry input = dao.getNextBusEventEntry(MAX_BUS_EVENTS, hostname, now);
         if (input == null) {
             return Collections.emptyList();
         }
-        
+
         final boolean claimed = (dao.claimBusEvent(hostname, nextAvailable, input.getId(), now) == 1);
         if (claimed) {
             dao.insertClaimedHistory(hostname, now, input.getId());
@@ -147,12 +147,12 @@ public class PersistentBus extends PersistentQueueBase implements Bus {
     }
 
     @Override
-    public void register(Object handlerInstance) throws EventBusException {
+    public void register(final Object handlerInstance) throws EventBusException {
         eventBusDelegate.register(handlerInstance);
     }
 
     @Override
-    public void unregister(Object handlerInstance) throws EventBusException {
+    public void unregister(final Object handlerInstance) throws EventBusException {
         eventBusDelegate.unregister(handlerInstance);
     }
 
@@ -160,8 +160,8 @@ public class PersistentBus extends PersistentQueueBase implements Bus {
     public void post(final BusEvent event) throws EventBusException {
         dao.inTransaction(new Transaction<Void, PersistentBusSqlDao>() {
             @Override
-            public Void inTransaction(PersistentBusSqlDao transactional,
-                    TransactionStatus status) throws Exception {
+            public Void inTransaction(final PersistentBusSqlDao transactional,
+                                      final TransactionStatus status) throws Exception {
                 postFromTransaction(event, transactional);
                 return null;
             }
@@ -169,16 +169,16 @@ public class PersistentBus extends PersistentQueueBase implements Bus {
     }
 
     @Override
-    public void postFromTransaction(final BusEvent event, Transmogrifier transmogrifier)
+    public void postFromTransaction(final BusEvent event, final Transmogrifier transmogrifier)
             throws EventBusException {
-        PersistentBusSqlDao transactional = transmogrifier.become(PersistentBusSqlDao.class);
+        final PersistentBusSqlDao transactional = transmogrifier.become(PersistentBusSqlDao.class);
         postFromTransaction(event, transactional);
     }
-    
-    private void postFromTransaction(BusEvent event, PersistentBusSqlDao transactional) {
+
+    private void postFromTransaction(final BusEvent event, final PersistentBusSqlDao transactional) {
         try {
-            String json = objectMapper.writeValueAsString(event);
-            BusEventEntry entry  =  new BusEventEntry(hostname, event.getClass().getName(), json);
+            final String json = objectMapper.writeValueAsString(event);
+            final BusEventEntry entry = new BusEventEntry(hostname, event.getClass().getName(), json);
             transactional.insertBusEvent(entry);
         } catch (Exception e) {
             log.error("Failed to post BusEvent " + event.toString(), e);

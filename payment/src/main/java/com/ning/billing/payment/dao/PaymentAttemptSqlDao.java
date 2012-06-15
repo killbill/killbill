@@ -22,7 +22,6 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.UUID;
 
-
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
@@ -47,55 +46,54 @@ import com.ning.billing.util.entity.dao.UpdatableEntitySqlDao;
 
 @ExternalizedSqlViaStringTemplate3()
 @RegisterMapper(PaymentAttemptSqlDao.PaymentAttemptModelDaoMapper.class)
-public interface PaymentAttemptSqlDao extends Transactional<PaymentAttemptSqlDao>, UpdatableEntitySqlDao<PaymentAttemptModelDao>, Transmogrifier,  CloseMe {
+public interface PaymentAttemptSqlDao extends Transactional<PaymentAttemptSqlDao>, UpdatableEntitySqlDao<PaymentAttemptModelDao>, Transmogrifier, CloseMe {
 
-
-    
 
     @SqlUpdate
     void insertPaymentAttempt(@Bind(binder = PaymentAttemptModelDaoBinder.class) final PaymentAttemptModelDao attempt,
-                           @CallContextBinder final CallContext context);
-    
+                              @CallContextBinder final CallContext context);
+
     @SqlUpdate
     void updatePaymentAttemptStatus(@Bind("id") final String attemptId,
-            @Bind("processingStatus") final String processingStatus,
-            @Bind("paymentError") final String paymentError);
-    
+                                    @Bind("processingStatus") final String processingStatus,
+                                    @Bind("paymentError") final String paymentError);
+
     @SqlQuery
     PaymentAttemptModelDao getPaymentAttempt(@Bind("id") final String attemptId);
 
     @SqlQuery
     List<PaymentAttemptModelDao> getPaymentAttempts(@Bind("paymentId") final String paymentId);
 
-   
+
     @Override
     @SqlUpdate
     void insertHistoryFromTransaction(@PaymentAttemptHistoryBinder final EntityHistory<PaymentAttemptModelDao> payment,
-                                            @CallContextBinder final CallContext context);
+                                      @CallContextBinder final CallContext context);
 
     public static final class PaymentAttemptModelDaoBinder extends BinderBase implements Binder<Bind, PaymentAttemptModelDao> {
         @Override
-        public void bind(@SuppressWarnings("rawtypes") SQLStatement stmt, Bind bind, PaymentAttemptModelDao attempt) {
+        public void bind(@SuppressWarnings("rawtypes") final SQLStatement stmt, final Bind bind, final PaymentAttemptModelDao attempt) {
             stmt.bind("id", attempt.getId().toString());
-            stmt.bind("paymentId", attempt.getPaymentId().toString());            
+            stmt.bind("paymentId", attempt.getPaymentId().toString());
             stmt.bind("processingStatus", attempt.getPaymentStatus().toString());
-            stmt.bind("paymentError", attempt.getPaymentError());            
-            stmt.bind("requestedAmount", attempt.getRequestedAmount());            
+            stmt.bind("paymentError", attempt.getPaymentError());
+            stmt.bind("requestedAmount", attempt.getRequestedAmount());
         }
     }
+
     public static class PaymentAttemptModelDaoMapper extends MapperBase implements ResultSetMapper<PaymentAttemptModelDao> {
 
         @Override
-        public PaymentAttemptModelDao map(int index, ResultSet rs, StatementContext ctx)
+        public PaymentAttemptModelDao map(final int index, final ResultSet rs, final StatementContext ctx)
                 throws SQLException {
-            UUID id = getUUID(rs, "id");
-            UUID accountId = getUUID(rs, "account_id");
-            UUID invoiceId = getUUID(rs, "invoice_id");            
-            UUID paymentId = getUUID(rs, "payment_id");  
-            DateTime effectiveDate = getDate(rs, "effective_date");            
-            PaymentStatus processingStatus = PaymentStatus.valueOf(rs.getString("processing_status"));
-            String paymentError = rs.getString("payment_error");
-            BigDecimal requestedAmount = rs.getBigDecimal("requested_amount");
+            final UUID id = getUUID(rs, "id");
+            final UUID accountId = getUUID(rs, "account_id");
+            final UUID invoiceId = getUUID(rs, "invoice_id");
+            final UUID paymentId = getUUID(rs, "payment_id");
+            final DateTime effectiveDate = getDate(rs, "effective_date");
+            final PaymentStatus processingStatus = PaymentStatus.valueOf(rs.getString("processing_status"));
+            final String paymentError = rs.getString("payment_error");
+            final BigDecimal requestedAmount = rs.getBigDecimal("requested_amount");
             return new PaymentAttemptModelDao(id, accountId, invoiceId, paymentId, processingStatus, effectiveDate, requestedAmount, paymentError);
         }
     }

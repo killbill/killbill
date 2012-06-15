@@ -33,38 +33,38 @@ public class BillingStateBundle extends BillingState<SubscriptionBundle> {
     private final BillingPeriod basePlanBillingPeriod;
     private final PriceList basePlanPriceList;
     private final PhaseType basePlanPhaseType;
-    
-	public BillingStateBundle(UUID id, 
-	        int numberOfUnpaidInvoices, 
-	        BigDecimal unpaidInvoiceBalance,
-			DateTime dateOfEarliestUnpaidInvoice,
-			UUID idOfEarliestUnpaidInvoice,
-			PaymentResponse responseForLastFailedPayment,
-			Tag[] tags, 
-			Product basePlanProduct,
-			BillingPeriod basePlanBillingPeriod, 
-			PriceList basePlanPriceList, PhaseType basePlanPhaseType) {
-		super(id, numberOfUnpaidInvoices, unpaidInvoiceBalance, 
-				dateOfEarliestUnpaidInvoice, idOfEarliestUnpaidInvoice, 
-				responseForLastFailedPayment, tags);
-		
-		this.basePlanProduct = basePlanProduct;
-		this.basePlanBillingPeriod = basePlanBillingPeriod;
-		this.basePlanPriceList = basePlanPriceList;
-		this.basePlanPhaseType = basePlanPhaseType;
-	}
-	
-	public Product getBasePlanProduct() {
-		return basePlanProduct;
-	}
-	
-	public BillingPeriod getBasePlanBillingPeriod() {
-		return basePlanBillingPeriod;
-	}
-	
-	public PriceList getBasePlanPriceList() {
-		return basePlanPriceList;
-	}
+
+    public BillingStateBundle(final UUID id,
+                              final int numberOfUnpaidInvoices,
+                              final BigDecimal unpaidInvoiceBalance,
+                              final DateTime dateOfEarliestUnpaidInvoice,
+                              final UUID idOfEarliestUnpaidInvoice,
+                              final PaymentResponse responseForLastFailedPayment,
+                              final Tag[] tags,
+                              final Product basePlanProduct,
+                              final BillingPeriod basePlanBillingPeriod,
+                              final PriceList basePlanPriceList, final PhaseType basePlanPhaseType) {
+        super(id, numberOfUnpaidInvoices, unpaidInvoiceBalance,
+              dateOfEarliestUnpaidInvoice, idOfEarliestUnpaidInvoice,
+              responseForLastFailedPayment, tags);
+
+        this.basePlanProduct = basePlanProduct;
+        this.basePlanBillingPeriod = basePlanBillingPeriod;
+        this.basePlanPriceList = basePlanPriceList;
+        this.basePlanPhaseType = basePlanPhaseType;
+    }
+
+    public Product getBasePlanProduct() {
+        return basePlanProduct;
+    }
+
+    public BillingPeriod getBasePlanBillingPeriod() {
+        return basePlanBillingPeriod;
+    }
+
+    public PriceList getBasePlanPriceList() {
+        return basePlanPriceList;
+    }
 
     public PhaseType getBasePlanPhaseType() {
         return basePlanPhaseType;

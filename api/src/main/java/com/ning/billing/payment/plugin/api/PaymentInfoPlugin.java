@@ -20,13 +20,13 @@ import java.math.BigDecimal;
 import org.joda.time.DateTime;
 
 public interface PaymentInfoPlugin {
-    
+
     public enum PaymentPluginStatus {
         UNDEFINED,
         PROCESSED,
         ERROR
-    };
-    
+    }
+
     public BigDecimal getAmount();
 
     public DateTime getCreatedDate();
@@ -34,8 +34,8 @@ public interface PaymentInfoPlugin {
     public DateTime getEffectiveDate();
 
     public PaymentPluginStatus getStatus();
-    
+
     public String getGatewayError();
-    
+
     public String getGatewayErrorCode();
 }

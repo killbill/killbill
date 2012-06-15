@@ -27,17 +27,17 @@ import com.ning.billing.util.tag.TagDefinition;
 public class TagHelper {
 
     private final TagUserApi tagUserApi;
-    
+
     @Inject
     public TagHelper(final TagUserApi tagUserApi) {
         this.tagUserApi = tagUserApi;
     }
-    
+
     public List<TagDefinition> getTagDefinitionFromTagList(final String tagList) throws TagDefinitionApiException {
-        List<TagDefinition> result = new LinkedList<TagDefinition>();
-        String [] tagParts = tagList.split(",\\s*");
-        for (String cur : tagParts) {
-            TagDefinition curDef = tagUserApi.getTagDefinition(cur);
+        final List<TagDefinition> result = new LinkedList<TagDefinition>();
+        final String[] tagParts = tagList.split(",\\s*");
+        for (final String cur : tagParts) {
+            final TagDefinition curDef = tagUserApi.getTagDefinition(cur);
             // Yack should throw exception
             if (curDef == null) {
                 throw new TagDefinitionApiException(ErrorCode.TAG_DEFINITION_DOES_NOT_EXIST, cur);

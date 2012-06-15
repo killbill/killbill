@@ -29,9 +29,9 @@ import com.ning.billing.junction.api.BlockingState;
 public class BlockingAccount implements Account {
     private final Account account;
     private BlockingState blockingState = null;
-    private BlockingApi blockingApi;
+    private final BlockingApi blockingApi;
 
-    public BlockingAccount( Account account, BlockingApi blockingApi) {
+    public BlockingAccount(final Account account, final BlockingApi blockingApi) {
         this.account = account;
         this.blockingApi = blockingApi;
     }
@@ -93,7 +93,7 @@ public class BlockingAccount implements Account {
 
     @Override
     public BlockingState getBlockingState() {
-        if(blockingState == null) {
+        if (blockingState == null) {
             blockingState = blockingApi.getBlockingStateFor(account);
         }
         return blockingState;

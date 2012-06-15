@@ -16,17 +16,18 @@
 
 package com.ning.billing.account.dao;
 
-import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.DefaultAccount;
-import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.util.dao.MapperBase;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.UUID;
+
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.UUID;
+import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.DefaultAccount;
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.util.dao.MapperBase;
 
 public class AccountMapper extends MapperBase implements ResultSetMapper<Account> {
     @Override
@@ -60,9 +61,9 @@ public class AccountMapper extends MapperBase implements ResultSetMapper<Account
         final Boolean isMigrated = result.getBoolean("migrated");
         final Boolean isNotifiedForInvoices = result.getBoolean("is_notified_for_invoices");
 
-        return new DefaultAccount(id, externalKey, email, name,firstNameLength, currency,
-                billingCycleDay, paymentMethodId, timeZone, locale,
-                address1, address2, companyName, city, stateOrProvince, country, postalCode, phone,
-                isMigrated, isNotifiedForInvoices);
+        return new DefaultAccount(id, externalKey, email, name, firstNameLength, currency,
+                                  billingCycleDay, paymentMethodId, timeZone, locale,
+                                  address1, address2, companyName, city, stateOrProvince, country, postalCode, phone,
+                                  isMigrated, isNotifiedForInvoices);
     }
 }

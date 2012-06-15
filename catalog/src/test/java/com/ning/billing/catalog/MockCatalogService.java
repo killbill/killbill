@@ -22,9 +22,9 @@ import com.ning.billing.catalog.api.StaticCatalog;
 
 public class MockCatalogService extends DefaultCatalogService {
 
-    private MockCatalog catalog;
+    private final MockCatalog catalog;
 
-    public MockCatalogService(MockCatalog catalog) {
+    public MockCatalogService(final MockCatalog catalog) {
         super(null, null);
         this.catalog = catalog;
     }
@@ -45,7 +45,7 @@ public class MockCatalogService extends DefaultCatalogService {
 
     @Override
     public Catalog get() {
-         return catalog;
+        return catalog;
     }
 
     @Override
@@ -53,5 +53,5 @@ public class MockCatalogService extends DefaultCatalogService {
         return catalog;
     }
 
-    
+
 }

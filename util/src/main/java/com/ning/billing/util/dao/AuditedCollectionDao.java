@@ -16,13 +16,14 @@
 
 package com.ning.billing.util.dao;
 
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.entity.Entity;
-import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
-
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
+import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
+
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.entity.Entity;
 
 public interface AuditedCollectionDao<T extends Entity> {
     void saveEntitiesFromTransaction(Transmogrifier transactionalDao, UUID objectId, ObjectType objectType,

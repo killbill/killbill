@@ -16,12 +16,13 @@
 
 package com.ning.billing.util.dao;
 
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.entity.Entity;
+import java.util.List;
+
 import org.skife.jdbi.v2.sqlobject.SqlBatch;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
-import java.util.List;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.entity.Entity;
 
 public interface HistorySqlDao<T extends Entity> {
     @SqlBatch(transactional = false)

@@ -16,6 +16,12 @@
 
 package com.ning.billing.entitlement.api.user;
 
+import java.lang.reflect.Field;
+import java.util.List;
+import java.util.UUID;
+
+import org.joda.time.DateTime;
+
 import com.google.inject.Inject;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.ProductCategory;
@@ -24,11 +30,6 @@ import com.ning.billing.entitlement.api.SubscriptionFactory;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.util.clock.Clock;
-import org.joda.time.DateTime;
-
-import java.lang.reflect.Field;
-import java.util.List;
-import java.util.UUID;
 
 public class DefaultSubscriptionFactory implements SubscriptionFactory {
 
@@ -37,15 +38,15 @@ public class DefaultSubscriptionFactory implements SubscriptionFactory {
     protected final CatalogService catalogService;
 
     @Inject
-    public DefaultSubscriptionFactory(SubscriptionApiService apiService, Clock clock, CatalogService catalogService) {
+    public DefaultSubscriptionFactory(final SubscriptionApiService apiService, final Clock clock, final CatalogService catalogService) {
         this.apiService = apiService;
         this.clock = clock;
         this.catalogService = catalogService;
     }
 
 
-    public SubscriptionData createSubscription(SubscriptionBuilder builder, List<EntitlementEvent> events) {
-        SubscriptionData subscription = new SubscriptionData(builder, apiService, clock);
+    public SubscriptionData createSubscription(final SubscriptionBuilder builder, final List<EntitlementEvent> events) {
+        final SubscriptionData subscription = new SubscriptionData(builder, apiService, clock);
         if (events.size() > 0) {
             subscription.rebuildTransitions(events, catalogService.getFullCatalog());
         }
@@ -55,20 +56,20 @@ public class DefaultSubscriptionFactory implements SubscriptionFactory {
 
     public static class SubscriptionBuilder {
 
-        private  UUID id;
-        private  UUID bundleId;
-        private  DateTime startDate;
-        private  DateTime bundleStartDate;
-        private  Long activeVersion;
-        private  ProductCategory category;
-        private  DateTime chargedThroughDate;
-        private  DateTime paidThroughDate;
+        private UUID id;
+        private UUID bundleId;
+        private DateTime startDate;
+        private DateTime bundleStartDate;
+        private Long activeVersion;
+        private ProductCategory category;
+        private DateTime chargedThroughDate;
+        private DateTime paidThroughDate;
 
         public SubscriptionBuilder() {
             this.activeVersion = SubscriptionEvents.INITIAL_VERSION;
         }
 
-        public SubscriptionBuilder(SubscriptionData original) {
+        public SubscriptionBuilder(final SubscriptionData original) {
             this.id = original.getId();
             this.bundleId = original.getBundleId();
             this.startDate = original.getStartDate();
@@ -80,35 +81,42 @@ public class DefaultSubscriptionFactory implements SubscriptionFactory {
         }
 
 
-        public SubscriptionBuilder setId(UUID id) {
+        public SubscriptionBuilder setId(final UUID id) {
             this.id = id;
             return this;
         }
-        public SubscriptionBuilder setBundleId(UUID bundleId) {
+
+        public SubscriptionBuilder setBundleId(final UUID bundleId) {
             this.bundleId = bundleId;
             return this;
         }
-        public SubscriptionBuilder setStartDate(DateTime startDate) {
+
+        public SubscriptionBuilder setStartDate(final DateTime startDate) {
             this.startDate = startDate;
             return this;
         }
-        public SubscriptionBuilder setBundleStartDate(DateTime bundleStartDate) {
+
+        public SubscriptionBuilder setBundleStartDate(final DateTime bundleStartDate) {
             this.bundleStartDate = bundleStartDate;
             return this;
         }
-        public SubscriptionBuilder setActiveVersion(long activeVersion) {
+
+        public SubscriptionBuilder setActiveVersion(final long activeVersion) {
             this.activeVersion = activeVersion;
             return this;
         }
-        public SubscriptionBuilder setChargedThroughDate(DateTime chargedThroughDate) {
+
+        public SubscriptionBuilder setChargedThroughDate(final DateTime chargedThroughDate) {
             this.chargedThroughDate = chargedThroughDate;
             return this;
         }
-        public SubscriptionBuilder setPaidThroughDate(DateTime paidThroughDate) {
+
+        public SubscriptionBuilder setPaidThroughDate(final DateTime paidThroughDate) {
             this.paidThroughDate = paidThroughDate;
             return this;
         }
-        public SubscriptionBuilder setCategory(ProductCategory category) {
+
+        public SubscriptionBuilder setCategory(final ProductCategory category) {
             this.category = category;
             return this;
         }
@@ -116,38 +124,46 @@ public class DefaultSubscriptionFactory implements SubscriptionFactory {
         public UUID getId() {
             return id;
         }
+
         public UUID getBundleId() {
             return bundleId;
         }
+
         public DateTime getStartDate() {
             return startDate;
         }
+
         public DateTime getBundleStartDate() {
             return bundleStartDate;
         }
+
         public Long getActiveVersion() {
             return activeVersion;
         }
+
         public ProductCategory getCategory() {
             return category;
         }
+
         public DateTime getChargedThroughDate() {
             return chargedThroughDate;
         }
+
         public DateTime getPaidThroughDate() {
             return paidThroughDate;
         }
+
         private void checkAllFieldsSet() {
-            for (Field cur : SubscriptionBuilder.class.getDeclaredFields()) {
+            for (final Field cur : SubscriptionBuilder.class.getDeclaredFields()) {
                 try {
-                    Object value = cur.get(this);
+                    final Object value = cur.get(this);
                     if (value == null) {
                         throw new EntitlementError(String.format("Field %s has not been set for Subscription",
-                                cur.getName()));
+                                                                 cur.getName()));
                     }
                 } catch (IllegalAccessException e) {
                     throw new EntitlementError(String.format("Failed to access value for field %s for Subscription",
-                            cur.getName()), e);
+                                                             cur.getName()), e);
                 }
             }
         }

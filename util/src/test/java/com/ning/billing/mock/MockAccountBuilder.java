@@ -151,8 +151,8 @@ public class MockAccountBuilder {
     }
 
     public Account build() {
-        return new Account(){
-            
+        return new Account() {
+
             @Override
             public String getExternalKey() {
                 return externalKey;
@@ -160,109 +160,109 @@ public class MockAccountBuilder {
 
             @Override
             public String getName() {
-               
+
                 return name;
             }
 
             @Override
             public int getFirstNameLength() {
-               
+
                 return firstNameLength;
             }
 
             @Override
             public String getEmail() {
-               
+
                 return email;
             }
 
             @Override
             public int getBillCycleDay() {
-               
+
                 return billingCycleDay;
             }
 
             @Override
             public Currency getCurrency() {
-               
+
                 return currency;
             }
 
             @Override
             public UUID getPaymentMethodId() {
-               
+
                 return paymentMethodId;
             }
 
             @Override
             public DateTimeZone getTimeZone() {
-               
+
                 return timeZone;
             }
 
             @Override
             public String getLocale() {
-               
+
                 return locale;
             }
 
             @Override
             public String getAddress1() {
-               
+
                 return address1;
             }
 
             @Override
             public String getAddress2() {
-               
+
                 return address2;
             }
 
             @Override
             public String getCompanyName() {
-               
+
                 return companyName;
             }
 
             @Override
             public String getCity() {
-               
+
                 return city;
             }
 
             @Override
             public String getStateOrProvince() {
-               
+
                 return stateOrProvince;
             }
 
             @Override
             public String getPostalCode() {
-               
+
                 return postalCode;
             }
 
             @Override
             public String getCountry() {
-               
+
                 return country;
             }
 
             @Override
             public String getPhone() {
-               
+
                 return phone;
             }
 
             @Override
             public boolean isMigrated() {
-               
+
                 return migrated;
             }
 
             @Override
             public boolean isNotifiedForInvoices() {
-               
+
                 return isNotifiedForInvoices;
             }
 

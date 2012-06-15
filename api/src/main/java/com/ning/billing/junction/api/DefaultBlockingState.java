@@ -21,10 +21,10 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 
-public class DefaultBlockingState implements BlockingState{
+public class DefaultBlockingState implements BlockingState {
 
-    private static BlockingState clearState= null;
-    
+    private static BlockingState clearState = null;
+
     private final UUID blockingId;
     private final Blockable.Type type;
     private final String stateName;
@@ -33,41 +33,41 @@ public class DefaultBlockingState implements BlockingState{
     private final boolean blockEntitlement;
     private final boolean blockBilling;
     private final DateTime timestamp;
-    
+
     public static BlockingState getClearState() {
-        if(clearState == null) {
+        if (clearState == null) {
             clearState = new DefaultBlockingState(null, BlockingApi.CLEAR_STATE_NAME, null, null, false, false, false);
         }
         return clearState;
-    }    
-    
-    public DefaultBlockingState(UUID blockingId, 
-            String stateName, 
-            Blockable.Type type, 
-            String service,
-            boolean blockChange,
-            boolean blockEntitlement,
-            boolean blockBilling
-            ) {
-        this(   blockingId, 
-                 stateName, 
-                 type, 
-                 service,
-                 blockChange,
-                 blockEntitlement,
-                 blockBilling,
-                 null);
-    }    
-    
-    public DefaultBlockingState(UUID blockingId, 
-            String stateName, 
-            Blockable.Type type, 
-            String service,
-            boolean blockChange,
-            boolean blockEntitlement,
-            boolean blockBilling,
-            DateTime timestamp
-            ) {
+    }
+
+    public DefaultBlockingState(final UUID blockingId,
+                                final String stateName,
+                                final Blockable.Type type,
+                                final String service,
+                                final boolean blockChange,
+                                final boolean blockEntitlement,
+                                final boolean blockBilling
+                               ) {
+        this(blockingId,
+             stateName,
+             type,
+             service,
+             blockChange,
+             blockEntitlement,
+             blockBilling,
+             null);
+    }
+
+    public DefaultBlockingState(final UUID blockingId,
+                                final String stateName,
+                                final Blockable.Type type,
+                                final String service,
+                                final boolean blockChange,
+                                final boolean blockEntitlement,
+                                final boolean blockBilling,
+                                final DateTime timestamp
+                               ) {
         super();
         this.blockingId = blockingId;
         this.stateName = stateName;
@@ -78,13 +78,14 @@ public class DefaultBlockingState implements BlockingState{
         this.type = type;
         this.timestamp = timestamp;
     }
-    
+
     public UUID getBlockedId() {
         return blockingId;
     }
+
     /* (non-Javadoc)
-     * @see com.ning.billing.junction.api.blocking.BlockingState#getStateName()
-     */
+    * @see com.ning.billing.junction.api.blocking.BlockingState#getStateName()
+    */
     @Override
     public String getStateName() {
         return stateName;
@@ -94,9 +95,10 @@ public class DefaultBlockingState implements BlockingState{
     public Blockable.Type getType() {
         return type;
     }
+
     /* (non-Javadoc)
-     * @see com.ning.billing.junction.api.blocking.BlockingState#getTimestamp()
-     */
+    * @see com.ning.billing.junction.api.blocking.BlockingState#getTimestamp()
+    */
     @Override
     public DateTime getTimestamp() {
         return timestamp;
@@ -133,7 +135,7 @@ public class DefaultBlockingState implements BlockingState{
     /* (non-Javadoc)
      * @see com.ning.billing.junction.api.blocking.BlockingState#compareTo(com.ning.billing.junction.api.blocking.DefaultBlockingState)
      */
-    public int compareTo(BlockingState arg0) {
+    public int compareTo(final BlockingState arg0) {
         if (timestamp.compareTo(arg0.getTimestamp()) != 0) {
             return timestamp.compareTo(arg0.getTimestamp());
         } else {
@@ -157,59 +159,74 @@ public class DefaultBlockingState implements BlockingState{
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
+    public boolean equals(final Object obj) {
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
-        DefaultBlockingState other = (DefaultBlockingState) obj;
-        if (blockBilling != other.blockBilling)
+        }
+        final DefaultBlockingState other = (DefaultBlockingState) obj;
+        if (blockBilling != other.blockBilling) {
             return false;
-        if (blockChange != other.blockChange)
+        }
+        if (blockChange != other.blockChange) {
             return false;
-        if (blockEntitlement != other.blockEntitlement)
+        }
+        if (blockEntitlement != other.blockEntitlement) {
             return false;
+        }
         if (blockingId == null) {
-            if (other.blockingId != null)
+            if (other.blockingId != null) {
                 return false;
-        } else if (!blockingId.equals(other.blockingId))
+            }
+        } else if (!blockingId.equals(other.blockingId)) {
             return false;
+        }
         if (service == null) {
-            if (other.service != null)
+            if (other.service != null) {
                 return false;
-        } else if (!service.equals(other.service))
+            }
+        } else if (!service.equals(other.service)) {
             return false;
+        }
         if (stateName == null) {
-            if (other.stateName != null)
+            if (other.stateName != null) {
                 return false;
-        } else if (!stateName.equals(other.stateName))
+            }
+        } else if (!stateName.equals(other.stateName)) {
             return false;
+        }
         if (timestamp == null) {
-            if (other.timestamp != null)
+            if (other.timestamp != null) {
                 return false;
-        } else if (!timestamp.equals(other.timestamp))
+            }
+        } else if (!timestamp.equals(other.timestamp)) {
             return false;
-        if (type != other.type)
+        }
+        if (type != other.type) {
             return false;
+        }
         return true;
     }
-    
+
     /* (non-Javadoc)
-     * @see com.ning.billing.junction.api.blocking.BlockingState#getDescription()
-     */
+    * @see com.ning.billing.junction.api.blocking.BlockingState#getDescription()
+    */
     @Override
     public String getDescription() {
-        String entitlement = onOff(isBlockEntitlement());
-        String billing = onOff(isBlockBilling());
-        String change = onOff(isBlockChange());
-               
+        final String entitlement = onOff(isBlockEntitlement());
+        final String billing = onOff(isBlockBilling());
+        final String change = onOff(isBlockChange());
+
         return String.format("(Change: %s, Entitlement: %s, Billing: %s)", change, entitlement, billing);
     }
-    
-    private String onOff(boolean val) {
-        if(val) {
+
+    private String onOff(final boolean val) {
+        if (val) {
             return "Off";
         } else {
             return "On";
@@ -224,5 +241,4 @@ public class DefaultBlockingState implements BlockingState{
     }
 
 
-    
 }

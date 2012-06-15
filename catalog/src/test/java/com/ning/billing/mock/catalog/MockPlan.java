@@ -29,65 +29,65 @@ import com.ning.billing.catalog.api.Product;
 
 public class MockPlan implements Plan {
 
-	@Override
-	public PlanPhase[] getInitialPhases() {
-		return null;
-	}
+    @Override
+    public PlanPhase[] getInitialPhases() {
+        return null;
+    }
 
-	@Override
-	public Product getProduct() {
-		return null;
-	}
+    @Override
+    public Product getProduct() {
+        return null;
+    }
 
-	@Override
-	public String getName() {
-		return null;
-	}
+    @Override
+    public String getName() {
+        return null;
+    }
 
-	@Override
-	public boolean isRetired() {
-				return false;
-	}
+    @Override
+    public boolean isRetired() {
+        return false;
+    }
 
-	@Override
-	public Iterator<PlanPhase> getInitialPhaseIterator() {
-				return null;
-	}
+    @Override
+    public Iterator<PlanPhase> getInitialPhaseIterator() {
+        return null;
+    }
 
-	@Override
-	public PlanPhase getFinalPhase() {
-				return null;
-	}
+    @Override
+    public PlanPhase getFinalPhase() {
+        return null;
+    }
 
-	@Override
-	public BillingPeriod getBillingPeriod() {
-				return null;
-	}
+    @Override
+    public BillingPeriod getBillingPeriod() {
+        return null;
+    }
 
-	@Override
-	public int getPlansAllowedInBundle() {
-				return 0;
-	}
+    @Override
+    public int getPlansAllowedInBundle() {
+        return 0;
+    }
 
-	@Override
-	public PlanPhase[] getAllPhases() {
-				return null;
-	}
+    @Override
+    public PlanPhase[] getAllPhases() {
+        return null;
+    }
 
-	@Override
-	public Date getEffectiveDateForExistingSubscriptons() {
-				return null;
-	}
+    @Override
+    public Date getEffectiveDateForExistingSubscriptons() {
+        return null;
+    }
 
-	@Override
-	public PlanPhase findPhase(String name) throws CatalogApiException {
-				return null;
-	}
+    @Override
+    public PlanPhase findPhase(final String name) throws CatalogApiException {
+        return null;
+    }
 
-	@Override
-	public DateTime dateOfFirstRecurringNonZeroCharge(
-			DateTime subscriptionStartDate) {
-				return null;
-	}
+    @Override
+    public DateTime dateOfFirstRecurringNonZeroCharge(
+            final DateTime subscriptionStartDate) {
+        return null;
+    }
 
 }

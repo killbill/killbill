@@ -25,7 +25,7 @@ import com.ning.billing.dbi.DbiConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
 
 public class TestDbiModule extends AbstractModule {
- 
+
     protected void configure() {
 
         final MysqlTestingHelper helper = new MysqlTestingHelper();
@@ -35,9 +35,9 @@ public class TestDbiModule extends AbstractModule {
             final DbiConfig config = new ConfigurationObjectFactory(System.getProperties()).build(DbiConfig.class);
             bind(DbiConfig.class).toInstance(config);
         } else {
-            final IDBI dbi = helper.getDBI(); 
+            final IDBI dbi = helper.getDBI();
             bind(IDBI.class).toInstance(dbi);
         }
 
-     }
+    }
 }

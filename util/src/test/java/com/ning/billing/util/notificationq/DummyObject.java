@@ -22,7 +22,7 @@ public class DummyObject {
     private final String value;
     private final UUID key;
 
-    public DummyObject(String value, UUID key) {
+    public DummyObject(final String value, final UUID key) {
         super();
         this.value = value;
         this.key = key;

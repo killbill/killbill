@@ -18,38 +18,43 @@ package com.ning.billing.entitlement.api.migration;
 
 import java.util.UUID;
 
-import com.ning.billing.util.callcontext.CallContext;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.util.callcontext.CallContext;
 
 public interface EntitlementMigrationApi {
 
 
     public interface EntitlementAccountMigration {
         public UUID getAccountKey();
-        public EntitlementBundleMigration [] getBundles();
+
+        public EntitlementBundleMigration[] getBundles();
     }
 
     public interface EntitlementBundleMigration {
         public String getBundleKey();
-        public EntitlementSubscriptionMigration [] getSubscriptions();
+
+        public EntitlementSubscriptionMigration[] getSubscriptions();
     }
 
     public interface EntitlementSubscriptionMigration {
         public ProductCategory getCategory();
+
         public DateTime getChargedThroughDate();
-        public EntitlementSubscriptionMigrationCase [] getSubscriptionCases();
+
+        public EntitlementSubscriptionMigrationCase[] getSubscriptionCases();
     }
 
     /**
-     *
      * Each case is either a PHASE or a different PlanSpecifier
      */
     public interface EntitlementSubscriptionMigrationCase {
         public PlanPhaseSpecifier getPlanPhaseSpecifier();
+
         public DateTime getEffectiveDate();
+
         public DateTime getCancelledDate();
     }
 
@@ -59,9 +64,9 @@ public interface EntitlementMigrationApi {
      * The semantics is 'all or nothing' (atomic operation)
      *
      * @param toBeMigrated all the bundles and associated subscription that should be migrated for the account
-     * @throws EntitlementMigrationApiException an entitlement api exception
-     *
+     * @throws EntitlementMigrationApiException
+     *          an entitlement api exception
      */
     public void migrate(EntitlementAccountMigration toBeMigrated, CallContext context)
-        throws EntitlementMigrationApiException;
+            throws EntitlementMigrationApiException;
 }

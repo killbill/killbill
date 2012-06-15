@@ -18,8 +18,9 @@ package com.ning.billing.util.notificationq;
 
 import java.util.UUID;
 
-import com.ning.billing.util.entity.EntityBase;
 import org.joda.time.DateTime;
+
+import com.ning.billing.util.entity.EntityBase;
 
 public class DefaultNotification extends EntityBase implements Notification {
     private final long ordering;
@@ -32,9 +33,9 @@ public class DefaultNotification extends EntityBase implements Notification {
     private final DateTime effectiveDate;
 
 
-    public DefaultNotification(long ordering, UUID id, String createdOwner, String owner, String queueName, DateTime nextAvailableDate,
-            PersistentQueueEntryLifecycleState lifecycleState,
-            String notificationKey, DateTime effectiveDate) {
+    public DefaultNotification(final long ordering, final UUID id, final String createdOwner, final String owner, final String queueName, final DateTime nextAvailableDate,
+                               final PersistentQueueEntryLifecycleState lifecycleState,
+                               final String notificationKey, final DateTime effectiveDate) {
         super(id);
         this.ordering = ordering;
         this.owner = owner;
@@ -46,9 +47,10 @@ public class DefaultNotification extends EntityBase implements Notification {
         this.effectiveDate = effectiveDate;
     }
 
-    public DefaultNotification(String queueName, String createdOwner, String notificationKey, DateTime effectiveDate) {
+    public DefaultNotification(final String queueName, final String createdOwner, final String notificationKey, final DateTime effectiveDate) {
         this(-1L, UUID.randomUUID(), createdOwner, null, queueName, null, PersistentQueueEntryLifecycleState.AVAILABLE, notificationKey, effectiveDate);
     }
+
     @Override
     public Long getOrdering() {
         return ordering;
@@ -70,20 +72,20 @@ public class DefaultNotification extends EntityBase implements Notification {
     }
 
     @Override
-    public boolean isAvailableForProcessing(DateTime now) {
-        switch(lifecycleState) {
-        case AVAILABLE:
-            break;
-        case IN_PROCESSING:
-            // Somebody already got the event, not available yet
-            if (nextAvailableDate.isAfter(now)) {
+    public boolean isAvailableForProcessing(final DateTime now) {
+        switch (lifecycleState) {
+            case AVAILABLE:
+                break;
+            case IN_PROCESSING:
+                // Somebody already got the event, not available yet
+                if (nextAvailableDate.isAfter(now)) {
+                    return false;
+                }
+                break;
+            case PROCESSED:
                 return false;
-            }
-            break;
-        case PROCESSED:
-            return false;
-        default:
-            throw new RuntimeException(String.format("Unkwnon IEvent processing state %s", lifecycleState));
+            default:
+                throw new RuntimeException(String.format("Unkwnon IEvent processing state %s", lifecycleState));
         }
         return effectiveDate.isBefore(now);
     }
@@ -98,10 +100,10 @@ public class DefaultNotification extends EntityBase implements Notification {
         return effectiveDate;
     }
 
-	@Override
-	public String getQueueName() {
-		return queueName;
-	}
+    @Override
+    public String getQueueName() {
+        return queueName;
+    }
 
     @Override
     public String getCreatedOwner() {

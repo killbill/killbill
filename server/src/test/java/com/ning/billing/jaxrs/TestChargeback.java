@@ -37,11 +37,10 @@ import static org.testng.Assert.assertNotNull;
 
 public class TestChargeback extends TestJaxrsBase {
     private final String accountId = UUID.randomUUID().toString();
-    private InvoicePayment invoicePayment;
 
     @BeforeMethod(groups = "slow")
     public void setUp() throws Exception {
-        invoicePayment = createInvoicePayment();
+        final InvoicePayment invoicePayment = createInvoicePayment();
     }
 
     @Test(groups = "slow", enabled = false)

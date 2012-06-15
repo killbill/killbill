@@ -35,17 +35,17 @@ import com.ning.billing.util.dao.EntityHistory;
 public @interface PaymentMethodHistoryBinder {
     public static class PaymentMethodHistoryBinderFactory extends BinderBase implements BinderFactory {
         @Override
-        public Binder<PaymentMethodHistoryBinder, EntityHistory<PaymentMethodModelDao>> build(Annotation annotation) {
+        public Binder<PaymentMethodHistoryBinder, EntityHistory<PaymentMethodModelDao>> build(final Annotation annotation) {
             return new Binder<PaymentMethodHistoryBinder, EntityHistory<PaymentMethodModelDao>>() {
                 @Override
-                public void bind(@SuppressWarnings("rawtypes") SQLStatement q, PaymentMethodHistoryBinder bind, EntityHistory<PaymentMethodModelDao> history) {
+                public void bind(@SuppressWarnings("rawtypes") final SQLStatement q, final PaymentMethodHistoryBinder bind, final EntityHistory<PaymentMethodModelDao> history) {
                     q.bind("recordId", history.getValue());
                     q.bind("changeType", history.getChangeType().toString());
-                    PaymentMethodModelDao paymentMethod = history.getEntity();
+                    final PaymentMethodModelDao paymentMethod = history.getEntity();
                     q.bind("id", paymentMethod.getId().toString());
-                    q.bind("isActive", paymentMethod.isActive());                    
-                    q.bind("accountId", paymentMethod.getAccountId().toString());            
-                    q.bind("pluginName", paymentMethod.getPluginName()); 
+                    q.bind("isActive", paymentMethod.isActive());
+                    q.bind("accountId", paymentMethod.getAccountId().toString());
+                    q.bind("pluginName", paymentMethod.getPluginName());
                     q.bind("externalId", paymentMethod.getExternalId());
                 }
             };

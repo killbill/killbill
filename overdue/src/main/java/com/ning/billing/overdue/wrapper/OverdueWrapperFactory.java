@@ -39,7 +39,7 @@ import com.ning.billing.overdue.config.api.OverdueStateSet;
 import com.ning.billing.util.clock.Clock;
 
 public class OverdueWrapperFactory {
-    private static final Logger log =  LoggerFactory.getLogger(OverdueWrapperFactory.class);
+    private static final Logger log = LoggerFactory.getLogger(OverdueWrapperFactory.class);
 
     private final EntitlementUserApi entitlementApi;
     private final BillingStateCalculatorBundle billingStateCalcuatorBundle;
@@ -49,10 +49,10 @@ public class OverdueWrapperFactory {
     private OverdueConfig config;
 
     @Inject
-    public OverdueWrapperFactory(BlockingApi api, Clock clock, 
-            BillingStateCalculatorBundle billingStateCalcuatorBundle, 
-            OverdueStateApplicator<SubscriptionBundle> overdueStateApplicatorBundle,
-            EntitlementUserApi entitlementApi) {
+    public OverdueWrapperFactory(final BlockingApi api, final Clock clock,
+                                 final BillingStateCalculatorBundle billingStateCalcuatorBundle,
+                                 final OverdueStateApplicator<SubscriptionBundle> overdueStateApplicatorBundle,
+                                 final EntitlementUserApi entitlementApi) {
         this.billingStateCalcuatorBundle = billingStateCalcuatorBundle;
         this.overdueStateApplicatorBundle = overdueStateApplicatorBundle;
         this.entitlementApi = entitlementApi;
@@ -61,39 +61,39 @@ public class OverdueWrapperFactory {
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends Blockable> OverdueWrapper<T> createOverdueWrapperFor(T bloackable) throws OverdueError {
-  
-        if(bloackable instanceof SubscriptionBundle) {
-            return (OverdueWrapper<T>)new OverdueWrapper<SubscriptionBundle>((SubscriptionBundle)bloackable, api, getOverdueStateSetBundle(), 
-                    clock, billingStateCalcuatorBundle, overdueStateApplicatorBundle);
+    public <T extends Blockable> OverdueWrapper<T> createOverdueWrapperFor(final T bloackable) throws OverdueError {
+
+        if (bloackable instanceof SubscriptionBundle) {
+            return (OverdueWrapper<T>) new OverdueWrapper<SubscriptionBundle>((SubscriptionBundle) bloackable, api, getOverdueStateSetBundle(),
+                                                                              clock, billingStateCalcuatorBundle, overdueStateApplicatorBundle);
         } else {
             throw new OverdueError(ErrorCode.OVERDUE_TYPE_NOT_SUPPORTED, bloackable.getId(), bloackable.getClass());
         }
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends Blockable> OverdueWrapper<T> createOverdueWrapperFor(UUID id) throws OverdueError {
-        BlockingState state = api.getBlockingStateFor(id);
+    public <T extends Blockable> OverdueWrapper<T> createOverdueWrapperFor(final UUID id) throws OverdueError {
+        final BlockingState state = api.getBlockingStateFor(id);
 
         try {
             switch (state.getType()) {
-            case SUBSCRIPTION_BUNDLE : {
-                SubscriptionBundle bundle = entitlementApi.getBundleFromId(id);
-                return (OverdueWrapper<T>) new OverdueWrapper<SubscriptionBundle>(bundle, api, getOverdueStateSetBundle(), 
-                        clock, billingStateCalcuatorBundle, overdueStateApplicatorBundle );
+                case SUBSCRIPTION_BUNDLE: {
+                    final SubscriptionBundle bundle = entitlementApi.getBundleFromId(id);
+                    return (OverdueWrapper<T>) new OverdueWrapper<SubscriptionBundle>(bundle, api, getOverdueStateSetBundle(),
+                                                                                      clock, billingStateCalcuatorBundle, overdueStateApplicatorBundle);
+                }
+                default: {
+                    throw new OverdueError(ErrorCode.OVERDUE_TYPE_NOT_SUPPORTED, id, state.getType());
+                }
+
             }
-            default : {
-                throw new OverdueError(ErrorCode.OVERDUE_TYPE_NOT_SUPPORTED, id, state.getType());
-            }
-                
-            }  
         } catch (EntitlementUserApiException e) {
             throw new OverdueError(e);
         }
     }
-    
+
     private OverdueStateSet<SubscriptionBundle> getOverdueStateSetBundle() {
-        if(config == null || config.getBundleStateSet() == null) {
+        if (config == null || config.getBundleStateSet() == null) {
             return new DefaultOverdueStateSet<SubscriptionBundle>() {
 
                 @SuppressWarnings("unchecked")
@@ -103,11 +103,11 @@ public class OverdueWrapperFactory {
                 }
             };
         } else {
-           return config.getBundleStateSet();
+            return config.getBundleStateSet();
         }
     }
-    
-    public void setOverdueConfig(OverdueConfig config) {   
+
+    public void setOverdueConfig(final OverdueConfig config) {
         this.config = config;
     }
 

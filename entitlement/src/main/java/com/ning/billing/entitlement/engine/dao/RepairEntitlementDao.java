@@ -40,15 +40,15 @@ import com.ning.billing.util.callcontext.CallContext;
 public class RepairEntitlementDao implements EntitlementDao, RepairEntitlementLifecycleDao {
 
     private final ThreadLocal<Map<UUID, SubscriptionRepairEvent>> preThreadsInRepairSubscriptions = new ThreadLocal<Map<UUID, SubscriptionRepairEvent>>();
-    
-    private final static class SubscriptionRepairEvent {
-        
+
+    private static final class SubscriptionRepairEvent {
+
         private final Set<EntitlementEvent> events;
-        
-        public SubscriptionRepairEvent(List<EntitlementEvent> initialEvents) {
+
+        public SubscriptionRepairEvent(final List<EntitlementEvent> initialEvents) {
             events = new TreeSet<EntitlementEvent>(new Comparator<EntitlementEvent>() {
                 @Override
-                public int compare(EntitlementEvent o1, EntitlementEvent o2) {
+                public int compare(final EntitlementEvent o1, final EntitlementEvent o2) {
                     return o1.compareTo(o2);
                 }
             });
@@ -56,74 +56,74 @@ public class RepairEntitlementDao implements EntitlementDao, RepairEntitlementLi
                 events.addAll(initialEvents);
             }
         }
-        
+
         public Set<EntitlementEvent> getEvents() {
             return events;
         }
-        
-        public void addEvents(List<EntitlementEvent> newEvents) {
+
+        public void addEvents(final List<EntitlementEvent> newEvents) {
             events.addAll(newEvents);
         }
     }
-    
+
     private Map<UUID, SubscriptionRepairEvent> getRepairMap() {
         if (preThreadsInRepairSubscriptions.get() == null) {
             preThreadsInRepairSubscriptions.set(new HashMap<UUID, SubscriptionRepairEvent>());
         }
         return preThreadsInRepairSubscriptions.get();
     }
-    
-    private SubscriptionRepairEvent getRepairSubscriptionEvents(UUID subscriptionId) {
-        Map<UUID, SubscriptionRepairEvent> map = getRepairMap();
+
+    private SubscriptionRepairEvent getRepairSubscriptionEvents(final UUID subscriptionId) {
+        final Map<UUID, SubscriptionRepairEvent> map = getRepairMap();
         return map.get(subscriptionId);
     }
-    
+
     @Override
-    public List<EntitlementEvent> getEventsForSubscription(UUID subscriptionId) {
-        SubscriptionRepairEvent target =  getRepairSubscriptionEvents(subscriptionId);
+    public List<EntitlementEvent> getEventsForSubscription(final UUID subscriptionId) {
+        final SubscriptionRepairEvent target = getRepairSubscriptionEvents(subscriptionId);
         return new LinkedList<EntitlementEvent>(target.getEvents());
     }
 
     @Override
-    public void createSubscription(SubscriptionData subscription,
-            List<EntitlementEvent> createEvents, CallContext context) {
+    public void createSubscription(final SubscriptionData subscription,
+                                   final List<EntitlementEvent> createEvents, final CallContext context) {
         addEvents(subscription.getId(), createEvents);
     }
 
     @Override
-    public void recreateSubscription(UUID subscriptionId,
-            List<EntitlementEvent> recreateEvents, CallContext context) {
+    public void recreateSubscription(final UUID subscriptionId,
+                                     final List<EntitlementEvent> recreateEvents, final CallContext context) {
         addEvents(subscriptionId, recreateEvents);
     }
 
     @Override
-    public void cancelSubscription(UUID subscriptionId,
-            EntitlementEvent cancelEvent, CallContext context, int cancelSeq) {
-        long activeVersion = cancelEvent.getActiveVersion();
+    public void cancelSubscription(final UUID subscriptionId,
+                                   final EntitlementEvent cancelEvent, final CallContext context, final int cancelSeq) {
+        final long activeVersion = cancelEvent.getActiveVersion();
         addEvents(subscriptionId, Collections.singletonList(cancelEvent));
-        SubscriptionRepairEvent target =  getRepairSubscriptionEvents(subscriptionId);
+        final SubscriptionRepairEvent target = getRepairSubscriptionEvents(subscriptionId);
         boolean foundCancelEvent = false;
-        for (EntitlementEvent cur : target.getEvents()) {
+        for (final EntitlementEvent cur : target.getEvents()) {
             if (cur.getId().equals(cancelEvent.getId())) {
                 foundCancelEvent = true;
-            } else if (foundCancelEvent) { 
+            } else if (foundCancelEvent) {
                 cur.setActiveVersion(activeVersion - 1);
             }
         }
     }
 
-    
+
     @Override
-    public void changePlan(UUID subscriptionId,
-            List<EntitlementEvent> changeEvents, CallContext context) {
-        addEvents(subscriptionId, changeEvents);        
+    public void changePlan(final UUID subscriptionId,
+                           final List<EntitlementEvent> changeEvents, final CallContext context) {
+        addEvents(subscriptionId, changeEvents);
     }
 
     @Override
-    public void initializeRepair(UUID subscriptionId, List<EntitlementEvent> initialEvents) {
-        Map<UUID, SubscriptionRepairEvent> map = getRepairMap();
+    public void initializeRepair(final UUID subscriptionId, final List<EntitlementEvent> initialEvents) {
+        final Map<UUID, SubscriptionRepairEvent> map = getRepairMap();
         if (map.get(subscriptionId) == null) {
-            SubscriptionRepairEvent value = new SubscriptionRepairEvent(initialEvents);
+            final SubscriptionRepairEvent value = new SubscriptionRepairEvent(initialEvents);
             map.put(subscriptionId, value);
         } else {
             throw new EntitlementError(String.format("Unexpected SubscriptionRepairEvent %s for thread %s", subscriptionId, Thread.currentThread().getName()));
@@ -132,112 +132,112 @@ public class RepairEntitlementDao implements EntitlementDao, RepairEntitlementLi
 
     @Override
     public void cleanup() {
-        Map<UUID, SubscriptionRepairEvent> map = getRepairMap();
+        final Map<UUID, SubscriptionRepairEvent> map = getRepairMap();
         map.clear();
     }
 
-    
-    private void addEvents(UUID subscriptionId, List<EntitlementEvent> events) {
-        SubscriptionRepairEvent target =  getRepairSubscriptionEvents(subscriptionId);
-        target.addEvents(events);        
+
+    private void addEvents(final UUID subscriptionId, final List<EntitlementEvent> events) {
+        final SubscriptionRepairEvent target = getRepairSubscriptionEvents(subscriptionId);
+        target.addEvents(events);
     }
 
-    
+
     @Override
-    public void uncancelSubscription(UUID subscriptionId,
-            List<EntitlementEvent> uncancelEvents, CallContext context) {
-        throw new EntitlementError("Not implemented");        
-    }
-    
-    @Override
-    public List<SubscriptionBundle> getSubscriptionBundleForAccount(UUID accountId) {
+    public void uncancelSubscription(final UUID subscriptionId,
+                                     final List<EntitlementEvent> uncancelEvents, final CallContext context) {
         throw new EntitlementError("Not implemented");
     }
 
     @Override
-    public SubscriptionBundle getSubscriptionBundleFromKey(String bundleKey) {
+    public List<SubscriptionBundle> getSubscriptionBundleForAccount(final UUID accountId) {
         throw new EntitlementError("Not implemented");
     }
 
     @Override
-    public SubscriptionBundle getSubscriptionBundleFromId(UUID bundleId) {
+    public SubscriptionBundle getSubscriptionBundleFromKey(final String bundleKey) {
+        throw new EntitlementError("Not implemented");
+    }
+
+    @Override
+    public SubscriptionBundle getSubscriptionBundleFromId(final UUID bundleId) {
         throw new EntitlementError("Not implemented");
     }
 
     @Override
     public SubscriptionBundle createSubscriptionBundle(
-            SubscriptionBundleData bundle, CallContext context) {
+            final SubscriptionBundleData bundle, final CallContext context) {
         throw new EntitlementError("Not implemented");
     }
 
     @Override
-    public Subscription getSubscriptionFromId(SubscriptionFactory factory,
-            UUID subscriptionId) {
+    public Subscription getSubscriptionFromId(final SubscriptionFactory factory,
+                                              final UUID subscriptionId) {
         throw new EntitlementError("Not implemented");
     }
 
     @Override
-    public UUID getAccountIdFromSubscriptionId(UUID subscriptionId) {
+    public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId) {
         throw new EntitlementError("Not implemented");
     }
 
     @Override
-    public Subscription getBaseSubscription(SubscriptionFactory factory,
-            UUID bundleId) {
+    public Subscription getBaseSubscription(final SubscriptionFactory factory,
+                                            final UUID bundleId) {
         throw new EntitlementError("Not implemented");
     }
 
     @Override
-    public List<Subscription> getSubscriptions(SubscriptionFactory factory,
-            UUID bundleId) {
+    public List<Subscription> getSubscriptions(final SubscriptionFactory factory,
+                                               final UUID bundleId) {
         throw new EntitlementError("Not implemented");
     }
 
     @Override
     public List<Subscription> getSubscriptionsForKey(
-            SubscriptionFactory factory, String bundleKey) {
+            final SubscriptionFactory factory, final String bundleKey) {
         throw new EntitlementError("Not implemented");
     }
 
     @Override
-    public void updateChargedThroughDate(SubscriptionData subscription,
-            CallContext context) {
+    public void updateChargedThroughDate(final SubscriptionData subscription,
+                                         final CallContext context) {
         throw new EntitlementError("Not implemented");
     }
 
     @Override
-    public void createNextPhaseEvent(UUID subscriptionId,
-            EntitlementEvent nextPhase, CallContext context) {
+    public void createNextPhaseEvent(final UUID subscriptionId,
+                                     final EntitlementEvent nextPhase, final CallContext context) {
         throw new EntitlementError("Not implemented");
     }
 
     @Override
-    public EntitlementEvent getEventById(UUID eventId) {
+    public EntitlementEvent getEventById(final UUID eventId) {
         throw new EntitlementError("Not implemented");
     }
 
     @Override
-    public Map<UUID, List<EntitlementEvent>> getEventsForBundle(UUID bundleId) {
+    public Map<UUID, List<EntitlementEvent>> getEventsForBundle(final UUID bundleId) {
         throw new EntitlementError("Not implemented");
     }
 
 
     @Override
     public List<EntitlementEvent> getPendingEventsForSubscription(
-            UUID subscriptionId) {
+            final UUID subscriptionId) {
         throw new EntitlementError("Not implemented");
     }
 
 
     @Override
-    public void migrate(UUID accountId, AccountMigrationData data,
-            CallContext context) {
+    public void migrate(final UUID accountId, final AccountMigrationData data,
+                        final CallContext context) {
         throw new EntitlementError("Not implemented");
     }
 
     @Override
-    public void repair(UUID accountId, UUID bundleId, List<SubscriptionDataRepair> inRepair,
-            CallContext context) {
+    public void repair(final UUID accountId, final UUID bundleId, final List<SubscriptionDataRepair> inRepair,
+                       final CallContext context) {
         throw new EntitlementError("Not implemented");
     }
 }

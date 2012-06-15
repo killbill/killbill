@@ -29,8 +29,8 @@ import com.ning.billing.util.clock.Clock;
 public class RepairSubscriptionApiService extends DefaultSubscriptionApiService implements SubscriptionApiService {
 
     @Inject
-    public RepairSubscriptionApiService(Clock clock, @Named(DefaultEntitlementModule.REPAIR_NAMED) EntitlementDao dao,
-            CatalogService catalogService, PlanAligner planAligner) {
+    public RepairSubscriptionApiService(final Clock clock, @Named(DefaultEntitlementModule.REPAIR_NAMED) final EntitlementDao dao,
+                                        final CatalogService catalogService, final PlanAligner planAligner) {
         super(clock, dao, catalogService, planAligner);
     }
 }

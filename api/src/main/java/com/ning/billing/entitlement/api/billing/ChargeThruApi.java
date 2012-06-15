@@ -19,7 +19,6 @@ package com.ning.billing.entitlement.api.billing;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
 import com.ning.billing.util.callcontext.CallContext;
 
@@ -30,10 +29,10 @@ public interface ChargeThruApi {
      * @return UUID of
      */
     public UUID getAccountIdFromSubscriptionId(UUID subscriptionId) throws EntitlementBillingApiException;
-    
+
     /**
      * Sets the charged through date for the subscription with that Id.
-     * 
+     *
      * @param subscriptionId
      * @param ctd
      * @param context
