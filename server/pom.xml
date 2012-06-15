@@ -8,7 +8,8 @@
 	OR CONDITIONS OF ANY KIND, either express or implied. See the ~ License for 
 	the specific language governing permissions and limitations ~ under the License. -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>com.ning.billing</groupId>
@@ -27,36 +28,35 @@
 		<jetty.version>8.1.2.v20120308</jetty.version>
 		<logback.version>1.0.1</logback.version>
 		<metrics.version>2.1.2</metrics.version>
-		<slf4j.version>1.6.4</slf4j.version>
 		<skeleton.version>0.1.2</skeleton.version>
 		<async-http-client.version>1.6.5</async-http-client.version>
 	</properties>
 
 	<dependencies>
-                <!-- Jetty provided scope -->
+		<!-- Jetty test scope -->
 		<dependency>
 			<groupId>org.eclipse.jetty</groupId>
 			<artifactId>jetty-http</artifactId>
 			<version>${jetty.version}</version>
-			<scope>provided</scope>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.eclipse.jetty</groupId>
 			<artifactId>jetty-io</artifactId>
 			<version>${jetty.version}</version>
-			<scope>provided</scope>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.eclipse.jetty</groupId>
 			<artifactId>jetty-util</artifactId>
 			<version>${jetty.version}</version>
-			<scope>provided</scope>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.eclipse.jetty</groupId>
 			<artifactId>jetty-server</artifactId>
 			<version>${jetty.version}</version>
-			<scope>provided</scope>
+			<scope>test</scope>
 		</dependency>
 
 		<dependency>
@@ -113,6 +113,7 @@
 			<groupId>javax.servlet</groupId>
 			<artifactId>javax.servlet-api</artifactId>
 			<version>3.0.1</version>
+                        <scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.ning.jetty</groupId>
@@ -125,16 +126,8 @@
 			<version>${skeleton.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>com.ning.jetty</groupId>
-			<artifactId>ning-service-skeleton-log4j</artifactId>
-			<version>${skeleton.version}</version>
-			<classifier>selfcontained</classifier>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
-			<version>${slf4j.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
@@ -146,22 +139,24 @@
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-core</artifactId>
 			<version>${logback.version}</version>
+                       <scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-classic</artifactId>
 			<version>${logback.version}</version>
+                       <scope>runtime</scope>
 		</dependency>
 
 		<!-- FROM MASTER POM / LIBRARY -->
-        <dependency>
-            <groupId>com.ning.billing</groupId>
-            <artifactId>killbill-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.ning.billing</groupId>
-            <artifactId>killbill-account</artifactId>
-        </dependency>
+		<dependency>
+			<groupId>com.ning.billing</groupId>
+			<artifactId>killbill-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.ning.billing</groupId>
+			<artifactId>killbill-account</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>com.ning.billing</groupId>
 			<artifactId>killbill-jaxrs</artifactId>
@@ -194,10 +189,10 @@
 			<groupId>com.ning.billing</groupId>
 			<artifactId>killbill-analytics</artifactId>
 		</dependency>
-                <dependency>
-                        <groupId>com.ning.billing</groupId>
-                        <artifactId>killbill-junction</artifactId>
-                </dependency>
+		<dependency>
+			<groupId>com.ning.billing</groupId>
+			<artifactId>killbill-junction</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
@@ -236,10 +231,10 @@
 			<groupId>joda-time</groupId>
 			<artifactId>joda-time</artifactId>
 		</dependency>
-                <dependency>
-                        <groupId>commons-io</groupId>
-                        <artifactId>commons-io</artifactId>
-                </dependency>
+		<dependency>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>com.ning</groupId>
 			<artifactId>async-http-client</artifactId>
@@ -287,6 +282,31 @@
 			</resource>
 		</resources>
 		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-shade-plugin</artifactId>
+				<version>1.4</version>
+				<executions>
+					<execution>
+						<id>assemble-killbill</id>
+						<goals>
+							<goal>shade</goal>
+						</goals>
+						<phase>package</phase>
+						<configuration>
+							<createSourcesJar>true</createSourcesJar>
+							<shadedArtifactAttached>true</shadedArtifactAttached>
+							<shadedClassifierName>jar-with-dependencies</shadedClassifierName>
+							<filters>
+								<filter>
+									<artifact>${project.groupId}:${project.artifactId}</artifact>
+									</filter>
+							</filters>
+							<minimizeJar>true</minimizeJar>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 			<plugin>
 				<groupId>com.ning.maven.plugins</groupId>
 				<artifactId>maven-dependency-versions-check-plugin</artifactId>

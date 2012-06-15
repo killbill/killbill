@@ -22,11 +22,7 @@ import com.jolbox.bonecp.BoneCPConfig;
 import com.jolbox.bonecp.BoneCPDataSource;
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.IDBI;
-import org.skife.jdbi.v2.TimingCollector;
-import org.skife.jdbi.v2.logging.Log4JLog;
-import org.skife.jdbi.v2.tweak.SQLLog;
 
-import java.util.concurrent.TimeUnit;
 
 public class DBIProvider implements Provider<IDBI>
 {
@@ -55,8 +51,8 @@ public class DBIProvider implements Provider<IDBI>
 
         final BoneCPDataSource ds = new BoneCPDataSource(dbConfig);
         final DBI dbi = new DBI(ds);
-        final SQLLog log = new Log4JLog();
-        dbi.setSQLLog(log);
+        //final SQLLog log = new Log4JLog();
+        //dbi.setSQLLog(log);
 
         return dbi;
     }

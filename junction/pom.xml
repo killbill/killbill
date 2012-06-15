@@ -57,6 +57,11 @@
         </dependency>
         <!-- TEST SCOPE -->
         <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>com.ning.billing</groupId>
             <artifactId>killbill-util</artifactId>
             <type>test-jar</type>
@@ -99,7 +104,6 @@
             <artifactId>guava</artifactId>
            <scope>test</scope>
          </dependency>
- 
     </dependencies>
     <build>
         <plugins>
