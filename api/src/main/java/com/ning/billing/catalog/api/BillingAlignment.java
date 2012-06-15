@@ -17,7 +17,7 @@
 package com.ning.billing.catalog.api;
 
 public enum BillingAlignment {
-	ACCOUNT,
-	BUNDLE,
-	SUBSCRIPTION
+    ACCOUNT,
+    BUNDLE,
+    SUBSCRIPTION
 }

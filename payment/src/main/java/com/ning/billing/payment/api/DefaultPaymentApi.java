@@ -30,57 +30,57 @@ import com.ning.billing.payment.core.RefundProcessor;
 import com.ning.billing.util.callcontext.CallContext;
 
 public class DefaultPaymentApi implements PaymentApi {
-    
+
 
     private final PaymentMethodProcessor methodProcessor;
     private final PaymentProcessor paymentProcessor;
     private final RefundProcessor refundProcessor;
-      
+
     @Inject
     public DefaultPaymentApi(final PaymentMethodProcessor methodProcessor,
-            final PaymentProcessor paymentProcessor,
-            final RefundProcessor refundProcessor) {
+                             final PaymentProcessor paymentProcessor,
+                             final RefundProcessor refundProcessor) {
         this.methodProcessor = methodProcessor;
         this.paymentProcessor = paymentProcessor;
         this.refundProcessor = refundProcessor;
     }
-     
+
     @Override
-    public Payment createPayment(final String accountKey, final UUID invoiceId, final BigDecimal amount, final CallContext context) 
-    throws PaymentApiException {
+    public Payment createPayment(final String accountKey, final UUID invoiceId, final BigDecimal amount, final CallContext context)
+            throws PaymentApiException {
         return paymentProcessor.createPayment(accountKey, invoiceId, amount, context, true);
-     }
-    
-    @Override
-    public Payment createPayment(Account account, UUID invoiceId,
-            final BigDecimal amount, CallContext context) throws PaymentApiException {
-        return paymentProcessor.createPayment(account, invoiceId, amount, context, true);        
     }
 
     @Override
-    public Payment getPayment(UUID paymentId) throws PaymentApiException {
-        Payment payment = paymentProcessor.getPayment(paymentId);
+    public Payment createPayment(final Account account, final UUID invoiceId,
+                                 final BigDecimal amount, final CallContext context) throws PaymentApiException {
+        return paymentProcessor.createPayment(account, invoiceId, amount, context, true);
+    }
+
+    @Override
+    public Payment getPayment(final UUID paymentId) throws PaymentApiException {
+        final Payment payment = paymentProcessor.getPayment(paymentId);
         if (payment == null) {
             throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT, paymentId);
         }
         return payment;
     }
-    
+
     @Override
-    public List<Payment> getInvoicePayments(UUID invoiceId) {
+    public List<Payment> getInvoicePayments(final UUID invoiceId) {
         return paymentProcessor.getInvoicePayments(invoiceId);
     }
 
     @Override
-    public List<Payment> getAccountPayments(UUID accountId)
+    public List<Payment> getAccountPayments(final UUID accountId)
             throws PaymentApiException {
         return paymentProcessor.getAccountPayments(accountId);
     }
-    
+
 
     @Override
-    public Refund createRefund(Account account, UUID paymentId, CallContext context)
-        throws PaymentApiException {
+    public Refund createRefund(final Account account, final UUID paymentId, final CallContext context)
+            throws PaymentApiException {
         return refundProcessor.createRefund(account, paymentId, context);
     }
 
@@ -91,59 +91,59 @@ public class DefaultPaymentApi implements PaymentApi {
 
 
     @Override
-    public String initializeAccountPlugin(String pluginName, Account account)
-        throws PaymentApiException {
+    public String initializeAccountPlugin(final String pluginName, final Account account)
+            throws PaymentApiException {
         return methodProcessor.initializeAccountPlugin(pluginName, account);
     }
 
 
     @Override
-    public UUID addPaymentMethod(String pluginName, Account account,
-            boolean setDefault, final PaymentMethodPlugin paymentMethodInfo, final CallContext context) 
-        throws PaymentApiException {
+    public UUID addPaymentMethod(final String pluginName, final Account account,
+                                 final boolean setDefault, final PaymentMethodPlugin paymentMethodInfo, final CallContext context)
+            throws PaymentApiException {
         return methodProcessor.addPaymentMethod(pluginName, account, setDefault, paymentMethodInfo, context);
     }
 
- 
+
     @Override
-    public List<PaymentMethod> refreshPaymentMethods(String pluginName,
-            Account account, final CallContext context) 
+    public List<PaymentMethod> refreshPaymentMethods(final String pluginName,
+                                                     final Account account, final CallContext context)
             throws PaymentApiException {
         return methodProcessor.refreshPaymentMethods(pluginName, account, context);
     }
 
     @Override
-    public List<PaymentMethod> getPaymentMethods(Account account, boolean withPluginDetail) 
-    throws PaymentApiException {
+    public List<PaymentMethod> getPaymentMethods(final Account account, final boolean withPluginDetail)
+            throws PaymentApiException {
         return methodProcessor.getPaymentMethods(account, withPluginDetail);
     }
 
     public PaymentMethod getPaymentMethodById(final UUID paymentMethodId)
-    throws PaymentApiException {
-        return methodProcessor.getPaymentMethodById(paymentMethodId);        
+            throws PaymentApiException {
+        return methodProcessor.getPaymentMethodById(paymentMethodId);
     }
 
     @Override
-    public PaymentMethod getPaymentMethod(final Account account, UUID paymentMethod, boolean withPluginDetail)
-        throws PaymentApiException {
+    public PaymentMethod getPaymentMethod(final Account account, final UUID paymentMethod, final boolean withPluginDetail)
+            throws PaymentApiException {
         return methodProcessor.getPaymentMethod(account, paymentMethod, withPluginDetail);
     }
 
     @Override
-    public void updatePaymentMethod(final Account account, UUID paymentMethodId, PaymentMethodPlugin paymentMethodInfo)
-        throws PaymentApiException {
+    public void updatePaymentMethod(final Account account, final UUID paymentMethodId, final PaymentMethodPlugin paymentMethodInfo)
+            throws PaymentApiException {
         methodProcessor.updatePaymentMethod(account, paymentMethodId, paymentMethodInfo);
     }
 
     @Override
-    public void deletedPaymentMethod(final Account account, UUID paymentMethodId, final CallContext context) 
-        throws PaymentApiException {
+    public void deletedPaymentMethod(final Account account, final UUID paymentMethodId, final CallContext context)
+            throws PaymentApiException {
         methodProcessor.deletedPaymentMethod(account, paymentMethodId);
     }
 
     @Override
-    public void setDefaultPaymentMethod(Account account, UUID paymentMethodId, final CallContext context)
-        throws PaymentApiException {
+    public void setDefaultPaymentMethod(final Account account, final UUID paymentMethodId, final CallContext context)
+            throws PaymentApiException {
         methodProcessor.setDefaultPaymentMethod(account, paymentMethodId, context);
     }
 }

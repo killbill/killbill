@@ -23,11 +23,11 @@ import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 
 public class MockBlockingModule extends AbstractModule {
-    public static final String CLEAR_STATE="Clear";
+    public static final String CLEAR_STATE = "Clear";
 
     @Override
     protected void configure() {
-        BlockingApi BlockingApi = BrainDeadProxyFactory.createBrainDeadProxyFor(BlockingApi.class);
+        final BlockingApi BlockingApi = BrainDeadProxyFactory.createBrainDeadProxyFor(BlockingApi.class);
         ((ZombieControl) BlockingApi).addResult("getOverdueStateNameFor", MockBlockingModule.CLEAR_STATE);
         bind(BlockingStateDao.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(BlockingStateDao.class));
         bind(BlockingApi.class).toInstance(BlockingApi);

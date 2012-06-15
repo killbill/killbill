@@ -40,69 +40,69 @@ import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionEvent;
 
 public class BillCycleDayCalculator {
-	private static final Logger log = LoggerFactory.getLogger(BillCycleDayCalculator.class);
-	
-	private final CatalogService catalogService;
-	private final EntitlementUserApi entitlementApi;
+    private static final Logger log = LoggerFactory.getLogger(BillCycleDayCalculator.class);
 
-	@Inject
-	public BillCycleDayCalculator(final CatalogService catalogService, final EntitlementUserApi entitlementApi) {
-		super();
-		this.catalogService = catalogService;
-		this.entitlementApi = entitlementApi;
-	}
+    private final CatalogService catalogService;
+    private final EntitlementUserApi entitlementApi;
 
-	protected int calculateBcd(SubscriptionBundle bundle, Subscription subscription, final SubscriptionEvent transition, final Account account)
-	throws CatalogApiException, AccountApiException, EntitlementUserApiException {
+    @Inject
+    public BillCycleDayCalculator(final CatalogService catalogService, final EntitlementUserApi entitlementApi) {
+        super();
+        this.catalogService = catalogService;
+        this.entitlementApi = entitlementApi;
+    }
 
-	    Catalog catalog = catalogService.getFullCatalog();
-		
-	    Plan prevPlan = (transition.getPreviousPlan() != null) ? catalog.findPlan(transition.getPreviousPlan(), transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
-	    Plan nextPlan = (transition.getNextPlan() != null) ? catalog.findPlan(transition.getNextPlan(), transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;	    
-		
-		Plan plan =  (transition.getTransitionType() != SubscriptionTransitionType.CANCEL) ? nextPlan : prevPlan;
-		Product product = plan.getProduct();
+    protected int calculateBcd(final SubscriptionBundle bundle, final Subscription subscription, final SubscriptionEvent transition, final Account account)
+            throws CatalogApiException, AccountApiException, EntitlementUserApiException {
 
-        PlanPhase prevPhase = (transition.getPreviousPhase() != null) ? catalog.findPhase(transition.getPreviousPhase(), transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
-        PlanPhase nextPhase = (transition.getNextPhase() != null) ? catalog.findPhase(transition.getNextPhase(), transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
-        
-		PlanPhase phase = (transition.getTransitionType() != SubscriptionTransitionType.CANCEL) ? nextPhase : prevPhase;
+        final Catalog catalog = catalogService.getFullCatalog();
 
-		BillingAlignment alignment = catalog.billingAlignment(
-		        new PlanPhaseSpecifier(product.getName(),
-		                product.getCategory(),
-		                phase.getBillingPeriod(),
-		                transition.getNextPriceList(),
-		                phase.getPhaseType()),
-		                transition.getRequestedTransitionTime());
+        final Plan prevPlan = (transition.getPreviousPlan() != null) ? catalog.findPlan(transition.getPreviousPlan(), transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
+        final Plan nextPlan = (transition.getNextPlan() != null) ? catalog.findPlan(transition.getNextPlan(), transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
 
-		int result = -1;
-		switch (alignment) {
-		case ACCOUNT :
-		    result = account.getBillCycleDay();
-		    if(result == 0) {
-		        result = calculateBcdFromSubscription(subscription, plan, account);
-		    }
-		    break;
-		case BUNDLE :
-		    Subscription baseSub = entitlementApi.getBaseSubscription(bundle.getId());
-		    Plan basePlan = baseSub.getCurrentPlan();
-		    result = calculateBcdFromSubscription(baseSub, basePlan, account);
-		    break;
-		case SUBSCRIPTION :
-		    result = calculateBcdFromSubscription(subscription, plan, account);
-		    break;
-		}
-		if(result == -1) {
-		    throw new CatalogApiException(ErrorCode.CAT_INVALID_BILLING_ALIGNMENT, alignment.toString());
-		}
-		return result;
+        final Plan plan = (transition.getTransitionType() != SubscriptionTransitionType.CANCEL) ? nextPlan : prevPlan;
+        final Product product = plan.getProduct();
 
-	}
+        final PlanPhase prevPhase = (transition.getPreviousPhase() != null) ? catalog.findPhase(transition.getPreviousPhase(), transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
+        final PlanPhase nextPhase = (transition.getNextPhase() != null) ? catalog.findPhase(transition.getNextPhase(), transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
 
-	private int calculateBcdFromSubscription(Subscription subscription, Plan plan, Account account) throws AccountApiException {
-		DateTime date = plan.dateOfFirstRecurringNonZeroCharge(subscription.getStartDate());
-		return date.toDateTime(account.getTimeZone()).getDayOfMonth();
-	}
+        final PlanPhase phase = (transition.getTransitionType() != SubscriptionTransitionType.CANCEL) ? nextPhase : prevPhase;
+
+        final BillingAlignment alignment = catalog.billingAlignment(
+                new PlanPhaseSpecifier(product.getName(),
+                                       product.getCategory(),
+                                       phase.getBillingPeriod(),
+                                       transition.getNextPriceList(),
+                                       phase.getPhaseType()),
+                transition.getRequestedTransitionTime());
+
+        int result = -1;
+        switch (alignment) {
+            case ACCOUNT:
+                result = account.getBillCycleDay();
+                if (result == 0) {
+                    result = calculateBcdFromSubscription(subscription, plan, account);
+                }
+                break;
+            case BUNDLE:
+                final Subscription baseSub = entitlementApi.getBaseSubscription(bundle.getId());
+                final Plan basePlan = baseSub.getCurrentPlan();
+                result = calculateBcdFromSubscription(baseSub, basePlan, account);
+                break;
+            case SUBSCRIPTION:
+                result = calculateBcdFromSubscription(subscription, plan, account);
+                break;
+        }
+        if (result == -1) {
+            throw new CatalogApiException(ErrorCode.CAT_INVALID_BILLING_ALIGNMENT, alignment.toString());
+        }
+        return result;
+
+    }
+
+    private int calculateBcdFromSubscription(final Subscription subscription, final Plan plan, final Account account) throws AccountApiException {
+        final DateTime date = plan.dateOfFirstRecurringNonZeroCharge(subscription.getStartDate());
+        return date.toDateTime(account.getTimeZone()).getDayOfMonth();
+    }
 
 }

@@ -16,10 +16,10 @@
 
 package com.ning.billing.account.api;
 
-import com.ning.billing.util.bus.BusEvent;
-
 import java.util.List;
 import java.util.UUID;
+
+import com.ning.billing.util.bus.BusEvent;
 
 public interface AccountChangeEvent extends BusEvent {
     public UUID getAccountId();

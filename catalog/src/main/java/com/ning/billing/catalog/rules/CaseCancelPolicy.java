@@ -20,19 +20,19 @@ import javax.xml.bind.annotation.XmlElement;
 
 import com.ning.billing.catalog.api.ActionPolicy;
 
-public class CaseCancelPolicy extends CasePhase<ActionPolicy>{
+public class CaseCancelPolicy extends CasePhase<ActionPolicy> {
 
-	@XmlElement(required=true)
-	private ActionPolicy policy;
+    @XmlElement(required = true)
+    private ActionPolicy policy;
 
-	@Override
-	protected ActionPolicy getResult() {
-		return policy;
-	}
+    @Override
+    protected ActionPolicy getResult() {
+        return policy;
+    }
 
-	protected CaseCancelPolicy setPolicy(ActionPolicy policy) {
-		this.policy = policy;
-		return this;
-	}
+    protected CaseCancelPolicy setPolicy(final ActionPolicy policy) {
+        this.policy = policy;
+        return this;
+    }
 
 }

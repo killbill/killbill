@@ -22,15 +22,15 @@ import com.ning.billing.ErrorCode;
 public class EntitlementBillingApiException extends BillingExceptionBase {
     private static final long serialVersionUID = 127392038L;
 
-    public EntitlementBillingApiException(Throwable cause, int code, final String msg) {
+    public EntitlementBillingApiException(final Throwable cause, final int code, final String msg) {
         super(cause, code, msg);
     }
 
-    public EntitlementBillingApiException(Throwable cause, ErrorCode code, final Object... args) {
+    public EntitlementBillingApiException(final Throwable cause, final ErrorCode code, final Object... args) {
         super(cause, code, args);
     }
 
-    public EntitlementBillingApiException(ErrorCode code, final Object... args) {
+    public EntitlementBillingApiException(final ErrorCode code, final Object... args) {
         super(code, args);
     }
 }

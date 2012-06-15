@@ -23,7 +23,7 @@ public class Hostname {
 
     public static String get() {
         try {
-            InetAddress addr = InetAddress.getLocalHost();
+            final InetAddress addr = InetAddress.getLocalHost();
             return addr.getHostName();
         } catch (UnknownHostException e) {
             e.printStackTrace();

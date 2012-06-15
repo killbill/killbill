@@ -30,26 +30,26 @@ import com.ning.billing.util.callcontext.CallContext;
 public class DefaultChargeThruApi implements ChargeThruApi {
     private final EntitlementDao entitlementDao;
     private final SubscriptionFactory subscriptionFactory;
-  
+
     @Inject
     public DefaultChargeThruApi(final SubscriptionFactory subscriptionFactory, final EntitlementDao dao) {
         super();
         this.subscriptionFactory = subscriptionFactory;
         this.entitlementDao = dao;
     }
-    
+
     @Override
     public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId) {
         return entitlementDao.getAccountIdFromSubscriptionId(subscriptionId);
     }
 
     @Override
-    public void setChargedThroughDate(final UUID subscriptionId, final DateTime ctd, CallContext context) {
-        SubscriptionData subscription = (SubscriptionData) entitlementDao.getSubscriptionFromId(subscriptionFactory, subscriptionId);
+    public void setChargedThroughDate(final UUID subscriptionId, final DateTime ctd, final CallContext context) {
+        final SubscriptionData subscription = (SubscriptionData) entitlementDao.getSubscriptionFromId(subscriptionFactory, subscriptionId);
 
-        SubscriptionBuilder builder = new SubscriptionBuilder(subscription)
-            .setChargedThroughDate(ctd)
-            .setPaidThroughDate(subscription.getPaidThroughDate());
+        final SubscriptionBuilder builder = new SubscriptionBuilder(subscription)
+                .setChargedThroughDate(ctd)
+                .setPaidThroughDate(subscription.getPaidThroughDate());
         entitlementDao.updateChargedThroughDate(new SubscriptionData(builder), context);
     }
 }

@@ -96,39 +96,39 @@ public class MockEntitlementUserApi implements EntitlementUserApi {
     }
 
     @Override
-    public SubscriptionBundle createBundleForAccount(final UUID accountId, final String bundleKey, CallContext context) throws EntitlementUserApiException {
+    public SubscriptionBundle createBundleForAccount(final UUID accountId, final String bundleKey, final CallContext context) throws EntitlementUserApiException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public List<Subscription> getSubscriptionsForKey(String bundleKey) {
+    public List<Subscription> getSubscriptionsForKey(final String bundleKey) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public Subscription createSubscription(UUID bundleId, PlanPhaseSpecifier spec,
-                                           DateTime requestedDate, CallContext context) throws EntitlementUserApiException {
+    public Subscription createSubscription(final UUID bundleId, final PlanPhaseSpecifier spec,
+                                           final DateTime requestedDate, final CallContext context) throws EntitlementUserApiException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public SubscriptionBundle getBundleForKey(String bundleKey) {
+    public SubscriptionBundle getBundleForKey(final String bundleKey) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public DateTime getNextBillingDate(UUID account) {
+    public DateTime getNextBillingDate(final UUID account) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public Subscription getBaseSubscription(UUID bundleId) {
+    public Subscription getBaseSubscription(final UUID bundleId) {
         throw new UnsupportedOperationException();
     }
 
     @Override
     public List<SubscriptionStatusDryRun> getDryRunChangePlanStatus(
-            UUID subscriptionId, String productName, DateTime requestedDate)
+            final UUID subscriptionId, final String productName, final DateTime requestedDate)
             throws EntitlementUserApiException {
         throw new UnsupportedOperationException();
     }

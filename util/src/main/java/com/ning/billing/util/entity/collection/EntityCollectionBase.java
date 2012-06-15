@@ -16,22 +16,22 @@
 
 package com.ning.billing.util.entity.collection;
 
-import com.ning.billing.util.dao.ObjectType;
-import com.ning.billing.util.entity.Entity;
-import com.ning.billing.util.entity.EntityCollection;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.util.entity.Entity;
+import com.ning.billing.util.entity.EntityCollection;
+
 public abstract class EntityCollectionBase<T extends Entity> implements EntityCollection<T> {
     protected Map<String, T> entities = new HashMap<String, T>();
     protected final UUID objectId;
     protected final ObjectType objectType;
 
-    public EntityCollectionBase(UUID objectId, ObjectType objectType) {
+    public EntityCollectionBase(final UUID objectId, final ObjectType objectType) {
         this.objectId = objectId;
         this.objectType = objectType;
     }
@@ -45,19 +45,19 @@ public abstract class EntityCollectionBase<T extends Entity> implements EntityCo
     public abstract String getEntityKey(T entity);
 
     @Override
-    public void add(T entity) {
+    public void add(final T entity) {
         entities.put(getEntityKey(entity), entity);
     }
 
     @Override
-    public void add(List<T> entities) {
-        for (T entity : entities) {
+    public void add(final List<T> entities) {
+        for (final T entity : entities) {
             add(entity);
         }
     }
 
     @Override
-    public void remove(T entity) {
+    public void remove(final T entity) {
         entities.remove(getEntityKey(entity));
     }
 

@@ -25,45 +25,45 @@ public interface StaticCatalog {
     // Simple getters
     //
     public abstract String getCatalogName();
-    
+
     public abstract Date getEffectiveDate() throws CatalogApiException;
 
     public abstract Currency[] getCurrentSupportedCurrencies() throws CatalogApiException;
 
-	public abstract Product[] getCurrentProducts() throws CatalogApiException;
-	
-	public abstract Plan[] getCurrentPlans() throws CatalogApiException;
-	
-	//
-	// Find a plan
-	//
-	public abstract Plan findCurrentPlan(String productName, BillingPeriod term, String priceList) throws CatalogApiException;
+    public abstract Product[] getCurrentProducts() throws CatalogApiException;
 
-	public abstract Plan findCurrentPlan(String name) throws CatalogApiException;
+    public abstract Plan[] getCurrentPlans() throws CatalogApiException;
 
-	//
-	// Find a product
-	//
+    //
+    // Find a plan
+    //
+    public abstract Plan findCurrentPlan(String productName, BillingPeriod term, String priceList) throws CatalogApiException;
+
+    public abstract Plan findCurrentPlan(String name) throws CatalogApiException;
+
+    //
+    // Find a product
+    //
     public abstract Product findCurrentProduct(String name) throws CatalogApiException;
 
     //
     // Find a phase
     //
-    public abstract  PlanPhase findCurrentPhase(String name) throws CatalogApiException;
-    
+    public abstract PlanPhase findCurrentPhase(String name) throws CatalogApiException;
+
     //
     // Find a pricelist
     //
     public abstract PriceList findCurrentPricelist(String name) throws CatalogApiException;
-    
+
     //
     //  
     //
-	public abstract ActionPolicy planChangePolicy(PlanPhaseSpecifier from,
-			PlanSpecifier to) throws CatalogApiException;
+    public abstract ActionPolicy planChangePolicy(PlanPhaseSpecifier from,
+                                                  PlanSpecifier to) throws CatalogApiException;
 
-	public abstract PlanChangeResult planChange(PlanPhaseSpecifier from,
-			PlanSpecifier to) throws CatalogApiException;
+    public abstract PlanChangeResult planChange(PlanPhaseSpecifier from,
+                                                PlanSpecifier to) throws CatalogApiException;
 
 
     public abstract ActionPolicy planCancelPolicy(PlanPhaseSpecifier planPhase) throws CatalogApiException;
@@ -73,7 +73,7 @@ public interface StaticCatalog {
     public abstract BillingAlignment billingAlignment(PlanPhaseSpecifier planPhase) throws CatalogApiException;
 
     public abstract PlanAlignmentChange planChangeAlignment(PlanPhaseSpecifier from,
-			PlanSpecifier to) throws CatalogApiException;
+                                                            PlanSpecifier to) throws CatalogApiException;
 
     public abstract boolean canCreatePlan(PlanSpecifier specifier) throws CatalogApiException;
 

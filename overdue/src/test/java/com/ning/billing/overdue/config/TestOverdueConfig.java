@@ -24,42 +24,41 @@ import org.testng.annotations.Test;
 import com.ning.billing.util.config.XMLLoader;
 
 public class TestOverdueConfig {
-    private String xml = 
-            "<overdueConfig>" +
-                    "   <bundleOverdueStates>" +
-                    "       <state name=\"OD1\">" +
-                    "           <condition>" +
-                    "               <timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
-                    "                   <unit>MONTHS</unit><number>1</number>" +
-                    "               </timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
-                    "           </condition>" +
-                    "           <externalMessage>Reached OD1</externalMessage>" +
-                    "           <blockChanges>true</blockChanges>" +
-                    "           <disableEntitlementAndChangesBlocked>false</disableEntitlementAndChangesBlocked>" +
-                    "           <autoReevaluationInterval>" +
-                    "               <unit>DAYS</unit><number>15</number>" +
-                    "           </autoReevaluationInterval>" +
-                    "       </state>" +
-                    "       <state name=\"OD2\">" +
-                    "           <condition>" +
-                    "               <timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
-                    "                   <unit>MONTHS</unit><number>2</number>" +
-                    "               </timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
-                    "           </condition>" +
-                    "           <externalMessage>Reached OD1</externalMessage>" +
-                    "           <blockChanges>true</blockChanges>" +
-                    "           <disableEntitlementAndChangesBlocked>true</disableEntitlementAndChangesBlocked>" +
-                    "           <autoReevaluationInterval>" +
-                    "               <unit>DAYS</unit><number>15</number>" +
-                    "           </autoReevaluationInterval>" +
-                    "       </state>" +
-                    "   </bundleOverdueStates>" +
-                    "</overdueConfig>";
 
     @Test
     public void testParseConfig() throws Exception {
-        InputStream is = new ByteArrayInputStream(xml.getBytes());
-        OverdueConfig c = XMLLoader.getObjectFromStreamNoValidation(is,  OverdueConfig.class);
+        final String xml = "<overdueConfig>" +
+                "   <bundleOverdueStates>" +
+                "       <state name=\"OD1\">" +
+                "           <condition>" +
+                "               <timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
+                "                   <unit>MONTHS</unit><number>1</number>" +
+                "               </timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
+                "           </condition>" +
+                "           <externalMessage>Reached OD1</externalMessage>" +
+                "           <blockChanges>true</blockChanges>" +
+                "           <disableEntitlementAndChangesBlocked>false</disableEntitlementAndChangesBlocked>" +
+                "           <autoReevaluationInterval>" +
+                "               <unit>DAYS</unit><number>15</number>" +
+                "           </autoReevaluationInterval>" +
+                "       </state>" +
+                "       <state name=\"OD2\">" +
+                "           <condition>" +
+                "               <timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
+                "                   <unit>MONTHS</unit><number>2</number>" +
+                "               </timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
+                "           </condition>" +
+                "           <externalMessage>Reached OD1</externalMessage>" +
+                "           <blockChanges>true</blockChanges>" +
+                "           <disableEntitlementAndChangesBlocked>true</disableEntitlementAndChangesBlocked>" +
+                "           <autoReevaluationInterval>" +
+                "               <unit>DAYS</unit><number>15</number>" +
+                "           </autoReevaluationInterval>" +
+                "       </state>" +
+                "   </bundleOverdueStates>" +
+                "</overdueConfig>";
+        final InputStream is = new ByteArrayInputStream(xml.getBytes());
+        final OverdueConfig c = XMLLoader.getObjectFromStreamNoValidation(is, OverdueConfig.class);
 
     }
 

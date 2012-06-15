@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import com.ning.billing.util.jackson.ObjectMapper;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -27,36 +26,37 @@ import com.ning.billing.account.api.AccountChangeEvent;
 import com.ning.billing.account.api.ChangedField;
 import com.ning.billing.account.api.DefaultChangedField;
 import com.ning.billing.account.api.user.DefaultAccountCreationEvent.DefaultAccountData;
+import com.ning.billing.util.jackson.ObjectMapper;
 
 public class TestEventJson {
     private final ObjectMapper mapper = new ObjectMapper();
 
-    @Test(groups= {"fast"})
+    @Test(groups = {"fast"})
     public void testDefaultAccountChangeEvent() throws Exception {
 
-        List<ChangedField> changes = new ArrayList<ChangedField>();
+        final List<ChangedField> changes = new ArrayList<ChangedField>();
         changes.add(new DefaultChangedField("fieldXX", "valueX", "valueXXX"));
-        changes.add(new DefaultChangedField("fieldYY", "valueY", "valueYYY"));        
-        AccountChangeEvent e = new DefaultAccountChangeEvent(UUID.randomUUID(), changes, UUID.randomUUID());
-        
-        String json = mapper.writeValueAsString(e);
-        
-        Class<?> claz = Class.forName("com.ning.billing.account.api.user.DefaultAccountChangeEvent");
-        Object obj =  mapper.readValue(json, claz);
+        changes.add(new DefaultChangedField("fieldYY", "valueY", "valueYYY"));
+        final AccountChangeEvent e = new DefaultAccountChangeEvent(UUID.randomUUID(), changes, UUID.randomUUID());
+
+        final String json = mapper.writeValueAsString(e);
+
+        final Class<?> claz = Class.forName("com.ning.billing.account.api.user.DefaultAccountChangeEvent");
+        final Object obj = mapper.readValue(json, claz);
         Assert.assertTrue(obj.equals(e));
     }
-    
-    @Test(groups= {"fast"})
+
+    @Test(groups = {"fast"})
     public void testAccountCreationEvent() throws Exception {
-        
-        DefaultAccountData data = new DefaultAccountData("dsfdsf", "bobo", 3, "bobo@yahoo.com", 12, "USD", UUID.randomUUID(), 
-                "UTC", "US", "21 avenue", "", "Gling", "San Franciso", "CA", "94110", "USA", "4126789887", false, false);
-        DefaultAccountCreationEvent e = new DefaultAccountCreationEvent(data, UUID.randomUUID(), UUID.randomUUID());
-        
-        String json = mapper.writeValueAsString(e);
-        Class<?> claz = Class.forName(DefaultAccountCreationEvent.class.getName());
-        Object obj =  mapper.readValue(json, claz);
+
+        final DefaultAccountData data = new DefaultAccountData("dsfdsf", "bobo", 3, "bobo@yahoo.com", 12, "USD", UUID.randomUUID(),
+                                                         "UTC", "US", "21 avenue", "", "Gling", "San Franciso", "CA", "94110", "USA", "4126789887", false, false);
+        final DefaultAccountCreationEvent e = new DefaultAccountCreationEvent(data, UUID.randomUUID(), UUID.randomUUID());
+
+        final String json = mapper.writeValueAsString(e);
+        final Class<?> claz = Class.forName(DefaultAccountCreationEvent.class.getName());
+        final Object obj = mapper.readValue(json, claz);
         Assert.assertTrue(obj.equals(e));
-        
+
     }
 }

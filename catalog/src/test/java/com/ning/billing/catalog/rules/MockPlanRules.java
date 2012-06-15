@@ -18,16 +18,16 @@ package com.ning.billing.catalog.rules;
 
 public class MockPlanRules extends PlanRules {
 
-	//For test
-	public MockPlanRules(
-			CaseChangePlanPolicy[] changeCase, CaseCancelPolicy[] cancelCase,
-			CaseChangePlanAlignment[] changeAlignmentCase,
-			CaseCreateAlignment[] createAlignmentCase) {
-		super();
-		setChangeCase(changeCase);
-		setCancelCase(cancelCase);
-		setChangeAlignmentCase(changeAlignmentCase);
-		setCreateAlignmentCase(createAlignmentCase);
-	}
+    //For test
+    public MockPlanRules(
+            final CaseChangePlanPolicy[] changeCase, final CaseCancelPolicy[] cancelCase,
+            final CaseChangePlanAlignment[] changeAlignmentCase,
+            final CaseCreateAlignment[] createAlignmentCase) {
+        super();
+        setChangeCase(changeCase);
+        setCancelCase(cancelCase);
+        setChangeAlignmentCase(changeAlignmentCase);
+        setCreateAlignmentCase(createAlignmentCase);
+    }
 
 }

@@ -154,7 +154,7 @@ public class TestBundleTimelineJson {
         final String currency = "USD";
         final String status = UUID.randomUUID().toString();
 
-        
+
         return new PaymentJsonSimple(amount, paidAmount, accountId.toString(), invoiceId.toString(), paymentId.toString(),
                                      paymentRequestedDate, paymentEffectiveDate, retryCount,
                                      currency, status);

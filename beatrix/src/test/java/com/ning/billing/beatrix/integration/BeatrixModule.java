@@ -16,8 +16,6 @@
 
 package com.ning.billing.beatrix.integration;
 
-import static org.testng.Assert.assertNotNull;
-
 import java.io.IOException;
 import java.net.URL;
 import java.util.Set;
@@ -31,7 +29,6 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.ning.billing.account.api.AccountService;
 import com.ning.billing.account.glue.AccountModule;
-import com.ning.billing.account.glue.AccountModuleWithMocks;
 import com.ning.billing.beatrix.integration.overdue.IntegrationTestOverdueModule;
 import com.ning.billing.beatrix.lifecycle.DefaultLifecycle;
 import com.ning.billing.beatrix.lifecycle.Lifecycle;
@@ -63,9 +60,11 @@ import com.ning.billing.util.glue.GlobalLockerModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.TagStoreModule;
 
+import static org.testng.Assert.assertNotNull;
+
 
 public class BeatrixModule extends AbstractModule {
-    
+
     public static final String PLUGIN_NAME = "yoyo";
 
     @Override
@@ -82,7 +81,7 @@ public class BeatrixModule extends AbstractModule {
         final IDBI dbi;
         if (helper.isUsingLocalInstance()) {
             final DbiConfig config = new ConfigurationObjectFactory(System.getProperties()).build(DbiConfig.class);
-            DBIProvider provider = new DBIProvider(config);
+            final DBIProvider provider = new DBIProvider(config);
             dbi = provider.get();
         } else {
             dbi = helper.getDBI();
@@ -108,7 +107,7 @@ public class BeatrixModule extends AbstractModule {
 
     private static final class PaymentPluginMockModule extends PaymentModule {
         @Override
-        protected void installPaymentProviderPlugins(PaymentConfig config) {
+        protected void installPaymentProviderPlugins(final PaymentConfig config) {
             install(new MockPaymentProviderPluginModule(PLUGIN_NAME));
         }
     }
@@ -117,30 +116,30 @@ public class BeatrixModule extends AbstractModule {
         final URL url = TestIntegration.class.getResource(resource);
         assertNotNull(url);
         try {
-            System.getProperties().load( url.openStream() );
+            System.getProperties().load(url.openStream());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private final static class SubsetDefaultLifecycle extends DefaultLifecycle {
+    private static final class SubsetDefaultLifecycle extends DefaultLifecycle {
 
         @Inject
-        public SubsetDefaultLifecycle(Injector injector) {
+        public SubsetDefaultLifecycle(final Injector injector) {
             super(injector);
         }
 
         @Override
         protected Set<? extends KillbillService> findServices() {
-            ImmutableSet<? extends KillbillService> services = new ImmutableSet.Builder<KillbillService>()
-                            .add(injector.getInstance(AccountService.class))
-                            .add(injector.getInstance(BusService.class))
-                            .add(injector.getInstance(CatalogService.class))
-                            .add(injector.getInstance(EntitlementService.class))
-                            .add(injector.getInstance(InvoiceService.class))
-                            .add(injector.getInstance(PaymentService.class))
-                            .add(injector.getInstance(OverdueService.class))
-                            .build();
+            final ImmutableSet<? extends KillbillService> services = new ImmutableSet.Builder<KillbillService>()
+                    .add(injector.getInstance(AccountService.class))
+                    .add(injector.getInstance(BusService.class))
+                    .add(injector.getInstance(CatalogService.class))
+                    .add(injector.getInstance(EntitlementService.class))
+                    .add(injector.getInstance(InvoiceService.class))
+                    .add(injector.getInstance(PaymentService.class))
+                    .add(injector.getInstance(OverdueService.class))
+                    .build();
             return services;
         }
     }

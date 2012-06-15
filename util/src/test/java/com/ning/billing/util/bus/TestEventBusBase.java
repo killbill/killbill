@@ -17,15 +17,15 @@ package com.ning.billing.util.bus;
 
 import java.util.UUID;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
 import com.ning.billing.util.bus.BusEvent.BusEventType;
@@ -41,26 +41,26 @@ public class TestEventBusBase {
     public void setup() throws Exception {
         eventBus.start();
     }
-    
+
     @AfterClass(groups = "slow")
     public void tearDown() {
         eventBus.stop();
     }
 
-    
-    public static  class MyEvent implements BusEvent {
-        
-        private String name;
-        private Long value;
-        private UUID userToken;
-        private String type;
+
+    public static class MyEvent implements BusEvent {
+
+        private final String name;
+        private final Long value;
+        private final UUID userToken;
+        private final String type;
 
         @JsonCreator
-        public MyEvent(@JsonProperty("name") String name,
-                @JsonProperty("value") Long value,
-                @JsonProperty("token") UUID token,
-                @JsonProperty("type") String type) {
-                
+        public MyEvent(@JsonProperty("name") final String name,
+                       @JsonProperty("value") final Long value,
+                       @JsonProperty("token") final UUID token,
+                       @JsonProperty("type") final String type) {
+
             this.name = name;
             this.value = value;
             this.userToken = token;
@@ -90,39 +90,39 @@ public class TestEventBusBase {
             return type;
         }
     }
-    
+
     public static final class MyEventWithException extends MyEvent {
-        
+
         @JsonCreator
-        public MyEventWithException(@JsonProperty("name") String name,
-                @JsonProperty("value") Long value,
-                @JsonProperty("token") UUID token,
-                @JsonProperty("type") String type) {
+        public MyEventWithException(@JsonProperty("name") final String name,
+                                    @JsonProperty("value") final Long value,
+                                    @JsonProperty("token") final UUID token,
+                                    @JsonProperty("type") final String type) {
             super(name, value, token, type);
-        }        
+        }
     }
 
 
     public static final class MyOtherEvent implements BusEvent {
 
-        private String name;
-        private Double value;
-        private UUID userToken;
-        private String type;
+        private final String name;
+        private final Double value;
+        private final UUID userToken;
+        private final String type;
 
 
         @JsonCreator
-        public MyOtherEvent(@JsonProperty("name") String name,
-                @JsonProperty("value") Double value,
-                @JsonProperty("token") UUID token,
-                @JsonProperty("type") String type) {
-                
+        public MyOtherEvent(@JsonProperty("name") final String name,
+                            @JsonProperty("value") final Double value,
+                            @JsonProperty("token") final UUID token,
+                            @JsonProperty("type") final String type) {
+
             this.name = name;
             this.value = value;
             this.userToken = token;
             this.type = type;
         }
-       
+
         @JsonIgnore
         @Override
         public BusEventType getBusEventType() {
@@ -146,9 +146,9 @@ public class TestEventBusBase {
             return type;
         }
     }
-    
+
     public static class MyEventHandlerException extends RuntimeException {
-        public MyEventHandlerException(String msg) {
+        public MyEventHandlerException(final String msg) {
             super(msg);
         }
     }
@@ -160,7 +160,7 @@ public class TestEventBusBase {
         private volatile int gotEvents;
 
 
-        public MyEventHandler(int exp) {
+        public MyEventHandler(final int exp) {
             this.expectedEvents = exp;
             this.gotEvents = 0;
         }
@@ -170,19 +170,19 @@ public class TestEventBusBase {
         }
 
         @Subscribe
-        public synchronized void processEvent(MyEvent event) {
+        public synchronized void processEvent(final MyEvent event) {
             gotEvents++;
             //log.debug("Got event {} {}", event.name, event.value);
         }
 
         @Subscribe
-        public synchronized void processEvent(MyEventWithException event) {
+        public synchronized void processEvent(final MyEventWithException event) {
             throw new MyEventHandlerException("FAIL");
         }
-        
-        public synchronized boolean waitForCompletion(long timeoutMs) {
 
-            long ini = System.currentTimeMillis();
+        public synchronized boolean waitForCompletion(final long timeoutMs) {
+
+            final long ini = System.currentTimeMillis();
             long remaining = timeoutMs;
             while (gotEvents < expectedEvents && remaining > 0) {
                 try {
@@ -200,40 +200,40 @@ public class TestEventBusBase {
 
     public void testSimpleWithException() {
         try {
-        MyEventHandler handler = new MyEventHandler(1);
-        eventBus.register(handler);
+            final MyEventHandler handler = new MyEventHandler(1);
+            eventBus.register(handler);
 
-        eventBus.post(new MyEventWithException("my-event", 1L, UUID.randomUUID(), BusEventType.ACCOUNT_CHANGE.toString()));
-        
-        Thread.sleep(50000);
+            eventBus.post(new MyEventWithException("my-event", 1L, UUID.randomUUID(), BusEventType.ACCOUNT_CHANGE.toString()));
+
+            Thread.sleep(50000);
         } catch (Exception e) {
-            
+
         }
-        
+
     }
-    
+
     public void testSimple() {
         try {
 
-            int nbEvents = 5;
-            MyEventHandler handler = new MyEventHandler(nbEvents);
+            final int nbEvents = 5;
+            final MyEventHandler handler = new MyEventHandler(nbEvents);
             eventBus.register(handler);
 
             for (int i = 0; i < nbEvents; i++) {
                 eventBus.post(new MyEvent("my-event", (long) i, UUID.randomUUID(), BusEventType.ACCOUNT_CHANGE.toString()));
             }
 
-            boolean completed = handler.waitForCompletion(10000);
+            final boolean completed = handler.waitForCompletion(10000);
             Assert.assertEquals(completed, true);
         } catch (Exception e) {
-            Assert.fail("",e);
+            Assert.fail("", e);
         }
     }
 
     public void testDifferentType() {
         try {
 
-            MyEventHandler handler = new MyEventHandler(1);
+            final MyEventHandler handler = new MyEventHandler(1);
             eventBus.register(handler);
 
             for (int i = 0; i < 5; i++) {
@@ -241,10 +241,10 @@ public class TestEventBusBase {
             }
             eventBus.post(new MyEvent("my-event", 11l, UUID.randomUUID(), BusEventType.ACCOUNT_CHANGE.toString()));
 
-            boolean completed = handler.waitForCompletion(10000);
+            final boolean completed = handler.waitForCompletion(10000);
             Assert.assertEquals(completed, true);
         } catch (Exception e) {
-            Assert.fail("",e);
+            Assert.fail("", e);
         }
 
     }

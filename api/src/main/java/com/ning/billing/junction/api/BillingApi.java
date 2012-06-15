@@ -22,10 +22,8 @@ import com.ning.billing.entitlement.api.billing.ChargeThruApi;
 
 public interface BillingApi extends ChargeThruApi {
     /**
-     *
-     * @param accountId 
+     * @param accountId
      * @return an ordered list of billing event for the given accounts
-     *
      */
     public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(UUID accountId);
 }

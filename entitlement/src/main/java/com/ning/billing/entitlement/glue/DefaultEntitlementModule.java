@@ -41,16 +41,16 @@ import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.engine.addon.AddonUtils;
 import com.ning.billing.entitlement.engine.core.Engine;
-import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.engine.dao.AuditedEntitlementDao;
+import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.engine.dao.RepairEntitlementDao;
 import com.ning.billing.glue.EntitlementModule;
 import com.ning.billing.util.glue.RealImplementation;
 
-public class DefaultEntitlementModule extends AbstractModule implements EntitlementModule{
-    
+public class DefaultEntitlementModule extends AbstractModule implements EntitlementModule {
+
     public static final String REPAIR_NAMED = "repair";
-    
+
     protected void installConfig() {
         final EntitlementConfig config = new ConfigurationObjectFactory(System.getProperties()).build(EntitlementConfig.class);
         bind(EntitlementConfig.class).toInstance(config);
@@ -62,20 +62,20 @@ public class DefaultEntitlementModule extends AbstractModule implements Entitlem
         bind(RepairEntitlementLifecycleDao.class).annotatedWith(Names.named(REPAIR_NAMED)).to(RepairEntitlementDao.class);
         bind(RepairEntitlementDao.class).asEagerSingleton();
     }
-    
+
     protected void installEntitlementCore() {
-        
+
         bind(SubscriptionFactory.class).annotatedWith(Names.named(REPAIR_NAMED)).to(RepairSubscriptionFactory.class).asEagerSingleton();
         bind(SubscriptionFactory.class).to(DefaultSubscriptionFactory.class).asEagerSingleton();
-        
+
         bind(SubscriptionApiService.class).annotatedWith(Names.named(REPAIR_NAMED)).to(RepairSubscriptionApiService.class).asEagerSingleton();
         bind(SubscriptionApiService.class).to(DefaultSubscriptionApiService.class).asEagerSingleton();
-        
+
         bind(Engine.class).asEagerSingleton();
         bind(PlanAligner.class).asEagerSingleton();
         bind(AddonUtils.class).asEagerSingleton();
         bind(MigrationPlanAligner.class).asEagerSingleton();
-        
+
         installEntitlementService();
         installEntitlementTimelineApi();
         installEntitlementMigrationApi();
@@ -93,7 +93,7 @@ public class DefaultEntitlementModule extends AbstractModule implements Entitlem
     @Override
     public void installEntitlementService() {
         bind(EntitlementService.class).to(Engine.class).asEagerSingleton();
-     }
+    }
 
     @Override
     public void installEntitlementTimelineApi() {

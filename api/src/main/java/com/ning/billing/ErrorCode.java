@@ -44,7 +44,7 @@ public enum ErrorCode {
     ENT_CHANGE_NON_ACTIVE(1021, "Subscription %s is in state %s: Failed to change plan"),
     ENT_CHANGE_FUTURE_CANCELLED(1022, "Subscription %s is future cancelled: Failed to change plan"),
     ENT_CHANGE_DRY_RUN_NOT_BP(1022, "Change DryRun API is only available for BP"),
-    
+
     /* Cancellation */
     ENT_CANCEL_BAD_STATE(1031, "Subscription %s is in state %s: Failed to cancel"),
     /* Recreation */
@@ -62,26 +62,26 @@ public enum ErrorCode {
 
     /* Repair */
     ENT_REPAIR_INVALID_DELETE_SET(1091, "Event %s is not deleted for subscription %s but prior events were"),
-    ENT_REPAIR_NON_EXISTENT_DELETE_EVENT(1092, "Event %s does not exist for subscription %s"),    
+    ENT_REPAIR_NON_EXISTENT_DELETE_EVENT(1092, "Event %s does not exist for subscription %s"),
     ENT_REPAIR_MISSING_AO_DELETE_EVENT(1093, "Event %s should be in deleted set for subscription %s because BP events got deleted earlier"),
     ENT_REPAIR_NEW_EVENT_BEFORE_LAST_BP_REMAINING(1094, "New event %s for subscription %s is before last remaining event for BP"),
     ENT_REPAIR_NEW_EVENT_BEFORE_LAST_AO_REMAINING(1095, "New event %s for subscription %s is before last remaining event"),
     ENT_REPAIR_UNKNOWN_TYPE(1096, "Unknown new event type %s for subscription %s"),
-    ENT_REPAIR_UNKNOWN_BUNDLE(1097, "Unknown bundle %s"), 
-    ENT_REPAIR_UNKNOWN_SUBSCRIPTION(1098, "Unknown subscription %s"),     
-    ENT_REPAIR_NO_ACTIVE_SUBSCRIPTIONS(1099, "No active subscriptions on bundle %s"),         
-    ENT_REPAIR_VIEW_CHANGED(1100, "View for bundle %s has changed from %s to %s"),             
-    ENT_REPAIR_SUB_RECREATE_NOT_EMPTY(1101, "Subscription %s with recreation for bundle %s should specify all existing events to be deleted"),    
-    ENT_REPAIR_SUB_EMPTY(1102, "Subscription %s with recreation for bundle %s should specify all existing events to be deleted"),    
-    ENT_REPAIR_BP_RECREATE_MISSING_AO(1103, "BP recreation for bundle %s implies repair all subscriptions"),    
-    ENT_REPAIR_BP_RECREATE_MISSING_AO_CREATE(1104, "BP recreation for bundle %s implies that all AO should be start also with a CREATE"),        
-    ENT_REPAIR_AO_CREATE_BEFORE_BP_START(1105, "Can't recreate AO %s for bundle %s before BP starts"),    
-    
-    
+    ENT_REPAIR_UNKNOWN_BUNDLE(1097, "Unknown bundle %s"),
+    ENT_REPAIR_UNKNOWN_SUBSCRIPTION(1098, "Unknown subscription %s"),
+    ENT_REPAIR_NO_ACTIVE_SUBSCRIPTIONS(1099, "No active subscriptions on bundle %s"),
+    ENT_REPAIR_VIEW_CHANGED(1100, "View for bundle %s has changed from %s to %s"),
+    ENT_REPAIR_SUB_RECREATE_NOT_EMPTY(1101, "Subscription %s with recreation for bundle %s should specify all existing events to be deleted"),
+    ENT_REPAIR_SUB_EMPTY(1102, "Subscription %s with recreation for bundle %s should specify all existing events to be deleted"),
+    ENT_REPAIR_BP_RECREATE_MISSING_AO(1103, "BP recreation for bundle %s implies repair all subscriptions"),
+    ENT_REPAIR_BP_RECREATE_MISSING_AO_CREATE(1104, "BP recreation for bundle %s implies that all AO should be start also with a CREATE"),
+    ENT_REPAIR_AO_CREATE_BEFORE_BP_START(1105, "Can't recreate AO %s for bundle %s before BP starts"),
+
+
     ENT_BUNDLE_IS_OVERDUE_BLOCKED(1090, "Changes to this bundle are blocked by overdue enforcement (%s :  %s)"),
     ENT_ACCOUNT_IS_OVERDUE_BLOCKED(1091, "Changes to this account are blocked by overdue enforcement (%s)"),
- 
-    
+
+
     /*
     *
     * Range 2000 : CATALOG
@@ -94,35 +94,35 @@ public enum ErrorCode {
 
     /* Plan change is disallowed by the catalog */
     CAT_ILLEGAL_CHANGE_REQUEST(2001, "Attempting to change plan from (product: '%s', billing period: '%s', " +
-    		"pricelist '%s') to (product: '%s', billing period: '%s', pricelist '%s'). This transition is not allowed by catalog rules"),
+            "pricelist '%s') to (product: '%s', billing period: '%s', pricelist '%s'). This transition is not allowed by catalog rules"),
 
-	/*
-	 * Price list
-	 */
+    /*
+      * Price list
+      */
 
-	/*Attempt to reference a price that is not present - should only happen if it is a currency not available in the catalog */
+    /*Attempt to reference a price that is not present - should only happen if it is a currency not available in the catalog */
     CAT_NO_PRICE_FOR_CURRENCY(2010, "This price does not have a value for the currency '%s'."),
 
     /* Price value explicitly set to NULL meaning there is no price available in that currency */
     CAT_PRICE_VALUE_NULL_FOR_CURRENCY(2011, "The value for the currency '%s' is NULL. This plan cannot be bought in this currency."),
-    CAT_NULL_PRICE_LIST_NAME(2012,"Price list name was null"),
+    CAT_NULL_PRICE_LIST_NAME(2012, "Price list name was null"),
     CAT_PRICE_LIST_NOT_FOUND(2013, "Could not find a pricelist with name '%s'"),
     /*
      * Plans
      */
-    CAT_PLAN_NOT_FOUND(2020,"Could not find a plan matching: (product: '%s', billing period: '%s', pricelist '%s')"),
-    CAT_NO_SUCH_PLAN(2021,"Could not find any plans named '%s'"),
+    CAT_PLAN_NOT_FOUND(2020, "Could not find a plan matching: (product: '%s', billing period: '%s', pricelist '%s')"),
+    CAT_NO_SUCH_PLAN(2021, "Could not find any plans named '%s'"),
 
     /*
      * Products
      */
-    CAT_NO_SUCH_PRODUCT(2030,"Could not find any product named '%s'"),
-    CAT_NULL_PRODUCT_NAME(2031,"Product name was null"),
+    CAT_NO_SUCH_PRODUCT(2030, "Could not find any product named '%s'"),
+    CAT_NULL_PRODUCT_NAME(2031, "Product name was null"),
     /*
      * Phases
      */
-    CAT_NO_SUCH_PHASE(2040,"Could not find any phases named '%s'"),
-    CAT_BAD_PHASE_NAME(2041,"Bad phase name '%s'"),
+    CAT_NO_SUCH_PHASE(2040, "Could not find any phases named '%s'"),
+    CAT_BAD_PHASE_NAME(2041, "Bad phase name '%s'"),
     /*
      * Versioned Catalog
      */
@@ -139,7 +139,7 @@ public enum ErrorCode {
     CAT_NO_SUCH_OVEDUE_STATE(2070, "No such overdue state '%s'"),
     CAT_MISSING_CLEAR_STATE(2071, "Missing a clear state"),
     CAT_NO_OVERDUEABLE_TYPE(2072, "No such overdueable type: "),
-   /*
+    /*
     *
     * Range 3000 : ACCOUNT
     *
@@ -153,7 +153,7 @@ public enum ErrorCode {
     ACCOUNT_CREATION_FAILED(3006, "Account creation failed."),
     ACCOUNT_UPDATE_FAILED(3007, "Account update failed."),
 
-   /*
+    /*
     *
     * Range 3900: Tag definitions
     *
@@ -162,17 +162,17 @@ public enum ErrorCode {
     TAG_DEFINITION_ALREADY_EXISTS(3901, "The tag definition name already exists (name: %s)"),
     TAG_DEFINITION_DOES_NOT_EXIST(3902, "The tag definition name does not exist (name: %s)"),
     TAG_DEFINITION_IN_USE(3903, "The tag definition name is currently in use (name: %s)"),
-    
+
     CONTROL_TAG_DOES_NOT_EXIST(3904, "The control tag does not exist (name: %s)"),
 
-   /*
+    /*
     *
     * Range 3950: Tags
     *
     */
     TAG_DOES_NOT_EXIST(3950, "The tag does not exist (name: %s)"),
 
-   /*
+    /*
     *
     * Range 4000: INVOICE
     *
@@ -198,9 +198,9 @@ public enum ErrorCode {
      * Range 5000: Overdue system
      * 
      */
-    OVERDUE_CAT_ERROR_ENCOUNTERED(5001,"Catalog error encountered on Overdueable: id='%s', type='%s'"),  
-    OVERDUE_TYPE_NOT_SUPPORTED(5002,"Overdue of this type is not supported: id='%s', type='%s'"),  
-    OVERDUE_NO_REEVALUATION_INTERVAL(5003,"No valid reevaluation interval for state (name: %s)"),
+    OVERDUE_CAT_ERROR_ENCOUNTERED(5001, "Catalog error encountered on Overdueable: id='%s', type='%s'"),
+    OVERDUE_TYPE_NOT_SUPPORTED(5002, "Overdue of this type is not supported: id='%s', type='%s'"),
+    OVERDUE_NO_REEVALUATION_INTERVAL(5003, "No valid reevaluation interval for state (name: %s)"),
     OVERDUE_NOT_CONFIGURED(5004, "No configuration was found for the overdue system"),
     /*
      * 
@@ -209,40 +209,40 @@ public enum ErrorCode {
      */
     BLOCK_BLOCKED_ACTION(6000, "The action %s is block on this %s with id=%s"),
     BLOCK_TYPE_NOT_SUPPORTED(6001, "The Blockable type '%s' is not supported"),
-    
-    
+
+
     /*
-     * Range 7000 : Payment
-     */
-    
+    * Range 7000 : Payment
+    */
+
     PAYMENT_NO_SUCH_PAYMENT_METHOD(7000, "Payment method for account %s, and paymentId %s does not exist"),
     PAYMENT_NO_PAYMENT_METHODS(7001, "Payment methods for account %s don't exist"),
     PAYMENT_UPD_GATEWAY_FAILED(7002, "Failed to update payment gateway for account %s : %s"),
-    PAYMENT_GET_PAYMENT_PROVIDER(7003, "Failed to retrieve payment provider for account %s : %s"),    
-    PAYMENT_GET_PAYMENT_METHODS(7004, "Failed to retrieve payment method for account %s : %s"),        
-    PAYMENT_ADD_PAYMENT_METHOD(7005, "Failed to add payment method for account %s : %s"),        
-    PAYMENT_REFRESH_PAYMENT_METHOD(7006, "Failed to resfresh payment methods for account %s : %s"),            
-    PAYMENT_DEL_PAYMENT_METHOD(7007, "Failed to delete payment method for account %s : %s"),        
-    PAYMENT_UPD_PAYMENT_METHOD(7008, "Failed to update payment method for account %s : %s"),            
-    PAYMENT_CREATE_PAYMENT(7009, "Failed to create payment for account %s : %s"),                
-    PAYMENT_CREATE_PAYMENT_FOR_ATTEMPT(70010, "Failed to create payment for account %s and attempt %s : %s"),                    
-    PAYMENT_CREATE_PAYMENT_FOR_ATTEMPT_WITH_NON_POSITIVE_INV(7011, "Got payment attempt with negative or null invoice for account %s"),                        
-    PAYMENT_CREATE_PAYMENT_FOR_ATTEMPT_BAD(7012, "Failed to create payment for attempts %s "),                    
-    PAYMENT_CREATE_PAYMENT_PROVIDER_ACCOUNT(7013, "Failed to create payment provider account for account %s : %s"),                
+    PAYMENT_GET_PAYMENT_PROVIDER(7003, "Failed to retrieve payment provider for account %s : %s"),
+    PAYMENT_GET_PAYMENT_METHODS(7004, "Failed to retrieve payment method for account %s : %s"),
+    PAYMENT_ADD_PAYMENT_METHOD(7005, "Failed to add payment method for account %s : %s"),
+    PAYMENT_REFRESH_PAYMENT_METHOD(7006, "Failed to resfresh payment methods for account %s : %s"),
+    PAYMENT_DEL_PAYMENT_METHOD(7007, "Failed to delete payment method for account %s : %s"),
+    PAYMENT_UPD_PAYMENT_METHOD(7008, "Failed to update payment method for account %s : %s"),
+    PAYMENT_CREATE_PAYMENT(7009, "Failed to create payment for account %s : %s"),
+    PAYMENT_CREATE_PAYMENT_FOR_ATTEMPT(70010, "Failed to create payment for account %s and attempt %s : %s"),
+    PAYMENT_CREATE_PAYMENT_FOR_ATTEMPT_WITH_NON_POSITIVE_INV(7011, "Got payment attempt with negative or null invoice for account %s"),
+    PAYMENT_CREATE_PAYMENT_FOR_ATTEMPT_BAD(7012, "Failed to create payment for attempts %s "),
+    PAYMENT_CREATE_PAYMENT_PROVIDER_ACCOUNT(7013, "Failed to create payment provider account for account %s : %s"),
     PAYMENT_UPD_PAYMENT_PROVIDER_ACCOUNT(7014, "Failed to update payment provider account for account %s : %s"),
-    PAYMENT_GET_PAYMENT_PROVIDER_ACCOUNT(7015, "Failed to retrieve payment provider account for account %s : %s"),                        
-    PAYMENT_CREATE_REFUND(7016, "Failed to create refund for account %s : %s"),                
-    PAYMENT_NULL_INVOICE(7017, "Invoice %s has a balance <= 0 "),      
-    PAYMENT_AMOUNT_DENIED(7018, "Payment amount requested for invoice %s is greater than invoice balance [%f/%f]"),         
+    PAYMENT_GET_PAYMENT_PROVIDER_ACCOUNT(7015, "Failed to retrieve payment provider account for account %s : %s"),
+    PAYMENT_CREATE_REFUND(7016, "Failed to create refund for account %s : %s"),
+    PAYMENT_NULL_INVOICE(7017, "Invoice %s has a balance <= 0 "),
+    PAYMENT_AMOUNT_DENIED(7018, "Payment amount requested for invoice %s is greater than invoice balance [%f/%f]"),
     PAYMENT_INTERNAL_ERROR(7019, "Internal payment error : %s"),
     PAYMENT_NO_SUCH_PAYMENT(7020, "Payment %s does not exist"),
     PAYMENT_NO_DEFAULT_PAYMENT_METHOD(7021, "Account %s does not have a default payment method set"),
-    PAYMENT_DEL_DEFAULT_PAYMENT_METHOD(7022, "Cannot delete default payment method for account %s"),            
+    PAYMENT_DEL_DEFAULT_PAYMENT_METHOD(7022, "Cannot delete default payment method for account %s"),
 
-    PAYMENT_PLUGIN_TIMEOUT(7100, "Plugin timeout for account %s and invoice %s"),    
-    PAYMENT_PLUGIN_ACCOUNT_INIT(7101, "Account initialization for account %s and plugin % s failed: %s"),        
+    PAYMENT_PLUGIN_TIMEOUT(7100, "Plugin timeout for account %s and invoice %s"),
+    PAYMENT_PLUGIN_ACCOUNT_INIT(7101, "Account initialization for account %s and plugin % s failed: %s"),
 
-    
+
     /*
     *
     * Range 9000: Miscellaneous
@@ -253,11 +253,11 @@ public enum ErrorCode {
     MISSING_TRANSLATION_RESOURCE(9010, "The resources for %s translation could not be found."),
     MISSING_DEFAULT_TRANSLATION_RESOURCE(9011, "The default resource for %s translation could not be found.");
 
-    
-    private int code;
-    private String format;
 
-    ErrorCode(int code, String format) {
+    private final int code;
+    private final String format;
+
+    ErrorCode(final int code, final String format) {
         this.code = code;
         this.format = format;
     }

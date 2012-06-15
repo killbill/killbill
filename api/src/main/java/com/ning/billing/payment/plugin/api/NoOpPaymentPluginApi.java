@@ -18,9 +18,9 @@ package com.ning.billing.payment.plugin.api;
 public interface NoOpPaymentPluginApi extends PaymentPluginApi {
 
     public void clear();
-    
+
     public void makeNextPaymentFailWithError();
-    
+
     public void makeNextPaymentFailWithException();
 
     public void makeAllInvoicesFailWithError(boolean failure);

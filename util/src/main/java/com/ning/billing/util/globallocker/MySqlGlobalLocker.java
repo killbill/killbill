@@ -16,23 +16,24 @@
 
 package com.ning.billing.util.globallocker;
 
-import com.google.inject.Inject;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.inject.Inject;
+
 public class MySqlGlobalLocker implements GlobalLocker {
 
-    private final static Logger logger = LoggerFactory.getLogger(MySqlGlobalLocker.class);
+    private static final Logger logger = LoggerFactory.getLogger(MySqlGlobalLocker.class);
 
-    private final static long DEFAULT_TIMEOUT = 3L; // 3 seconds
+    private static final long DEFAULT_TIMEOUT = 3L; // 3 seconds
 
     private final IDBI dbi;
     private long timeout;
 
     @Inject
-    public MySqlGlobalLocker(IDBI dbi) {
+    public MySqlGlobalLocker(final IDBI dbi) {
         this.dbi = dbi;
         this.timeout = DEFAULT_TIMEOUT;
     }
@@ -47,7 +48,7 @@ public class MySqlGlobalLocker implements GlobalLocker {
         final String lockName = getLockName(service, lockKey);
         int tries_left = retry;
         while (tries_left-- > 0) {
-            GlobalLock lock = lock(lockName);
+            final GlobalLock lock = lock(lockName);
             if (lock != null) {
                 return lock;
             }
@@ -68,8 +69,7 @@ public class MySqlGlobalLocker implements GlobalLocker {
                 public void release() {
                     try {
                         dao.releaseLock(lockName);
-                    }
-                    finally {
+                    } finally {
                         if (h != null) {
                             h.close();
                         }
@@ -97,10 +97,10 @@ public class MySqlGlobalLocker implements GlobalLocker {
     }
 
     private String getLockName(final LockerService service, final String lockKey) {
-        StringBuilder tmp = new StringBuilder()
-            .append(service.toString())
-            .append("-")
-            .append(lockKey);
+        final StringBuilder tmp = new StringBuilder()
+                .append(service.toString())
+                .append("-")
+                .append(lockKey);
         return tmp.toString();
     }
 }

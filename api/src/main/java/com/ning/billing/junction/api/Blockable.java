@@ -29,19 +29,19 @@ public interface Blockable {
         ACCOUNT,
         SUBSCRIPTION_BUNDLE,
         SUBSCRIPTION;
-        
-        public static Type get(Blockable o) throws BlockingApiException{
-            if (o instanceof Account){
+
+        public static Type get(final Blockable o) throws BlockingApiException {
+            if (o instanceof Account) {
                 return ACCOUNT;
-            } else if (o instanceof SubscriptionBundle){
+            } else if (o instanceof SubscriptionBundle) {
                 return SUBSCRIPTION_BUNDLE;
-            } else if (o instanceof Subscription){
+            } else if (o instanceof Subscription) {
                 return SUBSCRIPTION;
             }
-            throw new BlockingApiException(ErrorCode.BLOCK_TYPE_NOT_SUPPORTED , o.getClass().getName());
+            throw new BlockingApiException(ErrorCode.BLOCK_TYPE_NOT_SUPPORTED, o.getClass().getName());
         }
-        
-        public static Type get(String type) throws BlockingApiException {
+
+        public static Type get(final String type) throws BlockingApiException {
             if (type.equalsIgnoreCase(ACCOUNT.name())) {
                 return ACCOUNT;
             } else if (type.equalsIgnoreCase(SUBSCRIPTION_BUNDLE.name())) {
@@ -49,12 +49,12 @@ public interface Blockable {
             } else if (type.equalsIgnoreCase(SUBSCRIPTION.name())) {
                 return SUBSCRIPTION;
             }
-            throw new BlockingApiException(ErrorCode.BLOCK_TYPE_NOT_SUPPORTED , type);
+            throw new BlockingApiException(ErrorCode.BLOCK_TYPE_NOT_SUPPORTED, type);
         }
 
     }
 
     public UUID getId();
-    
+
     public BlockingState getBlockingState();
 }

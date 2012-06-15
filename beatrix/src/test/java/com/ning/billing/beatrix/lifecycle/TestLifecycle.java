@@ -16,6 +16,12 @@
 
 package com.ning.billing.beatrix.lifecycle;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
+
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
@@ -24,16 +30,11 @@ import com.google.inject.Stage;
 import com.ning.billing.lifecycle.KillbillService;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.Assert;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
 
 
 public class TestLifecycle {
 
-    private final static Logger log = LoggerFactory.getLogger(TestLifecycle.class);
+    private static final Logger log = LoggerFactory.getLogger(TestLifecycle.class);
 
     private Service1 s1;
     private Service2 s2;
@@ -61,7 +62,7 @@ public class TestLifecycle {
         }
     }
 
-    public static class Service1 extends ServiceBase implements KillbillService  {
+    public static class Service1 extends ServiceBase implements KillbillService {
 
         @LifecycleHandlerType(LifecycleLevel.INIT_BUS)
         public void initBus() {
@@ -120,8 +121,7 @@ public class TestLifecycle {
     }
 
 
-
-    @BeforeClass(alwaysRun=true)
+    @BeforeClass(alwaysRun = true)
     public void setup() {
         final Injector g = Guice.createInjector(Stage.DEVELOPMENT, new TestLifecycleModule());
         s1 = g.getInstance(Service1.class);
@@ -129,7 +129,7 @@ public class TestLifecycle {
         lifecycle = g.getInstance(DefaultLifecycle.class);
     }
 
-    @Test(enabled=true, groups={"fast"})
+    @Test(enabled = true, groups = {"fast"})
     public void testLifecycle() {
         s1.reset();
         s2.reset();
@@ -155,11 +155,12 @@ public class TestLifecycle {
     public static class LifecycleNoWarn extends DefaultLifecycle {
 
         @Inject
-        public LifecycleNoWarn(Injector injector) {
+        public LifecycleNoWarn(final Injector injector) {
             super(injector);
         }
+
         @Override
-        protected void logWarn(String msg, Exception e) {
+        protected void logWarn(final String msg, final Exception e) {
         }
     }
 

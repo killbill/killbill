@@ -16,15 +16,15 @@
 
 package com.ning.billing.util.validation;
 
-import com.google.inject.Inject;
-import com.ning.billing.util.validation.dao.DatabaseSchemaDao;
-
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.google.inject.Inject;
+import com.ning.billing.util.validation.dao.DatabaseSchemaDao;
 
 public class ValidationManager {
     private final DatabaseSchemaDao dao;
@@ -34,7 +34,7 @@ public class ValidationManager {
     private final Map<Class, ValidationConfiguration> configurations = new HashMap<Class, ValidationConfiguration>();
 
     @Inject
-    public ValidationManager(DatabaseSchemaDao dao) {
+    public ValidationManager(final DatabaseSchemaDao dao) {
         this.dao = dao;
     }
 
@@ -43,8 +43,8 @@ public class ValidationManager {
         columnInfoMap.clear();
 
         // get schema information and map it to columnInfo
-        List<ColumnInfo> columnInfoList = dao.getColumnInfoList(schemaName);
-        for (ColumnInfo columnInfo : columnInfoList) {
+        final List<ColumnInfo> columnInfoList = dao.getColumnInfoList(schemaName);
+        for (final ColumnInfo columnInfo : columnInfoList) {
             final String tableName = columnInfo.getTableName();
 
             if (!columnInfoMap.containsKey(tableName)) {
@@ -63,33 +63,45 @@ public class ValidationManager {
         return (columnInfoMap.get(tableName) == null) ? null : columnInfoMap.get(tableName).get(columnName);
     }
 
-    public boolean validate(Object o) {
-        ValidationConfiguration configuration = getConfiguration(o.getClass());
+    public boolean validate(final Object o) {
+        final ValidationConfiguration configuration = getConfiguration(o.getClass());
 
         // if no configuration exists for this class, the object is valid
-        if (configuration == null) {return true;}
+        if (configuration == null) {
+            return true;
+        }
 
-        Class clazz = o.getClass();
-        for (String propertyName : configuration.keySet()) {
+        final Class clazz = o.getClass();
+        for (final String propertyName : configuration.keySet()) {
             try {
-                Field field = clazz.getDeclaredField(propertyName);
+                final Field field = clazz.getDeclaredField(propertyName);
                 if (!field.isAccessible()) {
                     field.setAccessible(true);
                 }
 
-                Object value = field.get(o);
+                final Object value = field.get(o);
 
-                ColumnInfo columnInfo = configuration.get(propertyName);
+                final ColumnInfo columnInfo = configuration.get(propertyName);
                 if (columnInfo == null) {
                     // no column info means the property hasn't been properly mapped; suppress validation
                     return true;
                 }
 
-                if (!hasValidNullability(columnInfo, value)) {return false;}
-                if (!isValidLengthString(columnInfo, value)) {return false;}
-                if (!isValidLengthChar(columnInfo, value)) {return false;}
-                if (!hasValidPrecision(columnInfo, value)) {return false;}
-                if (!hasValidScale(columnInfo, value)) {return false;}
+                if (!hasValidNullability(columnInfo, value)) {
+                    return false;
+                }
+                if (!isValidLengthString(columnInfo, value)) {
+                    return false;
+                }
+                if (!isValidLengthChar(columnInfo, value)) {
+                    return false;
+                }
+                if (!hasValidPrecision(columnInfo, value)) {
+                    return false;
+                }
+                if (!hasValidScale(columnInfo, value)) {
+                    return false;
+                }
             } catch (NoSuchFieldException e) {
                 // if the field doesn't exist, assume the configuration is faulty and skip this property
             } catch (IllegalAccessException e) {
@@ -103,7 +115,9 @@ public class ValidationManager {
 
     private boolean hasValidNullability(final ColumnInfo columnInfo, final Object value) {
         if (!columnInfo.getIsNullable()) {
-            if (value == null) {return false;}
+            if (value == null) {
+                return false;
+            }
         }
 
         return true;
@@ -123,7 +137,7 @@ public class ValidationManager {
 
     private boolean isValidLengthChar(final ColumnInfo columnInfo, final Object value) {
         if (columnInfo.getDataType().equals("char")) {
-            if (value== null) {
+            if (value == null) {
                 return false;
             } else {
                 if (value.toString().length() != columnInfo.getMaximumLength()) {
@@ -138,7 +152,7 @@ public class ValidationManager {
     private boolean hasValidPrecision(final ColumnInfo columnInfo, final Object value) {
         if (columnInfo.getPrecision() != 0) {
             if (value != null) {
-                BigDecimal bigDecimalValue = new BigDecimal(value.toString());
+                final BigDecimal bigDecimalValue = new BigDecimal(value.toString());
                 if (bigDecimalValue.precision() > columnInfo.getPrecision()) {
                     return false;
                 }
@@ -151,7 +165,7 @@ public class ValidationManager {
     private boolean hasValidScale(final ColumnInfo columnInfo, final Object value) {
         if (columnInfo.getScale() != 0) {
             if (value != null) {
-                BigDecimal bigDecimalValue = new BigDecimal(value.toString());
+                final BigDecimal bigDecimalValue = new BigDecimal(value.toString());
                 if (bigDecimalValue.scale() > columnInfo.getScale()) {
                     return false;
                 }
@@ -161,15 +175,15 @@ public class ValidationManager {
         return true;
     }
 
-    public boolean hasConfiguration(Class clazz) {
+    public boolean hasConfiguration(final Class clazz) {
         return configurations.containsKey(clazz);
     }
 
-    public ValidationConfiguration getConfiguration(Class clazz) {
+    public ValidationConfiguration getConfiguration(final Class clazz) {
         return configurations.get(clazz);
     }
 
-    public void setConfiguration(Class clazz, String propertyName, ColumnInfo columnInfo) {
+    public void setConfiguration(final Class clazz, final String propertyName, final ColumnInfo columnInfo) {
         if (!configurations.containsKey(clazz)) {
             configurations.put(clazz, new ValidationConfiguration());
         }

@@ -20,14 +20,14 @@ import com.ning.billing.BillingExceptionBase;
 import com.ning.billing.ErrorCode;
 
 public class BlockingApiException extends BillingExceptionBase {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	public BlockingApiException(Throwable cause, ErrorCode code, Object... args) {
-		super(cause, code, args);
-	}
+    public BlockingApiException(final Throwable cause, final ErrorCode code, final Object... args) {
+        super(cause, code, args);
+    }
 
-	public BlockingApiException(ErrorCode code, Object... args) {
-		super(code, args);
-	}
+    public BlockingApiException(final ErrorCode code, final Object... args) {
+        super(code, args);
+    }
 
 }

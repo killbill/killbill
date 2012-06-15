@@ -35,11 +35,11 @@ public class OverdueWrapper<T extends Blockable> {
     private final BillingStateCalculator<T> billingStateCalcuator;
     private final OverdueStateApplicator<T> overdueStateApplicator;
 
-    public OverdueWrapper(T overdueable, BlockingApi api,
-            OverdueStateSet<T> overdueStateSet,
-            Clock clock,
-            BillingStateCalculator<T> billingStateCalcuator,
-            OverdueStateApplicator<T> overdueStateApplicator) {
+    public OverdueWrapper(final T overdueable, final BlockingApi api,
+                          final OverdueStateSet<T> overdueStateSet,
+                          final Clock clock,
+                          final BillingStateCalculator<T> billingStateCalcuator,
+                          final OverdueStateApplicator<T> overdueStateApplicator) {
         this.overdueable = overdueable;
         this.overdueStateSet = overdueStateSet;
         this.api = api;
@@ -49,17 +49,17 @@ public class OverdueWrapper<T extends Blockable> {
     }
 
     public OverdueState<T> refresh() throws OverdueError, OverdueApiException {
-        if(overdueStateSet.size() < 1) { // No configuration available
+        if (overdueStateSet.size() < 1) { // No configuration available
             return overdueStateSet.getClearState();
-        } 
-        
-        OverdueState<T> nextOverdueState;
-        BillingState<T> billingState    = billingState();
-        String previousOverdueStateName = api.getBlockingStateFor(overdueable).getStateName();
-        nextOverdueState                = overdueStateSet.calculateOverdueState(billingState, clock.getUTCNow());
+        }
 
-        if(nextOverdueState != null && !previousOverdueStateName.equals(nextOverdueState.getName())) {
-            overdueStateApplicator.apply(overdueable, previousOverdueStateName, nextOverdueState); 
+        final OverdueState<T> nextOverdueState;
+        final BillingState<T> billingState = billingState();
+        final String previousOverdueStateName = api.getBlockingStateFor(overdueable).getStateName();
+        nextOverdueState = overdueStateSet.calculateOverdueState(billingState, clock.getUTCNow());
+
+        if (nextOverdueState != null && !previousOverdueStateName.equals(nextOverdueState.getName())) {
+            overdueStateApplicator.apply(overdueable, previousOverdueStateName, nextOverdueState);
         }
 
         return nextOverdueState;

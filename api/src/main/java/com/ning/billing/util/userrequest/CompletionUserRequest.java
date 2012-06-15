@@ -15,5 +15,5 @@
  */
 package com.ning.billing.util.userrequest;
 
-public interface CompletionUserRequest extends CompletionUserRequestNotifier, CompletionUserRequestWaiter{
+public interface CompletionUserRequest extends CompletionUserRequestNotifier, CompletionUserRequestWaiter {
 }

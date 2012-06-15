@@ -25,32 +25,32 @@ import java.net.URL;
 import java.util.Scanner;
 
 public class UriAccessor {
-	private static final String URI_SCHEME_FOR_CLASSPATH = "jar";
-	private static final String URI_SCHEME_FOR_FILE = "file";
+    private static final String URI_SCHEME_FOR_CLASSPATH = "jar";
+    private static final String URI_SCHEME_FOR_FILE = "file";
 
-	public static InputStream accessUri(String uri)  throws IOException, URISyntaxException {
-		return accessUri(new URI(uri));
-	}
-	
-	public static InputStream accessUri(URI uri) throws IOException {
-		String scheme = uri.getScheme();
+    public static InputStream accessUri(final String uri) throws IOException, URISyntaxException {
+        return accessUri(new URI(uri));
+    }
+
+    public static InputStream accessUri(final URI uri) throws IOException {
+        final String scheme = uri.getScheme();
         URL url = null;
         if (scheme.equals(URI_SCHEME_FOR_CLASSPATH)) {
-        	return UriAccessor.class.getResourceAsStream(uri.getPath());
+            return UriAccessor.class.getResourceAsStream(uri.getPath());
         } else if (scheme.equals(URI_SCHEME_FOR_FILE) &&
-        	!uri.getSchemeSpecificPart().startsWith("/")) { // interpret URIs of this form as relative path uris
-        	url = new File(uri.getSchemeSpecificPart()).toURI().toURL();
+                !uri.getSchemeSpecificPart().startsWith("/")) { // interpret URIs of this form as relative path uris
+            url = new File(uri.getSchemeSpecificPart()).toURI().toURL();
         }
         url = uri.toURL();
-    	return url.openConnection().getInputStream();
-	}
-	
-	public static String accessUriAsString(String uri)  throws IOException, URISyntaxException {
-		return accessUriAsString(new URI(uri));
-	}
-	
-	public static String accessUriAsString(URI uri) throws IOException {
-		InputStream stream = accessUri(uri);
-		return new Scanner(stream).useDelimiter("\\A").next();
-	}
+        return url.openConnection().getInputStream();
+    }
+
+    public static String accessUriAsString(final String uri) throws IOException, URISyntaxException {
+        return accessUriAsString(new URI(uri));
+    }
+
+    public static String accessUriAsString(final URI uri) throws IOException {
+        final InputStream stream = accessUri(uri);
+        return new Scanner(stream).useDelimiter("\\A").next();
+    }
 }

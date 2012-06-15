@@ -22,31 +22,45 @@ import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 public enum ApiEventType {
     MIGRATE_ENTITLEMENT {
         @Override
-        public SubscriptionTransitionType getSubscriptionTransitionType() { return SubscriptionTransitionType.MIGRATE_ENTITLEMENT; }
+        public SubscriptionTransitionType getSubscriptionTransitionType() {
+            return SubscriptionTransitionType.MIGRATE_ENTITLEMENT;
+        }
     },
     CREATE {
         @Override
-        public SubscriptionTransitionType getSubscriptionTransitionType() { return SubscriptionTransitionType.CREATE; }
+        public SubscriptionTransitionType getSubscriptionTransitionType() {
+            return SubscriptionTransitionType.CREATE;
+        }
     },
     MIGRATE_BILLING {
         @Override
-        public SubscriptionTransitionType getSubscriptionTransitionType() { return SubscriptionTransitionType.MIGRATE_BILLING; }
+        public SubscriptionTransitionType getSubscriptionTransitionType() {
+            return SubscriptionTransitionType.MIGRATE_BILLING;
+        }
     },
     CHANGE {
         @Override
-        public SubscriptionTransitionType getSubscriptionTransitionType() { return SubscriptionTransitionType.CHANGE; }
+        public SubscriptionTransitionType getSubscriptionTransitionType() {
+            return SubscriptionTransitionType.CHANGE;
+        }
     },
     RE_CREATE {
         @Override
-        public SubscriptionTransitionType getSubscriptionTransitionType() { return SubscriptionTransitionType.RE_CREATE; }
+        public SubscriptionTransitionType getSubscriptionTransitionType() {
+            return SubscriptionTransitionType.RE_CREATE;
+        }
     },
     CANCEL {
         @Override
-        public SubscriptionTransitionType getSubscriptionTransitionType() { return SubscriptionTransitionType.CANCEL; }
+        public SubscriptionTransitionType getSubscriptionTransitionType() {
+            return SubscriptionTransitionType.CANCEL;
+        }
     },
     UNCANCEL {
         @Override
-        public SubscriptionTransitionType getSubscriptionTransitionType() { return SubscriptionTransitionType.UNCANCEL; }
+        public SubscriptionTransitionType getSubscriptionTransitionType() {
+            return SubscriptionTransitionType.UNCANCEL;
+        }
     };
 
     // Used to map from internal events to User visible events (both user and phase)

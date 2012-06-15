@@ -32,7 +32,7 @@ import com.ning.billing.util.entity.EntityBase;
 
 public class DefaultPayment extends EntityBase implements Payment {
 
-    
+
     private final UUID accountId;
     private final UUID invoiceId;
     private final UUID paymentMethodId;
@@ -40,14 +40,14 @@ public class DefaultPayment extends EntityBase implements Payment {
     private final Currency currency;
     private final DateTime effectiveDate;
     private final Integer paymentNumber;
-    private final PaymentStatus paymentStatus;    
+    private final PaymentStatus paymentStatus;
     private final List<PaymentAttempt> attempts;
 
-    
-    private DefaultPayment(UUID id, UUID accountId, UUID invoiceId,
-            UUID paymentMethodId, BigDecimal amount, Currency currency,
-            DateTime effectiveDate, Integer paymentNumber,
-            PaymentStatus paymentStatus, String paymentError, List<PaymentAttempt> attempts) {
+
+    private DefaultPayment(final UUID id, final UUID accountId, final UUID invoiceId,
+                           final UUID paymentMethodId, final BigDecimal amount, final Currency currency,
+                           final DateTime effectiveDate, final Integer paymentNumber,
+                           final PaymentStatus paymentStatus, final String paymentError, final List<PaymentAttempt> attempts) {
         super(id);
         this.accountId = accountId;
         this.invoiceId = invoiceId;
@@ -59,8 +59,8 @@ public class DefaultPayment extends EntityBase implements Payment {
         this.paymentStatus = paymentStatus;
         this.attempts = attempts;
     }
-    
-    public DefaultPayment(PaymentModelDao src, List<PaymentAttemptModelDao> attempts) {
+
+    public DefaultPayment(final PaymentModelDao src, final List<PaymentAttemptModelDao> attempts) {
         this(src.getId(),
              src.getAccountId(),
              src.getInvoiceId(),
@@ -73,13 +73,13 @@ public class DefaultPayment extends EntityBase implements Payment {
              null,
              toPaymentAttempts(attempts));
     }
-    
+
 
     @Override
     public Integer getPaymentNumber() {
         return paymentNumber;
     }
-    
+
     @Override
     public UUID getAccountId() {
         return accountId;
@@ -120,8 +120,8 @@ public class DefaultPayment extends EntityBase implements Payment {
     public List<PaymentAttempt> getAttempts() {
         return attempts;
     }
-    
-    private static List<PaymentAttempt> toPaymentAttempts(List<PaymentAttemptModelDao> attempts) {
+
+    private static List<PaymentAttempt> toPaymentAttempts(final List<PaymentAttemptModelDao> attempts) {
         if (attempts == null || attempts.size() == 0) {
             return Collections.emptyList();
         }
@@ -133,14 +133,17 @@ public class DefaultPayment extends EntityBase implements Payment {
                     public PaymentStatus getPaymentStatus() {
                         return input.getPaymentStatus();
                     }
+
                     @Override
                     public String getErrorMsg() {
                         return input.getPaymentError();
                     }
+
                     @Override
                     public DateTime getEffectiveDate() {
                         return input.getEffectiveDate();
                     }
+
                     @Override
                     public UUID getId() {
                         return input.getId();

@@ -27,7 +27,7 @@ public class AccountModuleWithMocks extends AccountModule {
     @Override
     protected void installAccountDao() {
         bind(MockAccountDao.class).asEagerSingleton();
-        AccountEmailDao accountEmailDao = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountEmailDao.class);
+        final AccountEmailDao accountEmailDao = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountEmailDao.class);
         bind(AccountEmailDao.class).toInstance(accountEmailDao);
         bind(AccountDao.class).to(MockAccountDao.class);
     }

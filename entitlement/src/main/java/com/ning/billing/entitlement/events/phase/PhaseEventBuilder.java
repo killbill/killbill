@@ -26,11 +26,11 @@ public class PhaseEventBuilder extends EventBaseBuilder<PhaseEventBuilder> {
         super();
     }
 
-    public PhaseEventBuilder(EventBaseBuilder<?> base) {
+    public PhaseEventBuilder(final EventBaseBuilder<?> base) {
         super(base);
     }
 
-    public PhaseEventBuilder setPhaseName(String phaseName) {
+    public PhaseEventBuilder setPhaseName(final String phaseName) {
         this.phaseName = phaseName;
         return this;
     }

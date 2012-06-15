@@ -16,9 +16,8 @@
 
 package com.ning.billing.util.validation;
 
-import com.ning.billing.dbi.MysqlTestingHelper;
-import com.ning.billing.util.globallocker.TestMysqlGlobalLocker;
-import com.ning.billing.util.validation.dao.DatabaseSchemaDao;
+import java.io.IOException;
+import java.util.Collection;
 
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
@@ -27,8 +26,9 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import java.io.IOException;
-import java.util.Collection;
+import com.ning.billing.dbi.MysqlTestingHelper;
+import com.ning.billing.util.globallocker.TestMysqlGlobalLocker;
+import com.ning.billing.util.validation.dao.DatabaseSchemaDao;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
@@ -41,7 +41,7 @@ public class TestValidationManager {
     private static final String TABLE_NAME = "validation_test";
 
     private ValidationManager vm;
-    
+
     @BeforeClass(groups = "slow")
     public void setup() throws IOException {
         setupDatabase();
@@ -49,8 +49,8 @@ public class TestValidationManager {
     }
 
     private void setupDao() {
-        IDBI dbi = helper.getDBI();
-        DatabaseSchemaDao dao = new DatabaseSchemaDao(dbi);
+        final IDBI dbi = helper.getDBI();
+        final DatabaseSchemaDao dao = new DatabaseSchemaDao(dbi);
         vm = new ValidationManager(dao);
         vm.loadSchemaInformation(helper.getDbName());
     }
@@ -74,12 +74,12 @@ public class TestValidationManager {
 
     @Test(groups = "slow")
     public void testRetrievingColumnInfo() {
-        Collection<ColumnInfo> columnInfoList = vm.getTableInfo(TABLE_NAME);
+        final Collection<ColumnInfo> columnInfoList = vm.getTableInfo(TABLE_NAME);
         assertEquals(columnInfoList.size(), 4);
         assertNotNull(vm.getColumnInfo(TABLE_NAME, "column1"));
         assertNull(vm.getColumnInfo(TABLE_NAME, "bogus"));
 
-        ColumnInfo numericColumnInfo = vm.getColumnInfo(TABLE_NAME, "column3");
+        final ColumnInfo numericColumnInfo = vm.getColumnInfo(TABLE_NAME, "column3");
         assertNotNull(numericColumnInfo);
         assertEquals(numericColumnInfo.getScale(), 4);
         assertEquals(numericColumnInfo.getPrecision(), 10);
@@ -87,17 +87,17 @@ public class TestValidationManager {
 
     @Test(groups = "slow")
     public void testSimpleConfiguration() {
-        String STRING_FIELD_2 = "column2";
-        String STRING_FIELD_2_PROPERTY = "stringField2";
+        final String STRING_FIELD_2 = "column2";
+        final String STRING_FIELD_2_PROPERTY = "stringField2";
 
-        SimpleTestClass testObject = new SimpleTestClass(null, null, 7.9, new DateTime());
+        final SimpleTestClass testObject = new SimpleTestClass(null, null, 7.9, new DateTime());
 
         vm.setConfiguration(testObject.getClass(), STRING_FIELD_2_PROPERTY, vm.getColumnInfo(TABLE_NAME, STRING_FIELD_2));
 
         assertTrue(vm.hasConfiguration(testObject.getClass()));
         assertFalse(vm.hasConfiguration(ValidationManager.class));
 
-        ValidationConfiguration configuration = vm.getConfiguration(SimpleTestClass.class);
+        final ValidationConfiguration configuration = vm.getConfiguration(SimpleTestClass.class);
         assertNotNull(configuration);
         assertTrue(configuration.hasMapping(STRING_FIELD_2_PROPERTY));
 
@@ -160,7 +160,7 @@ public class TestValidationManager {
         private double numericField1;
         private DateTime dateTimeField1;
 
-        public SimpleTestClass(String stringField1, String stringField2, double numericField1, DateTime dateTimeField1) {
+        public SimpleTestClass(final String stringField1, final String stringField2, final double numericField1, final DateTime dateTimeField1) {
             this.stringField1 = stringField1;
             this.stringField2 = stringField2;
             this.numericField1 = numericField1;
@@ -171,7 +171,7 @@ public class TestValidationManager {
             return stringField1;
         }
 
-        public void setStringField1(String stringField1) {
+        public void setStringField1(final String stringField1) {
             this.stringField1 = stringField1;
         }
 
@@ -179,7 +179,7 @@ public class TestValidationManager {
             return stringField2;
         }
 
-        public void setStringField2(String stringField2) {
+        public void setStringField2(final String stringField2) {
             this.stringField2 = stringField2;
         }
 
@@ -187,7 +187,7 @@ public class TestValidationManager {
             return numericField1;
         }
 
-        public void setNumericField1(double numericField1) {
+        public void setNumericField1(final double numericField1) {
             this.numericField1 = numericField1;
         }
 
@@ -195,7 +195,7 @@ public class TestValidationManager {
             return dateTimeField1;
         }
 
-        public void setDateTimeField1(DateTime dateTimeField1) {
+        public void setDateTimeField1(final DateTime dateTimeField1) {
             this.dateTimeField1 = dateTimeField1;
         }
     }

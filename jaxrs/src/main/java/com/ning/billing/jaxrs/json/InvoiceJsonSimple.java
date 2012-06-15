@@ -32,7 +32,7 @@ public class InvoiceJsonSimple {
     private final DateTime invoiceDate;
     private final DateTime targetDate;
     private final String invoiceNumber;
-    private final BigDecimal credit;    
+    private final BigDecimal credit;
     private final BigDecimal balance;
     private final String accountId;
 

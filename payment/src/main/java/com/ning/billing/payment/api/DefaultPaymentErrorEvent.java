@@ -15,6 +15,7 @@
  */
 
 package com.ning.billing.payment.api;
+
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -25,7 +26,7 @@ import com.ning.billing.util.entity.EntityBase;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "error")
 public class DefaultPaymentErrorEvent extends EntityBase implements PaymentErrorEvent {
-	
+
     private final String message;
     private final UUID accountId;
     private final UUID invoiceId;
@@ -34,38 +35,36 @@ public class DefaultPaymentErrorEvent extends EntityBase implements PaymentError
 
 
     @JsonCreator
-    public DefaultPaymentErrorEvent(@JsonProperty("id") UUID id,
-            @JsonProperty("accountId") UUID accountId,
-            @JsonProperty("invoiceId") UUID invoiceId,
-            @JsonProperty("paymentId") UUID paymentId,            
-            @JsonProperty("message") String message,
-            @JsonProperty("userToken") UUID userToken) {
+    public DefaultPaymentErrorEvent(@JsonProperty("id") final UUID id,
+                                    @JsonProperty("accountId") final UUID accountId,
+                                    @JsonProperty("invoiceId") final UUID invoiceId,
+                                    @JsonProperty("paymentId") final UUID paymentId,
+                                    @JsonProperty("message") final String message,
+                                    @JsonProperty("userToken") final UUID userToken) {
         super(id);
         this.message = message;
         this.accountId = accountId;
         this.invoiceId = invoiceId;
         this.paymentId = paymentId;
-        this.userToken = userToken;        
+        this.userToken = userToken;
     }
-    
 
 
-    public DefaultPaymentErrorEvent(UUID accountId,
-            UUID invoiceId, UUID paymentId, String message, UUID userToken) {
+    public DefaultPaymentErrorEvent(final UUID accountId,
+                                    final UUID invoiceId, final UUID paymentId, final String message, final UUID userToken) {
         this(UUID.randomUUID(), accountId, invoiceId, paymentId, message, userToken);
     }
 
 
-
     @JsonIgnore
-	@Override
-	public BusEventType getBusEventType() {
-		return BusEventType.PAYMENT_ERROR;
-	}
+    @Override
+    public BusEventType getBusEventType() {
+        return BusEventType.PAYMENT_ERROR;
+    }
 
     @Override
     public UUID getUserToken() {
-    	return userToken;
+        return userToken;
     }
 
     @Override
@@ -107,39 +106,52 @@ public class DefaultPaymentErrorEvent extends EntityBase implements PaymentError
 
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
+    public boolean equals(final Object obj) {
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
-        DefaultPaymentErrorEvent other = (DefaultPaymentErrorEvent) obj;
+        }
+        final DefaultPaymentErrorEvent other = (DefaultPaymentErrorEvent) obj;
         if (accountId == null) {
-            if (other.accountId != null)
+            if (other.accountId != null) {
                 return false;
-        } else if (!accountId.equals(other.accountId))
+            }
+        } else if (!accountId.equals(other.accountId)) {
             return false;
+        }
         if (invoiceId == null) {
-            if (other.invoiceId != null)
+            if (other.invoiceId != null) {
                 return false;
-        } else if (!invoiceId.equals(other.invoiceId))
+            }
+        } else if (!invoiceId.equals(other.invoiceId)) {
             return false;
+        }
         if (message == null) {
-            if (other.message != null)
+            if (other.message != null) {
                 return false;
-        } else if (!message.equals(other.message))
+            }
+        } else if (!message.equals(other.message)) {
             return false;
+        }
         if (paymentId == null) {
-            if (other.paymentId != null)
+            if (other.paymentId != null) {
                 return false;
-        } else if (!paymentId.equals(other.paymentId))
+            }
+        } else if (!paymentId.equals(other.paymentId)) {
             return false;
+        }
         if (userToken == null) {
-            if (other.userToken != null)
+            if (other.userToken != null) {
                 return false;
-        } else if (!userToken.equals(other.userToken))
+            }
+        } else if (!userToken.equals(other.userToken)) {
             return false;
+        }
         return true;
     }
 

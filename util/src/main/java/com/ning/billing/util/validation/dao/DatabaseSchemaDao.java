@@ -16,17 +16,18 @@
 
 package com.ning.billing.util.validation.dao;
 
-import com.google.inject.Inject;
-import com.ning.billing.util.validation.ColumnInfo;
+import java.util.List;
+
 import org.skife.jdbi.v2.IDBI;
 
-import java.util.List;
+import com.google.inject.Inject;
+import com.ning.billing.util.validation.ColumnInfo;
 
 public class DatabaseSchemaDao {
     private final DatabaseSchemaSqlDao dao;
 
     @Inject
-    public DatabaseSchemaDao(IDBI dbi) {
+    public DatabaseSchemaDao(final IDBI dbi) {
         this.dao = dbi.onDemand(DatabaseSchemaSqlDao.class);
     }
 

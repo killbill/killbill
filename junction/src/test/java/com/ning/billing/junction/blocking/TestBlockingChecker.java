@@ -42,18 +42,18 @@ import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.util.clock.Clock;
 
 public class TestBlockingChecker {
-   
+
     private BlockingState bundleState;
     private BlockingState subscriptionState;
     private BlockingState accountState;
-    
-    private BlockingStateDao dao = new BlockingStateDao() {
+
+    private final BlockingStateDao dao = new BlockingStateDao() {
 
         @Override
-        public BlockingState getBlockingStateFor(Blockable blockable) {
-            if(blockable.getId() == account.getId()) {
+        public BlockingState getBlockingStateFor(final Blockable blockable) {
+            if (blockable.getId() == account.getId()) {
                 return accountState;
-            } else  if(blockable.getId() == subscription.getId()) {
+            } else if (blockable.getId() == subscription.getId()) {
                 return subscriptionState;
             } else {
                 return bundleState;
@@ -61,10 +61,10 @@ public class TestBlockingChecker {
         }
 
         @Override
-        public BlockingState getBlockingStateFor(UUID blockableId) {
-            if(blockableId == account.getId()) {
+        public BlockingState getBlockingStateFor(final UUID blockableId) {
+            if (blockableId == account.getId()) {
                 return accountState;
-            } else  if(blockableId == subscription.getId()) {
+            } else if (blockableId == subscription.getId()) {
                 return subscriptionState;
             } else {
                 return bundleState;
@@ -72,31 +72,31 @@ public class TestBlockingChecker {
         }
 
         @Override
-        public SortedSet<BlockingState> getBlockingHistoryFor(Blockable overdueable) {
+        public SortedSet<BlockingState> getBlockingHistoryFor(final Blockable overdueable) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public SortedSet<BlockingState> getBlockingHistoryFor(UUID overdueableId) {
+        public SortedSet<BlockingState> getBlockingHistoryFor(final UUID overdueableId) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public <T extends Blockable> void setBlockingState(BlockingState state, Clock clock) {
+        public <T extends Blockable> void setBlockingState(final BlockingState state, final Clock clock) {
             throw new UnsupportedOperationException();
         }
-        
+
     };
     private BlockingChecker checker;
     private Subscription subscription;
     private Account account;
     private SubscriptionBundle bundle;
-    
-    @BeforeClass(groups={"fast"})
+
+    @BeforeClass(groups = {"fast"})
     public void setup() {
         account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
         ((ZombieControl) account).addResult("getId", UUID.randomUUID());
-        
+
         bundle = BrainDeadProxyFactory.createBrainDeadProxyFor(SubscriptionBundle.class);
         ((ZombieControl) bundle).addResult("getAccountId", account.getId());
         ((ZombieControl) bundle).addResult("getId", UUID.randomUUID());
@@ -106,41 +106,41 @@ public class TestBlockingChecker {
         ((ZombieControl) subscription).addResult("getId", UUID.randomUUID());
         ((ZombieControl) subscription).addResult("getBundleId", bundle.getId());
 
-        
-        Injector i = Guice.createInjector(new AbstractModule() {
+
+        final Injector i = Guice.createInjector(new AbstractModule() {
 
             @Override
             protected void configure() {
                 bind(BlockingChecker.class).to(DefaultBlockingChecker.class).asEagerSingleton();
-                
-                bind(BlockingStateDao.class).toInstance(dao);             
-                
-                EntitlementUserApi entitlementUserApi = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementUserApi.class);
+
+                bind(BlockingStateDao.class).toInstance(dao);
+
+                final EntitlementUserApi entitlementUserApi = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementUserApi.class);
                 bind(EntitlementUserApi.class).toInstance(entitlementUserApi);
-                ((ZombieControl) entitlementUserApi).addResult("getBundleFromId",bundle);
-                
+                ((ZombieControl) entitlementUserApi).addResult("getBundleFromId", bundle);
+
             }
-            
+
         });
         checker = i.getInstance(BlockingChecker.class);
     }
 
 
-    private void setStateBundle(boolean bC, boolean bE, boolean bB) {
-        bundleState = new DefaultBlockingState(UUID.randomUUID(), "state", Blockable.Type.SUBSCRIPTION_BUNDLE, "test-service", bC, bE,bB);
+    private void setStateBundle(final boolean bC, final boolean bE, final boolean bB) {
+        bundleState = new DefaultBlockingState(UUID.randomUUID(), "state", Blockable.Type.SUBSCRIPTION_BUNDLE, "test-service", bC, bE, bB);
         ((ZombieControl) bundle).addResult("getBlockingState", bundleState);
     }
 
-    private void setStateAccount(boolean bC, boolean bE, boolean bB) {
-        accountState = new DefaultBlockingState(UUID.randomUUID(), "state", Blockable.Type.SUBSCRIPTION_BUNDLE, "test-service", bC, bE,bB);
+    private void setStateAccount(final boolean bC, final boolean bE, final boolean bB) {
+        accountState = new DefaultBlockingState(UUID.randomUUID(), "state", Blockable.Type.SUBSCRIPTION_BUNDLE, "test-service", bC, bE, bB);
     }
 
-    private void setStateSubscription(boolean bC, boolean bE, boolean bB) {
-        subscriptionState = new DefaultBlockingState(UUID.randomUUID(), "state", Blockable.Type.SUBSCRIPTION_BUNDLE, "test-service", bC, bE,bB);
+    private void setStateSubscription(final boolean bC, final boolean bE, final boolean bB) {
+        subscriptionState = new DefaultBlockingState(UUID.randomUUID(), "state", Blockable.Type.SUBSCRIPTION_BUNDLE, "test-service", bC, bE, bB);
         ((ZombieControl) subscription).addResult("getBlockingState", subscriptionState);
     }
 
-    @Test(groups={"fast"}, enabled = true)
+    @Test(groups = {"fast"}, enabled = true)
     public void testSubscriptionChecker() throws Exception {
         setStateAccount(false, false, false);
         setStateBundle(false, false, false);
@@ -148,7 +148,7 @@ public class TestBlockingChecker {
         checker.checkBlockedChange(subscription);
         checker.checkBlockedEntitlement(subscription);
         checker.checkBlockedBilling(subscription);
-        
+
         //BLOCKED SUBSCRIPTION
         setStateSubscription(true, false, false);
         checker.checkBlockedEntitlement(subscription);
@@ -159,7 +159,7 @@ public class TestBlockingChecker {
         } catch (BlockingApiException e) {
             //Expected behavior
         }
-        
+
         setStateSubscription(false, true, false);
         checker.checkBlockedChange(subscription);
         checker.checkBlockedBilling(subscription);
@@ -169,13 +169,13 @@ public class TestBlockingChecker {
         } catch (BlockingApiException e) {
             //Expected behavior
         }
-        
+
         setStateSubscription(false, false, true);
         checker.checkBlockedChange(subscription);
         checker.checkBlockedEntitlement(subscription);
         try {
-           checker.checkBlockedBilling(subscription);
-           Assert.fail("The call should have been blocked!");
+            checker.checkBlockedBilling(subscription);
+            Assert.fail("The call should have been blocked!");
         } catch (BlockingApiException e) {
             //Expected behavior
         }
@@ -191,7 +191,7 @@ public class TestBlockingChecker {
         } catch (BlockingApiException e) {
             //Expected behavior
         }
-        
+
         setStateBundle(false, true, false);
         checker.checkBlockedChange(subscription);
         checker.checkBlockedBilling(subscription);
@@ -201,18 +201,18 @@ public class TestBlockingChecker {
         } catch (BlockingApiException e) {
             //Expected behavior
         }
-        
+
         setStateBundle(false, false, true);
         checker.checkBlockedChange(subscription);
         checker.checkBlockedEntitlement(subscription);
         try {
-           checker.checkBlockedBilling(subscription);
-           Assert.fail("The call should have been blocked!");
+            checker.checkBlockedBilling(subscription);
+            Assert.fail("The call should have been blocked!");
         } catch (BlockingApiException e) {
             //Expected behavior
         }
-        
-        
+
+
         //BLOCKED ACCOUNT
         setStateSubscription(false, false, false);
         setStateBundle(false, false, false);
@@ -225,7 +225,7 @@ public class TestBlockingChecker {
         } catch (BlockingApiException e) {
             //Expected behavior
         }
-        
+
         setStateAccount(false, true, false);
         checker.checkBlockedChange(subscription);
         checker.checkBlockedBilling(subscription);
@@ -235,21 +235,21 @@ public class TestBlockingChecker {
         } catch (BlockingApiException e) {
             //Expected behavior
         }
-        
+
         setStateAccount(false, false, true);
         checker.checkBlockedChange(subscription);
         checker.checkBlockedEntitlement(subscription);
         try {
-           checker.checkBlockedBilling(subscription);
-           Assert.fail("The call should have been blocked!");
+            checker.checkBlockedBilling(subscription);
+            Assert.fail("The call should have been blocked!");
         } catch (BlockingApiException e) {
             //Expected behavior
         }
-        
-        
+
+
     }
-    
-    @Test(groups={"fast"}, enabled = true)
+
+    @Test(groups = {"fast"}, enabled = true)
     public void testBundleChecker() throws Exception {
         setStateAccount(false, false, false);
         setStateBundle(false, false, false);
@@ -269,7 +269,7 @@ public class TestBlockingChecker {
         } catch (BlockingApiException e) {
             //Expected behavior
         }
-        
+
         setStateBundle(false, true, false);
         checker.checkBlockedChange(bundle);
         checker.checkBlockedBilling(bundle);
@@ -279,18 +279,18 @@ public class TestBlockingChecker {
         } catch (BlockingApiException e) {
             //Expected behavior
         }
-        
+
         setStateBundle(false, false, true);
         checker.checkBlockedChange(bundle);
         checker.checkBlockedEntitlement(bundle);
         try {
-           checker.checkBlockedBilling(bundle);
-           Assert.fail("The call should have been blocked!");
+            checker.checkBlockedBilling(bundle);
+            Assert.fail("The call should have been blocked!");
         } catch (BlockingApiException e) {
             //Expected behavior
         }
-        
-        
+
+
         //BLOCKED ACCOUNT
         setStateSubscription(false, false, false);
         setStateBundle(false, false, false);
@@ -303,7 +303,7 @@ public class TestBlockingChecker {
         } catch (BlockingApiException e) {
             //Expected behavior
         }
-        
+
         setStateAccount(false, true, false);
         checker.checkBlockedChange(bundle);
         checker.checkBlockedBilling(bundle);
@@ -313,21 +313,21 @@ public class TestBlockingChecker {
         } catch (BlockingApiException e) {
             //Expected behavior
         }
-        
+
         setStateAccount(false, false, true);
         checker.checkBlockedChange(bundle);
         checker.checkBlockedEntitlement(bundle);
         try {
-           checker.checkBlockedBilling(bundle);
-           Assert.fail("The call should have been blocked!");
+            checker.checkBlockedBilling(bundle);
+            Assert.fail("The call should have been blocked!");
         } catch (BlockingApiException e) {
             //Expected behavior
         }
-        
-  
+
+
     }
-    
-    @Test(groups={"fast"}, enabled = true)
+
+    @Test(groups = {"fast"}, enabled = true)
     public void testAccountChecker() throws Exception {
         setStateAccount(false, false, false);
         setStateBundle(false, false, false);
@@ -348,7 +348,7 @@ public class TestBlockingChecker {
         } catch (BlockingApiException e) {
             //Expected behavior
         }
-        
+
         setStateAccount(false, true, false);
         checker.checkBlockedChange(account);
         checker.checkBlockedBilling(account);
@@ -358,21 +358,19 @@ public class TestBlockingChecker {
         } catch (BlockingApiException e) {
             //Expected behavior
         }
-        
+
         setStateAccount(false, false, true);
         checker.checkBlockedChange(account);
         checker.checkBlockedEntitlement(account);
         try {
-           checker.checkBlockedBilling(account);
-           Assert.fail("The call should have been blocked!");
+            checker.checkBlockedBilling(account);
+            Assert.fail("The call should have been blocked!");
         } catch (BlockingApiException e) {
             //Expected behavior
         }
-        
 
-        
+
     }
-    
 
-     
+
 }

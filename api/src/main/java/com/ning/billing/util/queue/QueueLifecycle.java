@@ -23,12 +23,11 @@ public interface QueueLifecycle {
 
     /**
      * Stop the queue
-     *
      */
     public void stopQueue();
-    
+
     /**
-     *  Processes event from queue
+     * Processes event from queue
      */
     public int doProcessEvents();
 }

@@ -16,14 +16,11 @@
 
 package com.ning.billing.util.globallocker;
 
-import com.ning.billing.util.globallocker.GlobalLock;
-import com.ning.billing.util.globallocker.GlobalLocker;
-
 public class MockGlobalLocker implements GlobalLocker {
 
     @Override
-    public GlobalLock lockWithNumberOfTries(LockerService service,
-            String lockKey, int retry) {
+    public GlobalLock lockWithNumberOfTries(final LockerService service,
+                                            final String lockKey, final int retry) {
         return new GlobalLock() {
             @Override
             public void release() {
@@ -32,7 +29,7 @@ public class MockGlobalLocker implements GlobalLocker {
     }
 
     @Override
-    public Boolean isFree(LockerService service, String lockKey) {
+    public Boolean isFree(final LockerService service, final String lockKey) {
         return Boolean.TRUE;
     }
 }

@@ -16,60 +16,60 @@
 
 package com.ning.billing.catalog.rules;
 
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlIDREF;
+
 import com.ning.billing.catalog.DefaultPriceList;
 import com.ning.billing.catalog.DefaultProduct;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.ProductCategory;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlIDREF;
-
 public abstract class CaseStandardNaming<T> extends Case<T> {
-    @XmlElement(required=false, name="product")
+    @XmlElement(required = false, name = "product")
     @XmlIDREF
     private DefaultProduct product;
-    @XmlElement(required=false, name="productCategory")
+    @XmlElement(required = false, name = "productCategory")
     private ProductCategory productCategory;
-    
-    @XmlElement(required=false, name="billingPeriod")
+
+    @XmlElement(required = false, name = "billingPeriod")
     private BillingPeriod billingPeriod;
-    
-    @XmlElement(required=false, name="priceList")
+
+    @XmlElement(required = false, name = "priceList")
     @XmlIDREF
     private DefaultPriceList priceList;
 
-	public DefaultProduct getProduct(){
-		return product;
-	}
+    public DefaultProduct getProduct() {
+        return product;
+    }
 
-	public ProductCategory getProductCategory() {
-		return productCategory;
-	}
+    public ProductCategory getProductCategory() {
+        return productCategory;
+    }
 
-	public BillingPeriod getBillingPeriod() {
-		return billingPeriod;
-	}
-	
-	public DefaultPriceList getPriceList() {
-		return priceList;
-	}
+    public BillingPeriod getBillingPeriod() {
+        return billingPeriod;
+    }
 
-    protected CaseStandardNaming<T> setProduct(DefaultProduct product) {
+    public DefaultPriceList getPriceList() {
+        return priceList;
+    }
+
+    protected CaseStandardNaming<T> setProduct(final DefaultProduct product) {
         this.product = product;
         return this;
     }
 
-    protected CaseStandardNaming<T> setProductCategory(ProductCategory productCategory) {
+    protected CaseStandardNaming<T> setProductCategory(final ProductCategory productCategory) {
         this.productCategory = productCategory;
         return this;
     }
 
-    protected CaseStandardNaming<T> setBillingPeriod(BillingPeriod billingPeriod) {
+    protected CaseStandardNaming<T> setBillingPeriod(final BillingPeriod billingPeriod) {
         this.billingPeriod = billingPeriod;
         return this;
     }
 
-    protected CaseStandardNaming<T> setPriceList(DefaultPriceList priceList) {
+    protected CaseStandardNaming<T> setPriceList(final DefaultPriceList priceList) {
         this.priceList = priceList;
         return this;
     }

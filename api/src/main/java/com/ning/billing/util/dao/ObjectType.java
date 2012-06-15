@@ -27,7 +27,8 @@ public enum ObjectType {
     PAYMENT_METHOD("payment method");
 
     private final String objectName;
-    ObjectType(String objectName) {
+
+    ObjectType(final String objectName) {
         this.objectName = objectName;
     }
 

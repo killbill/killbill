@@ -16,13 +16,14 @@
 
 package com.ning.billing.catalog;
 
+import org.testng.Assert;
+import org.testng.annotations.Test;
+
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
-import org.testng.Assert;
-import org.testng.annotations.Test;
 
 import static com.ning.billing.catalog.api.BillingPeriod.ANNUAL;
 import static com.ning.billing.catalog.api.BillingPeriod.MONTHLY;
@@ -30,56 +31,56 @@ import static com.ning.billing.catalog.api.PhaseType.DISCOUNT;
 import static com.ning.billing.catalog.api.PhaseType.EVERGREEN;
 
 public class TestPriceListSet {
-	@Test(enabled=true)
-	public void testOverriding() throws CatalogApiException {
-		DefaultProduct foo = new DefaultProduct("Foo", ProductCategory.BASE);
-		DefaultProduct bar = new DefaultProduct("Bar", ProductCategory.BASE);
-		DefaultPlan[] defaultPlans = new DefaultPlan[]{ 
-				new MockPlan().setName("plan-foo-monthly").setProduct(foo).setFinalPhase(new MockPlanPhase().setBillCycleDuration(MONTHLY).setPhaseType(EVERGREEN)),
-				new MockPlan().setName("plan-bar-monthly").setProduct(bar).setFinalPhase(new MockPlanPhase().setBillCycleDuration(MONTHLY).setPhaseType(EVERGREEN)),
-				new MockPlan().setName("plan-foo-annual").setProduct(foo).setFinalPhase(new MockPlanPhase().setBillCycleDuration(ANNUAL).setPhaseType(EVERGREEN)),
-				new MockPlan().setName("plan-bar-annual").setProduct(bar).setFinalPhase(new MockPlanPhase().setBillCycleDuration(ANNUAL).setPhaseType(EVERGREEN))
-				};
-		DefaultPlan[] childPlans = new DefaultPlan[]{ 
-				new MockPlan().setName("plan-foo").setProduct(foo).setFinalPhase(new MockPlanPhase().setBillCycleDuration(ANNUAL).setPhaseType(DISCOUNT)),
-				new MockPlan().setName("plan-bar").setProduct(bar).setFinalPhase(new MockPlanPhase().setBillCycleDuration(ANNUAL).setPhaseType(DISCOUNT))
-				};
-		PriceListDefault defaultPriceList = new PriceListDefault(defaultPlans);
-		DefaultPriceList[] childPriceLists = new DefaultPriceList[] {
-				new DefaultPriceList(childPlans, "child")
-		};
-		DefaultPriceListSet set = new DefaultPriceListSet(defaultPriceList, childPriceLists);
-		
-		Assert.assertEquals(set.getPlanFrom(PriceListSet.DEFAULT_PRICELIST_NAME, foo, BillingPeriod.ANNUAL).getFinalPhase().getPhaseType(), PhaseType.EVERGREEN);
-		Assert.assertEquals(set.getPlanFrom(PriceListSet.DEFAULT_PRICELIST_NAME, foo, BillingPeriod.MONTHLY).getFinalPhase().getPhaseType(), PhaseType.EVERGREEN);
-		Assert.assertEquals(set.getPlanFrom("child", foo, BillingPeriod.ANNUAL).getFinalPhase().getPhaseType(), PhaseType.DISCOUNT);
-		Assert.assertEquals(set.getPlanFrom("child", foo, BillingPeriod.MONTHLY).getFinalPhase().getPhaseType(), PhaseType.EVERGREEN);
-	}
-	
-	public void testForNullBillingPeriod() throws CatalogApiException {
-		DefaultProduct foo = new DefaultProduct("Foo", ProductCategory.BASE);
-		DefaultProduct bar = new DefaultProduct("Bar", ProductCategory.BASE);
-		DefaultPlan[] defaultPlans = new DefaultPlan[]{ 
-				new MockPlan().setName("plan-foo-monthly").setProduct(foo).setFinalPhase(new MockPlanPhase().setBillCycleDuration(MONTHLY).setPhaseType(EVERGREEN)),
-				new MockPlan().setName("plan-bar-monthly").setProduct(bar).setFinalPhase(new MockPlanPhase().setBillCycleDuration(MONTHLY).setPhaseType(EVERGREEN)),
-				new MockPlan().setName("plan-foo-annual").setProduct(foo).setFinalPhase(new MockPlanPhase().setBillCycleDuration(null).setPhaseType(EVERGREEN)),
-				new MockPlan().setName("plan-bar-annual").setProduct(bar).setFinalPhase(new MockPlanPhase().setBillCycleDuration(null).setPhaseType(EVERGREEN))
-				};
-		DefaultPlan[] childPlans = new DefaultPlan[]{ 
-				new MockPlan().setName("plan-foo").setProduct(foo).setFinalPhase(new MockPlanPhase().setBillCycleDuration(ANNUAL).setPhaseType(DISCOUNT)),
-				new MockPlan().setName("plan-bar").setProduct(bar).setFinalPhase(new MockPlanPhase().setBillCycleDuration(ANNUAL).setPhaseType(DISCOUNT))
-				};
+    @Test(enabled = true)
+    public void testOverriding() throws CatalogApiException {
+        final DefaultProduct foo = new DefaultProduct("Foo", ProductCategory.BASE);
+        final DefaultProduct bar = new DefaultProduct("Bar", ProductCategory.BASE);
+        final DefaultPlan[] defaultPlans = new DefaultPlan[]{
+                new MockPlan().setName("plan-foo-monthly").setProduct(foo).setFinalPhase(new MockPlanPhase().setBillCycleDuration(MONTHLY).setPhaseType(EVERGREEN)),
+                new MockPlan().setName("plan-bar-monthly").setProduct(bar).setFinalPhase(new MockPlanPhase().setBillCycleDuration(MONTHLY).setPhaseType(EVERGREEN)),
+                new MockPlan().setName("plan-foo-annual").setProduct(foo).setFinalPhase(new MockPlanPhase().setBillCycleDuration(ANNUAL).setPhaseType(EVERGREEN)),
+                new MockPlan().setName("plan-bar-annual").setProduct(bar).setFinalPhase(new MockPlanPhase().setBillCycleDuration(ANNUAL).setPhaseType(EVERGREEN))
+        };
+        final DefaultPlan[] childPlans = new DefaultPlan[]{
+                new MockPlan().setName("plan-foo").setProduct(foo).setFinalPhase(new MockPlanPhase().setBillCycleDuration(ANNUAL).setPhaseType(DISCOUNT)),
+                new MockPlan().setName("plan-bar").setProduct(bar).setFinalPhase(new MockPlanPhase().setBillCycleDuration(ANNUAL).setPhaseType(DISCOUNT))
+        };
+        final PriceListDefault defaultPriceList = new PriceListDefault(defaultPlans);
+        final DefaultPriceList[] childPriceLists = new DefaultPriceList[]{
+                new DefaultPriceList(childPlans, "child")
+        };
+        final DefaultPriceListSet set = new DefaultPriceListSet(defaultPriceList, childPriceLists);
 
-		PriceListDefault defaultPriceList = new PriceListDefault(defaultPlans);
-		DefaultPriceList[] childPriceLists = new DefaultPriceList[] {
-				new DefaultPriceList(childPlans, "child")
-		};
-		DefaultPriceListSet set = new DefaultPriceListSet(defaultPriceList, childPriceLists);
-		
-		Assert.assertEquals(set.getPlanFrom("child", foo, BillingPeriod.ANNUAL).getFinalPhase().getPhaseType(), PhaseType.DISCOUNT);
-		Assert.assertEquals(set.getPlanFrom("child", foo, BillingPeriod.MONTHLY).getFinalPhase().getPhaseType(), PhaseType.EVERGREEN);
-		Assert.assertEquals(set.getPlanFrom(PriceListSet.DEFAULT_PRICELIST_NAME, foo, BillingPeriod.ANNUAL).getFinalPhase().getPhaseType(), PhaseType.EVERGREEN);
-		Assert.assertEquals(set.getPlanFrom(PriceListSet.DEFAULT_PRICELIST_NAME, foo, BillingPeriod.MONTHLY).getFinalPhase().getPhaseType(), PhaseType.EVERGREEN);
-	}
+        Assert.assertEquals(set.getPlanFrom(PriceListSet.DEFAULT_PRICELIST_NAME, foo, BillingPeriod.ANNUAL).getFinalPhase().getPhaseType(), PhaseType.EVERGREEN);
+        Assert.assertEquals(set.getPlanFrom(PriceListSet.DEFAULT_PRICELIST_NAME, foo, BillingPeriod.MONTHLY).getFinalPhase().getPhaseType(), PhaseType.EVERGREEN);
+        Assert.assertEquals(set.getPlanFrom("child", foo, BillingPeriod.ANNUAL).getFinalPhase().getPhaseType(), PhaseType.DISCOUNT);
+        Assert.assertEquals(set.getPlanFrom("child", foo, BillingPeriod.MONTHLY).getFinalPhase().getPhaseType(), PhaseType.EVERGREEN);
+    }
+
+    public void testForNullBillingPeriod() throws CatalogApiException {
+        final DefaultProduct foo = new DefaultProduct("Foo", ProductCategory.BASE);
+        final DefaultProduct bar = new DefaultProduct("Bar", ProductCategory.BASE);
+        final DefaultPlan[] defaultPlans = new DefaultPlan[]{
+                new MockPlan().setName("plan-foo-monthly").setProduct(foo).setFinalPhase(new MockPlanPhase().setBillCycleDuration(MONTHLY).setPhaseType(EVERGREEN)),
+                new MockPlan().setName("plan-bar-monthly").setProduct(bar).setFinalPhase(new MockPlanPhase().setBillCycleDuration(MONTHLY).setPhaseType(EVERGREEN)),
+                new MockPlan().setName("plan-foo-annual").setProduct(foo).setFinalPhase(new MockPlanPhase().setBillCycleDuration(null).setPhaseType(EVERGREEN)),
+                new MockPlan().setName("plan-bar-annual").setProduct(bar).setFinalPhase(new MockPlanPhase().setBillCycleDuration(null).setPhaseType(EVERGREEN))
+        };
+        final DefaultPlan[] childPlans = new DefaultPlan[]{
+                new MockPlan().setName("plan-foo").setProduct(foo).setFinalPhase(new MockPlanPhase().setBillCycleDuration(ANNUAL).setPhaseType(DISCOUNT)),
+                new MockPlan().setName("plan-bar").setProduct(bar).setFinalPhase(new MockPlanPhase().setBillCycleDuration(ANNUAL).setPhaseType(DISCOUNT))
+        };
+
+        final PriceListDefault defaultPriceList = new PriceListDefault(defaultPlans);
+        final DefaultPriceList[] childPriceLists = new DefaultPriceList[]{
+                new DefaultPriceList(childPlans, "child")
+        };
+        final DefaultPriceListSet set = new DefaultPriceListSet(defaultPriceList, childPriceLists);
+
+        Assert.assertEquals(set.getPlanFrom("child", foo, BillingPeriod.ANNUAL).getFinalPhase().getPhaseType(), PhaseType.DISCOUNT);
+        Assert.assertEquals(set.getPlanFrom("child", foo, BillingPeriod.MONTHLY).getFinalPhase().getPhaseType(), PhaseType.EVERGREEN);
+        Assert.assertEquals(set.getPlanFrom(PriceListSet.DEFAULT_PRICELIST_NAME, foo, BillingPeriod.ANNUAL).getFinalPhase().getPhaseType(), PhaseType.EVERGREEN);
+        Assert.assertEquals(set.getPlanFrom(PriceListSet.DEFAULT_PRICELIST_NAME, foo, BillingPeriod.MONTHLY).getFinalPhase().getPhaseType(), PhaseType.EVERGREEN);
+    }
 
 }

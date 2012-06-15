@@ -33,14 +33,10 @@ import org.testng.annotations.Test;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.ning.billing.dbi.MysqlTestingHelper;
-import com.ning.billing.util.globallocker.GlobalLock;
-import com.ning.billing.util.globallocker.GlobalLocker;
-import com.ning.billing.util.globallocker.LockFailedException;
-import com.ning.billing.util.globallocker.MySqlGlobalLocker;
 import com.ning.billing.util.globallocker.GlobalLocker.LockerService;
 
 @Test(groups = "slow")
-@Guice(modules=TestMysqlGlobalLocker.TestMysqlGlobalLockerModule.class)
+@Guice(modules = TestMysqlGlobalLocker.TestMysqlGlobalLockerModule.class)
 public class TestMysqlGlobalLocker {
 
     @Inject
@@ -50,7 +46,7 @@ public class TestMysqlGlobalLocker {
     private MysqlTestingHelper helper;
 
     @BeforeClass(groups = "slow")
-    public void setup() throws IOException  {
+    public void setup() throws IOException {
         final String testDdl = IOUtils.toString(TestMysqlGlobalLocker.class.getResourceAsStream("/com/ning/billing/util/ddl_test.sql"));
         helper.startMysql();
         helper.initDb(testDdl);
@@ -64,19 +60,19 @@ public class TestMysqlGlobalLocker {
     }
 
     // Used as a manual test to validate the simple DAO by stepping through that locking is done and release correctly
-    @Test(groups= "slow", enabled = true)
+    @Test(groups = "slow", enabled = true)
     public void testSimpleLocking() {
 
         final String lockName = UUID.randomUUID().toString();
 
-        GlobalLocker locker = new MySqlGlobalLocker(dbi);
-        GlobalLock lock = locker.lockWithNumberOfTries(LockerService.INVOICE, lockName, 3);
+        final GlobalLocker locker = new MySqlGlobalLocker(dbi);
+        final GlobalLock lock = locker.lockWithNumberOfTries(LockerService.INVOICE, lockName, 3);
 
         dbi.inTransaction(new TransactionCallback<Void>() {
             @Override
-            public Void inTransaction(Handle conn, TransactionStatus status)
+            public Void inTransaction(final Handle conn, final TransactionStatus status)
                     throws Exception {
-                conn.execute("insert into dummy2 (dummy_id) values ('" + UUID.randomUUID().toString()  + "')");
+                conn.execute("insert into dummy2 (dummy_id) values ('" + UUID.randomUUID().toString() + "')");
                 return null;
             }
         });
@@ -95,11 +91,11 @@ public class TestMysqlGlobalLocker {
         Assert.assertEquals(locker.isFree(LockerService.INVOICE, lockName), Boolean.TRUE);
     }
 
-    public final static class TestMysqlGlobalLockerModule extends AbstractModule {
+    public static final class TestMysqlGlobalLockerModule extends AbstractModule {
 
         @Override
         protected void configure() {
-            MysqlTestingHelper helper = new MysqlTestingHelper();
+            final MysqlTestingHelper helper = new MysqlTestingHelper();
             bind(MysqlTestingHelper.class).toInstance(helper);
             final IDBI dbi = helper.getDBI();
             bind(IDBI.class).toInstance(dbi);

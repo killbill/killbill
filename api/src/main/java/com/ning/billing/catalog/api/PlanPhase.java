@@ -19,21 +19,19 @@ package com.ning.billing.catalog.api;
 
 public interface PlanPhase {
 
-	public abstract InternationalPrice getRecurringPrice();
+    public abstract InternationalPrice getRecurringPrice();
 
-	public abstract InternationalPrice getFixedPrice();
+    public abstract InternationalPrice getFixedPrice();
 
-	public abstract BillingPeriod getBillingPeriod();
+    public abstract BillingPeriod getBillingPeriod();
 
-	public abstract String getName();
+    public abstract String getName();
 
-	public abstract Plan getPlan();
+    public abstract Plan getPlan();
 
-	public abstract Duration getDuration();
+    public abstract Duration getDuration();
 
-	public abstract PhaseType getPhaseType();
+    public abstract PhaseType getPhaseType();
 
-
-	
 
 }

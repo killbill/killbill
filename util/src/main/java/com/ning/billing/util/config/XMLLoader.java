@@ -16,11 +16,6 @@
 
 package com.ning.billing.util.config;
 
-import com.ning.billing.catalog.api.InvalidConfigException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.xml.sax.SAXException;
-
 import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -33,80 +28,86 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 
-public class XMLLoader {
-	public static Logger log = LoggerFactory.getLogger(XMLLoader.class);
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.xml.sax.SAXException;
 
-	public static <T extends ValidatingConfig<T>> T getObjectFromString(String uri, Class<T> objectType) throws Exception {
-		if (uri == null) {
-			return null;
-		}
-		log.info("Initializing an object of class " + objectType.getName() + " from xml file at: " + uri);
-					
-		return getObjectFromStream(new URI(uri), UriAccessor.accessUri(uri), objectType);
-	}
-	
-	public static <T extends ValidatingConfig<T>> T getObjectFromUri(URI uri, Class<T> objectType) throws Exception {
-		if (uri == null) {
-			return null;
-		}
-		log.info("Initializing an object of class " + objectType.getName() + " from xml file at: " + uri);
-					
-		return getObjectFromStream(uri, UriAccessor.accessUri(uri), objectType);
-	}
-	
-	public static <T extends ValidatingConfig<T>> T getObjectFromStream(URI uri, InputStream stream, Class<T> clazz) throws SAXException, InvalidConfigException, JAXBException, IOException, TransformerException, ValidationException {
-	    if(stream == null) {
-	        return null;
-	    }
-	    
-	    Object o = unmarshaller(clazz).unmarshal(stream);
+import com.ning.billing.catalog.api.InvalidConfigException;
+
+public class XMLLoader {
+    public static Logger log = LoggerFactory.getLogger(XMLLoader.class);
+
+    public static <T extends ValidatingConfig<T>> T getObjectFromString(final String uri, final Class<T> objectType) throws Exception {
+        if (uri == null) {
+            return null;
+        }
+        log.info("Initializing an object of class " + objectType.getName() + " from xml file at: " + uri);
+
+        return getObjectFromStream(new URI(uri), UriAccessor.accessUri(uri), objectType);
+    }
+
+    public static <T extends ValidatingConfig<T>> T getObjectFromUri(final URI uri, final Class<T> objectType) throws Exception {
+        if (uri == null) {
+            return null;
+        }
+        log.info("Initializing an object of class " + objectType.getName() + " from xml file at: " + uri);
+
+        return getObjectFromStream(uri, UriAccessor.accessUri(uri), objectType);
+    }
+
+    public static <T extends ValidatingConfig<T>> T getObjectFromStream(final URI uri, final InputStream stream, final Class<T> clazz) throws SAXException, InvalidConfigException, JAXBException, IOException, TransformerException, ValidationException {
+        if (stream == null) {
+            return null;
+        }
+
+        final Object o = unmarshaller(clazz).unmarshal(stream);
         if (clazz.isInstance(o)) {
-        	@SuppressWarnings("unchecked")
-			T castObject = (T)o;
-        	try {
-        		validate(uri,castObject);
-        	} catch (ValidationException e) {
-        		e.getErrors().log(log);
-        		System.err.println(e.getErrors().toString());
-        		throw e;
-        	}
+            @SuppressWarnings("unchecked") final
+            T castObject = (T) o;
+            try {
+                validate(uri, castObject);
+            } catch (ValidationException e) {
+                e.getErrors().log(log);
+                System.err.println(e.getErrors().toString());
+                throw e;
+            }
             return castObject;
         } else {
             return null;
         }
-    } 
-	
-	public static <T> T getObjectFromStreamNoValidation(InputStream stream, Class<T> clazz) throws SAXException, InvalidConfigException, JAXBException, IOException, TransformerException {
-        Object o = unmarshaller(clazz).unmarshal(stream);
+    }
+
+    public static <T> T getObjectFromStreamNoValidation(final InputStream stream, final Class<T> clazz) throws SAXException, InvalidConfigException, JAXBException, IOException, TransformerException {
+        final Object o = unmarshaller(clazz).unmarshal(stream);
         if (clazz.isInstance(o)) {
-        	@SuppressWarnings("unchecked")
-			T castObject = (T)o;
-        	return castObject;
+            @SuppressWarnings("unchecked") final
+            T castObject = (T) o;
+            return castObject;
         } else {
             return null;
         }
-    } 
-
-
-	public static <T extends ValidatingConfig<T>> void validate(URI uri, T c) throws ValidationException {
-            c.initialize(c, uri);
-            ValidationErrors errs = c.validate(c, new ValidationErrors());
-            log.info("Errors: " + errs.size() + " for " + uri);  
-            if(errs.size() > 0) {
-            	throw new ValidationException(errs);
-            }
     }
-    
-    public static Unmarshaller unmarshaller(Class<?> clazz) throws JAXBException, SAXException, IOException, TransformerException {
-    	 JAXBContext context =JAXBContext.newInstance(clazz);
 
-         SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI );
-         Unmarshaller um = context.createUnmarshaller();
 
-         Schema schema = factory.newSchema(new StreamSource(XMLSchemaGenerator.xmlSchema(clazz)));
-         um.setSchema(schema);
-         
-         return um;
+    public static <T extends ValidatingConfig<T>> void validate(final URI uri, final T c) throws ValidationException {
+        c.initialize(c, uri);
+        final ValidationErrors errs = c.validate(c, new ValidationErrors());
+        log.info("Errors: " + errs.size() + " for " + uri);
+        if (errs.size() > 0) {
+            throw new ValidationException(errs);
+        }
     }
-	
+
+    public static Unmarshaller unmarshaller(final Class<?> clazz) throws JAXBException, SAXException, IOException, TransformerException {
+        final JAXBContext context = JAXBContext.newInstance(clazz);
+
+        final SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+        final Unmarshaller um = context.createUnmarshaller();
+
+        final Schema schema = factory.newSchema(new StreamSource(XMLSchemaGenerator.xmlSchema(clazz)));
+        um.setSchema(schema);
+
+        return um;
+    }
+
 }

@@ -33,38 +33,38 @@ public class TestUserApiChangePlanMemory extends TestUserApiChangePlan {
 
 
     @Override
-    @Test(enabled=true, groups={"fast"})
+    @Test(enabled = true, groups = {"fast"})
     public void testChangePlanBundleAlignEOTWithNoChargeThroughDate() {
-         super.testChangePlanBundleAlignEOTWithNoChargeThroughDate();
+        super.testChangePlanBundleAlignEOTWithNoChargeThroughDate();
     }
 
     @Override
-    @Test(enabled=true, groups={"fast"})
+    @Test(enabled = true, groups = {"fast"})
     public void testChangePlanBundleAlignEOTWithChargeThroughDate() throws EntitlementBillingApiException {
         super.testChangePlanBundleAlignEOTWithChargeThroughDate();
     }
 
     @Override
-    @Test(enabled=true, groups={"fast"})
+    @Test(enabled = true, groups = {"fast"})
     public void testChangePlanBundleAlignIMM() {
         super.testChangePlanBundleAlignIMM();
     }
 
     @Override
-    @Test(enabled=true, groups={"fast"})
+    @Test(enabled = true, groups = {"fast"})
     public void testMultipleChangeLastIMM() throws EntitlementBillingApiException {
         super.testMultipleChangeLastIMM();
     }
 
     @Override
-    @Test(enabled=true, groups={"fast"})
+    @Test(enabled = true, groups = {"fast"})
     public void testMultipleChangeLastEOT() throws EntitlementBillingApiException {
         super.testMultipleChangeLastEOT();
     }
 
 
     @Override
-    @Test(enabled=true, groups={"fast"})
+    @Test(enabled = true, groups = {"fast"})
     public void testCorrectPhaseAlignmentOnChange() {
         super.testCorrectPhaseAlignmentOnChange();
     }

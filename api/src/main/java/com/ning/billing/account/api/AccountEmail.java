@@ -16,11 +16,12 @@
 
 package com.ning.billing.account.api;
 
-import com.ning.billing.util.entity.UpdatableEntity;
-
 import java.util.UUID;
+
+import com.ning.billing.util.entity.UpdatableEntity;
 
 public interface AccountEmail extends UpdatableEntity {
     UUID getAccountId();
+
     String getEmail();
 }

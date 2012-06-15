@@ -16,26 +16,27 @@
 
 package com.ning.billing.util.email.templates;
 
-import com.samskivert.mustache.Mustache;
-import com.samskivert.mustache.Template;
-import org.apache.commons.io.IOUtils;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.util.Map;
 
+import org.apache.commons.io.IOUtils;
+
+import com.samskivert.mustache.Mustache;
+import com.samskivert.mustache.Template;
+
 public class MustacheTemplateEngine implements TemplateEngine {
     @Override
-    public String executeTemplate(String templateName, Map<String, Object> data) throws IOException {
-        String templateText = getTemplateText(templateName);
-        Template template = Mustache.compiler().compile(templateText);
+    public String executeTemplate(final String templateName, final Map<String, Object> data) throws IOException {
+        final String templateText = getTemplateText(templateName);
+        final Template template = Mustache.compiler().compile(templateText);
         return template.execute(data);
     }
 
-    private String getTemplateText(String templateName) throws IOException {
-        InputStream templateStream = this.getClass().getResourceAsStream(templateName + ".mustache");
-        StringWriter writer = new StringWriter();
+    private String getTemplateText(final String templateName) throws IOException {
+        final InputStream templateStream = this.getClass().getResourceAsStream(templateName + ".mustache");
+        final StringWriter writer = new StringWriter();
         IOUtils.copy(templateStream, writer, "UTF-8");
         return writer.toString();
     }

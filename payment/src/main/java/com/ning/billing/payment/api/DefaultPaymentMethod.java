@@ -20,23 +20,23 @@ import java.util.UUID;
 import com.ning.billing.payment.dao.PaymentMethodModelDao;
 import com.ning.billing.util.entity.EntityBase;
 
-public class DefaultPaymentMethod extends EntityBase  implements PaymentMethod {
+public class DefaultPaymentMethod extends EntityBase implements PaymentMethod {
 
 
-    private final UUID accountId;    
+    private final UUID accountId;
     private final Boolean isActive;
     private final String pluginName;
     private final PaymentMethodPlugin pluginDetail;
-    
-    public DefaultPaymentMethod(UUID paymentMethodId, UUID accountId, Boolean isActive, String pluginName) {
+
+    public DefaultPaymentMethod(final UUID paymentMethodId, final UUID accountId, final Boolean isActive, final String pluginName) {
         super(paymentMethodId);
         this.accountId = accountId;
         this.isActive = isActive;
         this.pluginName = pluginName;
         this.pluginDetail = null;
     }
-    
-    public DefaultPaymentMethod(UUID paymentMethodId, UUID accountId, Boolean isActive, String pluginName, PaymentMethodPlugin pluginDetail) {
+
+    public DefaultPaymentMethod(final UUID paymentMethodId, final UUID accountId, final Boolean isActive, final String pluginName, final PaymentMethodPlugin pluginDetail) {
         super(paymentMethodId);
         this.accountId = accountId;
         this.isActive = isActive;
@@ -44,15 +44,15 @@ public class DefaultPaymentMethod extends EntityBase  implements PaymentMethod {
         this.pluginDetail = pluginDetail;
     }
 
-    public DefaultPaymentMethod(UUID accountId, String pluginName, PaymentMethodPlugin pluginDetail) {
+    public DefaultPaymentMethod(final UUID accountId, final String pluginName, final PaymentMethodPlugin pluginDetail) {
         this(UUID.randomUUID(), accountId, true, pluginName, pluginDetail);
     }
 
-    public DefaultPaymentMethod(PaymentMethodModelDao input) {
+    public DefaultPaymentMethod(final PaymentMethodModelDao input) {
         this(input.getId(), input.getAccountId(), input.isActive(), input.getPluginName());
     }
 
-    public DefaultPaymentMethod(PaymentMethodModelDao input, PaymentMethodPlugin pluginDetail) {
+    public DefaultPaymentMethod(final PaymentMethodModelDao input, final PaymentMethodPlugin pluginDetail) {
         this(input.getId(), input.getAccountId(), input.isActive(), input.getPluginName(), pluginDetail);
     }
 

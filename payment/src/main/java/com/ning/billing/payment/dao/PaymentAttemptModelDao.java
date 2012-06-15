@@ -31,11 +31,11 @@ public class PaymentAttemptModelDao extends EntityBase {
     private final PaymentStatus processingStatus;
     private final DateTime effectiveDate;
     private final String paymentError;
-    private final BigDecimal requestedAmount; 
-    
-    public PaymentAttemptModelDao(UUID id, UUID accountId, UUID invoiceId,
-            UUID paymentId, PaymentStatus processingStatus, DateTime effectiveDate,
-            BigDecimal requestedAmount, String paymentError) {
+    private final BigDecimal requestedAmount;
+
+    public PaymentAttemptModelDao(final UUID id, final UUID accountId, final UUID invoiceId,
+                                  final UUID paymentId, final PaymentStatus processingStatus, final DateTime effectiveDate,
+                                  final BigDecimal requestedAmount, final String paymentError) {
         super(id);
         this.accountId = accountId;
         this.invoiceId = invoiceId;
@@ -45,16 +45,16 @@ public class PaymentAttemptModelDao extends EntityBase {
         this.requestedAmount = requestedAmount;
         this.paymentError = paymentError;
     }
-    
-    public PaymentAttemptModelDao(UUID accountId, UUID invoiceId, UUID paymentId, DateTime effectiveDate, BigDecimal requestedAmount) {
-        this(UUID.randomUUID(), accountId, invoiceId, paymentId, PaymentStatus.UNKNOWN, effectiveDate, requestedAmount,  null);
+
+    public PaymentAttemptModelDao(final UUID accountId, final UUID invoiceId, final UUID paymentId, final DateTime effectiveDate, final BigDecimal requestedAmount) {
+        this(UUID.randomUUID(), accountId, invoiceId, paymentId, PaymentStatus.UNKNOWN, effectiveDate, requestedAmount, null);
     }
 
-    public PaymentAttemptModelDao(PaymentAttemptModelDao src, PaymentStatus newProcessingStatus, String paymentError) {
+    public PaymentAttemptModelDao(final PaymentAttemptModelDao src, final PaymentStatus newProcessingStatus, final String paymentError) {
         this(src.getId(), src.getAccountId(), src.getInvoiceId(), src.getPaymentId(), newProcessingStatus,
-                src.getEffectiveDate(), src.getRequestedAmount(), paymentError);
+             src.getEffectiveDate(), src.getRequestedAmount(), paymentError);
     }
-    
+
     public UUID getAccountId() {
         return accountId;
     }
@@ -70,15 +70,15 @@ public class PaymentAttemptModelDao extends EntityBase {
     public PaymentStatus getPaymentStatus() {
         return processingStatus;
     }
-    
+
     public DateTime getEffectiveDate() {
         return effectiveDate;
     }
-    
+
     public String getPaymentError() {
         return paymentError;
     }
-    
+
     public BigDecimal getRequestedAmount() {
         return requestedAmount;
     }

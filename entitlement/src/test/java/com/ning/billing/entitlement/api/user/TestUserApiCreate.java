@@ -17,10 +17,6 @@
 package com.ning.billing.entitlement.api.user;
 
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
-
 import java.util.List;
 
 import org.joda.time.DateTime;
@@ -41,28 +37,32 @@ import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
 import com.ning.billing.util.clock.DefaultClock;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
+
 public abstract class TestUserApiCreate extends TestApiBase {
 
-    private static Logger log = LoggerFactory.getLogger(TestUserApiCreate.class);
+    private static final Logger log = LoggerFactory.getLogger(TestUserApiCreate.class);
 
     public void testCreateWithRequestedDate() {
         log.info("Starting testCreateWithRequestedDate");
         try {
 
-            DateTime init = clock.getUTCNow();
-            DateTime requestedDate = init.minusYears(1);
+            final DateTime init = clock.getUTCNow();
+            final DateTime requestedDate = init.minusYears(1);
 
-            String productName = "Shotgun";
-            BillingPeriod term = BillingPeriod.MONTHLY;
-            String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
+            final String productName = "Shotgun";
+            final BillingPeriod term = BillingPeriod.MONTHLY;
+            final String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
 
 
             testListener.pushExpectedEvent(NextEvent.PHASE);
             testListener.pushExpectedEvent(NextEvent.CREATE);
 
 
-            SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
-                    getProductSpecifier(productName, planSetName, term, null), requestedDate, context);
+            final SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
+                                                                                                 getProductSpecifier(productName, planSetName, term, null), requestedDate, context);
             assertNotNull(subscription);
 
             assertEquals(subscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
@@ -73,9 +73,9 @@ public abstract class TestUserApiCreate extends TestApiBase {
             assertTrue(testListener.isCompleted(5000));
 
             assertListenerStatus();
-            
+
         } catch (EntitlementUserApiException e) {
-        	log.error("Unexpected exception",e);
+            log.error("Unexpected exception", e);
             Assert.fail(e.getMessage());
         }
     }
@@ -86,16 +86,16 @@ public abstract class TestUserApiCreate extends TestApiBase {
         try {
 
 
-            DateTime init = clock.getUTCNow();
+            final DateTime init = clock.getUTCNow();
 
-            String productName = "Shotgun";
-            BillingPeriod term = BillingPeriod.MONTHLY;
-            String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
+            final String productName = "Shotgun";
+            final BillingPeriod term = BillingPeriod.MONTHLY;
+            final String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
 
             testListener.pushExpectedEvent(NextEvent.CREATE);
 
-            SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
-                    getProductSpecifier(productName, planSetName, term, PhaseType.EVERGREEN), clock.getUTCNow(), context);
+            final SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
+                                                                                                 getProductSpecifier(productName, planSetName, term, PhaseType.EVERGREEN), clock.getUTCNow(), context);
             assertNotNull(subscription);
 
             assertEquals(subscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
@@ -104,18 +104,18 @@ public abstract class TestUserApiCreate extends TestApiBase {
             assertDateWithin(subscription.getStartDate(), init, clock.getUTCNow());
             assertDateWithin(subscription.getBundleStartDate(), init, clock.getUTCNow());
 
-            Plan currentPlan = subscription.getCurrentPlan();
+            final Plan currentPlan = subscription.getCurrentPlan();
             assertNotNull(currentPlan);
             assertEquals(currentPlan.getProduct().getName(), productName);
             assertEquals(currentPlan.getProduct().getCategory(), ProductCategory.BASE);
             assertEquals(currentPlan.getBillingPeriod(), BillingPeriod.MONTHLY);
 
-            PlanPhase currentPhase = subscription.getCurrentPhase();
+            final PlanPhase currentPhase = subscription.getCurrentPhase();
             assertNotNull(currentPhase);
             assertEquals(currentPhase.getPhaseType(), PhaseType.EVERGREEN);
 
             assertListenerStatus();
-            
+
         } catch (EntitlementUserApiException e) {
             Assert.fail(e.getMessage());
         }
@@ -126,17 +126,17 @@ public abstract class TestUserApiCreate extends TestApiBase {
         log.info("Starting testSimpleCreateSubscription");
         try {
 
-            DateTime init = clock.getUTCNow();
+            final DateTime init = clock.getUTCNow();
 
-            String productName = "Shotgun";
-            BillingPeriod term = BillingPeriod.MONTHLY;
-            String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
+            final String productName = "Shotgun";
+            final BillingPeriod term = BillingPeriod.MONTHLY;
+            final String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
 
             testListener.pushExpectedEvent(NextEvent.CREATE);
 
-            SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
-                    getProductSpecifier(productName, planSetName, term, null),
-                    clock.getUTCNow(), context);
+            final SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
+                                                                                                 getProductSpecifier(productName, planSetName, term, null),
+                                                                                                 clock.getUTCNow(), context);
             assertNotNull(subscription);
 
             assertEquals(subscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
@@ -145,31 +145,31 @@ public abstract class TestUserApiCreate extends TestApiBase {
             assertDateWithin(subscription.getStartDate(), init, clock.getUTCNow());
             assertDateWithin(subscription.getBundleStartDate(), init, clock.getUTCNow());
 
-            Plan currentPlan = subscription.getCurrentPlan();
+            final Plan currentPlan = subscription.getCurrentPlan();
             assertNotNull(currentPlan);
             assertEquals(currentPlan.getProduct().getName(), productName);
             assertEquals(currentPlan.getProduct().getCategory(), ProductCategory.BASE);
             assertEquals(currentPlan.getBillingPeriod(), BillingPeriod.MONTHLY);
 
-            PlanPhase currentPhase = subscription.getCurrentPhase();
+            final PlanPhase currentPhase = subscription.getCurrentPhase();
             assertNotNull(currentPhase);
             assertEquals(currentPhase.getPhaseType(), PhaseType.TRIAL);
             assertTrue(testListener.isCompleted(5000));
 
-            List<EntitlementEvent> events = dao.getPendingEventsForSubscription(subscription.getId());
+            final List<EntitlementEvent> events = dao.getPendingEventsForSubscription(subscription.getId());
             assertNotNull(events);
             printEvents(events);
             assertTrue(events.size() == 1);
             assertTrue(events.get(0) instanceof PhaseEvent);
-            DateTime nextPhaseChange = ((PhaseEvent ) events.get(0)).getEffectiveDate();
-            DateTime nextExpectedPhaseChange = DefaultClock.addDuration(subscription.getStartDate(), currentPhase.getDuration());
+            final DateTime nextPhaseChange = ((PhaseEvent) events.get(0)).getEffectiveDate();
+            final DateTime nextExpectedPhaseChange = DefaultClock.addDuration(subscription.getStartDate(), currentPhase.getDuration());
             assertEquals(nextPhaseChange, nextExpectedPhaseChange);
 
             testListener.pushExpectedEvent(NextEvent.PHASE);
-            Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(31));
+            final Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(31));
             clock.addDeltaFromReality(it.toDurationMillis());
 
-            DateTime futureNow = clock.getUTCNow();
+            final DateTime futureNow = clock.getUTCNow();
             assertTrue(futureNow.isAfter(nextPhaseChange));
 
             assertTrue(testListener.isCompleted(5000));
@@ -186,15 +186,15 @@ public abstract class TestUserApiCreate extends TestApiBase {
         log.info("Starting testSimpleSubscriptionThroughPhases");
         try {
 
-            String productName = "Pistol";
-            BillingPeriod term = BillingPeriod.ANNUAL;
-            String planSetName = "gunclubDiscount";
+            final String productName = "Pistol";
+            final BillingPeriod term = BillingPeriod.ANNUAL;
+            final String planSetName = "gunclubDiscount";
 
             testListener.pushExpectedEvent(NextEvent.CREATE);
 
             // CREATE SUBSCRIPTION
             SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
-                    getProductSpecifier(productName, planSetName, term, null), clock.getUTCNow(), context);
+                                                                                                 getProductSpecifier(productName, planSetName, term, null), clock.getUTCNow(), context);
             assertNotNull(subscription);
 
             PlanPhase currentPhase = subscription.getCurrentPhase();
@@ -210,7 +210,7 @@ public abstract class TestUserApiCreate extends TestApiBase {
             currentPhase = subscription.getCurrentPhase();
             assertNotNull(currentPhase);
             assertEquals(currentPhase.getPhaseType(), PhaseType.DISCOUNT);
-            
+
 
             // MOVE TO EVERGREEN PHASE + RE-READ SUBSCRIPTION
             testListener.pushExpectedEvent(NextEvent.PHASE);
@@ -234,14 +234,14 @@ public abstract class TestUserApiCreate extends TestApiBase {
         log.info("Starting testSubscriptionWithAddOn");
         try {
 
-            String productName = "Shotgun";
-            BillingPeriod term = BillingPeriod.ANNUAL;
-            String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
+            final String productName = "Shotgun";
+            final BillingPeriod term = BillingPeriod.ANNUAL;
+            final String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
 
             testListener.pushExpectedEvent(NextEvent.CREATE);
 
-            SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
-                    getProductSpecifier(productName, planSetName, term, null), clock.getUTCNow(), context);
+            final SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
+                                                                                                 getProductSpecifier(productName, planSetName, term, null), clock.getUTCNow(), context);
             assertNotNull(subscription);
 
             assertListenerStatus();

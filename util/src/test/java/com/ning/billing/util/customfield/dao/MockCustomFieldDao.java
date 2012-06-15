@@ -16,42 +16,43 @@
 
 package com.ning.billing.util.customfield.dao;
 
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.customfield.CustomField;
-import com.ning.billing.util.dao.ObjectType;
-import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
+
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.customfield.CustomField;
+import com.ning.billing.util.dao.ObjectType;
+
 public class MockCustomFieldDao implements CustomFieldDao {
     private final Map<UUID, List<CustomField>> fields = new HashMap<UUID, List<CustomField>>();
 
     @Override
-    public void saveEntitiesFromTransaction(Transmogrifier transactionalDao, UUID objectId, ObjectType objectType, List<CustomField> entities, CallContext context) {
+    public void saveEntitiesFromTransaction(final Transmogrifier transactionalDao, final UUID objectId, final ObjectType objectType, final List<CustomField> entities, final CallContext context) {
         fields.put(objectId, entities);
     }
 
     @Override
-    public void saveEntities(UUID objectId, ObjectType objectType, List<CustomField> entities, CallContext context) {
+    public void saveEntities(final UUID objectId, final ObjectType objectType, final List<CustomField> entities, final CallContext context) {
         fields.put(objectId, entities);
     }
 
     @Override
-    public Map<String, CustomField> loadEntities(UUID objectId, ObjectType objectType) {
+    public Map<String, CustomField> loadEntities(final UUID objectId, final ObjectType objectType) {
         return getMap(fields.get(objectId));
     }
 
     @Override
-    public Map<String, CustomField> loadEntitiesFromTransaction(Transmogrifier dao, UUID objectId, ObjectType objectType) {
+    public Map<String, CustomField> loadEntitiesFromTransaction(final Transmogrifier dao, final UUID objectId, final ObjectType objectType) {
         return getMap(fields.get(objectId));
     }
 
-    private Map<String, CustomField> getMap(List<CustomField> customFields) {
-        Map<String, CustomField> map = new HashMap<String, CustomField>();
-        for (CustomField customField : customFields) {
+    private Map<String, CustomField> getMap(final List<CustomField> customFields) {
+        final Map<String, CustomField> map = new HashMap<String, CustomField>();
+        for (final CustomField customField : customFields) {
             map.put(customField.getName(), customField);
         }
         return map;

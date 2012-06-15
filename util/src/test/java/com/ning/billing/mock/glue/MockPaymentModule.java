@@ -24,8 +24,8 @@ public class MockPaymentModule extends AbstractModule {
 
     @Override
     protected void configure() {
-       
+
         bind(PaymentApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(PaymentApi.class));
-        
+
     }
 }

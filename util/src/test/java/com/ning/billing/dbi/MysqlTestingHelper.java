@@ -39,8 +39,7 @@ import com.mysql.management.MysqldResourceI;
 /**
  * Utility class to embed MySQL for testing purposes
  */
-public class MysqlTestingHelper
-{
+public class MysqlTestingHelper {
 
     public static final String USE_LOCAL_DB_PROP = "com.ning.billing.dbi.test.useLocalDb";
 
@@ -51,14 +50,13 @@ public class MysqlTestingHelper
     private static final String PASSWORD = "root";
 
     // Discover dynamically list of all tables in that database;
-    private List<String> allTables;    
+    private List<String> allTables;
     private File dbDir;
     private File dataDir;
     private MysqldResource mysqldResource;
     private int port;
 
-    public MysqlTestingHelper()
-    {
+    public MysqlTestingHelper() {
         if (isUsingLocalInstance()) {
             port = 3306;
         } else {
@@ -68,8 +66,7 @@ public class MysqlTestingHelper
                 socket = new ServerSocket(0);
                 port = socket.getLocalPort();
                 socket.close();
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 Assert.fail();
             }
         }
@@ -80,8 +77,7 @@ public class MysqlTestingHelper
         return (System.getProperty(USE_LOCAL_DB_PROP) != null);
     }
 
-    public void startMysql() throws IOException
-    {
+    public void startMysql() throws IOException {
         if (isUsingLocalInstance()) {
             return;
         }
@@ -106,15 +102,13 @@ public class MysqlTestingHelper
         mysqldResource.start("test-mysqld-thread", dbOpts);
         if (!mysqldResource.isRunning()) {
             throw new IllegalStateException("MySQL did not start.");
-        }
-        else {
+        } else {
             log.info("MySQL running on port " + mysqldResource.getPort());
             log.info(String.format("To connect to it: mysql -u%s -p%s -P%s -S%s/mysql.sock %s", USERNAME, PASSWORD, port, dataDir, DB_NAME));
         }
     }
 
-    public void cleanupTable(final String table)
-    {
+    public void cleanupTable(final String table) {
 
         if (!isUsingLocalInstance() && (mysqldResource == null || !mysqldResource.isRunning())) {
             log.error("Asked to cleanup table " + table + " but MySQL is not running!");
@@ -123,48 +117,45 @@ public class MysqlTestingHelper
 
         log.info("Deleting table: " + table);
         final IDBI dbi = getDBI();
-        dbi.withHandle(new HandleCallback<Void>()
-        {
+        dbi.withHandle(new HandleCallback<Void>() {
             @Override
-            public Void withHandle(final Handle handle) throws Exception
-            {
+            public Void withHandle(final Handle handle) throws Exception {
                 handle.execute("truncate " + table);
                 return null;
             }
         });
     }
-    
+
     public void cleanupAllTables() {
-    	final List<String> tablesToCleanup = fetchAllTables();
-    	for (String tableName : tablesToCleanup) {
-    		cleanupTable(tableName);
-    	}
+        final List<String> tablesToCleanup = fetchAllTables();
+        for (final String tableName : tablesToCleanup) {
+            cleanupTable(tableName);
+        }
     }
 
     public synchronized List<String> fetchAllTables() {
 
-    	if (allTables == null) {
-    		final String dbiString = "jdbc:mysql://localhost:" + port + "/information_schema";
-    		IDBI cleanupDbi = new DBI(dbiString, USERNAME, PASSWORD);
+        if (allTables == null) {
+            final String dbiString = "jdbc:mysql://localhost:" + port + "/information_schema";
+            final IDBI cleanupDbi = new DBI(dbiString, USERNAME, PASSWORD);
 
-    		final List<String> tables=  cleanupDbi.withHandle(new HandleCallback<List<String>>() {
+            final List<String> tables = cleanupDbi.withHandle(new HandleCallback<List<String>>() {
 
-    			@Override
-    			public List<String> withHandle(Handle h) throws Exception {
-    				return h.createQuery("select table_name from tables where table_schema = :table_schema and table_type = 'BASE TABLE';")
-    				.bind("table_schema", DB_NAME)
-    				.map(new StringMapper())
-    				.list();
-    			}
-    		});
-    		allTables = tables;
-    	}
-    	return allTables;
+                @Override
+                public List<String> withHandle(final Handle h) throws Exception {
+                    return h.createQuery("select table_name from tables where table_schema = :table_schema and table_type = 'BASE TABLE';")
+                            .bind("table_schema", DB_NAME)
+                            .map(new StringMapper())
+                            .list();
+                }
+            });
+            allTables = tables;
+        }
+        return allTables;
     }
 
-    
-    public void stopMysql()
-    {
+
+    public void stopMysql() {
         try {
             if (mysqldResource != null) {
                 mysqldResource.shutdown();
@@ -177,23 +168,19 @@ public class MysqlTestingHelper
         }
     }
 
-    public IDBI getDBI()
-    {
+    public IDBI getDBI() {
         final String dbiString = "jdbc:mysql://localhost:" + port + "/" + DB_NAME + "?createDatabaseIfNotExist=true&allowMultiQueries=true";
         return new DBI(dbiString, USERNAME, PASSWORD);
     }
 
-    public void initDb(final String ddl) throws IOException
-    {
+    public void initDb(final String ddl) throws IOException {
         if (isUsingLocalInstance()) {
             return;
         }
         final IDBI dbi = getDBI();
-        dbi.withHandle(new HandleCallback<Void>()
-        {
+        dbi.withHandle(new HandleCallback<Void>() {
             @Override
-            public Void withHandle(final Handle handle) throws Exception
-            {
+            public Void withHandle(final Handle handle) throws Exception {
                 log.info("Executing DDL script: " + ddl);
                 handle.createScript(ddl).execute();
                 return null;

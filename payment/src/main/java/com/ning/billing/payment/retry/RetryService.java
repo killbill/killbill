@@ -21,17 +21,17 @@ import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotifi
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
 
 public interface RetryService {
-    
+
     public void initialize(final String svcName)
-        throws NotificationQueueAlreadyExists;
-    
+            throws NotificationQueueAlreadyExists;
+
     public void start();
-    
+
     public void stop()
-        throws NoSuchNotificationQueue;
-    
+            throws NoSuchNotificationQueue;
+
     public String getQueueName();
-    
+
     public void retry(UUID paymentId);
 
 }

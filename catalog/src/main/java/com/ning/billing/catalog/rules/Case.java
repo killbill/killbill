@@ -29,53 +29,53 @@ import com.ning.billing.util.config.ValidationErrors;
 
 public abstract class Case<T> extends ValidatingConfig<StandaloneCatalog> {
 
-	protected abstract T getResult();
-	
-	public abstract DefaultProduct getProduct();
+    protected abstract T getResult();
 
-	public abstract ProductCategory getProductCategory();
+    public abstract DefaultProduct getProduct();
 
-	public abstract BillingPeriod getBillingPeriod();
-	    
-	public abstract DefaultPriceList getPriceList();
+    public abstract ProductCategory getProductCategory();
 
-	public T getResult(PlanSpecifier planPhase, StandaloneCatalog c) throws CatalogApiException {
-		if (satisfiesCase(planPhase, c)	) {
-			return getResult(); 
-		}
-		return null;
-	}
-	
-	protected boolean satisfiesCase(PlanSpecifier planPhase, StandaloneCatalog c) throws CatalogApiException {
-		return (getProduct()         == null || getProduct().equals(c.findCurrentProduct(planPhase.getProductName()))) &&
-		(getProductCategory() == null || getProductCategory().equals(planPhase.getProductCategory())) &&
-		(getBillingPeriod()   == null || getBillingPeriod().equals(planPhase.getBillingPeriod())) &&
-		(getPriceList()       == null || getPriceList().equals(c.findCurrentPriceList(planPhase.getPriceListName())));
-	}
+    public abstract BillingPeriod getBillingPeriod();
 
-	public static <K> K getResult(Case<K>[] cases, PlanSpecifier planSpec, StandaloneCatalog catalog) throws CatalogApiException {
-    	if(cases != null) {
-    		for(Case<K> c : cases) {
-    			K result = c.getResult(planSpec, catalog);
-    			if(result != null) { 
-    				return result; 
-    			}        					
-    		}
-    	}
+    public abstract DefaultPriceList getPriceList();
+
+    public T getResult(final PlanSpecifier planPhase, final StandaloneCatalog c) throws CatalogApiException {
+        if (satisfiesCase(planPhase, c)) {
+            return getResult();
+        }
         return null;
-        
     }
-	
-	@Override
-	public ValidationErrors validate(StandaloneCatalog catalog, ValidationErrors errors) {
-		return errors;
-	}
 
-	protected abstract Case<T> setProduct(DefaultProduct product);
+    protected boolean satisfiesCase(final PlanSpecifier planPhase, final StandaloneCatalog c) throws CatalogApiException {
+        return (getProduct() == null || getProduct().equals(c.findCurrentProduct(planPhase.getProductName()))) &&
+                (getProductCategory() == null || getProductCategory().equals(planPhase.getProductCategory())) &&
+                (getBillingPeriod() == null || getBillingPeriod().equals(planPhase.getBillingPeriod())) &&
+                (getPriceList() == null || getPriceList().equals(c.findCurrentPriceList(planPhase.getPriceListName())));
+    }
 
-	protected abstract  Case<T> setProductCategory(ProductCategory productCategory);
+    public static <K> K getResult(final Case<K>[] cases, final PlanSpecifier planSpec, final StandaloneCatalog catalog) throws CatalogApiException {
+        if (cases != null) {
+            for (final Case<K> c : cases) {
+                final K result = c.getResult(planSpec, catalog);
+                if (result != null) {
+                    return result;
+                }
+            }
+        }
+        return null;
 
-	protected abstract  Case<T> setBillingPeriod(BillingPeriod billingPeriod);
+    }
 
-	protected abstract  Case<T> setPriceList(DefaultPriceList priceList);
+    @Override
+    public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {
+        return errors;
+    }
+
+    protected abstract Case<T> setProduct(DefaultProduct product);
+
+    protected abstract Case<T> setProductCategory(ProductCategory productCategory);
+
+    protected abstract Case<T> setBillingPeriod(BillingPeriod billingPeriod);
+
+    protected abstract Case<T> setPriceList(DefaultPriceList priceList);
 }

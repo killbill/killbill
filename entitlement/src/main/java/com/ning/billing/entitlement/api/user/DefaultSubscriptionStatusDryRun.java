@@ -21,18 +21,18 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PhaseType;
 
 public class DefaultSubscriptionStatusDryRun implements SubscriptionStatusDryRun {
-        
+
     private final UUID id;
     private final String productName;
     private final PhaseType phaseType;
     private final BillingPeriod billingPeriod;
     private final String priceList;
     private final DryRunChangeReason reason;
-    
-    
+
+
     public DefaultSubscriptionStatusDryRun(final UUID id, final String productName,
-            final PhaseType phaseType, final BillingPeriod billingPeriod, final String priceList,
-            final DryRunChangeReason reason) {
+                                           final PhaseType phaseType, final BillingPeriod billingPeriod, final String priceList,
+                                           final DryRunChangeReason reason) {
         super();
         this.id = id;
         this.productName = productName;
@@ -57,7 +57,7 @@ public class DefaultSubscriptionStatusDryRun implements SubscriptionStatusDryRun
         return phaseType;
     }
 
-    
+
     @Override
     public BillingPeriod getBillingPeriod() {
         return billingPeriod;

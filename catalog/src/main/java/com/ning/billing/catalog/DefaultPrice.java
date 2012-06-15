@@ -16,24 +16,24 @@
 
 package com.ning.billing.catalog;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import java.math.BigDecimal;
+
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.CurrencyValueNull;
 import com.ning.billing.catalog.api.Price;
 import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationErrors;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-import java.math.BigDecimal;
-
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultPrice extends ValidatingConfig<StandaloneCatalog> implements Price {
-	@XmlElement(required=true)
-	private Currency currency;
+    @XmlElement(required = true)
+    private Currency currency;
 
-	@XmlElement(required=true,nillable=true)
-	private BigDecimal value;
+    @XmlElement(required = true, nillable = true)
+    private BigDecimal value;
 
     public DefaultPrice() {
         // for serialization support
@@ -45,38 +45,38 @@ public class DefaultPrice extends ValidatingConfig<StandaloneCatalog> implements
         this.currency = currency;
     }
 
-	/* (non-Javadoc)
-	 * @see com.ning.billing.catalog.IPrice#getCurrency()
-	 */
-	@Override
-	public Currency getCurrency() {
-		return currency;
-	}
+    /* (non-Javadoc)
+      * @see com.ning.billing.catalog.IPrice#getCurrency()
+      */
+    @Override
+    public Currency getCurrency() {
+        return currency;
+    }
 
-	/* (non-Javadoc)
-	 * @see com.ning.billing.catalog.IPrice#getValue()
-	 */
-	@Override
-	public BigDecimal getValue() throws CurrencyValueNull {
-		if (value == null) {
-			throw new CurrencyValueNull(currency);
-		}
-		return value;
-	}
-	
-	protected DefaultPrice setCurrency(Currency currency) {
-		this.currency = currency;
-		return this;
-	}
+    /* (non-Javadoc)
+      * @see com.ning.billing.catalog.IPrice#getValue()
+      */
+    @Override
+    public BigDecimal getValue() throws CurrencyValueNull {
+        if (value == null) {
+            throw new CurrencyValueNull(currency);
+        }
+        return value;
+    }
 
-	protected DefaultPrice setValue(BigDecimal value) {
-		this.value = value;
-		return this;
-	}
-	
-	@Override
-	public ValidationErrors validate(StandaloneCatalog catalog, ValidationErrors errors) {
-		return errors;
+    protected DefaultPrice setCurrency(final Currency currency) {
+        this.currency = currency;
+        return this;
+    }
 
-	}
+    protected DefaultPrice setValue(final BigDecimal value) {
+        this.value = value;
+        return this;
+    }
+
+    @Override
+    public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {
+        return errors;
+
+    }
 }

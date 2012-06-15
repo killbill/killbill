@@ -16,32 +16,32 @@
 
 package com.ning.billing.util.config;
 
-import org.slf4j.Logger;
-
 import java.net.URI;
 import java.util.ArrayList;
 
-public class ValidationErrors extends ArrayList<ValidationError>{
-	private static final long serialVersionUID = 1L;
+import org.slf4j.Logger;
 
-	public void add(String description, URI catalogURI,
-			Class<?> objectType, String objectName) {
-		add(new ValidationError(description, catalogURI, objectType, objectName));
-		
-	}
+public class ValidationErrors extends ArrayList<ValidationError> {
+    private static final long serialVersionUID = 1L;
 
-	public void log(Logger log) {
-		for(ValidationError error : this) {
-			error.log(log);
-		}	
-	}
-	
-	public String toString() {
-		StringBuilder builder = new StringBuilder();
-		for(ValidationError error : this) {
-			builder.append(error.toString());
-		}	
-		return builder.toString();
-	}
+    public void add(final String description, final URI catalogURI,
+                    final Class<?> objectType, final String objectName) {
+        add(new ValidationError(description, catalogURI, objectType, objectName));
+
+    }
+
+    public void log(final Logger log) {
+        for (final ValidationError error : this) {
+            error.log(log);
+        }
+    }
+
+    public String toString() {
+        final StringBuilder builder = new StringBuilder();
+        for (final ValidationError error : this) {
+            builder.append(error.toString());
+        }
+        return builder.toString();
+    }
 
 }

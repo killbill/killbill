@@ -16,6 +16,18 @@
 
 package com.ning.billing.beatrix.lifecycle;
 
+import java.lang.reflect.Method;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Supplier;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
@@ -27,22 +39,11 @@ import com.ning.billing.lifecycle.KillbillService;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel.Sequence;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.lang.reflect.Method;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArraySet;
 
 
 public class DefaultLifecycle implements Lifecycle {
 
-    private final static Logger log = LoggerFactory.getLogger(DefaultLifecycle.class);
+    private static final Logger log = LoggerFactory.getLogger(DefaultLifecycle.class);
     private final SetMultimap<LifecycleLevel, LifecycleHandler<? extends KillbillService>> handlersByLevel;
 
     private final ServiceFinder serviceFinder;
@@ -50,17 +51,17 @@ public class DefaultLifecycle implements Lifecycle {
     protected final Injector injector;
 
     @Inject
-    public DefaultLifecycle(Injector injector) {
+    public DefaultLifecycle(final Injector injector) {
 
         this.serviceFinder = new ServiceFinder(DefaultLifecycle.class.getClassLoader());
         this.handlersByLevel = Multimaps.newSetMultimap(new ConcurrentHashMap<LifecycleLevel, Collection<LifecycleHandler<? extends KillbillService>>>(),
 
-                new Supplier<Set<LifecycleHandler<? extends KillbillService>>>() {
-            @Override
-            public Set<LifecycleHandler<? extends KillbillService>> get() {
-                return new CopyOnWriteArraySet<LifecycleHandler<? extends KillbillService>>();
-            }
-        });
+                                                        new Supplier<Set<LifecycleHandler<? extends KillbillService>>>() {
+                                                            @Override
+                                                            public Set<LifecycleHandler<? extends KillbillService>> get() {
+                                                                return new CopyOnWriteArraySet<LifecycleHandler<? extends KillbillService>>();
+                                                            }
+                                                        });
         this.injector = injector;
 
         init();
@@ -89,12 +90,12 @@ public class DefaultLifecycle implements Lifecycle {
 
     protected Set<? extends KillbillService> findServices() {
 
-        Set<KillbillService> result = new HashSet<KillbillService>();
-        Set<Class<? extends KillbillService>> services =  serviceFinder.getServices();
-        for (Class<? extends KillbillService> cur : services) {
+        final Set<KillbillService> result = new HashSet<KillbillService>();
+        final Set<Class<? extends KillbillService>> services = serviceFinder.getServices();
+        for (final Class<? extends KillbillService> cur : services) {
             log.debug("Found service {}", cur.getName());
             try {
-                KillbillService instance = injector.getInstance(cur);
+                final KillbillService instance = injector.getInstance(cur);
                 log.debug("got instance {}", instance.getName());
                 result.add(instance);
             } catch (Exception e) {
@@ -106,28 +107,28 @@ public class DefaultLifecycle implements Lifecycle {
     }
 
     private void init() {
-        Set<? extends KillbillService> services = findServices();
-        Iterator<? extends KillbillService> it = services.iterator();
+        final Set<? extends KillbillService> services = findServices();
+        final Iterator<? extends KillbillService> it = services.iterator();
         while (it.hasNext()) {
             handlersByLevel.putAll(findAllHandlers(it.next()));
         }
     }
 
-    private void fireSequence(Sequence seq) {
-        List<LifecycleLevel> levels = LifecycleLevel.getLevelsForSequence(seq);
-        for (LifecycleLevel cur : levels) {
+    private void fireSequence(final Sequence seq) {
+        final List<LifecycleLevel> levels = LifecycleLevel.getLevelsForSequence(seq);
+        for (final LifecycleLevel cur : levels) {
             doFireStage(cur);
         }
     }
 
-    private void doFireStage(LifecycleLevel level) {
+    private void doFireStage(final LifecycleLevel level) {
         log.info("Killbill lifecycle firing stage {}", level);
-        Set<LifecycleHandler<? extends KillbillService>> handlers = handlersByLevel.get(level);
-        for (LifecycleHandler<? extends KillbillService> cur : handlers) {
+        final Set<LifecycleHandler<? extends KillbillService>> handlers = handlersByLevel.get(level);
+        for (final LifecycleHandler<? extends KillbillService> cur : handlers) {
 
             try {
-                Method method = cur.getMethod();
-                KillbillService target = cur.getTarget();
+                final Method method = cur.getMethod();
+                final KillbillService target = cur.getTarget();
                 log.info("Killbill lifecycle calling handler {} for service {}", cur.getMethod().getName(), target.getName());
                 method.invoke(target);
             } catch (Exception e) {
@@ -139,18 +140,18 @@ public class DefaultLifecycle implements Lifecycle {
 
 
     // Used to disable valid injection failure from unit tests
-    protected void logWarn(String msg, Exception e) {
+    protected void logWarn(final String msg, final Exception e) {
         log.warn(msg, e);
     }
 
-    private Multimap<LifecycleLevel, LifecycleHandler<? extends KillbillService>> findAllHandlers(KillbillService service) {
-        Multimap<LifecycleLevel, LifecycleHandler<? extends KillbillService>> methodsInService = HashMultimap.create();
-        Class<? extends KillbillService> clazz = service.getClass();
-        for (Method method : clazz.getMethods()) {
-            LifecycleHandlerType annotation = method.getAnnotation(LifecycleHandlerType.class);
+    private Multimap<LifecycleLevel, LifecycleHandler<? extends KillbillService>> findAllHandlers(final KillbillService service) {
+        final Multimap<LifecycleLevel, LifecycleHandler<? extends KillbillService>> methodsInService = HashMultimap.create();
+        final Class<? extends KillbillService> clazz = service.getClass();
+        for (final Method method : clazz.getMethods()) {
+            final LifecycleHandlerType annotation = method.getAnnotation(LifecycleHandlerType.class);
             if (annotation != null) {
-                LifecycleLevel level = annotation.value();
-                LifecycleHandler<? extends KillbillService> handler = new  LifecycleHandler<KillbillService>(service, method);
+                final LifecycleLevel level = annotation.value();
+                final LifecycleHandler<? extends KillbillService> handler = new LifecycleHandler<KillbillService>(service, method);
                 methodsInService.put(level, handler);
             }
         }
@@ -161,7 +162,7 @@ public class DefaultLifecycle implements Lifecycle {
         private final T target;
         private final Method method;
 
-        public LifecycleHandler(T target, Method method) {
+        public LifecycleHandler(final T target, final Method method) {
             this.target = target;
             this.method = method;
         }

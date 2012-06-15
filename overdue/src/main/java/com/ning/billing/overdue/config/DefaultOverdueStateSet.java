@@ -20,14 +20,11 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 
 import org.joda.time.DateTime;
-import org.joda.time.MutablePeriod;
 import org.joda.time.Period;
 
 import com.ning.billing.ErrorCode;
-import com.ning.billing.catalog.api.Duration;
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.BlockingApi;
-import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.overdue.OverdueApiException;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.config.api.BillingState;
@@ -38,17 +35,19 @@ import com.ning.billing.util.config.ValidationErrors;
 @XmlAccessorType(XmlAccessType.NONE)
 public abstract class DefaultOverdueStateSet<T extends Blockable> extends ValidatingConfig<OverdueConfig> implements OverdueStateSet<T> {
     private static final Period ZERO_PERIOD = new Period();
-    private DefaultOverdueState<T> clearState = new DefaultOverdueState<T>().setName(BlockingApi.CLEAR_STATE_NAME).setClearState(true);
+    private final DefaultOverdueState<T> clearState = new DefaultOverdueState<T>().setName(BlockingApi.CLEAR_STATE_NAME).setClearState(true);
 
     protected abstract DefaultOverdueState<T>[] getStates();
-    
+
     @Override
-    public OverdueState<T> findState(String stateName) throws OverdueApiException {
-        if(stateName.equals( BlockingApi.CLEAR_STATE_NAME)) {
+    public OverdueState<T> findState(final String stateName) throws OverdueApiException {
+        if (stateName.equals(BlockingApi.CLEAR_STATE_NAME)) {
             return clearState;
         }
-        for(DefaultOverdueState<T> state: getStates()) {
-            if(state.getName().equals(stateName) ) { return state; }
+        for (final DefaultOverdueState<T> state : getStates()) {
+            if (state.getName().equals(stateName)) {
+                return state;
+            }
         }
         throw new OverdueApiException(ErrorCode.CAT_NO_SUCH_OVEDUE_STATE, stateName);
     }
@@ -59,34 +58,34 @@ public abstract class DefaultOverdueStateSet<T extends Blockable> extends Valida
      */
     @Override
     public DefaultOverdueState<T> getClearState() throws OverdueApiException {
-       return clearState;
+        return clearState;
     }
 
     /* (non-Javadoc)
      * @see com.ning.billing.catalog.overdue.OverdueBillingState#calculateOverdueState(com.ning.billing.catalog.api.overdue.BillingState, org.joda.time.DateTime)
      */
     @Override
-    public DefaultOverdueState<T> calculateOverdueState(BillingState<T> billingState, DateTime now) throws OverdueApiException {         
-        for(DefaultOverdueState<T> overdueState : getStates()) {
-            if(overdueState.getCondition().evaluate(billingState, now)) {   
+    public DefaultOverdueState<T> calculateOverdueState(final BillingState<T> billingState, final DateTime now) throws OverdueApiException {
+        for (final DefaultOverdueState<T> overdueState : getStates()) {
+            if (overdueState.getCondition().evaluate(billingState, now)) {
                 return overdueState;
             }
         }
-        return  getClearState();
+        return getClearState();
     }
 
     @Override
-    public ValidationErrors validate(OverdueConfig root,
-            ValidationErrors errors) {
-        for(DefaultOverdueState<T> state: getStates()) {
+    public ValidationErrors validate(final OverdueConfig root,
+                                     final ValidationErrors errors) {
+        for (final DefaultOverdueState<T> state : getStates()) {
             state.validate(root, errors);
         }
         try {
             getClearState();
         } catch (OverdueApiException e) {
-            if(e.getCode() == ErrorCode.CAT_MISSING_CLEAR_STATE.getCode()) {
-                errors.add("Overdue state set is missing a clear state.", 
-                        root.getURI(), this.getClass(), "");
+            if (e.getCode() == ErrorCode.CAT_MISSING_CLEAR_STATE.getCode()) {
+                errors.add("Overdue state set is missing a clear state.",
+                           root.getURI(), this.getClass(), "");
             }
         }
 
@@ -97,5 +96,5 @@ public abstract class DefaultOverdueStateSet<T extends Blockable> extends Valida
     public int size() {
         return getStates().length;
     }
-    
+
 }

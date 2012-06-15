@@ -17,6 +17,7 @@
 package com.ning.billing.util.notificationq;
 
 import org.skife.jdbi.v2.IDBI;
+
 import com.google.inject.Inject;
 import com.ning.billing.config.NotificationConfig;
 import com.ning.billing.util.clock.Clock;
@@ -32,9 +33,9 @@ public class DefaultNotificationQueueService extends NotificationQueueServiceBas
     }
 
     @Override
-    protected NotificationQueue createNotificationQueueInternal(String svcName,
-            String queueName, NotificationQueueHandler handler,
-            NotificationConfig config) {
+    protected NotificationQueue createNotificationQueueInternal(final String svcName,
+                                                                final String queueName, final NotificationQueueHandler handler,
+                                                                final NotificationConfig config) {
         return new DefaultNotificationQueue(dbi, clock, svcName, queueName, handler, config);
     }
 }

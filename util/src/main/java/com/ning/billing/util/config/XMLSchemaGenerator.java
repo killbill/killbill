@@ -16,15 +16,6 @@
 
 package com.ning.billing.util.config;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.List;
-
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.SchemaOutputResolver;
@@ -36,77 +27,83 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMResult;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-import javax.xml.transform.stream.StreamSource;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.w3c.dom.Document;
 
 public class XMLSchemaGenerator {
-	final private static  int MAX_SCHEMA_SIZE_IN_BYTES = 100000;
+    private static final int MAX_SCHEMA_SIZE_IN_BYTES = 100000;
 
 
-	//Note: this main method is called by the maven build to generate the schema for the jar
-	public static void main(String[] args) throws IOException, TransformerException, JAXBException, ClassNotFoundException {
-		if (args.length != 2) {
-			printUsage();
-			System.exit(0);
-		}
-		Class<?> clazz = ClassLoader.getSystemClassLoader().loadClass(args[1]);
-		
-		JAXBContext context =JAXBContext.newInstance(clazz);
-		String xsdFileName = "Schema.xsd";
-		if(args.length != 0) {
-			xsdFileName = args[0] + "/" + xsdFileName;
-		}
-		FileOutputStream s = new FileOutputStream(xsdFileName);
-		pojoToXSD(context, s);
-	}
+    //Note: this main method is called by the maven build to generate the schema for the jar
+    public static void main(final String[] args) throws IOException, TransformerException, JAXBException, ClassNotFoundException {
+        if (args.length != 2) {
+            printUsage();
+            System.exit(0);
+        }
+        final Class<?> clazz = ClassLoader.getSystemClassLoader().loadClass(args[1]);
 
-	private static void printUsage() {
-		System.out.println(XMLSchemaGenerator.class.getName() + " <file> <class1>");
-		
-	}
-	
-	public static String xmlSchemaAsString(Class<?> clazz) throws IOException, TransformerException, JAXBException {
-		ByteArrayOutputStream output = new ByteArrayOutputStream(MAX_SCHEMA_SIZE_IN_BYTES);
-		JAXBContext context =JAXBContext.newInstance(clazz);
-		pojoToXSD(context, output);
-		return new String(output.toByteArray());
-	}
+        final JAXBContext context = JAXBContext.newInstance(clazz);
+        String xsdFileName = "Schema.xsd";
+        if (args.length != 0) {
+            xsdFileName = args[0] + "/" + xsdFileName;
+        }
+        final FileOutputStream s = new FileOutputStream(xsdFileName);
+        pojoToXSD(context, s);
+    }
 
-	public static InputStream xmlSchema(Class<?> clazz) throws IOException, TransformerException, JAXBException {
-		ByteArrayOutputStream output = new ByteArrayOutputStream(MAX_SCHEMA_SIZE_IN_BYTES);
-		JAXBContext context =JAXBContext.newInstance(clazz);
-		pojoToXSD(context, output);
-		return new ByteArrayInputStream(output.toByteArray());
-	}
+    private static void printUsage() {
+        System.out.println(XMLSchemaGenerator.class.getName() + " <file> <class1>");
 
-	public static void pojoToXSD(JAXBContext context, OutputStream out)
-		    throws IOException, TransformerException
-		{
-		    final List<DOMResult> results = new ArrayList<DOMResult>();
+    }
 
-		    context.generateSchema(new SchemaOutputResolver() {
-		        @Override
-		        public Result createOutput(String ns, String file)
-		                throws IOException {
-		            DOMResult result = new DOMResult();
-		            result.setSystemId(file);
-		            results.add(result);
-		            return result;
-		        }
-		    });
+    public static String xmlSchemaAsString(final Class<?> clazz) throws IOException, TransformerException, JAXBException {
+        final ByteArrayOutputStream output = new ByteArrayOutputStream(MAX_SCHEMA_SIZE_IN_BYTES);
+        final JAXBContext context = JAXBContext.newInstance(clazz);
+        pojoToXSD(context, output);
+        return new String(output.toByteArray());
+    }
 
-		    DOMResult domResult = results.get(0);
-		    Document doc = (Document) domResult.getNode();
+    public static InputStream xmlSchema(final Class<?> clazz) throws IOException, TransformerException, JAXBException {
+        final ByteArrayOutputStream output = new ByteArrayOutputStream(MAX_SCHEMA_SIZE_IN_BYTES);
+        final JAXBContext context = JAXBContext.newInstance(clazz);
+        pojoToXSD(context, output);
+        return new ByteArrayInputStream(output.toByteArray());
+    }
 
-		    // Use a Transformer for output
-		    TransformerFactory tFactory = TransformerFactory.newInstance();
-		    Transformer transformer = tFactory.newTransformer();
+    public static void pojoToXSD(final JAXBContext context, final OutputStream out)
+            throws IOException, TransformerException {
+        final List<DOMResult> results = new ArrayList<DOMResult>();
 
-		    DOMSource source = new DOMSource(doc);
-		    StreamResult result = new StreamResult(out);
-		    transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-		    transformer.transform(source, result);
-		}
+        context.generateSchema(new SchemaOutputResolver() {
+            @Override
+            public Result createOutput(final String ns, final String file)
+                    throws IOException {
+                final DOMResult result = new DOMResult();
+                result.setSystemId(file);
+                results.add(result);
+                return result;
+            }
+        });
+
+        final DOMResult domResult = results.get(0);
+        final Document doc = (Document) domResult.getNode();
+
+        // Use a Transformer for output
+        final TransformerFactory tFactory = TransformerFactory.newInstance();
+        final Transformer transformer = tFactory.newTransformer();
+
+        final DOMSource source = new DOMSource(doc);
+        final StreamResult result = new StreamResult(out);
+        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+        transformer.transform(source, result);
+    }
 
 }

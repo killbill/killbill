@@ -18,8 +18,6 @@ package com.ning.billing.payment.dao;
 import java.util.List;
 import java.util.UUID;
 
-import org.skife.jdbi.v2.sqlobject.Bind;
-
 import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.util.callcontext.CallContext;
 
@@ -31,25 +29,25 @@ public interface PaymentDao {
     public PaymentAttemptModelDao insertNewAttemptForPayment(final UUID paymentId, final PaymentAttemptModelDao attempt, final boolean scheduleTimeoutRetry, final CallContext context);
 
 
-    public void updateStatusForPayment(final UUID paymentId, final PaymentStatus paymentStatus, final CallContext context);    
+    public void updateStatusForPayment(final UUID paymentId, final PaymentStatus paymentStatus, final CallContext context);
 
     public void updateStatusForPaymentWithAttempt(final UUID paymentId, final PaymentStatus paymentStatus, final String paymentError, final UUID attemptId, final CallContext context);
-    
+
     public PaymentAttemptModelDao getPaymentAttempt(final UUID attemptId);
-    
+
     public List<PaymentModelDao> getPaymentsForInvoice(final UUID invoiceId);
-    
-    public List<PaymentModelDao> getPaymentsForAccount(final UUID accountId);    
-    
-    public PaymentModelDao getPayment(final UUID paymentId);    
+
+    public List<PaymentModelDao> getPaymentsForAccount(final UUID accountId);
+
+    public PaymentModelDao getPayment(final UUID paymentId);
 
     public List<PaymentAttemptModelDao> getAttemptsForPayment(final UUID paymentId);
-    
+
     public PaymentMethodModelDao insertPaymentMethod(final PaymentMethodModelDao paymentMethod, final CallContext context);
-    
+
     public PaymentMethodModelDao getPaymentMethod(final UUID paymentMethodId);
-    
-    public List<PaymentMethodModelDao> getPaymentMethods(final UUID accountId);   
+
+    public List<PaymentMethodModelDao> getPaymentMethods(final UUID accountId);
 
     public void deletedPaymentMethod(final UUID paymentMethodId);
 }

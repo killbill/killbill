@@ -17,7 +17,7 @@
 package com.ning.billing.catalog.api;
 
 public enum ActionPolicy {
-	END_OF_TERM, // transition occurs at end of term
-	IMMEDIATE,   // transition occurs immediately
-	ILLEGAL      // transition is not allowed
+    END_OF_TERM, // transition occurs at end of term
+    IMMEDIATE,   // transition occurs immediately
+    ILLEGAL      // transition is not allowed
 }

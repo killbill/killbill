@@ -42,62 +42,61 @@ public class TestBillingStateCalculator {
     InvoiceUserApi invoiceApi = BrainDeadProxyFactory.createBrainDeadProxyFor(InvoiceUserApi.class);
     private int hash = 0;
     DateTime now;
-    
+
     public BillingStateCalculator<SubscriptionBundle> createBSCalc() {
         now = new DateTime();
-        Collection<Invoice> invoices = new ArrayList<Invoice>();
+        final Collection<Invoice> invoices = new ArrayList<Invoice>();
         invoices.add(createInvoice(now, BigDecimal.ZERO, null));
         invoices.add(createInvoice(now.plusDays(1), BigDecimal.TEN, null));
         invoices.add(createInvoice(now.plusDays(2), new BigDecimal("100.0"), null));
-     
-        ((ZombieControl)invoiceApi).addResult("getUnpaidInvoicesByAccountId", invoices);
-            
+
+        ((ZombieControl) invoiceApi).addResult("getUnpaidInvoicesByAccountId", invoices);
+
         return new BillingStateCalculator<SubscriptionBundle>(invoiceApi, clock) {
             @Override
             public BillingState<SubscriptionBundle> calculateBillingState(
-                    SubscriptionBundle overdueable) {
-               return null;
-            }};
+                    final SubscriptionBundle overdueable) {
+                return null;
+            }
+        };
     }
-    
-    public Invoice createInvoice(DateTime date, BigDecimal balance, List<InvoiceItem> invoiceItems) {
-        Invoice invoice = BrainDeadProxyFactory.createBrainDeadProxyFor(Invoice.class);
-        ((ZombieControl)invoice).addResult("getBalance", balance);
-        ((ZombieControl)invoice).addResult("getInvoiceDate", date);
-        ((ZombieControl)invoice).addResult("hashCode", hash++);
-        ((ZombieControl)invoice).addResult("getInvoiceItems", invoiceItems);
-        ((ZombieControl)invoice).addResult("getId", UUID.randomUUID());
-        
+
+    public Invoice createInvoice(final DateTime date, final BigDecimal balance, final List<InvoiceItem> invoiceItems) {
+        final Invoice invoice = BrainDeadProxyFactory.createBrainDeadProxyFor(Invoice.class);
+        ((ZombieControl) invoice).addResult("getBalance", balance);
+        ((ZombieControl) invoice).addResult("getInvoiceDate", date);
+        ((ZombieControl) invoice).addResult("hashCode", hash++);
+        ((ZombieControl) invoice).addResult("getInvoiceItems", invoiceItems);
+        ((ZombieControl) invoice).addResult("getId", UUID.randomUUID());
+
         return invoice;
     }
-    
-    @Test(groups={"fast"}, enabled=true)
+
+    @Test(groups = {"fast"}, enabled = true)
     public void testUnpaidInvoices() {
-        BillingStateCalculator<SubscriptionBundle> calc = createBSCalc();
-        SortedSet<Invoice> invoices = calc.unpaidInvoicesForAccount(new UUID(0L,0L));
-        
+        final BillingStateCalculator<SubscriptionBundle> calc = createBSCalc();
+        final SortedSet<Invoice> invoices = calc.unpaidInvoicesForAccount(new UUID(0L, 0L));
+
         Assert.assertEquals(invoices.size(), 3);
         Assert.assertEquals(BigDecimal.ZERO.compareTo(invoices.first().getBalance()), 0);
         Assert.assertEquals(new BigDecimal("100.0").compareTo(invoices.last().getBalance()), 0);
     }
-    
-    @Test(groups={"fast"}, enabled=true)
+
+    @Test(groups = {"fast"}, enabled = true)
     public void testSum() {
-        
-        BillingStateCalculator<SubscriptionBundle> calc = createBSCalc();
-        SortedSet<Invoice> invoices = calc.unpaidInvoicesForAccount(new UUID(0L,0L));
+
+        final BillingStateCalculator<SubscriptionBundle> calc = createBSCalc();
+        final SortedSet<Invoice> invoices = calc.unpaidInvoicesForAccount(new UUID(0L, 0L));
         Assert.assertEquals(new BigDecimal("110.0").compareTo(calc.sumBalance(invoices)), 0);
     }
 
-    @Test(groups={"fast"}, enabled=true)
+    @Test(groups = {"fast"}, enabled = true)
     public void testEarliest() {
-        
-        BillingStateCalculator<SubscriptionBundle> calc = createBSCalc();
-        SortedSet<Invoice> invoices = calc.unpaidInvoicesForAccount(new UUID(0L,0L));
+
+        final BillingStateCalculator<SubscriptionBundle> calc = createBSCalc();
+        final SortedSet<Invoice> invoices = calc.unpaidInvoicesForAccount(new UUID(0L, 0L));
         Assert.assertEquals(calc.earliest(invoices).getInvoiceDate(), now);
     }
 
-    
-    
-    
+
 }

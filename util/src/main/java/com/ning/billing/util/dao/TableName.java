@@ -29,18 +29,18 @@ public enum TableName {
     PAYMENT_ATTEMPTS("payment_attempts"),
     PAYMENT_HISTORY("payment_history"),
     PAYMENTS("payments"),
-    PAYMENT_METHODS("payment_methods"),    
+    PAYMENT_METHODS("payment_methods"),
     RECURRING_INVOICE_ITEMS("recurring_invoice_items"),
     SUBSCRIPTIONS("subscriptions"),
     SUBSCRIPTION_EVENTS("subscription_events"),
     TAG_HISTORY("tag_history");
-    
+
     private final String tableName;
-    
-    TableName(String tableName) {
+
+    TableName(final String tableName) {
         this.tableName = tableName;
     }
-    
+
     public String getTableName() {
         return tableName;
     }

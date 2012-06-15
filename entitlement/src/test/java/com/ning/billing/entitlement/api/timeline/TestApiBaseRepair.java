@@ -15,8 +15,6 @@
  */
 package com.ning.billing.entitlement.api.timeline;
 
-import static org.testng.Assert.assertEquals;
-
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -27,7 +25,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 
-
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PhaseType;
@@ -35,25 +32,24 @@ import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.TestApiBase;
-import com.ning.billing.entitlement.api.timeline.BundleTimeline;
-import com.ning.billing.entitlement.api.timeline.EntitlementRepairException;
-import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline;
 import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline.DeletedEvent;
 import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline.ExistingEvent;
 import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline.NewEvent;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 
+import static org.testng.Assert.assertEquals;
+
 
 public abstract class TestApiBaseRepair extends TestApiBase {
 
-    protected final static Logger log = LoggerFactory.getLogger(TestApiBaseRepair.class);
-    
+    protected static final Logger log = LoggerFactory.getLogger(TestApiBaseRepair.class);
+
     public interface TestWithExceptionCallback {
         public void doTest() throws EntitlementRepairException, EntitlementUserApiException;
     }
-    
+
     public static class TestWithException {
-        public void withException(TestWithExceptionCallback callback, ErrorCode code) throws Exception {
+        public void withException(final TestWithExceptionCallback callback, final ErrorCode code) throws Exception {
             try {
                 callback.doTest();
                 Assert.fail("Failed to catch exception " + code);
@@ -63,21 +59,24 @@ public abstract class TestApiBaseRepair extends TestApiBase {
         }
     }
 
-    
+
     protected SubscriptionTimeline createSubscriptionRepair(final UUID id, final List<DeletedEvent> deletedEvents, final List<NewEvent> newEvents) {
         return new SubscriptionTimeline() {
             @Override
             public UUID getId() {
                 return id;
             }
+
             @Override
             public List<NewEvent> getNewEvents() {
                 return newEvents;
             }
+
             @Override
             public List<ExistingEvent> getExistingEvents() {
                 return null;
             }
+
             @Override
             public List<DeletedEvent> getDeletedEvents() {
                 return deletedEvents;
@@ -91,14 +90,17 @@ public abstract class TestApiBaseRepair extends TestApiBase {
             public String getViewId() {
                 return viewId;
             }
+
             @Override
             public List<SubscriptionTimeline> getSubscriptions() {
                 return subscriptionRepair;
             }
+
             @Override
             public UUID getBundleId() {
                 return bundleId;
             }
+
             @Override
             public String getExternalKey() {
                 return null;
@@ -106,28 +108,32 @@ public abstract class TestApiBaseRepair extends TestApiBase {
         };
     }
 
-    protected ExistingEvent createExistingEventForAssertion(final SubscriptionTransitionType type, 
-            final String productName, final PhaseType phaseType, final ProductCategory category, final String priceListName, final BillingPeriod billingPeriod,
-            final DateTime effectiveDateTime) {
+    protected ExistingEvent createExistingEventForAssertion(final SubscriptionTransitionType type,
+                                                            final String productName, final PhaseType phaseType, final ProductCategory category, final String priceListName, final BillingPeriod billingPeriod,
+                                                            final DateTime effectiveDateTime) {
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, category, billingPeriod, priceListName, phaseType);
-        ExistingEvent ev = new ExistingEvent() {
+        final ExistingEvent ev = new ExistingEvent() {
             @Override
             public SubscriptionTransitionType getSubscriptionTransitionType() {
                 return type;
             }
-             @Override
+
+            @Override
             public DateTime getRequestedDate() {
-                 return null;
+                return null;
             }
+
             @Override
             public PlanPhaseSpecifier getPlanPhaseSpecifier() {
                 return spec;
             }
+
             @Override
             public UUID getEventId() {
                 return null;
             }
+
             @Override
             public DateTime getEffectiveDate() {
                 return effectiveDateTime;
@@ -135,9 +141,9 @@ public abstract class TestApiBaseRepair extends TestApiBase {
         };
         return ev;
     }
-    
+
     protected SubscriptionTimeline getSubscriptionRepair(final UUID id, final BundleTimeline bundleRepair) {
-        for (SubscriptionTimeline cur : bundleRepair.getSubscriptions()) {
+        for (final SubscriptionTimeline cur : bundleRepair.getSubscriptions()) {
             if (cur.getId().equals(id)) {
                 return cur;
             }
@@ -145,22 +151,23 @@ public abstract class TestApiBaseRepair extends TestApiBase {
         Assert.fail("Failed to find SubscriptionReapir " + id);
         return null;
     }
+
     protected void validateExistingEventForAssertion(final ExistingEvent expected, final ExistingEvent input) {
-        
+
         log.info(String.format("Got %s -> Expected %s", input.getPlanPhaseSpecifier().getProductName(), expected.getPlanPhaseSpecifier().getProductName()));
         assertEquals(input.getPlanPhaseSpecifier().getProductName(), expected.getPlanPhaseSpecifier().getProductName());
         log.info(String.format("Got %s -> Expected %s", input.getPlanPhaseSpecifier().getPhaseType(), expected.getPlanPhaseSpecifier().getPhaseType()));
         assertEquals(input.getPlanPhaseSpecifier().getPhaseType(), expected.getPlanPhaseSpecifier().getPhaseType());
         log.info(String.format("Got %s -> Expected %s", input.getPlanPhaseSpecifier().getProductCategory(), expected.getPlanPhaseSpecifier().getProductCategory()));
-        assertEquals(input.getPlanPhaseSpecifier().getProductCategory(), expected.getPlanPhaseSpecifier().getProductCategory());                    
+        assertEquals(input.getPlanPhaseSpecifier().getProductCategory(), expected.getPlanPhaseSpecifier().getProductCategory());
         log.info(String.format("Got %s -> Expected %s", input.getPlanPhaseSpecifier().getPriceListName(), expected.getPlanPhaseSpecifier().getPriceListName()));
-        assertEquals(input.getPlanPhaseSpecifier().getPriceListName(), expected.getPlanPhaseSpecifier().getPriceListName());                    
+        assertEquals(input.getPlanPhaseSpecifier().getPriceListName(), expected.getPlanPhaseSpecifier().getPriceListName());
         log.info(String.format("Got %s -> Expected %s", input.getPlanPhaseSpecifier().getBillingPeriod(), expected.getPlanPhaseSpecifier().getBillingPeriod()));
         assertEquals(input.getPlanPhaseSpecifier().getBillingPeriod(), expected.getPlanPhaseSpecifier().getBillingPeriod());
         log.info(String.format("Got %s -> Expected %s", input.getEffectiveDate(), expected.getEffectiveDate()));
-        assertEquals(input.getEffectiveDate(), expected.getEffectiveDate());        
+        assertEquals(input.getEffectiveDate(), expected.getEffectiveDate());
     }
-    
+
     protected DeletedEvent createDeletedEvent(final UUID eventId) {
         return new DeletedEvent() {
             @Override
@@ -177,10 +184,12 @@ public abstract class TestApiBaseRepair extends TestApiBase {
             public SubscriptionTransitionType getSubscriptionTransitionType() {
                 return type;
             }
+
             @Override
             public DateTime getRequestedDate() {
                 return requestedDate;
             }
+
             @Override
             public PlanPhaseSpecifier getPlanPhaseSpecifier() {
                 return spec;
@@ -192,7 +201,7 @@ public abstract class TestApiBaseRepair extends TestApiBase {
         if (bundle.getSubscriptions() == null) {
             return;
         }
-        for (SubscriptionTimeline cur : bundle.getSubscriptions()) {
+        for (final SubscriptionTimeline cur : bundle.getSubscriptions()) {
             if (cur.getExistingEvents() != null) {
                 sortExistingEvent(cur.getExistingEvents());
             }
@@ -205,15 +214,16 @@ public abstract class TestApiBaseRepair extends TestApiBase {
     protected void sortExistingEvent(final List<ExistingEvent> events) {
         Collections.sort(events, new Comparator<ExistingEvent>() {
             @Override
-            public int compare(ExistingEvent arg0, ExistingEvent arg1) {
+            public int compare(final ExistingEvent arg0, final ExistingEvent arg1) {
                 return arg0.getEffectiveDate().compareTo(arg1.getEffectiveDate());
             }
         });
     }
+
     protected void sortNewEvent(final List<NewEvent> events) {
         Collections.sort(events, new Comparator<NewEvent>() {
             @Override
-            public int compare(NewEvent arg0, NewEvent arg1) {
+            public int compare(final NewEvent arg0, final NewEvent arg1) {
                 return arg0.getRequestedDate().compareTo(arg1.getRequestedDate());
             }
         });

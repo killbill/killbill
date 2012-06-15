@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
 
 public class BillingExceptionBase extends Exception {
 
-    private final static Logger log = LoggerFactory.getLogger(BillingExceptionBase.class);
+    private static final Logger log = LoggerFactory.getLogger(BillingExceptionBase.class);
 
     private static final long serialVersionUID = 165720101383L;
 
@@ -30,23 +30,23 @@ public class BillingExceptionBase extends Exception {
     private final int code;
     private final String formattedMsg;
 
-    public BillingExceptionBase(Throwable cause, int code, final String msg) {
+    public BillingExceptionBase(final Throwable cause, final int code, final String msg) {
         this.formattedMsg = msg;
         this.code = code;
         this.cause = cause;
     }
-    
-    public BillingExceptionBase(BillingExceptionBase cause) {
+
+    public BillingExceptionBase(final BillingExceptionBase cause) {
         this.formattedMsg = cause.getMessage();
         this.code = cause.getCode();
         this.cause = cause;
     }
 
 
-    public BillingExceptionBase(Throwable cause, ErrorCode code, final Object... args) {
+    public BillingExceptionBase(final Throwable cause, final ErrorCode code, final Object... args) {
         String tmp = null;
         try {
-           tmp = String.format(code.getFormat(), args);
+            tmp = String.format(code.getFormat(), args);
         } catch (RuntimeException e) {
             log.error("Failed to format msg for error code " + code.getCode(), e);
             throw e;
@@ -56,7 +56,7 @@ public class BillingExceptionBase extends Exception {
         this.cause = cause;
     }
 
-    public BillingExceptionBase(ErrorCode code, final Object... args) {
+    public BillingExceptionBase(final ErrorCode code, final Object... args) {
         this(null, code, args);
     }
 

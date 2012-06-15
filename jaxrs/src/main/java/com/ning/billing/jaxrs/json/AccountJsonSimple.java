@@ -17,7 +17,6 @@ package com.ning.billing.jaxrs.json;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 
 public class AccountJsonSimple {
 

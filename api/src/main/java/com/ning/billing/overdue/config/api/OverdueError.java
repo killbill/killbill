@@ -21,21 +21,21 @@ import com.ning.billing.ErrorCode;
 
 public class OverdueError extends BillingExceptionBase {
 
-    public OverdueError(BillingExceptionBase cause) {
+    public OverdueError(final BillingExceptionBase cause) {
         super(cause);
-     }
+    }
 
-    public OverdueError(Throwable cause, int code, String msg) {
+    public OverdueError(final Throwable cause, final int code, final String msg) {
         super(cause, code, msg);
     }
 
     private static final long serialVersionUID = 1L;
 
-    public OverdueError(Throwable cause, ErrorCode code, Object... args) {
+    public OverdueError(final Throwable cause, final ErrorCode code, final Object... args) {
         super(cause, code, args);
     }
 
-    public OverdueError(ErrorCode code, Object... args) {
+    public OverdueError(final ErrorCode code, final Object... args) {
         super(code, args);
     }
 

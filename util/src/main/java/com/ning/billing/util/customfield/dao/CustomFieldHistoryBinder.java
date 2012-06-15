@@ -16,19 +16,19 @@
 
 package com.ning.billing.util.customfield.dao;
 
-import com.ning.billing.util.customfield.CustomField;
-import com.ning.billing.util.dao.EntityHistory;
-import com.ning.billing.util.dao.MappedEntity;
-import org.skife.jdbi.v2.SQLStatement;
-import org.skife.jdbi.v2.sqlobject.Binder;
-import org.skife.jdbi.v2.sqlobject.BinderFactory;
-import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
-
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+
+import org.skife.jdbi.v2.SQLStatement;
+import org.skife.jdbi.v2.sqlobject.Binder;
+import org.skife.jdbi.v2.sqlobject.BinderFactory;
+import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
+
+import com.ning.billing.util.customfield.CustomField;
+import com.ning.billing.util.dao.EntityHistory;
 
 @BindingAnnotation(CustomFieldHistoryBinder.CustomFieldBinderFactory.class)
 @Retention(RetentionPolicy.RUNTIME)
@@ -36,10 +36,10 @@ import java.lang.annotation.Target;
 public @interface CustomFieldHistoryBinder {
     public static class CustomFieldBinderFactory implements BinderFactory {
         @Override
-        public Binder build(Annotation annotation) {
+        public Binder build(final Annotation annotation) {
             return new Binder<CustomFieldHistoryBinder, EntityHistory<CustomField>>() {
                 @Override
-                public void bind(SQLStatement q, CustomFieldHistoryBinder bind, EntityHistory<CustomField> customFieldHistory) {
+                public void bind(final SQLStatement q, final CustomFieldHistoryBinder bind, final EntityHistory<CustomField> customFieldHistory) {
                     q.bind("recordId", customFieldHistory.getValue());
                     q.bind("changeType", customFieldHistory.getChangeType().toString());
                     q.bind("id", customFieldHistory.getId().toString());

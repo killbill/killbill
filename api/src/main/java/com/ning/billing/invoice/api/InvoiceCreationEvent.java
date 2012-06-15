@@ -26,9 +26,13 @@ import com.ning.billing.util.bus.BusEvent;
 
 public interface InvoiceCreationEvent extends BusEvent {
     public UUID getInvoiceId();
+
     public UUID getAccountId();
+
     public BigDecimal getAmountOwed();
+
     public Currency getCurrency();
+
     public DateTime getInvoiceCreationDate();
 
 }

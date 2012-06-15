@@ -24,7 +24,7 @@ public class DefaultListing implements Listing {
     private final Plan plan;
     private final PriceList priceList;
 
-    public DefaultListing(Plan plan, PriceList priceList) {
+    public DefaultListing(final Plan plan, final PriceList priceList) {
         super();
         this.plan = plan;
         this.priceList = priceList;

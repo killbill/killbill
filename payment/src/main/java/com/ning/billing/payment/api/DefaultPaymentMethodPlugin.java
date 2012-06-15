@@ -22,13 +22,13 @@ public class DefaultPaymentMethodPlugin implements PaymentMethodPlugin {
     private final String externalPaymentMethodId;
     private final boolean isDefaultPaymentMethod;
     private final List<PaymentMethodKVInfo> properties;
-    
-    public DefaultPaymentMethodPlugin(PaymentMethodPlugin src, String externalPaymentId) {
+
+    public DefaultPaymentMethodPlugin(final PaymentMethodPlugin src, final String externalPaymentId) {
         this.externalPaymentMethodId = externalPaymentId;
         this.isDefaultPaymentMethod = src.isDefaultPaymentMethod();
         this.properties = src.getProperties();
     }
-    
+
     @Override
     public String getExternalPaymentMethodId() {
         return externalPaymentMethodId;
@@ -45,7 +45,7 @@ public class DefaultPaymentMethodPlugin implements PaymentMethodPlugin {
     }
 
     @Override
-    public String getValueString(String key) {
+    public String getValueString(final String key) {
         throw new RuntimeException("Not implemented");
     }
 

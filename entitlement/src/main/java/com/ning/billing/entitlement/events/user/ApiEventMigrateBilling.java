@@ -19,22 +19,22 @@ package com.ning.billing.entitlement.events.user;
 import org.joda.time.DateTime;
 
 public class ApiEventMigrateBilling extends ApiEventBase {
-    public ApiEventMigrateBilling(ApiEventBuilder builder) {
+    public ApiEventMigrateBilling(final ApiEventBuilder builder) {
         super(builder.setEventType(ApiEventType.MIGRATE_BILLING));
     }
 
-    public ApiEventMigrateBilling(ApiEventMigrateEntitlement input, DateTime ctd) {
+    public ApiEventMigrateBilling(final ApiEventMigrateEntitlement input, final DateTime ctd) {
         super(new ApiEventBuilder()
-        .setSubscriptionId(input.getSubscriptionId())
-        .setEventPlan(input.getEventPlan())
-        .setEventPlanPhase(input.getEventPlanPhase())
-        .setEventPriceList(input.getPriceList())
-        .setActiveVersion(input.getActiveVersion())
-        .setEffectiveDate(ctd)
-        .setProcessedDate(input.getProcessedDate())
-        .setRequestedDate(input.getRequestedDate())
-        .setFromDisk(true)
-        .setEventType(ApiEventType.MIGRATE_BILLING));
+                      .setSubscriptionId(input.getSubscriptionId())
+                      .setEventPlan(input.getEventPlan())
+                      .setEventPlanPhase(input.getEventPlanPhase())
+                      .setEventPriceList(input.getPriceList())
+                      .setActiveVersion(input.getActiveVersion())
+                      .setEffectiveDate(ctd)
+                      .setProcessedDate(input.getProcessedDate())
+                      .setRequestedDate(input.getRequestedDate())
+                      .setFromDisk(true)
+                      .setEventType(ApiEventType.MIGRATE_BILLING));
     }
 
 }

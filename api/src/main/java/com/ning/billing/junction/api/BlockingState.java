@@ -21,7 +21,7 @@ import org.joda.time.DateTime;
 public interface BlockingState extends Comparable<BlockingState> {
 
     public abstract String getStateName();
-    
+
     public abstract Blockable.Type getType();
 
     public abstract DateTime getTimestamp();

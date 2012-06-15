@@ -20,5 +20,5 @@ import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.util.entity.UpdatableEntity;
 
 public interface Account extends AccountData, UpdatableEntity, Blockable {
-    public MutableAccountData toMutableAccountData(); 
+    public MutableAccountData toMutableAccountData();
 }

@@ -81,23 +81,23 @@ public class BusinessSubscriptionEvent {
         return eventType;
     }
 
-    public static BusinessSubscriptionEvent subscriptionCreated(final String plan, Catalog catalog, DateTime eventTime, DateTime subscriptionCreationDate) {
+    public static BusinessSubscriptionEvent subscriptionCreated(final String plan, final Catalog catalog, final DateTime eventTime, final DateTime subscriptionCreationDate) {
         return eventFromType(EventType.ADD, plan, catalog, eventTime, subscriptionCreationDate);
     }
 
-    public static BusinessSubscriptionEvent subscriptionCancelled(final String plan, Catalog catalog, DateTime eventTime, DateTime subscriptionCreationDate) {
+    public static BusinessSubscriptionEvent subscriptionCancelled(final String plan, final Catalog catalog, final DateTime eventTime, final DateTime subscriptionCreationDate) {
         return eventFromType(EventType.CANCEL, plan, catalog, eventTime, subscriptionCreationDate);
     }
 
-    public static BusinessSubscriptionEvent subscriptionChanged(final String plan, Catalog catalog, DateTime eventTime, DateTime subscriptionCreationDate) {
+    public static BusinessSubscriptionEvent subscriptionChanged(final String plan, final Catalog catalog, final DateTime eventTime, final DateTime subscriptionCreationDate) {
         return eventFromType(EventType.CHANGE, plan, catalog, eventTime, subscriptionCreationDate);
     }
 
-    public static BusinessSubscriptionEvent subscriptionRecreated(final String plan, Catalog catalog, DateTime eventTime, DateTime subscriptionCreationDate) {
+    public static BusinessSubscriptionEvent subscriptionRecreated(final String plan, final Catalog catalog, final DateTime eventTime, final DateTime subscriptionCreationDate) {
         return eventFromType(EventType.RE_ADD, plan, catalog, eventTime, subscriptionCreationDate);
     }
 
-    public static BusinessSubscriptionEvent subscriptionPhaseChanged(final String plan, final SubscriptionState state, Catalog catalog, DateTime eventTime, DateTime subscriptionCreationDate) {
+    public static BusinessSubscriptionEvent subscriptionPhaseChanged(final String plan, final SubscriptionState state, final Catalog catalog, final DateTime eventTime, final DateTime subscriptionCreationDate) {
         if (state != null && state.equals(SubscriptionState.CANCELLED)) {
             return eventFromType(EventType.SYSTEM_CANCEL, plan, catalog, eventTime, subscriptionCreationDate);
         } else {
@@ -105,7 +105,7 @@ public class BusinessSubscriptionEvent {
         }
     }
 
-    private static BusinessSubscriptionEvent eventFromType(final EventType eventType, final String plan, Catalog catalog, DateTime eventTime, DateTime subscriptionCreationDate) {
+    private static BusinessSubscriptionEvent eventFromType(final EventType eventType, final String plan, final Catalog catalog, final DateTime eventTime, final DateTime subscriptionCreationDate) {
         Plan thePlan = null;
         try {
             thePlan = catalog.findPlan(plan, eventTime, subscriptionCreationDate);

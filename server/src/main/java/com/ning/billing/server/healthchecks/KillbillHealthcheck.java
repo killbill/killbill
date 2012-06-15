@@ -15,31 +15,27 @@
  */
 package com.ning.billing.server.healthchecks;
 
-import com.yammer.metrics.core.HealthCheck;
 import org.weakref.jmx.Managed;
 
-public class KillbillHealthcheck extends HealthCheck
-{
-    public KillbillHealthcheck()
-    {
+import com.yammer.metrics.core.HealthCheck;
+
+public class KillbillHealthcheck extends HealthCheck {
+    public KillbillHealthcheck() {
         super(KillbillHealthcheck.class.getSimpleName());
     }
 
     @Override
-    public Result check()
-    {
+    public Result check() {
         try {
             // STEPH obviously needs more than that
             return Result.healthy();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             return Result.unhealthy(e);
         }
     }
 
     @Managed(description = "Basic killbill healthcheck")
-    public boolean isHealthy()
-    {
+    public boolean isHealthy() {
         return check().isHealthy();
     }
 }

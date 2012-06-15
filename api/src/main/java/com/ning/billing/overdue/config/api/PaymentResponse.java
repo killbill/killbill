@@ -19,32 +19,32 @@ package com.ning.billing.overdue.config.api;
 public enum PaymentResponse {
     // Card issues
     INVALID_CARD("The card number, expiry date or cvc is invalid or incorrect"),
-	EXPIRED_CARD("The card has expired"),
-	LOST_OR_STOLEN_CARD("The card has been lost or stolen"),
+    EXPIRED_CARD("The card has expired"),
+    LOST_OR_STOLEN_CARD("The card has been lost or stolen"),
 
-	// Account issues
+    // Account issues
     DO_NOT_HONOR("Do not honor the card - usually a problem with account"),
-	INSUFFICIENT_FUNDS("The account had insufficient funds to fulfil the payment"),
-	DECLINE("Generic payment decline"),
-	
-	//Transaction
-	PROCESSING_ERROR("Error processing card"),
-	INVALID_AMOUNT("An invalid amount was entered"),
-	DUPLICATE_TRANSACTION("A transaction with identical amount and credit card information was submitted very recently."),
+    INSUFFICIENT_FUNDS("The account had insufficient funds to fulfil the payment"),
+    DECLINE("Generic payment decline"),
 
-	//Other
-	OTHER("Some other error");
-	
-	private String description;
-	
-	private PaymentResponse(String description) {
-	    this.description = description;
-	}
-	
-	public String getDescription() {
-	    return description;
-	}
-	
+    //Transaction
+    PROCESSING_ERROR("Error processing card"),
+    INVALID_AMOUNT("An invalid amount was entered"),
+    DUPLICATE_TRANSACTION("A transaction with identical amount and credit card information was submitted very recently."),
+
+    //Other
+    OTHER("Some other error");
+
+    private final String description;
+
+    private PaymentResponse(final String description) {
+        this.description = description;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
 //	 690118 | Approved
 //	 136956 | Do Not Honor
 //	 119640 | Insufficient Funds

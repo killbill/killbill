@@ -66,17 +66,17 @@ public class MockAccountUserApi implements AccountUserApi {
     }
 
     @Override
-    public UUID getIdFromKey(String externalKey) {
+    public UUID getIdFromKey(final String externalKey) {
         return id;
     }
 
     @Override
-    public List<AccountEmail> getEmails(UUID accountId) {
+    public List<AccountEmail> getEmails(final UUID accountId) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void saveEmails(UUID accountId, List<AccountEmail> emails, CallContext context) {
+    public void saveEmails(final UUID accountId, final List<AccountEmail> emails, final CallContext context) {
         throw new UnsupportedOperationException();
     }
 
@@ -91,19 +91,19 @@ public class MockAccountUserApi implements AccountUserApi {
     }
 
     @Override
-    public Account migrateAccount(MigrationAccountData data, final CallContext context)
+    public Account migrateAccount(final MigrationAccountData data, final CallContext context)
             throws AccountApiException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void updateAccount(String key, AccountData accountData, final CallContext context)
+    public void updateAccount(final String key, final AccountData accountData, final CallContext context)
             throws AccountApiException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void updateAccount(UUID accountId, AccountData accountData, CallContext context)
+    public void updateAccount(final UUID accountId, final AccountData accountData, final CallContext context)
             throws AccountApiException {
         throw new NotImplementedException();
     }

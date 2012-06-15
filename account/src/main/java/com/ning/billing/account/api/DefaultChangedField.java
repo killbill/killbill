@@ -16,35 +16,36 @@
 
 package com.ning.billing.account.api;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import org.joda.time.DateTime;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class DefaultChangedField implements ChangedField {
-    
+
     private final String fieldName;
     private final String oldValue;
     private final String newValue;
     private final DateTime changeDate;
 
     @JsonCreator
-    public DefaultChangedField(@JsonProperty("fieldName") String fieldName,
-            @JsonProperty("oldValue") String oldValue,
-            @JsonProperty("newValue") String newValue,
-            @JsonProperty("changeDate") DateTime changeDate) {
+    public DefaultChangedField(@JsonProperty("fieldName") final String fieldName,
+                               @JsonProperty("oldValue") final String oldValue,
+                               @JsonProperty("newValue") final String newValue,
+                               @JsonProperty("changeDate") final DateTime changeDate) {
         this.changeDate = changeDate;
         this.fieldName = fieldName;
         this.oldValue = oldValue;
         this.newValue = newValue;
     }
 
-    public DefaultChangedField(String fieldName,
-            String oldValue,
-            String newValue) {
+    public DefaultChangedField(final String fieldName,
+                               final String oldValue,
+                               final String newValue) {
         this(fieldName, oldValue, newValue, new DateTime());
     }
 
-    
+
     @Override
     public String getFieldName() {
         return fieldName;
@@ -81,35 +82,46 @@ public class DefaultChangedField implements ChangedField {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
+    public boolean equals(final Object obj) {
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
-        DefaultChangedField other = (DefaultChangedField) obj;
+        }
+        final DefaultChangedField other = (DefaultChangedField) obj;
         if (changeDate == null) {
-            if (other.changeDate != null)
+            if (other.changeDate != null) {
                 return false;
-        } else if (changeDate.compareTo(other.changeDate) != 0)
+            }
+        } else if (changeDate.compareTo(other.changeDate) != 0) {
             return false;
+        }
         if (fieldName == null) {
-            if (other.fieldName != null)
+            if (other.fieldName != null) {
                 return false;
-        } else if (!fieldName.equals(other.fieldName))
+            }
+        } else if (!fieldName.equals(other.fieldName)) {
             return false;
+        }
         if (newValue == null) {
-            if (other.newValue != null)
+            if (other.newValue != null) {
                 return false;
-        } else if (!newValue.equals(other.newValue))
+            }
+        } else if (!newValue.equals(other.newValue)) {
             return false;
+        }
         if (oldValue == null) {
-            if (other.oldValue != null)
+            if (other.oldValue != null) {
                 return false;
-        } else if (!oldValue.equals(other.oldValue))
+            }
+        } else if (!oldValue.equals(other.oldValue)) {
             return false;
+        }
         return true;
     }
-    
+
 }

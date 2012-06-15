@@ -16,7 +16,7 @@
 package com.ning.billing.api;
 
 public interface TestListenerStatus {
-    
+
     public void failed(String msg);
 
     public void resetTestListenerStatus();

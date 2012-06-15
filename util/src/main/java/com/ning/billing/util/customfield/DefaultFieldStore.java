@@ -22,20 +22,20 @@ import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.entity.collection.EntityCollectionBase;
 
 public class DefaultFieldStore extends EntityCollectionBase<CustomField> implements FieldStore {
-    public DefaultFieldStore(UUID objectId, ObjectType objectType) {
+    public DefaultFieldStore(final UUID objectId, final ObjectType objectType) {
         super(objectId, objectType);
     }
 
-    public static DefaultFieldStore create(UUID objectId, ObjectType objectType) {
+    public static DefaultFieldStore create(final UUID objectId, final ObjectType objectType) {
         return new DefaultFieldStore(objectId, objectType);
     }
 
     @Override
-    public String getEntityKey(CustomField entity) {
+    public String getEntityKey(final CustomField entity) {
         return entity.getName();
     }
 
-    public void setValue(String fieldName, String fieldValue) {
+    public void setValue(final String fieldName, final String fieldValue) {
         if (entities.containsKey(fieldName)) {
             entities.get(fieldName).setValue(fieldValue);
         } else {
@@ -43,7 +43,7 @@ public class DefaultFieldStore extends EntityCollectionBase<CustomField> impleme
         }
     }
 
-    public String getValue(String fieldName) {
+    public String getValue(final String fieldName) {
         if (entities.containsKey(fieldName)) {
             return entities.get(fieldName).getValue();
         } else {

@@ -17,16 +17,17 @@
 package com.ning.billing.entitlement.events.phase;
 
 
+import org.joda.time.DateTime;
+
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.events.EventBase;
-import org.joda.time.DateTime;
 
 
 public class PhaseEventData extends EventBase implements PhaseEvent {
 
     private final String phaseName;
 
-    public PhaseEventData(PhaseEventBuilder builder) {
+    public PhaseEventData(final PhaseEventBuilder builder) {
         super(builder);
         this.phaseName = builder.getPhaseName();
     }
@@ -44,8 +45,8 @@ public class PhaseEventData extends EventBase implements PhaseEvent {
     @Override
     public String toString() {
         return "PhaseEvent [getId()= " + getId()
-        		+ ", phaseName=" + phaseName
-        		+ ", getType()=" + getType()
+                + ", phaseName=" + phaseName
+                + ", getType()=" + getType()
                 + ", getPhase()=" + getPhase()
                 + ", getRequestedDate()=" + getRequestedDate()
                 + ", getEffectiveDate()=" + getEffectiveDate()
@@ -55,15 +56,15 @@ public class PhaseEventData extends EventBase implements PhaseEvent {
                 + ", isActive()=" + isActive() + "]\n";
     }
 
-    public static final PhaseEvent createNextPhaseEvent(String phaseName, SubscriptionData subscription, DateTime now, DateTime effectiveDate) {
+    public static PhaseEvent createNextPhaseEvent(final String phaseName, final SubscriptionData subscription, final DateTime now, final DateTime effectiveDate) {
         return (phaseName == null) ?
                 null :
-                    new PhaseEventData(new PhaseEventBuilder()
-                        .setSubscriptionId(subscription.getId())
-                        .setRequestedDate(now)
-                        .setEffectiveDate(effectiveDate)
-                        .setProcessedDate(now)
-                        .setActiveVersion(subscription.getActiveVersion())
-                        .setPhaseName(phaseName));
+                new PhaseEventData(new PhaseEventBuilder()
+                                           .setSubscriptionId(subscription.getId())
+                                           .setRequestedDate(now)
+                                           .setEffectiveDate(effectiveDate)
+                                           .setProcessedDate(now)
+                                           .setActiveVersion(subscription.getActiveVersion())
+                                           .setPhaseName(phaseName));
     }
 }

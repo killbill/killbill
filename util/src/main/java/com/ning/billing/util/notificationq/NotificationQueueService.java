@@ -30,12 +30,12 @@ public interface NotificationQueueService {
          * @param notificationKey the notification key associated to that notification entry
          */
         public void handleReadyNotification(String notificationKey, DateTime eventDateTime);
-     }
+    }
 
     public static final class NotificationQueueAlreadyExists extends Exception {
         private static final long serialVersionUID = 1541281L;
 
-        public NotificationQueueAlreadyExists(String msg) {
+        public NotificationQueueAlreadyExists(final String msg) {
             super(msg);
         }
     }
@@ -43,7 +43,7 @@ public interface NotificationQueueService {
     public static final class NoSuchNotificationQueue extends Exception {
         private static final long serialVersionUID = 1541281L;
 
-        public NoSuchNotificationQueue(String msg) {
+        public NoSuchNotificationQueue(final String msg) {
             super(msg);
         }
     }
@@ -51,18 +51,16 @@ public interface NotificationQueueService {
     /**
      * Creates a new NotificationQueue for a given associated with the given service and queueName
      *
-     * @param svcName the name of the service using that queue
+     * @param svcName   the name of the service using that queue
      * @param queueName a name for that queue (unique per service)
-     * @param handler the handler required for notifying the caller of state change
-     * @param config the notification queue configuration
-     *
+     * @param handler   the handler required for notifying the caller of state change
+     * @param config    the notification queue configuration
      * @return a new NotificationQueue
-     *
-     * @throws com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists is the queue associated with that service and name already exits
-     *
+     * @throws com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists
+     *          is the queue associated with that service and name already exits
      */
     public NotificationQueue createNotificationQueue(final String svcName, final String queueName, final NotificationQueueHandler handler, final NotificationConfig config)
-        throws NotificationQueueAlreadyExists;
+            throws NotificationQueueAlreadyExists;
 
     /**
      * Retrieves an already created NotificationQueue by service and name if it exists
@@ -70,11 +68,10 @@ public interface NotificationQueueService {
      * @param svcName
      * @param queueName
      * @return
-     *
      * @throws NoSuchNotificationQueue if queue does not exist
      */
     public NotificationQueue getNotificationQueue(final String svcName, final String queueName)
-        throws NoSuchNotificationQueue;
+            throws NoSuchNotificationQueue;
 
     /**
      * Delete notificationQueue
@@ -82,17 +79,15 @@ public interface NotificationQueueService {
      * @param svcName
      * @param queueName
      * @return
-     *
      * @throws NoSuchNotificationQueue if queue does not exist
      */
     public void deleteNotificationQueue(final String svcName, final String queueName)
-    throws NoSuchNotificationQueue;
-            
+            throws NoSuchNotificationQueue;
+
 
     /**
-     *
      * @param services
      * @return the number of processed notifications
      */
-    public int triggerManualQueueProcessing(final String [] services, final Boolean keepRunning);
+    public int triggerManualQueueProcessing(final String[] services, final Boolean keepRunning);
 }

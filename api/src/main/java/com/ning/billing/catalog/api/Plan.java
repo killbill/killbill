@@ -23,28 +23,28 @@ import org.joda.time.DateTime;
 
 public interface Plan {
 
-	public abstract PlanPhase[] getInitialPhases();
+    public abstract PlanPhase[] getInitialPhases();
 
-	public abstract Product getProduct();
+    public abstract Product getProduct();
 
-	public abstract String getName();
+    public abstract String getName();
 
-	public abstract boolean isRetired();
+    public abstract boolean isRetired();
 
-	public abstract Iterator<PlanPhase> getInitialPhaseIterator();
+    public abstract Iterator<PlanPhase> getInitialPhaseIterator();
 
-	public abstract PlanPhase getFinalPhase();
+    public abstract PlanPhase getFinalPhase();
 
-	public abstract BillingPeriod getBillingPeriod();
+    public abstract BillingPeriod getBillingPeriod();
 
-	public abstract int getPlansAllowedInBundle();
+    public abstract int getPlansAllowedInBundle();
 
-	public abstract PlanPhase[] getAllPhases();
+    public abstract PlanPhase[] getAllPhases();
 
-	public abstract Date getEffectiveDateForExistingSubscriptons();
+    public abstract Date getEffectiveDateForExistingSubscriptons();
 
-	public abstract PlanPhase findPhase(String name) throws CatalogApiException;
+    public abstract PlanPhase findPhase(String name) throws CatalogApiException;
 
-	public abstract DateTime dateOfFirstRecurringNonZeroCharge(DateTime subscriptionStartDate);
-	
+    public abstract DateTime dateOfFirstRecurringNonZeroCharge(DateTime subscriptionStartDate);
+
 }

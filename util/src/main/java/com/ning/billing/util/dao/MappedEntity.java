@@ -16,17 +16,17 @@
 
 package com.ning.billing.util.dao;
 
+import java.util.UUID;
+
 import com.ning.billing.util.ChangeType;
 import com.ning.billing.util.entity.Entity;
-
-import java.util.UUID;
 
 public class MappedEntity<T extends Entity, K, V> {
     private final Mapper<K, V> mapper;
     private final T entity;
     private final ChangeType changeType;
 
-    public MappedEntity(Mapper<K, V> mapper, T entity, ChangeType changeType) {
+    public MappedEntity(final Mapper<K, V> mapper, final T entity, final ChangeType changeType) {
         this.mapper = mapper;
         this.entity = entity;
         this.changeType = changeType;

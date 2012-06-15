@@ -16,11 +16,6 @@
 
 package com.ning.billing.payment.api;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.fail;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
@@ -61,12 +56,17 @@ import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.glue.CallContextModule;
 
-@Guice(modules = { PaymentTestModuleWithMocks.class, MockClockModule.class, MockJunctionModule.class, CallContextModule.class })
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
+
+@Guice(modules = {PaymentTestModuleWithMocks.class, MockClockModule.class, MockJunctionModule.class, CallContextModule.class})
 @Test(groups = "fast")
 public class TestPaymentApi {
-    
+
     private static final Logger log = LoggerFactory.getLogger(TestPaymentApi.class);
-    
+
     @Inject
     private Bus eventBus;
     @Inject
@@ -80,17 +80,17 @@ public class TestPaymentApi {
 
     protected CallContext context;
 
-    private Account account; 
-    
-    
+    private Account account;
+
+
     @Inject
-    public TestPaymentApi(Clock clock) {
+    public TestPaymentApi(final Clock clock) {
         context = new DefaultCallContext("Payment Tests", CallOrigin.INTERNAL, UserType.SYSTEM, clock);
     }
-    
+
     @BeforeClass
     public void setupClass() throws Exception {
-        account = testHelper.createTestAccount("yoyo.yahoo.com");        
+        account = testHelper.createTestAccount("yoyo.yahoo.com");
     }
 
     @BeforeMethod(alwaysRun = true)
@@ -103,67 +103,67 @@ public class TestPaymentApi {
         eventBus.stop();
     }
 
-    
-    @Test(enabled=true)
+
+    @Test(enabled = true)
     public void testSimplePaymentWithNoAmount() throws Exception {
         final BigDecimal invoiceAmount = new BigDecimal("10.0011");
         final BigDecimal requestedAmount = null;
-        final BigDecimal expectedAmount = invoiceAmount;        
-        
+        final BigDecimal expectedAmount = invoiceAmount;
+
         testSimplePayment(invoiceAmount, requestedAmount, expectedAmount);
     }
 
-    @Test(enabled=true)
+    @Test(enabled = true)
     public void testSimplePaymentWithInvoiceAmount() throws Exception {
         final BigDecimal invoiceAmount = new BigDecimal("10.0011");
         final BigDecimal requestedAmount = invoiceAmount;
-        final BigDecimal expectedAmount = invoiceAmount;        
-        
+        final BigDecimal expectedAmount = invoiceAmount;
+
         testSimplePayment(invoiceAmount, requestedAmount, expectedAmount);
     }
 
-    @Test(enabled=true)
+    @Test(enabled = true)
     public void testSimplePaymentWithLowerAmount() throws Exception {
         final BigDecimal invoiceAmount = new BigDecimal("10.0011");
         final BigDecimal requestedAmount = new BigDecimal("8.0091");
-        final BigDecimal expectedAmount = requestedAmount;        
-        
+        final BigDecimal expectedAmount = requestedAmount;
+
         testSimplePayment(invoiceAmount, requestedAmount, expectedAmount);
     }
 
-    @Test(enabled=true)
+    @Test(enabled = true)
     public void testSimplePaymentWithInvalidAmount() throws Exception {
         final BigDecimal invoiceAmount = new BigDecimal("10.0011");
         final BigDecimal requestedAmount = new BigDecimal("80.0091");
-        final BigDecimal expectedAmount = null;        
-        
+        final BigDecimal expectedAmount = null;
+
         testSimplePayment(invoiceAmount, requestedAmount, expectedAmount);
     }
-    
 
-    private void testSimplePayment(BigDecimal invoiceAmount, BigDecimal requestedAmount, BigDecimal expectedAmount) throws Exception {
-        
-        ((ZombieControl)invoicePaymentApi).addResult("notifyOfPaymentAttempt", BrainDeadProxyFactory.ZOMBIE_VOID);
+
+    private void testSimplePayment(final BigDecimal invoiceAmount, final BigDecimal requestedAmount, final BigDecimal expectedAmount) throws Exception {
+
+        ((ZombieControl) invoicePaymentApi).addResult("notifyOfPaymentAttempt", BrainDeadProxyFactory.ZOMBIE_VOID);
 
         final DateTime now = new DateTime(DateTimeZone.UTC);
         final Invoice invoice = testHelper.createTestInvoice(account, now, Currency.USD);
-        
+
         final UUID subscriptionId = UUID.randomUUID();
         final UUID bundleId = UUID.randomUUID();
 
 
         invoice.addInvoiceItem(new MockRecurringInvoiceItem(invoice.getId(), account.getId(),
-                                                       subscriptionId,
-                                                       bundleId,
-                                                       "test plan", "test phase",
-                                                       now,
-                                                       now.plusMonths(1),
-                                                       invoiceAmount,
-                                                       new BigDecimal("1.0"),
-                                                       Currency.USD));
+                                                            subscriptionId,
+                                                            bundleId,
+                                                            "test plan", "test phase",
+                                                            now,
+                                                            now.plusMonths(1),
+                                                            invoiceAmount,
+                                                            new BigDecimal("1.0"),
+                                                            Currency.USD));
 
         try {
-            Payment paymentInfo = paymentApi.createPayment(account.getExternalKey(), invoice.getId(), requestedAmount, context);
+            final Payment paymentInfo = paymentApi.createPayment(account.getExternalKey(), invoice.getId(), requestedAmount, context);
             if (expectedAmount == null) {
                 fail("Expected to fail because requested amount > invoice amount");
             }
@@ -175,7 +175,7 @@ public class TestPaymentApi {
             assertEquals(paymentInfo.getInvoiceId(), invoice.getId());
             assertEquals(paymentInfo.getCurrency(), Currency.USD);
 
-            PaymentAttempt paymentAttempt = paymentInfo.getAttempts().get(0);
+            final PaymentAttempt paymentAttempt = paymentInfo.getAttempts().get(0);
             assertNotNull(paymentAttempt);
             assertNotNull(paymentAttempt.getId());
         } catch (PaymentApiException e) {
@@ -187,28 +187,27 @@ public class TestPaymentApi {
             }
         }
     }
-    
-    @Test(enabled=true)
-    public void testPaymentMethods() throws Exception  {
+
+    @Test(enabled = true)
+    public void testPaymentMethods() throws Exception {
 
         List<PaymentMethod> methods = paymentApi.getPaymentMethods(account, false);
         assertEquals(methods.size(), 1);
-        
-        PaymentMethod initDefaultMethod = methods.get(0);
-        assertEquals(initDefaultMethod.getId(), account.getPaymentMethodId());
-        
 
-        
+        final PaymentMethod initDefaultMethod = methods.get(0);
+        assertEquals(initDefaultMethod.getId(), account.getPaymentMethodId());
+
+
         //((ZombieControl)accountApi).addResult("updateAccount", );
-        PaymentMethodPlugin newPaymenrMethod = new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), true, null);
-        UUID newPaymentMethodId = paymentApi.addPaymentMethod(PaymentTestModuleWithMocks.PLUGIN_TEST_NAME, account, true, newPaymenrMethod, context);
-        ((ZombieControl)account).addResult("getPaymentMethodId", newPaymentMethodId);
-        
+        final PaymentMethodPlugin newPaymenrMethod = new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), true, null);
+        final UUID newPaymentMethodId = paymentApi.addPaymentMethod(PaymentTestModuleWithMocks.PLUGIN_TEST_NAME, account, true, newPaymenrMethod, context);
+        ((ZombieControl) account).addResult("getPaymentMethodId", newPaymentMethodId);
+
         methods = paymentApi.getPaymentMethods(account, false);
         assertEquals(methods.size(), 2);
-        
+
         assertEquals(newPaymentMethodId, account.getPaymentMethodId());
-        
+
         boolean failed = false;
         try {
             paymentApi.deletedPaymentMethod(account, newPaymentMethodId, context);
@@ -218,9 +217,9 @@ public class TestPaymentApi {
         assertTrue(failed);
 
         paymentApi.deletedPaymentMethod(account, initDefaultMethod.getId(), context);
-        methods = paymentApi.getPaymentMethods(account, false);        
+        methods = paymentApi.getPaymentMethods(account, false);
         assertEquals(methods.size(), 1);
     }
 
-    
+
 }

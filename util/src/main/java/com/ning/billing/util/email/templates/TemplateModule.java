@@ -22,7 +22,7 @@ public class TemplateModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(TemplateEngine.class).to(MustacheTemplateEngine.class).asEagerSingleton();      
+        bind(TemplateEngine.class).to(MustacheTemplateEngine.class).asEagerSingleton();
     }
 
 }

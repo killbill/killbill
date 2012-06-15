@@ -19,17 +19,17 @@ package com.ning.billing.catalog.api;
 
 public interface Product {
 
-	public abstract String getName();
+    public abstract String getName();
 
-	public abstract boolean isRetired();
+    public abstract boolean isRetired();
 
-	public abstract Product[] getAvailable();
+    public abstract Product[] getAvailable();
 
-	public abstract Product[] getIncluded();
+    public abstract Product[] getIncluded();
 
-	public abstract ProductCategory getCategory();
+    public abstract ProductCategory getCategory();
 
-	public abstract String getCatalogName();
+    public abstract String getCatalogName();
 
 
 }

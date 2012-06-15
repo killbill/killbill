@@ -16,10 +16,10 @@
 
 package com.ning.billing.util.notificationq;
 
+import org.joda.time.DateTime;
+
 import com.ning.billing.util.entity.Entity;
 import com.ning.billing.util.queue.PersistentQueueEntryLifecycle;
-
-import org.joda.time.DateTime;
 
 public interface Notification extends PersistentQueueEntryLifecycle, Entity {
     public Long getOrdering();

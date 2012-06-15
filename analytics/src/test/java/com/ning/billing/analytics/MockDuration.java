@@ -37,7 +37,7 @@ public class MockDuration {
             }
 
             @Override
-            public DateTime addToDateTime(DateTime dateTime) {
+            public DateTime addToDateTime(final DateTime dateTime) {
                 throw new NotImplementedException();
             }
 
@@ -61,7 +61,7 @@ public class MockDuration {
             }
 
             @Override
-            public DateTime addToDateTime(DateTime dateTime) {
+            public DateTime addToDateTime(final DateTime dateTime) {
                 throw new NotImplementedException();
             }
 
@@ -85,7 +85,7 @@ public class MockDuration {
             }
 
             @Override
-            public DateTime addToDateTime(DateTime dateTime) {
+            public DateTime addToDateTime(final DateTime dateTime) {
                 throw new NotImplementedException();
             }
 

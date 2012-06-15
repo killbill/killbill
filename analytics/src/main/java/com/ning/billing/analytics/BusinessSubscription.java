@@ -90,11 +90,11 @@ public class BusinessSubscription {
      * @param currency     ACCOUNT currency
      * @param catalog      Catalog to use
      */
-    BusinessSubscription(final Subscription subscription, final Currency currency, Catalog catalog) {
+    BusinessSubscription(final Subscription subscription, final Currency currency, final Catalog catalog) {
         this(subscription.getCurrentPriceList() == null ? null : subscription.getCurrentPriceList().getName(), subscription.getCurrentPlan().getName(), subscription.getCurrentPhase().getName(), currency, subscription.getStartDate(), subscription.getState(), subscription.getId(), subscription.getBundleId(), catalog);
     }
 
-    public BusinessSubscription(final String priceList, final String currentPlan, final String currentPhase, final Currency currency, final DateTime startDate, final SubscriptionState state, final UUID subscriptionId, final UUID bundleId, Catalog catalog) {
+    public BusinessSubscription(final String priceList, final String currentPlan, final String currentPhase, final Currency currency, final DateTime startDate, final SubscriptionState state, final UUID subscriptionId, final UUID bundleId, final Catalog catalog) {
         Plan thePlan = null;
         PlanPhase thePhase = null;
         try {

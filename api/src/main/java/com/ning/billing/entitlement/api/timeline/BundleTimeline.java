@@ -21,9 +21,9 @@ import java.util.UUID;
 public interface BundleTimeline {
 
     String getViewId();
-    
+
     UUID getBundleId();
-    
+
     String getExternalKey();
 
     List<SubscriptionTimeline> getSubscriptions();

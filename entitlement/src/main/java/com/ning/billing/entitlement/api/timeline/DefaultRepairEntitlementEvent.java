@@ -17,10 +17,11 @@ package com.ning.billing.entitlement.api.timeline;
 
 import java.util.UUID;
 
+import org.joda.time.DateTime;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.joda.time.DateTime;
 
 public class DefaultRepairEntitlementEvent implements RepairEntitlementEvent {
 
@@ -28,19 +29,19 @@ public class DefaultRepairEntitlementEvent implements RepairEntitlementEvent {
     private final UUID bundleId;
     private final UUID accountId;
     private final DateTime effectiveDate;
-    
-    
+
+
     @JsonCreator
     public DefaultRepairEntitlementEvent(@JsonProperty("userToken") final UUID userToken,
-            @JsonProperty("accountId") final UUID accountId,
-            @JsonProperty("bundleId") final UUID bundleId,
-            @JsonProperty("effectiveDate") final DateTime effectiveDate) {
+                                         @JsonProperty("accountId") final UUID accountId,
+                                         @JsonProperty("bundleId") final UUID bundleId,
+                                         @JsonProperty("effectiveDate") final DateTime effectiveDate) {
         this.userToken = userToken;
         this.bundleId = bundleId;
         this.accountId = accountId;
         this.effectiveDate = effectiveDate;
     }
-    
+
     @JsonIgnore
     @Override
     public BusEventType getBusEventType() {
@@ -83,34 +84,45 @@ public class DefaultRepairEntitlementEvent implements RepairEntitlementEvent {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
+    public boolean equals(final Object obj) {
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
-        DefaultRepairEntitlementEvent other = (DefaultRepairEntitlementEvent) obj;
+        }
+        final DefaultRepairEntitlementEvent other = (DefaultRepairEntitlementEvent) obj;
         if (accountId == null) {
-            if (other.accountId != null)
+            if (other.accountId != null) {
                 return false;
-        } else if (!accountId.equals(other.accountId))
+            }
+        } else if (!accountId.equals(other.accountId)) {
             return false;
+        }
         if (bundleId == null) {
-            if (other.bundleId != null)
+            if (other.bundleId != null) {
                 return false;
-        } else if (!bundleId.equals(other.bundleId))
+            }
+        } else if (!bundleId.equals(other.bundleId)) {
             return false;
+        }
         if (effectiveDate == null) {
-            if (other.effectiveDate != null)
+            if (other.effectiveDate != null) {
                 return false;
-        } else if (effectiveDate.compareTo(other.effectiveDate) != 0)
+            }
+        } else if (effectiveDate.compareTo(other.effectiveDate) != 0) {
             return false;
+        }
         if (userToken == null) {
-            if (other.userToken != null)
+            if (other.userToken != null) {
                 return false;
-        } else if (!userToken.equals(other.userToken))
+            }
+        } else if (!userToken.equals(other.userToken)) {
             return false;
+        }
         return true;
     }
 }

@@ -16,16 +16,17 @@
 
 package com.ning.billing.util.entity.dao;
 
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallContextBinder;
-import com.ning.billing.util.entity.Entity;
-import com.ning.billing.util.entity.EntityPersistenceException;
+import java.util.List;
+
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
-import java.util.List;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallContextBinder;
+import com.ning.billing.util.entity.Entity;
+import com.ning.billing.util.entity.EntityPersistenceException;
 
 public interface EntitySqlDao<T extends Entity> {
     @SqlUpdate

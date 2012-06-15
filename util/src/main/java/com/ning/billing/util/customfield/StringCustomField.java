@@ -24,13 +24,13 @@ public class StringCustomField extends UpdatableEntityBase implements CustomFiel
     private final String name;
     private String value;
 
-    public StringCustomField(String name, String value) {
+    public StringCustomField(final String name, final String value) {
         super();
         this.name = name;
         this.value = value;
     }
 
-    public StringCustomField(UUID id, String name, String value) {
+    public StringCustomField(final UUID id, final String name, final String value) {
         super(id);
         this.name = name;
         this.value = value;
@@ -47,7 +47,7 @@ public class StringCustomField extends UpdatableEntityBase implements CustomFiel
     }
 
     @Override
-    public void setValue(String value) {
+    public void setValue(final String value) {
         this.value = value;
     }
 
@@ -66,26 +66,31 @@ public class StringCustomField extends UpdatableEntityBase implements CustomFiel
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
+    public boolean equals(final Object obj) {
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
-        StringCustomField other = (StringCustomField) obj;
+        }
+        final StringCustomField other = (StringCustomField) obj;
         if (name == null) {
-            if (other.name != null)
+            if (other.name != null) {
                 return false;
-        }
-        else if (!name.equals(other.name))
+            }
+        } else if (!name.equals(other.name)) {
             return false;
+        }
         if (value == null) {
-            if (other.value != null)
+            if (other.value != null) {
                 return false;
-        }
-        else if (!value.equals(other.value))
+            }
+        } else if (!value.equals(other.value)) {
             return false;
+        }
         return true;
     }
 

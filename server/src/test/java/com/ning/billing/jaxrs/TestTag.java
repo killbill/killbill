@@ -15,30 +15,29 @@
  */
 package com.ning.billing.jaxrs;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-
+import javax.ws.rs.core.Response.Status;
 import java.util.List;
 
-import javax.ws.rs.core.Response.Status;
-
-import com.ning.billing.jaxrs.resources.JaxrsResource;
 import org.testng.annotations.Test;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.ning.billing.jaxrs.json.TagDefinitionJson;
+import com.ning.billing.jaxrs.resources.JaxrsResource;
 import com.ning.http.client.Response;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+
 public class TestTag extends TestJaxrsBase {
-    @Test(groups="slow", enabled=true)
+    @Test(groups = "slow", enabled = true)
     public void testTagDefinitionOk() throws Exception {
-    
-        TagDefinitionJson input = new TagDefinitionJson("blue", "relaxing color");
+
+        final TagDefinitionJson input = new TagDefinitionJson("blue", "relaxing color");
         String baseJson = mapper.writeValueAsString(input);
         Response response = doPost(JaxrsResource.TAG_DEFINITIONS_PATH, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
 
-        String location = response.getHeader("Location");
+        final String location = response.getHeader("Location");
         assertNotNull(location);
 
         // Retrieves by Id based on Location returned
@@ -46,21 +45,21 @@ public class TestTag extends TestJaxrsBase {
         assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
 
         baseJson = response.getResponseBody();
-        TagDefinitionJson objFromJson = mapper.readValue(baseJson, TagDefinitionJson.class);
+        final TagDefinitionJson objFromJson = mapper.readValue(baseJson, TagDefinitionJson.class);
         assertNotNull(objFromJson);
         assertEquals(objFromJson, input);
     }
-    
-    @Test(groups="slow", enabled=true)
+
+    @Test(groups = "slow", enabled = true)
     public void testMultipleTagDefinitionOk() throws Exception {
-    
+
         Response response = doGet(JaxrsResource.TAG_DEFINITIONS_PATH, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
         String baseJson = response.getResponseBody();
-        
+
         List<TagDefinitionJson> objFromJson = mapper.readValue(baseJson, new TypeReference<List<TagDefinitionJson>>() {});
-        int sizeSystemTag = (objFromJson == null || objFromJson.size() == 0) ? 0 : objFromJson.size();
-        
+        final int sizeSystemTag = (objFromJson == null || objFromJson.size() == 0) ? 0 : objFromJson.size();
+
         TagDefinitionJson input = new TagDefinitionJson("blue", "relaxing color");
         baseJson = mapper.writeValueAsString(input);
         response = doPost(JaxrsResource.TAG_DEFINITIONS_PATH, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
@@ -84,13 +83,13 @@ public class TestTag extends TestJaxrsBase {
         response = doGet(JaxrsResource.TAG_DEFINITIONS_PATH, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
         baseJson = response.getResponseBody();
-        
+
         objFromJson = mapper.readValue(baseJson, new TypeReference<List<TagDefinitionJson>>() {});
         assertNotNull(objFromJson);
         assertEquals(objFromJson.size(), 4 + sizeSystemTag);
 
         // STEPH currently broken Tag API does not work as expected...
-        
+
         /*
         String uri = JaxrsResource.TAG_DEFINITIONS_PATH + "/green";
         response = doDelete(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
@@ -105,5 +104,5 @@ public class TestTag extends TestJaxrsBase {
         assertEquals(objFromJson.size(), 3 + sizeSystemTag);
         */
     }
-    
+
 }

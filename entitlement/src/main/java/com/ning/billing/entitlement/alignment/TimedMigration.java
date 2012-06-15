@@ -34,8 +34,8 @@ public class TimedMigration {
     private final String priceList;
 
 
-    public TimedMigration(DateTime eventTime, EventType eventType,
-            ApiEventType apiEventType, Plan plan, PlanPhase phase, String priceList) {
+    public TimedMigration(final DateTime eventTime, final EventType eventType,
+                          final ApiEventType apiEventType, final Plan plan, final PlanPhase phase, final String priceList) {
         super();
         this.eventTime = eventTime;
         this.eventType = eventType;
