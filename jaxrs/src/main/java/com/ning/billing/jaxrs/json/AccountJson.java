@@ -117,7 +117,8 @@ public class AccountJson extends AccountJsonSimple {
 
             @Override
             public String getLocale() {
-                return null;
+                // TODO
+                return "en";
             }
 
             @Override
