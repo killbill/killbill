@@ -42,7 +42,7 @@ public class HtmlInvoiceGenerator {
         this.config = config;
     }
 
-    public String generateInvoice(final Account account, final Invoice invoice, final String templateName) throws IOException {
+    public String generateInvoice(final Account account, final Invoice invoice) throws IOException {
         final Map<String, Object> data = new HashMap<String, Object>();
         final DefaultInvoiceTranslator invoiceTranslator = new DefaultInvoiceTranslator(config);
         final Locale locale = new Locale(account.getLocale());
@@ -53,6 +53,6 @@ public class HtmlInvoiceGenerator {
         final InvoiceFormatter formattedInvoice = factory.createInvoiceFormatter(config, invoice, locale);
         data.put("invoice", formattedInvoice);
 
-        return templateEngine.executeTemplate(templateName, data);
+        return templateEngine.executeTemplate(config.getTemplateName(), data);
     }
 }

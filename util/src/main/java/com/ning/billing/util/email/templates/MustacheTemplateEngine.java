@@ -19,10 +19,12 @@ package com.ning.billing.util.email.templates;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.net.URISyntaxException;
 import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
 
+import com.ning.billing.util.config.UriAccessor;
 import com.samskivert.mustache.Mustache;
 import com.samskivert.mustache.Template;
 
@@ -35,7 +37,12 @@ public class MustacheTemplateEngine implements TemplateEngine {
     }
 
     private String getTemplateText(final String templateName) throws IOException {
-        final InputStream templateStream = this.getClass().getResourceAsStream(templateName + ".mustache");
+        final InputStream templateStream;
+        try {
+            templateStream = UriAccessor.accessUri(templateName);
+        } catch (URISyntaxException e) {
+            throw new IOException(e);
+        }
         final StringWriter writer = new StringWriter();
         IOUtils.copy(templateStream, writer, "UTF-8");
         return writer.toString();

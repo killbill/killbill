@@ -16,6 +16,8 @@
 
 package com.ning.billing.invoice.api.migration;
 
+import org.skife.config.ConfigurationObjectFactory;
+
 import com.ning.billing.invoice.MockModule;
 import com.ning.billing.invoice.api.InvoiceNotifier;
 import com.ning.billing.invoice.glue.DefaultInvoiceModule;
@@ -25,6 +27,7 @@ import com.ning.billing.invoice.notification.NullInvoiceNotifier;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.util.email.templates.TemplateModule;
+import com.ning.billing.util.template.translation.TranslatorConfig;
 
 public class MockModuleNoEntitlement extends MockModule {
 //	@Override
@@ -50,6 +53,9 @@ public class MockModuleNoEntitlement extends MockModule {
                 ((ZombieControl) poster).addResult("insertNextBillingNotification", BrainDeadProxyFactory.ZOMBIE_VOID);
                 bind(NextBillingDatePoster.class).toInstance(poster);
                 bind(InvoiceNotifier.class).to(NullInvoiceNotifier.class).asEagerSingleton();
+
+                final TranslatorConfig config = new ConfigurationObjectFactory(System.getProperties()).build(TranslatorConfig.class);
+                bind(TranslatorConfig.class).toInstance(config);
             }
 
 

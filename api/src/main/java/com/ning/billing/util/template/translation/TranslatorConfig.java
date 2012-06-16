@@ -20,7 +20,15 @@ import org.skife.config.Config;
 import org.skife.config.Default;
 
 public interface TranslatorConfig {
-    @Config("email.default.locale")
+    @Config("killbill.template.default.locale")
     @Default("en_US")
     public String getDefaultLocale();
+
+    @Config("killbill.template.bundlePath")
+    @Default("com/ning/billing/util/template/translation/InvoiceTranslation")
+    public String getBundlePath();
+
+    @Config("killbill.template.name")
+    @Default("com/ning/billing/util/email/templates/HtmlInvoiceTemplate.mustache")
+    String getTemplateName();
 }

@@ -116,6 +116,6 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     public String getInvoiceAsHTML(final UUID invoiceId) throws AccountApiException, IOException {
         final Invoice invoice = getInvoice(invoiceId);
         final Account account = accountUserApi.getAccountById(invoice.getAccountId());
-        return generator.generateInvoice(account, invoice, "HtmlInvoiceTemplate");
+        return generator.generateInvoice(account, invoice);
     }
 }
