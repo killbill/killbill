@@ -234,7 +234,7 @@ public class TestAccount extends TestJaxrsBase {
     @Test(groups = "slow", enabled = true)
     public void testAccountPayments() throws Exception {
 
-        clock.setTime(new DateTime(2012, 4, 25, 0, 3, 42, 0));
+        //clock.setTime(new DateTime(2012, 4, 25, 0, 3, 42, 0));
 
         final AccountJson accountJson = createAccountWithDefaultPaymentMethod("ermenehildo", "shtyrgfhwe", "ermenehildo@yahoo.com");
         assertNotNull(accountJson);

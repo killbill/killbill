@@ -54,7 +54,6 @@ public class DefaultCatalogService implements KillbillService, Provider<Catalog>
                 final String url = config.getCatalogURI();
                 catalog = loader.load(url);
 
-                //catalog = XMLLoader.getObjectFromProperty(config.getCatalogURI(), Catalog.class);
                 isInitialized = true;
             } catch (Exception e) {
                 throw new ServiceException(e);

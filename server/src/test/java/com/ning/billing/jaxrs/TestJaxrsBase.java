@@ -134,14 +134,17 @@ public class TestJaxrsBase {
             throw new RuntimeException(e);
         }
 
-        // Use the full path for the catalog
+        /*
         final String catalogURI = System.getProperty("killbill.catalog.uri");
+        System.setProperty("killbill.catalog.uri", Resources.getResource(catalogURI).toExternalForm());
+
         if (catalogURI != null) {
             try {
-                System.setProperty("killbill.catalog.uri", Resources.getResource(catalogURI).toExternalForm());
+                
             } catch (IllegalArgumentException ignored) {
             }
         }
+        */
     }
 
     public static class TestKillbillGuiceListener extends KillbillGuiceListener {

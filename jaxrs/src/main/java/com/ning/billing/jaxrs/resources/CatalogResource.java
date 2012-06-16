@@ -22,15 +22,22 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+
+import org.joda.time.DateTime;
+
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Listing;
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.StaticCatalog;
+import com.ning.billing.jaxrs.json.CatalogJsonSimple;
 import com.ning.billing.jaxrs.json.PlanDetailJason;
 import com.ning.billing.util.config.XMLWriter;
 
@@ -80,5 +87,16 @@ public class CatalogResource implements JaxrsResource {
             details.add(new PlanDetailJason(listing));
         }
         return Response.status(Status.OK).entity(details).build();
+    }
+
+    @GET
+    @Path("/simpleCatalog")
+    @Produces(APPLICATION_JSON)
+    public Response getSimpleCatalog() throws CatalogApiException {
+
+        StaticCatalog catalog  = catalogService.getCurrentCatalog();
+        
+        CatalogJsonSimple json = new CatalogJsonSimple(catalog);
+        return Response.status(Status.OK).entity(json).build();            
     }
 }

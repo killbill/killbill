@@ -83,8 +83,8 @@ public class SubscriptionResource extends JaxRsResourceBase {
 
     @Inject
     public SubscriptionResource(final JaxrsUriBuilder uriBuilder, final EntitlementUserApi entitlementApi,
-                                final Context context, final KillbillEventHandler killbillHandler,
-                                final TagUserApi tagUserApi, final TagHelper tagHelper, final CustomFieldUserApi customFieldUserApi) {
+            final Context context, final KillbillEventHandler killbillHandler,
+            final TagUserApi tagUserApi, final TagHelper tagHelper, final CustomFieldUserApi customFieldUserApi) {
         super(uriBuilder, tagUserApi, tagHelper, customFieldUserApi);
         this.uriBuilder = uriBuilder;
         this.entitlementApi = entitlementApi;
@@ -116,12 +116,12 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response createSubscription(final SubscriptionJsonNoEvents subscription,
-                                       @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
-                                       @QueryParam(QUERY_CALL_COMPLETION) @DefaultValue("false") final Boolean callCompletion,
-                                       @QueryParam(QUERY_CALL_TIMEOUT) @DefaultValue("3") final long timeoutSec,
-                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                       @HeaderParam(HDR_REASON) final String reason,
-                                       @HeaderParam(HDR_COMMENT) final String comment) {
+            @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
+            @QueryParam(QUERY_CALL_COMPLETION) @DefaultValue("false") final Boolean callCompletion,
+            @QueryParam(QUERY_CALL_TIMEOUT) @DefaultValue("3") final long timeoutSec,
+            @HeaderParam(HDR_CREATED_BY) final String createdBy,
+            @HeaderParam(HDR_REASON) final String reason,
+            @HeaderParam(HDR_COMMENT) final String comment) {
 
 
         final SubscriptionCallCompletionCallback<Subscription> callback = new SubscriptionCallCompletionCallback<Subscription>() {
@@ -132,8 +132,8 @@ public class SubscriptionResource extends JaxRsResourceBase {
                 final UUID uuid = UUID.fromString(subscription.getBundleId());
 
                 final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(subscription.getProductName(),
-                                                                 ProductCategory.valueOf(subscription.getProductCategory()),
-                                                                 BillingPeriod.valueOf(subscription.getBillingPeriod()), subscription.getPriceList(), null);
+                        ProductCategory.valueOf(subscription.getProductCategory()),
+                        BillingPeriod.valueOf(subscription.getBillingPeriod()), subscription.getPriceList(), null);
                 return entitlementApi.createSubscription(uuid, spec, inputDate, ctx);
             }
 
@@ -156,13 +156,13 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Path("/{subscriptionId:" + UUID_PATTERN + "}")
     public Response changeSubscriptionPlan(final SubscriptionJsonNoEvents subscription,
-                                           @PathParam("subscriptionId") final String subscriptionId,
-                                           @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
-                                           @QueryParam(QUERY_CALL_COMPLETION) @DefaultValue("false") final Boolean callCompletion,
-                                           @QueryParam(QUERY_CALL_TIMEOUT) @DefaultValue("3") final long timeoutSec,
-                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                           @HeaderParam(HDR_REASON) final String reason,
-                                           @HeaderParam(HDR_COMMENT) final String comment) {
+            @PathParam("subscriptionId") final String subscriptionId,
+            @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
+            @QueryParam(QUERY_CALL_COMPLETION) @DefaultValue("false") final Boolean callCompletion,
+            @QueryParam(QUERY_CALL_TIMEOUT) @DefaultValue("3") final long timeoutSec,
+            @HeaderParam(HDR_CREATED_BY) final String createdBy,
+            @HeaderParam(HDR_REASON) final String reason,
+            @HeaderParam(HDR_COMMENT) final String comment) {
 
         final SubscriptionCallCompletionCallback<Response> callback = new SubscriptionCallCompletionCallback<Response>() {
 
@@ -170,8 +170,8 @@ public class SubscriptionResource extends JaxRsResourceBase {
 
             @Override
             public Response doOperation(final CallContext ctx)
-                    throws EntitlementUserApiException, InterruptedException,
-                    TimeoutException {
+            throws EntitlementUserApiException, InterruptedException,
+            TimeoutException {
                 try {
                     final UUID uuid = UUID.fromString(subscriptionId);
                     final Subscription current = entitlementApi.getSubscriptionFromId(uuid);
@@ -213,9 +213,9 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @Path("/{subscriptionId:" + UUID_PATTERN + "}/uncancel")
     @Produces(APPLICATION_JSON)
     public Response uncancelSubscriptionPlan(@PathParam("subscriptionId") final String subscriptionId,
-                                             @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                             @HeaderParam(HDR_REASON) final String reason,
-                                             @HeaderParam(HDR_COMMENT) final String comment) {
+            @HeaderParam(HDR_CREATED_BY) final String createdBy,
+            @HeaderParam(HDR_REASON) final String reason,
+            @HeaderParam(HDR_COMMENT) final String comment) {
         try {
             final UUID uuid = UUID.fromString(subscriptionId);
             final Subscription current = entitlementApi.getSubscriptionFromId(uuid);
@@ -236,12 +236,12 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @Path("/{subscriptionId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
     public Response cancelSubscriptionPlan(@PathParam("subscriptionId") final String subscriptionId,
-                                           @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
-                                           @QueryParam(QUERY_CALL_COMPLETION) @DefaultValue("false") final Boolean callCompletion,
-                                           @QueryParam(QUERY_CALL_TIMEOUT) @DefaultValue("5") final long timeoutSec,
-                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                           @HeaderParam(HDR_REASON) final String reason,
-                                           @HeaderParam(HDR_COMMENT) final String comment) {
+            @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
+            @QueryParam(QUERY_CALL_COMPLETION) @DefaultValue("false") final Boolean callCompletion,
+            @QueryParam(QUERY_CALL_TIMEOUT) @DefaultValue("5") final long timeoutSec,
+            @HeaderParam(HDR_CREATED_BY) final String createdBy,
+            @HeaderParam(HDR_REASON) final String reason,
+            @HeaderParam(HDR_COMMENT) final String comment) {
 
         final SubscriptionCallCompletionCallback<Response> callback = new SubscriptionCallCompletionCallback<Response>() {
 
@@ -249,8 +249,8 @@ public class SubscriptionResource extends JaxRsResourceBase {
 
             @Override
             public Response doOperation(final CallContext ctx)
-                    throws EntitlementUserApiException, InterruptedException,
-                    TimeoutException {
+            throws EntitlementUserApiException, InterruptedException,
+            TimeoutException {
                 try {
                     final UUID uuid = UUID.fromString(subscriptionId);
 
@@ -289,34 +289,34 @@ public class SubscriptionResource extends JaxRsResourceBase {
         }
 
         @Override
-        public void onSubscriptionTransition(final SubscriptionEvent curEvent) {
-            log.debug(String.format("Got event SubscriptionTransition token = %s, type = %s, remaining = %d ",
-                                    curEvent.getUserToken(), curEvent.getTransitionType(), curEvent.getRemainingEventsForUserOperation()));
+        public void onSubscriptionTransition(SubscriptionEvent curEvent) {
+            log.info(String.format("Got event SubscriptionTransition token = %s, type = %s, remaining = %d ", 
+                    curEvent.getUserToken(), curEvent.getTransitionType(),  curEvent.getRemainingEventsForUserOperation())); 
         }
 
         @Override
         public void onEmptyInvoice(final EmptyInvoiceEvent curEvent) {
-            log.debug(String.format("Got event EmptyInvoiceNotification token = %s ", curEvent.getUserToken()));
+            log.info(String.format("Got event EmptyInvoiceNotification token = %s ", curEvent.getUserToken())); 
             notifyForCompletion();
         }
 
         @Override
-        public void onInvoiceCreation(final InvoiceCreationEvent curEvent) {
-            log.debug(String.format("Got event InvoiceCreationNotification token = %s ", curEvent.getUserToken()));
+        public void onInvoiceCreation(InvoiceCreationEvent curEvent) {
+            log.info(String.format("Got event InvoiceCreationNotification token = %s ", curEvent.getUserToken())); 
             if (curEvent.getAmountOwed().compareTo(BigDecimal.ZERO) <= 0) {
                 notifyForCompletion();
             }
         }
 
         @Override
-        public void onPaymentInfo(final PaymentInfoEvent curEvent) {
-            log.debug(String.format("Got event PaymentInfo token = %s ", curEvent.getUserToken()));
+        public void onPaymentInfo(PaymentInfoEvent curEvent) {
+            log.info(String.format("Got event PaymentInfo token = %s ", curEvent.getUserToken()));  
             notifyForCompletion();
         }
 
         @Override
-        public void onPaymentError(final PaymentErrorEvent curEvent) {
-            log.debug(String.format("Got event PaymentError token = %s ", curEvent.getUserToken()));
+        public void onPaymentError(PaymentErrorEvent curEvent) {
+            log.info(String.format("Got event PaymentError token = %s ", curEvent.getUserToken())); 
             notifyForCompletion();
         }
     }
@@ -332,11 +332,11 @@ public class SubscriptionResource extends JaxRsResourceBase {
     private class SubscriptionCallCompletion<T> {
 
         public Response withSynchronization(final SubscriptionCallCompletionCallback<T> callback,
-                                            final long timeoutSec,
-                                            final boolean callCompletion,
-                                            final String createdBy,
-                                            final String reason,
-                                            final String comment) {
+                final long timeoutSec,
+                final boolean callCompletion,
+                final String createdBy,
+                final String reason,
+                final String comment) {
 
             final CallContext ctx = context.createContext(createdBy, reason, comment);
             final CompletionUserRequestSubscription waiter = callCompletion ? new CompletionUserRequestSubscription(ctx.getUserToken()) : null;
@@ -376,12 +376,12 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response createCustomFields(@PathParam(ID_PARAM_NAME) final String id,
-                                       final List<CustomFieldJson> customFields,
-                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                       @HeaderParam(HDR_REASON) final String reason,
-                                       @HeaderParam(HDR_COMMENT) final String comment) {
+            final List<CustomFieldJson> customFields,
+            @HeaderParam(HDR_CREATED_BY) final String createdBy,
+            @HeaderParam(HDR_REASON) final String reason,
+            @HeaderParam(HDR_COMMENT) final String comment) {
         return super.createCustomFields(UUID.fromString(id), customFields,
-                                        context.createContext(createdBy, reason, comment));
+                context.createContext(createdBy, reason, comment));
     }
 
     @DELETE
@@ -389,12 +389,12 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response deleteCustomFields(@PathParam(ID_PARAM_NAME) final String id,
-                                       @QueryParam(QUERY_CUSTOM_FIELDS) final String customFieldList,
-                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                       @HeaderParam(HDR_REASON) final String reason,
-                                       @HeaderParam(HDR_COMMENT) final String comment) {
+            @QueryParam(QUERY_CUSTOM_FIELDS) final String customFieldList,
+            @HeaderParam(HDR_CREATED_BY) final String createdBy,
+            @HeaderParam(HDR_REASON) final String reason,
+            @HeaderParam(HDR_COMMENT) final String comment) {
         return super.deleteCustomFields(UUID.fromString(id), customFieldList,
-                                        context.createContext(createdBy, reason, comment));
+                context.createContext(createdBy, reason, comment));
     }
 
     @GET
@@ -409,12 +409,12 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response createTags(@PathParam(ID_PARAM_NAME) final String id,
-                               @QueryParam(QUERY_TAGS) final String tagList,
-                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                               @HeaderParam(HDR_REASON) final String reason,
-                               @HeaderParam(HDR_COMMENT) final String comment) {
+            @QueryParam(QUERY_TAGS) final String tagList,
+            @HeaderParam(HDR_CREATED_BY) final String createdBy,
+            @HeaderParam(HDR_REASON) final String reason,
+            @HeaderParam(HDR_COMMENT) final String comment) {
         return super.createTags(UUID.fromString(id), tagList,
-                                context.createContext(createdBy, reason, comment));
+                context.createContext(createdBy, reason, comment));
     }
 
     @DELETE
@@ -422,13 +422,13 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response deleteTags(@PathParam(ID_PARAM_NAME) final String id,
-                               @QueryParam(QUERY_TAGS) final String tagList,
-                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                               @HeaderParam(HDR_REASON) final String reason,
-                               @HeaderParam(HDR_COMMENT) final String comment) {
+            @QueryParam(QUERY_TAGS) final String tagList,
+            @HeaderParam(HDR_CREATED_BY) final String createdBy,
+            @HeaderParam(HDR_REASON) final String reason,
+            @HeaderParam(HDR_COMMENT) final String comment) {
 
         return super.deleteTags(UUID.fromString(id), tagList,
-                                context.createContext(createdBy, reason, comment));
+                context.createContext(createdBy, reason, comment));
     }
 
     @Override

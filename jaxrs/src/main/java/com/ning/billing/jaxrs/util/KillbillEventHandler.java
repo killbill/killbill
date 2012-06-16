@@ -52,8 +52,8 @@ public class KillbillEventHandler {
     }
 
     /*
-    * IRS event handler for killbill entitlement events
-    */
+     * Killbill server event handler
+     */
     @Subscribe
     public void handleEntitlementevents(final BusEvent event) {
         final List<CompletionUserRequestNotifier> runningWaiters = new ArrayList<CompletionUserRequestNotifier>();
