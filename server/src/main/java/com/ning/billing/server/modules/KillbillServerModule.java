@@ -16,6 +16,7 @@
 
 package com.ning.billing.server.modules;
 
+
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.IDBI;
 
@@ -57,7 +58,13 @@ public class KillbillServerModule extends AbstractModule {
         installKillbillModules();
     }
 
+    
     protected void configureDao() {
+        // Load mysql driver if needed
+        try {
+            Class.forName ("com.mysql.jdbc.Driver").newInstance ();
+        } catch (Exception ignore) {
+        }
         bind(IDBI.class).to(DBI.class).asEagerSingleton();
         bind(DBI.class).toProvider(DBIProvider.class).asEagerSingleton();
     }
