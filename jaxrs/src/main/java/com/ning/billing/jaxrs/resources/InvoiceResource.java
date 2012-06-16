@@ -28,6 +28,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -61,6 +62,7 @@ import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.dao.ObjectType;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.TEXT_HTML;
 
 
 @Path(JaxrsResource.INVOICES_PATH)
@@ -126,6 +128,19 @@ public class InvoiceResource extends JaxRsResourceBase {
         } else {
             final InvoiceJsonSimple json = withItems ? new InvoiceJsonWithItems(invoice) : new InvoiceJsonSimple(invoice);
             return Response.status(Status.OK).entity(json).build();
+        }
+    }
+
+    @GET
+    @Path("/{invoiceId:" + UUID_PATTERN + "}/html")
+    @Produces(TEXT_HTML)
+    public Response getInvoiceAsHTML(@PathParam("invoiceId") final String invoiceId) {
+        try {
+            return Response.status(Status.OK).entity(invoiceApi.getInvoiceAsHTML(UUID.fromString(invoiceId))).build();
+        } catch (AccountApiException e) {
+            return Response.status(Status.NO_CONTENT).build();
+        } catch (IOException e) {
+            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         }
     }
 

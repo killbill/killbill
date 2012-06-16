@@ -16,6 +16,7 @@
 
 package com.ning.billing.invoice.api;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.List;
@@ -23,6 +24,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.callcontext.CallContext;
@@ -50,4 +52,6 @@ public interface InvoiceUserApi {
 
     public InvoiceItem insertCredit(UUID accountId, BigDecimal amount, DateTime effectiveDate,
                                     Currency currency, CallContext context) throws InvoiceApiException;
+
+    public String getInvoiceAsHTML(UUID invoiceId) throws AccountApiException, IOException;
 }
