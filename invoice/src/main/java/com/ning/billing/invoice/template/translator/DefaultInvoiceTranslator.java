@@ -36,7 +36,7 @@ public class DefaultInvoiceTranslator extends DefaultTranslatorBase implements I
 
     @Override
     protected String getBundlePath() {
-        return "com/ning/billing/util/email/translation/InvoiceTranslation";
+        return "com/ning/billing/util/template/translation/InvoiceTranslation";
     }
 
     @Override
