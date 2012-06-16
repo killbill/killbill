@@ -50,8 +50,6 @@ public class UriAccessor {
         } else if (scheme.equals(URI_SCHEME_FOR_FILE) &&
                 !uri.getSchemeSpecificPart().startsWith("/")) { // interpret URIs of this form as relative path uris
             url = new File(uri.getSchemeSpecificPart()).toURI().toURL();
-        } else {
-            throw new RuntimeException("");
         }
         url = uri.toURL();
         return url.openConnection().getInputStream();
