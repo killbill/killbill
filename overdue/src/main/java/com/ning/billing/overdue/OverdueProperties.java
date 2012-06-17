@@ -38,7 +38,7 @@ public interface OverdueProperties extends NotificationConfig, KillbillConfig {
     @Default("36")
     public int getNumberOfMonthsInFuture();
 
-    @Config("killbill.overdue.configUri")
+    @Config("killbill.overdue.uri")
     @Default("jar:///com/ning/billing/irs/overdue/Config.xml")
     public String getConfigURI();
 }
