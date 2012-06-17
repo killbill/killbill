@@ -20,12 +20,16 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
 
 public class RecurringInvoiceItem extends InvoiceItemBase {
+    private final DateTimeFormatter dateTimeFormatter = DateTimeFormat.mediumDate();
+
     private final BigDecimal rate;
     private final UUID reversedItemId;
 
@@ -78,7 +82,7 @@ public class RecurringInvoiceItem extends InvoiceItemBase {
 
     @Override
     public String getDescription() {
-        return String.format("%s from %s to %s", phaseName, startDate.toString(), endDate.toString());
+        return String.format("%s from %s to %s", phaseName, startDate.toString(dateTimeFormatter), endDate.toString(dateTimeFormatter));
     }
 
     public UUID getReversedItemId() {
