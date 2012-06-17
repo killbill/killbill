@@ -26,7 +26,7 @@ public interface InvoiceConfig extends NotificationConfig, KillbillConfig {
     public long getSleepTimeMs();
 
     @Override
-    @Config("killbill.notifications.off")
+    @Config("killbill.invoice.engine.notifications.off")
     @Default("false")
     public boolean isNotificationProcessingOff();
 

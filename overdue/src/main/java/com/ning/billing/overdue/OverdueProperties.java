@@ -24,14 +24,13 @@ import com.ning.billing.config.NotificationConfig;
 
 
 public interface OverdueProperties extends NotificationConfig, KillbillConfig {
-
     @Override
     @Config("killbill.overdue.engine.notifications.sleep")
     @Default("500")
     public long getSleepTimeMs();
 
     @Override
-    @Config("killbill.notifications.off")
+    @Config("killbill.overdue.engine.notifications.off")
     @Default("false")
     public boolean isNotificationProcessingOff();
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2012 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -23,8 +23,6 @@ import org.skife.config.Default;
 
 
 public interface PaymentConfig extends NotificationConfig, KillbillConfig {
-
-
     @Config("killbill.payment.provider.default")
     @Default("noop")
     public String getDefaultPaymentProvider();
@@ -51,7 +49,7 @@ public interface PaymentConfig extends NotificationConfig, KillbillConfig {
     public long getSleepTimeMs();
 
     @Override
-    @Config("killbill.payment.engine.events.off")
+    @Config("killbill.payment.engine.notifications.off")
     @Default("false")
     public boolean isNotificationProcessingOff();
 
