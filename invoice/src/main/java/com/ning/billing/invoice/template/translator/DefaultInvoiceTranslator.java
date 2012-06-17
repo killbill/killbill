@@ -86,7 +86,7 @@ public class DefaultInvoiceTranslator extends DefaultTranslatorBase implements I
 
     @Override
     public String getCompanyCityProvincePostalCode() {
-        return getTranslation(locale, "");
+        return getTranslation(locale, "companyCityProvincePostalCode");
     }
 
     @Override
