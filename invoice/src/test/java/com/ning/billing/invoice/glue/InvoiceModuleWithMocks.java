@@ -16,12 +16,17 @@
 
 package com.ning.billing.invoice.glue;
 
+import org.skife.config.ConfigurationObjectFactory;
+
 import com.ning.billing.invoice.api.InvoiceNotifier;
+import com.ning.billing.invoice.api.formatters.InvoiceFormatterFactory;
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.dao.MockInvoiceDao;
 import com.ning.billing.invoice.notification.NullInvoiceNotifier;
+import com.ning.billing.invoice.template.formatters.DefaultInvoiceFormatterFactory;
 import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.globallocker.MockGlobalLocker;
+import com.ning.billing.util.template.translation.TranslatorConfig;
 
 
 public class InvoiceModuleWithMocks extends DefaultInvoiceModule {
@@ -40,6 +45,9 @@ public class InvoiceModuleWithMocks extends DefaultInvoiceModule {
     @Override
     protected void installNotifiers() {
         bind(InvoiceNotifier.class).to(NullInvoiceNotifier.class).asEagerSingleton();
+        final TranslatorConfig config = new ConfigurationObjectFactory(System.getProperties()).build(TranslatorConfig.class);
+        bind(TranslatorConfig.class).toInstance(config);
+        bind(InvoiceFormatterFactory.class).to(DefaultInvoiceFormatterFactory.class).asEagerSingleton();
     }
 
     @Override

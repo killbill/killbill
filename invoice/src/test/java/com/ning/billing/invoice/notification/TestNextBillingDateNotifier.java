@@ -57,6 +57,7 @@ import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.email.templates.TemplateModule;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.BusModule.BusType;
 import com.ning.billing.util.glue.NotificationQueueModule;
@@ -119,6 +120,7 @@ public class TestNextBillingDateNotifier {
                 install(new MockJunctionModule());
                 install(new MockCatalogModule());
                 install(new NotificationQueueModule());
+                install(new TemplateModule());
 
                 final MysqlTestingHelper helper = new MysqlTestingHelper();
                 bind(MysqlTestingHelper.class).toInstance(helper);
