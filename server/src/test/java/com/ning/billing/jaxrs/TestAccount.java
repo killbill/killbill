@@ -245,9 +245,7 @@ public class TestAccount extends TestJaxrsBase {
         final SubscriptionJsonNoEvents subscriptionJson = createSubscription(bundleJson.getBundleId(), "Shotgun", ProductCategory.BASE.toString(), BillingPeriod.MONTHLY.toString(), true);
         assertNotNull(subscriptionJson);
 
-        // MOVE AFTER TRIAL
-        clock.addMonths(3);
-
+        clock.addMonths(1);
         crappyWaitForLackOfProperSynchonization();
 
 
@@ -257,7 +255,7 @@ public class TestAccount extends TestJaxrsBase {
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
         final String baseJson = response.getResponseBody();
         final List<PaymentJsonSimple> objFromJson = mapper.readValue(baseJson, new TypeReference<List<PaymentJsonSimple>>() {});
-        Assert.assertEquals(objFromJson.size(), 3);
+        Assert.assertEquals(objFromJson.size(), 1);
     }
 
     @Test(groups = "slow", enabled = true)
