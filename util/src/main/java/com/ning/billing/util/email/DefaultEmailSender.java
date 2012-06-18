@@ -66,7 +66,7 @@ public class DefaultEmailSender implements EmailSender {
             email.setSSL(config.useSSL());
             email.send();
         } catch (EmailException ee) {
-            log.warn("Failed to send e-mail", ee);
+            throw new EmailApiException(ee, ErrorCode.EMAIL_SENDING_FAILED);
         }
     }
 }
