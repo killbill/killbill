@@ -46,4 +46,8 @@ public interface EmailConfig extends KillbillConfig {
     @Config("killbill.mail.from")
     @Default("support@example.com")
     String getDefaultFrom();
+
+    @Config("killbill.mail.useSSL")
+    @Default("false")
+    boolean useSSL();
 }
