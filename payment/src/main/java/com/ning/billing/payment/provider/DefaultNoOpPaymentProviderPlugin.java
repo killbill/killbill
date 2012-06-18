@@ -24,8 +24,6 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.commons.lang.RandomStringUtils;
-
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
@@ -37,8 +35,6 @@ import com.ning.billing.payment.plugin.api.PaymentProviderAccount;
 import com.ning.billing.util.clock.Clock;
 
 public class DefaultNoOpPaymentProviderPlugin implements NoOpPaymentPluginApi {
-
-
     private final AtomicBoolean makeNextInvoiceFailWithError = new AtomicBoolean(false);
     private final AtomicBoolean makeNextInvoiceFailWithException = new AtomicBoolean(false);
     private final AtomicBoolean makeAllInvoicesFailWithError = new AtomicBoolean(false);
@@ -109,8 +105,8 @@ public class DefaultNoOpPaymentProviderPlugin implements NoOpPaymentPluginApi {
     @Override
     public String createPaymentProviderAccount(final Account account) throws PaymentPluginApiException {
         if (account != null) {
-            final String id = String.valueOf(RandomStringUtils.randomAlphanumeric(10));
-            final String paymentMethodId = String.valueOf(RandomStringUtils.randomAlphanumeric(10));
+            final String id = UUID.randomUUID().toString();
+            final String paymentMethodId = UUID.randomUUID().toString();
             accounts.put(account.getExternalKey(),
                          new PaymentProviderAccount.Builder().setAccountKey(account.getExternalKey())
                                                              .setId(id)

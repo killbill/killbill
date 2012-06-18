@@ -30,7 +30,6 @@ import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.io.IOUtils;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.IDBI;
@@ -46,7 +45,6 @@ import org.testng.annotations.BeforeSuite;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
-import com.google.common.io.Resources;
 import com.google.inject.Module;
 import com.ning.billing.account.glue.AccountModule;
 import com.ning.billing.analytics.setup.AnalyticsModule;
@@ -85,6 +83,7 @@ import com.ning.billing.util.glue.CustomFieldModule;
 import com.ning.billing.util.glue.GlobalLockerModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.TagStoreModule;
+import com.ning.billing.util.io.IOUtils;
 import com.ning.http.client.AsyncCompletionHandler;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
@@ -133,18 +132,6 @@ public class TestJaxrsBase {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
-        /*
-        final String catalogURI = System.getProperty("killbill.catalog.uri");
-        System.setProperty("killbill.catalog.uri", Resources.getResource(catalogURI).toExternalForm());
-
-        if (catalogURI != null) {
-            try {
-                
-            } catch (IllegalArgumentException ignored) {
-            }
-        }
-        */
     }
 
     public static class TestKillbillGuiceListener extends KillbillGuiceListener {

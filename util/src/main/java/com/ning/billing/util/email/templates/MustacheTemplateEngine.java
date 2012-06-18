@@ -18,13 +18,11 @@ package com.ning.billing.util.email.templates;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringWriter;
 import java.net.URISyntaxException;
 import java.util.Map;
 
-import org.apache.commons.io.IOUtils;
-
 import com.ning.billing.util.config.UriAccessor;
+import com.ning.billing.util.io.IOUtils;
 import com.samskivert.mustache.Mustache;
 import com.samskivert.mustache.Template;
 
@@ -43,8 +41,7 @@ public class MustacheTemplateEngine implements TemplateEngine {
         } catch (URISyntaxException e) {
             throw new IOException(e);
         }
-        final StringWriter writer = new StringWriter();
-        IOUtils.copy(templateStream, writer, "UTF-8");
-        return writer.toString();
+
+        return IOUtils.toString(templateStream);
     }
 }

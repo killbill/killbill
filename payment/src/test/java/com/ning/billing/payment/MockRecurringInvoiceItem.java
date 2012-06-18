@@ -20,7 +20,6 @@ import javax.annotation.Nullable;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.Currency;
@@ -160,7 +159,7 @@ public class MockRecurringInvoiceItem extends EntityBase implements InvoiceItem 
 
     @Override
     public InvoiceItem asReversingItem() {
-        throw new NotImplementedException();
+        throw new UnsupportedOperationException();
     }
 
     @Override

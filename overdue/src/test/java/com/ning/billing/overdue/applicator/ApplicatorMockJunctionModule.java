@@ -19,7 +19,6 @@ package com.ning.billing.overdue.applicator;
 import java.util.SortedSet;
 import java.util.UUID;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.joda.time.DateTime;
 
 import com.ning.billing.junction.api.Blockable;
@@ -29,7 +28,6 @@ import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.mock.glue.MockJunctionModule;
 
 public class ApplicatorMockJunctionModule extends MockJunctionModule {
-
     public static class ApplicatorBlockingApi implements BlockingApi {
         private BlockingState blockingState;
 
@@ -87,17 +85,17 @@ public class ApplicatorMockJunctionModule extends MockJunctionModule {
 
         @Override
         public BlockingState getBlockingStateFor(final UUID overdueableId) {
-            throw new NotImplementedException();
+            throw new UnsupportedOperationException();
         }
 
         @Override
         public SortedSet<BlockingState> getBlockingHistory(final Blockable overdueable) {
-            throw new NotImplementedException();
+            throw new UnsupportedOperationException();
         }
 
         @Override
         public SortedSet<BlockingState> getBlockingHistory(final UUID overdueableId) {
-            throw new NotImplementedException();
+            throw new UnsupportedOperationException();
         }
 
         @Override
@@ -110,7 +108,5 @@ public class ApplicatorMockJunctionModule extends MockJunctionModule {
     @Override
     public void installBlockingApi() {
         bind(BlockingApi.class).toInstance(new ApplicatorBlockingApi());
-
     }
-
 }

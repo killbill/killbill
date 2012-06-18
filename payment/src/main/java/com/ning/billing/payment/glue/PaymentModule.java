@@ -21,8 +21,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
+import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
+import org.skife.config.SimplePropertyConfigSource;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 import com.ning.billing.config.PaymentConfig;
@@ -43,21 +46,24 @@ import com.ning.billing.payment.retry.PluginFailureRetryService;
 import com.ning.billing.payment.retry.PluginFailureRetryService.PluginFailureRetryServiceScheduler;
 
 public class PaymentModule extends AbstractModule {
-
     private static final int PLUGIN_NB_THREADS = 3;
     private static final String PLUGIN_THREAD_PREFIX = "Plugin-th-";
 
     public static final String PLUGIN_EXECUTOR_NAMED = "PluginExecutor";
 
-
-    protected final Properties props;
+    @VisibleForTesting
+    protected ConfigSource configSource;
 
     public PaymentModule() {
-        this.props = System.getProperties();
+        this(System.getProperties());
     }
 
-    public PaymentModule(final Properties props) {
-        this.props = props;
+    public PaymentModule(final ConfigSource configSource) {
+        this.configSource = configSource;
+    }
+
+    public PaymentModule(final Properties properties) {
+        this(new SimplePropertyConfigSource(properties));
     }
 
     protected void installPaymentDao() {
@@ -73,7 +79,6 @@ public class PaymentModule extends AbstractModule {
         bind(FailedPaymentRetryServiceScheduler.class).asEagerSingleton();
         bind(PluginFailureRetryServiceScheduler.class).asEagerSingleton();
     }
-
 
     protected void installProcessors() {
         final ExecutorService pluginExecutorService = Executors.newFixedThreadPool(PLUGIN_NB_THREADS, new ThreadFactory() {
@@ -93,7 +98,7 @@ public class PaymentModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        final ConfigurationObjectFactory factory = new ConfigurationObjectFactory(props);
+        final ConfigurationObjectFactory factory = new ConfigurationObjectFactory(configSource);
         final PaymentConfig paymentConfig = factory.build(PaymentConfig.class);
 
         bind(PaymentConfig.class).toInstance(paymentConfig);

@@ -21,7 +21,6 @@ import java.math.RoundingMode;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.IDBI;
@@ -39,12 +38,12 @@ import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TestCallContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;
+import com.ning.billing.util.io.IOUtils;
 
 import static junit.framework.Assert.assertNull;
 import static org.testng.Assert.assertEquals;
 
 public class TestPaymentDao {
-
     private static final CallContext context = new TestCallContext("PaymentTests");
 
     private PaymentDao paymentDao;
@@ -56,7 +55,6 @@ public class TestPaymentDao {
     public void startMysql() throws IOException {
         final String paymentddl = IOUtils.toString(MysqlTestingHelper.class.getResourceAsStream("/com/ning/billing/payment/ddl.sql"));
         final String utilddl = IOUtils.toString(MysqlTestingHelper.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
-
 
         clock = new DefaultClock();
 

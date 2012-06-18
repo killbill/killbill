@@ -18,10 +18,12 @@ package com.ning.billing.payment.glue;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Map;
+import java.util.Properties;
 
-import org.apache.commons.collections.MapUtils;
+import org.skife.config.ConfigSource;
+import org.skife.config.SimplePropertyConfigSource;
 
-import com.google.common.collect.ImmutableMap;
 import com.ning.billing.config.PaymentConfig;
 import com.ning.billing.mock.glue.MockInvoiceModule;
 import com.ning.billing.mock.glue.MockNotificationQueueModule;
@@ -38,16 +40,6 @@ import com.ning.billing.util.glue.TagStoreModule;
 import static org.testng.Assert.assertNotNull;
 
 public class PaymentTestModuleWithMocks extends PaymentModule {
-    /*
-	public static class MockProvider implements Provider<BillingApi> {
-		@Override
-		public BillingApi get() {
-			return BrainDeadProxyFactory.createBrainDeadProxyFor(BillingApi.class);
-		}
-
-	}
-	*/
-
     public static final String PLUGIN_TEST_NAME = "my-mock";
 
     private void loadSystemPropertiesFromClasspath(final String resource) {
@@ -55,15 +47,29 @@ public class PaymentTestModuleWithMocks extends PaymentModule {
         assertNotNull(url);
 
         try {
-            props.load(url.openStream());
+            final Properties properties = System.getProperties();
+            properties.load(url.openStream());
+
+            properties.setProperty("killbill.payment.provider.default", PLUGIN_TEST_NAME);
+            properties.setProperty("killbill.payment.engine.events.off", "false");
+
+            configSource = new SimplePropertyConfigSource(properties);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public PaymentTestModuleWithMocks() {
-        super(MapUtils.toProperties(ImmutableMap.of("killbill.payment.provider.default", PLUGIN_TEST_NAME,
-                                                    "killbill.payment.engine.events.off", "false")));
+    private static final class MapConfigSource implements ConfigSource {
+        private final Map<String, String> map;
+
+        private MapConfigSource(final Map<String, String> map) {
+            this.map = map;
+        }
+
+        @Override
+        public String getString(final String propertyName) {
+            return map.get(propertyName);
+        }
     }
 
     @Override

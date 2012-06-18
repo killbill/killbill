@@ -20,13 +20,13 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.sql.SQLException;
 
-import org.apache.commons.io.IOUtils;
 import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
 
 import com.google.common.io.Resources;
 import com.ning.billing.dbi.MysqlTestingHelper;
+import com.ning.billing.util.io.IOUtils;
 
 public abstract class TestWithEmbeddedDB extends AnalyticsTestSuite {
     protected static final MysqlTestingHelper helper = new MysqlTestingHelper();

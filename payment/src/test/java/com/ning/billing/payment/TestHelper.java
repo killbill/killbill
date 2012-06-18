@@ -18,7 +18,6 @@ package com.ning.billing.payment;
 
 import java.util.UUID;
 
-import org.apache.commons.lang.RandomStringUtils;
 import org.joda.time.DateTime;
 
 import com.google.inject.Inject;
@@ -43,7 +42,6 @@ import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.UserType;
 
 public class TestHelper {
-
     protected final AccountUserApi accountUserApi;
     protected final InvoicePaymentApi invoicePaymentApi;
     protected PaymentApi paymentApi;
@@ -85,17 +83,17 @@ public class TestHelper {
 
         ((ZombieControl) invoicePaymentApi).addResult("getInvoice", invoice);
         final InvoiceCreationEvent event = new MockInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
-                                                                  invoice.getBalance(), invoice.getCurrency(),
-                                                                  invoice.getInvoiceDate(),
-                                                                  context.getUserToken());
+                                                                        invoice.getBalance(), invoice.getCurrency(),
+                                                                        invoice.getInvoiceDate(),
+                                                                        context.getUserToken());
 
         eventBus.post(event);
         return invoice;
     }
 
     public Account createTestAccount(final String email) throws Exception {
-        final String name = "First" + RandomStringUtils.randomAlphanumeric(5) + " " + "Last" + RandomStringUtils.randomAlphanumeric(5);
-        final String externalKey = RandomStringUtils.randomAlphanumeric(10);
+        final String name = "First" + UUID.randomUUID().toString() + " " + "Last" + UUID.randomUUID().toString();
+        final String externalKey = UUID.randomUUID().toString();
 
         final Account account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
         final ZombieControl zombie = (ZombieControl) account;

@@ -91,14 +91,8 @@ public class TestRetryService {
     private MockPaymentProviderPlugin mockPaymentProviderPlugin;
     private CallContext context;
 
-    @BeforeClass(groups = "fast")
-    public void initialize() throws Exception {
-
-    }
-
     @BeforeMethod(groups = "fast")
     public void setUp() throws Exception {
-
         pluginRetryService.initialize(DefaultPaymentService.SERVICE_NAME);
         pluginRetryService.start();
 
@@ -111,7 +105,6 @@ public class TestRetryService {
 
         context = new DefaultCallContext("RetryServiceTests", CallOrigin.INTERNAL, UserType.TEST, clock);
         ((ZombieControl) invoicePaymentApi).addResult("notifyOfPaymentAttempt", BrainDeadProxyFactory.ZOMBIE_VOID);
-
     }
 
     @AfterMethod(groups = "fast")
@@ -121,7 +114,6 @@ public class TestRetryService {
         eventBus.stop();
     }
 
-
     private Payment getPaymentForInvoice(final UUID invoiceId) throws PaymentApiException {
         final List<Payment> payments = paymentProcessor.getInvoicePayments(invoiceId);
         assertEquals(payments.size(), 1);
@@ -129,7 +121,6 @@ public class TestRetryService {
         assertEquals(payment.getInvoiceId(), invoiceId);
         return payment;
     }
-
 
     @Test(groups = "fast")
     public void testFailedPluginWithOneSuccessfulRetry() throws Exception {
@@ -161,7 +152,6 @@ public class TestRetryService {
     public void testAbortedPayment() throws Exception {
         testSchedulesRetryInternal(paymentConfig.getPaymentRetryDays().size() + 1, FailureType.PAYMENT_FAILURE);
     }
-
 
     private void testSchedulesRetryInternal(final int maxTries, final FailureType failureType) throws Exception {
 
@@ -281,5 +271,4 @@ public class TestRetryService {
             return paymentConfig.getPluginFailureRetryMaxAttempts();
         }
     }
-
 }

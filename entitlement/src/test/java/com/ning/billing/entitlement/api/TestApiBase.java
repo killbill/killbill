@@ -22,7 +22,6 @@ import java.net.URL;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Period;
@@ -75,18 +74,15 @@ import com.ning.billing.util.callcontext.TestCallContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.glue.RealImplementation;
+import com.ning.billing.util.io.IOUtils;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
-
 public abstract class TestApiBase implements TestListenerStatus {
-
     protected static final Logger log = LoggerFactory.getLogger(TestApiBase.class);
-
-    protected static final long DAY_IN_MS = (24 * 3600 * 1000);
 
     protected EntitlementService entitlementService;
     protected EntitlementUserApi entitlementApi;
@@ -282,8 +278,8 @@ public abstract class TestApiBase implements TestListenerStatus {
 
         testListener.pushExpectedEvent(NextEvent.CREATE);
         final SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundleId,
-                                                                                             new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSet, null),
-                                                                                             requestedDate == null ? clock.getUTCNow() : requestedDate, context);
+                                                                                                   new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSet, null),
+                                                                                                   requestedDate == null ? clock.getUTCNow() : requestedDate, context);
         assertNotNull(subscription);
         assertTrue(testListener.isCompleted(5000));
         return subscription;

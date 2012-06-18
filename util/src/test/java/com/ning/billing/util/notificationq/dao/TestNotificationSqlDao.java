@@ -21,7 +21,6 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.Handle;
@@ -37,6 +36,7 @@ import org.testng.annotations.Test;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.ning.billing.dbi.MysqlTestingHelper;
+import com.ning.billing.util.io.IOUtils;
 import com.ning.billing.util.notificationq.DefaultNotification;
 import com.ning.billing.util.notificationq.Notification;
 import com.ning.billing.util.notificationq.dao.NotificationSqlDao.NotificationSqlMapper;
@@ -48,7 +48,6 @@ import static org.testng.Assert.assertNotNull;
 @Test(groups = "slow")
 @Guice(modules = TestNotificationSqlDao.TestNotificationSqlDaoModule.class)
 public class TestNotificationSqlDao {
-
     private static final String hostname = "Yop";
 
     @Inject
@@ -148,21 +147,21 @@ public class TestNotificationSqlDao {
             @Override
             public Notification withHandle(final Handle handle) throws Exception {
                 final Notification res = handle.createQuery("   select" +
-                                                              " record_id " +
-                                                              ", id" +
-                                                              ", notification_key" +
-                                                              ", created_date" +
-                                                              ", creating_owner" +
-                                                              ", effective_date" +
-                                                              ", queue_name" +
-                                                              ", processing_owner" +
-                                                              ", processing_available_date" +
-                                                              ", processing_state" +
-                                                              "    from notifications " +
-                                                              " where " +
-                                                              " id = '" + notificationId + "';")
-                                         .map(new NotificationSqlMapper())
-                                         .first();
+                                                                    " record_id " +
+                                                                    ", id" +
+                                                                    ", notification_key" +
+                                                                    ", created_date" +
+                                                                    ", creating_owner" +
+                                                                    ", effective_date" +
+                                                                    ", queue_name" +
+                                                                    ", processing_owner" +
+                                                                    ", processing_available_date" +
+                                                                    ", processing_state" +
+                                                                    "    from notifications " +
+                                                                    " where " +
+                                                                    " id = '" + notificationId + "';")
+                                               .map(new NotificationSqlMapper())
+                                               .first();
                 return res;
             }
         });

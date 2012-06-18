@@ -19,7 +19,6 @@ package com.ning.billing.util.globallocker;
 import java.io.IOException;
 import java.util.UUID;
 
-import org.apache.commons.io.IOUtils;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.TransactionCallback;
@@ -34,6 +33,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.util.globallocker.GlobalLocker.LockerService;
+import com.ning.billing.util.io.IOUtils;
 
 @Test(groups = "slow")
 @Guice(modules = TestMysqlGlobalLocker.TestMysqlGlobalLockerModule.class)

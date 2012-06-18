@@ -19,7 +19,6 @@ package com.ning.billing.util.customfield;
 import java.io.IOException;
 import java.util.UUID;
 
-import org.apache.commons.io.IOUtils;
 import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +36,7 @@ import com.ning.billing.util.customfield.dao.AuditedCustomFieldDao;
 import com.ning.billing.util.customfield.dao.CustomFieldDao;
 import com.ning.billing.util.customfield.dao.CustomFieldSqlDao;
 import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.util.io.IOUtils;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.fail;

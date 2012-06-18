@@ -20,12 +20,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.commons.lang.StringUtils;
-
+import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.ning.billing.config.PaymentConfig;
 import com.ning.billing.payment.plugin.api.PaymentPluginApi;
-
 
 public class DefaultPaymentProviderPluginRegistry implements PaymentProviderPluginRegistry {
 
@@ -44,7 +42,7 @@ public class DefaultPaymentProviderPluginRegistry implements PaymentProviderPlug
 
     @Override
     public PaymentPluginApi getPlugin(final String name) {
-        final PaymentPluginApi plugin = pluginsByName.get(StringUtils.defaultIfEmpty(name, defaultPlugin).toLowerCase());
+        final PaymentPluginApi plugin = pluginsByName.get((Strings.emptyToNull(name) == null ? defaultPlugin : name).toLowerCase());
 
         if (plugin == null) {
             throw new IllegalArgumentException("No payment provider plugin is configured for " + name);

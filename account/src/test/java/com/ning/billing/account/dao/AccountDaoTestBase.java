@@ -18,7 +18,6 @@ package com.ning.billing.account.dao;
 
 import java.io.IOException;
 
-import org.apache.commons.io.IOUtils;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.TransactionCallback;
@@ -38,6 +37,7 @@ import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.io.IOUtils;
 import com.ning.billing.util.tag.api.user.TagEventBuilder;
 
 import static org.testng.Assert.fail;

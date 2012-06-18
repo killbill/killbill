@@ -16,7 +16,6 @@
 
 package com.ning.billing.analytics;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 
@@ -38,7 +37,7 @@ public class MockDuration {
 
             @Override
             public DateTime addToDateTime(final DateTime dateTime) {
-                throw new NotImplementedException();
+                throw new UnsupportedOperationException();
             }
 
             @Override
@@ -62,7 +61,7 @@ public class MockDuration {
 
             @Override
             public DateTime addToDateTime(final DateTime dateTime) {
-                throw new NotImplementedException();
+                throw new UnsupportedOperationException();
             }
 
             @Override
@@ -86,7 +85,7 @@ public class MockDuration {
 
             @Override
             public DateTime addToDateTime(final DateTime dateTime) {
-                throw new NotImplementedException();
+                throw new UnsupportedOperationException();
             }
 
             @Override

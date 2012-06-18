@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2012 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -14,21 +14,24 @@
  * under the License.
  */
 
-package com.ning.billing.util.config;
+package com.ning.billing.util.io;
 
-import javax.xml.bind.JAXBException;
-import javax.xml.transform.TransformerException;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.testng.annotations.Test;
+import com.google.common.base.Charsets;
+import com.google.common.io.CharStreams;
+import com.google.common.io.InputSupplier;
 
-import com.ning.billing.util.io.IOUtils;
+public class IOUtils {
+    public static String toString(final InputStream stream) throws IOException {
+        final InputSupplier<InputStream> inputSupplier = new InputSupplier<InputStream>() {
+            @Override
+            public InputStream getInput() throws IOException {
+                return stream;
+            }
+        };
 
-public class TestXMLSchemaGenerator {
-    @Test(groups = "fast", enabled = false)
-    public void test() throws IOException, TransformerException, JAXBException {
-        final InputStream stream = XMLSchemaGenerator.xmlSchema(XmlTestClass.class);
-        System.out.println(IOUtils.toString(stream));
+        return CharStreams.toString(CharStreams.newReaderSupplier(inputSupplier, Charsets.UTF_8));
     }
 }

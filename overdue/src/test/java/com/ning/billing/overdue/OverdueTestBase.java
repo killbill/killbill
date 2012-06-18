@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
@@ -62,9 +61,9 @@ import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
+import com.ning.billing.util.io.IOUtils;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
 
-//@Guice(modules = {MockJunctionModule.class, MockInvoiceModule.class, DefaultOverdueModule.class})
 @Guice(modules = {DefaultOverdueModule.class, MockClockModule.class, ApplicatorMockJunctionModule.class, CatalogModule.class, MockInvoiceModule.class, MockPaymentModule.class, BusModule.class, NotificationQueueModule.class, TestDbiModule.class})
 public class OverdueTestBase {
     protected final String configXml =
@@ -150,7 +149,6 @@ public class OverdueTestBase {
         helper.startMysql();
         helper.initDb(utilDdl);
     }
-
 
     @BeforeClass(groups = "slow")
     public void setup() throws Exception {

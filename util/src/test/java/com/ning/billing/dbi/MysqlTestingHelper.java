@@ -17,13 +17,13 @@
 package com.ning.billing.dbi;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.io.FileUtils;
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
@@ -159,8 +159,8 @@ public class MysqlTestingHelper {
         try {
             if (mysqldResource != null) {
                 mysqldResource.shutdown();
-                FileUtils.deleteQuietly(dataDir);
-                FileUtils.deleteQuietly(dbDir);
+                deleteRecursive(dataDir);
+                deleteRecursive(dbDir);
                 log.info("MySQLd stopped");
             }
         } catch (Exception ex) {
@@ -190,5 +190,18 @@ public class MysqlTestingHelper {
 
     public String getDbName() {
         return DB_NAME;
+    }
+
+    public static boolean deleteRecursive(final File path) throws FileNotFoundException {
+        if (!path.exists()) {
+            throw new FileNotFoundException(path.getAbsolutePath());
+        }
+        boolean ret = true;
+        if (path.isDirectory()) {
+            for (final File f : path.listFiles()) {
+                ret = ret && deleteRecursive(f);
+            }
+        }
+        return ret && path.delete();
     }
 }

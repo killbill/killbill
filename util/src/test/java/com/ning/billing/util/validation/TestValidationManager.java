@@ -19,7 +19,6 @@ package com.ning.billing.util.validation;
 import java.io.IOException;
 import java.util.Collection;
 
-import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.IDBI;
 import org.testng.annotations.AfterClass;
@@ -28,6 +27,7 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.util.globallocker.TestMysqlGlobalLocker;
+import com.ning.billing.util.io.IOUtils;
 import com.ning.billing.util.validation.dao.DatabaseSchemaDao;
 
 import static org.testng.Assert.assertEquals;

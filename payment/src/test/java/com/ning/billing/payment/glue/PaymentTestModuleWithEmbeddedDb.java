@@ -18,9 +18,6 @@ package com.ning.billing.payment.glue;
 
 import java.util.HashMap;
 
-import org.apache.commons.collections.MapUtils;
-
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Provider;
 import com.ning.billing.config.PaymentConfig;
 import com.ning.billing.mock.BrainDeadProxyFactory;
@@ -35,18 +32,7 @@ import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.tag.Tag;
 
 public class PaymentTestModuleWithEmbeddedDb extends PaymentModule {
-    /*
-	public static class MockProvider implements Provider<BillingApi> {
-		@Override
-		public BillingApi get() {
-			return BrainDeadProxyFactory.createBrainDeadProxyFor(BillingApi.class);
-		}
-
-	}
-	*/
-
     public static class MockTagApiProvider implements Provider<TagUserApi> {
-
         @Override
         public TagUserApi get() {
             final TagUserApi api = BrainDeadProxyFactory.createBrainDeadProxyFor(TagUserApi.class);
@@ -54,10 +40,6 @@ public class PaymentTestModuleWithEmbeddedDb extends PaymentModule {
             return api;
         }
 
-    }
-
-    public PaymentTestModuleWithEmbeddedDb() {
-        super(MapUtils.toProperties(ImmutableMap.of("killbill.payment.provider.default", "my-mock")));
     }
 
     @Override

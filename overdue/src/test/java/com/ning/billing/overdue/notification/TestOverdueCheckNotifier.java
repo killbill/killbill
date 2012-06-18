@@ -21,7 +21,6 @@ import java.sql.SQLException;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 
-import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.IDBI;
@@ -64,6 +63,7 @@ import com.ning.billing.util.customfield.dao.CustomFieldDao;
 import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.globallocker.MySqlGlobalLocker;
 import com.ning.billing.util.glue.BusModule;
+import com.ning.billing.util.io.IOUtils;
 import com.ning.billing.util.notificationq.DefaultNotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.notificationq.dao.NotificationSqlDao;

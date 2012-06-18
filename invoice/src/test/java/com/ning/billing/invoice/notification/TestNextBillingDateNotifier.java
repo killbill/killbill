@@ -21,7 +21,6 @@ import java.sql.SQLException;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 
-import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.IDBI;
@@ -61,6 +60,7 @@ import com.ning.billing.util.email.templates.TemplateModule;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.BusModule.BusType;
 import com.ning.billing.util.glue.NotificationQueueModule;
+import com.ning.billing.util.io.IOUtils;
 import com.ning.billing.util.notificationq.DummySqlTest;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.notificationq.dao.NotificationSqlDao;
@@ -76,7 +76,6 @@ public class TestNextBillingDateNotifier {
     private MysqlTestingHelper helper;
     private InvoiceListenerMock listener;
     private NotificationQueueService notificationQueueService;
-
 
     private static final class InvoiceListenerMock extends InvoiceListener {
         int eventCount = 0;

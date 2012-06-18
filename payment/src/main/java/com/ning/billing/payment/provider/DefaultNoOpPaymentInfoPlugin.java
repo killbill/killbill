@@ -29,7 +29,6 @@ public class DefaultNoOpPaymentInfoPlugin implements PaymentInfoPlugin {
     private final PaymentPluginStatus status;
     private final String error;
 
-
     public DefaultNoOpPaymentInfoPlugin(final BigDecimal amount, final DateTime effectiveDate,
                                         final DateTime createdDate, final PaymentPluginStatus status, final String error) {
         super();

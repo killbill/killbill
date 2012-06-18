@@ -21,8 +21,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.RandomStringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.IDBI;
@@ -64,6 +62,7 @@ import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.io.IOUtils;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -71,7 +70,6 @@ import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 public class TestIntegrationBase implements TestListenerStatus {
-
     protected static final int NUMBER_OF_DECIMALS = InvoicingConfiguration.getNumberOfDecimals();
     protected static final int ROUNDING_METHOD = InvoicingConfiguration.getRoundingMode();
 
@@ -287,8 +285,7 @@ public class TestIntegrationBase implements TestListenerStatus {
 
 
     protected AccountData getAccountData(final int billingDay) {
-
-        final String someRandomKey = RandomStringUtils.randomAlphanumeric(10);
+        final String someRandomKey = UUID.randomUUID().toString();
         return new AccountData() {
             @Override
             public String getName() {

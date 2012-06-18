@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.util.SortedSet;
 import java.util.UUID;
 
-import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -43,6 +42,7 @@ import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.mock.glue.MockEntitlementModule;
 import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.io.IOUtils;
 
 @Guice(modules = {MockModule.class, MockEntitlementModule.class})
 public class TestBlockingApi {
@@ -65,7 +65,6 @@ public class TestBlockingApi {
 
         helper.startMysql();
         helper.initDb(utilDdl);
-
     }
 
     @BeforeMethod(groups = {"slow"})

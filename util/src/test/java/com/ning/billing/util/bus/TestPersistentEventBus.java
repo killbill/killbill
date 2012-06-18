@@ -15,8 +15,6 @@
  */
 package com.ning.billing.util.bus;
 
-
-import org.apache.commons.io.IOUtils;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.IDBI;
 import org.testng.annotations.BeforeClass;
@@ -33,10 +31,10 @@ import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.BusModule.BusType;
+import com.ning.billing.util.io.IOUtils;
 
 @Guice(modules = TestPersistentEventBus.PersistentBusModuleTest.class)
 public class TestPersistentEventBus extends TestEventBusBase {
-
     @Inject
     private MysqlTestingHelper helper;
 
@@ -56,10 +54,8 @@ public class TestPersistentEventBus extends TestEventBusBase {
     }
 
     public static class PersistentBusModuleTest extends AbstractModule {
-
         @Override
         protected void configure() {
-
             //System.setProperty("com.ning.billing.dbi.test.useLocalDb", "true");
 
             bind(Clock.class).to(ClockMock.class).asEagerSingleton();
