@@ -88,7 +88,7 @@ public class DefaultInvoiceModule extends AbstractModule implements InvoiceModul
         bind(NextBillingDatePoster.class).to(DefaultNextBillingDatePoster.class).asEagerSingleton();
         final TranslatorConfig config = new ConfigurationObjectFactory(System.getProperties()).build(TranslatorConfig.class);
         bind(TranslatorConfig.class).toInstance(config);
-        bind(InvoiceFormatterFactory.class).to(DefaultInvoiceFormatterFactory.class).asEagerSingleton();
+        bind(InvoiceFormatterFactory.class).to(config.getInvoiceFormatterFactoryClass()).asEagerSingleton();
     }
 
     protected void installInvoiceNotifier() {
