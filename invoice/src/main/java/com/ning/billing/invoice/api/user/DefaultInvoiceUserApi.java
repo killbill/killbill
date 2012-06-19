@@ -24,6 +24,7 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import com.google.inject.Inject;
+import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
@@ -113,8 +114,12 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
 
     @Override
-    public String getInvoiceAsHTML(final UUID invoiceId) throws AccountApiException, IOException {
+    public String getInvoiceAsHTML(final UUID invoiceId) throws AccountApiException, IOException, InvoiceApiException {
         final Invoice invoice = getInvoice(invoiceId);
+        if (invoice == null) {
+            throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND, invoiceId);
+        }
+
         final Account account = accountUserApi.getAccountById(invoice.getAccountId());
         return generator.generateInvoice(account, invoice);
     }

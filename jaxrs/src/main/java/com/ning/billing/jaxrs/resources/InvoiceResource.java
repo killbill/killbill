@@ -141,6 +141,8 @@ public class InvoiceResource extends JaxRsResourceBase {
             return Response.status(Status.NO_CONTENT).build();
         } catch (IOException e) {
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+        } catch (InvoiceApiException e) {
+            return Response.status(Status.NO_CONTENT).build();
         }
     }
 
