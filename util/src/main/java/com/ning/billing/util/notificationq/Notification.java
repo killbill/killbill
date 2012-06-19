@@ -24,6 +24,8 @@ import com.ning.billing.util.queue.PersistentQueueEntryLifecycle;
 public interface Notification extends PersistentQueueEntryLifecycle, Entity {
     public Long getOrdering();
 
+    public String getNotificationKeyClass();
+    
     public String getNotificationKey();
 
     public DateTime getEffectiveDate();

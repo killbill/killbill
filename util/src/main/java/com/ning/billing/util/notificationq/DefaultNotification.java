@@ -29,13 +29,14 @@ public class DefaultNotification extends EntityBase implements Notification {
     private final String queueName;
     private final DateTime nextAvailableDate;
     private final PersistentQueueEntryLifecycleState lifecycleState;
+    private final String notificationKeyClass;
     private final String notificationKey;
     private final DateTime effectiveDate;
 
 
     public DefaultNotification(final long ordering, final UUID id, final String createdOwner, final String owner, final String queueName, final DateTime nextAvailableDate,
                                final PersistentQueueEntryLifecycleState lifecycleState,
-                               final String notificationKey, final DateTime effectiveDate) {
+                               final String notificationKeyClass, final String notificationKey, final DateTime effectiveDate) {
         super(id);
         this.ordering = ordering;
         this.owner = owner;
@@ -43,12 +44,13 @@ public class DefaultNotification extends EntityBase implements Notification {
         this.queueName = queueName;
         this.nextAvailableDate = nextAvailableDate;
         this.lifecycleState = lifecycleState;
+        this.notificationKeyClass = notificationKeyClass;
         this.notificationKey = notificationKey;
         this.effectiveDate = effectiveDate;
     }
 
-    public DefaultNotification(final String queueName, final String createdOwner, final String notificationKey, final DateTime effectiveDate) {
-        this(-1L, UUID.randomUUID(), createdOwner, null, queueName, null, PersistentQueueEntryLifecycleState.AVAILABLE, notificationKey, effectiveDate);
+    public DefaultNotification(final String queueName, final String createdOwner, final String notificationKeyClass, final String notificationKey, final DateTime effectiveDate) {
+        this(-1L, UUID.randomUUID(), createdOwner, null, queueName, null, PersistentQueueEntryLifecycleState.AVAILABLE, notificationKeyClass, notificationKey, effectiveDate);
     }
 
     @Override
@@ -90,6 +92,12 @@ public class DefaultNotification extends EntityBase implements Notification {
         return effectiveDate.isBefore(now);
     }
 
+    @Override
+    public String getNotificationKeyClass() {
+        return notificationKeyClass;
+    }
+
+    
     @Override
     public String getNotificationKey() {
         return notificationKey;

@@ -30,6 +30,7 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.invoice.InvoiceListener;
 import com.ning.billing.invoice.api.DefaultInvoiceService;
+import com.ning.billing.util.notificationq.NotificationKey;
 import com.ning.billing.util.notificationq.NotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotificationQueue;
@@ -52,7 +53,7 @@ public class DefaultNextBillingDateNotifier implements NextBillingDateNotifier {
 
     @Inject
     public DefaultNextBillingDateNotifier(final NotificationQueueService notificationQueueService,
-                                          final InvoiceConfig config, final EntitlementUserApi entitlementUserApi, final InvoiceListener listener) {
+            final InvoiceConfig config, final EntitlementUserApi entitlementUserApi, final InvoiceListener listener) {
         this.notificationQueueService = notificationQueueService;
         this.config = config;
         this.entitlementUserApi = entitlementUserApi;
@@ -62,41 +63,46 @@ public class DefaultNextBillingDateNotifier implements NextBillingDateNotifier {
     @Override
     public void initialize() throws NotificationQueueAlreadyExists {
         nextBillingQueue = notificationQueueService.createNotificationQueue(DefaultInvoiceService.INVOICE_SERVICE_NAME,
-                                                                            NEXT_BILLING_DATE_NOTIFIER_QUEUE,
-                                                                            new NotificationQueueHandler() {
-                                                                                @Override
-                                                                                public void handleReadyNotification(final String notificationKey, final DateTime eventDate) {
-                                                                                    try {
-                                                                                        final UUID key = UUID.fromString(notificationKey);
-                                                                                        try {
-                                                                                            final Subscription subscription = entitlementUserApi.getSubscriptionFromId(key);
-                                                                                            if (subscription == null) {
-                                                                                                log.warn("Next Billing Date Notification Queue handled spurious notification (key: " + key + ")");
-                                                                                            } else {
-                                                                                                processEvent(key, eventDate);
-                                                                                            }
-                                                                                        } catch (EntitlementUserApiException e) {
-                                                                                            log.warn("Next Billing Date Notification Queue handled spurious notification (key: " + key + ")", e);
-                                                                                        }
-                                                                                    } catch (IllegalArgumentException e) {
-                                                                                        log.error("The key returned from the NextBillingNotificationQueue is not a valid UUID", e);
-                                                                                    }
+                NEXT_BILLING_DATE_NOTIFIER_QUEUE,
+                new NotificationQueueHandler() {
+            @Override
+            public void handleReadyNotification(final NotificationKey notificationKey, final DateTime eventDate) {
+                try {
+                    
+                    if (! (notificationKey instanceof NextBillingDateNotificationKey)) {
+                        log.error("Invoice service received an unexpected event type {}", notificationKey.getClass().getName());
+                        return;
+                    }
+                    final NextBillingDateNotificationKey key = (NextBillingDateNotificationKey) notificationKey;
+                    try {
+                        final Subscription subscription = entitlementUserApi.getSubscriptionFromId(key.getUuidKey());
+                        if (subscription == null) {
+                            log.warn("Next Billing Date Notification Queue handled spurious notification (key: " + key + ")");
+                        } else {
+                            processEvent(key.getUuidKey(), eventDate);
+                        }
+                    } catch (EntitlementUserApiException e) {
+                        log.warn("Next Billing Date Notification Queue handled spurious notification (key: " + key + ")", e);
+                    }
+                } catch (IllegalArgumentException e) {
+                    log.error("The key returned from the NextBillingNotificationQueue is not a valid UUID", e);
+                }
 
-                                                                                }
-                                                                            },
-                                                                            new NotificationConfig() {
+            }
+        },
+        new NotificationConfig() {
 
-                                                                                @Override
-                                                                                public long getSleepTimeMs() {
-                                                                                    return config.getSleepTimeMs();
-                                                                                }
+            @Override
+            public long getSleepTimeMs() {
+                return config.getSleepTimeMs();
+            }
 
-                                                                                @Override
-                                                                                public boolean isNotificationProcessingOff() {
-                                                                                    return config.isNotificationProcessingOff();
-                                                                                }
-                                                                            }
-                                                                           );
+            @Override
+            public boolean isNotificationProcessingOff() {
+                return config.isNotificationProcessingOff();
+            }
+        }
+        );
 
     }
 

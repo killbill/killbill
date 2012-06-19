@@ -16,6 +16,7 @@
 
 package com.ning.billing.invoice.notification;
 
+import java.io.IOException;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -51,14 +52,11 @@ public class DefaultNextBillingDatePoster implements NextBillingDatePoster {
                                                                              DefaultNextBillingDateNotifier.NEXT_BILLING_DATE_NOTIFIER_QUEUE);
             log.info("Queuing next billing date notification. id: {}, timestamp: {}", subscriptionId.toString(), futureNotificationTime.toString());
 
-            nextBillingQueue.recordFutureNotificationFromTransaction(transactionalDao, futureNotificationTime, new NotificationKey() {
-                @Override
-                public String toString() {
-                    return subscriptionId.toString();
-                }
-            });
+            nextBillingQueue.recordFutureNotificationFromTransaction(transactionalDao, futureNotificationTime, new NextBillingDateNotificationKey(subscriptionId));
         } catch (NoSuchNotificationQueue e) {
             log.error("Attempting to put items on a non-existent queue (NextBillingDateNotifier).", e);
+        } catch (IOException e) {
+            log.error("Failed to serialize notficationKey for subscriptionId {}", subscriptionId);            
         }
     }
 }

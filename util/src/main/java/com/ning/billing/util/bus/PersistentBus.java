@@ -46,7 +46,7 @@ public class PersistentBus extends PersistentQueueBase implements Bus {
 
     private final PersistentBusSqlDao dao;
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+
     private final EventBusDelegate eventBusDelegate;
     private final Clock clock;
     private final String hostname;
@@ -108,23 +108,13 @@ public class PersistentBus extends PersistentQueueBase implements Bus {
 
         int result = 0;
         for (final BusEventEntry cur : events) {
-            final BusEvent evt = deserializeBusEvent(cur.getBusEventClass(), cur.getBusEventJson());
+            final BusEvent evt = deserializeEvent(cur.getBusEventClass(), cur.getBusEventJson());
             result++;
             // STEPH exception handling is done by GUAVA-- logged a bug Issue-780
             eventBusDelegate.post(evt);
             dao.clearBusEvent(cur.getId(), hostname);
         }
         return result;
-    }
-
-    private BusEvent deserializeBusEvent(final String className, final String json) {
-        try {
-            final Class<?> claz = Class.forName(className);
-            return (BusEvent) objectMapper.readValue(json, claz);
-        } catch (Exception e) {
-            log.error(String.format("Failed to deserialize json object %s for class %s", json, className), e);
-            return null;
-        }
     }
 
 

@@ -22,7 +22,9 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
 import com.ning.billing.config.PersistentQueueConfig;
+import com.ning.billing.util.jackson.ObjectMapper;
 
 
 public abstract class PersistentQueueBase implements QueueLifecycle {
@@ -35,15 +37,17 @@ public abstract class PersistentQueueBase implements QueueLifecycle {
     private final Executor executor;
     private final String svcName;
     private final long sleepTimeMs;
-
     private boolean isProcessingEvents;
     private int curActiveThreads;
 
+    protected final ObjectMapper objectMapper;
+    
     public PersistentQueueBase(final String svcName, final Executor executor, final int nbThreads, final PersistentQueueConfig config) {
         this.executor = executor;
         this.nbThreads = nbThreads;
         this.svcName = svcName;
         this.sleepTimeMs = config.getSleepTimeMs();
+        this.objectMapper = new ObjectMapper();        
         this.isProcessingEvents = false;
         this.curActiveThreads = 0;
     }
@@ -154,6 +158,18 @@ public abstract class PersistentQueueBase implements QueueLifecycle {
             curActiveThreads = 0;
         }
     }
+    
+    protected <T> T deserializeEvent(final String className, final String json) {
+        try {
+            final Class<?> claz = Class.forName(className);
+            return (T) objectMapper.readValue(json, claz);
+        } catch (Exception e) {
+            log.error(String.format("Failed to deserialize json object %s for class %s", json, className), e);
+            return null;
+        }
+    }
+
+
 
 
     @Override

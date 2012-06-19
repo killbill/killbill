@@ -21,6 +21,4 @@ package com.ning.billing.util.notificationq;
  */
 public interface NotificationKey {
 
-    @Override
-    public String toString();
 }

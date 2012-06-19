@@ -4,6 +4,7 @@ getReadyNotifications() ::= <<
     select
       record_id
       , id
+      , class_name
       , notification_key
       , created_date
       , creating_owner
@@ -62,6 +63,7 @@ removeNotificationsByKey() ::= <<
 insertNotification() ::= <<
     insert into notifications (
       id
+      , class_name
       , notification_key
       , created_date
       , creating_owner
@@ -72,6 +74,7 @@ insertNotification() ::= <<
       , processing_state
     ) values (
       :id
+      , :className
       , :notificationKey
       , :createdDate
       , :creatingOwner

@@ -40,6 +40,8 @@ import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.inject.AbstractModule;
@@ -84,6 +86,28 @@ public class TestNotificationQueue {
         helper.initDb(testDdl);
     }
 
+    
+    private final static class TestNotificationKey implements NotificationKey, Comparable<TestNotificationKey> {
+        
+        private final String value;
+
+        @JsonCreator
+        public TestNotificationKey(@JsonProperty("value") String value) {
+            super();
+            this.value = value;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        @Override
+        public int compareTo(TestNotificationKey arg0) {
+            return value.compareTo(arg0.value);
+        }
+    }
+    
+    
     @BeforeSuite(groups = "slow")
     public void setup() throws Exception {
         startMysql();
@@ -124,21 +148,21 @@ public class TestNotificationQueue {
     @Test(groups = {"slow"}, enabled = true)
     public void testSimpleNotification() throws Exception {
 
-        final Map<String, Boolean> expectedNotifications = new TreeMap<String, Boolean>();
+        final Map<NotificationKey, Boolean> expectedNotifications = new TreeMap<NotificationKey, Boolean>();
 
         final DefaultNotificationQueue queue = new DefaultNotificationQueue(dbi, clock, "test-svc", "foo",
-                                                                            new NotificationQueueHandler() {
-                                                                                @Override
-                                                                                public void handleReadyNotification(final String notificationKey, final DateTime eventDateTime) {
-                                                                                    synchronized (expectedNotifications) {
-                                                                                        log.info("Handler received key: " + notificationKey);
+                new NotificationQueueHandler() {
+            @Override
+            public void handleReadyNotification(final NotificationKey notificationKey, final DateTime eventDateTime) {
+                synchronized (expectedNotifications) {
+                    log.info("Handler received key: " + notificationKey);
 
-                                                                                        expectedNotifications.put(notificationKey, Boolean.TRUE);
-                                                                                        expectedNotifications.notify();
-                                                                                    }
-                                                                                }
-                                                                            },
-                                                                            getNotificationConfig(false, 100, 1, 10000));
+                    expectedNotifications.put(notificationKey, Boolean.TRUE);
+                    expectedNotifications.notify();
+                }
+            }
+        },
+        getNotificationConfig(false, 100, 1, 10000));
 
 
         queue.startQueue();
@@ -147,24 +171,20 @@ public class TestNotificationQueue {
         final DummyObject obj = new DummyObject("foo", key);
         final DateTime now = new DateTime();
         final DateTime readyTime = now.plusMillis(2000);
-        final NotificationKey notificationKey = new NotificationKey() {
-            @Override
-            public String toString() {
-                return key.toString();
-            }
-        };
-        expectedNotifications.put(notificationKey.toString(), Boolean.FALSE);
+        final NotificationKey notificationKey = new TestNotificationKey(key.toString());
+
+        expectedNotifications.put(notificationKey, Boolean.FALSE);
 
 
         // Insert dummy to be processed in 2 sec'
         dao.inTransaction(new Transaction<Void, DummySqlTest>() {
             @Override
             public Void inTransaction(final DummySqlTest transactional,
-                                      final TransactionStatus status) throws Exception {
+                    final TransactionStatus status) throws Exception {
 
                 transactional.insertDummy(obj);
                 queue.recordFutureNotificationFromTransaction(transactional,
-                                                              readyTime, notificationKey);
+                        readyTime, notificationKey);
                 log.info("Posted key: " + notificationKey);
 
                 return null;
@@ -178,29 +198,29 @@ public class TestNotificationQueue {
         await().atMost(1, MINUTES).until(new Callable<Boolean>() {
             @Override
             public Boolean call() throws Exception {
-                return expectedNotifications.get(notificationKey.toString());
+                return expectedNotifications.get(notificationKey);
             }
         });
 
         queue.stopQueue();
-        Assert.assertTrue(expectedNotifications.get(notificationKey.toString()));
+        Assert.assertTrue(expectedNotifications.get(notificationKey));
     }
 
     @Test(groups = "slow")
     public void testManyNotifications() throws InterruptedException {
-        final Map<String, Boolean> expectedNotifications = new TreeMap<String, Boolean>();
+        final Map<NotificationKey, Boolean> expectedNotifications = new TreeMap<NotificationKey, Boolean>();
 
         final DefaultNotificationQueue queue = new DefaultNotificationQueue(dbi, clock, "test-svc", "many",
-                                                                            new NotificationQueueHandler() {
-                                                                                @Override
-                                                                                public void handleReadyNotification(final String notificationKey, final DateTime eventDateTime) {
-                                                                                    synchronized (expectedNotifications) {
-                                                                                        expectedNotifications.put(notificationKey, Boolean.TRUE);
-                                                                                        expectedNotifications.notify();
-                                                                                    }
-                                                                                }
-                                                                            },
-                                                                            getNotificationConfig(false, 100, 10, 10000));
+                new NotificationQueueHandler() {
+            @Override
+            public void handleReadyNotification(final NotificationKey notificationKey, final DateTime eventDateTime) {
+                synchronized (expectedNotifications) {
+                    expectedNotifications.put(notificationKey, Boolean.TRUE);
+                    expectedNotifications.notify();
+                }
+            }
+        },
+        getNotificationConfig(false, 100, 10, 10000));
 
 
         queue.startQueue();
@@ -215,22 +235,17 @@ public class TestNotificationQueue {
             final DummyObject obj = new DummyObject("foo", key);
             final int currentIteration = i;
 
-            final NotificationKey notificationKey = new NotificationKey() {
-                @Override
-                public String toString() {
-                    return key.toString();
-                }
-            };
-            expectedNotifications.put(notificationKey.toString(), Boolean.FALSE);
+            final NotificationKey notificationKey = new TestNotificationKey(key.toString());
+            expectedNotifications.put(notificationKey, Boolean.FALSE);
 
             dao.inTransaction(new Transaction<Void, DummySqlTest>() {
                 @Override
                 public Void inTransaction(final DummySqlTest transactional,
-                                          final TransactionStatus status) throws Exception {
+                        final TransactionStatus status) throws Exception {
 
                     transactional.insertDummy(obj);
                     queue.recordFutureNotificationFromTransaction(transactional,
-                                                                  now.plus((currentIteration + 1) * nextReadyTimeIncrementMs), notificationKey);
+                            now.plus((currentIteration + 1) * nextReadyTimeIncrementMs), notificationKey);
                     return null;
                 }
             });
@@ -266,6 +281,12 @@ public class TestNotificationQueue {
         } while (nbTry-- > 0);
 
         queue.stopQueue();
+        log.info("STEPH GOT SIZE " +  Collections2.filter(expectedNotifications.values(), new Predicate<Boolean>() {
+            @Override
+            public boolean apply(final Boolean input) {
+                return input;
+            }
+        }).size());
         assertEquals(success, true);
     }
 
@@ -278,8 +299,8 @@ public class TestNotificationQueue {
     @Test(groups = {"slow"}, enabled = true)
     public void testMultipleHandlerNotification() throws Exception {
 
-        final Map<String, Boolean> expectedNotificationsFred = new TreeMap<String, Boolean>();
-        final Map<String, Boolean> expectedNotificationsBarney = new TreeMap<String, Boolean>();
+        final Map<NotificationKey, Boolean> expectedNotificationsFred = new TreeMap<NotificationKey, Boolean>();
+        final Map<NotificationKey, Boolean> expectedNotificationsBarney = new TreeMap<NotificationKey, Boolean>();
 
         final NotificationQueueService notificationQueueService = new DefaultNotificationQueueService(dbi, clock);
 
@@ -298,23 +319,23 @@ public class TestNotificationQueue {
 
         final NotificationQueue queueFred = notificationQueueService.createNotificationQueue("UtilTest", "Fred", new NotificationQueueHandler() {
             @Override
-            public void handleReadyNotification(final String notificationKey, final DateTime eventDateTime) {
+            public void handleReadyNotification(final NotificationKey notificationKey, final DateTime eventDateTime) {
                 log.info("Fred received key: " + notificationKey);
                 expectedNotificationsFred.put(notificationKey, Boolean.TRUE);
                 eventsReceived++;
             }
         },
-                                                                                             config);
+        config);
 
         final NotificationQueue queueBarney = notificationQueueService.createNotificationQueue("UtilTest", "Barney", new NotificationQueueHandler() {
             @Override
-            public void handleReadyNotification(final String notificationKey, final DateTime eventDateTime) {
+            public void handleReadyNotification(final NotificationKey notificationKey, final DateTime eventDateTime) {
                 log.info("Barney received key: " + notificationKey);
                 expectedNotificationsBarney.put(notificationKey, Boolean.TRUE);
                 eventsReceived++;
             }
         },
-                                                                                               config);
+        config);
 
         queueFred.startQueue();
         //		We don't start Barney so it can never pick up notifications
@@ -324,37 +345,27 @@ public class TestNotificationQueue {
         final DummyObject obj = new DummyObject("foo", key);
         final DateTime now = new DateTime();
         final DateTime readyTime = now.plusMillis(2000);
-        final NotificationKey notificationKeyFred = new NotificationKey() {
-            @Override
-            public String toString() {
-                return "Fred";
-            }
-        };
+        final NotificationKey notificationKeyFred = new TestNotificationKey("Fred");
 
 
-        final NotificationKey notificationKeyBarney = new NotificationKey() {
-            @Override
-            public String toString() {
-                return "Barney";
-            }
-        };
+        final NotificationKey notificationKeyBarney = new TestNotificationKey("Barney"); 
 
-        expectedNotificationsFred.put(notificationKeyFred.toString(), Boolean.FALSE);
-        expectedNotificationsFred.put(notificationKeyBarney.toString(), Boolean.FALSE);
+        expectedNotificationsFred.put(notificationKeyFred, Boolean.FALSE);
+        expectedNotificationsFred.put(notificationKeyBarney, Boolean.FALSE);
 
 
         // Insert dummy to be processed in 2 sec'
         dao.inTransaction(new Transaction<Void, DummySqlTest>() {
             @Override
             public Void inTransaction(final DummySqlTest transactional,
-                                      final TransactionStatus status) throws Exception {
+                    final TransactionStatus status) throws Exception {
 
                 transactional.insertDummy(obj);
                 queueFred.recordFutureNotificationFromTransaction(transactional,
-                                                                  readyTime, notificationKeyFred);
+                        readyTime, notificationKeyFred);
                 log.info("posted key: " + notificationKeyFred.toString());
                 queueBarney.recordFutureNotificationFromTransaction(transactional,
-                                                                    readyTime, notificationKeyBarney);
+                        readyTime, notificationKeyBarney);
                 log.info("posted key: " + notificationKeyBarney.toString());
 
                 return null;
@@ -379,12 +390,12 @@ public class TestNotificationQueue {
         }
 
         queueFred.stopQueue();
-        Assert.assertTrue(expectedNotificationsFred.get(notificationKeyFred.toString()));
-        Assert.assertFalse(expectedNotificationsFred.get(notificationKeyBarney.toString()));
+        Assert.assertTrue(expectedNotificationsFred.get(notificationKeyFred));
+        Assert.assertFalse(expectedNotificationsFred.get(notificationKeyBarney));
     }
 
     NotificationConfig getNotificationConfig(final boolean off,
-                                             final long sleepTime, final int maxReadyEvents, final long claimTimeMs) {
+            final long sleepTime, final int maxReadyEvents, final long claimTimeMs) {
         return new NotificationConfig() {
             @Override
             public boolean isNotificationProcessingOff() {
@@ -403,31 +414,21 @@ public class TestNotificationQueue {
     public void testRemoveNotifications() throws InterruptedException {
 
         final UUID key = UUID.randomUUID();
-        final NotificationKey notificationKey = new NotificationKey() {
-            @Override
-            public String toString() {
-                return key.toString();
-            }
-        };
+        final NotificationKey notificationKey = new TestNotificationKey(key.toString());
         final UUID key2 = UUID.randomUUID();
-        final NotificationKey notificationKey2 = new NotificationKey() {
-            @Override
-            public String toString() {
-                return key2.toString();
-            }
-        };
+        final NotificationKey notificationKey2 = new TestNotificationKey(key2.toString());
 
         final DefaultNotificationQueue queue = new DefaultNotificationQueue(dbi, clock, "test-svc", "many",
-                                                                            new NotificationQueueHandler() {
-                                                                                @Override
-                                                                                public void handleReadyNotification(final String key, final DateTime eventDateTime) {
-                                                                                    if (key.equals(notificationKey) || key.equals(notificationKey2)) { //ignore stray events from other tests
-                                                                                        log.info("Received notification with key: " + notificationKey);
-                                                                                        eventsReceived++;
-                                                                                    }
-                                                                                }
-                                                                            },
-                                                                            getNotificationConfig(false, 100, 10, 10000));
+                new NotificationQueueHandler() {
+            @Override
+            public void handleReadyNotification(final NotificationKey inputKey, final DateTime eventDateTime) {
+                if (inputKey.equals(notificationKey) || inputKey.equals(notificationKey2)) { //ignore stray events from other tests
+                    log.info("Received notification with key: " + notificationKey);
+                    eventsReceived++;
+                }
+            }
+        },
+        getNotificationConfig(false, 100, 10, 10000));
 
 
         queue.startQueue();
@@ -440,14 +441,14 @@ public class TestNotificationQueue {
         dao.inTransaction(new Transaction<Void, DummySqlTest>() {
             @Override
             public Void inTransaction(final DummySqlTest transactional,
-                                      final TransactionStatus status) throws Exception {
+                    final TransactionStatus status) throws Exception {
 
                 queue.recordFutureNotificationFromTransaction(transactional,
-                                                              start.plus(nextReadyTimeIncrementMs), notificationKey);
+                        start.plus(nextReadyTimeIncrementMs), notificationKey);
                 queue.recordFutureNotificationFromTransaction(transactional,
-                                                              start.plus(2 * nextReadyTimeIncrementMs), notificationKey);
+                        start.plus(2 * nextReadyTimeIncrementMs), notificationKey);
                 queue.recordFutureNotificationFromTransaction(transactional,
-                                                              start.plus(3 * nextReadyTimeIncrementMs), notificationKey2);
+                        start.plus(3 * nextReadyTimeIncrementMs), notificationKey2);
                 return null;
             }
         });

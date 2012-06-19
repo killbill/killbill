@@ -29,7 +29,7 @@ public interface NotificationQueueService {
          *
          * @param notificationKey the notification key associated to that notification entry
          */
-        public void handleReadyNotification(String notificationKey, DateTime eventDateTime);
+        public void handleReadyNotification(NotificationKey notificationKey, DateTime eventDateTime);
     }
 
     public static final class NotificationQueueAlreadyExists extends Exception {

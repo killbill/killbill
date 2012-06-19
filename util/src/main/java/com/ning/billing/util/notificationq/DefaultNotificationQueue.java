@@ -16,6 +16,7 @@
 
 package com.ning.billing.util.notificationq;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -25,6 +26,7 @@ import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
 import com.ning.billing.config.NotificationConfig;
+import com.ning.billing.util.bus.dao.BusEventEntry;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
 import com.ning.billing.util.notificationq.dao.NotificationSqlDao;
@@ -56,7 +58,8 @@ public class DefaultNotificationQueue extends NotificationQueueBase {
             nbProcessedEvents.incrementAndGet();
             logDebug("handling notification %s, key = %s for time %s",
                      cur.getId(), cur.getNotificationKey(), cur.getEffectiveDate());
-            handler.handleReadyNotification(cur.getNotificationKey(), cur.getEffectiveDate());
+            NotificationKey key = deserializeEvent(cur.getNotificationKeyClass(), cur.getNotificationKey()); 
+            handler.handleReadyNotification(key, cur.getEffectiveDate());
             result++;
             clearNotification(cur);
             logDebug("done handling notification %s, key = %s for time %s",
@@ -65,20 +68,24 @@ public class DefaultNotificationQueue extends NotificationQueueBase {
         return result;
     }
 
+
     @Override
-    public void recordFutureNotification(final DateTime futureNotificationTime, final NotificationKey notificationKey) {
-        final Notification notification = new DefaultNotification(getFullQName(), hostname, notificationKey.toString(), futureNotificationTime);
-        dao.insertNotification(notification);
+    public void recordFutureNotification(final DateTime futureNotificationTime, final NotificationKey notificationKey) throws IOException {
+        recordFutureNotificationInternal(futureNotificationTime, notificationKey, dao);
     }
 
     @Override
     public void recordFutureNotificationFromTransaction(final Transmogrifier transactionalDao,
-                                                        final DateTime futureNotificationTime, final NotificationKey notificationKey) {
+                                                        final DateTime futureNotificationTime, final NotificationKey notificationKey) throws IOException {
         final NotificationSqlDao transactionalNotificationDao = transactionalDao.become(NotificationSqlDao.class);
-        final Notification notification = new DefaultNotification(getFullQName(), hostname, notificationKey.toString(), futureNotificationTime);
-        transactionalNotificationDao.insertNotification(notification);
+        recordFutureNotificationInternal(futureNotificationTime, notificationKey, transactionalNotificationDao);
     }
-
+    
+    private void recordFutureNotificationInternal(final DateTime futureNotificationTime, final NotificationKey notificationKey, final NotificationSqlDao thisDao) throws IOException {
+        final String json = objectMapper.writeValueAsString(notificationKey);
+        final Notification notification = new DefaultNotification(getFullQName(), hostname, notificationKey.getClass().getName(), json, futureNotificationTime);
+        thisDao.insertNotification(notification);
+    }
 
     private void clearNotification(final Notification cleared) {
         dao.clearNotification(cleared.getId().toString(), hostname);

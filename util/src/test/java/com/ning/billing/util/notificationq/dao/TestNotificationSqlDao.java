@@ -102,7 +102,7 @@ public class TestNotificationSqlDao {
 
         final String notificationKey = UUID.randomUUID().toString();
         final DateTime effDt = new DateTime();
-        final Notification notif = new DefaultNotification("testBasic", hostname, notificationKey, effDt);
+        final Notification notif = new DefaultNotification("testBasic", hostname, notificationKey.getClass().getName(), notificationKey, effDt);
         dao.insertNotification(notif);
 
         Thread.sleep(1000);
@@ -149,6 +149,7 @@ public class TestNotificationSqlDao {
                 final Notification res = handle.createQuery("   select" +
                                                                     " record_id " +
                                                                     ", id" +
+                                                                    ", class_name" +                                                                    
                                                                     ", notification_key" +
                                                                     ", created_date" +
                                                                     ", creating_owner" +

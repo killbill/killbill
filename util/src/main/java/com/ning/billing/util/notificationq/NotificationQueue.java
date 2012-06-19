@@ -16,6 +16,8 @@
 
 package com.ning.billing.util.notificationq;
 
+import java.io.IOException;
+
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
@@ -29,7 +31,8 @@ public interface NotificationQueue extends QueueLifecycle {
      * @param futureNotificationTime the time at which the notification is ready
      * @param notificationKey        the key for that notification
      */
-    public void recordFutureNotification(final DateTime futureNotificationTime, final NotificationKey notificationKey);
+    public void recordFutureNotification(final DateTime futureNotificationTime, final NotificationKey notificationKey)
+        throws IOException;
 
     /**
      * Record from within a transaction the need to be called back when the notification is ready
@@ -39,7 +42,8 @@ public interface NotificationQueue extends QueueLifecycle {
      * @param notificationKey        the key for that notification
      */
     public void recordFutureNotificationFromTransaction(final Transmogrifier transactionalDao,
-                                                        final DateTime futureNotificationTime, final NotificationKey notificationKey);
+                                                        final DateTime futureNotificationTime, final NotificationKey notificationKey)
+        throws IOException;
 
 
     /**

@@ -73,6 +73,7 @@ public interface NotificationSqlDao extends Transactional<NotificationSqlDao>, C
             stmt.bind("id", evt.getId().toString());
             stmt.bind("createdDate", getDate(new DateTime()));
             stmt.bind("creatingOwner", evt.getCreatedOwner());
+            stmt.bind("className", evt.getNotificationKeyClass());            
             stmt.bind("notificationKey", evt.getNotificationKey());
             stmt.bind("effectiveDate", getDate(evt.getEffectiveDate()));
             stmt.bind("queueName", evt.getQueueName());
@@ -91,6 +92,7 @@ public interface NotificationSqlDao extends Transactional<NotificationSqlDao>, C
             final Long ordering = r.getLong("record_id");
             final UUID id = getUUID(r, "id");
             final String createdOwner = r.getString("creating_owner");
+            final String className = r.getString("class_name");            
             final String notificationKey = r.getString("notification_key");
             final String queueName = r.getString("queue_name");
             final DateTime effectiveDate = getDate(r, "effective_date");
@@ -99,7 +101,7 @@ public interface NotificationSqlDao extends Transactional<NotificationSqlDao>, C
             final PersistentQueueEntryLifecycleState processingState = PersistentQueueEntryLifecycleState.valueOf(r.getString("processing_state"));
 
             return new DefaultNotification(ordering, id, createdOwner, processingOwner, queueName, nextAvailableDate,
-                                           processingState, notificationKey, effectiveDate);
+                                           processingState, className, notificationKey, effectiveDate);
 
         }
     }

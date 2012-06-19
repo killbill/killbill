@@ -17,33 +17,25 @@ package com.ning.billing.entitlement.engine.core;
 
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ning.billing.util.notificationq.NotificationKey;
 
 public class EntitlementNotificationKey implements NotificationKey {
 
-    private static final String DELIMITER = ":";
-
     private final UUID eventId;
     private final int seqId;
 
-    public EntitlementNotificationKey(final UUID eventId, final int seqId) {
+    
+    @JsonCreator
+    public EntitlementNotificationKey(@JsonProperty("eventId") final UUID eventId,
+            @JsonProperty("seqId") final int seqId) {
         this.eventId = eventId;
         this.seqId = seqId;
     }
 
     public EntitlementNotificationKey(final UUID eventId) {
         this(eventId, 0);
-    }
-
-    public EntitlementNotificationKey(final String input) {
-
-        final String[] parts = input.split(DELIMITER);
-        eventId = UUID.fromString(parts[0]);
-        if (parts.length == 2) {
-            seqId = Integer.valueOf(parts[1]);
-        } else {
-            seqId = 0;
-        }
     }
 
     public UUID getEventId() {

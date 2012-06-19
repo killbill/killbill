@@ -16,6 +16,7 @@
 
 package com.ning.billing.entitlement.engine.dao;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -46,6 +47,7 @@ import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.engine.core.Engine;
+import com.ning.billing.entitlement.engine.core.EntitlementNotificationKey;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
 import com.ning.billing.entitlement.events.user.ApiEvent;
@@ -159,12 +161,7 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
         synchronized (events) {
             events.addAll(initialEvents);
             for (final EntitlementEvent cur : initialEvents) {
-                recordFutureNotificationFromTransaction(null, cur.getEffectiveDate(), new NotificationKey() {
-                    @Override
-                    public String toString() {
-                        return cur.getId().toString();
-                    }
-                });
+                recordFutureNotificationFromTransaction(null, cur.getEffectiveDate(), new EntitlementNotificationKey(cur.getId()));
             }
         }
         final Subscription updatedSubscription = buildSubscription(null, subscription);
@@ -178,12 +175,7 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
         synchronized (events) {
             events.addAll(recreateEvents);
             for (final EntitlementEvent cur : recreateEvents) {
-                recordFutureNotificationFromTransaction(null, cur.getEffectiveDate(), new NotificationKey() {
-                    @Override
-                    public String toString() {
-                        return cur.getId().toString();
-                    }
-                });
+                recordFutureNotificationFromTransaction(null, cur.getEffectiveDate(), new EntitlementNotificationKey(cur.getId()));
             }
         }
     }
@@ -295,12 +287,7 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
             cancelNextPhaseEvent(subscriptionId);
             events.addAll(changeEvents);
             for (final EntitlementEvent cur : changeEvents) {
-                recordFutureNotificationFromTransaction(null, cur.getEffectiveDate(), new NotificationKey() {
-                    @Override
-                    public String toString() {
-                        return cur.getId().toString();
-                    }
-                });
+                recordFutureNotificationFromTransaction(null, cur.getEffectiveDate(), new EntitlementNotificationKey(cur.getId()));
             }
         }
     }
@@ -308,12 +295,7 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
     private void insertEvent(final EntitlementEvent event) {
         synchronized (events) {
             events.add(event);
-            recordFutureNotificationFromTransaction(null, event.getEffectiveDate(), new NotificationKey() {
-                @Override
-                public String toString() {
-                    return event.getId().toString();
-                }
-            });
+            recordFutureNotificationFromTransaction(null, event.getEffectiveDate(), new EntitlementNotificationKey(event.getId()));
         }
     }
 
@@ -403,12 +385,7 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
                     final SubscriptionData subData = curSubscription.getData();
                     for (final EntitlementEvent curEvent : curSubscription.getInitialEvents()) {
                         events.add(curEvent);
-                        recordFutureNotificationFromTransaction(null, curEvent.getEffectiveDate(), new NotificationKey() {
-                            @Override
-                            public String toString() {
-                                return curEvent.getId().toString();
-                            }
-                        });
+                        recordFutureNotificationFromTransaction(null, curEvent.getEffectiveDate(), new EntitlementNotificationKey(curEvent.getId()));
 
                     }
                     subscriptions.add(subData);
@@ -437,6 +414,8 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
             subscriptionEventQueue.recordFutureNotificationFromTransaction(transactionalDao, effectiveDate, notificationKey);
         } catch (NoSuchNotificationQueue e) {
             throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);            
         }
     }
 
