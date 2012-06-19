@@ -97,7 +97,11 @@ public abstract class DefaultTranslatorBase implements Translator {
     private ResourceBundle getBundleFromPropertiesFile(final String propertiesFileName) {
         try {
             final InputStream inputStream = UriAccessor.accessUri(propertiesFileName);
-            return new PropertyResourceBundle(inputStream);
+            if (inputStream == null) {
+                return null;
+            } else {
+                return new PropertyResourceBundle(inputStream);
+            }
         } catch (MissingResourceException mrex) {
             return null;
         } catch (URISyntaxException e) {
