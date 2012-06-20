@@ -91,7 +91,7 @@ public class DefaultEntitlementMigrationApi implements EntitlementMigrationApi {
 
 
             final List<EntitlementSubscriptionMigration> sortedSubscriptions = Lists.newArrayList(curBundle.getSubscriptions());
-            // Make sure we have first mpp or legacy, then addon and for each category order by CED
+            // Make sure we have first BASE or STANDALONE, then ADDON and for each category order by CED
             Collections.sort(sortedSubscriptions, new Comparator<EntitlementSubscriptionMigration>() {
                 @Override
                 public int compare(final EntitlementSubscriptionMigration o1,
@@ -99,14 +99,10 @@ public class DefaultEntitlementMigrationApi implements EntitlementMigrationApi {
                     if (o1.getCategory().equals(o2.getCategory())) {
                         return o1.getSubscriptionCases()[0].getEffectiveDate().compareTo(o2.getSubscriptionCases()[0].getEffectiveDate());
                     } else {
-                        if (o1.getCategory().equals("mpp")) {
+                    	if (!o1.getCategory().name().equalsIgnoreCase("ADD_ON")) {
                             return -1;
-                        } else if (o2.getCategory().equals("mpp")) {
-                            return 1;
-                        } else if (o1.getCategory().equals("legacy")) {
-                            return -1;
-                        } else if (o2.getCategory().equals("legacy")) {
-                            return 1;
+                        } else if (o1.getCategory().name().equalsIgnoreCase("ADD_ON")) {
+                            return 1;                    
                         } else {
                             return 0;
                         }
