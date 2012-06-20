@@ -19,6 +19,7 @@ getReadyNotifications() ::= <<
       and queue_name = :queueName
       and processing_state != 'PROCESSED'
       and processing_state != 'REMOVED'
+      and creating_owner = :owner
       and (processing_owner IS NULL OR processing_available_date \<= :now)
     order by
       effective_date asc

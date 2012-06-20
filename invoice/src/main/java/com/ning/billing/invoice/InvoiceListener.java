@@ -59,7 +59,8 @@ public class InvoiceListener {
         try {
             //  Skip future uncancel event
             //  Skip events which are marked as not being the last one
-            if (transition.getTransitionType() == SubscriptionTransitionType.UNCANCEL
+            if (transition.getTransitionType() == SubscriptionTransitionType.UNCANCEL ||
+                    transition.getTransitionType() == SubscriptionTransitionType.MIGRATE_ENTITLEMENT
                     || transition.getRemainingEventsForUserOperation() > 0) {
                 return;
             }
