@@ -1,0 +1,24 @@
+group BusinessInvoicePayment;
+
+getInvoicePaymentForPaymentAttempt(payment_attempt_id) ::= <<
+>>
+
+getInvoicePaymentForPayment(payment_id) ::= <<
+>>
+
+getInvoicePaymentsForAccount(account_key) ::= <<
+>>
+
+createInvoicePayment() ::= <<
+>>
+
+updateInvoicePayment() ::= <<
+>>
+
+deleteInvoicePaymentForPaymentAttempt(payment_attempt_id) ::= <<
+delete from bip where payment_attempt_id = :payment_attempt_id
+>>
+
+test() ::= <<
+select 1 from bip;
+>>

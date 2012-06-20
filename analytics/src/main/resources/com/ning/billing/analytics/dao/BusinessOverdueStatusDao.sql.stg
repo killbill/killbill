@@ -1,0 +1,17 @@
+group BusinessOverdueStatus;
+
+getOverdueStatusesForBundle(external_key) ::= <<
+>>
+
+createOverdueStatus() ::= <<
+>>
+
+updateOverdueStatus() ::= <<
+>>
+
+deleteOverdueStatus() ::= <<
+>>
+
+test() ::= <<
+  select 1 from bos;
+>>
