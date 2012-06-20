@@ -23,11 +23,11 @@ import java.util.UUID;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import com.ning.billing.analytics.model.BusinessPaymentField;
+import com.ning.billing.analytics.model.BusinessInvoicePaymentField;
 
-public class BusinessInvoicePaymentFieldMapper implements ResultSetMapper<BusinessPaymentField> {
+public class BusinessInvoicePaymentFieldMapper implements ResultSetMapper<BusinessInvoicePaymentField> {
     @Override
-    public BusinessPaymentField map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
-        return new BusinessPaymentField(UUID.fromString(r.getString(1)), r.getString(2), r.getString(3));
+    public BusinessInvoicePaymentField map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
+        return new BusinessInvoicePaymentField(UUID.fromString(r.getString(1)), r.getString(2), r.getString(3));
     }
 }
