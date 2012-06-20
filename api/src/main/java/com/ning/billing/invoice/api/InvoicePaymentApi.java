@@ -44,9 +44,9 @@ public interface InvoicePaymentApi {
 
     public void notifyOfPaymentAttempt(UUID invoiceId, UUID paymentAttemptId, DateTime paymentAttemptDate, CallContext context);
 
-    public void processChargeback(UUID invoicePaymentId, BigDecimal amount, CallContext context) throws InvoiceApiException;
+    public InvoicePayment processChargeback(UUID invoicePaymentId, BigDecimal amount, CallContext context) throws InvoiceApiException;
 
-    public void processChargeback(UUID invoicePaymentId, CallContext context) throws InvoiceApiException;
+    public InvoicePayment processChargeback(UUID invoicePaymentId, CallContext context) throws InvoiceApiException;
 
     public BigDecimal getRemainingAmountPaid(UUID invoicePaymentId);
 

@@ -61,7 +61,7 @@ public interface InvoiceDao {
 
     void removeWrittenOff(final UUID invoiceId, final CallContext context) throws TagApiException;
 
-    void postChargeback(final UUID invoicePaymentId, final BigDecimal amount, final CallContext context) throws InvoiceApiException;
+    InvoicePayment postChargeback(final UUID invoicePaymentId, final BigDecimal amount, final CallContext context) throws InvoiceApiException;
 
     BigDecimal getRemainingAmountPaid(final UUID invoicePaymentId);
 

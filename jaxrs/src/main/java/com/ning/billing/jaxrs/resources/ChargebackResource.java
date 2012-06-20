@@ -114,20 +114,22 @@ public class ChargebackResource implements JaxrsResource {
                 }
             });
             if (attempts.size() == 0) {
-                final String error = String.format("Failed to locate succesful payment attempts for paymentId %s", paymentId);
+                final String error = String.format("Failed to locate successful payment attempts for paymentId %s", paymentId);
                 return Response.status(Response.Status.NO_CONTENT).entity(error).build();
             }
             final UUID paymentAttemptId = attempts.iterator().next().getId();
 
             final List<InvoicePayment> chargebacks = invoicePaymentApi.getChargebacksByPaymentAttemptId(paymentAttemptId);
+            if (chargebacks.size() == 0) {
+                return Response.status(Response.Status.NO_CONTENT).build();
+            }
+
+            final UUID invoicePaymentId = chargebacks.get(0).getId();
+            final String accountId = invoicePaymentApi.getAccountIdFromInvoicePaymentId(invoicePaymentId).toString();
             final List<ChargebackJson> chargebacksJson = convertToJson(chargebacks);
-
-            final String accountId = invoicePaymentApi.getAccountIdFromInvoicePaymentId(UUID.fromString(paymentId)).toString();
-
-
             final ChargebackCollectionJson json = new ChargebackCollectionJson(accountId, chargebacksJson);
-            return Response.status(Response.Status.OK).entity(json).build();
 
+            return Response.status(Response.Status.OK).entity(json).build();
         } catch (PaymentApiException e) {
             final String error = String.format("Failed to locate payment attempt for payment id %s", paymentId);
             return Response.status(Response.Status.NO_CONTENT).entity(error).build();
@@ -145,14 +147,35 @@ public class ChargebackResource implements JaxrsResource {
                                      @HeaderParam(HDR_REASON) final String reason,
                                      @HeaderParam(HDR_COMMENT) final String comment) {
         try {
-            invoicePaymentApi.processChargeback(UUID.fromString(json.getPaymentId()), json.getChargebackAmount(),
-                                                context.createContext(createdBy, reason, comment));
-            return uriBuilder.buildResponse(ChargebackResource.class, "getChargeback", json.getPaymentId());
+            final Payment payment = paymentApi.getPayment(UUID.fromString(json.getPaymentId()));
+            final Collection<PaymentAttempt> attempts = Collections2.filter(payment.getAttempts(), new Predicate<PaymentAttempt>() {
+                @Override
+                public boolean apply(final PaymentAttempt input) {
+                    return input.getPaymentStatus() == PaymentStatus.SUCCESS;
+                }
+            });
+            if (attempts.size() == 0) {
+                final String error = String.format("Failed to locate successful payment attempts for paymentId %s", json.getPaymentId());
+                return Response.status(Response.Status.NO_CONTENT).entity(error).build();
+            }
+
+            final UUID paymentAttemptId = attempts.iterator().next().getId();
+            final InvoicePayment invoicePayment = invoicePaymentApi.getInvoicePayment(paymentAttemptId);
+            if (invoicePayment == null) {
+                final String error = String.format("Failed to locate invoice payment for paymentAttemptId %s", paymentAttemptId);
+                return Response.status(Response.Status.NO_CONTENT).entity(error).build();
+            }
+
+            final InvoicePayment chargeBack = invoicePaymentApi.processChargeback(invoicePayment.getId(), json.getChargebackAmount(),
+                                                                                  context.createContext(createdBy, reason, comment));
+            return uriBuilder.buildResponse(ChargebackResource.class, "getChargeback", chargeBack.getId());
         } catch (InvoiceApiException e) {
             final String error = String.format("Failed to create chargeback %s", json);
             log.info(error, e);
             return Response.status(Response.Status.BAD_REQUEST).entity(error).build();
         } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        } catch (PaymentApiException e) {
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
         }
     }
