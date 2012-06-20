@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.analytics;
+package com.ning.billing.analytics.model;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -24,6 +24,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.ning.billing.analytics.AnalyticsTestSuite;
 import com.ning.billing.analytics.model.BusinessAccount;
 
 public class TestBusinessAccount extends AnalyticsTestSuite {

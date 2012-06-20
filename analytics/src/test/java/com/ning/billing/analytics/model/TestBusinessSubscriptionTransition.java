@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.analytics;
+package com.ning.billing.analytics.model;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -23,6 +23,12 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.ning.billing.analytics.AnalyticsTestSuite;
+import com.ning.billing.analytics.MockDuration;
+import com.ning.billing.analytics.MockPhase;
+import com.ning.billing.analytics.MockPlan;
+import com.ning.billing.analytics.MockProduct;
+import com.ning.billing.analytics.MockSubscription;
 import com.ning.billing.analytics.model.BusinessSubscription;
 import com.ning.billing.analytics.model.BusinessSubscriptionEvent;
 import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
