@@ -1,17 +1,30 @@
 group BusinessOverdueStatus;
 
 getOverdueStatusesForBundle(external_key) ::= <<
+select
+  external_key
+, status
+, start_date
+, end_date
+from bos
+where external_key = :external_key
+;
 >>
 
 createOverdueStatus() ::= <<
->>
-
-updateOverdueStatus() ::= <<
->>
-
-deleteOverdueStatus() ::= <<
+insert into bos (
+  external_key
+, status
+, start_date
+, end_date
+) values (
+  :external_key
+, :status
+, :start_date
+, :end_date
+);
 >>
 
 test() ::= <<
-  select 1 from bos;
+select 1 from bos;
 >>
