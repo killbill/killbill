@@ -119,7 +119,7 @@ create table bos (
 , status varchar(50) not null
 , start_date bigint default null
 , end_date bigint default null
-) engine=innodb comment 'Business Overdue Status, describe the historical overdue status of the bundles';
+) engine=innodb comment 'Business Overdue Status, historical bundles overdue status';
 create unique index bos_key_index on bos (external_key, status);
 
 drop table if exists bac_tags;
