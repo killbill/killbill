@@ -27,7 +27,7 @@ batchCreateFromTransaction() ::= <<
 getByPaymentAttemptId() ::= <<
   SELECT <invoicePaymentFields()>
   FROM invoice_payments
-  WHERE payment_id = :paymentAttemptId;
+  WHERE payment_attempt_id = :paymentAttemptId;
 >>
 
 get() ::= <<
@@ -56,7 +56,7 @@ notifyOfPaymentAttempt() ::= <<
 getInvoicePayment() ::= <<
     SELECT <invoicePaymentFields()>
     FROM invoice_payments
-    WHERE payment_id = :payment_id;
+    WHERE payment_attempt_id = :paymentAttemptId;
 >>
 
 getRecordId() ::= <<

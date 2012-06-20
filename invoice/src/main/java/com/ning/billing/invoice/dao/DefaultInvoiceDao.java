@@ -255,7 +255,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
 
     @Override
     public InvoicePayment getInvoicePayment(final UUID paymentAttemptId) {
-        return invoicePaymentSqlDao.getInvoicePayment(paymentAttemptId);
+        return invoicePaymentSqlDao.getInvoicePayment(paymentAttemptId.toString());
     }
 
     @Override
@@ -269,18 +269,25 @@ public class DefaultInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public void postChargeback(final UUID invoicePaymentId, final BigDecimal amount, final CallContext context) throws InvoiceApiException {
-        final InvoicePayment payment = invoicePaymentSqlDao.getById(invoicePaymentId.toString());
-        if (payment == null) {
-            throw new InvoiceApiException(ErrorCode.INVOICE_PAYMENT_NOT_FOUND, invoicePaymentId.toString());
-        } else {
-            if (amount.compareTo(BigDecimal.ZERO) < 0) {
-                throw new InvoiceApiException(ErrorCode.CHARGE_BACK_AMOUNT_IS_NEGATIVE);
-            }
+    public InvoicePayment postChargeback(final UUID invoicePaymentId, final BigDecimal amount, final CallContext context) throws InvoiceApiException {
+        return invoicePaymentSqlDao.inTransaction(new Transaction<InvoicePayment, InvoicePaymentSqlDao>() {
+            @Override
+            public InvoicePayment inTransaction(final InvoicePaymentSqlDao transactional, final TransactionStatus status) throws Exception {
+                final InvoicePayment payment = invoicePaymentSqlDao.getById(invoicePaymentId.toString());
+                if (payment == null) {
+                    throw new InvoiceApiException(ErrorCode.INVOICE_PAYMENT_NOT_FOUND, invoicePaymentId.toString());
+                } else {
+                    if (amount.compareTo(BigDecimal.ZERO) < 0) {
+                        throw new InvoiceApiException(ErrorCode.CHARGE_BACK_AMOUNT_IS_NEGATIVE);
+                    }
 
-            final InvoicePayment chargeBack = payment.asChargeBack(amount, context.getCreatedDate());
-            invoicePaymentSqlDao.create(chargeBack, context);
-        }
+                    final InvoicePayment chargeBack = payment.asChargeBack(amount, context.getCreatedDate());
+                    invoicePaymentSqlDao.create(chargeBack, context);
+
+                    return chargeBack;
+                }
+            }
+        });
     }
 
     @Override
