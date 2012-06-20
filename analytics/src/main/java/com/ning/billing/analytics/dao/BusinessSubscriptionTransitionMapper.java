@@ -83,7 +83,7 @@ public class BusinessSubscriptionTransitionMapper implements ResultSetMapper<Bus
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.valueOf(r.getString(5));
 
         return new BusinessSubscriptionTransition(
-                UUID.fromString(r.getString(1)),
+                r.getLong(1),
                 r.getString(2),
                 r.getString(3),
                 new DateTime(r.getLong(4), DateTimeZone.UTC),

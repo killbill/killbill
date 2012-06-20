@@ -6,7 +6,7 @@ getAccount(account_key) ::= <<
   , created_date
   , updated_date
   , balance
-  , tags
+  , name
   , last_invoice_date
   , total_invoice_balance
   , last_payment_status
@@ -25,7 +25,7 @@ createAccount() ::= <<
   , created_date
   , updated_date
   , balance
-  , tags
+  , name
   , last_invoice_date
   , total_invoice_balance
   , last_payment_status
@@ -37,7 +37,7 @@ createAccount() ::= <<
   , :created_date
   , :updated_date
   , :balance
-  , :tags
+  , :name
   , :last_invoice_date
   , :total_invoice_balance
   , :last_payment_status
@@ -51,7 +51,7 @@ saveAccount() ::= <<
   update bac set
     updated_date=:updated_date
   , balance=:balance
-  , tags=:tags
+  , name=:name
   , last_invoice_date=:last_invoice_date
   , total_invoice_balance=:total_invoice_balance
   , last_payment_status=:last_payment_status

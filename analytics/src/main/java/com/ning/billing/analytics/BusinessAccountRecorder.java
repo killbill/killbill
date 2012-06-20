@@ -136,8 +136,8 @@ public class BusinessAccountRecorder {
     private BusinessAccount createBusinessAccountFromAccount(final Account account, final List<Tag> tags) {
         final BusinessAccount bac = new BusinessAccount(
                 account.getExternalKey(),
+                account.getName(),
                 invoiceUserApi.getAccountBalance(account.getId()),
-                tags,
                 // These fields will be updated below
                 null,
                 null,

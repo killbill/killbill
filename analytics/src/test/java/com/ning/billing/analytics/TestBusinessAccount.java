@@ -17,22 +17,19 @@
 package com.ning.billing.analytics;
 
 import java.math.BigDecimal;
-import java.util.Collections;
+import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import com.ning.billing.util.tag.Tag;
 
 public class TestBusinessAccount extends AnalyticsTestSuite {
     private BusinessAccount account;
 
     @BeforeMethod(groups = "fast")
     public void setUp() throws Exception {
-        account = new BusinessAccount("pierre", BigDecimal.ONE, Collections.singletonList(getMockTag("batch15")), new DateTime(), BigDecimal.TEN, "ERROR_NOT_ENOUGH_FUNDS", "CreditCard", "Visa", "");
+        account = new BusinessAccount("pierre", UUID.randomUUID().toString(), BigDecimal.ONE, new DateTime(), BigDecimal.TEN, "ERROR_NOT_ENOUGH_FUNDS", "CreditCard", "Visa", "");
     }
 
     @Test(groups = "fast")
@@ -41,14 +38,7 @@ public class TestBusinessAccount extends AnalyticsTestSuite {
         Assert.assertEquals(account, account);
         Assert.assertTrue(account.equals(account));
 
-        final BusinessAccount otherAccount = new BusinessAccount("pierre cardin", BigDecimal.ONE, Collections.singletonList(getMockTag("batch15")), new DateTime(), BigDecimal.TEN, "ERROR_NOT_ENOUGH_FUNDS", "CreditCard", "Visa", "");
+        final BusinessAccount otherAccount = new BusinessAccount("pierre cardin", UUID.randomUUID().toString(), BigDecimal.ONE, new DateTime(), BigDecimal.TEN, "ERROR_NOT_ENOUGH_FUNDS", "CreditCard", "Visa", "");
         Assert.assertFalse(account.equals(otherAccount));
-    }
-
-    private Tag getMockTag(final String tagDefinitionName) {
-        final Tag tag = Mockito.mock(Tag.class);
-        Mockito.when(tag.getTagDefinitionName()).thenReturn(tagDefinitionName);
-        Mockito.when(tag.toString()).thenReturn(tagDefinitionName);
-        return tag;
     }
 }

@@ -54,7 +54,7 @@ public @interface BusinessAccountBinder {
 
                     q.bind("account_key", account.getKey());
                     q.bind("balance", account.getRoundedBalance());
-                    q.bind("tags", joiner.join(account.getTags()));
+                    q.bind("name", account.getName());
                     if (account.getLastInvoiceDate() != null) {
                         q.bind("last_invoice_date", account.getLastInvoiceDate().getMillis());
                     } else {

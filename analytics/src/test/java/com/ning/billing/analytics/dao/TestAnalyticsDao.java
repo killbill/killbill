@@ -19,7 +19,6 @@ package com.ning.billing.analytics.dao;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -51,11 +50,10 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.util.tag.Tag;
 
 public class TestAnalyticsDao extends TestWithEmbeddedDB {
-    private static final UUID EVENT_ID = UUID.randomUUID();
-    private static final String EVENT_KEY = "23456";
+    private static final Long TOTAL_ORDERING = 1L;
+    private static final String EXTERNAL_KEY = "23456";
     private static final String ACCOUNT_KEY = "pierre-143343-vcc";
 
     private final Product product = new MockProduct("platinium", "subscription", ProductCategory.BASE);
@@ -87,7 +85,7 @@ public class TestAnalyticsDao extends TestWithEmbeddedDB {
         final BusinessSubscription nextSubscription = new BusinessSubscription(null, plan.getName(), phase.getName(), Currency.USD, new DateTime(DateTimeZone.UTC), Subscription.SubscriptionState.CANCELLED, UUID.randomUUID(), UUID.randomUUID(), catalog);
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionCancelled(plan.getName(), catalog, requestedTimestamp, requestedTimestamp);
 
-        transition = new BusinessSubscriptionTransition(EVENT_ID, EVENT_KEY, ACCOUNT_KEY, requestedTimestamp, event, prevSubscription, nextSubscription);
+        transition = new BusinessSubscriptionTransition(TOTAL_ORDERING, EXTERNAL_KEY, ACCOUNT_KEY, requestedTimestamp, event, prevSubscription, nextSubscription);
 
         final IDBI dbi = helper.getDBI();
         businessSubscriptionTransitionDao = dbi.onDemand(BusinessSubscriptionTransitionDao.class);
@@ -101,10 +99,7 @@ public class TestAnalyticsDao extends TestWithEmbeddedDB {
     }
 
     private void setupBusinessAccount() {
-        final List<Tag> tags = new ArrayList<Tag>();
-        tags.add(getMockTag("batch1"));
-        tags.add(getMockTag("great,guy"));
-        account = new BusinessAccount(ACCOUNT_KEY, BigDecimal.ONE, tags, new DateTime(DateTimeZone.UTC), BigDecimal.TEN, "ERROR_NOT_ENOUGH_FUNDS", "CreditCard", "Visa", "FRANCE");
+        account = new BusinessAccount(ACCOUNT_KEY, UUID.randomUUID().toString(), BigDecimal.ONE, new DateTime(DateTimeZone.UTC), BigDecimal.TEN, "ERROR_NOT_ENOUGH_FUNDS", "CreditCard", "Visa", "FRANCE");
 
         final IDBI dbi = helper.getDBI();
         businessAccountDao = dbi.onDemand(BusinessAccountDao.class);
@@ -117,18 +112,11 @@ public class TestAnalyticsDao extends TestWithEmbeddedDB {
         }
     }
 
-    private Tag getMockTag(final String tagDefinitionName) {
-        final Tag tag = Mockito.mock(Tag.class);
-        Mockito.when(tag.getTagDefinitionName()).thenReturn(tagDefinitionName);
-        Mockito.when(tag.toString()).thenReturn(tagDefinitionName);
-        return tag;
-    }
-
     @Test(groups = "slow")
     public void testHandleDuplicatedEvents() {
         final BusinessSubscriptionTransition transitionWithNullPrev = new BusinessSubscriptionTransition(
-                transition.getId(),
-                transition.getKey(),
+                transition.getTotalOrdering(),
+                transition.getExternalKey(),
                 transition.getAccountKey(),
                 transition.getRequestedTimestamp(),
                 transition.getEvent(),
@@ -137,19 +125,19 @@ public class TestAnalyticsDao extends TestWithEmbeddedDB {
         );
 
         businessSubscriptionTransitionDao.createTransition(transitionWithNullPrev);
-        List<BusinessSubscriptionTransition> transitions = businessSubscriptionTransitionDao.getTransitions(EVENT_KEY);
+        List<BusinessSubscriptionTransition> transitions = businessSubscriptionTransitionDao.getTransitions(EXTERNAL_KEY);
         Assert.assertEquals(transitions.size(), 1);
         Assert.assertEquals(transitions.get(0), transitionWithNullPrev);
         // Try to add the same transition, with the same UUID - we should only store one though
         businessSubscriptionTransitionDao.createTransition(transitionWithNullPrev);
-        transitions = businessSubscriptionTransitionDao.getTransitions(EVENT_KEY);
+        transitions = businessSubscriptionTransitionDao.getTransitions(EXTERNAL_KEY);
         Assert.assertEquals(transitions.size(), 1);
         Assert.assertEquals(transitions.get(0), transitionWithNullPrev);
 
         // Try now to store a look-alike transition (same fields except UUID) - we should store it this time
         final BusinessSubscriptionTransition secondTransitionWithNullPrev = new BusinessSubscriptionTransition(
-                UUID.randomUUID(),
-                transition.getKey(),
+                12L,
+                transition.getExternalKey(),
                 transition.getAccountKey(),
                 transition.getRequestedTimestamp(),
                 transition.getEvent(),
@@ -157,7 +145,7 @@ public class TestAnalyticsDao extends TestWithEmbeddedDB {
                 transition.getNextSubscription()
         );
         businessSubscriptionTransitionDao.createTransition(secondTransitionWithNullPrev);
-        transitions = businessSubscriptionTransitionDao.getTransitions(EVENT_KEY);
+        transitions = businessSubscriptionTransitionDao.getTransitions(EXTERNAL_KEY);
         Assert.assertEquals(transitions.size(), 2);
         Assert.assertTrue(transitions.contains(transitionWithNullPrev));
         Assert.assertTrue(transitions.contains(secondTransitionWithNullPrev));
@@ -166,8 +154,8 @@ public class TestAnalyticsDao extends TestWithEmbeddedDB {
     @Test(groups = "slow")
     public void testTransitionsWithNullPrevSubscription() {
         final BusinessSubscriptionTransition transitionWithNullPrev = new BusinessSubscriptionTransition(
-                transition.getId(),
-                transition.getKey(),
+                transition.getTotalOrdering(),
+                transition.getExternalKey(),
                 transition.getAccountKey(),
                 transition.getRequestedTimestamp(),
                 transition.getEvent(),
@@ -176,7 +164,7 @@ public class TestAnalyticsDao extends TestWithEmbeddedDB {
         );
         businessSubscriptionTransitionDao.createTransition(transitionWithNullPrev);
 
-        final List<BusinessSubscriptionTransition> transitions = businessSubscriptionTransitionDao.getTransitions(EVENT_KEY);
+        final List<BusinessSubscriptionTransition> transitions = businessSubscriptionTransitionDao.getTransitions(EXTERNAL_KEY);
         Assert.assertEquals(transitions.size(), 1);
         Assert.assertEquals(transitions.get(0), transitionWithNullPrev);
     }
@@ -184,8 +172,8 @@ public class TestAnalyticsDao extends TestWithEmbeddedDB {
     @Test(groups = "slow")
     public void testTransitionsWithNullNextSubscription() {
         final BusinessSubscriptionTransition transitionWithNullNext = new BusinessSubscriptionTransition(
-                transition.getId(),
-                transition.getKey(),
+                transition.getTotalOrdering(),
+                transition.getExternalKey(),
                 transition.getAccountKey(),
                 transition.getRequestedTimestamp(),
                 transition.getEvent(),
@@ -194,7 +182,7 @@ public class TestAnalyticsDao extends TestWithEmbeddedDB {
         );
         businessSubscriptionTransitionDao.createTransition(transitionWithNullNext);
 
-        final List<BusinessSubscriptionTransition> transitions = businessSubscriptionTransitionDao.getTransitions(EVENT_KEY);
+        final List<BusinessSubscriptionTransition> transitions = businessSubscriptionTransitionDao.getTransitions(EXTERNAL_KEY);
         Assert.assertEquals(transitions.size(), 1);
         Assert.assertEquals(transitions.get(0), transitionWithNullNext);
     }
@@ -203,8 +191,8 @@ public class TestAnalyticsDao extends TestWithEmbeddedDB {
     public void testTransitionsWithNullFieldsInSubscription() {
         final BusinessSubscription subscriptionWithNullFields = new BusinessSubscription(null, plan.getName(), phase.getName(), Currency.USD, null, null, null, null, catalog);
         final BusinessSubscriptionTransition transitionWithNullFields = new BusinessSubscriptionTransition(
-                transition.getId(),
-                transition.getKey(),
+                transition.getTotalOrdering(),
+                transition.getExternalKey(),
                 transition.getAccountKey(),
                 transition.getRequestedTimestamp(),
                 transition.getEvent(),
@@ -213,7 +201,7 @@ public class TestAnalyticsDao extends TestWithEmbeddedDB {
         );
         businessSubscriptionTransitionDao.createTransition(transitionWithNullFields);
 
-        final List<BusinessSubscriptionTransition> transitions = businessSubscriptionTransitionDao.getTransitions(EVENT_KEY);
+        final List<BusinessSubscriptionTransition> transitions = businessSubscriptionTransitionDao.getTransitions(EXTERNAL_KEY);
         Assert.assertEquals(transitions.size(), 1);
         Assert.assertEquals(transitions.get(0), transitionWithNullFields);
     }
@@ -222,8 +210,8 @@ public class TestAnalyticsDao extends TestWithEmbeddedDB {
     public void testTransitionsWithNullPlanAndPhase() throws Exception {
         final BusinessSubscription subscriptionWithNullPlanAndPhase = new BusinessSubscription(null, null, null, Currency.USD, null, null, null, null, catalog);
         final BusinessSubscriptionTransition transitionWithNullPlanAndPhase = new BusinessSubscriptionTransition(
-                transition.getId(),
-                transition.getKey(),
+                transition.getTotalOrdering(),
+                transition.getExternalKey(),
                 transition.getAccountKey(),
                 transition.getRequestedTimestamp(),
                 transition.getEvent(),
@@ -232,9 +220,9 @@ public class TestAnalyticsDao extends TestWithEmbeddedDB {
         );
         businessSubscriptionTransitionDao.createTransition(transitionWithNullPlanAndPhase);
 
-        final List<BusinessSubscriptionTransition> transitions = businessSubscriptionTransitionDao.getTransitions(EVENT_KEY);
+        final List<BusinessSubscriptionTransition> transitions = businessSubscriptionTransitionDao.getTransitions(EXTERNAL_KEY);
         Assert.assertEquals(transitions.size(), 1);
-        Assert.assertEquals(transitions.get(0).getKey(), transition.getKey());
+        Assert.assertEquals(transitions.get(0).getExternalKey(), transition.getExternalKey());
         Assert.assertEquals(transitions.get(0).getRequestedTimestamp(), transition.getRequestedTimestamp());
         Assert.assertEquals(transitions.get(0).getEvent(), transition.getEvent());
         Assert.assertNull(transitions.get(0).getPreviousSubscription());
@@ -245,8 +233,8 @@ public class TestAnalyticsDao extends TestWithEmbeddedDB {
     public void testTransitionsWithNullPlan() throws Exception {
         final BusinessSubscription subscriptionWithNullPlan = new BusinessSubscription(null, null, phase.getName(), Currency.USD, null, null, null, null, catalog);
         final BusinessSubscriptionTransition transitionWithNullPlan = new BusinessSubscriptionTransition(
-                transition.getId(),
-                transition.getKey(),
+                transition.getTotalOrdering(),
+                transition.getExternalKey(),
                 transition.getAccountKey(),
                 transition.getRequestedTimestamp(),
                 transition.getEvent(),
@@ -255,7 +243,7 @@ public class TestAnalyticsDao extends TestWithEmbeddedDB {
         );
         businessSubscriptionTransitionDao.createTransition(transitionWithNullPlan);
 
-        final List<BusinessSubscriptionTransition> transitions = businessSubscriptionTransitionDao.getTransitions(EVENT_KEY);
+        final List<BusinessSubscriptionTransition> transitions = businessSubscriptionTransitionDao.getTransitions(EXTERNAL_KEY);
         Assert.assertEquals(transitions.size(), 1);
         // Null Plan but Phase - we don't turn the subscription into a null
         Assert.assertEquals(transitions.get(0), transitionWithNullPlan);
@@ -265,8 +253,8 @@ public class TestAnalyticsDao extends TestWithEmbeddedDB {
     public void testTransitionsWithNullPhase() throws Exception {
         final BusinessSubscription subscriptionWithNullPhase = new BusinessSubscription(null, plan.getName(), null, Currency.USD, null, null, null, null, catalog);
         final BusinessSubscriptionTransition transitionWithNullPhase = new BusinessSubscriptionTransition(
-                transition.getId(),
-                transition.getKey(),
+                transition.getTotalOrdering(),
+                transition.getExternalKey(),
                 transition.getAccountKey(),
                 transition.getRequestedTimestamp(),
                 transition.getEvent(),
@@ -275,9 +263,9 @@ public class TestAnalyticsDao extends TestWithEmbeddedDB {
         );
         businessSubscriptionTransitionDao.createTransition(transitionWithNullPhase);
 
-        final List<BusinessSubscriptionTransition> transitions = businessSubscriptionTransitionDao.getTransitions(EVENT_KEY);
+        final List<BusinessSubscriptionTransition> transitions = businessSubscriptionTransitionDao.getTransitions(EXTERNAL_KEY);
         Assert.assertEquals(transitions.size(), 1);
-        Assert.assertEquals(transitions.get(0).getKey(), transition.getKey());
+        Assert.assertEquals(transitions.get(0).getExternalKey(), transition.getExternalKey());
         Assert.assertEquals(transitions.get(0).getRequestedTimestamp(), transition.getRequestedTimestamp());
         Assert.assertEquals(transitions.get(0).getEvent(), transition.getEvent());
 
@@ -291,7 +279,7 @@ public class TestAnalyticsDao extends TestWithEmbeddedDB {
     public void testCreateAndRetrieveTransitions() {
         businessSubscriptionTransitionDao.createTransition(transition);
 
-        final List<BusinessSubscriptionTransition> transitions = businessSubscriptionTransitionDao.getTransitions(EVENT_KEY);
+        final List<BusinessSubscriptionTransition> transitions = businessSubscriptionTransitionDao.getTransitions(EXTERNAL_KEY);
         Assert.assertEquals(transitions.size(), 1);
         Assert.assertEquals(transitions.get(0), transition);
 
@@ -305,10 +293,6 @@ public class TestAnalyticsDao extends TestWithEmbeddedDB {
         final BusinessAccount foundAccount = businessAccountDao.getAccount(ACCOUNT_KEY);
         Assert.assertNotNull(foundAccount.getCreatedDt());
         Assert.assertEquals(foundAccount.getCreatedDt(), foundAccount.getUpdatedDt());
-        // Verify the joiner stuff
-        Assert.assertEquals(foundAccount.getTags().size(), 2);
-        Assert.assertEquals(foundAccount.getTags().get(0).getTagDefinitionName(), "batch1");
-        Assert.assertEquals(foundAccount.getTags().get(1).getTagDefinitionName(), "great,guy");
         // Verify the dates by backfilling them
         account.setCreatedDt(foundAccount.getCreatedDt());
         account.setUpdatedDt(foundAccount.getUpdatedDt());

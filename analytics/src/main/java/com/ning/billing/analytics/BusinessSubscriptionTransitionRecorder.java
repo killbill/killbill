@@ -84,13 +84,13 @@ public class BusinessSubscriptionTransitionRecorder {
     void recordTransition(final BusinessSubscriptionEvent event, final SubscriptionEvent transition)
             throws AccountApiException, EntitlementUserApiException {
         Currency currency = null;
-        String transitionKey = null;
+        String externalKey = null;
         String accountKey = null;
 
         // Retrieve key and currency via the bundle
         final SubscriptionBundle bundle = entitlementApi.getBundleFromId(transition.getBundleId());
         if (bundle != null) {
-            transitionKey = bundle.getKey();
+            externalKey = bundle.getKey();
 
             final Account account = accountApi.getAccountById(bundle.getAccountId());
             if (account != null) {
@@ -104,7 +104,7 @@ public class BusinessSubscriptionTransitionRecorder {
         DateTime previousEffectiveTransitionTime = null;
         // For creation events, the prev subscription will always be null
         if (event.getEventType() != BusinessSubscriptionEvent.EventType.ADD) {
-            final List<BusinessSubscriptionTransition> transitions = dao.getTransitions(transitionKey);
+            final List<BusinessSubscriptionTransition> transitions = dao.getTransitions(externalKey);
             if (transitions != null && transitions.size() > 0) {
                 final BusinessSubscriptionTransition lastTransition = transitions.get(transitions.size() - 1);
                 if (lastTransition != null && lastTransition.getNextSubscription() != null) {
@@ -129,14 +129,14 @@ public class BusinessSubscriptionTransitionRecorder {
             nextSubscription = new BusinessSubscription(transition.getNextPriceList(), transition.getNextPlan(), transition.getNextPhase(), currency, transition.getEffectiveTransitionTime(), transition.getNextState(), transition.getSubscriptionId(), transition.getBundleId(), catalogService.getFullCatalog());
         }
 
-        record(transition.getId(), transitionKey, accountKey, transition.getRequestedTransitionTime(), event, prevSubscription, nextSubscription);
+        record(transition.getTotalOrdering(), externalKey, accountKey, transition.getRequestedTransitionTime(), event, prevSubscription, nextSubscription);
     }
 
     // Public for internal reasons
-    public void record(final UUID id, final String key, final String accountKey, final DateTime requestedDateTime, final BusinessSubscriptionEvent event, final BusinessSubscription prevSubscription, final BusinessSubscription nextSubscription) {
+    public void record(final Long totalOrdering, final String externalKey, final String accountKey, final DateTime requestedDateTime, final BusinessSubscriptionEvent event, final BusinessSubscription prevSubscription, final BusinessSubscription nextSubscription) {
         final BusinessSubscriptionTransition transition = new BusinessSubscriptionTransition(
-                id,
-                key,
+                totalOrdering,
+                externalKey,
                 accountKey,
                 requestedDateTime,
                 event,

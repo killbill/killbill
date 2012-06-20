@@ -30,7 +30,7 @@ import com.ning.billing.analytics.BusinessSubscriptionTransition;
 @RegisterMapper(BusinessSubscriptionTransitionMapper.class)
 public interface BusinessSubscriptionTransitionDao {
     @SqlQuery
-    List<BusinessSubscriptionTransition> getTransitions(@Bind("event_key") final String key);
+    List<BusinessSubscriptionTransition> getTransitions(@Bind("external_key") final String externalKey);
 
     @SqlUpdate
     int createTransition(@BusinessSubscriptionTransitionBinder final BusinessSubscriptionTransition transition);

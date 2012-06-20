@@ -38,7 +38,7 @@ import com.ning.billing.entitlement.api.user.SubscriptionEvent;
 public class TestBusinessSubscriptionTransitionRecorder extends AnalyticsTestSuite {
     @Test(groups = "fast")
     public void testCreateAddOn() throws Exception {
-        final UUID key = UUID.randomUUID();
+        final UUID externalKey = UUID.randomUUID();
 
         // Setup the catalog
         final CatalogService catalogService = Mockito.mock(CatalogService.class);
@@ -56,8 +56,8 @@ public class TestBusinessSubscriptionTransitionRecorder extends AnalyticsTestSui
                                                                                    UUID.randomUUID(),
                                                                                    UUID.randomUUID(),
                                                                                    catalogService.getFullCatalog());
-        dao.createTransition(new BusinessSubscriptionTransition(UUID.randomUUID(),
-                                                                key.toString(),
+        dao.createTransition(new BusinessSubscriptionTransition(10L,
+                                                                externalKey.toString(),
                                                                 UUID.randomUUID().toString(),
                                                                 new DateTime(DateTimeZone.UTC),
                                                                 BusinessSubscriptionEvent.valueOf("ADD_MISC"),
@@ -66,13 +66,13 @@ public class TestBusinessSubscriptionTransitionRecorder extends AnalyticsTestSui
 
         // Setup the entitlement API
         final SubscriptionBundle bundle = Mockito.mock(SubscriptionBundle.class);
-        Mockito.when(bundle.getKey()).thenReturn(key.toString());
+        Mockito.when(bundle.getKey()).thenReturn(externalKey.toString());
         final EntitlementUserApi entitlementApi = Mockito.mock(EntitlementUserApi.class);
         Mockito.when(entitlementApi.getBundleFromId(Mockito.<UUID>any())).thenReturn(bundle);
 
         // Setup the account API
         final Account account = Mockito.mock(Account.class);
-        Mockito.when(account.getExternalKey()).thenReturn(key.toString());
+        Mockito.when(account.getExternalKey()).thenReturn(externalKey.toString());
         final AccountUserApi accountApi = Mockito.mock(AccountUserApi.class);
         Mockito.when(accountApi.getAccountById(bundle.getAccountId())).thenReturn(account);
 
@@ -87,10 +87,10 @@ public class TestBusinessSubscriptionTransitionRecorder extends AnalyticsTestSui
         Mockito.when(event.getSubscriptionStartDate()).thenReturn(new DateTime(DateTimeZone.UTC));
         recorder.subscriptionCreated(event);
 
-        Assert.assertEquals(dao.getTransitions(key.toString()).size(), 2);
-        final BusinessSubscriptionTransition transition = dao.getTransitions(key.toString()).get(1);
-        Assert.assertEquals(transition.getId(), event.getId());
-        Assert.assertEquals(transition.getAccountKey(), key.toString());
+        Assert.assertEquals(dao.getTransitions(externalKey.toString()).size(), 2);
+        final BusinessSubscriptionTransition transition = dao.getTransitions(externalKey.toString()).get(1);
+        Assert.assertEquals(transition.getTotalOrdering(), (long) event.getTotalOrdering());
+        Assert.assertEquals(transition.getAccountKey(), externalKey.toString());
         // Make sure all the prev_ columns are null
         Assert.assertNull(transition.getPreviousSubscription());
     }

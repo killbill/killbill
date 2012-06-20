@@ -94,8 +94,8 @@ public class TestAnalyticsService extends TestWithEmbeddedDB {
     final Plan plan = new MockPlan("platinum-monthly", product);
     final PlanPhase phase = new MockPhase(PhaseType.EVERGREEN, plan, MockDuration.UNLIMITED(), 25.95);
 
-    private static final UUID ID = UUID.randomUUID();
-    private static final String KEY = "12345";
+    private static final Long TOTAL_ORDERING = 11L;
+    private static final String EXTERNAL_KEY = "12345";
     private static final String ACCOUNT_KEY = "pierre-12345";
     private static final Currency ACCOUNT_CURRENCY = Currency.EUR;
     private static final BigDecimal INVOICE_AMOUNT = BigDecimal.valueOf(1243.11);
@@ -165,11 +165,11 @@ public class TestAnalyticsService extends TestWithEmbeddedDB {
     }
 
     private void createSubscriptionTransitionEvent(final Account account) throws EntitlementUserApiException {
-        final SubscriptionBundle bundle = entitlementApi.createBundleForAccount(account.getId(), KEY, context);
+        final SubscriptionBundle bundle = entitlementApi.createBundleForAccount(account.getId(), EXTERNAL_KEY, context);
 
         // Verify we correctly initialized the account subsystem
         Assert.assertNotNull(bundle);
-        Assert.assertEquals(bundle.getKey(), KEY);
+        Assert.assertEquals(bundle.getKey(), EXTERNAL_KEY);
 
         // Create a subscription transition event
         final UUID subscriptionId = UUID.randomUUID();
@@ -179,7 +179,7 @@ public class TestAnalyticsService extends TestWithEmbeddedDB {
 
 
         transition = new DefaultSubscriptionEvent(new SubscriptionTransitionData(
-                ID,
+                UUID.randomUUID(),
                 subscriptionId,
                 bundle.getId(),
                 EntitlementEvent.EventType.API_USER,
@@ -194,12 +194,12 @@ public class TestAnalyticsService extends TestWithEmbeddedDB {
                 plan,
                 phase,
                 priceList,
-                1L,
+                TOTAL_ORDERING,
                 null,
                 true), null);
         expectedTransition = new BusinessSubscriptionTransition(
-                ID,
-                KEY,
+                TOTAL_ORDERING,
+                EXTERNAL_KEY,
                 ACCOUNT_KEY,
                 requestedTransitionTime,
                 BusinessSubscriptionEvent.subscriptionCreated(plan.getName(), catalog, new DateTime(), new DateTime()),
@@ -268,8 +268,8 @@ public class TestAnalyticsService extends TestWithEmbeddedDB {
         bus.post(accountCreationNotification);
         Thread.sleep(5000);
 
-        Assert.assertEquals(subscriptionDao.getTransitions(KEY).size(), 1);
-        Assert.assertEquals(subscriptionDao.getTransitions(KEY).get(0), expectedTransition);
+        Assert.assertEquals(subscriptionDao.getTransitions(EXTERNAL_KEY).size(), 1);
+        Assert.assertEquals(subscriptionDao.getTransitions(EXTERNAL_KEY).get(0), expectedTransition);
 
         // Test invoice integration - the account creation notification has triggered a BAC update
         Assert.assertTrue(accountDao.getAccount(ACCOUNT_KEY).getTotalInvoiceBalance().compareTo(INVOICE_AMOUNT) == 0);
