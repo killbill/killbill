@@ -28,8 +28,8 @@ import org.skife.jdbi.v2.sqlobject.Binder;
 import org.skife.jdbi.v2.sqlobject.BinderFactory;
 import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
 
-import com.ning.billing.analytics.BusinessSubscription;
-import com.ning.billing.analytics.BusinessSubscriptionTransition;
+import com.ning.billing.analytics.model.BusinessSubscription;
+import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
 
 @BindingAnnotation(BusinessSubscriptionTransitionBinder.BstBinderFactory.class)
 @Retention(RetentionPolicy.RUNTIME)

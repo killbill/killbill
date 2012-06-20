@@ -33,6 +33,7 @@ import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.api.ChangedField;
 import com.ning.billing.analytics.dao.BusinessAccountDao;
+import com.ning.billing.analytics.model.BusinessAccount;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.payment.api.Payment;

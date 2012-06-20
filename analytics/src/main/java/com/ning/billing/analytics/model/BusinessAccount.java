@@ -14,16 +14,13 @@
  * under the License.
  */
 
-package com.ning.billing.analytics;
+package com.ning.billing.analytics.model;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 import org.joda.time.DateTime;
 
-import com.google.common.base.Joiner;
 import com.ning.billing.analytics.utils.Rounder;
-import com.ning.billing.util.tag.Tag;
 
 public class BusinessAccount {
     // Populated by the database

@@ -25,7 +25,7 @@ import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import com.ning.billing.analytics.BusinessAccount;
+import com.ning.billing.analytics.model.BusinessAccount;
 
 public class BusinessAccountMapper implements ResultSetMapper<BusinessAccount> {
     @Override

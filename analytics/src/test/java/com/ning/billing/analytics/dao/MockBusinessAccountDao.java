@@ -16,7 +16,7 @@
 
 package com.ning.billing.analytics.dao;
 
-import com.ning.billing.analytics.BusinessAccount;
+import com.ning.billing.analytics.model.BusinessAccount;
 
 public class MockBusinessAccountDao implements BusinessAccountDao {
 

@@ -24,6 +24,8 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.ning.billing.analytics.model.BusinessAccount;
+
 public class TestBusinessAccount extends AnalyticsTestSuite {
     private BusinessAccount account;
 
