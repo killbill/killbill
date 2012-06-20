@@ -37,6 +37,7 @@ import com.ning.billing.account.api.AccountCreationEvent;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.api.user.DefaultAccountCreationEvent;
 import com.ning.billing.analytics.AnalyticsTestModule;
+import com.ning.billing.analytics.dao.BusinessAccountSqlDao;
 import com.ning.billing.analytics.model.BusinessSubscription;
 import com.ning.billing.analytics.model.BusinessSubscriptionEvent;
 import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
@@ -46,8 +47,7 @@ import com.ning.billing.analytics.MockPhase;
 import com.ning.billing.analytics.MockPlan;
 import com.ning.billing.analytics.MockProduct;
 import com.ning.billing.analytics.TestWithEmbeddedDB;
-import com.ning.billing.analytics.dao.BusinessAccountDao;
-import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionDao;
+import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionSqlDao;
 import com.ning.billing.catalog.MockPriceList;
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogApiException;
@@ -122,10 +122,10 @@ public class TestAnalyticsService extends TestWithEmbeddedDB {
     private Bus bus;
 
     @Inject
-    private BusinessSubscriptionTransitionDao subscriptionDao;
+    private BusinessSubscriptionTransitionSqlDao subscriptionSqlDao;
 
     @Inject
-    private BusinessAccountDao accountDao;
+    private BusinessAccountSqlDao accountSqlDao;
 
     private SubscriptionEvent transition;
     private BusinessSubscriptionTransition expectedTransition;
@@ -261,23 +261,23 @@ public class TestAnalyticsService extends TestWithEmbeddedDB {
             Assert.fail("Unable to start the bus or service! " + t);
         }
 
-        Assert.assertNull(accountDao.getAccount(ACCOUNT_KEY));
+        Assert.assertNull(accountSqlDao.getAccount(ACCOUNT_KEY));
 
         // Send events and wait for the async part...
         bus.post(transition);
         bus.post(accountCreationNotification);
         Thread.sleep(5000);
 
-        Assert.assertEquals(subscriptionDao.getTransitions(EXTERNAL_KEY).size(), 1);
-        Assert.assertEquals(subscriptionDao.getTransitions(EXTERNAL_KEY).get(0), expectedTransition);
+        Assert.assertEquals(subscriptionSqlDao.getTransitions(EXTERNAL_KEY).size(), 1);
+        Assert.assertEquals(subscriptionSqlDao.getTransitions(EXTERNAL_KEY).get(0), expectedTransition);
 
         // Test invoice integration - the account creation notification has triggered a BAC update
-        Assert.assertTrue(accountDao.getAccount(ACCOUNT_KEY).getTotalInvoiceBalance().compareTo(INVOICE_AMOUNT) == 0);
+        Assert.assertTrue(accountSqlDao.getAccount(ACCOUNT_KEY).getTotalInvoiceBalance().compareTo(INVOICE_AMOUNT) == 0);
 
         // Post the same invoice event again - the invoice balance shouldn't change
         bus.post(invoiceCreationNotification);
         Thread.sleep(5000);
-        Assert.assertTrue(accountDao.getAccount(ACCOUNT_KEY).getTotalInvoiceBalance().compareTo(INVOICE_AMOUNT) == 0);
+        Assert.assertTrue(accountSqlDao.getAccount(ACCOUNT_KEY).getTotalInvoiceBalance().compareTo(INVOICE_AMOUNT) == 0);
 
         // Test payment integration - the fields have already been populated, just make sure the code is exercised
         bus.post(paymentInfoNotification);

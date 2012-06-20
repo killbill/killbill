@@ -26,7 +26,7 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountUserApi;
-import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionDao;
+import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionSqlDao;
 import com.ning.billing.analytics.model.BusinessSubscription;
 import com.ning.billing.analytics.model.BusinessSubscriptionEvent;
 import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
@@ -48,7 +48,7 @@ public class TestBusinessSubscriptionTransitionRecorder extends AnalyticsTestSui
         Mockito.when(catalogService.getFullCatalog()).thenReturn(Mockito.mock(Catalog.class));
 
         // Setup the dao
-        final BusinessSubscriptionTransitionDao dao = new MockBusinessSubscriptionTransitionDao();
+        final BusinessSubscriptionTransitionSqlDao sqlDao = new MockBusinessSubscriptionTransitionSqlDao();
         // Add a previous subscription to make sure it doesn't impact the addon
         final BusinessSubscription nextPrevSubscription = new BusinessSubscription(UUID.randomUUID().toString(),
                                                                                    UUID.randomUUID().toString(),
@@ -59,7 +59,7 @@ public class TestBusinessSubscriptionTransitionRecorder extends AnalyticsTestSui
                                                                                    UUID.randomUUID(),
                                                                                    UUID.randomUUID(),
                                                                                    catalogService.getFullCatalog());
-        dao.createTransition(new BusinessSubscriptionTransition(10L,
+        sqlDao.createTransition(new BusinessSubscriptionTransition(10L,
                                                                 externalKey.toString(),
                                                                 UUID.randomUUID().toString(),
                                                                 new DateTime(DateTimeZone.UTC),
@@ -79,7 +79,7 @@ public class TestBusinessSubscriptionTransitionRecorder extends AnalyticsTestSui
         final AccountUserApi accountApi = Mockito.mock(AccountUserApi.class);
         Mockito.when(accountApi.getAccountById(bundle.getAccountId())).thenReturn(account);
 
-        final BusinessSubscriptionTransitionRecorder recorder = new BusinessSubscriptionTransitionRecorder(dao, catalogService, entitlementApi, accountApi);
+        final BusinessSubscriptionTransitionRecorder recorder = new BusinessSubscriptionTransitionRecorder(sqlDao, catalogService, entitlementApi, accountApi);
 
         // Create an new subscription event
         final SubscriptionEvent event = Mockito.mock(SubscriptionEvent.class);
@@ -90,8 +90,8 @@ public class TestBusinessSubscriptionTransitionRecorder extends AnalyticsTestSui
         Mockito.when(event.getSubscriptionStartDate()).thenReturn(new DateTime(DateTimeZone.UTC));
         recorder.subscriptionCreated(event);
 
-        Assert.assertEquals(dao.getTransitions(externalKey.toString()).size(), 2);
-        final BusinessSubscriptionTransition transition = dao.getTransitions(externalKey.toString()).get(1);
+        Assert.assertEquals(sqlDao.getTransitions(externalKey.toString()).size(), 2);
+        final BusinessSubscriptionTransition transition = sqlDao.getTransitions(externalKey.toString()).get(1);
         Assert.assertEquals(transition.getTotalOrdering(), (long) event.getTotalOrdering());
         Assert.assertEquals(transition.getAccountKey(), externalKey.toString());
         // Make sure all the prev_ columns are null

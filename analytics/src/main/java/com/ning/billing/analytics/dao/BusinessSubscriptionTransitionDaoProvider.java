@@ -21,7 +21,7 @@ import org.skife.jdbi.v2.IDBI;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 
-public class BusinessSubscriptionTransitionDaoProvider implements Provider<BusinessSubscriptionTransitionDao> {
+public class BusinessSubscriptionTransitionDaoProvider implements Provider<BusinessSubscriptionTransitionSqlDao> {
     private final IDBI dbi;
 
     @Inject
@@ -30,7 +30,7 @@ public class BusinessSubscriptionTransitionDaoProvider implements Provider<Busin
     }
 
     @Override
-    public BusinessSubscriptionTransitionDao get() {
-        return dbi.onDemand(BusinessSubscriptionTransitionDao.class);
+    public BusinessSubscriptionTransitionSqlDao get() {
+        return dbi.onDemand(BusinessSubscriptionTransitionSqlDao.class);
     }
 }

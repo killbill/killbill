@@ -21,7 +21,7 @@ import org.skife.jdbi.v2.IDBI;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 
-public class BusinessAccountDaoProvider implements Provider<BusinessAccountDao> {
+public class BusinessAccountDaoProvider implements Provider<BusinessAccountSqlDao> {
     private final IDBI dbi;
 
     @Inject
@@ -30,7 +30,7 @@ public class BusinessAccountDaoProvider implements Provider<BusinessAccountDao> 
     }
 
     @Override
-    public BusinessAccountDao get() {
-        return dbi.onDemand(BusinessAccountDao.class);
+    public BusinessAccountSqlDao get() {
+        return dbi.onDemand(BusinessAccountSqlDao.class);
     }
 }

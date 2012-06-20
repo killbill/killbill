@@ -51,7 +51,7 @@ public class TestAnalyticsListener extends AnalyticsTestSuite {
     private static final String ACCOUNT_KEY = "pierre-1234";
     private final Currency CURRENCY = Currency.BRL;
 
-    private final MockBusinessSubscriptionTransitionDao dao = new MockBusinessSubscriptionTransitionDao();
+    private final MockBusinessSubscriptionTransitionSqlDao dao = new MockBusinessSubscriptionTransitionSqlDao();
     private final UUID subscriptionId = UUID.randomUUID();
     private final UUID bundleUUID = UUID.randomUUID();
     private final Product product = new MockProduct("platinium", "subscription", ProductCategory.BASE);

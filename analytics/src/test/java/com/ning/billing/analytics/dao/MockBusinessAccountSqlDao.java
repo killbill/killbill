@@ -16,26 +16,29 @@
 
 package com.ning.billing.analytics.dao;
 
-import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.SqlQuery;
-import org.skife.jdbi.v2.sqlobject.SqlUpdate;
-import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
-import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
-
 import com.ning.billing.analytics.model.BusinessAccount;
 
-@ExternalizedSqlViaStringTemplate3()
-@RegisterMapper(BusinessAccountMapper.class)
-public interface BusinessAccountDao {
-    @SqlQuery
-    BusinessAccount getAccount(@Bind("account_key") final String key);
+public class MockBusinessAccountSqlDao implements BusinessAccountSqlDao {
 
-    @SqlUpdate
-    int createAccount(@BusinessAccountBinder final BusinessAccount account);
+    @Override
+    public BusinessAccount getAccount(final String key) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
-    @SqlUpdate
-    int saveAccount(@BusinessAccountBinder final BusinessAccount account);
+    @Override
+    public int createAccount(final BusinessAccount account) {
+        // TODO Auto-generated method stub
+        return 0;
+    }
 
-    @SqlUpdate
-    void test();
+    @Override
+    public int saveAccount(final BusinessAccount account) {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+    @Override
+    public void test() {
+    }
 }

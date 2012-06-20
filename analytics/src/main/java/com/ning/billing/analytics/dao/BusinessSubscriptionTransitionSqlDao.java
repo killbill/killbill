@@ -28,7 +28,7 @@ import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
 
 @ExternalizedSqlViaStringTemplate3()
 @RegisterMapper(BusinessSubscriptionTransitionMapper.class)
-public interface BusinessSubscriptionTransitionDao {
+public interface BusinessSubscriptionTransitionSqlDao {
     @SqlQuery
     List<BusinessSubscriptionTransition> getTransitions(@Bind("external_key") final String externalKey);
 

@@ -26,7 +26,7 @@ import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
-import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionDao;
+import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionSqlDao;
 import com.ning.billing.analytics.model.BusinessSubscription;
 import com.ning.billing.analytics.model.BusinessSubscriptionEvent;
 import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
@@ -40,14 +40,14 @@ import com.ning.billing.entitlement.api.user.SubscriptionEvent;
 public class BusinessSubscriptionTransitionRecorder {
     private static final Logger log = LoggerFactory.getLogger(BusinessSubscriptionTransitionRecorder.class);
 
-    private final BusinessSubscriptionTransitionDao dao;
+    private final BusinessSubscriptionTransitionSqlDao sqlDao;
     private final EntitlementUserApi entitlementApi;
     private final AccountUserApi accountApi;
     private final CatalogService catalogService;
 
     @Inject
-    public BusinessSubscriptionTransitionRecorder(final BusinessSubscriptionTransitionDao dao, final CatalogService catalogService, final EntitlementUserApi entitlementApi, final AccountUserApi accountApi) {
-        this.dao = dao;
+    public BusinessSubscriptionTransitionRecorder(final BusinessSubscriptionTransitionSqlDao sqlDao, final CatalogService catalogService, final EntitlementUserApi entitlementApi, final AccountUserApi accountApi) {
+        this.sqlDao = sqlDao;
         this.catalogService = catalogService;
         this.entitlementApi = entitlementApi;
         this.accountApi = accountApi;
@@ -106,7 +106,7 @@ public class BusinessSubscriptionTransitionRecorder {
         DateTime previousEffectiveTransitionTime = null;
         // For creation events, the prev subscription will always be null
         if (event.getEventType() != BusinessSubscriptionEvent.EventType.ADD) {
-            final List<BusinessSubscriptionTransition> transitions = dao.getTransitions(externalKey);
+            final List<BusinessSubscriptionTransition> transitions = sqlDao.getTransitions(externalKey);
             if (transitions != null && transitions.size() > 0) {
                 final BusinessSubscriptionTransition lastTransition = transitions.get(transitions.size() - 1);
                 if (lastTransition != null && lastTransition.getNextSubscription() != null) {
@@ -147,6 +147,6 @@ public class BusinessSubscriptionTransitionRecorder {
         );
 
         log.info(transition.getEvent() + " " + transition);
-        dao.createTransition(transition);
+        sqlDao.createTransition(transition);
     }
 }
