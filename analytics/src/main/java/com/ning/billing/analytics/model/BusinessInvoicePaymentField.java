@@ -18,10 +18,10 @@ package com.ning.billing.analytics.model;
 
 import java.util.UUID;
 
-public class BusinessPaymentField extends BusinessField {
+public class BusinessInvoicePaymentField extends BusinessField {
     private final UUID paymentId;
 
-    public BusinessPaymentField(final UUID paymentId, final String name, final String value) {
+    public BusinessInvoicePaymentField(final UUID paymentId, final String name, final String value) {
         super(name, value);
         this.paymentId = paymentId;
     }
@@ -50,7 +50,7 @@ public class BusinessPaymentField extends BusinessField {
             return false;
         }
 
-        final BusinessPaymentField that = (BusinessPaymentField) o;
+        final BusinessInvoicePaymentField that = (BusinessInvoicePaymentField) o;
 
         if (paymentId != null ? !paymentId.equals(that.paymentId) : that.paymentId != null) {
             return false;
