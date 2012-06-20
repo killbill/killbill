@@ -88,7 +88,7 @@ create table bii (
 , end_date bigint default null
 , amount numeric(10, 4) default 0
 , currency char(3) default null
-) engine=innodb comment 'Business Invoice Items, keep a record of generated invoice items';
+) engine=innodb comment 'Business Invoice Items, keep a record of all invoice items';
 create unique index bii_key_index on bii (item_id);
 
 drop table if exists bip;
@@ -110,7 +110,7 @@ create table bip (
 , payment_method varchar(20) default null
 , card_type varchar(20) default null
 , card_country varchar(20) default null
-) engine=innodb comment 'Business Invoice Payments, keep a record of all payment attempts';
+) engine=innodb comment 'Business Invoice Payments, track all payment attempts';
 create unique index bip_key_index on bip (attempt_id);
 
 drop table if exists bos;
