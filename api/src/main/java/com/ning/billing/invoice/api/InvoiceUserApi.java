@@ -53,5 +53,5 @@ public interface InvoiceUserApi {
     public InvoiceItem insertCredit(UUID accountId, BigDecimal amount, DateTime effectiveDate,
                                     Currency currency, CallContext context) throws InvoiceApiException;
 
-    public String getInvoiceAsHTML(UUID invoiceId) throws AccountApiException, IOException;
+    public String getInvoiceAsHTML(UUID invoiceId) throws AccountApiException, IOException, InvoiceApiException;
 }

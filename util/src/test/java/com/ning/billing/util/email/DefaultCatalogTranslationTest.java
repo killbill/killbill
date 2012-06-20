@@ -15,11 +15,14 @@ package com.ning.billing.util.email;/*
  */
 
 import java.util.Locale;
+import java.util.Map;
 
+import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import com.google.common.collect.ImmutableMap;
 import com.ning.billing.util.template.translation.DefaultCatalogTranslator;
 import com.ning.billing.util.template.translation.Translator;
 import com.ning.billing.util.template.translation.TranslatorConfig;
@@ -32,7 +35,17 @@ public class DefaultCatalogTranslationTest {
 
     @BeforeClass(groups = {"fast", "email"})
     public void setup() {
-        final TranslatorConfig config = new ConfigurationObjectFactory(System.getProperties()).build(TranslatorConfig.class);
+        final ConfigSource configSource = new ConfigSource() {
+            private final Map<String, String> properties = ImmutableMap.<String, String>of("killbill.template.invoiceFormatterFactoryClass",
+                                                                                           "com.ning.billing.mock.MockInvoiceFormatterFactory");
+
+            @Override
+            public String getString(final String propertyName) {
+                return properties.get(propertyName);
+            }
+        };
+
+        final TranslatorConfig config = new ConfigurationObjectFactory(configSource).build(TranslatorConfig.class);
         translation = new DefaultCatalogTranslator(config);
     }
 

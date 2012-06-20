@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
+import com.ning.billing.ErrorCode;
 
 public class DefaultEmailSender implements EmailSender {
     private final Logger log = LoggerFactory.getLogger(EmailSender.class);
@@ -62,10 +63,10 @@ public class DefaultEmailSender implements EmailSender {
                 }
             }
 
-            email.setSSL(true);
+            email.setSSL(config.useSSL());
             email.send();
         } catch (EmailException ee) {
-            log.warn("Failed to send e-mail", ee);
+            throw new EmailApiException(ee, ErrorCode.EMAIL_SENDING_FAILED);
         }
     }
 }

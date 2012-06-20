@@ -179,4 +179,22 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
     public UUID getId() {
         return invoice.getId();
     }
+
+    // Expose the fields for children classes. This is useful for further customization of the invoices
+
+    protected TranslatorConfig getConfig() {
+        return config;
+    }
+
+    protected DateTimeFormatter getDateFormatter() {
+        return dateFormatter;
+    }
+
+    protected Locale getLocale() {
+        return locale;
+    }
+
+    protected Invoice getInvoice() {
+        return invoice;
+    }
 }
