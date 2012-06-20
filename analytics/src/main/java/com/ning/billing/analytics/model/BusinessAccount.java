@@ -14,16 +14,13 @@
  * under the License.
  */
 
-package com.ning.billing.analytics;
+package com.ning.billing.analytics.model;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 import org.joda.time.DateTime;
 
-import com.google.common.base.Joiner;
 import com.ning.billing.analytics.utils.Rounder;
-import com.ning.billing.util.tag.Tag;
 
 public class BusinessAccount {
     // Populated by the database
@@ -31,8 +28,8 @@ public class BusinessAccount {
     private DateTime updatedDt = null;
 
     private final String key;
+    private String name;
     private BigDecimal balance;
-    private List<Tag> tags;
     private DateTime lastInvoiceDate;
     private BigDecimal totalInvoiceBalance;
     private String lastPaymentStatus;
@@ -40,15 +37,15 @@ public class BusinessAccount {
     private String creditCardType;
     private String billingAddressCountry;
 
-    public BusinessAccount(final String key, final BigDecimal balance, final List<Tag> tags, final DateTime lastInvoiceDate, final BigDecimal totalInvoiceBalance, final String lastPaymentStatus, final String paymentMethod, final String creditCardType, final String billingAddressCountry) {
+    public BusinessAccount(final String key, final String name, final BigDecimal balance, final DateTime lastInvoiceDate, final BigDecimal totalInvoiceBalance, final String lastPaymentStatus, final String paymentMethod, final String creditCardType, final String billingAddressCountry) {
         this.key = key;
         this.balance = balance;
         this.billingAddressCountry = billingAddressCountry;
         this.creditCardType = creditCardType;
         this.lastInvoiceDate = lastInvoiceDate;
         this.lastPaymentStatus = lastPaymentStatus;
+        this.name = name;
         this.paymentMethod = paymentMethod;
-        this.tags = tags;
         this.totalInvoiceBalance = totalInvoiceBalance;
     }
 
@@ -108,20 +105,20 @@ public class BusinessAccount {
         this.lastPaymentStatus = lastPaymentStatus;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public void setName(final String name) {
+        this.name = name;
+    }
+
     public String getPaymentMethod() {
         return paymentMethod;
     }
 
     public void setPaymentMethod(final String paymentMethod) {
         this.paymentMethod = paymentMethod;
-    }
-
-    public List<Tag> getTags() {
-        return tags;
-    }
-
-    public void setTags(final List<Tag> tags) {
-        this.tags = tags;
     }
 
     public BigDecimal getTotalInvoiceBalance() {
@@ -152,9 +149,7 @@ public class BusinessAccount {
         sb.append(", createdDt=").append(createdDt);
         sb.append(", updatedDt=").append(updatedDt);
         sb.append(", key='").append(key).append('\'');
-        sb.append(", tags=");
-        final Joiner joiner = Joiner.on(";").skipNulls();
-        sb.append(joiner.join(tags));
+        sb.append(", name='").append(name).append('\'');
         sb.append(", lastInvoiceDate=").append(lastInvoiceDate);
         sb.append(", totalInvoiceBalance=").append(totalInvoiceBalance);
         sb.append(", lastPaymentStatus='").append(lastPaymentStatus).append('\'');
@@ -197,10 +192,10 @@ public class BusinessAccount {
         if (lastPaymentStatus != null ? !lastPaymentStatus.equals(that.lastPaymentStatus) : that.lastPaymentStatus != null) {
             return false;
         }
-        if (paymentMethod != null ? !paymentMethod.equals(that.paymentMethod) : that.paymentMethod != null) {
+        if (name != null ? !name.equals(that.name) : that.name != null) {
             return false;
         }
-        if (tags != null ? !tags.toString().equals(that.tags.toString()) : that.tags != null) {
+        if (paymentMethod != null ? !paymentMethod.equals(that.paymentMethod) : that.paymentMethod != null) {
             return false;
         }
         if (totalInvoiceBalance == null ? that.totalInvoiceBalance != null : totalInvoiceBalance.compareTo(that.totalInvoiceBalance) != 0) {
@@ -218,8 +213,8 @@ public class BusinessAccount {
         int result = createdDt != null ? createdDt.hashCode() : 0;
         result = 31 * result + (updatedDt != null ? updatedDt.hashCode() : 0);
         result = 31 * result + (key != null ? key.hashCode() : 0);
+        result = 31 * result + (name != null ? name.hashCode() : 0);
         result = 31 * result + (balance != null ? balance.hashCode() : 0);
-        result = 31 * result + (tags != null ? tags.hashCode() : 0);
         result = 31 * result + (lastInvoiceDate != null ? lastInvoiceDate.hashCode() : 0);
         result = 31 * result + (totalInvoiceBalance != null ? totalInvoiceBalance.hashCode() : 0);
         result = 31 * result + (lastPaymentStatus != null ? lastPaymentStatus.hashCode() : 0);

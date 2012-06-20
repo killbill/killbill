@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2012 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -16,24 +16,31 @@
 
 package com.ning.billing.analytics.dao;
 
-import java.util.List;
-
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 
-import com.ning.billing.analytics.BusinessSubscriptionTransition;
+import com.ning.billing.analytics.model.BusinessAccount;
 
 @ExternalizedSqlViaStringTemplate3()
-@RegisterMapper(BusinessSubscriptionTransitionMapper.class)
-public interface BusinessSubscriptionTransitionDao {
+@RegisterMapper(BusinessAccountMapper.class)
+public interface BusinessInvoiceSqlDao {
     @SqlQuery
-    List<BusinessSubscriptionTransition> getTransitions(@Bind("event_key") final String key);
+    BusinessAccount getInvoice(@Bind("invoice_id") final String invoiceId);
+
+    @SqlQuery
+    BusinessAccount getInvoicesForAccount(@Bind("account_key") final String accountKey);
 
     @SqlUpdate
-    int createTransition(@BusinessSubscriptionTransitionBinder final BusinessSubscriptionTransition transition);
+    int createInvoice(final BusinessAccount account);
+
+    @SqlUpdate
+    int updateInvoice(@BusinessAccountBinder final BusinessAccount account);
+
+    @SqlUpdate
+    int deleteInvoice(@BusinessAccountBinder final BusinessAccount account);
 
     @SqlUpdate
     void test();

@@ -32,7 +32,8 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.api.ChangedField;
-import com.ning.billing.analytics.dao.BusinessAccountDao;
+import com.ning.billing.analytics.dao.BusinessAccountSqlDao;
+import com.ning.billing.analytics.model.BusinessAccount;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.payment.api.Payment;
@@ -46,17 +47,17 @@ import com.ning.billing.util.tag.Tag;
 public class BusinessAccountRecorder {
     private static final Logger log = LoggerFactory.getLogger(BusinessAccountRecorder.class);
 
-    private final BusinessAccountDao dao;
+    private final BusinessAccountSqlDao sqlDao;
     private final AccountUserApi accountApi;
     private final InvoiceUserApi invoiceUserApi;
     private final PaymentApi paymentApi;
     private final TagUserApi tagUserApi;
 
     @Inject
-    public BusinessAccountRecorder(final BusinessAccountDao dao, final AccountUserApi accountApi,
+    public BusinessAccountRecorder(final BusinessAccountSqlDao sqlDao, final AccountUserApi accountApi,
                                    final InvoiceUserApi invoiceUserApi, final PaymentApi paymentApi,
                                    final TagUserApi tagUserApi) {
-        this.dao = dao;
+        this.sqlDao = sqlDao;
         this.accountApi = accountApi;
         this.invoiceUserApi = invoiceUserApi;
         this.paymentApi = paymentApi;
@@ -71,7 +72,7 @@ public class BusinessAccountRecorder {
             final BusinessAccount bac = createBusinessAccountFromAccount(account, new ArrayList<Tag>(tags.values()));
 
             log.info("ACCOUNT CREATION " + bac);
-            dao.createAccount(bac);
+            sqlDao.createAccount(bac);
         } catch (AccountApiException e) {
             log.warn("Error encountered creating BusinessAccount", e);
         }
@@ -117,15 +118,15 @@ public class BusinessAccountRecorder {
                 return;
             }
 
-            BusinessAccount bac = dao.getAccount(account.getExternalKey());
+            BusinessAccount bac = sqlDao.getAccount(account.getExternalKey());
             if (bac == null) {
                 bac = createBusinessAccountFromAccount(account, new ArrayList<Tag>(tags.values()));
                 log.info("ACCOUNT CREATION " + bac);
-                dao.createAccount(bac);
+                sqlDao.createAccount(bac);
             } else {
                 updateBusinessAccountFromAccount(account, bac);
                 log.info("ACCOUNT UPDATE " + bac);
-                dao.saveAccount(bac);
+                sqlDao.saveAccount(bac);
             }
         } catch (AccountApiException e) {
             log.warn("Error encountered creating BusinessAccount", e);
@@ -136,8 +137,8 @@ public class BusinessAccountRecorder {
     private BusinessAccount createBusinessAccountFromAccount(final Account account, final List<Tag> tags) {
         final BusinessAccount bac = new BusinessAccount(
                 account.getExternalKey(),
+                account.getName(),
                 invoiceUserApi.getAccountBalance(account.getId()),
-                tags,
                 // These fields will be updated below
                 null,
                 null,

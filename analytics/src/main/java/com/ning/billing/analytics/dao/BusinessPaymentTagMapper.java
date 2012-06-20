@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2012 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -16,21 +16,18 @@
 
 package com.ning.billing.analytics.dao;
 
-import org.skife.jdbi.v2.IDBI;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.UUID;
 
-import com.google.inject.Inject;
-import com.google.inject.Provider;
+import org.skife.jdbi.v2.StatementContext;
+import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-public class BusinessAccountDaoProvider implements Provider<BusinessAccountDao> {
-    private final IDBI dbi;
+import com.ning.billing.analytics.model.BusinessPaymentTag;
 
-    @Inject
-    public BusinessAccountDaoProvider(final IDBI dbi) {
-        this.dbi = dbi;
-    }
-
+public class BusinessPaymentTagMapper implements ResultSetMapper<BusinessPaymentTag> {
     @Override
-    public BusinessAccountDao get() {
-        return dbi.onDemand(BusinessAccountDao.class);
+    public BusinessPaymentTag map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
+        return new BusinessPaymentTag(UUID.fromString(r.getString(1)), r.getString(2));
     }
 }

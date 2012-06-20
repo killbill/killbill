@@ -24,9 +24,10 @@ import java.util.Map;
 import org.skife.jdbi.v2.sqlobject.Bind;
 
 import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionBinder;
-import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionDao;
+import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionSqlDao;
+import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
 
-public class MockBusinessSubscriptionTransitionDao implements BusinessSubscriptionTransitionDao {
+public class MockBusinessSubscriptionTransitionSqlDao implements BusinessSubscriptionTransitionSqlDao {
     private final Map<String, List<BusinessSubscriptionTransition>> content = new HashMap<String, List<BusinessSubscriptionTransition>>();
 
     @Override
@@ -36,10 +37,10 @@ public class MockBusinessSubscriptionTransitionDao implements BusinessSubscripti
 
     @Override
     public int createTransition(@BusinessSubscriptionTransitionBinder final BusinessSubscriptionTransition transition) {
-        if (content.get(transition.getKey()) == null) {
-            content.put(transition.getKey(), new ArrayList<BusinessSubscriptionTransition>());
+        if (content.get(transition.getExternalKey()) == null) {
+            content.put(transition.getExternalKey(), new ArrayList<BusinessSubscriptionTransition>());
         }
-        content.get(transition.getKey()).add(transition);
+        content.get(transition.getExternalKey()).add(transition);
         return 1;
     }
 

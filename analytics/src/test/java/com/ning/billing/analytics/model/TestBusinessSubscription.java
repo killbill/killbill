@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.analytics;
+package com.ning.billing.analytics.model;
 
 import java.math.BigDecimal;
 
@@ -24,6 +24,13 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.ning.billing.analytics.AnalyticsTestSuite;
+import com.ning.billing.analytics.MockDuration;
+import com.ning.billing.analytics.MockPhase;
+import com.ning.billing.analytics.MockPlan;
+import com.ning.billing.analytics.MockProduct;
+import com.ning.billing.analytics.MockSubscription;
+import com.ning.billing.analytics.model.BusinessSubscription;
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Duration;

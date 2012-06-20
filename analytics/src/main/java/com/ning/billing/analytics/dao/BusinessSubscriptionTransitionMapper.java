@@ -26,9 +26,9 @@ import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import com.ning.billing.analytics.BusinessSubscription;
-import com.ning.billing.analytics.BusinessSubscriptionEvent;
-import com.ning.billing.analytics.BusinessSubscriptionTransition;
+import com.ning.billing.analytics.model.BusinessSubscription;
+import com.ning.billing.analytics.model.BusinessSubscriptionEvent;
+import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
 import com.ning.billing.catalog.api.ProductCategory;
 
 import static com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
@@ -83,7 +83,7 @@ public class BusinessSubscriptionTransitionMapper implements ResultSetMapper<Bus
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.valueOf(r.getString(5));
 
         return new BusinessSubscriptionTransition(
-                UUID.fromString(r.getString(1)),
+                r.getLong(1),
                 r.getString(2),
                 r.getString(3),
                 new DateTime(r.getLong(4), DateTimeZone.UTC),

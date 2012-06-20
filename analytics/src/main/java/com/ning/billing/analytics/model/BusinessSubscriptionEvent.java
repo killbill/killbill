@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.analytics;
+package com.ning.billing.analytics.model;
 
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -32,7 +32,6 @@ import static com.ning.billing.entitlement.api.user.Subscription.SubscriptionSta
  * Describe an event associated with a transition between two BusinessSubscription
  */
 public class BusinessSubscriptionEvent {
-
     private static final Logger log = LoggerFactory.getLogger(BusinessSubscriptionEvent.class);
 
     private static final String MISC = "MISC";

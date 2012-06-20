@@ -22,11 +22,11 @@ import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 
-import com.ning.billing.analytics.BusinessAccount;
+import com.ning.billing.analytics.model.BusinessAccount;
 
 @ExternalizedSqlViaStringTemplate3()
 @RegisterMapper(BusinessAccountMapper.class)
-public interface BusinessAccountDao {
+public interface BusinessAccountSqlDao {
     @SqlQuery
     BusinessAccount getAccount(@Bind("account_key") final String key);
 

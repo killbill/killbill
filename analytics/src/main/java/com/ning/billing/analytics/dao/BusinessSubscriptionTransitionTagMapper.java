@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2012 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -16,29 +16,17 @@
 
 package com.ning.billing.analytics.dao;
 
-import com.ning.billing.analytics.BusinessAccount;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
-public class MockBusinessAccountDao implements BusinessAccountDao {
+import org.skife.jdbi.v2.StatementContext;
+import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
+import com.ning.billing.analytics.model.BusinessSubscriptionTransitionTag;
+
+public class BusinessSubscriptionTransitionTagMapper implements ResultSetMapper<BusinessSubscriptionTransitionTag> {
     @Override
-    public BusinessAccount getAccount(final String key) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public int createAccount(final BusinessAccount account) {
-        // TODO Auto-generated method stub
-        return 0;
-    }
-
-    @Override
-    public int saveAccount(final BusinessAccount account) {
-        // TODO Auto-generated method stub
-        return 0;
-    }
-
-    @Override
-    public void test() {
+    public BusinessSubscriptionTransitionTag map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
+        return new BusinessSubscriptionTransitionTag(r.getString(1), r.getString(2));
     }
 }
