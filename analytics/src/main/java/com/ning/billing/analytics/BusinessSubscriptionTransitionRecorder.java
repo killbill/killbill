@@ -17,7 +17,6 @@
 package com.ning.billing.analytics;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
