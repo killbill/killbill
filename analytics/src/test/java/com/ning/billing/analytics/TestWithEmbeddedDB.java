@@ -47,7 +47,7 @@ public abstract class TestWithEmbeddedDB extends AnalyticsTestSuite {
         helper.cleanupAllTables();
     }
 
-    @BeforeMethod(alwaysRun = true)
+    @BeforeMethod(groups = "slow")
     public void cleanup() {
         try {
             helper.cleanupAllTables();

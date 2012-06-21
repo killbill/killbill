@@ -4,6 +4,7 @@ getFieldsForInvoice(invoice_id) ::=<<
 select
   invoice_id
 , name
+, value
 from bin_fields
 where invoice_id = :invoice_id
 ;

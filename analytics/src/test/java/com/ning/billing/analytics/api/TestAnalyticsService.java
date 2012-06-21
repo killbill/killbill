@@ -241,13 +241,6 @@ public class TestAnalyticsService extends TestWithEmbeddedDB {
     */
     }
 
-
-    @AfterClass(groups = "slow")
-    public void stopMysql() {
-        helper.stopMysql();
-    }
-
-
     // STEPH talk to Pierre -- see previous remark hence disable test
     @Test(groups = "slow", enabled = true)
     public void testRegisterForNotifications() throws Exception {
