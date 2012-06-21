@@ -16,31 +16,33 @@
 
 package com.ning.billing.analytics.dao;
 
+import java.util.List;
+
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 
-import com.ning.billing.analytics.model.BusinessAccount;
+import com.ning.billing.analytics.model.BusinessInvoice;
 
 @ExternalizedSqlViaStringTemplate3()
-@RegisterMapper(BusinessAccountMapper.class)
+@RegisterMapper(BusinessInvoiceMapper.class)
 public interface BusinessInvoiceSqlDao {
     @SqlQuery
-    BusinessAccount getInvoice(@Bind("invoice_id") final String invoiceId);
+    BusinessInvoice getInvoice(@Bind("invoice_id") final String invoiceId);
 
     @SqlQuery
-    BusinessAccount getInvoicesForAccount(@Bind("account_key") final String accountKey);
+    List<BusinessInvoice> getInvoicesForAccount(@Bind("account_key") final String accountKey);
 
     @SqlUpdate
-    int createInvoice(final BusinessAccount account);
+    int createInvoice(final BusinessInvoice invoice);
 
     @SqlUpdate
-    int updateInvoice(@BusinessAccountBinder final BusinessAccount account);
+    int updateInvoice(final BusinessInvoice invoice);
 
     @SqlUpdate
-    int deleteInvoice(@BusinessAccountBinder final BusinessAccount account);
+    int deleteInvoice(@Bind("invoice_id") final String invoiceId);
 
     @SqlUpdate
     void test();

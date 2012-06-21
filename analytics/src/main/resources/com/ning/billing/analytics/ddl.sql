@@ -34,7 +34,7 @@ create table bst (
 , next_subscription_id varchar(100) default null
 , next_bundle_id varchar(100) default null
 , primary key(total_ordering)
-) engine=innodb comment 'Business Subscription Transitions, track bundles';
+) engine=innodb comment 'Business Subscription Transitions, track bundles lifecycle';
 create index bst_key_index on bst (external_key, requested_timestamp asc);
 
 drop table if exists bac;

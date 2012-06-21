@@ -113,7 +113,7 @@ insert into bip (
 );
 >>
 
-updateInvoicePaymentforPaymentAttempt(attempt_id) ::= <<
+updateInvoicePaymentForPaymentAttempt() ::= <<
 update bip set
   updated_date = :updated_date
 , account_key = :account_key

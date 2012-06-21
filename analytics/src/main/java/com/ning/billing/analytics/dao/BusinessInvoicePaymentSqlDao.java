@@ -16,5 +16,37 @@
 
 package com.ning.billing.analytics.dao;
 
+import java.util.List;
+
+import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.SqlQuery;
+import org.skife.jdbi.v2.sqlobject.SqlUpdate;
+import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
+import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
+
+import com.ning.billing.analytics.model.BusinessInvoicePayment;
+
+@ExternalizedSqlViaStringTemplate3()
+@RegisterMapper(BusinessInvoicePaymentMapper.class)
 public interface BusinessInvoicePaymentSqlDao {
+    @SqlQuery
+    BusinessInvoicePayment getInvoicePaymentForPaymentAttempt(@Bind("attempt_id") final String attemptId);
+
+    @SqlQuery
+    List<BusinessInvoicePayment> getInvoicePaymentsForPayment(@Bind("payment_id") final String paymentId);
+
+    @SqlQuery
+    List<BusinessInvoicePayment> getInvoicePaymentsForAccount(@Bind("account_key") final String accountKey);
+
+    @SqlUpdate
+    int createInvoicePayment(final BusinessInvoicePayment payment);
+
+    @SqlUpdate
+    int updateInvoicePaymentForPaymentAttempt(final BusinessInvoicePayment payment);
+
+    @SqlUpdate
+    int deleteInvoicePaymentForPaymentAttempt(@Bind("attempt_id") final String attemptId);
+
+    @SqlUpdate
+    void test();
 }
