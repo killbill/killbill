@@ -21,6 +21,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.analytics.utils.Rounder;
 import com.ning.billing.catalog.api.Currency;
 
 public class BusinessInvoice {
@@ -167,16 +168,16 @@ public class BusinessInvoice {
         if (accountKey != null ? !accountKey.equals(that.accountKey) : that.accountKey != null) {
             return false;
         }
-        if (amountCharged != null ? !amountCharged.equals(that.amountCharged) : that.amountCharged != null) {
+        if (amountCharged != null ? Rounder.round(amountCharged) != Rounder.round(that.amountCharged) : that.amountCharged != null) {
             return false;
         }
-        if (amountCredited != null ? !amountCredited.equals(that.amountCredited) : that.amountCredited != null) {
+        if (amountCredited != null ? Rounder.round(amountCredited) != Rounder.round(that.amountCredited) : that.amountCredited != null) {
             return false;
         }
-        if (amountPaid != null ? !amountPaid.equals(that.amountPaid) : that.amountPaid != null) {
+        if (amountPaid != null ? Rounder.round(amountPaid) != Rounder.round(that.amountPaid) : that.amountPaid != null) {
             return false;
         }
-        if (balance != null ? !balance.equals(that.balance) : that.balance != null) {
+        if (balance != null ? Rounder.round(balance) != Rounder.round(that.balance) : that.balance != null) {
             return false;
         }
         if (createdDate != null ? !createdDate.equals(that.createdDate) : that.createdDate != null) {
