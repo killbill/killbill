@@ -36,10 +36,10 @@ public interface BusinessInvoiceSqlDao {
     List<BusinessInvoice> getInvoicesForAccount(@Bind("account_key") final String accountKey);
 
     @SqlUpdate
-    int createInvoice(final BusinessInvoice invoice);
+    int createInvoice(@BusinessInvoiceBinder final BusinessInvoice invoice);
 
     @SqlUpdate
-    int updateInvoice(final BusinessInvoice invoice);
+    int updateInvoice(@BusinessInvoiceBinder final BusinessInvoice invoice);
 
     @SqlUpdate
     int deleteInvoice(@Bind("invoice_id") final String invoiceId);

@@ -39,10 +39,10 @@ public interface BusinessInvoicePaymentSqlDao {
     List<BusinessInvoicePayment> getInvoicePaymentsForAccount(@Bind("account_key") final String accountKey);
 
     @SqlUpdate
-    int createInvoicePayment(final BusinessInvoicePayment payment);
+    int createInvoicePayment(@BusinessInvoicePaymentBinder final BusinessInvoicePayment payment);
 
     @SqlUpdate
-    int updateInvoicePaymentForPaymentAttempt(final BusinessInvoicePayment payment);
+    int updateInvoicePaymentForPaymentAttempt(@BusinessInvoicePaymentBinder final BusinessInvoicePayment payment);
 
     @SqlUpdate
     int deleteInvoicePaymentForPaymentAttempt(@Bind("attempt_id") final String attemptId);

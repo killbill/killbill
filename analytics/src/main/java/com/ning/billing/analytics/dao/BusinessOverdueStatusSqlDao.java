@@ -33,7 +33,7 @@ public interface BusinessOverdueStatusSqlDao {
     List<BusinessOverdueStatus> getOverdueStatusesForBundle(@Bind("external_key") final String externalKey);
 
     @SqlUpdate
-    int createOverdueStatus(final BusinessOverdueStatus status);
+    int createOverdueStatus(@BusinessOverdueStatusBinder final BusinessOverdueStatus status);
 
     @SqlUpdate
     void test();

@@ -39,10 +39,10 @@ public interface BusinessInvoiceItemSqlDao {
     List<BusinessInvoiceItem> getInvoiceItemsForBundle(@Bind("external_key") final String externalKey);
 
     @SqlUpdate
-    int createInvoiceItem(final BusinessInvoiceItem invoiceItem);
+    int createInvoiceItem(@BusinessInvoiceItemBinder final BusinessInvoiceItem invoiceItem);
 
     @SqlUpdate
-    int updateInvoiceItem(final BusinessInvoiceItem invoiceItem);
+    int updateInvoiceItem(@BusinessInvoiceItemBinder final BusinessInvoiceItem invoiceItem);
 
     @SqlUpdate
     int deleteInvoiceItem(@Bind("item_id") final String itemId);
