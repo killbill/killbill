@@ -29,19 +29,19 @@ public class TestBusinessSubscriptionTransitionField extends AnalyticsTestSuite 
         final String externalKey = UUID.randomUUID().toString();
         final String name = UUID.randomUUID().toString();
         final String value = UUID.randomUUID().toString();
-        final BusinessSubscriptionTransitionField accountField = new BusinessSubscriptionTransitionField(externalKey,
-                                                                                                         name,
-                                                                                                         value);
-        Assert.assertSame(accountField, accountField);
-        Assert.assertEquals(accountField, accountField);
-        Assert.assertTrue(accountField.equals(accountField));
-        Assert.assertEquals(accountField.getExternalKey(), externalKey);
-        Assert.assertEquals(accountField.getName(), name);
-        Assert.assertEquals(accountField.getValue(), value);
+        final BusinessSubscriptionTransitionField subscriptionTransitionField = new BusinessSubscriptionTransitionField(externalKey,
+                                                                                                                        name,
+                                                                                                                        value);
+        Assert.assertSame(subscriptionTransitionField, subscriptionTransitionField);
+        Assert.assertEquals(subscriptionTransitionField, subscriptionTransitionField);
+        Assert.assertTrue(subscriptionTransitionField.equals(subscriptionTransitionField));
+        Assert.assertEquals(subscriptionTransitionField.getExternalKey(), externalKey);
+        Assert.assertEquals(subscriptionTransitionField.getName(), name);
+        Assert.assertEquals(subscriptionTransitionField.getValue(), value);
 
         final BusinessSubscriptionTransitionField otherSubscriptionField = new BusinessSubscriptionTransitionField(UUID.randomUUID().toString(),
                                                                                                                    UUID.randomUUID().toString(),
                                                                                                                    UUID.randomUUID().toString());
-        Assert.assertFalse(accountField.equals(otherSubscriptionField));
+        Assert.assertFalse(subscriptionTransitionField.equals(otherSubscriptionField));
     }
 }
