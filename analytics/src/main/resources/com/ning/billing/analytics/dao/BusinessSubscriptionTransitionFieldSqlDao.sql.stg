@@ -1,0 +1,31 @@
+group BusinessSubscriptionTransitionField;
+
+getFieldsForBusinessSubscriptionTransition(external_key) ::=<<
+select
+  external_key
+, name
+, value
+from bst_fields
+where external_key = :external_key
+;
+>>
+
+addField(external_key, name, value) ::=<<
+insert into bst_fields (
+  external_key
+, name
+, value
+) values (
+  :external_key
+, :name
+, :value
+);
+>>
+
+removeField(external_key, name) ::= <<
+delete from bst_fields where external_key = :external_key and name = :name;
+>>
+
+test() ::= <<
+select 1 from bst_fields;
+>>

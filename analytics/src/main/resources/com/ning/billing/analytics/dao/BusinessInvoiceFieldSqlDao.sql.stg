@@ -1,0 +1,30 @@
+group BusinessInvoiceField;
+
+getFieldsForInvoice(invoice_id) ::=<<
+select
+  invoice_id
+, name
+from bin_fields
+where invoice_id = :invoice_id
+;
+>>
+
+addField(invoice_id, name, value) ::=<<
+insert into bin_fields (
+  invoice_id
+, name
+, value
+) values (
+  :invoice_id
+, :name
+, :value
+);
+>>
+
+removeField(invoice_id, name, value) ::= <<
+delete from bin_fields where invoice_id = :invoice_id and name = :name;
+>>
+
+test() ::= <<
+select 1 from bin_tags;
+>>
