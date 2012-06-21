@@ -67,13 +67,13 @@ public @interface BusinessInvoiceItemBinder {
                     q.bind("billing_period", invoiceItem.getBillingPeriod());
 
                     if (invoiceItem.getStartDate() != null) {
-                        q.bind("start_date", invoiceItem.getStartDate());
+                        q.bind("start_date", invoiceItem.getStartDate().getMillis());
                     } else {
                         q.bindNull("start_date", Types.BIGINT);
                     }
 
                     if (invoiceItem.getEndDate() != null) {
-                        q.bind("end_date", invoiceItem.getEndDate());
+                        q.bind("end_date", invoiceItem.getEndDate().getMillis());
                     } else {
                         q.bindNull("end_date", Types.BIGINT);
                     }

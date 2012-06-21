@@ -21,6 +21,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.analytics.utils.Rounder;
 import com.ning.billing.catalog.api.Currency;
 
 public class BusinessInvoiceItem {
@@ -220,7 +221,7 @@ public class BusinessInvoiceItem {
 
         final BusinessInvoiceItem that = (BusinessInvoiceItem) o;
 
-        if (amount != null ? !amount.equals(that.amount) : that.amount != null) {
+        if (amount != null ? Rounder.round(amount) != (Rounder.round(that.amount)) : that.amount != null) {
             return false;
         }
         if (billingPeriod != null ? !billingPeriod.equals(that.billingPeriod) : that.billingPeriod != null) {
