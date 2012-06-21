@@ -23,16 +23,16 @@ import com.ning.billing.analytics.BusinessAccountRecorder;
 import com.ning.billing.analytics.BusinessSubscriptionTransitionRecorder;
 import com.ning.billing.analytics.api.AnalyticsService;
 import com.ning.billing.analytics.api.DefaultAnalyticsService;
-import com.ning.billing.analytics.dao.BusinessAccountDao;
-import com.ning.billing.analytics.dao.BusinessAccountDaoProvider;
-import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionDao;
-import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionDaoProvider;
+import com.ning.billing.analytics.dao.BusinessAccountSqlDao;
+import com.ning.billing.analytics.dao.BusinessAccountSqlDaoProvider;
+import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionSqlDao;
+import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionSqlDaoProvider;
 
 public class AnalyticsModule extends AbstractModule {
     @Override
     protected void configure() {
-        bind(BusinessSubscriptionTransitionDao.class).toProvider(BusinessSubscriptionTransitionDaoProvider.class).asEagerSingleton();
-        bind(BusinessAccountDao.class).toProvider(BusinessAccountDaoProvider.class).asEagerSingleton();
+        bind(BusinessSubscriptionTransitionSqlDao.class).toProvider(BusinessSubscriptionTransitionSqlDaoProvider.class).asEagerSingleton();
+        bind(BusinessAccountSqlDao.class).toProvider(BusinessAccountSqlDaoProvider.class).asEagerSingleton();
 
         bind(BusinessSubscriptionTransitionRecorder.class).asEagerSingleton();
         bind(BusinessAccountRecorder.class).asEagerSingleton();

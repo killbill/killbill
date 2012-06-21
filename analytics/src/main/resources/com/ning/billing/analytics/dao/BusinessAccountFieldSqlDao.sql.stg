@@ -1,0 +1,31 @@
+group BusinessAccountField;
+
+getFieldsForAccount(account_key) ::=<<
+select
+  account_key
+, name
+, value
+from bac_fields
+where account_key = :account_key
+;
+>>
+
+addField(account_key, name, value) ::=<<
+insert into bac_fields (
+  account_key
+, name
+, value
+) values (
+  :account_key
+, :name
+, :value
+);
+>>
+
+removeField(account_key, name) ::= <<
+delete from bac_fields where account_key = :account_key and name = :name;
+>>
+
+test() ::= <<
+select 1 from bac_fields;
+>>

@@ -484,6 +484,9 @@ public class AuditedEntitlementDao implements EntitlementDao {
     }
 
     private List<Subscription> buildBundleSubscriptions(final SubscriptionFactory factory, final List<Subscription> input) {
+        if (input == null || input.size() == 0) {
+            return Collections.emptyList();
+        }
         // Make sure BasePlan -- if exists-- is first
         Collections.sort(input, new Comparator<Subscription>() {
             @Override

@@ -78,7 +78,7 @@ public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePayment>, Tran
     public List<InvoicePayment> getPaymentsForInvoice(@Bind("invoiceId") final String invoiceId);
 
     @SqlQuery
-    InvoicePayment getInvoicePayment(@Bind("paymentAttemptId") final UUID paymentAttemptId);
+    InvoicePayment getInvoicePayment(@Bind("paymentAttemptId") final String paymentAttemptId);
 
     @SqlUpdate
     void notifyOfPaymentAttempt(@InvoicePaymentBinder final InvoicePayment invoicePayment,

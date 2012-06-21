@@ -1,0 +1,142 @@
+group BusinessInvoicePayment;
+
+getInvoicePaymentForPaymentAttempt(attempt_id) ::= <<
+select
+  payment_id
+, created_date
+, updated_date
+, attempt_id
+, account_key
+, invoice_id
+, effective_date
+, amount
+, currency
+, payment_error
+, processing_status
+, requested_amount
+, plugin_name
+, payment_type
+, payment_method
+, card_type
+, card_country
+from bip
+where attempt_id = :attempt_id
+limit 1
+;
+>>
+
+getInvoicePaymentsForPayment(payment_id) ::= <<
+select
+  payment_id
+, created_date
+, updated_date
+, attempt_id
+, account_key
+, invoice_id
+, effective_date
+, amount
+, currency
+, payment_error
+, processing_status
+, requested_amount
+, plugin_name
+, payment_type
+, payment_method
+, card_type
+, card_country
+from bip
+where payment_id = :payment_id
+;
+>>
+
+getInvoicePaymentsForAccount(account_key) ::= <<
+select
+  payment_id
+, created_date
+, updated_date
+, attempt_id
+, account_key
+, invoice_id
+, effective_date
+, amount
+, currency
+, payment_error
+, processing_status
+, requested_amount
+, plugin_name
+, payment_type
+, payment_method
+, card_type
+, card_country
+from bip
+where account_key = :account_key
+;
+>>
+
+createInvoicePayment() ::= <<
+insert into bip (
+  payment_id
+, created_date
+, updated_date
+, attempt_id
+, account_key
+, invoice_id
+, effective_date
+, amount
+, currency
+, payment_error
+, processing_status
+, requested_amount
+, plugin_name
+, payment_type
+, payment_method
+, card_type
+, card_country
+) values (
+  :payment_id
+, :created_date
+, :updated_date
+, :attempt_id
+, :account_key
+, :invoice_id
+, :effective_date
+, :amount
+, :currency
+, :payment_error
+, :processing_status
+, :requested_amount
+, :plugin_name
+, :payment_type
+, :payment_method
+, :card_type
+, :card_country
+);
+>>
+
+updateInvoicePaymentForPaymentAttempt() ::= <<
+update bip set
+  updated_date = :updated_date
+, account_key = :account_key
+, invoice_id = :invoice_id
+, effective_date = :effective_date
+, amount = :amount
+, currency = :currency
+, payment_error = :payment_error
+, processing_status = :processing_status
+, requested_amount = :requested_amount
+, plugin_name = :plugin_name
+, payment_type = :payment_type
+, payment_method = :payment_method
+, card_type = :card_type
+, card_country = :card_country
+where attempt_id = :attempt_id
+;
+>>
+
+deleteInvoicePaymentForPaymentAttempt(attempt_id) ::= <<
+delete from bip where attempt_id = :attempt_id
+>>
+
+test() ::= <<
+select 1 from bip;
+>>
