@@ -122,7 +122,11 @@ public class BusinessTagRecorder {
             return;
         }
 
-        // TODO - this stores tags for bundles?
+        /*
+         * Note: we store tags associated to bundles, not to subscriptions.
+         * Subscriptions are in the core of killbill and not exposed in Analytics to avoid a hard dependency
+         * (i.e. dashboards should not rely on killbill ids).
+         */
         final String externalKey = bundle.getKey();
         subscriptionTransitionTagSqlDao.addTag(externalKey, name);
     }
@@ -136,7 +140,6 @@ public class BusinessTagRecorder {
             return;
         }
 
-        // TODO - this stores tags for bundles?
         final String externalKey = bundle.getKey();
         subscriptionTransitionTagSqlDao.removeTag(externalKey, name);
     }
