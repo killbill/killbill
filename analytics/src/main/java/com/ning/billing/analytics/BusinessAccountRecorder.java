@@ -37,7 +37,6 @@ import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.PaymentInfoEvent;
-import com.ning.billing.util.api.TagUserApi;
 
 public class BusinessAccountRecorder {
     private static final Logger log = LoggerFactory.getLogger(BusinessAccountRecorder.class);
@@ -46,17 +45,14 @@ public class BusinessAccountRecorder {
     private final AccountUserApi accountApi;
     private final InvoiceUserApi invoiceUserApi;
     private final PaymentApi paymentApi;
-    private final TagUserApi tagUserApi;
 
     @Inject
     public BusinessAccountRecorder(final BusinessAccountSqlDao sqlDao, final AccountUserApi accountApi,
-                                   final InvoiceUserApi invoiceUserApi, final PaymentApi paymentApi,
-                                   final TagUserApi tagUserApi) {
+                                   final InvoiceUserApi invoiceUserApi, final PaymentApi paymentApi) {
         this.sqlDao = sqlDao;
         this.accountApi = accountApi;
         this.invoiceUserApi = invoiceUserApi;
         this.paymentApi = paymentApi;
-        this.tagUserApi = tagUserApi;
     }
 
     public void accountCreated(final AccountData data) {
