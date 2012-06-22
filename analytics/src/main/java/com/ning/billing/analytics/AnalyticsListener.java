@@ -21,20 +21,34 @@ import com.google.inject.Inject;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountChangeEvent;
 import com.ning.billing.account.api.AccountCreationEvent;
+import com.ning.billing.entitlement.api.timeline.RepairEntitlementEvent;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionEvent;
+import com.ning.billing.invoice.api.EmptyInvoiceEvent;
 import com.ning.billing.invoice.api.InvoiceCreationEvent;
 import com.ning.billing.payment.api.PaymentErrorEvent;
 import com.ning.billing.payment.api.PaymentInfoEvent;
+import com.ning.billing.util.tag.api.ControlTagCreationEvent;
+import com.ning.billing.util.tag.api.ControlTagDefinitionCreationEvent;
+import com.ning.billing.util.tag.api.ControlTagDefinitionDeletionEvent;
+import com.ning.billing.util.tag.api.ControlTagDeletionEvent;
+import com.ning.billing.util.tag.api.UserTagCreationEvent;
+import com.ning.billing.util.tag.api.UserTagDefinitionCreationEvent;
+import com.ning.billing.util.tag.api.UserTagDefinitionDeletionEvent;
+import com.ning.billing.util.tag.api.UserTagDeletionEvent;
 
 public class AnalyticsListener {
     private final BusinessSubscriptionTransitionRecorder bstRecorder;
     private final BusinessAccountRecorder bacRecorder;
+    private final BusinessTagRecorder tagRecorder;
 
     @Inject
-    public AnalyticsListener(final BusinessSubscriptionTransitionRecorder bstRecorder, final BusinessAccountRecorder bacRecorder) {
+    public AnalyticsListener(final BusinessSubscriptionTransitionRecorder bstRecorder,
+                             final BusinessAccountRecorder bacRecorder,
+                             final BusinessTagRecorder tagRecorder) {
         this.bstRecorder = bstRecorder;
         this.bacRecorder = bacRecorder;
+        this.tagRecorder = tagRecorder;
     }
 
     @Subscribe
@@ -81,8 +95,12 @@ public class AnalyticsListener {
     }
 
     @Subscribe
-    public void handleInvoice(final InvoiceCreationEvent event) {
+    public void handleInvoiceCreation(final InvoiceCreationEvent event) {
         bacRecorder.accountUpdated(event.getAccountId());
+    }
+
+    @Subscribe
+    public void handleNullInvoice(final EmptyInvoiceEvent event) {
     }
 
     @Subscribe
@@ -93,5 +111,50 @@ public class AnalyticsListener {
     @Subscribe
     public void handlePaymentError(final PaymentErrorEvent paymentError) {
         // TODO - we can't tie the error back to an account yet
+    }
+
+    @Subscribe
+    public void handleControlTagCreation(final ControlTagCreationEvent event) {
+        tagRecorder.tagAdded(event.getObjectType(), event.getObjectId(), event.getTagDefinition().getName());
+    }
+
+    @Subscribe
+    public void handleControlTagDeletion(final ControlTagDeletionEvent event) {
+        tagRecorder.tagRemoved(event.getObjectType(), event.getObjectId(), event.getTagDefinition().getName());
+    }
+
+    @Subscribe
+    public void handleUserTagCreation(final UserTagCreationEvent event) {
+        tagRecorder.tagAdded(event.getObjectType(), event.getObjectId(), event.getTagDefinition().getName());
+    }
+
+    @Subscribe
+    public void handleUserTagDeletion(final UserTagDeletionEvent event) {
+        tagRecorder.tagRemoved(event.getObjectType(), event.getObjectId(), event.getTagDefinition().getName());
+    }
+
+    @Subscribe
+    public void handleControlTagDefinitionCreation(final ControlTagDefinitionCreationEvent event) {
+        // Ignored for now
+    }
+
+    @Subscribe
+    public void handleControlTagDefinitionDeletion(final ControlTagDefinitionDeletionEvent event) {
+        // Ignored for now
+    }
+
+    @Subscribe
+    public void handleUserTagDefinitionCreation(final UserTagDefinitionCreationEvent event) {
+        // Ignored for now
+    }
+
+    @Subscribe
+    public void handleUserTagDefinitionDeletion(final UserTagDefinitionDeletionEvent event) {
+        // Ignored for now
+    }
+
+    @Subscribe
+    public void handleRepairEntitlement(final RepairEntitlementEvent event) {
+        // Ignored for now
     }
 }

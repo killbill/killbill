@@ -74,7 +74,7 @@ public class TestAnalyticsListener extends AnalyticsTestSuite {
     @BeforeMethod(groups = "fast")
     public void setUp() throws Exception {
         final BusinessSubscriptionTransitionRecorder recorder = new BusinessSubscriptionTransitionRecorder(dao, catalogService, new MockEntitlementUserApi(bundleUUID, EXTERNAL_KEY), new MockAccountUserApi(ACCOUNT_KEY, CURRENCY));
-        listener = new AnalyticsListener(recorder, null);
+        listener = new AnalyticsListener(recorder, null, null);
     }
 
     @Test(groups = "fast")

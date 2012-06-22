@@ -21,21 +21,44 @@ import com.google.inject.AbstractModule;
 import com.ning.billing.analytics.AnalyticsListener;
 import com.ning.billing.analytics.BusinessAccountRecorder;
 import com.ning.billing.analytics.BusinessSubscriptionTransitionRecorder;
+import com.ning.billing.analytics.BusinessTagRecorder;
 import com.ning.billing.analytics.api.AnalyticsService;
 import com.ning.billing.analytics.api.DefaultAnalyticsService;
 import com.ning.billing.analytics.dao.BusinessAccountSqlDao;
-import com.ning.billing.analytics.dao.BusinessAccountSqlDaoProvider;
+import com.ning.billing.analytics.dao.BusinessAccountTagSqlDao;
+import com.ning.billing.analytics.dao.BusinessInvoiceFieldSqlDao;
+import com.ning.billing.analytics.dao.BusinessInvoiceItemSqlDao;
+import com.ning.billing.analytics.dao.BusinessInvoicePaymentFieldSqlDao;
+import com.ning.billing.analytics.dao.BusinessInvoicePaymentSqlDao;
+import com.ning.billing.analytics.dao.BusinessInvoicePaymentTagSqlDao;
+import com.ning.billing.analytics.dao.BusinessInvoiceSqlDao;
+import com.ning.billing.analytics.dao.BusinessInvoiceTagSqlDao;
+import com.ning.billing.analytics.dao.BusinessOverdueStatusSqlDao;
+import com.ning.billing.analytics.dao.BusinessSqlProvider;
+import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionFieldSqlDao;
 import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionSqlDao;
-import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionSqlDaoProvider;
+import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionTagSqlDao;
 
 public class AnalyticsModule extends AbstractModule {
     @Override
     protected void configure() {
-        bind(BusinessSubscriptionTransitionSqlDao.class).toProvider(BusinessSubscriptionTransitionSqlDaoProvider.class).asEagerSingleton();
-        bind(BusinessAccountSqlDao.class).toProvider(BusinessAccountSqlDaoProvider.class).asEagerSingleton();
+        bind(BusinessAccountSqlDao.class).toProvider(new BusinessSqlProvider<BusinessAccountSqlDao>(BusinessAccountSqlDao.class));
+        bind(BusinessAccountTagSqlDao.class).toProvider(new BusinessSqlProvider<BusinessAccountTagSqlDao>(BusinessAccountTagSqlDao.class));
+        bind(BusinessInvoiceFieldSqlDao.class).toProvider(new BusinessSqlProvider<BusinessInvoiceFieldSqlDao>(BusinessInvoiceFieldSqlDao.class));
+        bind(BusinessInvoiceItemSqlDao.class).toProvider(new BusinessSqlProvider<BusinessInvoiceItemSqlDao>(BusinessInvoiceItemSqlDao.class));
+        bind(BusinessInvoicePaymentFieldSqlDao.class).toProvider(new BusinessSqlProvider<BusinessInvoicePaymentFieldSqlDao>(BusinessInvoicePaymentFieldSqlDao.class));
+        bind(BusinessInvoicePaymentSqlDao.class).toProvider(new BusinessSqlProvider<BusinessInvoicePaymentSqlDao>(BusinessInvoicePaymentSqlDao.class));
+        bind(BusinessInvoicePaymentTagSqlDao.class).toProvider(new BusinessSqlProvider<BusinessInvoicePaymentTagSqlDao>(BusinessInvoicePaymentTagSqlDao.class));
+        bind(BusinessInvoiceSqlDao.class).toProvider(new BusinessSqlProvider<BusinessInvoiceSqlDao>(BusinessInvoiceSqlDao.class));
+        bind(BusinessInvoiceTagSqlDao.class).toProvider(new BusinessSqlProvider<BusinessInvoiceTagSqlDao>(BusinessInvoiceTagSqlDao.class));
+        bind(BusinessOverdueStatusSqlDao.class).toProvider(new BusinessSqlProvider<BusinessOverdueStatusSqlDao>(BusinessOverdueStatusSqlDao.class));
+        bind(BusinessSubscriptionTransitionFieldSqlDao.class).toProvider(new BusinessSqlProvider<BusinessSubscriptionTransitionFieldSqlDao>(BusinessSubscriptionTransitionFieldSqlDao.class));
+        bind(BusinessSubscriptionTransitionSqlDao.class).toProvider(new BusinessSqlProvider<BusinessSubscriptionTransitionSqlDao>(BusinessSubscriptionTransitionSqlDao.class));
+        bind(BusinessSubscriptionTransitionTagSqlDao.class).toProvider(new BusinessSqlProvider<BusinessSubscriptionTransitionTagSqlDao>(BusinessSubscriptionTransitionTagSqlDao.class));
 
         bind(BusinessSubscriptionTransitionRecorder.class).asEagerSingleton();
         bind(BusinessAccountRecorder.class).asEagerSingleton();
+        bind(BusinessTagRecorder.class).asEagerSingleton();
         bind(AnalyticsListener.class).asEagerSingleton();
 
         bind(AnalyticsService.class).to(DefaultAnalyticsService.class).asEagerSingleton();
