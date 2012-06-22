@@ -40,14 +40,17 @@ import com.ning.billing.util.tag.api.UserTagDeletionEvent;
 public class AnalyticsListener {
     private final BusinessSubscriptionTransitionRecorder bstRecorder;
     private final BusinessAccountRecorder bacRecorder;
+    private final BusinessInvoiceRecorder invoiceRecorder;
     private final BusinessTagRecorder tagRecorder;
 
     @Inject
     public AnalyticsListener(final BusinessSubscriptionTransitionRecorder bstRecorder,
                              final BusinessAccountRecorder bacRecorder,
+                             final BusinessInvoiceRecorder invoiceRecorder,
                              final BusinessTagRecorder tagRecorder) {
         this.bstRecorder = bstRecorder;
         this.bacRecorder = bacRecorder;
+        this.invoiceRecorder = invoiceRecorder;
         this.tagRecorder = tagRecorder;
     }
 
@@ -96,11 +99,12 @@ public class AnalyticsListener {
 
     @Subscribe
     public void handleInvoiceCreation(final InvoiceCreationEvent event) {
-        bacRecorder.accountUpdated(event.getAccountId());
+        invoiceRecorder.invoiceCreated(event.getInvoiceId());
     }
 
     @Subscribe
     public void handleNullInvoice(final EmptyInvoiceEvent event) {
+        // Ignored for now
     }
 
     @Subscribe

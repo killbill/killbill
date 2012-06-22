@@ -24,6 +24,7 @@ import com.ning.billing.analytics.BusinessSubscriptionTransitionRecorder;
 import com.ning.billing.analytics.BusinessTagRecorder;
 import com.ning.billing.analytics.api.AnalyticsService;
 import com.ning.billing.analytics.api.DefaultAnalyticsService;
+import com.ning.billing.analytics.dao.AnalyticsDao;
 import com.ning.billing.analytics.dao.BusinessAccountSqlDao;
 import com.ning.billing.analytics.dao.BusinessAccountTagSqlDao;
 import com.ning.billing.analytics.dao.BusinessInvoiceFieldSqlDao;
@@ -38,6 +39,7 @@ import com.ning.billing.analytics.dao.BusinessSqlProvider;
 import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionFieldSqlDao;
 import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionSqlDao;
 import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionTagSqlDao;
+import com.ning.billing.analytics.dao.DefaultAnalyticsDao;
 
 public class AnalyticsModule extends AbstractModule {
     @Override
@@ -61,6 +63,7 @@ public class AnalyticsModule extends AbstractModule {
         bind(BusinessTagRecorder.class).asEagerSingleton();
         bind(AnalyticsListener.class).asEagerSingleton();
 
+        bind(AnalyticsDao.class).to(DefaultAnalyticsDao.class).asEagerSingleton();
         bind(AnalyticsService.class).to(DefaultAnalyticsService.class).asEagerSingleton();
     }
 }

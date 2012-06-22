@@ -69,7 +69,7 @@ public class BusinessAccountRecorder {
         try {
             account = accountApi.getAccountByKey(data.getExternalKey());
             final Map<String, Tag> tags = tagUserApi.getTags(account.getId(), ObjectType.ACCOUNT);
-            final BusinessAccount bac = createBusinessAccountFromAccount(account, new ArrayList<Tag>(tags.values()));
+            final BusinessAccount bac = createBusinessAccountFromAccount(account);
 
             log.info("ACCOUNT CREATION " + bac);
             sqlDao.createAccount(bac);
@@ -111,16 +111,10 @@ public class BusinessAccountRecorder {
     public void accountUpdated(final UUID accountId) {
         try {
             final Account account = accountApi.getAccountById(accountId);
-            final Map<String, Tag> tags = tagUserApi.getTags(accountId, ObjectType.ACCOUNT);
-
-            if (account == null) {
-                log.warn("Couldn't find account {}", accountId);
-                return;
-            }
 
             BusinessAccount bac = sqlDao.getAccount(account.getExternalKey());
             if (bac == null) {
-                bac = createBusinessAccountFromAccount(account, new ArrayList<Tag>(tags.values()));
+                bac = createBusinessAccountFromAccount(account);
                 log.info("ACCOUNT CREATION " + bac);
                 sqlDao.createAccount(bac);
             } else {
@@ -131,10 +125,9 @@ public class BusinessAccountRecorder {
         } catch (AccountApiException e) {
             log.warn("Error encountered creating BusinessAccount", e);
         }
-
     }
 
-    private BusinessAccount createBusinessAccountFromAccount(final Account account, final List<Tag> tags) {
+    private BusinessAccount createBusinessAccountFromAccount(final Account account) {
         final BusinessAccount bac = new BusinessAccount(
                 account.getExternalKey(),
                 account.getName(),
