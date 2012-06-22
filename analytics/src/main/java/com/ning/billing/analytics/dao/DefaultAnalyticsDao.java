@@ -28,11 +28,18 @@ import com.ning.billing.analytics.model.BusinessInvoice;
 import com.ning.billing.analytics.model.BusinessInvoiceItem;
 
 public class DefaultAnalyticsDao implements AnalyticsDao {
+    private final BusinessAccountSqlDao accountSqlDao;
     private final BusinessInvoiceSqlDao invoiceSqlDao;
 
     @Inject
-    public DefaultAnalyticsDao(final BusinessInvoiceSqlDao invoiceSqlDao) {
+    public DefaultAnalyticsDao(final BusinessAccountSqlDao accountSqlDao, final BusinessInvoiceSqlDao invoiceSqlDao) {
+        this.accountSqlDao = accountSqlDao;
         this.invoiceSqlDao = invoiceSqlDao;
+    }
+
+    @Override
+    public BusinessAccount getAccountByKey(final String accountKey) {
+        return accountSqlDao.getAccount(accountKey);
     }
 
     @Override

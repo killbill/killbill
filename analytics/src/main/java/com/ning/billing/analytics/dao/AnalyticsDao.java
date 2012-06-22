@@ -16,9 +16,12 @@
 
 package com.ning.billing.analytics.dao;
 
+import com.ning.billing.analytics.model.BusinessAccount;
 import com.ning.billing.analytics.model.BusinessInvoice;
 import com.ning.billing.analytics.model.BusinessInvoiceItem;
 
 public interface AnalyticsDao {
+    BusinessAccount getAccountByKey(final String accountKey);
+
     void createInvoice(final String accountKey, final BusinessInvoice invoice, final Iterable<BusinessInvoiceItem> invoiceItems);
 }

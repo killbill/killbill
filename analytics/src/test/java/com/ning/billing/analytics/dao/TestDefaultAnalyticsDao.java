@@ -46,7 +46,7 @@ public class TestDefaultAnalyticsDao extends TestWithEmbeddedDB {
         accountSqlDao = dbi.onDemand(BusinessAccountSqlDao.class);
         invoiceSqlDao = dbi.onDemand(BusinessInvoiceSqlDao.class);
         invoiceItemSqlDao = dbi.onDemand(BusinessInvoiceItemSqlDao.class);
-        analyticsDao = new DefaultAnalyticsDao(invoiceSqlDao);
+        analyticsDao = new DefaultAnalyticsDao(accountSqlDao, invoiceSqlDao);
     }
 
     @Test(groups = "slow")
