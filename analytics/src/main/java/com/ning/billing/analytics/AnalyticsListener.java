@@ -94,7 +94,7 @@ public class AnalyticsListener {
             return;
         }
 
-        bacRecorder.accountUpdated(event.getAccountId(), event.getChangedFields());
+        bacRecorder.accountUpdated(event.getAccountId());
     }
 
     @Subscribe
