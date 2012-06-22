@@ -20,6 +20,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -36,6 +37,7 @@ import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
 import com.ning.billing.analytics.utils.Rounder;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.CatalogApiException;
+import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
@@ -67,7 +69,10 @@ public class TestAnalytics extends TestIntegrationBase {
         final SubscriptionBundle bundle = verifyFirstBundle(account);
 
         // Add a subscription
-        verifyFirstSubscription(account, bundle);
+        final Subscription subscription = verifyFirstSubscription(account, bundle);
+
+        // Upgrade the subscription
+        verifyChangePlan(account, bundle, subscription);
     }
 
     private Account verifyAccountCreation() throws Exception {
@@ -185,7 +190,54 @@ public class TestAnalytics extends TestIntegrationBase {
         Assert.assertEquals(transition.getNextSubscription().getState(), subscription.getState());
         Assert.assertEquals(transition.getNextSubscription().getSubscriptionId(), subscription.getId());
 
+        // Make sure the account balance is still zero
+        final BusinessAccount businessAccount = analyticsUserApi.getAccountByKey(account.getExternalKey());
+        Assert.assertEquals(businessAccount.getBalance().doubleValue(), Rounder.round(BigDecimal.ZERO));
+        Assert.assertEquals(businessAccount.getTotalInvoiceBalance().doubleValue(), Rounder.round(BigDecimal.ZERO));
+
         return subscription;
+    }
+
+    private void verifyChangePlan(final Account account, final SubscriptionBundle bundle, final Subscription subscription) throws EntitlementUserApiException, InterruptedException {
+        final String newProductName = "Assault-Rifle";
+        final BillingPeriod newTerm = BillingPeriod.MONTHLY;
+        final String newPlanSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
+        final DateTime requestedDate = clock.getUTCNow();
+        Assert.assertTrue(subscription.changePlan(newProductName, newTerm, newPlanSetName, requestedDate, context));
+
+        waitALittle();
+
+        // BST should have two transitions
+        final List<BusinessSubscriptionTransition> transitions = analyticsUserApi.getTransitionsForBundle(bundle.getKey());
+        Assert.assertEquals(transitions.size(), 2);
+        final BusinessSubscriptionTransition previousTransition = transitions.get(0);
+        final BusinessSubscriptionTransition transition = transitions.get(1);
+        Assert.assertEquals(transition.getExternalKey(), bundle.getKey());
+        Assert.assertEquals(transition.getAccountKey(), account.getExternalKey());
+        Assert.assertEquals(transition.getEvent().getCategory(), ProductCategory.BASE);
+        Assert.assertEquals(transition.getEvent().getEventType(), BusinessSubscriptionEvent.EventType.CHANGE);
+
+        // Verify the previous subscription matches
+        Assert.assertNull(previousTransition.getPreviousSubscription());
+        Assert.assertEquals(previousTransition.getNextSubscription(), transition.getPreviousSubscription());
+
+        // Verify the next subscription
+        // No billing period for the trial phase
+        Assert.assertEquals(transition.getNextSubscription().getBillingPeriod(), BillingPeriod.NO_BILLING_PERIOD.toString());
+        Assert.assertEquals(transition.getNextSubscription().getBundleId(), subscription.getBundleId());
+        Assert.assertEquals(transition.getNextSubscription().getCurrency(), account.getCurrency().toString());
+        Assert.assertEquals(transition.getNextSubscription().getPhase(), PhaseType.TRIAL.toString());
+        // We're still in trial
+        Assert.assertEquals(transition.getNextSubscription().getPrice().doubleValue(), 0.0);
+        Assert.assertEquals(transition.getNextSubscription().getPriceList(), newPlanSetName);
+        Assert.assertEquals(transition.getNextSubscription().getProductCategory(), ProductCategory.BASE);
+        Assert.assertEquals(transition.getNextSubscription().getProductName(), newProductName);
+        Assert.assertEquals(transition.getNextSubscription().getProductType(), subscription.getCurrentPlan().getProduct().getCatalogName());
+        Assert.assertEquals(transition.getNextSubscription().getSlug(), subscription.getCurrentPhase().getName());
+        Assert.assertEquals(transition.getNextSubscription().getStartDate(), requestedDate);
+        Assert.assertEquals(transition.getNextSubscription().getState(), Subscription.SubscriptionState.ACTIVE);
+        // It's still the same subscription
+        Assert.assertEquals(transition.getNextSubscription().getSubscriptionId(), subscription.getId());
     }
 
     private void waitALittle() throws InterruptedException {
