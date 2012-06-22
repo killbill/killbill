@@ -24,6 +24,7 @@ import com.ning.billing.analytics.BusinessSubscriptionTransitionRecorder;
 import com.ning.billing.analytics.BusinessTagRecorder;
 import com.ning.billing.analytics.api.AnalyticsService;
 import com.ning.billing.analytics.api.DefaultAnalyticsService;
+import com.ning.billing.analytics.api.user.DefaultAnalyticsUserApi;
 import com.ning.billing.analytics.dao.AnalyticsDao;
 import com.ning.billing.analytics.dao.BusinessAccountSqlDao;
 import com.ning.billing.analytics.dao.BusinessAccountTagSqlDao;
@@ -65,5 +66,7 @@ public class AnalyticsModule extends AbstractModule {
 
         bind(AnalyticsDao.class).to(DefaultAnalyticsDao.class).asEagerSingleton();
         bind(AnalyticsService.class).to(DefaultAnalyticsService.class).asEagerSingleton();
+
+        bind(DefaultAnalyticsUserApi.class).asEagerSingleton();
     }
 }

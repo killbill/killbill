@@ -37,6 +37,8 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.AccountService;
 import com.ning.billing.account.api.AccountUserApi;
+import com.ning.billing.analytics.AnalyticsListener;
+import com.ning.billing.analytics.api.user.DefaultAnalyticsUserApi;
 import com.ning.billing.api.TestApiListener;
 import com.ning.billing.api.TestListenerStatus;
 import com.ning.billing.beatrix.lifecycle.Lifecycle;
@@ -124,6 +126,12 @@ public class TestIntegrationBase implements TestListenerStatus {
     @Inject
     protected AccountUserApi accountUserApi;
 
+    @Inject
+    protected DefaultAnalyticsUserApi analyticsUserApi;
+
+    @Inject
+    protected AnalyticsListener analyticsListener;
+
     protected TestApiListener busHandler;
 
 
@@ -152,6 +160,7 @@ public class TestIntegrationBase implements TestListenerStatus {
 
     protected void setupMySQL() throws IOException {
         final String accountDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/account/ddl.sql"));
+        final String analyticsDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/analytics/ddl.sql"));
         final String entitlementDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/entitlement/ddl.sql"));
         final String invoiceDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
         final String paymentDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/payment/ddl.sql"));
@@ -161,6 +170,7 @@ public class TestIntegrationBase implements TestListenerStatus {
         helper.startMysql();
 
         helper.initDb(accountDdl);
+        helper.initDb(analyticsDdl);
         helper.initDb(entitlementDdl);
         helper.initDb(invoiceDdl);
         helper.initDb(paymentDdl);

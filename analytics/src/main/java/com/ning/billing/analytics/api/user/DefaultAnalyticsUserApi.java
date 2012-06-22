@@ -14,19 +14,29 @@
  * under the License.
  */
 
-package com.ning.billing.analytics.dao;
+package com.ning.billing.analytics.api.user;
 
+import javax.inject.Inject;
 import java.util.List;
 
+import com.ning.billing.analytics.dao.AnalyticsDao;
 import com.ning.billing.analytics.model.BusinessAccount;
-import com.ning.billing.analytics.model.BusinessInvoice;
-import com.ning.billing.analytics.model.BusinessInvoiceItem;
 import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
 
-public interface AnalyticsDao {
-    BusinessAccount getAccountByKey(final String accountKey);
+// Note: not exposed in api yet
+public class DefaultAnalyticsUserApi {
+    private final AnalyticsDao analyticsDao;
 
-    List<BusinessSubscriptionTransition> getTransitionsByKey(final String externalKey);
+    @Inject
+    public DefaultAnalyticsUserApi(final AnalyticsDao analyticsDao) {
+        this.analyticsDao = analyticsDao;
+    }
 
-    void createInvoice(final String accountKey, final BusinessInvoice invoice, final Iterable<BusinessInvoiceItem> invoiceItems);
+    public BusinessAccount getAccountByKey(final String accountKey) {
+        return analyticsDao.getAccountByKey(accountKey);
+    }
+
+    public List<BusinessSubscriptionTransition> getTransitionsForBundle(final String key) {
+        return analyticsDao.getTransitionsByKey(key);
+    }
 }

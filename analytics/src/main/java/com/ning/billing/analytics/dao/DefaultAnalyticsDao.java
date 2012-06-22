@@ -17,6 +17,7 @@
 package com.ning.billing.analytics.dao;
 
 import javax.inject.Inject;
+import java.util.List;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -26,20 +27,30 @@ import org.skife.jdbi.v2.TransactionStatus;
 import com.ning.billing.analytics.model.BusinessAccount;
 import com.ning.billing.analytics.model.BusinessInvoice;
 import com.ning.billing.analytics.model.BusinessInvoiceItem;
+import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
 
 public class DefaultAnalyticsDao implements AnalyticsDao {
     private final BusinessAccountSqlDao accountSqlDao;
+    private final BusinessSubscriptionTransitionSqlDao subscriptionTransitionSqlDao;
     private final BusinessInvoiceSqlDao invoiceSqlDao;
 
     @Inject
-    public DefaultAnalyticsDao(final BusinessAccountSqlDao accountSqlDao, final BusinessInvoiceSqlDao invoiceSqlDao) {
+    public DefaultAnalyticsDao(final BusinessAccountSqlDao accountSqlDao,
+                               final BusinessSubscriptionTransitionSqlDao subscriptionTransitionSqlDao,
+                               final BusinessInvoiceSqlDao invoiceSqlDao) {
         this.accountSqlDao = accountSqlDao;
+        this.subscriptionTransitionSqlDao = subscriptionTransitionSqlDao;
         this.invoiceSqlDao = invoiceSqlDao;
     }
 
     @Override
     public BusinessAccount getAccountByKey(final String accountKey) {
         return accountSqlDao.getAccount(accountKey);
+    }
+
+    @Override
+    public List<BusinessSubscriptionTransition> getTransitionsByKey(final String externalKey) {
+        return subscriptionTransitionSqlDao.getTransitions(externalKey);
     }
 
     @Override
