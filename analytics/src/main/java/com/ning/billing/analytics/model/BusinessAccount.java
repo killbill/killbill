@@ -27,7 +27,7 @@ public class BusinessAccount {
     private DateTime createdDt = null;
     private DateTime updatedDt = null;
 
-    private final String key;
+    private String key;
     private String name;
     private BigDecimal balance;
     private DateTime lastInvoiceDate;
