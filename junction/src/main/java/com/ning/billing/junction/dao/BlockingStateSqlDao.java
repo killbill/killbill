@@ -144,7 +144,7 @@ public interface BlockingStateSqlDao extends BlockingStateDao, CloseMe, Transmog
 
     public static class OverdueStateBinder<T extends Blockable> extends BinderBase implements Binder<Bind, OverdueState<T>> {
         @Override
-        public void bind(@SuppressWarnings("rawtypes") final SQLStatement stmt, final Bind bind, final OverdueState<T> overdueState) {
+        public void bind(final SQLStatement<?> stmt, final Bind bind, final OverdueState<T> overdueState) {
             stmt.bind("state", overdueState.getName());
         }
     }

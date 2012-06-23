@@ -40,7 +40,7 @@ public @interface PaymentAttemptHistoryBinder {
         public Binder<PaymentAttemptHistoryBinder, EntityHistory<PaymentAttemptModelDao>> build(final Annotation annotation) {
             return new Binder<PaymentAttemptHistoryBinder, EntityHistory<PaymentAttemptModelDao>>() {
                 @Override
-                public void bind(@SuppressWarnings("rawtypes") final SQLStatement q, final PaymentAttemptHistoryBinder bind, final EntityHistory<PaymentAttemptModelDao> history) {
+                public void bind(final SQLStatement<?> q, final PaymentAttemptHistoryBinder bind, final EntityHistory<PaymentAttemptModelDao> history) {
                     q.bind("recordId", history.getValue());
                     q.bind("changeType", history.getChangeType().toString());
                     final PaymentAttemptModelDao attempt = history.getEntity();
