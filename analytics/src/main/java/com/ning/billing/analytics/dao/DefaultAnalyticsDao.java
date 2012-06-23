@@ -33,14 +33,17 @@ public class DefaultAnalyticsDao implements AnalyticsDao {
     private final BusinessAccountSqlDao accountSqlDao;
     private final BusinessSubscriptionTransitionSqlDao subscriptionTransitionSqlDao;
     private final BusinessInvoiceSqlDao invoiceSqlDao;
+    private final BusinessInvoiceItemSqlDao invoiceItemSqlDao;
 
     @Inject
     public DefaultAnalyticsDao(final BusinessAccountSqlDao accountSqlDao,
                                final BusinessSubscriptionTransitionSqlDao subscriptionTransitionSqlDao,
-                               final BusinessInvoiceSqlDao invoiceSqlDao) {
+                               final BusinessInvoiceSqlDao invoiceSqlDao,
+                               final BusinessInvoiceItemSqlDao invoiceItemSqlDao) {
         this.accountSqlDao = accountSqlDao;
         this.subscriptionTransitionSqlDao = subscriptionTransitionSqlDao;
         this.invoiceSqlDao = invoiceSqlDao;
+        this.invoiceItemSqlDao = invoiceItemSqlDao;
     }
 
     @Override
@@ -56,6 +59,11 @@ public class DefaultAnalyticsDao implements AnalyticsDao {
     @Override
     public List<BusinessInvoice> getInvoicesByKey(final String accountKey) {
         return invoiceSqlDao.getInvoicesForAccount(accountKey);
+    }
+
+    @Override
+    public List<BusinessInvoiceItem> getInvoiceItemsForInvoice(final String invoiceId) {
+        return invoiceItemSqlDao.getInvoiceItemsForInvoice(invoiceId);
     }
 
     @Override

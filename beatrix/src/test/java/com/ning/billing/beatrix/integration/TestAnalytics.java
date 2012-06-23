@@ -32,6 +32,8 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.MutableAccountData;
 import com.ning.billing.analytics.model.BusinessAccount;
+import com.ning.billing.analytics.model.BusinessInvoice;
+import com.ning.billing.analytics.model.BusinessInvoiceItem;
 import com.ning.billing.analytics.model.BusinessSubscriptionEvent;
 import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
 import com.ning.billing.analytics.utils.Rounder;
@@ -205,12 +207,34 @@ public class TestAnalytics extends TestIntegrationBase {
         Assert.assertEquals(businessAccount.getTotalInvoiceBalance().doubleValue(), Rounder.round(BigDecimal.ZERO));
 
         // The account should have one invoice for the trial phase
-        Assert.assertEquals(analyticsUserApi.getInvoicesForAccount(account.getExternalKey()).size(), 1);
-        Assert.assertEquals(analyticsUserApi.getInvoicesForAccount(account.getExternalKey()).get(0).getBalance().doubleValue(), 0.0);
-        Assert.assertEquals(analyticsUserApi.getInvoicesForAccount(account.getExternalKey()).get(0).getAmountCharged().doubleValue(), 0.0);
-        Assert.assertEquals(analyticsUserApi.getInvoicesForAccount(account.getExternalKey()).get(0).getAmountCredited().doubleValue(), 0.0);
-        Assert.assertEquals(analyticsUserApi.getInvoicesForAccount(account.getExternalKey()).get(0).getAmountPaid().doubleValue(), 0.0);
-        Assert.assertEquals(analyticsUserApi.getInvoicesForAccount(account.getExternalKey()).get(0).getCurrency(), account.getCurrency());
+        final List<BusinessInvoice> invoices = analyticsUserApi.getInvoicesForAccount(account.getExternalKey());
+        Assert.assertEquals(invoices.size(), 1);
+        final BusinessInvoice invoice = invoices.get(0);
+        Assert.assertEquals(invoice.getBalance().doubleValue(), 0.0);
+        Assert.assertEquals(invoice.getAmountCharged().doubleValue(), 0.0);
+        Assert.assertEquals(invoice.getAmountCredited().doubleValue(), 0.0);
+        Assert.assertEquals(invoice.getAmountPaid().doubleValue(), 0.0);
+        Assert.assertEquals(invoice.getCurrency(), account.getCurrency());
+
+        // The invoice should have a single item associated to it
+        final List<BusinessInvoiceItem> invoiceItems = analyticsUserApi.getInvoiceItemsForInvoice(invoice.getInvoiceId());
+        Assert.assertEquals(invoiceItems.size(), 1);
+        final BusinessInvoiceItem invoiceItem = invoiceItems.get(0);
+        Assert.assertEquals(invoiceItem.getAmount().doubleValue(), 0.0);
+        // No billing period for the trial item
+        Assert.assertEquals(invoiceItem.getBillingPeriod(), subscription.getCurrentPhase().getBillingPeriod().toString());
+        Assert.assertEquals(invoiceItem.getCurrency(), account.getCurrency());
+        // The subscription end date is null (evergreen)
+        Assert.assertEquals(invoiceItem.getEndDate(), subscription.getStartDate().plus(subscription.getCurrentPhase().getDuration().toJodaPeriod()));
+        Assert.assertEquals(invoiceItem.getExternalKey(), bundle.getKey());
+        Assert.assertEquals(invoiceItem.getInvoiceId(), invoice.getInvoiceId());
+        Assert.assertEquals(invoiceItem.getItemType(), "FIXED");
+        Assert.assertEquals(invoiceItem.getPhase(), subscription.getCurrentPhase().getPhaseType().toString());
+        Assert.assertEquals(invoiceItem.getProductCategory(), subscription.getCurrentPlan().getProduct().getCategory().toString());
+        Assert.assertEquals(invoiceItem.getProductName(), subscription.getCurrentPlan().getProduct().getName());
+        Assert.assertEquals(invoiceItem.getProductType(), subscription.getCurrentPlan().getProduct().getCatalogName());
+        Assert.assertEquals(invoiceItem.getSlug(), subscription.getCurrentPhase().getName());
+        Assert.assertEquals(invoiceItem.getStartDate(), subscription.getStartDate());
 
         return subscription;
     }
@@ -272,6 +296,6 @@ public class TestAnalytics extends TestIntegrationBase {
 
     private void waitALittle() throws InterruptedException {
         // We especially need to wait for entitlement events
-        Thread.sleep(1000);
+        Thread.sleep(2000);
     }
 }

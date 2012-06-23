@@ -71,9 +71,9 @@ public class BusinessInvoiceItem {
     }
 
     public BusinessInvoiceItem(final String externalKey, final InvoiceItem invoiceItem, final Plan plan, final PlanPhase planPhase) {
-        this(invoiceItem.getAmount(), plan.getBillingPeriod().toString(), new DateTime(DateTimeZone.UTC), invoiceItem.getCurrency(), invoiceItem.getEndDate(),
+        this(invoiceItem.getAmount(), planPhase.getBillingPeriod().toString(), new DateTime(DateTimeZone.UTC), invoiceItem.getCurrency(), invoiceItem.getEndDate(),
              externalKey, invoiceItem.getInvoiceId(), invoiceItem.getId(), invoiceItem.getInvoiceItemType().toString(),
-             invoiceItem.getPhaseName(), plan.getProduct().getName(), plan.getProduct().getCatalogName(), plan.getProduct().getCategory().toString(),
+             planPhase.getPhaseType().toString(), plan.getProduct().getCategory().toString(), plan.getProduct().getName(), plan.getProduct().getCatalogName(),
              planPhase.getName(), invoiceItem.getStartDate(), new DateTime(DateTimeZone.UTC));
     }
 

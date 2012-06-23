@@ -18,10 +18,12 @@ package com.ning.billing.analytics.api.user;
 
 import javax.inject.Inject;
 import java.util.List;
+import java.util.UUID;
 
 import com.ning.billing.analytics.dao.AnalyticsDao;
 import com.ning.billing.analytics.model.BusinessAccount;
 import com.ning.billing.analytics.model.BusinessInvoice;
+import com.ning.billing.analytics.model.BusinessInvoiceItem;
 import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
 
 // Note: not exposed in api yet
@@ -43,5 +45,9 @@ public class DefaultAnalyticsUserApi {
 
     public List<BusinessInvoice> getInvoicesForAccount(final String accountKey) {
         return analyticsDao.getInvoicesByKey(accountKey);
+    }
+
+    public List<BusinessInvoiceItem> getInvoiceItemsForInvoice(final UUID invoiceId) {
+        return analyticsDao.getInvoiceItemsForInvoice(invoiceId.toString());
     }
 }

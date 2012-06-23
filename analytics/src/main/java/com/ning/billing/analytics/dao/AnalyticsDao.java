@@ -30,5 +30,7 @@ public interface AnalyticsDao {
 
     List<BusinessInvoice> getInvoicesByKey(final String accountKey);
 
+    List<BusinessInvoiceItem> getInvoiceItemsForInvoice(final String invoiceId);
+
     void createInvoice(final String accountKey, final BusinessInvoice invoice, final Iterable<BusinessInvoiceItem> invoiceItems);
 }
