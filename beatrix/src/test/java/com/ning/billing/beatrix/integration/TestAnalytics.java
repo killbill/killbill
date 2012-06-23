@@ -32,6 +32,7 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.MutableAccountData;
 import com.ning.billing.analytics.model.BusinessAccount;
+import com.ning.billing.analytics.model.BusinessAccountTag;
 import com.ning.billing.analytics.model.BusinessInvoice;
 import com.ning.billing.analytics.model.BusinessInvoiceItem;
 import com.ning.billing.analytics.model.BusinessSubscriptionEvent;
@@ -46,6 +47,10 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.util.api.TagApiException;
+import com.ning.billing.util.api.TagDefinitionApiException;
+import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.util.tag.TagDefinition;
 
 @Guice(modules = BeatrixModule.class)
 public class TestAnalytics extends TestIntegrationBase {
@@ -66,6 +71,9 @@ public class TestAnalytics extends TestIntegrationBase {
 
         // Update some fields
         verifyAccountUpdate(account);
+
+        // Add a tag
+        verifyAddTagToAccount(account);
 
         // Create a bundle
         final SubscriptionBundle bundle = verifyFirstBundle(account);
@@ -146,6 +154,19 @@ public class TestAnalytics extends TestIntegrationBase {
 
         // The account should still not have any invoice
         Assert.assertEquals(analyticsUserApi.getInvoicesForAccount(account.getExternalKey()).size(), 0);
+    }
+
+    private void verifyAddTagToAccount(final Account account) throws TagDefinitionApiException, TagApiException, InterruptedException {
+        Assert.assertEquals(analyticsUserApi.getTagsForAccount(account.getExternalKey()).size(), 0);
+
+        final TagDefinition tagDefinition = tagUserApi.create(UUID.randomUUID().toString().substring(0, 10), UUID.randomUUID().toString(), context);
+        tagUserApi.addTag(account.getId(), ObjectType.ACCOUNT, tagDefinition, context);
+
+        waitALittle();
+
+        final List<BusinessAccountTag> tagsForAccount = analyticsUserApi.getTagsForAccount(account.getExternalKey());
+        Assert.assertEquals(tagsForAccount.size(), 1);
+        Assert.assertEquals(tagsForAccount.get(0).getName(), tagDefinition.getName());
     }
 
     private SubscriptionBundle verifyFirstBundle(final Account account) throws EntitlementUserApiException, InterruptedException {

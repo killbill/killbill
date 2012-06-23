@@ -19,6 +19,7 @@ package com.ning.billing.analytics.dao;
 import java.util.List;
 
 import com.ning.billing.analytics.model.BusinessAccount;
+import com.ning.billing.analytics.model.BusinessAccountTag;
 import com.ning.billing.analytics.model.BusinessInvoice;
 import com.ning.billing.analytics.model.BusinessInvoiceItem;
 import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
@@ -29,6 +30,8 @@ public interface AnalyticsDao {
     List<BusinessSubscriptionTransition> getTransitionsByKey(final String externalKey);
 
     List<BusinessInvoice> getInvoicesByKey(final String accountKey);
+
+    List<BusinessAccountTag> getTagsForAccount(final String accountKey);
 
     List<BusinessInvoiceItem> getInvoiceItemsForInvoice(final String invoiceId);
 

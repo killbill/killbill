@@ -25,6 +25,7 @@ import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
 
 import com.ning.billing.analytics.model.BusinessAccount;
+import com.ning.billing.analytics.model.BusinessAccountTag;
 import com.ning.billing.analytics.model.BusinessInvoice;
 import com.ning.billing.analytics.model.BusinessInvoiceItem;
 import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
@@ -34,16 +35,19 @@ public class DefaultAnalyticsDao implements AnalyticsDao {
     private final BusinessSubscriptionTransitionSqlDao subscriptionTransitionSqlDao;
     private final BusinessInvoiceSqlDao invoiceSqlDao;
     private final BusinessInvoiceItemSqlDao invoiceItemSqlDao;
+    private final BusinessAccountTagSqlDao accountTagSqlDao;
 
     @Inject
     public DefaultAnalyticsDao(final BusinessAccountSqlDao accountSqlDao,
                                final BusinessSubscriptionTransitionSqlDao subscriptionTransitionSqlDao,
                                final BusinessInvoiceSqlDao invoiceSqlDao,
-                               final BusinessInvoiceItemSqlDao invoiceItemSqlDao) {
+                               final BusinessInvoiceItemSqlDao invoiceItemSqlDao,
+                               final BusinessAccountTagSqlDao accountTagSqlDao) {
         this.accountSqlDao = accountSqlDao;
         this.subscriptionTransitionSqlDao = subscriptionTransitionSqlDao;
         this.invoiceSqlDao = invoiceSqlDao;
         this.invoiceItemSqlDao = invoiceItemSqlDao;
+        this.accountTagSqlDao = accountTagSqlDao;
     }
 
     @Override
@@ -59,6 +63,11 @@ public class DefaultAnalyticsDao implements AnalyticsDao {
     @Override
     public List<BusinessInvoice> getInvoicesByKey(final String accountKey) {
         return invoiceSqlDao.getInvoicesForAccount(accountKey);
+    }
+
+    @Override
+    public List<BusinessAccountTag> getTagsForAccount(final String accountKey) {
+        return accountTagSqlDao.getTagsForAccount(accountKey);
     }
 
     @Override

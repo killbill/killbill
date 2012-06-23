@@ -36,7 +36,6 @@ import com.ning.billing.catalog.api.Currency;
 
 public class TestDefaultAnalyticsDao extends TestWithEmbeddedDB {
     private BusinessAccountSqlDao accountSqlDao;
-    private BusinessSubscriptionTransitionSqlDao subscriptionTransitionSqlDao;
     private BusinessInvoiceSqlDao invoiceSqlDao;
     private BusinessInvoiceItemSqlDao invoiceItemSqlDao;
     private AnalyticsDao analyticsDao;
@@ -45,10 +44,11 @@ public class TestDefaultAnalyticsDao extends TestWithEmbeddedDB {
     public void setUp() throws Exception {
         final IDBI dbi = helper.getDBI();
         accountSqlDao = dbi.onDemand(BusinessAccountSqlDao.class);
-        subscriptionTransitionSqlDao = dbi.onDemand(BusinessSubscriptionTransitionSqlDao.class);
+        final BusinessSubscriptionTransitionSqlDao subscriptionTransitionSqlDao = dbi.onDemand(BusinessSubscriptionTransitionSqlDao.class);
         invoiceSqlDao = dbi.onDemand(BusinessInvoiceSqlDao.class);
         invoiceItemSqlDao = dbi.onDemand(BusinessInvoiceItemSqlDao.class);
-        analyticsDao = new DefaultAnalyticsDao(accountSqlDao, subscriptionTransitionSqlDao, invoiceSqlDao, invoiceItemSqlDao);
+        final BusinessAccountTagSqlDao accountTagSqlDao = dbi.onDemand(BusinessAccountTagSqlDao.class);
+        analyticsDao = new DefaultAnalyticsDao(accountSqlDao, subscriptionTransitionSqlDao, invoiceSqlDao, invoiceItemSqlDao, accountTagSqlDao);
     }
 
     @Test(groups = "slow")

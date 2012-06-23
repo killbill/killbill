@@ -58,6 +58,7 @@ import com.ning.billing.invoice.model.InvoicingConfiguration;
 import com.ning.billing.junction.plumbing.api.BlockingSubscription;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
+import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallOrigin;
@@ -128,6 +129,9 @@ public class TestIntegrationBase implements TestListenerStatus {
 
     @Inject
     protected DefaultAnalyticsUserApi analyticsUserApi;
+
+    @Inject
+    protected TagUserApi tagUserApi;
 
     @Inject
     protected AnalyticsListener analyticsListener;
