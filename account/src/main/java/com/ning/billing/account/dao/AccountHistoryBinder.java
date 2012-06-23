@@ -41,7 +41,7 @@ public @interface AccountHistoryBinder {
         public Binder<AccountHistoryBinder, EntityHistory<Account>> build(final Annotation annotation) {
             return new Binder<AccountHistoryBinder, EntityHistory<Account>>() {
                 @Override
-                public void bind(final SQLStatement q, final AccountHistoryBinder bind, final EntityHistory<Account> history) {
+                public void bind(final SQLStatement<?> q, final AccountHistoryBinder bind, final EntityHistory<Account> history) {
                     q.bind("recordId", history.getValue());
                     q.bind("changeType", history.getChangeType().toString());
 
