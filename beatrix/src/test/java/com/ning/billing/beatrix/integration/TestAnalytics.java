@@ -105,6 +105,9 @@ public class TestAnalytics extends TestIntegrationBase {
         //Assert.assertNotNull(businessAccount.getCreditCardType());
         //Assert.assertNotNull(businessAccount.getPaymentMethod());
 
+        // The account shouldn't have any invoice yet
+        Assert.assertEquals(analyticsUserApi.getInvoicesForAccount(account.getExternalKey()).size(), 0);
+
         return account;
     }
 
@@ -138,6 +141,9 @@ public class TestAnalytics extends TestIntegrationBase {
         //Assert.assertNotNull(businessAccount.getBillingAddressCountry());
         //Assert.assertNotNull(businessAccount.getCreditCardType());
         //Assert.assertNotNull(businessAccount.getPaymentMethod());
+
+        // The account should still not have any invoice
+        Assert.assertEquals(analyticsUserApi.getInvoicesForAccount(account.getExternalKey()).size(), 0);
     }
 
     private SubscriptionBundle verifyFirstBundle(final Account account) throws EntitlementUserApiException, InterruptedException {
@@ -149,6 +155,9 @@ public class TestAnalytics extends TestIntegrationBase {
 
         // Verify BST is still empty since no subscription has been added yet
         Assert.assertEquals(analyticsUserApi.getTransitionsForBundle(bundle.getKey()).size(), 0);
+
+        // The account should still not have any invoice
+        Assert.assertEquals(analyticsUserApi.getInvoicesForAccount(account.getExternalKey()).size(), 0);
 
         return bundle;
     }
@@ -195,6 +204,14 @@ public class TestAnalytics extends TestIntegrationBase {
         Assert.assertEquals(businessAccount.getBalance().doubleValue(), Rounder.round(BigDecimal.ZERO));
         Assert.assertEquals(businessAccount.getTotalInvoiceBalance().doubleValue(), Rounder.round(BigDecimal.ZERO));
 
+        // The account should have one invoice for the trial phase
+        Assert.assertEquals(analyticsUserApi.getInvoicesForAccount(account.getExternalKey()).size(), 1);
+        Assert.assertEquals(analyticsUserApi.getInvoicesForAccount(account.getExternalKey()).get(0).getBalance().doubleValue(), 0.0);
+        Assert.assertEquals(analyticsUserApi.getInvoicesForAccount(account.getExternalKey()).get(0).getAmountCharged().doubleValue(), 0.0);
+        Assert.assertEquals(analyticsUserApi.getInvoicesForAccount(account.getExternalKey()).get(0).getAmountCredited().doubleValue(), 0.0);
+        Assert.assertEquals(analyticsUserApi.getInvoicesForAccount(account.getExternalKey()).get(0).getAmountPaid().doubleValue(), 0.0);
+        Assert.assertEquals(analyticsUserApi.getInvoicesForAccount(account.getExternalKey()).get(0).getCurrency(), account.getCurrency());
+
         return subscription;
     }
 
@@ -238,6 +255,19 @@ public class TestAnalytics extends TestIntegrationBase {
         Assert.assertEquals(transition.getNextSubscription().getState(), Subscription.SubscriptionState.ACTIVE);
         // It's still the same subscription
         Assert.assertEquals(transition.getNextSubscription().getSubscriptionId(), subscription.getId());
+
+        // The account should have two invoices for the trial phase of both subscriptions
+        Assert.assertEquals(analyticsUserApi.getInvoicesForAccount(account.getExternalKey()).size(), 2);
+        Assert.assertEquals(analyticsUserApi.getInvoicesForAccount(account.getExternalKey()).get(0).getBalance().doubleValue(), 0.0);
+        Assert.assertEquals(analyticsUserApi.getInvoicesForAccount(account.getExternalKey()).get(0).getAmountCharged().doubleValue(), 0.0);
+        Assert.assertEquals(analyticsUserApi.getInvoicesForAccount(account.getExternalKey()).get(0).getAmountCredited().doubleValue(), 0.0);
+        Assert.assertEquals(analyticsUserApi.getInvoicesForAccount(account.getExternalKey()).get(0).getAmountPaid().doubleValue(), 0.0);
+        Assert.assertEquals(analyticsUserApi.getInvoicesForAccount(account.getExternalKey()).get(0).getCurrency(), account.getCurrency());
+        Assert.assertEquals(analyticsUserApi.getInvoicesForAccount(account.getExternalKey()).get(1).getBalance().doubleValue(), 0.0);
+        Assert.assertEquals(analyticsUserApi.getInvoicesForAccount(account.getExternalKey()).get(1).getAmountCharged().doubleValue(), 0.0);
+        Assert.assertEquals(analyticsUserApi.getInvoicesForAccount(account.getExternalKey()).get(1).getAmountCredited().doubleValue(), 0.0);
+        Assert.assertEquals(analyticsUserApi.getInvoicesForAccount(account.getExternalKey()).get(1).getAmountPaid().doubleValue(), 0.0);
+        Assert.assertEquals(analyticsUserApi.getInvoicesForAccount(account.getExternalKey()).get(1).getCurrency(), account.getCurrency());
     }
 
     private void waitALittle() throws InterruptedException {

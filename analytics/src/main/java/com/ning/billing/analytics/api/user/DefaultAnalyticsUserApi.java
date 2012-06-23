@@ -21,6 +21,7 @@ import java.util.List;
 
 import com.ning.billing.analytics.dao.AnalyticsDao;
 import com.ning.billing.analytics.model.BusinessAccount;
+import com.ning.billing.analytics.model.BusinessInvoice;
 import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
 
 // Note: not exposed in api yet
@@ -36,7 +37,11 @@ public class DefaultAnalyticsUserApi {
         return analyticsDao.getAccountByKey(accountKey);
     }
 
-    public List<BusinessSubscriptionTransition> getTransitionsForBundle(final String key) {
-        return analyticsDao.getTransitionsByKey(key);
+    public List<BusinessSubscriptionTransition> getTransitionsForBundle(final String externalKey) {
+        return analyticsDao.getTransitionsByKey(externalKey);
+    }
+
+    public List<BusinessInvoice> getInvoicesForAccount(final String accountKey) {
+        return analyticsDao.getInvoicesByKey(accountKey);
     }
 }

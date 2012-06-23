@@ -28,5 +28,7 @@ public interface AnalyticsDao {
 
     List<BusinessSubscriptionTransition> getTransitionsByKey(final String externalKey);
 
+    List<BusinessInvoice> getInvoicesByKey(final String accountKey);
+
     void createInvoice(final String accountKey, final BusinessInvoice invoice, final Iterable<BusinessInvoiceItem> invoiceItems);
 }
