@@ -46,6 +46,7 @@ select
 , card_country
 from bip
 where payment_id = :payment_id
+order by created_date asc
 ;
 >>
 
@@ -70,6 +71,7 @@ select
 , card_country
 from bip
 where account_key = :account_key
+order by created_date asc
 ;
 >>
 

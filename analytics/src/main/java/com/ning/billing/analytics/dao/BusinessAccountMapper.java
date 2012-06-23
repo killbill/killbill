@@ -34,7 +34,7 @@ public class BusinessAccountMapper implements ResultSetMapper<BusinessAccount> {
                 r.getString(1),
                 r.getString(5),
                 BigDecimal.valueOf(r.getDouble(4)),
-                new DateTime(r.getLong(6), DateTimeZone.UTC),
+                r.getLong(6) == 0 ? null : new DateTime(r.getLong(6), DateTimeZone.UTC),
                 BigDecimal.valueOf(r.getDouble(7)),
                 r.getString(8),
                 r.getString(9),

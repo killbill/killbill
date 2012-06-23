@@ -44,6 +44,7 @@ select
 , currency
 from bii
 where invoice_id = :invoice_id
+order by created_date asc
 ;
 >>
 
@@ -67,6 +68,7 @@ select
 , currency
 from bii
 where external_key = :external_key
+order by created_date asc
 ;
 >>
 

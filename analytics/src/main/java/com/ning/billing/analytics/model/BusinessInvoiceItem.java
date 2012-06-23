@@ -20,9 +20,13 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 import com.ning.billing.analytics.utils.Rounder;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.invoice.api.InvoiceItem;
 
 public class BusinessInvoiceItem {
     private final UUID itemId;
@@ -64,6 +68,13 @@ public class BusinessInvoiceItem {
         this.slug = slug;
         this.startDate = startDate;
         this.updatedDate = updatedDate;
+    }
+
+    public BusinessInvoiceItem(final String externalKey, final InvoiceItem invoiceItem, final Plan plan, final PlanPhase planPhase) {
+        this(invoiceItem.getAmount(), planPhase.getBillingPeriod().toString(), new DateTime(DateTimeZone.UTC), invoiceItem.getCurrency(), invoiceItem.getEndDate(),
+             externalKey, invoiceItem.getInvoiceId(), invoiceItem.getId(), invoiceItem.getInvoiceItemType().toString(),
+             planPhase.getPhaseType().toString(), plan.getProduct().getCategory().toString(), plan.getProduct().getName(), plan.getProduct().getCatalogName(),
+             planPhase.getName(), invoiceItem.getStartDate(), new DateTime(DateTimeZone.UTC));
     }
 
     public DateTime getCreatedDate() {

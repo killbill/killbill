@@ -20,9 +20,11 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 import com.ning.billing.analytics.utils.Rounder;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.invoice.api.Invoice;
 
 public class BusinessInvoice {
     private final UUID invoiceId;
@@ -53,6 +55,12 @@ public class BusinessInvoice {
         this.invoiceId = invoiceId;
         this.targetDate = targetDate;
         this.updatedDate = updatedDate;
+    }
+
+    public BusinessInvoice(final String accountKey, final Invoice invoice) {
+        this(accountKey, invoice.getAmountCharged(), invoice.getAmountCredited(), invoice.getAmountPaid(), invoice.getBalance(),
+             new DateTime(DateTimeZone.UTC), invoice.getCurrency(), invoice.getInvoiceDate(), invoice.getId(), invoice.getTargetDate(),
+             new DateTime(DateTimeZone.UTC));
     }
 
     public DateTime getCreatedDate() {

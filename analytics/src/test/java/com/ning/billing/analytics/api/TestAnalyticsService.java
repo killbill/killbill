@@ -242,7 +242,7 @@ public class TestAnalyticsService extends TestWithEmbeddedDB {
     }
 
     // STEPH talk to Pierre -- see previous remark hence disable test
-    @Test(groups = "slow", enabled = true)
+    @Test(groups = "slow", enabled = false)
     public void testRegisterForNotifications() throws Exception {
         // Make sure the service has been instantiated
         Assert.assertEquals(service.getName(), "analytics-service");

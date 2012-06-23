@@ -17,9 +17,7 @@
 package com.ning.billing.analytics;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -31,7 +29,6 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.AccountUserApi;
-import com.ning.billing.account.api.ChangedField;
 import com.ning.billing.analytics.dao.BusinessAccountSqlDao;
 import com.ning.billing.analytics.model.BusinessAccount;
 import com.ning.billing.invoice.api.Invoice;
@@ -40,9 +37,6 @@ import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.PaymentInfoEvent;
-import com.ning.billing.util.api.TagUserApi;
-import com.ning.billing.util.dao.ObjectType;
-import com.ning.billing.util.tag.Tag;
 
 public class BusinessAccountRecorder {
     private static final Logger log = LoggerFactory.getLogger(BusinessAccountRecorder.class);
@@ -51,42 +45,28 @@ public class BusinessAccountRecorder {
     private final AccountUserApi accountApi;
     private final InvoiceUserApi invoiceUserApi;
     private final PaymentApi paymentApi;
-    private final TagUserApi tagUserApi;
 
     @Inject
     public BusinessAccountRecorder(final BusinessAccountSqlDao sqlDao, final AccountUserApi accountApi,
-                                   final InvoiceUserApi invoiceUserApi, final PaymentApi paymentApi,
-                                   final TagUserApi tagUserApi) {
+                                   final InvoiceUserApi invoiceUserApi, final PaymentApi paymentApi) {
         this.sqlDao = sqlDao;
         this.accountApi = accountApi;
         this.invoiceUserApi = invoiceUserApi;
         this.paymentApi = paymentApi;
-        this.tagUserApi = tagUserApi;
     }
 
     public void accountCreated(final AccountData data) {
         final Account account;
         try {
             account = accountApi.getAccountByKey(data.getExternalKey());
-            final Map<String, Tag> tags = tagUserApi.getTags(account.getId(), ObjectType.ACCOUNT);
-            final BusinessAccount bac = createBusinessAccountFromAccount(account, new ArrayList<Tag>(tags.values()));
+            final BusinessAccount bac = new BusinessAccount();
+            updateBusinessAccountFromAccount(account, bac);
 
             log.info("ACCOUNT CREATION " + bac);
             sqlDao.createAccount(bac);
         } catch (AccountApiException e) {
             log.warn("Error encountered creating BusinessAccount", e);
         }
-    }
-
-    /**
-     * Notification handler for Account changes
-     *
-     * @param accountId     account id changed
-     * @param changedFields list of changed fields
-     */
-    public void accountUpdated(final UUID accountId, final List<ChangedField> changedFields) {
-        // None of the fields updated interest us so far - see DefaultAccountChangeNotification
-        // TODO We'll need notifications for tags changes eventually
     }
 
     /**
@@ -111,16 +91,11 @@ public class BusinessAccountRecorder {
     public void accountUpdated(final UUID accountId) {
         try {
             final Account account = accountApi.getAccountById(accountId);
-            final Map<String, Tag> tags = tagUserApi.getTags(accountId, ObjectType.ACCOUNT);
-
-            if (account == null) {
-                log.warn("Couldn't find account {}", accountId);
-                return;
-            }
 
             BusinessAccount bac = sqlDao.getAccount(account.getExternalKey());
             if (bac == null) {
-                bac = createBusinessAccountFromAccount(account, new ArrayList<Tag>(tags.values()));
+                bac = new BusinessAccount();
+                updateBusinessAccountFromAccount(account, bac);
                 log.info("ACCOUNT CREATION " + bac);
                 sqlDao.createAccount(bac);
             } else {
@@ -131,44 +106,25 @@ public class BusinessAccountRecorder {
         } catch (AccountApiException e) {
             log.warn("Error encountered creating BusinessAccount", e);
         }
-
-    }
-
-    private BusinessAccount createBusinessAccountFromAccount(final Account account, final List<Tag> tags) {
-        final BusinessAccount bac = new BusinessAccount(
-                account.getExternalKey(),
-                account.getName(),
-                invoiceUserApi.getAccountBalance(account.getId()),
-                // These fields will be updated below
-                null,
-                null,
-                null,
-                null,
-                null,
-                null
-        );
-        updateBusinessAccountFromAccount(account, bac);
-
-        return bac;
     }
 
     private void updateBusinessAccountFromAccount(final Account account, final BusinessAccount bac) {
+        bac.setName(account.getName());
+        bac.setKey(account.getExternalKey());
 
-        final List<UUID> invoiceIds = new ArrayList<UUID>();
         try {
-            DateTime lastInvoiceDate = null;
-            BigDecimal totalInvoiceBalance = BigDecimal.ZERO;
-            String lastPaymentStatus = null;
-            String paymentMethod = null;
-            String creditCardType = null;
-            String billingAddressCountry = null;
+            DateTime lastInvoiceDate = bac.getLastInvoiceDate();
+            BigDecimal totalInvoiceBalance = bac.getTotalInvoiceBalance();
+            String lastPaymentStatus = bac.getLastPaymentStatus();
+            String paymentMethod = bac.getPaymentMethod();
+            String creditCardType = bac.getCreditCardType();
+            String billingAddressCountry = bac.getBillingAddressCountry();
 
             // Retrieve invoices information
             final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId());
             if (invoices != null && invoices.size() > 0) {
 
                 for (final Invoice invoice : invoices) {
-                    invoiceIds.add(invoice.getId());
                     totalInvoiceBalance = totalInvoiceBalance.add(invoice.getBalance());
 
                     if (lastInvoiceDate == null || invoice.getInvoiceDate().isAfter(lastInvoiceDate)) {

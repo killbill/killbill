@@ -20,13 +20,15 @@ import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
+import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
+import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 
 import com.ning.billing.analytics.model.BusinessAccount;
 
 @ExternalizedSqlViaStringTemplate3()
 @RegisterMapper(BusinessAccountMapper.class)
-public interface BusinessAccountSqlDao {
+public interface BusinessAccountSqlDao extends Transactional<BusinessAccountSqlDao>, Transmogrifier {
     @SqlQuery
     BusinessAccount getAccount(@Bind("account_key") final String key);
 
