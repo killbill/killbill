@@ -27,6 +27,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.ning.billing.account.api.Account;
 import com.ning.billing.analytics.model.BusinessSubscription;
 import com.ning.billing.analytics.model.BusinessSubscriptionEvent;
 import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
@@ -45,6 +46,10 @@ import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
+import com.ning.billing.mock.MockAccountBuilder;
+import com.ning.billing.mock.api.MockAccountUserApi;
+import com.ning.billing.mock.api.MockEntitlementUserApi;
+import com.ning.billing.util.callcontext.CallContext;
 
 public class TestAnalyticsListener extends AnalyticsTestSuite {
     private static final String EXTERNAL_KEY = "1234";
@@ -62,6 +67,7 @@ public class TestAnalyticsListener extends AnalyticsTestSuite {
     private final CatalogService catalogService = Mockito.mock(CatalogService.class);
     private final Catalog catalog = Mockito.mock(Catalog.class);
 
+    private UUID accountId;
     private AnalyticsListener listener;
 
     @BeforeClass(groups = "fast")
@@ -73,7 +79,15 @@ public class TestAnalyticsListener extends AnalyticsTestSuite {
 
     @BeforeMethod(groups = "fast")
     public void setUp() throws Exception {
-        final BusinessSubscriptionTransitionRecorder recorder = new BusinessSubscriptionTransitionRecorder(dao, catalogService, new MockEntitlementUserApi(bundleUUID, EXTERNAL_KEY), new MockAccountUserApi(ACCOUNT_KEY, CURRENCY));
+        final MockAccountUserApi accountApi = new MockAccountUserApi();
+        final Account accountData = new MockAccountBuilder().externalKey(ACCOUNT_KEY).currency(CURRENCY).build();
+        final Account account = accountApi.createAccount(accountData, Mockito.mock(CallContext.class));
+        accountId = account.getId();
+
+        final MockEntitlementUserApi entitlementApi = new MockEntitlementUserApi();
+        entitlementApi.addBundle(bundleUUID, EXTERNAL_KEY, accountId);
+
+        final BusinessSubscriptionTransitionRecorder recorder = new BusinessSubscriptionTransitionRecorder(dao, catalogService, entitlementApi, accountApi);
         listener = new AnalyticsListener(recorder, null, null, null);
     }
 

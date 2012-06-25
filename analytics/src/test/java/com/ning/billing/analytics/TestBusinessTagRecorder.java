@@ -50,6 +50,7 @@ import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.engine.addon.AddonUtils;
 import com.ning.billing.entitlement.engine.dao.AuditedEntitlementDao;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
+import com.ning.billing.mock.MockAccountBuilder;
 import com.ning.billing.util.bus.InMemoryBus;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallOrigin;
@@ -107,7 +108,11 @@ public class TestBusinessTagRecorder extends TestWithEmbeddedDB {
         final CallContext callContext = callContextFactory.createCallContext(UUID.randomUUID().toString(), CallOrigin.TEST, UserType.TEST);
         final String accountKey = UUID.randomUUID().toString();
 
-        final Account account = accountUserApi.createAccount(new MockAccount(UUID.randomUUID(), accountKey, Currency.MXN), callContext);
+        final Account accountData = new MockAccountBuilder()
+                .externalKey(accountKey)
+                .currency(Currency.MXN)
+                .build();
+        final Account account = accountUserApi.createAccount(accountData, callContext);
         final UUID accountId = account.getId();
 
         Assert.assertEquals(accountTagSqlDao.getTagsForAccount(accountKey).size(), 0);
@@ -123,7 +128,10 @@ public class TestBusinessTagRecorder extends TestWithEmbeddedDB {
         final CallContext callContext = callContextFactory.createCallContext(UUID.randomUUID().toString(), CallOrigin.TEST, UserType.TEST);
         final String externalKey = UUID.randomUUID().toString();
 
-        final Account account = accountUserApi.createAccount(new MockAccount(UUID.randomUUID(), UUID.randomUUID().toString(), Currency.MXN), callContext);
+        final Account accountData = new MockAccountBuilder()
+                .currency(Currency.MXN)
+                .build();
+        final Account account = accountUserApi.createAccount(accountData, callContext);
         final SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(account.getId(), externalKey, callContext);
         final UUID bundleId = bundle.getId();
 

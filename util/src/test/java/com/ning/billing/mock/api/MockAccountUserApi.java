@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.account.api;
+package com.ning.billing.mock.api;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +23,14 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.joda.time.DateTimeZone;
 
+import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.account.api.AccountData;
+import com.ning.billing.account.api.AccountEmail;
+import com.ning.billing.account.api.AccountUserApi;
+import com.ning.billing.account.api.MigrationAccountData;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.mock.MockAccountBuilder;
 import com.ning.billing.util.callcontext.CallContext;
 
 public class MockAccountUserApi implements AccountUserApi {
@@ -48,17 +55,32 @@ public class MockAccountUserApi implements AccountUserApi {
                                  final String postalCode,
                                  final String phone) {
 
-        final Account result = new DefaultAccount(id, externalKey, email, name,
-                                                  firstNameLength, currency, billCycleDay, paymentMethodId,
-                                                  timeZone, locale, address1, address2, companyName, city,
-                                                  stateOrProvince, country, postalCode, phone, false, false);
+        final Account result = new MockAccountBuilder(id)
+                .externalKey(externalKey)
+                .email(email)
+                .name(name).firstNameLength(firstNameLength)
+                .currency(currency)
+                .billingCycleDay(billCycleDay)
+                .paymentMethodId(paymentMethodId)
+                .timeZone(timeZone)
+                .locale(locale)
+                .address1(address1)
+                .address2(address2)
+                .companyName(companyName)
+                .city(city)
+                .stateOrProvince(stateOrProvince)
+                .country(country)
+                .postalCode(postalCode)
+                .phone(phone)
+                .isNotifiedForInvoices(false)
+                .build();
         accounts.add(result);
         return result;
     }
 
     @Override
     public Account createAccount(final AccountData data, final CallContext context) throws AccountApiException {
-        final Account result = new DefaultAccount(data);
+        final Account result = new MockAccountBuilder(data).build();
         accounts.add(result);
         return result;
     }
@@ -126,7 +148,7 @@ public class MockAccountUserApi implements AccountUserApi {
     @Override
     public Account migrateAccount(final MigrationAccountData data, final CallContext context)
             throws AccountApiException {
-        final Account result = new DefaultAccount(data);
+        final Account result = new MockAccountBuilder(data).build();
         accounts.add(result);
         return result;
     }

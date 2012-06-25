@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.analytics;
+package com.ning.billing.mock.api;
 
 import java.util.HashMap;
 import java.util.List;
@@ -35,9 +35,11 @@ import com.ning.billing.util.callcontext.CallContext;
 
 public class MockEntitlementUserApi implements EntitlementUserApi {
     private final Map<UUID, String> subscriptionBundles = new HashMap<UUID, String>();
+    private final Map<UUID, UUID> accountForBundle = new HashMap<UUID, UUID>();
 
-    public MockEntitlementUserApi(final UUID bundleUUID, final String key) {
-        subscriptionBundles.put(bundleUUID, key);
+    public synchronized void addBundle(final UUID bundleUUID, final String externalKey, final UUID accountId) {
+        subscriptionBundles.put(bundleUUID, externalKey);
+        accountForBundle.put(bundleUUID, accountId);
     }
 
     @Override
@@ -50,7 +52,7 @@ public class MockEntitlementUserApi implements EntitlementUserApi {
         return new SubscriptionBundle() {
             @Override
             public UUID getAccountId() {
-                return UUID.randomUUID();
+                return accountForBundle.get(id);
             }
 
             @Override

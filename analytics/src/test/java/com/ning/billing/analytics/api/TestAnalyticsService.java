@@ -25,7 +25,6 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.mockito.Mockito;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Guice;
@@ -37,17 +36,16 @@ import com.ning.billing.account.api.AccountCreationEvent;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.api.user.DefaultAccountCreationEvent;
 import com.ning.billing.analytics.AnalyticsTestModule;
-import com.ning.billing.analytics.dao.BusinessAccountSqlDao;
-import com.ning.billing.analytics.model.BusinessSubscription;
-import com.ning.billing.analytics.model.BusinessSubscriptionEvent;
-import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
-import com.ning.billing.analytics.MockAccount;
 import com.ning.billing.analytics.MockDuration;
 import com.ning.billing.analytics.MockPhase;
 import com.ning.billing.analytics.MockPlan;
 import com.ning.billing.analytics.MockProduct;
 import com.ning.billing.analytics.TestWithEmbeddedDB;
+import com.ning.billing.analytics.dao.BusinessAccountSqlDao;
 import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionSqlDao;
+import com.ning.billing.analytics.model.BusinessSubscription;
+import com.ning.billing.analytics.model.BusinessSubscriptionEvent;
+import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
 import com.ning.billing.catalog.MockPriceList;
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogApiException;
@@ -74,6 +72,7 @@ import com.ning.billing.invoice.api.user.DefaultInvoiceCreationEvent;
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
+import com.ning.billing.mock.MockAccountBuilder;
 import com.ning.billing.payment.api.DefaultPaymentInfoEvent;
 import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.payment.api.PaymentStatus;
@@ -151,7 +150,11 @@ public class TestAnalyticsService extends TestWithEmbeddedDB {
 
     @BeforeMethod(groups = "slow")
     public void createMocks() {
-        final MockAccount account = new MockAccount(UUID.randomUUID(), ACCOUNT_KEY, ACCOUNT_CURRENCY);
+        final Account account = new MockAccountBuilder(UUID.randomUUID())
+                .externalKey(ACCOUNT_KEY)
+                .currency(ACCOUNT_CURRENCY)
+                .build();
+
         try {
             final Account storedAccount = accountApi.createAccount(account, context);
 

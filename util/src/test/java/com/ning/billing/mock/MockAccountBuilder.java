@@ -21,6 +21,7 @@ import java.util.UUID;
 import org.joda.time.DateTimeZone;
 
 import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.MutableAccountData;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.junction.api.BlockingState;
@@ -53,6 +54,29 @@ public class MockAccountBuilder {
 
     public MockAccountBuilder(final UUID id) {
         this.id = id;
+    }
+
+    public MockAccountBuilder(final AccountData data) {
+        this.id = UUID.randomUUID();
+        this.address1(data.getAddress1());
+        this.address2(data.getAddress2());
+        this.billingCycleDay(data.getBillCycleDay());
+        this.city(data.getCity());
+        this.companyName(data.getCompanyName());
+        this.country(data.getCountry());
+        this.currency(data.getCurrency());
+        this.email(data.getEmail());
+        this.externalKey(data.getExternalKey());
+        this.firstNameLength(data.getFirstNameLength());
+        this.isNotifiedForInvoices(data.isNotifiedForInvoices());
+        this.locale(data.getLocale());
+        this.migrated(data.isMigrated());
+        this.name(data.getName());
+        this.paymentMethodId(data.getPaymentMethodId());
+        this.phone(data.getPhone());
+        this.postalCode(data.getPostalCode());
+        this.stateOrProvince(data.getStateOrProvince());
+        this.timeZone(data.getTimeZone());
     }
 
     public MockAccountBuilder externalKey(final String externalKey) {
@@ -152,7 +176,6 @@ public class MockAccountBuilder {
 
     public Account build() {
         return new Account() {
-
             @Override
             public String getExternalKey() {
                 return externalKey;
