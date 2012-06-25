@@ -40,6 +40,7 @@ import org.joda.time.format.ISODateTimeFormat;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
+import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
@@ -149,8 +150,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    public Response createFutureInvoice(final InvoiceJsonSimple invoice,
-                                        @QueryParam(QUERY_ACCOUNT_ID) final String accountId,
+    public Response createFutureInvoice(@QueryParam(QUERY_ACCOUNT_ID) final String accountId,
                                         @QueryParam(QUERY_TARGET_DATE) final String targetDate,
                                         @QueryParam(QUERY_DRY_RUN) @DefaultValue("false") final Boolean dryRun,
                                         @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -173,7 +173,11 @@ public class InvoiceResource extends JaxRsResourceBase {
         } catch (AccountApiException e) {
             return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
         } catch (InvoiceApiException e) {
-            return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+            if (e.getCode() == ErrorCode.INVOICE_NOTHING_TO_DO.getCode()) {
+                return Response.status(Status.NO_CONTENT).build();
+            } else {
+                return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+            }
         } catch (NullPointerException e) {
             return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
         }

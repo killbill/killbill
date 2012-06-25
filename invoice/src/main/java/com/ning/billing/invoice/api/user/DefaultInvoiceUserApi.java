@@ -89,7 +89,12 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     public Invoice triggerInvoiceGeneration(final UUID accountId,
                                             final DateTime targetDate, final boolean dryRun,
                                             final CallContext context) throws InvoiceApiException {
-        return dispatcher.processAccount(accountId, targetDate, dryRun, context);
+        Invoice result = dispatcher.processAccount(accountId, targetDate, dryRun, context);
+        if (result == null) {
+            throw new InvoiceApiException(ErrorCode.INVOICE_NOTHING_TO_DO, accountId, targetDate);
+        } else {
+            return result;
+        }
     }
 
     @Override

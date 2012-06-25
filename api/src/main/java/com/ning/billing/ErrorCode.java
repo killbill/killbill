@@ -183,7 +183,8 @@ public enum ErrorCode {
     INVOICE_INVALID_DATE_SEQUENCE(4004, "Date sequence was invalid. Start Date: %s; End Date: %s; Target Date: %s"),
     INVOICE_TARGET_DATE_TOO_FAR_IN_THE_FUTURE(4005, "The target date was too far in the future. Target Date: %s"),
     INVOICE_NOT_FOUND(4006, "No invoice could be found for id %s."),
-
+    INVOICE_NOTHING_TO_DO(4007, "No invoice to generate for account %s and date %s"),
+    
     /*
      *
      * Range 4900: Invoice payment
