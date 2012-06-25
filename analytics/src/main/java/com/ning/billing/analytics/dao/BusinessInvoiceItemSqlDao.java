@@ -16,5 +16,39 @@
 
 package com.ning.billing.analytics.dao;
 
-public interface BusinessInvoiceItemSqlDao {
+import java.util.List;
+
+import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.SqlQuery;
+import org.skife.jdbi.v2.sqlobject.SqlUpdate;
+import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
+import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
+import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
+import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
+
+import com.ning.billing.analytics.model.BusinessInvoiceItem;
+
+@ExternalizedSqlViaStringTemplate3()
+@RegisterMapper(BusinessInvoiceItemMapper.class)
+public interface BusinessInvoiceItemSqlDao extends Transactional<BusinessInvoiceItemSqlDao>, Transmogrifier {
+    @SqlQuery
+    BusinessInvoiceItem getInvoiceItem(@Bind("item_id") final String itemId);
+
+    @SqlQuery
+    List<BusinessInvoiceItem> getInvoiceItemsForInvoice(@Bind("invoice_id") final String invoiceId);
+
+    @SqlQuery
+    List<BusinessInvoiceItem> getInvoiceItemsForBundle(@Bind("external_key") final String externalKey);
+
+    @SqlUpdate
+    int createInvoiceItem(@BusinessInvoiceItemBinder final BusinessInvoiceItem invoiceItem);
+
+    @SqlUpdate
+    int updateInvoiceItem(@BusinessInvoiceItemBinder final BusinessInvoiceItem invoiceItem);
+
+    @SqlUpdate
+    int deleteInvoiceItem(@Bind("item_id") final String itemId);
+
+    @SqlUpdate
+    void test();
 }

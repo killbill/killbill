@@ -42,13 +42,13 @@ public @interface BusinessOverdueStatusBinder {
                     q.bind("status", overdueStatus.getStatus());
 
                     if (overdueStatus.getStartDate() != null) {
-                        q.bind("start_date", overdueStatus.getStartDate());
+                        q.bind("start_date", overdueStatus.getStartDate().getMillis());
                     } else {
                         q.bindNull("start_date", Types.BIGINT);
                     }
 
                     if (overdueStatus.getEndDate() != null) {
-                        q.bind("end_date", overdueStatus.getEndDate());
+                        q.bind("end_date", overdueStatus.getEndDate().getMillis());
                     } else {
                         q.bindNull("end_date", Types.BIGINT);
                     }

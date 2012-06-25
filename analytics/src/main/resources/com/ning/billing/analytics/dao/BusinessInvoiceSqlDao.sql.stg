@@ -34,6 +34,7 @@ select
 , amount_credited
 from bin
 where account_key = :account_key
+order by created_date asc
 ;
 >>
 

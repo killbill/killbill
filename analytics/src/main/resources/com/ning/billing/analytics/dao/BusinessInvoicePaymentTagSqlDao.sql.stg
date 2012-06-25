@@ -1,0 +1,28 @@
+group BusinessInvoicePaymentTag;
+
+getTagsForInvoicePayment(payment_id) ::=<<
+select
+  payment_id
+, name
+from bip_tags
+where payment_id = :payment_id
+;
+>>
+
+addTag(payment_id, name) ::=<<
+insert into bip_tags (
+  payment_id
+, name
+) values (
+  :payment_id
+, :name
+);
+>>
+
+removeTag(payment_id, name) ::= <<
+delete from bip_tags where payment_id = :payment_id and name = :name;
+>>
+
+test() ::= <<
+select 1 from bip_tags;
+>>

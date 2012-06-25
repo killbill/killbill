@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2012 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -21,16 +21,18 @@ import org.skife.jdbi.v2.IDBI;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 
-public class BusinessSubscriptionTransitionSqlDaoProvider implements Provider<BusinessSubscriptionTransitionSqlDao> {
-    private final IDBI dbi;
-
+public class BusinessSqlProvider<T> implements Provider<T> {
     @Inject
-    public BusinessSubscriptionTransitionSqlDaoProvider(final IDBI dbi) {
-        this.dbi = dbi;
+    private IDBI dbi;
+
+    private final Class clazz;
+
+    public BusinessSqlProvider(final Class<T> clazz) {
+        this.clazz = clazz;
     }
 
     @Override
-    public BusinessSubscriptionTransitionSqlDao get() {
-        return dbi.onDemand(BusinessSubscriptionTransitionSqlDao.class);
+    public T get() {
+        return (T) dbi.onDemand(clazz);
     }
 }

@@ -29,6 +29,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.ning.billing.account.api.AccountService;
 import com.ning.billing.account.glue.AccountModule;
+import com.ning.billing.analytics.setup.AnalyticsModule;
 import com.ning.billing.beatrix.integration.overdue.IntegrationTestOverdueModule;
 import com.ning.billing.beatrix.lifecycle.DefaultLifecycle;
 import com.ning.billing.beatrix.lifecycle.Lifecycle;
@@ -96,6 +97,7 @@ public class BeatrixModule extends AbstractModule {
         install(new TagStoreModule());
         install(new CustomFieldModule());
         install(new AccountModule());
+        install(new AnalyticsModule());
         install(new CatalogModule());
         install(new DefaultEntitlementModule());
         install(new DefaultInvoiceModule());

@@ -61,7 +61,7 @@ public @interface BusinessInvoicePaymentBinder {
                     q.bind("invoice_id", invoicePayment.getInvoiceId().toString());
 
                     if (invoicePayment.getEffectiveDate() != null) {
-                        q.bind("effective_date", invoicePayment.getEffectiveDate());
+                        q.bind("effective_date", invoicePayment.getEffectiveDate().getMillis());
                     } else {
                         q.bindNull("effective_date", Types.BIGINT);
                     }

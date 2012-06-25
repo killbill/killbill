@@ -1,0 +1,28 @@
+group BusinessInvoiceTag;
+
+getTagsForInvoice(invoice_id) ::=<<
+select
+  invoice_id
+, name
+from bin_tags
+where invoice_id = :invoice_id
+;
+>>
+
+addTag(invoice_id, name) ::=<<
+insert into bin_tags (
+  invoice_id
+, name
+) values (
+  :invoice_id
+, :name
+);
+>>
+
+removeTag(invoice_id, name) ::= <<
+delete from bin_tags where invoice_id = :invoice_id and name = :name;
+>>
+
+test() ::= <<
+select 1 from bin_tags;
+>>

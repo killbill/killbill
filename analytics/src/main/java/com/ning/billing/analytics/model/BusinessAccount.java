@@ -27,7 +27,7 @@ public class BusinessAccount {
     private DateTime createdDt = null;
     private DateTime updatedDt = null;
 
-    private final String key;
+    private String key;
     private String name;
     private BigDecimal balance;
     private DateTime lastInvoiceDate;
@@ -36,6 +36,9 @@ public class BusinessAccount {
     private String paymentMethod;
     private String creditCardType;
     private String billingAddressCountry;
+
+    public BusinessAccount() {
+    }
 
     public BusinessAccount(final String key, final String name, final BigDecimal balance, final DateTime lastInvoiceDate, final BigDecimal totalInvoiceBalance, final String lastPaymentStatus, final String paymentMethod, final String creditCardType, final String billingAddressCountry) {
         this.key = key;
@@ -51,6 +54,10 @@ public class BusinessAccount {
 
     public String getKey() {
         return key;
+    }
+
+    public void setKey(final String key) {
+        this.key = key;
     }
 
     public BigDecimal getBalance() {
