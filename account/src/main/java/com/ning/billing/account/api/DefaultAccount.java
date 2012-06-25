@@ -158,7 +158,7 @@ public class DefaultAccount extends EntityBase implements Account {
 
     @Override
     public String getAddress1() {
-        return Objects.firstNonNull((address1, DEFAULT_STRING_VALUE);
+        return Objects.firstNonNull(address1, DEFAULT_STRING_VALUE);
     }
 
     @Override
