@@ -28,23 +28,23 @@ import com.ning.billing.junction.api.BlockingState;
 
 public class MockAccountBuilder {
     private final UUID id;
-    private String externalKey;
-    private String email;
-    private String name;
+    private String externalKey = "";
+    private String email = "";
+    private String name = "";
     private int firstNameLength;
-    private Currency currency;
+    private Currency currency = Currency.USD;
     private int billingCycleDay;
     private UUID paymentMethodId;
-    private DateTimeZone timeZone;
-    private String locale;
-    private String address1;
-    private String address2;
-    private String companyName;
-    private String city;
-    private String stateOrProvince;
-    private String country;
-    private String postalCode;
-    private String phone;
+    private DateTimeZone timeZone = DateTimeZone.UTC;
+    private String locale = "";
+    private String address1 = "";
+    private String address2 = "";
+    private String companyName = "";
+    private String city = "";
+    private String stateOrProvince = "";
+    private String country = "";
+    private String postalCode = "";
+    private String phone = "";
     private boolean migrated;
     private boolean isNotifiedForInvoices;
 
