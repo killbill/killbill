@@ -22,12 +22,22 @@ import org.joda.time.DateTimeZone;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
-import com.google.common.base.Strings;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.util.entity.EntityBase;
 
 public class DefaultAccount extends EntityBase implements Account {
+    // Default values. When updating an account object, null values are
+    // interpreted as "no change". You can use these defaults to reset
+    // some fields
+    public static final String DEFAULT_STRING_VALUE = "";
+    public static final Integer DEFAULT_INTEGER_VALUE = 0;
+    public static final Integer DEFAULT_BCD_VALUE = DEFAULT_INTEGER_VALUE;
+    public static final Currency DEFAULT_CURRENCY_VALUE = Currency.USD;
+    public static final DateTimeZone DEFAULT_TIMEZONE_VALUE = DateTimeZone.UTC;
+    private static final Boolean DEFAULT_MIGRATED_VALUE = true;
+    private static final Boolean DEFAULT_NOTIFIED_FOR_INVOICES_VALUE = false;
+
     private final String externalKey;
     private final String email;
     private final String name;
@@ -102,97 +112,98 @@ public class DefaultAccount extends EntityBase implements Account {
 
     @Override
     public String getExternalKey() {
-        return Strings.nullToEmpty(externalKey);
+        return Objects.firstNonNull(externalKey, DEFAULT_STRING_VALUE);
     }
 
     @Override
     public String getName() {
-        return Strings.nullToEmpty(name);
+        return Objects.firstNonNull(name, DEFAULT_STRING_VALUE);
     }
 
     @Override
     public String getEmail() {
-        return Strings.nullToEmpty(email);
+        return Objects.firstNonNull(email, DEFAULT_STRING_VALUE);
     }
 
     @Override
     public Integer getFirstNameLength() {
-        return Objects.firstNonNull(firstNameLength, 0);
+        return Objects.firstNonNull(firstNameLength, DEFAULT_INTEGER_VALUE);
     }
 
     @Override
     public Currency getCurrency() {
-        return currency;
+        return Objects.firstNonNull(currency, DEFAULT_CURRENCY_VALUE);
     }
 
     @Override
     public Integer getBillCycleDay() {
-        return Objects.firstNonNull(billCycleDay, 0);
+        return Objects.firstNonNull(billCycleDay, DEFAULT_BCD_VALUE);
     }
 
     @Override
     public UUID getPaymentMethodId() {
+        // Null if non specified
         return paymentMethodId;
     }
 
     @Override
     public DateTimeZone getTimeZone() {
-        return timeZone;
+        return Objects.firstNonNull(timeZone, DEFAULT_TIMEZONE_VALUE);
     }
 
     @Override
     public String getLocale() {
-        return Strings.nullToEmpty(locale);
+        return Objects.firstNonNull(locale, DEFAULT_STRING_VALUE);
     }
 
     @Override
     public String getAddress1() {
-        return Strings.nullToEmpty(address1);
+        return Objects.firstNonNull((address1, DEFAULT_STRING_VALUE);
     }
 
     @Override
     public String getAddress2() {
-        return Strings.nullToEmpty(address2);
+        return Objects.firstNonNull(address2, DEFAULT_STRING_VALUE);
     }
 
     @Override
     public String getCompanyName() {
-        return Strings.nullToEmpty(companyName);
+        return Objects.firstNonNull(companyName, DEFAULT_STRING_VALUE);
     }
 
     @Override
     public String getCity() {
-        return Strings.nullToEmpty(city);
+        return Objects.firstNonNull(city, DEFAULT_STRING_VALUE);
     }
 
     @Override
     public String getStateOrProvince() {
-        return Strings.nullToEmpty(stateOrProvince);
+        return Objects.firstNonNull(stateOrProvince, DEFAULT_STRING_VALUE);
     }
 
     @Override
     public String getPostalCode() {
-        return Strings.nullToEmpty(postalCode);
+        return Objects.firstNonNull(postalCode, DEFAULT_STRING_VALUE);
     }
 
     @Override
     public String getCountry() {
-        return Strings.nullToEmpty(country);
+        return Objects.firstNonNull(country, DEFAULT_STRING_VALUE);
     }
 
     @Override
     public Boolean isMigrated() {
-        return Objects.firstNonNull(this.isMigrated, true);
+        return Objects.firstNonNull(this.isMigrated, DEFAULT_MIGRATED_VALUE);
     }
 
     @Override
     public Boolean isNotifiedForInvoices() {
-        return Objects.firstNonNull(isNotifiedForInvoices, false);
+        return Objects.firstNonNull(isNotifiedForInvoices, DEFAULT_NOTIFIED_FOR_INVOICES_VALUE);
     }
 
     @Override
     public String getPhone() {
-        return Strings.nullToEmpty(phone);
+        return Objects.firstNonNull(phone, DEFAULT_STRING_VALUE);
     }
 
     @Override
