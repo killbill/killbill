@@ -127,7 +127,7 @@ public class DefaultAccount extends EntityBase implements Account {
 
     @Override
     public Integer getBillCycleDay() {
-        return billCycleDay;
+        return Objects.firstNonNull(billCycleDay, 0);
     }
 
     @Override
