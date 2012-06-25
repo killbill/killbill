@@ -222,7 +222,7 @@ public class DefaultAccount extends EntityBase implements Account {
         accountData.setPostalCode(Objects.firstNonNull(postalCode, delegate.getPostalCode()));
         accountData.setPhone(Objects.firstNonNull(phone, delegate.getPhone()));
         accountData.setIsMigrated(Objects.firstNonNull(isMigrated, delegate.isMigrated()));
-        accountData.setIsMigrated(Objects.firstNonNull(isNotifiedForInvoices, delegate.isNotifiedForInvoices()));
+        accountData.setIsNotifiedForInvoices(Objects.firstNonNull(isNotifiedForInvoices, delegate.isNotifiedForInvoices()));
 
         return new DefaultAccount(delegate.getId(), accountData);
     }
