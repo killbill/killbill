@@ -89,14 +89,15 @@ public class AuditedAccountDao implements AccountDao {
                     if (currentAccount != null) {
                         throw new AccountApiException(ErrorCode.ACCOUNT_ALREADY_EXISTS, key);
                     }
+
                     transactionalDao.create(account, context);
 
-                    // insert history
+                    // Insert history
                     final Long recordId = accountSqlDao.getRecordId(account.getId().toString());
                     final EntityHistory<Account> history = new EntityHistory<Account>(account.getId(), recordId, account, ChangeType.INSERT);
                     accountSqlDao.insertHistoryFromTransaction(history, context);
 
-                    // insert audit
+                    // Insert audit
                     final Long historyRecordId = accountSqlDao.getHistoryRecordId(recordId);
                     final EntityAudit audit = new EntityAudit(TableName.ACCOUNT_HISTORY, historyRecordId, ChangeType.INSERT);
                     accountSqlDao.insertAuditFromTransaction(audit, context);
@@ -122,38 +123,41 @@ public class AuditedAccountDao implements AccountDao {
     }
 
     @Override
-    public void update(final Account account, final CallContext context) throws EntityPersistenceException {
+    public void update(final Account specifiedAccount, final CallContext context) throws EntityPersistenceException {
         try {
             accountSqlDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
                 @Override
                 public Void inTransaction(final AccountSqlDao transactional, final TransactionStatus status) throws EntityPersistenceException, Bus.EventBusException {
-                    final String accountId = account.getId().toString();
-                    final Account currentAccount = transactional.getById(accountId);
+                    final UUID accountId = specifiedAccount.getId();
+                    final Account currentAccount = transactional.getById(accountId.toString());
                     if (currentAccount == null) {
                         throw new EntityPersistenceException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID, accountId);
                     }
 
                     final String currentKey = currentAccount.getExternalKey();
-                    if (!currentKey.equals(account.getExternalKey())) {
+                    if (!currentKey.equals(specifiedAccount.getExternalKey())) {
                         throw new EntityPersistenceException(ErrorCode.ACCOUNT_CANNOT_CHANGE_EXTERNAL_KEY, currentKey);
                     }
 
+                    // Set unspecified (null) fields to their current values
+                    final Account account = specifiedAccount.mergeWithDelegate(currentAccount);
+
                     transactional.update(account, context);
 
-                    final Long recordId = accountSqlDao.getRecordId(account.getId().toString());
-                    final EntityHistory<Account> history = new EntityHistory<Account>(account.getId(), recordId, account, ChangeType.INSERT);
+                    final Long recordId = accountSqlDao.getRecordId(accountId.toString());
+                    final EntityHistory<Account> history = new EntityHistory<Account>(accountId, recordId, account, ChangeType.INSERT);
                     accountSqlDao.insertHistoryFromTransaction(history, context);
 
                     final Long historyRecordId = accountSqlDao.getHistoryRecordId(recordId);
                     final EntityAudit audit = new EntityAudit(TableName.ACCOUNT_HISTORY, historyRecordId, ChangeType.INSERT);
                     accountSqlDao.insertAuditFromTransaction(audit, context);
 
-                    final AccountChangeEvent changeEvent = new DefaultAccountChangeEvent(account.getId(), context.getUserToken(), currentAccount, account);
+                    final AccountChangeEvent changeEvent = new DefaultAccountChangeEvent(accountId, context.getUserToken(), currentAccount, account);
                     if (changeEvent.hasChanges()) {
                         try {
                             eventBus.postFromTransaction(changeEvent, transactional);
                         } catch (EventBusException e) {
-                            log.warn("Failed to post account change event for account " + account.getId(), e);
+                            log.warn("Failed to post account change event for account " + accountId, e);
                         }
                     }
                     return null;

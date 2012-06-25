@@ -21,4 +21,6 @@ import com.ning.billing.util.entity.UpdatableEntity;
 
 public interface Account extends AccountData, UpdatableEntity, Blockable {
     public MutableAccountData toMutableAccountData();
+
+    public Account mergeWithDelegate(final Account delegate);
 }

@@ -345,40 +345,6 @@ public class TestAccountDao extends AccountDaoTestBase {
         assertEquals(savedAccount.getPhone(), phone);
     }
 
-    @Test
-    public void testRemovingContactInformation() throws Exception {
-        final UUID accountId = UUID.randomUUID();
-
-        final DefaultAccount account = new DefaultAccount(accountId, "extKey654321", "myemail654321@glam.com",
-                                                          "John Smith", 4, Currency.USD, 15, null,
-                                                          DateTimeZone.forID("America/Cambridge_Bay"), "EN-CA",
-                                                          "123 address 1", "456 address 2", null, "Cambridge Bay",
-                                                          "Nunavut", "Canada", "X0B 0C0", "18001112222",
-                                                          false, false);
-        accountDao.create(account, context);
-
-        final DefaultAccount updatedAccount = new DefaultAccount(accountId, "extKey654321", "myemail654321@glam.com",
-                                                                 "John Smith", 4, Currency.USD, 15, null,
-                                                                 DateTimeZone.forID("America/Cambridge_Bay"), "EN-CA",
-                                                                 null, null, null, null, null, null, null, null,
-                                                                 false, false);
-
-        accountDao.update(updatedAccount, context);
-
-        final Account savedAccount = accountDao.getById(accountId);
-
-        assertNotNull(savedAccount);
-        assertEquals(savedAccount.getId(), accountId);
-        assertEquals(savedAccount.getAddress1(), null);
-        assertEquals(savedAccount.getAddress2(), null);
-        assertEquals(savedAccount.getCompanyName(), null);
-        assertEquals(savedAccount.getCity(), null);
-        assertEquals(savedAccount.getStateOrProvince(), null);
-        assertEquals(savedAccount.getCity(), null);
-        assertEquals(savedAccount.getPostalCode(), null);
-        assertEquals(savedAccount.getPhone(), null);
-    }
-
     @Test(expectedExceptions = EntityPersistenceException.class)
     public void testExternalKeyCannotBeUpdated() throws Exception {
         final UUID accountId = UUID.randomUUID();

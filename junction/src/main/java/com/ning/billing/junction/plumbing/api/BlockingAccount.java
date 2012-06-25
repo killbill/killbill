@@ -148,4 +148,9 @@ public class BlockingAccount implements Account {
     public boolean isNotifiedForInvoices() {
         return account.isNotifiedForInvoices();
     }
+
+    @Override
+    public Account mergeWithDelegate(final Account delegate) {
+        return account.mergeWithDelegate(delegate);
+    }
 }

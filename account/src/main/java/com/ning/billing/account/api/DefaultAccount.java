@@ -20,6 +20,9 @@ import java.util.UUID;
 
 import org.joda.time.DateTimeZone;
 
+import com.google.common.base.Objects;
+import com.google.common.base.Optional;
+import com.google.common.base.Strings;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.util.entity.EntityBase;
@@ -99,17 +102,17 @@ public class DefaultAccount extends EntityBase implements Account {
 
     @Override
     public String getExternalKey() {
-        return externalKey;
+        return Strings.nullToEmpty(externalKey);
     }
 
     @Override
     public String getName() {
-        return name;
+        return Strings.nullToEmpty(name);
     }
 
     @Override
     public String getEmail() {
-        return email;
+        return Strings.nullToEmpty(email);
     }
 
     @Override
@@ -139,42 +142,42 @@ public class DefaultAccount extends EntityBase implements Account {
 
     @Override
     public String getLocale() {
-        return locale;
+        return Strings.nullToEmpty(locale);
     }
 
     @Override
     public String getAddress1() {
-        return address1;
+        return Strings.nullToEmpty(address1);
     }
 
     @Override
     public String getAddress2() {
-        return address2;
+        return Strings.nullToEmpty(address2);
     }
 
     @Override
     public String getCompanyName() {
-        return companyName;
+        return Strings.nullToEmpty(companyName);
     }
 
     @Override
     public String getCity() {
-        return city;
+        return Strings.nullToEmpty(city);
     }
 
     @Override
     public String getStateOrProvince() {
-        return stateOrProvince;
+        return Strings.nullToEmpty(stateOrProvince);
     }
 
     @Override
     public String getPostalCode() {
-        return postalCode;
+        return Strings.nullToEmpty(postalCode);
     }
 
     @Override
     public String getCountry() {
-        return country;
+        return Strings.nullToEmpty(country);
     }
 
     @Override
@@ -189,12 +192,39 @@ public class DefaultAccount extends EntityBase implements Account {
 
     @Override
     public String getPhone() {
-        return phone;
+        return Strings.nullToEmpty(phone);
     }
 
     @Override
     public MutableAccountData toMutableAccountData() {
         return new DefaultMutableAccountData(this);
+    }
+
+    @Override
+    public Account mergeWithDelegate(final Account delegate) {
+        final DefaultMutableAccountData accountData = new DefaultMutableAccountData(this);
+        accountData.setExternalKey(Objects.firstNonNull(externalKey, delegate.getExternalKey()));
+        accountData.setEmail(Objects.firstNonNull(email, delegate.getEmail()));
+        accountData.setName(Objects.firstNonNull(name, delegate.getName()));
+        accountData.setFirstNameLength(Objects.firstNonNull(firstNameLength, delegate.getFirstNameLength()));
+        accountData.setCurrency(Objects.firstNonNull(currency, delegate.getCurrency()));
+        accountData.setBillCycleDay(Objects.firstNonNull(billCycleDay, delegate.getBillCycleDay()));
+        accountData.setPaymentMethodId(Optional.<UUID>fromNullable(paymentMethodId)
+                                               .or(Optional.<UUID>fromNullable(delegate.getPaymentMethodId())).orNull());
+        accountData.setTimeZone(Objects.firstNonNull(timeZone, delegate.getTimeZone()));
+        accountData.setLocale(Objects.firstNonNull(locale, delegate.getLocale()));
+        accountData.setAddress1(Objects.firstNonNull(address1, delegate.getAddress1()));
+        accountData.setAddress2(Objects.firstNonNull(address2, delegate.getAddress2()));
+        accountData.setCompanyName(Objects.firstNonNull(companyName, delegate.getCompanyName()));
+        accountData.setCity(Objects.firstNonNull(city, delegate.getCity()));
+        accountData.setStateOrProvince(Objects.firstNonNull(stateOrProvince, delegate.getStateOrProvince()));
+        accountData.setCountry(Objects.firstNonNull(country, delegate.getCountry()));
+        accountData.setPostalCode(Objects.firstNonNull(postalCode, delegate.getPostalCode()));
+        accountData.setPhone(Objects.firstNonNull(phone, delegate.getPhone()));
+        accountData.setIsMigrated(Objects.firstNonNull(isMigrated, delegate.isMigrated()));
+        accountData.setIsMigrated(Objects.firstNonNull(isNotifiedForInvoices, delegate.isNotifiedForInvoices()));
+
+        return new DefaultAccount(delegate.getId(), accountData);
     }
 
     @Override

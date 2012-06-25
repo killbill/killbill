@@ -303,6 +303,11 @@ public class MockAccountBuilder {
             public MutableAccountData toMutableAccountData() {
                 throw new UnsupportedOperationException();
             }
+
+            @Override
+            public Account mergeWithDelegate(final Account delegate) {
+                throw new UnsupportedOperationException();
+            }
         };
     }
 }
