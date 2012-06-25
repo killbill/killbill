@@ -188,7 +188,7 @@ public class MockAccountBuilder {
             }
 
             @Override
-            public int getFirstNameLength() {
+            public Integer getFirstNameLength() {
 
                 return firstNameLength;
             }
@@ -200,7 +200,7 @@ public class MockAccountBuilder {
             }
 
             @Override
-            public int getBillCycleDay() {
+            public Integer getBillCycleDay() {
 
                 return billingCycleDay;
             }
@@ -278,13 +278,13 @@ public class MockAccountBuilder {
             }
 
             @Override
-            public boolean isMigrated() {
+            public Boolean isMigrated() {
 
                 return migrated;
             }
 
             @Override
-            public boolean isNotifiedForInvoices() {
+            public Boolean isNotifiedForInvoices() {
 
                 return isNotifiedForInvoices;
             }

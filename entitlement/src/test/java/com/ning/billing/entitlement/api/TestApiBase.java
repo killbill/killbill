@@ -401,7 +401,7 @@ public abstract class TestApiBase implements TestListenerStatus {
             }
 
             @Override
-            public int getFirstNameLength() {
+            public Integer getFirstNameLength() {
                 return "firstName".length();
             }
 
@@ -416,12 +416,12 @@ public abstract class TestApiBase implements TestListenerStatus {
             }
 
             @Override
-            public boolean isMigrated() {
+            public Boolean isMigrated() {
                 return false;
             }
 
             @Override
-            public boolean isNotifiedForInvoices() {
+            public Boolean isNotifiedForInvoices() {
                 return false;
             }
 
@@ -431,7 +431,7 @@ public abstract class TestApiBase implements TestListenerStatus {
             }
 
             @Override
-            public int getBillCycleDay() {
+            public Integer getBillCycleDay() {
                 return 1;
             }
 

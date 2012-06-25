@@ -116,8 +116,8 @@ public class DefaultAccount extends EntityBase implements Account {
     }
 
     @Override
-    public int getFirstNameLength() {
-        return firstNameLength;
+    public Integer getFirstNameLength() {
+        return Objects.firstNonNull(firstNameLength, 0);
     }
 
     @Override
@@ -126,7 +126,7 @@ public class DefaultAccount extends EntityBase implements Account {
     }
 
     @Override
-    public int getBillCycleDay() {
+    public Integer getBillCycleDay() {
         return billCycleDay;
     }
 
@@ -181,13 +181,13 @@ public class DefaultAccount extends EntityBase implements Account {
     }
 
     @Override
-    public boolean isMigrated() {
-        return this.isMigrated;
+    public Boolean isMigrated() {
+        return Objects.firstNonNull(this.isMigrated, true);
     }
 
     @Override
-    public boolean isNotifiedForInvoices() {
-        return isNotifiedForInvoices;
+    public Boolean isNotifiedForInvoices() {
+        return Objects.firstNonNull(isNotifiedForInvoices, false);
     }
 
     @Override

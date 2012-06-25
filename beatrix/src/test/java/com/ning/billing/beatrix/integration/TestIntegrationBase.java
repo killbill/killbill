@@ -307,7 +307,7 @@ public class TestIntegrationBase implements TestListenerStatus {
             }
 
             @Override
-            public int getFirstNameLength() {
+            public Integer getFirstNameLength() {
                 return "firstName".length();
             }
 
@@ -322,12 +322,12 @@ public class TestIntegrationBase implements TestListenerStatus {
             }
 
             @Override
-            public boolean isMigrated() {
+            public Boolean isMigrated() {
                 return false;
             }
 
             @Override
-            public boolean isNotifiedForInvoices() {
+            public Boolean isNotifiedForInvoices() {
                 return false;
             }
 
@@ -337,7 +337,7 @@ public class TestIntegrationBase implements TestListenerStatus {
             }
 
             @Override
-            public int getBillCycleDay() {
+            public Integer getBillCycleDay() {
                 return billingDay;
             }
 

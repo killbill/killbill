@@ -23,16 +23,15 @@ import org.joda.time.DateTimeZone;
 import com.ning.billing.catalog.api.Currency;
 
 public interface AccountData {
-
     public String getExternalKey();
 
     public String getName();
 
-    public int getFirstNameLength();
+    public Integer getFirstNameLength();
 
     public String getEmail();
 
-    public int getBillCycleDay();
+    public Integer getBillCycleDay();
 
     public Currency getCurrency();
 
@@ -58,7 +57,7 @@ public interface AccountData {
 
     public String getPhone();
 
-    public boolean isMigrated();
+    public Boolean isMigrated();
 
-    public boolean isNotifiedForInvoices();
+    public Boolean isNotifiedForInvoices();
 }

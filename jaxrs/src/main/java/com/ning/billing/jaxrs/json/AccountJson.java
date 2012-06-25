@@ -96,12 +96,12 @@ public class AccountJson extends AccountJsonSimple {
             }
 
             @Override
-            public boolean isMigrated() {
+            public Boolean isMigrated() {
                 return false;
             }
 
             @Override
-            public boolean isNotifiedForInvoices() {
+            public Boolean isNotifiedForInvoices() {
                 return false;
             }
 
@@ -122,7 +122,7 @@ public class AccountJson extends AccountJsonSimple {
             }
 
             @Override
-            public int getFirstNameLength() {
+            public Integer getFirstNameLength() {
                 return length;
             }
 
@@ -157,7 +157,7 @@ public class AccountJson extends AccountJsonSimple {
             }
 
             @Override
-            public int getBillCycleDay() {
+            public Integer getBillCycleDay() {
                 return billCycleDay;
             }
 

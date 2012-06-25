@@ -124,7 +124,7 @@ public class DefaultMutableAccountData implements MutableAccountData {
     * @see com.ning.billing.account.api.MutableAccountData#getFirstNameLength()
     */
     @Override
-    public int getFirstNameLength() {
+    public Integer getFirstNameLength() {
         return firstNameLength;
     }
 
@@ -140,7 +140,7 @@ public class DefaultMutableAccountData implements MutableAccountData {
     * @see com.ning.billing.account.api.MutableAccountData#getBillCycleDay()
     */
     @Override
-    public int getBillCycleDay() {
+    public Integer getBillCycleDay() {
         return billCycleDay;
     }
 
@@ -236,7 +236,7 @@ public class DefaultMutableAccountData implements MutableAccountData {
     * @see com.ning.billing.account.api.MutableAccountData#isMigrated()
     */
     @Override
-    public boolean isMigrated() {
+    public Boolean isMigrated() {
         return isMigrated;
     }
 
@@ -244,7 +244,7 @@ public class DefaultMutableAccountData implements MutableAccountData {
     * @see com.ning.billing.account.api.MutableAccountData#getSendInvoiceEmails()
     */
     @Override
-    public boolean isNotifiedForInvoices() {
+    public Boolean isNotifiedForInvoices() {
         return isNotifiedForInvoices;
     }
 

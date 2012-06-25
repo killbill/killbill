@@ -115,7 +115,7 @@ public class TestAccountDao extends AccountDaoTestBase {
         final UUID id = account.getId();
         final String key = account.getExternalKey();
         final String name = account.getName();
-        final int firstNameLength = account.getFirstNameLength();
+        final Integer firstNameLength = account.getFirstNameLength();
 
         accountDao.create(account, context);
 
@@ -198,7 +198,7 @@ public class TestAccountDao extends AccountDaoTestBase {
             }
 
             @Override
-            public int getFirstNameLength() {
+            public Integer getFirstNameLength() {
                 return 4;
             }
 
@@ -213,17 +213,17 @@ public class TestAccountDao extends AccountDaoTestBase {
             }
 
             @Override
-            public boolean isMigrated() {
+            public Boolean isMigrated() {
                 return false;
             }
 
             @Override
-            public boolean isNotifiedForInvoices() {
+            public Boolean isNotifiedForInvoices() {
                 return false;
             }
 
             @Override
-            public int getBillCycleDay() {
+            public Integer getBillCycleDay() {
                 return account.getBillCycleDay();
             }
 

@@ -58,9 +58,9 @@ public class TestDefaultAccountUserApi {
         final String externalKey = UUID.randomUUID().toString();
         final String email = UUID.randomUUID().toString();
         final String name = UUID.randomUUID().toString();
-        final int firstNameLength = Integer.MAX_VALUE;
+        final Integer firstNameLength = Integer.MAX_VALUE;
         final Currency currency = Currency.BRL;
-        final int billCycleDay = Integer.MIN_VALUE;
+        final Integer billCycleDay = Integer.MIN_VALUE;
         final UUID paymentMethodId = UUID.randomUUID();
         final DateTimeZone timeZone = DateTimeZone.UTC;
         final String locale = UUID.randomUUID().toString();
@@ -72,8 +72,8 @@ public class TestDefaultAccountUserApi {
         final String country = UUID.randomUUID().toString();
         final String postalCode = UUID.randomUUID().toString();
         final String phone = UUID.randomUUID().toString();
-        final boolean isMigrated = true;
-        final boolean isNotifiedForInvoices = false;
+        final Boolean isMigrated = true;
+        final Boolean isNotifiedForInvoices = false;
         final AccountData data = new DefaultAccount(id, externalKey, email, name, firstNameLength, currency, billCycleDay,
                                                     paymentMethodId, timeZone, locale, address1, address2, companyName,
                                                     city, stateOrProvince, country, postalCode, phone, isMigrated, isNotifiedForInvoices);

@@ -120,7 +120,6 @@ public class DefaultAccountCreationEvent implements AccountCreationEvent {
 
 
     public static class DefaultAccountData implements AccountData {
-
         private final String externalKey;
         private final String name;
         private final Integer firstNameLength;
@@ -140,7 +139,6 @@ public class DefaultAccountCreationEvent implements AccountCreationEvent {
         private final String phone;
         private final boolean isMigrated;
         private final boolean isNotifiedForInvoices;
-
 
         public DefaultAccountData(final Account d) {
             this(d.getExternalKey() != null ? d.getExternalKey() : null,
@@ -217,7 +215,7 @@ public class DefaultAccountCreationEvent implements AccountCreationEvent {
         }
 
         @Override
-        public int getFirstNameLength() {
+        public Integer getFirstNameLength() {
             return firstNameLength;
         }
 
@@ -227,7 +225,7 @@ public class DefaultAccountCreationEvent implements AccountCreationEvent {
         }
 
         @Override
-        public int getBillCycleDay() {
+        public Integer getBillCycleDay() {
             return billCycleDay;
         }
 
@@ -299,13 +297,13 @@ public class DefaultAccountCreationEvent implements AccountCreationEvent {
 
         @Override
         @JsonIgnore
-        public boolean isMigrated() {
+        public Boolean isMigrated() {
             return isMigrated;
         }
 
         @Override
         @JsonIgnore
-        public boolean isNotifiedForInvoices() {
+        public Boolean isNotifiedForInvoices() {
             return isNotifiedForInvoices;
         }
 
