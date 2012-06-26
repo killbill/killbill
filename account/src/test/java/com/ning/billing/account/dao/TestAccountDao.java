@@ -23,6 +23,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.Handle;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
@@ -345,7 +346,7 @@ public class TestAccountDao extends AccountDaoTestBase {
         assertEquals(savedAccount.getPhone(), phone);
     }
 
-    @Test(expectedExceptions = EntityPersistenceException.class)
+    @Test
     public void testExternalKeyCannotBeUpdated() throws Exception {
         final UUID accountId = UUID.randomUUID();
         final String originalExternalKey = "extKey1337";
@@ -356,11 +357,13 @@ public class TestAccountDao extends AccountDaoTestBase {
                                                           false, false);
         accountDao.create(account, context);
 
-        final DefaultAccount updatedAccount = new DefaultAccount(accountId, "extKey1338", "myemail1337@glam.com",
+        final String buggyKey = "extKey1338";
+        final DefaultAccount updatedAccountData = new DefaultAccount(accountId, buggyKey, "myemail1337@glam.com",
                                                                  "John Smith", 4, Currency.USD, 15, null,
                                                                  null, null, null, null, null, null, null, null, null, null,
                                                                  false, false);
-        accountDao.update(updatedAccount, context);
+        accountDao.update(updatedAccountData, context);
+        Assert.assertNull(accountDao.getAccountByKey(buggyKey));
     }
 
     @Test
