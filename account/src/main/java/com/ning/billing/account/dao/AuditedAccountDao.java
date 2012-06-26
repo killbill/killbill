@@ -134,11 +134,6 @@ public class AuditedAccountDao implements AccountDao {
                         throw new EntityPersistenceException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID, accountId);
                     }
 
-                    final String currentKey = currentAccount.getExternalKey();
-                    if (!currentKey.equals(specifiedAccount.getExternalKey())) {
-                        throw new EntityPersistenceException(ErrorCode.ACCOUNT_CANNOT_CHANGE_EXTERNAL_KEY, currentKey);
-                    }
-
                     // Set unspecified (null) fields to their current values
                     final Account account = specifiedAccount.mergeWithDelegate(currentAccount);
 
