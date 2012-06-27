@@ -134,7 +134,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         for (final UUID invoiceId : amountOwedByInvoice.keySet()) {
             final BigDecimal invoiceBalance = amountOwedByInvoice.get(invoiceId);
             if (invoiceBalance.compareTo(BigDecimal.ZERO) < 0) {
-                proposedItems.add(new CreditInvoiceItem(invoiceId, accountId, clock.getUTCNow(), invoiceBalance.negate(), currency));
+                proposedItems.add(new CreditBalanceAdjInvoiceItem(invoiceId, accountId, clock.getUTCNow(), invoiceBalance.negate(), currency));
             }
         }
     }
@@ -154,13 +154,13 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         BigDecimal totalAmountOwed = BigDecimal.ZERO;
 
         for (final InvoiceItem item : existingItems) {
-            if (item instanceof CreditInvoiceItem) {
+            if (item instanceof CreditBalanceAdjInvoiceItem) {
                 totalUnusedCreditAmount = totalUnusedCreditAmount.add(item.getAmount());
             }
         }
 
         for (final InvoiceItem item : proposedItems) {
-            if (item instanceof CreditInvoiceItem) {
+            if (item instanceof CreditBalanceAdjInvoiceItem) {
                 totalUnusedCreditAmount = totalUnusedCreditAmount.add(item.getAmount());
             } else {
                 totalAmountOwed = totalAmountOwed.add(item.getAmount());
@@ -179,7 +179,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         }
 
         if (creditAmount.compareTo(BigDecimal.ZERO) < 0) {
-            proposedItems.add(new CreditInvoiceItem(invoiceId, accountId, clock.getUTCNow(), creditAmount, targetCurrency));
+            proposedItems.add(new CreditBalanceAdjInvoiceItem(invoiceId, accountId, clock.getUTCNow(), creditAmount, targetCurrency));
         }
     }
 

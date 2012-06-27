@@ -30,16 +30,13 @@ import com.ning.billing.invoice.api.InvoiceItemType;
 public class RecurringInvoiceItem extends InvoiceItemBase {
     private final DateTimeFormatter dateTimeFormatter = DateTimeFormat.mediumDate();
 
-    private final BigDecimal rate;
-    private final UUID reversedItemId;
+
 
     public RecurringInvoiceItem(final UUID invoiceId, final UUID accountId, final UUID bundleId, final UUID subscriptionId, final String planName, final String phaseName,
                                 final DateTime startDate, final DateTime endDate,
                                 final BigDecimal amount, final BigDecimal rate,
                                 final Currency currency) {
-        super(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency, InvoiceItemType.RECURRING);
-        this.rate = rate;
-        this.reversedItemId = null;
+        super(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, rate, currency, null);
     }
 
     public RecurringInvoiceItem(final UUID invoiceId, final UUID accountId, final UUID bundleId, final UUID subscriptionId, final String planName, final String phaseName,
@@ -47,9 +44,7 @@ public class RecurringInvoiceItem extends InvoiceItemBase {
                                 final BigDecimal amount, final BigDecimal rate,
                                 final Currency currency, final UUID reversedItemId) {
         super(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate,
-              amount, currency, InvoiceItemType.REVERSAL);
-        this.rate = rate;
-        this.reversedItemId = reversedItemId;
+              amount, rate, currency, reversedItemId);
     }
 
     public RecurringInvoiceItem(final UUID id, final UUID invoiceId, final UUID accountId, final UUID bundleId, final UUID subscriptionId,
@@ -57,9 +52,7 @@ public class RecurringInvoiceItem extends InvoiceItemBase {
                                 final DateTime startDate, final DateTime endDate,
                                 final BigDecimal amount, final BigDecimal rate,
                                 final Currency currency) {
-        super(id, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency, InvoiceItemType.RECURRING);
-        this.rate = rate;
-        this.reversedItemId = null;
+        super(id, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, rate, currency, null);
     }
 
     public RecurringInvoiceItem(final UUID id, final UUID invoiceId, final UUID accountId, final UUID bundleId, final UUID subscriptionId,
@@ -67,9 +60,7 @@ public class RecurringInvoiceItem extends InvoiceItemBase {
                                 final DateTime startDate, final DateTime endDate,
                                 final BigDecimal amount, final BigDecimal rate,
                                 final Currency currency, final UUID reversedItemId) {
-        super(id, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency, InvoiceItemType.REVERSAL);
-        this.rate = rate;
-        this.reversedItemId = reversedItemId;
+        super(id, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, rate, currency, reversedItemId);
     }
 
     @Override
@@ -192,7 +183,7 @@ public class RecurringInvoiceItem extends InvoiceItemBase {
         result = 31 * result + amount.hashCode();
         result = 31 * result + rate.hashCode();
         result = 31 * result + currency.hashCode();
-        result = 31 * result + invoiceItemType.hashCode();
+        result = 31 * result + getInvoiceItemType().hashCode();
         result = 31 * result + (reversedItemId != null ? reversedItemId.hashCode() : 0);
         return result;
     }
@@ -210,4 +201,10 @@ public class RecurringInvoiceItem extends InvoiceItemBase {
 
         return sb.toString();
     }
+
+    @Override
+    public InvoiceItemType getInvoiceItemType() {
+        return InvoiceItemType.RECURRING;
+    }
+
 }

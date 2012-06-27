@@ -43,7 +43,7 @@ import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
-import com.ning.billing.invoice.model.CreditInvoiceItem;
+import com.ning.billing.invoice.model.CreditBalanceAdjInvoiceItem;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextBinder;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
@@ -76,8 +76,8 @@ public interface CreditInvoiceItemSqlDao extends EntitySqlDao<InvoiceItem> {
     public @interface CreditInvoiceItemBinder {
         public static class CreditInvoiceItemBinderFactory implements BinderFactory {
             public Binder build(final Annotation annotation) {
-                return new Binder<CreditInvoiceItemBinder, CreditInvoiceItem>() {
-                    public void bind(final SQLStatement q, final CreditInvoiceItemBinder bind, final CreditInvoiceItem item) {
+                return new Binder<CreditInvoiceItemBinder, CreditBalanceAdjInvoiceItem>() {
+                    public void bind(final SQLStatement q, final CreditInvoiceItemBinder bind, final CreditBalanceAdjInvoiceItem item) {
                         q.bind("id", item.getId().toString());
                         q.bind("invoiceId", item.getInvoiceId().toString());
                         q.bind("accountId", item.getAccountId().toString());
@@ -99,7 +99,7 @@ public interface CreditInvoiceItemSqlDao extends EntitySqlDao<InvoiceItem> {
             final DateTime creditDate = new DateTime(result.getTimestamp("credit_date"));
             final BigDecimal amount = result.getBigDecimal("amount");
             final Currency currency = Currency.valueOf(result.getString("currency"));
-            return new CreditInvoiceItem(id, invoiceId, accountId, creditDate, amount, currency);
+            return new CreditBalanceAdjInvoiceItem(id, invoiceId, accountId, creditDate, amount, currency);
         }
     }
 }

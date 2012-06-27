@@ -59,6 +59,8 @@ public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
     protected RecurringInvoiceItemSqlDao recurringInvoiceItemDao;
     protected FixedPriceInvoiceItemSqlDao fixedPriceInvoiceItemSqlDao;
     protected CreditInvoiceItemSqlDao creditInvoiceItemSqlDao;
+
+    protected InvoiceItemSqlDao invoiceItemSqlDao;
     protected InvoicePaymentSqlDao invoicePaymentDao;
     protected Clock clock;
     protected CallContext context;
@@ -109,6 +111,7 @@ public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
         recurringInvoiceItemDao = dbi.onDemand(RecurringInvoiceItemSqlDao.class);
         fixedPriceInvoiceItemSqlDao = dbi.onDemand(FixedPriceInvoiceItemSqlDao.class);
         creditInvoiceItemSqlDao = dbi.onDemand(CreditInvoiceItemSqlDao.class);
+        invoiceItemSqlDao = dbi.onDemand(InvoiceItemSqlDao.class);
         invoicePaymentDao = dbi.onDemand(InvoicePaymentSqlDao.class);
 
         clock = new ClockMock();

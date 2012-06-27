@@ -47,7 +47,7 @@ import com.ning.billing.invoice.MockBillingEventSet;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
-import com.ning.billing.invoice.model.CreditInvoiceItem;
+import com.ning.billing.invoice.model.CreditBalanceAdjInvoiceItem;
 import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.invoice.model.DefaultInvoiceGenerator;
 import com.ning.billing.invoice.model.DefaultInvoicePayment;
@@ -957,7 +957,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         // add account-level credit
         final DateTime creditDate = startDate.plusDays(5);
         final Invoice invoiceWithCredit = new DefaultInvoice(accountId, creditDate, creditDate, Currency.USD);
-        final InvoiceItem accountCredit = new CreditInvoiceItem(invoiceWithCredit.getId(), accountId, creditDate, FIVE, Currency.USD);
+        final InvoiceItem accountCredit = new CreditBalanceAdjInvoiceItem(invoiceWithCredit.getId(), accountId, creditDate, FIVE, Currency.USD);
         invoiceWithCredit.addInvoiceItem(accountCredit);
         invoices.add(invoiceWithCredit);
 

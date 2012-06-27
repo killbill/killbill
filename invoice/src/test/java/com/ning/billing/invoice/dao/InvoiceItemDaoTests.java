@@ -25,7 +25,7 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
-import com.ning.billing.invoice.model.CreditInvoiceItem;
+import com.ning.billing.invoice.model.CreditBalanceAdjInvoiceItem;
 import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
@@ -36,6 +36,9 @@ import static org.testng.Assert.assertTrue;
 
 @Test(groups = {"slow", "invoicing", "invoicing-invoiceDao"})
 public class InvoiceItemDaoTests extends InvoiceDaoTestBase {
+
+
+
     @Test
     public void testInvoiceItemCreation() {
         final UUID accountId = UUID.randomUUID();
@@ -48,9 +51,9 @@ public class InvoiceItemDaoTests extends InvoiceDaoTestBase {
 
         final RecurringInvoiceItem item = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, "test plan", "test phase", startDate, endDate,
                                                                    rate, rate, Currency.USD);
-        recurringInvoiceItemDao.create(item, context);
+        invoiceItemSqlDao.create(item, context);
 
-        final RecurringInvoiceItem thisItem = (RecurringInvoiceItem) recurringInvoiceItemDao.getById(item.getId().toString());
+        final RecurringInvoiceItem thisItem = (RecurringInvoiceItem) invoiceItemSqlDao.getById(item.getId().toString());
         assertNotNull(thisItem);
         assertEquals(thisItem.getId(), item.getId());
         assertEquals(thisItem.getInvoiceId(), item.getInvoiceId());
@@ -137,7 +140,7 @@ public class InvoiceItemDaoTests extends InvoiceDaoTestBase {
         final UUID accountId = UUID.randomUUID();
         final DateTime creditDate = new DateTime(2012, 4, 1, 0, 10, 22, 0);
 
-        final InvoiceItem creditInvoiceItem = new CreditInvoiceItem(invoiceId, accountId, creditDate, TEN, Currency.USD);
+        final InvoiceItem creditInvoiceItem = new CreditBalanceAdjInvoiceItem(invoiceId, accountId, creditDate, TEN, Currency.USD);
         creditInvoiceItemSqlDao.create(creditInvoiceItem, context);
 
         final InvoiceItem savedItem = creditInvoiceItemSqlDao.getById(creditInvoiceItem.getId().toString());

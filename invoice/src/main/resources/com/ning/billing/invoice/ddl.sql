@@ -1,4 +1,32 @@
+
 DROP TABLE IF EXISTS invoice_items;
+CREATE TABLE invoice_items (
+    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
+    id char(36) NOT NULL,
+    type varchar(24) NOT NULL,
+    invoice_id char(36) NOT NULL,
+    account_id char(36) NOT NULL,
+    bundle_id char(36),
+    subscription_id char(36),
+    plan_name varchar(50),
+    phase_name varchar(50),
+    start_date datetime NOT NULL,
+    end_date datetime,
+    amount numeric(10,4) NOT NULL,
+    rate numeric(10,4) NULL,
+    currency char(3) NOT NULL,
+    reversed_item_id char(36),
+    created_by varchar(50) NOT NULL,
+    created_date datetime NOT NULL,
+    PRIMARY KEY(record_id)
+) ENGINE=innodb;
+
+CREATE UNIQUE INDEX invoice_items_id ON invoice_items(id);
+CREATE INDEX invoice_items_subscription_id ON invoice_items(subscription_id ASC);
+CREATE INDEX invoice_items_invoice_id ON invoice_items(invoice_id ASC);
+CREATE INDEX invoice_items_account_id ON invoice_items(account_id ASC);
+
+
 DROP TABLE IF EXISTS recurring_invoice_items;
 CREATE TABLE recurring_invoice_items (
     record_id int(11) unsigned NOT NULL AUTO_INCREMENT,

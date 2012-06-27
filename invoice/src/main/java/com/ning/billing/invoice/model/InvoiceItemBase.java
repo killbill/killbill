@@ -28,28 +28,48 @@ import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.util.entity.EntityBase;
 
 public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem {
+
+    /* Common to all items */
     protected final UUID invoiceId;
     protected final UUID accountId;
-    protected final UUID subscriptionId;
-    protected final UUID bundleId;
-    protected final String planName;
-    protected final String phaseName;
     protected final DateTime startDate;
     protected final DateTime endDate;
     protected final BigDecimal amount;
     protected final Currency currency;
-    protected final InvoiceItemType invoiceItemType;
+
+    /* Fixed and recurring specific */
+    protected final UUID subscriptionId;
+    protected final UUID bundleId;
+    protected final String planName;
+    protected final String phaseName;
+
+    /* Recurring specific STEPH */
+    protected final BigDecimal rate;
+    protected final UUID reversedItemId;
+
 
     public InvoiceItemBase(final UUID invoiceId, final UUID accountId, final UUID bundleId, final UUID subscriptionId, final String planName, final String phaseName,
-                           final DateTime startDate, final DateTime endDate, final BigDecimal amount, final Currency currency, final InvoiceItemType invoiceItemType) {
+            final DateTime startDate, final DateTime endDate, final BigDecimal amount, final Currency currency) {
+       this(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, null, currency, null);
+
+    }
+
+    public InvoiceItemBase(final UUID invoiceId, final UUID accountId, final UUID bundleId, final UUID subscriptionId, final String planName, final String phaseName,
+            final DateTime startDate, final DateTime endDate, final BigDecimal amount, final BigDecimal rate, final Currency currency, final UUID reversedItemId) {
         this(UUID.randomUUID(), invoiceId, accountId, bundleId, subscriptionId, planName, phaseName,
-             startDate, endDate, amount, currency, invoiceItemType);
+                startDate, endDate, amount, rate, currency, reversedItemId);
     }
 
     public InvoiceItemBase(final UUID id, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
-                           @Nullable final UUID subscriptionId, @Nullable final String planName, @Nullable final String phaseName,
-                           final DateTime startDate, final DateTime endDate, final BigDecimal amount, final Currency currency,
-                           final InvoiceItemType invoiceItemType) {
+            @Nullable final UUID subscriptionId, @Nullable final String planName, @Nullable final String phaseName,
+            final DateTime startDate, final DateTime endDate, final BigDecimal amount, final Currency currency) {
+        this(subscriptionId, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, null, currency, null);
+    }
+
+    public InvoiceItemBase(final UUID id, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
+            @Nullable final UUID subscriptionId, @Nullable final String planName, @Nullable final String phaseName,
+            final DateTime startDate, final DateTime endDate, final BigDecimal amount, final BigDecimal rate, final Currency currency,
+            UUID reversedItemId) {
         super(id);
         this.invoiceId = invoiceId;
         this.accountId = accountId;
@@ -61,7 +81,8 @@ public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem 
         this.endDate = endDate;
         this.amount = amount;
         this.currency = currency;
-        this.invoiceItemType = invoiceItemType;
+        this.rate = rate;
+        this.reversedItemId = reversedItemId;
     }
 
     @Override
@@ -74,6 +95,7 @@ public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem 
         return bundleId;
     }
 
+    @Override
     public UUID getAccountId() {
         return accountId;
     }
@@ -114,9 +136,7 @@ public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem 
     }
 
     @Override
-    public InvoiceItemType getInvoiceItemType() {
-        return invoiceItemType;
-    }
+    public abstract InvoiceItemType getInvoiceItemType();
 
     @Override
     public abstract InvoiceItem asReversingItem();

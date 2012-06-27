@@ -33,7 +33,7 @@ import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
-import com.ning.billing.invoice.model.CreditInvoiceItem;
+import com.ning.billing.invoice.model.CreditBalanceAdjInvoiceItem;
 import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
@@ -169,7 +169,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
                     recordIdList = fixedPriceInvoiceItemDao.getRecordIds(invoice.getId().toString());
                     audits.addAll(createAudits(TableName.FIXED_INVOICE_ITEMS, recordIdList));
 
-                    final List<InvoiceItem> creditInvoiceItems = invoice.getInvoiceItems(CreditInvoiceItem.class);
+                    final List<InvoiceItem> creditInvoiceItems = invoice.getInvoiceItems(CreditBalanceAdjInvoiceItem.class);
                     final CreditInvoiceItemSqlDao creditInvoiceItemSqlDao = transactional.become(CreditInvoiceItemSqlDao.class);
                     creditInvoiceItemSqlDao.batchCreateFromTransaction(creditInvoiceItems, context);
                     recordIdList = creditInvoiceItemSqlDao.getRecordIds(invoice.getId().toString());
@@ -339,7 +339,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
         final Invoice invoice = new DefaultInvoice(accountId, effectiveDate, effectiveDate, currency);
         invoiceSqlDao.create(invoice, context);
 
-        final InvoiceItem credit = new CreditInvoiceItem(invoice.getId(), accountId, effectiveDate, amount, currency);
+        final InvoiceItem credit = new CreditBalanceAdjInvoiceItem(invoice.getId(), accountId, effectiveDate, amount, currency);
         creditInvoiceItemSqlDao.create(credit, context);
 
         return credit;
