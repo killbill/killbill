@@ -24,19 +24,15 @@ import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 
 public class TimedMigration {
-
     private final DateTime eventTime;
     private final EventType eventType;
     private final ApiEventType apiEventType;
-
     private final Plan plan;
     private final PlanPhase phase;
     private final String priceList;
 
-
-    public TimedMigration(final DateTime eventTime, final EventType eventType,
-                          final ApiEventType apiEventType, final Plan plan, final PlanPhase phase, final String priceList) {
-        super();
+    public TimedMigration(final DateTime eventTime, final EventType eventType, final ApiEventType apiEventType,
+                          final Plan plan, final PlanPhase phase, final String priceList) {
         this.eventTime = eventTime;
         this.eventType = eventType;
         this.apiEventType = apiEventType;
@@ -52,7 +48,6 @@ public class TimedMigration {
     public EventType getEventType() {
         return eventType;
     }
-
 
     public ApiEventType getApiEventType() {
         return apiEventType;
