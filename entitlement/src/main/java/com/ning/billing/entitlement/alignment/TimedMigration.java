@@ -64,4 +64,62 @@ public class TimedMigration {
     public String getPriceList() {
         return priceList;
     }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append("TimedMigration");
+        sb.append("{apiEventType=").append(apiEventType);
+        sb.append(", eventTime=").append(eventTime);
+        sb.append(", eventType=").append(eventType);
+        sb.append(", plan=").append(plan);
+        sb.append(", phase=").append(phase);
+        sb.append(", priceList='").append(priceList).append('\'');
+        sb.append('}');
+        return sb.toString();
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        final TimedMigration that = (TimedMigration) o;
+
+        if (apiEventType != that.apiEventType) {
+            return false;
+        }
+        if (eventTime != null ? !eventTime.equals(that.eventTime) : that.eventTime != null) {
+            return false;
+        }
+        if (eventType != that.eventType) {
+            return false;
+        }
+        if (phase != null ? !phase.equals(that.phase) : that.phase != null) {
+            return false;
+        }
+        if (plan != null ? !plan.equals(that.plan) : that.plan != null) {
+            return false;
+        }
+        if (priceList != null ? !priceList.equals(that.priceList) : that.priceList != null) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = eventTime != null ? eventTime.hashCode() : 0;
+        result = 31 * result + (eventType != null ? eventType.hashCode() : 0);
+        result = 31 * result + (apiEventType != null ? apiEventType.hashCode() : 0);
+        result = 31 * result + (plan != null ? plan.hashCode() : 0);
+        result = 31 * result + (phase != null ? phase.hashCode() : 0);
+        result = 31 * result + (priceList != null ? priceList.hashCode() : 0);
+        return result;
+    }
 }
