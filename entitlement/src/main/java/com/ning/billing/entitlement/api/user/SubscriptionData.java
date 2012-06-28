@@ -313,13 +313,16 @@ public class SubscriptionData extends EntityBase implements Subscription {
 
     public SubscriptionTransitionData getInitialTransitionForCurrentPlan() {
         if (transitions == null) {
-            throw new EntitlementError(String.format(
-                    "No transitions for subscription %s", getId()));
+            throw new EntitlementError(String.format("No transitions for subscription %s", getId()));
         }
 
-        final SubscriptionTransitionDataIterator it = new SubscriptionTransitionDataIterator(
-                clock, transitions, Order.DESC_FROM_FUTURE, Kind.ENTITLEMENT,
-                Visibility.ALL, TimeLimit.PAST_OR_PRESENT_ONLY);
+        final SubscriptionTransitionDataIterator it = new SubscriptionTransitionDataIterator(clock,
+                                                                                             transitions,
+                                                                                             Order.DESC_FROM_FUTURE,
+                                                                                             Kind.ENTITLEMENT,
+                                                                                             Visibility.ALL,
+                                                                                             TimeLimit.PAST_OR_PRESENT_ONLY);
+
         while (it.hasNext()) {
             final SubscriptionTransitionData cur = it.next();
             if (cur.getTransitionType() == SubscriptionTransitionType.CREATE
@@ -329,9 +332,8 @@ public class SubscriptionData extends EntityBase implements Subscription {
                 return cur;
             }
         }
-        throw new EntitlementError(String.format(
-                "Failed to find InitialTransitionForCurrentPlan id = %s",
-                getId().toString()));
+
+        throw new EntitlementError(String.format("Failed to find InitialTransitionForCurrentPlan id = %s", getId()));
     }
 
     public boolean isSubscriptionFutureCancelled() {
@@ -482,10 +484,9 @@ public class SubscriptionData extends EntityBase implements Subscription {
                 nextPhase = (nextPhaseName != null) ? catalog.findPhase(nextPhaseName, cur.getRequestedDate(), getStartDate()) : null;
                 nextPriceList = (nextPriceListName != null) ? catalog.findPriceList(nextPriceListName, cur.getRequestedDate()) : null;
             } catch (CatalogApiException e) {
-                log.error(String.format(
-                        "Failed to build transition for subscription %s", id),
-                          e);
+                log.error(String.format("Failed to build transition for subscription %s", id), e);
             }
+
             final SubscriptionTransitionData transition = new SubscriptionTransitionData(
                     cur.getId(), id, bundleId, cur.getType(), apiEventType,
                     cur.getRequestedDate(), cur.getEffectiveDate(),

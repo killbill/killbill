@@ -63,13 +63,13 @@ public class PlanAligner {
     /**
      * Returns the current and next phase for the subscription in creation
      *
-     * @param subscription  the subscription in creation
+     * @param subscription  the subscription in creation (only the start date and the bundle start date are looked at)
      * @param plan          the current Plan
      * @param initialPhase  the initialPhase on which we should create that subscription. can be null
      * @param priceList     the priceList
-     * @param requestedDate the requested date
-     * @param effectiveDate the effective creation date
-     * @return the current and next phase
+     * @param requestedDate the requested date (only used to load the catalog)
+     * @param effectiveDate the effective creation date (driven by the catalog policy, i.e. when the creation occurs)
+     * @return the current and next phases
      * @throws CatalogApiException         for catalog errors
      * @throws EntitlementUserApiException for entitlement errors
      */
@@ -94,11 +94,12 @@ public class PlanAligner {
     /**
      * Returns current Phase for that Plan change
      *
-     * @param subscription  the subscription in creation
+     * @param subscription  the subscription in change (only start date, bundle start date, current phase, plan and pricelist
+     *                      are looked at)
      * @param plan          the current Plan
      * @param priceList     the priceList on which we should change that subscription.
      * @param requestedDate the requested date
-     * @param effectiveDate the effective change date
+     * @param effectiveDate the effective change date (driven by the catalog policy, i.e. when the change occurs)
      * @return the current phase
      * @throws CatalogApiException         for catalog errors
      * @throws EntitlementUserApiException for entitlement errors
@@ -114,11 +115,12 @@ public class PlanAligner {
     /**
      * Returns next Phase for that Plan change
      *
-     * @param subscription  the subscription in creation
+     * @param subscription  the subscription in change (only start date, bundle start date, current phase, plan and pricelist
+     *                      are looked at)
      * @param plan          the current Plan
      * @param priceList     the priceList on which we should change that subscription.
      * @param requestedDate the requested date
-     * @param effectiveDate the effective change date
+     * @param effectiveDate the effective change date (driven by the catalog policy, i.e. when the change occurs)
      * @return the next phase
      * @throws CatalogApiException         for catalog errors
      * @throws EntitlementUserApiException for entitlement errors
@@ -133,12 +135,11 @@ public class PlanAligner {
 
     /**
      * Returns next Phase for that Subscription at a point in time
-     * <p/>
      *
      * @param subscription  the subscription for which we need to compute the next Phase event
      * @param requestedDate the requested date
      * @param effectiveDate the date at which we look to compute that event. effective needs to be after last Plan change or initial Plan
-     * @return The PhaseEvent at the correct point in time
+     * @return the next phase
      */
     public TimedPhase getNextTimedPhase(final SubscriptionData subscription, final DateTime requestedDate, final DateTime effectiveDate) {
         try {
@@ -160,7 +161,7 @@ public class PlanAligner {
                                                                                lastPlanTransition.getNextPriceList().getName(),
                                                                                requestedDate);
                     return getTimedPhase(timedPhases, effectiveDate, WhichPhase.NEXT);
-                // If we went through Plan changes, borrow the logics for changePlan alignment
+                // If we went through Plan changes, borrow the logic for changePlan alignment
                 case CHANGE:
                     return getTimedPhaseOnChange(subscription.getStartDate(),
                                                  subscription.getBundleStartDate(),
