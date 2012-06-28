@@ -63,7 +63,6 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
         this.subscriptionFactory = subscriptionFactory;
     }
 
-
     @Override
     public SubscriptionBundle getBundleFromId(final UUID id) throws EntitlementUserApiException {
         final SubscriptionBundle result = dao.getSubscriptionBundleFromId(id);
@@ -115,7 +114,6 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
         return result;
     }
 
-
     public SubscriptionBundle createBundleForAccount(final UUID accountId, final String bundleName, final CallContext context)
             throws EntitlementUserApiException {
         final SubscriptionBundleData bundle = new SubscriptionBundleData(bundleName, accountId, clock.getUTCNow());
@@ -123,12 +121,12 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
     }
 
     @Override
-    public Subscription createSubscription(final UUID bundleId, final PlanPhaseSpecifier spec, DateTime requestedDate,
+    public Subscription createSubscription(final UUID bundleId, final PlanPhaseSpecifier spec, final DateTime requestedDateWithMs,
                                            final CallContext context) throws EntitlementUserApiException {
         try {
             final String realPriceList = (spec.getPriceListName() == null) ? PriceListSet.DEFAULT_PRICELIST_NAME : spec.getPriceListName();
             final DateTime now = clock.getUTCNow();
-            requestedDate = (requestedDate != null) ? DefaultClock.truncateMs(requestedDate) : now;
+            final DateTime requestedDate = (requestedDateWithMs != null) ? DefaultClock.truncateMs(requestedDateWithMs) : now;
             if (requestedDate.isAfter(now)) {
                 throw new EntitlementUserApiException(ErrorCode.ENT_INVALID_REQUESTED_DATE, requestedDate.toString());
             }
@@ -185,20 +183,17 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
                                                              plan.getProduct().getCategory().toString()));
             }
 
-            final SubscriptionData subscription = apiService.createPlan(new SubscriptionBuilder()
-                                                                          .setId(UUID.randomUUID())
-                                                                          .setBundleId(bundleId)
-                                                                          .setCategory(plan.getProduct().getCategory())
-                                                                          .setBundleStartDate(bundleStartDate)
-                                                                          .setStartDate(effectiveDate),
-                                                                  plan, spec.getPhaseType(), realPriceList, requestedDate, effectiveDate, now, context);
-
-            return subscription;
+            return apiService.createPlan(new SubscriptionBuilder()
+                                                 .setId(UUID.randomUUID())
+                                                 .setBundleId(bundleId)
+                                                 .setCategory(plan.getProduct().getCategory())
+                                                 .setBundleStartDate(bundleStartDate)
+                                                 .setStartDate(effectiveDate),
+                                         plan, spec.getPhaseType(), realPriceList, requestedDate, effectiveDate, now, context);
         } catch (CatalogApiException e) {
             throw new EntitlementUserApiException(e);
         }
     }
-
 
     @Override
     public DateTime getNextBillingDate(final UUID accountId) {
@@ -216,7 +211,6 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
         }
         return result;
     }
-
 
     @Override
     public List<SubscriptionStatusDryRun> getDryRunChangePlanStatus(final UUID subscriptionId, final String baseProductName, final DateTime requestedDate)
@@ -247,9 +241,10 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
                 reason = DryRunChangeReason.AO_NOT_AVAILABLE_IN_NEW_PLAN;
             }
             final SubscriptionStatusDryRun status = new DefaultSubscriptionStatusDryRun(cur.getId(),
-                                                                                  cur.getCurrentPlan().getProduct().getName(), cur.getCurrentPhase().getPhaseType(),
-                                                                                  cur.getCurrentPlan().getBillingPeriod(),
-                                                                                  cur.getCurrentPriceList().getName(), reason);
+                                                                                        cur.getCurrentPlan().getProduct().getName(),
+                                                                                        cur.getCurrentPhase().getPhaseType(),
+                                                                                        cur.getCurrentPlan().getBillingPeriod(),
+                                                                                        cur.getCurrentPriceList().getName(), reason);
             result.add(status);
         }
         return result;
