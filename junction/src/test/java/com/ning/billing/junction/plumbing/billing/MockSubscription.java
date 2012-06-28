@@ -27,9 +27,9 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.SubscriptionEvent;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.util.callcontext.CallContext;
@@ -103,15 +103,15 @@ public class MockSubscription implements Subscription {
         return sub.getCategory();
     }
 
-    public SubscriptionEvent getPendingTransition() {
+    public EffectiveSubscriptionEvent getPendingTransition() {
         return sub.getPendingTransition();
     }
 
-    public SubscriptionEvent getPreviousTransition() {
+    public EffectiveSubscriptionEvent getPreviousTransition() {
         return sub.getPreviousTransition();
     }
 
-    public List<SubscriptionEvent> getBillingTransitions() {
+    public List<EffectiveSubscriptionEvent> getBillingTransitions() {
         return sub.getBillingTransitions();
     }
 

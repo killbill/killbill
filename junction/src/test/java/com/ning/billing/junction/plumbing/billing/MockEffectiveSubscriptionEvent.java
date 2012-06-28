@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.ning.billing.entitlement.api.user;
+package com.ning.billing.junction.plumbing.billing;
 
 import java.util.UUID;
 
@@ -23,9 +23,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
+import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 
-public class DefaultSubscriptionEvent implements SubscriptionEvent {
+public class MockEffectiveSubscriptionEvent implements EffectiveSubscriptionEvent {
 
     private final Long totalOrdering;
     private final UUID subscriptionId;
@@ -47,46 +48,25 @@ public class DefaultSubscriptionEvent implements SubscriptionEvent {
 
     private final DateTime startDate;
 
-    public DefaultSubscriptionEvent(final SubscriptionTransitionData in, final DateTime startDate) {
-        this(in.getId(),
-             in.getSubscriptionId(),
-             in.getBundleId(),
-             in.getRequestedTransitionTime(),
-             in.getEffectiveTransitionTime(),
-             in.getPreviousState(),
-             (in.getPreviousPlan() != null) ? in.getPreviousPlan().getName() : null,
-             (in.getPreviousPhase() != null) ? in.getPreviousPhase().getName() : null,
-             (in.getPreviousPriceList() != null) ? in.getPreviousPriceList().getName() : null,
-             in.getNextState(),
-             (in.getNextPlan() != null) ? in.getNextPlan().getName() : null,
-             (in.getNextPhase() != null) ? in.getNextPhase().getName() : null,
-             (in.getNextPriceList() != null) ? in.getNextPriceList().getName() : null,
-             in.getTotalOrdering(),
-             in.getUserToken(),
-             in.getTransitionType(),
-             in.getRemainingEventsForUserOperation(),
-             startDate);
-    }
-
     @JsonCreator
-    public DefaultSubscriptionEvent(@JsonProperty("eventId") final UUID eventId,
-                                    @JsonProperty("subscriptionId") final UUID subscriptionId,
-                                    @JsonProperty("bundleId") final UUID bundleId,
-                                    @JsonProperty("requestedTransitionTime") final DateTime requestedTransitionTime,
-                                    @JsonProperty("effectiveTransitionTime") final DateTime effectiveTransitionTime,
-                                    @JsonProperty("previousState") final SubscriptionState previousState,
-                                    @JsonProperty("previousPlan") final String previousPlan,
-                                    @JsonProperty("previousPhase") final String previousPhase,
-                                    @JsonProperty("previousPriceList") final String previousPriceList,
-                                    @JsonProperty("nextState") final SubscriptionState nextState,
-                                    @JsonProperty("nextPlan") final String nextPlan,
-                                    @JsonProperty("nextPhase") final String nextPhase,
-                                    @JsonProperty("nextPriceList") final String nextPriceList,
-                                    @JsonProperty("totalOrdering") final Long totalOrdering,
-                                    @JsonProperty("userToken") final UUID userToken,
-                                    @JsonProperty("transitionType") final SubscriptionTransitionType transitionType,
-                                    @JsonProperty("remainingEventsForUserOperation") final Integer remainingEventsForUserOperation,
-                                    @JsonProperty("startDate") final DateTime startDate) {
+    public MockEffectiveSubscriptionEvent(@JsonProperty("eventId") final UUID eventId,
+                                          @JsonProperty("subscriptionId") final UUID subscriptionId,
+                                          @JsonProperty("bundleId") final UUID bundleId,
+                                          @JsonProperty("requestedTransitionTime") final DateTime requestedTransitionTime,
+                                          @JsonProperty("effectiveTransitionTime") final DateTime effectiveTransitionTime,
+                                          @JsonProperty("previousState") final SubscriptionState previousState,
+                                          @JsonProperty("previousPlan") final String previousPlan,
+                                          @JsonProperty("previousPhase") final String previousPhase,
+                                          @JsonProperty("previousPriceList") final String previousPriceList,
+                                          @JsonProperty("nextState") final SubscriptionState nextState,
+                                          @JsonProperty("nextPlan") final String nextPlan,
+                                          @JsonProperty("nextPhase") final String nextPhase,
+                                          @JsonProperty("nextPriceList") final String nextPriceList,
+                                          @JsonProperty("totalOrdering") final Long totalOrdering,
+                                          @JsonProperty("userToken") final UUID userToken,
+                                          @JsonProperty("transitionType") final SubscriptionTransitionType transitionType,
+                                          @JsonProperty("remainingEventsForUserOperation") final Integer remainingEventsForUserOperation,
+                                          @JsonProperty("startDate") final DateTime startDate) {
         super();
         this.eventId = eventId;
         this.subscriptionId = subscriptionId;
@@ -269,7 +249,7 @@ public class DefaultSubscriptionEvent implements SubscriptionEvent {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        final DefaultSubscriptionEvent other = (DefaultSubscriptionEvent) obj;
+        final MockEffectiveSubscriptionEvent other = (MockEffectiveSubscriptionEvent) obj;
         if (bundleId == null) {
             if (other.bundleId != null) {
                 return false;
@@ -381,25 +361,6 @@ public class DefaultSubscriptionEvent implements SubscriptionEvent {
             return false;
         }
         return true;
-    }
-
-    @Override
-    public String toString() {
-        return "DefaultSubscriptionEvent [transitionType=" + transitionType
-                + ", effectiveTransitionTime=" + effectiveTransitionTime
-                + ", totalOrdering=" + totalOrdering
-                + ", subscriptionId=" + subscriptionId + ", bundleId="
-                + bundleId + ", eventId=" + eventId
-                + ", requestedTransitionTime=" + requestedTransitionTime
-                + ", previousState=" + previousState + ", previousPriceList="
-                + previousPriceList + ", previousPlan=" + previousPlan
-                + ", previousPhase=" + previousPhase + ", nextState="
-                + nextState + ", nextPriceList=" + nextPriceList
-                + ", nextPlan=" + nextPlan + ", nextPhase=" + nextPhase
-                + ", remainingEventsForUserOperation="
-                + remainingEventsForUserOperation + ", userToken=" + userToken
-                + ", startDate=" + startDate + "]";
-
     }
 
 }

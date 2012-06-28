@@ -22,8 +22,8 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountChangeEvent;
 import com.ning.billing.account.api.AccountCreationEvent;
 import com.ning.billing.entitlement.api.timeline.RepairEntitlementEvent;
+import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
-import com.ning.billing.entitlement.api.user.SubscriptionEvent;
 import com.ning.billing.invoice.api.EmptyInvoiceEvent;
 import com.ning.billing.invoice.api.InvoiceCreationEvent;
 import com.ning.billing.payment.api.PaymentErrorEvent;
@@ -55,31 +55,31 @@ public class AnalyticsListener {
     }
 
     @Subscribe
-    public void handleSubscriptionTransitionChange(final SubscriptionEvent event) throws AccountApiException, EntitlementUserApiException {
-        switch (event.getTransitionType()) {
+    public void handleSubscriptionTransitionChange(final EffectiveSubscriptionEvent eventEffective) throws AccountApiException, EntitlementUserApiException {
+        switch (eventEffective.getTransitionType()) {
             // A subscription enters either through migration or as newly created subscription
             case MIGRATE_ENTITLEMENT:
             case CREATE:
-                bstRecorder.subscriptionCreated(event);
+                bstRecorder.subscriptionCreated(eventEffective);
                 break;
             case RE_CREATE:
-                bstRecorder.subscriptionRecreated(event);
+                bstRecorder.subscriptionRecreated(eventEffective);
                 break;
             case MIGRATE_BILLING:
                 break;
             case CANCEL:
-                bstRecorder.subscriptionCancelled(event);
+                bstRecorder.subscriptionCancelled(eventEffective);
                 break;
             case CHANGE:
-                bstRecorder.subscriptionChanged(event);
+                bstRecorder.subscriptionChanged(eventEffective);
                 break;
             case UNCANCEL:
                 break;
             case PHASE:
-                bstRecorder.subscriptionPhaseChanged(event);
+                bstRecorder.subscriptionPhaseChanged(eventEffective);
                 break;
             default:
-                throw new RuntimeException("Unexpected event type " + event.getTransitionType());
+                throw new RuntimeException("Unexpected event type " + eventEffective.getTransitionType());
         }
     }
 

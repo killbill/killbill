@@ -138,7 +138,7 @@ public class SubscriptionData extends EntityBase implements Subscription {
 
     @Override
     public DateTime getEndDate() {
-        final SubscriptionEvent latestTransition = getPreviousTransition();
+        final EffectiveSubscriptionEvent latestTransition = getPreviousTransition();
         if (latestTransition.getNextState() == SubscriptionState.CANCELLED) {
             return latestTransition.getEffectiveTransitionTime();
         }
@@ -172,12 +172,12 @@ public class SubscriptionData extends EntityBase implements Subscription {
     }
 
     @Override
-    public SubscriptionEvent getPendingTransition() {
+    public EffectiveSubscriptionEvent getPendingTransition() {
         final SubscriptionTransitionData data = getPendingTransitionData();
         if (data == null) {
             return null;
         }
-        return new DefaultSubscriptionEvent(data, startDate);
+        return new DefaultEffectiveSubscriptionEvent(data, startDate);
     }
 
     @Override
@@ -196,12 +196,12 @@ public class SubscriptionData extends EntityBase implements Subscription {
     }
 
     @Override
-    public SubscriptionEvent getPreviousTransition() {
+    public EffectiveSubscriptionEvent getPreviousTransition() {
         final SubscriptionTransitionData data = getPreviousTransitionData();
         if (data == null) {
             return null;
         }
-        return new DefaultSubscriptionEvent(data, startDate);
+        return new DefaultEffectiveSubscriptionEvent(data, startDate);
     }
 
     protected SubscriptionTransitionData getPreviousTransitionData() {
@@ -264,29 +264,29 @@ public class SubscriptionData extends EntityBase implements Subscription {
         return true;
     }
 
-    public List<SubscriptionEvent> getBillingTransitions() {
+    public List<EffectiveSubscriptionEvent> getBillingTransitions() {
 
         if (transitions == null) {
             return Collections.emptyList();
         }
-        final List<SubscriptionEvent> result = new ArrayList<SubscriptionEvent>();
+        final List<EffectiveSubscriptionEvent> result = new ArrayList<EffectiveSubscriptionEvent>();
         final SubscriptionTransitionDataIterator it = new SubscriptionTransitionDataIterator(
                 clock, transitions, Order.ASC_FROM_PAST, Kind.BILLING,
                 Visibility.ALL, TimeLimit.ALL);
         while (it.hasNext()) {
-            result.add(new DefaultSubscriptionEvent(it.next(), startDate));
+            result.add(new DefaultEffectiveSubscriptionEvent(it.next(), startDate));
         }
         return result;
     }
 
-    public SubscriptionEvent getTransitionFromEvent(final EntitlementEvent event, final int seqId) {
+    public EffectiveSubscriptionEvent getTransitionFromEvent(final EntitlementEvent event, final int seqId) {
         if (transitions == null || event == null) {
             return null;
         }
         for (final SubscriptionTransitionData cur : transitions) {
             if (cur.getId().equals(event.getId())) {
                 final SubscriptionTransitionData withSeq = new SubscriptionTransitionData(cur, seqId);
-                return new DefaultSubscriptionEvent(withSeq, startDate);
+                return new DefaultEffectiveSubscriptionEvent(withSeq, startDate);
             }
         }
         return null;

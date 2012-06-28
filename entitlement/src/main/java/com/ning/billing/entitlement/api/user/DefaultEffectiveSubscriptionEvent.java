@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -13,7 +13,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.ning.billing.junction.plumbing.billing;
+
+package com.ning.billing.entitlement.api.user;
 
 import java.util.UUID;
 
@@ -24,9 +25,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
-import com.ning.billing.entitlement.api.user.SubscriptionEvent;
 
-public class MockSubscriptionEvent implements SubscriptionEvent {
+public class DefaultEffectiveSubscriptionEvent implements EffectiveSubscriptionEvent {
 
     private final Long totalOrdering;
     private final UUID subscriptionId;
@@ -48,25 +48,46 @@ public class MockSubscriptionEvent implements SubscriptionEvent {
 
     private final DateTime startDate;
 
+    public DefaultEffectiveSubscriptionEvent(final SubscriptionTransitionData in, final DateTime startDate) {
+        this(in.getId(),
+             in.getSubscriptionId(),
+             in.getBundleId(),
+             in.getRequestedTransitionTime(),
+             in.getEffectiveTransitionTime(),
+             in.getPreviousState(),
+             (in.getPreviousPlan() != null) ? in.getPreviousPlan().getName() : null,
+             (in.getPreviousPhase() != null) ? in.getPreviousPhase().getName() : null,
+             (in.getPreviousPriceList() != null) ? in.getPreviousPriceList().getName() : null,
+             in.getNextState(),
+             (in.getNextPlan() != null) ? in.getNextPlan().getName() : null,
+             (in.getNextPhase() != null) ? in.getNextPhase().getName() : null,
+             (in.getNextPriceList() != null) ? in.getNextPriceList().getName() : null,
+             in.getTotalOrdering(),
+             in.getUserToken(),
+             in.getTransitionType(),
+             in.getRemainingEventsForUserOperation(),
+             startDate);
+    }
+
     @JsonCreator
-    public MockSubscriptionEvent(@JsonProperty("eventId") final UUID eventId,
-                                 @JsonProperty("subscriptionId") final UUID subscriptionId,
-                                 @JsonProperty("bundleId") final UUID bundleId,
-                                 @JsonProperty("requestedTransitionTime") final DateTime requestedTransitionTime,
-                                 @JsonProperty("effectiveTransitionTime") final DateTime effectiveTransitionTime,
-                                 @JsonProperty("previousState") final SubscriptionState previousState,
-                                 @JsonProperty("previousPlan") final String previousPlan,
-                                 @JsonProperty("previousPhase") final String previousPhase,
-                                 @JsonProperty("previousPriceList") final String previousPriceList,
-                                 @JsonProperty("nextState") final SubscriptionState nextState,
-                                 @JsonProperty("nextPlan") final String nextPlan,
-                                 @JsonProperty("nextPhase") final String nextPhase,
-                                 @JsonProperty("nextPriceList") final String nextPriceList,
-                                 @JsonProperty("totalOrdering") final Long totalOrdering,
-                                 @JsonProperty("userToken") final UUID userToken,
-                                 @JsonProperty("transitionType") final SubscriptionTransitionType transitionType,
-                                 @JsonProperty("remainingEventsForUserOperation") final Integer remainingEventsForUserOperation,
-                                 @JsonProperty("startDate") final DateTime startDate) {
+    public DefaultEffectiveSubscriptionEvent(@JsonProperty("eventId") final UUID eventId,
+                                             @JsonProperty("subscriptionId") final UUID subscriptionId,
+                                             @JsonProperty("bundleId") final UUID bundleId,
+                                             @JsonProperty("requestedTransitionTime") final DateTime requestedTransitionTime,
+                                             @JsonProperty("effectiveTransitionTime") final DateTime effectiveTransitionTime,
+                                             @JsonProperty("previousState") final SubscriptionState previousState,
+                                             @JsonProperty("previousPlan") final String previousPlan,
+                                             @JsonProperty("previousPhase") final String previousPhase,
+                                             @JsonProperty("previousPriceList") final String previousPriceList,
+                                             @JsonProperty("nextState") final SubscriptionState nextState,
+                                             @JsonProperty("nextPlan") final String nextPlan,
+                                             @JsonProperty("nextPhase") final String nextPhase,
+                                             @JsonProperty("nextPriceList") final String nextPriceList,
+                                             @JsonProperty("totalOrdering") final Long totalOrdering,
+                                             @JsonProperty("userToken") final UUID userToken,
+                                             @JsonProperty("transitionType") final SubscriptionTransitionType transitionType,
+                                             @JsonProperty("remainingEventsForUserOperation") final Integer remainingEventsForUserOperation,
+                                             @JsonProperty("startDate") final DateTime startDate) {
         super();
         this.eventId = eventId;
         this.subscriptionId = subscriptionId;
@@ -110,7 +131,6 @@ public class MockSubscriptionEvent implements SubscriptionEvent {
         return bundleId;
     }
 
-
     @Override
     public SubscriptionState getPreviousState() {
         return previousState;
@@ -141,7 +161,6 @@ public class MockSubscriptionEvent implements SubscriptionEvent {
         return nextState;
     }
 
-
     @Override
     public String getPreviousPriceList() {
         return previousPriceList;
@@ -161,7 +180,6 @@ public class MockSubscriptionEvent implements SubscriptionEvent {
     public Integer getRemainingEventsForUserOperation() {
         return remainingEventsForUserOperation;
     }
-
 
     @Override
     public DateTime getRequestedTransitionTime() {
@@ -188,7 +206,6 @@ public class MockSubscriptionEvent implements SubscriptionEvent {
     public DateTime getSubscriptionStartDate() {
         return startDate;
     }
-
 
     @Override
     public int hashCode() {
@@ -249,7 +266,7 @@ public class MockSubscriptionEvent implements SubscriptionEvent {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        final MockSubscriptionEvent other = (MockSubscriptionEvent) obj;
+        final DefaultEffectiveSubscriptionEvent other = (DefaultEffectiveSubscriptionEvent) obj;
         if (bundleId == null) {
             if (other.bundleId != null) {
                 return false;
@@ -361,6 +378,25 @@ public class MockSubscriptionEvent implements SubscriptionEvent {
             return false;
         }
         return true;
+    }
+
+    @Override
+    public String toString() {
+        return "DefaultSubscriptionEvent [transitionType=" + transitionType
+                + ", effectiveTransitionTime=" + effectiveTransitionTime
+                + ", totalOrdering=" + totalOrdering
+                + ", subscriptionId=" + subscriptionId + ", bundleId="
+                + bundleId + ", eventId=" + eventId
+                + ", requestedTransitionTime=" + requestedTransitionTime
+                + ", previousState=" + previousState + ", previousPriceList="
+                + previousPriceList + ", previousPlan=" + previousPlan
+                + ", previousPhase=" + previousPhase + ", nextState="
+                + nextState + ", nextPriceList=" + nextPriceList
+                + ", nextPlan=" + nextPlan + ", nextPhase=" + nextPhase
+                + ", remainingEventsForUserOperation="
+                + remainingEventsForUserOperation + ", userToken=" + userToken
+                + ", startDate=" + startDate + "]";
+
     }
 
 }

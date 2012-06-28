@@ -24,7 +24,7 @@ import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.util.bus.BusEvent;
 
-public interface SubscriptionEvent extends BusEvent {
+public interface EffectiveSubscriptionEvent extends BusEvent {
 
     UUID getId();
 
