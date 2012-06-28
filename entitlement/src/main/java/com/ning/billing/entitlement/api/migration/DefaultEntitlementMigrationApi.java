@@ -208,9 +208,7 @@ public class DefaultEntitlementMigrationApi implements EntitlementMigrationApi {
         }
         events.add(new ApiEventMigrateBilling(creationEvent, ctd));
         Collections.sort(events, new Comparator<EntitlementEvent>() {
-
             int compForApiType(final EntitlementEvent o1, final EntitlementEvent o2, final ApiEventType type) {
-
                 ApiEventType apiO1 = null;
                 if (o1.getType() == EventType.API_USER) {
                     apiO1 = ((ApiEvent) o1).getEventType();
@@ -219,9 +217,9 @@ public class DefaultEntitlementMigrationApi implements EntitlementMigrationApi {
                 if (o2.getType() == EventType.API_USER) {
                     apiO2 = ((ApiEvent) o2).getEventType();
                 }
-                if (apiO1 != null && apiO1 == type) {
+                if (apiO1 != null && apiO1.equals(type)) {
                     return -1;
-                } else if (apiO2 != null && apiO2 == type) {
+                } else if (apiO2 != null && apiO2.equals(type)) {
                     return 1;
                 } else {
                     return 0;
