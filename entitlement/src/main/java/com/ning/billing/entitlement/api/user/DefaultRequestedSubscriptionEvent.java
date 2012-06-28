@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2012 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -24,13 +24,13 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 
-public class DefaultEffectiveSubscriptionEvent extends DefaultSubscriptionEvent implements EffectiveSubscriptionEvent {
-    public DefaultEffectiveSubscriptionEvent(final SubscriptionTransitionData in, final DateTime startDate) {
+public class DefaultRequestedSubscriptionEvent extends DefaultSubscriptionEvent implements RequestedSubscriptionEvent {
+    public DefaultRequestedSubscriptionEvent(final SubscriptionTransitionData in, final DateTime startDate) {
         super(in, startDate);
     }
 
     @JsonCreator
-    public DefaultEffectiveSubscriptionEvent(@JsonProperty("eventId") final UUID eventId,
+    public DefaultRequestedSubscriptionEvent(@JsonProperty("eventId") final UUID eventId,
                                              @JsonProperty("subscriptionId") final UUID subscriptionId,
                                              @JsonProperty("bundleId") final UUID bundleId,
                                              @JsonProperty("requestedTransitionTime") final DateTime requestedTransitionTime,
