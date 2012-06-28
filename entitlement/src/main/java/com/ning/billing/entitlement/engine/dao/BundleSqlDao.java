@@ -45,10 +45,9 @@ import com.ning.billing.util.dao.BinderBase;
 import com.ning.billing.util.dao.MapperBase;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 
-
 @ExternalizedSqlViaStringTemplate3()
 public interface BundleSqlDao extends Transactional<BundleSqlDao>, EntitySqlDao<SubscriptionBundle>,
-        AuditSqlDao, CloseMe, Transmogrifier {
+                                      AuditSqlDao, CloseMe, Transmogrifier {
 
     @SqlUpdate
     public void insertBundle(@Bind(binder = SubscriptionBundleBinder.class) SubscriptionBundleData bundle,
@@ -81,17 +80,14 @@ public interface BundleSqlDao extends Transactional<BundleSqlDao>, EntitySqlDao<
     }
 
     public static class ISubscriptionBundleSqlMapper extends MapperBase implements ResultSetMapper<SubscriptionBundle> {
-
         @Override
-        public SubscriptionBundle map(final int arg, final ResultSet r,
-                                      final StatementContext ctx) throws SQLException {
+        public SubscriptionBundle map(final int arg, final ResultSet r, final StatementContext ctx) throws SQLException {
             final UUID id = UUID.fromString(r.getString("id"));
             final String key = r.getString("external_key");
             final UUID accountId = UUID.fromString(r.getString("account_id"));
             final DateTime startDate = getDate(r, "start_date");
             final DateTime lastSysUpdateDate = getDate(r, "last_sys_update_date");
-            final SubscriptionBundleData bundle = new SubscriptionBundleData(id, key, accountId, startDate, lastSysUpdateDate);
-            return bundle;
+            return new SubscriptionBundleData(id, key, accountId, startDate, lastSysUpdateDate);
         }
     }
 }
