@@ -54,35 +54,33 @@ import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.entity.EntityBase;
 
 public class SubscriptionData extends EntityBase implements Subscription {
-
     private static final Logger log = LoggerFactory.getLogger(SubscriptionData.class);
 
+    private final Clock clock;
+    private final SubscriptionApiService apiService;
 
-    protected final Clock clock;
-    protected final SubscriptionApiService apiService;
     //
     // Final subscription fields
     //
-    protected final UUID bundleId;
-    protected final DateTime startDate;
-    protected final DateTime bundleStartDate;
-    protected final ProductCategory category;
+    private final UUID bundleId;
+    private final DateTime startDate;
+    private final DateTime bundleStartDate;
+    private final ProductCategory category;
 
     //
     // Those can be modified through non User APIs, and a new Subscription
     // object would be created
     //
-    protected final long activeVersion;
-    protected final DateTime chargedThroughDate;
-    protected final DateTime paidThroughDate;
-
+    private final long activeVersion;
+    private final DateTime chargedThroughDate;
+    private final DateTime paidThroughDate;
 
     //
     // User APIs (create, change, cancel,...) will recompute those each time,
     // so the user holding that subscription object get the correct state when
     // the call completes
     //
-    protected LinkedList<SubscriptionTransitionData> transitions;
+    private LinkedList<SubscriptionTransitionData> transitions;
 
     // Transient object never returned at the API
     public SubscriptionData(final SubscriptionBuilder builder) {
@@ -281,7 +279,6 @@ public class SubscriptionData extends EntityBase implements Subscription {
         return result;
     }
 
-
     public SubscriptionEvent getTransitionFromEvent(final EntitlementEvent event, final int seqId) {
         if (transitions == null || event == null) {
             return null;
@@ -305,7 +302,6 @@ public class SubscriptionData extends EntityBase implements Subscription {
     public long getActiveVersion() {
         return activeVersion;
     }
-
 
     public List<SubscriptionTransitionData> getAllTransitions() {
         return transitions;

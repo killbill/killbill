@@ -47,7 +47,6 @@ import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.clock.Clock;
 
 public class SubscriptionDataRepair extends SubscriptionData {
-
     private final AddonUtils addonUtils;
     private final Clock clock;
     private final EntitlementDao repairDao;
@@ -56,8 +55,7 @@ public class SubscriptionDataRepair extends SubscriptionData {
     private final List<EntitlementEvent> initialEvents;
 
     // Low level events are ONLY used for Repair APIs
-    protected List<EntitlementEvent> events;
-
+    private List<EntitlementEvent> events;
 
     public SubscriptionDataRepair(final SubscriptionBuilder builder, final List<EntitlementEvent> initialEvents, final SubscriptionApiService apiService,
                                   final EntitlementDao dao, final Clock clock, final AddonUtils addonUtils, final CatalogService catalogService) {
@@ -68,7 +66,6 @@ public class SubscriptionDataRepair extends SubscriptionData {
         this.catalogService = catalogService;
         this.initialEvents = initialEvents;
     }
-
 
     DateTime getLastUserEventEffectiveDate() {
         DateTime res = null;
@@ -119,7 +116,7 @@ public class SubscriptionDataRepair extends SubscriptionData {
 
     public void addFutureAddonCancellation(final List<SubscriptionDataRepair> addOnSubscriptionInRepair, final CallContext context) {
 
-        if (category != ProductCategory.BASE) {
+        if (getCategory() != ProductCategory.BASE) {
             return;
         }
 
@@ -136,7 +133,7 @@ public class SubscriptionDataRepair extends SubscriptionData {
     private void trickleDownBPEffectForAddon(final List<SubscriptionDataRepair> addOnSubscriptionInRepair, final DateTime effectiveDate, final CallContext context)
             throws EntitlementUserApiException {
 
-        if (category != ProductCategory.BASE) {
+        if (getCategory() != ProductCategory.BASE) {
             return;
         }
 
@@ -144,7 +141,6 @@ public class SubscriptionDataRepair extends SubscriptionData {
                 null : getCurrentPlan().getProduct();
         addAddonCancellationIfRequired(addOnSubscriptionInRepair, baseProduct, effectiveDate, context);
     }
-
 
     private void addAddonCancellationIfRequired(final List<SubscriptionDataRepair> addOnSubscriptionInRepair, final Product baseProduct, final DateTime effectiveDate, final CallContext context) {
 
@@ -177,7 +173,7 @@ public class SubscriptionDataRepair extends SubscriptionData {
 
     private void checkAddonRights(final SubscriptionDataRepair baseSubscription)
             throws EntitlementUserApiException, CatalogApiException {
-        if (category == ProductCategory.ADD_ON) {
+        if (getCategory() == ProductCategory.ADD_ON) {
             addonUtils.checkAddonCreationRights(baseSubscription, getCurrentPlan());
         }
     }
@@ -194,7 +190,6 @@ public class SubscriptionDataRepair extends SubscriptionData {
     public List<EntitlementEvent> getInitialEvents() {
         return initialEvents;
     }
-
 
     public Collection<EntitlementEvent> getNewEvents() {
         final Collection<EntitlementEvent> newEvents = Collections2.filter(events, new Predicate<EntitlementEvent>() {
