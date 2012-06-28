@@ -18,8 +18,6 @@ package com.ning.billing.junction.plumbing.api;
 
 import java.util.UUID;
 
-import org.joda.time.DateTime;
-
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.junction.api.BlockingState;
@@ -44,10 +42,6 @@ public class BlockingSubscriptionBundle implements SubscriptionBundle {
         return subscriptionBundle.getId();
     }
 
-    public DateTime getStartDate() {
-        return subscriptionBundle.getStartDate();
-    }
-
     public String getKey() {
         return subscriptionBundle.getKey();
     }
@@ -64,4 +58,46 @@ public class BlockingSubscriptionBundle implements SubscriptionBundle {
         return blockingState;
     }
 
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append("BlockingSubscriptionBundle");
+        sb.append("{blockingApi=").append(blockingApi);
+        sb.append(", subscriptionBundle=").append(subscriptionBundle);
+        sb.append(", blockingState=").append(blockingState);
+        sb.append('}');
+        return sb.toString();
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        final BlockingSubscriptionBundle that = (BlockingSubscriptionBundle) o;
+
+        if (blockingApi != null ? !blockingApi.equals(that.blockingApi) : that.blockingApi != null) {
+            return false;
+        }
+        if (blockingState != null ? !blockingState.equals(that.blockingState) : that.blockingState != null) {
+            return false;
+        }
+        if (subscriptionBundle != null ? !subscriptionBundle.equals(that.subscriptionBundle) : that.subscriptionBundle != null) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = subscriptionBundle != null ? subscriptionBundle.hashCode() : 0;
+        result = 31 * result + (blockingApi != null ? blockingApi.hashCode() : 0);
+        result = 31 * result + (blockingState != null ? blockingState.hashCode() : 0);
+        return result;
+    }
 }
