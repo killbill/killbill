@@ -32,10 +32,9 @@ import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.util.clock.Clock;
 
 public class DefaultSubscriptionFactory implements SubscriptionFactory {
-
-    protected final SubscriptionApiService apiService;
-    protected final Clock clock;
-    protected final CatalogService catalogService;
+    private final SubscriptionApiService apiService;
+    private final Clock clock;
+    private final CatalogService catalogService;
 
     @Inject
     public DefaultSubscriptionFactory(final SubscriptionApiService apiService, final Clock clock, final CatalogService catalogService) {
@@ -43,7 +42,6 @@ public class DefaultSubscriptionFactory implements SubscriptionFactory {
         this.clock = clock;
         this.catalogService = catalogService;
     }
-
 
     public SubscriptionData createSubscription(final SubscriptionBuilder builder, final List<EntitlementEvent> events) {
         final SubscriptionData subscription = new SubscriptionData(builder, apiService, clock);
@@ -53,9 +51,7 @@ public class DefaultSubscriptionFactory implements SubscriptionFactory {
         return subscription;
     }
 
-
     public static class SubscriptionBuilder {
-
         private UUID id;
         private UUID bundleId;
         private DateTime startDate;
@@ -79,7 +75,6 @@ public class DefaultSubscriptionFactory implements SubscriptionFactory {
             this.chargedThroughDate = original.getChargedThroughDate();
             this.paidThroughDate = original.getPaidThroughDate();
         }
-
 
         public SubscriptionBuilder setId(final UUID id) {
             this.id = id;
@@ -169,5 +164,15 @@ public class DefaultSubscriptionFactory implements SubscriptionFactory {
         }
     }
 
+    public SubscriptionApiService getApiService() {
+        return apiService;
+    }
 
+    public CatalogService getCatalogService() {
+        return catalogService;
+    }
+
+    public Clock getClock() {
+        return clock;
+    }
 }

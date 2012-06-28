@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.entitlement.api.timeline;
 
 import java.util.Collection;
@@ -113,7 +114,6 @@ public class SubscriptionDataRepair extends SubscriptionData {
         }
     }
 
-
     public void addFutureAddonCancellation(final List<SubscriptionDataRepair> addOnSubscriptionInRepair, final CallContext context) {
 
         if (getCategory() != ProductCategory.BASE) {
@@ -158,13 +158,13 @@ public class SubscriptionDataRepair extends SubscriptionData {
                     !addonUtils.isAddonAvailable(baseProduct, addonCurrentPlan)) {
 
                 final EntitlementEvent cancelEvent = new ApiEventCancel(new ApiEventBuilder()
-                                                                          .setSubscriptionId(cur.getId())
-                                                                          .setActiveVersion(cur.getActiveVersion())
-                                                                          .setProcessedDate(now)
-                                                                          .setEffectiveDate(effectiveDate)
-                                                                          .setRequestedDate(now)
-                                                                          .setUserToken(context.getUserToken())
-                                                                          .setFromDisk(true));
+                                                                                .setSubscriptionId(cur.getId())
+                                                                                .setActiveVersion(cur.getActiveVersion())
+                                                                                .setProcessedDate(now)
+                                                                                .setEffectiveDate(effectiveDate)
+                                                                                .setRequestedDate(now)
+                                                                                .setUserToken(context.getUserToken())
+                                                                                .setFromDisk(true));
                 repairDao.cancelSubscription(cur.getId(), cancelEvent, context, 0);
                 cur.rebuildTransitions(repairDao.getEventsForSubscription(cur.getId()), catalogService.getFullCatalog());
             }
@@ -192,12 +192,11 @@ public class SubscriptionDataRepair extends SubscriptionData {
     }
 
     public Collection<EntitlementEvent> getNewEvents() {
-        final Collection<EntitlementEvent> newEvents = Collections2.filter(events, new Predicate<EntitlementEvent>() {
+        return Collections2.filter(events, new Predicate<EntitlementEvent>() {
             @Override
             public boolean apply(final EntitlementEvent input) {
                 return !initialEvents.contains(input);
             }
         });
-        return newEvents;
     }
 }
