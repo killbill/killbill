@@ -78,7 +78,6 @@ public class DefaultEntitlementMigrationApi implements EntitlementMigrationApi {
 
     private AccountMigrationData createAccountMigrationData(final EntitlementAccountMigration toBeMigrated, final CallContext context)
             throws EntitlementMigrationApiException {
-
         final UUID accountId = toBeMigrated.getAccountKey();
         final DateTime now = clock.getUTCNow();
 
@@ -89,7 +88,6 @@ public class DefaultEntitlementMigrationApi implements EntitlementMigrationApi {
             final SubscriptionBundleData bundleData = new SubscriptionBundleData(curBundle.getBundleKey(), accountId, clock.getUTCNow());
             final List<SubscriptionMigrationData> bundleSubscriptionData = new LinkedList<AccountMigrationData.SubscriptionMigrationData>();
 
-
             final List<EntitlementSubscriptionMigration> sortedSubscriptions = Lists.newArrayList(curBundle.getSubscriptions());
             // Make sure we have first BASE or STANDALONE, then ADDON and for each category order by CED
             Collections.sort(sortedSubscriptions, new Comparator<EntitlementSubscriptionMigration>() {
@@ -99,10 +97,10 @@ public class DefaultEntitlementMigrationApi implements EntitlementMigrationApi {
                     if (o1.getCategory().equals(o2.getCategory())) {
                         return o1.getSubscriptionCases()[0].getEffectiveDate().compareTo(o2.getSubscriptionCases()[0].getEffectiveDate());
                     } else {
-                    	if (!o1.getCategory().name().equalsIgnoreCase("ADD_ON")) {
+                        if (!o1.getCategory().name().equalsIgnoreCase("ADD_ON")) {
                             return -1;
                         } else if (o1.getCategory().name().equalsIgnoreCase("ADD_ON")) {
-                            return 1;                    
+                            return 1;
                         } else {
                             return 0;
                         }
@@ -127,24 +125,23 @@ public class DefaultEntitlementMigrationApi implements EntitlementMigrationApi {
             final BundleMigrationData bundleMigrationData = new BundleMigrationData(bundleData, bundleSubscriptionData);
             accountBundleData.add(bundleMigrationData);
         }
-        final AccountMigrationData accountMigrationData = new AccountMigrationData(accountBundleData);
-        return accountMigrationData;
+
+        return new AccountMigrationData(accountBundleData);
     }
 
     private SubscriptionMigrationData createInitialSubscription(final UUID bundleId, final ProductCategory productCategory,
                                                                 final EntitlementSubscriptionMigrationCase[] input, final DateTime now, final DateTime ctd, final CallContext context)
             throws EntitlementMigrationApiException {
-
         final TimedMigration[] events = migrationAligner.getEventsMigration(input, now);
         final DateTime migrationStartDate = events[0].getEventTime();
         final List<EntitlementEvent> emptyEvents = Collections.emptyList();
         final SubscriptionData subscriptionData = factory.createSubscription(new SubscriptionBuilder()
-                                                                               .setId(UUID.randomUUID())
-                                                                               .setBundleId(bundleId)
-                                                                               .setCategory(productCategory)
-                                                                               .setBundleStartDate(migrationStartDate)
-                                                                               .setStartDate(migrationStartDate),
-                                                                       emptyEvents);
+                                                                                     .setId(UUID.randomUUID())
+                                                                                     .setBundleId(bundleId)
+                                                                                     .setCategory(productCategory)
+                                                                                     .setBundleStartDate(migrationStartDate)
+                                                                                     .setStartDate(migrationStartDate),
+                                                                             emptyEvents);
         return new SubscriptionMigrationData(subscriptionData, toEvents(subscriptionData, now, ctd, events, context));
     }
 
@@ -155,18 +152,16 @@ public class DefaultEntitlementMigrationApi implements EntitlementMigrationApi {
         final DateTime migrationStartDate = events[0].getEventTime();
         final List<EntitlementEvent> emptyEvents = Collections.emptyList();
         final SubscriptionData subscriptionData = factory.createSubscription(new SubscriptionBuilder()
-                                                                               .setId(UUID.randomUUID())
-                                                                               .setBundleId(bundleId)
-                                                                               .setCategory(productCategory)
-                                                                               .setBundleStartDate(bundleStartDate)
-                                                                               .setStartDate(migrationStartDate),
-                                                                       emptyEvents);
+                                                                                     .setId(UUID.randomUUID())
+                                                                                     .setBundleId(bundleId)
+                                                                                     .setCategory(productCategory)
+                                                                                     .setBundleStartDate(bundleStartDate)
+                                                                                     .setStartDate(migrationStartDate),
+                                                                             emptyEvents);
         return new SubscriptionMigrationData(subscriptionData, toEvents(subscriptionData, now, ctd, events, context));
     }
 
     private List<EntitlementEvent> toEvents(final SubscriptionData subscriptionData, final DateTime now, final DateTime ctd, final TimedMigration[] migrationEvents, final CallContext context) {
-
-
         ApiEventMigrateEntitlement creationEvent = null;
         final List<EntitlementEvent> events = new ArrayList<EntitlementEvent>(migrationEvents.length);
         for (final TimedMigration cur : migrationEvents) {
@@ -246,6 +241,7 @@ public class DefaultEntitlementMigrationApi implements EntitlementMigrationApi {
                 return comp;
             }
         });
+
         return events;
     }
 }
