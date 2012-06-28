@@ -50,9 +50,10 @@ import com.ning.billing.util.tag.ControlTagType;
 public class DefaultInvoiceDao implements InvoiceDao {
     private final InvoiceSqlDao invoiceSqlDao;
     private final InvoicePaymentSqlDao invoicePaymentSqlDao;
-    private final CreditInvoiceItemSqlDao creditInvoiceItemSqlDao;
     private final TagUserApi tagUserApi;
     private final NextBillingDatePoster nextBillingDatePoster;
+
+    private final InvoiceItemSqlDao invoiceItemSqlDao;
 
     @Inject
     public DefaultInvoiceDao(final IDBI dbi,
@@ -60,7 +61,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
                              final TagUserApi tagUserApi) {
         this.invoiceSqlDao = dbi.onDemand(InvoiceSqlDao.class);
         this.invoicePaymentSqlDao = dbi.onDemand(InvoicePaymentSqlDao.class);
-        this.creditInvoiceItemSqlDao = dbi.onDemand(CreditInvoiceItemSqlDao.class);
+        this.invoiceItemSqlDao = dbi.onDemand(InvoiceItemSqlDao.class);
         this.nextBillingDatePoster = nextBillingDatePoster;
         this.tagUserApi = tagUserApi;
     }
@@ -155,25 +156,15 @@ public class DefaultInvoiceDao implements InvoiceDao {
 
                     List<Long> recordIdList;
 
-                    final List<InvoiceItem> recurringInvoiceItems = invoice.getInvoiceItems(RecurringInvoiceItem.class);
-                    final RecurringInvoiceItemSqlDao recurringInvoiceItemDao = transactional.become(RecurringInvoiceItemSqlDao.class);
-                    recurringInvoiceItemDao.batchCreateFromTransaction(recurringInvoiceItems, context);
-                    recordIdList = recurringInvoiceItemDao.getRecordIds(invoice.getId().toString());
-                    audits.addAll(createAudits(TableName.RECURRING_INVOICE_ITEMS, recordIdList));
+                    final List<InvoiceItem> invoiceItems = invoice.getInvoiceItems();
+                    final InvoiceItemSqlDao transInvoiceItemSqlDao = transactional.become(InvoiceItemSqlDao.class);
+                    transInvoiceItemSqlDao.batchCreateFromTransaction(invoiceItems, context);
+                    recordIdList = transInvoiceItemSqlDao.getRecordIds(invoice.getId().toString());
+                    audits.addAll(createAudits(TableName.INVOICE_ITEMS, recordIdList));
+
+                    List<InvoiceItem> recurringInvoiceItems = invoice.getInvoiceItems(RecurringInvoiceItem.class);
 
                     notifyOfFutureBillingEvents(transactional, recurringInvoiceItems);
-
-                    final List<InvoiceItem> fixedPriceInvoiceItems = invoice.getInvoiceItems(FixedPriceInvoiceItem.class);
-                    final FixedPriceInvoiceItemSqlDao fixedPriceInvoiceItemDao = transactional.become(FixedPriceInvoiceItemSqlDao.class);
-                    fixedPriceInvoiceItemDao.batchCreateFromTransaction(fixedPriceInvoiceItems, context);
-                    recordIdList = fixedPriceInvoiceItemDao.getRecordIds(invoice.getId().toString());
-                    audits.addAll(createAudits(TableName.FIXED_INVOICE_ITEMS, recordIdList));
-
-                    final List<InvoiceItem> creditInvoiceItems = invoice.getInvoiceItems(CreditBalanceAdjInvoiceItem.class);
-                    final CreditInvoiceItemSqlDao creditInvoiceItemSqlDao = transactional.become(CreditInvoiceItemSqlDao.class);
-                    creditInvoiceItemSqlDao.batchCreateFromTransaction(creditInvoiceItems, context);
-                    recordIdList = creditInvoiceItemSqlDao.getRecordIds(invoice.getId().toString());
-                    audits.addAll(createAudits(TableName.CREDIT_INVOICE_ITEMS, recordIdList));
 
                     final List<InvoicePayment> invoicePayments = invoice.getPayments();
                     final InvoicePaymentSqlDao invoicePaymentSqlDao = transactional.become(InvoicePaymentSqlDao.class);
@@ -328,7 +319,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
 
     @Override
     public InvoiceItem getCreditById(final UUID creditId) throws InvoiceApiException {
-        return creditInvoiceItemSqlDao.getById(creditId.toString());
+        return invoiceItemSqlDao.getById(creditId.toString());
     }
 
     // TODO: make this transactional
@@ -340,7 +331,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
         invoiceSqlDao.create(invoice, context);
 
         final InvoiceItem credit = new CreditBalanceAdjInvoiceItem(invoice.getId(), accountId, effectiveDate, amount, currency);
-        creditInvoiceItemSqlDao.create(credit, context);
+        invoiceItemSqlDao.create(credit, context);
 
         return credit;
     }
@@ -366,20 +357,12 @@ public class DefaultInvoiceDao implements InvoiceDao {
         }
     }
 
-    private void getInvoiceItemsWithinTransaction(final Invoice invoice, final InvoiceSqlDao invoiceDao) {
+    private void getInvoiceItemsWithinTransaction(final Invoice invoice, final InvoiceSqlDao transactional) {
         final String invoiceId = invoice.getId().toString();
 
-        final RecurringInvoiceItemSqlDao recurringInvoiceItemDao = invoiceDao.become(RecurringInvoiceItemSqlDao.class);
-        final List<InvoiceItem> recurringInvoiceItems = recurringInvoiceItemDao.getInvoiceItemsByInvoice(invoiceId);
-        invoice.addInvoiceItems(recurringInvoiceItems);
-
-        final FixedPriceInvoiceItemSqlDao fixedPriceInvoiceItemDao = invoiceDao.become(FixedPriceInvoiceItemSqlDao.class);
-        final List<InvoiceItem> fixedPriceInvoiceItems = fixedPriceInvoiceItemDao.getInvoiceItemsByInvoice(invoiceId);
-        invoice.addInvoiceItems(fixedPriceInvoiceItems);
-
-        final CreditInvoiceItemSqlDao creditInvoiceItemSqlDao = invoiceDao.become(CreditInvoiceItemSqlDao.class);
-        final List<InvoiceItem> creditInvoiceItems = creditInvoiceItemSqlDao.getInvoiceItemsByInvoice(invoiceId);
-        invoice.addInvoiceItems(creditInvoiceItems);
+        final InvoiceItemSqlDao transInvoiceItemSqlDao = transactional.become(InvoiceItemSqlDao.class);
+        final List<InvoiceItem> items = transInvoiceItemSqlDao.getInvoiceItemsByInvoice(invoiceId);
+        invoice.addInvoiceItems(items);
     }
 
     private void getInvoicePaymentsWithinTransaction(final List<Invoice> invoices, final InvoiceSqlDao invoiceDao) {

@@ -40,7 +40,7 @@ public class InvoiceItemList extends ArrayList<InvoiceItem> {
         BigDecimal total = BigDecimal.ZERO.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
 
         for (final InvoiceItem item : this) {
-            if (!(item instanceof CreditBalanceAdjInvoiceItem)) {
+            if ((item instanceof FixedPriceInvoiceItem) || (item instanceof RecurringInvoiceItem)) {
                 if (item.getAmount() != null) {
                     total = total.add(item.getAmount());
                 }

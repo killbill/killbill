@@ -183,7 +183,7 @@ public class MockInvoice extends EntityBase implements Invoice {
         BigDecimal result = BigDecimal.ZERO;
 
         for (final InvoiceItem i : invoiceItems) {
-            if (!i.getInvoiceItemType().equals(InvoiceItemType.CREDIT)) {
+            if (!i.getInvoiceItemType().equals(InvoiceItemType.CBA_ADJ)) {
                 result = result.add(i.getAmount());
             }
         }
@@ -195,7 +195,7 @@ public class MockInvoice extends EntityBase implements Invoice {
         BigDecimal result = BigDecimal.ZERO;
 
         for (final InvoiceItem i : invoiceItems) {
-            if (i.getInvoiceItemType().equals(InvoiceItemType.CREDIT)) {
+            if (i.getInvoiceItemType().equals(InvoiceItemType.CBA_ADJ)) {
                 result = result.add(i.getAmount());
             }
         }

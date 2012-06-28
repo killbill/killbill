@@ -36,7 +36,7 @@ public class RecurringInvoiceItem extends InvoiceItemBase {
                                 final DateTime startDate, final DateTime endDate,
                                 final BigDecimal amount, final BigDecimal rate,
                                 final Currency currency) {
-        super(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, rate, currency, null);
+        super(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, rate, currency);
     }
 
     public RecurringInvoiceItem(final UUID invoiceId, final UUID accountId, final UUID bundleId, final UUID subscriptionId, final String planName, final String phaseName,
@@ -44,7 +44,7 @@ public class RecurringInvoiceItem extends InvoiceItemBase {
                                 final BigDecimal amount, final BigDecimal rate,
                                 final Currency currency, final UUID reversedItemId) {
         super(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate,
-              amount, rate, currency, reversedItemId);
+              amount, rate, currency);
     }
 
     public RecurringInvoiceItem(final UUID id, final UUID invoiceId, final UUID accountId, final UUID bundleId, final UUID subscriptionId,
@@ -52,16 +52,9 @@ public class RecurringInvoiceItem extends InvoiceItemBase {
                                 final DateTime startDate, final DateTime endDate,
                                 final BigDecimal amount, final BigDecimal rate,
                                 final Currency currency) {
-        super(id, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, rate, currency, null);
+        super(id, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, rate, currency);
     }
 
-    public RecurringInvoiceItem(final UUID id, final UUID invoiceId, final UUID accountId, final UUID bundleId, final UUID subscriptionId,
-                                final String planName, final String phaseName,
-                                final DateTime startDate, final DateTime endDate,
-                                final BigDecimal amount, final BigDecimal rate,
-                                final Currency currency, final UUID reversedItemId) {
-        super(id, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, rate, currency, reversedItemId);
-    }
 
     @Override
     public InvoiceItem asReversingItem() {
@@ -76,6 +69,7 @@ public class RecurringInvoiceItem extends InvoiceItemBase {
         return String.format("%s from %s to %s", phaseName, startDate.toString(dateTimeFormatter), endDate.toString(dateTimeFormatter));
     }
 
+    @Override
     public UUID getReversedItemId() {
         return reversedItemId;
     }
@@ -84,6 +78,7 @@ public class RecurringInvoiceItem extends InvoiceItemBase {
         return (reversedItemId != null);
     }
 
+    @Override
     public BigDecimal getRate() {
         return rate;
     }

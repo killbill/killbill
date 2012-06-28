@@ -13,7 +13,6 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
 package com.ning.billing.invoice.dao;
 
 import java.lang.annotation.Annotation;
@@ -43,15 +42,24 @@ import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.invoice.api.InvoiceItemType;
+import com.ning.billing.invoice.model.CreditAdjInvoiceItem;
+import com.ning.billing.invoice.model.CreditBalanceAdjInvoiceItem;
+import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
+import com.ning.billing.invoice.model.RefundAdjInvoiceItem;
+import com.ning.billing.invoice.model.RepairAdjInvoiceItem;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextBinder;
 import com.ning.billing.util.dao.MapperBase;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 
+
 @ExternalizedSqlViaStringTemplate3()
-@RegisterMapper(RecurringInvoiceItemSqlDao.RecurringInvoiceItemMapper.class)
-public interface RecurringInvoiceItemSqlDao extends EntitySqlDao<InvoiceItem> {
+@RegisterMapper(InvoiceItemSqlDao.InvoiceItemSqlDaoMapper.class)
+public interface InvoiceItemSqlDao extends EntitySqlDao<InvoiceItem> {
+
+
     @SqlQuery
     List<Long> getRecordIds(@Bind("invoiceId") final String invoiceId);
 
@@ -66,32 +74,33 @@ public interface RecurringInvoiceItemSqlDao extends EntitySqlDao<InvoiceItem> {
 
     @Override
     @SqlUpdate
-    void create(@RecurringInvoiceItemBinder final InvoiceItem invoiceItem, @CallContextBinder final CallContext context);
+    void create(@InvoiceItemBinder final InvoiceItem invoiceItem, @CallContextBinder final CallContext context);
 
     @SqlBatch(transactional = false)
-    void batchCreateFromTransaction(@RecurringInvoiceItemBinder final List<InvoiceItem> items, @CallContextBinder final CallContext context);
+    void batchCreateFromTransaction(@InvoiceItemBinder final List<InvoiceItem> items, @CallContextBinder final CallContext context);
 
-    @BindingAnnotation(RecurringInvoiceItemBinder.InvoiceItemBinderFactory.class)
+    @BindingAnnotation(InvoiceItemBinder.InvoiceItemBinderFactory.class)
     @Retention(RetentionPolicy.RUNTIME)
     @Target({ElementType.PARAMETER})
-    public @interface RecurringInvoiceItemBinder {
+    public @interface InvoiceItemBinder {
         public static class InvoiceItemBinderFactory implements BinderFactory {
             @Override
             public Binder build(final Annotation annotation) {
-                return new Binder<RecurringInvoiceItemBinder, RecurringInvoiceItem>() {
+                return new Binder<InvoiceItemBinder, InvoiceItem>() {
                     @Override
-                    public void bind(final SQLStatement q, final RecurringInvoiceItemBinder bind, final RecurringInvoiceItem item) {
+                    public void bind(final SQLStatement<?> q, final InvoiceItemBinder bind, final InvoiceItem item) {
                         q.bind("id", item.getId().toString());
+                        q.bind("type", item.getInvoiceItemType().toString());
                         q.bind("invoiceId", item.getInvoiceId().toString());
                         q.bind("accountId", item.getAccountId().toString());
                         q.bind("bundleId", item.getBundleId() == null ? null : item.getBundleId().toString());
                         q.bind("subscriptionId", item.getSubscriptionId() == null ? null : item.getSubscriptionId().toString());
-                        q.bind("planName", item.getPlanName());
-                        q.bind("phaseName", item.getPhaseName());
+                        q.bind("planName", item.getPlanName() == null ? null : item.getPlanName());
+                        q.bind("phaseName", item.getPhaseName() == null ? item.getPhaseName() : item.getPhaseName());
                         q.bind("startDate", item.getStartDate().toDate());
-                        q.bind("endDate", item.getEndDate().toDate());
+                        q.bind("endDate", item.getEndDate() == null ? null : item.getEndDate().toDate());
                         q.bind("amount", item.getAmount());
-                        q.bind("rate", item.getRate());
+                        q.bind("rate", (item.getRate() == null) ? null : item.getRate());
                         q.bind("currency", item.getCurrency().toString());
                         q.bind("reversedItemId", (item.getReversedItemId() == null) ? null : item.getReversedItemId().toString());
                     }
@@ -100,10 +109,11 @@ public interface RecurringInvoiceItemSqlDao extends EntitySqlDao<InvoiceItem> {
         }
     }
 
-    public static class RecurringInvoiceItemMapper extends MapperBase implements ResultSetMapper<InvoiceItem> {
+    public static class InvoiceItemSqlDaoMapper extends MapperBase implements ResultSetMapper<InvoiceItem> {
         @Override
         public InvoiceItem map(final int index, final ResultSet result, final StatementContext context) throws SQLException {
             final UUID id = getUUID(result, "id");
+            final InvoiceItemType type = InvoiceItemType.valueOf(result.getString("type"));
             final UUID invoiceId = getUUID(result, "invoice_id");
             final UUID accountId = getUUID(result, "account_id");
             final UUID subscriptionId = getUUID(result, "subscription_id");
@@ -117,9 +127,30 @@ public interface RecurringInvoiceItemSqlDao extends EntitySqlDao<InvoiceItem> {
             final Currency currency = Currency.valueOf(result.getString("currency"));
             final UUID reversedItemId = getUUID(result, "reversed_item_id");
 
-            return new RecurringInvoiceItem(id, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate,
-                                            amount, rate, currency, reversedItemId);
-
+            InvoiceItem item = null;
+            switch(type) {
+            case FIXED:
+                item = new FixedPriceInvoiceItem(id, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency);
+                break;
+            case RECURRING:
+                item = new RecurringInvoiceItem(id, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, rate, currency);
+                break;
+            case CBA_ADJ:
+                item = new CreditBalanceAdjInvoiceItem(id, invoiceId, accountId, startDate, amount, currency);
+                break;
+            case CREDIT_ADJ:
+                item = new CreditAdjInvoiceItem(id, invoiceId, accountId, startDate, amount, currency);
+                break;
+            case REFUND_ADJ:
+                item = new RefundAdjInvoiceItem(id, invoiceId, accountId, startDate, amount, currency);
+                break;
+            case REPAIR_ADJ:
+                item = new RepairAdjInvoiceItem(id, invoiceId, accountId, startDate, endDate, amount, currency, reversedItemId);
+                break;
+            default:
+                throw new RuntimeException("Unexpected type of event item " + item);
+            }
+            return item;
         }
     }
 }

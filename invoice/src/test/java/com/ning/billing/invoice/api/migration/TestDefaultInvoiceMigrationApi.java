@@ -16,7 +16,11 @@
 
 package com.ning.billing.invoice.api.migration;
 
+import static org.testng.Assert.assertNotNull;
+
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.net.URL;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
@@ -52,7 +56,7 @@ import com.ning.billing.invoice.api.InvoiceNotifier;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.invoice.dao.InvoiceDao;
-import com.ning.billing.invoice.model.InvoiceGenerator;
+import com.ning.billing.invoice.generator.InvoiceGenerator;
 import com.ning.billing.invoice.notification.NullInvoiceNotifier;
 import com.ning.billing.invoice.tests.InvoicingTestBase;
 import com.ning.billing.junction.api.BillingApi;
@@ -111,6 +115,8 @@ public class TestDefaultInvoiceMigrationApi extends InvoicingTestBase {
     private static final Currency MIGRATION_INVOICE_CURRENCY = Currency.USD;
 
     private final Clock clock = new ClockMock();
+
+
 
     @BeforeClass(groups = {"slow"})
     public void setup() throws Exception {

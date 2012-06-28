@@ -1,7 +1,8 @@
-group FixedPriceInvoiceItemSqlDao;
+group InvoiceItemSqlDao;
 
 fields(prefix) ::= <<
   <prefix>id,
+  <prefix>type,  
   <prefix>invoice_id,
   <prefix>account_id,
   <prefix>bundle_id,
@@ -11,51 +12,50 @@ fields(prefix) ::= <<
   <prefix>start_date,
   <prefix>end_date,
   <prefix>amount,
+  <prefix>rate,
   <prefix>currency,
+  <prefix>reversed_item_id,
   <prefix>created_by,
   <prefix>created_date
 >>
 
 getById() ::= <<
   SELECT <fields()>
-  FROM fixed_invoice_items
+  FROM invoice_items
   WHERE id = :id;
 >>
 
 getInvoiceItemsByInvoice() ::= <<
   SELECT <fields()>
-  FROM fixed_invoice_items
+  FROM invoice_items
   WHERE invoice_id = :invoiceId;
 >>
 
 getInvoiceItemsByAccount() ::= <<
-  SELECT <fields("rii.")>
-  FROM fixed_invoice_items rii
-  INNER JOIN invoices i ON i.id = rii.invoice_id
-  WHERE i.account_id = :accountId;
+  SELECT <fields()>
+  FROM invoice_items
+  WHERE account_id = :accountId;
 >>
 
 getInvoiceItemsBySubscription() ::= <<
   SELECT <fields()>
-  FROM fixed_invoice_items
+  FROM invoice_items
   WHERE subscription_id = :subscriptionId;
 >>
 
 create() ::= <<
-  INSERT INTO fixed_invoice_items(<fields()>)
-  VALUES(:id, :invoiceId, :accountId, :bundleId, :subscriptionId, :planName, :phaseName,
-         :startDate, :endDate, :amount, :currency, :userName, :createdDate);
+  INSERT INTO invoice_items(<fields()>)
+  VALUES(:id, :type, :invoiceId, :accountId, :bundleId, :subscriptionId, :planName, :phaseName, :startDate, :endDate, :amount, :rate, :currency, :reversedItemId, :userName, :createdDate);
 >>
 
 batchCreateFromTransaction() ::= <<
-  INSERT INTO fixed_invoice_items(<fields()>)
-  VALUES(:id, :invoiceId, :accountId, :bundleId, :subscriptionId, :planName, :phaseName,
-         :startDate, :endDate, :amount, :currency, :userName, :createdDate);
+  INSERT INTO invoice_items(<fields()>)
+  VALUES(:id, :type,:invoiceId, :accountId, :bundleId, :subscriptionId, :planName, :phaseName, :startDate, :endDate, :amount, :rate, :currency, :reversedItemId, :userName, :createdDate);
 >>
 
 getRecordIds() ::= <<
     SELECT record_id, id
-    FROM fixed_invoice_items
+    FROM invoice_items
     WHERE invoice_id = :invoiceId;
 >>
 
@@ -77,6 +77,6 @@ insertAuditFromTransaction() ::= <<
 
 test() ::= <<
   SELECT 1
-  FROM fixed_invoice_items;
+  FROM invoice_items;
 >>
 ;

@@ -16,6 +16,11 @@
 
 package com.ning.billing.invoice;
 
+import static org.testng.Assert.assertNotNull;
+
+import java.io.IOException;
+import java.net.URL;
+
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.IDBI;
 
@@ -25,6 +30,7 @@ import com.ning.billing.dbi.DBIProvider;
 import com.ning.billing.dbi.DbiConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.invoice.api.formatters.InvoiceFormatterFactory;
+import com.ning.billing.invoice.api.migration.TestDefaultInvoiceMigrationApi;
 import com.ning.billing.invoice.glue.DefaultInvoiceModule;
 import com.ning.billing.invoice.template.formatters.DefaultInvoiceFormatterFactory;
 import com.ning.billing.mock.glue.MockJunctionModule;
@@ -43,6 +49,9 @@ import com.ning.billing.util.glue.TagStoreModule;
 public class MockModule extends AbstractModule {
     @Override
     protected void configure() {
+
+        loadSystemPropertiesFromClasspath("/resource.properties");
+
         bind(Clock.class).to(ClockMock.class).asEagerSingleton();
         bind(ClockMock.class).asEagerSingleton();
         bind(CallContextFactory.class).to(DefaultCallContextFactory.class).asEagerSingleton();
@@ -75,5 +84,16 @@ public class MockModule extends AbstractModule {
 
     protected void installInvoiceModule() {
         install(new DefaultInvoiceModule());
+    }
+
+
+    private static void loadSystemPropertiesFromClasspath(final String resource) {
+        final URL url = TestDefaultInvoiceMigrationApi.class.getResource(resource);
+        assertNotNull(url);
+        try {
+            System.getProperties().load(url.openStream());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

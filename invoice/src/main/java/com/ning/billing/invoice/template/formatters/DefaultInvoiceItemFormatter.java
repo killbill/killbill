@@ -130,4 +130,14 @@ public class DefaultInvoiceItemFormatter implements InvoiceItemFormatter {
     public UUID getId() {
         return item.getId();
     }
+
+    @Override
+    public BigDecimal getRate() {
+        return null;
+    }
+
+    @Override
+    public UUID getReversedItemId() {
+        return null;
+    }
 }

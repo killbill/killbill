@@ -14,45 +14,20 @@
  * under the License.
  */
 
-package com.ning.billing.invoice.api;
+package com.ning.billing.invoice.generator;
 
-import java.math.BigDecimal;
+import javax.annotation.Nullable;
+import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.util.entity.Entity;
+import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoiceApiException;
+import com.ning.billing.junction.api.BillingEventSet;
 
-public interface InvoiceItem extends Entity, Comparable<InvoiceItem> {
-
-    InvoiceItemType getInvoiceItemType();
-
-    UUID getInvoiceId();
-
-    UUID getAccountId();
-
-    DateTime getStartDate();
-
-    DateTime getEndDate();
-
-    BigDecimal getAmount();
-
-    Currency getCurrency();
-
-    String getDescription();
-
-    UUID getBundleId();
-
-    UUID getSubscriptionId();
-
-    String getPlanName();
-
-    String getPhaseName();
-
-    BigDecimal getRate();
-
-    UUID getReversedItemId();
-
-    InvoiceItem asReversingItem();
+public interface InvoiceGenerator {
+    public Invoice generateInvoice(UUID accountId, @Nullable BillingEventSet events, @Nullable List<Invoice> existingInvoices,
+                                   DateTime targetDate, Currency targetCurrency) throws InvoiceApiException;
 }

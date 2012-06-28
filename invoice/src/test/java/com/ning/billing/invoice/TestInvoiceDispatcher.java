@@ -46,7 +46,7 @@ import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceNotifier;
 import com.ning.billing.invoice.dao.InvoiceDao;
-import com.ning.billing.invoice.model.InvoiceGenerator;
+import com.ning.billing.invoice.generator.InvoiceGenerator;
 import com.ning.billing.invoice.notification.NextBillingDateNotifier;
 import com.ning.billing.invoice.notification.NullInvoiceNotifier;
 import com.ning.billing.invoice.tests.InvoicingTestBase;

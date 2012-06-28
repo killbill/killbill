@@ -156,5 +156,4 @@ public class FixedPriceInvoiceItem extends InvoiceItemBase {
     public InvoiceItemType getInvoiceItemType() {
         return InvoiceItemType.FIXED;
     }
-
 }
