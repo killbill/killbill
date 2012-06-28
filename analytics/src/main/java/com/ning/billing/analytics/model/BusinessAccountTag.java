@@ -33,7 +33,7 @@ public class BusinessAccountTag extends BusinessTag {
         final StringBuilder sb = new StringBuilder();
         sb.append("BusinessAccountTag");
         sb.append("{accountKey='").append(accountKey).append('\'');
-        sb.append(", name='").append(name).append('\'');
+        sb.append(", name='").append(getName()).append('\'');
         sb.append('}');
         return sb.toString();
     }
@@ -52,7 +52,7 @@ public class BusinessAccountTag extends BusinessTag {
         if (accountKey != null ? !accountKey.equals(that.accountKey) : that.accountKey != null) {
             return false;
         }
-        if (name != null ? !name.equals(that.name) : that.name != null) {
+        if (getName() != null ? !getName().equals(that.getName()) : that.getName() != null) {
             return false;
         }
 
@@ -62,7 +62,7 @@ public class BusinessAccountTag extends BusinessTag {
     @Override
     public int hashCode() {
         int result = accountKey != null ? accountKey.hashCode() : 0;
-        result = 31 * result + (name != null ? name.hashCode() : 0);
+        result = 31 * result + (getName() != null ? getName().hashCode() : 0);
         return result;
     }
 }

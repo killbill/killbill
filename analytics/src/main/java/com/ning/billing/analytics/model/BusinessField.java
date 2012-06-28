@@ -17,8 +17,8 @@
 package com.ning.billing.analytics.model;
 
 public abstract class BusinessField {
-    protected final String name;
-    protected final String value;
+    private final String name;
+    private final String value;
 
     public BusinessField(final String name, final String value) {
         this.name = name;
