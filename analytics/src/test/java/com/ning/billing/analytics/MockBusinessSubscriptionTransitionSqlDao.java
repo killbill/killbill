@@ -23,6 +23,7 @@ import java.util.Map;
 
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.sqlobject.Bind;
+import org.testng.Assert;
 
 import com.google.common.collect.ImmutableList;
 import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionBinder;
@@ -86,6 +87,11 @@ public class MockBusinessSubscriptionTransitionSqlDao implements BusinessSubscri
 
     @Override
     public <ReturnType> ReturnType inTransaction(final Transaction<ReturnType, BusinessSubscriptionTransitionSqlDao> func) {
-        return null;
+        try {
+            return func.inTransaction(this, null);
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+            return null;
+        }
     }
 }
