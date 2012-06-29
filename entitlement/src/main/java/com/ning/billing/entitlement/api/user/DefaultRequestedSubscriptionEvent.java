@@ -52,4 +52,25 @@ public class DefaultRequestedSubscriptionEvent extends DefaultSubscriptionEvent 
               previousPhase, previousPriceList, nextState, nextPlan, nextPhase, nextPriceList, totalOrdering, userToken,
               transitionType, remainingEventsForUserOperation, startDate);
     }
+
+    public DefaultRequestedSubscriptionEvent(final SubscriptionEvent event) {
+        this(event.getId(),
+             event.getSubscriptionId(),
+             event.getBundleId(),
+             event.getRequestedTransitionTime(),
+             event.getEffectiveTransitionTime(),
+             event.getPreviousState(),
+             event.getPreviousPlan(),
+             event.getPreviousPhase(),
+             event.getPreviousPriceList(),
+             event.getNextState(),
+             event.getNextPlan(),
+             event.getNextPhase(),
+             event.getNextPriceList(),
+             event.getTotalOrdering(),
+             event.getUserToken(),
+             event.getTransitionType(),
+             event.getRemainingEventsForUserOperation(),
+             event.getSubscriptionStartDate());
+    }
 }
