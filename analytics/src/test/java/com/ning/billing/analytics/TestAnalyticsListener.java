@@ -148,7 +148,6 @@ public class TestAnalyticsListener extends AnalyticsTestSuite {
             @Nullable final BusinessSubscription previousSubscription,
             @Nullable final Subscription.SubscriptionState nextState) {
         return new BusinessSubscriptionTransition(
-                subscriptionId,
                 totalOrdering,
                 EXTERNAL_KEY,
                 ACCOUNT_KEY,

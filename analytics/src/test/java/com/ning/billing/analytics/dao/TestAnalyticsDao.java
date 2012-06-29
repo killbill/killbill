@@ -52,7 +52,6 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.Subscription;
 
 public class TestAnalyticsDao extends TestWithEmbeddedDB {
-    private static final UUID SUBSCRIPTION_ID = UUID.randomUUID();
     private static final Long TOTAL_ORDERING = 1L;
     private static final String EXTERNAL_KEY = "23456";
     private static final String ACCOUNT_KEY = "pierre-143343-vcc";
@@ -86,7 +85,7 @@ public class TestAnalyticsDao extends TestWithEmbeddedDB {
         final BusinessSubscription nextSubscription = new BusinessSubscription(null, plan.getName(), phase.getName(), Currency.USD, new DateTime(DateTimeZone.UTC), Subscription.SubscriptionState.CANCELLED, UUID.randomUUID(), UUID.randomUUID(), catalog);
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionCancelled(plan.getName(), catalog, requestedTimestamp, requestedTimestamp);
 
-        transition = new BusinessSubscriptionTransition(SUBSCRIPTION_ID, TOTAL_ORDERING, EXTERNAL_KEY, ACCOUNT_KEY, requestedTimestamp, event, prevSubscription, nextSubscription);
+        transition = new BusinessSubscriptionTransition(TOTAL_ORDERING, EXTERNAL_KEY, ACCOUNT_KEY, requestedTimestamp, event, prevSubscription, nextSubscription);
 
         final IDBI dbi = helper.getDBI();
         businessSubscriptionTransitionSqlDao = dbi.onDemand(BusinessSubscriptionTransitionSqlDao.class);
@@ -116,7 +115,6 @@ public class TestAnalyticsDao extends TestWithEmbeddedDB {
     @Test(groups = "slow")
     public void testHandleDuplicatedEvents() {
         final BusinessSubscriptionTransition transitionWithNullPrev = new BusinessSubscriptionTransition(
-                transition.getSubscriptionId(),
                 transition.getTotalOrdering(),
                 transition.getExternalKey(),
                 transition.getAccountKey(),
@@ -138,7 +136,6 @@ public class TestAnalyticsDao extends TestWithEmbeddedDB {
 
         // Try now to store a look-alike transition (same fields except UUID) - we should store it this time
         final BusinessSubscriptionTransition secondTransitionWithNullPrev = new BusinessSubscriptionTransition(
-                transition.getSubscriptionId(),
                 12L,
                 transition.getExternalKey(),
                 transition.getAccountKey(),
@@ -157,7 +154,6 @@ public class TestAnalyticsDao extends TestWithEmbeddedDB {
     @Test(groups = "slow")
     public void testTransitionsWithNullPrevSubscription() {
         final BusinessSubscriptionTransition transitionWithNullPrev = new BusinessSubscriptionTransition(
-                transition.getSubscriptionId(),
                 transition.getTotalOrdering(),
                 transition.getExternalKey(),
                 transition.getAccountKey(),
@@ -176,7 +172,6 @@ public class TestAnalyticsDao extends TestWithEmbeddedDB {
     @Test(groups = "slow")
     public void testTransitionsWithNullNextSubscription() {
         final BusinessSubscriptionTransition transitionWithNullNext = new BusinessSubscriptionTransition(
-                transition.getSubscriptionId(),
                 transition.getTotalOrdering(),
                 transition.getExternalKey(),
                 transition.getAccountKey(),
@@ -196,7 +191,6 @@ public class TestAnalyticsDao extends TestWithEmbeddedDB {
     public void testTransitionsWithNullFieldsInSubscription() {
         final BusinessSubscription subscriptionWithNullFields = new BusinessSubscription(null, plan.getName(), phase.getName(), Currency.USD, null, null, null, null, catalog);
         final BusinessSubscriptionTransition transitionWithNullFields = new BusinessSubscriptionTransition(
-                transition.getSubscriptionId(),
                 transition.getTotalOrdering(),
                 transition.getExternalKey(),
                 transition.getAccountKey(),
@@ -216,7 +210,6 @@ public class TestAnalyticsDao extends TestWithEmbeddedDB {
     public void testTransitionsWithNullPlanAndPhase() throws Exception {
         final BusinessSubscription subscriptionWithNullPlanAndPhase = new BusinessSubscription(null, null, null, Currency.USD, null, null, null, null, catalog);
         final BusinessSubscriptionTransition transitionWithNullPlanAndPhase = new BusinessSubscriptionTransition(
-                transition.getSubscriptionId(),
                 transition.getTotalOrdering(),
                 transition.getExternalKey(),
                 transition.getAccountKey(),
@@ -229,7 +222,6 @@ public class TestAnalyticsDao extends TestWithEmbeddedDB {
 
         final List<BusinessSubscriptionTransition> transitions = businessSubscriptionTransitionSqlDao.getTransitions(EXTERNAL_KEY);
         Assert.assertEquals(transitions.size(), 1);
-        Assert.assertEquals(transitions.get(0).getSubscriptionId(), transition.getSubscriptionId());
         Assert.assertEquals(transitions.get(0).getExternalKey(), transition.getExternalKey());
         Assert.assertEquals(transitions.get(0).getRequestedTimestamp(), transition.getRequestedTimestamp());
         Assert.assertEquals(transitions.get(0).getEvent(), transition.getEvent());
@@ -241,7 +233,6 @@ public class TestAnalyticsDao extends TestWithEmbeddedDB {
     public void testTransitionsWithNullPlan() throws Exception {
         final BusinessSubscription subscriptionWithNullPlan = new BusinessSubscription(null, null, phase.getName(), Currency.USD, null, null, null, null, catalog);
         final BusinessSubscriptionTransition transitionWithNullPlan = new BusinessSubscriptionTransition(
-                transition.getSubscriptionId(),
                 transition.getTotalOrdering(),
                 transition.getExternalKey(),
                 transition.getAccountKey(),
@@ -262,7 +253,6 @@ public class TestAnalyticsDao extends TestWithEmbeddedDB {
     public void testTransitionsWithNullPhase() throws Exception {
         final BusinessSubscription subscriptionWithNullPhase = new BusinessSubscription(null, plan.getName(), null, Currency.USD, null, null, null, null, catalog);
         final BusinessSubscriptionTransition transitionWithNullPhase = new BusinessSubscriptionTransition(
-                transition.getSubscriptionId(),
                 transition.getTotalOrdering(),
                 transition.getExternalKey(),
                 transition.getAccountKey(),
@@ -275,7 +265,6 @@ public class TestAnalyticsDao extends TestWithEmbeddedDB {
 
         final List<BusinessSubscriptionTransition> transitions = businessSubscriptionTransitionSqlDao.getTransitions(EXTERNAL_KEY);
         Assert.assertEquals(transitions.size(), 1);
-        Assert.assertEquals(transitions.get(0).getSubscriptionId(), transition.getSubscriptionId());
         Assert.assertEquals(transitions.get(0).getExternalKey(), transition.getExternalKey());
         Assert.assertEquals(transitions.get(0).getRequestedTimestamp(), transition.getRequestedTimestamp());
         Assert.assertEquals(transitions.get(0).getEvent(), transition.getEvent());

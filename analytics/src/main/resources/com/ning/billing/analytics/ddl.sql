@@ -1,7 +1,6 @@
 drop table if exists bst;
 create table bst (
-  subscription_id char(36) not null
-, total_ordering bigint default 0
+  total_ordering bigint default 0
 , external_key varchar(50) not null comment 'Bundle external key'
 , account_key varchar(50) not null comment 'Account external key'
 , requested_timestamp bigint not null

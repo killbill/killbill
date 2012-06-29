@@ -59,14 +59,13 @@ public class TestBusinessSubscriptionTransitionRecorder extends AnalyticsTestSui
                                                                                    UUID.randomUUID(),
                                                                                    UUID.randomUUID(),
                                                                                    catalogService.getFullCatalog());
-        sqlDao.createTransition(new BusinessSubscriptionTransition(UUID.randomUUID(),
-                                                                   10L,
-                                                                   externalKey.toString(),
-                                                                   UUID.randomUUID().toString(),
-                                                                   new DateTime(DateTimeZone.UTC),
-                                                                   BusinessSubscriptionEvent.valueOf("ADD_MISC"),
-                                                                   null,
-                                                                   nextPrevSubscription));
+        sqlDao.createTransition(new BusinessSubscriptionTransition(10L,
+                                                                externalKey.toString(),
+                                                                UUID.randomUUID().toString(),
+                                                                new DateTime(DateTimeZone.UTC),
+                                                                BusinessSubscriptionEvent.valueOf("ADD_MISC"),
+                                                                null,
+                                                                nextPrevSubscription));
 
         // Setup the entitlement API
         final SubscriptionBundle bundle = Mockito.mock(SubscriptionBundle.class);

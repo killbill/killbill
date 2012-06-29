@@ -201,7 +201,6 @@ public class TestAnalyticsService extends TestWithEmbeddedDB {
                 null,
                 true), null);
         expectedTransition = new BusinessSubscriptionTransition(
-                transition.getSubscriptionId(),
                 TOTAL_ORDERING,
                 EXTERNAL_KEY,
                 ACCOUNT_KEY,

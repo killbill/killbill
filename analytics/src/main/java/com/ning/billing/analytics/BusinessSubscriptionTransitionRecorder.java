@@ -17,7 +17,6 @@
 package com.ning.billing.analytics;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -135,41 +134,40 @@ public class BusinessSubscriptionTransitionRecorder {
             nextSubscription = new BusinessSubscription(transition.getNextPriceList(), transition.getNextPlan(), transition.getNextPhase(), currency, transition.getEffectiveTransitionTime(), transition.getNextState(), transition.getSubscriptionId(), transition.getBundleId(), catalogService.getFullCatalog());
         }
 
-        catchUpIfNeededAndRecord(transition.getSubscriptionId(), transition.getTotalOrdering(), externalKey, accountKey, transition.getRequestedTransitionTime(), event, prevSubscription, nextSubscription);
+        catchUpIfNeededAndRecord(transition.getTotalOrdering(), externalKey, accountKey, transition.getRequestedTransitionTime(), event, prevSubscription, nextSubscription);
     }
 
-    public void catchUpIfNeededAndRecord(final UUID subscriptionId, final Long totalOrdering, final String externalKey, final String accountKey, final DateTime requestedDateTime,
+    public void catchUpIfNeededAndRecord(final Long totalOrdering, final String externalKey, final String accountKey, final DateTime requestedDateTime,
                                          final BusinessSubscriptionEvent event, final BusinessSubscription prevSubscription, final BusinessSubscription nextSubscription) {
         // There is no ordering guaranteed with events on the bus. This can be problematic on e.g. subscription creation:
         // the requested future change from trial to evergreen could be received before the actual creation event.
         // In this case, we would have two subscriptions in BST, with both null for the previous transition.
         // To work around this, we need to update bst as we go
         if (BusinessSubscriptionEvent.EventType.ADD.equals(event.getEventType())) {
-            final List<BusinessSubscriptionTransition> transitions = sqlDao.getTransitionForSubscription(subscriptionId.toString());
-            final BusinessSubscriptionTransition firstTransition = transitions.get(0);
-            if (firstTransition.getPreviousSubscription() == null) {
-                final BusinessSubscriptionTransition updatedFirstTransition = new BusinessSubscriptionTransition(
-                        firstTransition.getSubscriptionId(),
-                        firstTransition.getTotalOrdering(),
-                        firstTransition.getExternalKey(),
-                        firstTransition.getAccountKey(),
-                        firstTransition.getRequestedTimestamp(),
-                        firstTransition.getEvent(),
-                        nextSubscription,
-                        firstTransition.getNextSubscription()
-                );
-                sqlDao.updateTransition(updatedFirstTransition.getTotalOrdering(), updatedFirstTransition);
+            final List<BusinessSubscriptionTransition> transitions = sqlDao.getTransitionForSubscription(nextSubscription.getSubscriptionId().toString());
+            if (transitions != null && transitions.size() > 0) {
+                final BusinessSubscriptionTransition firstTransition = transitions.get(0);
+                if (firstTransition.getPreviousSubscription() == null) {
+                    final BusinessSubscriptionTransition updatedFirstTransition = new BusinessSubscriptionTransition(
+                            firstTransition.getTotalOrdering(),
+                            firstTransition.getExternalKey(),
+                            firstTransition.getAccountKey(),
+                            firstTransition.getRequestedTimestamp(),
+                            firstTransition.getEvent(),
+                            nextSubscription,
+                            firstTransition.getNextSubscription()
+                    );
+                    sqlDao.updateTransition(updatedFirstTransition.getTotalOrdering(), updatedFirstTransition);
+                }
             }
         }
 
-        record(subscriptionId, totalOrdering, externalKey, accountKey, requestedDateTime, event, prevSubscription, nextSubscription);
+        record(totalOrdering, externalKey, accountKey, requestedDateTime, event, prevSubscription, nextSubscription);
     }
 
     // Public for internal reasons
-    public void record(final UUID subscriptionId, final Long totalOrdering, final String externalKey, final String accountKey, final DateTime requestedDateTime,
-                       final BusinessSubscriptionEvent event, final BusinessSubscription prevSubscription, final BusinessSubscription nextSubscription) {
+    public void record(final Long totalOrdering, final String externalKey, final String accountKey, final DateTime requestedDateTime, final BusinessSubscriptionEvent event, final BusinessSubscription prevSubscription, final BusinessSubscription nextSubscription) {
         final BusinessSubscriptionTransition transition = new BusinessSubscriptionTransition(
-                subscriptionId,
                 totalOrdering,
                 externalKey,
                 accountKey,

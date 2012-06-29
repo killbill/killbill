@@ -16,8 +16,6 @@
 
 package com.ning.billing.analytics.model;
 
-import java.util.UUID;
-
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.mockito.Mockito;
@@ -31,6 +29,9 @@ import com.ning.billing.analytics.MockPhase;
 import com.ning.billing.analytics.MockPlan;
 import com.ning.billing.analytics.MockProduct;
 import com.ning.billing.analytics.MockSubscription;
+import com.ning.billing.analytics.model.BusinessSubscription;
+import com.ning.billing.analytics.model.BusinessSubscriptionEvent;
+import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.PhaseType;
@@ -47,7 +48,6 @@ public class TestBusinessSubscriptionTransition extends AnalyticsTestSuite {
     private BusinessSubscription nextSubscription;
     private BusinessSubscriptionEvent event;
     private DateTime requestedTimestamp;
-    private UUID subscriptionId;
     private Long totalOrdering;
     private String externalKey;
     private String accountKey;
@@ -74,11 +74,10 @@ public class TestBusinessSubscriptionTransition extends AnalyticsTestSuite {
         nextSubscription = new BusinessSubscription(nextISubscription, USD, catalog);
         event = BusinessSubscriptionEvent.subscriptionCancelled(prevISubscription.getCurrentPlan().getName(), catalog, now, now);
         requestedTimestamp = new DateTime(DateTimeZone.UTC);
-        subscriptionId = UUID.randomUUID();
         totalOrdering = 12L;
         externalKey = "1234";
         accountKey = "pierre-1234";
-        transition = new BusinessSubscriptionTransition(subscriptionId, totalOrdering, externalKey, accountKey, requestedTimestamp, event, prevSubscription, nextSubscription);
+        transition = new BusinessSubscriptionTransition(totalOrdering, externalKey, accountKey, requestedTimestamp, event, prevSubscription, nextSubscription);
     }
 
     @Test(groups = "fast")
@@ -97,54 +96,47 @@ public class TestBusinessSubscriptionTransition extends AnalyticsTestSuite {
 
         BusinessSubscriptionTransition otherTransition;
 
-        otherTransition = new BusinessSubscriptionTransition(subscriptionId, totalOrdering, externalKey, accountKey, new DateTime(), event, prevSubscription, nextSubscription);
+        otherTransition = new BusinessSubscriptionTransition(totalOrdering, externalKey, accountKey, new DateTime(), event, prevSubscription, nextSubscription);
         Assert.assertTrue(!transition.equals(otherTransition));
 
-        otherTransition = new BusinessSubscriptionTransition(subscriptionId, totalOrdering, "12345", accountKey, requestedTimestamp, event, prevSubscription, nextSubscription);
+        otherTransition = new BusinessSubscriptionTransition(totalOrdering, "12345", accountKey, requestedTimestamp, event, prevSubscription, nextSubscription);
         Assert.assertTrue(!transition.equals(otherTransition));
 
-        otherTransition = new BusinessSubscriptionTransition(subscriptionId, totalOrdering, externalKey, accountKey, requestedTimestamp, event, prevSubscription, prevSubscription);
+        otherTransition = new BusinessSubscriptionTransition(totalOrdering, externalKey, accountKey, requestedTimestamp, event, prevSubscription, prevSubscription);
         Assert.assertTrue(!transition.equals(otherTransition));
 
-        otherTransition = new BusinessSubscriptionTransition(subscriptionId, totalOrdering, externalKey, accountKey, requestedTimestamp, event, nextSubscription, nextSubscription);
+        otherTransition = new BusinessSubscriptionTransition(totalOrdering, externalKey, accountKey, requestedTimestamp, event, nextSubscription, nextSubscription);
         Assert.assertTrue(!transition.equals(otherTransition));
 
-        otherTransition = new BusinessSubscriptionTransition(subscriptionId, totalOrdering, externalKey, accountKey, requestedTimestamp, event, nextSubscription, prevSubscription);
+        otherTransition = new BusinessSubscriptionTransition(totalOrdering, externalKey, accountKey, requestedTimestamp, event, nextSubscription, prevSubscription);
         Assert.assertTrue(!transition.equals(otherTransition));
     }
 
     @Test(groups = "fast")
     public void testRejectInvalidTransitions() throws Exception {
         try {
-            new BusinessSubscriptionTransition(null, totalOrdering, externalKey, accountKey, requestedTimestamp, event, prevSubscription, nextSubscription);
+            new BusinessSubscriptionTransition(null, externalKey, accountKey, requestedTimestamp, event, prevSubscription, nextSubscription);
             Assert.fail();
         } catch (IllegalArgumentException e) {
             Assert.assertTrue(true);
         }
 
         try {
-            new BusinessSubscriptionTransition(subscriptionId, null, externalKey, accountKey, requestedTimestamp, event, prevSubscription, nextSubscription);
+            new BusinessSubscriptionTransition(totalOrdering, null, accountKey, requestedTimestamp, event, prevSubscription, nextSubscription);
             Assert.fail();
         } catch (IllegalArgumentException e) {
             Assert.assertTrue(true);
         }
 
         try {
-            new BusinessSubscriptionTransition(subscriptionId, totalOrdering, null, accountKey, requestedTimestamp, event, prevSubscription, nextSubscription);
+            new BusinessSubscriptionTransition(totalOrdering, externalKey, accountKey, null, event, prevSubscription, nextSubscription);
             Assert.fail();
         } catch (IllegalArgumentException e) {
             Assert.assertTrue(true);
         }
 
         try {
-            new BusinessSubscriptionTransition(subscriptionId, totalOrdering, externalKey, accountKey, null, event, prevSubscription, nextSubscription);
-            Assert.fail();
-        } catch (IllegalArgumentException e) {
-            Assert.assertTrue(true);
-        }
-
-        try {
-            new BusinessSubscriptionTransition(subscriptionId, totalOrdering, externalKey, accountKey, requestedTimestamp, null, prevSubscription, nextSubscription);
+            new BusinessSubscriptionTransition(totalOrdering, externalKey, accountKey, requestedTimestamp, null, prevSubscription, nextSubscription);
             Assert.fail();
         } catch (IllegalArgumentException e) {
             Assert.assertTrue(true);

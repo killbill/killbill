@@ -39,7 +39,6 @@ public @interface BusinessSubscriptionTransitionBinder {
         public Binder build(final Annotation annotation) {
             return new Binder<BusinessSubscriptionTransitionBinder, BusinessSubscriptionTransition>() {
                 public void bind(final SQLStatement q, final BusinessSubscriptionTransitionBinder bind, final BusinessSubscriptionTransition arg) {
-                    q.bind("subscription_id", arg.getSubscriptionId().toString());
                     q.bind("total_ordering", arg.getTotalOrdering());
                     q.bind("external_key", arg.getExternalKey());
                     q.bind("account_key", arg.getAccountKey());

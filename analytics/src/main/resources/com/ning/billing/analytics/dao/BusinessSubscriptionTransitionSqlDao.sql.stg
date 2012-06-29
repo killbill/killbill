@@ -2,8 +2,7 @@ group BusinessSubscriptionTransition;
 
 getTransitions(external_key) ::= <<
   select
-    subscription_id
-  , total_ordering
+    total_ordering
   , external_key
   , account_key
   , requested_timestamp
@@ -44,8 +43,7 @@ getTransitions(external_key) ::= <<
 
 getTransitionForSubscription(subscription_id) ::= <<
   select
-    subscription_id
-  , total_ordering
+    total_ordering
   , external_key
   , account_key
   , requested_timestamp
@@ -79,15 +77,14 @@ getTransitionForSubscription(subscription_id) ::= <<
   , next_subscription_id
   , next_bundle_id
   from bst
-  where subscription_id =: subscription_id
+  where prev_subscription_id =: subscription_id or next_subscription_id = :subscription_id
   order by requested_timestamp asc
   ;
 >>
 
 createTransition() ::= <<
   insert ignore into bst(
-    subscription_id
-  , total_ordering
+    total_ordering
   , external_key
   , account_key
   , requested_timestamp
@@ -121,8 +118,7 @@ createTransition() ::= <<
   , next_subscription_id
   , next_bundle_id
   ) values (
-    :subscription_id
-  , :total_ordering
+    :total_ordering
   , :external_key
   , :account_key
   , :requested_timestamp
@@ -160,8 +156,7 @@ createTransition() ::= <<
 
 updateTransition() ::= <<
   update bst set
-    subscription_id = :subscription_id
-  , total_ordering = :total_ordering
+    total_ordering = :total_ordering
   , external_key = :external_key
   , account_key = :account_key
   , requested_timestamp = :requested_timestamp
