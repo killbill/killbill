@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.sqlobject.Bind;
 
 import com.google.common.collect.ImmutableList;
@@ -57,5 +58,34 @@ public class MockBusinessSubscriptionTransitionSqlDao implements BusinessSubscri
 
     @Override
     public void test() {
+    }
+
+    @Override
+    public void begin() {
+    }
+
+    @Override
+    public void commit() {
+    }
+
+    @Override
+    public void rollback() {
+    }
+
+    @Override
+    public void checkpoint(final String name) {
+    }
+
+    @Override
+    public void release(final String name) {
+    }
+
+    @Override
+    public void rollback(final String name) {
+    }
+
+    @Override
+    public <ReturnType> ReturnType inTransaction(final Transaction<ReturnType, BusinessSubscriptionTransitionSqlDao> func) {
+        return null;
     }
 }

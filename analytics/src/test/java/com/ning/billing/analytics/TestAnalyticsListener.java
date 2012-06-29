@@ -98,7 +98,7 @@ public class TestAnalyticsListener extends AnalyticsTestSuite {
         final DateTime requestedTransitionTime = effectiveTransitionTime;
         final SubscriptionTransitionData firstTransition = createFirstSubscriptionTransition(requestedTransitionTime, effectiveTransitionTime);
         final BusinessSubscriptionTransition firstBST = createExpectedFirstBST(firstTransition.getTotalOrdering(), requestedTransitionTime, effectiveTransitionTime);
-        listener.handleSubscriptionTransitionChange(new DefaultEffectiveSubscriptionEvent(firstTransition, effectiveTransitionTime));
+        listener.handleEffectiveSubscriptionTransitionChange(new DefaultEffectiveSubscriptionEvent(firstTransition, effectiveTransitionTime));
         Assert.assertEquals(dao.getTransitions(EXTERNAL_KEY).size(), 1);
         Assert.assertEquals(dao.getTransitions(EXTERNAL_KEY).get(0), firstBST);
 
@@ -107,7 +107,7 @@ public class TestAnalyticsListener extends AnalyticsTestSuite {
         final DateTime requestedCancelTransitionTime = effectiveCancelTransitionTime;
         final SubscriptionTransitionData cancelledSubscriptionTransition = createCancelSubscriptionTransition(requestedCancelTransitionTime, effectiveCancelTransitionTime, firstTransition.getNextState());
         final BusinessSubscriptionTransition cancelledBST = createExpectedCancelledBST(cancelledSubscriptionTransition.getTotalOrdering(), requestedCancelTransitionTime, effectiveCancelTransitionTime, firstBST.getNextSubscription());
-        listener.handleSubscriptionTransitionChange(new DefaultEffectiveSubscriptionEvent(cancelledSubscriptionTransition, effectiveTransitionTime));
+        listener.handleEffectiveSubscriptionTransitionChange(new DefaultEffectiveSubscriptionEvent(cancelledSubscriptionTransition, effectiveTransitionTime));
         Assert.assertEquals(dao.getTransitions(EXTERNAL_KEY).size(), 2);
         Assert.assertEquals(dao.getTransitions(EXTERNAL_KEY).get(1), cancelledBST);
 
@@ -116,7 +116,7 @@ public class TestAnalyticsListener extends AnalyticsTestSuite {
         final DateTime requestedRecreatedTransitionTime = effectiveRecreatedTransitionTime;
         final SubscriptionTransitionData recreatedSubscriptionTransition = createRecreatedSubscriptionTransition(requestedRecreatedTransitionTime, effectiveRecreatedTransitionTime, cancelledSubscriptionTransition.getNextState());
         final BusinessSubscriptionTransition recreatedBST = createExpectedRecreatedBST(recreatedSubscriptionTransition.getTotalOrdering(), requestedRecreatedTransitionTime, effectiveRecreatedTransitionTime, cancelledBST.getNextSubscription());
-        listener.handleSubscriptionTransitionChange(new DefaultEffectiveSubscriptionEvent(recreatedSubscriptionTransition, effectiveTransitionTime));
+        listener.handleEffectiveSubscriptionTransitionChange(new DefaultEffectiveSubscriptionEvent(recreatedSubscriptionTransition, effectiveTransitionTime));
         Assert.assertEquals(dao.getTransitions(EXTERNAL_KEY).size(), 3);
         Assert.assertEquals(dao.getTransitions(EXTERNAL_KEY).get(2), recreatedBST);
 

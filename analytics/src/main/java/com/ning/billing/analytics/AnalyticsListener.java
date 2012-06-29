@@ -25,6 +25,7 @@ import com.ning.billing.entitlement.api.timeline.RepairEntitlementEvent;
 import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.RequestedSubscriptionEvent;
+import com.ning.billing.entitlement.api.user.SubscriptionEvent;
 import com.ning.billing.invoice.api.EmptyInvoiceEvent;
 import com.ning.billing.invoice.api.InvoiceCreationEvent;
 import com.ning.billing.payment.api.PaymentErrorEvent;
@@ -56,38 +57,14 @@ public class AnalyticsListener {
     }
 
     @Subscribe
-    public void handleSubscriptionTransitionChange(final EffectiveSubscriptionEvent eventEffective) throws AccountApiException, EntitlementUserApiException {
-        switch (eventEffective.getTransitionType()) {
-            // A subscription enters either through migration or as newly created subscription
-            case MIGRATE_ENTITLEMENT:
-            case CREATE:
-                bstRecorder.subscriptionCreated(eventEffective);
-                break;
-            case RE_CREATE:
-                bstRecorder.subscriptionRecreated(eventEffective);
-                break;
-            case MIGRATE_BILLING:
-                break;
-            case CANCEL:
-                bstRecorder.subscriptionCancelled(eventEffective);
-                break;
-            case CHANGE:
-                bstRecorder.subscriptionChanged(eventEffective);
-                break;
-            case UNCANCEL:
-                break;
-            case PHASE:
-                bstRecorder.subscriptionPhaseChanged(eventEffective);
-                break;
-            default:
-                throw new RuntimeException("Unexpected event type " + eventEffective.getTransitionType());
-        }
+    public void handleEffectiveSubscriptionTransitionChange(final EffectiveSubscriptionEvent eventEffective) throws AccountApiException, EntitlementUserApiException {
+        handleSubscriptionTransitionChange(eventEffective);
     }
 
     @Subscribe
-    public void handleFutureSubscriptionTransitionChange(final RequestedSubscriptionEvent eventRequested) throws AccountApiException, EntitlementUserApiException {
+    public void handleRequestedSubscriptionTransitionChange(final RequestedSubscriptionEvent eventRequested) throws AccountApiException, EntitlementUserApiException {
         if (eventRequested.getEffectiveTransitionTime().isAfter(eventRequested.getRequestedTransitionTime())) {
-            bstRecorder.subscriptionChanged(eventRequested);
+            handleSubscriptionTransitionChange(eventRequested);
         }
     }
 
@@ -168,5 +145,33 @@ public class AnalyticsListener {
     @Subscribe
     public void handleRepairEntitlement(final RepairEntitlementEvent event) {
         // Ignored for now
+    }
+
+    private void handleSubscriptionTransitionChange(final SubscriptionEvent eventEffective) throws AccountApiException, EntitlementUserApiException {
+        switch (eventEffective.getTransitionType()) {
+            // A subscription enters either through migration or as newly created subscription
+            case MIGRATE_ENTITLEMENT:
+            case CREATE:
+                bstRecorder.subscriptionCreated(eventEffective);
+                break;
+            case RE_CREATE:
+                bstRecorder.subscriptionRecreated(eventEffective);
+                break;
+            case MIGRATE_BILLING:
+                break;
+            case CANCEL:
+                bstRecorder.subscriptionCancelled(eventEffective);
+                break;
+            case CHANGE:
+                bstRecorder.subscriptionChanged(eventEffective);
+                break;
+            case UNCANCEL:
+                break;
+            case PHASE:
+                bstRecorder.subscriptionPhaseChanged(eventEffective);
+                break;
+            default:
+                throw new RuntimeException("Unexpected event type " + eventEffective.getTransitionType());
+        }
     }
 }

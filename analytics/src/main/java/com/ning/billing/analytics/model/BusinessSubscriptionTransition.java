@@ -112,13 +112,26 @@ public class BusinessSubscriptionTransition {
 
         final BusinessSubscriptionTransition that = (BusinessSubscriptionTransition) o;
 
+        return totalOrdering == that.totalOrdering && isDuplicateOf(that);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = (int) (totalOrdering ^ (totalOrdering >>> 32));
+        result = 31 * result + (externalKey != null ? externalKey.hashCode() : 0);
+        result = 31 * result + (accountKey != null ? accountKey.hashCode() : 0);
+        result = 31 * result + (requestedTimestamp != null ? requestedTimestamp.hashCode() : 0);
+        result = 31 * result + (event != null ? event.hashCode() : 0);
+        result = 31 * result + (previousSubscription != null ? previousSubscription.hashCode() : 0);
+        result = 31 * result + (nextSubscription != null ? nextSubscription.hashCode() : 0);
+        return result;
+    }
+
+    public boolean isDuplicateOf(final BusinessSubscriptionTransition that) {
         if (accountKey != null ? !accountKey.equals(that.accountKey) : that.accountKey != null) {
             return false;
         }
         if (event != null ? !event.equals(that.event) : that.event != null) {
-            return false;
-        }
-        if (totalOrdering != that.totalOrdering) {
             return false;
         }
         if (externalKey != null ? !externalKey.equals(that.externalKey) : that.externalKey != null) {
@@ -135,17 +148,5 @@ public class BusinessSubscriptionTransition {
         }
 
         return true;
-    }
-
-    @Override
-    public int hashCode() {
-        int result = (int) (totalOrdering ^ (totalOrdering >>> 32));
-        result = 31 * result + (externalKey != null ? externalKey.hashCode() : 0);
-        result = 31 * result + (accountKey != null ? accountKey.hashCode() : 0);
-        result = 31 * result + (requestedTimestamp != null ? requestedTimestamp.hashCode() : 0);
-        result = 31 * result + (event != null ? event.hashCode() : 0);
-        result = 31 * result + (previousSubscription != null ? previousSubscription.hashCode() : 0);
-        result = 31 * result + (nextSubscription != null ? nextSubscription.hashCode() : 0);
-        return result;
     }
 }
