@@ -17,6 +17,7 @@
 package com.ning.billing.analytics;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -131,12 +132,14 @@ public class BusinessSubscriptionTransitionRecorder {
             nextSubscription = new BusinessSubscription(transition.getNextPriceList(), transition.getNextPlan(), transition.getNextPhase(), currency, transition.getEffectiveTransitionTime(), transition.getNextState(), transition.getSubscriptionId(), transition.getBundleId(), catalogService.getFullCatalog());
         }
 
-        record(transition.getTotalOrdering(), externalKey, accountKey, transition.getRequestedTransitionTime(), event, prevSubscription, nextSubscription);
+        record(transition.getSubscriptionId(), transition.getTotalOrdering(), externalKey, accountKey, transition.getRequestedTransitionTime(), event, prevSubscription, nextSubscription);
     }
 
     // Public for internal reasons
-    public void record(final Long totalOrdering, final String externalKey, final String accountKey, final DateTime requestedDateTime, final BusinessSubscriptionEvent event, final BusinessSubscription prevSubscription, final BusinessSubscription nextSubscription) {
+    public void record(final UUID subscriptionId, final Long totalOrdering, final String externalKey, final String accountKey, final DateTime requestedDateTime,
+                       final BusinessSubscriptionEvent event, final BusinessSubscription prevSubscription, final BusinessSubscription nextSubscription) {
         final BusinessSubscriptionTransition transition = new BusinessSubscriptionTransition(
+                subscriptionId,
                 totalOrdering,
                 externalKey,
                 accountKey,

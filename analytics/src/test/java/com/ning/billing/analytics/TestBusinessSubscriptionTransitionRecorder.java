@@ -59,13 +59,14 @@ public class TestBusinessSubscriptionTransitionRecorder extends AnalyticsTestSui
                                                                                    UUID.randomUUID(),
                                                                                    UUID.randomUUID(),
                                                                                    catalogService.getFullCatalog());
-        sqlDao.createTransition(new BusinessSubscriptionTransition(10L,
-                                                                externalKey.toString(),
-                                                                UUID.randomUUID().toString(),
-                                                                new DateTime(DateTimeZone.UTC),
-                                                                BusinessSubscriptionEvent.valueOf("ADD_MISC"),
-                                                                null,
-                                                                nextPrevSubscription));
+        sqlDao.createTransition(new BusinessSubscriptionTransition(UUID.randomUUID(),
+                                                                   10L,
+                                                                   externalKey.toString(),
+                                                                   UUID.randomUUID().toString(),
+                                                                   new DateTime(DateTimeZone.UTC),
+                                                                   BusinessSubscriptionEvent.valueOf("ADD_MISC"),
+                                                                   null,
+                                                                   nextPrevSubscription));
 
         // Setup the entitlement API
         final SubscriptionBundle bundle = Mockito.mock(SubscriptionBundle.class);
@@ -84,6 +85,7 @@ public class TestBusinessSubscriptionTransitionRecorder extends AnalyticsTestSui
         // Create an new subscription event
         final EffectiveSubscriptionEvent eventEffective = Mockito.mock(EffectiveSubscriptionEvent.class);
         Mockito.when(eventEffective.getId()).thenReturn(UUID.randomUUID());
+        Mockito.when(eventEffective.getSubscriptionId()).thenReturn(UUID.randomUUID());
         Mockito.when(eventEffective.getRequestedTransitionTime()).thenReturn(new DateTime(DateTimeZone.UTC));
         Mockito.when(eventEffective.getNextPlan()).thenReturn(UUID.randomUUID().toString());
         Mockito.when(eventEffective.getEffectiveTransitionTime()).thenReturn(new DateTime(DateTimeZone.UTC));

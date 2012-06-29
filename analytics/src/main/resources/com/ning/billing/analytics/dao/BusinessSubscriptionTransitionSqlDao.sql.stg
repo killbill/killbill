@@ -2,7 +2,8 @@ group BusinessSubscriptionTransition;
 
 getTransitions(external_key) ::= <<
   select
-    total_ordering
+    subscription_id
+  , total_ordering
   , external_key
   , account_key
   , requested_timestamp
@@ -43,7 +44,8 @@ getTransitions(external_key) ::= <<
 
 createTransition() ::= <<
   insert ignore into bst(
-    total_ordering
+    subscription_id
+  , total_ordering
   , external_key
   , account_key
   , requested_timestamp
@@ -77,7 +79,8 @@ createTransition() ::= <<
   , next_subscription_id
   , next_bundle_id
   ) values (
-    :total_ordering
+    :subscription_id
+  , :total_ordering
   , :external_key
   , :account_key
   , :requested_timestamp

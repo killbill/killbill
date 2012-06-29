@@ -16,6 +16,8 @@
 
 package com.ning.billing.analytics.model;
 
+import java.util.UUID;
+
 import org.joda.time.DateTime;
 
 /**
@@ -24,6 +26,7 @@ import org.joda.time.DateTime;
  * The key is unique identifier that ties sets of subscriptions together.
  */
 public class BusinessSubscriptionTransition {
+    private final UUID subscriptionId;
     private final long totalOrdering;
     private final String externalKey;
     private final String accountKey;
@@ -32,7 +35,11 @@ public class BusinessSubscriptionTransition {
     private final BusinessSubscription previousSubscription;
     private final BusinessSubscription nextSubscription;
 
-    public BusinessSubscriptionTransition(final Long totalOrdering, final String externalKey, final String accountKey, final DateTime requestedTimestamp, final BusinessSubscriptionEvent event, final BusinessSubscription previousSubscription, final BusinessSubscription nextSubscription) {
+    public BusinessSubscriptionTransition(final UUID subscriptionId, final Long totalOrdering, final String externalKey, final String accountKey, final DateTime requestedTimestamp,
+                                          final BusinessSubscriptionEvent event, final BusinessSubscription previousSubscription, final BusinessSubscription nextSubscription) {
+        if (subscriptionId == null) {
+            throw new IllegalArgumentException("An event must have a subscription id");
+        }
         if (totalOrdering == null) {
             throw new IllegalArgumentException("An event must have a total ordering");
         }
@@ -49,6 +56,7 @@ public class BusinessSubscriptionTransition {
             throw new IllegalArgumentException("No event specified");
         }
 
+        this.subscriptionId = subscriptionId;
         this.totalOrdering = totalOrdering;
         this.externalKey = externalKey;
         this.accountKey = accountKey;
@@ -56,6 +64,10 @@ public class BusinessSubscriptionTransition {
         this.event = event;
         this.previousSubscription = previousSubscription;
         this.nextSubscription = nextSubscription;
+    }
+
+    public UUID getSubscriptionId() {
+        return subscriptionId;
     }
 
     public long getTotalOrdering() {
@@ -91,6 +103,7 @@ public class BusinessSubscriptionTransition {
         final StringBuilder sb = new StringBuilder();
         sb.append("BusinessSubscriptionTransition");
         sb.append("{accountKey='").append(accountKey).append('\'');
+        sb.append(", subscriptionId=").append(subscriptionId);
         sb.append(", totalOrdering=").append(totalOrdering);
         sb.append(", key='").append(externalKey).append('\'');
         sb.append(", requestedTimestamp=").append(requestedTimestamp);
@@ -113,6 +126,9 @@ public class BusinessSubscriptionTransition {
         final BusinessSubscriptionTransition that = (BusinessSubscriptionTransition) o;
 
         if (accountKey != null ? !accountKey.equals(that.accountKey) : that.accountKey != null) {
+            return false;
+        }
+        if (subscriptionId != null ? !subscriptionId.equals(that.subscriptionId) : that.subscriptionId != null) {
             return false;
         }
         if (event != null ? !event.equals(that.event) : that.event != null) {
@@ -142,6 +158,7 @@ public class BusinessSubscriptionTransition {
         int result = (int) (totalOrdering ^ (totalOrdering >>> 32));
         result = 31 * result + (externalKey != null ? externalKey.hashCode() : 0);
         result = 31 * result + (accountKey != null ? accountKey.hashCode() : 0);
+        result = 31 * result + (subscriptionId != null ? subscriptionId.hashCode() : 0);
         result = 31 * result + (requestedTimestamp != null ? requestedTimestamp.hashCode() : 0);
         result = 31 * result + (event != null ? event.hashCode() : 0);
         result = 31 * result + (previousSubscription != null ? previousSubscription.hashCode() : 0);
