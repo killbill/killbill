@@ -18,6 +18,8 @@ package com.ning.billing.invoice.dao;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
@@ -26,6 +28,9 @@ import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
 
+import com.google.common.base.Function;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.Currency;
@@ -72,9 +77,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
             @Override
             public List<Invoice> inTransaction(final InvoiceSqlDao invoiceDao, final TransactionStatus status) throws Exception {
                 final List<Invoice> invoices = invoiceDao.getInvoicesByAccount(accountId.toString());
-
                 populateChildren(invoices, invoiceDao);
-
                 return invoices;
             }
         });
@@ -85,11 +88,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
         return invoiceSqlDao.inTransaction(new Transaction<List<Invoice>, InvoiceSqlDao>() {
             @Override
             public List<Invoice> inTransaction(final InvoiceSqlDao invoiceDao, final TransactionStatus status) throws Exception {
-                final List<Invoice> invoices = invoiceDao.getAllInvoicesByAccount(accountId.toString());
-
-                populateChildren(invoices, invoiceDao);
-
-                return invoices;
+                return getAllInvoicesByAccountFromTransaction(accountId, invoiceDao);
             }
         });
     }
@@ -205,8 +204,27 @@ public class DefaultInvoiceDao implements InvoiceDao {
 
     @Override
     public BigDecimal getAccountBalance(final UUID accountId) {
-        return invoiceSqlDao.getAccountBalance(accountId.toString());
+
+        return invoiceSqlDao.inTransaction(new Transaction<BigDecimal, InvoiceSqlDao>() {
+            @Override
+            public BigDecimal inTransaction(final InvoiceSqlDao transactional, final TransactionStatus status) throws Exception {
+
+                BigDecimal accountBalance = BigDecimal.ZERO;
+                List<Invoice> invoices = getAllInvoicesByAccountFromTransaction(accountId, transactional);
+                List<InvoiceItem> creditBalanceItems = new LinkedList<InvoiceItem>();
+                for (Invoice cur : invoices) {
+                    accountBalance = accountBalance.add(cur.getBalance());
+                    creditBalanceItems.addAll(cur.getInvoiceItems(CreditBalanceAdjInvoiceItem.class));
+                }
+                BigDecimal cbaTotal = BigDecimal.ZERO;
+                for (InvoiceItem cur : creditBalanceItems) {
+                    cbaTotal = cbaTotal.add(cur.getAmount());
+                }
+                return accountBalance.add(cbaTotal.negate());
+            }
+        });
     }
+
 
     @Override
     public void notifyOfPaymentAttempt(final InvoicePayment invoicePayment, final CallContext context) {
@@ -230,11 +248,16 @@ public class DefaultInvoiceDao implements InvoiceDao {
         return invoiceSqlDao.inTransaction(new Transaction<List<Invoice>, InvoiceSqlDao>() {
             @Override
             public List<Invoice> inTransaction(final InvoiceSqlDao invoiceDao, final TransactionStatus status) throws Exception {
-                final List<Invoice> invoices = invoiceSqlDao.getUnpaidInvoicesByAccountId(accountId.toString(), upToDate.toDate());
 
-                populateChildren(invoices, invoiceDao);
-
-                return invoices;
+                List<Invoice> invoices = getAllInvoicesByAccountFromTransaction(accountId, invoiceDao);
+                Collection<Invoice> unpaidInvoices = Collections2.filter(invoices, new Predicate<Invoice>() {
+                    @Override
+                    public boolean apply(Invoice in) {
+                        // STEPH do we really want to exclude migration invoice
+                        return (!in.isMigrationInvoice() && in.getBalance().compareTo(BigDecimal.ZERO) >= 1);
+                    }
+                });
+                return new ArrayList<Invoice>(unpaidInvoices);
             }
         });
     }
@@ -350,6 +373,13 @@ public class DefaultInvoiceDao implements InvoiceDao {
         getInvoiceItemsWithinTransaction(invoices, invoiceSqlDao);
         getInvoicePaymentsWithinTransaction(invoices, invoiceSqlDao);
     }
+
+    private List<Invoice> getAllInvoicesByAccountFromTransaction(final UUID accountId, final InvoiceSqlDao transactional) {
+        final List<Invoice> invoices = transactional.getAllInvoicesByAccount(accountId.toString());
+        populateChildren(invoices, transactional);
+        return invoices;
+    }
+
 
     private void getInvoiceItemsWithinTransaction(final List<Invoice> invoices, final InvoiceSqlDao invoiceDao) {
         for (final Invoice invoice : invoices) {

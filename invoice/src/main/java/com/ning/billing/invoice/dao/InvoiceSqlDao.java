@@ -77,13 +77,6 @@ public interface InvoiceSqlDao extends EntitySqlDao<Invoice>, AuditSqlDao, Trans
     @RegisterMapper(UuidMapper.class)
     UUID getInvoiceIdByPaymentAttemptId(@Bind("paymentAttemptId") final String paymentAttemptId);
 
-    @SqlQuery
-    @RegisterMapper(BalanceMapper.class)
-    BigDecimal getAccountBalance(@Bind("accountId") final String accountId);
-
-    @SqlQuery
-    List<Invoice> getUnpaidInvoicesByAccountId(@Bind("accountId") final String accountId,
-                                               @Bind("upToDate") final Date upToDate);
 
     @BindingAnnotation(InvoiceBinder.InvoiceBinderFactory.class)
     @Retention(RetentionPolicy.RUNTIME)

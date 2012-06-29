@@ -41,33 +41,15 @@ getInvoicesByAccountAfterDate() ::= <<
 getInvoicesBySubscription() ::= <<
   SELECT i.record_id as invoice_number, <invoiceFields("i.")>
   FROM invoices i
-  LEFT JOIN recurring_invoice_items rii ON i.id = rii.invoice_id
+  LEFT JOIN invoice_items rii ON i.id = rii.invoice_id
   WHERE rii.subscription_id = :subscriptionId AND migrated = 'FALSE'
   GROUP BY i.record_id, <invoiceFields("i.")>
-
-  UNION ALL
-
-  SELECT i.record_id as invoice_number, <invoiceFields("i.")>
-  FROM invoices i
-  LEFT JOIN fixed_invoice_items fii ON i.id = fii.invoice_id
-  WHERE fii.subscription_id = :subscriptionId AND migrated = 'FALSE'
-  GROUP BY i.record_id, <invoiceFields("i.")>;
 >>
 
 getById() ::= <<
   SELECT record_id as invoice_number, <invoiceFields()>
   FROM invoices
   WHERE id = :id;
->>
-
-getAccountBalance() ::= <<
-  SELECT SUM(iis.amount_invoiced) AS amount_invoiced,
-         SUM(ips.total_paid) AS amount_paid
-  FROM invoices i
-  LEFT JOIN invoice_payment_summary ips ON i.id = ips.invoice_id
-  LEFT JOIN invoice_item_summary iis ON i.id = iis.invoice_id
-  WHERE i.account_id = :accountId
-  GROUP BY i.account_id;
 >>
 
 create() ::= <<
@@ -82,17 +64,6 @@ getInvoiceIdByPaymentAttemptId() ::= <<
      AND ip.payment_attempt_id = :paymentAttemptId
 >>
 
-getUnpaidInvoicesByAccountId() ::= <<
-  SELECT record_id as invoice_number, <invoiceFields("i.")>
-  FROM invoices i
-  LEFT JOIN invoice_payment_summary ips ON i.id = ips.invoice_id
-  LEFT JOIN invoice_item_summary iis ON i.id = iis.invoice_id
-  WHERE i.account_id = :accountId AND NOT (i.target_date > :upToDate) AND migrated = 'FALSE'
-  GROUP BY i.id, i.account_id, i.invoice_date, i.target_date, i.currency
-  HAVING (SUM(iis.amount_invoiced) > SUM(ips.total_paid)) OR (SUM(ips.total_paid) IS NULL)
-  AND SUM(iis.amount_invoiced) > 0
-  ORDER BY i.target_date ASC;
->>
 
 getRecordId() ::= <<
     SELECT record_id

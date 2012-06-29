@@ -185,6 +185,7 @@ public class DefaultInvoice extends EntityBase implements Invoice {
     @Override
     public BigDecimal getBalance() {
         // credits offset payments
+        // STEPH fix that
         return getAmountCharged().subtract(getAmountPaid().subtract(getAmountCredited()));
     }
 

@@ -63,9 +63,11 @@ public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePayment>, Tran
     @SqlQuery
     public InvoicePayment getByPaymentAttemptId(@Bind("paymentAttempt") final String paymentAttemptId);
 
+    @Override
     @SqlQuery
     public List<InvoicePayment> get();
 
+    @Override
     @SqlUpdate
     public void create(@InvoicePaymentBinder final InvoicePayment invoicePayment,
                        @CallContextBinder final CallContext context);
