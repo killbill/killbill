@@ -130,10 +130,6 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
         return invoice.getCBAAmount();
     }
 
-    @Override
-    public BigDecimal getAdjustedAmount() {
-        return invoice.getAdjustedAmount();
-    }
 
     @Override
     public BigDecimal getBalance() {
@@ -201,5 +197,20 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
 
     protected Invoice getInvoice() {
         return invoice;
+    }
+
+    @Override
+    public BigDecimal getTotalAdjAmount() {
+        return invoice.getTotalAdjAmount();
+    }
+
+    @Override
+    public BigDecimal getCreditAdjAmount() {
+        return invoice.getCreditAdjAmount();
+    }
+
+    @Override
+    public BigDecimal getRefundAdjAmount() {
+        return invoice.getRefundAdjAmount();
     }
 }

@@ -40,8 +40,16 @@ public class InvoiceItemList extends ArrayList<InvoiceItem> {
         this.addAll(invoiceItems);
     }
 
-    public BigDecimal getAdjustedAmount() {
+    public BigDecimal getTotalAdjAmount() {
         return getAmoutForItems(InvoiceItemType.CREDIT_ADJ, InvoiceItemType.REFUND_ADJ);
+    }
+
+    public BigDecimal getCreditAdjAmount() {
+        return getAmoutForItems(InvoiceItemType.CREDIT_ADJ);
+    }
+
+    public BigDecimal getRefundAdjAmount() {
+        return getAmoutForItems(InvoiceItemType.REFUND_ADJ);
     }
 
     public BigDecimal getChargedAmount() {

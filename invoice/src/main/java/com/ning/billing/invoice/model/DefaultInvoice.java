@@ -183,13 +183,22 @@ public class DefaultInvoice extends EntityBase implements Invoice {
     }
 
     @Override
-    public BigDecimal getAdjustedAmount() {
-        return invoiceItems.getAdjustedAmount();
+    public BigDecimal getTotalAdjAmount() {
+        return invoiceItems.getTotalAdjAmount();
     }
 
     @Override
+    public BigDecimal getCreditAdjAmount() {
+        return invoiceItems.getCreditAdjAmount();
+    }
+
+    @Override
+    public BigDecimal getRefundAdjAmount() {
+        return invoiceItems.getRefundAdjAmount();
+    }
+    @Override
     public BigDecimal getBalance() {
-        final BigDecimal balance = getChargedAmount().add(getAdjustedAmount()).subtract(getPaidAmount()).subtract(getCBAAmount());
+        final BigDecimal balance = getChargedAmount().add(getTotalAdjAmount()).subtract(getPaidAmount()).subtract(getCBAAmount());
         return balance;
     }
 

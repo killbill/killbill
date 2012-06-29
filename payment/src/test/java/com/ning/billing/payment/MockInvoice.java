@@ -179,7 +179,7 @@ public class MockInvoice extends EntityBase implements Invoice {
     }
 
     @Override
-    public BigDecimal getAmountCharged() {
+    public BigDecimal getChargedAmount() {
         BigDecimal result = BigDecimal.ZERO;
 
         for (final InvoiceItem i : invoiceItems) {
@@ -191,7 +191,7 @@ public class MockInvoice extends EntityBase implements Invoice {
     }
 
     @Override
-    public BigDecimal getAmountCredited() {
+    public BigDecimal getCreditAdjAmount() {
         BigDecimal result = BigDecimal.ZERO;
 
         for (final InvoiceItem i : invoiceItems) {
@@ -204,7 +204,7 @@ public class MockInvoice extends EntityBase implements Invoice {
 
     @Override
     public BigDecimal getBalance() {
-        return getAmountCharged().subtract(getPaidAmount().subtract(getAmountCredited()));
+        return getChargedAmount().subtract(getPaidAmount());
     }
 
     @Override
@@ -224,6 +224,24 @@ public class MockInvoice extends EntityBase implements Invoice {
     @Override
     public String toString() {
         return "DefaultInvoice [items=" + invoiceItems + ", payments=" + payments + ", id=" + id + ", accountId=" + accountId + ", invoiceDate=" + invoiceDate + ", targetDate=" + targetDate + ", currency=" + currency + ", amountPaid=" + getPaidAmount() + ", lastPaymentAttempt=" + getLastPaymentAttempt() + "]";
+    }
+
+    @Override
+    public BigDecimal getCBAAmount() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public BigDecimal getTotalAdjAmount() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public BigDecimal getRefundAdjAmount() {
+        // TODO Auto-generated method stub
+        return null;
     }
 }
 

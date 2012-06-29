@@ -113,6 +113,7 @@ public class MockRecurringInvoiceItem extends EntityBase implements InvoiceItem 
         return bundleId;
     }
 
+    @Override
     public UUID getAccountId() {
         return accountId;
     }
@@ -158,15 +159,11 @@ public class MockRecurringInvoiceItem extends EntityBase implements InvoiceItem 
     }
 
     @Override
-    public InvoiceItem asReversingItem() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public String getDescription() {
         return String.format("%s from %s to %s", phaseName, startDate.toString(), endDate.toString());
     }
 
+    @Override
     public UUID getLinkedItemId() {
         return reversedItemId;
     }
@@ -175,6 +172,7 @@ public class MockRecurringInvoiceItem extends EntityBase implements InvoiceItem 
         return (reversedItemId != null);
     }
 
+    @Override
     public BigDecimal getRate() {
         return rate;
     }

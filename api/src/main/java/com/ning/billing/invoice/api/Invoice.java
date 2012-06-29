@@ -62,7 +62,11 @@ public interface Invoice extends Entity {
 
     BigDecimal getCBAAmount();
 
-    BigDecimal getAdjustedAmount();
+    BigDecimal getTotalAdjAmount();
+
+    BigDecimal getCreditAdjAmount();
+
+    BigDecimal getRefundAdjAmount();
 
     BigDecimal getBalance();
 
