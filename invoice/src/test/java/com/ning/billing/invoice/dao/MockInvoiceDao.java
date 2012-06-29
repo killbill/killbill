@@ -248,7 +248,14 @@ public class MockInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public InvoiceItem insertCredit(final UUID accountId, final BigDecimal amount, final DateTime effectiveDate, final Currency currency, final CallContext context) {
+    public InvoiceItem insertCredit(final UUID accountId, final UUID invoiceId, final BigDecimal amount, final DateTime effectiveDate, final Currency currency, final CallContext context) {
         throw new UnsupportedOperationException();
     }
+
+    @Override
+    public BigDecimal getAccountCBA(UUID accountId) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
 }

@@ -198,7 +198,7 @@ public class DefaultInvoice extends EntityBase implements Invoice {
     }
     @Override
     public BigDecimal getBalance() {
-        final BigDecimal balance = getChargedAmount().add(getTotalAdjAmount()).subtract(getPaidAmount()).subtract(getCBAAmount());
+        final BigDecimal balance = getChargedAmount().add(getTotalAdjAmount()).subtract(getPaidAmount());;
         return balance;
     }
 

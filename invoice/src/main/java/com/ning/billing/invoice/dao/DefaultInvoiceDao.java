@@ -39,6 +39,7 @@ import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.invoice.api.InvoicePayment;
+import com.ning.billing.invoice.model.CreditAdjInvoiceItem;
 import com.ning.billing.invoice.model.CreditBalanceAdjInvoiceItem;
 import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
@@ -211,19 +212,30 @@ public class DefaultInvoiceDao implements InvoiceDao {
 
                 BigDecimal accountBalance = BigDecimal.ZERO;
                 List<Invoice> invoices = getAllInvoicesByAccountFromTransaction(accountId, transactional);
-                List<InvoiceItem> creditBalanceItems = new LinkedList<InvoiceItem>();
                 for (Invoice cur : invoices) {
                     accountBalance = accountBalance.add(cur.getBalance());
-                    creditBalanceItems.addAll(cur.getInvoiceItems(CreditBalanceAdjInvoiceItem.class));
                 }
-                BigDecimal cbaTotal = BigDecimal.ZERO;
-                for (InvoiceItem cur : creditBalanceItems) {
-                    cbaTotal = cbaTotal.add(cur.getAmount());
-                }
-                return accountBalance.add(cbaTotal.negate());
+                return accountBalance;
             }
         });
     }
+
+    @Override
+    public BigDecimal getAccountCBA(final UUID accountId) {
+        return invoiceSqlDao.inTransaction(new Transaction<BigDecimal, InvoiceSqlDao>() {
+            @Override
+            public BigDecimal inTransaction(final InvoiceSqlDao transactional, final TransactionStatus status) throws Exception {
+
+                BigDecimal cba = BigDecimal.ZERO;
+                List<Invoice> invoices = getAllInvoicesByAccountFromTransaction(accountId, transactional);
+                for (Invoice cur : invoices) {
+                    cba = cba.add(cur.getCBAAmount());
+                }
+                return cba;
+            }
+        });
+    }
+
 
 
     @Override
@@ -344,18 +356,26 @@ public class DefaultInvoiceDao implements InvoiceDao {
         return invoiceItemSqlDao.getById(creditId.toString());
     }
 
-    // TODO: make this transactional
     @Override
-    public InvoiceItem insertCredit(final UUID accountId, final BigDecimal amount,
-                                    final DateTime effectiveDate, final Currency currency,
-                                    final CallContext context) {
-        final Invoice invoice = new DefaultInvoice(accountId, effectiveDate, effectiveDate, currency);
-        invoiceSqlDao.create(invoice, context);
+    public InvoiceItem insertCredit(final UUID accountId, final UUID invoiceId, final BigDecimal amount,
+            final DateTime effectiveDate, final Currency currency,
+            final CallContext context) {
 
-        final InvoiceItem credit = new CreditBalanceAdjInvoiceItem(invoice.getId(), accountId, effectiveDate, amount, currency);
-        invoiceItemSqlDao.create(credit, context);
-
-        return credit;
+        return invoiceSqlDao.inTransaction(new Transaction<InvoiceItem, InvoiceSqlDao>() {
+            @Override
+            public InvoiceItem inTransaction(final InvoiceSqlDao transactional, final TransactionStatus status) throws Exception {
+                UUID invoiceIdForRefund = invoiceId;
+                if (invoiceIdForRefund == null) {
+                    final Invoice invoiceForRefund = new DefaultInvoice(accountId, effectiveDate, effectiveDate, currency);
+                    transactional.create(invoiceForRefund, context);
+                    invoiceIdForRefund = invoiceForRefund.getId();
+                }
+                final InvoiceItem credit = new CreditAdjInvoiceItem(invoiceIdForRefund, accountId, effectiveDate, amount, currency);
+                InvoiceItemSqlDao transInvoiceItemDao = transactional.become(InvoiceItemSqlDao.class);
+                transInvoiceItemDao.create(credit, context);
+                return credit;
+            }
+        });
     }
 
     @Override

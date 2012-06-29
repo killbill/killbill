@@ -31,6 +31,7 @@ import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.callcontext.CallContext;
 
 public interface InvoiceDao {
+
     void create(Invoice invoice, CallContext context);
 
     Invoice getById(final UUID id);
@@ -50,6 +51,8 @@ public interface InvoiceDao {
     void notifyOfPaymentAttempt(final InvoicePayment invoicePayment, final CallContext context);
 
     BigDecimal getAccountBalance(final UUID accountId);
+
+    public BigDecimal getAccountCBA(final UUID accountId);
 
     List<Invoice> getUnpaidInvoicesByAccountId(final UUID accountId, final DateTime upToDate);
 
@@ -75,7 +78,8 @@ public interface InvoiceDao {
 
     InvoiceItem getCreditById(final UUID creditId) throws InvoiceApiException;
 
-    InvoiceItem insertCredit(final UUID accountId, final BigDecimal amount,
+    InvoiceItem insertCredit(final UUID accountId, final UUID invoiceId, final BigDecimal amount,
                              final DateTime effectiveDate, final Currency currency,
                              final CallContext context);
+
 }
