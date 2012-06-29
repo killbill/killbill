@@ -42,6 +42,48 @@ getTransitions(external_key) ::= <<
   ;
 >>
 
+getTransitionForSubscription(subscription_id) ::= <<
+  select
+    subscription_id
+  , total_ordering
+  , external_key
+  , account_key
+  , requested_timestamp
+  , event
+  , prev_product_name
+  , prev_product_type
+  , prev_product_category
+  , prev_slug
+  , prev_phase
+  , prev_billing_period
+  , prev_price
+  , prev_price_list
+  , prev_mrr
+  , prev_currency
+  , prev_start_date
+  , prev_state
+  , prev_subscription_id
+  , prev_bundle_id
+  , next_product_name
+  , next_product_type
+  , next_product_category
+  , next_slug
+  , next_phase
+  , next_billing_period
+  , next_price
+  , next_price_list
+  , next_mrr
+  , next_currency
+  , next_start_date
+  , next_state
+  , next_subscription_id
+  , next_bundle_id
+  from bst
+  where subscription_id =: subscription_id
+  order by requested_timestamp asc
+  ;
+>>
+
 createTransition() ::= <<
   insert ignore into bst(
     subscription_id
@@ -114,6 +156,45 @@ createTransition() ::= <<
   , :next_subscription_id
   , :next_bundle_id
   );
+>>
+
+updateTransition() ::= <<
+  update bst set
+    subscription_id = :subscription_id
+  , total_ordering = :total_ordering
+  , external_key = :external_key
+  , account_key = :account_key
+  , requested_timestamp = :requested_timestamp
+  , event = :event
+  , prev_product_name = :prev_product_name
+  , prev_product_type = :prev_product_type
+  , prev_product_category = :prev_product_category
+  , prev_slug = :prev_slug
+  , prev_phase = :prev_phase
+  , prev_billing_period = :prev_billing_period
+  , prev_price = :prev_price
+  , prev_price_list = :prev_price_list
+  , prev_mrr = :prev_mrr
+  , prev_currency = :prev_currency
+  , prev_start_date = :prev_start_date
+  , prev_state = :prev_state
+  , prev_subscription_id = :prev_subscription_id
+  , prev_bundle_id = :prev_bundle_id
+  , next_product_name = :next_product_name
+  , next_product_type = :next_product_type
+  , next_product_category = :next_product_category
+  , next_slug = :next_slug
+  , next_phase = :next_phase
+  , next_billing_period = :next_billing_period
+  , next_price = :next_price
+  , next_price_list = :next_price_list
+  , next_mrr = :next_mrr
+  , next_currency = :next_currency
+  , next_start_date = :next_start_date
+  , next_state = :next_state
+  , next_subscription_id = :next_subscription_id
+  , next_bundle_id = :next_bundle_id
+  where total_ordering = :total_ordering
 >>
 
 test() ::= <<

@@ -32,8 +32,14 @@ public interface BusinessSubscriptionTransitionSqlDao {
     @SqlQuery
     List<BusinessSubscriptionTransition> getTransitions(@Bind("external_key") final String externalKey);
 
+    @SqlQuery
+    List<BusinessSubscriptionTransition> getTransitionForSubscription(@Bind("subscription_id") final String subscriptionId);
+
     @SqlUpdate
     int createTransition(@BusinessSubscriptionTransitionBinder final BusinessSubscriptionTransition transition);
+
+    @SqlUpdate
+    void updateTransition(@Bind("total_ordering") long totalOrdering, @BusinessSubscriptionTransitionBinder BusinessSubscriptionTransition updatedFirstTransition);
 
     @SqlUpdate
     void test();

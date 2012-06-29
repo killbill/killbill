@@ -36,12 +36,22 @@ public class MockBusinessSubscriptionTransitionSqlDao implements BusinessSubscri
     }
 
     @Override
+    public List<BusinessSubscriptionTransition> getTransitionForSubscription(@Bind("subscription_id") final String subscriptionId) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public int createTransition(@BusinessSubscriptionTransitionBinder final BusinessSubscriptionTransition transition) {
         if (content.get(transition.getExternalKey()) == null) {
             content.put(transition.getExternalKey(), new ArrayList<BusinessSubscriptionTransition>());
         }
         content.get(transition.getExternalKey()).add(transition);
         return 1;
+    }
+
+    @Override
+    public void updateTransition(@Bind("total_ordering") final long totalOrdering, @BusinessSubscriptionTransitionBinder final BusinessSubscriptionTransition updatedFirstTransition) {
+        throw new UnsupportedOperationException();
     }
 
     @Override

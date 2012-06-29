@@ -24,6 +24,7 @@ import com.ning.billing.account.api.AccountCreationEvent;
 import com.ning.billing.entitlement.api.timeline.RepairEntitlementEvent;
 import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
+import com.ning.billing.entitlement.api.user.RequestedSubscriptionEvent;
 import com.ning.billing.invoice.api.EmptyInvoiceEvent;
 import com.ning.billing.invoice.api.InvoiceCreationEvent;
 import com.ning.billing.payment.api.PaymentErrorEvent;
@@ -80,6 +81,13 @@ public class AnalyticsListener {
                 break;
             default:
                 throw new RuntimeException("Unexpected event type " + eventEffective.getTransitionType());
+        }
+    }
+
+    @Subscribe
+    public void handleFutureSubscriptionTransitionChange(final RequestedSubscriptionEvent eventRequested) throws AccountApiException, EntitlementUserApiException {
+        if (eventRequested.getEffectiveTransitionTime().isAfter(eventRequested.getRequestedTransitionTime())) {
+            bstRecorder.subscriptionChanged(eventRequested);
         }
     }
 
