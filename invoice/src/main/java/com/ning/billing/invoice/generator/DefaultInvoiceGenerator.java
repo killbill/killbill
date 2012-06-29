@@ -42,6 +42,7 @@ import com.ning.billing.entitlement.api.billing.BillingModeType;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.invoice.model.BillingMode;
 import com.ning.billing.invoice.model.CreditBalanceAdjInvoiceItem;
 import com.ning.billing.invoice.model.DefaultInvoice;
@@ -109,8 +110,8 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         removeCancellingInvoiceItems(existingItems);
         removeDuplicatedInvoiceItems(proposedItems, existingItems);
 
-        addReversingItems(existingItems, proposedItems);
-        generateCreditsForPastRepairedInvoices(accountId, existingInvoices, proposedItems, targetCurrency);
+        addRepairedItems(existingItems, proposedItems);
+        generateCBAForExistingInvoices(accountId, existingInvoices, proposedItems, targetCurrency);
         consumeExistingCredit(invoiceId, accountId, existingItems, proposedItems, targetCurrency);
 
         if (proposedItems == null || proposedItems.size() == 0) {
@@ -122,7 +123,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         }
     }
 
-    void generateCreditsForPastRepairedInvoices(final UUID accountId, final List<Invoice> existingInvoices, final List<InvoiceItem> proposedItems, final Currency currency) {
+    void generateCBAForExistingInvoices(final UUID accountId, final List<Invoice> existingInvoices, final List<InvoiceItem> proposedItems, final Currency currency) {
         // determine most accurate invoice balances up to this point
         final Map<UUID, BigDecimal> amountOwedByInvoice = new HashMap<UUID, BigDecimal>();
 
@@ -149,12 +150,12 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         }
     }
 
-    void addReversingItems(final List<InvoiceItem> existingItems, final List<InvoiceItem> proposedItems) {
+    void addRepairedItems(final List<InvoiceItem> existingItems, final List<InvoiceItem> proposedItems) {
         for (final InvoiceItem existingItem : existingItems) {
-            if (existingItem instanceof RecurringInvoiceItem) {
-                final RecurringInvoiceItem ri = (RecurringInvoiceItem) existingItem;
-                final BigDecimal amountNegated = ri.getAmount() == null ? null : ri.getAmount().negate();
-                RepairAdjInvoiceItem repairItem  = new RepairAdjInvoiceItem(ri.getInvoiceId(), ri.getAccountId(), ri.getStartDate(), ri.getEndDate(), amountNegated, ri.getCurrency(), ri.getId());
+            if (existingItem.getInvoiceItemType() == InvoiceItemType.RECURRING ||
+                    existingItem.getInvoiceItemType() == InvoiceItemType.FIXED) {
+                final BigDecimal amountNegated = existingItem.getAmount() == null ? null : existingItem.getAmount().negate();
+                RepairAdjInvoiceItem repairItem  = new RepairAdjInvoiceItem(existingItem.getInvoiceId(), existingItem.getAccountId(), existingItem.getStartDate(),existingItem.getEndDate(), amountNegated, existingItem.getCurrency(), existingItem.getId());
                 proposedItems.add(repairItem);
             }
         }
@@ -166,24 +167,20 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         BigDecimal totalAmountOwed = BigDecimal.ZERO;
 
         for (final InvoiceItem item : existingItems) {
-            if (item instanceof CreditBalanceAdjInvoiceItem) {
+            if (item.getInvoiceItemType() == InvoiceItemType.CBA_ADJ) {
                 totalUnusedCreditAmount = totalUnusedCreditAmount.add(item.getAmount());
             }
         }
 
         for (final InvoiceItem item : proposedItems) {
-            if (item instanceof CreditBalanceAdjInvoiceItem) {
+            if (item.getInvoiceItemType() == InvoiceItemType.CBA_ADJ) {
                 totalUnusedCreditAmount = totalUnusedCreditAmount.add(item.getAmount());
-            } else if ((item instanceof RecurringInvoiceItem)
-                    || (item instanceof FixedPriceInvoiceItem)) {
-                totalAmountOwed = totalAmountOwed.add(item.getAmount());
             } else {
-                // STEPH
+                totalAmountOwed = totalAmountOwed.add(item.getAmount());
             }
         }
 
-        // credits are positive when they reduce the amount owed (since they offset payment)
-        // the credit balance should never be negative
+
         BigDecimal creditAmount = BigDecimal.ZERO;
         if (totalUnusedCreditAmount.compareTo(BigDecimal.ZERO) > 0) {
             if (totalAmountOwed.abs().compareTo(totalUnusedCreditAmount.abs()) > 0) {
@@ -246,7 +243,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         final List<UUID> itemsToRemove = new ArrayList<UUID>();
 
         for (final InvoiceItem item1 : items) {
-            if (item1 instanceof RepairAdjInvoiceItem) {
+            if (item1.getInvoiceItemType() == InvoiceItemType.REPAIR_ADJ) {
                 final RepairAdjInvoiceItem repairItem = (RepairAdjInvoiceItem) item1;
                 itemsToRemove.add(repairItem.getId());
                 itemsToRemove.add(repairItem.getLinkedItemId());

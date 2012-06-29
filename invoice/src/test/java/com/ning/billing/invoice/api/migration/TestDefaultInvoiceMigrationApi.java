@@ -237,9 +237,7 @@ public class TestDefaultInvoiceMigrationApi extends InvoicingTestBase {
         return invoice.getId();
     }
 
-    // STEPH double check with Martin this is wrong (disable until i know)
-    // Check migration invoice is NOT returned for all user api invoice calls
-    @Test(groups = {"slow"}, enabled = false)
+    @Test(groups = {"slow"}, enabled = true)
     public void testUserApiAccess() {
         final List<Invoice> byAccount = invoiceUserApi.getInvoicesByAccount(accountId);
         Assert.assertEquals(byAccount.size(), 1);
@@ -250,9 +248,7 @@ public class TestDefaultInvoiceMigrationApi extends InvoicingTestBase {
         Assert.assertEquals(byAccountAndDate.get(0).getId(), regularInvoiceId);
 
         final Collection<Invoice> unpaid = invoiceUserApi.getUnpaidInvoicesByAccountId(accountId, date_regular.plusDays(1));
-        Assert.assertEquals(unpaid.size(), 1);
-        Assert.assertEquals(regularInvoiceId, unpaid.iterator().next().getId());
-
+        Assert.assertEquals(unpaid.size(), 2);
     }
 
 

@@ -168,7 +168,7 @@ public class MockInvoice extends EntityBase implements Invoice {
     }
 
     @Override
-    public BigDecimal getAmountPaid() {
+    public BigDecimal getPaidAmount() {
         BigDecimal amountPaid = BigDecimal.ZERO;
         for (final InvoicePayment payment : payments) {
             if (payment.getAmount() != null) {
@@ -204,7 +204,7 @@ public class MockInvoice extends EntityBase implements Invoice {
 
     @Override
     public BigDecimal getBalance() {
-        return getAmountCharged().subtract(getAmountPaid().subtract(getAmountCredited()));
+        return getAmountCharged().subtract(getPaidAmount().subtract(getAmountCredited()));
     }
 
     @Override
@@ -223,7 +223,7 @@ public class MockInvoice extends EntityBase implements Invoice {
 
     @Override
     public String toString() {
-        return "DefaultInvoice [items=" + invoiceItems + ", payments=" + payments + ", id=" + id + ", accountId=" + accountId + ", invoiceDate=" + invoiceDate + ", targetDate=" + targetDate + ", currency=" + currency + ", amountPaid=" + getAmountPaid() + ", lastPaymentAttempt=" + getLastPaymentAttempt() + "]";
+        return "DefaultInvoice [items=" + invoiceItems + ", payments=" + payments + ", id=" + id + ", accountId=" + accountId + ", invoiceDate=" + invoiceDate + ", targetDate=" + targetDate + ", currency=" + currency + ", amountPaid=" + getPaidAmount() + ", lastPaymentAttempt=" + getLastPaymentAttempt() + "]";
     }
 }
 

@@ -162,7 +162,7 @@ public class DefaultInvoice extends EntityBase implements Invoice {
     }
 
     @Override
-    public BigDecimal getAmountPaid() {
+    public BigDecimal getPaidAmount() {
         BigDecimal amountPaid = BigDecimal.ZERO;
         for (final InvoicePayment payment : payments) {
             if (payment.getAmount() != null) {
@@ -173,20 +173,24 @@ public class DefaultInvoice extends EntityBase implements Invoice {
     }
 
     @Override
-    public BigDecimal getAmountCharged() {
-        return invoiceItems.getAmountCharged();
+    public BigDecimal getChargedAmount() {
+        return invoiceItems.getChargedAmount();
     }
 
     @Override
-    public BigDecimal getAmountCredited() {
-        return invoiceItems.getAmountCredited();
+    public BigDecimal getCBAAmount() {
+        return invoiceItems.getCBAAmount();
+    }
+
+    @Override
+    public BigDecimal getAdjustedAmount() {
+        return invoiceItems.getAdjustedAmount();
     }
 
     @Override
     public BigDecimal getBalance() {
-        // credits offset payments
-        // STEPH fix that
-        return getAmountCharged().subtract(getAmountPaid().subtract(getAmountCredited()));
+        final BigDecimal balance = getChargedAmount().add(getAdjustedAmount()).subtract(getPaidAmount()).subtract(getCBAAmount());
+        return balance;
     }
 
     @Override
@@ -201,7 +205,8 @@ public class DefaultInvoice extends EntityBase implements Invoice {
 
     @Override
     public String toString() {
-        return "DefaultInvoice [items=" + invoiceItems + ", payments=" + payments + ", id=" + id + ", accountId=" + accountId + ", invoiceDate=" + invoiceDate + ", targetDate=" + targetDate + ", currency=" + currency + ", amountPaid=" + getAmountPaid() + ", lastPaymentAttempt=" + getLastPaymentAttempt() + "]";
+        return "DefaultInvoice [items=" + invoiceItems + ", payments=" + payments + ", id=" + id + ", accountId=" + accountId + ", invoiceDate=" + invoiceDate + ", targetDate=" + targetDate + ", currency=" + currency + ", amountPaid=" + getPaidAmount() + ", lastPaymentAttempt=" + getLastPaymentAttempt() + "]";
     }
+
 }
 

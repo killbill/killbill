@@ -58,7 +58,7 @@ public class BusinessInvoice {
     }
 
     public BusinessInvoice(final String accountKey, final Invoice invoice) {
-        this(accountKey, invoice.getAmountCharged(), invoice.getAmountCredited(), invoice.getAmountPaid(), invoice.getBalance(),
+        this(accountKey, invoice.getAmountCharged(), invoice.getAmountCredited(), invoice.getPaidAmount(), invoice.getBalance(),
              new DateTime(DateTimeZone.UTC), invoice.getCurrency(), invoice.getInvoiceDate(), invoice.getId(), invoice.getTargetDate(),
              new DateTime(DateTimeZone.UTC));
     }

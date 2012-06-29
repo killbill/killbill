@@ -835,7 +835,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         assertEquals(invoice2.getBalance().compareTo(ZERO), 0);
 
         // ensure that the account has a credit balance
-        final BigDecimal creditBalance = invoice1.getAmountCredited().add(invoice2.getAmountCredited());
+        final BigDecimal creditBalance = invoice1.getCBAAmount().add(invoice2.getCBAAmount());
         assertTrue(creditBalance.compareTo(FIVE) == 0);
     }
 

@@ -190,7 +190,7 @@ public class TestDefaultInvoiceGenerator  {
 
     // STEPH same as testRemoveCancellingInvoiceItemsFixedPrice: should we have one for FixedPrice?
     @Test(groups = {"fast"})
-    public void testAddReversingItemsRecurringPrice() {
+    public void testAddRepairedItemsItemsRecurringPrice() {
         DateTime startDate = clock.getUTCNow();
         DateTime endDate = startDate.plusDays(30);
         DateTime nextEndDate = startDate.plusMonths(1);
@@ -210,7 +210,7 @@ public class TestDefaultInvoiceGenerator  {
         InvoiceItem other = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, endDate, nextEndDate, amount2, rate2, currency, null);
         proposed.add(other);
 
-        gen.addReversingItems(existing, proposed);
+        gen.addRepairedItems(existing, proposed);
         assertEquals(existing.size(), 1);
         assertEquals(proposed.size(), 2);
         InvoiceItem leftItem1 = proposed.get(0);
@@ -257,7 +257,7 @@ public class TestDefaultInvoiceGenerator  {
         proposed.add(reversedItem1);
         proposed.add(newItem1);
 
-        gen.generateCreditsForPastRepairedInvoices(accountId, existingInvoices, proposed, currency);
+        gen.generateCBAForExistingInvoices(accountId, existingInvoices, proposed, currency);
 
         assertEquals(proposed.size(), 3);
         InvoiceItem reversedItemCheck1 = proposed.get(0);

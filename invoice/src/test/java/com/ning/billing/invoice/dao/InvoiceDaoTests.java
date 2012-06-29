@@ -103,7 +103,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         final Invoice savedInvoice = invoiceDao.getById(invoiceId);
         assertNotNull(savedInvoice);
         assertEquals(savedInvoice.getBalance().compareTo(new BigDecimal("21.00")), 0);
-        assertEquals(savedInvoice.getAmountPaid(), BigDecimal.ZERO);
+        assertEquals(savedInvoice.getPaidAmount(), BigDecimal.ZERO);
         assertEquals(savedInvoice.getInvoiceItems().size(), 1);
 
         final BigDecimal paymentAmount = new BigDecimal("11.00");
@@ -114,9 +114,9 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         final Invoice retrievedInvoice = invoiceDao.getById(invoiceId);
         assertNotNull(retrievedInvoice);
         assertEquals(retrievedInvoice.getInvoiceItems().size(), 1);
-        assertEquals(retrievedInvoice.getAmountCharged().compareTo(new BigDecimal("21.00")), 0);
+        assertEquals(retrievedInvoice.getChargedAmount().compareTo(new BigDecimal("21.00")), 0);
         assertEquals(retrievedInvoice.getBalance().compareTo(new BigDecimal("10.00")), 0);
-        assertEquals(retrievedInvoice.getAmountPaid().compareTo(new BigDecimal("11.00")), 0);
+        assertEquals(retrievedInvoice.getPaidAmount().compareTo(new BigDecimal("11.00")), 0);
     }
 
     @Test
@@ -139,7 +139,7 @@ public class InvoiceDaoTests extends InvoiceDaoTestBase {
         invoiceDao.notifyOfPaymentAttempt(new DefaultInvoicePayment(paymentAttemptId, invoice.getId(), paymentAttemptDate, paymentAmount, Currency.USD), context);
 
         invoice = invoiceDao.getById(invoice.getId());
-        assertEquals(invoice.getAmountPaid().compareTo(paymentAmount), 0);
+        assertEquals(invoice.getPaidAmount().compareTo(paymentAmount), 0);
         assertEquals(invoice.getLastPaymentAttempt().compareTo(paymentAttemptDate), 0);
         assertEquals(invoice.getNumberOfPayments(), 1);
     }
