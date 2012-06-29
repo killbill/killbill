@@ -102,7 +102,7 @@ public interface InvoiceItemSqlDao extends EntitySqlDao<InvoiceItem> {
                         q.bind("amount", item.getAmount());
                         q.bind("rate", (item.getRate() == null) ? null : item.getRate());
                         q.bind("currency", item.getCurrency().toString());
-                        q.bind("reversedItemId", (item.getReversedItemId() == null) ? null : item.getReversedItemId().toString());
+                        q.bind("linkedItemId", (item.getLinkedItemId() == null) ? null : item.getLinkedItemId().toString());
                     }
                 };
             }
@@ -125,7 +125,7 @@ public interface InvoiceItemSqlDao extends EntitySqlDao<InvoiceItem> {
             final BigDecimal amount = result.getBigDecimal("amount");
             final BigDecimal rate = result.getBigDecimal("rate");
             final Currency currency = Currency.valueOf(result.getString("currency"));
-            final UUID reversedItemId = getUUID(result, "reversed_item_id");
+            final UUID linkedItemId = getUUID(result, "linked_item_id");
 
             InvoiceItem item = null;
             switch(type) {
@@ -145,7 +145,7 @@ public interface InvoiceItemSqlDao extends EntitySqlDao<InvoiceItem> {
                 item = new RefundAdjInvoiceItem(id, invoiceId, accountId, startDate, amount, currency);
                 break;
             case REPAIR_ADJ:
-                item = new RepairAdjInvoiceItem(id, invoiceId, accountId, startDate, endDate, amount, currency, reversedItemId);
+                item = new RepairAdjInvoiceItem(id, invoiceId, accountId, startDate, endDate, amount, currency, linkedItemId);
                 break;
             default:
                 throw new RuntimeException("Unexpected type of event item " + item);

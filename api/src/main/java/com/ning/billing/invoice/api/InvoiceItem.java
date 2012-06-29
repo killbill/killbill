@@ -52,7 +52,5 @@ public interface InvoiceItem extends Entity, Comparable<InvoiceItem> {
 
     BigDecimal getRate();
 
-    UUID getReversedItemId();
-
-    InvoiceItem asReversingItem();
+    UUID getLinkedItemId();
 }

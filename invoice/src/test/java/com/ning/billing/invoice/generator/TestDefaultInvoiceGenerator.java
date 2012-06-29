@@ -222,7 +222,7 @@ public class TestDefaultInvoiceGenerator  {
         assertEquals(newItem2.getInvoiceId(), firstInvoiceId);
         assertEquals(newItem2.getInvoiceItemType(), InvoiceItemType.REPAIR_ADJ);
         assertEquals(newItem2.getAmount(), item1.getAmount().negate());
-        assertEquals(newItem2.getReversedItemId(), item1.getId());
+        assertEquals(newItem2.getLinkedItemId(), item1.getId());
 
     }
 
@@ -264,7 +264,7 @@ public class TestDefaultInvoiceGenerator  {
         assertEquals(reversedItemCheck1.getInvoiceId(), existingInvoiceId);
         assertEquals(reversedItemCheck1.getInvoiceItemType(), InvoiceItemType.REPAIR_ADJ);
         assertEquals(reversedItemCheck1.getAmount(), item1.getAmount().negate());
-        assertEquals(reversedItemCheck1.getReversedItemId(), item1.getId());
+        assertEquals(reversedItemCheck1.getLinkedItemId(), item1.getId());
 
         InvoiceItem newItemCheck1 = proposed.get(1);
         assertEquals(newItemCheck1.getInvoiceId(), invoiceId);

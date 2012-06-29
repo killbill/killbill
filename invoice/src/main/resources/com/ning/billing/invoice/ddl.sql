@@ -15,7 +15,7 @@ CREATE TABLE invoice_items (
     amount numeric(10,4) NOT NULL,
     rate numeric(10,4) NULL,
     currency char(3) NOT NULL,
-    reversed_item_id char(36),
+    linked_item_id char(36),
     created_by varchar(50) NOT NULL,
     created_date datetime NOT NULL,
     PRIMARY KEY(record_id)
@@ -25,8 +25,6 @@ CREATE UNIQUE INDEX invoice_items_id ON invoice_items(id);
 CREATE INDEX invoice_items_subscription_id ON invoice_items(subscription_id ASC);
 CREATE INDEX invoice_items_invoice_id ON invoice_items(invoice_id ASC);
 CREATE INDEX invoice_items_account_id ON invoice_items(account_id ASC);
-
-
 
 DROP TABLE IF EXISTS invoices;
 CREATE TABLE invoices (

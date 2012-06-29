@@ -167,7 +167,7 @@ public class MockRecurringInvoiceItem extends EntityBase implements InvoiceItem 
         return String.format("%s from %s to %s", phaseName, startDate.toString(), endDate.toString());
     }
 
-    public UUID getReversedItemId() {
+    public UUID getLinkedItemId() {
         return reversedItemId;
     }
 

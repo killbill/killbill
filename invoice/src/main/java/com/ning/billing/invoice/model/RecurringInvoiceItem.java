@@ -57,20 +57,12 @@ public class RecurringInvoiceItem extends InvoiceItemBase {
 
 
     @Override
-    public InvoiceItem asReversingItem() {
-        final BigDecimal amountNegated = amount == null ? null : amount.negate();
-
-        return new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate,
-                                        amountNegated, rate, currency, id);
-    }
-
-    @Override
     public String getDescription() {
         return String.format("%s from %s to %s", phaseName, startDate.toString(dateTimeFormatter), endDate.toString(dateTimeFormatter));
     }
 
     @Override
-    public UUID getReversedItemId() {
+    public UUID getLinkedItemId() {
         return reversedItemId;
     }
 

@@ -39,11 +39,6 @@ public class FixedPriceInvoiceItem extends InvoiceItemBase {
     }
 
     @Override
-    public InvoiceItem asReversingItem() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public String getDescription() {
         return String.format("%s (fixed price) on %s", getPhaseName(), getStartDate().toString());
     }

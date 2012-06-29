@@ -143,7 +143,6 @@ public class DefaultInvoiceDao implements InvoiceDao {
             @Override
             public Void inTransaction(final InvoiceSqlDao transactional, final TransactionStatus status) throws Exception {
 
-                // STEPH this seems useless
                 final Invoice currentInvoice = transactional.getById(invoice.getId().toString());
 
                 if (currentInvoice == null) {
@@ -253,8 +252,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
                 Collection<Invoice> unpaidInvoices = Collections2.filter(invoices, new Predicate<Invoice>() {
                     @Override
                     public boolean apply(Invoice in) {
-                        // STEPH do we really want to exclude migration invoice
-                        return (!in.isMigrationInvoice() && in.getBalance().compareTo(BigDecimal.ZERO) >= 1);
+                        return (in.getBalance().compareTo(BigDecimal.ZERO) >= 1);
                     }
                 });
                 return new ArrayList<Invoice>(unpaidInvoices);

@@ -45,12 +45,6 @@ public abstract class AdjInvoiceItem extends InvoiceItemBase {
     }
 
     @Override
-    public InvoiceItem asReversingItem() {
-        throw new UnsupportedOperationException();
-    }
-
-
-    @Override
     public boolean equals(final Object o) {
         if (this == o) {
             return true;

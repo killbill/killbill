@@ -155,8 +155,6 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                 final RecurringInvoiceItem ri = (RecurringInvoiceItem) existingItem;
                 final BigDecimal amountNegated = ri.getAmount() == null ? null : ri.getAmount().negate();
                 RepairAdjInvoiceItem repairItem  = new RepairAdjInvoiceItem(ri.getInvoiceId(), ri.getAccountId(), ri.getStartDate(), ri.getEndDate(), amountNegated, ri.getCurrency(), ri.getId());
-                // STEPH do we need asReversingItem
-                //proposedItems.add(ri.asReversingItem());
                 proposedItems.add(repairItem);
             }
         }
@@ -251,7 +249,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
             if (item1 instanceof RepairAdjInvoiceItem) {
                 final RepairAdjInvoiceItem repairItem = (RepairAdjInvoiceItem) item1;
                 itemsToRemove.add(repairItem.getId());
-                itemsToRemove.add(repairItem.getReversedItemId());
+                itemsToRemove.add(repairItem.getLinkedItemId());
             }
         }
 

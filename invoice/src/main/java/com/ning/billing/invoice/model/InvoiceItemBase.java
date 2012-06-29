@@ -174,7 +174,7 @@ public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem 
     }
 
     @Override
-    public UUID getReversedItemId() {
+    public UUID getLinkedItemId() {
         return reversedItemId;
     }
 
@@ -186,9 +186,5 @@ public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem 
 
     @Override
     public abstract int compareTo(InvoiceItem invoiceItem);
-
-    // STEPH
-    @Override
-    public abstract InvoiceItem asReversingItem();
 
 }

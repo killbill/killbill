@@ -14,7 +14,7 @@ fields(prefix) ::= <<
   <prefix>amount,
   <prefix>rate,
   <prefix>currency,
-  <prefix>reversed_item_id,
+  <prefix>linked_item_id,
   <prefix>created_by,
   <prefix>created_date
 >>
@@ -45,12 +45,12 @@ getInvoiceItemsBySubscription() ::= <<
 
 create() ::= <<
   INSERT INTO invoice_items(<fields()>)
-  VALUES(:id, :type, :invoiceId, :accountId, :bundleId, :subscriptionId, :planName, :phaseName, :startDate, :endDate, :amount, :rate, :currency, :reversedItemId, :userName, :createdDate);
+  VALUES(:id, :type, :invoiceId, :accountId, :bundleId, :subscriptionId, :planName, :phaseName, :startDate, :endDate, :amount, :rate, :currency, :linkedItemId, :userName, :createdDate);
 >>
 
 batchCreateFromTransaction() ::= <<
   INSERT INTO invoice_items(<fields()>)
-  VALUES(:id, :type,:invoiceId, :accountId, :bundleId, :subscriptionId, :planName, :phaseName, :startDate, :endDate, :amount, :rate, :currency, :reversedItemId, :userName, :createdDate);
+  VALUES(:id, :type,:invoiceId, :accountId, :bundleId, :subscriptionId, :planName, :phaseName, :startDate, :endDate, :amount, :rate, :currency, :linkedItemId, :userName, :createdDate);
 >>
 
 getRecordIds() ::= <<
