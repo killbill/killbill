@@ -171,7 +171,7 @@ public class PersistentBus extends PersistentQueueBase implements Bus {
             final BusEventEntry entry = new BusEventEntry(hostname, event.getClass().getName(), json);
             transactional.insertBusEvent(entry);
         } catch (Exception e) {
-            log.error("Failed to post BusEvent " + event.toString(), e);
+            log.error("Failed to post BusEvent " + event, e);
         }
     }
 }
