@@ -40,7 +40,7 @@ public interface Subscription extends Entity, Blockable {
     public boolean uncancel(CallContext context)
             throws EntitlementUserApiException;
 
-    public boolean changePlan(String productName, BillingPeriod term, String planSet, DateTime requestedDate, CallContext context)
+    public boolean changePlan(String productName, BillingPeriod term, String priceList, DateTime requestedDate, CallContext context)
             throws EntitlementUserApiException;
 
     public boolean recreate(PlanPhaseSpecifier spec, DateTime requestedDate, CallContext context)

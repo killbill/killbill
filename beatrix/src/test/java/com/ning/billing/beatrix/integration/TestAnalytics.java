@@ -65,6 +65,18 @@ public class TestAnalytics extends TestIntegrationBase {
     }
 
     @Test(groups = "slow")
+    public void testAnalyticsFutureEvents() throws Exception {
+        // Create an account
+        final Account account = verifyAccountCreation();
+
+        // Create a bundle
+        final SubscriptionBundle bundle = verifyFirstBundle(account);
+
+        // Add a subscription
+        final Subscription subscription = verifyFirstSubscription(account, bundle);
+    }
+
+    @Test(groups = "slow")
     public void testAnalyticsEvents() throws Exception {
         // Create an account
         final Account account = verifyAccountCreation();
@@ -195,32 +207,59 @@ public class TestAnalytics extends TestIntegrationBase {
 
         waitALittle();
 
-        // BST should have one transition
+        // BST should have two transitions
         final List<BusinessSubscriptionTransition> transitions = analyticsUserApi.getTransitionsForBundle(bundle.getKey());
-        Assert.assertEquals(transitions.size(), 1);
-        final BusinessSubscriptionTransition transition = transitions.get(0);
-        Assert.assertEquals(transition.getExternalKey(), bundle.getKey());
-        Assert.assertEquals(transition.getAccountKey(), account.getExternalKey());
-        Assert.assertEquals(transition.getEvent().getCategory(), phaseSpecifier.getProductCategory());
-        Assert.assertEquals(transition.getEvent().getEventType(), BusinessSubscriptionEvent.EventType.ADD);
+        Assert.assertEquals(transitions.size(), 2);
+
+        // Check the first transition (into trial phase)
+        final BusinessSubscriptionTransition initialTransition = transitions.get(0);
+        Assert.assertEquals(initialTransition.getExternalKey(), bundle.getKey());
+        Assert.assertEquals(initialTransition.getAccountKey(), account.getExternalKey());
+        Assert.assertEquals(initialTransition.getEvent().getCategory(), phaseSpecifier.getProductCategory());
+        Assert.assertEquals(initialTransition.getEvent().getEventType(), BusinessSubscriptionEvent.EventType.ADD);
 
         // This is the first transition
-        Assert.assertNull(transition.getPreviousSubscription());
+        Assert.assertNull(initialTransition.getPreviousSubscription());
 
-        Assert.assertEquals(transition.getNextSubscription().getBillingPeriod(), subscription.getCurrentPhase().getBillingPeriod().toString());
-        Assert.assertEquals(transition.getNextSubscription().getBundleId(), subscription.getBundleId());
-        Assert.assertEquals(transition.getNextSubscription().getCurrency(), account.getCurrency().toString());
-        Assert.assertEquals(transition.getNextSubscription().getPhase(), subscription.getCurrentPhase().getPhaseType().toString());
+        Assert.assertEquals(initialTransition.getNextSubscription().getBillingPeriod(), subscription.getCurrentPhase().getBillingPeriod().toString());
+        Assert.assertEquals(initialTransition.getNextSubscription().getBundleId(), subscription.getBundleId());
+        Assert.assertEquals(initialTransition.getNextSubscription().getCurrency(), account.getCurrency().toString());
+        Assert.assertEquals(initialTransition.getNextSubscription().getPhase(), subscription.getCurrentPhase().getPhaseType().toString());
         // Trial: fixed price of zero
-        Assert.assertEquals(transition.getNextSubscription().getPrice().doubleValue(), subscription.getCurrentPhase().getFixedPrice().getPrice(account.getCurrency()).doubleValue());
-        Assert.assertEquals(transition.getNextSubscription().getPriceList(), subscription.getCurrentPriceList().getName());
-        Assert.assertEquals(transition.getNextSubscription().getProductCategory(), subscription.getCurrentPlan().getProduct().getCategory());
-        Assert.assertEquals(transition.getNextSubscription().getProductName(), subscription.getCurrentPlan().getProduct().getName());
-        Assert.assertEquals(transition.getNextSubscription().getProductType(), subscription.getCurrentPlan().getProduct().getCatalogName());
-        Assert.assertEquals(transition.getNextSubscription().getSlug(), subscription.getCurrentPhase().getName());
-        Assert.assertEquals(transition.getNextSubscription().getStartDate(), subscription.getStartDate());
-        Assert.assertEquals(transition.getNextSubscription().getState(), subscription.getState());
-        Assert.assertEquals(transition.getNextSubscription().getSubscriptionId(), subscription.getId());
+        Assert.assertEquals(initialTransition.getNextSubscription().getPrice().doubleValue(), subscription.getCurrentPhase().getFixedPrice().getPrice(account.getCurrency()).doubleValue());
+        Assert.assertEquals(initialTransition.getNextSubscription().getPriceList(), subscription.getCurrentPriceList().getName());
+        Assert.assertEquals(initialTransition.getNextSubscription().getProductCategory(), subscription.getCurrentPlan().getProduct().getCategory());
+        Assert.assertEquals(initialTransition.getNextSubscription().getProductName(), subscription.getCurrentPlan().getProduct().getName());
+        Assert.assertEquals(initialTransition.getNextSubscription().getProductType(), subscription.getCurrentPlan().getProduct().getCatalogName());
+        Assert.assertEquals(initialTransition.getNextSubscription().getSlug(), subscription.getCurrentPhase().getName());
+        Assert.assertEquals(initialTransition.getNextSubscription().getStartDate(), subscription.getStartDate());
+        Assert.assertEquals(initialTransition.getNextSubscription().getState(), subscription.getState());
+        Assert.assertEquals(initialTransition.getNextSubscription().getSubscriptionId(), subscription.getId());
+
+        // Check the second transition (from trial to evergreen)
+        final BusinessSubscriptionTransition futureTransition = transitions.get(1);
+        Assert.assertEquals(futureTransition.getExternalKey(), bundle.getKey());
+        Assert.assertEquals(futureTransition.getAccountKey(), account.getExternalKey());
+        Assert.assertEquals(futureTransition.getEvent().getCategory(), phaseSpecifier.getProductCategory());
+        Assert.assertEquals(futureTransition.getEvent().getEventType(), BusinessSubscriptionEvent.EventType.CHANGE);
+
+        Assert.assertEquals(futureTransition.getPreviousSubscription(), initialTransition.getNextSubscription());
+
+        Assert.assertEquals(futureTransition.getNextSubscription().getBillingPeriod(), term.toString());
+        Assert.assertEquals(futureTransition.getNextSubscription().getBundleId(), subscription.getBundleId());
+        Assert.assertEquals(initialTransition.getNextSubscription().getCurrency(), account.getCurrency().toString());
+        // From trial to evergreen
+        Assert.assertEquals(futureTransition.getNextSubscription().getPhase(), PhaseType.EVERGREEN.toString());
+        Assert.assertTrue(futureTransition.getNextSubscription().getPrice().doubleValue() > 0);
+        Assert.assertEquals(futureTransition.getNextSubscription().getPriceList(), subscription.getCurrentPriceList().getName());
+        Assert.assertEquals(futureTransition.getNextSubscription().getProductCategory(), subscription.getCurrentPlan().getProduct().getCategory());
+        Assert.assertEquals(futureTransition.getNextSubscription().getProductName(), subscription.getCurrentPlan().getProduct().getName());
+        Assert.assertEquals(futureTransition.getNextSubscription().getProductType(), subscription.getCurrentPlan().getProduct().getCatalogName());
+        Assert.assertEquals(futureTransition.getNextSubscription().getSlug(), subscription.getCurrentPhase().getName().replace("-trial", "-evergreen"));
+        // 30 days trial
+        Assert.assertEquals(futureTransition.getNextSubscription().getStartDate(), subscription.getStartDate().plusDays(30));
+        Assert.assertEquals(futureTransition.getNextSubscription().getState(), subscription.getState());
+        Assert.assertEquals(futureTransition.getNextSubscription().getSubscriptionId(), subscription.getId());
 
         // Make sure the account balance is still zero
         final BusinessAccount businessAccount = analyticsUserApi.getAccountByKey(account.getExternalKey());

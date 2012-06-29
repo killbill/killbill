@@ -37,7 +37,7 @@ getTransitions(external_key) ::= <<
   , next_bundle_id
   from bst
   where external_key=:external_key
-  order by requested_timestamp asc
+  order by prev_start_date, next_start_date, requested_timestamp asc
   ;
 >>
 
@@ -77,7 +77,7 @@ getTransitionForSubscription(subscription_id) ::= <<
   , next_subscription_id
   , next_bundle_id
   from bst
-  where prev_subscription_id =: subscription_id or next_subscription_id = :subscription_id
+  where prev_subscription_id = :subscription_id or next_subscription_id = :subscription_id
   order by requested_timestamp asc
   ;
 >>
