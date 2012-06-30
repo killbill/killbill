@@ -119,7 +119,6 @@ public class TestAnalyticsListener extends AnalyticsTestSuite {
         listener.handleEffectiveSubscriptionTransitionChange(new DefaultEffectiveSubscriptionEvent(recreatedSubscriptionTransition, effectiveTransitionTime));
         Assert.assertEquals(dao.getTransitions(EXTERNAL_KEY).size(), 3);
         Assert.assertEquals(dao.getTransitions(EXTERNAL_KEY).get(2), recreatedBST);
-
     }
 
     private BusinessSubscriptionTransition createExpectedFirstBST(final Long totalOrdering, final DateTime requestedTransitionTime, final DateTime effectiveTransitionTime) {

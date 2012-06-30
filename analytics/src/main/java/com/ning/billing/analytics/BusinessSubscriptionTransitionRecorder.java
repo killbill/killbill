@@ -101,8 +101,8 @@ public class BusinessSubscriptionTransitionRecorder {
         // The SubscriptionEvent interface gives us all the prev/next information we need but the start date
         // of the previous phase. We need to retrieve it from our own transitions table
         DateTime previousEffectiveTransitionTime = null;
-        // For creation events, the prev subscription will always be null
-        if (event.getEventType() != BusinessSubscriptionEvent.EventType.ADD) {
+        // For (re-)creation events, the prev subscription will always be null
+        if (!BusinessSubscriptionEvent.EventType.ADD.equals(event.getEventType()) && !BusinessSubscriptionEvent.EventType.RE_ADD.equals(event.getEventType())) {
             final List<BusinessSubscriptionTransition> transitions = sqlDao.getTransitions(externalKey);
             if (transitions != null && transitions.size() > 0) {
                 for (final BusinessSubscriptionTransition candidate : transitions) {
@@ -129,35 +129,7 @@ public class BusinessSubscriptionTransitionRecorder {
             nextSubscription = new BusinessSubscription(transition.getNextPriceList(), transition.getNextPlan(), transition.getNextPhase(), currency, transition.getEffectiveTransitionTime(), transition.getNextState(), transition.getSubscriptionId(), transition.getBundleId(), catalogService.getFullCatalog());
         }
 
-        catchUpIfNeededAndRecord(transition.getTotalOrdering(), externalKey, accountKey, transition.getRequestedTransitionTime(), event, prevSubscription, nextSubscription);
-    }
-
-    public void catchUpIfNeededAndRecord(final Long totalOrdering, final String externalKey, final String accountKey, final DateTime requestedDateTime,
-                                         final BusinessSubscriptionEvent event, final BusinessSubscription prevSubscription, final BusinessSubscription nextSubscription) {
-        // There is no ordering guaranteed with events on the bus. This can be problematic on e.g. subscription creation:
-        // the requested future change from trial to evergreen could be received before the actual creation event.
-        // In this case, we would have two subscriptions in BST, with both null for the previous transition.
-        // To work around this, we need to update bst as we go
-        if (BusinessSubscriptionEvent.EventType.ADD.equals(event.getEventType())) {
-            final List<BusinessSubscriptionTransition> transitions = sqlDao.getTransitionForSubscription(nextSubscription.getSubscriptionId().toString());
-            if (transitions != null && transitions.size() > 0) {
-                final BusinessSubscriptionTransition firstTransition = transitions.get(0);
-                if (firstTransition.getPreviousSubscription() == null) {
-                    final BusinessSubscriptionTransition updatedFirstTransition = new BusinessSubscriptionTransition(
-                            firstTransition.getTotalOrdering(),
-                            firstTransition.getExternalKey(),
-                            firstTransition.getAccountKey(),
-                            firstTransition.getRequestedTimestamp(),
-                            firstTransition.getEvent(),
-                            nextSubscription,
-                            firstTransition.getNextSubscription()
-                    );
-                    sqlDao.updateTransition(updatedFirstTransition.getTotalOrdering(), updatedFirstTransition);
-                }
-            }
-        }
-
-        record(totalOrdering, externalKey, accountKey, requestedDateTime, event, prevSubscription, nextSubscription);
+        record(transition.getTotalOrdering(), externalKey, accountKey, transition.getRequestedTransitionTime(), event, prevSubscription, nextSubscription);
     }
 
     // Public for internal reasons
@@ -177,10 +149,36 @@ public class BusinessSubscriptionTransitionRecorder {
             @Override
             public Void inTransaction(final BusinessSubscriptionTransitionSqlDao transactional, final TransactionStatus status) throws Exception {
                 final String subscriptionId;
-                if (nextSubscription.getSubscriptionId() != null) {
+                if (nextSubscription != null && nextSubscription.getSubscriptionId() != null) {
                     subscriptionId = nextSubscription.getSubscriptionId().toString();
                 } else {
                     subscriptionId = prevSubscription.getSubscriptionId().toString();
+                }
+
+                // There is no ordering guaranteed with events on the bus. This can be problematic on e.g. subscription creation:
+                // the requested future change from trial to evergreen could be received before the actual creation event.
+                // In this case, we would have two subscriptions in BST, with both null for the previous transition.
+                // To work around this, we need to update bst as we go
+                if (BusinessSubscriptionEvent.EventType.ADD.equals(event.getEventType())) {
+                    final List<BusinessSubscriptionTransition> transitions = transactional.getTransitionForSubscription(subscriptionId);
+                    if (transitions != null && transitions.size() > 0) {
+                        final BusinessSubscriptionTransition firstTransition = transitions.get(0);
+                        // Ignore (re-)creation events here, the previous subscription is expected to be null
+                        if (!BusinessSubscriptionEvent.EventType.ADD.equals(firstTransition.getEvent().getEventType()) &&
+                                !BusinessSubscriptionEvent.EventType.RE_ADD.equals(firstTransition.getEvent().getEventType()) &&
+                                firstTransition.getPreviousSubscription() == null) {
+                            final BusinessSubscriptionTransition updatedFirstTransition = new BusinessSubscriptionTransition(
+                                    firstTransition.getTotalOrdering(),
+                                    firstTransition.getExternalKey(),
+                                    firstTransition.getAccountKey(),
+                                    firstTransition.getRequestedTimestamp(),
+                                    firstTransition.getEvent(),
+                                    nextSubscription,
+                                    firstTransition.getNextSubscription()
+                            );
+                            transactional.updateTransition(updatedFirstTransition.getTotalOrdering(), updatedFirstTransition);
+                        }
+                    }
                 }
 
                 // Ignore duplicates: for e.g. phase events, we may already have recorded the transition when the change
