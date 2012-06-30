@@ -98,7 +98,7 @@ public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
         }
     }
 
-    @BeforeClass(alwaysRun = true)
+    @BeforeClass(groups={"slow"})
     protected void setup() throws IOException {
 
         loadSystemPropertiesFromClasspath("/resource.properties");
@@ -109,9 +109,14 @@ public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
         final String invoiceDdl = IOUtils.toString(DefaultInvoiceDao.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
         final String utilDdl = IOUtils.toString(DefaultInvoiceDao.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
 
+        clock = new ClockMock();
+
         mysqlTestingHelper.startMysql();
         mysqlTestingHelper.initDb(invoiceDdl);
         mysqlTestingHelper.initDb(utilDdl);
+
+        bus = new InMemoryBus();
+        bus.start();
 
         final NextBillingDatePoster nextBillingDatePoster = new MockNextBillingDatePoster();
         final TagDefinitionDao tagDefinitionDao = new MockTagDefinitionDao();
@@ -123,16 +128,17 @@ public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
         invoiceItemSqlDao = dbi.onDemand(InvoiceItemSqlDao.class);
         invoicePaymentDao = dbi.onDemand(InvoicePaymentSqlDao.class);
 
-        clock = new ClockMock();
+
+
         context = new TestCallContext("Invoice Dao Tests");
         generator = new DefaultInvoiceGenerator(clock, invoiceConfig);
-        bus = new InMemoryBus();
-        bus.start();
+
+
 
         assertTrue(true);
     }
 
-    @BeforeMethod(alwaysRun = true)
+    @BeforeMethod(groups={"slow"})
     public void cleanupData() {
         dbi.inTransaction(new TransactionCallback<Void>() {
             @Override
@@ -146,7 +152,7 @@ public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
         });
     }
 
-    @AfterClass(alwaysRun = true)
+    @AfterClass(groups={"slow"})
     protected void tearDown() {
         bus.stop();
         mysqlTestingHelper.stopMysql();

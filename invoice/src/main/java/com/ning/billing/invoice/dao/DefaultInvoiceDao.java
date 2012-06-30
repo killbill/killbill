@@ -270,7 +270,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
                 Collection<Invoice> unpaidInvoices = Collections2.filter(invoices, new Predicate<Invoice>() {
                     @Override
                     public boolean apply(Invoice in) {
-                        return (in.getBalance().compareTo(BigDecimal.ZERO) >= 1);
+                        return (in.getBalance().compareTo(BigDecimal.ZERO) >= 1) && !in.getTargetDate().isAfter(upToDate);
                     }
                 });
                 return new ArrayList<Invoice>(unpaidInvoices);
@@ -313,29 +313,46 @@ public class DefaultInvoiceDao implements InvoiceDao {
                 }
                 final BigDecimal maxRefundAmount = payment.getAmount() == null ? BigDecimal.ZERO : payment.getAmount();
                 final BigDecimal requestedAmount = amount == null ? maxRefundAmount : amount;
-                if (requestedAmount.compareTo(BigDecimal.ZERO) <= 0) {
-                    throw new InvoiceApiException(ErrorCode.REFUND_AMOUNT_IS_NEGATIVE);
+                if (requestedAmount.compareTo(BigDecimal.ZERO) >= 0) {
+                    throw new InvoiceApiException(ErrorCode.REFUND_AMOUNT_IS_POSITIVE);
                 }
-                if (requestedAmount.compareTo(maxRefundAmount) > 0) {
-                    throw new InvoiceApiException(ErrorCode.REFUND_AMOUNT_TOO_HIGH, requestedAmount, maxRefundAmount);
+
+                // No that we check signs, let's work with positive numbers, this makes things simpler
+                final BigDecimal requestedPositiveAmount = requestedAmount.negate();
+                if (requestedPositiveAmount.compareTo(maxRefundAmount) > 0) {
+                    throw new InvoiceApiException(ErrorCode.REFUND_AMOUNT_TOO_HIGH, requestedPositiveAmount, maxRefundAmount);
                 }
 
                 final InvoicePayment refund = new DefaultInvoicePayment(UUID.randomUUID(), InvoicePaymentType.REFUND, paymentAttemptId,
-                        payment.getInvoiceId(), context.getCreatedDate(), requestedAmount, payment.getCurrency(), payment.getId());
+                        payment.getInvoiceId(), context.getCreatedDate(), requestedPositiveAmount.negate(), payment.getCurrency(), payment.getId());
                 transactional.create(refund, context);
 
-                if (isInvoiceAdjusted) {
-                    InvoiceSqlDao transInvoiceDao = transactional.become(InvoiceSqlDao.class);
-                    Invoice invoice = transInvoiceDao.getById(payment.getInvoiceId().toString());
-                    if (invoice != null) {
-                        populateChildren(invoice, transInvoiceDao);
-                    }
+                // Retrieve invoice after the Refund
+                InvoiceSqlDao transInvoiceDao = transactional.become(InvoiceSqlDao.class);
+                Invoice invoice = transInvoiceDao.getById(payment.getInvoiceId().toString());
+                if (invoice != null) {
+                    populateChildren(invoice, transInvoiceDao);
+                }
 
-                    BigDecimal maxBalanceToAdjust = (invoice.getBalance().compareTo(BigDecimal.ZERO) <= 0) ? BigDecimal.ZERO : invoice.getBalance();
-                    BigDecimal requestedAmountToAdjust = requestedAmount.compareTo(maxBalanceToAdjust)  > 0 ? maxBalanceToAdjust : requestedAmount;
-                    if (requestedAmountToAdjust.compareTo(BigDecimal.ZERO) > 0) {
-                        final InvoiceItem adjItem = new RefundAdjInvoiceItem(invoice.getId(), invoice.getAccountId(), context.getCreatedDate(), requestedAmountToAdjust, invoice.getCurrency());
-                        InvoiceItemSqlDao transInvoiceItemDao = transInvoiceDao.become(InvoiceItemSqlDao.class);
+                final BigDecimal invoiceBalanceAfterRefund = invoice.getBalance();
+                InvoiceItemSqlDao transInvoiceItemDao = transInvoiceDao.become(InvoiceItemSqlDao.class);
+
+                // If we have an existing CBA > 0, we need to adjust it
+                final BigDecimal cbaAmountAfterRefund = invoice.getCBAAmount();
+                BigDecimal cbaAdjAmount = BigDecimal.ZERO;
+                if (cbaAmountAfterRefund.compareTo(BigDecimal.ZERO) > 0) {
+                    cbaAdjAmount = (requestedPositiveAmount.compareTo(cbaAmountAfterRefund) > 0) ?  cbaAmountAfterRefund.negate() : requestedPositiveAmount.negate();
+                    final InvoiceItem cbaAdjItem = new CreditBalanceAdjInvoiceItem(invoice.getId(), invoice.getAccountId(), context.getCreatedDate(), cbaAdjAmount, invoice.getCurrency());
+                    transInvoiceItemDao.create(cbaAdjItem, context);
+                }
+                final BigDecimal requestedPositiveAmountAfterCbaAdj = requestedPositiveAmount.subtract(cbaAdjAmount);
+
+                if (isInvoiceAdjusted) {
+
+                    BigDecimal maxBalanceToAdjust = (invoiceBalanceAfterRefund.compareTo(BigDecimal.ZERO) <= 0) ? BigDecimal.ZERO : invoiceBalanceAfterRefund;
+                    BigDecimal requestedPositiveAmountToAdjust = requestedPositiveAmountAfterCbaAdj.compareTo(maxBalanceToAdjust)  > 0 ? maxBalanceToAdjust : requestedPositiveAmountAfterCbaAdj;
+                    if (requestedPositiveAmountToAdjust.compareTo(BigDecimal.ZERO) > 0) {
+                        final InvoiceItem adjItem = new RefundAdjInvoiceItem(invoice.getId(), invoice.getAccountId(), context.getCreatedDate(), requestedPositiveAmountToAdjust.negate(), invoice.getCurrency());
                         transInvoiceItemDao.create(adjItem, context);
                     }
                 }

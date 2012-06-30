@@ -62,7 +62,7 @@ public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePayment>, Tran
     List<Long> getRecordIds(@Bind("invoiceId") final String invoiceId);
 
     @SqlQuery
-    public InvoicePayment getByPaymentAttemptId(@Bind("paymentAttempt") final String paymentAttemptId);
+    public InvoicePayment getByPaymentAttemptId(@Bind("paymentAttemptId") final String paymentAttemptId);
 
     @Override
     @SqlQuery

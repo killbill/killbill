@@ -20,7 +20,7 @@ get() ::= <<
 getInvoicesByAccount() ::= <<
   SELECT record_id as invoice_number, <invoiceFields()>
   FROM invoices
-  WHERE account_id = :accountId AND migrated = 'FALSE'
+  WHERE account_id = :accountId AND migrated = '0'
   ORDER BY target_date ASC;
 >>
 
@@ -34,16 +34,15 @@ getAllInvoicesByAccount() ::= <<
 getInvoicesByAccountAfterDate() ::= <<
   SELECT record_id as invoice_number, <invoiceFields()>
   FROM invoices
-  WHERE account_id = :accountId AND target_date >= :fromDate AND migrated = 'FALSE'
+  WHERE account_id = :accountId AND target_date >= :fromDate AND migrated = '0'
   ORDER BY target_date ASC;
 >>
 
 getInvoicesBySubscription() ::= <<
   SELECT i.record_id as invoice_number, <invoiceFields("i.")>
   FROM invoices i
-  LEFT JOIN invoice_items rii ON i.id = rii.invoice_id
-  WHERE rii.subscription_id = :subscriptionId AND migrated = 'FALSE'
-  GROUP BY i.record_id, <invoiceFields("i.")>
+  JOIN invoice_items ii ON i.id = ii.invoice_id
+  WHERE ii.subscription_id = :subscriptionId AND i.migrated = '0';
 >>
 
 getById() ::= <<
