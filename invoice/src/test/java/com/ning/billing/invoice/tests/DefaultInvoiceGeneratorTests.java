@@ -47,6 +47,7 @@ import com.ning.billing.invoice.MockBillingEventSet;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.invoice.api.InvoicePayment.InvoicePaymentType;
 import com.ning.billing.invoice.generator.DefaultInvoiceGenerator;
 import com.ning.billing.invoice.generator.InvoiceGenerator;
 import com.ning.billing.invoice.model.CreditBalanceAdjInvoiceItem;
@@ -809,7 +810,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         invoices.add(invoice1);
 
         // pay the invoice
-        invoice1.addPayment(new DefaultInvoicePayment(UUID.randomUUID(), invoice1.getId(), april25, TEN, Currency.USD));
+        invoice1.addPayment(new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, UUID.randomUUID(), invoice1.getId(), april25, TEN, Currency.USD));
         assertEquals(invoice1.getBalance().compareTo(ZERO), 0);
 
         // change the plan (i.e. repair) on start date

@@ -28,6 +28,7 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoicePayment;
+import com.ning.billing.invoice.api.InvoicePayment.InvoicePaymentType;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.model.DefaultInvoicePayment;
@@ -69,13 +70,13 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
 
     @Override
     public void notifyOfPaymentAttempt(final UUID invoiceId, final BigDecimal amount, final Currency currency, final UUID paymentAttemptId, final DateTime paymentAttemptDate, final CallContext context) {
-        final InvoicePayment invoicePayment = new DefaultInvoicePayment(paymentAttemptId, invoiceId, paymentAttemptDate, amount, currency);
+        final InvoicePayment invoicePayment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentAttemptId, invoiceId, paymentAttemptDate, amount, currency);
         dao.notifyOfPaymentAttempt(invoicePayment, context);
     }
 
     @Override
     public void notifyOfPaymentAttempt(final UUID invoiceId, final UUID paymentAttemptId, final DateTime paymentAttemptDate, final CallContext context) {
-        final InvoicePayment invoicePayment = new DefaultInvoicePayment(paymentAttemptId, invoiceId, paymentAttemptDate);
+        final InvoicePayment invoicePayment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentAttemptId, invoiceId, paymentAttemptDate);
         dao.notifyOfPaymentAttempt(invoicePayment, context);
     }
 
@@ -86,10 +87,7 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
 
     @Override
     public InvoicePayment processChargeback(final UUID invoicePaymentId, final CallContext context) throws InvoiceApiException {
-        // use the invoicePaymentId to get the amount remaining on the payment
-        // (preventing charge backs totalling more than the payment)
-        final BigDecimal amount = dao.getRemainingAmountPaid(invoicePaymentId);
-        return processChargeback(invoicePaymentId, amount, context);
+        return processChargeback(invoicePaymentId, null, context);
     }
 
     @Override

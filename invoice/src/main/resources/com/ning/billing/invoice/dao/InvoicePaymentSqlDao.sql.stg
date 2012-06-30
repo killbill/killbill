@@ -2,26 +2,27 @@ group InvoicePayment;
 
 invoicePaymentFields(prefix) ::= <<
   <prefix>id,
+  <prefix>type,
   <prefix>invoice_id,
   <prefix>payment_attempt_id,
   <prefix>payment_attempt_date,
   <prefix>amount,
   <prefix>currency,
-  <prefix>reversed_invoice_payment_id,
+  <prefix>linked_invoice_payment_id,
   <prefix>created_by,
   <prefix>created_date
 >>
 
 create() ::= <<
   INSERT INTO invoice_payments(<invoicePaymentFields()>)
-  VALUES(:id, :invoiceId, :paymentAttemptId, :paymentAttemptDate, :amount, :currency,
-         :reversedInvoicePaymentId, :userName, :createdDate);
+  VALUES(:id, :type, :invoiceId, :paymentAttemptId, :paymentAttemptDate, :amount, :currency,
+         :linkedInvoicePaymentId, :userName, :createdDate);
 >>
 
 batchCreateFromTransaction() ::= <<
   INSERT INTO invoice_payments(<invoicePaymentFields()>)
-  VALUES(:id, :invoiceId, :paymentAttemptId, :paymentAttemptDate, :amount, :currency,
-        :reversedInvoicePaymentId, :userName, :createdDate);
+  VALUES(:id, :type, :invoiceId, :paymentAttemptId, :paymentAttemptDate, :amount, :currency,
+        :linkedInvoicePaymentId, :userName, :createdDate);
 >>
 
 getByPaymentAttemptId() ::= <<
@@ -49,8 +50,8 @@ getPaymentsForInvoice() ::= <<
 
 notifyOfPaymentAttempt() ::= <<
   INSERT INTO invoice_payments(<invoicePaymentFields()>)
-  VALUES(:id, :invoiceId, :paymentAttemptId, :paymentAttemptDate, :amount, :currency,
-        :reversedInvoicePaymentId, :userName, :createdDate);
+  VALUES(:id, :type, :invoiceId, :paymentAttemptId, :paymentAttemptDate, :amount, :currency,
+        :linkedInvoicePaymentId, :userName, :createdDate);
 >>
 
 getInvoicePayment() ::= <<
@@ -95,7 +96,7 @@ getRemainingAmountPaid() ::= <<
     SELECT SUM(amount)
     FROM invoice_payments
     WHERE id = :invoicePaymentId
-    OR reversed_invoice_payment_id = :invoicePaymentId;
+    OR linked_invoice_payment_id = :invoicePaymentId;
 >>
 
 getAccountIdFromInvoicePaymentId() ::= <<
@@ -110,13 +111,13 @@ getChargeBacksByAccountId() ::= <<
     FROM invoice_payments ip
     INNER JOIN invoices i ON i.id = ip.invoice_id
     WHERE i.account_id = :accountId
-    AND reversed_invoice_payment_id IS NOT NULL;
+    AND linked_invoice_payment_id IS NOT NULL;
 >>
 
 getChargebacksByAttemptPaymentId() ::= <<
     SELECT <invoicePaymentFields()>
     FROM invoice_payments
-    WHERE reversed_invoice_payment_id IN
+    WHERE linked_invoice_payment_id IN
         (SELECT id FROM invoice_payments WHERE payment_attempt_id = :paymentAttemptId);
 >>
 ;

@@ -46,16 +46,17 @@ DROP TABLE IF EXISTS invoice_payments;
 CREATE TABLE invoice_payments (
     record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
     id char(36) NOT NULL,
+    type varchar(24) NOT NULL,    
     invoice_id char(36) NOT NULL,
     payment_attempt_id char(36) COLLATE utf8_bin,
     payment_attempt_date datetime NOT NULL,
     amount numeric(10,4) NOT NULL,
     currency char(3) NOT NULL,
-    reversed_invoice_payment_id char(36) DEFAULT NULL,
+    linked_invoice_payment_id char(36) DEFAULT NULL,
     created_by varchar(50) NOT NULL,
     created_date datetime NOT NULL,
     PRIMARY KEY(record_id)
 ) ENGINE=innodb;
 CREATE UNIQUE INDEX invoice_payments_id ON invoice_payments(id);
 CREATE INDEX invoice_payments_attempt ON invoice_payments(payment_attempt_id);
-CREATE INDEX invoice_payments_reversals ON invoice_payments(reversed_invoice_payment_id);
+CREATE INDEX invoice_payments_reversals ON invoice_payments(linked_invoice_payment_id);

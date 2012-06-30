@@ -159,7 +159,7 @@ public class ChargeBackTests {
         final List<InvoicePayment> chargebacks = invoicePaymentApi.getChargebacksByAccountId(invoice.getAccountId());
         assertNotNull(chargebacks);
         assertEquals(chargebacks.size(), 1);
-        assertEquals(chargebacks.get(0).getReversedInvoicePaymentId(), payment.getId());
+        assertEquals(chargebacks.get(0).getLinkedInvoicePaymentId(), payment.getId());
     }
 
     @Test
@@ -180,7 +180,7 @@ public class ChargeBackTests {
         final List<InvoicePayment> chargebacks = invoicePaymentApi.getChargebacksByPaymentAttemptId(payment.getPaymentAttemptId());
         assertNotNull(chargebacks);
         assertEquals(chargebacks.size(), 1);
-        assertEquals(chargebacks.get(0).getReversedInvoicePaymentId(), payment.getId());
+        assertEquals(chargebacks.get(0).getLinkedInvoicePaymentId(), payment.getId());
     }
 
     private Invoice createAndPersistInvoice(final BigDecimal amount) {

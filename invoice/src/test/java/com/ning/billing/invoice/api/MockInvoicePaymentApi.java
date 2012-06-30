@@ -26,6 +26,7 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.invoice.api.InvoicePayment.InvoicePaymentType;
 import com.ning.billing.invoice.model.DefaultInvoicePayment;
 import com.ning.billing.util.callcontext.CallContext;
 
@@ -91,13 +92,13 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi {
 
     @Override
     public void notifyOfPaymentAttempt(final UUID invoiceId, final BigDecimal amountOutstanding, final Currency currency, final UUID paymentAttemptId, final DateTime paymentAttemptDate, final CallContext context) {
-        final InvoicePayment invoicePayment = new DefaultInvoicePayment(paymentAttemptId, invoiceId, paymentAttemptDate, amountOutstanding, currency);
+        final InvoicePayment invoicePayment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentAttemptId, invoiceId, paymentAttemptDate, amountOutstanding, currency);
         notifyOfPaymentAttempt(invoicePayment, context);
     }
 
     @Override
     public void notifyOfPaymentAttempt(final UUID invoiceId, final UUID paymentAttemptId, final DateTime paymentAttemptDate, final CallContext context) {
-        final InvoicePayment invoicePayment = new DefaultInvoicePayment(paymentAttemptId, invoiceId, paymentAttemptDate);
+        final InvoicePayment invoicePayment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentAttemptId, invoiceId, paymentAttemptDate);
         notifyOfPaymentAttempt(invoicePayment, context);
     }
 
@@ -107,11 +108,13 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi {
         for (final InvoicePayment payment : invoicePayments) {
             if (payment.getId() == invoicePaymentId) {
                 existingPayment = payment;
+                break;
             }
         }
 
         if (existingPayment != null) {
-            invoicePayments.add(existingPayment.asChargeBack(amount, DateTime.now(DateTimeZone.UTC)));
+            invoicePayments.add(new DefaultInvoicePayment(UUID.randomUUID(), InvoicePaymentType.CHARGED_BACK, null, null, DateTime.now(DateTimeZone.UTC), amount,
+                    Currency.USD, existingPayment.getId()));
         }
 
         return existingPayment;
@@ -141,7 +144,7 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi {
                 amount = amount.add(payment.getAmount());
             }
 
-            if (payment.getReversedInvoicePaymentId().equals(invoicePaymentId)) {
+            if (payment.getLinkedInvoicePaymentId().equals(invoicePaymentId)) {
                 amount = amount.add(payment.getAmount());
             }
         }

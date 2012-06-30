@@ -30,31 +30,38 @@ import com.ning.billing.util.entity.EntityBase;
 
 public class DefaultInvoicePayment extends EntityBase implements InvoicePayment {
     private final UUID paymentAttemptId;
+    private final InvoicePaymentType type;
     private final UUID invoiceId;
     private final DateTime paymentDate;
     private final BigDecimal amount;
     private final Currency currency;
     private final UUID reversedInvoicePaymentId;
 
-    public DefaultInvoicePayment(final UUID paymentAttemptId, final UUID invoiceId, final DateTime paymentDate) {
-        this(UUID.randomUUID(), paymentAttemptId, invoiceId, paymentDate, null, null, null);
+    public DefaultInvoicePayment(final InvoicePaymentType type, final UUID paymentAttemptId, final UUID invoiceId, final DateTime paymentDate) {
+        this(UUID.randomUUID(), type, paymentAttemptId, invoiceId, paymentDate, null, null, null);
     }
 
-    public DefaultInvoicePayment(final UUID paymentAttemptId, final UUID invoiceId, final DateTime paymentDate,
+    public DefaultInvoicePayment(final InvoicePaymentType type, final UUID paymentAttemptId, final UUID invoiceId, final DateTime paymentDate,
                                  final BigDecimal amount, final Currency currency) {
-        this(UUID.randomUUID(), paymentAttemptId, invoiceId, paymentDate, amount, currency, null);
+        this(UUID.randomUUID(), type, paymentAttemptId, invoiceId, paymentDate, amount, currency, null);
     }
 
-    public DefaultInvoicePayment(final UUID id, final UUID paymentAttemptId, final UUID invoiceId, final DateTime paymentDate,
+    public DefaultInvoicePayment(final UUID id, final InvoicePaymentType type, final UUID paymentAttemptId, final UUID invoiceId, final DateTime paymentDate,
                                  @Nullable final BigDecimal amount, @Nullable final Currency currency,
                                  @Nullable final UUID reversedInvoicePaymentId) {
         super(id);
+        this.type = type;
         this.paymentAttemptId = paymentAttemptId;
         this.amount = amount;
         this.invoiceId = invoiceId;
         this.paymentDate = paymentDate;
         this.currency = currency;
         this.reversedInvoicePaymentId = reversedInvoicePaymentId;
+    }
+
+    @Override
+    public InvoicePaymentType getType() {
+        return type;
     }
 
     @Override
@@ -83,16 +90,7 @@ public class DefaultInvoicePayment extends EntityBase implements InvoicePayment 
     }
 
     @Override
-    public UUID getReversedInvoicePaymentId() {
+    public UUID getLinkedInvoicePaymentId() {
         return reversedInvoicePaymentId;
-    }
-
-    @Override
-    public InvoicePayment asChargeBack(final BigDecimal chargeBackAmount, final DateTime chargeBackDate) throws InvoiceApiException {
-        if (chargeBackAmount.compareTo(amount) > 0) {
-            throw new InvoiceApiException(ErrorCode.CHARGE_BACK_AMOUNT_TOO_HIGH, chargeBackAmount, amount);
-        }
-
-        return new DefaultInvoicePayment(UUID.randomUUID(), null, invoiceId, chargeBackDate, chargeBackAmount.negate(), currency, id);
     }
 }

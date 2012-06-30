@@ -23,6 +23,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
@@ -39,9 +41,11 @@ import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.invoice.api.InvoicePayment;
+import com.ning.billing.invoice.api.InvoicePayment.InvoicePaymentType;
 import com.ning.billing.invoice.model.CreditAdjInvoiceItem;
 import com.ning.billing.invoice.model.CreditBalanceAdjInvoiceItem;
 import com.ning.billing.invoice.model.DefaultInvoice;
+import com.ning.billing.invoice.model.DefaultInvoicePayment;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
@@ -295,20 +299,27 @@ public class DefaultInvoiceDao implements InvoiceDao {
 
     @Override
     public InvoicePayment postChargeback(final UUID invoicePaymentId, final BigDecimal amount, final CallContext context) throws InvoiceApiException {
+
         return invoicePaymentSqlDao.inTransaction(new Transaction<InvoicePayment, InvoicePaymentSqlDao>() {
             @Override
             public InvoicePayment inTransaction(final InvoicePaymentSqlDao transactional, final TransactionStatus status) throws Exception {
+
+                final BigDecimal maxChargedBackAmount = getRemainingAmountPaidFromTransaction(invoicePaymentId, transactional);
+                final BigDecimal requestedChargedBackAmout = (amount == null) ? maxChargedBackAmount : amount;
+                if (requestedChargedBackAmout.compareTo(BigDecimal.ZERO) < 0) {
+                    throw new InvoiceApiException(ErrorCode.CHARGE_BACK_AMOUNT_IS_NEGATIVE);
+                }
+                if (requestedChargedBackAmout.compareTo(maxChargedBackAmount) > 0) {
+                    throw new InvoiceApiException(ErrorCode.CHARGE_BACK_AMOUNT_TOO_HIGH, requestedChargedBackAmout, maxChargedBackAmount);
+                }
+
                 final InvoicePayment payment = invoicePaymentSqlDao.getById(invoicePaymentId.toString());
                 if (payment == null) {
                     throw new InvoiceApiException(ErrorCode.INVOICE_PAYMENT_NOT_FOUND, invoicePaymentId.toString());
                 } else {
-                    if (amount.compareTo(BigDecimal.ZERO) < 0) {
-                        throw new InvoiceApiException(ErrorCode.CHARGE_BACK_AMOUNT_IS_NEGATIVE);
-                    }
-
-                    final InvoicePayment chargeBack = payment.asChargeBack(amount, context.getCreatedDate());
+                    final InvoicePayment chargeBack = new DefaultInvoicePayment(UUID.randomUUID(), InvoicePaymentType.CHARGED_BACK, null,
+                            payment.getInvoiceId(), context.getCreatedDate(), requestedChargedBackAmout.negate(), payment.getCurrency(), payment.getId());
                     invoicePaymentSqlDao.create(chargeBack, context);
-
                     return chargeBack;
                 }
             }
@@ -317,8 +328,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
 
     @Override
     public BigDecimal getRemainingAmountPaid(final UUID invoicePaymentId) {
-        final BigDecimal amount = invoicePaymentSqlDao.getRemainingAmountPaid(invoicePaymentId.toString());
-        return amount == null ? BigDecimal.ZERO : amount;
+        return getRemainingAmountPaidFromTransaction(invoicePaymentId, invoicePaymentSqlDao);
     }
 
     @Override
@@ -398,6 +408,13 @@ public class DefaultInvoiceDao implements InvoiceDao {
         populateChildren(invoices, transactional);
         return invoices;
     }
+
+
+    private BigDecimal getRemainingAmountPaidFromTransaction(final UUID invoicePaymentId, final InvoicePaymentSqlDao transactional) {
+        final BigDecimal amount = transactional.getRemainingAmountPaid(invoicePaymentId.toString());
+        return amount == null ? BigDecimal.ZERO : amount;
+    }
+
 
 
     private void getInvoiceItemsWithinTransaction(final List<Invoice> invoices, final InvoiceSqlDao invoiceDao) {
