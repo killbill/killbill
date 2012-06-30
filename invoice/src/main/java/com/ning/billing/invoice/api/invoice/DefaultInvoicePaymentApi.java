@@ -81,13 +81,13 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
     }
 
     @Override
-    public InvoicePayment processChargeback(final UUID invoicePaymentId, final BigDecimal amount, final CallContext context) throws InvoiceApiException {
+    public InvoicePayment createChargeback(final UUID invoicePaymentId, final BigDecimal amount, final CallContext context) throws InvoiceApiException {
         return dao.postChargeback(invoicePaymentId, amount, context);
     }
 
     @Override
-    public InvoicePayment processChargeback(final UUID invoicePaymentId, final CallContext context) throws InvoiceApiException {
-        return processChargeback(invoicePaymentId, null, context);
+    public InvoicePayment createChargeback(final UUID invoicePaymentId, final CallContext context) throws InvoiceApiException {
+        return createChargeback(invoicePaymentId, null, context);
     }
 
     @Override
@@ -113,5 +113,12 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
     @Override
     public UUID getAccountIdFromInvoicePaymentId(final UUID invoicePaymentId) throws InvoiceApiException {
         return dao.getAccountIdFromInvoicePaymentId(invoicePaymentId);
+    }
+
+    @Override
+    public InvoicePayment createRefund(UUID paymentAttemptId,
+            BigDecimal amount, boolean isInvoiceAdjusted, CallContext context)
+            throws InvoiceApiException {
+        return dao.createRefund(paymentAttemptId, amount, isInvoiceAdjusted, context);
     }
 }

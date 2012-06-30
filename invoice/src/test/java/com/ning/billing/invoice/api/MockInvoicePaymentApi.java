@@ -103,7 +103,7 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi {
     }
 
     @Override
-    public InvoicePayment processChargeback(final UUID invoicePaymentId, final BigDecimal amount, final CallContext context) throws InvoiceApiException {
+    public InvoicePayment createChargeback(final UUID invoicePaymentId, final BigDecimal amount, final CallContext context) throws InvoiceApiException {
         InvoicePayment existingPayment = null;
         for (final InvoicePayment payment : invoicePayments) {
             if (payment.getId() == invoicePaymentId) {
@@ -121,7 +121,7 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi {
     }
 
     @Override
-    public InvoicePayment processChargeback(final UUID invoicePaymentId, final CallContext context) throws InvoiceApiException {
+    public InvoicePayment createChargeback(final UUID invoicePaymentId, final CallContext context) throws InvoiceApiException {
         InvoicePayment existingPayment = null;
         for (final InvoicePayment payment : invoicePayments) {
             if (payment.getId() == invoicePaymentId) {
@@ -130,7 +130,7 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi {
         }
 
         if (existingPayment != null) {
-            this.processChargeback(invoicePaymentId, existingPayment.getAmount(), context);
+            this.createChargeback(invoicePaymentId, existingPayment.getAmount(), context);
         }
 
         return existingPayment;
@@ -170,5 +170,13 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi {
     @Override
     public InvoicePayment getChargebackById(final UUID chargebackId) {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public InvoicePayment createRefund(UUID paymentAttemptId,
+            BigDecimal amount, boolean isInvoiceAdjusted, CallContext context)
+            throws InvoiceApiException {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

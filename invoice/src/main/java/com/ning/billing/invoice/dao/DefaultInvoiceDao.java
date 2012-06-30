@@ -48,6 +48,7 @@ import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.invoice.model.DefaultInvoicePayment;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
+import com.ning.billing.invoice.model.RefundAdjInvoiceItem;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.util.ChangeType;
 import com.ning.billing.util.api.TagApiException;
@@ -297,6 +298,53 @@ public class DefaultInvoiceDao implements InvoiceDao {
         tagUserApi.removeTag(invoiceId, ObjectType.INVOICE, ControlTagType.WRITTEN_OFF.toTagDefinition(), context);
     }
 
+
+    @Override
+    public InvoicePayment createRefund(final UUID paymentAttemptId,
+            final BigDecimal amount, final boolean isInvoiceAdjusted, final CallContext context)
+            throws InvoiceApiException {
+
+        return invoicePaymentSqlDao.inTransaction(new Transaction<InvoicePayment, InvoicePaymentSqlDao>() {
+            @Override
+            public InvoicePayment inTransaction(final InvoicePaymentSqlDao transactional, final TransactionStatus status) throws Exception {
+                final InvoicePayment payment = transactional.getByPaymentAttemptId(paymentAttemptId.toString());
+                if (payment == null) {
+                    throw new InvoiceApiException(ErrorCode.INVOICE_PAYMENT_BY_ATTEMPT_NOT_FOUND, paymentAttemptId);
+                }
+                final BigDecimal maxRefundAmount = payment.getAmount() == null ? BigDecimal.ZERO : payment.getAmount();
+                final BigDecimal requestedAmount = amount == null ? maxRefundAmount : amount;
+                if (requestedAmount.compareTo(BigDecimal.ZERO) <= 0) {
+                    throw new InvoiceApiException(ErrorCode.REFUND_AMOUNT_IS_NEGATIVE);
+                }
+                if (requestedAmount.compareTo(maxRefundAmount) > 0) {
+                    throw new InvoiceApiException(ErrorCode.REFUND_AMOUNT_TOO_HIGH, requestedAmount, maxRefundAmount);
+                }
+
+                final InvoicePayment refund = new DefaultInvoicePayment(UUID.randomUUID(), InvoicePaymentType.REFUND, paymentAttemptId,
+                        payment.getInvoiceId(), context.getCreatedDate(), requestedAmount, payment.getCurrency(), payment.getId());
+                transactional.create(refund, context);
+
+                if (isInvoiceAdjusted) {
+                    InvoiceSqlDao transInvoiceDao = transactional.become(InvoiceSqlDao.class);
+                    Invoice invoice = transInvoiceDao.getById(payment.getInvoiceId().toString());
+                    if (invoice != null) {
+                        populateChildren(invoice, transInvoiceDao);
+                    }
+
+                    BigDecimal maxBalanceToAdjust = (invoice.getBalance().compareTo(BigDecimal.ZERO) <= 0) ? BigDecimal.ZERO : invoice.getBalance();
+                    BigDecimal requestedAmountToAdjust = requestedAmount.compareTo(maxBalanceToAdjust)  > 0 ? maxBalanceToAdjust : requestedAmount;
+                    if (requestedAmountToAdjust.compareTo(BigDecimal.ZERO) > 0) {
+                        final InvoiceItem adjItem = new RefundAdjInvoiceItem(invoice.getId(), invoice.getAccountId(), context.getCreatedDate(), requestedAmountToAdjust, invoice.getCurrency());
+                        InvoiceItemSqlDao transInvoiceItemDao = transInvoiceDao.become(InvoiceItemSqlDao.class);
+                        transInvoiceItemDao.create(adjItem, context);
+                    }
+                }
+                return refund;
+            }
+        });
+    }
+
+
     @Override
     public InvoicePayment postChargeback(final UUID invoicePaymentId, final BigDecimal amount, final CallContext context) throws InvoiceApiException {
 
@@ -306,7 +354,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
 
                 final BigDecimal maxChargedBackAmount = getRemainingAmountPaidFromTransaction(invoicePaymentId, transactional);
                 final BigDecimal requestedChargedBackAmout = (amount == null) ? maxChargedBackAmount : amount;
-                if (requestedChargedBackAmout.compareTo(BigDecimal.ZERO) < 0) {
+                if (requestedChargedBackAmout.compareTo(BigDecimal.ZERO) <= 0) {
                     throw new InvoiceApiException(ErrorCode.CHARGE_BACK_AMOUNT_IS_NEGATIVE);
                 }
                 if (requestedChargedBackAmout.compareTo(maxChargedBackAmount) > 0) {

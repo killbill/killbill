@@ -90,7 +90,7 @@ public class ChargeBackTests {
         final InvoicePayment payment = createAndPersistPayment(invoice.getId(), THIRTY);
 
         // create a full charge back
-        invoicePaymentApi.processChargeback(payment.getId(), THIRTY, context);
+        invoicePaymentApi.createChargeback(payment.getId(), THIRTY, context);
 
         // check amount owed
         final BigDecimal amount = invoicePaymentApi.getRemainingAmountPaid(payment.getId());
@@ -103,7 +103,7 @@ public class ChargeBackTests {
         final InvoicePayment payment = createAndPersistPayment(invoice.getId(), THIRTY);
 
         // create a partial charge back
-        invoicePaymentApi.processChargeback(payment.getId(), FIFTEEN, context);
+        invoicePaymentApi.createChargeback(payment.getId(), FIFTEEN, context);
 
         // check amount owed
         final BigDecimal amount = invoicePaymentApi.getRemainingAmountPaid(payment.getId());
@@ -116,7 +116,7 @@ public class ChargeBackTests {
         final InvoicePayment payment = createAndPersistPayment(invoice.getId(), THIRTY);
 
         // create a large charge back
-        invoicePaymentApi.processChargeback(payment.getId(), ONE_MILLION, context);
+        invoicePaymentApi.createChargeback(payment.getId(), ONE_MILLION, context);
     }
 
     @Test(expectedExceptions = InvoiceApiException.class)
@@ -125,7 +125,7 @@ public class ChargeBackTests {
         final InvoicePayment payment = createAndPersistPayment(invoice.getId(), THIRTY);
 
         // create a partial charge back
-        invoicePaymentApi.processChargeback(payment.getId(), BigDecimal.ONE.negate(), context);
+        invoicePaymentApi.createChargeback(payment.getId(), BigDecimal.ONE.negate(), context);
     }
 
     @Test
@@ -154,7 +154,7 @@ public class ChargeBackTests {
         final InvoicePayment payment = createAndPersistPayment(invoice.getId(), THIRTY);
 
         // create a partial charge back
-        invoicePaymentApi.processChargeback(payment.getId(), FIFTEEN, context);
+        invoicePaymentApi.createChargeback(payment.getId(), FIFTEEN, context);
 
         final List<InvoicePayment> chargebacks = invoicePaymentApi.getChargebacksByAccountId(invoice.getAccountId());
         assertNotNull(chargebacks);
@@ -175,7 +175,7 @@ public class ChargeBackTests {
         final InvoicePayment payment = createAndPersistPayment(invoice.getId(), THIRTY);
 
         // create a partial charge back
-        invoicePaymentApi.processChargeback(payment.getId(), FIFTEEN, context);
+        invoicePaymentApi.createChargeback(payment.getId(), FIFTEEN, context);
 
         final List<InvoicePayment> chargebacks = invoicePaymentApi.getChargebacksByPaymentAttemptId(payment.getPaymentAttemptId());
         assertNotNull(chargebacks);
