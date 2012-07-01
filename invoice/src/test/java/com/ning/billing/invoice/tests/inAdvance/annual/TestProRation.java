@@ -25,14 +25,13 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.invoice.model.InvalidDateSequenceException;
 import com.ning.billing.invoice.tests.inAdvance.ProRationInAdvanceTestBase;
 
-@Test(groups = {"fast", "invoicing", "proRation"})
-public class ProRationTests extends ProRationInAdvanceTestBase {
+public class TestProRation extends ProRationInAdvanceTestBase {
     @Override
     protected BillingPeriod getBillingPeriod() {
         return BillingPeriod.ANNUAL;
     }
 
-    @Test
+    @Test(groups = {"fast"})
     public void testSinglePlan_PrecedingProRation() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2011, 1, 31);
         final DateTime targetDate = buildDateTime(2011, 2, 24);
@@ -41,7 +40,7 @@ public class ProRationTests extends ProRationInAdvanceTestBase {
         testCalculateNumberOfBillingCycles(startDate, targetDate, 15, expectedValue);
     }
 
-    @Test
+    @Test(groups = {"fast"})
     public void testSinglePlan_PrecedingProRation_CrossingYearBoundary() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2010, 12, 15);
         final DateTime targetDate = buildDateTime(2011, 1, 13);
@@ -50,7 +49,8 @@ public class ProRationTests extends ProRationInAdvanceTestBase {
         testCalculateNumberOfBillingCycles(startDate, targetDate, 4, expectedValue);
     }
 
-    @Test(enabled = false)
+    // Test fails, needs to be investigated
+    @Test(groups = {"fast"}, enabled=false)
     public void testSinglePlanDoubleProRation() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2011, 1, 10);
         final DateTime endDate = buildDateTime(2012, 3, 4);

@@ -68,7 +68,7 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
-public class InvoiceDaoTests extends InvoiceDaoTestBase {
+public class TestInvoiceDao extends InvoiceDaoTestBase {
 
     @Test(groups = {"slow"})
     public void testCreationAndRetrievalByAccount() {

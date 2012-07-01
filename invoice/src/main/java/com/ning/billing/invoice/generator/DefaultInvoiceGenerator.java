@@ -175,7 +175,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         for (final InvoiceItem item : proposedItems) {
             if (item.getInvoiceItemType() == InvoiceItemType.CBA_ADJ) {
                 totalUnusedCreditAmount = totalUnusedCreditAmount.add(item.getAmount());
-            } else {
+            } else if (item.getInvoiceId().equals(invoiceId)) {
                 totalAmountOwed = totalAmountOwed.add(item.getAmount());
             }
         }
@@ -310,7 +310,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
             final BillingMode billingMode = instantiateBillingMode(thisEvent.getBillingMode());
             final DateTime startDate = thisEvent.getEffectiveDate();
             final DateTime tzAdjustedStartDate = startDate.toDateTime(thisEvent.getTimeZone());
-            final DateTime roundedStartDate = new DateTime(tzAdjustedStartDate.getYear(), tzAdjustedStartDate.getMonthOfYear(), tzAdjustedStartDate.getDayOfMonth(), 0, 0);
+            final DateTime roundedStartDate = new DateTime(tzAdjustedStartDate.getYear(), tzAdjustedStartDate.getMonthOfYear(), tzAdjustedStartDate.getDayOfMonth(), 0, 0, thisEvent.getTimeZone());
             log.info(String.format("start = %s, rounded = %s, target = %s, in = %s", startDate, roundedStartDate, targetDate, (!roundedStartDate.isAfter(targetDate)) ? "in" : "out"));
             if (!roundedStartDate.isAfter(targetDate)) {
                 final DateTime endDate = (nextEvent == null) ? null : nextEvent.getEffectiveDate();

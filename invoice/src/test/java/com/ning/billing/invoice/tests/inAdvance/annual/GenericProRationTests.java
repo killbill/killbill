@@ -23,7 +23,6 @@ import org.testng.annotations.Test;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.invoice.tests.inAdvance.GenericProRationTestBase;
 
-@Test(groups = {"fast", "invoicing", "proRation"})
 public class GenericProRationTests extends GenericProRationTestBase {
     @Override
     protected BillingPeriod getBillingPeriod() {

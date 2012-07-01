@@ -53,7 +53,7 @@ import com.ning.billing.util.tag.dao.TagDefinitionDao;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
-public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
+public class InvoiceDaoTestBase extends InvoicingTestBase {
     protected final TagEventBuilder tagEventBuilder = new TagEventBuilder();
 
     protected IDBI dbi;

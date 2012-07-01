@@ -25,14 +25,14 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.invoice.model.InvalidDateSequenceException;
 import com.ning.billing.invoice.tests.inAdvance.ProRationInAdvanceTestBase;
 
-@Test(groups = {"fast", "invoicing", "proRation"})
-public class TrailingProRationTests extends ProRationInAdvanceTestBase {
+
+public class TestTrailingProRation extends ProRationInAdvanceTestBase {
     @Override
     protected BillingPeriod getBillingPeriod() {
         return BillingPeriod.ANNUAL;
     }
 
-    @Test
+    @Test(groups = {"fast"})
     public void testTargetDateOnStartDate() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2010, 6, 17);
         final DateTime endDate = buildDateTime(2012, 6, 25);
@@ -41,7 +41,7 @@ public class TrailingProRationTests extends ProRationInAdvanceTestBase {
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 17, ONE);
     }
 
-    @Test
+    @Test(groups = {"fast"})
     public void testTargetDateInFirstBillingPeriod() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2010, 6, 17);
         final DateTime endDate = buildDateTime(2011, 6, 25);
@@ -50,7 +50,7 @@ public class TrailingProRationTests extends ProRationInAdvanceTestBase {
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 17, ONE);
     }
 
-    @Test
+    @Test(groups = {"fast"})
     public void testTargetDateAtEndOfFirstBillingCycle() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2010, 6, 17);
         final DateTime endDate = buildDateTime(2011, 6, 25);
@@ -60,7 +60,7 @@ public class TrailingProRationTests extends ProRationInAdvanceTestBase {
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 17, expectedValue);
     }
 
-    @Test
+    @Test(groups = {"fast"})
     public void testTargetDateInProRationPeriod() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2010, 6, 17);
         final DateTime endDate = buildDateTime(2011, 6, 25);
@@ -70,7 +70,7 @@ public class TrailingProRationTests extends ProRationInAdvanceTestBase {
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 17, expectedValue);
     }
 
-    @Test
+    @Test(groups = {"fast"})
     public void testTargetDateOnEndDate() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2010, 6, 17);
         final DateTime endDate = buildDateTime(2011, 6, 25);
@@ -79,7 +79,7 @@ public class TrailingProRationTests extends ProRationInAdvanceTestBase {
         testCalculateNumberOfBillingCycles(startDate, endDate, endDate, 17, expectedValue);
     }
 
-    @Test
+    @Test(groups = {"fast"})
     public void testTargetDateAfterEndDate() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2010, 6, 17);
         final DateTime endDate = buildDateTime(2011, 6, 25);

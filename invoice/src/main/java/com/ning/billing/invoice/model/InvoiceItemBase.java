@@ -43,10 +43,22 @@ public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem 
     protected final String planName;
     protected final String phaseName;
 
-    /* Recurring specific STEPH */
+    /* Recurring specific */
     protected final BigDecimal rate;
-    protected final UUID reversedItemId;
 
+    /* RepairAdjInvoiceItem */
+   protected final UUID linkedItemId;
+
+
+    @Override
+    public String toString() {
+        return getInvoiceItemType() + ": [startDate=" + startDate + ", endDate="
+                + endDate + ", amount=" + amount + ", currency=" + currency
+                + ", invoiceId=" + invoiceId
+                + ", subscriptionId=" + subscriptionId + ", planName="
+                + planName + ", phaseName=" + phaseName + ", rate=" + rate
+                + ", linkedItemId=" + linkedItemId + "]";
+    }
 
     /*
      * CTOR without ID; called from generator when creating invoice item
@@ -115,7 +127,7 @@ public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem 
         this.amount = amount;
         this.currency = currency;
         this.rate = rate;
-        this.reversedItemId = reversedItemId;
+        this.linkedItemId = reversedItemId;
     }
 
     @Override
@@ -175,7 +187,7 @@ public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem 
 
     @Override
     public UUID getLinkedItemId() {
-        return reversedItemId;
+        return linkedItemId;
     }
 
     @Override

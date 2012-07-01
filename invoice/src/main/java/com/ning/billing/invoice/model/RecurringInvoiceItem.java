@@ -63,11 +63,11 @@ public class RecurringInvoiceItem extends InvoiceItemBase {
 
     @Override
     public UUID getLinkedItemId() {
-        return reversedItemId;
+        return linkedItemId;
     }
 
     public boolean reversesItem() {
-        return (reversedItemId != null);
+        return (linkedItemId != null);
     }
 
     @Override
@@ -145,7 +145,7 @@ public class RecurringInvoiceItem extends InvoiceItemBase {
         if (rate.compareTo(that.rate) != 0) {
             return false;
         }
-        if (reversedItemId != null ? !reversedItemId.equals(that.reversedItemId) : that.reversedItemId != null) {
+        if (linkedItemId != null ? !linkedItemId.equals(that.linkedItemId) : that.linkedItemId != null) {
             return false;
         }
         if (subscriptionId != null ? !subscriptionId.equals(that.subscriptionId) : that.subscriptionId != null) {
@@ -171,22 +171,8 @@ public class RecurringInvoiceItem extends InvoiceItemBase {
         result = 31 * result + rate.hashCode();
         result = 31 * result + currency.hashCode();
         result = 31 * result + getInvoiceItemType().hashCode();
-        result = 31 * result + (reversedItemId != null ? reversedItemId.hashCode() : 0);
+        result = 31 * result + (linkedItemId != null ? linkedItemId.hashCode() : 0);
         return result;
-    }
-
-    @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder();
-
-        sb.append(phaseName).append(", ");
-        sb.append(startDate.toString()).append(", ");
-        sb.append(endDate.toString()).append(", ");
-        sb.append(amount.toString()).append(", ");
-        sb.append("subscriptionId = ").append(subscriptionId == null ? null : subscriptionId.toString()).append(", ");
-        sb.append("bundleId = ").append(bundleId == null ? null : bundleId.toString()).append(", ");
-
-        return sb.toString();
     }
 
     @Override

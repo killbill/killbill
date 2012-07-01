@@ -23,7 +23,7 @@ import java.util.Locale;
 
 import org.joda.time.DateTime;
 import org.skife.config.ConfigurationObjectFactory;
-import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
@@ -41,11 +41,10 @@ import com.ning.billing.util.template.translation.TranslatorConfig;
 
 import static org.testng.Assert.assertNotNull;
 
-@Test(groups = {"fast", "email"})
-public class HtmlInvoiceGeneratorTest {
+public class TestHtmlInvoiceGenerator {
     private HtmlInvoiceGenerator g;
 
-    @BeforeClass
+    @BeforeSuite(groups = {"fast"})
     public void setup() {
         final TranslatorConfig config = new ConfigurationObjectFactory(System.getProperties()).build(TranslatorConfig.class);
         final TemplateEngine templateEngine = new MustacheTemplateEngine();
@@ -53,7 +52,7 @@ public class HtmlInvoiceGeneratorTest {
         g = new HtmlInvoiceGenerator(factory, templateEngine, config);
     }
 
-    @Test
+    @Test(groups = {"fast"})
     public void testGenerateInvoice() throws Exception {
         final String output = g.generateInvoice(createAccount(), createInvoice());
         assertNotNull(output);

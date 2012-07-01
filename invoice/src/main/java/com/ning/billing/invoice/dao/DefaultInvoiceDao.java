@@ -26,6 +26,7 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
+import org.joda.time.field.ZeroIsMaxDateTimeField;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
@@ -215,12 +216,15 @@ public class DefaultInvoiceDao implements InvoiceDao {
             @Override
             public BigDecimal inTransaction(final InvoiceSqlDao transactional, final TransactionStatus status) throws Exception {
 
+                BigDecimal cba = BigDecimal.ZERO;
+
                 BigDecimal accountBalance = BigDecimal.ZERO;
                 List<Invoice> invoices = getAllInvoicesByAccountFromTransaction(accountId, transactional);
                 for (Invoice cur : invoices) {
                     accountBalance = accountBalance.add(cur.getBalance());
+                    cba = cba.add(cur.getCBAAmount());
                 }
-                return accountBalance;
+                return accountBalance.subtract(cba);
             }
         });
     }
@@ -345,7 +349,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
                     final InvoiceItem cbaAdjItem = new CreditBalanceAdjInvoiceItem(invoice.getId(), invoice.getAccountId(), context.getCreatedDate(), cbaAdjAmount, invoice.getCurrency());
                     transInvoiceItemDao.create(cbaAdjItem, context);
                 }
-                final BigDecimal requestedPositiveAmountAfterCbaAdj = requestedPositiveAmount.subtract(cbaAdjAmount);
+                final BigDecimal requestedPositiveAmountAfterCbaAdj = requestedPositiveAmount.add(cbaAdjAmount);
 
                 if (isInvoiceAdjusted) {
 

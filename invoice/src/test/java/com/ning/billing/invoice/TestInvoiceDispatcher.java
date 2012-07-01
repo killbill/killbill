@@ -64,7 +64,6 @@ import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.io.IOUtils;
 
-@Test(groups = "slow")
 @Guice(modules = {MockModule.class})
 public class TestInvoiceDispatcher extends InvoicingTestBase {
     private final Logger log = LoggerFactory.getLogger(TestInvoiceDispatcher.class);
@@ -95,7 +94,7 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
 
     private CallContext context;
 
-    @BeforeSuite(groups = "slow")
+    @BeforeSuite(groups = {"slow"})
     public void setup() throws Exception {
         final String invoiceDdl = IOUtils.toString(TestInvoiceDispatcher.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
         final String utilDdl = IOUtils.toString(TestInvoiceDispatcher.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
@@ -113,7 +112,7 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
         ((ZombieControl) billingApi).addResult("setChargedThroughDate", BrainDeadProxyFactory.ZOMBIE_VOID);
     }
 
-    @AfterClass(alwaysRun = true)
+    @AfterClass(groups = {"slow"})
     public void tearDown() {
         try {
             ((DefaultBusService) busService).stopBus();
