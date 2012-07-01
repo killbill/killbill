@@ -234,17 +234,10 @@ public class DefaultInvoiceDao implements InvoiceDao {
         return invoiceSqlDao.inTransaction(new Transaction<BigDecimal, InvoiceSqlDao>() {
             @Override
             public BigDecimal inTransaction(final InvoiceSqlDao transactional, final TransactionStatus status) throws Exception {
-
-                BigDecimal cba = BigDecimal.ZERO;
-                List<Invoice> invoices = getAllInvoicesByAccountFromTransaction(accountId, transactional);
-                for (Invoice cur : invoices) {
-                    cba = cba.add(cur.getCBAAmount());
-                }
-                return cba;
+                return getAccountCBAFromTransaction(accountId, transactional);
             }
         });
     }
-
 
 
     @Override
@@ -327,6 +320,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
                     throw new InvoiceApiException(ErrorCode.REFUND_AMOUNT_TOO_HIGH, requestedPositiveAmount, maxRefundAmount);
                 }
 
+
                 final InvoicePayment refund = new DefaultInvoicePayment(UUID.randomUUID(), InvoicePaymentType.REFUND, paymentAttemptId,
                         payment.getInvoiceId(), context.getCreatedDate(), requestedPositiveAmount.negate(), payment.getCurrency(), payment.getId());
                 transactional.create(refund, context);
@@ -342,10 +336,11 @@ public class DefaultInvoiceDao implements InvoiceDao {
                 InvoiceItemSqlDao transInvoiceItemDao = transInvoiceDao.become(InvoiceItemSqlDao.class);
 
                 // If we have an existing CBA > 0, we need to adjust it
-                final BigDecimal cbaAmountAfterRefund = invoice.getCBAAmount();
+                //final BigDecimal cbaAmountAfterRefund = invoice.getCBAAmount();
+                final BigDecimal accountCbaAvailable = getAccountCBAFromTransaction(invoice.getAccountId(), transInvoiceDao);
                 BigDecimal cbaAdjAmount = BigDecimal.ZERO;
-                if (cbaAmountAfterRefund.compareTo(BigDecimal.ZERO) > 0) {
-                    cbaAdjAmount = (requestedPositiveAmount.compareTo(cbaAmountAfterRefund) > 0) ?  cbaAmountAfterRefund.negate() : requestedPositiveAmount.negate();
+                if (accountCbaAvailable.compareTo(BigDecimal.ZERO) > 0) {
+                    cbaAdjAmount = (requestedPositiveAmount.compareTo(accountCbaAvailable) > 0) ?  accountCbaAvailable.negate() : requestedPositiveAmount.negate();
                     final InvoiceItem cbaAdjItem = new CreditBalanceAdjInvoiceItem(invoice.getId(), invoice.getAccountId(), context.getCreatedDate(), cbaAdjAmount, invoice.getCurrency());
                     transInvoiceItemDao.create(cbaAdjItem, context);
                 }
@@ -461,6 +456,16 @@ public class DefaultInvoiceDao implements InvoiceDao {
     public void test() {
         invoiceSqlDao.test();
     }
+
+    private BigDecimal getAccountCBAFromTransaction(final UUID accountId, final InvoiceSqlDao transactional) {
+        BigDecimal cba = BigDecimal.ZERO;
+        List<Invoice> invoices = getAllInvoicesByAccountFromTransaction(accountId, transactional);
+        for (Invoice cur : invoices) {
+            cba = cba.add(cur.getCBAAmount());
+        }
+        return cba;
+    }
+
 
     private void populateChildren(final Invoice invoice, final InvoiceSqlDao invoiceSqlDao) {
         getInvoiceItemsWithinTransaction(invoice, invoiceSqlDao);
