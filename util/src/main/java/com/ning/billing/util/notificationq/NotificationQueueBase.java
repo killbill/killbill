@@ -33,17 +33,17 @@ import com.ning.billing.util.queue.PersistentQueueBase;
 
 public abstract class NotificationQueueBase extends PersistentQueueBase implements NotificationQueue {
 
-    protected final static Logger log = LoggerFactory.getLogger(NotificationQueueBase.class);
+    protected static final Logger log = LoggerFactory.getLogger(NotificationQueueBase.class);
 
-    public final static int CLAIM_TIME_MS = (5 * 60 * 1000); // 5 minutes
-    
-    private final static String NOTIFICATION_THREAD_PREFIX = "Notification-";
-    private final static int NB_THREADS = 1;
+    public static final int CLAIM_TIME_MS = (5 * 60 * 1000); // 5 minutes
 
-    
+    private static final String NOTIFICATION_THREAD_PREFIX = "Notification-";
+    private static final int NB_THREADS = 1;
+
+
     private final String svcName;
     private final String queueName;
-    
+
     protected final NotificationQueueHandler handler;
     protected final NotificationConfig config;
 
@@ -53,16 +53,16 @@ public abstract class NotificationQueueBase extends PersistentQueueBase implemen
     protected AtomicLong nbProcessedEvents;
 
     // Package visibility on purpose
-    NotificationQueueBase(final Clock clock,  final String svcName, final String queueName, final NotificationQueueHandler handler, final NotificationConfig config) {
+    NotificationQueueBase(final Clock clock, final String svcName, final String queueName, final NotificationQueueHandler handler, final NotificationConfig config) {
         super(svcName, Executors.newFixedThreadPool(1, new ThreadFactory() {
 
             @Override
-            public Thread newThread(Runnable r) {
-                Thread th = new Thread(r);
+            public Thread newThread(final Runnable r) {
+                final Thread th = new Thread(r);
                 th.setName(NOTIFICATION_THREAD_PREFIX + svcName + "-" + queueName);
                 th.setUncaughtExceptionHandler(new UncaughtExceptionHandler() {
                     @Override
-                    public void uncaughtException(Thread t, Throwable e) {
+                    public void uncaughtException(final Thread t, final Throwable e) {
                         log.error("Uncaught exception for thread " + t.getName(), e);
                     }
                 });
@@ -86,7 +86,7 @@ public abstract class NotificationQueueBase extends PersistentQueueBase implemen
         }
         super.startQueue();
     }
-    
+
     @Override
     public void stopQueue() {
         if (config.isNotificationProcessingOff()) {

@@ -20,11 +20,11 @@ import com.ning.billing.overdue.OverdueService;
 import com.ning.billing.overdue.glue.DefaultOverdueModule;
 
 public class IntegrationTestOverdueModule extends DefaultOverdueModule {
-   
-    
+
+
     protected void installOverdueService() {
-        bind(OverdueService.class).to(MockOverdueService.class);    
+        bind(OverdueService.class).to(MockOverdueService.class);
     }
 
-     
+
 }

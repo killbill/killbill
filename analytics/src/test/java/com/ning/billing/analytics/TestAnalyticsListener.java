@@ -27,6 +27,10 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.ning.billing.account.api.Account;
+import com.ning.billing.analytics.model.BusinessSubscription;
+import com.ning.billing.analytics.model.BusinessSubscriptionEvent;
+import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
@@ -42,13 +46,17 @@ import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
+import com.ning.billing.mock.MockAccountBuilder;
+import com.ning.billing.mock.api.MockAccountUserApi;
+import com.ning.billing.mock.api.MockEntitlementUserApi;
+import com.ning.billing.util.callcontext.CallContext;
 
 public class TestAnalyticsListener extends AnalyticsTestSuite {
-    private static final String KEY = "1234";
+    private static final String EXTERNAL_KEY = "1234";
     private static final String ACCOUNT_KEY = "pierre-1234";
     private final Currency CURRENCY = Currency.BRL;
 
-    private final MockBusinessSubscriptionTransitionDao dao = new MockBusinessSubscriptionTransitionDao();
+    private final MockBusinessSubscriptionTransitionSqlDao dao = new MockBusinessSubscriptionTransitionSqlDao();
     private final UUID subscriptionId = UUID.randomUUID();
     private final UUID bundleUUID = UUID.randomUUID();
     private final Product product = new MockProduct("platinium", "subscription", ProductCategory.BASE);
@@ -59,6 +67,7 @@ public class TestAnalyticsListener extends AnalyticsTestSuite {
     private final CatalogService catalogService = Mockito.mock(CatalogService.class);
     private final Catalog catalog = Mockito.mock(Catalog.class);
 
+    private UUID accountId;
     private AnalyticsListener listener;
 
     @BeforeClass(groups = "fast")
@@ -70,8 +79,16 @@ public class TestAnalyticsListener extends AnalyticsTestSuite {
 
     @BeforeMethod(groups = "fast")
     public void setUp() throws Exception {
-        final BusinessSubscriptionTransitionRecorder recorder = new BusinessSubscriptionTransitionRecorder(dao, catalogService, new MockEntitlementUserApi(bundleUUID, KEY), new MockAccountUserApi(ACCOUNT_KEY, CURRENCY));
-        listener = new AnalyticsListener(recorder, null);
+        final MockAccountUserApi accountApi = new MockAccountUserApi();
+        final Account accountData = new MockAccountBuilder().externalKey(ACCOUNT_KEY).currency(CURRENCY).build();
+        final Account account = accountApi.createAccount(accountData, Mockito.mock(CallContext.class));
+        accountId = account.getId();
+
+        final MockEntitlementUserApi entitlementApi = new MockEntitlementUserApi();
+        entitlementApi.addBundle(bundleUUID, EXTERNAL_KEY, accountId);
+
+        final BusinessSubscriptionTransitionRecorder recorder = new BusinessSubscriptionTransitionRecorder(dao, catalogService, entitlementApi, accountApi);
+        listener = new AnalyticsListener(recorder, null, null, null);
     }
 
     @Test(groups = "fast")
@@ -80,59 +97,59 @@ public class TestAnalyticsListener extends AnalyticsTestSuite {
         final DateTime effectiveTransitionTime = new DateTime(DateTimeZone.UTC);
         final DateTime requestedTransitionTime = effectiveTransitionTime;
         final SubscriptionTransitionData firstTransition = createFirstSubscriptionTransition(requestedTransitionTime, effectiveTransitionTime);
-        final BusinessSubscriptionTransition firstBST = createExpectedFirstBST(firstTransition.getId(), requestedTransitionTime, effectiveTransitionTime);
+        final BusinessSubscriptionTransition firstBST = createExpectedFirstBST(firstTransition.getTotalOrdering(), requestedTransitionTime, effectiveTransitionTime);
         listener.handleSubscriptionTransitionChange(new DefaultSubscriptionEvent(firstTransition, effectiveTransitionTime));
-        Assert.assertEquals(dao.getTransitions(KEY).size(), 1);
-        Assert.assertEquals(dao.getTransitions(KEY).get(0), firstBST);
+        Assert.assertEquals(dao.getTransitions(EXTERNAL_KEY).size(), 1);
+        Assert.assertEquals(dao.getTransitions(EXTERNAL_KEY).get(0), firstBST);
 
         // Cancel it
         final DateTime effectiveCancelTransitionTime = new DateTime(DateTimeZone.UTC);
         final DateTime requestedCancelTransitionTime = effectiveCancelTransitionTime;
         final SubscriptionTransitionData cancelledSubscriptionTransition = createCancelSubscriptionTransition(requestedCancelTransitionTime, effectiveCancelTransitionTime, firstTransition.getNextState());
-        final BusinessSubscriptionTransition cancelledBST = createExpectedCancelledBST(cancelledSubscriptionTransition.getId(), requestedCancelTransitionTime, effectiveCancelTransitionTime, firstBST.getNextSubscription());
+        final BusinessSubscriptionTransition cancelledBST = createExpectedCancelledBST(cancelledSubscriptionTransition.getTotalOrdering(), requestedCancelTransitionTime, effectiveCancelTransitionTime, firstBST.getNextSubscription());
         listener.handleSubscriptionTransitionChange(new DefaultSubscriptionEvent(cancelledSubscriptionTransition, effectiveTransitionTime));
-        Assert.assertEquals(dao.getTransitions(KEY).size(), 2);
-        Assert.assertEquals(dao.getTransitions(KEY).get(1), cancelledBST);
+        Assert.assertEquals(dao.getTransitions(EXTERNAL_KEY).size(), 2);
+        Assert.assertEquals(dao.getTransitions(EXTERNAL_KEY).get(1), cancelledBST);
 
         // Recreate it
         final DateTime effectiveRecreatedTransitionTime = new DateTime(DateTimeZone.UTC);
         final DateTime requestedRecreatedTransitionTime = effectiveRecreatedTransitionTime;
         final SubscriptionTransitionData recreatedSubscriptionTransition = createRecreatedSubscriptionTransition(requestedRecreatedTransitionTime, effectiveRecreatedTransitionTime, cancelledSubscriptionTransition.getNextState());
-        final BusinessSubscriptionTransition recreatedBST = createExpectedRecreatedBST(recreatedSubscriptionTransition.getId(), requestedRecreatedTransitionTime, effectiveRecreatedTransitionTime, cancelledBST.getNextSubscription());
+        final BusinessSubscriptionTransition recreatedBST = createExpectedRecreatedBST(recreatedSubscriptionTransition.getTotalOrdering(), requestedRecreatedTransitionTime, effectiveRecreatedTransitionTime, cancelledBST.getNextSubscription());
         listener.handleSubscriptionTransitionChange(new DefaultSubscriptionEvent(recreatedSubscriptionTransition, effectiveTransitionTime));
-        Assert.assertEquals(dao.getTransitions(KEY).size(), 3);
-        Assert.assertEquals(dao.getTransitions(KEY).get(2), recreatedBST);
+        Assert.assertEquals(dao.getTransitions(EXTERNAL_KEY).size(), 3);
+        Assert.assertEquals(dao.getTransitions(EXTERNAL_KEY).get(2), recreatedBST);
 
     }
 
-    private BusinessSubscriptionTransition createExpectedFirstBST(final UUID id, final DateTime requestedTransitionTime, final DateTime effectiveTransitionTime) {
+    private BusinessSubscriptionTransition createExpectedFirstBST(final Long totalOrdering, final DateTime requestedTransitionTime, final DateTime effectiveTransitionTime) {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionCreated(plan.getName(), catalog, effectiveTransitionTime, effectiveTransitionTime);
 
         final Subscription.SubscriptionState subscriptionState = Subscription.SubscriptionState.ACTIVE;
-        return createExpectedBST(id, event, requestedTransitionTime, effectiveTransitionTime, null, subscriptionState);
+        return createExpectedBST(totalOrdering, event, requestedTransitionTime, effectiveTransitionTime, null, subscriptionState);
     }
 
-    private BusinessSubscriptionTransition createExpectedCancelledBST(final UUID id, final DateTime requestedTransitionTime, final DateTime effectiveTransitionTime, final BusinessSubscription lastSubscription) {
+    private BusinessSubscriptionTransition createExpectedCancelledBST(final Long totalOrdering, final DateTime requestedTransitionTime, final DateTime effectiveTransitionTime, final BusinessSubscription lastSubscription) {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionCancelled(plan.getName(), catalog, effectiveTransitionTime, effectiveTransitionTime);
-        return createExpectedBST(id, event, requestedTransitionTime, effectiveTransitionTime, lastSubscription, null);
+        return createExpectedBST(totalOrdering, event, requestedTransitionTime, effectiveTransitionTime, lastSubscription, null);
     }
 
-    private BusinessSubscriptionTransition createExpectedRecreatedBST(final UUID id, final DateTime requestedTransitionTime, final DateTime effectiveTransitionTime, final BusinessSubscription lastSubscription) {
+    private BusinessSubscriptionTransition createExpectedRecreatedBST(final Long totalOrdering, final DateTime requestedTransitionTime, final DateTime effectiveTransitionTime, final BusinessSubscription lastSubscription) {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionRecreated(plan.getName(), catalog, effectiveTransitionTime, effectiveTransitionTime);
         final Subscription.SubscriptionState subscriptionState = Subscription.SubscriptionState.ACTIVE;
-        return createExpectedBST(id, event, requestedTransitionTime, effectiveTransitionTime, lastSubscription, subscriptionState);
+        return createExpectedBST(totalOrdering, event, requestedTransitionTime, effectiveTransitionTime, lastSubscription, subscriptionState);
     }
 
     private BusinessSubscriptionTransition createExpectedBST(
-            final UUID eventId,
+            final Long totalOrdering,
             final BusinessSubscriptionEvent eventType,
             final DateTime requestedTransitionTime,
             final DateTime effectiveTransitionTime,
             @Nullable final BusinessSubscription previousSubscription,
             @Nullable final Subscription.SubscriptionState nextState) {
         return new BusinessSubscriptionTransition(
-                eventId,
-                KEY,
+                totalOrdering,
+                EXTERNAL_KEY,
                 ACCOUNT_KEY,
                 requestedTransitionTime,
                 eventType,

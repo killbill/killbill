@@ -16,76 +16,75 @@
 package com.ning.billing.entitlement.engine.core;
 
 import java.util.UUID;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ning.billing.util.notificationq.NotificationKey;
 
 public class EntitlementNotificationKey implements NotificationKey {
 
-	private static final String DELIMITER = ":";
-	
-	private final UUID eventId;
-	private final int seqId;
-	
-	public EntitlementNotificationKey(final UUID eventId, int seqId) {
-		this.eventId = eventId;
-		this.seqId = seqId;
-	}
+    private final UUID eventId;
+    private final int seqId;
 
-	public EntitlementNotificationKey(final UUID eventId) {
-		this(eventId, 0);
-	}
-	
-	public EntitlementNotificationKey(final String input) {
-			
-		String [] parts = input.split(DELIMITER);
-		eventId = UUID.fromString(parts[0]);
-		if (parts.length == 2) {
-			seqId = Integer.valueOf(parts[1]);
-		} else {
-			seqId = 0;
-		}
-	}
-	
-	public UUID getEventId() {
-		return eventId;
-	}
+    
+    @JsonCreator
+    public EntitlementNotificationKey(@JsonProperty("eventId") final UUID eventId,
+            @JsonProperty("seqId") final int seqId) {
+        this.eventId = eventId;
+        this.seqId = seqId;
+    }
 
-	public int getSeqId() {
-		return seqId;
-	}
+    public EntitlementNotificationKey(final UUID eventId) {
+        this(eventId, 0);
+    }
 
-	public String toString() {
-		if (seqId == 0) {
-			return eventId.toString();
-		} else {
-			return eventId.toString() + ":" + seqId;
-		}
-	}
+    public UUID getEventId() {
+        return eventId;
+    }
 
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((eventId == null) ? 0 : eventId.hashCode());
-		result = prime * result + seqId;
-		return result;
-	}
+    public int getSeqId() {
+        return seqId;
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		EntitlementNotificationKey other = (EntitlementNotificationKey) obj;
-		if (eventId == null) {
-			if (other.eventId != null)
-				return false;
-		} else if (!eventId.equals(other.eventId))
-			return false;
-		if (seqId != other.seqId)
-			return false;
-		return true;
-	}
+    public String toString() {
+        if (seqId == 0) {
+            return eventId.toString();
+        } else {
+            return eventId.toString() + ":" + seqId;
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((eventId == null) ? 0 : eventId.hashCode());
+        result = prime * result + seqId;
+        return result;
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final EntitlementNotificationKey other = (EntitlementNotificationKey) obj;
+        if (eventId == null) {
+            if (other.eventId != null) {
+                return false;
+            }
+        } else if (!eventId.equals(other.eventId)) {
+            return false;
+        }
+        if (seqId != other.seqId) {
+            return false;
+        }
+        return true;
+    }
 }

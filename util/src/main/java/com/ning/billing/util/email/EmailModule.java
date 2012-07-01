@@ -16,12 +16,13 @@
 
 package com.ning.billing.util.email;
 
-import com.google.inject.AbstractModule;
 import org.skife.config.ConfigurationObjectFactory;
+
+import com.google.inject.AbstractModule;
 
 public class EmailModule extends AbstractModule {
     protected void installEmailConfig() {
-        EmailConfig config = new ConfigurationObjectFactory(System.getProperties()).build(EmailConfig.class);
+        final EmailConfig config = new ConfigurationObjectFactory(System.getProperties()).build(EmailConfig.class);
         bind(EmailConfig.class).toInstance(config);
     }
 

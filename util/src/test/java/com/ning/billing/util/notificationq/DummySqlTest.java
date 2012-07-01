@@ -46,15 +46,15 @@ public interface DummySqlTest extends Transactional<DummySqlTest>, Transmogrifie
 
     public static class DummySqlTestBinder implements Binder<Bind, DummyObject> {
         @Override
-        public void bind(@SuppressWarnings("rawtypes") SQLStatement stmt, Bind bind, DummyObject dummy) {
+        public void bind(@SuppressWarnings("rawtypes") final SQLStatement stmt, final Bind bind, final DummyObject dummy) {
             stmt.bind("dummy_id", dummy.getKey().toString());
             stmt.bind("value", dummy.getValue());
         }
     }
 
-    public static class DummySqlTestMapper  implements ResultSetMapper<DummyObject> {
+    public static class DummySqlTestMapper implements ResultSetMapper<DummyObject> {
         @Override
-        public DummyObject map(int index, ResultSet r, StatementContext ctx)
+        public DummyObject map(final int index, final ResultSet r, final StatementContext ctx)
                 throws SQLException {
             final UUID key = UUID.fromString(r.getString("dummy_id"));
             final String value = r.getString("value");

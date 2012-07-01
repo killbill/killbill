@@ -18,7 +18,6 @@ package com.ning.billing.invoice.dao;
 
 import java.io.IOException;
 
-import org.apache.commons.io.IOUtils;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.TransactionCallback;
@@ -41,6 +40,7 @@ import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TestCallContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.io.IOUtils;
 import com.ning.billing.util.tag.api.DefaultTagUserApi;
 import com.ning.billing.util.tag.api.user.TagEventBuilder;
 import com.ning.billing.util.tag.dao.AuditedTagDao;
@@ -79,6 +79,11 @@ public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
         @Override
         public int getNumberOfMonthsInFuture() {
             return 36;
+        }
+
+        @Override
+        public boolean isEmailNotificationsEnabled() {
+            return false;
         }
     };
 

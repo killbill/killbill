@@ -30,16 +30,13 @@ import org.skife.jdbi.v2.sqlobject.Binder;
 import org.skife.jdbi.v2.sqlobject.BinderFactory;
 import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
 
-import com.google.common.base.Joiner;
-import com.ning.billing.analytics.BusinessAccount;
+import com.ning.billing.analytics.model.BusinessAccount;
 
 @BindingAnnotation(BusinessAccountBinder.BacBinderFactory.class)
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.PARAMETER})
 public @interface BusinessAccountBinder {
     public static class BacBinderFactory implements BinderFactory {
-        private final Joiner joiner = Joiner.on(";").skipNulls();
-
         public Binder build(final Annotation annotation) {
             return new Binder<BusinessAccountBinder, BusinessAccount>() {
                 public void bind(final SQLStatement q, final BusinessAccountBinder bind, final BusinessAccount account) {
@@ -54,7 +51,7 @@ public @interface BusinessAccountBinder {
 
                     q.bind("account_key", account.getKey());
                     q.bind("balance", account.getRoundedBalance());
-                    q.bind("tags", joiner.join(account.getTags()));
+                    q.bind("name", account.getName());
                     if (account.getLastInvoiceDate() != null) {
                         q.bind("last_invoice_date", account.getLastInvoiceDate().getMillis());
                     } else {

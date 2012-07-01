@@ -18,31 +18,32 @@ package com.ning.billing.payment.api;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-import com.ning.billing.util.jackson.ObjectMapper;
 import org.joda.time.DateTime;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.ning.billing.util.jackson.ObjectMapper;
+
 public class TestEventJson {
-    private ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper mapper = new ObjectMapper();
 
-    @Test(groups= {"fast"})
+    @Test(groups = {"fast"})
     public void testPaymentErrorEvent() throws Exception {
-        PaymentErrorEvent e = new DefaultPaymentErrorEvent(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "no message", UUID.randomUUID());
-        String json = mapper.writeValueAsString(e);
+        final PaymentErrorEvent e = new DefaultPaymentErrorEvent(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "no message", UUID.randomUUID());
+        final String json = mapper.writeValueAsString(e);
 
-        Class<?> claz = Class.forName(DefaultPaymentErrorEvent.class.getName());
-        Object obj =  mapper.readValue(json, claz);
+        final Class<?> claz = Class.forName(DefaultPaymentErrorEvent.class.getName());
+        final Object obj = mapper.readValue(json, claz);
         Assert.assertTrue(obj.equals(e));
     }
-    
-    @Test(groups= {"fast"})
-    public void testPaymentInfoEvent() throws Exception {
-        PaymentInfoEvent e = new DefaultPaymentInfoEvent(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), new BigDecimal(12.9), new Integer(13), PaymentStatus.SUCCESS, UUID.randomUUID(), new DateTime());
-        String json = mapper.writeValueAsString(e);
 
-        Class<?> clazz = Class.forName(DefaultPaymentInfoEvent.class.getName());
-        Object obj =  mapper.readValue(json, clazz);
+    @Test(groups = {"fast"})
+    public void testPaymentInfoEvent() throws Exception {
+        final PaymentInfoEvent e = new DefaultPaymentInfoEvent(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), new BigDecimal(12.9), new Integer(13), PaymentStatus.SUCCESS, UUID.randomUUID(), new DateTime());
+        final String json = mapper.writeValueAsString(e);
+
+        final Class<?> clazz = Class.forName(DefaultPaymentInfoEvent.class.getName());
+        final Object obj = mapper.readValue(json, clazz);
         Assert.assertTrue(obj.equals(e));
     }
 }

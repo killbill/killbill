@@ -77,7 +77,7 @@ CREATE TABLE invoices (
     PRIMARY KEY(record_id)
 ) ENGINE=innodb;
 CREATE UNIQUE INDEX invoices_id ON invoices(id);
-CREATE INDEX invoices_account_id ON invoices(account_id ASC);
+CREATE INDEX invoices_account_target ON invoices(account_id ASC, target_date);
 
 DROP TABLE IF EXISTS invoice_payments;
 CREATE TABLE invoice_payments (
@@ -94,6 +94,7 @@ CREATE TABLE invoice_payments (
     PRIMARY KEY(record_id)
 ) ENGINE=innodb;
 CREATE UNIQUE INDEX invoice_payments_id ON invoice_payments(id);
+CREATE INDEX invoice_payments_attempt ON invoice_payments(payment_attempt_id);
 CREATE INDEX invoice_payments_reversals ON invoice_payments(reversed_invoice_payment_id);
 
 DROP VIEW IF EXISTS invoice_payment_summary;

@@ -16,34 +16,34 @@
 
 package com.ning.billing.catalog.rules;
 
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlIDREF;
+
 import com.ning.billing.catalog.DefaultPriceList;
 import com.ning.billing.catalog.DefaultProduct;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.ProductCategory;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlIDREF;
-
 public class CasePriceList extends Case<DefaultPriceList> {
-    @XmlElement(required=false, name="fromProduct")
+    @XmlElement(required = false, name = "fromProduct")
     @XmlIDREF
     private DefaultProduct fromProduct;
-    
-    @XmlElement(required=false, name="fromProductCategory")
+
+    @XmlElement(required = false, name = "fromProductCategory")
     private ProductCategory fromProductCategory;
-    
-    @XmlElement(required=false, name="fromBillingPeriod")
+
+    @XmlElement(required = false, name = "fromBillingPeriod")
     private BillingPeriod fromBillingPeriod;
-    
-    @XmlElement(required=false, name="fromPriceList")
+
+    @XmlElement(required = false, name = "fromPriceList")
     @XmlIDREF
     private DefaultPriceList fromPriceList;
 
-    @XmlElement(required=true, name="toPriceList")
+    @XmlElement(required = true, name = "toPriceList")
     @XmlIDREF
     private DefaultPriceList toPriceList;
 
-    public DefaultProduct getProduct(){
+    public DefaultProduct getProduct() {
         return fromProduct;
     }
 
@@ -54,7 +54,7 @@ public class CasePriceList extends Case<DefaultPriceList> {
     public BillingPeriod getBillingPeriod() {
         return fromBillingPeriod;
     }
-    
+
     public DefaultPriceList getPriceList() {
         return fromPriceList;
     }
@@ -63,33 +63,31 @@ public class CasePriceList extends Case<DefaultPriceList> {
         return toPriceList;
     }
 
-    protected CasePriceList setProduct(DefaultProduct product) {
+    protected CasePriceList setProduct(final DefaultProduct product) {
         this.fromProduct = product;
         return this;
     }
 
-    protected CasePriceList setProductCategory(ProductCategory productCategory) {
+    protected CasePriceList setProductCategory(final ProductCategory productCategory) {
         this.fromProductCategory = productCategory;
         return this;
     }
 
-    protected CasePriceList setBillingPeriod(BillingPeriod billingPeriod) {
+    protected CasePriceList setBillingPeriod(final BillingPeriod billingPeriod) {
         this.fromBillingPeriod = billingPeriod;
         return this;
     }
 
-    protected CasePriceList setPriceList(DefaultPriceList priceList) {
+    protected CasePriceList setPriceList(final DefaultPriceList priceList) {
         this.fromPriceList = priceList;
         return this;
     }
-    
-    
 
 
-	protected CasePriceList setToPriceList(DefaultPriceList toPriceList) {
-		this.toPriceList = toPriceList;
-		return this;
-	}
-	
-	
+    protected CasePriceList setToPriceList(final DefaultPriceList toPriceList) {
+        this.toPriceList = toPriceList;
+        return this;
+    }
+
+
 }

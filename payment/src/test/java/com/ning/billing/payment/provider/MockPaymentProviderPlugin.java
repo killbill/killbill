@@ -21,9 +21,9 @@ import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 import com.ning.billing.util.clock.Clock;
 
 public class MockPaymentProviderPlugin extends DefaultNoOpPaymentProviderPlugin implements PaymentPluginApi {
-    
+
     @Inject
-    public MockPaymentProviderPlugin(Clock clock) {
+    public MockPaymentProviderPlugin(final Clock clock) {
         super(clock);
     }
 }

@@ -27,15 +27,14 @@ import com.ning.billing.entitlement.glue.MockEngineModuleSql;
 public class TestUserApiCancelSql extends TestUserApiCancel {
 
 
-    private final int MAX_STRESS_ITERATIONS = 10;
-
     @Override
     public Injector getInjector() {
         return Guice.createInjector(Stage.DEVELOPMENT, new MockEngineModuleSql());
     }
 
-    @Test(enabled= false, groups={"stress"})
+    @Test(enabled = false, groups = {"stress"})
     public void stressTest() throws Exception {
+        final int MAX_STRESS_ITERATIONS = 10;
         for (int i = 0; i < MAX_STRESS_ITERATIONS; i++) {
             cleanupTest();
             setupTest();
@@ -50,25 +49,25 @@ public class TestUserApiCancelSql extends TestUserApiCancel {
     }
 
     @Override
-    @Test(enabled=true, groups={"slow"})
+    @Test(enabled = true, groups = {"slow"})
     public void testCancelSubscriptionIMM() {
         super.testCancelSubscriptionIMM();
     }
 
     @Override
-    @Test(enabled=true, groups={"slow"})
+    @Test(enabled = true, groups = {"slow"})
     public void testCancelSubscriptionEOTWithChargeThroughDate() throws EntitlementBillingApiException {
         super.testCancelSubscriptionEOTWithChargeThroughDate();
     }
 
     @Override
-    @Test(enabled=true, groups={"slow"})
+    @Test(enabled = true, groups = {"slow"})
     public void testCancelSubscriptionEOTWithNoChargeThroughDate() {
         super.testCancelSubscriptionEOTWithNoChargeThroughDate();
     }
 
     @Override
-    @Test(enabled=true, groups={"slow"})
+    @Test(enabled = true, groups = {"slow"})
     public void testUncancel() throws EntitlementBillingApiException {
         super.testUncancel();
     }

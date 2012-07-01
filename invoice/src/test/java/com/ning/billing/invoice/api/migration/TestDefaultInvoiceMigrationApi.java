@@ -21,7 +21,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,6 +68,7 @@ import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.globallocker.GlobalLocker;
+import com.ning.billing.util.io.IOUtils;
 
 @Guice(modules = {MockModuleNoEntitlement.class})
 public class TestDefaultInvoiceMigrationApi extends InvoicingTestBase {

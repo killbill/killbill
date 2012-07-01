@@ -15,12 +15,9 @@
  */
 package com.ning.billing.payment.core;
 
-import static com.ning.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR_NAMED;
-
+import javax.inject.Inject;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
-
-import javax.inject.Inject;
 
 import com.google.inject.name.Named;
 import com.ning.billing.account.api.Account;
@@ -33,20 +30,22 @@ import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.globallocker.GlobalLocker;
 
+import static com.ning.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR_NAMED;
+
 public class RefundProcessor extends ProcessorBase {
 
     @Inject
     public RefundProcessor(final PaymentProviderPluginRegistry pluginRegistry,
-            final AccountUserApi accountUserApi,
-            final Bus eventBus,
-            final PaymentDao paymentDao,
-            final GlobalLocker locker,
-            @Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor) {
-        super(pluginRegistry, accountUserApi, eventBus, paymentDao, locker, executor);        
+                           final AccountUserApi accountUserApi,
+                           final Bus eventBus,
+                           final PaymentDao paymentDao,
+                           final GlobalLocker locker,
+                           @Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor) {
+        super(pluginRegistry, accountUserApi, eventBus, paymentDao, locker, executor);
     }
-    
-    public Refund createRefund(Account account, UUID paymentId, CallContext context)
-    throws PaymentApiException {
+
+    public Refund createRefund(final Account account, final UUID paymentId, final CallContext context)
+            throws PaymentApiException {
         /*
         try {
             

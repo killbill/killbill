@@ -26,15 +26,14 @@ import com.ning.billing.entitlement.glue.MockEngineModuleSql;
 
 public class TestUserApiChangePlanSql extends TestUserApiChangePlan {
 
-    private final int MAX_STRESS_ITERATIONS = 10;
-
     @Override
     public Injector getInjector() {
         return Guice.createInjector(Stage.DEVELOPMENT, new MockEngineModuleSql());
     }
 
-    @Test(enabled= false, groups={"stress"})
+    @Test(enabled = false, groups = {"stress"})
     public void stressTest() throws Exception {
+        final int MAX_STRESS_ITERATIONS = 10;
         for (int i = 0; i < MAX_STRESS_ITERATIONS; i++) {
             cleanupTest();
             setupTest();
@@ -55,44 +54,44 @@ public class TestUserApiChangePlanSql extends TestUserApiChangePlan {
     }
 
     @Override
-    @Test(enabled=true, groups={"slow"})
+    @Test(enabled = true, groups = {"slow"})
     public void testCorrectPhaseAlignmentOnChange() {
         super.testCorrectPhaseAlignmentOnChange();
     }
 
     @Override
-    @Test(enabled=true, groups={"slow"})
+    @Test(enabled = true, groups = {"slow"})
     public void testChangePlanBundleAlignEOTWithNoChargeThroughDate() {
         super.testChangePlanBundleAlignEOTWithNoChargeThroughDate();
     }
 
     @Override
-    @Test(enabled=true, groups={"slow"})
+    @Test(enabled = true, groups = {"slow"})
     public void testChangePlanBundleAlignEOTWithChargeThroughDate() throws EntitlementBillingApiException {
         super.testChangePlanBundleAlignEOTWithChargeThroughDate();
     }
 
     @Override
-    @Test(enabled=true, groups={"slow"})
+    @Test(enabled = true, groups = {"slow"})
     public void testChangePlanBundleAlignIMM() {
         super.testChangePlanBundleAlignIMM();
     }
 
     @Override
-    @Test(enabled=true, groups={"slow"})
+    @Test(enabled = true, groups = {"slow"})
     public void testMultipleChangeLastIMM() throws EntitlementBillingApiException {
         super.testMultipleChangeLastIMM();
     }
 
     @Override
-    @Test(enabled=true, groups={"slow"})
+    @Test(enabled = true, groups = {"slow"})
     public void testMultipleChangeLastEOT() throws EntitlementBillingApiException {
         super.testMultipleChangeLastEOT();
     }
 
     // rescue not implemented yet
     @Override
-    @Test(enabled=false, groups={"slow"})
+    @Test(enabled = false, groups = {"slow"})
     public void testChangePlanChangePlanAlignEOTWithChargeThroughDate() throws EntitlementBillingApiException {
         super.testChangePlanChangePlanAlignEOTWithChargeThroughDate();
     }

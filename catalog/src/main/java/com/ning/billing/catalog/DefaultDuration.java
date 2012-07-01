@@ -31,17 +31,17 @@ import com.ning.billing.util.config.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultDuration extends ValidatingConfig<StandaloneCatalog> implements Duration {
-	@XmlElement(required=true)
+    @XmlElement(required = true)
     private TimeUnit unit;
 
-	@XmlElement(required=false)
+    @XmlElement(required = false)
     private Integer number = -1;
-	
+
     /* (non-Javadoc)
-	 * @see com.ning.billing.catalog.IDuration#getUnit()
-	 */
+      * @see com.ning.billing.catalog.IDuration#getUnit()
+      */
     @Override
-	public TimeUnit getUnit() {
+    public TimeUnit getUnit() {
         return unit;
     }
 
@@ -49,13 +49,15 @@ public class DefaultDuration extends ValidatingConfig<StandaloneCatalog> impleme
 	 * @see com.ning.billing.catalog.IDuration#getLength()
 	 */
     @Override
-	public int getNumber() {
+    public int getNumber() {
         return number;
     }
 
     @Override
-    public DateTime addToDateTime(DateTime dateTime) {
-        if ((number == null) && (unit != TimeUnit.UNLIMITED)) {return dateTime;}
+    public DateTime addToDateTime(final DateTime dateTime) {
+        if ((number == null) && (unit != TimeUnit.UNLIMITED)) {
+            return dateTime;
+        }
 
         switch (unit) {
             case DAYS:
@@ -72,30 +74,32 @@ public class DefaultDuration extends ValidatingConfig<StandaloneCatalog> impleme
     }
 
     @Override
-	public ValidationErrors validate(StandaloneCatalog catalog, ValidationErrors errors) {
+    public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {
         //Validation: TimeUnit UNLIMITED iff number == -1
-        if((unit == TimeUnit.UNLIMITED && number != -1)) {
-            errors.add(new ValidationError("Duration can only have 'UNLIMITED' unit if the number is omitted.", 
-                    catalog.getCatalogURI(), DefaultPlanPhase.class, ""));
+        if ((unit == TimeUnit.UNLIMITED && number != -1)) {
+            errors.add(new ValidationError("Duration can only have 'UNLIMITED' unit if the number is omitted.",
+                                           catalog.getCatalogURI(), DefaultPlanPhase.class, ""));
         }
 
-		//TODO MDW - Validation TimeUnit UNLIMITED iff number == -1
-		return errors;
-	}
+        //TODO MDW - Validation TimeUnit UNLIMITED iff number == -1
+        return errors;
+    }
 
-	protected DefaultDuration setUnit(TimeUnit unit) {
-		this.unit = unit;
-		return this;
-	}
+    protected DefaultDuration setUnit(final TimeUnit unit) {
+        this.unit = unit;
+        return this;
+    }
 
-	protected DefaultDuration setNumber(Integer number) {
-		this.number = number;
-		return this;
-	}
-	
+    protected DefaultDuration setNumber(final Integer number) {
+        this.number = number;
+        return this;
+    }
+
     @Override
     public Period toJodaPeriod() {
-        if ((number == null) && (unit != TimeUnit.UNLIMITED)) {return new Period();}
+        if ((number == null) && (unit != TimeUnit.UNLIMITED)) {
+            return new Period();
+        }
 
         switch (unit) {
             case DAYS:

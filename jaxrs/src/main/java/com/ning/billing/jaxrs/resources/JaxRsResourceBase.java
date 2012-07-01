@@ -16,6 +16,14 @@
 
 package com.ning.billing.jaxrs.resources;
 
+import javax.ws.rs.core.Response;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Collections2;
@@ -32,14 +40,6 @@ import com.ning.billing.util.customfield.StringCustomField;
 import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;
-
-import javax.ws.rs.core.Response;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 public abstract class JaxRsResourceBase implements JaxrsResource {
     private final JaxrsUriBuilder uriBuilder;
@@ -60,15 +60,15 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
     }
 
     protected Response getTags(final UUID id) {
-        Map<String, Tag> tags = tagUserApi.getTags(id, getObjectType());
-        Collection<String> tagNameList = (tags.size() == 0) ?
+        final Map<String, Tag> tags = tagUserApi.getTags(id, getObjectType());
+        final Collection<String> tagNameList = (tags.size() == 0) ?
                 Collections.<String>emptyList() :
-            Collections2.transform(tags.values(), new Function<Tag, String>() {
-                @Override
-                public String apply(Tag input) {
-                    return input.getTagDefinitionName();
-                }
-            });
+                Collections2.transform(tags.values(), new Function<Tag, String>() {
+                    @Override
+                    public String apply(final Tag input) {
+                        return input.getTagDefinitionName();
+                    }
+                });
         return Response.status(Response.Status.OK).entity(tagNameList).build();
     }
 
@@ -78,7 +78,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         try {
             Preconditions.checkNotNull(tagList, "Query % list cannot be null", JaxrsResource.QUERY_TAGS);
 
-            List<TagDefinition> input = tagHelper.getTagDefinitionFromTagList(tagList);
+            final List<TagDefinition> input = tagHelper.getTagDefinitionFromTagList(tagList);
             tagUserApi.addTags(id, getObjectType(), input, context);
 
             return uriBuilder.buildResponse(this.getClass(), "createTags", id);
@@ -98,7 +98,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
                                   final CallContext context) {
 
         try {
-            List<TagDefinition> input = tagHelper.getTagDefinitionFromTagList(tagList);
+            final List<TagDefinition> input = tagHelper.getTagDefinitionFromTagList(tagList);
             tagUserApi.removeTags(id, getObjectType(), input, context);
 
             return Response.status(Response.Status.OK).build();
@@ -114,10 +114,10 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
     }
 
     protected Response getCustomFields(final UUID id) {
-        Map<String, CustomField> fields = customFieldUserApi.getCustomFields(id, getObjectType());
+        final Map<String, CustomField> fields = customFieldUserApi.getCustomFields(id, getObjectType());
 
-        List<CustomFieldJson> result = new LinkedList<CustomFieldJson>();
-        for (CustomField cur : fields.values()) {
+        final List<CustomFieldJson> result = new LinkedList<CustomFieldJson>();
+        for (final CustomField cur : fields.values()) {
             result.add(new CustomFieldJson(cur));
         }
         return Response.status(Response.Status.OK).entity(result).build();
@@ -127,8 +127,8 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
                                           final List<CustomFieldJson> customFields,
                                           final CallContext context) {
         try {
-            LinkedList<CustomField> input = new LinkedList<CustomField>();
-            for (CustomFieldJson cur : customFields) {
+            final LinkedList<CustomField> input = new LinkedList<CustomField>();
+            for (final CustomFieldJson cur : customFields) {
                 input.add(new StringCustomField(cur.getName(), cur.getValue()));
             }
 

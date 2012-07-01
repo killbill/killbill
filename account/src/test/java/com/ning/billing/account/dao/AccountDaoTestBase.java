@@ -16,11 +16,8 @@
 
 package com.ning.billing.account.dao;
 
-import static org.testng.Assert.fail;
-
 import java.io.IOException;
 
-import org.apache.commons.io.IOUtils;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.TransactionCallback;
@@ -30,17 +27,20 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
 import com.ning.billing.dbi.MysqlTestingHelper;
-import com.ning.billing.util.bus.DefaultBusService;
-import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.bus.BusService;
+import com.ning.billing.util.bus.DefaultBusService;
 import com.ning.billing.util.bus.InMemoryBus;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallOrigin;
-import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.callcontext.DefaultCallContextFactory;
+import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.io.IOUtils;
 import com.ning.billing.util.tag.api.user.TagEventBuilder;
+
+import static org.testng.Assert.fail;
 
 public abstract class AccountDaoTestBase {
     private final MysqlTestingHelper helper = new MysqlTestingHelper();
@@ -67,7 +67,7 @@ public abstract class AccountDaoTestBase {
             dbi = helper.getDBI();
 
             bus = new InMemoryBus();
-            BusService busService = new DefaultBusService(bus);
+            final BusService busService = new DefaultBusService(bus);
             ((DefaultBusService) busService).startBus();
 
             accountDao = new AuditedAccountDao(dbi, bus);
@@ -76,17 +76,15 @@ public abstract class AccountDaoTestBase {
             accountEmailDao = new AuditedAccountEmailDao(dbi);
             accountEmailDao.test();
 
-            Clock clock = new ClockMock();
+            final Clock clock = new ClockMock();
             context = new DefaultCallContextFactory(clock).createCallContext("Account Dao Tests", CallOrigin.TEST, UserType.TEST);
-        }
-        catch (Throwable t) {
+        } catch (Throwable t) {
             fail(t.toString());
         }
     }
 
     @AfterClass(alwaysRun = true)
-    public void stopMysql()
-    {
+    public void stopMysql() {
         helper.stopMysql();
     }
 
@@ -94,11 +92,11 @@ public abstract class AccountDaoTestBase {
     public void cleanupData() {
         dbi.inTransaction(new TransactionCallback<Void>() {
             @Override
-            public Void inTransaction(Handle h, TransactionStatus status) throws Exception {
+            public Void inTransaction(final Handle h, final TransactionStatus status) throws Exception {
                 h.execute("truncate table accounts");
                 h.execute("truncate table notifications");
                 h.execute("truncate table bus_events");
-                h.execute("truncate table claimed_bus_events");                              
+                h.execute("truncate table claimed_bus_events");
                 h.execute("truncate table claimed_notifications");
                 h.execute("truncate table tag_definitions");
                 h.execute("truncate table tags");

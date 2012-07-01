@@ -15,19 +15,12 @@
  */
 package com.ning.billing.beatrix.integration;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.fail;
-
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.RandomStringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.IDBI;
@@ -44,6 +37,8 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.AccountService;
 import com.ning.billing.account.api.AccountUserApi;
+import com.ning.billing.analytics.AnalyticsListener;
+import com.ning.billing.analytics.api.user.DefaultAnalyticsUserApi;
 import com.ning.billing.api.TestApiListener;
 import com.ning.billing.api.TestListenerStatus;
 import com.ning.billing.beatrix.lifecycle.Lifecycle;
@@ -63,15 +58,21 @@ import com.ning.billing.invoice.model.InvoicingConfiguration;
 import com.ning.billing.junction.plumbing.api.BlockingSubscription;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
+import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.io.IOUtils;
+
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 public class TestIntegrationBase implements TestListenerStatus {
-
     protected static final int NUMBER_OF_DECIMALS = InvoicingConfiguration.getNumberOfDecimals();
     protected static final int ROUNDING_METHOD = InvoicingConfiguration.getRoundingMode();
 
@@ -81,7 +82,7 @@ public class TestIntegrationBase implements TestListenerStatus {
     protected static final BigDecimal THIRTY_ONE = new BigDecimal("31.0000").setScale(NUMBER_OF_DECIMALS);
 
     protected static final Logger log = LoggerFactory.getLogger(TestIntegration.class);
-    protected static long AT_LEAST_ONE_MONTH_MS =  31L * 24L * 3600L * 1000L;
+    protected static long AT_LEAST_ONE_MONTH_MS = 31L * 24L * 3600L * 1000L;
 
 
     protected static final long DELAY = 5000;
@@ -91,7 +92,7 @@ public class TestIntegrationBase implements TestListenerStatus {
 
     @Inject
     protected ClockMock clock;
-    
+
     protected CallContext context;
 
     @Inject
@@ -116,24 +117,33 @@ public class TestIntegrationBase implements TestListenerStatus {
 
     @Inject
     protected EntitlementTimelineApi repairApi;
-    
+
     @Inject
     protected InvoiceUserApi invoiceUserApi;
 
     @Inject
     protected PaymentApi paymentApi;
-    
+
     @Inject
     protected AccountUserApi accountUserApi;
 
+    @Inject
+    protected DefaultAnalyticsUserApi analyticsUserApi;
+
+    @Inject
+    protected TagUserApi tagUserApi;
+
+    @Inject
+    protected AnalyticsListener analyticsListener;
+
     protected TestApiListener busHandler;
 
-    
+
     private boolean isListenerFailed;
     private String listenerFailedMsg;
-    
+
     @Override
-    public void failed(String msg) {
+    public void failed(final String msg) {
         isListenerFailed = true;
         listenerFailedMsg = msg;
     }
@@ -144,7 +154,7 @@ public class TestIntegrationBase implements TestListenerStatus {
         listenerFailedMsg = null;
     }
 
-    
+
     protected void assertListenerStatus() {
         if (isListenerFailed) {
             log.error(listenerFailedMsg);
@@ -152,9 +162,9 @@ public class TestIntegrationBase implements TestListenerStatus {
         }
     }
 
-    protected void setupMySQL() throws IOException
-    {
+    protected void setupMySQL() throws IOException {
         final String accountDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/account/ddl.sql"));
+        final String analyticsDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/analytics/ddl.sql"));
         final String entitlementDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/entitlement/ddl.sql"));
         final String invoiceDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
         final String paymentDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/payment/ddl.sql"));
@@ -164,6 +174,7 @@ public class TestIntegrationBase implements TestListenerStatus {
         helper.startMysql();
 
         helper.initDb(accountDdl);
+        helper.initDb(analyticsDdl);
         helper.initDb(entitlementDdl);
         helper.initDb(invoiceDdl);
         helper.initDb(paymentDdl);
@@ -171,15 +182,15 @@ public class TestIntegrationBase implements TestListenerStatus {
         helper.initDb(junctionDb);
     }
 
-  
+
     @BeforeClass(groups = "slow")
-    public void setup() throws Exception{
+    public void setup() throws Exception {
 
         setupMySQL();
-        
+
         context = new DefaultCallContextFactory(clock).createCallContext("Integration Test", CallOrigin.TEST, UserType.TEST);
         busHandler = new TestApiListener(this);
-        
+
     }
 
     @AfterClass(groups = "slow")
@@ -193,13 +204,13 @@ public class TestIntegrationBase implements TestListenerStatus {
 
         log.warn("\n");
         log.warn("RESET TEST FRAMEWORK\n\n");
-        
+
         // Pre test cleanup
         helper.cleanupAllTables();
 
         clock.resetDeltaFromReality();
         resetTestListenerStatus();
-        
+
         // Start services
         lifecycle.fireStartupSequencePriorEventRegistration();
         busService.getBus().register(busHandler);
@@ -214,24 +225,24 @@ public class TestIntegrationBase implements TestListenerStatus {
 
         log.warn("DONE WITH TEST\n");
     }
-    
 
-    protected void verifyTestResult(UUID accountId, UUID subscriptionId,
-                                  DateTime startDate, DateTime endDate,
-                                  BigDecimal amount, DateTime chargeThroughDate,
-                                  int totalInvoiceItemCount) throws EntitlementUserApiException {
-        SubscriptionData subscription = subscriptionDataFromSubscription(entitlementUserApi.getSubscriptionFromId(subscriptionId));
 
-        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId);
-        List<InvoiceItem> invoiceItems = new ArrayList<InvoiceItem>();
-        for (Invoice invoice : invoices) {
+    protected void verifyTestResult(final UUID accountId, final UUID subscriptionId,
+                                    final DateTime startDate, final DateTime endDate,
+                                    final BigDecimal amount, final DateTime chargeThroughDate,
+                                    final int totalInvoiceItemCount) throws EntitlementUserApiException {
+        final SubscriptionData subscription = subscriptionDataFromSubscription(entitlementUserApi.getSubscriptionFromId(subscriptionId));
+
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId);
+        final List<InvoiceItem> invoiceItems = new ArrayList<InvoiceItem>();
+        for (final Invoice invoice : invoices) {
             invoiceItems.addAll(invoice.getInvoiceItems());
         }
         assertEquals(invoiceItems.size(), totalInvoiceItemCount);
 
         boolean wasFound = false;
 
-        for (InvoiceItem item : invoiceItems) {
+        for (final InvoiceItem item : invoiceItems) {
             if (item.getStartDate().compareTo(startDate) == 0) {
                 if (item.getEndDate().compareTo(endDate) == 0) {
                     if (item.getAmount().compareTo(amount) == 0) {
@@ -246,34 +257,37 @@ public class TestIntegrationBase implements TestListenerStatus {
             fail();
         }
 
-        DateTime ctd = subscription.getChargedThroughDate();
+        final DateTime ctd = subscription.getChargedThroughDate();
         assertNotNull(ctd);
         log.info("Checking CTD: " + ctd.toString() + "; clock is " + clock.getUTCNow().toString());
         assertTrue(clock.getUTCNow().isBefore(ctd));
         assertTrue(ctd.compareTo(chargeThroughDate) == 0);
     }
-       
-    protected SubscriptionData subscriptionDataFromSubscription(Subscription sub) {
-        return (SubscriptionData)((BlockingSubscription)sub).getDelegateSubscription();
+
+    protected SubscriptionData subscriptionDataFromSubscription(final Subscription sub) {
+        return (SubscriptionData) ((BlockingSubscription) sub).getDelegateSubscription();
     }
-    
-    protected Account createAccountWithPaymentMethod(AccountData accountData) throws Exception {
-        Account account = accountUserApi.createAccount(accountData, context);
+
+    protected Account createAccountWithPaymentMethod(final AccountData accountData) throws Exception {
+        final Account account = accountUserApi.createAccount(accountData, context);
         assertNotNull(account);
-        
-        PaymentMethodPlugin info = new PaymentMethodPlugin() {
+
+        final PaymentMethodPlugin info = new PaymentMethodPlugin() {
             @Override
             public boolean isDefaultPaymentMethod() {
                 return false;
             }
+
             @Override
-            public String getValueString(String key) {
+            public String getValueString(final String key) {
                 return null;
             }
+
             @Override
             public List<PaymentMethodKVInfo> getProperties() {
                 return null;
             }
+
             @Override
             public String getExternalPaymentMethodId() {
                 return UUID.randomUUID().toString();
@@ -283,35 +297,37 @@ public class TestIntegrationBase implements TestListenerStatus {
         return accountUserApi.getAccountById(account.getId());
     }
 
-    
-    protected AccountData getAccountData(final int billingDay) {
 
-        final String someRandomKey = RandomStringUtils.randomAlphanumeric(10);
+    protected AccountData getAccountData(final int billingDay) {
+        final String someRandomKey = UUID.randomUUID().toString();
         return new AccountData() {
             @Override
             public String getName() {
                 return "firstName lastName";
             }
+
             @Override
-            public int getFirstNameLength() {
+            public Integer getFirstNameLength() {
                 return "firstName".length();
             }
+
             @Override
             public String getEmail() {
-                return  someRandomKey + "@laposte.fr";
+                return someRandomKey + "@laposte.fr";
             }
+
             @Override
             public String getPhone() {
                 return "4152876341";
             }
 
             @Override
-            public boolean isMigrated() {
+            public Boolean isMigrated() {
                 return false;
             }
 
             @Override
-            public boolean isNotifiedForInvoices() {
+            public Boolean isNotifiedForInvoices() {
                 return false;
             }
 
@@ -319,14 +335,17 @@ public class TestIntegrationBase implements TestListenerStatus {
             public String getExternalKey() {
                 return someRandomKey;
             }
+
             @Override
-            public int getBillCycleDay() {
+            public Integer getBillCycleDay() {
                 return billingDay;
             }
+
             @Override
             public Currency getCurrency() {
                 return Currency.USD;
             }
+
             @Override
             public UUID getPaymentMethodId() {
                 return null;

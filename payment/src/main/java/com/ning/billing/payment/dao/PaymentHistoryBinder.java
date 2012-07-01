@@ -35,16 +35,16 @@ import com.ning.billing.util.dao.EntityHistory;
 public @interface PaymentHistoryBinder {
     public static class PaymentHistoryBinderFactory extends BinderBase implements BinderFactory {
         @Override
-        public Binder<PaymentHistoryBinder, EntityHistory<PaymentModelDao>> build(Annotation annotation) {
+        public Binder<PaymentHistoryBinder, EntityHistory<PaymentModelDao>> build(final Annotation annotation) {
             return new Binder<PaymentHistoryBinder, EntityHistory<PaymentModelDao>>() {
                 @Override
-                public void bind(@SuppressWarnings("rawtypes") SQLStatement q, PaymentHistoryBinder bind, EntityHistory<PaymentModelDao> history) {
+                public void bind(final SQLStatement<?> q, final PaymentHistoryBinder bind, final EntityHistory<PaymentModelDao> history) {
                     q.bind("recordId", history.getValue());
                     q.bind("changeType", history.getChangeType().toString());
-                    PaymentModelDao payment = history.getEntity();
+                    final PaymentModelDao payment = history.getEntity();
                     q.bind("id", payment.getId().toString());
-                    q.bind("accountId", payment.getAccountId().toString());            
-                    q.bind("invoiceId", payment.getInvoiceId().toString());            
+                    q.bind("accountId", payment.getAccountId().toString());
+                    q.bind("invoiceId", payment.getInvoiceId().toString());
                     q.bind("paymentMethodId", ""); //payment.getPaymentMethodId().toString());
                     q.bind("amount", payment.getAmount());
                     q.bind("currency", payment.getCurrency().toString());

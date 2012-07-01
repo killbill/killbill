@@ -23,15 +23,14 @@ import com.ning.billing.config.KillbillConfig;
 import com.ning.billing.config.NotificationConfig;
 
 
-public interface OverdueProperties extends NotificationConfig, KillbillConfig  {
-
+public interface OverdueProperties extends NotificationConfig, KillbillConfig {
     @Override
     @Config("killbill.overdue.engine.notifications.sleep")
     @Default("500")
     public long getSleepTimeMs();
 
     @Override
-    @Config("killbill.notifications.off")
+    @Config("killbill.overdue.engine.notifications.off")
     @Default("false")
     public boolean isNotificationProcessingOff();
 
@@ -39,7 +38,7 @@ public interface OverdueProperties extends NotificationConfig, KillbillConfig  {
     @Default("36")
     public int getNumberOfMonthsInFuture();
 
-    @Config("killbill.overdue.configUri")
+    @Config("killbill.overdue.uri")
     @Default("jar:///com/ning/billing/irs/overdue/Config.xml")
     public String getConfigURI();
 }

@@ -30,17 +30,17 @@ import com.ning.billing.overdue.config.OverdueConfig;
 import com.ning.billing.util.config.XMLLoader;
 
 public class TestOverdueWrapper extends OverdueTestBase {
-    @Test( groups={"fast"} , enabled = true)
+    @Test(groups = {"fast"}, enabled = true)
     public void testWrapperBasic() throws Exception {
-        InputStream is = new ByteArrayInputStream(configXml.getBytes());
-        config = XMLLoader.getObjectFromStreamNoValidation(is,  OverdueConfig.class);
+        final InputStream is = new ByteArrayInputStream(configXml.getBytes());
+        config = XMLLoader.getObjectFromStreamNoValidation(is, OverdueConfig.class);
         overdueWrapperFactory.setOverdueConfig(config);
-        
+
         SubscriptionBundle bundle;
-        OverdueWrapper<SubscriptionBundle> wrapper ;
+        OverdueWrapper<SubscriptionBundle> wrapper;
         OverdueState<SubscriptionBundle> state;
 
-        state = config.getBundleStateSet().findState("OD1"); 
+        state = config.getBundleStateSet().findState("OD1");
         bundle = createBundle(clock.getUTCNow().minusDays(31));
         wrapper = overdueWrapperFactory.createOverdueWrapperFor(bundle);
         wrapper.refresh();
@@ -60,25 +60,26 @@ public class TestOverdueWrapper extends OverdueTestBase {
         checkStateApplied(state);
 
     }
-    @Test( groups={"fast"} , enabled = true)
+
+    @Test(groups = {"fast"}, enabled = true)
     public void testWrapperNoConfig() throws Exception {
 
         overdueWrapperFactory.setOverdueConfig(null);
-        
 
-        SubscriptionBundle bundle;
-        OverdueWrapper<SubscriptionBundle> wrapper ;
-        OverdueState<SubscriptionBundle> state;
 
-        InputStream is = new ByteArrayInputStream(configXml.getBytes());
-        config = XMLLoader.getObjectFromStreamNoValidation(is,  OverdueConfig.class);
-        state = config.getBundleStateSet().findState(BlockingApi.CLEAR_STATE_NAME); 
+        final SubscriptionBundle bundle;
+        final OverdueWrapper<SubscriptionBundle> wrapper;
+        final OverdueState<SubscriptionBundle> state;
+
+        final InputStream is = new ByteArrayInputStream(configXml.getBytes());
+        config = XMLLoader.getObjectFromStreamNoValidation(is, OverdueConfig.class);
+        state = config.getBundleStateSet().findState(BlockingApi.CLEAR_STATE_NAME);
         bundle = createBundle(clock.getUTCNow().minusDays(31));
         wrapper = overdueWrapperFactory.createOverdueWrapperFor(bundle);
-        OverdueState<SubscriptionBundle> result = wrapper.refresh();
+        final OverdueState<SubscriptionBundle> result = wrapper.refresh();
 
 
-        Assert.assertEquals(result.getName(),state.getName());
+        Assert.assertEquals(result.getName(), state.getName());
         Assert.assertEquals(result.blockChanges(), state.blockChanges());
         Assert.assertEquals(result.disableEntitlementAndChangesBlocked(), state.disableEntitlementAndChangesBlocked());
 

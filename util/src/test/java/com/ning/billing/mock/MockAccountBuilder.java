@@ -21,29 +21,30 @@ import java.util.UUID;
 import org.joda.time.DateTimeZone;
 
 import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.MutableAccountData;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.junction.api.BlockingState;
 
 public class MockAccountBuilder {
     private final UUID id;
-    private String externalKey;
-    private String email;
-    private String name;
+    private String externalKey = "";
+    private String email = "";
+    private String name = "";
     private int firstNameLength;
-    private Currency currency;
+    private Currency currency = Currency.USD;
     private int billingCycleDay;
     private UUID paymentMethodId;
-    private DateTimeZone timeZone;
-    private String locale;
-    private String address1;
-    private String address2;
-    private String companyName;
-    private String city;
-    private String stateOrProvince;
-    private String country;
-    private String postalCode;
-    private String phone;
+    private DateTimeZone timeZone = DateTimeZone.UTC;
+    private String locale = "";
+    private String address1 = "";
+    private String address2 = "";
+    private String companyName = "";
+    private String city = "";
+    private String stateOrProvince = "";
+    private String country = "";
+    private String postalCode = "";
+    private String phone = "";
     private boolean migrated;
     private boolean isNotifiedForInvoices;
 
@@ -53,6 +54,29 @@ public class MockAccountBuilder {
 
     public MockAccountBuilder(final UUID id) {
         this.id = id;
+    }
+
+    public MockAccountBuilder(final AccountData data) {
+        this.id = UUID.randomUUID();
+        this.address1(data.getAddress1());
+        this.address2(data.getAddress2());
+        this.billingCycleDay(data.getBillCycleDay());
+        this.city(data.getCity());
+        this.companyName(data.getCompanyName());
+        this.country(data.getCountry());
+        this.currency(data.getCurrency());
+        this.email(data.getEmail());
+        this.externalKey(data.getExternalKey());
+        this.firstNameLength(data.getFirstNameLength());
+        this.isNotifiedForInvoices(data.isNotifiedForInvoices());
+        this.locale(data.getLocale());
+        this.migrated(data.isMigrated());
+        this.name(data.getName());
+        this.paymentMethodId(data.getPaymentMethodId());
+        this.phone(data.getPhone());
+        this.postalCode(data.getPostalCode());
+        this.stateOrProvince(data.getStateOrProvince());
+        this.timeZone(data.getTimeZone());
     }
 
     public MockAccountBuilder externalKey(final String externalKey) {
@@ -151,8 +175,7 @@ public class MockAccountBuilder {
     }
 
     public Account build() {
-        return new Account(){
-            
+        return new Account() {
             @Override
             public String getExternalKey() {
                 return externalKey;
@@ -160,109 +183,109 @@ public class MockAccountBuilder {
 
             @Override
             public String getName() {
-               
+
                 return name;
             }
 
             @Override
-            public int getFirstNameLength() {
-               
+            public Integer getFirstNameLength() {
+
                 return firstNameLength;
             }
 
             @Override
             public String getEmail() {
-               
+
                 return email;
             }
 
             @Override
-            public int getBillCycleDay() {
-               
+            public Integer getBillCycleDay() {
+
                 return billingCycleDay;
             }
 
             @Override
             public Currency getCurrency() {
-               
+
                 return currency;
             }
 
             @Override
             public UUID getPaymentMethodId() {
-               
+
                 return paymentMethodId;
             }
 
             @Override
             public DateTimeZone getTimeZone() {
-               
+
                 return timeZone;
             }
 
             @Override
             public String getLocale() {
-               
+
                 return locale;
             }
 
             @Override
             public String getAddress1() {
-               
+
                 return address1;
             }
 
             @Override
             public String getAddress2() {
-               
+
                 return address2;
             }
 
             @Override
             public String getCompanyName() {
-               
+
                 return companyName;
             }
 
             @Override
             public String getCity() {
-               
+
                 return city;
             }
 
             @Override
             public String getStateOrProvince() {
-               
+
                 return stateOrProvince;
             }
 
             @Override
             public String getPostalCode() {
-               
+
                 return postalCode;
             }
 
             @Override
             public String getCountry() {
-               
+
                 return country;
             }
 
             @Override
             public String getPhone() {
-               
+
                 return phone;
             }
 
             @Override
-            public boolean isMigrated() {
-               
+            public Boolean isMigrated() {
+
                 return migrated;
             }
 
             @Override
-            public boolean isNotifiedForInvoices() {
-               
+            public Boolean isNotifiedForInvoices() {
+
                 return isNotifiedForInvoices;
             }
 
@@ -278,6 +301,11 @@ public class MockAccountBuilder {
 
             @Override
             public MutableAccountData toMutableAccountData() {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Account mergeWithDelegate(final Account delegate) {
                 throw new UnsupportedOperationException();
             }
         };

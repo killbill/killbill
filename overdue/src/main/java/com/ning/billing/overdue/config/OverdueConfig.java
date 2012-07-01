@@ -16,22 +16,21 @@
 
 package com.ning.billing.overdue.config;
 
-import java.net.URI;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.net.URI;
 
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationErrors;
 
-@XmlRootElement(name="overdueConfig")
+@XmlRootElement(name = "overdueConfig")
 @XmlAccessorType(XmlAccessType.NONE)
-public class OverdueConfig  extends ValidatingConfig<OverdueConfig> {
+public class OverdueConfig extends ValidatingConfig<OverdueConfig> {
 
-    @XmlElement(required=true, name="bundleOverdueStates")
+    @XmlElement(required = true, name = "bundleOverdueStates")
     private OverdueStatesBundle bundleOverdueStates = new OverdueStatesBundle();
 
     public DefaultOverdueStateSet<SubscriptionBundle> getBundleStateSet() {
@@ -39,12 +38,12 @@ public class OverdueConfig  extends ValidatingConfig<OverdueConfig> {
     }
 
     @Override
-    public ValidationErrors validate(OverdueConfig root,
-            ValidationErrors errors) {
+    public ValidationErrors validate(final OverdueConfig root,
+                                     final ValidationErrors errors) {
         return bundleOverdueStates.validate(root, errors);
     }
-    
-    public OverdueConfig setOverdueStatesBundle(OverdueStatesBundle bundleODS) {
+
+    public OverdueConfig setOverdueStatesBundle(final OverdueStatesBundle bundleODS) {
         this.bundleOverdueStates = bundleODS;
         return this;
     }

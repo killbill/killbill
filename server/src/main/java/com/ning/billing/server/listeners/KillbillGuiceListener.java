@@ -16,6 +16,13 @@
 package com.ning.billing.server.listeners;
 
 
+import javax.servlet.ServletContextEvent;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.inject.Injector;
+import com.google.inject.Module;
 import com.ning.billing.beatrix.lifecycle.DefaultLifecycle;
 import com.ning.billing.jaxrs.util.KillbillEventHandler;
 import com.ning.billing.server.config.KillbillServerConfig;
@@ -26,18 +33,7 @@ import com.ning.billing.util.bus.BusService;
 import com.ning.jetty.base.modules.ServerModuleBuilder;
 import com.ning.jetty.core.listeners.SetupServer;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.PropertyNamingStrategy;
-import com.google.inject.Injector;
-import com.google.inject.Module;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.servlet.ServletContextEvent;
-
-public class KillbillGuiceListener extends SetupServer
-{
+public class KillbillGuiceListener extends SetupServer {
     public static final Logger logger = LoggerFactory.getLogger(KillbillGuiceListener.class);
 
     private DefaultLifecycle killbillLifecycle;
@@ -46,13 +42,14 @@ public class KillbillGuiceListener extends SetupServer
 
 
     protected Module getModule() {
-    	return new KillbillServerModule();
+        return new KillbillServerModule();
     }
 
+    
+   
     @Override
-    public void contextInitialized(ServletContextEvent event)
-    {
-    	
+    public void contextInitialized(final ServletContextEvent event) {
+
 
         final ServerModuleBuilder builder = new ServerModuleBuilder()
                 .addConfig(KillbillServerConfig.class)
@@ -67,16 +64,16 @@ public class KillbillGuiceListener extends SetupServer
         super.contextInitialized(event);
 
         logger.info("KillbillLifecycleListener : contextInitialized");
-        Injector theInjector = injector(event);
+        final Injector theInjector = injector(event);
         killbillLifecycle = theInjector.getInstance(DefaultLifecycle.class);
         killbillBusService = theInjector.getInstance(BusService.class);
-        killbilleventHandler = theInjector.getInstance(KillbillEventHandler.class); 
-        
+        killbilleventHandler = theInjector.getInstance(KillbillEventHandler.class);
+
         /*
-        ObjectMapper mapper = theInjector.getInstance(ObjectMapper.class);
-        mapper.setPropertyNamingStrategy(new PropertyNamingStrategy.LowerCaseWithUnderscoresStrategy());
-*/
-        
+                ObjectMapper mapper = theInjector.getInstance(ObjectMapper.class);
+                mapper.setPropertyNamingStrategy(new PropertyNamingStrategy.LowerCaseWithUnderscoresStrategy());
+        */
+
         //
         // Fire all Startup levels up to service start
         //
@@ -86,8 +83,7 @@ public class KillbillGuiceListener extends SetupServer
         //
         try {
             killbillBusService.getBus().register(killbilleventHandler);
-        }
-        catch (Bus.EventBusException e) {
+        } catch (Bus.EventBusException e) {
             logger.error("Failed to register for event notifications, this is bad exiting!", e);
             System.exit(1);
         }
@@ -96,8 +92,7 @@ public class KillbillGuiceListener extends SetupServer
     }
 
     @Override
-    public void contextDestroyed(ServletContextEvent sce)
-    {
+    public void contextDestroyed(final ServletContextEvent sce) {
         super.contextDestroyed(sce);
 
         logger.info("IrsKillbillListener : contextDestroyed");
@@ -111,8 +106,7 @@ public class KillbillGuiceListener extends SetupServer
 
         try {
             killbillBusService.getBus().unregister(killbilleventHandler);
-        }
-        catch (Bus.EventBusException e) {
+        } catch (Bus.EventBusException e) {
             logger.warn("Failed to unregister for event notifications", e);
         }
 

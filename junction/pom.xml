@@ -13,7 +13,7 @@
     <parent>
         <groupId>com.ning.billing</groupId>
         <artifactId>killbill</artifactId>
-        <version>0.1.13-SNAPSHOT</version>
+        <version>0.1.20-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>killbill-junction</artifactId>
@@ -28,7 +28,7 @@
             <groupId>com.ning.billing</groupId>
             <artifactId>killbill-util</artifactId>
         </dependency>
-         <dependency>
+        <dependency>
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
             <scope>provided</scope>
@@ -41,7 +41,7 @@
             <groupId>joda-time</groupId>
             <artifactId>joda-time</artifactId>
         </dependency>
-         <dependency>
+        <dependency>
             <groupId>org.jdbi</groupId>
             <artifactId>jdbi</artifactId>
         </dependency>
@@ -50,12 +50,12 @@
             <artifactId>testng</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- TEST SCOPE -->
         <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
             <scope>test</scope>
         </dependency>
-        <!-- TEST SCOPE -->
         <dependency>
             <groupId>com.ning.billing</groupId>
             <artifactId>killbill-util</artifactId>
@@ -78,7 +78,7 @@
             <artifactId>mockito-all</artifactId>
             <scope>test</scope>
         </dependency>
-         <dependency>
+        <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
             <scope>runtime</scope>
@@ -99,7 +99,6 @@
             <artifactId>guava</artifactId>
            <scope>test</scope>
          </dependency>
- 
     </dependencies>
     <build>
         <plugins>

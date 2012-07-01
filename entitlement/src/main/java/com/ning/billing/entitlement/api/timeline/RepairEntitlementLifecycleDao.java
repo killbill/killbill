@@ -23,6 +23,6 @@ import com.ning.billing.entitlement.events.EntitlementEvent;
 public interface RepairEntitlementLifecycleDao {
 
     public void initializeRepair(final UUID subscriptionId, final List<EntitlementEvent> initialEvents);
-    
+
     public void cleanup();
 }

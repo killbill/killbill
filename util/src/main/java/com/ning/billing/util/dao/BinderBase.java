@@ -16,17 +16,17 @@
 
 package com.ning.billing.util.dao;
 
-import org.joda.time.DateTime;
-
 import java.util.Date;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
+
 public abstract class BinderBase {
-    protected Date getDate(DateTime dateTime) {
+    protected Date getDate(final DateTime dateTime) {
         return dateTime == null ? null : dateTime.toDate();
     }
 
-    protected String uuidToString(UUID uuid) {
+    protected String uuidToString(final UUID uuid) {
         if (uuid == null) {
             return null;
         } else {

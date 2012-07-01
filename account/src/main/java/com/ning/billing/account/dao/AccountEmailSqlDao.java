@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2012 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -38,64 +38,30 @@ import com.ning.billing.util.entity.collection.dao.UpdatableEntityCollectionSqlD
 @RegisterMapper(AccountEmailMapper.class)
 public interface AccountEmailSqlDao extends UpdatableEntityCollectionSqlDao<AccountEmail>, Transactional<AccountEmailSqlDao>, Transmogrifier {
     @Override
-    @SqlBatch(transactional=false)
+    @SqlBatch
     public void insertFromTransaction(@Bind("objectId") final String objectId,
                                       @ObjectTypeBinder final ObjectType objectType,
                                       @AccountEmailBinder final Collection<AccountEmail> entities,
                                       @CallContextBinder final CallContext context);
 
     @Override
-    @SqlBatch(transactional=false)
+    @SqlBatch
     public void updateFromTransaction(@Bind("objectId") final String objectId,
                                       @ObjectTypeBinder final ObjectType objectType,
                                       @AccountEmailBinder final Collection<AccountEmail> entities,
                                       @CallContextBinder final CallContext context);
 
     @Override
-    @SqlBatch(transactional=false)
+    @SqlBatch
     public void deleteFromTransaction(@Bind("objectId") final String objectId,
                                       @ObjectTypeBinder final ObjectType objectType,
                                       @AccountEmailBinder final Collection<AccountEmail> entities,
                                       @CallContextBinder final CallContext context);
 
     @Override
-    @SqlBatch(transactional=false)
+    @SqlBatch
     public void addHistoryFromTransaction(@Bind("objectId") final String objectId,
-                                               @ObjectTypeBinder final ObjectType objectType,
-                                               @AccountEmailHistoryBinder final List<EntityHistory<AccountEmail>> entities,
-                                               @CallContextBinder final CallContext context);
-//    @Override
-//    @SqlUpdate
-//    public void create(@AccountEmailBinder final AccountEmail accountEmail,
-//                       @CallContextBinder final CallContext context);
-
-//    @SqlBatch(transactional = false)
-//    public void create(@AccountEmailBinder final List<AccountEmail> accountEmailList,
-//                       @CallContextBinder final CallContext context);
-
-//    @Override
-//    @SqlUpdate
-//    public void update(@AccountEmailBinder final AccountEmail accountEmail,
-//                       @CallContextBinder final CallContext context);
-//
-//    @SqlBatch(transactional = false)
-//    public void update(@AccountEmailBinder final List<AccountEmail> accountEmailList,
-//                       @CallContextBinder final CallContext context);
-//
-//    @SqlUpdate
-//    public void delete(@AccountEmailBinder final AccountEmail accountEmail,
-//                       @CallContextBinder final CallContext context);
-//
-//    @SqlBatch(transactional = false)
-//    public void delete(@AccountEmailBinder final List<AccountEmail> accountEmailList,
-//                       @CallContextBinder final CallContext context);
-//
-//    @SqlBatch(transactional=false)
-//    public void insertAccountEmailHistoryFromTransaction(@Bind("historyRecordId") final List<String> historyRecordIdList,
-//                                                         @AccountEmailBinder final List<AccountEmail> accountEmail,
-//                                                         @ChangeTypeBinder final ChangeType changeType,
-//                                                         @CallContextBinder final CallContext context);
-//
-//    @SqlQuery
-//    public List<AccountEmail> getByAccountId(@Bind("accountId") final String accountId);
+                                          @ObjectTypeBinder final ObjectType objectType,
+                                          @AccountEmailHistoryBinder final List<EntityHistory<AccountEmail>> entities,
+                                          @CallContextBinder final CallContext context);
 }

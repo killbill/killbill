@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.util.SortedSet;
 import java.util.UUID;
 
-import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -43,21 +42,22 @@ import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.mock.glue.MockEntitlementModule;
 import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.io.IOUtils;
 
-@Guice(modules = { MockModule.class, MockEntitlementModule.class })
+@Guice(modules = {MockModule.class, MockEntitlementModule.class})
 public class TestBlockingApi {
-    private Logger log = LoggerFactory.getLogger(TestBlockingDao.class);
-    
+    private final Logger log = LoggerFactory.getLogger(TestBlockingDao.class);
+
     @Inject
     private MysqlTestingHelper helper;
-    
-    @Inject 
+
+    @Inject
     private BlockingApi api;
-    
+
     @Inject
     private ClockMock clock;
 
-    @BeforeClass(groups={"slow"})
+    @BeforeClass(groups = {"slow"})
     public void setup() throws IOException {
         log.info("Starting set up TestBlockingApi");
 
@@ -65,82 +65,80 @@ public class TestBlockingApi {
 
         helper.startMysql();
         helper.initDb(utilDdl);
-     
     }
-    
-    @BeforeMethod(groups={"slow"})
-    public void clean() {       
+
+    @BeforeMethod(groups = {"slow"})
+    public void clean() {
         helper.cleanupTable("blocking_states");
         clock.resetDeltaFromReality();
     }
-    
+
     @AfterClass(groups = "slow")
-    public void stopMysql()
-    {
+    public void stopMysql() {
         helper.stopMysql();
     }
 
-    @Test(groups={"slow"}, enabled=true)
-    public void testApi() { 
+    @Test(groups = {"slow"}, enabled = true)
+    public void testApi() {
 
-        UUID uuid = UUID.randomUUID();
-        String overdueStateName = "WayPassedItMan";
-        String service = "TEST";
-        
-        boolean blockChange = true;
-        boolean blockEntitlement = false;
-        boolean blockBilling = false;
+        final UUID uuid = UUID.randomUUID();
+        final String overdueStateName = "WayPassedItMan";
+        final String service = "TEST";
 
-        BlockingState state1 = new DefaultBlockingState(uuid, overdueStateName, Blockable.Type.SUBSCRIPTION_BUNDLE, service, blockChange, blockEntitlement,blockBilling);
+        final boolean blockChange = true;
+        final boolean blockEntitlement = false;
+        final boolean blockBilling = false;
+
+        final BlockingState state1 = new DefaultBlockingState(uuid, overdueStateName, Blockable.Type.SUBSCRIPTION_BUNDLE, service, blockChange, blockEntitlement, blockBilling);
         api.setBlockingState(state1);
         clock.setDeltaFromReality(1000 * 3600 * 24);
-        
-        String overdueStateName2 = "NoReallyThisCantGoOn";
-        BlockingState state2 = new DefaultBlockingState(uuid, overdueStateName2, Blockable.Type.SUBSCRIPTION_BUNDLE, service, blockChange, blockEntitlement,blockBilling);
+
+        final String overdueStateName2 = "NoReallyThisCantGoOn";
+        final BlockingState state2 = new DefaultBlockingState(uuid, overdueStateName2, Blockable.Type.SUBSCRIPTION_BUNDLE, service, blockChange, blockEntitlement, blockBilling);
         api.setBlockingState(state2);
-        
-        SubscriptionBundle bundle = BrainDeadProxyFactory.createBrainDeadProxyFor(SubscriptionBundle.class);
-        ((ZombieControl)bundle).addResult("getId", uuid);
-        
+
+        final SubscriptionBundle bundle = BrainDeadProxyFactory.createBrainDeadProxyFor(SubscriptionBundle.class);
+        ((ZombieControl) bundle).addResult("getId", uuid);
+
         Assert.assertEquals(api.getBlockingStateFor(bundle).getStateName(), overdueStateName2);
         Assert.assertEquals(api.getBlockingStateFor(bundle.getId()).getStateName(), overdueStateName2);
-        
-    }
-    
-    @Test(groups={"slow"}, enabled=true)
-    public void testApiHistory() throws Exception { 
-        UUID uuid = UUID.randomUUID();
-        String overdueStateName = "WayPassedItMan";
-        String service = "TEST";
-        
-        boolean blockChange = true;
-        boolean blockEntitlement = false;
-        boolean blockBilling = false;
 
-        BlockingState state1 = new DefaultBlockingState(uuid, overdueStateName, Blockable.Type.SUBSCRIPTION_BUNDLE, service, blockChange, blockEntitlement,blockBilling);
+    }
+
+    @Test(groups = {"slow"}, enabled = true)
+    public void testApiHistory() throws Exception {
+        final UUID uuid = UUID.randomUUID();
+        final String overdueStateName = "WayPassedItMan";
+        final String service = "TEST";
+
+        final boolean blockChange = true;
+        final boolean blockEntitlement = false;
+        final boolean blockBilling = false;
+
+        final BlockingState state1 = new DefaultBlockingState(uuid, overdueStateName, Blockable.Type.SUBSCRIPTION_BUNDLE, service, blockChange, blockEntitlement, blockBilling);
         api.setBlockingState(state1);
-        
+
         clock.setDeltaFromReality(1000 * 3600 * 24);
 
-        String overdueStateName2 = "NoReallyThisCantGoOn";
-        BlockingState state2 = new DefaultBlockingState(uuid, overdueStateName2, Blockable.Type.SUBSCRIPTION_BUNDLE, service, blockChange, blockEntitlement,blockBilling);
+        final String overdueStateName2 = "NoReallyThisCantGoOn";
+        final BlockingState state2 = new DefaultBlockingState(uuid, overdueStateName2, Blockable.Type.SUBSCRIPTION_BUNDLE, service, blockChange, blockEntitlement, blockBilling);
         api.setBlockingState(state2);
-        
-        SubscriptionBundle bundle = BrainDeadProxyFactory.createBrainDeadProxyFor(SubscriptionBundle.class);
-        ((ZombieControl)bundle).addResult("getId", uuid);
-        
-     
-        SortedSet<BlockingState> history1 = api.getBlockingHistory(bundle);
-        SortedSet<BlockingState> history2 = api.getBlockingHistory(bundle.getId());
-        
+
+        final SubscriptionBundle bundle = BrainDeadProxyFactory.createBrainDeadProxyFor(SubscriptionBundle.class);
+        ((ZombieControl) bundle).addResult("getId", uuid);
+
+
+        final SortedSet<BlockingState> history1 = api.getBlockingHistory(bundle);
+        final SortedSet<BlockingState> history2 = api.getBlockingHistory(bundle.getId());
+
         Assert.assertEquals(history1.size(), 2);
         Assert.assertEquals(history1.first().getStateName(), overdueStateName);
         Assert.assertEquals(history1.last().getStateName(), overdueStateName2);
-        
+
         Assert.assertEquals(history2.size(), 2);
         Assert.assertEquals(history2.first().getStateName(), overdueStateName);
         Assert.assertEquals(history2.last().getStateName(), overdueStateName2);
-       
+
     }
-    
+
 }

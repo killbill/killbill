@@ -26,13 +26,13 @@ import com.ning.billing.dbi.MysqlTestingHelper;
 
 public class MockDbHelperModule extends AbstractModule {
 
-    
+
     @Override
     protected void configure() {
         installMysqlTestingHelper();
     }
-    
-    public void  installMysqlTestingHelper() {
+
+    public void installMysqlTestingHelper() {
 
         final MysqlTestingHelper helper = new MysqlTestingHelper();
         bind(MysqlTestingHelper.class).toInstance(helper);
@@ -41,10 +41,10 @@ public class MockDbHelperModule extends AbstractModule {
             final DbiConfig config = new ConfigurationObjectFactory(System.getProperties()).build(DbiConfig.class);
             bind(DbiConfig.class).toInstance(config);
         } else {
-            final IDBI dbi = helper.getDBI(); 
+            final IDBI dbi = helper.getDBI();
             bind(IDBI.class).toInstance(dbi);
         }
 
     }
-    
+
 }

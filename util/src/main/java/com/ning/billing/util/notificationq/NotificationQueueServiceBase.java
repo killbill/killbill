@@ -29,7 +29,6 @@ import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 import com.ning.billing.config.NotificationConfig;
 import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotificationQueue;
 
 public abstract class NotificationQueueServiceBase implements NotificationQueueService {
 
@@ -45,22 +44,22 @@ public abstract class NotificationQueueServiceBase implements NotificationQueueS
         this.queues = new TreeMap<String, NotificationQueue>();
     }
 
-    
+
     @Override
-    public NotificationQueue createNotificationQueue(String svcName,
-            String queueName, NotificationQueueHandler handler,
-            NotificationConfig config) throws NotificationQueueAlreadyExists {
+    public NotificationQueue createNotificationQueue(final String svcName,
+                                                     final String queueName, final NotificationQueueHandler handler,
+                                                     final NotificationConfig config) throws NotificationQueueAlreadyExists {
         if (svcName == null || queueName == null || handler == null || config == null) {
             throw new RuntimeException("Need to specify all parameters");
         }
 
-        String compositeName = getCompositeName(svcName, queueName);
+        final String compositeName = getCompositeName(svcName, queueName);
         NotificationQueue result = null;
-        synchronized(queues) {
+        synchronized (queues) {
             result = queues.get(compositeName);
             if (result != null) {
                 throw new NotificationQueueAlreadyExists(String.format("Queue for svc %s and name %s already exist",
-                        svcName, queueName));
+                                                                       svcName, queueName));
             }
             result = createNotificationQueueInternal(svcName, queueName, handler, config);
             queues.put(compositeName, result);
@@ -69,30 +68,30 @@ public abstract class NotificationQueueServiceBase implements NotificationQueueS
     }
 
     @Override
-    public NotificationQueue getNotificationQueue(String svcName,
-            String queueName) throws NoSuchNotificationQueue {
+    public NotificationQueue getNotificationQueue(final String svcName,
+                                                  final String queueName) throws NoSuchNotificationQueue {
 
         NotificationQueue result = null;
-        String compositeName = getCompositeName(svcName, queueName);
-        synchronized(queues) {
+        final String compositeName = getCompositeName(svcName, queueName);
+        synchronized (queues) {
             result = queues.get(compositeName);
             if (result == null) {
                 throw new NoSuchNotificationQueue(String.format("Queue for svc %s and name %s does not exist",
-                        svcName, queueName));
+                                                                svcName, queueName));
             }
         }
         return result;
     }
 
-    
+
     public void deleteNotificationQueue(final String svcName, final String queueName)
-        throws NoSuchNotificationQueue {
-        String compositeName = getCompositeName(svcName, queueName);
-        synchronized(queues) {
-            NotificationQueue result = queues.get(compositeName);
+            throws NoSuchNotificationQueue {
+        final String compositeName = getCompositeName(svcName, queueName);
+        synchronized (queues) {
+            final NotificationQueue result = queues.get(compositeName);
             if (result == null) {
                 throw new NoSuchNotificationQueue(String.format("Queue for svc %s and name %s does not exist",
-                        svcName, queueName));
+                                                                svcName, queueName));
             }
             queues.remove(compositeName);
         }
@@ -103,7 +102,7 @@ public abstract class NotificationQueueServiceBase implements NotificationQueueS
     // Test ONLY
     //
     @Override
-    public int triggerManualQueueProcessing(final String [] services, final Boolean keepRunning) {
+    public int triggerManualQueueProcessing(final String[] services, final Boolean keepRunning) {
 
         int result = 0;
 
@@ -111,30 +110,30 @@ public abstract class NotificationQueueServiceBase implements NotificationQueueS
         if (services == null) {
             manualQueues = new ArrayList<NotificationQueue>(queues.values());
         } else {
-            Joiner join = Joiner.on(",");
+            final Joiner join = Joiner.on(",");
             join.join(services);
 
             log.info("Trigger manual processing for services {} ", join.toString());
             manualQueues = new LinkedList<NotificationQueue>();
             synchronized (queues) {
-                for (String svc : services) {
+                for (final String svc : services) {
                     addQueuesForService(manualQueues, svc);
                 }
             }
         }
-        for (NotificationQueue cur : manualQueues) {
+        for (final NotificationQueue cur : manualQueues) {
             int processedNotifications = 0;
             do {
                 processedNotifications = cur.processReadyNotification();
                 log.info("Got {} results from queue {}", processedNotifications, cur.getFullQName());
                 result += processedNotifications;
-            } while(keepRunning && processedNotifications > 0);
+            } while (keepRunning && processedNotifications > 0);
         }
         return result;
     }
 
-    private final void addQueuesForService(final List<NotificationQueue> result, final String svcName) {
-        for (String cur : queues.keySet()) {
+    private void addQueuesForService(final List<NotificationQueue> result, final String svcName) {
+        for (final String cur : queues.keySet()) {
             if (cur.startsWith(svcName)) {
                 result.add(queues.get(cur));
             }
@@ -142,11 +141,11 @@ public abstract class NotificationQueueServiceBase implements NotificationQueueS
     }
 
     protected abstract NotificationQueue createNotificationQueueInternal(String svcName,
-            String queueName, NotificationQueueHandler handler,
-            NotificationConfig config);
+                                                                         String queueName, NotificationQueueHandler handler,
+                                                                         NotificationConfig config);
 
 
-    public static String getCompositeName(String svcName, String queueName) {
+    public static String getCompositeName(final String svcName, final String queueName) {
         return svcName + ":" + queueName;
     }
 }

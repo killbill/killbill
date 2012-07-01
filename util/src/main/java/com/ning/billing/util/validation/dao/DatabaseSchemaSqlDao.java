@@ -16,7 +16,10 @@
 
 package com.ning.billing.util.validation.dao;
 
-import com.ning.billing.util.validation.ColumnInfo;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.List;
+
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
@@ -24,9 +27,7 @@ import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.List;
+import com.ning.billing.util.validation.ColumnInfo;
 
 @ExternalizedSqlViaStringTemplate3
 @RegisterMapper(DatabaseSchemaSqlDao.ColumnInfoMapper.class)
@@ -36,7 +37,7 @@ public interface DatabaseSchemaSqlDao {
 
     class ColumnInfoMapper implements ResultSetMapper<ColumnInfo> {
         @Override
-        public ColumnInfo map(int index, ResultSet r, StatementContext ctx) throws SQLException {
+        public ColumnInfo map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
             final String tableName = r.getString("table_name");
             final String columnName = r.getString("column_name");
             final Integer scale = r.getInt("numeric_scale");

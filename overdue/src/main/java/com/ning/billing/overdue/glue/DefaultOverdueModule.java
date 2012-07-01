@@ -38,24 +38,24 @@ public class DefaultOverdueModule extends AbstractModule implements OverdueModul
     @Override
     protected void configure() {
         installOverdueUserApi();
-        
+
         // internal bindings
         installOverdueService();
         installOverdueWrapperFactory();
 
         final OverdueProperties config = new ConfigurationObjectFactory(System.getProperties()).build(OverdueProperties.class);
         bind(OverdueProperties.class).toInstance(config);
-        bind(ExtendedOverdueService.class).to(DefaultOverdueService.class).asEagerSingleton();    
+        bind(ExtendedOverdueService.class).to(DefaultOverdueService.class).asEagerSingleton();
         bind(OverdueCheckNotifier.class).to(DefaultOverdueCheckNotifier.class).asEagerSingleton();
         bind(OverdueCheckPoster.class).to(DefaultOverdueCheckPoster.class).asEagerSingleton();
-   }
+    }
 
     protected void installOverdueService() {
-        bind(OverdueService.class).to(DefaultOverdueService.class).asEagerSingleton();    
+        bind(OverdueService.class).to(DefaultOverdueService.class).asEagerSingleton();
     }
 
     protected void installOverdueWrapperFactory() {
-        bind(OverdueWrapperFactory.class).asEagerSingleton();    
+        bind(OverdueWrapperFactory.class).asEagerSingleton();
     }
 
     /* (non-Javadoc)
@@ -63,8 +63,8 @@ public class DefaultOverdueModule extends AbstractModule implements OverdueModul
      */
     @Override
     public void installOverdueUserApi() {
-        bind(OverdueUserApi.class).to(DefaultOverdueUserApi.class).asEagerSingleton();         
+        bind(OverdueUserApi.class).to(DefaultOverdueUserApi.class).asEagerSingleton();
     }
-    
+
 
 }

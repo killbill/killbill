@@ -14,12 +14,12 @@ package com.ning.billing.util.email;/*
  * under the License.
  */
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.skife.config.ConfigurationObjectFactory;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Test(groups = {"slow", "email"})
 public class EmailSenderTest {
@@ -30,13 +30,13 @@ public class EmailSenderTest {
         config = new ConfigurationObjectFactory(System.getProperties()).build(EmailConfig.class);
     }
 
-    @Test
+    @Test(enabled = false)
     public void testSendEmail() throws Exception {
-        String html = "<html><body><h1>Test E-mail</h1></body></html>";
-        List<String> recipients = new ArrayList<String>();
+        final String html = "<html><body><h1>Test E-mail</h1></body></html>";
+        final List<String> recipients = new ArrayList<String>();
         recipients.add("killbill.ning@gmail.com");
 
-        EmailSender sender = new DefaultEmailSender(config);
+        final EmailSender sender = new DefaultEmailSender(config);
         sender.sendSecureEmail(recipients, null, "Test message", html);
     }
 }

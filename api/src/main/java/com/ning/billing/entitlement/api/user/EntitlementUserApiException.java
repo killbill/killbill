@@ -24,18 +24,19 @@ public class EntitlementUserApiException extends BillingExceptionBase {
 
     private static final long serialVersionUID = 19083233L;
 
-    public EntitlementUserApiException(CatalogApiException e) {
+    public EntitlementUserApiException(final CatalogApiException e) {
         super(e, e.getCode(), e.getMessage());
     }
-    public EntitlementUserApiException(Throwable e, ErrorCode code, Object...args) {
+
+    public EntitlementUserApiException(final Throwable e, final ErrorCode code, final Object... args) {
         super(e, code, args);
     }
 
-    public EntitlementUserApiException(Throwable e, int code, String message) {
+    public EntitlementUserApiException(final Throwable e, final int code, final String message) {
         super(e, code, message);
     }
 
-    public EntitlementUserApiException(ErrorCode code, Object...args) {
+    public EntitlementUserApiException(final ErrorCode code, final Object... args) {
         super(code, args);
     }
 }

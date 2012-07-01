@@ -28,53 +28,51 @@ import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.api.MigrationAccountData;
 import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.glue.RealImplementation;
-import com.ning.billing.util.tag.TagDefinition;
 
-public class BlockingAccountUserApi implements AccountUserApi { 
-    private AccountUserApi userApi;
-    private BlockingApi blockingApi;
+public class BlockingAccountUserApi implements AccountUserApi {
+    private final AccountUserApi userApi;
+    private final BlockingApi blockingApi;
 
     @Inject
-    public BlockingAccountUserApi(@RealImplementation AccountUserApi userApi, BlockingApi blockingApi) {
+    public BlockingAccountUserApi(@RealImplementation final AccountUserApi userApi, final BlockingApi blockingApi) {
         this.userApi = userApi;
         this.blockingApi = blockingApi;
     }
 
     @Override
-    public Account createAccount(AccountData data, CallContext context)
+    public Account createAccount(final AccountData data, final CallContext context)
             throws AccountApiException {
         return userApi.createAccount(data, context);
     }
 
     @Override
-    public Account migrateAccount(MigrationAccountData data, CallContext context) throws AccountApiException {
+    public Account migrateAccount(final MigrationAccountData data, final CallContext context) throws AccountApiException {
         return userApi.migrateAccount(data, context);
     }
 
     @Override
-    public void updateAccount(Account account, CallContext context) throws AccountApiException {
+    public void updateAccount(final Account account, final CallContext context) throws AccountApiException {
         userApi.updateAccount(account, context);
     }
 
     @Override
-    public void updateAccount(String key, AccountData accountData, CallContext context) throws AccountApiException {
+    public void updateAccount(final String key, final AccountData accountData, final CallContext context) throws AccountApiException {
         userApi.updateAccount(key, accountData, context);
     }
 
     @Override
-    public void updateAccount(UUID accountId, AccountData accountData, CallContext context) throws AccountApiException {
+    public void updateAccount(final UUID accountId, final AccountData accountData, final CallContext context) throws AccountApiException {
         userApi.updateAccount(accountId, accountData, context);
     }
 
     @Override
-    public Account getAccountByKey(String key) throws AccountApiException {
+    public Account getAccountByKey(final String key) throws AccountApiException {
         return new BlockingAccount(userApi.getAccountByKey(key), blockingApi);
     }
 
     @Override
-    public Account getAccountById(UUID accountId) throws AccountApiException {
+    public Account getAccountById(final UUID accountId) throws AccountApiException {
         return userApi.getAccountById(accountId);
     }
 
@@ -84,18 +82,27 @@ public class BlockingAccountUserApi implements AccountUserApi {
     }
 
     @Override
-    public UUID getIdFromKey(String externalKey) throws AccountApiException {
+    public UUID getIdFromKey(final String externalKey) throws AccountApiException {
         return userApi.getIdFromKey(externalKey);
     }
 
     @Override
-    public List<AccountEmail> getEmails(UUID accountId) {
+    public List<AccountEmail> getEmails(final UUID accountId) {
         return userApi.getEmails(accountId);
     }
 
     @Override
-    public void saveEmails(UUID accountId, List<AccountEmail> emails, CallContext context) {
+    public void saveEmails(final UUID accountId, final List<AccountEmail> emails, final CallContext context) {
         userApi.saveEmails(accountId, emails, context);
     }
 
+    @Override
+    public void addEmail(final UUID accountId, final AccountEmail email, final CallContext context) {
+        userApi.addEmail(accountId, email, context);
+    }
+
+    @Override
+    public void removeEmail(final UUID accountId, final AccountEmail email, final CallContext context) {
+        userApi.removeEmail(accountId, email, context);
+    }
 }

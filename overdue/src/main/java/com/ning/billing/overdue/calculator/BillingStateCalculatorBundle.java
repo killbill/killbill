@@ -41,52 +41,52 @@ import com.ning.billing.overdue.config.api.PaymentResponse;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.tag.Tag;
 
-public class BillingStateCalculatorBundle  extends BillingStateCalculator<SubscriptionBundle>{
+public class BillingStateCalculatorBundle extends BillingStateCalculator<SubscriptionBundle> {
 
-    private EntitlementUserApi entitlementApi;
+    private final EntitlementUserApi entitlementApi;
 
-    @Inject 
-    public BillingStateCalculatorBundle(EntitlementUserApi entitlementApi, InvoiceUserApi invoiceApi, Clock clock) {
+    @Inject
+    public BillingStateCalculatorBundle(final EntitlementUserApi entitlementApi, final InvoiceUserApi invoiceApi, final Clock clock) {
         super(invoiceApi, clock);
         this.entitlementApi = entitlementApi;
     }
 
     @Override
-    public BillingStateBundle calculateBillingState(SubscriptionBundle bundle) throws OverdueError {
+    public BillingStateBundle calculateBillingState(final SubscriptionBundle bundle) throws OverdueError {
         try {
-            SortedSet<Invoice> unpaidInvoices = unpaidInvoicesForBundle(bundle.getId(), bundle.getAccountId());
+            final SortedSet<Invoice> unpaidInvoices = unpaidInvoicesForBundle(bundle.getId(), bundle.getAccountId());
 
-            Subscription basePlan = entitlementApi.getBaseSubscription(bundle.getId());
+            final Subscription basePlan = entitlementApi.getBaseSubscription(bundle.getId());
 
-            UUID id = bundle.getId();
-            int numberOfUnpaidInvoices = unpaidInvoices.size(); 
-            BigDecimal unpaidInvoiceBalance = sumBalance(unpaidInvoices);
+            final UUID id = bundle.getId();
+            final int numberOfUnpaidInvoices = unpaidInvoices.size();
+            final BigDecimal unpaidInvoiceBalance = sumBalance(unpaidInvoices);
             DateTime dateOfEarliestUnpaidInvoice = null;
             UUID idOfEarliestUnpaidInvoice = null;
-            Invoice invoice = earliest(unpaidInvoices);
-            if(invoice != null) {
+            final Invoice invoice = earliest(unpaidInvoices);
+            if (invoice != null) {
                 dateOfEarliestUnpaidInvoice = invoice.getInvoiceDate();
                 idOfEarliestUnpaidInvoice = invoice.getId();
             }
-            PaymentResponse responseForLastFailedPayment = PaymentResponse.INSUFFICIENT_FUNDS; //TODO MDW
-            Tag[] tags = new Tag[]{}; //TODO MDW
-            Product basePlanProduct = basePlan.getCurrentPlan().getProduct();
-            BillingPeriod basePlanBillingPeriod = basePlan.getCurrentPlan().getBillingPeriod();
-            PriceList basePlanPriceList = basePlan.getCurrentPriceList();
-            PhaseType basePlanPhaseType = basePlan.getCurrentPhase().getPhaseType();
+            final PaymentResponse responseForLastFailedPayment = PaymentResponse.INSUFFICIENT_FUNDS; //TODO MDW
+            final Tag[] tags = new Tag[]{}; //TODO MDW
+            final Product basePlanProduct = basePlan.getCurrentPlan().getProduct();
+            final BillingPeriod basePlanBillingPeriod = basePlan.getCurrentPlan().getBillingPeriod();
+            final PriceList basePlanPriceList = basePlan.getCurrentPriceList();
+            final PhaseType basePlanPhaseType = basePlan.getCurrentPhase().getPhaseType();
 
 
-            return new BillingStateBundle( 
-                    id, 
-                    numberOfUnpaidInvoices, 
+            return new BillingStateBundle(
+                    id,
+                    numberOfUnpaidInvoices,
                     unpaidInvoiceBalance,
                     dateOfEarliestUnpaidInvoice,
                     idOfEarliestUnpaidInvoice,
                     responseForLastFailedPayment,
-                    tags, 
+                    tags,
                     basePlanProduct,
-                    basePlanBillingPeriod, 
-                    basePlanPriceList, 
+                    basePlanBillingPeriod,
+                    basePlanPriceList,
                     basePlanPhaseType);
         } catch (EntitlementUserApiException e) {
             throw new OverdueError(e);
@@ -94,21 +94,21 @@ public class BillingStateCalculatorBundle  extends BillingStateCalculator<Subscr
 
     }
 
-    public SortedSet<Invoice> unpaidInvoicesForBundle(UUID bundleId, UUID accountId) {
-        SortedSet<Invoice> unpaidInvoices = unpaidInvoicesForAccount(accountId);
-        SortedSet<Invoice> result = new TreeSet<Invoice>(new InvoiceDateComparator());
+    public SortedSet<Invoice> unpaidInvoicesForBundle(final UUID bundleId, final UUID accountId) {
+        final SortedSet<Invoice> unpaidInvoices = unpaidInvoicesForAccount(accountId);
+        final SortedSet<Invoice> result = new TreeSet<Invoice>(new InvoiceDateComparator());
         result.addAll(unpaidInvoices);
-        for(Invoice invoice : unpaidInvoices) {
-            if(!invoiceHasAnItemFromBundle(invoice, bundleId)) {
+        for (final Invoice invoice : unpaidInvoices) {
+            if (!invoiceHasAnItemFromBundle(invoice, bundleId)) {
                 result.remove(invoice);
             }
         }
         return result;
     }
 
-    private boolean invoiceHasAnItemFromBundle(Invoice invoice, UUID bundleId) {
-        for(InvoiceItem item : invoice.getInvoiceItems()) {
-            if(item.getBundleId().equals(bundleId)) {
+    private boolean invoiceHasAnItemFromBundle(final Invoice invoice, final UUID bundleId) {
+        for (final InvoiceItem item : invoice.getInvoiceItems()) {
+            if (item.getBundleId().equals(bundleId)) {
                 return true;
             }
         }

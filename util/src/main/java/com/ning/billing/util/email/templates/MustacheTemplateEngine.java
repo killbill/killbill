@@ -16,27 +16,32 @@
 
 package com.ning.billing.util.email.templates;
 
-import com.samskivert.mustache.Mustache;
-import com.samskivert.mustache.Template;
-import org.apache.commons.io.IOUtils;
-
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringWriter;
+import java.net.URISyntaxException;
 import java.util.Map;
+
+import com.ning.billing.util.config.UriAccessor;
+import com.ning.billing.util.io.IOUtils;
+import com.samskivert.mustache.Mustache;
+import com.samskivert.mustache.Template;
 
 public class MustacheTemplateEngine implements TemplateEngine {
     @Override
-    public String executeTemplate(String templateName, Map<String, Object> data) throws IOException {
-        String templateText = getTemplateText(templateName);
-        Template template = Mustache.compiler().compile(templateText);
+    public String executeTemplate(final String templateName, final Map<String, Object> data) throws IOException {
+        final String templateText = getTemplateText(templateName);
+        final Template template = Mustache.compiler().compile(templateText);
         return template.execute(data);
     }
 
-    private String getTemplateText(String templateName) throws IOException {
-        InputStream templateStream = this.getClass().getResourceAsStream(templateName + ".mustache");
-        StringWriter writer = new StringWriter();
-        IOUtils.copy(templateStream, writer, "UTF-8");
-        return writer.toString();
+    private String getTemplateText(final String templateName) throws IOException {
+        final InputStream templateStream;
+        try {
+            templateStream = UriAccessor.accessUri(templateName);
+        } catch (URISyntaxException e) {
+            throw new IOException(e);
+        }
+
+        return IOUtils.toString(templateStream);
     }
 }

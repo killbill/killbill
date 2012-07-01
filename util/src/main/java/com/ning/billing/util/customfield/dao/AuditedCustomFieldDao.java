@@ -39,12 +39,12 @@ public class AuditedCustomFieldDao extends AuditedCollectionDaoBase<CustomField,
     }
 
     @Override
-    protected String getEquivalenceObjectFor(CustomField obj) {
+    protected String getEquivalenceObjectFor(final CustomField obj) {
         return obj.getName();
     }
 
     @Override
-    protected UpdatableEntityCollectionSqlDao<CustomField> transmogrifyDao(Transmogrifier transactionalDao) {
+    protected UpdatableEntityCollectionSqlDao<CustomField> transmogrifyDao(final Transmogrifier transactionalDao) {
         return transactionalDao.become(CustomFieldSqlDao.class);
     }
 
@@ -54,7 +54,7 @@ public class AuditedCustomFieldDao extends AuditedCollectionDaoBase<CustomField,
     }
 
     @Override
-    protected String getKey(CustomField entity) {
+    protected String getKey(final CustomField entity) {
         return entity.getName();
     }
 

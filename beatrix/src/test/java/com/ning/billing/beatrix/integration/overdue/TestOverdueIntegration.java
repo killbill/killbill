@@ -16,11 +16,6 @@
 
 package com.ning.billing.beatrix.integration.overdue;
 
-import static com.jayway.awaitility.Awaitility.await;
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
-
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.math.BigDecimal;
@@ -62,73 +57,35 @@ import com.ning.billing.util.callcontext.DefaultCallContext;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.config.XMLLoader;
 
+import static com.jayway.awaitility.Awaitility.await;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
+
 @Test(groups = "slow")
 @Guice(modules = {BeatrixModule.class})
 public class TestOverdueIntegration extends TestIntegrationBase {
-    private final String configXml =  
-            "<overdueConfig>" +
-                    "   <bundleOverdueStates>" +
-                    "       <state name=\"OD3\">" +
-                    "           <condition>" +
-                    "               <timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
-                    "                   <unit>DAYS</unit><number>50</number>" +
-                    "               </timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
-                    "           </condition>" +
-                    "           <externalMessage>Reached OD3</externalMessage>" +
-                    "           <blockChanges>true</blockChanges>" +
-                    "           <disableEntitlementAndChangesBlocked>true</disableEntitlementAndChangesBlocked>" +
-                    "           <autoReevaluationInterval>" +
-                    "               <unit>DAYS</unit><number>5</number>" +
-                    "           </autoReevaluationInterval>" +
-                    "       </state>" +
-                    "       <state name=\"OD2\">" +
-                    "           <condition>" +
-                    "               <timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
-                    "                   <unit>DAYS</unit><number>40</number>" +
-                    "               </timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
-                    "           </condition>" +
-                    "           <externalMessage>Reached OD2</externalMessage>" +
-                    "           <blockChanges>true</blockChanges>" +
-                    "           <disableEntitlementAndChangesBlocked>true</disableEntitlementAndChangesBlocked>" +
-                    "           <autoReevaluationInterval>" +
-                    "               <unit>DAYS</unit><number>5</number>" +
-                    "           </autoReevaluationInterval>" +
-                    "       </state>" +
-                    "       <state name=\"OD1\">" +
-                    "           <condition>" +
-                    "               <timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
-                    "                   <unit>DAYS</unit><number>30</number>" +
-                    "               </timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
-                    "           </condition>" +
-                    "           <externalMessage>Reached OD1</externalMessage>" +
-                    "           <blockChanges>true</blockChanges>" +
-                    "           <disableEntitlementAndChangesBlocked>false</disableEntitlementAndChangesBlocked>" +
-                    "           <autoReevaluationInterval>" +
-                    "               <unit>DAYS</unit><number>100</number>" + // this number is intentionally too high
-                    "           </autoReevaluationInterval>" +
-                    "       </state>" +
-                    "   </bundleOverdueStates>" +
-                    "</overdueConfig>";
-    private OverdueConfig config; 
 
     @Inject
     private ClockMock clock;
 
+    @Named("yoyo")
     @Inject
-    private @Named("yoyo") MockPaymentProviderPlugin paymentPlugin;
+    private
+    MockPaymentProviderPlugin paymentPlugin;
 
     @Inject
     private BlockingApi blockingApi;
-    
+
     @Inject
     private OverdueWrapperFactory overdueWrapperFactory;
-    
+
     @Inject
     private OverdueUserApi overdueApi;
-    
+
     @Inject
     private PaymentApi paymentApi;
-    
+
     @Inject
     private InvoiceUserApi invoiceApi;
 
@@ -140,26 +97,72 @@ public class TestOverdueIntegration extends TestIntegrationBase {
 
     @BeforeMethod(groups = {"slow"})
     public void setupOverdue() throws Exception {
-        InputStream is = new ByteArrayInputStream(configXml.getBytes());
-        config = XMLLoader.getObjectFromStreamNoValidation(is,  OverdueConfig.class);
+        final String configXml = "<overdueConfig>" +
+                "   <bundleOverdueStates>" +
+                "       <state name=\"OD3\">" +
+                "           <condition>" +
+                "               <timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
+                "                   <unit>DAYS</unit><number>50</number>" +
+                "               </timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
+                "           </condition>" +
+                "           <externalMessage>Reached OD3</externalMessage>" +
+                "           <blockChanges>true</blockChanges>" +
+                "           <disableEntitlementAndChangesBlocked>true</disableEntitlementAndChangesBlocked>" +
+                "           <autoReevaluationInterval>" +
+                "               <unit>DAYS</unit><number>5</number>" +
+                "           </autoReevaluationInterval>" +
+                "       </state>" +
+                "       <state name=\"OD2\">" +
+                "           <condition>" +
+                "               <timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
+                "                   <unit>DAYS</unit><number>40</number>" +
+                "               </timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
+                "           </condition>" +
+                "           <externalMessage>Reached OD2</externalMessage>" +
+                "           <blockChanges>true</blockChanges>" +
+                "           <disableEntitlementAndChangesBlocked>true</disableEntitlementAndChangesBlocked>" +
+                "           <autoReevaluationInterval>" +
+                "               <unit>DAYS</unit><number>5</number>" +
+                "           </autoReevaluationInterval>" +
+                "       </state>" +
+                "       <state name=\"OD1\">" +
+                "           <condition>" +
+                "               <timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
+                "                   <unit>DAYS</unit><number>30</number>" +
+                "               </timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
+                "           </condition>" +
+                "           <externalMessage>Reached OD1</externalMessage>" +
+                "           <blockChanges>true</blockChanges>" +
+                "           <disableEntitlementAndChangesBlocked>false</disableEntitlementAndChangesBlocked>" +
+                "           <autoReevaluationInterval>" +
+                "               <unit>DAYS</unit><number>100</number>" + // this number is intentionally too high
+                "           </autoReevaluationInterval>" +
+                "       </state>" +
+                "   </bundleOverdueStates>" +
+                "</overdueConfig>";
+        final InputStream is = new ByteArrayInputStream(configXml.getBytes());
+        final OverdueConfig config = XMLLoader.getObjectFromStreamNoValidation(is, OverdueConfig.class);
         overdueWrapperFactory.setOverdueConfig(config);
-        
+
         account = createAccountWithPaymentMethod(getAccountData(25));
         assertNotNull(account);
-        
-        PaymentMethodPlugin info = new PaymentMethodPlugin() {
+
+        final PaymentMethodPlugin info = new PaymentMethodPlugin() {
             @Override
             public boolean isDefaultPaymentMethod() {
                 return false;
             }
+
             @Override
-            public String getValueString(String key) {
+            public String getValueString(final String key) {
                 return null;
             }
+
             @Override
             public List<PaymentMethodKVInfo> getProperties() {
                 return null;
             }
+
             @Override
             public String getExternalPaymentMethodId() {
                 return UUID.randomUUID().toString();
@@ -180,30 +183,30 @@ public class TestOverdueIntegration extends TestIntegrationBase {
     }
 
     @AfterMethod
-    public void cleanup(){
+    public void cleanup() {
         // Clear databases
     }
 
-    @Test(groups={"slow"}, enabled = true)
+    @Test(groups = {"slow"}, enabled = true)
     public void testBasicOverdueState() throws Exception {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
         paymentPlugin.makeAllInvoicesFailWithError(true);
-        
+
         // set next invoice to fail and create subscription 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.INVOICE);
-        SubscriptionData baseSubscription = subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(),
-                new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, context));
+        final SubscriptionData baseSubscription = subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(),
+                                                                                                                   new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, context));
         assertNotNull(baseSubscription);
         assertTrue(busHandler.isCompleted(DELAY));
 
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR);
         clock.addDays(30); // DAY 30 have to get out of trial before first payment
-        
+
         assertTrue(busHandler.isCompleted(DELAY));
-        
+
         // should still be in clear state
         checkODState(BlockingApi.CLEAR_STATE_NAME);
-    
+
         clock.addDays(15); // DAY 45 - 15 days after invoice
         assertTrue(busHandler.isCompleted(DELAY));
         //should still be in clear state
@@ -212,10 +215,10 @@ public class TestOverdueIntegration extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT_ERROR);
         clock.addDays(20); // DAY 65 - 35 days after invoice
         assertTrue(busHandler.isCompleted(DELAY));
-        
+
         //Now we should be in OD1
         checkODState("OD1");
-          
+
         clock.addDays(2); //DAY 67 - 37 days after invoice
         assertTrue(busHandler.isCompleted(DELAY));
         // should still be in OD1
@@ -226,41 +229,41 @@ public class TestOverdueIntegration extends TestIntegrationBase {
         assertTrue(busHandler.isCompleted(DELAY));
         // should still be in OD1
         checkODState("OD2");
-        
+
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT_ERROR);
         clock.addDays(10); //DAY 85 - 55 days after invoice
         assertTrue(busHandler.isCompleted(DELAY));
         // should now be in OD2 state once the update is processed
         checkODState("OD3");
-        
+
         paymentPlugin.makeAllInvoicesFailWithError(false);
-        Collection<Invoice> invoices = invoiceApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCNow());
-        List<String> invoiceIds = new ArrayList<String>();
-        for (Invoice invoice : invoices) {
-            invoiceIds.add(invoice.getId().toString()); 
+        final Collection<Invoice> invoices = invoiceApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCNow());
+        final List<String> invoiceIds = new ArrayList<String>();
+        for (final Invoice invoice : invoices) {
+            invoiceIds.add(invoice.getId().toString());
             if (invoice.getBalance().compareTo(BigDecimal.ZERO) > 0) {
                 busHandler.pushExpectedEvent(NextEvent.PAYMENT);
                 paymentApi.createPayment(account, invoice.getId(), invoice.getBalance(), new DefaultCallContext("test", null, null, clock));
                 assertTrue(busHandler.isCompleted(DELAY));
             }
         }
-        
+
         checkODState(BlockingApi.CLEAR_STATE_NAME);
 
     }
 
     private void checkODState(final String expected) {
-        
+
         try {
             await().atMost(10, SECONDS).until(new Callable<Boolean>() {
                 @Override
                 public Boolean call() throws Exception {
-                    overdueApi.refreshOverdueStateFor(bundle); 
-                    return expected.equals(blockingApi.getBlockingStateFor(bundle).getStateName()) ;
+                    overdueApi.refreshOverdueStateFor(bundle);
+                    return expected.equals(blockingApi.getBlockingStateFor(bundle).getStateName());
                 }
             });
         } catch (Exception e) {
-           Assert.assertEquals(blockingApi.getBlockingStateFor(bundle).getStateName(), expected);
+            Assert.assertEquals(blockingApi.getBlockingStateFor(bundle).getStateName(), expected);
         }
     }
 }

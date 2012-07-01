@@ -15,15 +15,10 @@
  */
 package com.ning.billing.jaxrs;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
-
+import javax.ws.rs.core.Response.Status;
 import java.util.Map;
 import java.util.UUID;
 
-import javax.ws.rs.core.Response.Status;
-
-import com.ning.billing.jaxrs.resources.JaxrsResource;
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
 import org.slf4j.Logger;
@@ -37,54 +32,58 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.BundleJsonNoSubscriptions;
 import com.ning.billing.jaxrs.json.SubscriptionJsonNoEvents;
+import com.ning.billing.jaxrs.resources.JaxrsResource;
 import com.ning.http.client.Response;
+
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 public class TestSubscription extends TestJaxrsBase {
 
     private static final Logger log = LoggerFactory.getLogger(TestSubscription.class);
 
     private static final String CALL_COMPLETION_TIMEOUT_SEC = "5";
-    
 
-    @Test(groups="slow", enabled=true)
+
+    @Test(groups = "slow", enabled = true)
     public void testSubscriptionInTrialOk() throws Exception {
 
-        DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
+        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
-        
-        AccountJson accountJson = createAccount("xil", "shdxilhkkl", "xil@yahoo.com");
-        BundleJsonNoSubscriptions bundleJson = createBundle(accountJson.getAccountId(), "99999");
 
-        String productName = "Shotgun";
-        BillingPeriod term = BillingPeriod.MONTHLY;
+        final AccountJson accountJson = createAccount("xil", "shdxilhkkl", "xil@yahoo.com");
+        final BundleJsonNoSubscriptions bundleJson = createBundle(accountJson.getAccountId(), "99999");
 
-        SubscriptionJsonNoEvents subscriptionJson = createSubscription(bundleJson.getBundleId(), productName, ProductCategory.BASE.toString(), term.toString(), true);
+        final String productName = "Shotgun";
+        final BillingPeriod term = BillingPeriod.MONTHLY;
+
+        final SubscriptionJsonNoEvents subscriptionJson = createSubscription(bundleJson.getBundleId(), productName, ProductCategory.BASE.toString(), term.toString(), true);
         Assert.assertNotNull(subscriptionJson.getChargedThroughDate());
-        Assert.assertEquals(subscriptionJson.getChargedThroughDate(), subscriptionJson.getStartDate().plusDays(30));        
-        
+        Assert.assertEquals(subscriptionJson.getChargedThroughDate(), subscriptionJson.getStartDate().plusDays(30));
+
         String uri = JaxrsResource.SUBSCRIPTIONS_PATH + "/" + subscriptionJson.getSubscriptionId().toString();
- 
-        
+
+
         // Retrieves with GET
-        Response response =  doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
         String baseJson = response.getResponseBody();
         SubscriptionJsonNoEvents objFromJson = mapper.readValue(baseJson, SubscriptionJsonNoEvents.class);
         Assert.assertTrue(objFromJson.equals(subscriptionJson));
-        
-        // Change plan IMM
-        String newProductName = "Assault-Rifle";
 
-        SubscriptionJsonNoEvents newInput = new SubscriptionJsonNoEvents(subscriptionJson.getSubscriptionId(),
-                subscriptionJson.getBundleId(),
-                null,
-                newProductName,
-                subscriptionJson.getProductCategory(), 
-                subscriptionJson.getBillingPeriod(), 
-                subscriptionJson.getPriceList(), null);
+        // Change plan IMM
+        final String newProductName = "Assault-Rifle";
+
+        final SubscriptionJsonNoEvents newInput = new SubscriptionJsonNoEvents(subscriptionJson.getSubscriptionId(),
+                                                                         subscriptionJson.getBundleId(),
+                                                                         null,
+                                                                         newProductName,
+                                                                         subscriptionJson.getProductCategory(),
+                                                                         subscriptionJson.getBillingPeriod(),
+                                                                         subscriptionJson.getPriceList(), null);
         baseJson = mapper.writeValueAsString(newInput);
 
-        Map<String, String> queryParams = getQueryParamsForCallCompletion(CALL_COMPLETION_TIMEOUT_SEC);
+        final Map<String, String> queryParams = getQueryParamsForCallCompletion(CALL_COMPLETION_TIMEOUT_SEC);
         response = doPut(uri, baseJson, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
         baseJson = response.getResponseBody();
@@ -92,7 +91,7 @@ public class TestSubscription extends TestJaxrsBase {
         assertTrue(objFromJson.equalsNoSubscriptionIdNoStartDateNoCTD(newInput));
 
         // MOVE AFTER TRIAL
-        Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(3).plusDays(1));
+        final Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(3).plusDays(1));
         clock.addDeltaFromReality(it.toDurationMillis());
 
         crappyWaitForLackOfProperSynchonization();
@@ -108,24 +107,24 @@ public class TestSubscription extends TestJaxrsBase {
         response = doPut(uri, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
     }
-    
-    @Test(groups="slow", enabled=true)
+
+    @Test(groups = "slow", enabled = true)
     public void testWithNonExistentSubscription() throws Exception {
-        String uri = JaxrsResource.SUBSCRIPTIONS_PATH + "/" + UUID.randomUUID().toString();
-        SubscriptionJsonNoEvents subscriptionJson = new SubscriptionJsonNoEvents(null, UUID.randomUUID().toString(), null, "Pistol", ProductCategory.BASE.toString(), BillingPeriod.MONTHLY.toString(), PriceListSet.DEFAULT_PRICELIST_NAME, null);
-        String baseJson = mapper.writeValueAsString(subscriptionJson);
-        
+        final String uri = JaxrsResource.SUBSCRIPTIONS_PATH + "/" + UUID.randomUUID().toString();
+        final SubscriptionJsonNoEvents subscriptionJson = new SubscriptionJsonNoEvents(null, UUID.randomUUID().toString(), null, "Pistol", ProductCategory.BASE.toString(), BillingPeriod.MONTHLY.toString(), PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        final String baseJson = mapper.writeValueAsString(subscriptionJson);
+
         Response response = doPut(uri, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.NO_CONTENT.getStatusCode());
         String body = response.getResponseBody();
         Assert.assertEquals(body, "");
-        
+
         response = doDelete(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.NO_CONTENT.getStatusCode());
         body = response.getResponseBody();
         Assert.assertEquals(body, "");
-        
-        response =  doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+
+        response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.NO_CONTENT.getStatusCode());
     }
 

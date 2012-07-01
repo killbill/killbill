@@ -16,25 +16,25 @@
 
 package com.ning.billing.account.api;
 
-import com.ning.billing.util.entity.UpdatableEntityBase;
-
 import java.util.UUID;
+
+import com.ning.billing.util.entity.UpdatableEntityBase;
 
 public class DefaultAccountEmail extends UpdatableEntityBase implements AccountEmail {
     private final UUID accountId;
     private final String email;
 
-    public DefaultAccountEmail(UUID accountId, String email) {
+    public DefaultAccountEmail(final UUID accountId, final String email) {
         super();
         this.accountId = accountId;
         this.email = email;
     }
 
-    public DefaultAccountEmail(AccountEmail source, String newEmail) {
+    public DefaultAccountEmail(final AccountEmail source, final String newEmail) {
         this(source.getAccountId(), newEmail);
     }
 
-    public DefaultAccountEmail(UUID id, UUID accountId, String email) {
+    public DefaultAccountEmail(final UUID id, final UUID accountId, final String email) {
         super(id);
         this.accountId = accountId;
         this.email = email;
@@ -51,22 +51,40 @@ public class DefaultAccountEmail extends UpdatableEntityBase implements AccountE
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append("DefaultAccountEmail");
+        sb.append("{accountId=").append(accountId);
+        sb.append(", email='").append(email).append('\'');
+        sb.append('}');
+        return sb.toString();
+    }
 
-        DefaultAccountEmail that = (DefaultAccountEmail) o;
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
-        if (!accountId.equals(that.accountId)) return false;
-        if (!email.equals(that.email)) return false;
+        final DefaultAccountEmail that = (DefaultAccountEmail) o;
+
+        if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
+            return false;
+        }
+        if (email != null ? !email.equals(that.email) : that.email != null) {
+            return false;
+        }
 
         return true;
     }
 
     @Override
     public int hashCode() {
-        int result = accountId.hashCode();
-        result = 31 * result + email.hashCode();
+        int result = accountId != null ? accountId.hashCode() : 0;
+        result = 31 * result + (email != null ? email.hashCode() : 0);
         return result;
     }
 }

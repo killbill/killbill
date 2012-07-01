@@ -46,7 +46,7 @@ public class DefaultPaymentService implements PaymentService {
 
     @Inject
     public DefaultPaymentService(final InvoiceHandler requestProcessor, final PaymentApi api, final Bus eventBus,
-            final FailedPaymentRetryService failedRetryService, final PluginFailureRetryService timedoutRetryService) {
+                                 final FailedPaymentRetryService failedRetryService, final PluginFailureRetryService timedoutRetryService) {
         this.requestProcessor = requestProcessor;
         this.eventBus = eventBus;
         this.api = api;
@@ -64,17 +64,16 @@ public class DefaultPaymentService implements PaymentService {
         failedRetryService.initialize(SERVICE_NAME);
         timedoutRetryService.initialize(SERVICE_NAME);
     }
-    
+
     @LifecycleHandlerType(LifecycleHandlerType.LifecycleLevel.REGISTER_EVENTS)
     public void registerForNotifications() {
         try {
             eventBus.register(requestProcessor);
-        }
-        catch (Bus.EventBusException e) {
+        } catch (Bus.EventBusException e) {
             log.error("Unable to register with the EventBus!", e);
         }
     }
-    
+
     @LifecycleHandlerType(LifecycleLevel.START_SERVICE)
     public void start() {
         failedRetryService.start();

@@ -16,7 +16,6 @@
 package com.ning.billing.util.userrequest;
 
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 
 import com.ning.billing.account.api.AccountChangeEvent;
@@ -31,18 +30,18 @@ import com.ning.billing.util.bus.BusEvent;
 public interface CompletionUserRequestWaiter {
 
     public List<BusEvent> waitForCompletion(final long timeoutMilliSec) throws InterruptedException, TimeoutException;
-    
+
     public void onAccountCreation(final AccountCreationEvent curEvent);
 
     public void onAccountChange(final AccountChangeEvent curEvent);
 
-    public void onSubscriptionTransition(final SubscriptionEvent curEvent);    
+    public void onSubscriptionTransition(final SubscriptionEvent curEvent);
 
-    public void onInvoiceCreation(final InvoiceCreationEvent curEvent);    
-    
-    public void onEmptyInvoice(final EmptyInvoiceEvent curEvent);        
+    public void onInvoiceCreation(final InvoiceCreationEvent curEvent);
 
-    public void onPaymentInfo(final PaymentInfoEvent curEvent);    
+    public void onEmptyInvoice(final EmptyInvoiceEvent curEvent);
 
-    public void onPaymentError(final PaymentErrorEvent curEvent);    
+    public void onPaymentInfo(final PaymentInfoEvent curEvent);
+
+    public void onPaymentError(final PaymentErrorEvent curEvent);
 }

@@ -16,17 +16,18 @@
 
 package com.ning.billing.util.customfield.dao;
 
-import com.ning.billing.util.customfield.CustomField;
-import org.skife.jdbi.v2.SQLStatement;
-import org.skife.jdbi.v2.sqlobject.Binder;
-import org.skife.jdbi.v2.sqlobject.BinderFactory;
-import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
-
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+
+import org.skife.jdbi.v2.SQLStatement;
+import org.skife.jdbi.v2.sqlobject.Binder;
+import org.skife.jdbi.v2.sqlobject.BinderFactory;
+import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
+
+import com.ning.billing.util.customfield.CustomField;
 
 @BindingAnnotation(CustomFieldBinder.CustomFieldBinderFactory.class)
 @Retention(RetentionPolicy.RUNTIME)
@@ -34,10 +35,10 @@ import java.lang.annotation.Target;
 public @interface CustomFieldBinder {
     public static class CustomFieldBinderFactory implements BinderFactory {
         @Override
-        public Binder build(Annotation annotation) {
+        public Binder build(final Annotation annotation) {
             return new Binder<CustomFieldBinder, CustomField>() {
                 @Override
-                public void bind(SQLStatement q, CustomFieldBinder bind, CustomField customField) {
+                public void bind(final SQLStatement q, final CustomFieldBinder bind, final CustomField customField) {
                     q.bind("id", customField.getId().toString());
                     q.bind("fieldName", customField.getName());
                     q.bind("fieldValue", customField.getValue());

@@ -80,16 +80,16 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
     }
 
     @Override
-    public void processChargeback(final UUID invoicePaymentId, final BigDecimal amount, final CallContext context) throws InvoiceApiException {
-        dao.postChargeback(invoicePaymentId, amount, context);
+    public InvoicePayment processChargeback(final UUID invoicePaymentId, final BigDecimal amount, final CallContext context) throws InvoiceApiException {
+        return dao.postChargeback(invoicePaymentId, amount, context);
     }
 
     @Override
-    public void processChargeback(final UUID invoicePaymentId, final CallContext context) throws InvoiceApiException {
+    public InvoicePayment processChargeback(final UUID invoicePaymentId, final CallContext context) throws InvoiceApiException {
         // use the invoicePaymentId to get the amount remaining on the payment
         // (preventing charge backs totalling more than the payment)
         final BigDecimal amount = dao.getRemainingAmountPaid(invoicePaymentId);
-        processChargeback(invoicePaymentId, amount, context);
+        return processChargeback(invoicePaymentId, amount, context);
     }
 
     @Override

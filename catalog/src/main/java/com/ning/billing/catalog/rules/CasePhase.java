@@ -16,6 +16,8 @@
 
 package com.ning.billing.catalog.rules;
 
+import javax.xml.bind.annotation.XmlElement;
+
 import com.ning.billing.catalog.StandaloneCatalog;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.PhaseType;
@@ -23,44 +25,42 @@ import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PlanSpecifier;
 import com.ning.billing.util.config.ValidationErrors;
 
-import javax.xml.bind.annotation.XmlElement;
-
 public abstract class CasePhase<T> extends CaseStandardNaming<T> {
 
-	@XmlElement(required=false)
-	private PhaseType phaseType;	
-	
-	public T getResult(PlanPhaseSpecifier specifier, StandaloneCatalog c) throws CatalogApiException {
-		if ((phaseType       == null ||  specifier.getPhaseType() == phaseType) 
-				&& satisfiesCase(new PlanSpecifier(specifier), c)
-				) {
-			return getResult(); 
-		}
-		return null;
-	}
-	
-	public static <K> K getResult(CasePhase<K>[] cases, PlanPhaseSpecifier planSpec, StandaloneCatalog catalog) throws CatalogApiException {
-    	if(cases != null) {
-    		for(CasePhase<K> cp : cases) {
-    			K result = cp.getResult(planSpec, catalog);
-    			if(result != null) { 
-    				return result; 
-    			}        					
-    		}
-    	}
+    @XmlElement(required = false)
+    private PhaseType phaseType;
+
+    public T getResult(final PlanPhaseSpecifier specifier, final StandaloneCatalog c) throws CatalogApiException {
+        if ((phaseType == null || specifier.getPhaseType() == phaseType)
+                && satisfiesCase(new PlanSpecifier(specifier), c)
+                ) {
+            return getResult();
+        }
         return null;
-        
     }
 
-	@Override
-	public ValidationErrors validate(StandaloneCatalog catalog, ValidationErrors errors) {
-		return errors;
-	}
+    public static <K> K getResult(final CasePhase<K>[] cases, final PlanPhaseSpecifier planSpec, final StandaloneCatalog catalog) throws CatalogApiException {
+        if (cases != null) {
+            for (final CasePhase<K> cp : cases) {
+                final K result = cp.getResult(planSpec, catalog);
+                if (result != null) {
+                    return result;
+                }
+            }
+        }
+        return null;
 
-	protected CasePhase<T> setPhaseType(PhaseType phaseType) {
-		this.phaseType = phaseType;
-		return this;
-	}
-	
-	
+    }
+
+    @Override
+    public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {
+        return errors;
+    }
+
+    protected CasePhase<T> setPhaseType(final PhaseType phaseType) {
+        this.phaseType = phaseType;
+        return this;
+    }
+
+
 }

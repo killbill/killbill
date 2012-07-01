@@ -24,15 +24,15 @@ public class NotificationError extends Error {
         super();
     }
 
-    public NotificationError(String msg, Throwable arg1) {
+    public NotificationError(final String msg, final Throwable arg1) {
         super(msg, arg1);
     }
 
-    public NotificationError(String msg) {
+    public NotificationError(final String msg) {
         super(msg);
     }
 
-    public NotificationError(Throwable msg) {
+    public NotificationError(final Throwable msg) {
         super(msg);
     }
 }

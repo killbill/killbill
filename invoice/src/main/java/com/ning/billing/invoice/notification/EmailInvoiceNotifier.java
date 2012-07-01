@@ -59,7 +59,7 @@ public class EmailInvoiceNotifier implements InvoiceNotifier {
 
         final String htmlBody;
         try {
-            htmlBody = generator.generateInvoice(account, invoice, "HtmlInvoiceTemplate");
+            htmlBody = generator.generateInvoice(account, invoice);
         } catch (IOException e) {
             throw new InvoiceApiException(e, ErrorCode.EMAIL_SENDING_FAILED);
         }

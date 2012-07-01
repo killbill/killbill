@@ -22,10 +22,8 @@ import com.google.inject.name.Named;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.entitlement.api.SubscriptionApiService;
 import com.ning.billing.entitlement.api.SubscriptionFactory;
-import com.ning.billing.entitlement.api.user.DefaultSubscriptionApiService;
 import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
-import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.engine.addon.AddonUtils;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.events.EntitlementEvent;
@@ -36,20 +34,20 @@ public class RepairSubscriptionFactory extends DefaultSubscriptionFactory implem
 
     private final AddonUtils addonUtils;
     private final EntitlementDao repairDao;
-    
+
     @Inject
-    public RepairSubscriptionFactory(@Named(DefaultEntitlementModule.REPAIR_NAMED) SubscriptionApiService apiService,
-            @Named(DefaultEntitlementModule.REPAIR_NAMED) EntitlementDao dao,
-            Clock clock, CatalogService catalogService, AddonUtils addonUtils) {
+    public RepairSubscriptionFactory(@Named(DefaultEntitlementModule.REPAIR_NAMED) final SubscriptionApiService apiService,
+                                     @Named(DefaultEntitlementModule.REPAIR_NAMED) final EntitlementDao dao,
+                                     final Clock clock, final CatalogService catalogService, final AddonUtils addonUtils) {
         super(apiService, clock, catalogService);
         this.addonUtils = addonUtils;
         this.repairDao = dao;
     }
-     
+
     @Override
-    public SubscriptionData createSubscription(SubscriptionBuilder builder,
-            List<EntitlementEvent> events) {
-        SubscriptionData subscription = new SubscriptionDataRepair(builder, events, apiService, repairDao, clock, addonUtils, catalogService);
+    public SubscriptionData createSubscription(final SubscriptionBuilder builder,
+                                               final List<EntitlementEvent> events) {
+        final SubscriptionData subscription = new SubscriptionDataRepair(builder, events, apiService, repairDao, clock, addonUtils, catalogService);
         subscription.rebuildTransitions(events, catalogService.getFullCatalog());
         return subscription;
     }

@@ -44,7 +44,6 @@ import static org.testng.Assert.assertNotNull;
 @Test(groups = {"fast", "email"})
 public class HtmlInvoiceGeneratorTest {
     private HtmlInvoiceGenerator g;
-    private static final String TEST_TEMPLATE_NAME = "HtmlInvoiceTemplate";
 
     @BeforeClass
     public void setup() {
@@ -56,7 +55,7 @@ public class HtmlInvoiceGeneratorTest {
 
     @Test
     public void testGenerateInvoice() throws Exception {
-        final String output = g.generateInvoice(createAccount(), createInvoice(), TEST_TEMPLATE_NAME);
+        final String output = g.generateInvoice(createAccount(), createInvoice());
         assertNotNull(output);
         System.out.print(output);
     }

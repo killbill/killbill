@@ -17,11 +17,8 @@
 package com.ning.billing.util.notificationq;
 
 /**
- *
  * The notification key associated with a given notification
  */
 public interface NotificationKey {
 
-    @Override
-    public String toString();
 }

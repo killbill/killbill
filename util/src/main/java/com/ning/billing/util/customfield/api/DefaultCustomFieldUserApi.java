@@ -16,6 +16,10 @@
 
 package com.ning.billing.util.customfield.api;
 
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
 import com.google.inject.Inject;
 import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.callcontext.CallContext;
@@ -23,25 +27,21 @@ import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.customfield.dao.CustomFieldDao;
 import com.ning.billing.util.dao.ObjectType;
 
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
 public class DefaultCustomFieldUserApi implements CustomFieldUserApi {
     private final CustomFieldDao customFieldDao;
 
     @Inject
-    public DefaultCustomFieldUserApi(CustomFieldDao customFieldDao) {
+    public DefaultCustomFieldUserApi(final CustomFieldDao customFieldDao) {
         this.customFieldDao = customFieldDao;
     }
 
     @Override
-    public Map<String, CustomField> getCustomFields(UUID objectId, ObjectType objectType) {
+    public Map<String, CustomField> getCustomFields(final UUID objectId, final ObjectType objectType) {
         return customFieldDao.loadEntities(objectId, objectType);
     }
 
     @Override
-    public void saveCustomFields(UUID objectId, ObjectType objectType, List<CustomField> fields, CallContext context) {
+    public void saveCustomFields(final UUID objectId, final ObjectType objectType, final List<CustomField> fields, final CallContext context) {
         customFieldDao.saveEntities(objectId, objectType, fields, context);
     }
 }

@@ -16,38 +16,37 @@
 
 package com.ning.billing.util.config;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.URI;
 
 import org.testng.annotations.Test;
 
-public class TestXMLWriter {
-	public static final String TEST_XML = 
-			"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" +
-		    "<xmlTestClass>" +
-			"<foo>foo</foo>" +
-			"<bar>1.0</bar>" +
-			"<lala>42</lala>" +
-			"</xmlTestClass>";
-	
-	@Test
-	public void test() throws Exception {
-		InputStream is = new ByteArrayInputStream(TEST_XML.getBytes());
-		XmlTestClass test = XMLLoader.getObjectFromStream(new URI("internal:/"), is, XmlTestClass.class);
-		assertEquals(test.getFoo(), "foo");
-		assertEquals(test.getBar(), 1.0);
-		assertEquals(test.getLala(), 42);
-		
-		String output = XMLWriter.writeXML(test, XmlTestClass.class);
-		
-		System.out.println(output);
-		assertEquals(output.replaceAll("\\s", ""), TEST_XML.replaceAll("\\s", ""));
-		 
-	}
+import static org.testng.Assert.assertEquals;
 
-	
+public class TestXMLWriter {
+    public static final String TEST_XML =
+            "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" +
+                    "<xmlTestClass>" +
+                    "<foo>foo</foo>" +
+                    "<bar>1.0</bar>" +
+                    "<lala>42</lala>" +
+                    "</xmlTestClass>";
+
+    @Test
+    public void test() throws Exception {
+        final InputStream is = new ByteArrayInputStream(TEST_XML.getBytes());
+        final XmlTestClass test = XMLLoader.getObjectFromStream(new URI("internal:/"), is, XmlTestClass.class);
+        assertEquals(test.getFoo(), "foo");
+        assertEquals(test.getBar(), 1.0);
+        assertEquals(test.getLala(), 42);
+
+        final String output = XMLWriter.writeXML(test, XmlTestClass.class);
+
+        System.out.println(output);
+        assertEquals(output.replaceAll("\\s", ""), TEST_XML.replaceAll("\\s", ""));
+
+    }
+
+
 }

@@ -18,7 +18,9 @@ package com.ning.billing.invoice.api;
 
 import java.math.BigDecimal;
 import java.util.UUID;
+
 import org.joda.time.DateTime;
+
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.entity.Entity;
 

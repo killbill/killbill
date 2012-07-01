@@ -16,6 +16,7 @@
 
 package com.ning.billing.server.modules;
 
+
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.IDBI;
 
@@ -37,7 +38,6 @@ import com.ning.billing.jaxrs.resources.TagResource;
 import com.ning.billing.jaxrs.util.KillbillEventHandler;
 import com.ning.billing.jaxrs.util.TagHelper;
 import com.ning.billing.junction.glue.DefaultJunctionModule;
-
 import com.ning.billing.payment.glue.PaymentModule;
 import com.ning.billing.util.email.EmailModule;
 import com.ning.billing.util.email.templates.TemplateModule;
@@ -50,8 +50,7 @@ import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.TagStoreModule;
 import com.ning.jetty.jdbi.guice.providers.DBIProvider;
 
-public class KillbillServerModule extends AbstractModule
-{
+public class KillbillServerModule extends AbstractModule {
     @Override
     protected void configure() {
         configureDao();
@@ -59,7 +58,13 @@ public class KillbillServerModule extends AbstractModule
         installKillbillModules();
     }
 
+    
     protected void configureDao() {
+        // Load mysql driver if needed
+        try {
+            Class.forName ("com.mysql.jdbc.Driver").newInstance ();
+        } catch (Exception ignore) {
+        }
         bind(IDBI.class).to(DBI.class).asEagerSingleton();
         bind(DBI.class).toProvider(DBIProvider.class).asEagerSingleton();
     }
@@ -72,22 +77,22 @@ public class KillbillServerModule extends AbstractModule
         bind(InvoiceResource.class).asEagerSingleton();
         bind(TagResource.class).asEagerSingleton();
         bind(CatalogResource.class).asEagerSingleton();
-        bind(PaymentMethodResource.class).asEagerSingleton();        
-        bind(PaymentResource.class).asEagerSingleton();                
+        bind(PaymentMethodResource.class).asEagerSingleton();
+        bind(PaymentResource.class).asEagerSingleton();
         bind(KillbillEventHandler.class).asEagerSingleton();
     }
 
     protected void installClock() {
-        install(new ClockModule());    	
+        install(new ClockModule());
     }
-    
+
     protected void installKillbillModules() {
         install(new EmailModule());
         install(new GlobalLockerModule());
         install(new CustomFieldModule());
         install(new TagStoreModule());
         install(new CatalogModule());
-    	install(new BusModule());
+        install(new BusModule());
         install(new NotificationQueueModule());
         install(new CallContextModule());
         install(new AccountModule());
@@ -97,7 +102,7 @@ public class KillbillServerModule extends AbstractModule
         install(new AnalyticsModule());
         install(new PaymentModule());
         install(new BeatrixModule());
-        install(new DefaultJunctionModule());        
+        install(new DefaultJunctionModule());
         installClock();
     }
 }

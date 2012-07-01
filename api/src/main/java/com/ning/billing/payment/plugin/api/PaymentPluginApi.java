@@ -24,36 +24,36 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
 
 public interface PaymentPluginApi {
-    
+
     public String getName();
-    
+
     public PaymentInfoPlugin processPayment(String externalAccountKey, UUID paymentId, BigDecimal amount)
-    throws PaymentPluginApiException;
+            throws PaymentPluginApiException;
 
     public PaymentInfoPlugin getPaymentInfo(UUID paymentId)
-    throws PaymentPluginApiException;
+            throws PaymentPluginApiException;
 
     public List<PaymentInfoPlugin> processRefund(Account account)
-    throws PaymentPluginApiException;
-    
+            throws PaymentPluginApiException;
+
     public String createPaymentProviderAccount(Account account)
-    throws PaymentPluginApiException;
+            throws PaymentPluginApiException;
 
-    public List<PaymentMethodPlugin> getPaymentMethodDetails(String accountKey) 
-    throws PaymentPluginApiException;
+    public List<PaymentMethodPlugin> getPaymentMethodDetails(String accountKey)
+            throws PaymentPluginApiException;
 
-    public PaymentMethodPlugin getPaymentMethodDetail(String accountKey, String externalPaymentMethodId) 
-    throws PaymentPluginApiException;
+    public PaymentMethodPlugin getPaymentMethodDetail(String accountKey, String externalPaymentMethodId)
+            throws PaymentPluginApiException;
 
     public String addPaymentMethod(String accountKey, PaymentMethodPlugin paymentMethodProps, boolean setDefault)
-    throws PaymentPluginApiException;
+            throws PaymentPluginApiException;
 
     public void updatePaymentMethod(String accountKey, PaymentMethodPlugin paymentMethodProps)
-    throws PaymentPluginApiException;
+            throws PaymentPluginApiException;
 
     public void deletePaymentMethod(String accountKey, String externalPaymentMethodId)
-    throws PaymentPluginApiException;    
+            throws PaymentPluginApiException;
 
     public void setDefaultPaymentMethod(String accountKey, String externalPaymentId)
-    throws PaymentPluginApiException;    
+            throws PaymentPluginApiException;
 }

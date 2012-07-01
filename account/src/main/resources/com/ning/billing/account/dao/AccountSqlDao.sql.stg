@@ -39,7 +39,7 @@ create() ::= <<
 
 update() ::= <<
     UPDATE accounts
-    SET external_key = :externalKey, email = :email, name = :name, first_name_length = :firstNameLength,
+    SET email = :email, name = :name, first_name_length = :firstNameLength,
         currency = :currency, billing_cycle_day = :billingCycleDay, payment_method_id = :paymentMethodId,
         time_zone = :timeZone, locale = :locale,
         address1 = :address1, address2 = :address2, company_name = :companyName, city = :city, state_or_province = :stateOrProvince,

@@ -16,11 +16,6 @@
 
 package com.ning.billing.jaxrs.resources;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-
-import java.util.LinkedList;
-import java.util.List;
-
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -31,6 +26,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import java.util.LinkedList;
+import java.util.List;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -41,77 +38,78 @@ import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.tag.TagDefinition;
 
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+
 @Singleton
 @Path(JaxrsResource.TAG_DEFINITIONS_PATH)
 public class TagResource implements JaxrsResource {
-    
+
     private final TagUserApi tagUserApi;
     private final Context context;
     private final JaxrsUriBuilder uriBuilder;
-    
+
     @Inject
-    public TagResource(TagUserApi tagUserApi, final JaxrsUriBuilder uriBuilder, final Context context) {
+    public TagResource(final TagUserApi tagUserApi, final JaxrsUriBuilder uriBuilder, final Context context) {
         this.tagUserApi = tagUserApi;
         this.context = context;
         this.uriBuilder = uriBuilder;
     }
-    
+
     @GET
     @Produces(APPLICATION_JSON)
     public Response getTagDefinitions() {
-        
-        List<TagDefinitionJson> result = new LinkedList<TagDefinitionJson>();
-        List<TagDefinition> tagDefinitions = tagUserApi.getTagDefinitions();
-        for (TagDefinition cur : tagDefinitions) {
+
+        final List<TagDefinitionJson> result = new LinkedList<TagDefinitionJson>();
+        final List<TagDefinition> tagDefinitions = tagUserApi.getTagDefinitions();
+        for (final TagDefinition cur : tagDefinitions) {
             result.add(new TagDefinitionJson(cur.getName(), cur.getDescription()));
         }
         return Response.status(Status.OK).entity(result).build();
     }
-    
+
     @GET
     @Path("/{tagDefinitionName:" + STRING_PATTERN + "}")
     @Produces(APPLICATION_JSON)
     public Response getTagDefinition(@PathParam("tagDefinitionName") final String tagDefName) {
         try {
-            TagDefinition tagDef = tagUserApi.getTagDefinition(tagDefName);
-            TagDefinitionJson json = new TagDefinitionJson(tagDef.getName(), tagDef.getDescription());
+            final TagDefinition tagDef = tagUserApi.getTagDefinition(tagDefName);
+            final TagDefinitionJson json = new TagDefinitionJson(tagDef.getName(), tagDef.getDescription());
             return Response.status(Status.OK).entity(json).build();
         } catch (TagDefinitionApiException e) {
-            return Response.status(Status.NO_CONTENT).build(); 
+            return Response.status(Status.NO_CONTENT).build();
         }
     }
-
 
 
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response createTagDefinition(final TagDefinitionJson json,
-            @HeaderParam(HDR_CREATED_BY) final String createdBy,
-            @HeaderParam(HDR_REASON) final String reason,
-            @HeaderParam(HDR_COMMENT) final String comment) {
+                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                        @HeaderParam(HDR_REASON) final String reason,
+                                        @HeaderParam(HDR_COMMENT) final String comment) {
         try {
-            TagDefinition createdTagDef =  tagUserApi.create(json.getName(), json.getDescription(), context.createContext(createdBy, reason, comment));
+            final TagDefinition createdTagDef = tagUserApi.create(json.getName(), json.getDescription(), context.createContext(createdBy, reason, comment));
             return uriBuilder.buildResponse(TagResource.class, "getTagDefinition", createdTagDef.getName());
         } catch (TagDefinitionApiException e) {
-            return Response.status(Status.NO_CONTENT).build(); 
+            return Response.status(Status.NO_CONTENT).build();
         } catch (IllegalArgumentException e) {
             return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
         }
     }
-    
+
     @DELETE
     @Path("/{tagDefinitionName:" + STRING_PATTERN + "}")
     @Produces(APPLICATION_JSON)
-    public Response deleteTagDefinition(@PathParam("tagDefinitionName") String tagDefName,
-            @HeaderParam(HDR_CREATED_BY) final String createdBy,
-            @HeaderParam(HDR_REASON) final String reason,
-            @HeaderParam(HDR_COMMENT) final String comment) {
+    public Response deleteTagDefinition(@PathParam("tagDefinitionName") final String tagDefName,
+                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                        @HeaderParam(HDR_REASON) final String reason,
+                                        @HeaderParam(HDR_COMMENT) final String comment) {
         try {
             tagUserApi.deleteTagDefinition(tagDefName, context.createContext(createdBy, reason, comment));
             return Response.status(Status.NO_CONTENT).build();
         } catch (TagDefinitionApiException e) {
-            return Response.status(Status.NO_CONTENT).build(); 
+            return Response.status(Status.NO_CONTENT).build();
         } catch (IllegalArgumentException e) {
             return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
         }

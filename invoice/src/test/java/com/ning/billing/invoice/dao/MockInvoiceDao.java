@@ -213,7 +213,7 @@ public class MockInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public void postChargeback(final UUID invoicePaymentId, final BigDecimal amount, final CallContext context) throws InvoiceApiException {
+    public InvoicePayment postChargeback(final UUID invoicePaymentId, final BigDecimal amount, final CallContext context) throws InvoiceApiException {
         throw new UnsupportedOperationException();
     }
 

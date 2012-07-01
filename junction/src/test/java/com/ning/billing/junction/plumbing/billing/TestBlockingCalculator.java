@@ -16,10 +16,6 @@
 
 package com.ning.billing.junction.plumbing.billing;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertNull;
-
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Hashtable;
@@ -60,6 +56,10 @@ import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
+
 
 public class TestBlockingCalculator {
 
@@ -72,8 +72,8 @@ public class TestBlockingCalculator {
     private Subscription subscription2;
     private Subscription subscription3;
     private Subscription subscription4;
-    private UUID bundleId1 = UUID.randomUUID();
-    private UUID bundleId2 = UUID.randomUUID();
+    private final UUID bundleId1 = UUID.randomUUID();
+    private final UUID bundleId2 = UUID.randomUUID();
     private Clock clock;
     private BlockingCalculator odc;
 
@@ -81,8 +81,8 @@ public class TestBlockingCalculator {
     public void setUpBeforeClass() throws Exception {
 
         clock = new ClockMock();
-        
-        Injector i = Guice.createInjector(new AbstractModule() {
+
+        final Injector i = Guice.createInjector(new AbstractModule() {
 
             @Override
             protected void configure() {
@@ -105,13 +105,13 @@ public class TestBlockingCalculator {
                 ((ZombieControl) subscription2).addResult("getId", UUID.randomUUID());
                 ((ZombieControl) subscription3).addResult("getId", UUID.randomUUID());
                 ((ZombieControl) subscription4).addResult("getId", UUID.randomUUID());
-         
-         
+
+
                 bind(BlockingStateDao.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(BlockingStateDao.class));
-                bind(BlockingApi.class).toInstance(blockingApi);              
-                              
+                bind(BlockingApi.class).toInstance(blockingApi);
+
             }
-            
+
         });
         odc = i.getInstance(BlockingCalculator.class);
 
@@ -123,88 +123,88 @@ public class TestBlockingCalculator {
     // S1 --A-------------------------------------
     // S2 --B------C------------------------------
     // S3 ------------------D---------------------
-    
+
 
     //Result
     // S1 --A--[-------]--------------------------
     // S2 --B--[-------]--------------------------
     // S3 ------------------D---------------------
-    
+
     public void testInsertBlockingEvents() {
-        DateTime now = clock.getUTCNow();
-        List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
-        SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
-        
+        final DateTime now = clock.getUTCNow();
+        final List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
+        final SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
+
         disabledDuration.add(new DisabledDuration(now, null));
-        BillingEvent A = createRealEvent(now.minusDays(1).minusHours(1), subscription1);
-        BillingEvent B = createRealEvent(now.minusDays(1), subscription2);
-        BillingEvent C = createRealEvent(now.plusDays(1), subscription2);
-        BillingEvent D = createRealEvent(now.plusDays(3), subscription3);
+        final BillingEvent A = createRealEvent(now.minusDays(1).minusHours(1), subscription1);
+        final BillingEvent B = createRealEvent(now.minusDays(1), subscription2);
+        final BillingEvent C = createRealEvent(now.plusDays(1), subscription2);
+        final BillingEvent D = createRealEvent(now.plusDays(3), subscription3);
         billingEvents.add(A);
         billingEvents.add(B);
         billingEvents.add(C);
         billingEvents.add(D);
 
-        SortedSet<BlockingState> blockingStates = new TreeSet<BlockingState>();
-        blockingStates.add(new DefaultBlockingState(bundleId1,DISABLED_BUNDLE, Blockable.Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now));
-        blockingStates.add(new DefaultBlockingState(bundleId1,CLEAR_BUNDLE, Blockable.Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now.plusDays(2)));
-        
-        ((ZombieControl)blockingApi).addResult("getBlockingHistory", blockingStates);
-        
-        
+        final SortedSet<BlockingState> blockingStates = new TreeSet<BlockingState>();
+        blockingStates.add(new DefaultBlockingState(bundleId1, DISABLED_BUNDLE, Blockable.Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now));
+        blockingStates.add(new DefaultBlockingState(bundleId1, CLEAR_BUNDLE, Blockable.Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now.plusDays(2)));
+
+        ((ZombieControl) blockingApi).addResult("getBlockingHistory", blockingStates);
+
+
         odc.insertBlockingEvents(billingEvents);
-        
+
         assertEquals(billingEvents.size(), 7);
-        
-        SortedSet<BillingEvent> s1Events = odc.filter(billingEvents, subscription1);
-        Iterator<BillingEvent> it1 = s1Events.iterator();
+
+        final SortedSet<BillingEvent> s1Events = odc.filter(billingEvents, subscription1);
+        final Iterator<BillingEvent> it1 = s1Events.iterator();
         assertEquals(it1.next(), A);
         assertEquals(it1.next().getTransitionType(), SubscriptionTransitionType.CANCEL);
         assertEquals(it1.next().getTransitionType(), SubscriptionTransitionType.RE_CREATE);
-        
-        SortedSet<BillingEvent> s2Events = odc.filter(billingEvents, subscription2);
-        Iterator<BillingEvent> it2 = s2Events.iterator();       
+
+        final SortedSet<BillingEvent> s2Events = odc.filter(billingEvents, subscription2);
+        final Iterator<BillingEvent> it2 = s2Events.iterator();
         assertEquals(it2.next(), B);
         assertEquals(it2.next().getTransitionType(), SubscriptionTransitionType.CANCEL);
         assertEquals(it2.next().getTransitionType(), SubscriptionTransitionType.RE_CREATE);
-                
-        SortedSet<BillingEvent> s3Events = odc.filter(billingEvents, subscription3);
-        Iterator<BillingEvent> it3 = s3Events.iterator();       
-        assertEquals(it3.next(),D);
+
+        final SortedSet<BillingEvent> s3Events = odc.filter(billingEvents, subscription3);
+        final Iterator<BillingEvent> it3 = s3Events.iterator();
+        assertEquals(it3.next(), D);
     }
 
     // Open ended duration with a previous event
     // --X--[----------------------------------
-   @Test
+    @Test
     public void testEventsToRemoveOpenPrev() {
-       DateTime now = clock.getUTCNow();
-       List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
-       SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
-       
-       disabledDuration.add(new DisabledDuration(now, null));
-       billingEvents.add(createRealEvent(now.minusDays(1), subscription1));
-       
-       SortedSet<BillingEvent> results = odc.eventsToRemove( disabledDuration, billingEvents, subscription1);
-       
-       assertEquals(results.size(), 0);
-   }
+        final DateTime now = clock.getUTCNow();
+        final List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
+        final SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
 
-   // Open with previous and following events
-   // --X--[----Y-----------------------------
+        disabledDuration.add(new DisabledDuration(now, null));
+        billingEvents.add(createRealEvent(now.minusDays(1), subscription1));
+
+        final SortedSet<BillingEvent> results = odc.eventsToRemove(disabledDuration, billingEvents, subscription1);
+
+        assertEquals(results.size(), 0);
+    }
+
+    // Open with previous and following events
+    // --X--[----Y-----------------------------
     @Test
     public void testEventsToRemoveOpenPrevFollow() {
-        DateTime now = clock.getUTCNow();
-        List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
-        SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
-        
+        final DateTime now = clock.getUTCNow();
+        final List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
+        final SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
+
         disabledDuration.add(new DisabledDuration(now, null));
-        BillingEvent e1 = createRealEvent(now.minusDays(1), subscription1);
-        BillingEvent e2  = createRealEvent(now.plusDays(1), subscription1);
+        final BillingEvent e1 = createRealEvent(now.minusDays(1), subscription1);
+        final BillingEvent e2 = createRealEvent(now.plusDays(1), subscription1);
         billingEvents.add(e1);
         billingEvents.add(e2);
-        
-        SortedSet<BillingEvent> results = odc.eventsToRemove( disabledDuration, billingEvents,  subscription1);
-        
+
+        final SortedSet<BillingEvent> results = odc.eventsToRemove(disabledDuration, billingEvents, subscription1);
+
         assertEquals(results.size(), 1);
         assertEquals(results.first(), e2);
     }
@@ -213,54 +213,54 @@ public class TestBlockingCalculator {
     // -----[----X-----------------------------
     @Test
     public void testEventsToRemoveOpenFollow() {
-        DateTime now = clock.getUTCNow();
-        List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
-        SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
-        
+        final DateTime now = clock.getUTCNow();
+        final List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
+        final SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
+
         disabledDuration.add(new DisabledDuration(now, null));
-        BillingEvent e1  = createRealEvent(now.plusDays(1), subscription1);
+        final BillingEvent e1 = createRealEvent(now.plusDays(1), subscription1);
         billingEvents.add(e1);
-        
-        SortedSet<BillingEvent> results = odc.eventsToRemove( disabledDuration, billingEvents,  subscription1);
-        
+
+        final SortedSet<BillingEvent> results = odc.eventsToRemove(disabledDuration, billingEvents, subscription1);
+
         assertEquals(results.size(), 1);
         assertEquals(results.first(), e1);
-   }
+    }
 
     // Closed duration with a single previous event
     // --X--[------------]---------------------
-        @Test
+    @Test
     public void testEventsToRemoveClosedPrev() {
-            DateTime now = clock.getUTCNow();
-            List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
-            SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
-            
-            disabledDuration.add(new DisabledDuration(now, now.plusDays(2)));
-            BillingEvent e1  = createRealEvent(now.minusDays(1), subscription1);
-            billingEvents.add(e1);
-            
-            SortedSet<BillingEvent> results = odc.eventsToRemove( disabledDuration, billingEvents,  subscription1);
-            
-            assertEquals(results.size(), 0);
+        final DateTime now = clock.getUTCNow();
+        final List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
+        final SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
+
+        disabledDuration.add(new DisabledDuration(now, now.plusDays(2)));
+        final BillingEvent e1 = createRealEvent(now.minusDays(1), subscription1);
+        billingEvents.add(e1);
+
+        final SortedSet<BillingEvent> results = odc.eventsToRemove(disabledDuration, billingEvents, subscription1);
+
+        assertEquals(results.size(), 0);
     }
 
     // Closed duration with a previous event and in-between event
     // --X--[------Y-----]---------------------
     @Test
     public void testEventsToRemoveClosedPrevBetw() {
-        DateTime now = clock.getUTCNow();
-        List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
-        SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
-        
+        final DateTime now = clock.getUTCNow();
+        final List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
+        final SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
+
         disabledDuration.add(new DisabledDuration(now, now.plusDays(2)));
-        BillingEvent e1 = createRealEvent(now.minusDays(1), subscription1);
-        BillingEvent e2  = createRealEvent(now.plusDays(1), subscription1);
+        final BillingEvent e1 = createRealEvent(now.minusDays(1), subscription1);
+        final BillingEvent e2 = createRealEvent(now.plusDays(1), subscription1);
         billingEvents.add(e1);
-        billingEvents.add(e2);        
-       
-        
-        SortedSet<BillingEvent> results = odc.eventsToRemove( disabledDuration, billingEvents, subscription1);
-        
+        billingEvents.add(e2);
+
+
+        final SortedSet<BillingEvent> results = odc.eventsToRemove(disabledDuration, billingEvents, subscription1);
+
         assertEquals(results.size(), 1);
         assertEquals(results.first(), e2);
     }
@@ -269,39 +269,39 @@ public class TestBlockingCalculator {
     // --X--[------Y-----]-------Z-------------
     @Test
     public void testEventsToRemoveClosedPrevBetwNext() {
-        DateTime now = clock.getUTCNow();
-        List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
-        SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
-        
+        final DateTime now = clock.getUTCNow();
+        final List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
+        final SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
+
         disabledDuration.add(new DisabledDuration(now, now.plusDays(2)));
-        BillingEvent e1 = createRealEvent(now.minusDays(1), subscription1);
-        BillingEvent e2  = createRealEvent(now.plusDays(1), subscription1);
-        BillingEvent e3  = createRealEvent(now.plusDays(3), subscription1);
+        final BillingEvent e1 = createRealEvent(now.minusDays(1), subscription1);
+        final BillingEvent e2 = createRealEvent(now.plusDays(1), subscription1);
+        final BillingEvent e3 = createRealEvent(now.plusDays(3), subscription1);
         billingEvents.add(e1);
-        billingEvents.add(e2);        
-        billingEvents.add(e3);        
-        
-        SortedSet<BillingEvent> results = odc.eventsToRemove( disabledDuration, billingEvents, subscription1);
-        
+        billingEvents.add(e2);
+        billingEvents.add(e3);
+
+        final SortedSet<BillingEvent> results = odc.eventsToRemove(disabledDuration, billingEvents, subscription1);
+
         assertEquals(results.size(), 1);
         assertEquals(results.first(), e2);
-   }
+    }
 
     // Closed with no previous event but in-between events
     // -----[------Y-----]---------------------
     @Test
     public void testEventsToRemoveClosedBetwn() {
-        DateTime now = clock.getUTCNow();
-        List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
-        SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
-        
+        final DateTime now = clock.getUTCNow();
+        final List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
+        final SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
+
         disabledDuration.add(new DisabledDuration(now, now.plusDays(2)));
-        BillingEvent e2  = createRealEvent(now.plusDays(1), subscription1);
-        billingEvents.add(e2);        
-      
-        
-        SortedSet<BillingEvent> results = odc.eventsToRemove( disabledDuration, billingEvents, subscription1);
-        
+        final BillingEvent e2 = createRealEvent(now.plusDays(1), subscription1);
+        billingEvents.add(e2);
+
+
+        final SortedSet<BillingEvent> results = odc.eventsToRemove(disabledDuration, billingEvents, subscription1);
+
         assertEquals(results.size(), 1);
         assertEquals(results.first(), e2);
     }
@@ -310,19 +310,19 @@ public class TestBlockingCalculator {
     // -----[------Y-----]-------Z-------------
     @Test
     public void testEventsToRemoveClosedBetweenFollow() {
-        DateTime now = clock.getUTCNow();
-        List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
-        SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
-        
+        final DateTime now = clock.getUTCNow();
+        final List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
+        final SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
+
         disabledDuration.add(new DisabledDuration(now, now.plusDays(2)));
 
-        BillingEvent e2  = createRealEvent(now.plusDays(1), subscription1);
-        BillingEvent e3  = createRealEvent(now.plusDays(3), subscription1);
-        billingEvents.add(e2);        
-        billingEvents.add(e3);        
-        
-        SortedSet<BillingEvent> results = odc.eventsToRemove( disabledDuration, billingEvents, subscription1);
-        
+        final BillingEvent e2 = createRealEvent(now.plusDays(1), subscription1);
+        final BillingEvent e3 = createRealEvent(now.plusDays(3), subscription1);
+        billingEvents.add(e2);
+        billingEvents.add(e3);
+
+        final SortedSet<BillingEvent> results = odc.eventsToRemove(disabledDuration, billingEvents, subscription1);
+
         assertEquals(results.size(), 1);
         assertEquals(results.first(), e2);
     }
@@ -331,54 +331,54 @@ public class TestBlockingCalculator {
     // -----[------------]-------Z-------------
     @Test
     public void testEventsToRemoveClosedFollow() {
-        DateTime now = clock.getUTCNow();
-        List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
-        SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
-        
+        final DateTime now = clock.getUTCNow();
+        final List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
+        final SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
+
         disabledDuration.add(new DisabledDuration(now, now.plusDays(2)));
 
-        BillingEvent e3  = createRealEvent(now.plusDays(3), subscription1);
-       
-        billingEvents.add(e3);        
-        
-        SortedSet<BillingEvent> results = odc.eventsToRemove( disabledDuration, billingEvents, subscription1);
-        
+        final BillingEvent e3 = createRealEvent(now.plusDays(3), subscription1);
+
+        billingEvents.add(e3);
+
+        final SortedSet<BillingEvent> results = odc.eventsToRemove(disabledDuration, billingEvents, subscription1);
+
         assertEquals(results.size(), 0);
-     }
-    
+    }
+
     // Open ended duration with a previous event
     // --X--[----------------------------------
-   @Test
+    @Test
     public void testCreateNewEventsOpenPrev() {
-       DateTime now = clock.getUTCNow();
-       List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
-       SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
-       
-       disabledDuration.add(new DisabledDuration(now, null));
-       billingEvents.add(createRealEvent(now.minusDays(1), subscription1));
-       
-       SortedSet<BillingEvent> results = odc.createNewEvents( disabledDuration, billingEvents,  account, subscription1);
-       
-       assertEquals(results.size(), 1);
-       assertEquals(results.first().getEffectiveDate(), now);
-       assertEquals(results.first().getRecurringPrice(), BigDecimal.ZERO);
-       assertEquals(results.first().getTransitionType(), SubscriptionTransitionType.CANCEL);
-   }
+        final DateTime now = clock.getUTCNow();
+        final List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
+        final SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
 
-   // Open with previous and following events
-   // --X--[----Y-----------------------------
+        disabledDuration.add(new DisabledDuration(now, null));
+        billingEvents.add(createRealEvent(now.minusDays(1), subscription1));
+
+        final SortedSet<BillingEvent> results = odc.createNewEvents(disabledDuration, billingEvents, account, subscription1);
+
+        assertEquals(results.size(), 1);
+        assertEquals(results.first().getEffectiveDate(), now);
+        assertEquals(results.first().getRecurringPrice(), BigDecimal.ZERO);
+        assertEquals(results.first().getTransitionType(), SubscriptionTransitionType.CANCEL);
+    }
+
+    // Open with previous and following events
+    // --X--[----Y-----------------------------
     @Test
     public void testCreateNewEventsOpenPrevFollow() {
-        DateTime now = clock.getUTCNow();
-        List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
-        SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
-        
+        final DateTime now = clock.getUTCNow();
+        final List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
+        final SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
+
         disabledDuration.add(new DisabledDuration(now, null));
         billingEvents.add(createRealEvent(now.minusDays(1), subscription1));
         billingEvents.add(createRealEvent(now.plusDays(1), subscription1));
-        
-        SortedSet<BillingEvent> results = odc.createNewEvents( disabledDuration, billingEvents,  account, subscription1);
-        
+
+        final SortedSet<BillingEvent> results = odc.createNewEvents(disabledDuration, billingEvents, account, subscription1);
+
         assertEquals(results.size(), 1);
         assertEquals(results.first().getEffectiveDate(), now);
         assertEquals(results.first().getRecurringPrice(), BigDecimal.ZERO);
@@ -389,54 +389,54 @@ public class TestBlockingCalculator {
     // -----[----X-----------------------------
     @Test
     public void testCreateNewEventsOpenFollow() {
-        DateTime now = clock.getUTCNow();
-        List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
-        SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
-        
+        final DateTime now = clock.getUTCNow();
+        final List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
+        final SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
+
         disabledDuration.add(new DisabledDuration(now, null));
         billingEvents.add(createRealEvent(now.plusDays(1), subscription1));
-        
-        SortedSet<BillingEvent> results = odc.createNewEvents( disabledDuration, billingEvents,  account, subscription1);
-        
+
+        final SortedSet<BillingEvent> results = odc.createNewEvents(disabledDuration, billingEvents, account, subscription1);
+
         assertEquals(results.size(), 0);
-   }
+    }
 
     // Closed duration with a single previous event
     // --X--[------------]---------------------
-        @Test
+    @Test
     public void testCreateNewEventsClosedPrev() {
-            DateTime now = clock.getUTCNow();
-            List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
-            SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
-            
-            disabledDuration.add(new DisabledDuration(now, now.plusDays(2)));
-            billingEvents.add(createRealEvent(now.minusDays(1), subscription1));
-            
-            SortedSet<BillingEvent> results = odc.createNewEvents( disabledDuration, billingEvents,  account, subscription1);
-            
-            assertEquals(results.size(), 2);
-            assertEquals(results.first().getEffectiveDate(), now);
-            assertEquals(results.first().getRecurringPrice(), BigDecimal.ZERO);
-            assertEquals(results.first().getTransitionType(), SubscriptionTransitionType.CANCEL);
-            assertEquals(results.last().getEffectiveDate(), now.plusDays(2));
-            assertEquals(results.last().getRecurringPrice(), billingEvents.first().getRecurringPrice());
-            assertEquals(results.last().getTransitionType(), SubscriptionTransitionType.RE_CREATE);
+        final DateTime now = clock.getUTCNow();
+        final List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
+        final SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
+
+        disabledDuration.add(new DisabledDuration(now, now.plusDays(2)));
+        billingEvents.add(createRealEvent(now.minusDays(1), subscription1));
+
+        final SortedSet<BillingEvent> results = odc.createNewEvents(disabledDuration, billingEvents, account, subscription1);
+
+        assertEquals(results.size(), 2);
+        assertEquals(results.first().getEffectiveDate(), now);
+        assertEquals(results.first().getRecurringPrice(), BigDecimal.ZERO);
+        assertEquals(results.first().getTransitionType(), SubscriptionTransitionType.CANCEL);
+        assertEquals(results.last().getEffectiveDate(), now.plusDays(2));
+        assertEquals(results.last().getRecurringPrice(), billingEvents.first().getRecurringPrice());
+        assertEquals(results.last().getTransitionType(), SubscriptionTransitionType.RE_CREATE);
     }
 
     // Closed duration with a previous event and in-between event
     // --X--[------Y-----]---------------------
     @Test
     public void testCreateNewEventsClosedPrevBetw() {
-        DateTime now = clock.getUTCNow();
-        List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
-        SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
-        
+        final DateTime now = clock.getUTCNow();
+        final List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
+        final SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
+
         disabledDuration.add(new DisabledDuration(now, now.plusDays(2)));
         billingEvents.add(createRealEvent(now.minusDays(1), subscription1));
         billingEvents.add(createRealEvent(now.plusDays(1), subscription1));
-        
-        SortedSet<BillingEvent> results = odc.createNewEvents( disabledDuration, billingEvents,  account, subscription1);
-        
+
+        final SortedSet<BillingEvent> results = odc.createNewEvents(disabledDuration, billingEvents, account, subscription1);
+
         assertEquals(results.size(), 2);
         assertEquals(results.first().getEffectiveDate(), now);
         assertEquals(results.first().getRecurringPrice(), BigDecimal.ZERO);
@@ -450,17 +450,17 @@ public class TestBlockingCalculator {
     // --X--[------Y-----]-------Z-------------
     @Test
     public void testCreateNewEventsClosedPrevBetwNext() {
-        DateTime now = clock.getUTCNow();
-        List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
-        SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
-        
+        final DateTime now = clock.getUTCNow();
+        final List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
+        final SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
+
         disabledDuration.add(new DisabledDuration(now, now.plusDays(2)));
         billingEvents.add(createRealEvent(now.minusDays(1), subscription1));
         billingEvents.add(createRealEvent(now.plusDays(1), subscription1));
         billingEvents.add(createRealEvent(now.plusDays(3), subscription1));
-        
-        SortedSet<BillingEvent> results = odc.createNewEvents( disabledDuration, billingEvents,  account, subscription1);
-        
+
+        final SortedSet<BillingEvent> results = odc.createNewEvents(disabledDuration, billingEvents, account, subscription1);
+
         assertEquals(results.size(), 2);
         assertEquals(results.first().getEffectiveDate(), now);
         assertEquals(results.first().getRecurringPrice(), BigDecimal.ZERO);
@@ -468,21 +468,21 @@ public class TestBlockingCalculator {
         assertEquals(results.last().getEffectiveDate(), now.plusDays(2));
         assertEquals(results.last().getRecurringPrice(), billingEvents.first().getRecurringPrice());
         assertEquals(results.last().getTransitionType(), SubscriptionTransitionType.RE_CREATE);
-   }
+    }
 
     // Closed with no previous event but in-between events
     // -----[------Y-----]---------------------
     @Test
     public void testCreateNewEventsClosedBetwn() {
-        DateTime now = clock.getUTCNow();
-        List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
-        SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
-        
+        final DateTime now = clock.getUTCNow();
+        final List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
+        final SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
+
         disabledDuration.add(new DisabledDuration(now, now.plusDays(2)));
         billingEvents.add(createRealEvent(now.plusDays(1), subscription1));
-        
-        SortedSet<BillingEvent> results = odc.createNewEvents( disabledDuration, billingEvents,  account, subscription1);
-        
+
+        final SortedSet<BillingEvent> results = odc.createNewEvents(disabledDuration, billingEvents, account, subscription1);
+
         assertEquals(results.size(), 1);
         assertEquals(results.last().getEffectiveDate(), now.plusDays(2));
         assertEquals(results.last().getRecurringPrice(), billingEvents.first().getRecurringPrice());
@@ -493,15 +493,15 @@ public class TestBlockingCalculator {
     // -----[------Y-----]-------Z-------------
     @Test
     public void testCreateNewEventsClosedBetweenFollow() {
-        DateTime now = clock.getUTCNow();
-        List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
-        SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
-        
+        final DateTime now = clock.getUTCNow();
+        final List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
+        final SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
+
         disabledDuration.add(new DisabledDuration(now, now.plusDays(2)));
         billingEvents.add(createRealEvent(now.plusDays(1), subscription1));
-        
-        SortedSet<BillingEvent> results = odc.createNewEvents( disabledDuration, billingEvents,  account, subscription1);
-        
+
+        final SortedSet<BillingEvent> results = odc.createNewEvents(disabledDuration, billingEvents, account, subscription1);
+
         assertEquals(results.size(), 1);
         assertEquals(results.last().getEffectiveDate(), now.plusDays(2));
         assertEquals(results.last().getRecurringPrice(), billingEvents.first().getRecurringPrice());
@@ -512,40 +512,40 @@ public class TestBlockingCalculator {
     // -----[------------]-------Z-------------
     @Test
     public void testCreateNewEventsClosedFollow() {
-        DateTime now = clock.getUTCNow();
-        List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
-        SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
-        
+        final DateTime now = clock.getUTCNow();
+        final List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
+        final SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
+
         disabledDuration.add(new DisabledDuration(now, now.plusDays(2)));
         billingEvents.add(createRealEvent(now.plusDays(3), subscription1));
-        
-        SortedSet<BillingEvent> results = odc.createNewEvents( disabledDuration, billingEvents,  account, subscription1);
-        
+
+        final SortedSet<BillingEvent> results = odc.createNewEvents(disabledDuration, billingEvents, account, subscription1);
+
         assertEquals(results.size(), 0);
-     }
+    }
 
     @Test
     public void testPrecedingBillingEventForSubscription() {
-        DateTime now = new DateTime();
-        
-        SortedSet<BillingEvent> events = new TreeSet<BillingEvent>();
+        final DateTime now = new DateTime();
+
+        final SortedSet<BillingEvent> events = new TreeSet<BillingEvent>();
 
         events.add(createRealEvent(now.minusDays(10), subscription1));
         events.add(createRealEvent(now.minusDays(6), subscription1));
         events.add(createRealEvent(now.minusDays(5), subscription1));
         events.add(createRealEvent(now.minusDays(1), subscription1));
-        
-        BillingEvent minus11 = odc.precedingBillingEventForSubscription(now.minusDays(11), events, subscription1);
+
+        final BillingEvent minus11 = odc.precedingBillingEventForSubscription(now.minusDays(11), events, subscription1);
         assertNull(minus11);
-        
-        BillingEvent minus5andAHalf= odc.precedingBillingEventForSubscription(now.minusDays(5).minusHours(12), events, subscription1);
+
+        final BillingEvent minus5andAHalf = odc.precedingBillingEventForSubscription(now.minusDays(5).minusHours(12), events, subscription1);
         assertNotNull(minus5andAHalf);
         assertEquals(minus5andAHalf.getEffectiveDate(), now.minusDays(6));
-      
-        
+
+
     }
-    
-    protected BillingEvent createRealEvent(DateTime effectiveDate, Subscription subscription) {
+
+    protected BillingEvent createRealEvent(final DateTime effectiveDate, final Subscription subscription) {
         final Account account = this.account;
         final int billCycleDay = 1;
         final PlanPhase planPhase = new MockPlanPhase();
@@ -557,29 +557,29 @@ public class TestBlockingCalculator {
         final BillingModeType billingModeType = BillingModeType.IN_ADVANCE;
         final BillingPeriod billingPeriod = BillingPeriod.MONTHLY;
         final SubscriptionTransitionType type = SubscriptionTransitionType.CHANGE;
-        final Long totalOrdering = 0L; 
+        final Long totalOrdering = 0L;
         final DateTimeZone tz = DateTimeZone.UTC;
 
         return new DefaultBillingEvent(account, subscription, effectiveDate, plan, planPhase,
-                fixedPrice, recurringPrice, currency,
-                billingPeriod, billCycleDay, billingModeType,
-                description, totalOrdering, type, tz);
+                                       fixedPrice, recurringPrice, currency,
+                                       billingPeriod, billCycleDay, billingModeType,
+                                       description, totalOrdering, type, tz);
     }
 
 
     @Test
     public void testFilter() {
-        SortedSet<BillingEvent> events = new TreeSet<BillingEvent>();
-        
+        final SortedSet<BillingEvent> events = new TreeSet<BillingEvent>();
+
         events.add(createBillingEvent(subscription1));
         events.add(createBillingEvent(subscription1));
         events.add(createBillingEvent(subscription1));
         events.add(createBillingEvent(subscription2));
-        
-        SortedSet<BillingEvent> result1 = odc.filter(events, subscription1);
-        SortedSet<BillingEvent> result2 = odc.filter(events, subscription2);
-        SortedSet<BillingEvent> result3 = odc.filter(events, subscription3);
-        
+
+        final SortedSet<BillingEvent> result1 = odc.filter(events, subscription1);
+        final SortedSet<BillingEvent> result2 = odc.filter(events, subscription2);
+        final SortedSet<BillingEvent> result3 = odc.filter(events, subscription3);
+
         assertEquals(result1.size(), 3);
         assertEquals(result1.first().getSubscription(), subscription1);
         assertEquals(result1.last().getSubscription(), subscription1);
@@ -590,147 +590,147 @@ public class TestBlockingCalculator {
 
     @Test
     public void testCreateNewDisableEvent() {
-        DateTime now = clock.getUTCNow();
-        BillingEvent event = new MockBillingEvent();
-        
-        BillingEvent result = odc.createNewDisableEvent(now, event);
-        assertEquals(result.getBillCycleDay(),event.getBillCycleDay());
+        final DateTime now = clock.getUTCNow();
+        final BillingEvent event = new MockBillingEvent();
+
+        final BillingEvent result = odc.createNewDisableEvent(now, event);
+        assertEquals(result.getBillCycleDay(), event.getBillCycleDay());
         assertEquals(result.getEffectiveDate(), now);
         assertEquals(result.getPlanPhase(), event.getPlanPhase());
         assertEquals(result.getPlan(), event.getPlan());
-        assertEquals(result.getFixedPrice(),BigDecimal.ZERO);
+        assertEquals(result.getFixedPrice(), BigDecimal.ZERO);
         assertEquals(result.getRecurringPrice(), BigDecimal.ZERO);
         assertEquals(result.getCurrency(), event.getCurrency());
         assertEquals(result.getDescription(), "");
         assertEquals(result.getBillingMode(), event.getBillingMode());
         assertEquals(result.getBillingPeriod(), event.getBillingPeriod());
-        assertEquals(result.getTransitionType(),  SubscriptionTransitionType.CANCEL);
+        assertEquals(result.getTransitionType(), SubscriptionTransitionType.CANCEL);
         assertEquals(result.getTotalOrdering(), new Long(0));
     }
 
     @Test
     public void testCreateNewReenableEvent() {
-        DateTime now = clock.getUTCNow();
-        BillingEvent event = new MockBillingEvent();
-        
-        BillingEvent result = odc.createNewReenableEvent(now, event);
-        assertEquals(result.getBillCycleDay(),event.getBillCycleDay());
+        final DateTime now = clock.getUTCNow();
+        final BillingEvent event = new MockBillingEvent();
+
+        final BillingEvent result = odc.createNewReenableEvent(now, event);
+        assertEquals(result.getBillCycleDay(), event.getBillCycleDay());
         assertEquals(result.getEffectiveDate(), now);
         assertEquals(result.getPlanPhase(), event.getPlanPhase());
         assertEquals(result.getPlan(), event.getPlan());
-        assertEquals(result.getFixedPrice(),event.getFixedPrice());
+        assertEquals(result.getFixedPrice(), event.getFixedPrice());
         assertEquals(result.getRecurringPrice(), event.getRecurringPrice());
         assertEquals(result.getCurrency(), event.getCurrency());
         assertEquals(result.getDescription(), "");
         assertEquals(result.getBillingMode(), event.getBillingMode());
         assertEquals(result.getBillingPeriod(), event.getBillingPeriod());
-        assertEquals(result.getTransitionType(),  SubscriptionTransitionType.RE_CREATE);
+        assertEquals(result.getTransitionType(), SubscriptionTransitionType.RE_CREATE);
         assertEquals(result.getTotalOrdering(), new Long(0));
     }
-    
+
     private class MockBillingEvent extends DefaultBillingEvent {
         public MockBillingEvent() {
             super(account, subscription1, clock.getUTCNow(), null, null, BigDecimal.ZERO, BigDecimal.TEN, Currency.USD, BillingPeriod.ANNUAL,
-                    4, BillingModeType.IN_ADVANCE, "", 3L, SubscriptionTransitionType.CREATE, DateTimeZone.UTC);
-        }        
+                  4, BillingModeType.IN_ADVANCE, "", 3L, SubscriptionTransitionType.CREATE, DateTimeZone.UTC);
+        }
     }
 
     @Test
     public void testCreateBundleSubscriptionMap() {
-        SortedSet<BillingEvent> events = new TreeSet<BillingEvent>();
+        final SortedSet<BillingEvent> events = new TreeSet<BillingEvent>();
         events.add(createBillingEvent(subscription1));
         events.add(createBillingEvent(subscription2));
         events.add(createBillingEvent(subscription3));
         events.add(createBillingEvent(subscription4));
-        
-        Hashtable<UUID,List<Subscription>> map = odc.createBundleSubscriptionMap(events);
-        
+
+        final Hashtable<UUID, List<Subscription>> map = odc.createBundleSubscriptionMap(events);
+
         assertNotNull(map);
-        assertEquals(map.keySet().size(),2);
+        assertEquals(map.keySet().size(), 2);
         assertEquals(map.get(bundleId1).size(), 3);
         assertEquals(map.get(bundleId2).size(), 1);
-        
+
     }
 
-    private BillingEvent createBillingEvent(Subscription subscription) {
-        BillingEvent result =  BrainDeadProxyFactory.createBrainDeadProxyFor(BillingEvent.class, Comparable.class);
-        ((ZombieControl)result).addResult("getSubscription", subscription);
-        ((ZombieControl)result).addResult("compareTo", 1);
+    private BillingEvent createBillingEvent(final Subscription subscription) {
+        final BillingEvent result = BrainDeadProxyFactory.createBrainDeadProxyFor(BillingEvent.class, Comparable.class);
+        ((ZombieControl) result).addResult("getSubscription", subscription);
+        ((ZombieControl) result).addResult("compareTo", 1);
         return result;
     }
 
     @Test
     public void testCreateDisablePairs() {
         SortedSet<BlockingState> blockingEvents;
-        UUID ovdId = UUID.randomUUID();
-        DateTime now = clock.getUTCNow();
-        
+        final UUID ovdId = UUID.randomUUID();
+        final DateTime now = clock.getUTCNow();
+
         //simple events open clear -> disabled
         blockingEvents = new TreeSet<BlockingState>();
-        blockingEvents.add(new DefaultBlockingState(ovdId,CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE,"test", false, false, false, now));
-        blockingEvents.add(new DefaultBlockingState(ovdId,DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true,now.plusDays(1)));
-        
+        blockingEvents.add(new DefaultBlockingState(ovdId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now));
+        blockingEvents.add(new DefaultBlockingState(ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now.plusDays(1)));
+
         List<DisabledDuration> pairs = odc.createBlockingDurations(blockingEvents);
         assertEquals(pairs.size(), 1);
         assertNotNull(pairs.get(0).getStart());
-        assertEquals(pairs.get(0).getStart(),now.plusDays(1));
+        assertEquals(pairs.get(0).getStart(), now.plusDays(1));
         assertNull(pairs.get(0).getEnd());
-        
+
         //simple events closed clear -> disabled
         blockingEvents = new TreeSet<BlockingState>();
-        blockingEvents.add(new DefaultBlockingState(ovdId,CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE,"test", false, false, false,now));
-        blockingEvents.add(new DefaultBlockingState(ovdId,DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true,now.plusDays(1)));
-        blockingEvents.add(new DefaultBlockingState(ovdId,CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE,"test", false, false, false,now.plusDays(2)));
-        
+        blockingEvents.add(new DefaultBlockingState(ovdId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now));
+        blockingEvents.add(new DefaultBlockingState(ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now.plusDays(1)));
+        blockingEvents.add(new DefaultBlockingState(ovdId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now.plusDays(2)));
+
         pairs = odc.createBlockingDurations(blockingEvents);
         assertEquals(pairs.size(), 1);
         assertNotNull(pairs.get(0).getStart());
-        assertEquals(pairs.get(0).getStart(),now.plusDays(1));
+        assertEquals(pairs.get(0).getStart(), now.plusDays(1));
         assertNotNull(pairs.get(0).getEnd());
-        assertEquals(pairs.get(0).getEnd(),now.plusDays(2));
+        assertEquals(pairs.get(0).getEnd(), now.plusDays(2));
 
         //simple BUNDLE events closed clear -> disabled
         blockingEvents = new TreeSet<BlockingState>();
-        blockingEvents.add(new DefaultBlockingState(ovdId,CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE,"test", false, false, false,now));
-        blockingEvents.add(new DefaultBlockingState(ovdId,DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true,now.plusDays(1)));
-        blockingEvents.add(new DefaultBlockingState(ovdId,CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE,"test", false, false, false,now.plusDays(2)));
-        
+        blockingEvents.add(new DefaultBlockingState(ovdId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now));
+        blockingEvents.add(new DefaultBlockingState(ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now.plusDays(1)));
+        blockingEvents.add(new DefaultBlockingState(ovdId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now.plusDays(2)));
+
         pairs = odc.createBlockingDurations(blockingEvents);
         assertEquals(pairs.size(), 1);
         assertNotNull(pairs.get(0).getStart());
-        assertEquals(pairs.get(0).getStart(),now.plusDays(1));
+        assertEquals(pairs.get(0).getStart(), now.plusDays(1));
         assertNotNull(pairs.get(0).getEnd());
-        assertEquals(pairs.get(0).getEnd(),now.plusDays(2));
-        
-        
+        assertEquals(pairs.get(0).getEnd(), now.plusDays(2));
+
+
         //two or more disableds in a row
         blockingEvents = new TreeSet<BlockingState>();
-        blockingEvents.add(new DefaultBlockingState(ovdId,CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE,"test", false, false, false,now));
-        blockingEvents.add(new DefaultBlockingState(ovdId,DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true,now.plusDays(1)));
-        blockingEvents.add(new DefaultBlockingState(ovdId,DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true,now.plusDays(2)));
-        blockingEvents.add(new DefaultBlockingState(ovdId,CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE,"test", false, false, false,now.plusDays(3)));
-        
-        pairs = odc.createBlockingDurations(blockingEvents);
-        assertEquals(pairs.size(), 1);
-        assertNotNull(pairs.get(0).getStart());
-        assertEquals(pairs.get(0).getStart(),now.plusDays(1));
-        assertNotNull(pairs.get(0).getEnd());
-        assertEquals(pairs.get(0).getEnd(),now.plusDays(3));
+        blockingEvents.add(new DefaultBlockingState(ovdId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now));
+        blockingEvents.add(new DefaultBlockingState(ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now.plusDays(1)));
+        blockingEvents.add(new DefaultBlockingState(ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now.plusDays(2)));
+        blockingEvents.add(new DefaultBlockingState(ovdId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now.plusDays(3)));
 
-       
-        blockingEvents = new TreeSet<BlockingState>();
-        blockingEvents.add(new DefaultBlockingState(ovdId,CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE,"test", false, false, false,now));
-        blockingEvents.add(new DefaultBlockingState(ovdId,DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true,now.plusDays(1)));
-        blockingEvents.add(new DefaultBlockingState(ovdId,DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true,now.plusDays(2)));
-        blockingEvents.add(new DefaultBlockingState(ovdId,DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true,now.plusDays(3)));
-        blockingEvents.add(new DefaultBlockingState(ovdId,CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE,"test", false, false, false,now.plusDays(4)));
-        
         pairs = odc.createBlockingDurations(blockingEvents);
         assertEquals(pairs.size(), 1);
         assertNotNull(pairs.get(0).getStart());
-        assertEquals(pairs.get(0).getStart(),now.plusDays(1));
+        assertEquals(pairs.get(0).getStart(), now.plusDays(1));
         assertNotNull(pairs.get(0).getEnd());
-        assertEquals(pairs.get(0).getEnd(),now.plusDays(4));
-  
+        assertEquals(pairs.get(0).getEnd(), now.plusDays(3));
+
+
+        blockingEvents = new TreeSet<BlockingState>();
+        blockingEvents.add(new DefaultBlockingState(ovdId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now));
+        blockingEvents.add(new DefaultBlockingState(ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now.plusDays(1)));
+        blockingEvents.add(new DefaultBlockingState(ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now.plusDays(2)));
+        blockingEvents.add(new DefaultBlockingState(ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now.plusDays(3)));
+        blockingEvents.add(new DefaultBlockingState(ovdId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now.plusDays(4)));
+
+        pairs = odc.createBlockingDurations(blockingEvents);
+        assertEquals(pairs.size(), 1);
+        assertNotNull(pairs.get(0).getStart());
+        assertEquals(pairs.get(0).getStart(), now.plusDays(1));
+        assertNotNull(pairs.get(0).getEnd());
+        assertEquals(pairs.get(0).getEnd(), now.plusDays(4));
+
     }
 }

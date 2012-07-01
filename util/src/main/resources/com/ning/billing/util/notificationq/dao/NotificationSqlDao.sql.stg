@@ -4,6 +4,7 @@ getReadyNotifications() ::= <<
     select
       record_id
       , id
+      , class_name
       , notification_key
       , created_date
       , creating_owner
@@ -13,11 +14,13 @@ getReadyNotifications() ::= <<
       , processing_available_date
       , processing_state
     from notifications
+    FORCE INDEX (idx_comp_where)
     where
       effective_date \<= :now
       and queue_name = :queueName
       and processing_state != 'PROCESSED'
       and processing_state != 'REMOVED'
+      and creating_owner = :owner
       and (processing_owner IS NULL OR processing_available_date \<= :now)
     order by
       effective_date asc
@@ -62,6 +65,7 @@ removeNotificationsByKey() ::= <<
 insertNotification() ::= <<
     insert into notifications (
       id
+      , class_name
       , notification_key
       , created_date
       , creating_owner
@@ -72,6 +76,7 @@ insertNotification() ::= <<
       , processing_state
     ) values (
       :id
+      , :className
       , :notificationKey
       , :createdDate
       , :creatingOwner

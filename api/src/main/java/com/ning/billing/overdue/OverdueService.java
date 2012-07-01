@@ -24,5 +24,5 @@ public interface OverdueService extends KillbillService {
     public String getName();
 
     public OverdueUserApi getUserApi();
-    
+
 }

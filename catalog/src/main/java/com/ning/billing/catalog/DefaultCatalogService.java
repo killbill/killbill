@@ -37,11 +37,11 @@ public class DefaultCatalogService implements KillbillService, Provider<Catalog>
     private final CatalogConfig config;
     private boolean isInitialized;
 
-	private VersionedCatalogLoader loader;
+    private final VersionedCatalogLoader loader;
 
 
     @Inject
-    public DefaultCatalogService(CatalogConfig config, VersionedCatalogLoader loader) {
+    public DefaultCatalogService(final CatalogConfig config, final VersionedCatalogLoader loader) {
         this.config = config;
         this.isInitialized = false;
         this.loader = loader;
@@ -51,10 +51,9 @@ public class DefaultCatalogService implements KillbillService, Provider<Catalog>
     public synchronized void loadCatalog() throws ServiceException {
         if (!isInitialized) {
             try {
-            	String url = config.getCatalogURI();
-            	catalog = loader.load(url);
+                final String url = config.getCatalogURI();
+                catalog = loader.load(url);
 
-                //catalog = XMLLoader.getObjectFromProperty(config.getCatalogURI(), Catalog.class);
                 isInitialized = true;
             } catch (Exception e) {
                 throw new ServiceException(e);
@@ -69,10 +68,9 @@ public class DefaultCatalogService implements KillbillService, Provider<Catalog>
     }
 
 
-
     /* (non-Javadoc)
-     * @see com.ning.billing.catalog.ICatlogService#getCatalog()
-     */
+    * @see com.ning.billing.catalog.ICatlogService#getCatalog()
+    */
     @Override
     public Catalog getFullCatalog() {
         return catalog;
@@ -85,9 +83,9 @@ public class DefaultCatalogService implements KillbillService, Provider<Catalog>
         return catalog;
     }
 
-	@Override
-	public StaticCatalog getCurrentCatalog() {
-		return catalog;
-	}
+    @Override
+    public StaticCatalog getCurrentCatalog() {
+        return catalog;
+    }
 
 }

@@ -16,9 +16,9 @@
 
 package com.ning.billing.entitlement.events;
 
-import org.joda.time.DateTime;
-
 import java.util.UUID;
+
+import org.joda.time.DateTime;
 
 @SuppressWarnings("unchecked")
 public class EventBaseBuilder<T extends EventBaseBuilder<T>> {
@@ -39,7 +39,7 @@ public class EventBaseBuilder<T extends EventBaseBuilder<T>> {
         this.isActive = true;
     }
 
-    public EventBaseBuilder(EventBaseBuilder<?> copy) {
+    public EventBaseBuilder(final EventBaseBuilder<?> copy) {
         this.uuid = copy.uuid;
         this.subscriptionId = copy.subscriptionId;
         this.requestedDate = copy.requestedDate;
@@ -51,42 +51,42 @@ public class EventBaseBuilder<T extends EventBaseBuilder<T>> {
         this.totalOrdering = copy.totalOrdering;
     }
 
-    public T setTotalOrdering(long totalOrdering) {
+    public T setTotalOrdering(final long totalOrdering) {
         this.totalOrdering = totalOrdering;
         return (T) this;
     }
 
-    public T setUuid(UUID uuid) {
+    public T setUuid(final UUID uuid) {
         this.uuid = uuid;
         return (T) this;
     }
 
-    public T setSubscriptionId(UUID subscriptionId) {
+    public T setSubscriptionId(final UUID subscriptionId) {
         this.subscriptionId = subscriptionId;
         return (T) this;
     }
 
-    public T setRequestedDate(DateTime requestedDate) {
+    public T setRequestedDate(final DateTime requestedDate) {
         this.requestedDate = requestedDate;
         return (T) this;
     }
 
-    public T setEffectiveDate(DateTime effectiveDate) {
+    public T setEffectiveDate(final DateTime effectiveDate) {
         this.effectiveDate = effectiveDate;
         return (T) this;
     }
 
-    public T setProcessedDate(DateTime processedDate) {
+    public T setProcessedDate(final DateTime processedDate) {
         this.processedDate = processedDate;
         return (T) this;
     }
 
-    public T setActiveVersion(long activeVersion) {
+    public T setActiveVersion(final long activeVersion) {
         this.activeVersion = activeVersion;
         return (T) this;
     }
 
-    public T setActive(boolean isActive) {
+    public T setActive(final boolean isActive) {
         this.isActive = isActive;
         return (T) this;
     }

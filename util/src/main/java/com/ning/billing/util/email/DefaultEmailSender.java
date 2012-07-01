@@ -24,45 +24,49 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
+import com.ning.billing.ErrorCode;
 
-public class DefaultEmailSender implements EmailSender { 
+public class DefaultEmailSender implements EmailSender {
     private final Logger log = LoggerFactory.getLogger(EmailSender.class);
     private final EmailConfig config;
 
     @Inject
-    public DefaultEmailSender(EmailConfig emailConfig) {
+    public DefaultEmailSender(final EmailConfig emailConfig) {
         this.config = emailConfig;
     }
 
     @Override
-    public void sendSecureEmail(List<String> to, List<String> cc, String subject, String htmlBody) throws EmailApiException {
-        HtmlEmail email;
+    public void sendSecureEmail(final List<String> to, final List<String> cc, final String subject, final String htmlBody) throws EmailApiException {
+        final HtmlEmail email;
         try {
             email = new HtmlEmail();
 
             email.setSmtpPort(config.getSmtpPort());
-            email.setAuthentication(config.getSmtpUserName(), config.getSmtpPassword());
+            if (config.useSmtpAuth()) {
+                email.setAuthentication(config.getSmtpUserName(), config.getSmtpPassword());
+            }
             email.setHostName(config.getSmtpServerName());
-            email.setFrom(config.getSmtpUserName());
+            email.setFrom(config.getDefaultFrom());
+
             email.setSubject(subject);
             email.setHtmlMsg(htmlBody);
 
             if (to != null) {
-                for (String recipient : to) {
+                for (final String recipient : to) {
                     email.addTo(recipient);
                 }
             }
 
             if (cc != null) {
-                for (String recipient : cc) {
+                for (final String recipient : cc) {
                     email.addCc(recipient);
                 }
             }
 
-            email.setSSL(true);
+            email.setSSL(config.useSSL());
             email.send();
-        } catch (EmailException ee)  {
-            log.warn("Failed to send e-mail", ee);
+        } catch (EmailException ee) {
+            throw new EmailApiException(ee, ErrorCode.EMAIL_SENDING_FAILED);
         }
     }
 }

@@ -1,0 +1,90 @@
+group BusinessInvoice;
+
+getInvoice(invoice_id) ::= <<
+select
+  invoice_id
+, created_date
+, updated_date
+, account_key
+, invoice_date
+, target_date
+, currency
+, balance
+, amount_paid
+, amount_charged
+, amount_credited
+from bin
+where invoice_id = :invoice_id
+limit 1
+;
+>>
+
+getInvoicesForAccount(account_key) ::= <<
+select
+  invoice_id
+, created_date
+, updated_date
+, account_key
+, invoice_date
+, target_date
+, currency
+, balance
+, amount_paid
+, amount_charged
+, amount_credited
+from bin
+where account_key = :account_key
+order by created_date asc
+;
+>>
+
+createInvoice() ::= <<
+insert into bin (
+  invoice_id
+, created_date
+, updated_date
+, account_key
+, invoice_date
+, target_date
+, currency
+, balance
+, amount_paid
+, amount_charged
+, amount_credited
+) values (
+  :invoice_id
+, :created_date
+, :updated_date
+, :account_key
+, :invoice_date
+, :target_date
+, :currency
+, :balance
+, :amount_paid
+, :amount_charged
+, :amount_credited
+);
+>>
+
+updateInvoice() ::= <<
+update bin set
+  updated_date = :updated_date
+, account_key = :account_key
+, invoice_date = :invoice_date
+, target_date = :target_date
+, currency = :currency
+, balance = :balance
+, amount_paid = :amount_paid
+, amount_charged = :amount_charged
+, amount_credited = :amount_credited
+where invoice_id = :invoice_id
+;
+>>
+
+deleteInvoice(invoice_id) ::= <<
+delete from bin where invoice_id = :invoice_id;
+>>
+
+test() ::= <<
+select 1 from bin;
+>>

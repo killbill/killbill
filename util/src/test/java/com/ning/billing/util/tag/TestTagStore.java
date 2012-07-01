@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.joda.time.Seconds;
 import org.skife.jdbi.v2.Handle;
@@ -46,6 +45,7 @@ import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.util.io.IOUtils;
 import com.ning.billing.util.tag.dao.TagDao;
 import com.ning.billing.util.tag.dao.TagDefinitionDao;
 

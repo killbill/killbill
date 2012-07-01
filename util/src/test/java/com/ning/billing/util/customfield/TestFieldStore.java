@@ -19,23 +19,24 @@ package com.ning.billing.util.customfield;
 import java.io.IOException;
 import java.util.UUID;
 
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallOrigin;
-import com.ning.billing.util.callcontext.UserType;
-import com.ning.billing.util.callcontext.DefaultCallContextFactory;
-import com.ning.billing.util.clock.ClockMock;
-import com.ning.billing.util.customfield.dao.AuditedCustomFieldDao;
-import com.ning.billing.util.customfield.dao.CustomFieldDao;
-import com.ning.billing.util.dao.ObjectType;
-import org.apache.commons.io.IOUtils;
 import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+
 import com.ning.billing.dbi.MysqlTestingHelper;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.DefaultCallContextFactory;
+import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.customfield.dao.AuditedCustomFieldDao;
+import com.ning.billing.util.customfield.dao.CustomFieldDao;
 import com.ning.billing.util.customfield.dao.CustomFieldSqlDao;
+import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.util.io.IOUtils;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.fail;
@@ -60,17 +61,15 @@ public class TestFieldStore {
             dbi = helper.getDBI();
             customFieldDao = new AuditedCustomFieldDao(dbi);
             context = new DefaultCallContextFactory(new ClockMock()).createCallContext("Fezzik", CallOrigin.TEST, UserType.TEST);
-        }
-        catch (Throwable t) {
+        } catch (Throwable t) {
             log.error("Setup failed", t);
             fail(t.toString());
         }
     }
 
     @AfterClass(groups = {"util", "slow"})
-    public void stopMysql()
-    {
-        if (helper!= null) {
+    public void stopMysql() {
+        if (helper != null) {
             helper.stopMysql();
         }
     }
@@ -82,11 +81,11 @@ public class TestFieldStore {
 
         final FieldStore fieldStore1 = new DefaultFieldStore(id, objectType);
 
-        String fieldName = "TestField1";
+        final String fieldName = "TestField1";
         String fieldValue = "Kitty Hawk";
         fieldStore1.setValue(fieldName, fieldValue);
 
-        CustomFieldSqlDao customFieldSqlDao = dbi.onDemand(CustomFieldSqlDao.class);
+        final CustomFieldSqlDao customFieldSqlDao = dbi.onDemand(CustomFieldSqlDao.class);
         customFieldDao.saveEntitiesFromTransaction(customFieldSqlDao, id, objectType, fieldStore1.getEntityList(), context);
 
         final FieldStore fieldStore2 = DefaultFieldStore.create(id, objectType);

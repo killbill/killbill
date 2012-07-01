@@ -17,8 +17,8 @@
 package com.ning.billing.catalog.api;
 
 public enum PhaseType {
-	TRIAL,
-	DISCOUNT,
-	FIXEDTERM,
-	EVERGREEN
+    TRIAL,
+    DISCOUNT,
+    FIXEDTERM,
+    EVERGREEN
 }

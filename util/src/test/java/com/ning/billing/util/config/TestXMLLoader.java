@@ -16,10 +16,6 @@
 
 package com.ning.billing.util.config;
 
-import com.ning.billing.catalog.api.InvalidConfigException;
-import org.testng.annotations.Test;
-import org.xml.sax.SAXException;
-
 import javax.xml.bind.JAXBException;
 import javax.xml.transform.TransformerException;
 import java.io.ByteArrayInputStream;
@@ -28,28 +24,30 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import org.testng.annotations.Test;
+import org.xml.sax.SAXException;
+
+import com.ning.billing.catalog.api.InvalidConfigException;
+
 import static org.testng.Assert.assertEquals;
 
 
 public class TestXMLLoader {
-	public static final String TEST_XML = 
-			"<xmlTestClass>" +
-			"	<foo>foo</foo>" +
-			"	<bar>1.0</bar>" +
-			"	<lala>42</lala>" +
-			"</xmlTestClass>";
-	
-	@Test
-	public void test() throws SAXException, InvalidConfigException, JAXBException, IOException, TransformerException, URISyntaxException, ValidationException {
-		InputStream is = new ByteArrayInputStream(TEST_XML.getBytes());
-		XmlTestClass test = XMLLoader.getObjectFromStream(new URI("internal:/"), is, XmlTestClass.class);
-		assertEquals(test.getFoo(), "foo");
-		assertEquals(test.getBar(),1.0);
-		assertEquals(test.getLala(), 42);
-	}
-	
-	
-	
-	
-	
+    public static final String TEST_XML =
+            "<xmlTestClass>" +
+                    "	<foo>foo</foo>" +
+                    "	<bar>1.0</bar>" +
+                    "	<lala>42</lala>" +
+                    "</xmlTestClass>";
+
+    @Test
+    public void test() throws SAXException, InvalidConfigException, JAXBException, IOException, TransformerException, URISyntaxException, ValidationException {
+        final InputStream is = new ByteArrayInputStream(TEST_XML.getBytes());
+        final XmlTestClass test = XMLLoader.getObjectFromStream(new URI("internal:/"), is, XmlTestClass.class);
+        assertEquals(test.getFoo(), "foo");
+        assertEquals(test.getBar(), 1.0);
+        assertEquals(test.getLala(), 42);
+    }
+
+
 }

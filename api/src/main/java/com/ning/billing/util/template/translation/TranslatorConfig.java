@@ -19,8 +19,22 @@ package com.ning.billing.util.template.translation;
 import org.skife.config.Config;
 import org.skife.config.Default;
 
+import com.ning.billing.invoice.api.formatters.InvoiceFormatterFactory;
+
 public interface TranslatorConfig {
-    @Config("email.default.locale")
+    @Config("killbill.template.default.locale")
     @Default("en_US")
     public String getDefaultLocale();
+
+    @Config("killbill.template.bundlePath")
+    @Default("com/ning/billing/util/template/translation/InvoiceTranslation")
+    public String getBundlePath();
+
+    @Config("killbill.template.name")
+    @Default("com/ning/billing/util/email/templates/HtmlInvoiceTemplate.mustache")
+    String getTemplateName();
+
+    @Config("killbill.template.invoiceFormatterFactoryClass")
+    @Default("com.ning.billing.invoice.template.formatters.DefaultInvoiceFormatterFactory")
+    Class<? extends InvoiceFormatterFactory> getInvoiceFormatterFactoryClass();
 }

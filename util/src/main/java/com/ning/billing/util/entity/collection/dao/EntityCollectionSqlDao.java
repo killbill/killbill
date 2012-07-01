@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2012 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -38,16 +38,17 @@ import com.ning.billing.util.entity.Entity;
 /**
  * provides consistent semantics for entity collections
  * note: this is intended to be extended by an interface which provides @ExternalizedSqlViaStringTemplate3 and mappers
+ *
  * @param <T>
  */
 public interface EntityCollectionSqlDao<T extends Entity> {
-    @SqlBatch(transactional=false)
+    @SqlBatch
     public void insertFromTransaction(@Bind("objectId") final String objectId,
                                       @ObjectTypeBinder final ObjectType objectType,
                                       @BindBean final Collection<T> entities,
                                       @CallContextBinder final CallContext context);
 
-    @SqlBatch(transactional=false)
+    @SqlBatch
     public void deleteFromTransaction(@Bind("objectId") final String objectId,
                                       @ObjectTypeBinder final ObjectType objectType,
                                       @BindBean final Collection<T> entities,

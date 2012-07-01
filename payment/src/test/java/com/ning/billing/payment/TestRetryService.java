@@ -16,12 +16,6 @@
 
 package com.ning.billing.payment;
 
-import static com.jayway.awaitility.Awaitility.await;
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.fail;
-
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.Comparator;
@@ -30,18 +24,7 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeoutException;
 
-import com.ning.billing.payment.api.Payment;
-import com.ning.billing.payment.api.Payment.PaymentAttempt;
-import com.ning.billing.payment.api.PaymentApi;
-import com.ning.billing.payment.api.PaymentApiException;
-import com.ning.billing.payment.api.PaymentStatus;
-import com.ning.billing.payment.core.PaymentProcessor;
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallOrigin;
-import com.ning.billing.util.callcontext.DefaultCallContext;
-import com.ning.billing.util.callcontext.UserType;
 import org.joda.time.DateTime;
-import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -58,6 +41,11 @@ import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.mock.glue.MockClockModule;
 import com.ning.billing.mock.glue.MockJunctionModule;
+import com.ning.billing.payment.api.Payment;
+import com.ning.billing.payment.api.Payment.PaymentAttempt;
+import com.ning.billing.payment.api.PaymentApiException;
+import com.ning.billing.payment.api.PaymentStatus;
+import com.ning.billing.payment.core.PaymentProcessor;
 import com.ning.billing.payment.glue.DefaultPaymentService;
 import com.ning.billing.payment.glue.PaymentTestModuleWithMocks;
 import com.ning.billing.payment.provider.MockPaymentProviderPlugin;
@@ -65,10 +53,20 @@ import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
 import com.ning.billing.payment.retry.FailedPaymentRetryService;
 import com.ning.billing.payment.retry.PluginFailureRetryService;
 import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.DefaultCallContext;
+import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.glue.CallContextModule;
 
-@Guice(modules = { PaymentTestModuleWithMocks.class, MockClockModule.class, MockJunctionModule.class, CallContextModule.class })
+import static com.jayway.awaitility.Awaitility.await;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
+
+@Guice(modules = {PaymentTestModuleWithMocks.class, MockClockModule.class, MockJunctionModule.class, CallContextModule.class})
 public class TestRetryService {
     @Inject
     private PaymentConfig paymentConfig;
@@ -93,27 +91,20 @@ public class TestRetryService {
     private MockPaymentProviderPlugin mockPaymentProviderPlugin;
     private CallContext context;
 
-    @BeforeClass(groups = "fast")
-    public void initialize() throws Exception {
-        
-    }
-
     @BeforeMethod(groups = "fast")
     public void setUp() throws Exception {
-
         pluginRetryService.initialize(DefaultPaymentService.SERVICE_NAME);
         pluginRetryService.start();
-        
+
         retryService.initialize(DefaultPaymentService.SERVICE_NAME);
         retryService.start();
         eventBus.start();
-        
+
         mockPaymentProviderPlugin = (MockPaymentProviderPlugin) registry.getPlugin(null);
         mockPaymentProviderPlugin.clear();
-        
-        context = new DefaultCallContext("RetryServiceTests", CallOrigin.INTERNAL, UserType.TEST, clock);
-        ((ZombieControl)invoicePaymentApi).addResult("notifyOfPaymentAttempt", BrainDeadProxyFactory.ZOMBIE_VOID);
 
+        context = new DefaultCallContext("RetryServiceTests", CallOrigin.INTERNAL, UserType.TEST, clock);
+        ((ZombieControl) invoicePaymentApi).addResult("notifyOfPaymentAttempt", BrainDeadProxyFactory.ZOMBIE_VOID);
     }
 
     @AfterMethod(groups = "fast")
@@ -123,15 +114,13 @@ public class TestRetryService {
         eventBus.stop();
     }
 
-    
     private Payment getPaymentForInvoice(final UUID invoiceId) throws PaymentApiException {
-        List<Payment> payments = paymentProcessor.getInvoicePayments(invoiceId);
+        final List<Payment> payments = paymentProcessor.getInvoicePayments(invoiceId);
         assertEquals(payments.size(), 1);
-        Payment payment = payments.get(0);
+        final Payment payment = payments.get(0);
         assertEquals(payment.getInvoiceId(), invoiceId);
         return payment;
     }
-
 
     @Test(groups = "fast")
     public void testFailedPluginWithOneSuccessfulRetry() throws Exception {
@@ -164,9 +153,8 @@ public class TestRetryService {
         testSchedulesRetryInternal(paymentConfig.getPaymentRetryDays().size() + 1, FailureType.PAYMENT_FAILURE);
     }
 
+    private void testSchedulesRetryInternal(final int maxTries, final FailureType failureType) throws Exception {
 
-    private void testSchedulesRetryInternal(int maxTries, final FailureType failureType) throws Exception {
-        
         final Account account = testHelper.createTestAccount("yiyi.gmail.com");
         final Invoice invoice = testHelper.createTestInvoice(account, clock.getUTCNow(), Currency.USD);
         final BigDecimal amount = new BigDecimal("10.00");
@@ -176,15 +164,15 @@ public class TestRetryService {
         final DateTime startDate = clock.getUTCNow();
         final DateTime endDate = startDate.plusMonths(1);
         invoice.addInvoiceItem(new MockRecurringInvoiceItem(invoice.getId(),
-                                                       account.getId(),
-                                                       subscriptionId,
-                                                       bundleId,
-                                                       "test plan", "test phase",
-                                                       startDate,
-                                                       endDate,
-                                                       amount,
-                                                       new BigDecimal("1.0"),
-                                                       Currency.USD));
+                                                            account.getId(),
+                                                            subscriptionId,
+                                                            bundleId,
+                                                            "test plan", "test phase",
+                                                            startDate,
+                                                            endDate,
+                                                            amount,
+                                                            new BigDecimal("1.0"),
+                                                            Currency.USD));
         setPaymentFailure(failureType);
         boolean failed = false;
         try {
@@ -197,17 +185,17 @@ public class TestRetryService {
         for (int curFailure = 0; curFailure < maxTries; curFailure++) {
 
             if (curFailure < maxTries - 1) {
-                setPaymentFailure(failureType);                
+                setPaymentFailure(failureType);
             }
 
             if (curFailure < getMaxRetrySizeForFailureType(failureType)) {
-                
+
                 moveClockForFailureType(failureType, curFailure);
                 try {
                     await().atMost(3, SECONDS).until(new Callable<Boolean>() {
                         @Override
                         public Boolean call() throws Exception {
-                            Payment payment = getPaymentForInvoice(invoice.getId());
+                            final Payment payment = getPaymentForInvoice(invoice.getId());
                             return payment.getPaymentStatus() == PaymentStatus.SUCCESS;
                         }
                     });
@@ -218,70 +206,69 @@ public class TestRetryService {
                 }
             }
         }
-        Payment payment = getPaymentForInvoice(invoice.getId());
-        List<PaymentAttempt> attempts = payment.getAttempts();
-        
-        int expectedAttempts = maxTries < getMaxRetrySizeForFailureType(failureType) ?
+        final Payment payment = getPaymentForInvoice(invoice.getId());
+        final List<PaymentAttempt> attempts = payment.getAttempts();
+
+        final int expectedAttempts = maxTries < getMaxRetrySizeForFailureType(failureType) ?
                 maxTries + 1 : getMaxRetrySizeForFailureType(failureType) + 1;
         assertEquals(attempts.size(), expectedAttempts);
         Collections.sort(attempts, new Comparator<PaymentAttempt>() {
             @Override
-            public int compare(PaymentAttempt o1, PaymentAttempt o2) {
+            public int compare(final PaymentAttempt o1, final PaymentAttempt o2) {
                 return o1.getEffectiveDate().compareTo(o2.getEffectiveDate());
             }
         });
- 
+
         for (int i = 0; i < attempts.size(); i++) {
-            PaymentAttempt cur = attempts.get(i);
+            final PaymentAttempt cur = attempts.get(i);
             if (i < attempts.size() - 1) {
                 if (failureType == FailureType.PAYMENT_FAILURE) {
                     assertEquals(cur.getPaymentStatus(), PaymentStatus.PAYMENT_FAILURE);
                 } else {
-                    assertEquals(cur.getPaymentStatus(), PaymentStatus.PLUGIN_FAILURE);                    
+                    assertEquals(cur.getPaymentStatus(), PaymentStatus.PLUGIN_FAILURE);
                 }
             } else if (maxTries <= getMaxRetrySizeForFailureType(failureType)) {
                 assertEquals(cur.getPaymentStatus(), PaymentStatus.SUCCESS);
                 assertEquals(payment.getPaymentStatus(), PaymentStatus.SUCCESS);
             } else {
                 if (failureType == FailureType.PAYMENT_FAILURE) {
-                    assertEquals(cur.getPaymentStatus(), PaymentStatus.PAYMENT_FAILURE_ABORTED);      
+                    assertEquals(cur.getPaymentStatus(), PaymentStatus.PAYMENT_FAILURE_ABORTED);
                     assertEquals(payment.getPaymentStatus(), PaymentStatus.PAYMENT_FAILURE_ABORTED);
                 } else {
-                    assertEquals(cur.getPaymentStatus(), PaymentStatus.PLUGIN_FAILURE_ABORTED);      
+                    assertEquals(cur.getPaymentStatus(), PaymentStatus.PLUGIN_FAILURE_ABORTED);
                     assertEquals(payment.getPaymentStatus(), PaymentStatus.PLUGIN_FAILURE_ABORTED);
                 }
             }
         }
     }
-    
+
     private enum FailureType {
         PLUGIN_EXCEPTION,
         PAYMENT_FAILURE
     }
-    
-    private void setPaymentFailure(FailureType failureType) {
+
+    private void setPaymentFailure(final FailureType failureType) {
         if (failureType == FailureType.PAYMENT_FAILURE) {
             mockPaymentProviderPlugin.makeNextPaymentFailWithError();
         } else if (failureType == FailureType.PLUGIN_EXCEPTION) {
-            mockPaymentProviderPlugin.makeNextPaymentFailWithException();            
+            mockPaymentProviderPlugin.makeNextPaymentFailWithException();
         }
     }
-    
-    private void moveClockForFailureType(FailureType failureType, int curFailure) {
+
+    private void moveClockForFailureType(final FailureType failureType, final int curFailure) {
         if (failureType == FailureType.PAYMENT_FAILURE) {
-            int nbDays = paymentConfig.getPaymentRetryDays().get(curFailure);            
+            final int nbDays = paymentConfig.getPaymentRetryDays().get(curFailure);
             clock.addDays(nbDays + 1);
         } else {
             clock.addDays(1);
         }
     }
-    
-    private int getMaxRetrySizeForFailureType(FailureType failureType) {
-        if (failureType == FailureType.PAYMENT_FAILURE) {        
+
+    private int getMaxRetrySizeForFailureType(final FailureType failureType) {
+        if (failureType == FailureType.PAYMENT_FAILURE) {
             return paymentConfig.getPaymentRetryDays().size();
         } else {
             return paymentConfig.getPluginFailureRetryMaxAttempts();
         }
     }
-     
 }

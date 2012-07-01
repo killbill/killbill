@@ -21,8 +21,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
+import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
+import org.skife.config.SimplePropertyConfigSource;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 import com.ning.billing.config.PaymentConfig;
@@ -43,44 +46,46 @@ import com.ning.billing.payment.retry.PluginFailureRetryService;
 import com.ning.billing.payment.retry.PluginFailureRetryService.PluginFailureRetryServiceScheduler;
 
 public class PaymentModule extends AbstractModule {
-    
-    private final static int PLUGIN_NB_THREADS = 3;
-    private final static String PLUGIN_THREAD_PREFIX = "Plugin-th-";
-    
-    public final static String PLUGIN_EXECUTOR_NAMED = "PluginExecutor";
-    
+    private static final int PLUGIN_NB_THREADS = 3;
+    private static final String PLUGIN_THREAD_PREFIX = "Plugin-th-";
 
-    protected final Properties props;
+    public static final String PLUGIN_EXECUTOR_NAMED = "PluginExecutor";
+
+    @VisibleForTesting
+    protected ConfigSource configSource;
 
     public PaymentModule() {
-        this.props = System.getProperties();
+        this(System.getProperties());
     }
 
-    public PaymentModule(Properties props) {
-        this.props = props;
+    public PaymentModule(final ConfigSource configSource) {
+        this.configSource = configSource;
+    }
+
+    public PaymentModule(final Properties properties) {
+        this(new SimplePropertyConfigSource(properties));
     }
 
     protected void installPaymentDao() {
         bind(PaymentDao.class).to(AuditedPaymentDao.class).asEagerSingleton();
     }
 
-    protected void installPaymentProviderPlugins(PaymentConfig config) {
+    protected void installPaymentProviderPlugins(final PaymentConfig config) {
     }
 
     protected void installRetryEngines() {
         bind(FailedPaymentRetryService.class).asEagerSingleton();
-        bind(PluginFailureRetryService.class).asEagerSingleton(); 
+        bind(PluginFailureRetryService.class).asEagerSingleton();
         bind(FailedPaymentRetryServiceScheduler.class).asEagerSingleton();
-        bind(PluginFailureRetryServiceScheduler.class).asEagerSingleton();        
+        bind(PluginFailureRetryServiceScheduler.class).asEagerSingleton();
     }
-    
-    
+
     protected void installProcessors() {
         final ExecutorService pluginExecutorService = Executors.newFixedThreadPool(PLUGIN_NB_THREADS, new ThreadFactory() {
 
             @Override
-            public Thread newThread(Runnable r) {
-                Thread th = new Thread(r);
+            public Thread newThread(final Runnable r) {
+                final Thread th = new Thread(r);
                 th.setName(PLUGIN_THREAD_PREFIX + th.getId());
                 return th;
             }
@@ -93,7 +98,7 @@ public class PaymentModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        final ConfigurationObjectFactory factory = new ConfigurationObjectFactory(props);
+        final ConfigurationObjectFactory factory = new ConfigurationObjectFactory(configSource);
         final PaymentConfig paymentConfig = factory.build(PaymentConfig.class);
 
         bind(PaymentConfig.class).toInstance(paymentConfig);

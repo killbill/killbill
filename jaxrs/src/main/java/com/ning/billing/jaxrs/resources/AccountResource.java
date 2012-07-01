@@ -50,7 +50,9 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
+import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.account.api.AccountUserApi;
+import com.ning.billing.account.api.MutableAccountData;
 import com.ning.billing.entitlement.api.timeline.BundleTimeline;
 import com.ning.billing.entitlement.api.timeline.EntitlementRepairException;
 import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
@@ -58,10 +60,12 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceUserApi;
+import com.ning.billing.jaxrs.json.AccountEmailJson;
 import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.AccountTimelineJson;
 import com.ning.billing.jaxrs.json.BundleJsonNoSubscriptions;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
+import com.ning.billing.jaxrs.json.InvoiceEmailJson;
 import com.ning.billing.jaxrs.json.PaymentJsonSimple;
 import com.ning.billing.jaxrs.json.PaymentMethodJson;
 import com.ning.billing.jaxrs.util.Context;
@@ -78,11 +82,10 @@ import com.ning.billing.util.dao.ObjectType;
 @Singleton
 @Path(JaxrsResource.ACCOUNTS_PATH)
 public class AccountResource extends JaxRsResourceBase {
-
     private static final Logger log = LoggerFactory.getLogger(AccountResource.class);
     private static final String ID_PARAM_NAME = "accountId";
-    private static final String CUSTOM_FIELD_URI = JaxrsResource.CUSTOM_FIELDS;
-    private static final String TAG_URI = JaxrsResource.TAGS;
+    private static final String CUSTOM_FIELD_URI = JaxrsResource.CUSTOM_FIELDS + "/{" + ID_PARAM_NAME + ":" + UUID_PATTERN + "}";
+    private static final String TAG_URI = JaxrsResource.TAGS + "/{" + ID_PARAM_NAME + ":" + UUID_PATTERN + "}";
 
     private final AccountUserApi accountApi;
     private final EntitlementUserApi entitlementApi;
@@ -94,18 +97,18 @@ public class AccountResource extends JaxRsResourceBase {
 
     @Inject
     public AccountResource(final JaxrsUriBuilder uriBuilder,
-            final AccountUserApi accountApi,
-            final EntitlementUserApi entitlementApi,
-            final InvoiceUserApi invoiceApi,
-            final PaymentApi paymentApi,
-            final EntitlementTimelineApi timelineApi,
-            final CustomFieldUserApi customFieldUserApi,
-            final TagUserApi tagUserApi,
-            final TagHelper tagHelper,
-            final Context context) {
+                           final AccountUserApi accountApi,
+                           final EntitlementUserApi entitlementApi,
+                           final InvoiceUserApi invoiceApi,
+                           final PaymentApi paymentApi,
+                           final EntitlementTimelineApi timelineApi,
+                           final CustomFieldUserApi customFieldUserApi,
+                           final TagUserApi tagUserApi,
+                           final TagHelper tagHelper,
+                           final Context context) {
         super(uriBuilder, tagUserApi, tagHelper, customFieldUserApi);
         this.uriBuilder = uriBuilder;
-    	this.accountApi = accountApi;
+        this.accountApi = accountApi;
         this.entitlementApi = entitlementApi;
         this.invoiceApi = invoiceApi;
         this.paymentApi = paymentApi;
@@ -116,11 +119,11 @@ public class AccountResource extends JaxRsResourceBase {
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
-    public Response getAccount(@PathParam("accountId") String accountId) {
+    public Response getAccount(@PathParam("accountId") final String accountId) {
         try {
-            Account account = accountApi.getAccountById(UUID.fromString(accountId));
+            final Account account = accountApi.getAccountById(UUID.fromString(accountId));
 
-            AccountJson json = new AccountJson(account);
+            final AccountJson json = new AccountJson(account);
             return Response.status(Status.OK).entity(json).build();
         } catch (AccountApiException e) {
             return Response.status(Status.NO_CONTENT).build();
@@ -131,15 +134,15 @@ public class AccountResource extends JaxRsResourceBase {
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + BUNDLES)
     @Produces(APPLICATION_JSON)
-    public Response getAccountBundles(@PathParam("accountId") String accountId) {
+    public Response getAccountBundles(@PathParam("accountId") final String accountId) {
         try {
-            UUID uuid = UUID.fromString(accountId);
+            final UUID uuid = UUID.fromString(accountId);
             accountApi.getAccountById(uuid);
 
-            List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(uuid);
-            Collection<BundleJsonNoSubscriptions> result = Collections2.transform(bundles, new Function<SubscriptionBundle, BundleJsonNoSubscriptions>() {
+            final List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(uuid);
+            final Collection<BundleJsonNoSubscriptions> result = Collections2.transform(bundles, new Function<SubscriptionBundle, BundleJsonNoSubscriptions>() {
                 @Override
-                public BundleJsonNoSubscriptions apply(SubscriptionBundle input) {
+                public BundleJsonNoSubscriptions apply(final SubscriptionBundle input) {
                     return new BundleJsonNoSubscriptions(input);
                 }
             });
@@ -149,10 +152,9 @@ public class AccountResource extends JaxRsResourceBase {
         }
     }
 
-
     @GET
     @Produces(APPLICATION_JSON)
-    public Response getAccountByKey(@QueryParam(QUERY_EXTERNAL_KEY) String externalKey) {
+    public Response getAccountByKey(@QueryParam(QUERY_EXTERNAL_KEY) final String externalKey) {
         try {
             Account account = null;
             if (externalKey != null) {
@@ -161,24 +163,23 @@ public class AccountResource extends JaxRsResourceBase {
             if (account == null) {
                 return Response.status(Status.NO_CONTENT).build();
             }
-            AccountJson json = new AccountJson(account);
+            final AccountJson json = new AccountJson(account);
             return Response.status(Status.OK).entity(json).build();
         } catch (AccountApiException e) {
             return Response.status(Status.NO_CONTENT).build();
         }
     }
 
-
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response createAccount(final AccountJson json,
-            @HeaderParam(HDR_CREATED_BY) final String createdBy,
-            @HeaderParam(HDR_REASON) final String reason,
-            @HeaderParam(HDR_COMMENT) final String comment) {
+                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                  @HeaderParam(HDR_REASON) final String reason,
+                                  @HeaderParam(HDR_COMMENT) final String comment) {
 
         try {
-            AccountData data = json.toAccountData();
+            final AccountData data = json.toAccountData();
             final Account account = accountApi.createAccount(data, context.createContext(createdBy, reason, comment));
             return uriBuilder.buildResponse(AccountResource.class, "getAccount", account.getId());
         } catch (AccountApiException e) {
@@ -195,22 +196,22 @@ public class AccountResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @Path("/{accountId:" + UUID_PATTERN + "}")
     public Response updateAccount(final AccountJson json,
-            @PathParam("accountId") final String accountId,
-            @HeaderParam(HDR_CREATED_BY) final String createdBy,
-            @HeaderParam(HDR_REASON) final String reason,
-            @HeaderParam(HDR_COMMENT) final String comment) {
+                                  @PathParam("accountId") final String accountId,
+                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                  @HeaderParam(HDR_REASON) final String reason,
+                                  @HeaderParam(HDR_COMMENT) final String comment) {
         try {
-            AccountData data = json.toAccountData();
-            UUID uuid = UUID.fromString(accountId);
+            final AccountData data = json.toAccountData();
+            final UUID uuid = UUID.fromString(accountId);
             accountApi.updateAccount(uuid, data, context.createContext(createdBy, reason, comment));
             return getAccount(accountId);
         } catch (AccountApiException e) {
-        	if (e.getCode() == ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID.getCode()) {
+            if (e.getCode() == ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID.getCode()) {
                 return Response.status(Status.NO_CONTENT).build();
-        	} else {
-        		log.info(String.format("Failed to update account %s with %s", accountId, json), e);
+            } else {
+                log.info(String.format("Failed to update account %s with %s", accountId, json), e);
                 return Response.status(Status.BAD_REQUEST).build();
-        	}
+            }
         } catch (IllegalArgumentException e) {
             return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
         }
@@ -220,7 +221,7 @@ public class AccountResource extends JaxRsResourceBase {
     @DELETE
     @Path("/{accountId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
-    public Response cancelAccount(@PathParam("accountId") String accountId) {
+    public Response cancelAccount(@PathParam("accountId") final String accountId) {
         /*
         try {
             accountApi.cancelAccount(accountId);
@@ -236,20 +237,20 @@ public class AccountResource extends JaxRsResourceBase {
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + TIMELINE)
     @Produces(APPLICATION_JSON)
-    public Response getAccountTimeline(@PathParam("accountId") String accountId) {
+    public Response getAccountTimeline(@PathParam("accountId") final String accountId) {
         try {
 
-            Account account = accountApi.getAccountById(UUID.fromString(accountId));
+            final Account account = accountApi.getAccountById(UUID.fromString(accountId));
 
-            List<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId());
-            List<Payment> payments = paymentApi.getAccountPayments(UUID.fromString(accountId));
+            final List<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId());
+            final List<Payment> payments = paymentApi.getAccountPayments(UUID.fromString(accountId));
 
-            List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(account.getId());
-            List<BundleTimeline> bundlesTimeline = new LinkedList<BundleTimeline>();
-            for (SubscriptionBundle cur : bundles) {
+            final List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(account.getId());
+            final List<BundleTimeline> bundlesTimeline = new LinkedList<BundleTimeline>();
+            for (final SubscriptionBundle cur : bundles) {
                 bundlesTimeline.add(timelineApi.getBundleRepair(cur.getId()));
             }
-            AccountTimelineJson json = new AccountTimelineJson(account, invoices, payments, bundlesTimeline);
+            final AccountTimelineJson json = new AccountTimelineJson(account, invoices, payments, bundlesTimeline);
             return Response.status(Status.OK).entity(json).build();
         } catch (AccountApiException e) {
             return Response.status(Status.NO_CONTENT).build();
@@ -262,19 +263,61 @@ public class AccountResource extends JaxRsResourceBase {
         }
     }
 
+    /*
+     * ************************** EMAIL NOTIFICATIONS FOR INVOICES ********************************
+     */
 
-    /*****************************  PAYMENTS *********************************/
+    @GET
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + EMAIL_NOTIFICATIONS)
+    @Produces(APPLICATION_JSON)
+    public Response getEmailNotificationsForAccount(@PathParam("accountId") final String accountId) {
+        try {
+            final Account account = accountApi.getAccountById(UUID.fromString(accountId));
+            final InvoiceEmailJson invoiceEmailJson = new InvoiceEmailJson(accountId, account.isNotifiedForInvoices());
+
+            return Response.status(Status.OK).entity(invoiceEmailJson).build();
+        } catch (AccountApiException e) {
+            return Response.status(Status.NOT_FOUND).build();
+        }
+    }
+
+    @PUT
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + EMAIL_NOTIFICATIONS)
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    public Response getEmailNotificationsForAccount(final InvoiceEmailJson json,
+                                                    @PathParam("accountId") final String accountIdString,
+                                                    @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                                    @HeaderParam(HDR_REASON) final String reason,
+                                                    @HeaderParam(HDR_COMMENT) final String comment) {
+        try {
+            final UUID accountId = UUID.fromString(accountIdString);
+            final Account account = accountApi.getAccountById(accountId);
+
+            final MutableAccountData mutableAccountData = account.toMutableAccountData();
+            mutableAccountData.setIsNotifiedForInvoices(json.isNotifiedForInvoices());
+            accountApi.updateAccount(accountId, mutableAccountData, context.createContext(createdBy, reason, comment));
+
+            return Response.status(Status.OK).build();
+        } catch (AccountApiException e) {
+            return Response.status(Status.NOT_FOUND).build();
+        }
+    }
+
+    /*
+     * ************************** PAYMENTS ********************************
+     */
 
     @GET
     @Path("/{accountId:\\w+-\\w+-\\w+-\\w+-\\w+}/" + PAYMENTS)
     @Produces(APPLICATION_JSON)
-    public Response getPayments(@PathParam("accountId") String accountId,
-            @QueryParam(QUERY_PAYMENT_LAST4_CC) final String last4CC,
-            @QueryParam(QUERY_PAYMENT_NAME_ON_CC) final String nameOnCC) {
+    public Response getPayments(@PathParam("accountId") final String accountId,
+                                @QueryParam(QUERY_PAYMENT_LAST4_CC) final String last4CC,
+                                @QueryParam(QUERY_PAYMENT_NAME_ON_CC) final String nameOnCC) {
         try {
-             List<Payment> payments = paymentApi.getAccountPayments(UUID.fromString(accountId));
-            List<PaymentJsonSimple> result =  new ArrayList<PaymentJsonSimple>(payments.size());
-            for (Payment cur : payments) {
+            final List<Payment> payments = paymentApi.getAccountPayments(UUID.fromString(accountId));
+            final List<PaymentJsonSimple> result = new ArrayList<PaymentJsonSimple>(payments.size());
+            for (final Payment cur : payments) {
                 result.add(new PaymentJsonSimple(cur));
             }
             return Response.status(Status.OK).entity(result).build();
@@ -288,18 +331,16 @@ public class AccountResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response createPaymentMethod(final PaymentMethodJson json,
-            @QueryParam(QUERY_PAYMENT_METHOD_IS_DEFAULT) @DefaultValue("false") final Boolean isDefault,
-            @HeaderParam(HDR_CREATED_BY) final String createdBy,
-            @HeaderParam(HDR_REASON) final String reason,
-            @HeaderParam(HDR_COMMENT) final String comment,
-            @javax.ws.rs.core.Context UriInfo uriInfo) {
-
+                                        @QueryParam(QUERY_PAYMENT_METHOD_IS_DEFAULT) @DefaultValue("false") final Boolean isDefault,
+                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                        @HeaderParam(HDR_REASON) final String reason,
+                                        @HeaderParam(HDR_COMMENT) final String comment,
+                                        @javax.ws.rs.core.Context final UriInfo uriInfo) {
         try {
+            final PaymentMethod data = json.toPaymentMethod();
+            final Account account = accountApi.getAccountById(data.getAccountId());
 
-            PaymentMethod data = json.toPaymentMethod();
-            Account account = accountApi.getAccountById(data.getAccountId());
-
-            UUID paymentMethodId = paymentApi.addPaymentMethod(data.getPluginName(), account, isDefault, data.getPluginDetail(), context.createContext(createdBy, reason, comment));
+            final UUID paymentMethodId = paymentApi.addPaymentMethod(data.getPluginName(), account, isDefault, data.getPluginDetail(), context.createContext(createdBy, reason, comment));
             return uriBuilder.buildResponse(PaymentMethodResource.class, "getPaymentMethod", paymentMethodId, uriInfo.getBaseUri().toString());
         } catch (AccountApiException e) {
             final String error = String.format("Failed to create account %s", json);
@@ -317,21 +358,22 @@ public class AccountResource extends JaxRsResourceBase {
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + PAYMENT_METHODS)
     @Produces(APPLICATION_JSON)
-    public Response getPaymentMethods(@PathParam("accountId") String accountId,
-            @QueryParam(QUERY_PAYMENT_METHOD_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
-            @QueryParam(QUERY_PAYMENT_LAST4_CC) final String last4CC,
-            @QueryParam(QUERY_PAYMENT_NAME_ON_CC) final String nameOnCC) {
+    public Response getPaymentMethods(@PathParam("accountId") final String accountId,
+                                      @QueryParam(QUERY_PAYMENT_METHOD_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
+                                      @QueryParam(QUERY_PAYMENT_LAST4_CC) final String last4CC,
+                                      @QueryParam(QUERY_PAYMENT_NAME_ON_CC) final String nameOnCC) {
 
         try {
             final Account account = accountApi.getAccountById(UUID.fromString(accountId));
-            List<PaymentMethod> methods = paymentApi.getPaymentMethods(account, withPluginInfo);
-            List<PaymentMethodJson> json = new ArrayList<PaymentMethodJson>(Collections2.transform(methods, new Function<PaymentMethod, PaymentMethodJson>() {
+            final List<PaymentMethod> methods = paymentApi.getPaymentMethods(account, withPluginInfo);
+            final List<PaymentMethodJson> json = new ArrayList<PaymentMethodJson>(Collections2.transform(methods, new Function<PaymentMethod, PaymentMethodJson>() {
                 @Override
-                public PaymentMethodJson apply(PaymentMethod input) {
+                public PaymentMethodJson apply(final PaymentMethod input) {
                     return PaymentMethodJson.toPaymentMethodJson(account, input);
                 }
             }));
             return Response.status(Status.OK).entity(json).build();
+
         } catch (PaymentApiException e) {
             return Response.status(Status.NOT_FOUND).build();
         } catch (AccountApiException e) {
@@ -344,10 +386,10 @@ public class AccountResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @Path("/{accountId:" + UUID_PATTERN + "}/" + PAYMENT_METHODS + "/{paymentMethodId:" + UUID_PATTERN + "}/" + PAYMENT_METHODS_DEFAULT_PATH_POSTFIX)
     public Response setDefaultPaymentMethod(@PathParam("accountId") final String accountId,
-            @PathParam("paymentMethodId") final String paymentMethodId,
-            @HeaderParam(HDR_CREATED_BY) final String createdBy,
-            @HeaderParam(HDR_REASON) final String reason,
-            @HeaderParam(HDR_COMMENT) final String comment) {
+                                            @PathParam("paymentMethodId") final String paymentMethodId,
+                                            @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                            @HeaderParam(HDR_REASON) final String reason,
+                                            @HeaderParam(HDR_COMMENT) final String comment) {
         try {
             final Account account = accountApi.getAccountById(UUID.fromString(accountId));
             paymentApi.setDefaultPaymentMethod(account, UUID.fromString(paymentMethodId), context.createContext(createdBy, reason, comment));
@@ -361,7 +403,10 @@ public class AccountResource extends JaxRsResourceBase {
         }
     }
 
-    /**************************** TAGS AND CUSTOM FIELDS ******************************/
+    /*
+     * *************************      CUSTOM FIELDS     *****************************
+     */
+
     @GET
     @Path(CUSTOM_FIELD_URI)
     @Produces(APPLICATION_JSON)
@@ -370,62 +415,132 @@ public class AccountResource extends JaxRsResourceBase {
     }
 
     @POST
-    @Path("/{accountId:" + UUID_PATTERN + "}/" + CUSTOM_FIELD_URI)
+    @Path(CUSTOM_FIELD_URI)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response createCustomFields(@PathParam(ID_PARAM_NAME) final String id,
-            final List<CustomFieldJson> customFields,
-            @HeaderParam(HDR_CREATED_BY) final String createdBy,
-            @HeaderParam(HDR_REASON) final String reason,
-            @HeaderParam(HDR_COMMENT) final String comment) {
+                                       final List<CustomFieldJson> customFields,
+                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                       @HeaderParam(HDR_REASON) final String reason,
+                                       @HeaderParam(HDR_COMMENT) final String comment) {
         return super.createCustomFields(UUID.fromString(id), customFields,
-                context.createContext(createdBy, reason, comment));
+                                        context.createContext(createdBy, reason, comment));
     }
 
     @DELETE
-    @Path("/{accountId:" + UUID_PATTERN + "}/" + CUSTOM_FIELD_URI)
+    @Path(CUSTOM_FIELD_URI)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response deleteCustomFields(@PathParam(ID_PARAM_NAME) final String id,
-            @QueryParam(QUERY_CUSTOM_FIELDS) final String customFieldList,
-            @HeaderParam(HDR_CREATED_BY) final String createdBy,
-            @HeaderParam(HDR_REASON) final String reason,
-            @HeaderParam(HDR_COMMENT) final String comment) {
+                                       @QueryParam(QUERY_CUSTOM_FIELDS) final String customFieldList,
+                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                       @HeaderParam(HDR_REASON) final String reason,
+                                       @HeaderParam(HDR_COMMENT) final String comment) {
         return super.deleteCustomFields(UUID.fromString(id), customFieldList,
-                context.createContext(createdBy, reason, comment));
+                                        context.createContext(createdBy, reason, comment));
     }
 
+    /*
+     * *************************     TAGS     *****************************
+     */
+
     @GET
-    @Path("/{accountId:" + UUID_PATTERN + "}/" + TAG_URI)
+    @Path(TAG_URI)
     @Produces(APPLICATION_JSON)
-    public Response getTags(@PathParam(ID_PARAM_NAME) String id) {
+    public Response getTags(@PathParam(ID_PARAM_NAME) final String id) {
         return super.getTags(UUID.fromString(id));
     }
 
     @POST
-    @Path("/{accountId:" + UUID_PATTERN + "}/" + TAG_URI)
+    @Path(TAG_URI)
+    @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response createTags(@PathParam(ID_PARAM_NAME) final String id,
-            @QueryParam(QUERY_TAGS) final String tagList,
-            @HeaderParam(HDR_CREATED_BY) final String createdBy,
-            @HeaderParam(HDR_REASON) final String reason,
-            @HeaderParam(HDR_COMMENT) final String comment) {
+                               @QueryParam(QUERY_TAGS) final String tagList,
+                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                               @HeaderParam(HDR_REASON) final String reason,
+                               @HeaderParam(HDR_COMMENT) final String comment) {
         return super.createTags(UUID.fromString(id), tagList,
                                 context.createContext(createdBy, reason, comment));
     }
 
     @DELETE
-    @Path("/{accountId:" + UUID_PATTERN + "}/" + TAG_URI)
+    @Path(TAG_URI)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response deleteTags(@PathParam(ID_PARAM_NAME) final String id,
-            @QueryParam(QUERY_TAGS) final String tagList,
-            @HeaderParam(HDR_CREATED_BY) final String createdBy,
-            @HeaderParam(HDR_REASON) final String reason,
-            @HeaderParam(HDR_COMMENT) final String comment) {
+                               @QueryParam(QUERY_TAGS) final String tagList,
+                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                               @HeaderParam(HDR_REASON) final String reason,
+                               @HeaderParam(HDR_COMMENT) final String comment) {
 
         return super.deleteTags(UUID.fromString(id), tagList,
                                 context.createContext(createdBy, reason, comment));
+    }
+
+    /*
+     * *************************     EMAILS     *****************************
+     */
+
+    @GET
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + EMAILS)
+    @Produces(APPLICATION_JSON)
+    public Response getEmails(@PathParam(ID_PARAM_NAME) final String id) {
+        final UUID accountId = UUID.fromString(id);
+        final List<AccountEmail> emails = accountApi.getEmails(accountId);
+
+        final List<AccountEmailJson> emailsJson = new ArrayList<AccountEmailJson>();
+        for (final AccountEmail email : emails) {
+            emailsJson.add(new AccountEmailJson(email.getAccountId().toString(), email.getEmail()));
+        }
+        return Response.status(Response.Status.OK).entity(emailsJson).build();
+    }
+
+    @POST
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + EMAILS)
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    public Response addEmail(final AccountEmailJson json,
+                             @PathParam(ID_PARAM_NAME) final String id,
+                             @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                             @HeaderParam(HDR_REASON) final String reason,
+                             @HeaderParam(HDR_COMMENT) final String comment) {
+        try {
+            final UUID accountId = UUID.fromString(id);
+
+            // Make sure the account exist or we will confuse the history and auditing code
+            if (accountApi.getAccountById(accountId) == null) {
+                return Response.status(Response.Status.BAD_REQUEST).entity("Account id " + accountId + " does not exist").build();
+            }
+
+            accountApi.addEmail(accountId, json.toAccountEmail(), context.createContext(createdBy, reason, comment));
+
+            return uriBuilder.buildResponse(AccountResource.class, "getEmails", json.getAccountId());
+        } catch (RuntimeException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        } catch (AccountApiException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        }
+    }
+
+    @DELETE
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + EMAILS + "/{email}")
+    @Produces(APPLICATION_JSON)
+    public Response removeEmail(@PathParam(ID_PARAM_NAME) final String id,
+                                @PathParam("email") final String email,
+                                @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                @HeaderParam(HDR_REASON) final String reason,
+                                @HeaderParam(HDR_COMMENT) final String comment) {
+        try {
+            final UUID accountId = UUID.fromString(id);
+            final AccountEmailJson accountEmailJson = new AccountEmailJson(id, email);
+            final AccountEmail accountEmail = accountEmailJson.toAccountEmail();
+            accountApi.removeEmail(accountId, accountEmail, context.createContext(createdBy, reason, comment));
+
+            return Response.status(Response.Status.OK).build();
+        } catch (RuntimeException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        }
     }
 
     @Override

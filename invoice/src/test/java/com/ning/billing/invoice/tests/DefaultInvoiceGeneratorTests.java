@@ -85,6 +85,11 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
             }
 
             @Override
+            public boolean isEmailNotificationsEnabled() {
+                return false;
+            }
+
+            @Override
             public boolean isNotificationProcessingOff() {
                 throw new UnsupportedOperationException();
             }

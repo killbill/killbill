@@ -13,7 +13,7 @@
     <parent>
         <groupId>com.ning.billing</groupId>
         <artifactId>killbill</artifactId>
-        <version>0.1.13-SNAPSHOT</version>
+        <version>0.1.20-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>killbill-beatrix</artifactId>
@@ -67,15 +67,20 @@
         </dependency>
 
         <!-- TEST SCOPE -->
-        <dependency> 
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>com.jayway.awaitility</groupId>
             <artifactId>awaitility</artifactId>
             <scope>test</scope>
-        </dependency>      
-         <dependency>
+        </dependency>
+        <dependency>
             <groupId>com.ning.billing</groupId>
             <artifactId>killbill-junction</artifactId>
-             <type>test-jar</type>
+            <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -103,6 +108,11 @@
         </dependency>
         <dependency>
             <groupId>com.ning.billing</groupId>
+            <artifactId>killbill-analytics</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.ning.billing</groupId>
             <artifactId>killbill-overdue</artifactId>
             <scope>test</scope>
         </dependency>
@@ -115,11 +125,6 @@
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

@@ -17,28 +17,28 @@
 package com.ning.billing.util.config;
 
 
-import java.net.URI;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import java.net.URI;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public abstract class ValidatingConfig<Context> {
-	/**
-	 * All must implement validation
-	 * 
-	 * @param root
-	 * @param errors
-	 * @return
-	 */
-	public abstract ValidationErrors validate(Context root, ValidationErrors errors);
-	
-	
-	/**
-	 * Override  to initialize
-	 * 
-	 * @param root
-	 */
-	public void initialize(Context root, URI uri){}
+    /**
+     * All must implement validation
+     *
+     * @param root
+     * @param errors
+     * @return
+     */
+    public abstract ValidationErrors validate(Context root, ValidationErrors errors);
+
+
+    /**
+     * Override  to initialize
+     *
+     * @param root
+     */
+    public void initialize(final Context root, final URI uri) {
+    }
 
 }

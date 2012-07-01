@@ -19,23 +19,23 @@ package com.ning.billing.util.callcontext;
 import java.util.UUID;
 
 public abstract class CallContextBase implements CallContext {
-	private final UUID userToken;
+    private final UUID userToken;
     private final String userName;
     private final CallOrigin callOrigin;
     private final UserType userType;
     private final String reasonCode;
     private final String comment;
 
-    public CallContextBase(String userName, CallOrigin callOrigin, UserType userType) {
-    	this(userName, callOrigin, userType, null);
+    public CallContextBase(final String userName, final CallOrigin callOrigin, final UserType userType) {
+        this(userName, callOrigin, userType, null);
     }
 
-    public CallContextBase(String userName, CallOrigin callOrigin, UserType userType, UUID userToken) {
+    public CallContextBase(final String userName, final CallOrigin callOrigin, final UserType userType, final UUID userToken) {
         this(userName, callOrigin, userType, null, null, userToken);
     }
 
-    public CallContextBase(String userName, CallOrigin callOrigin, UserType userType,
-                           String reasonCode, String comment, UUID userToken) {
+    public CallContextBase(final String userName, final CallOrigin callOrigin, final UserType userType,
+                           final String reasonCode, final String comment, final UUID userToken) {
         this.userName = userName;
         this.callOrigin = callOrigin;
         this.userType = userType;
@@ -68,9 +68,9 @@ public abstract class CallContextBase implements CallContext {
     public String getComment() {
         return comment;
     }
-    
+
     @Override
     public UUID getUserToken() {
-    	return userToken;
+        return userToken;
     }
 }

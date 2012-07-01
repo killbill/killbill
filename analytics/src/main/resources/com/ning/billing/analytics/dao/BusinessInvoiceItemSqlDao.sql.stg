@@ -1,0 +1,139 @@
+group BusinessInvoiceItem;
+
+getInvoiceItem(item_id) ::= <<
+select
+  item_id
+, created_date
+, updated_date
+, invoice_id
+, item_type
+, external_key
+, product_name
+, product_type
+, product_category
+, slug
+, phase
+, billing_period
+, start_date
+, end_date
+, amount
+, currency
+from bii
+where item_id = :item_id
+limit 1
+;
+>>
+
+getInvoiceItemsForInvoice(invoice_id) ::= <<
+select
+  item_id
+, created_date
+, updated_date
+, invoice_id
+, item_type
+, external_key
+, product_name
+, product_type
+, product_category
+, slug
+, phase
+, billing_period
+, start_date
+, end_date
+, amount
+, currency
+from bii
+where invoice_id = :invoice_id
+order by created_date asc
+;
+>>
+
+getInvoiceItemsForBundle(external_key) ::= <<
+select
+  item_id
+, created_date
+, updated_date
+, invoice_id
+, item_type
+, external_key
+, product_name
+, product_type
+, product_category
+, slug
+, phase
+, billing_period
+, start_date
+, end_date
+, amount
+, currency
+from bii
+where external_key = :external_key
+order by created_date asc
+;
+>>
+
+createInvoiceItem() ::= <<
+insert into bii (
+  item_id
+, created_date
+, updated_date
+, invoice_id
+, item_type
+, external_key
+, product_name
+, product_type
+, product_category
+, slug
+, phase
+, billing_period
+, start_date
+, end_date
+, amount
+, currency
+) values (
+  :item_id
+, :created_date
+, :updated_date
+, :invoice_id
+, :item_type
+, :external_key
+, :product_name
+, :product_type
+, :product_category
+, :slug
+, :phase
+, :billing_period
+, :start_date
+, :end_date
+, :amount
+, :currency
+);
+>>
+
+updateInvoiceItem() ::= <<
+update bii set
+  updated_date = :updated_date
+, invoice_id = :invoice_id
+, item_type = :item_type
+, external_key = :external_key
+, product_name = :product_name
+, product_type = :product_type
+, product_category = :product_category
+, slug = :slug
+, phase = :phase
+, billing_period = :billing_period
+, start_date = :start_date
+, end_date = :end_date
+, amount = :amount
+, currency = :currency
+where item_id = :item_id
+;
+>>
+
+deleteInvoiceItem(item_id) ::= <<
+delete from bii where item_id = :item_id;
+>>
+
+test() ::= <<
+select 1 from bii;
+>>

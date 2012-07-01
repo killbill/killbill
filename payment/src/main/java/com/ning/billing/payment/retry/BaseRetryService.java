@@ -15,6 +15,7 @@
  */
 package com.ning.billing.payment.retry;
 
+import java.io.IOException;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -34,34 +35,38 @@ import com.ning.billing.util.notificationq.NotificationQueueService.Notification
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
 
 public abstract class BaseRetryService implements RetryService {
-    
+
     private static final Logger log = LoggerFactory.getLogger(BaseRetryService.class);
-    
+
     private final NotificationQueueService notificationQueueService;
-    private final Clock clock;
     private final PaymentConfig config;
-    
+
     private NotificationQueue retryQueue;
-    
+
     public BaseRetryService(final NotificationQueueService notificationQueueService,
             final Clock clock, final PaymentConfig config) {
         this.notificationQueueService = notificationQueueService;
-        this.clock = clock;
+        final Clock clock1 = clock;
         this.config = config;
     }
-   
+
 
     @Override
     public void initialize(final String svcName) throws NotificationQueueAlreadyExists {
         retryQueue = notificationQueueService.createNotificationQueue(svcName, getQueueName(), new NotificationQueueHandler() {
             @Override
-            public void handleReadyNotification(String notificationKey, DateTime eventDateTime) {
-                retry(UUID.fromString(notificationKey));
+            public void handleReadyNotification(final NotificationKey notificationKey, final DateTime eventDateTime) {
+                if (! (notificationKey instanceof PaymentRetryNotificationKey)) {
+                    log.error("Payment service got an unexpected notification type {}", notificationKey.getClass().getName());
+                    return;
+                }
+                final PaymentRetryNotificationKey key = (PaymentRetryNotificationKey) notificationKey;
+                retry(key.getUuidKey());
             }
         },
         config);
     }
-
+    
     @Override
     public void start() {
         retryQueue.startQueue();
@@ -74,27 +79,27 @@ public abstract class BaseRetryService implements RetryService {
             notificationQueueService.deleteNotificationQueue(retryQueue.getServiceName(), retryQueue.getQueueName());
         }
     }
-    
+
     public abstract String getQueueName();
-    
-    
+
+
     public abstract static class RetryServiceScheduler {
-        
+
         private final NotificationQueueService notificationQueueService;
-        
+
         @Inject
         public RetryServiceScheduler(final NotificationQueueService notificationQueueService) {
             this.notificationQueueService = notificationQueueService;
         }
-    
+
         public boolean scheduleRetryFromTransaction(final UUID paymentId, final DateTime timeOfRetry, final Transmogrifier transactionalDao) {
             return scheduleRetryInternal(paymentId, timeOfRetry, transactionalDao);
         }
-        
+
         public boolean scheduleRetry(final UUID paymentId, final DateTime timeOfRetry) {
             return scheduleRetryInternal(paymentId, timeOfRetry, null);
         }
-        
+
         // STEPH TimedoutPaymentRetryServiceScheduler
         public void cancelAllScheduleRetryForKey(final UUID paymentId) {
             /*
@@ -110,19 +115,14 @@ public abstract class BaseRetryService implements RetryService {
             } catch (NoSuchNotificationQueue e) {
                 log.error(String.format("Failed to retrieve notification queue %s:%s", DefaultPaymentService.SERVICE_NAME, getQueueName()));
             }
-            */
+             */
         }
-        
+
         private boolean scheduleRetryInternal(final UUID paymentId, final DateTime timeOfRetry, final Transmogrifier transactionalDao) {
 
             try {
-                NotificationQueue retryQueue = notificationQueueService.getNotificationQueue(DefaultPaymentService.SERVICE_NAME, getQueueName());
-                NotificationKey key = new NotificationKey() {
-                    @Override
-                    public String toString() {
-                        return paymentId.toString();
-                    }
-                };
+                final NotificationQueue retryQueue = notificationQueueService.getNotificationQueue(DefaultPaymentService.SERVICE_NAME, getQueueName());
+                final NotificationKey key = new PaymentRetryNotificationKey(paymentId);
                 if (retryQueue != null) {
                     if (transactionalDao == null) {
                         retryQueue.recordFutureNotification(timeOfRetry, key);
@@ -133,9 +133,13 @@ public abstract class BaseRetryService implements RetryService {
             } catch (NoSuchNotificationQueue e) {
                 log.error(String.format("Failed to retrieve notification queue %s:%s", DefaultPaymentService.SERVICE_NAME, getQueueName()));
                 return false;
+            } catch (IOException e) {
+                log.error(String.format("Failed to serialize notificationQueue event for paymentId %s", paymentId));
+                return false;
             }
             return true;
         }
+
         public abstract String getQueueName();
     }
 }

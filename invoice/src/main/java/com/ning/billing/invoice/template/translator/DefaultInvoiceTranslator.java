@@ -36,7 +36,7 @@ public class DefaultInvoiceTranslator extends DefaultTranslatorBase implements I
 
     @Override
     protected String getBundlePath() {
-        return "com/ning/billing/util/email/translation/InvoiceTranslation";
+        return config.getBundlePath();
     }
 
     @Override
@@ -86,7 +86,7 @@ public class DefaultInvoiceTranslator extends DefaultTranslatorBase implements I
 
     @Override
     public String getCompanyCityProvincePostalCode() {
-        return getTranslation(locale, "");
+        return getTranslation(locale, "companyCityProvincePostalCode");
     }
 
     @Override

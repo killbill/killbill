@@ -17,7 +17,6 @@
 package com.ning.billing.jaxrs.json;
 
 import java.math.BigDecimal;
-import java.util.UUID;
 
 import org.joda.time.DateTime;
 
@@ -33,17 +32,17 @@ public class PaymentJsonWithBundleKeys extends PaymentJsonSimple {
     }
 
     @JsonCreator
-    public PaymentJsonWithBundleKeys(@JsonProperty("amount") BigDecimal amount,
-            @JsonProperty("paidAmount") BigDecimal paidAmount,
-            @JsonProperty("accountId") String accountId,
-            @JsonProperty("invoiceId") String invoiceId,
-            @JsonProperty("paymentId") String paymentId,
-            @JsonProperty("requestedDt") DateTime requestedDate,
-            @JsonProperty("effectiveDt") DateTime effectiveDate,
-            @JsonProperty("retryCount") Integer retryCount,
-            @JsonProperty("currency") String currency,
-            @JsonProperty("status") String status,
-            @JsonProperty("externalBundleKeys") String bundleKeys) {
+    public PaymentJsonWithBundleKeys(@JsonProperty("amount") final BigDecimal amount,
+                                     @JsonProperty("paidAmount") final BigDecimal paidAmount,
+                                     @JsonProperty("accountId") final String accountId,
+                                     @JsonProperty("invoiceId") final String invoiceId,
+                                     @JsonProperty("paymentId") final String paymentId,
+                                     @JsonProperty("requestedDt") final DateTime requestedDate,
+                                     @JsonProperty("effectiveDt") final DateTime effectiveDate,
+                                     @JsonProperty("retryCount") final Integer retryCount,
+                                     @JsonProperty("currency") final String currency,
+                                     @JsonProperty("status") final String status,
+                                     @JsonProperty("externalBundleKeys") final String bundleKeys) {
         super(amount, paidAmount, accountId, invoiceId, paymentId, requestedDate, effectiveDate, retryCount, currency, status);
         this.bundleKeys = bundleKeys;
     }

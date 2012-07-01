@@ -16,25 +16,19 @@
 
 package com.ning.billing.util.config;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringWriter;
-
 import javax.xml.bind.JAXBException;
 import javax.xml.transform.TransformerException;
+import java.io.IOException;
+import java.io.InputStream;
 
-import org.apache.commons.io.IOUtils;
 import org.testng.annotations.Test;
 
+import com.ning.billing.util.io.IOUtils;
+
 public class TestXMLSchemaGenerator {
-	
-	@Test
-	public void test() throws IOException, TransformerException, JAXBException {
-		InputStream stream = XMLSchemaGenerator.xmlSchema(XmlTestClass.class);
-		StringWriter writer = new StringWriter();
-		IOUtils.copy(stream, writer);
-		String result = writer.toString();
-		
-		System.out.println(result);
-	}
+    @Test(groups = "fast", enabled = false)
+    public void test() throws IOException, TransformerException, JAXBException {
+        final InputStream stream = XMLSchemaGenerator.xmlSchema(XmlTestClass.class);
+        System.out.println(IOUtils.toString(stream));
+    }
 }

@@ -18,41 +18,42 @@ package com.ning.billing.jaxrs;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.ning.billing.invoice.api.InvoicePayment;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.common.collect.ImmutableMap;
+import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.jaxrs.json.AccountJson;
+import com.ning.billing.jaxrs.json.BundleJsonNoSubscriptions;
 import com.ning.billing.jaxrs.json.ChargebackCollectionJson;
 import com.ning.billing.jaxrs.json.ChargebackJson;
+import com.ning.billing.jaxrs.json.InvoiceJsonSimple;
+import com.ning.billing.jaxrs.json.PaymentJsonSimple;
+import com.ning.billing.jaxrs.json.SubscriptionJsonNoEvents;
 import com.ning.billing.jaxrs.resources.JaxrsResource;
 import com.ning.http.client.Response;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
 
 public class TestChargeback extends TestJaxrsBase {
-    private final String accountId = UUID.randomUUID().toString();
-    private InvoicePayment invoicePayment;
-
-    @BeforeMethod(groups = "slow")
-    public void setUp() throws Exception {
-        invoicePayment = createInvoicePayment();
-    }
-
-    @Test(groups = "slow", enabled = false)
+    @Test(groups = "slow")
     public void testAddChargeback() throws Exception {
-        final ChargebackJson input = new ChargebackJson(new DateTime(DateTimeZone.UTC), new DateTime(DateTimeZone.UTC),
-                                                        BigDecimal.TEN, UUID.randomUUID().toString(), UUID.randomUUID().toString());
+        final PaymentJsonSimple payment = createInvoicePayment();
+        final ChargebackJson input = new ChargebackJson(null, null, BigDecimal.TEN, payment.getPaymentId(), null);
         final String jsonInput = mapper.writeValueAsString(input);
 
         // Create the chargeback
         Response response = doPost(JaxrsResource.CHARGEBACKS_PATH, jsonInput, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        assertEquals(response.getStatusCode(), javax.ws.rs.core.Response.Status.OK.getStatusCode(), response.getResponseBody());
+        assertEquals(response.getStatusCode(), javax.ws.rs.core.Response.Status.CREATED.getStatusCode(), response.getResponseBody());
 
         // Find the chargeback by location
         final String location = response.getHeader("Location");
@@ -61,11 +62,11 @@ public class TestChargeback extends TestJaxrsBase {
         verifySingleChargebackResponse(response, input);
 
         // Find the chargeback by account
-        response = doGet(JaxrsResource.CHARGEBACKS_PATH + "/accounts/" + accountId, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        response = doGet(JaxrsResource.CHARGEBACKS_PATH + "/accounts/" + payment.getAccountId(), DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         verifyCollectionChargebackResponse(response, input);
 
         // Find the chargeback by payment
-        response = doGet(JaxrsResource.CHARGEBACKS_PATH + "/payments/" + input.getPaymentId(), DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        response = doGet(JaxrsResource.CHARGEBACKS_PATH + "/payments/" + payment.getPaymentId(), DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         verifyCollectionChargebackResponse(response, input);
     }
 
@@ -73,13 +74,13 @@ public class TestChargeback extends TestJaxrsBase {
         assertEquals(response.getStatusCode(), javax.ws.rs.core.Response.Status.OK.getStatusCode());
         final ChargebackCollectionJson objFromJson = mapper.readValue(response.getResponseBody(), ChargebackCollectionJson.class);
         assertEquals(objFromJson.getChargebacks().size(), 1);
-        assertEquals(objFromJson.getChargebacks().get(0), input);
+        assertTrue(objFromJson.getChargebacks().get(0).getChargebackAmount().compareTo(input.getChargebackAmount()) == 0);
     }
 
     private void verifySingleChargebackResponse(final Response response, final ChargebackJson input) throws IOException {
         assertEquals(response.getStatusCode(), javax.ws.rs.core.Response.Status.OK.getStatusCode());
         final ChargebackJson objFromJson = mapper.readValue(response.getResponseBody(), ChargebackJson.class);
-        assertEquals(objFromJson, input);
+        assertTrue(objFromJson.getChargebackAmount().compareTo(input.getChargebackAmount()) == 0);
     }
 
     @Test(groups = "slow")
@@ -123,8 +124,50 @@ public class TestChargeback extends TestJaxrsBase {
         //assertEquals(response.getStatusCode(), javax.ws.rs.core.Response.Status.NO_CONTENT.getStatusCode(), response.getResponseBody());
     }
 
-    private InvoicePayment createInvoicePayment() {
-        // TODO - blocked on payment resource
-        return null;
+    private PaymentJsonSimple createInvoicePayment() throws Exception {
+        final InvoiceJsonSimple invoice = createInvoice();
+        return getPayment(invoice);
+    }
+
+    private InvoiceJsonSimple createInvoice() throws Exception {
+        // Create account
+        final AccountJson accountJson = createAccountWithDefaultPaymentMethod(UUID.randomUUID().toString(), UUID.randomUUID().toString(), "nohup@yahoo.com");
+
+        // Create bundle
+        final BundleJsonNoSubscriptions bundleJson = createBundle(accountJson.getAccountId(), UUID.randomUUID().toString());
+        assertNotNull(bundleJson);
+
+        // Create subscription
+        final SubscriptionJsonNoEvents subscriptionJson = createSubscription(bundleJson.getBundleId(), "Shotgun", ProductCategory.BASE.toString(), BillingPeriod.MONTHLY.toString(), true);
+        assertNotNull(subscriptionJson);
+
+        // Move after the trial period to trigger an invoice with a non-zero invoice item
+        clock.addDays(32);
+        crappyWaitForLackOfProperSynchonization();
+
+        // Retrieve the invoice
+        final Response response = doGet(JaxrsResource.INVOICES_PATH, ImmutableMap.<String, String>of(JaxrsResource.QUERY_ACCOUNT_ID, accountJson.getAccountId()), DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), javax.ws.rs.core.Response.Status.OK.getStatusCode());
+        final String baseJson = response.getResponseBody();
+        final List<InvoiceJsonSimple> objFromJson = mapper.readValue(baseJson, new TypeReference<List<InvoiceJsonSimple>>() {});
+        assertNotNull(objFromJson);
+        // We should have two invoices, one for the trial (zero dollar amount) and one for the first month
+        assertEquals(objFromJson.size(), 2);
+        assertTrue(objFromJson.get(1).getAmount().doubleValue() > 0);
+
+        return objFromJson.get(1);
+    }
+
+    private PaymentJsonSimple getPayment(final InvoiceJsonSimple invoice) throws IOException {
+        final String uri = JaxrsResource.INVOICES_PATH + "/" + invoice.getInvoiceId() + "/" + JaxrsResource.PAYMENTS;
+        final Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+
+        Assert.assertEquals(response.getStatusCode(), javax.ws.rs.core.Response.Status.OK.getStatusCode());
+        final String baseJson = response.getResponseBody();
+        final List<PaymentJsonSimple> objFromJson = mapper.readValue(baseJson, new TypeReference<List<PaymentJsonSimple>>() {});
+        assertNotNull(objFromJson);
+        assertEquals(objFromJson.size(), 1);
+
+        return objFromJson.get(0);
     }
 }

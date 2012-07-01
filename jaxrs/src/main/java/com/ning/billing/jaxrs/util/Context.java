@@ -40,7 +40,7 @@ public class Context {
     }
 
     public CallContext createContext(final String createdBy, final String reason, final String comment)
-    throws IllegalArgumentException {
+            throws IllegalArgumentException {
         try {
             Preconditions.checkNotNull(createdBy, String.format("Header %s needs to be set", JaxrsResource.HDR_CREATED_BY));
             return contextFactory.createCallContext(createdBy, origin, userType, reason, comment, UUID.randomUUID());

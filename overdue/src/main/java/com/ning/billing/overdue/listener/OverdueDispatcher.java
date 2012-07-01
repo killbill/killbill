@@ -29,7 +29,6 @@ import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.overdue.OverdueApiException;
 import com.ning.billing.overdue.config.api.OverdueError;
-import com.ning.billing.overdue.wrapper.OverdueWrapper;
 import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
 
 public class OverdueDispatcher {
@@ -40,29 +39,29 @@ public class OverdueDispatcher {
 
     @Inject
     public OverdueDispatcher(
-            EntitlementUserApi entitlementUserApi, 
-            OverdueWrapperFactory factory) {
+            final EntitlementUserApi entitlementUserApi,
+            final OverdueWrapperFactory factory) {
         this.entitlementUserApi = entitlementUserApi;
         this.factory = factory;
     }
 
-    public void processOverdueForAccount(UUID accountId) {
-        List<SubscriptionBundle> bundles = entitlementUserApi.getBundlesForAccount(accountId);
-        for(SubscriptionBundle bundle : bundles) {
+    public void processOverdueForAccount(final UUID accountId) {
+        final List<SubscriptionBundle> bundles = entitlementUserApi.getBundlesForAccount(accountId);
+        for (final SubscriptionBundle bundle : bundles) {
             processOverdue(bundle);
         }
     }
 
-    public void processOverdueForBundle(UUID bundleId) {
+    public void processOverdueForBundle(final UUID bundleId) {
         try {
-            SubscriptionBundle bundle        = entitlementUserApi.getBundleFromId(bundleId);
+            final SubscriptionBundle bundle = entitlementUserApi.getBundleFromId(bundleId);
             processOverdue(bundle);
         } catch (EntitlementUserApiException e) {
             log.error("Error processing Overdue for Bundle with id: " + bundleId.toString(), e);
         }
     }
 
-    public void processOverdue(Blockable blockable) {
+    public void processOverdue(final Blockable blockable) {
         try {
             factory.createOverdueWrapperFor(blockable).refresh();
         } catch (OverdueError e) {
@@ -72,9 +71,9 @@ public class OverdueDispatcher {
         }
     }
 
-    public void processOverdue(UUID blockableId) {
+    public void processOverdue(final UUID blockableId) {
         try {
-        factory.createOverdueWrapperFor(blockableId).refresh();
+            factory.createOverdueWrapperFor(blockableId).refresh();
         } catch (OverdueError e) {
             log.error("Error processing Overdue for Blockable with id: " + blockableId.toString(), e);
         } catch (OverdueApiException e) {

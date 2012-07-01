@@ -102,7 +102,8 @@ CREATE TABLE notifications (
     record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
     id char(36) NOT NULL,
     created_date datetime NOT NULL,
-	notification_key varchar(256) NOT NULL,
+    class_name varchar(256) NOT NULL,
+	notification_key varchar(2048) NOT NULL,
 	creating_owner char(50) NOT NULL,
     effective_date datetime NOT NULL,
     queue_name char(64) NOT NULL,
@@ -112,7 +113,7 @@ CREATE TABLE notifications (
     PRIMARY KEY(record_id)
 ) ENGINE=innodb;
 CREATE UNIQUE INDEX notifications_id ON notifications(id);
-CREATE INDEX  `idx_comp_where` ON notifications (`effective_date`, `queue_name`, `processing_state`,`processing_owner`,`processing_available_date`);
+CREATE INDEX  `idx_comp_where` ON notifications (`effective_date`, `queue_name`, `processing_state`,`creating_owner`,`processing_owner`,`processing_available_date`);
 CREATE INDEX  `idx_update` ON notifications (`processing_state`,`processing_owner`,`processing_available_date`);
 CREATE INDEX  `idx_get_ready` ON notifications (`effective_date`,`created_date`,`id`);
 
@@ -153,7 +154,7 @@ CREATE TABLE bus_events (
     processing_state varchar(14) DEFAULT 'AVAILABLE',
     PRIMARY KEY(record_id)
 ) ENGINE=innodb;
-CREATE INDEX  `idx_bus_where` ON bus_events (`processing_state`,`processing_owner`,`processing_available_date`);
+CREATE INDEX  `idx_bus_where` ON bus_events (`processing_state`,`processing_owner`,`creating_owner`,`processing_available_date`);
 
 DROP TABLE IF EXISTS claimed_bus_events;
 CREATE TABLE claimed_bus_events (

@@ -17,6 +17,8 @@ CREATE TABLE payments (
     PRIMARY KEY (record_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 CREATE UNIQUE INDEX payments_id ON payments(id);
+CREATE INDEX payments_inv ON payments(invoice_id);
+CREATE INDEX payments_accnt ON payments(account_id);
 
 DROP TABLE IF EXISTS payment_history; 
 CREATE TABLE payment_history (
@@ -54,6 +56,7 @@ CREATE TABLE payment_attempts (
     PRIMARY KEY (record_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 CREATE UNIQUE INDEX payment_attempts_id ON payment_attempts(id);
+CREATE INDEX payment_attempts_payment ON payment_attempts(payment_id);
 
 
 DROP TABLE IF EXISTS payment_attempt_history;
@@ -89,6 +92,7 @@ CREATE TABLE payment_methods (
     PRIMARY KEY (record_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 CREATE UNIQUE INDEX payment_methods_id ON payment_methods(id);
+CREATE INDEX payment_methods_active_accnt ON payment_methods(is_active, account_id);
 
 
 DROP TABLE IF EXISTS payment_method_history;

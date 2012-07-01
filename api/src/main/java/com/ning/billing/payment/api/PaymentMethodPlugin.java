@@ -18,21 +18,21 @@ package com.ning.billing.payment.api;
 import java.util.List;
 
 public interface PaymentMethodPlugin {
-    
+
     public String getExternalPaymentMethodId();
-    
+
     public boolean isDefaultPaymentMethod();
-    
-    public List<PaymentMethodKVInfo> getProperties(); 
-    
+
+    public List<PaymentMethodKVInfo> getProperties();
+
     public String getValueString(String key);
-    
+
     public class PaymentMethodKVInfo {
         private final String key;
         private final Object value;
         private final Boolean isUpdatable;
-        
-        public PaymentMethodKVInfo(String key, Object value, Boolean isUpdatable) {
+
+        public PaymentMethodKVInfo(final String key, final Object value, final Boolean isUpdatable) {
             super();
             this.key = key;
             this.value = value;

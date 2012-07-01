@@ -17,12 +17,17 @@
 package com.ning.billing.account.dao;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.skife.jdbi.v2.IDBI;
+import org.skife.jdbi.v2.Transaction;
+import org.skife.jdbi.v2.TransactionStatus;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.util.callcontext.CallContext;
@@ -35,12 +40,12 @@ public class AuditedAccountEmailDao extends AuditedCollectionDaoBase<AccountEmai
     private final AccountEmailSqlDao accountEmailSqlDao;
 
     @Inject
-    public AuditedAccountEmailDao(IDBI dbi) {
+    public AuditedAccountEmailDao(final IDBI dbi) {
         this.accountEmailSqlDao = dbi.onDemand(AccountEmailSqlDao.class);
     }
 
     @Override
-    protected AccountEmail getEquivalenceObjectFor(AccountEmail obj) {
+    protected AccountEmail getEquivalenceObjectFor(final AccountEmail obj) {
         return obj;
     }
 
@@ -55,7 +60,51 @@ public class AuditedAccountEmailDao extends AuditedCollectionDaoBase<AccountEmai
     }
 
     @Override
-    public String getKey(AccountEmail entity) {
+    public void addEmail(final UUID accountId, final AccountEmail email, final CallContext context) {
+        accountEmailSqlDao.inTransaction(new Transaction<Object, AccountEmailSqlDao>() {
+            @Override
+            public Object inTransaction(final AccountEmailSqlDao transactional, final TransactionStatus status) throws Exception {
+                // Compute the final list of emails by looking up the current ones and adding the new one
+                // We can use a simple set here as the supplied email may not have its id field populated
+                final List<AccountEmail> currentEmails = accountEmailSqlDao.load(accountId.toString(), ObjectType.ACCOUNT_EMAIL);
+                final Map<String, AccountEmail> newEmails = new HashMap<String, AccountEmail>();
+                for (final AccountEmail currentEmail : currentEmails) {
+                    newEmails.put(currentEmail.getEmail(), currentEmail);
+                }
+                newEmails.put(email.getEmail(), email);
+
+                saveEntitiesFromTransaction(getSqlDao(), accountId, ObjectType.ACCOUNT_EMAIL,
+                                            ImmutableList.<AccountEmail>copyOf(newEmails.values()), context);
+
+                return null;
+            }
+        });
+    }
+
+    @Override
+    public void removeEmail(final UUID accountId, final AccountEmail email, final CallContext context) {
+        accountEmailSqlDao.inTransaction(new Transaction<Object, AccountEmailSqlDao>() {
+            @Override
+            public Object inTransaction(final AccountEmailSqlDao transactional, final TransactionStatus status) throws Exception {
+                // Compute the final list of emails by looking up the current ones and removing the new one
+                // We can use a simple set here as the supplied email may not have its id field populated
+                final List<AccountEmail> currentEmails = accountEmailSqlDao.load(accountId.toString(), ObjectType.ACCOUNT_EMAIL);
+                final Map<String, AccountEmail> newEmails = new HashMap<String, AccountEmail>();
+                for (final AccountEmail currentEmail : currentEmails) {
+                    newEmails.put(currentEmail.getEmail(), currentEmail);
+                }
+                newEmails.remove(email.getEmail());
+
+                saveEntitiesFromTransaction(getSqlDao(), accountId, ObjectType.ACCOUNT_EMAIL,
+                                            ImmutableList.<AccountEmail>copyOf(newEmails.values()), context);
+
+                return null;
+            }
+        });
+    }
+
+    @Override
+    public String getKey(final AccountEmail entity) {
         return entity.getEmail();
     }
 
@@ -64,79 +113,13 @@ public class AuditedAccountEmailDao extends AuditedCollectionDaoBase<AccountEmai
         accountEmailSqlDao.test();
     }
 
-//    @Override
-//    public List<AccountEmail> getEmails(final UUID accountId) {
-//        return accountEmailSqlDao.load(accountId.toString(), null);
-//        //return accountEmailSqlDao.getByAccountId(accountId.toString());
-//    }
-
-//    @Override
-//    public void saveEmails(final UUID accountId, final List<AccountEmail> emails, final CallContext context) {
-//        final List<AccountEmail> existingEmails = accountEmailSqlDao.getByAccountId(accountId.toString());
-//        final List<AccountEmail> updatedEmails = new ArrayList<AccountEmail>();
-//
-//        Iterator<AccountEmail> existingEmailIterator = existingEmails.iterator();
-//        while (existingEmailIterator.hasNext()) {
-//            AccountEmail existingEmail = existingEmailIterator.next();
-//
-//            Iterator<AccountEmail> newEmailIterator = emails.iterator();
-//            while (newEmailIterator.hasNext()) {
-//                AccountEmail newEmail = newEmailIterator.next();
-//                if (newEmail.getId().equals(existingEmail.getId())) {
-//                    // check equality; if not equal, add to updated
-//                    if (!newEmail.equals(existingEmail)) {
-//                        updatedEmails.add(newEmail);
-//                    }
-//
-//                    // remove from both
-//                    newEmailIterator.remove();
-//                    existingEmailIterator.remove();
-//                }
-//            }
-//        }
-//
-//        // remaining emails in newEmail are inserts; remaining emails in existingEmail are deletes
-//        accountEmailSqlDao.inTransaction(new Transaction<Void, AccountEmailSqlDao>() {
-//            @Override
-//            public Void inTransaction(AccountEmailSqlDao dao, TransactionStatus transactionStatus) throws Exception {
-//                dao.create(emails, context);
-//                dao.update(updatedEmails, context);
-//                dao.delete(existingEmails, context);
-//
-//                List<String> insertHistoryIdList = getIdList(emails.size());
-//                List<String> updateHistoryIdList = getIdList(updatedEmails.size());
-//                List<String> deleteHistoryIdList = getIdList(existingEmails.size());
-//
-//                // insert histories
-//                dao.insertAccountEmailHistoryFromTransaction(insertHistoryIdList, emails, ChangeType.INSERT, context);
-//                dao.insertAccountEmailHistoryFromTransaction(updateHistoryIdList, updatedEmails, ChangeType.UPDATE, context);
-//                dao.insertAccountEmailHistoryFromTransaction(deleteHistoryIdList, existingEmails, ChangeType.DELETE, context);
-//
-//                // insert audits
-//                auditSqlDao.insertAuditFromTransaction(TableName.ACCOUNT_EMAIL_HISTORY, insertHistoryIdList, ChangeType.INSERT, context);
-//                auditSqlDao.insertAuditFromTransaction(TableName.ACCOUNT_EMAIL_HISTORY, updateHistoryIdList, ChangeType.UPDATE, context);
-//                auditSqlDao.insertAuditFromTransaction(TableName.ACCOUNT_EMAIL_HISTORY, deleteHistoryIdList, ChangeType.DELETE, context);
-//
-//                return null;
-//            }
-//        });
-//    }
-//
-//    private List<String> getIdList(int size) {
-//        List<String> results = new ArrayList<String>();
-//        for (int i = 0; i < size; i++) {
-//            results.add(UUID.randomUUID().toString());
-//        }
-//        return results;
-//    }
-
     @Override
     protected TableName getTableName() {
         return TableName.ACCOUNT_EMAIL_HISTORY;
     }
 
     @Override
-    protected UpdatableEntityCollectionSqlDao<AccountEmail> transmogrifyDao(Transmogrifier transactionalDao) {
+    protected UpdatableEntityCollectionSqlDao<AccountEmail> transmogrifyDao(final Transmogrifier transactionalDao) {
         return transactionalDao.become(AccountEmailSqlDao.class);
     }
 

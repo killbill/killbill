@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2012 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -40,6 +40,7 @@ import com.ning.billing.invoice.model.DefaultInvoiceGenerator;
 import com.ning.billing.invoice.model.InvoiceGenerator;
 import com.ning.billing.invoice.notification.DefaultNextBillingDateNotifier;
 import com.ning.billing.invoice.notification.DefaultNextBillingDatePoster;
+import com.ning.billing.invoice.notification.EmailInvoiceNotifier;
 import com.ning.billing.invoice.notification.NextBillingDateNotifier;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.invoice.notification.NullInvoiceNotifier;
@@ -47,36 +48,29 @@ import com.ning.billing.invoice.template.formatters.DefaultInvoiceFormatterFacto
 import com.ning.billing.util.template.translation.TranslatorConfig;
 
 public class DefaultInvoiceModule extends AbstractModule implements InvoiceModule {
+    InvoiceConfig config;
+
     protected void installInvoiceDao() {
         bind(InvoiceDao.class).to(DefaultInvoiceDao.class).asEagerSingleton();
     }
 
-    /* (non-Javadoc)
-     * @see com.ning.billing.invoice.glue.InvoiceModule#installInvoiceUserApi()
-     */
     @Override
     public void installInvoiceUserApi() {
         bind(InvoiceUserApi.class).to(DefaultInvoiceUserApi.class).asEagerSingleton();
     }
 
-    /* (non-Javadoc)
-    * @see com.ning.billing.invoice.glue.InvoiceModule#installInvoiceUserApi()
-    */
     @Override
     public void installInvoiceTestApi() {
         bind(InvoiceTestApi.class).to(DefaultInvoiceTestApi.class).asEagerSingleton();
     }
 
-    /* (non-Javadoc)
-     * @see com.ning.billing.invoice.glue.InvoiceModule#installInvoicePaymentApi()
-     */
     @Override
     public void installInvoicePaymentApi() {
         bind(InvoicePaymentApi.class).to(DefaultInvoicePaymentApi.class).asEagerSingleton();
     }
 
     protected void installConfig() {
-        final InvoiceConfig config = new ConfigurationObjectFactory(System.getProperties()).build(InvoiceConfig.class);
+        config = new ConfigurationObjectFactory(System.getProperties()).build(InvoiceConfig.class);
         bind(InvoiceConfig.class).toInstance(config);
     }
 
@@ -84,9 +78,6 @@ public class DefaultInvoiceModule extends AbstractModule implements InvoiceModul
         bind(InvoiceService.class).to(DefaultInvoiceService.class).asEagerSingleton();
     }
 
-    /* (non-Javadoc)
-    * @see com.ning.billing.invoice.glue.InvoiceModule#installInvoiceMigrationApi()
-    */
     @Override
     public void installInvoiceMigrationApi() {
         bind(InvoiceMigrationApi.class).to(DefaultInvoiceMigrationApi.class).asEagerSingleton();
@@ -97,8 +88,15 @@ public class DefaultInvoiceModule extends AbstractModule implements InvoiceModul
         bind(NextBillingDatePoster.class).to(DefaultNextBillingDatePoster.class).asEagerSingleton();
         final TranslatorConfig config = new ConfigurationObjectFactory(System.getProperties()).build(TranslatorConfig.class);
         bind(TranslatorConfig.class).toInstance(config);
-        bind(InvoiceFormatterFactory.class).to(DefaultInvoiceFormatterFactory.class).asEagerSingleton();
-        bind(InvoiceNotifier.class).to(NullInvoiceNotifier.class).asEagerSingleton();
+        bind(InvoiceFormatterFactory.class).to(config.getInvoiceFormatterFactoryClass()).asEagerSingleton();
+    }
+
+    protected void installInvoiceNotifier() {
+        if (config.isEmailNotificationsEnabled()) {
+            bind(InvoiceNotifier.class).to(EmailInvoiceNotifier.class).asEagerSingleton();
+        } else {
+            bind(InvoiceNotifier.class).to(NullInvoiceNotifier.class).asEagerSingleton();
+        }
     }
 
     protected void installInvoiceListener() {
@@ -111,8 +109,10 @@ public class DefaultInvoiceModule extends AbstractModule implements InvoiceModul
 
     @Override
     protected void configure() {
-        installInvoiceService();
         installConfig();
+
+        installInvoiceService();
+        installInvoiceNotifier();
         installNotifiers();
         installInvoiceListener();
         installInvoiceGenerator();

@@ -39,11 +39,11 @@ import com.ning.billing.util.queue.PersistentQueueEntryLifecycle.PersistentQueue
 @ExternalizedSqlViaStringTemplate3()
 public interface PersistentBusSqlDao extends Transactional<PersistentBusSqlDao>, CloseMe {
 
-    
+
     @SqlQuery
     @Mapper(PersistentBusSqlMapper.class)
     public BusEventEntry getNextBusEventEntry(@Bind("max") int max, @Bind("owner") String owner, @Bind("now") Date now);
-    
+
     @SqlUpdate
     public int claimBusEvent(@Bind("owner") String owner, @Bind("nextAvailable") Date nextAvailable,
                              @Bind("recordId") Long id, @Bind("now") Date now);
@@ -53,7 +53,7 @@ public interface PersistentBusSqlDao extends Transactional<PersistentBusSqlDao>,
 
     @SqlUpdate
     public void removeBusEventsById(@Bind("recordId") Long id);
-    
+
     @SqlUpdate
     public void insertBusEvent(@Bind(binder = PersistentBusSqlBinder.class) BusEventEntry evt);
 
@@ -61,11 +61,11 @@ public interface PersistentBusSqlDao extends Transactional<PersistentBusSqlDao>,
     public void insertClaimedHistory(@Bind("ownerId") String owner, @Bind("claimedDate") Date claimedDate,
                                      @Bind("busEventId") long id);
 
-    
+
     public static class PersistentBusSqlBinder extends BinderBase implements Binder<Bind, BusEventEntry> {
 
         @Override
-        public void bind(@SuppressWarnings("rawtypes") SQLStatement stmt, Bind bind, BusEventEntry evt) {
+        public void bind(@SuppressWarnings("rawtypes") final SQLStatement stmt, final Bind bind, final BusEventEntry evt) {
             stmt.bind("className", evt.getBusEventClass());
             stmt.bind("eventJson", evt.getBusEventJson());
             stmt.bind("createdDate", getDate(new DateTime()));
@@ -75,21 +75,21 @@ public interface PersistentBusSqlDao extends Transactional<PersistentBusSqlDao>,
             stmt.bind("processingState", PersistentQueueEntryLifecycleState.AVAILABLE.toString());
         }
     }
-    
+
     public static class PersistentBusSqlMapper extends MapperBase implements ResultSetMapper<BusEventEntry> {
 
         @Override
-        public BusEventEntry map(int index, ResultSet r, StatementContext ctx)
+        public BusEventEntry map(final int index, final ResultSet r, final StatementContext ctx)
                 throws SQLException {
 
             final Long recordId = r.getLong("record_id");
-            final String className = r.getString("class_name"); 
+            final String className = r.getString("class_name");
             final String createdOwner = r.getString("creating_owner");
-            final String eventJson = r.getString("event_json"); 
+            final String eventJson = r.getString("event_json");
             final DateTime nextAvailableDate = getDate(r, "processing_available_date");
             final String processingOwner = r.getString("processing_owner");
             final PersistentQueueEntryLifecycleState processingState = PersistentQueueEntryLifecycleState.valueOf(r.getString("processing_state"));
-            
+
             return new BusEventEntry(recordId, createdOwner, processingOwner, nextAvailableDate, processingState, className, eventJson);
         }
     }

@@ -23,18 +23,18 @@ import com.ning.billing.catalog.api.ActionPolicy;
 
 @XmlSeeAlso(CaseChange.class)
 public class CaseChangePlanPolicy extends CaseChange<ActionPolicy> {
-	
-	@XmlElement(required=true)
-	private ActionPolicy policy;
 
-	@Override
-	protected ActionPolicy getResult() {
-		return policy;
-	}
+    @XmlElement(required = true)
+    private ActionPolicy policy;
 
-	protected CaseChangePlanPolicy setPolicy(ActionPolicy policy) {
-		this.policy = policy;
-		return this;
-	}
-	
+    @Override
+    protected ActionPolicy getResult() {
+        return policy;
+    }
+
+    protected CaseChangePlanPolicy setPolicy(final ActionPolicy policy) {
+        this.policy = policy;
+        return this;
+    }
+
 }

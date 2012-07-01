@@ -22,12 +22,10 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlID;
 
-import org.joda.time.DateTime;
 import org.joda.time.Period;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.TimeUnit;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.overdue.OverdueApiException;
 import com.ning.billing.overdue.OverdueState;
@@ -36,114 +34,111 @@ import com.ning.billing.util.config.ValidationError;
 import com.ning.billing.util.config.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class DefaultOverdueState<T extends Blockable> extends ValidatingConfig<OverdueConfig>  implements OverdueState<T> {
+public class DefaultOverdueState<T extends Blockable> extends ValidatingConfig<OverdueConfig> implements OverdueState<T> {
 
     private static final int MAX_NAME_LENGTH = 50;
-    
-    @XmlElement(required=false, name="condition")
-	private DefaultCondition<T> condition;
 
-	@XmlAttribute(required=true, name="name")
+    @XmlElement(required = false, name = "condition")
+    private DefaultCondition<T> condition;
+
+    @XmlAttribute(required = true, name = "name")
     @XmlID
-    private String name; 
+    private String name;
 
-	@XmlElement(required=false, name="externalMessage")
-	private String externalMessage = "";
-    
-    @XmlElement(required=false, name="blockChanges")
+    @XmlElement(required = false, name = "externalMessage")
+    private String externalMessage = "";
+
+    @XmlElement(required = false, name = "blockChanges")
     private Boolean blockChanges = false;
 
-    @XmlElement(required=false, name="disableEntitlementAndChangesBlocked")
+    @XmlElement(required = false, name = "disableEntitlementAndChangesBlocked")
     private Boolean disableEntitlement = false;
-    
-    @XmlElement(required=false, name="daysBetweenPaymentRetries")
-    private Integer daysBetweenPaymentRetries = 8;
-    
-    @XmlElement(required=false, name="isClearState")
+
+    @XmlElement(required = false, name = "isClearState")
     private Boolean isClearState = false;
-    
-    @XmlElement(required=false, name="autoReevaluationInterval")
+
+    @XmlElement(required = false, name = "autoReevaluationInterval")
     private DefaultDuration autoReevaluationInterval;
 
 
-    
-	//Other actions could include
-	// - send email
-	// - trigger payment retry?
-	// - add tagStore to bundle/account
-	// - set payment failure email template
-	// - set payment retry interval
-	// - backup payment mechanism?
+    //Other actions could include
+    // - send email
+    // - trigger payment retry?
+    // - add tagStore to bundle/account
+    // - set payment failure email template
+    // - set payment retry interval
+    // - backup payment mechanism?
 
-	/* (non-Javadoc)
-     * @see com.ning.billing.catalog.overdue.OverdueState#getStageName()
-     */
-	@Override
+    /* (non-Javadoc)
+    * @see com.ning.billing.catalog.overdue.OverdueState#getStageName()
+    */
+    @Override
     public String getName() {
-		return name;
-	}
+        return name;
+    }
 
-	/* (non-Javadoc)
-     * @see com.ning.billing.catalog.overdue.OverdueState#getExternalMessage()
-     */
-	@Override
+    /* (non-Javadoc)
+    * @see com.ning.billing.catalog.overdue.OverdueState#getExternalMessage()
+    */
+    @Override
     public String getExternalMessage() {
-		return externalMessage;
-	}
-	
+        return externalMessage;
+    }
+
     @Override
     public boolean blockChanges() {
         return blockChanges || disableEntitlement;
     }
 
-	/* (non-Javadoc)
-     * @see com.ning.billing.catalog.overdue.OverdueState#applyCancel()
-     */
-	@Override
+    /* (non-Javadoc)
+    * @see com.ning.billing.catalog.overdue.OverdueState#applyCancel()
+    */
+    @Override
     public boolean disableEntitlementAndChangesBlocked() {
-		return disableEntitlement;
-	}
+        return disableEntitlement;
+    }
 
     @Override
     public Period getReevaluationInterval() throws OverdueApiException {
-        if(autoReevaluationInterval == null || autoReevaluationInterval.getUnit() == TimeUnit.UNLIMITED || autoReevaluationInterval.getNumber() == 0) {
+        if (autoReevaluationInterval == null || autoReevaluationInterval.getUnit() == TimeUnit.UNLIMITED || autoReevaluationInterval.getNumber() == 0) {
             throw new OverdueApiException(ErrorCode.OVERDUE_NO_REEVALUATION_INTERVAL, name);
         }
-        return autoReevaluationInterval.toJodaPeriod();       
+        return autoReevaluationInterval.toJodaPeriod();
     }
-	
+
     public DefaultCondition<T> getCondition() {
-		return condition;
-	}
+        return condition;
+    }
 
-	protected DefaultOverdueState<T> setName(String name) {
-		this.name = name;
-		return this;
-	}
+    protected DefaultOverdueState<T> setName(final String name) {
+        this.name = name;
+        return this;
+    }
 
-	protected DefaultOverdueState<T> setClearState(boolean isClearState) {
+    protected DefaultOverdueState<T> setClearState(final boolean isClearState) {
         this.isClearState = isClearState;
         return this;
     }
-	protected DefaultOverdueState<T> setExternalMessage(String externalMessage) {
-		this.externalMessage = externalMessage;
-		return this;
-	}
 
-    protected DefaultOverdueState<T> setDisableEntitlement(boolean cancel) {
+    protected DefaultOverdueState<T> setExternalMessage(final String externalMessage) {
+        this.externalMessage = externalMessage;
+        return this;
+    }
+
+    protected DefaultOverdueState<T> setDisableEntitlement(final boolean cancel) {
         this.disableEntitlement = cancel;
         return this;
     }
 
-    protected DefaultOverdueState<T> setBlockChanges(boolean cancel) {
+    protected DefaultOverdueState<T> setBlockChanges(final boolean cancel) {
         this.blockChanges = cancel;
         return this;
     }
 
-	protected DefaultOverdueState<T> setCondition(DefaultCondition<T> condition) {
-		this.condition = condition;
-		return this;
-	}
+    protected DefaultOverdueState<T> setCondition(final DefaultCondition<T> condition) {
+        this.condition = condition;
+        return this;
+    }
 
     @Override
     public boolean isClearState() {
@@ -151,17 +146,18 @@ public class DefaultOverdueState<T extends Blockable> extends ValidatingConfig<O
     }
 
     @Override
-    public ValidationErrors validate(OverdueConfig root,
-            ValidationErrors errors) {
-        if(name.length() > MAX_NAME_LENGTH) {
-            errors.add(new ValidationError(String.format("Name of state '%s' exceeds the maximum length of %d",name,MAX_NAME_LENGTH),root.getURI(), DefaultOverdueState.class, name));
+    public ValidationErrors validate(final OverdueConfig root,
+                                     final ValidationErrors errors) {
+        if (name.length() > MAX_NAME_LENGTH) {
+            errors.add(new ValidationError(String.format("Name of state '%s' exceeds the maximum length of %d", name, MAX_NAME_LENGTH), root.getURI(), DefaultOverdueState.class, name));
         }
         return errors;
     }
 
     @Override
     public int getDaysBetweenPaymentRetries() {
-         return daysBetweenPaymentRetries;
+        final Integer daysBetweenPaymentRetries = 8;
+        return daysBetweenPaymentRetries;
     }
 
 

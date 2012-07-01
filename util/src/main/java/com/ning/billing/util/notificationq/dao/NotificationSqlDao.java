@@ -22,8 +22,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-import com.ning.billing.util.dao.BinderBase;
-import com.ning.billing.util.dao.MapperBase;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
@@ -37,6 +35,8 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
+import com.ning.billing.util.dao.BinderBase;
+import com.ning.billing.util.dao.MapperBase;
 import com.ning.billing.util.notificationq.DefaultNotification;
 import com.ning.billing.util.notificationq.Notification;
 import com.ning.billing.util.queue.PersistentQueueEntryLifecycle.PersistentQueueEntryLifecycleState;
@@ -60,7 +60,7 @@ public interface NotificationSqlDao extends Transactional<NotificationSqlDao>, C
 
     @SqlUpdate
     public void removeNotificationsByKey(@Bind("notificationKey") String key);
-    
+
     @SqlUpdate
     public void insertNotification(@Bind(binder = NotificationSqlDaoBinder.class) Notification evt);
 
@@ -69,10 +69,11 @@ public interface NotificationSqlDao extends Transactional<NotificationSqlDao>, C
 
     public static class NotificationSqlDaoBinder extends BinderBase implements Binder<Bind, Notification> {
         @Override
-        public void bind(@SuppressWarnings("rawtypes") SQLStatement stmt, Bind bind, Notification evt) {
+        public void bind(@SuppressWarnings("rawtypes") final SQLStatement stmt, final Bind bind, final Notification evt) {
             stmt.bind("id", evt.getId().toString());
             stmt.bind("createdDate", getDate(new DateTime()));
-            stmt.bind("creatingOwner", evt.getCreatedOwner());            
+            stmt.bind("creatingOwner", evt.getCreatedOwner());
+            stmt.bind("className", evt.getNotificationKeyClass());            
             stmt.bind("notificationKey", evt.getNotificationKey());
             stmt.bind("effectiveDate", getDate(evt.getEffectiveDate()));
             stmt.bind("queueName", evt.getQueueName());
@@ -85,12 +86,13 @@ public interface NotificationSqlDao extends Transactional<NotificationSqlDao>, C
 
     public static class NotificationSqlMapper extends MapperBase implements ResultSetMapper<Notification> {
         @Override
-        public Notification map(int index, ResultSet r, StatementContext ctx)
-        throws SQLException {
+        public Notification map(final int index, final ResultSet r, final StatementContext ctx)
+                throws SQLException {
 
             final Long ordering = r.getLong("record_id");
             final UUID id = getUUID(r, "id");
-            final String createdOwner = r.getString("creating_owner");            
+            final String createdOwner = r.getString("creating_owner");
+            final String className = r.getString("class_name");            
             final String notificationKey = r.getString("notification_key");
             final String queueName = r.getString("queue_name");
             final DateTime effectiveDate = getDate(r, "effective_date");
@@ -99,7 +101,7 @@ public interface NotificationSqlDao extends Transactional<NotificationSqlDao>, C
             final PersistentQueueEntryLifecycleState processingState = PersistentQueueEntryLifecycleState.valueOf(r.getString("processing_state"));
 
             return new DefaultNotification(ordering, id, createdOwner, processingOwner, queueName, nextAvailableDate,
-                    processingState, notificationKey, effectiveDate);
+                                           processingState, className, notificationKey, effectiveDate);
 
         }
     }

@@ -17,11 +17,11 @@ package com.ning.billing.entitlement.api;
 
 import java.util.List;
 
-import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
+import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 
 public interface SubscriptionFactory {
-    
+
     public SubscriptionData createSubscription(SubscriptionBuilder builder, List<EntitlementEvent> events);
 }

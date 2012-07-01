@@ -35,61 +35,60 @@ import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionEvent;
 
 public class DefaultBillingEvent implements BillingEvent {
-    final private Account account;
-    final private int billCycleDay;
-    final private Subscription subscription;
-    final private DateTime effectiveDate;
-    final private PlanPhase planPhase;
-    final private Plan plan;
-    final private BigDecimal fixedPrice;
-    final private BigDecimal recurringPrice;
-    final private Currency currency;
-    final private String description;
-    final private BillingModeType billingModeType;
-    final private BillingPeriod billingPeriod;
-    final private SubscriptionTransitionType type;
-    final private Long totalOrdering;
-    final private DateTimeZone timeZone;
+    private final Account account;
+    private final int billCycleDay;
+    private final Subscription subscription;
+    private final DateTime effectiveDate;
+    private final PlanPhase planPhase;
+    private final Plan plan;
+    private final BigDecimal fixedPrice;
+    private final BigDecimal recurringPrice;
+    private final Currency currency;
+    private final String description;
+    private final BillingModeType billingModeType;
+    private final BillingPeriod billingPeriod;
+    private final SubscriptionTransitionType type;
+    private final Long totalOrdering;
+    private final DateTimeZone timeZone;
 
-    public DefaultBillingEvent(Account account, SubscriptionEvent transition, Subscription subscription, int billCycleDay, Currency currency, Catalog catalog) throws CatalogApiException {
+    public DefaultBillingEvent(final Account account, final SubscriptionEvent transition, final Subscription subscription, final int billCycleDay, final Currency currency, final Catalog catalog) throws CatalogApiException {
 
         this.account = account;
         this.billCycleDay = billCycleDay;
         this.subscription = subscription;
         effectiveDate = transition.getEffectiveTransitionTime();
-        String planPhaseName = (transition.getTransitionType() != SubscriptionTransitionType.CANCEL) ?
+        final String planPhaseName = (transition.getTransitionType() != SubscriptionTransitionType.CANCEL) ?
                 transition.getNextPhase() : transition.getPreviousPhase();
         planPhase = (planPhaseName != null) ? catalog.findPhase(planPhaseName, transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
-                
-        String planName = (transition.getTransitionType() != SubscriptionTransitionType.CANCEL) ?
+
+        final String planName = (transition.getTransitionType() != SubscriptionTransitionType.CANCEL) ?
                 transition.getNextPlan() : transition.getPreviousPlan();
         plan = (planName != null) ? catalog.findPlan(planName, transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
-             
-        String nextPhaseName = transition.getNextPhase();
-        PlanPhase nextPhase = (nextPhaseName != null) ? catalog.findPhase(nextPhaseName, transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
 
-        String prevPhaseName = transition.getPreviousPhase();
-        PlanPhase prevPhase = (prevPhaseName != null) ? catalog.findPhase(prevPhaseName, transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
+        final String nextPhaseName = transition.getNextPhase();
+        final PlanPhase nextPhase = (nextPhaseName != null) ? catalog.findPhase(nextPhaseName, transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
 
-        
-        
+        final String prevPhaseName = transition.getPreviousPhase();
+        final PlanPhase prevPhase = (prevPhaseName != null) ? catalog.findPhase(prevPhaseName, transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
+
+
         fixedPrice = (nextPhase != null && nextPhase.getFixedPrice() != null) ? nextPhase.getFixedPrice().getPrice(currency) : null;
         recurringPrice = (nextPhase != null && nextPhase.getRecurringPrice() != null) ? nextPhase.getRecurringPrice().getPrice(currency) : null;
-        
+
         this.currency = currency;
         description = transition.getTransitionType().toString();
         billingModeType = BillingModeType.IN_ADVANCE;
-        billingPeriod =  (transition.getTransitionType() != SubscriptionTransitionType.CANCEL) ?
+        billingPeriod = (transition.getTransitionType() != SubscriptionTransitionType.CANCEL) ?
                 nextPhase.getBillingPeriod() : prevPhase.getBillingPeriod();
         type = transition.getTransitionType();
         totalOrdering = transition.getTotalOrdering();
         timeZone = account.getTimeZone();
     }
 
-    public DefaultBillingEvent(Account account, Subscription subscription, DateTime effectiveDate, Plan plan, PlanPhase planPhase,
-                               BigDecimal fixedPrice, BigDecimal recurringPrice, Currency currency,
-                               BillingPeriod billingPeriod, int billCycleDay, BillingModeType billingModeType,
-                               String description, long totalOrdering, SubscriptionTransitionType type, DateTimeZone timeZone) {
+    public DefaultBillingEvent(final Account account, final Subscription subscription, final DateTime effectiveDate, final Plan plan, final PlanPhase planPhase,
+                               final BigDecimal fixedPrice, final BigDecimal recurringPrice, final Currency currency,
+                               final BillingPeriod billingPeriod, final int billCycleDay, final BillingModeType billingModeType,
+                               final String description, final long totalOrdering, final SubscriptionTransitionType type, final DateTimeZone timeZone) {
         this.account = account;
         this.subscription = subscription;
         this.effectiveDate = effectiveDate;
@@ -109,26 +108,26 @@ public class DefaultBillingEvent implements BillingEvent {
 
 
     @Override
-    public int compareTo(BillingEvent e1) {
-    	 if (!getSubscription().getId().equals(e1.getSubscription().getId())) { // First order by subscription
-    		 return getSubscription().getId().compareTo(e1.getSubscription().getId());
-    	 } else { // subscriptions are the same
-    		 if (! getEffectiveDate().equals(e1.getEffectiveDate())) { // Secondly order by date
-                 return getEffectiveDate().compareTo(e1.getEffectiveDate());
-    		 } else { // dates and subscriptions are the same
-    			 return getTotalOrdering().compareTo(e1.getTotalOrdering());
-    		 }
-    	 }
+    public int compareTo(final BillingEvent e1) {
+        if (!getSubscription().getId().equals(e1.getSubscription().getId())) { // First order by subscription
+            return getSubscription().getId().compareTo(e1.getSubscription().getId());
+        } else { // subscriptions are the same
+            if (!getEffectiveDate().equals(e1.getEffectiveDate())) { // Secondly order by date
+                return getEffectiveDate().compareTo(e1.getEffectiveDate());
+            } else { // dates and subscriptions are the same
+                return getTotalOrdering().compareTo(e1.getTotalOrdering());
+            }
+        }
     }
 
     @Override
     public Account getAccount() {
-         return account;
+        return account;
     }
 
     @Override
     public int getBillCycleDay() {
-         return billCycleDay;
+        return billCycleDay;
     }
 
     @Override
@@ -193,7 +192,7 @@ public class DefaultBillingEvent implements BillingEvent {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
+        final StringBuilder sb = new StringBuilder();
         sb.append("BillingEvent {subscriptionId = ").append(subscription.getId().toString()).append(", ");
         sb.append("plan = ").append(plan.getName()).append(", ");
         sb.append("phase = ").append(planPhase.getName()).append(", ");
@@ -227,26 +226,55 @@ public class DefaultBillingEvent implements BillingEvent {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        DefaultBillingEvent that = (DefaultBillingEvent) o;
-
-        if (billCycleDay != that.billCycleDay) return false;
-        if (billingModeType != that.billingModeType) return false;
-        if (billingPeriod != that.billingPeriod) return false;
-        if (currency != that.currency) return false;
-        if (!description.equals(that.description)) return false;
-        if (!effectiveDate.equals(that.effectiveDate)) return false;
-        if (fixedPrice != null ? !fixedPrice.equals(that.fixedPrice) : that.fixedPrice != null) return false;
-        if (!plan.equals(that.plan)) return false;
-        if (!planPhase.equals(that.planPhase)) return false;
-        if (recurringPrice != null ? !recurringPrice.equals(that.recurringPrice) : that.recurringPrice != null)
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
             return false;
-        if (!subscription.equals(that.subscription)) return false;
-        if (!totalOrdering.equals(that.totalOrdering)) return false;
-        if (type != that.type) return false;
+        }
+
+        final DefaultBillingEvent that = (DefaultBillingEvent) o;
+
+        if (billCycleDay != that.billCycleDay) {
+            return false;
+        }
+        if (billingModeType != that.billingModeType) {
+            return false;
+        }
+        if (billingPeriod != that.billingPeriod) {
+            return false;
+        }
+        if (currency != that.currency) {
+            return false;
+        }
+        if (!description.equals(that.description)) {
+            return false;
+        }
+        if (!effectiveDate.equals(that.effectiveDate)) {
+            return false;
+        }
+        if (fixedPrice != null ? !fixedPrice.equals(that.fixedPrice) : that.fixedPrice != null) {
+            return false;
+        }
+        if (!plan.equals(that.plan)) {
+            return false;
+        }
+        if (!planPhase.equals(that.planPhase)) {
+            return false;
+        }
+        if (recurringPrice != null ? !recurringPrice.equals(that.recurringPrice) : that.recurringPrice != null) {
+            return false;
+        }
+        if (!subscription.equals(that.subscription)) {
+            return false;
+        }
+        if (!totalOrdering.equals(that.totalOrdering)) {
+            return false;
+        }
+        if (type != that.type) {
+            return false;
+        }
 
         return true;
     }

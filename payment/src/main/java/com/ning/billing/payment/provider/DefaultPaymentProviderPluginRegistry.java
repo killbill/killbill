@@ -20,31 +20,29 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.commons.lang.StringUtils;
-
+import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.ning.billing.config.PaymentConfig;
 import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 
-
 public class DefaultPaymentProviderPluginRegistry implements PaymentProviderPluginRegistry {
-    
+
     private final String defaultPlugin;
     private final Map<String, PaymentPluginApi> pluginsByName = new ConcurrentHashMap<String, PaymentPluginApi>();
 
     @Inject
-    public DefaultPaymentProviderPluginRegistry(PaymentConfig config) {
+    public DefaultPaymentProviderPluginRegistry(final PaymentConfig config) {
         this.defaultPlugin = config.getDefaultPaymentProvider();
     }
 
     @Override
-    public void register(PaymentPluginApi plugin, String name) {
+    public void register(final PaymentPluginApi plugin, final String name) {
         pluginsByName.put(name.toLowerCase(), plugin);
     }
 
     @Override
-    public PaymentPluginApi getPlugin(String name) {
-        PaymentPluginApi plugin = pluginsByName.get(StringUtils.defaultIfEmpty(name, defaultPlugin).toLowerCase());
+    public PaymentPluginApi getPlugin(final String name) {
+        final PaymentPluginApi plugin = pluginsByName.get((Strings.emptyToNull(name) == null ? defaultPlugin : name).toLowerCase());
 
         if (plugin == null) {
             throw new IllegalArgumentException("No payment provider plugin is configured for " + name);
@@ -52,7 +50,7 @@ public class DefaultPaymentProviderPluginRegistry implements PaymentProviderPlug
 
         return plugin;
     }
-    
+
     @Override
     public Set<String> getRegisteredPluginNames() {
         return pluginsByName.keySet();

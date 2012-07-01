@@ -22,25 +22,25 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
-public class XmlTestClass extends ValidatingConfig<XmlTestClass>{
-	private String foo;
-	private Double bar;
-	private int lala;
-	
-	public String getFoo() {
-		return foo;
-	}
-	
-	public Double getBar() {
-		return bar;
-	}
-	
-	public int getLala() {
-		return lala;
-	}
-	
-	@Override
-	public ValidationErrors validate(XmlTestClass root, ValidationErrors errors) {
-		return errors;
-	}
+public class XmlTestClass extends ValidatingConfig<XmlTestClass> {
+    private String foo;
+    private Double bar;
+    private int lala;
+
+    public String getFoo() {
+        return foo;
+    }
+
+    public Double getBar() {
+        return bar;
+    }
+
+    public int getLala() {
+        return lala;
+    }
+
+    @Override
+    public ValidationErrors validate(final XmlTestClass root, final ValidationErrors errors) {
+        return errors;
+    }
 }

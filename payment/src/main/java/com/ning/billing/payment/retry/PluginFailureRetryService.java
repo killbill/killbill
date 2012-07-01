@@ -17,7 +17,6 @@ package com.ning.billing.payment.retry;
 
 import java.util.UUID;
 
-
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.slf4j.Logger;
@@ -27,45 +26,43 @@ import com.google.inject.Inject;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.config.PaymentConfig;
 import com.ning.billing.payment.core.PaymentProcessor;
-
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 
 public class PluginFailureRetryService extends BaseRetryService implements RetryService {
 
-  private static final Logger log = LoggerFactory.getLogger(PluginFailureRetryService.class);
-    
+    private static final Logger log = LoggerFactory.getLogger(PluginFailureRetryService.class);
+
     public static final String QUEUE_NAME = "plugin-failure";
 
     private final PaymentProcessor paymentProcessor;
 
-    
+
     @Inject
     public PluginFailureRetryService(final AccountUserApi accountUserApi,
-            final Clock clock,
-            final NotificationQueueService notificationQueueService,
-            final PaymentConfig config,
-            final PaymentProcessor paymentProcessor) {
+                                     final Clock clock,
+                                     final NotificationQueueService notificationQueueService,
+                                     final PaymentConfig config,
+                                     final PaymentProcessor paymentProcessor) {
         super(notificationQueueService, clock, config);
         this.paymentProcessor = paymentProcessor;
     }
 
-    
 
     @Override
     public void retry(final UUID paymentId) {
         paymentProcessor.retryPluginFailure(paymentId);
     }
-    
-    
+
+
     public static class PluginFailureRetryServiceScheduler extends RetryServiceScheduler {
-        
+
         private final Clock clock;
         private final PaymentConfig config;
-        
+
         @Inject
         public PluginFailureRetryServiceScheduler(final NotificationQueueService notificationQueueService,
-                final Clock clock, final PaymentConfig config) {
+                                                  final Clock clock, final PaymentConfig config) {
             super(notificationQueueService);
             this.clock = clock;
             this.config = config;
@@ -75,25 +72,25 @@ public class PluginFailureRetryService extends BaseRetryService implements Retry
         public String getQueueName() {
             return QUEUE_NAME;
         }
-        
+
         public boolean scheduleRetry(final UUID paymentId, final int retryAttempt) {
-            DateTime nextRetryDate = getNextRetryDate(retryAttempt);
+            final DateTime nextRetryDate = getNextRetryDate(retryAttempt);
             if (nextRetryDate == null) {
                 return false;
             }
             return scheduleRetry(paymentId, nextRetryDate);
         }
-        
+
         public boolean scheduleRetryFromTransaction(final UUID paymentId, final int retryAttempt, final Transmogrifier transactionalDao) {
-            DateTime nextRetryDate = getNextRetryDate(retryAttempt);
+            final DateTime nextRetryDate = getNextRetryDate(retryAttempt);
             if (nextRetryDate == null) {
                 return false;
             }
             return scheduleRetryFromTransaction(paymentId, nextRetryDate, transactionalDao);
         }
-        
+
         private DateTime getNextRetryDate(final int retryAttempt) {
-            
+
 
             if (retryAttempt > config.getPluginFailureRetryMaxAttempts()) {
                 return null;
@@ -105,7 +102,7 @@ public class PluginFailureRetryService extends BaseRetryService implements Retry
             }
             return clock.getUTCNow().plusSeconds(nbSec);
         }
-        
+
     }
 
     @Override

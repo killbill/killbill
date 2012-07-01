@@ -20,10 +20,10 @@ import javax.xml.bind.annotation.XmlElement;
 
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 
-public class OverdueStatesBundle extends DefaultOverdueStateSet<SubscriptionBundle>{
+public class OverdueStatesBundle extends DefaultOverdueStateSet<SubscriptionBundle> {
 
     @SuppressWarnings("unchecked")
-    @XmlElement(required=true, name="state")
+    @XmlElement(required = true, name = "state")
     private DefaultOverdueState<SubscriptionBundle>[] bundleOverdueStates = new DefaultOverdueState[0];
 
     @Override
@@ -31,7 +31,7 @@ public class OverdueStatesBundle extends DefaultOverdueStateSet<SubscriptionBund
         return bundleOverdueStates;
     }
 
-    protected OverdueStatesBundle setBundleOverdueStates(DefaultOverdueState<SubscriptionBundle>[] bundleOverdueStates) {
+    protected OverdueStatesBundle setBundleOverdueStates(final DefaultOverdueState<SubscriptionBundle>[] bundleOverdueStates) {
         this.bundleOverdueStates = bundleOverdueStates;
         return this;
     }

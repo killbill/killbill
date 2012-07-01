@@ -21,8 +21,7 @@ import org.skife.config.Default;
 import org.skife.config.Description;
 import org.skife.config.TimeSpan;
 
-public interface DbiConfig
-{
+public interface DbiConfig {
     @Description("The jdbc url for the database")
     @Config("com.ning.billing.dbi.jdbc.url")
     @Default("jdbc:mysql://127.0.0.1:3306/killbill")

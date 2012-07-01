@@ -16,22 +16,23 @@
 
 package com.ning.billing.util.customfield.dao;
 
-import com.ning.billing.util.customfield.CustomField;
-import com.ning.billing.util.customfield.StringCustomField;
-import com.ning.billing.util.dao.MapperBase;
-import org.skife.jdbi.v2.StatementContext;
-import org.skife.jdbi.v2.tweak.ResultSetMapper;
-
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
 
+import org.skife.jdbi.v2.StatementContext;
+import org.skife.jdbi.v2.tweak.ResultSetMapper;
+
+import com.ning.billing.util.customfield.CustomField;
+import com.ning.billing.util.customfield.StringCustomField;
+import com.ning.billing.util.dao.MapperBase;
+
 public class CustomFieldMapper extends MapperBase implements ResultSetMapper<CustomField> {
     @Override
-    public CustomField map(int index, ResultSet result, StatementContext context) throws SQLException {
-        UUID id = UUID.fromString(result.getString("id"));
-        String fieldName = result.getString("field_name");
-        String fieldValue = result.getString("field_value");
+    public CustomField map(final int index, final ResultSet result, final StatementContext context) throws SQLException {
+        final UUID id = UUID.fromString(result.getString("id"));
+        final String fieldName = result.getString("field_name");
+        final String fieldValue = result.getString("field_value");
         return new StringCustomField(id, fieldName, fieldValue);
     }
 }

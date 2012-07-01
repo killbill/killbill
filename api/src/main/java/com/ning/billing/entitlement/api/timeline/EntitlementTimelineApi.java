@@ -20,8 +20,8 @@ import java.util.UUID;
 import com.ning.billing.util.callcontext.CallContext;
 
 public interface EntitlementTimelineApi {
-    
+
     public BundleTimeline getBundleRepair(final UUID bundleId) throws EntitlementRepairException;
-    
+
     public BundleTimeline repairBundle(final BundleTimeline input, final boolean dryRun, final CallContext context) throws EntitlementRepairException;
 }

@@ -20,7 +20,7 @@ import java.util.UUID;
 
 public enum ControlTagType {
     AUTO_PAY_OFF("Suspends payments until removed.", true, false),
-    AUTO_INVOICING_OFF("Suspends invoicing until removed.", false, true), 
+    AUTO_INVOICING_OFF("Suspends invoicing until removed.", false, true),
     OVERDUE_ENFORCEMENT_OFF("Suspends overdue enforcement behaviour until removed.", false, false),
     WRITTEN_OFF("Indicated that an invoice is written off. No billing or payment effect.", false, false);
 
@@ -48,15 +48,25 @@ public enum ControlTagType {
 
     public TagDefinition toTagDefinition() {
         return new TagDefinition() {
-            @Override public String getName() {
+            @Override
+            public String getName() {
                 return name();
             }
 
-            @Override public String getDescription() {return description;}
+            @Override
+            public String getDescription() {
+                return description;
+            }
 
-            @Override public Boolean isControlTag() {return true;}
+            @Override
+            public Boolean isControlTag() {
+                return true;
+            }
 
-            @Override public UUID getId() {return null;}
+            @Override
+            public UUID getId() {
+                return null;
+            }
         };
     }
 }

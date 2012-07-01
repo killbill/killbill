@@ -27,33 +27,32 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountChangeEvent;
 import com.ning.billing.account.api.user.DefaultAccountChangeEvent;
 import com.ning.billing.account.api.user.DefaultAccountCreationEvent;
-import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
+import com.ning.billing.util.callcontext.CallContext;
 
 public class MockAccountDao implements AccountDao {
     private final Bus eventBus;
     private final Map<UUID, Account> accounts = new ConcurrentHashMap<UUID, Account>();
 
     @Inject
-    public MockAccountDao(Bus eventBus) {
+    public MockAccountDao(final Bus eventBus) {
         this.eventBus = eventBus;
     }
 
     @Override
-    public void create(Account account, CallContext context) {
+    public void create(final Account account, final CallContext context) {
         accounts.put(account.getId(), account);
 
         try {
             eventBus.post(new DefaultAccountCreationEvent(account, null));
-        }
-        catch (EventBusException ex) {
+        } catch (EventBusException ex) {
             throw new RuntimeException(ex);
         }
     }
 
     @Override
-    public Account getById(UUID id) {
+    public Account getById(final UUID id) {
         return accounts.get(id);
     }
 
@@ -67,8 +66,8 @@ public class MockAccountDao implements AccountDao {
     }
 
     @Override
-    public Account getAccountByKey(String externalKey) {
-        for (Account account : accounts.values()) {
+    public Account getAccountByKey(final String externalKey) {
+        for (final Account account : accounts.values()) {
             if (externalKey.equals(account.getExternalKey())) {
                 return account;
             }
@@ -77,21 +76,20 @@ public class MockAccountDao implements AccountDao {
     }
 
     @Override
-    public UUID getIdFromKey(String externalKey) {
-        Account account = getAccountByKey(externalKey);
+    public UUID getIdFromKey(final String externalKey) {
+        final Account account = getAccountByKey(externalKey);
         return account == null ? null : account.getId();
     }
 
     @Override
-    public void update(Account account, CallContext context) {
-        Account currentAccount = accounts.put(account.getId(), account);
+    public void update(final Account account, final CallContext context) {
+        final Account currentAccount = accounts.put(account.getId(), account);
 
-        AccountChangeEvent changeEvent = new DefaultAccountChangeEvent(account.getId(), null, currentAccount, account);
+        final AccountChangeEvent changeEvent = new DefaultAccountChangeEvent(account.getId(), null, currentAccount, account);
         if (changeEvent.hasChanges()) {
             try {
                 eventBus.post(changeEvent);
-            }
-            catch (EventBusException ex) {
+            } catch (EventBusException ex) {
                 throw new RuntimeException(ex);
             }
         }

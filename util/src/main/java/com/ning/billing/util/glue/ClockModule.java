@@ -22,8 +22,8 @@ import com.ning.billing.util.clock.DefaultClock;
 
 public class ClockModule extends AbstractModule {
 
-	@Override
-	protected void configure() {
-		bind(Clock.class).to(DefaultClock.class).asEagerSingleton();
-	}
+    @Override
+    protected void configure() {
+        bind(Clock.class).to(DefaultClock.class).asEagerSingleton();
+    }
 }

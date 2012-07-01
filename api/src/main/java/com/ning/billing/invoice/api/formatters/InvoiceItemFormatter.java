@@ -20,5 +20,6 @@ import com.ning.billing.invoice.api.InvoiceItem;
 
 public interface InvoiceItemFormatter extends InvoiceItem {
     public String getFormattedStartDate();
+
     public String getFormattedEndDate();
 }

@@ -20,19 +20,19 @@ import javax.xml.bind.annotation.XmlElement;
 
 import com.ning.billing.catalog.api.PlanAlignmentCreate;
 
-public class CaseCreateAlignment extends CaseStandardNaming<PlanAlignmentCreate>{
+public class CaseCreateAlignment extends CaseStandardNaming<PlanAlignmentCreate> {
 
-	@XmlElement(required=true)
-	private PlanAlignmentCreate alignment;
+    @XmlElement(required = true)
+    private PlanAlignmentCreate alignment;
 
-	@Override
-	protected PlanAlignmentCreate getResult() {
-		return alignment;
-	}
+    @Override
+    protected PlanAlignmentCreate getResult() {
+        return alignment;
+    }
 
-	protected CaseCreateAlignment setAlignment(PlanAlignmentCreate alignment) {
-		this.alignment = alignment;
-		return this;
-	}
-	
+    protected CaseCreateAlignment setAlignment(final PlanAlignmentCreate alignment) {
+        this.alignment = alignment;
+        return this;
+    }
+
 }

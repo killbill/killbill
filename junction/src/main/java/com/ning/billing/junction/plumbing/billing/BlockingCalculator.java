@@ -43,21 +43,23 @@ import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.junction.api.DefaultBlockingState;
 
 public class BlockingCalculator {
-    private static AtomicLong globaltotalOrder = new AtomicLong();
-    
+    private static final AtomicLong globaltotalOrder = new AtomicLong();
+
     private final BlockingApi blockingApi;
 
     protected static class DisabledDuration {
         private final DateTime start;
         private final DateTime end;
 
-        public DisabledDuration(DateTime start,DateTime end) {
+        public DisabledDuration(final DateTime start, final DateTime end) {
             this.start = start;
             this.end = end;
         }
+
         public DateTime getStart() {
             return start;
         }
+
         public DateTime getEnd() {
             return end;
         }
@@ -66,57 +68,59 @@ public class BlockingCalculator {
 
     protected static class MergeEvent extends DefaultBlockingState {
 
-        public MergeEvent(DateTime timestamp) {
-            super(null,null,null,null,false,false,false,timestamp);
+        public MergeEvent(final DateTime timestamp) {
+            super(null, null, null, null, false, false, false, timestamp);
         }
 
     }
 
     @Inject
-    public BlockingCalculator(BlockingApi blockingApi) {
+    public BlockingCalculator(final BlockingApi blockingApi) {
         this.blockingApi = blockingApi;
     }
 
-    public void insertBlockingEvents(SortedSet<BillingEvent> billingEvents) {
-        if(billingEvents.size() <= 0) { return; }
+    public void insertBlockingEvents(final SortedSet<BillingEvent> billingEvents) {
+        if (billingEvents.size() <= 0) {
+            return;
+        }
 
-        Account account = billingEvents.first().getAccount();
- 
-        Hashtable<UUID,List<Subscription>> bundleMap = createBundleSubscriptionMap(billingEvents);
+        final Account account = billingEvents.first().getAccount();
 
-        SortedSet<BillingEvent> billingEventsToAdd = new TreeSet<BillingEvent>();
-        SortedSet<BillingEvent> billingEventsToRemove = new TreeSet<BillingEvent>();
+        final Hashtable<UUID, List<Subscription>> bundleMap = createBundleSubscriptionMap(billingEvents);
 
-        for(UUID bundleId : bundleMap.keySet()) {
-            SortedSet<BlockingState> blockingEvents = blockingApi.getBlockingHistory(bundleId);
+        final SortedSet<BillingEvent> billingEventsToAdd = new TreeSet<BillingEvent>();
+        final SortedSet<BillingEvent> billingEventsToRemove = new TreeSet<BillingEvent>();
+
+        for (final UUID bundleId : bundleMap.keySet()) {
+            final SortedSet<BlockingState> blockingEvents = blockingApi.getBlockingHistory(bundleId);
             blockingEvents.addAll(blockingApi.getBlockingHistory(account.getId()));
-            List<DisabledDuration>  blockingDurations  = createBlockingDurations(blockingEvents); 
+            final List<DisabledDuration> blockingDurations = createBlockingDurations(blockingEvents);
 
-            for (Subscription subscription: bundleMap.get(bundleId)) {
-                billingEventsToAdd.addAll(createNewEvents( blockingDurations, billingEvents, account, subscription));
+            for (final Subscription subscription : bundleMap.get(bundleId)) {
+                billingEventsToAdd.addAll(createNewEvents(blockingDurations, billingEvents, account, subscription));
                 billingEventsToRemove.addAll(eventsToRemove(blockingDurations, billingEvents, subscription));
             }
         }
 
-        for(BillingEvent eventToAdd: billingEventsToAdd ) {
+        for (final BillingEvent eventToAdd : billingEventsToAdd) {
             billingEvents.add(eventToAdd);
         }
 
-        for(BillingEvent eventToRemove : billingEventsToRemove) {
+        for (final BillingEvent eventToRemove : billingEventsToRemove) {
             billingEvents.remove(eventToRemove);
         }
 
     }
 
-    protected SortedSet<BillingEvent> eventsToRemove(List<DisabledDuration> disabledDuration,
-            SortedSet<BillingEvent> billingEvents, Subscription subscription) {
-        SortedSet<BillingEvent> result = new TreeSet<BillingEvent>();
+    protected SortedSet<BillingEvent> eventsToRemove(final List<DisabledDuration> disabledDuration,
+                                                     final SortedSet<BillingEvent> billingEvents, final Subscription subscription) {
+        final SortedSet<BillingEvent> result = new TreeSet<BillingEvent>();
 
-        SortedSet<BillingEvent> filteredBillingEvents = filter(billingEvents, subscription);
-        for(DisabledDuration duration : disabledDuration) {
-            for(BillingEvent event : filteredBillingEvents) {
-                if(duration.getEnd() == null || event.getEffectiveDate().isBefore(duration.getEnd())) {
-                    if( event.getEffectiveDate().isAfter(duration.getStart()) ) { //between the pair
+        final SortedSet<BillingEvent> filteredBillingEvents = filter(billingEvents, subscription);
+        for (final DisabledDuration duration : disabledDuration) {
+            for (final BillingEvent event : filteredBillingEvents) {
+                if (duration.getEnd() == null || event.getEffectiveDate().isBefore(duration.getEnd())) {
+                    if (event.getEffectiveDate().isAfter(duration.getStart())) { //between the pair
                         result.add(event);
                     }
                 } else { //after the last event of the pair no need to keep checking
@@ -127,46 +131,46 @@ public class BlockingCalculator {
         return result;
     }
 
-     protected SortedSet<BillingEvent> createNewEvents( List<DisabledDuration> disabledDuration, SortedSet<BillingEvent> billingEvents, Account account, Subscription subscription) {
-        SortedSet<BillingEvent> result = new TreeSet<BillingEvent>();
-        for(DisabledDuration duration : disabledDuration) {
-            BillingEvent precedingInitialEvent = precedingBillingEventForSubscription(duration.getStart(), billingEvents, subscription);
-            BillingEvent precedingFinalEvent = precedingBillingEventForSubscription(duration.getEnd(), billingEvents, subscription);
+    protected SortedSet<BillingEvent> createNewEvents(final List<DisabledDuration> disabledDuration, final SortedSet<BillingEvent> billingEvents, final Account account, final Subscription subscription) {
+        final SortedSet<BillingEvent> result = new TreeSet<BillingEvent>();
+        for (final DisabledDuration duration : disabledDuration) {
+            final BillingEvent precedingInitialEvent = precedingBillingEventForSubscription(duration.getStart(), billingEvents, subscription);
+            final BillingEvent precedingFinalEvent = precedingBillingEventForSubscription(duration.getEnd(), billingEvents, subscription);
 
-            if(precedingInitialEvent != null) { // there is a preceding billing event
+            if (precedingInitialEvent != null) { // there is a preceding billing event
                 result.add(createNewDisableEvent(duration.getStart(), precedingInitialEvent));
-                if(duration.getEnd() != null) { // no second event in the pair means they are still disabled (no re-enable)
+                if (duration.getEnd() != null) { // no second event in the pair means they are still disabled (no re-enable)
                     result.add(createNewReenableEvent(duration.getEnd(), precedingFinalEvent));
                 }
 
-            } else if(precedingFinalEvent != null) { // can happen - e.g. phase event
+            } else if (precedingFinalEvent != null) { // can happen - e.g. phase event
                 //
                 // TODO: check with Jeff that this is going to do something sensible
                 //
                 result.add(createNewReenableEvent(duration.getEnd(), precedingFinalEvent));
 
-            } 
+            }
 
             // N.B. if there's no precedingInitial and no precedingFinal then there's nothing to do
         }
         return result;
     }
 
-    protected BillingEvent precedingBillingEventForSubscription(DateTime datetime, SortedSet<BillingEvent> billingEvents, Subscription subscription) { 
-        if(datetime == null) { //second of a pair can be null if there's no re-enabling
+    protected BillingEvent precedingBillingEventForSubscription(final DateTime datetime, final SortedSet<BillingEvent> billingEvents, final Subscription subscription) {
+        if (datetime == null) { //second of a pair can be null if there's no re-enabling
             return null;
         }
 
-        SortedSet<BillingEvent> filteredBillingEvents = filter(billingEvents, subscription);
+        final SortedSet<BillingEvent> filteredBillingEvents = filter(billingEvents, subscription);
         BillingEvent result = filteredBillingEvents.first();
 
-        if(datetime.isBefore(result.getEffectiveDate())) {
+        if (datetime.isBefore(result.getEffectiveDate())) {
             //This case can happen, for example, if we have an add on and the bundle goes into disabled before the add on is created
             return null;
         }
 
-        for(BillingEvent event : filteredBillingEvents) {
-            if(event.getEffectiveDate().isAfter(datetime)) { // found it its the previous event
+        for (final BillingEvent event : filteredBillingEvents) {
+            if (event.getEffectiveDate().isAfter(datetime)) { // found it its the previous event
                 return result;
             } else { // still looking
                 result = event;
@@ -175,17 +179,17 @@ public class BlockingCalculator {
         return result;
     }
 
-    protected SortedSet<BillingEvent> filter(SortedSet<BillingEvent> billingEvents, Subscription subscription) {
-        SortedSet<BillingEvent> result = new TreeSet<BillingEvent>();
-        for(BillingEvent event : billingEvents) {
-            if(event.getSubscription() == subscription) {
+    protected SortedSet<BillingEvent> filter(final SortedSet<BillingEvent> billingEvents, final Subscription subscription) {
+        final SortedSet<BillingEvent> result = new TreeSet<BillingEvent>();
+        for (final BillingEvent event : billingEvents) {
+            if (event.getSubscription() == subscription) {
                 result.add(event);
             }
         }
         return result;
     }
 
-    protected BillingEvent createNewDisableEvent(DateTime odEventTime, BillingEvent previousEvent) {
+    protected BillingEvent createNewDisableEvent(final DateTime odEventTime, final BillingEvent previousEvent) {
         final Account account = previousEvent.getAccount();
         final int billCycleDay = previousEvent.getBillCycleDay();
         final Subscription subscription = previousEvent.getSubscription();
@@ -199,16 +203,16 @@ public class BlockingCalculator {
         final BillingModeType billingModeType = previousEvent.getBillingMode();
         final BillingPeriod billingPeriod = previousEvent.getBillingPeriod();
         final SubscriptionTransitionType type = SubscriptionTransitionType.CANCEL;
-        final Long totalOrdering = globaltotalOrder.getAndIncrement(); 
+        final Long totalOrdering = globaltotalOrder.getAndIncrement();
         final DateTimeZone tz = previousEvent.getTimeZone();
 
         return new DefaultBillingEvent(account, subscription, effectiveDate, plan, planPhase,
-                fixedPrice, recurringPrice, currency,
-                billingPeriod, billCycleDay, billingModeType,
-                description, totalOrdering, type, tz);
+                                       fixedPrice, recurringPrice, currency,
+                                       billingPeriod, billCycleDay, billingModeType,
+                                       description, totalOrdering, type, tz);
     }
 
-    protected BillingEvent createNewReenableEvent(DateTime odEventTime, BillingEvent previousEvent) {
+    protected BillingEvent createNewReenableEvent(final DateTime odEventTime, final BillingEvent previousEvent) {
         final Account account = previousEvent.getAccount();
         final int billCycleDay = previousEvent.getBillCycleDay();
         final Subscription subscription = previousEvent.getSubscription();
@@ -222,47 +226,46 @@ public class BlockingCalculator {
         final BillingModeType billingModeType = previousEvent.getBillingMode();
         final BillingPeriod billingPeriod = previousEvent.getBillingPeriod();
         final SubscriptionTransitionType type = SubscriptionTransitionType.RE_CREATE;
-        final Long totalOrdering = globaltotalOrder.getAndIncrement();  
+        final Long totalOrdering = globaltotalOrder.getAndIncrement();
         final DateTimeZone tz = previousEvent.getTimeZone();
 
         return new DefaultBillingEvent(account, subscription, effectiveDate, plan, planPhase,
-                fixedPrice, recurringPrice, currency,
-                billingPeriod, billCycleDay, billingModeType,
-                description, totalOrdering, type, tz);
+                                       fixedPrice, recurringPrice, currency,
+                                       billingPeriod, billCycleDay, billingModeType,
+                                       description, totalOrdering, type, tz);
     }
 
-    protected Hashtable<UUID,List<Subscription>> createBundleSubscriptionMap(SortedSet<BillingEvent> billingEvents) {
-        Hashtable<UUID,List<Subscription>> result = new Hashtable<UUID,List<Subscription>>();
-        for(BillingEvent event : billingEvents) {
-            UUID bundleId = event.getSubscription().getBundleId();
+    protected Hashtable<UUID, List<Subscription>> createBundleSubscriptionMap(final SortedSet<BillingEvent> billingEvents) {
+        final Hashtable<UUID, List<Subscription>> result = new Hashtable<UUID, List<Subscription>>();
+        for (final BillingEvent event : billingEvents) {
+            final UUID bundleId = event.getSubscription().getBundleId();
             List<Subscription> subs = result.get(bundleId);
-            if(subs == null) {
+            if (subs == null) {
                 subs = new ArrayList<Subscription>();
-                result.put(bundleId,subs);
+                result.put(bundleId, subs);
             }
-            if(!result.contains(event.getSubscription())) {
-                subs.add(event.getSubscription());        
+            if (!result.contains(event.getSubscription())) {
+                subs.add(event.getSubscription());
             }
         }
         return result;
     }
 
 
-
-    protected List<DisabledDuration> createBlockingDurations(SortedSet<BlockingState> overdueBundleEvents) {
-        List<DisabledDuration> result = new ArrayList<BlockingCalculator.DisabledDuration>();
+    protected List<DisabledDuration> createBlockingDurations(final SortedSet<BlockingState> overdueBundleEvents) {
+        final List<DisabledDuration> result = new ArrayList<BlockingCalculator.DisabledDuration>();
         BlockingState first = null;
 
-        for(BlockingState e : overdueBundleEvents) {
-            if(e.isBlockBilling() && first == null) { // found a transition to disabled
+        for (final BlockingState e : overdueBundleEvents) {
+            if (e.isBlockBilling() && first == null) { // found a transition to disabled
                 first = e;
-            } else if(first != null && !e.isBlockBilling()) { // found a transition from disabled
+            } else if (first != null && !e.isBlockBilling()) { // found a transition from disabled
                 result.add(new DisabledDuration(first.getTimestamp(), e.getTimestamp()));
                 first = null;
             }
         }
 
-        if(first != null) { // found a transition to disabled with no terminating event
+        if (first != null) { // found a transition to disabled with no terminating event
             result.add(new DisabledDuration(first.getTimestamp(), null));
         }
 

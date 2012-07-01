@@ -19,10 +19,6 @@ package com.ning.billing.payment.retry;
 import java.util.List;
 import java.util.UUID;
 
-
-import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.notificationq.NotificationQueueService;
-
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,66 +28,67 @@ import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.config.PaymentConfig;
 import com.ning.billing.payment.core.PaymentProcessor;
 import com.ning.billing.payment.dao.PaymentDao;
+import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.notificationq.NotificationQueueService;
 
 
 public class FailedPaymentRetryService extends BaseRetryService implements RetryService {
-    
+
     private static final Logger log = LoggerFactory.getLogger(FailedPaymentRetryService.class);
-    
+
     public static final String QUEUE_NAME = "failed-payment";
 
     private final PaymentProcessor paymentProcessor;
 
-    
+
     @Inject
     public FailedPaymentRetryService(final AccountUserApi accountUserApi,
-            final Clock clock,
-            final NotificationQueueService notificationQueueService,
-            final PaymentConfig config,
-            final PaymentProcessor paymentProcessor,
-            final PaymentDao paymentDao) {
+                                     final Clock clock,
+                                     final NotificationQueueService notificationQueueService,
+                                     final PaymentConfig config,
+                                     final PaymentProcessor paymentProcessor,
+                                     final PaymentDao paymentDao) {
         super(notificationQueueService, clock, config);
         this.paymentProcessor = paymentProcessor;
     }
 
-    
 
     @Override
     public void retry(final UUID paymentId) {
         paymentProcessor.retryFailedPayment(paymentId);
     }
-    
-    
+
+
     public static class FailedPaymentRetryServiceScheduler extends RetryServiceScheduler {
-        
+
         private final PaymentConfig config;
         private final Clock clock;
-        
+
         @Inject
         public FailedPaymentRetryServiceScheduler(final NotificationQueueService notificationQueueService,
-                final Clock clock, final PaymentConfig config) {
+                                                  final Clock clock, final PaymentConfig config) {
             super(notificationQueueService);
             this.config = config;
             this.clock = clock;
         }
-        
+
         public boolean scheduleRetry(final UUID paymentId, final int retryAttempt) {
-            DateTime timeOfRetry = getNextRetryDate(retryAttempt);
+            final DateTime timeOfRetry = getNextRetryDate(retryAttempt);
             if (timeOfRetry == null) {
                 return false;
             }
             return scheduleRetry(paymentId, timeOfRetry);
         }
-        
-        
-        private DateTime getNextRetryDate(int retryAttempt) {
+
+
+        private DateTime getNextRetryDate(final int retryAttempt) {
 
             DateTime result = null;
             final List<Integer> retryDays = config.getPaymentRetryDays();
-            int retryCount = retryAttempt - 1;
+            final int retryCount = retryAttempt - 1;
             if (retryCount < retryDays.size()) {
                 int retryInDays = 0;
-                DateTime nextRetryDate = clock.getUTCNow();
+                final DateTime nextRetryDate = clock.getUTCNow();
                 try {
                     retryInDays = retryDays.get(retryCount);
                     result = nextRetryDate.plusDays(retryInDays);
@@ -99,7 +96,7 @@ public class FailedPaymentRetryService extends BaseRetryService implements Retry
                     log.error("Could not get retry day for retry count {}", retryCount);
                 }
             }
-            return result;            
+            return result;
         }
 
 

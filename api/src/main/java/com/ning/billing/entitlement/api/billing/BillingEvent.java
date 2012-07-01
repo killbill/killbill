@@ -37,87 +37,75 @@ public interface BillingEvent extends Comparable<BillingEvent> {
     public Account getAccount();
 
     /**
-     *
      * @return the billCycleDay as seen for that subscription at that time
-     *
-     * Note: The billCycleDay may come from the Account, or the bundle or the subscription itself
+     *         <p/>
+     *         Note: The billCycleDay may come from the Account, or the bundle or the subscription itself
      */
     public int getBillCycleDay();
 
     /**
-     *
      * @return the subscription
      */
     public Subscription getSubscription();
 
     /**
-     *
      * @return the date for when that event became effective
      */
     public DateTime getEffectiveDate();
 
     /**
-     *
      * @return the plan phase
      */
     public PlanPhase getPlanPhase();
 
 
     /**
-     *
      * @return the plan
      */
     public Plan getPlan();
 
     /**
-     *
      * @return the billing period for the active phase
      */
     public BillingPeriod getBillingPeriod();
 
     /**
-     *
      * @return the billing mode for the current event
      */
     public BillingModeType getBillingMode();
 
     /**
-     *
      * @return the description of the billing event
      */
     public String getDescription();
 
     /**
-     *
      * @return the fixed price for the phase
      */
     public BigDecimal getFixedPrice();
 
     /**
-     *
      * @return the recurring price for the phase
      */
     public BigDecimal getRecurringPrice();
 
     /**
-     *
      * @return the currency for the account being invoiced
      */
     public Currency getCurrency();
 
-	/**
-	 * @return the transition type of the underlying subscription event that triggered this
-	 */
-	public SubscriptionTransitionType getTransitionType();
+    /**
+     * @return the transition type of the underlying subscription event that triggered this
+     */
+    public SubscriptionTransitionType getTransitionType();
 
-	/**
-	 * @return a unique long indicating the ordering on which events got inserted on disk-- used for sorting only
-	 */
-	public Long getTotalOrdering();
-	
-	/**
-	 * 
-	 * @return The TimeZone of the account
-	 */
+    /**
+     * @return a unique long indicating the ordering on which events got inserted on disk-- used for sorting only
+     */
+    public Long getTotalOrdering();
+
+    /**
+     * @return The TimeZone of the account
+     */
     public DateTimeZone getTimeZone();
- }
+}

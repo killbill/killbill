@@ -16,16 +16,17 @@
 
 package com.ning.billing.util.notificationq;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.TreeSet;
-import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ning.billing.config.NotificationConfig;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
@@ -34,11 +35,13 @@ import com.ning.billing.util.queue.PersistentQueueEntryLifecycle.PersistentQueue
 public class MockNotificationQueue extends NotificationQueueBase implements NotificationQueue {
     private final TreeSet<Notification> notifications;
 
-    public MockNotificationQueue(final Clock clock,  final String svcName, final String queueName, final NotificationQueueHandler handler, final NotificationConfig config) {
+    ObjectMapper objectMapper = new ObjectMapper();
+    
+    public MockNotificationQueue(final Clock clock, final String svcName, final String queueName, final NotificationQueueHandler handler, final NotificationConfig config) {
         super(clock, svcName, queueName, handler, config);
         notifications = new TreeSet<Notification>(new Comparator<Notification>() {
             @Override
-            public int compare(Notification o1, Notification o2) {
+            public int compare(final Notification o1, final Notification o2) {
                 if (o1.getEffectiveDate().equals(o2.getEffectiveDate())) {
                     return o1.getNotificationKey().compareTo(o2.getNotificationKey());
                 } else {
@@ -49,24 +52,25 @@ public class MockNotificationQueue extends NotificationQueueBase implements Noti
     }
 
     @Override
-    public void recordFutureNotification(DateTime futureNotificationTime, NotificationKey notificationKey) {
-        Notification notification = new DefaultNotification("MockQueue", hostname, notificationKey.toString(), futureNotificationTime);
-        synchronized(notifications) {
+    public void recordFutureNotification(final DateTime futureNotificationTime, final NotificationKey notificationKey) throws IOException  {
+        final String json = objectMapper.writeValueAsString(notificationKey);
+        final Notification notification = new DefaultNotification("MockQueue", hostname, notificationKey.getClass().getName(), json, futureNotificationTime);
+        synchronized (notifications) {
             notifications.add(notification);
         }
     }
 
     @Override
     public void recordFutureNotificationFromTransaction(
-            Transmogrifier transactionalDao, DateTime futureNotificationTime,
-            NotificationKey notificationKey) {
+            final Transmogrifier transactionalDao, final DateTime futureNotificationTime,
+            final NotificationKey notificationKey) throws IOException  {
         recordFutureNotification(futureNotificationTime, notificationKey);
     }
 
     public List<Notification> getPendingEvents() {
-        List<Notification> result = new ArrayList<Notification>();
+        final List<Notification> result = new ArrayList<Notification>();
 
-        for (Notification notification : notifications) {
+        for (final Notification notification : notifications) {
             if (notification.getProcessingState() == PersistentQueueEntryLifecycleState.AVAILABLE) {
                 result.add(notification);
             }
@@ -79,14 +83,14 @@ public class MockNotificationQueue extends NotificationQueueBase implements Noti
 
         int result = 0;
 
-        List<Notification> processedNotifications = new ArrayList<Notification>();
-        List<Notification> oldNotifications = new ArrayList<Notification>();
+        final List<Notification> processedNotifications = new ArrayList<Notification>();
+        final List<Notification> oldNotifications = new ArrayList<Notification>();
 
-        List<Notification> readyNotifications = new ArrayList<Notification>();
-        synchronized(notifications) {
-            Iterator<Notification> it = notifications.iterator();
+        final List<Notification> readyNotifications = new ArrayList<Notification>();
+        synchronized (notifications) {
+            final Iterator<Notification> it = notifications.iterator();
             while (it.hasNext()) {
-                Notification cur = it.next();
+                final Notification cur = it.next();
                 if (cur.isAvailableForProcessing(clock.getUTCNow())) {
                     readyNotifications.add(cur);
                 }
@@ -94,13 +98,17 @@ public class MockNotificationQueue extends NotificationQueueBase implements Noti
         }
 
         result = readyNotifications.size();
-        for (Notification cur : readyNotifications) {
-            handler.handleReadyNotification(cur.getNotificationKey(), cur.getEffectiveDate());
-            DefaultNotification processedNotification = new DefaultNotification(-1L, cur.getId(), hostname, hostname, "MockQueue", clock.getUTCNow().plus(CLAIM_TIME_MS), PersistentQueueEntryLifecycleState.PROCESSED, cur.getNotificationKey(), cur.getEffectiveDate());
+        for (final Notification cur : readyNotifications) {
+            
+            
+            NotificationKey key = deserializeEvent(cur.getNotificationKeyClass(), cur.getNotificationKey()); 
+            handler.handleReadyNotification(key, cur.getEffectiveDate());
+            final DefaultNotification processedNotification = new DefaultNotification(-1L, cur.getId(), hostname, hostname, "MockQueue", clock.getUTCNow().plus(CLAIM_TIME_MS), PersistentQueueEntryLifecycleState.PROCESSED,
+                    cur.getNotificationKeyClass(), cur.getNotificationKey(), cur.getEffectiveDate());
             oldNotifications.add(cur);
             processedNotifications.add(processedNotification);
         }
-        synchronized(notifications) {
+        synchronized (notifications) {
             if (oldNotifications.size() > 0) {
                 notifications.removeAll(oldNotifications);
             }
@@ -113,18 +121,18 @@ public class MockNotificationQueue extends NotificationQueueBase implements Noti
     }
 
     @Override
-    public void removeNotificationsByKey(NotificationKey key) {
-        List<Notification> toClearNotifications = new ArrayList<Notification>();
-        for (Notification notification : notifications) {
+    public void removeNotificationsByKey(final NotificationKey key) {
+        final List<Notification> toClearNotifications = new ArrayList<Notification>();
+        for (final Notification notification : notifications) {
             if (notification.getNotificationKey().equals(key.toString())) {
-                    toClearNotifications.add(notification);
+                toClearNotifications.add(notification);
             }
         }
-        synchronized(notifications) {
+        synchronized (notifications) {
             if (toClearNotifications.size() > 0) {
                 notifications.removeAll(toClearNotifications);
             }
         }
-        
+
     }
 }

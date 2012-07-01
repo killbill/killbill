@@ -17,11 +17,11 @@ package com.ning.billing.entitlement.api.user;
 
 import java.util.UUID;
 
+import org.joda.time.DateTime;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.joda.time.DateTime;
-
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 
@@ -46,47 +46,47 @@ public class DefaultSubscriptionEvent implements SubscriptionEvent {
     private final SubscriptionTransitionType transitionType;
 
     private final DateTime startDate;
-    
+
     public DefaultSubscriptionEvent(final SubscriptionTransitionData in, final DateTime startDate) {
         this(in.getId(),
-                in.getSubscriptionId(),
-                in.getBundleId(),
-                in.getRequestedTransitionTime(),
-                in.getEffectiveTransitionTime(),
-                in.getPreviousState(),
-                (in.getPreviousPlan() != null ) ? in.getPreviousPlan().getName() : null,
-                (in.getPreviousPhase() != null) ? in.getPreviousPhase().getName() : null,
-                (in.getPreviousPriceList() != null) ? in.getPreviousPriceList().getName() : null,
-                in.getNextState(),
-                (in.getNextPlan() != null) ? in.getNextPlan().getName() : null,
-                (in.getNextPhase() != null) ? in.getNextPhase().getName() : null,
-                (in.getNextPriceList() != null) ? in.getNextPriceList().getName() : null,
-                in.getTotalOrdering(),
-                in.getUserToken(),
-                in.getTransitionType(),
-                in.getRemainingEventsForUserOperation(),
-                startDate);
+             in.getSubscriptionId(),
+             in.getBundleId(),
+             in.getRequestedTransitionTime(),
+             in.getEffectiveTransitionTime(),
+             in.getPreviousState(),
+             (in.getPreviousPlan() != null) ? in.getPreviousPlan().getName() : null,
+             (in.getPreviousPhase() != null) ? in.getPreviousPhase().getName() : null,
+             (in.getPreviousPriceList() != null) ? in.getPreviousPriceList().getName() : null,
+             in.getNextState(),
+             (in.getNextPlan() != null) ? in.getNextPlan().getName() : null,
+             (in.getNextPhase() != null) ? in.getNextPhase().getName() : null,
+             (in.getNextPriceList() != null) ? in.getNextPriceList().getName() : null,
+             in.getTotalOrdering(),
+             in.getUserToken(),
+             in.getTransitionType(),
+             in.getRemainingEventsForUserOperation(),
+             startDate);
     }
-    
+
     @JsonCreator
-    public DefaultSubscriptionEvent(@JsonProperty("eventId") UUID eventId,
-            @JsonProperty("subscriptionId") UUID subscriptionId,
-            @JsonProperty("bundleId") UUID bundleId,
-            @JsonProperty("requestedTransitionTime") DateTime requestedTransitionTime,
-            @JsonProperty("effectiveTransitionTime") DateTime effectiveTransitionTime,
-            @JsonProperty("previousState") SubscriptionState previousState,
-            @JsonProperty("previousPlan") String previousPlan,
-            @JsonProperty("previousPhase") String previousPhase,
-            @JsonProperty("previousPriceList") String previousPriceList,
-            @JsonProperty("nextState") SubscriptionState nextState,
-            @JsonProperty("nextPlan") String nextPlan,
-            @JsonProperty("nextPhase") String nextPhase,
-            @JsonProperty("nextPriceList") String nextPriceList,
-            @JsonProperty("totalOrdering") Long totalOrdering,
-            @JsonProperty("userToken") UUID userToken,
-            @JsonProperty("transitionType") SubscriptionTransitionType transitionType,
-            @JsonProperty("remainingEventsForUserOperation") Integer remainingEventsForUserOperation,
-            @JsonProperty("startDate") DateTime startDate) {
+    public DefaultSubscriptionEvent(@JsonProperty("eventId") final UUID eventId,
+                                    @JsonProperty("subscriptionId") final UUID subscriptionId,
+                                    @JsonProperty("bundleId") final UUID bundleId,
+                                    @JsonProperty("requestedTransitionTime") final DateTime requestedTransitionTime,
+                                    @JsonProperty("effectiveTransitionTime") final DateTime effectiveTransitionTime,
+                                    @JsonProperty("previousState") final SubscriptionState previousState,
+                                    @JsonProperty("previousPlan") final String previousPlan,
+                                    @JsonProperty("previousPhase") final String previousPhase,
+                                    @JsonProperty("previousPriceList") final String previousPriceList,
+                                    @JsonProperty("nextState") final SubscriptionState nextState,
+                                    @JsonProperty("nextPlan") final String nextPlan,
+                                    @JsonProperty("nextPhase") final String nextPhase,
+                                    @JsonProperty("nextPriceList") final String nextPriceList,
+                                    @JsonProperty("totalOrdering") final Long totalOrdering,
+                                    @JsonProperty("userToken") final UUID userToken,
+                                    @JsonProperty("transitionType") final SubscriptionTransitionType transitionType,
+                                    @JsonProperty("remainingEventsForUserOperation") final Integer remainingEventsForUserOperation,
+                                    @JsonProperty("startDate") final DateTime startDate) {
         super();
         this.eventId = eventId;
         this.subscriptionId = subscriptionId;
@@ -107,7 +107,7 @@ public class DefaultSubscriptionEvent implements SubscriptionEvent {
         this.remainingEventsForUserOperation = remainingEventsForUserOperation;
         this.startDate = startDate;
     }
-    
+
     @JsonIgnore
     @Override
     public BusEventType getBusEventType() {
@@ -171,12 +171,12 @@ public class DefaultSubscriptionEvent implements SubscriptionEvent {
     public String getNextPriceList() {
         return nextPriceList;
     }
-    
+
     @Override
     public UUID getUserToken() {
         return userToken;
     }
-    
+
     @Override
     public Integer getRemainingEventsForUserOperation() {
         return remainingEventsForUserOperation;
@@ -202,7 +202,7 @@ public class DefaultSubscriptionEvent implements SubscriptionEvent {
     public SubscriptionTransitionType getTransitionType() {
         return transitionType;
     }
-    
+
     @JsonProperty("startDate")
     @Override
     public DateTime getSubscriptionStartDate() {
@@ -219,7 +219,7 @@ public class DefaultSubscriptionEvent implements SubscriptionEvent {
         result = prime
                 * result
                 + ((effectiveTransitionTime == null) ? 0
-                        : effectiveTransitionTime.hashCode());
+                : effectiveTransitionTime.hashCode());
         result = prime * result + ((eventId == null) ? 0 : eventId.hashCode());
         result = prime * result
                 + ((nextPhase == null) ? 0 : nextPhase.hashCode());
@@ -236,17 +236,17 @@ public class DefaultSubscriptionEvent implements SubscriptionEvent {
         result = prime
                 * result
                 + ((previousPriceList == null) ? 0 : previousPriceList
-                        .hashCode());
+                .hashCode());
         result = prime * result
                 + ((previousState == null) ? 0 : previousState.hashCode());
         result = prime
                 * result
                 + ((remainingEventsForUserOperation == null) ? 0
-                        : remainingEventsForUserOperation.hashCode());
+                : remainingEventsForUserOperation.hashCode());
         result = prime
                 * result
                 + ((requestedTransitionTime == null) ? 0
-                        : requestedTransitionTime.hashCode());
+                : requestedTransitionTime.hashCode());
         result = prime * result
                 + ((subscriptionId == null) ? 0 : subscriptionId.hashCode());
         result = prime * result
@@ -259,100 +259,134 @@ public class DefaultSubscriptionEvent implements SubscriptionEvent {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
+    public boolean equals(final Object obj) {
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
-        DefaultSubscriptionEvent other = (DefaultSubscriptionEvent) obj;
+        }
+        final DefaultSubscriptionEvent other = (DefaultSubscriptionEvent) obj;
         if (bundleId == null) {
-            if (other.bundleId != null)
+            if (other.bundleId != null) {
                 return false;
-        } else if (!bundleId.equals(other.bundleId))
+            }
+        } else if (!bundleId.equals(other.bundleId)) {
             return false;
+        }
         if (effectiveTransitionTime == null) {
-            if (other.effectiveTransitionTime != null)
+            if (other.effectiveTransitionTime != null) {
                 return false;
+            }
         } else if (effectiveTransitionTime
-                .compareTo(other.effectiveTransitionTime) != 0)
+                .compareTo(other.effectiveTransitionTime) != 0) {
             return false;
+        }
         if (eventId == null) {
-            if (other.eventId != null)
+            if (other.eventId != null) {
                 return false;
-        } else if (!eventId.equals(other.eventId))
+            }
+        } else if (!eventId.equals(other.eventId)) {
             return false;
+        }
         if (nextPhase == null) {
-            if (other.nextPhase != null)
+            if (other.nextPhase != null) {
                 return false;
-        } else if (!nextPhase.equals(other.nextPhase))
+            }
+        } else if (!nextPhase.equals(other.nextPhase)) {
             return false;
+        }
         if (nextPlan == null) {
-            if (other.nextPlan != null)
+            if (other.nextPlan != null) {
                 return false;
-        } else if (!nextPlan.equals(other.nextPlan))
+            }
+        } else if (!nextPlan.equals(other.nextPlan)) {
             return false;
+        }
         if (nextPriceList == null) {
-            if (other.nextPriceList != null)
+            if (other.nextPriceList != null) {
                 return false;
-        } else if (!nextPriceList.equals(other.nextPriceList))
+            }
+        } else if (!nextPriceList.equals(other.nextPriceList)) {
             return false;
-        if (nextState != other.nextState)
+        }
+        if (nextState != other.nextState) {
             return false;
+        }
         if (previousPhase == null) {
-            if (other.previousPhase != null)
+            if (other.previousPhase != null) {
                 return false;
-        } else if (!previousPhase.equals(other.previousPhase))
+            }
+        } else if (!previousPhase.equals(other.previousPhase)) {
             return false;
+        }
         if (previousPlan == null) {
-            if (other.previousPlan != null)
+            if (other.previousPlan != null) {
                 return false;
-        } else if (!previousPlan.equals(other.previousPlan))
+            }
+        } else if (!previousPlan.equals(other.previousPlan)) {
             return false;
+        }
         if (previousPriceList == null) {
-            if (other.previousPriceList != null)
+            if (other.previousPriceList != null) {
                 return false;
-        } else if (!previousPriceList.equals(other.previousPriceList))
+            }
+        } else if (!previousPriceList.equals(other.previousPriceList)) {
             return false;
-        if (previousState != other.previousState)
+        }
+        if (previousState != other.previousState) {
             return false;
+        }
         if (remainingEventsForUserOperation == null) {
-            if (other.remainingEventsForUserOperation != null)
+            if (other.remainingEventsForUserOperation != null) {
                 return false;
+            }
         } else if (!remainingEventsForUserOperation
-                .equals(other.remainingEventsForUserOperation))
+                .equals(other.remainingEventsForUserOperation)) {
             return false;
+        }
         if (requestedTransitionTime == null) {
-            if (other.requestedTransitionTime != null)
+            if (other.requestedTransitionTime != null) {
                 return false;
+            }
         } else if (requestedTransitionTime
-                .compareTo(other.requestedTransitionTime) != 0)
+                .compareTo(other.requestedTransitionTime) != 0) {
             return false;
+        }
         if (subscriptionId == null) {
-            if (other.subscriptionId != null)
+            if (other.subscriptionId != null) {
                 return false;
-        } else if (!subscriptionId.equals(other.subscriptionId))
+            }
+        } else if (!subscriptionId.equals(other.subscriptionId)) {
             return false;
+        }
         if (totalOrdering == null) {
-            if (other.totalOrdering != null)
+            if (other.totalOrdering != null) {
                 return false;
-        } else if (!totalOrdering.equals(other.totalOrdering))
+            }
+        } else if (!totalOrdering.equals(other.totalOrdering)) {
             return false;
-        if (transitionType != other.transitionType)
+        }
+        if (transitionType != other.transitionType) {
             return false;
+        }
         if (userToken == null) {
-            if (other.userToken != null)
+            if (other.userToken != null) {
                 return false;
-        } else if (!userToken.equals(other.userToken))
+            }
+        } else if (!userToken.equals(other.userToken)) {
             return false;
+        }
         return true;
     }
 
     @Override
     public String toString() {
         return "DefaultSubscriptionEvent [transitionType=" + transitionType
-                + ", effectiveTransitionTime=" + effectiveTransitionTime        
+                + ", effectiveTransitionTime=" + effectiveTransitionTime
                 + ", totalOrdering=" + totalOrdering
                 + ", subscriptionId=" + subscriptionId + ", bundleId="
                 + bundleId + ", eventId=" + eventId
@@ -365,7 +399,7 @@ public class DefaultSubscriptionEvent implements SubscriptionEvent {
                 + ", remainingEventsForUserOperation="
                 + remainingEventsForUserOperation + ", userToken=" + userToken
                 + ", startDate=" + startDate + "]";
-                
+
     }
-    
+
 }

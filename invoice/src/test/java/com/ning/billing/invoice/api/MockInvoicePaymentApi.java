@@ -102,7 +102,7 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi {
     }
 
     @Override
-    public void processChargeback(final UUID invoicePaymentId, final BigDecimal amount, final CallContext context) throws InvoiceApiException {
+    public InvoicePayment processChargeback(final UUID invoicePaymentId, final BigDecimal amount, final CallContext context) throws InvoiceApiException {
         InvoicePayment existingPayment = null;
         for (final InvoicePayment payment : invoicePayments) {
             if (payment.getId() == invoicePaymentId) {
@@ -113,10 +113,12 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi {
         if (existingPayment != null) {
             invoicePayments.add(existingPayment.asChargeBack(amount, DateTime.now(DateTimeZone.UTC)));
         }
+
+        return existingPayment;
     }
 
     @Override
-    public void processChargeback(final UUID invoicePaymentId, final CallContext context) throws InvoiceApiException {
+    public InvoicePayment processChargeback(final UUID invoicePaymentId, final CallContext context) throws InvoiceApiException {
         InvoicePayment existingPayment = null;
         for (final InvoicePayment payment : invoicePayments) {
             if (payment.getId() == invoicePaymentId) {
@@ -127,6 +129,8 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi {
         if (existingPayment != null) {
             this.processChargeback(invoicePaymentId, existingPayment.getAmount(), context);
         }
+
+        return existingPayment;
     }
 
     @Override

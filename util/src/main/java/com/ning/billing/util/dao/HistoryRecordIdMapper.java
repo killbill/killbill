@@ -16,17 +16,17 @@
 
 package com.ning.billing.util.dao;
 
-import org.skife.jdbi.v2.StatementContext;
-import org.skife.jdbi.v2.tweak.ResultSetMapper;
-
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.skife.jdbi.v2.StatementContext;
+import org.skife.jdbi.v2.tweak.ResultSetMapper;
+
 public class HistoryRecordIdMapper extends MapperBase implements ResultSetMapper<Mapper> {
     @Override
-    public Mapper<Long, Long> map(int index, ResultSet resultSet, StatementContext ctx) throws SQLException {
-        Long recordId = resultSet.getLong("record_id");
-        Long historyRecordId = resultSet.getLong("history_record_id");
+    public Mapper<Long, Long> map(final int index, final ResultSet resultSet, final StatementContext ctx) throws SQLException {
+        final Long recordId = resultSet.getLong("record_id");
+        final Long historyRecordId = resultSet.getLong("history_record_id");
 
         return new Mapper<Long, Long>(recordId, historyRecordId);
     }

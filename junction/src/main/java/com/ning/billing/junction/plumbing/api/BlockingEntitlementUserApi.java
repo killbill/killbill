@@ -23,7 +23,6 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import com.google.inject.Inject;
-import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
@@ -43,55 +42,55 @@ public class BlockingEntitlementUserApi implements EntitlementUserApi {
     private final BlockingChecker checker;
 
     @Inject
-    public BlockingEntitlementUserApi(@RealImplementation EntitlementUserApi userApi, BlockingApi blockingApi, BlockingChecker checker) {
+    public BlockingEntitlementUserApi(@RealImplementation final EntitlementUserApi userApi, final BlockingApi blockingApi, final BlockingChecker checker) {
         this.entitlementUserApi = userApi;
         this.blockingApi = blockingApi;
         this.checker = checker;
     }
 
     @Override
-    public SubscriptionBundle getBundleFromId(UUID id) throws EntitlementUserApiException {
-        SubscriptionBundle bundle = entitlementUserApi.getBundleFromId(id);
+    public SubscriptionBundle getBundleFromId(final UUID id) throws EntitlementUserApiException {
+        final SubscriptionBundle bundle = entitlementUserApi.getBundleFromId(id);
         return new BlockingSubscriptionBundle(bundle, blockingApi);
     }
 
     @Override
-    public Subscription getSubscriptionFromId(UUID id) throws EntitlementUserApiException {
-        Subscription subscription = entitlementUserApi.getSubscriptionFromId(id);
+    public Subscription getSubscriptionFromId(final UUID id) throws EntitlementUserApiException {
+        final Subscription subscription = entitlementUserApi.getSubscriptionFromId(id);
         return new BlockingSubscription(subscription, blockingApi, checker);
     }
 
     @Override
-    public SubscriptionBundle getBundleForKey(String bundleKey) throws EntitlementUserApiException {
-        SubscriptionBundle bundle = entitlementUserApi.getBundleForKey(bundleKey);
+    public SubscriptionBundle getBundleForKey(final String bundleKey) throws EntitlementUserApiException {
+        final SubscriptionBundle bundle = entitlementUserApi.getBundleForKey(bundleKey);
         return new BlockingSubscriptionBundle(bundle, blockingApi);
     }
 
     @Override
-    public List<SubscriptionBundle> getBundlesForAccount(UUID accountId) {
-        List<SubscriptionBundle> result = new ArrayList<SubscriptionBundle>();
-        List<SubscriptionBundle> bundles = entitlementUserApi.getBundlesForAccount(accountId);
-        for(SubscriptionBundle bundle : bundles) {
+    public List<SubscriptionBundle> getBundlesForAccount(final UUID accountId) {
+        final List<SubscriptionBundle> result = new ArrayList<SubscriptionBundle>();
+        final List<SubscriptionBundle> bundles = entitlementUserApi.getBundlesForAccount(accountId);
+        for (final SubscriptionBundle bundle : bundles) {
             result.add(new BlockingSubscriptionBundle(bundle, blockingApi));
         }
         return result;
     }
 
     @Override
-    public List<Subscription> getSubscriptionsForBundle(UUID bundleId) {
-        List<Subscription> result = new ArrayList<Subscription>();
-        List<Subscription> subscriptions = entitlementUserApi.getSubscriptionsForBundle(bundleId);
-        for(Subscription subscription : subscriptions) {
+    public List<Subscription> getSubscriptionsForBundle(final UUID bundleId) {
+        final List<Subscription> result = new ArrayList<Subscription>();
+        final List<Subscription> subscriptions = entitlementUserApi.getSubscriptionsForBundle(bundleId);
+        for (final Subscription subscription : subscriptions) {
             result.add(new BlockingSubscription(subscription, blockingApi, checker));
         }
         return result;
     }
 
     @Override
-    public List<Subscription> getSubscriptionsForKey(String bundleKey) {
-        List<Subscription> result = new ArrayList<Subscription>();
-        List<Subscription> subscriptions = entitlementUserApi.getSubscriptionsForKey(bundleKey);
-        for(Subscription subscription : subscriptions) {
+    public List<Subscription> getSubscriptionsForKey(final String bundleKey) {
+        final List<Subscription> result = new ArrayList<Subscription>();
+        final List<Subscription> subscriptions = entitlementUserApi.getSubscriptionsForKey(bundleKey);
+        for (final Subscription subscription : subscriptions) {
             result.add(new BlockingSubscription(subscription, blockingApi, checker));
         }
         return result;
@@ -99,40 +98,40 @@ public class BlockingEntitlementUserApi implements EntitlementUserApi {
 
     @Override
     public List<SubscriptionStatusDryRun> getDryRunChangePlanStatus(
-            UUID subscriptionId, String productName, DateTime requestedDate)
+            final UUID subscriptionId, final String productName, final DateTime requestedDate)
             throws EntitlementUserApiException {
         return entitlementUserApi.getDryRunChangePlanStatus(subscriptionId, productName, requestedDate);
     }
 
     @Override
-    public Subscription getBaseSubscription(UUID bundleId) throws EntitlementUserApiException {
+    public Subscription getBaseSubscription(final UUID bundleId) throws EntitlementUserApiException {
         return new BlockingSubscription(entitlementUserApi.getBaseSubscription(bundleId), blockingApi, checker);
     }
 
     @Override
-    public SubscriptionBundle createBundleForAccount(UUID accountId, String bundleKey, CallContext context)
-    throws EntitlementUserApiException {
+    public SubscriptionBundle createBundleForAccount(final UUID accountId, final String bundleKey, final CallContext context)
+            throws EntitlementUserApiException {
         try {
             checker.checkBlockedChange(accountId, Blockable.Type.ACCOUNT);
             return new BlockingSubscriptionBundle(entitlementUserApi.createBundleForAccount(accountId, bundleKey, context), blockingApi);
-        }catch (BlockingApiException e) {
+        } catch (BlockingApiException e) {
             throw new EntitlementUserApiException(e, e.getCode(), e.getMessage());
         }
     }
 
     @Override
-    public Subscription createSubscription(UUID bundleId, PlanPhaseSpecifier spec, DateTime requestedDate,
-            CallContext context) throws EntitlementUserApiException {
+    public Subscription createSubscription(final UUID bundleId, final PlanPhaseSpecifier spec, final DateTime requestedDate,
+                                           final CallContext context) throws EntitlementUserApiException {
         try {
             checker.checkBlockedChange(bundleId, Blockable.Type.SUBSCRIPTION_BUNDLE);
             return new BlockingSubscription(entitlementUserApi.createSubscription(bundleId, spec, requestedDate, context), blockingApi, checker);
-        }catch (BlockingApiException e) {
+        } catch (BlockingApiException e) {
             throw new EntitlementUserApiException(e, e.getCode(), e.getMessage());
         }
     }
 
     @Override
-    public DateTime getNextBillingDate(UUID account) {
+    public DateTime getNextBillingDate(final UUID account) {
         return entitlementUserApi.getNextBillingDate(account);
     }
 }

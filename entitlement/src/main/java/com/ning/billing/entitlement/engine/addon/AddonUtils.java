@@ -26,11 +26,9 @@ import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.Product;
-import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
+import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
-import com.ning.billing.entitlement.api.user.SubscriptionEvent;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 
 public class AddonUtils {
@@ -40,32 +38,32 @@ public class AddonUtils {
     private final CatalogService catalogService;
 
     @Inject
-    public AddonUtils(CatalogService catalogService) {
+    public AddonUtils(final CatalogService catalogService) {
         this.catalogService = catalogService;
     }
 
-    public void checkAddonCreationRights(SubscriptionData baseSubscription, Plan targetAddOnPlan)
-    throws EntitlementUserApiException, CatalogApiException {
+    public void checkAddonCreationRights(final SubscriptionData baseSubscription, final Plan targetAddOnPlan)
+            throws EntitlementUserApiException, CatalogApiException {
 
         if (baseSubscription.getState() != SubscriptionState.ACTIVE) {
             throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_AO_BP_NON_ACTIVE, targetAddOnPlan.getName());
         }
 
-        Product baseProduct = baseSubscription.getCurrentPlan().getProduct();
+        final Product baseProduct = baseSubscription.getCurrentPlan().getProduct();
         if (isAddonIncluded(baseProduct, targetAddOnPlan)) {
             throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_AO_ALREADY_INCLUDED,
-                    targetAddOnPlan.getName(), baseSubscription.getCurrentPlan().getProduct().getName());
+                                                  targetAddOnPlan.getName(), baseSubscription.getCurrentPlan().getProduct().getName());
         }
 
         if (!isAddonAvailable(baseProduct, targetAddOnPlan)) {
             throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_AO_NOT_AVAILABLE,
-                    targetAddOnPlan.getName(), baseSubscription.getCurrentPlan().getProduct().getName());
+                                                  targetAddOnPlan.getName(), baseSubscription.getCurrentPlan().getProduct().getName());
         }
     }
 
     public boolean isAddonAvailableFromProdName(final String baseProductName, final DateTime requestedDate, final Plan targetAddOnPlan) {
         try {
-            Product product = catalogService.getFullCatalog().findProduct(baseProductName, requestedDate);
+            final Product product = catalogService.getFullCatalog().findProduct(baseProductName, requestedDate);
             return isAddonAvailable(product, targetAddOnPlan);
         } catch (CatalogApiException e) {
             throw new EntitlementError(e);
@@ -74,8 +72,8 @@ public class AddonUtils {
 
     public boolean isAddonAvailableFromPlanName(final String basePlanName, final DateTime requestedDate, final Plan targetAddOnPlan) {
         try {
-            Plan plan = catalogService.getFullCatalog().findPlan(basePlanName, requestedDate);
-            Product product = plan.getProduct();
+            final Plan plan = catalogService.getFullCatalog().findPlan(basePlanName, requestedDate);
+            final Product product = plan.getProduct();
             return isAddonAvailable(product, targetAddOnPlan);
         } catch (CatalogApiException e) {
             throw new EntitlementError(e);
@@ -83,20 +81,20 @@ public class AddonUtils {
     }
 
     public boolean isAddonAvailable(final Product baseProduct, final Plan targetAddOnPlan) {
-        Product targetAddonProduct = targetAddOnPlan.getProduct();
-        Product[] availableAddOns = baseProduct.getAvailable();
+        final Product targetAddonProduct = targetAddOnPlan.getProduct();
+        final Product[] availableAddOns = baseProduct.getAvailable();
 
-        for (Product curAv : availableAddOns) {
+        for (final Product curAv : availableAddOns) {
             if (curAv.getName().equals(targetAddonProduct.getName())) {
                 return true;
             }
         }
         return false;
     }
-    
+
     public boolean isAddonIncludedFromProdName(final String baseProductName, final DateTime requestedDate, final Plan targetAddOnPlan) {
-        try {            
-            Product product = catalogService.getFullCatalog().findProduct(baseProductName, requestedDate);
+        try {
+            final Product product = catalogService.getFullCatalog().findProduct(baseProductName, requestedDate);
             return isAddonIncluded(product, targetAddOnPlan);
         } catch (CatalogApiException e) {
             throw new EntitlementError(e);
@@ -105,9 +103,9 @@ public class AddonUtils {
     }
 
     public boolean isAddonIncludedFromPlanName(final String basePlanName, final DateTime requestedDate, final Plan targetAddOnPlan) {
-        try {            
-            Plan plan = catalogService.getFullCatalog().findPlan(basePlanName, requestedDate);
-            Product product = plan.getProduct();
+        try {
+            final Plan plan = catalogService.getFullCatalog().findPlan(basePlanName, requestedDate);
+            final Product product = plan.getProduct();
             return isAddonIncluded(product, targetAddOnPlan);
         } catch (CatalogApiException e) {
             throw new EntitlementError(e);
@@ -115,9 +113,9 @@ public class AddonUtils {
     }
 
     public boolean isAddonIncluded(final Product baseProduct, final Plan targetAddOnPlan) {
-        Product targetAddonProduct = targetAddOnPlan.getProduct();
-        Product[] includedAddOns = baseProduct.getIncluded();
-        for (Product curAv : includedAddOns) {
+        final Product targetAddonProduct = targetAddOnPlan.getProduct();
+        final Product[] includedAddOns = baseProduct.getIncluded();
+        for (final Product curAv : includedAddOns) {
             if (curAv.getName().equals(targetAddonProduct.getName())) {
                 return true;
             }

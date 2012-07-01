@@ -19,8 +19,8 @@ import org.joda.time.DateTime;
 
 import com.ning.billing.util.queue.PersistentQueueEntryLifecycle;
 
-public class BusEventEntry implements PersistentQueueEntryLifecycle  {
-    
+public class BusEventEntry implements PersistentQueueEntryLifecycle {
+
     private final long id;
     private final String owner;
     private final String createdOwner;
@@ -29,7 +29,7 @@ public class BusEventEntry implements PersistentQueueEntryLifecycle  {
     private final String busEventClass;
     private final String busEventJson;
 
-    public BusEventEntry(final long id, final String createdOwner, final String owner, final DateTime nextAvailable, PersistentQueueEntryLifecycleState processingState, final String busEventClass, final String busEventJson) {
+    public BusEventEntry(final long id, final String createdOwner, final String owner, final DateTime nextAvailable, final PersistentQueueEntryLifecycleState processingState, final String busEventClass, final String busEventJson) {
         this.id = id;
         this.createdOwner = createdOwner;
         this.owner = owner;
@@ -43,7 +43,6 @@ public class BusEventEntry implements PersistentQueueEntryLifecycle  {
         this(0, createdOwner, null, null, null, busEventClass, busEventJson);
     }
 
-    
 
     public long getId() {
         return id;
@@ -78,20 +77,20 @@ public class BusEventEntry implements PersistentQueueEntryLifecycle  {
     }
 
     @Override
-    public boolean isAvailableForProcessing(DateTime now) {
-        switch(processingState) {
-        case AVAILABLE:
-            break;
-        case IN_PROCESSING:
-            // Somebody already got the event, not available yet
-            if (nextAvailable.isAfter(now)) {
+    public boolean isAvailableForProcessing(final DateTime now) {
+        switch (processingState) {
+            case AVAILABLE:
+                break;
+            case IN_PROCESSING:
+                // Somebody already got the event, not available yet
+                if (nextAvailable.isAfter(now)) {
+                    return false;
+                }
+                break;
+            case PROCESSED:
                 return false;
-            }
-            break;
-        case PROCESSED:
-            return false;
-        default:
-            throw new RuntimeException(String.format("Unkwnon IEvent processing state %s", processingState));
+            default:
+                throw new RuntimeException(String.format("Unkwnon IEvent processing state %s", processingState));
         }
         return true;
     }

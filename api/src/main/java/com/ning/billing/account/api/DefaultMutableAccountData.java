@@ -43,14 +43,14 @@ public class DefaultMutableAccountData implements MutableAccountData {
     private String phone;
     private boolean isMigrated;
     private boolean isNotifiedForInvoices;
-    
-    public DefaultMutableAccountData(String externalKey, String email, String name,
-            int firstNameLength, Currency currency, int billCycleDay,
-            UUID paymentMethodId, TagStore tags, DateTimeZone timeZone,
-            String locale, String address1, String address2,
-            String companyName, String city, String stateOrProvince,
-            String country, String postalCode, String phone,
-            boolean isMigrated, boolean isNotifiedForInvoices) {
+
+    public DefaultMutableAccountData(final String externalKey, final String email, final String name,
+                                     final int firstNameLength, final Currency currency, final int billCycleDay,
+                                     final UUID paymentMethodId, final TagStore tags, final DateTimeZone timeZone,
+                                     final String locale, final String address1, final String address2,
+                                     final String companyName, final String city, final String stateOrProvince,
+                                     final String country, final String postalCode, final String phone,
+                                     final boolean isMigrated, final boolean isNotifiedForInvoices) {
         super();
         this.externalKey = externalKey;
         this.email = email;
@@ -72,8 +72,8 @@ public class DefaultMutableAccountData implements MutableAccountData {
         this.isMigrated = isMigrated;
         this.isNotifiedForInvoices = isNotifiedForInvoices;
     }
-    
-    public DefaultMutableAccountData(AccountData accountData) {
+
+    public DefaultMutableAccountData(final AccountData accountData) {
         super();
         this.externalKey = accountData.getExternalKey();
         this.email = accountData.getEmail();
@@ -103,259 +103,294 @@ public class DefaultMutableAccountData implements MutableAccountData {
     public String getExternalKey() {
         return externalKey;
     }
+
     /* (non-Javadoc)
-     * @see com.ning.billing.account.api.MutableAccountData#getEmail()
-     */
+    * @see com.ning.billing.account.api.MutableAccountData#getEmail()
+    */
     @Override
     public String getEmail() {
         return email;
     }
+
     /* (non-Javadoc)
-     * @see com.ning.billing.account.api.MutableAccountData#getName()
-     */
+    * @see com.ning.billing.account.api.MutableAccountData#getName()
+    */
     @Override
     public String getName() {
         return name;
     }
+
     /* (non-Javadoc)
-     * @see com.ning.billing.account.api.MutableAccountData#getFirstNameLength()
-     */
+    * @see com.ning.billing.account.api.MutableAccountData#getFirstNameLength()
+    */
     @Override
-    public int getFirstNameLength() {
+    public Integer getFirstNameLength() {
         return firstNameLength;
     }
+
     /* (non-Javadoc)
-     * @see com.ning.billing.account.api.MutableAccountData#getCurrency()
-     */
+    * @see com.ning.billing.account.api.MutableAccountData#getCurrency()
+    */
     @Override
     public Currency getCurrency() {
         return currency;
     }
+
     /* (non-Javadoc)
-     * @see com.ning.billing.account.api.MutableAccountData#getBillCycleDay()
-     */
+    * @see com.ning.billing.account.api.MutableAccountData#getBillCycleDay()
+    */
     @Override
-    public int getBillCycleDay() {
+    public Integer getBillCycleDay() {
         return billCycleDay;
     }
+
     /* (non-Javadoc)
-     * @see com.ning.billing.account.api.MutableAccountData#getPaymentProviderName()
-     */
+    * @see com.ning.billing.account.api.MutableAccountData#getPaymentProviderName()
+    */
     @Override
     public UUID getPaymentMethodId() {
         return paymentMethodId;
     }
+
     /* (non-Javadoc)
-     * @see com.ning.billing.account.api.MutableAccountData#getTimeZone()
-     */
+    * @see com.ning.billing.account.api.MutableAccountData#getTimeZone()
+    */
     @Override
     public DateTimeZone getTimeZone() {
         return timeZone;
     }
+
     /* (non-Javadoc)
-     * @see com.ning.billing.account.api.MutableAccountData#getLocale()
-     */
+    * @see com.ning.billing.account.api.MutableAccountData#getLocale()
+    */
     @Override
     public String getLocale() {
         return locale;
     }
+
     /* (non-Javadoc)
-     * @see com.ning.billing.account.api.MutableAccountData#getAddress1()
-     */
+    * @see com.ning.billing.account.api.MutableAccountData#getAddress1()
+    */
     @Override
     public String getAddress1() {
         return address1;
     }
+
     /* (non-Javadoc)
-     * @see com.ning.billing.account.api.MutableAccountData#getAddress2()
-     */
+    * @see com.ning.billing.account.api.MutableAccountData#getAddress2()
+    */
     @Override
     public String getAddress2() {
         return address2;
     }
+
     /* (non-Javadoc)
-     * @see com.ning.billing.account.api.MutableAccountData#getCompanyName()
-     */
+    * @see com.ning.billing.account.api.MutableAccountData#getCompanyName()
+    */
     @Override
     public String getCompanyName() {
         return companyName;
     }
+
     /* (non-Javadoc)
-     * @see com.ning.billing.account.api.MutableAccountData#getCity()
-     */
+    * @see com.ning.billing.account.api.MutableAccountData#getCity()
+    */
     @Override
     public String getCity() {
         return city;
     }
+
     /* (non-Javadoc)
-     * @see com.ning.billing.account.api.MutableAccountData#getStateOrProvince()
-     */
+    * @see com.ning.billing.account.api.MutableAccountData#getStateOrProvince()
+    */
     @Override
     public String getStateOrProvince() {
         return stateOrProvince;
     }
+
     /* (non-Javadoc)
-     * @see com.ning.billing.account.api.MutableAccountData#getCountry()
-     */
+    * @see com.ning.billing.account.api.MutableAccountData#getCountry()
+    */
     @Override
     public String getCountry() {
         return country;
     }
+
     /* (non-Javadoc)
-     * @see com.ning.billing.account.api.MutableAccountData#getPostalCode()
-     */
+    * @see com.ning.billing.account.api.MutableAccountData#getPostalCode()
+    */
     @Override
     public String getPostalCode() {
         return postalCode;
     }
+
     /* (non-Javadoc)
-     * @see com.ning.billing.account.api.MutableAccountData#getPhone()
-     */
+    * @see com.ning.billing.account.api.MutableAccountData#getPhone()
+    */
     @Override
     public String getPhone() {
         return phone;
     }
+
     /* (non-Javadoc)
-     * @see com.ning.billing.account.api.MutableAccountData#isMigrated()
-     */
+    * @see com.ning.billing.account.api.MutableAccountData#isMigrated()
+    */
     @Override
-    public boolean isMigrated() {
+    public Boolean isMigrated() {
         return isMigrated;
     }
+
     /* (non-Javadoc)
-     * @see com.ning.billing.account.api.MutableAccountData#getSendInvoiceEmails()
-     */
+    * @see com.ning.billing.account.api.MutableAccountData#getSendInvoiceEmails()
+    */
     @Override
-    public boolean isNotifiedForInvoices() {
+    public Boolean isNotifiedForInvoices() {
         return isNotifiedForInvoices;
     }
+
     /* (non-Javadoc)
-     * @see com.ning.billing.account.api.MutableAccountData#setExternalKey(java.lang.String)
-     */
+    * @see com.ning.billing.account.api.MutableAccountData#setExternalKey(java.lang.String)
+    */
     @Override
-    public void setExternalKey(String externalKey) {
+    public void setExternalKey(final String externalKey) {
         this.externalKey = externalKey;
     }
+
     /* (non-Javadoc)
-     * @see com.ning.billing.account.api.MutableAccountData#setEmail(java.lang.String)
-     */
+    * @see com.ning.billing.account.api.MutableAccountData#setEmail(java.lang.String)
+    */
     @Override
-    public void setEmail(String email) {
+    public void setEmail(final String email) {
         this.email = email;
     }
+
     /* (non-Javadoc)
-     * @see com.ning.billing.account.api.MutableAccountData#setName(java.lang.String)
-     */
+    * @see com.ning.billing.account.api.MutableAccountData#setName(java.lang.String)
+    */
     @Override
-    public void setName(String name) {
+    public void setName(final String name) {
         this.name = name;
     }
+
     /* (non-Javadoc)
-     * @see com.ning.billing.account.api.MutableAccountData#setFirstNameLength(int)
-     */
+    * @see com.ning.billing.account.api.MutableAccountData#setFirstNameLength(int)
+    */
     @Override
-    public void setFirstNameLength(int firstNameLength) {
+    public void setFirstNameLength(final int firstNameLength) {
         this.firstNameLength = firstNameLength;
     }
+
     /* (non-Javadoc)
-     * @see com.ning.billing.account.api.MutableAccountData#setCurrency(com.ning.billing.catalog.api.Currency)
-     */
+    * @see com.ning.billing.account.api.MutableAccountData#setCurrency(com.ning.billing.catalog.api.Currency)
+    */
     @Override
-    public void setCurrency(Currency currency) {
+    public void setCurrency(final Currency currency) {
         this.currency = currency;
     }
+
     /* (non-Javadoc)
-     * @see com.ning.billing.account.api.MutableAccountData#setBillCycleDay(int)
-     */
+    * @see com.ning.billing.account.api.MutableAccountData#setBillCycleDay(int)
+    */
     @Override
-    public void setBillCycleDay(int billCycleDay) {
+    public void setBillCycleDay(final int billCycleDay) {
         this.billCycleDay = billCycleDay;
     }
+
     /* (non-Javadoc)
-     * @see com.ning.billing.account.api.MutableAccountData#setPaymentProviderName(java.lang.String)
-     */
+    * @see com.ning.billing.account.api.MutableAccountData#setPaymentProviderName(java.lang.String)
+    */
     @Override
-    public void setPaymentMethodId(UUID paymentMethodId) {
+    public void setPaymentMethodId(final UUID paymentMethodId) {
         this.paymentMethodId = paymentMethodId;
     }
+
     /* (non-Javadoc)
-     * @see com.ning.billing.account.api.MutableAccountData#setTimeZone(org.joda.time.DateTimeZone)
-     */
+    * @see com.ning.billing.account.api.MutableAccountData#setTimeZone(org.joda.time.DateTimeZone)
+    */
     @Override
-    public void setTimeZone(DateTimeZone timeZone) {
+    public void setTimeZone(final DateTimeZone timeZone) {
         this.timeZone = timeZone;
     }
+
     /* (non-Javadoc)
-     * @see com.ning.billing.account.api.MutableAccountData#setLocale(java.lang.String)
-     */
+    * @see com.ning.billing.account.api.MutableAccountData#setLocale(java.lang.String)
+    */
     @Override
-    public void setLocale(String locale) {
+    public void setLocale(final String locale) {
         this.locale = locale;
     }
+
     /* (non-Javadoc)
-     * @see com.ning.billing.account.api.MutableAccountData#setAddress1(java.lang.String)
-     */
+    * @see com.ning.billing.account.api.MutableAccountData#setAddress1(java.lang.String)
+    */
     @Override
-    public void setAddress1(String address1) {
+    public void setAddress1(final String address1) {
         this.address1 = address1;
     }
+
     /* (non-Javadoc)
-     * @see com.ning.billing.account.api.MutableAccountData#setAddress2(java.lang.String)
-     */
+    * @see com.ning.billing.account.api.MutableAccountData#setAddress2(java.lang.String)
+    */
     @Override
-    public void setAddress2(String address2) {
+    public void setAddress2(final String address2) {
         this.address2 = address2;
     }
+
     /* (non-Javadoc)
-     * @see com.ning.billing.account.api.MutableAccountData#setCompanyName(java.lang.String)
-     */
+    * @see com.ning.billing.account.api.MutableAccountData#setCompanyName(java.lang.String)
+    */
     @Override
-    public void setCompanyName(String companyName) {
+    public void setCompanyName(final String companyName) {
         this.companyName = companyName;
     }
+
     /* (non-Javadoc)
-     * @see com.ning.billing.account.api.MutableAccountData#setCity(java.lang.String)
-     */
+    * @see com.ning.billing.account.api.MutableAccountData#setCity(java.lang.String)
+    */
     @Override
-    public void setCity(String city) {
+    public void setCity(final String city) {
         this.city = city;
     }
+
     /* (non-Javadoc)
-     * @see com.ning.billing.account.api.MutableAccountData#setStateOrProvince(java.lang.String)
-     */
+    * @see com.ning.billing.account.api.MutableAccountData#setStateOrProvince(java.lang.String)
+    */
     @Override
-    public void setStateOrProvince(String stateOrProvince) {
+    public void setStateOrProvince(final String stateOrProvince) {
         this.stateOrProvince = stateOrProvince;
     }
+
     /* (non-Javadoc)
-     * @see com.ning.billing.account.api.MutableAccountData#setCountry(java.lang.String)
-     */
+    * @see com.ning.billing.account.api.MutableAccountData#setCountry(java.lang.String)
+    */
     @Override
-    public void setCountry(String country) {
+    public void setCountry(final String country) {
         this.country = country;
     }
+
     /* (non-Javadoc)
-     * @see com.ning.billing.account.api.MutableAccountData#setPostalCode(java.lang.String)
-     */
+    * @see com.ning.billing.account.api.MutableAccountData#setPostalCode(java.lang.String)
+    */
     @Override
-    public void setPostalCode(String postalCode) {
+    public void setPostalCode(final String postalCode) {
         this.postalCode = postalCode;
     }
+
     /* (non-Javadoc)
-     * @see com.ning.billing.account.api.MutableAccountData#setPhone(java.lang.String)
-     */
+    * @see com.ning.billing.account.api.MutableAccountData#setPhone(java.lang.String)
+    */
     @Override
-    public void setPhone(String phone) {
+    public void setPhone(final String phone) {
         this.phone = phone;
     }
 
     @Override
-    public void setIsMigrated(boolean isMigrated) {
+    public void setIsMigrated(final boolean isMigrated) {
         this.isMigrated = isMigrated;
     }
 
     @Override
-    public void setIsNotifiedForInvoices(boolean isNotifiedForInvoices) {
+    public void setIsNotifiedForInvoices(final boolean isNotifiedForInvoices) {
         this.isNotifiedForInvoices = isNotifiedForInvoices;
     }
 

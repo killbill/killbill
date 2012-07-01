@@ -145,4 +145,14 @@ public class DefaultAccountUserApi implements AccountUserApi {
     public void saveEmails(final UUID accountId, final List<AccountEmail> newEmails, final CallContext context) {
         accountEmailDao.saveEmails(accountId, newEmails, context);
     }
+
+    @Override
+    public void addEmail(final UUID accountId, final AccountEmail email, final CallContext context) {
+        accountEmailDao.addEmail(accountId, email, context);
+    }
+
+    @Override
+    public void removeEmail(final UUID accountId, final AccountEmail email, final CallContext context) {
+        accountEmailDao.removeEmail(accountId, email, context);
+    }
 }

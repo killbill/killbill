@@ -27,47 +27,52 @@ import com.ning.billing.config.NotificationConfig;
 import com.ning.billing.overdue.OverdueProperties;
 import com.ning.billing.overdue.listener.OverdueListener;
 import com.ning.billing.overdue.service.DefaultOverdueService;
+import com.ning.billing.util.notificationq.NotificationKey;
 import com.ning.billing.util.notificationq.NotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
 
-public class DefaultOverdueCheckNotifier implements  OverdueCheckNotifier { 
+public class DefaultOverdueCheckNotifier implements OverdueCheckNotifier {
 
-    private final static Logger log = LoggerFactory.getLogger(DefaultOverdueCheckNotifier.class);
+    private static final Logger log = LoggerFactory.getLogger(DefaultOverdueCheckNotifier.class);
 
     public static final String OVERDUE_CHECK_NOTIFIER_QUEUE = "overdue-check-queue";
 
     private final NotificationQueueService notificationQueueService;
-	private final OverdueProperties config;
+    private final OverdueProperties config;
 
     private NotificationQueue overdueQueue;
-	private final OverdueListener listener;
+    private final OverdueListener listener;
 
     @Inject
-	public DefaultOverdueCheckNotifier(NotificationQueueService notificationQueueService,
-	        OverdueProperties config, OverdueListener listener){
-		this.notificationQueueService = notificationQueueService;
-		this.config = config;
+    public DefaultOverdueCheckNotifier(final NotificationQueueService notificationQueueService,
+            final OverdueProperties config, final OverdueListener listener) {
+        this.notificationQueueService = notificationQueueService;
+        this.config = config;
         this.listener = listener;
-	}
+    }
 
     @Override
     public void initialize() {
-		try {
+        try {
             overdueQueue = notificationQueueService.createNotificationQueue(DefaultOverdueService.OVERDUE_SERVICE_NAME,
-            		OVERDUE_CHECK_NOTIFIER_QUEUE,
+                    OVERDUE_CHECK_NOTIFIER_QUEUE,
                     new NotificationQueueHandler() {
                 @Override
-                public void handleReadyNotification(String notificationKey, DateTime eventDate) {
-                	try {
-                 		UUID key = UUID.fromString(notificationKey);
-                        processEvent(key , eventDate);
-                   	} catch (IllegalArgumentException e) {
-                		log.error("The key returned from the NextBillingNotificationQueue is not a valid UUID", e);
-                		return;
-                	}
+                public void handleReadyNotification(final NotificationKey notificationKey, final DateTime eventDate) {
+                    try {
+                        if (! (notificationKey instanceof OverdueCheckNotificationKey)) {
+                            log.error("Overdue service received Unexpected notificationKey {}", notificationKey.getClass().getName());
+                            return;
+                        }
+                        final OverdueCheckNotificationKey key = (OverdueCheckNotificationKey) notificationKey; 
+                        processEvent(key.getUuidKey(), eventDate);
+                    } catch (IllegalArgumentException e) {
+                        log.error("The key returned from the NextBillingNotificationQueue is not a valid UUID", e);
+                        return;
+                    }
 
                 }
             },
@@ -76,11 +81,13 @@ public class DefaultOverdueCheckNotifier implements  OverdueCheckNotifier {
                 public boolean isNotificationProcessingOff() {
                     return config.isNotificationProcessingOff();
                 }
+
                 @Override
                 public long getSleepTimeMs() {
                     return config.getSleepTimeMs();
                 }
-            });
+            }
+            );
         } catch (NotificationQueueAlreadyExists e) {
             throw new RuntimeException(e);
         }
@@ -88,23 +95,23 @@ public class DefaultOverdueCheckNotifier implements  OverdueCheckNotifier {
 
     @Override
     public void start() {
-    	overdueQueue.startQueue();
+        overdueQueue.startQueue();
     }
 
     @Override
     public void stop() {
         if (overdueQueue != null) {
-        	overdueQueue.stopQueue();
-        	try {
-        	    notificationQueueService.deleteNotificationQueue(overdueQueue.getServiceName(), overdueQueue.getQueueName());
-        	} catch (NoSuchNotificationQueue e) {
-        	    log.error("Error deleting a queue by its own name - this should never happen", e);
-        	}
+            overdueQueue.stopQueue();
+            try {
+                notificationQueueService.deleteNotificationQueue(overdueQueue.getServiceName(), overdueQueue.getQueueName());
+            } catch (NoSuchNotificationQueue e) {
+                log.error("Error deleting a queue by its own name - this should never happen", e);
+            }
         }
     }
 
-    private void processEvent(UUID overdueableId, DateTime eventDateTime) {
-        listener.handleNextOverdueCheck(overdueableId); 
+    private void processEvent(final UUID overdueableId, final DateTime eventDateTime) {
+        listener.handleNextOverdueCheck(overdueableId);
     }
 
 

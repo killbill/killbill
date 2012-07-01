@@ -29,14 +29,14 @@ public class DefaultNewEvent implements NewEvent {
     private final PlanPhaseSpecifier spec;
     private final DateTime requestedDate;
     private final SubscriptionTransitionType transitionType;
-    
+
     public DefaultNewEvent(final UUID subscriptionId, final PlanPhaseSpecifier spec, final DateTime requestedDate, final SubscriptionTransitionType transitionType) {
         this.subscriptionId = subscriptionId;
         this.spec = spec;
         this.requestedDate = requestedDate;
         this.transitionType = transitionType;
     }
-    
+
     @Override
     public PlanPhaseSpecifier getPlanPhaseSpecifier() {
         return spec;
@@ -51,7 +51,7 @@ public class DefaultNewEvent implements NewEvent {
     public SubscriptionTransitionType getSubscriptionTransitionType() {
         return transitionType;
     }
-    
+
     public UUID getSubscriptionId() {
         return subscriptionId;
     }

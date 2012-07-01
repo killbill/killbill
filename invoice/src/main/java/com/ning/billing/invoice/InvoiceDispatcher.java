@@ -126,7 +126,6 @@ public class InvoiceDispatcher {
             lock = locker.lockWithNumberOfTries(LockerService.INVOICE, accountId.toString(), NB_LOCK_TRY);
 
             return processAccountWithLock(accountId, targetDate, dryRun, context);
-
         } catch (LockFailedException e) {
             // Not good!
             log.error(String.format("Failed to process invoice for account %s, targetDate %s",

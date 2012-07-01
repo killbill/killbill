@@ -16,13 +16,13 @@
 
 package com.ning.billing.util.dao;
 
+import java.util.UUID;
+
 import com.ning.billing.util.ChangeType;
 import com.ning.billing.util.entity.Entity;
 
-import java.util.UUID;
-
 public class EntityHistory<T extends Entity> extends MappedEntity<T, UUID, Long> {
-    public EntityHistory(UUID id, Long recordId, T entity, ChangeType changeType) {
+    public EntityHistory(final UUID id, final Long recordId, final T entity, final ChangeType changeType) {
         super(new Mapper<UUID, Long>(id, recordId), entity, changeType);
     }
 }

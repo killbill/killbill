@@ -16,6 +16,9 @@
 
 package com.ning.billing.entitlement.engine.dao;
 
+import javax.annotation.Nullable;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -25,7 +28,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.IDBI;
@@ -48,11 +50,11 @@ import com.ning.billing.entitlement.api.migration.AccountMigrationData.Subscript
 import com.ning.billing.entitlement.api.timeline.DefaultRepairEntitlementEvent;
 import com.ning.billing.entitlement.api.timeline.RepairEntitlementEvent;
 import com.ning.billing.entitlement.api.timeline.SubscriptionDataRepair;
+import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
-import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.engine.addon.AddonUtils;
 import com.ning.billing.entitlement.engine.core.Engine;
 import com.ning.billing.entitlement.engine.core.EntitlementNotificationKey;
@@ -77,7 +79,7 @@ import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotificationQueue;
 
 public class AuditedEntitlementDao implements EntitlementDao {
-    private final static Logger log = LoggerFactory.getLogger(AuditedEntitlementDao.class);
+    private static final Logger log = LoggerFactory.getLogger(AuditedEntitlementDao.class);
 
     private final Clock clock;
     private final SubscriptionSqlDao subscriptionsDao;
@@ -89,8 +91,8 @@ public class AuditedEntitlementDao implements EntitlementDao {
 
     @Inject
     public AuditedEntitlementDao(final IDBI dbi, final Clock clock,
-                                 final AddonUtils addonUtils, final NotificationQueueService notificationQueueService,
-                                 final Bus eventBus) {
+            final AddonUtils addonUtils, final NotificationQueueService notificationQueueService,
+            final Bus eventBus) {
 
         this.clock = clock;
         this.subscriptionsDao = dbi.onDemand(SubscriptionSqlDao.class);
@@ -121,11 +123,11 @@ public class AuditedEntitlementDao implements EntitlementDao {
     public SubscriptionBundle createSubscriptionBundle(final SubscriptionBundleData bundle, final CallContext context) {
         return bundlesDao.inTransaction(new Transaction<SubscriptionBundle, BundleSqlDao>() {
             @Override
-            public SubscriptionBundle inTransaction(BundleSqlDao transactional, TransactionStatus status) {
+            public SubscriptionBundle inTransaction(final BundleSqlDao transactional, final TransactionStatus status) {
                 bundlesDao.insertBundle(bundle, context);
-                Long recordId = bundlesDao.getRecordId(bundle.getId().toString());
+                final Long recordId = bundlesDao.getRecordId(bundle.getId().toString());
 
-                EntityAudit audit = new EntityAudit(TableName.BUNDLES, recordId, ChangeType.INSERT);
+                final EntityAudit audit = new EntityAudit(TableName.BUNDLES, recordId, ChangeType.INSERT);
                 bundlesDao.insertAuditFromTransaction(audit, context);
 
                 return bundle;
@@ -135,19 +137,19 @@ public class AuditedEntitlementDao implements EntitlementDao {
 
     @Override
     public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId) {
-        Subscription subscription = subscriptionsDao.getSubscriptionFromId(subscriptionId.toString());
+        final Subscription subscription = subscriptionsDao.getSubscriptionFromId(subscriptionId.toString());
         if (subscription == null) {
             log.error(String.format(ErrorCode.ENT_INVALID_SUBSCRIPTION_ID.getFormat(), subscriptionId.toString()));
             return null;
         }
 
-        UUID bundleId = subscription.getBundleId();
+        final UUID bundleId = subscription.getBundleId();
         if (bundleId == null) {
             log.error(String.format(ErrorCode.ENT_GET_NO_BUNDLE_FOR_SUBSCRIPTION.getFormat(), subscriptionId.toString()));
             return null;
         }
 
-        SubscriptionBundle bundle = bundlesDao.getBundleFromId(bundleId.toString());
+        final SubscriptionBundle bundle = bundlesDao.getBundleFromId(bundleId.toString());
         if (bundle == null) {
             log.error(String.format(ErrorCode.ENT_GET_INVALID_BUNDLE_ID.getFormat(), bundleId.toString()));
             return null;
@@ -173,7 +175,7 @@ public class AuditedEntitlementDao implements EntitlementDao {
 
     @Override
     public List<Subscription> getSubscriptionsForKey(final SubscriptionFactory factory, final String bundleKey) {
-        SubscriptionBundle bundle =  bundlesDao.getBundleFromKey(bundleKey);
+        final SubscriptionBundle bundle = bundlesDao.getBundleFromKey(bundleKey);
         if (bundle == null) {
             return Collections.emptyList();
         }
@@ -183,24 +185,24 @@ public class AuditedEntitlementDao implements EntitlementDao {
     @Override
     public void updateChargedThroughDate(final SubscriptionData subscription, final CallContext context) {
 
-        final Date ctd = (subscription.getChargedThroughDate() != null)  ? subscription.getChargedThroughDate().toDate() : null;
+        final Date ctd = (subscription.getChargedThroughDate() != null) ? subscription.getChargedThroughDate().toDate() : null;
 
         subscriptionsDao.inTransaction(new Transaction<Void, SubscriptionSqlDao>() {
             @Override
-            public Void inTransaction(SubscriptionSqlDao transactionalDao,
-                    TransactionStatus status) throws Exception {
-                String subscriptionId = subscription.getId().toString();
+            public Void inTransaction(final SubscriptionSqlDao transactionalDao,
+                    final TransactionStatus status) throws Exception {
+                final String subscriptionId = subscription.getId().toString();
                 transactionalDao.updateChargedThroughDate(subscription.getId().toString(), ctd, context);
-                Long subscriptionRecordId = transactionalDao.getRecordId(subscriptionId);
-                EntityAudit subscriptionAudit = new EntityAudit(TableName.SUBSCRIPTIONS, subscriptionRecordId, ChangeType.UPDATE);
+                final Long subscriptionRecordId = transactionalDao.getRecordId(subscriptionId);
+                final EntityAudit subscriptionAudit = new EntityAudit(TableName.SUBSCRIPTIONS, subscriptionRecordId, ChangeType.UPDATE);
                 transactionalDao.insertAuditFromTransaction(subscriptionAudit, context);
 
-                BundleSqlDao bundleSqlDao = transactionalDao.become(BundleSqlDao.class);
-                String bundleId = subscription.getBundleId().toString();
+                final BundleSqlDao bundleSqlDao = transactionalDao.become(BundleSqlDao.class);
+                final String bundleId = subscription.getBundleId().toString();
                 bundleSqlDao.updateBundleLastSysTime(bundleId, clock.getUTCNow().toDate());
                 // SubscriptionBundle bundle = bundleSqlDao.getById(bundleId);
-                Long recordId = bundleSqlDao.getRecordId(bundleId);
-                EntityAudit bundleAudit = new EntityAudit(TableName.BUNDLES, recordId, ChangeType.UPDATE);
+                final Long recordId = bundleSqlDao.getRecordId(bundleId);
+                final EntityAudit bundleAudit = new EntityAudit(TableName.BUNDLES, recordId, ChangeType.UPDATE);
                 bundleSqlDao.insertAuditFromTransaction(bundleAudit, context);
                 return null;
             }
@@ -211,12 +213,12 @@ public class AuditedEntitlementDao implements EntitlementDao {
     public void createNextPhaseEvent(final UUID subscriptionId, final EntitlementEvent nextPhase, final CallContext context) {
         eventsDao.inTransaction(new Transaction<Void, EntitlementEventSqlDao>() {
             @Override
-            public Void inTransaction(EntitlementEventSqlDao transactional, TransactionStatus status) throws Exception {
+            public Void inTransaction(final EntitlementEventSqlDao transactional, final TransactionStatus status) throws Exception {
                 cancelNextPhaseEventFromTransaction(subscriptionId, transactional, context);
                 transactional.insertEvent(nextPhase, context);
 
-                Long recordId = transactional.getRecordId(nextPhase.getId().toString());
-                EntityAudit audit = new EntityAudit(TableName.SUBSCRIPTION_EVENTS, recordId, ChangeType.INSERT);
+                final Long recordId = transactional.getRecordId(nextPhase.getId().toString());
+                final EntityAudit audit = new EntityAudit(TableName.SUBSCRIPTION_EVENTS, recordId, ChangeType.INSERT);
                 transactional.insertAuditFromTransaction(audit, context);
 
                 recordFutureNotificationFromTransaction(transactional,
@@ -228,12 +230,12 @@ public class AuditedEntitlementDao implements EntitlementDao {
     }
 
     @Override
-    public EntitlementEvent getEventById(UUID eventId) {
+    public EntitlementEvent getEventById(final UUID eventId) {
         return eventsDao.getEventById(eventId.toString());
     }
 
     @Override
-    public List<EntitlementEvent> getEventsForSubscription(UUID subscriptionId) {
+    public List<EntitlementEvent> getEventsForSubscription(final UUID subscriptionId) {
         return eventsDao.getEventsForSubscription(subscriptionId.toString());
     }
 
@@ -241,16 +243,16 @@ public class AuditedEntitlementDao implements EntitlementDao {
     public Map<UUID, List<EntitlementEvent>> getEventsForBundle(final UUID bundleId) {
         return subscriptionsDao.inTransaction(new Transaction<Map<UUID, List<EntitlementEvent>>, SubscriptionSqlDao>() {
             @Override
-            public Map<UUID, List<EntitlementEvent>> inTransaction(SubscriptionSqlDao transactional,
-                    TransactionStatus status) throws Exception {
-                List<Subscription> subscriptions = transactional.getSubscriptionsFromBundleId(bundleId.toString());
+            public Map<UUID, List<EntitlementEvent>> inTransaction(final SubscriptionSqlDao transactional,
+                    final TransactionStatus status) throws Exception {
+                final List<Subscription> subscriptions = transactional.getSubscriptionsFromBundleId(bundleId.toString());
                 if (subscriptions.size() == 0) {
                     return Collections.emptyMap();
                 }
-                EntitlementEventSqlDao eventsDaoFromSameTransaction = transactional.become(EntitlementEventSqlDao.class);
-                Map<UUID, List<EntitlementEvent>> result = new HashMap<UUID, List<EntitlementEvent>>();
-                for (Subscription cur : subscriptions) {
-                    List<EntitlementEvent> events = eventsDaoFromSameTransaction.getEventsForSubscription(cur.getId().toString());
+                final EntitlementEventSqlDao eventsDaoFromSameTransaction = transactional.become(EntitlementEventSqlDao.class);
+                final Map<UUID, List<EntitlementEvent>> result = new HashMap<UUID, List<EntitlementEvent>>();
+                for (final Subscription cur : subscriptions) {
+                    final List<EntitlementEvent> events = eventsDaoFromSameTransaction.getEventsForSubscription(cur.getId().toString());
                     result.put(cur.getId(), events);
                 }
                 return result;
@@ -259,8 +261,8 @@ public class AuditedEntitlementDao implements EntitlementDao {
     }
 
     @Override
-    public List<EntitlementEvent> getPendingEventsForSubscription(UUID subscriptionId) {
-        Date now = clock.getUTCNow().toDate();
+    public List<EntitlementEvent> getPendingEventsForSubscription(final UUID subscriptionId) {
+        final Date now = clock.getUTCNow().toDate();
         return eventsDao.getFutureActiveEventForSubscription(subscriptionId.toString(), now);
     }
 
@@ -271,21 +273,21 @@ public class AuditedEntitlementDao implements EntitlementDao {
         subscriptionsDao.inTransaction(new Transaction<Void, SubscriptionSqlDao>() {
 
             @Override
-            public Void inTransaction(SubscriptionSqlDao transactional,
-                    TransactionStatus status) throws Exception {
+            public Void inTransaction(final SubscriptionSqlDao transactional,
+                    final TransactionStatus status) throws Exception {
 
                 transactional.insertSubscription(subscription, context);
-                Long subscriptionRecordId = transactional.getRecordId(subscription.getId().toString());
-                EntityAudit audit = new EntityAudit(TableName.SUBSCRIPTIONS, subscriptionRecordId, ChangeType.INSERT);
+                final Long subscriptionRecordId = transactional.getRecordId(subscription.getId().toString());
+                final EntityAudit audit = new EntityAudit(TableName.SUBSCRIPTIONS, subscriptionRecordId, ChangeType.INSERT);
                 transactional.insertAuditFromTransaction(audit, context);
 
                 // STEPH batch as well
-                EntitlementEventSqlDao eventsDaoFromSameTransaction = transactional.become(EntitlementEventSqlDao.class);
-                List<EntityAudit> audits = new ArrayList<EntityAudit>();
+                final EntitlementEventSqlDao eventsDaoFromSameTransaction = transactional.become(EntitlementEventSqlDao.class);
+                final List<EntityAudit> audits = new ArrayList<EntityAudit>();
 
                 for (final EntitlementEvent cur : initialEvents) {
                     eventsDaoFromSameTransaction.insertEvent(cur, context);
-                    Long recordId = eventsDaoFromSameTransaction.getRecordId(cur.getId().toString());
+                    final Long recordId = eventsDaoFromSameTransaction.getRecordId(cur.getId().toString());
                     audits.add(new EntityAudit(TableName.SUBSCRIPTION_EVENTS, recordId, ChangeType.INSERT));
                     recordFutureNotificationFromTransaction(transactional,
                             cur.getEffectiveDate(),
@@ -304,13 +306,13 @@ public class AuditedEntitlementDao implements EntitlementDao {
 
         eventsDao.inTransaction(new Transaction<Void, EntitlementEventSqlDao>() {
             @Override
-            public Void inTransaction(EntitlementEventSqlDao transactional,
-                    TransactionStatus status) throws Exception {
+            public Void inTransaction(final EntitlementEventSqlDao transactional,
+                    final TransactionStatus status) throws Exception {
 
-                List<EntityAudit> audits = new ArrayList<EntityAudit>();
+                final List<EntityAudit> audits = new ArrayList<EntityAudit>();
                 for (final EntitlementEvent cur : recreateEvents) {
                     transactional.insertEvent(cur, context);
-                    Long recordId = transactional.getRecordId(cur.getId().toString());
+                    final Long recordId = transactional.getRecordId(cur.getId().toString());
                     audits.add(new EntityAudit(TableName.SUBSCRIPTION_EVENTS, recordId, ChangeType.INSERT));
                     recordFutureNotificationFromTransaction(transactional,
                             cur.getEffectiveDate(),
@@ -329,16 +331,16 @@ public class AuditedEntitlementDao implements EntitlementDao {
 
         eventsDao.inTransaction(new Transaction<Void, EntitlementEventSqlDao>() {
             @Override
-            public Void inTransaction(EntitlementEventSqlDao transactional,
-                    TransactionStatus status) throws Exception {
+            public Void inTransaction(final EntitlementEventSqlDao transactional,
+                    final TransactionStatus status) throws Exception {
                 cancelNextCancelEventFromTransaction(subscriptionId, transactional, context);
                 cancelNextChangeEventFromTransaction(subscriptionId, transactional, context);
                 cancelNextPhaseEventFromTransaction(subscriptionId, transactional, context);
                 transactional.insertEvent(cancelEvent, context);
-                String cancelEventId = cancelEvent.getId().toString();
+                final String cancelEventId = cancelEvent.getId().toString();
 
-                Long recordId = transactional.getRecordId(cancelEventId);
-                EntityAudit audit = new EntityAudit(TableName.SUBSCRIPTION_EVENTS, recordId, ChangeType.INSERT);
+                final Long recordId = transactional.getRecordId(cancelEventId);
+                final EntityAudit audit = new EntityAudit(TableName.SUBSCRIPTION_EVENTS, recordId, ChangeType.INSERT);
                 transactional.insertAuditFromTransaction(audit, context);
 
                 recordFutureNotificationFromTransaction(transactional,
@@ -355,14 +357,14 @@ public class AuditedEntitlementDao implements EntitlementDao {
         eventsDao.inTransaction(new Transaction<Void, EntitlementEventSqlDao>() {
 
             @Override
-            public Void inTransaction(EntitlementEventSqlDao transactional,
-                    TransactionStatus status) throws Exception {
+            public Void inTransaction(final EntitlementEventSqlDao transactional,
+                    final TransactionStatus status) throws Exception {
 
                 EntitlementEvent cancelledEvent = null;
-                Date now = clock.getUTCNow().toDate();
-                List<EntitlementEvent> events = transactional.getFutureActiveEventForSubscription(subscriptionId.toString(), now);
+                final Date now = clock.getUTCNow().toDate();
+                final List<EntitlementEvent> events = transactional.getFutureActiveEventForSubscription(subscriptionId.toString(), now);
 
-                for (EntitlementEvent cur : events) {
+                for (final EntitlementEvent cur : events) {
                     if (cur.getType() == EventType.API_USER && ((ApiEvent) cur).getEventType() == ApiEventType.CANCEL) {
                         if (cancelledEvent != null) {
                             throw new EntitlementError(String.format("Found multiple cancel active events for subscriptions %s", subscriptionId.toString()));
@@ -372,16 +374,16 @@ public class AuditedEntitlementDao implements EntitlementDao {
                 }
 
                 if (cancelledEvent != null) {
-                    List<EntityAudit> eventAudits = new ArrayList<EntityAudit>();
+                    final List<EntityAudit> eventAudits = new ArrayList<EntityAudit>();
 
-                    String cancelledEventId = cancelledEvent.getId().toString();
+                    final String cancelledEventId = cancelledEvent.getId().toString();
                     transactional.unactiveEvent(cancelledEventId, context);
-                    Long cancelledRecordId = transactional.getRecordId(cancelledEventId);
+                    final Long cancelledRecordId = transactional.getRecordId(cancelledEventId);
                     eventAudits.add(new EntityAudit(TableName.SUBSCRIPTION_EVENTS, cancelledRecordId, ChangeType.UPDATE));
 
                     for (final EntitlementEvent cur : uncancelEvents) {
                         transactional.insertEvent(cur, context);
-                        Long recordId = transactional.getRecordId(cur.getId().toString());
+                        final Long recordId = transactional.getRecordId(cur.getId().toString());
                         eventAudits.add(new EntityAudit(TableName.SUBSCRIPTION_EVENTS, recordId, ChangeType.INSERT));
                         recordFutureNotificationFromTransaction(transactional,
                                 cur.getEffectiveDate(),
@@ -399,14 +401,14 @@ public class AuditedEntitlementDao implements EntitlementDao {
     public void changePlan(final UUID subscriptionId, final List<EntitlementEvent> changeEvents, final CallContext context) {
         eventsDao.inTransaction(new Transaction<Void, EntitlementEventSqlDao>() {
             @Override
-            public Void inTransaction(EntitlementEventSqlDao transactional, TransactionStatus status) throws Exception {
+            public Void inTransaction(final EntitlementEventSqlDao transactional, final TransactionStatus status) throws Exception {
                 cancelNextChangeEventFromTransaction(subscriptionId, transactional, context);
                 cancelNextPhaseEventFromTransaction(subscriptionId, transactional, context);
 
-                List<EntityAudit> eventAudits = new ArrayList<EntityAudit>();
+                final List<EntityAudit> eventAudits = new ArrayList<EntityAudit>();
                 for (final EntitlementEvent cur : changeEvents) {
                     transactional.insertEvent(cur, context);
-                    Long recordId = transactional.getRecordId(cur.getId().toString());
+                    final Long recordId = transactional.getRecordId(cur.getId().toString());
                     eventAudits.add(new EntityAudit(TableName.SUBSCRIPTION_EVENTS, recordId, ChangeType.INSERT));
 
                     recordFutureNotificationFromTransaction(transactional,
@@ -437,11 +439,11 @@ public class AuditedEntitlementDao implements EntitlementDao {
             final CallContext context) {
 
         EntitlementEvent futureEvent = null;
-        Date now = clock.getUTCNow().toDate();
-        List<EntitlementEvent> events = dao.getFutureActiveEventForSubscription(subscriptionId.toString(), now);
-        for (EntitlementEvent cur : events) {
+        final Date now = clock.getUTCNow().toDate();
+        final List<EntitlementEvent> events = dao.getFutureActiveEventForSubscription(subscriptionId.toString(), now);
+        for (final EntitlementEvent cur : events) {
             if (cur.getType() == type &&
-                    (apiType == null || apiType == ((ApiEvent) cur).getEventType() )) {
+                    (apiType == null || apiType == ((ApiEvent) cur).getEventType())) {
                 if (futureEvent != null) {
                     throw new EntitlementError(
                             String.format("Found multiple future events for type %s for subscriptions %s",
@@ -452,10 +454,10 @@ public class AuditedEntitlementDao implements EntitlementDao {
         }
 
         if (futureEvent != null) {
-            String eventId = futureEvent.getId().toString();
+            final String eventId = futureEvent.getId().toString();
             dao.unactiveEvent(eventId, context);
-            Long recordId = dao.getRecordId(eventId);
-            EntityAudit audit = new EntityAudit(TableName.SUBSCRIPTION_EVENTS, recordId, ChangeType.UPDATE);
+            final Long recordId = dao.getRecordId(eventId);
+            final EntityAudit audit = new EntityAudit(TableName.SUBSCRIPTION_EVENTS, recordId, ChangeType.UPDATE);
             dao.insertAuditFromTransaction(audit, context);
         }
     }
@@ -464,16 +466,16 @@ public class AuditedEntitlementDao implements EntitlementDao {
         if (input == null) {
             return null;
         }
-        List<Subscription> bundleInput = new ArrayList<Subscription>();
+        final List<Subscription> bundleInput = new ArrayList<Subscription>();
         if (input.getCategory() == ProductCategory.ADD_ON) {
-            Subscription baseSubscription = getBaseSubscription(factory, input.getBundleId(), false);
+            final Subscription baseSubscription = getBaseSubscription(factory, input.getBundleId(), false);
             bundleInput.add(baseSubscription);
             bundleInput.add(input);
         } else {
             bundleInput.add(input);
         }
-        List<Subscription> reloadedSubscriptions = buildBundleSubscriptions(factory, bundleInput);
-        for (Subscription cur : reloadedSubscriptions) {
+        final List<Subscription> reloadedSubscriptions = buildBundleSubscriptions(factory, bundleInput);
+        for (final Subscription cur : reloadedSubscriptions) {
             if (cur.getId().equals(input.getId())) {
                 return cur;
             }
@@ -482,10 +484,13 @@ public class AuditedEntitlementDao implements EntitlementDao {
     }
 
     private List<Subscription> buildBundleSubscriptions(final SubscriptionFactory factory, final List<Subscription> input) {
+        if (input == null || input.size() == 0) {
+            return Collections.emptyList();
+        }
         // Make sure BasePlan -- if exists-- is first
         Collections.sort(input, new Comparator<Subscription>() {
             @Override
-            public int compare(Subscription o1, Subscription o2) {
+            public int compare(final Subscription o1, final Subscription o2) {
                 if (o1.getCategory() == ProductCategory.BASE) {
                     return -1;
                 } else if (o2.getCategory() == ProductCategory.BASE) {
@@ -497,17 +502,17 @@ public class AuditedEntitlementDao implements EntitlementDao {
         });
 
         EntitlementEvent futureBaseEvent = null;
-        List<Subscription> result = new ArrayList<Subscription>(input.size());
-        for (Subscription cur : input) {
+        final List<Subscription> result = new ArrayList<Subscription>(input.size());
+        for (final Subscription cur : input) {
 
-            List<EntitlementEvent> events = eventsDao.getEventsForSubscription(cur.getId().toString());
+            final List<EntitlementEvent> events = eventsDao.getEventsForSubscription(cur.getId().toString());
             Subscription reloaded = factory.createSubscription(new SubscriptionBuilder((SubscriptionData) cur), events);
 
             switch (cur.getCategory()) {
             case BASE:
-                Collection<EntitlementEvent> futureApiEvents = Collections2.filter(events, new Predicate<EntitlementEvent>() {
+                final Collection<EntitlementEvent> futureApiEvents = Collections2.filter(events, new Predicate<EntitlementEvent>() {
                     @Override
-                    public boolean apply(EntitlementEvent input) {
+                    public boolean apply(final EntitlementEvent input) {
                         return (input.getEffectiveDate().isAfter(clock.getUTCNow()) &&
                                 ((input instanceof ApiEventCancel) || (input instanceof ApiEventChange)));
                     }
@@ -516,18 +521,18 @@ public class AuditedEntitlementDao implements EntitlementDao {
                 break;
 
             case ADD_ON:
-                Plan targetAddOnPlan = reloaded.getCurrentPlan();
-                String baseProductName = (futureBaseEvent instanceof ApiEventChange) ?
+                final Plan targetAddOnPlan = reloaded.getCurrentPlan();
+                final String baseProductName = (futureBaseEvent instanceof ApiEventChange) ?
                         ((ApiEventChange) futureBaseEvent).getEventPlan() : null;
 
-                        boolean createCancelEvent = (futureBaseEvent != null) &&
+                        final boolean createCancelEvent = (futureBaseEvent != null) &&
                         ((futureBaseEvent instanceof ApiEventCancel) ||
-                                ((! addonUtils.isAddonAvailableFromPlanName(baseProductName, futureBaseEvent.getEffectiveDate(), targetAddOnPlan)) ||
+                                ((!addonUtils.isAddonAvailableFromPlanName(baseProductName, futureBaseEvent.getEffectiveDate(), targetAddOnPlan)) ||
                                         (addonUtils.isAddonIncludedFromPlanName(baseProductName, futureBaseEvent.getEffectiveDate(), targetAddOnPlan))));
 
                         if (createCancelEvent) {
-                            DateTime now = clock.getUTCNow();
-                            EntitlementEvent addOnCancelEvent = new ApiEventCancel(new ApiEventBuilder()
+                            final DateTime now = clock.getUTCNow();
+                            final EntitlementEvent addOnCancelEvent = new ApiEventCancel(new ApiEventBuilder()
                             .setSubscriptionId(reloaded.getId())
                             .setActiveVersion(((SubscriptionData) reloaded).getActiveVersion())
                             .setProcessedDate(now)
@@ -557,22 +562,22 @@ public class AuditedEntitlementDao implements EntitlementDao {
         eventsDao.inTransaction(new Transaction<Void, EntitlementEventSqlDao>() {
 
             @Override
-            public Void inTransaction(EntitlementEventSqlDao transactional,
-                    TransactionStatus status) throws Exception {
+            public Void inTransaction(final EntitlementEventSqlDao transactional,
+                    final TransactionStatus status) throws Exception {
 
-                SubscriptionSqlDao transSubDao = transactional.become(SubscriptionSqlDao.class);
-                BundleSqlDao transBundleDao = transactional.become(BundleSqlDao.class);
+                final SubscriptionSqlDao transSubDao = transactional.become(SubscriptionSqlDao.class);
+                final BundleSqlDao transBundleDao = transactional.become(BundleSqlDao.class);
 
-                List<EntityAudit> audits = new ArrayList<EntityAudit>();
+                final List<EntityAudit> audits = new ArrayList<EntityAudit>();
 
                 Long recordId;
 
-                for (BundleMigrationData curBundle : accountData.getData()) {
-                    SubscriptionBundleData bundleData = curBundle.getData();
+                for (final BundleMigrationData curBundle : accountData.getData()) {
+                    final SubscriptionBundleData bundleData = curBundle.getData();
 
-                    for (SubscriptionMigrationData curSubscription : curBundle.getSubscriptions()) {
+                    for (final SubscriptionMigrationData curSubscription : curBundle.getSubscriptions()) {
 
-                        SubscriptionData subData = curSubscription.getData();
+                        final SubscriptionData subData = curSubscription.getData();
                         for (final EntitlementEvent curEvent : curSubscription.getInitialEvents()) {
                             transactional.insertEvent(curEvent, context);
                             recordId = transactional.getRecordId(curEvent.getId().toString());
@@ -603,16 +608,16 @@ public class AuditedEntitlementDao implements EntitlementDao {
         subscriptionsDao.inTransaction(new Transaction<Void, SubscriptionSqlDao>() {
 
             @Override
-            public Void inTransaction(SubscriptionSqlDao transactional,
-                    TransactionStatus status) throws Exception {
+            public Void inTransaction(final SubscriptionSqlDao transactional,
+                    final TransactionStatus status) throws Exception {
 
-                EntitlementEventSqlDao transEventDao = transactional.become(EntitlementEventSqlDao.class);
+                final EntitlementEventSqlDao transEventDao = transactional.become(EntitlementEventSqlDao.class);
                 for (final SubscriptionDataRepair cur : inRepair) {
                     transactional.updateForRepair(cur.getId().toString(), cur.getActiveVersion(), cur.getStartDate().toDate(), cur.getBundleStartDate().toDate(), context);
-                    for (EntitlementEvent event : cur.getInitialEvents()) {
+                    for (final EntitlementEvent event : cur.getInitialEvents()) {
                         transEventDao.updateVersion(event.getId().toString(), event.getActiveVersion(), context);
                     }
-                    for (EntitlementEvent event : cur.getNewEvents()) {
+                    for (final EntitlementEvent event : cur.getNewEvents()) {
                         transEventDao.insertEvent(event, context);
                         if (event.getEffectiveDate().isAfter(clock.getUTCNow())) {
                             recordFutureNotificationFromTransaction(transactional,
@@ -622,7 +627,7 @@ public class AuditedEntitlementDao implements EntitlementDao {
                     }
                 }
                 try {
-                    RepairEntitlementEvent busEvent = new DefaultRepairEntitlementEvent(context.getUserToken(), accountId, bundleId, clock.getUTCNow());
+                    final RepairEntitlementEvent busEvent = new DefaultRepairEntitlementEvent(context.getUserToken(), accountId, bundleId, clock.getUTCNow());
                     eventBus.postFromTransaction(busEvent, transactional);
                 } catch (EventBusException e) {
                     log.warn("Failed to post repair entitlement event for bundle " + bundleId, e);
@@ -632,11 +637,11 @@ public class AuditedEntitlementDao implements EntitlementDao {
         });
     }
 
-    private Subscription getBaseSubscription(final SubscriptionFactory factory, final UUID bundleId, boolean rebuildSubscription) {
-        List<Subscription> subscriptions = subscriptionsDao.getSubscriptionsFromBundleId(bundleId.toString());
-        for (Subscription cur : subscriptions) {
+    private Subscription getBaseSubscription(final SubscriptionFactory factory, final UUID bundleId, final boolean rebuildSubscription) {
+        final List<Subscription> subscriptions = subscriptionsDao.getSubscriptionsFromBundleId(bundleId.toString());
+        for (final Subscription cur : subscriptions) {
             if (cur.getCategory() == ProductCategory.BASE) {
-                return  rebuildSubscription ? buildSubscription(factory, cur) : cur;
+                return rebuildSubscription ? buildSubscription(factory, cur) : cur;
             }
         }
         return null;
@@ -644,10 +649,12 @@ public class AuditedEntitlementDao implements EntitlementDao {
 
     private void recordFutureNotificationFromTransaction(final Transmogrifier transactionalDao, final DateTime effectiveDate, final NotificationKey notificationKey) {
         try {
-            NotificationQueue subscriptionEventQueue = notificationQueueService.getNotificationQueue(Engine.ENTITLEMENT_SERVICE_NAME,
+            final NotificationQueue subscriptionEventQueue = notificationQueueService.getNotificationQueue(Engine.ENTITLEMENT_SERVICE_NAME,
                     Engine.NOTIFICATION_QUEUE_NAME);
             subscriptionEventQueue.recordFutureNotificationFromTransaction(transactionalDao, effectiveDate, notificationKey);
         } catch (NoSuchNotificationQueue e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }

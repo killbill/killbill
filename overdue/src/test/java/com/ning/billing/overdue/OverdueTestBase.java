@@ -22,9 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import javax.management.RuntimeErrorException;
-
-import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
@@ -64,12 +61,12 @@ import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
+import com.ning.billing.util.io.IOUtils;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
 
-//@Guice(modules = {MockJunctionModule.class, MockInvoiceModule.class, DefaultOverdueModule.class})
-@Guice( modules = {DefaultOverdueModule.class, MockClockModule.class, ApplicatorMockJunctionModule.class, CatalogModule.class, MockInvoiceModule.class, MockPaymentModule.class, BusModule.class, NotificationQueueModule.class, TestDbiModule.class})
+@Guice(modules = {DefaultOverdueModule.class, MockClockModule.class, ApplicatorMockJunctionModule.class, CatalogModule.class, MockInvoiceModule.class, MockPaymentModule.class, BusModule.class, NotificationQueueModule.class, TestDbiModule.class})
 public class OverdueTestBase {
-    protected final String configXml =  
+    protected final String configXml =
             "<overdueConfig>" +
                     "   <bundleOverdueStates>" +
                     "       <state name=\"OD3\">" +
@@ -113,7 +110,7 @@ public class OverdueTestBase {
                     "       </state>" +
                     "   </bundleOverdueStates>" +
                     "</overdueConfig>";
-    protected OverdueConfig config; 
+    protected OverdueConfig config;
 
     @Inject
     protected ClockMock clock;
@@ -147,25 +144,23 @@ public class OverdueTestBase {
     @Inject
     protected MysqlTestingHelper helper;
 
-    protected void setupMySQL() throws IOException
-    {
+    protected void setupMySQL() throws IOException {
         final String utilDdl = IOUtils.toString(TestOverdueStateApplicator.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
         helper.startMysql();
         helper.initDb(utilDdl);
     }
 
-
     @BeforeClass(groups = "slow")
-    public void setup() throws Exception{
+    public void setup() throws Exception {
 
         setupMySQL();
         service.registerForBus();
         try {
             service.initialize();
-        }catch (RuntimeException e) {
-            if(!(e.getCause() instanceof NotificationQueueAlreadyExists)) {
+        } catch (RuntimeException e) {
+            if (!(e.getCause() instanceof NotificationQueueAlreadyExists)) {
                 throw e;
-            } 
+            }
         }
         service.start();
     }
@@ -187,48 +182,48 @@ public class OverdueTestBase {
     }
 
 
-    protected void checkStateApplied( OverdueState<SubscriptionBundle> state) {
-        BlockingState result = ((ApplicatorBlockingApi)blockingApi).getBlockingState();
-        checkStateApplied( result, state);
+    protected void checkStateApplied(final OverdueState<SubscriptionBundle> state) {
+        final BlockingState result = ((ApplicatorBlockingApi) blockingApi).getBlockingState();
+        checkStateApplied(result, state);
     }
 
-    protected void checkStateApplied(BlockingState result, OverdueState<SubscriptionBundle> state) {
-        Assert.assertEquals(result.getStateName(),state.getName());
+    protected void checkStateApplied(final BlockingState result, final OverdueState<SubscriptionBundle> state) {
+        Assert.assertEquals(result.getStateName(), state.getName());
         Assert.assertEquals(result.isBlockChange(), state.blockChanges());
         Assert.assertEquals(result.isBlockEntitlement(), state.disableEntitlementAndChangesBlocked());
         Assert.assertEquals(result.isBlockBilling(), state.disableEntitlementAndChangesBlocked());
     }
 
 
-    protected SubscriptionBundle createBundle(DateTime dateOfLastUnPaidInvoice) {
-        SubscriptionBundle bundle = BrainDeadProxyFactory.createBrainDeadProxyFor(SubscriptionBundle.class);
-        UUID bundleId = UUID.randomUUID();
-        ((ZombieControl)bundle).addResult("getId", bundleId);
-        ((ZombieControl)bundle).addResult("getAccountId", UUID.randomUUID());
+    protected SubscriptionBundle createBundle(final DateTime dateOfLastUnPaidInvoice) {
+        final SubscriptionBundle bundle = BrainDeadProxyFactory.createBrainDeadProxyFor(SubscriptionBundle.class);
+        final UUID bundleId = UUID.randomUUID();
+        ((ZombieControl) bundle).addResult("getId", bundleId);
+        ((ZombieControl) bundle).addResult("getAccountId", UUID.randomUUID());
 
-        Invoice invoice = BrainDeadProxyFactory.createBrainDeadProxyFor(Invoice.class);
-        ((ZombieControl)invoice).addResult("getInvoiceDate",dateOfLastUnPaidInvoice);
-        ((ZombieControl)invoice).addResult("getBalance",BigDecimal.TEN);
-        ((ZombieControl)invoice).addResult("getId",UUID.randomUUID());
-        ((ZombieControl)invoice).addResult("hashCode", UUID.randomUUID().hashCode());
+        final Invoice invoice = BrainDeadProxyFactory.createBrainDeadProxyFor(Invoice.class);
+        ((ZombieControl) invoice).addResult("getInvoiceDate", dateOfLastUnPaidInvoice);
+        ((ZombieControl) invoice).addResult("getBalance", BigDecimal.TEN);
+        ((ZombieControl) invoice).addResult("getId", UUID.randomUUID());
+        ((ZombieControl) invoice).addResult("hashCode", UUID.randomUUID().hashCode());
 
-        InvoiceItem item = BrainDeadProxyFactory.createBrainDeadProxyFor(InvoiceItem.class);
-        ((ZombieControl)item).addResult("getBundleId",bundleId);
-        List<InvoiceItem> items = new ArrayList<InvoiceItem>();
+        final InvoiceItem item = BrainDeadProxyFactory.createBrainDeadProxyFor(InvoiceItem.class);
+        ((ZombieControl) item).addResult("getBundleId", bundleId);
+        final List<InvoiceItem> items = new ArrayList<InvoiceItem>();
         items.add(item);
 
-        ((ZombieControl)invoice).addResult("getInvoiceItems",items);
+        ((ZombieControl) invoice).addResult("getInvoiceItems", items);
 
-        List<Invoice> invoices = new ArrayList<Invoice>();
+        final List<Invoice> invoices = new ArrayList<Invoice>();
         invoices.add(invoice);
-        ((ZombieControl)invoiceApi).addResult("getUnpaidInvoicesByAccountId", invoices);
+        ((ZombieControl) invoiceApi).addResult("getUnpaidInvoicesByAccountId", invoices);
 
 
-        Subscription base = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
-        ((ZombieControl)base).addResult("getCurrentPlan", MockPlan.createBicycleNoTrialEvergreen1USD());
-        ((ZombieControl)base).addResult("getCurrentPriceList", new MockPriceList());
-        ((ZombieControl)base).addResult("getCurrentPhase", MockPlan.createBicycleNoTrialEvergreen1USD().getFinalPhase());
-        ((ZombieControl)entitlementApi).addResult("getBaseSubscription", base);
+        final Subscription base = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
+        ((ZombieControl) base).addResult("getCurrentPlan", MockPlan.createBicycleNoTrialEvergreen1USD());
+        ((ZombieControl) base).addResult("getCurrentPriceList", new MockPriceList());
+        ((ZombieControl) base).addResult("getCurrentPhase", MockPlan.createBicycleNoTrialEvergreen1USD().getFinalPhase());
+        ((ZombieControl) entitlementApi).addResult("getBaseSubscription", base);
 
         return bundle;
     }

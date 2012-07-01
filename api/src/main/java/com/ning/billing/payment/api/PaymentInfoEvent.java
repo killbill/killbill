@@ -17,16 +17,18 @@ package com.ning.billing.payment.api;
 
 import java.math.BigDecimal;
 import java.util.UUID;
-import com.ning.billing.util.entity.Entity;
+
 import org.joda.time.DateTime;
+
 import com.ning.billing.util.bus.BusEvent;
+import com.ning.billing.util.entity.Entity;
 
 public interface PaymentInfoEvent extends Entity, BusEvent {
 
     public UUID getPaymentId();
-    
+
     public UUID getAccountId();
-    
+
     public UUID getInvoiceId();
 
     public BigDecimal getAmount();

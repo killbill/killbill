@@ -24,20 +24,20 @@ import com.ning.billing.util.config.XMLSchemaGenerator;
 
 public class CreateOverdueConfigSchema {
 
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args) throws Exception {
-		if(args.length != 1) {
-			System.err.println("Usage: <filepath>");
-			System.exit(0);
-		}
-		
-		File f = new File(args[0]);
-		Writer w = new FileWriter(f);
-		w.write(XMLSchemaGenerator.xmlSchemaAsString(OverdueConfig.class));
-		w.close();
+    /**
+     * @param args
+     */
+    public static void main(final String[] args) throws Exception {
+        if (args.length != 1) {
+            System.err.println("Usage: <filepath>");
+            System.exit(0);
+        }
 
-	}
+        final File f = new File(args[0]);
+        final Writer w = new FileWriter(f);
+        w.write(XMLSchemaGenerator.xmlSchemaAsString(OverdueConfig.class));
+        w.close();
+
+    }
 
 }

@@ -15,37 +15,34 @@
  */
 package com.ning.billing.entitlement.api;
 
-import java.util.List;
-
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
+import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
-import com.ning.billing.entitlement.api.user.SubscriptionStatusDryRun;
-import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.util.callcontext.CallContext;
 
 public interface SubscriptionApiService {
 
     public SubscriptionData createPlan(SubscriptionBuilder builder, Plan plan, PhaseType initialPhase,
-            String realPriceList, DateTime requestedDate, DateTime effectiveDate, DateTime processedDate,
-            CallContext context)
-        throws EntitlementUserApiException;
+                                       String realPriceList, DateTime requestedDate, DateTime effectiveDate, DateTime processedDate,
+                                       CallContext context)
+            throws EntitlementUserApiException;
 
     public boolean recreatePlan(SubscriptionData subscription, PlanPhaseSpecifier spec, DateTime requestedDate, CallContext context)
-        throws EntitlementUserApiException;
+            throws EntitlementUserApiException;
 
     public boolean cancel(SubscriptionData subscription, DateTime requestedDate, boolean eot, CallContext context)
-        throws EntitlementUserApiException;
+            throws EntitlementUserApiException;
 
     public boolean uncancel(SubscriptionData subscription, CallContext context)
-        throws EntitlementUserApiException;
+            throws EntitlementUserApiException;
 
     public boolean changePlan(SubscriptionData subscription, String productName, BillingPeriod term,
-            String priceList, DateTime requestedDate, CallContext context)
-        throws EntitlementUserApiException;
+                              String priceList, DateTime requestedDate, CallContext context)
+            throws EntitlementUserApiException;
 }

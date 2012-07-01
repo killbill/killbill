@@ -25,57 +25,57 @@ import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.util.tag.Tag;
 
 public class BillingState<T extends Blockable> {
-	private final UUID objectId;
-	private final int numberOfUnpaidInvoices;
-	private final BigDecimal balanceOfUnpaidInvoices;
+    private final UUID objectId;
+    private final int numberOfUnpaidInvoices;
+    private final BigDecimal balanceOfUnpaidInvoices;
     private final DateTime dateOfEarliestUnpaidInvoice;
     private final UUID idOfEarliestUnpaidInvoice;
-	private final PaymentResponse responseForLastFailedPayment;
-	private final Tag[] tags;
-	
-	public BillingState(UUID id, 
-	        int numberOfUnpaidInvoices, 
-	        BigDecimal balanceOfUnpaidInvoices,
-			DateTime dateOfEarliestUnpaidInvoice,
-			UUID idOfEarliestUnpaidInvoice,
-			PaymentResponse responseForLastFailedPayment,
-			Tag[] tags) {
-		super();
-		this.objectId = id;
-		this.numberOfUnpaidInvoices = numberOfUnpaidInvoices;
-		this.balanceOfUnpaidInvoices = balanceOfUnpaidInvoices;
+    private final PaymentResponse responseForLastFailedPayment;
+    private final Tag[] tags;
+
+    public BillingState(final UUID id,
+                        final int numberOfUnpaidInvoices,
+                        final BigDecimal balanceOfUnpaidInvoices,
+                        final DateTime dateOfEarliestUnpaidInvoice,
+                        final UUID idOfEarliestUnpaidInvoice,
+                        final PaymentResponse responseForLastFailedPayment,
+                        final Tag[] tags) {
+        super();
+        this.objectId = id;
+        this.numberOfUnpaidInvoices = numberOfUnpaidInvoices;
+        this.balanceOfUnpaidInvoices = balanceOfUnpaidInvoices;
         this.dateOfEarliestUnpaidInvoice = dateOfEarliestUnpaidInvoice;
         this.idOfEarliestUnpaidInvoice = idOfEarliestUnpaidInvoice;
-		this.responseForLastFailedPayment = responseForLastFailedPayment;
-		this.tags = tags;
-	}
+        this.responseForLastFailedPayment = responseForLastFailedPayment;
+        this.tags = tags;
+    }
 
-	public UUID getObjectId() {
-		return objectId;
-	}
-	
-	public int getNumberOfUnpaidInvoices() {
-		return numberOfUnpaidInvoices;
-	}
+    public UUID getObjectId() {
+        return objectId;
+    }
 
-	public BigDecimal getBalanceOfUnpaidInvoices() {
-		return balanceOfUnpaidInvoices;
-	}
+    public int getNumberOfUnpaidInvoices() {
+        return numberOfUnpaidInvoices;
+    }
 
-	public DateTime getDateOfEarliestUnpaidInvoice() {
-		return dateOfEarliestUnpaidInvoice;
-	}
-	
-	public UUID getIdOfEarliestUnpaidInvoice() {
+    public BigDecimal getBalanceOfUnpaidInvoices() {
+        return balanceOfUnpaidInvoices;
+    }
+
+    public DateTime getDateOfEarliestUnpaidInvoice() {
+        return dateOfEarliestUnpaidInvoice;
+    }
+
+    public UUID getIdOfEarliestUnpaidInvoice() {
         return idOfEarliestUnpaidInvoice;
     }
 
     public PaymentResponse getResponseForLastFailedPayment() {
-		return responseForLastFailedPayment;
-	}
+        return responseForLastFailedPayment;
+    }
 
-	public Tag[] getTags() {
-		return tags;
-	}
+    public Tag[] getTags() {
+        return tags;
+    }
 
 }

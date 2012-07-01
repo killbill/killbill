@@ -16,25 +16,25 @@
 
 package com.ning.billing.util.dao;
 
-import org.skife.jdbi.v2.SQLStatement;
-import org.skife.jdbi.v2.sqlobject.Binder;
-import org.skife.jdbi.v2.sqlobject.BinderFactory;
-import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
-
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.skife.jdbi.v2.SQLStatement;
+import org.skife.jdbi.v2.sqlobject.Binder;
+import org.skife.jdbi.v2.sqlobject.BinderFactory;
+import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
+
 @BindingAnnotation(ObjectTypeBinder.ObjectTypeBinderFactory.class)
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.PARAMETER})
 public @interface ObjectTypeBinder {
     public static class ObjectTypeBinderFactory implements BinderFactory {
-        public Binder build(Annotation annotation) {
+        public Binder build(final Annotation annotation) {
             return new Binder<ObjectTypeBinder, ObjectType>() {
-                public void bind(SQLStatement q, ObjectTypeBinder bind, ObjectType objectType) {
+                public void bind(final SQLStatement q, final ObjectTypeBinder bind, final ObjectType objectType) {
                     q.bind("objectType", objectType.getObjectName());
                 }
             };

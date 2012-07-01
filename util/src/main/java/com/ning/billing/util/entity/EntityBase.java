@@ -16,15 +16,13 @@
 
 package com.ning.billing.util.entity;
 
-import org.joda.time.DateTime;
-
 import java.util.UUID;
 
 public abstract class EntityBase implements Entity {
     protected final UUID id;
 
     // used to hydrate objects
-    public EntityBase(UUID id) {
+    public EntityBase(final UUID id) {
         this.id = id;
     }
 

@@ -75,7 +75,6 @@ CREATE TABLE account_emails (
     PRIMARY KEY(record_id)
 ) ENGINE=innodb;
 CREATE UNIQUE INDEX account_email_id ON account_emails(id);
-CREATE INDEX account_email_account_id ON account_emails(account_id);
 CREATE UNIQUE INDEX account_email_account_id_email ON account_emails(account_id, email);
 
 DROP TABLE IF EXISTS account_email_history;

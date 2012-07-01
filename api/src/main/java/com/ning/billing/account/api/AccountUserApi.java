@@ -20,19 +20,15 @@ import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.customfield.CustomField;
-import com.ning.billing.util.tag.TagDefinition;
-
-import javax.annotation.Nullable;
 
 public interface AccountUserApi {
     public Account createAccount(AccountData data, CallContext context) throws AccountApiException;
 
     public Account migrateAccount(MigrationAccountData data, CallContext context) throws AccountApiException;
 
-    /***
-     *
+    /**
      * Note: does not update the external key
+     *
      * @param account account to be updated
      * @param context contains specific information about the call
      * @throws AccountApiException if a failure occurs
@@ -54,4 +50,8 @@ public interface AccountUserApi {
     public List<AccountEmail> getEmails(UUID accountId);
 
     public void saveEmails(UUID accountId, List<AccountEmail> emails, CallContext context);
+
+    public void addEmail(UUID accountId, AccountEmail email, CallContext context);
+
+    public void removeEmail(UUID accountId, AccountEmail email, CallContext context);
 }
