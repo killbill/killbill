@@ -32,10 +32,10 @@ import com.ning.billing.analytics.model.BusinessSubscriptionEvent;
 import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.entitlement.api.user.SubscriptionEvent;
 
 public class BusinessSubscriptionTransitionRecorder {
     private static final Logger log = LoggerFactory.getLogger(BusinessSubscriptionTransitionRecorder.class);
@@ -54,36 +54,36 @@ public class BusinessSubscriptionTransitionRecorder {
     }
 
 
-    public void subscriptionCreated(final SubscriptionEvent created) throws AccountApiException, EntitlementUserApiException {
+    public void subscriptionCreated(final EffectiveSubscriptionEvent created) throws AccountApiException, EntitlementUserApiException {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionCreated(created.getNextPlan(), catalogService.getFullCatalog(), created.getEffectiveTransitionTime(), created.getSubscriptionStartDate());
         recordTransition(event, created);
     }
 
 
-    public void subscriptionRecreated(final SubscriptionEvent recreated) throws AccountApiException, EntitlementUserApiException {
+    public void subscriptionRecreated(final EffectiveSubscriptionEvent recreated) throws AccountApiException, EntitlementUserApiException {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionRecreated(recreated.getNextPlan(), catalogService.getFullCatalog(), recreated.getEffectiveTransitionTime(), recreated.getSubscriptionStartDate());
         recordTransition(event, recreated);
     }
 
 
-    public void subscriptionCancelled(final SubscriptionEvent cancelled) throws AccountApiException, EntitlementUserApiException {
+    public void subscriptionCancelled(final EffectiveSubscriptionEvent cancelled) throws AccountApiException, EntitlementUserApiException {
         // cancelled.getNextPlan() is null here - need to look at the previous one to create the correct event name
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionCancelled(cancelled.getPreviousPlan(), catalogService.getFullCatalog(), cancelled.getEffectiveTransitionTime(), cancelled.getSubscriptionStartDate());
         recordTransition(event, cancelled);
     }
 
 
-    public void subscriptionChanged(final SubscriptionEvent changed) throws AccountApiException, EntitlementUserApiException {
+    public void subscriptionChanged(final EffectiveSubscriptionEvent changed) throws AccountApiException, EntitlementUserApiException {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionChanged(changed.getNextPlan(), catalogService.getFullCatalog(), changed.getEffectiveTransitionTime(), changed.getSubscriptionStartDate());
         recordTransition(event, changed);
     }
 
-    public void subscriptionPhaseChanged(final SubscriptionEvent phaseChanged) throws AccountApiException, EntitlementUserApiException {
+    public void subscriptionPhaseChanged(final EffectiveSubscriptionEvent phaseChanged) throws AccountApiException, EntitlementUserApiException {
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionPhaseChanged(phaseChanged.getNextPlan(), phaseChanged.getNextState(), catalogService.getFullCatalog(), phaseChanged.getEffectiveTransitionTime(), phaseChanged.getSubscriptionStartDate());
         recordTransition(event, phaseChanged);
     }
 
-    void recordTransition(final BusinessSubscriptionEvent event, final SubscriptionEvent transition)
+    void recordTransition(final BusinessSubscriptionEvent event, final EffectiveSubscriptionEvent transition)
             throws AccountApiException, EntitlementUserApiException {
         Currency currency = null;
         String externalKey = null;

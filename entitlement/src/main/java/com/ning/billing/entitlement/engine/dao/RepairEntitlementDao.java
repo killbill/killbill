@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.entitlement.engine.dao;
 
 import java.util.Collections;
@@ -38,11 +39,11 @@ import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.util.callcontext.CallContext;
 
 public class RepairEntitlementDao implements EntitlementDao, RepairEntitlementLifecycleDao {
+    private static final String NOT_IMPLEMENTED = "Not implemented";
 
     private final ThreadLocal<Map<UUID, SubscriptionRepairEvent>> preThreadsInRepairSubscriptions = new ThreadLocal<Map<UUID, SubscriptionRepairEvent>>();
 
     private static final class SubscriptionRepairEvent {
-
         private final Set<EntitlementEvent> events;
 
         public SubscriptionRepairEvent(final List<EntitlementEvent> initialEvents) {
@@ -112,7 +113,6 @@ public class RepairEntitlementDao implements EntitlementDao, RepairEntitlementLi
         }
     }
 
-
     @Override
     public void changePlan(final UUID subscriptionId,
                            final List<EntitlementEvent> changeEvents, final CallContext context) {
@@ -136,108 +136,104 @@ public class RepairEntitlementDao implements EntitlementDao, RepairEntitlementLi
         map.clear();
     }
 
-
     private void addEvents(final UUID subscriptionId, final List<EntitlementEvent> events) {
         final SubscriptionRepairEvent target = getRepairSubscriptionEvents(subscriptionId);
         target.addEvents(events);
     }
 
-
     @Override
     public void uncancelSubscription(final UUID subscriptionId,
                                      final List<EntitlementEvent> uncancelEvents, final CallContext context) {
-        throw new EntitlementError("Not implemented");
+        throw new EntitlementError(NOT_IMPLEMENTED);
     }
 
     @Override
     public List<SubscriptionBundle> getSubscriptionBundleForAccount(final UUID accountId) {
-        throw new EntitlementError("Not implemented");
+        throw new EntitlementError(NOT_IMPLEMENTED);
     }
 
     @Override
     public SubscriptionBundle getSubscriptionBundleFromKey(final String bundleKey) {
-        throw new EntitlementError("Not implemented");
+        throw new EntitlementError(NOT_IMPLEMENTED);
     }
 
     @Override
     public SubscriptionBundle getSubscriptionBundleFromId(final UUID bundleId) {
-        throw new EntitlementError("Not implemented");
+        throw new EntitlementError(NOT_IMPLEMENTED);
     }
 
     @Override
     public SubscriptionBundle createSubscriptionBundle(
             final SubscriptionBundleData bundle, final CallContext context) {
-        throw new EntitlementError("Not implemented");
+        throw new EntitlementError(NOT_IMPLEMENTED);
     }
 
     @Override
     public Subscription getSubscriptionFromId(final SubscriptionFactory factory,
                                               final UUID subscriptionId) {
-        throw new EntitlementError("Not implemented");
+        throw new EntitlementError(NOT_IMPLEMENTED);
     }
 
     @Override
     public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId) {
-        throw new EntitlementError("Not implemented");
+        throw new EntitlementError(NOT_IMPLEMENTED);
     }
 
     @Override
     public Subscription getBaseSubscription(final SubscriptionFactory factory,
                                             final UUID bundleId) {
-        throw new EntitlementError("Not implemented");
+        throw new EntitlementError(NOT_IMPLEMENTED);
     }
 
     @Override
     public List<Subscription> getSubscriptions(final SubscriptionFactory factory,
                                                final UUID bundleId) {
-        throw new EntitlementError("Not implemented");
+        throw new EntitlementError(NOT_IMPLEMENTED);
     }
 
     @Override
     public List<Subscription> getSubscriptionsForKey(
             final SubscriptionFactory factory, final String bundleKey) {
-        throw new EntitlementError("Not implemented");
+        throw new EntitlementError(NOT_IMPLEMENTED);
     }
 
     @Override
     public void updateChargedThroughDate(final SubscriptionData subscription,
                                          final CallContext context) {
-        throw new EntitlementError("Not implemented");
+        throw new EntitlementError(NOT_IMPLEMENTED);
     }
 
     @Override
     public void createNextPhaseEvent(final UUID subscriptionId,
                                      final EntitlementEvent nextPhase, final CallContext context) {
-        throw new EntitlementError("Not implemented");
+        throw new EntitlementError(NOT_IMPLEMENTED);
     }
 
     @Override
     public EntitlementEvent getEventById(final UUID eventId) {
-        throw new EntitlementError("Not implemented");
+        throw new EntitlementError(NOT_IMPLEMENTED);
     }
 
     @Override
     public Map<UUID, List<EntitlementEvent>> getEventsForBundle(final UUID bundleId) {
-        throw new EntitlementError("Not implemented");
+        throw new EntitlementError(NOT_IMPLEMENTED);
     }
-
 
     @Override
     public List<EntitlementEvent> getPendingEventsForSubscription(
             final UUID subscriptionId) {
-        throw new EntitlementError("Not implemented");
+        throw new EntitlementError(NOT_IMPLEMENTED);
     }
-
 
     @Override
     public void migrate(final UUID accountId, final AccountMigrationData data,
                         final CallContext context) {
-        throw new EntitlementError("Not implemented");
+        throw new EntitlementError(NOT_IMPLEMENTED);
     }
 
     @Override
     public void repair(final UUID accountId, final UUID bundleId, final List<SubscriptionDataRepair> inRepair,
                        final CallContext context) {
-        throw new EntitlementError("Not implemented");
+        throw new EntitlementError(NOT_IMPLEMENTED);
     }
 }

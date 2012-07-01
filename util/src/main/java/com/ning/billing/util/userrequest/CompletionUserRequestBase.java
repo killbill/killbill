@@ -22,7 +22,7 @@ import java.util.concurrent.TimeoutException;
 
 import com.ning.billing.account.api.AccountChangeEvent;
 import com.ning.billing.account.api.AccountCreationEvent;
-import com.ning.billing.entitlement.api.user.SubscriptionEvent;
+import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.invoice.api.EmptyInvoiceEvent;
 import com.ning.billing.invoice.api.InvoiceCreationEvent;
 import com.ning.billing.payment.api.PaymentErrorEvent;
@@ -103,7 +103,7 @@ public abstract class CompletionUserRequestBase implements CompletionUserRequest
                 onAccountChange((AccountChangeEvent) curEvent);
                 break;
             case SUBSCRIPTION_TRANSITION:
-                onSubscriptionTransition((SubscriptionEvent) curEvent);
+                onSubscriptionTransition((EffectiveSubscriptionEvent) curEvent);
                 break;
             case INVOICE_EMPTY:
                 onEmptyInvoice((EmptyInvoiceEvent) curEvent);
@@ -135,7 +135,7 @@ public abstract class CompletionUserRequestBase implements CompletionUserRequest
     }
 
     @Override
-    public void onSubscriptionTransition(final SubscriptionEvent curEvent) {
+    public void onSubscriptionTransition(final EffectiveSubscriptionEvent curEventEffective) {
     }
 
     @Override

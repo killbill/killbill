@@ -33,10 +33,10 @@ import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.entitlement.api.user.SubscriptionEvent;
 
 public class TestBusinessSubscriptionTransitionRecorder extends AnalyticsTestSuite {
     @Test(groups = "fast")
@@ -82,17 +82,17 @@ public class TestBusinessSubscriptionTransitionRecorder extends AnalyticsTestSui
         final BusinessSubscriptionTransitionRecorder recorder = new BusinessSubscriptionTransitionRecorder(sqlDao, catalogService, entitlementApi, accountApi);
 
         // Create an new subscription event
-        final SubscriptionEvent event = Mockito.mock(SubscriptionEvent.class);
-        Mockito.when(event.getId()).thenReturn(UUID.randomUUID());
-        Mockito.when(event.getRequestedTransitionTime()).thenReturn(new DateTime(DateTimeZone.UTC));
-        Mockito.when(event.getNextPlan()).thenReturn(UUID.randomUUID().toString());
-        Mockito.when(event.getEffectiveTransitionTime()).thenReturn(new DateTime(DateTimeZone.UTC));
-        Mockito.when(event.getSubscriptionStartDate()).thenReturn(new DateTime(DateTimeZone.UTC));
-        recorder.subscriptionCreated(event);
+        final EffectiveSubscriptionEvent eventEffective = Mockito.mock(EffectiveSubscriptionEvent.class);
+        Mockito.when(eventEffective.getId()).thenReturn(UUID.randomUUID());
+        Mockito.when(eventEffective.getRequestedTransitionTime()).thenReturn(new DateTime(DateTimeZone.UTC));
+        Mockito.when(eventEffective.getNextPlan()).thenReturn(UUID.randomUUID().toString());
+        Mockito.when(eventEffective.getEffectiveTransitionTime()).thenReturn(new DateTime(DateTimeZone.UTC));
+        Mockito.when(eventEffective.getSubscriptionStartDate()).thenReturn(new DateTime(DateTimeZone.UTC));
+        recorder.subscriptionCreated(eventEffective);
 
         Assert.assertEquals(sqlDao.getTransitions(externalKey.toString()).size(), 2);
         final BusinessSubscriptionTransition transition = sqlDao.getTransitions(externalKey.toString()).get(1);
-        Assert.assertEquals(transition.getTotalOrdering(), (long) event.getTotalOrdering());
+        Assert.assertEquals(transition.getTotalOrdering(), (long) eventEffective.getTotalOrdering());
         Assert.assertEquals(transition.getAccountKey(), externalKey.toString());
         // Make sure all the prev_ columns are null
         Assert.assertNull(transition.getPreviousSubscription());

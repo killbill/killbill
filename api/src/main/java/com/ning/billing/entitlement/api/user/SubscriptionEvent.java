@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2012 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -25,7 +25,6 @@ import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.util.bus.BusEvent;
 
 public interface SubscriptionEvent extends BusEvent {
-
     UUID getId();
 
     SubscriptionTransitionType getTransitionType();
@@ -59,5 +58,4 @@ public interface SubscriptionEvent extends BusEvent {
     Integer getRemainingEventsForUserOperation();
 
     Long getTotalOrdering();
-
 }

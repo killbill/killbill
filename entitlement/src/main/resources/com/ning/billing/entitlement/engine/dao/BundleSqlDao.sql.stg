@@ -2,7 +2,6 @@ group BundleSqlDao;
 
 fields(prefix) ::= <<
     <prefix>id,
-    <prefix>start_date,
     <prefix>external_key,
     <prefix>account_id,
     <prefix>last_sys_update_date
@@ -10,7 +9,7 @@ fields(prefix) ::= <<
 
 insertBundle() ::= <<
     insert into bundles (<fields()>)
-    values (:id, :startDate, :externalKey, :accountId, :lastSysUpdateDate);
+    values (:id, :externalKey, :accountId, :lastSysUpdateDate);
 >>
 
 updateBundleLastSysTime()  ::= <<

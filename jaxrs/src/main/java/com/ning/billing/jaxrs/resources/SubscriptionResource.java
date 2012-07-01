@@ -45,10 +45,10 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.SubscriptionEvent;
 import com.ning.billing.invoice.api.EmptyInvoiceEvent;
 import com.ning.billing.invoice.api.InvoiceCreationEvent;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
@@ -289,9 +289,9 @@ public class SubscriptionResource extends JaxRsResourceBase {
         }
 
         @Override
-        public void onSubscriptionTransition(SubscriptionEvent curEvent) {
+        public void onSubscriptionTransition(EffectiveSubscriptionEvent curEventEffective) {
             log.info(String.format("Got event SubscriptionTransition token = %s, type = %s, remaining = %d ", 
-                    curEvent.getUserToken(), curEvent.getTransitionType(),  curEvent.getRemainingEventsForUserOperation())); 
+                    curEventEffective.getUserToken(), curEventEffective.getTransitionType(),  curEventEffective.getRemainingEventsForUserOperation()));
         }
 
         @Override

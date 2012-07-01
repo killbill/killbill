@@ -30,32 +30,26 @@ import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
 import com.ning.billing.util.queue.PersistentQueueBase;
 
-
 public abstract class NotificationQueueBase extends PersistentQueueBase implements NotificationQueue {
-
-    protected static final Logger log = LoggerFactory.getLogger(NotificationQueueBase.class);
+    private static final Logger log = LoggerFactory.getLogger(NotificationQueueBase.class);
 
     public static final int CLAIM_TIME_MS = (5 * 60 * 1000); // 5 minutes
 
     private static final String NOTIFICATION_THREAD_PREFIX = "Notification-";
     private static final int NB_THREADS = 1;
 
-
     private final String svcName;
     private final String queueName;
+    private final NotificationQueueHandler handler;
+    private final NotificationConfig config;
+    private final Clock clock;
+    private final String hostname;
 
-    protected final NotificationQueueHandler handler;
-    protected final NotificationConfig config;
-
-    protected final Clock clock;
-    protected final String hostname;
-
-    protected AtomicLong nbProcessedEvents;
+    private AtomicLong nbProcessedEvents;
 
     // Package visibility on purpose
     NotificationQueueBase(final Clock clock, final String svcName, final String queueName, final NotificationQueueHandler handler, final NotificationConfig config) {
         super(svcName, Executors.newFixedThreadPool(1, new ThreadFactory() {
-
             @Override
             public Thread newThread(final Runnable r) {
                 final Thread th = new Thread(r);
@@ -115,9 +109,24 @@ public abstract class NotificationQueueBase extends PersistentQueueBase implemen
         return queueName;
     }
 
-
     public String getFullQName() {
         return NotificationQueueServiceBase.getCompositeName(svcName, queueName);
+    }
+
+    public AtomicLong getNbProcessedEvents() {
+        return nbProcessedEvents;
+    }
+
+    public String getHostname() {
+        return hostname;
+    }
+
+    public NotificationQueueHandler getHandler() {
+        return handler;
+    }
+
+    public Clock getClock() {
+        return clock;
     }
 
     @Override

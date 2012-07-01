@@ -26,7 +26,7 @@ import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.timeline.RepairEntitlementEvent;
-import com.ning.billing.entitlement.api.user.SubscriptionEvent;
+import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextFactory;
@@ -55,7 +55,7 @@ public class InvoiceListener {
     }
 
     @Subscribe
-    public void handleSubscriptionTransition(final SubscriptionEvent transition) {
+    public void handleSubscriptionTransition(final EffectiveSubscriptionEvent transition) {
         try {
             //  Skip future uncancel event
             //  Skip events which are marked as not being the last one
