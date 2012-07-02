@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.entitlement.api.timeline;
 
 import java.util.List;
@@ -31,7 +32,6 @@ import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
 import com.ning.billing.util.clock.Clock;
 
 public class RepairSubscriptionFactory extends DefaultSubscriptionFactory implements SubscriptionFactory {
-
     private final AddonUtils addonUtils;
     private final EntitlementDao repairDao;
 
@@ -47,8 +47,8 @@ public class RepairSubscriptionFactory extends DefaultSubscriptionFactory implem
     @Override
     public SubscriptionData createSubscription(final SubscriptionBuilder builder,
                                                final List<EntitlementEvent> events) {
-        final SubscriptionData subscription = new SubscriptionDataRepair(builder, events, apiService, repairDao, clock, addonUtils, catalogService);
-        subscription.rebuildTransitions(events, catalogService.getFullCatalog());
+        final SubscriptionData subscription = new SubscriptionDataRepair(builder, events, getApiService(), repairDao, getClock(), addonUtils, getCatalogService());
+        subscription.rebuildTransitions(events, getCatalogService().getFullCatalog());
         return subscription;
     }
 }

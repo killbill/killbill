@@ -53,11 +53,11 @@ import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.billing.BillingEvent;
 import com.ning.billing.entitlement.api.billing.BillingModeType;
+import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.entitlement.api.user.SubscriptionEvent;
 import com.ning.billing.junction.api.BillingApi;
 import com.ning.billing.junction.api.BillingEventSet;
 import com.ning.billing.junction.api.Blockable;
@@ -130,7 +130,7 @@ public class TestBillingApi {
 
     private CatalogService catalogService;
 
-    private List<SubscriptionEvent> subscriptionTransitions;
+    private List<EffectiveSubscriptionEvent> effectiveSubscriptionTransitions;
     private EntitlementUserApi entitlementApi;
 
     private final BlockingCalculator blockCalculator = new BlockingCalculator(null) {
@@ -164,14 +164,14 @@ public class TestBillingApi {
         bundles.add(bundle);
 
 
-        subscriptionTransitions = new LinkedList<SubscriptionEvent>();
+        effectiveSubscriptionTransitions = new LinkedList<EffectiveSubscriptionEvent>();
         final List<Subscription> subscriptions = new LinkedList<Subscription>();
 
         subscriptionStartDate = clock.getUTCNow().minusDays(3);
         subscription = new MockSubscription() {
             @Override
-            public List<SubscriptionEvent> getBillingTransitions() {
-                return subscriptionTransitions;
+            public List<EffectiveSubscriptionEvent> getBillingTransitions() {
+                return effectiveSubscriptionTransitions;
             }
 
             @Override
@@ -237,13 +237,13 @@ public class TestBillingApi {
         final PlanPhase nextPhase = nextPlan.getAllPhases()[0]; // The trial has no billing period
         final PriceList nextPriceList = catalogService.getFullCatalog().findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME, now);
 
-        final SubscriptionEvent t = new MockSubscriptionEvent(
+        final EffectiveSubscriptionEvent t = new MockEffectiveSubscriptionEvent(
                 eventId, subId, bunId, then, now, null, null, null, null, SubscriptionState.ACTIVE,
                 nextPlan.getName(), nextPhase.getName(),
                 nextPriceList.getName(), 1L, null,
                 SubscriptionTransitionType.CREATE, 0, null);
 
-        subscriptionTransitions.add(t);
+        effectiveSubscriptionTransitions.add(t);
 
         final AccountUserApi accountApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
         final Account account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
@@ -268,13 +268,13 @@ public class TestBillingApi {
         final Plan nextPlan = catalogService.getFullCatalog().findPlan("PickupTrialEvergreen10USD", now);
         final PlanPhase nextPhase = nextPlan.getAllPhases()[1];
         final PriceList nextPriceList = catalogService.getFullCatalog().findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME, now);
-        final SubscriptionEvent t = new MockSubscriptionEvent(
+        final EffectiveSubscriptionEvent t = new MockEffectiveSubscriptionEvent(
                 eventId, subId, bunId, then, now, null, null, null, null, SubscriptionState.ACTIVE,
                 nextPlan.getName(), nextPhase.getName(),
                 nextPriceList.getName(), 1L, null,
                 SubscriptionTransitionType.CREATE, 0, null);
 
-        subscriptionTransitions.add(t);
+        effectiveSubscriptionTransitions.add(t);
 
         final Account account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
         ((ZombieControl) account).addResult("getBillCycleDay", 1).addResult("getTimeZone", DateTimeZone.UTC)
@@ -302,14 +302,14 @@ public class TestBillingApi {
         final PlanPhase nextPhase = nextPlan.getAllPhases()[1];
         final PriceList nextPriceList = catalogService.getFullCatalog().findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME, now);
 
-        final SubscriptionEvent t = new MockSubscriptionEvent(
+        final EffectiveSubscriptionEvent t = new MockEffectiveSubscriptionEvent(
                 eventId, subId, bunId, then, now, null, null, null, null, SubscriptionState.ACTIVE,
                 nextPlan.getName(), nextPhase.getName(),
                 nextPriceList.getName(), 1L, null,
                 SubscriptionTransitionType.CREATE, 0, null);
 
 
-        subscriptionTransitions.add(t);
+        effectiveSubscriptionTransitions.add(t);
 
         final AccountUserApi accountApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
         final Account account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
@@ -338,13 +338,13 @@ public class TestBillingApi {
         final PlanPhase nextPhase = nextPlan.getAllPhases()[0];
         final PriceList nextPriceList = catalogService.getFullCatalog().findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME, now);
 
-        final SubscriptionEvent t = new MockSubscriptionEvent(
+        final EffectiveSubscriptionEvent t = new MockEffectiveSubscriptionEvent(
                 eventId, subId, bunId, then, now, null, null, null, null, SubscriptionState.ACTIVE,
                 nextPlan.getName(), nextPhase.getName(),
                 nextPriceList.getName(), 1L, null,
                 SubscriptionTransitionType.CREATE, 0, null);
 
-        subscriptionTransitions.add(t);
+        effectiveSubscriptionTransitions.add(t);
 
         final Account account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
         ((ZombieControl) account).addResult("getBillCycleDay", 1).addResult("getTimeZone", DateTimeZone.UTC);
@@ -377,13 +377,13 @@ public class TestBillingApi {
         final PriceList nextPriceList = catalogService.getFullCatalog().findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME, now);
 
 
-        final SubscriptionEvent t = new MockSubscriptionEvent(
+        final EffectiveSubscriptionEvent t = new MockEffectiveSubscriptionEvent(
                 eventId, subId, bunId, then, now, null, null, null, null, SubscriptionState.ACTIVE,
                 nextPlan.getName(), nextPhase.getName(),
                 nextPriceList.getName(), 1L, null,
                 SubscriptionTransitionType.CREATE, 0, null);
 
-        subscriptionTransitions.add(t);
+        effectiveSubscriptionTransitions.add(t);
 
         final AccountUserApi accountApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
         final Account account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
@@ -451,14 +451,14 @@ public class TestBillingApi {
         final PlanPhase nextPhase = nextPlan.getAllPhases()[1];
         final PriceList nextPriceList = catalogService.getFullCatalog().findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME, now);
 
-        final SubscriptionEvent t = new MockSubscriptionEvent(
+        final EffectiveSubscriptionEvent t = new MockEffectiveSubscriptionEvent(
                 eventId, subId, bunId, then, now, null, null, null, null, SubscriptionState.ACTIVE,
                 nextPlan.getName(), nextPhase.getName(),
                 nextPriceList.getName(), 1L, null,
                 SubscriptionTransitionType.CREATE, 0, null);
 
 
-        subscriptionTransitions.add(t);
+        effectiveSubscriptionTransitions.add(t);
 
         final AccountUserApi accountApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
         final Account account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
@@ -495,14 +495,14 @@ public class TestBillingApi {
         final PlanPhase nextPhase = nextPlan.getAllPhases()[1];
         final PriceList nextPriceList = catalogService.getFullCatalog().findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME, now);
 
-        final SubscriptionEvent t = new MockSubscriptionEvent(
+        final EffectiveSubscriptionEvent t = new MockEffectiveSubscriptionEvent(
                 eventId, subId, bunId, then, now, null, null, null, null, SubscriptionState.ACTIVE,
                 nextPlan.getName(), nextPhase.getName(),
                 nextPriceList.getName(), 1L, null,
                 SubscriptionTransitionType.CREATE, 0, null);
 
 
-        subscriptionTransitions.add(t);
+        effectiveSubscriptionTransitions.add(t);
 
         final AccountUserApi accountApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
         final Account account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);

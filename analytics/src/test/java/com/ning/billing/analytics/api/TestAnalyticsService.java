@@ -57,12 +57,12 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.entitlement.api.user.DefaultSubscriptionEvent;
+import com.ning.billing.entitlement.api.user.DefaultEffectiveSubscriptionEvent;
+import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.entitlement.api.user.SubscriptionEvent;
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
@@ -126,7 +126,7 @@ public class TestAnalyticsService extends TestWithEmbeddedDB {
     @Inject
     private BusinessAccountSqlDao accountSqlDao;
 
-    private SubscriptionEvent transition;
+    private EffectiveSubscriptionEvent transition;
     private BusinessSubscriptionTransition expectedTransition;
 
     private AccountCreationEvent accountCreationNotification;
@@ -181,7 +181,7 @@ public class TestAnalyticsService extends TestWithEmbeddedDB {
         final PriceList priceList = new MockPriceList().setName("something");
 
 
-        transition = new DefaultSubscriptionEvent(new SubscriptionTransitionData(
+        transition = new DefaultEffectiveSubscriptionEvent(new SubscriptionTransitionData(
                 UUID.randomUUID(),
                 subscriptionId,
                 bundle.getId(),

@@ -20,7 +20,7 @@ import java.util.concurrent.TimeoutException;
 
 import com.ning.billing.account.api.AccountChangeEvent;
 import com.ning.billing.account.api.AccountCreationEvent;
-import com.ning.billing.entitlement.api.user.SubscriptionEvent;
+import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.invoice.api.EmptyInvoiceEvent;
 import com.ning.billing.invoice.api.InvoiceCreationEvent;
 import com.ning.billing.payment.api.PaymentErrorEvent;
@@ -35,7 +35,7 @@ public interface CompletionUserRequestWaiter {
 
     public void onAccountChange(final AccountChangeEvent curEvent);
 
-    public void onSubscriptionTransition(final SubscriptionEvent curEvent);
+    public void onSubscriptionTransition(final EffectiveSubscriptionEvent curEventEffective);
 
     public void onInvoiceCreation(final InvoiceCreationEvent curEvent);
 

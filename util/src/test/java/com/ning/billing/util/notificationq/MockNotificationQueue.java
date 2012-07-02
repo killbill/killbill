@@ -19,7 +19,6 @@ package com.ning.billing.util.notificationq;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
 import java.util.TreeSet;
 
@@ -33,10 +32,10 @@ import com.ning.billing.util.notificationq.NotificationQueueService.Notification
 import com.ning.billing.util.queue.PersistentQueueEntryLifecycle.PersistentQueueEntryLifecycleState;
 
 public class MockNotificationQueue extends NotificationQueueBase implements NotificationQueue {
+    private static final ObjectMapper objectMapper = new ObjectMapper();
+
     private final TreeSet<Notification> notifications;
 
-    ObjectMapper objectMapper = new ObjectMapper();
-    
     public MockNotificationQueue(final Clock clock, final String svcName, final String queueName, final NotificationQueueHandler handler, final NotificationConfig config) {
         super(clock, svcName, queueName, handler, config);
         notifications = new TreeSet<Notification>(new Comparator<Notification>() {
@@ -52,18 +51,16 @@ public class MockNotificationQueue extends NotificationQueueBase implements Noti
     }
 
     @Override
-    public void recordFutureNotification(final DateTime futureNotificationTime, final NotificationKey notificationKey) throws IOException  {
+    public void recordFutureNotification(final DateTime futureNotificationTime, final NotificationKey notificationKey) throws IOException {
         final String json = objectMapper.writeValueAsString(notificationKey);
-        final Notification notification = new DefaultNotification("MockQueue", hostname, notificationKey.getClass().getName(), json, futureNotificationTime);
+        final Notification notification = new DefaultNotification("MockQueue", getHostname(), notificationKey.getClass().getName(), json, futureNotificationTime);
         synchronized (notifications) {
             notifications.add(notification);
         }
     }
 
     @Override
-    public void recordFutureNotificationFromTransaction(
-            final Transmogrifier transactionalDao, final DateTime futureNotificationTime,
-            final NotificationKey notificationKey) throws IOException  {
+    public void recordFutureNotificationFromTransaction(final Transmogrifier transactionalDao, final DateTime futureNotificationTime, final NotificationKey notificationKey) throws IOException {
         recordFutureNotification(futureNotificationTime, notificationKey);
     }
 
@@ -75,23 +72,20 @@ public class MockNotificationQueue extends NotificationQueueBase implements Noti
                 result.add(notification);
             }
         }
+
         return result;
     }
 
     @Override
     public int doProcessEvents() {
-
-        int result = 0;
-
+        final int result;
         final List<Notification> processedNotifications = new ArrayList<Notification>();
         final List<Notification> oldNotifications = new ArrayList<Notification>();
 
         final List<Notification> readyNotifications = new ArrayList<Notification>();
         synchronized (notifications) {
-            final Iterator<Notification> it = notifications.iterator();
-            while (it.hasNext()) {
-                final Notification cur = it.next();
-                if (cur.isAvailableForProcessing(clock.getUTCNow())) {
+            for (final Notification cur : notifications) {
+                if (cur.isAvailableForProcessing(getClock().getUTCNow())) {
                     readyNotifications.add(cur);
                 }
             }
@@ -99,15 +93,16 @@ public class MockNotificationQueue extends NotificationQueueBase implements Noti
 
         result = readyNotifications.size();
         for (final Notification cur : readyNotifications) {
-            
-            
-            NotificationKey key = deserializeEvent(cur.getNotificationKeyClass(), cur.getNotificationKey()); 
-            handler.handleReadyNotification(key, cur.getEffectiveDate());
-            final DefaultNotification processedNotification = new DefaultNotification(-1L, cur.getId(), hostname, hostname, "MockQueue", clock.getUTCNow().plus(CLAIM_TIME_MS), PersistentQueueEntryLifecycleState.PROCESSED,
-                    cur.getNotificationKeyClass(), cur.getNotificationKey(), cur.getEffectiveDate());
+            final NotificationKey key = deserializeEvent(cur.getNotificationKeyClass(), cur.getNotificationKey());
+            getHandler().handleReadyNotification(key, cur.getEffectiveDate());
+            final DefaultNotification processedNotification = new DefaultNotification(-1L, cur.getId(), getHostname(), getHostname(),
+                                                                                      "MockQueue", getClock().getUTCNow().plus(CLAIM_TIME_MS),
+                                                                                      PersistentQueueEntryLifecycleState.PROCESSED, cur.getNotificationKeyClass(),
+                                                                                      cur.getNotificationKey(), cur.getEffectiveDate());
             oldNotifications.add(cur);
             processedNotifications.add(processedNotification);
         }
+
         synchronized (notifications) {
             if (oldNotifications.size() > 0) {
                 notifications.removeAll(oldNotifications);
@@ -117,6 +112,7 @@ public class MockNotificationQueue extends NotificationQueueBase implements Noti
                 notifications.addAll(processedNotifications);
             }
         }
+
         return result;
     }
 
@@ -128,11 +124,11 @@ public class MockNotificationQueue extends NotificationQueueBase implements Noti
                 toClearNotifications.add(notification);
             }
         }
+
         synchronized (notifications) {
             if (toClearNotifications.size() > 0) {
                 notifications.removeAll(toClearNotifications);
             }
         }
-
     }
 }
