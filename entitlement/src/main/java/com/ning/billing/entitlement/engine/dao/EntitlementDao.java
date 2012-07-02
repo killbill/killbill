@@ -56,7 +56,7 @@ public interface EntitlementDao {
     public void updateChargedThroughDate(final SubscriptionData subscription, final CallContext context);
 
     // Event apis
-    public void createNextPhaseEvent(final SubscriptionData subscription, final EntitlementEvent nextPhase, final CallContext context);
+    public void createNextPhaseEvent(final UUID subscriptionId, final EntitlementEvent nextPhase, final CallContext context);
 
     public EntitlementEvent getEventById(final UUID eventId);
 
@@ -69,13 +69,13 @@ public interface EntitlementDao {
     // Subscription creation, cancellation, changePlan apis
     public void createSubscription(final SubscriptionData subscription, final List<EntitlementEvent> initialEvents, final CallContext context);
 
-    public void recreateSubscription(final SubscriptionData subscription, final List<EntitlementEvent> recreateEvents, final CallContext context);
+    public void recreateSubscription(final UUID subscriptionId, final List<EntitlementEvent> recreateEvents, final CallContext context);
 
-    public void cancelSubscription(final SubscriptionData subscription, final EntitlementEvent cancelEvent, final CallContext context, final int cancelSeq);
+    public void cancelSubscription(final UUID subscriptionId, final EntitlementEvent cancelEvent, final CallContext context, final int cancelSeq);
 
-    public void uncancelSubscription(final SubscriptionData subscription, final List<EntitlementEvent> uncancelEvents, final CallContext context);
+    public void uncancelSubscription(final UUID subscriptionId, final List<EntitlementEvent> uncancelEvents, final CallContext context);
 
-    public void changePlan(final SubscriptionData subscription, final List<EntitlementEvent> changeEvents, final CallContext context);
+    public void changePlan(final UUID subscriptionId, final List<EntitlementEvent> changeEvents, final CallContext context);
 
     public void migrate(final UUID accountId, final AccountMigrationData data, final CallContext context);
 

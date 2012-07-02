@@ -139,7 +139,7 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
                 events.add(nextPhaseEvent);
             }
             if (reCreate) {
-                dao.recreateSubscription(subscription, events, context);
+                dao.recreateSubscription(subscription.getId(), events, context);
             } else {
                 dao.createSubscription(subscription, events, context);
             }
@@ -179,7 +179,7 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
                                                                             .setUserToken(context.getUserToken())
                                                                             .setFromDisk(true));
 
-            dao.cancelSubscription(subscription, cancelEvent, context, 0);
+            dao.cancelSubscription(subscription.getId(), cancelEvent, context, 0);
             subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId()), catalogService.getFullCatalog());
             return (policy == ActionPolicy.IMMEDIATE);
         } catch (CatalogApiException e) {
@@ -213,7 +213,7 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
             uncancelEvents.add(nextPhaseEvent);
         }
 
-        dao.uncancelSubscription(subscription, uncancelEvents, context);
+        dao.uncancelSubscription(subscription.getId(), uncancelEvents, context);
         subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId()), catalogService.getFullCatalog());
 
         return true;
@@ -285,7 +285,7 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
                 changeEvents.add(nextPhaseEvent);
             }
             changeEvents.add(changeEvent);
-            dao.changePlan(subscription, changeEvents, context);
+            dao.changePlan(subscription.getId(), changeEvents, context);
             subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId()), catalogService.getFullCatalog());
             return (policy == ActionPolicy.IMMEDIATE);
         } catch (CatalogApiException e) {

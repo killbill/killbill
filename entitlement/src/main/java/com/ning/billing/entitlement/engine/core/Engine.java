@@ -210,10 +210,10 @@ public class Engine implements EventListener, EntitlementService {
             final TimedPhase nextTimedPhase = planAligner.getNextTimedPhase(subscription, now, now);
             final PhaseEvent nextPhaseEvent = (nextTimedPhase != null) ?
                     PhaseEventData.createNextPhaseEvent(nextTimedPhase.getPhase().getName(), subscription, now, nextTimedPhase.getStartPhase()) :
-                    null;
-            if (nextPhaseEvent != null) {
-                dao.createNextPhaseEvent(subscription, nextPhaseEvent, context);
-            }
+                        null;
+                    if (nextPhaseEvent != null) {
+                        dao.createNextPhaseEvent(subscription.getId(), nextPhaseEvent, context);
+                    }
         } catch (EntitlementError e) {
             log.error(String.format("Failed to insert next phase for subscription %s", subscription.getId()), e);
         }
@@ -229,8 +229,7 @@ public class Engine implements EventListener, EntitlementService {
         final List<Subscription> subscriptions = dao.getSubscriptions(subscriptionFactory, baseSubscription.getBundleId());
 
 
-        final Map<UUID, EntitlementEvent> addOnCancellationEvents = new HashMap<UUID, EntitlementEvent>();
-        final Map<UUID, SubscriptionData> addOnCancellationSubscriptions = new HashMap<UUID, SubscriptionData>();
+        final Map<UUID, EntitlementEvent> addOnCancellations = new HashMap<UUID, EntitlementEvent>();
 
         final Iterator<Subscription> it = subscriptions.iterator();
         while (it.hasNext()) {
@@ -255,14 +254,13 @@ public class Engine implements EventListener, EntitlementService {
                 .setUserToken(context.getUserToken())
                 .setFromDisk(true));
 
-                addOnCancellationEvents.put(cur.getId(), cancelEvent);
-                addOnCancellationSubscriptions.put(cur.getId(), cur);
+                addOnCancellations.put(cur.getId(), cancelEvent);
             }
         }
-        final int addOnSize = addOnCancellationEvents.size();
+        final int addOnSize = addOnCancellations.size();
         int cancelSeq = addOnSize - 1;
-        for (final UUID key : addOnCancellationEvents.keySet()) {
-            dao.cancelSubscription(addOnCancellationSubscriptions.get(key), addOnCancellationEvents.get(key), context, cancelSeq);
+        for (final UUID key : addOnCancellations.keySet()) {
+            dao.cancelSubscription(key, addOnCancellations.get(key), context, cancelSeq);
             cancelSeq--;
         }
         return addOnSize;

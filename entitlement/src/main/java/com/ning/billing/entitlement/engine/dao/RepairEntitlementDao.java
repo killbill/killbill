@@ -86,22 +86,22 @@ public class RepairEntitlementDao implements EntitlementDao, RepairEntitlementLi
     }
 
     @Override
-    public void createSubscription(final SubscriptionData subscription, final List<EntitlementEvent> createEvents, final CallContext context) {
+    public void createSubscription(final SubscriptionData subscription,
+                                   final List<EntitlementEvent> createEvents, final CallContext context) {
         addEvents(subscription.getId(), createEvents);
     }
 
     @Override
-    public void recreateSubscription(final SubscriptionData subscription, final List<EntitlementEvent> recreateEvents, final CallContext context) {
-        addEvents(subscription.getId(), recreateEvents);
+    public void recreateSubscription(final UUID subscriptionId,
+                                     final List<EntitlementEvent> recreateEvents, final CallContext context) {
+        addEvents(subscriptionId, recreateEvents);
     }
 
     @Override
-    public void cancelSubscription(final SubscriptionData subscription, final EntitlementEvent cancelEvent, final CallContext context, final int cancelSeq) {
-        final UUID subscriptionId = subscription.getId();
+    public void cancelSubscription(final UUID subscriptionId,
+                                   final EntitlementEvent cancelEvent, final CallContext context, final int cancelSeq) {
         final long activeVersion = cancelEvent.getActiveVersion();
-
         addEvents(subscriptionId, Collections.singletonList(cancelEvent));
-
         final SubscriptionRepairEvent target = getRepairSubscriptionEvents(subscriptionId);
         boolean foundCancelEvent = false;
         for (final EntitlementEvent cur : target.getEvents()) {
@@ -114,8 +114,9 @@ public class RepairEntitlementDao implements EntitlementDao, RepairEntitlementLi
     }
 
     @Override
-    public void changePlan(final SubscriptionData subscription, final List<EntitlementEvent> changeEvents, final CallContext context) {
-        addEvents(subscription.getId(), changeEvents);
+    public void changePlan(final UUID subscriptionId,
+                           final List<EntitlementEvent> changeEvents, final CallContext context) {
+        addEvents(subscriptionId, changeEvents);
     }
 
     @Override
@@ -141,7 +142,8 @@ public class RepairEntitlementDao implements EntitlementDao, RepairEntitlementLi
     }
 
     @Override
-    public void uncancelSubscription(final SubscriptionData subscription, final List<EntitlementEvent> uncancelEvents, final CallContext context) {
+    public void uncancelSubscription(final UUID subscriptionId,
+                                     final List<EntitlementEvent> uncancelEvents, final CallContext context) {
         throw new EntitlementError(NOT_IMPLEMENTED);
     }
 
@@ -161,12 +163,14 @@ public class RepairEntitlementDao implements EntitlementDao, RepairEntitlementLi
     }
 
     @Override
-    public SubscriptionBundle createSubscriptionBundle(final SubscriptionBundleData bundle, final CallContext context) {
+    public SubscriptionBundle createSubscriptionBundle(
+            final SubscriptionBundleData bundle, final CallContext context) {
         throw new EntitlementError(NOT_IMPLEMENTED);
     }
 
     @Override
-    public Subscription getSubscriptionFromId(final SubscriptionFactory factory, final UUID subscriptionId) {
+    public Subscription getSubscriptionFromId(final SubscriptionFactory factory,
+                                              final UUID subscriptionId) {
         throw new EntitlementError(NOT_IMPLEMENTED);
     }
 
@@ -176,27 +180,32 @@ public class RepairEntitlementDao implements EntitlementDao, RepairEntitlementLi
     }
 
     @Override
-    public Subscription getBaseSubscription(final SubscriptionFactory factory, final UUID bundleId) {
+    public Subscription getBaseSubscription(final SubscriptionFactory factory,
+                                            final UUID bundleId) {
         throw new EntitlementError(NOT_IMPLEMENTED);
     }
 
     @Override
-    public List<Subscription> getSubscriptions(final SubscriptionFactory factory, final UUID bundleId) {
+    public List<Subscription> getSubscriptions(final SubscriptionFactory factory,
+                                               final UUID bundleId) {
         throw new EntitlementError(NOT_IMPLEMENTED);
     }
 
     @Override
-    public List<Subscription> getSubscriptionsForKey(final SubscriptionFactory factory, final String bundleKey) {
+    public List<Subscription> getSubscriptionsForKey(
+            final SubscriptionFactory factory, final String bundleKey) {
         throw new EntitlementError(NOT_IMPLEMENTED);
     }
 
     @Override
-    public void updateChargedThroughDate(final SubscriptionData subscription, final CallContext context) {
+    public void updateChargedThroughDate(final SubscriptionData subscription,
+                                         final CallContext context) {
         throw new EntitlementError(NOT_IMPLEMENTED);
     }
 
     @Override
-    public void createNextPhaseEvent(final SubscriptionData subscription, final EntitlementEvent nextPhase, final CallContext context) {
+    public void createNextPhaseEvent(final UUID subscriptionId,
+                                     final EntitlementEvent nextPhase, final CallContext context) {
         throw new EntitlementError(NOT_IMPLEMENTED);
     }
 
@@ -211,17 +220,20 @@ public class RepairEntitlementDao implements EntitlementDao, RepairEntitlementLi
     }
 
     @Override
-    public List<EntitlementEvent> getPendingEventsForSubscription(final UUID subscriptionId) {
+    public List<EntitlementEvent> getPendingEventsForSubscription(
+            final UUID subscriptionId) {
         throw new EntitlementError(NOT_IMPLEMENTED);
     }
 
     @Override
-    public void migrate(final UUID accountId, final AccountMigrationData data, final CallContext context) {
+    public void migrate(final UUID accountId, final AccountMigrationData data,
+                        final CallContext context) {
         throw new EntitlementError(NOT_IMPLEMENTED);
     }
 
     @Override
-    public void repair(final UUID accountId, final UUID bundleId, final List<SubscriptionDataRepair> inRepair, final CallContext context) {
+    public void repair(final UUID accountId, final UUID bundleId, final List<SubscriptionDataRepair> inRepair,
+                       final CallContext context) {
         throw new EntitlementError(NOT_IMPLEMENTED);
     }
 }

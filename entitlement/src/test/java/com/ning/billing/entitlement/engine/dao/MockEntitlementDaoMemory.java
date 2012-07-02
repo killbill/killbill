@@ -169,7 +169,9 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
     }
 
     @Override
-    public void recreateSubscription(final SubscriptionData subscription, final List<EntitlementEvent> recreateEvents, final CallContext context) {
+    public void recreateSubscription(final UUID subscriptionId,
+                                     final List<EntitlementEvent> recreateEvents, final CallContext context) {
+
         synchronized (events) {
             events.addAll(recreateEvents);
             for (final EntitlementEvent cur : recreateEvents) {
@@ -231,9 +233,9 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
     }
 
     @Override
-    public void createNextPhaseEvent(final SubscriptionData subscription, final EntitlementEvent nextPhase,
+    public void createNextPhaseEvent(final UUID subscriptionId, final EntitlementEvent nextPhase,
                                      final CallContext context) {
-        cancelNextPhaseEvent(subscription.getId());
+        cancelNextPhaseEvent(subscriptionId);
         insertEvent(nextPhase);
     }
 
@@ -269,19 +271,18 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
     }
 
     @Override
-    public void cancelSubscription(final SubscriptionData subscription, final EntitlementEvent cancelEvent,
+    public void cancelSubscription(final UUID subscriptionId, final EntitlementEvent cancelEvent,
                                    final CallContext context, final int seqId) {
         synchronized (events) {
-            cancelNextPhaseEvent(subscription.getId());
+            cancelNextPhaseEvent(subscriptionId);
             insertEvent(cancelEvent);
         }
     }
 
     @Override
-    public void changePlan(final SubscriptionData subscription, final List<EntitlementEvent> changeEvents,
+    public void changePlan(final UUID subscriptionId, final List<EntitlementEvent> changeEvents,
                            final CallContext context) {
         synchronized (events) {
-            final UUID subscriptionId = subscription.getId();
             cancelNextChangeEvent(subscriptionId);
             cancelNextPhaseEvent(subscriptionId);
             events.addAll(changeEvents);
@@ -347,7 +348,7 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
     }
 
     @Override
-    public void uncancelSubscription(final SubscriptionData subscription, final List<EntitlementEvent> uncancelEvents,
+    public void uncancelSubscription(final UUID subscriptionId, final List<EntitlementEvent> uncancelEvents,
                                      final CallContext context) {
 
         synchronized (events) {
@@ -355,7 +356,7 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
             final Iterator<EntitlementEvent> it = events.descendingIterator();
             while (it.hasNext()) {
                 final EntitlementEvent cur = it.next();
-                if (cur.getSubscriptionId() != subscription.getId()) {
+                if (cur.getSubscriptionId() != subscriptionId) {
                     continue;
                 }
                 if (cur.getType() == EventType.API_USER &&
