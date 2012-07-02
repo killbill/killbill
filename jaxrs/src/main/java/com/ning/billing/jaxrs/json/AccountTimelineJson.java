@@ -92,8 +92,10 @@ public class AccountTimelineJson {
         }
         this.invoices = new LinkedList<InvoiceJsonWithBundleKeys>();
         for (final Invoice cur : invoices) {
-            this.invoices.add(new InvoiceJsonWithBundleKeys(cur.getAmountPaid(),
-                                                            cur.getAmountCredited(),
+            this.invoices.add(new InvoiceJsonWithBundleKeys(cur.getPaidAmount(),
+                                                            cur.getCBAAmount(),
+                                                            cur.getCreditAdjAmount(),
+                                                            cur.getRefundAdjAmount(),
                                                             cur.getId().toString(),
                                                             cur.getInvoiceDate(),
                                                             cur.getTargetDate(),

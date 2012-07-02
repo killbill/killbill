@@ -44,7 +44,9 @@ public class TestInvoiceJsonWithItems {
     @Test(groups = "fast")
     public void testJson() throws Exception {
         final BigDecimal amount = BigDecimal.TEN;
-        final BigDecimal credit = BigDecimal.ONE;
+        final BigDecimal cba = BigDecimal.ONE;
+        final BigDecimal creditAdj = BigDecimal.ONE;
+        final BigDecimal refundAdj = BigDecimal.ONE;
         final String invoiceId = UUID.randomUUID().toString();
         final DateTime invoiceDate = new DateTime(DateTimeZone.UTC);
         final DateTime targetDate = new DateTime(DateTimeZone.UTC);
@@ -52,11 +54,13 @@ public class TestInvoiceJsonWithItems {
         final BigDecimal balance = BigDecimal.ZERO;
         final String accountId = UUID.randomUUID().toString();
         final InvoiceItemJsonSimple invoiceItemJsonSimple = createInvoiceItemJson();
-        final InvoiceJsonWithItems invoiceJsonWithItems = new InvoiceJsonWithItems(amount, credit, invoiceId, invoiceDate,
+        final InvoiceJsonWithItems invoiceJsonWithItems = new InvoiceJsonWithItems(amount, cba, creditAdj, refundAdj, invoiceId, invoiceDate,
                                                                                    targetDate, invoiceNumber, balance, accountId,
                                                                                    ImmutableList.<InvoiceItemJsonSimple>of(invoiceItemJsonSimple));
         Assert.assertEquals(invoiceJsonWithItems.getAmount(), amount);
-        Assert.assertEquals(invoiceJsonWithItems.getCredit(), credit);
+        Assert.assertEquals(invoiceJsonWithItems.getCBA(), cba);
+        Assert.assertEquals(invoiceJsonWithItems.getCreditAdj(), creditAdj);
+        Assert.assertEquals(invoiceJsonWithItems.getRefundAdj(), refundAdj);
         Assert.assertEquals(invoiceJsonWithItems.getInvoiceId(), invoiceId);
         Assert.assertEquals(invoiceJsonWithItems.getInvoiceDate(), invoiceDate);
         Assert.assertEquals(invoiceJsonWithItems.getTargetDate(), targetDate);
@@ -68,7 +72,9 @@ public class TestInvoiceJsonWithItems {
 
         final String asJson = mapper.writeValueAsString(invoiceJsonWithItems);
         Assert.assertEquals(asJson, "{\"amount\":" + invoiceJsonWithItems.getAmount().toString() + "," +
-                "\"credit\":" + invoiceJsonWithItems.getCredit().toString() + "," +
+                "\"cba\":" + invoiceJsonWithItems.getCBA().toString() + "," +
+                "\"creditAdj\":" + invoiceJsonWithItems.getCreditAdj().toString() + "," +
+                "\"refundAdj\":" + invoiceJsonWithItems.getRefundAdj().toString() + "," +
                 "\"invoiceId\":\"" + invoiceJsonWithItems.getInvoiceId() + "\"," +
                 "\"invoiceDate\":\"" + invoiceJsonWithItems.getInvoiceDate().toDateTimeISO().toString() + "\"," +
                 "\"targetDate\":\"" + invoiceJsonWithItems.getTargetDate().toDateTimeISO().toString() + "\"," +
@@ -94,8 +100,7 @@ public class TestInvoiceJsonWithItems {
     @Test(groups = "fast")
     public void testFromInvoice() throws Exception {
         final Invoice invoice = Mockito.mock(Invoice.class);
-        Mockito.when(invoice.getAmountCharged()).thenReturn(BigDecimal.TEN);
-        Mockito.when(invoice.getAmountCredited()).thenReturn(BigDecimal.ONE);
+        Mockito.when(invoice.getChargedAmount()).thenReturn(BigDecimal.TEN);
         Mockito.when(invoice.getId()).thenReturn(UUID.randomUUID());
         Mockito.when(invoice.getInvoiceDate()).thenReturn(new DateTime(DateTimeZone.UTC));
         Mockito.when(invoice.getTargetDate()).thenReturn(new DateTime(DateTimeZone.UTC));
@@ -106,8 +111,7 @@ public class TestInvoiceJsonWithItems {
         Mockito.when(invoice.getInvoiceItems()).thenReturn(ImmutableList.<InvoiceItem>of(invoiceItem));
 
         final InvoiceJsonWithItems invoiceJsonWithItems = new InvoiceJsonWithItems(invoice);
-        Assert.assertEquals(invoiceJsonWithItems.getAmount(), invoice.getAmountCharged());
-        Assert.assertEquals(invoiceJsonWithItems.getCredit(), invoice.getAmountCredited());
+        Assert.assertEquals(invoiceJsonWithItems.getAmount(), invoice.getChargedAmount());
         Assert.assertEquals(invoiceJsonWithItems.getInvoiceId(), invoice.getId().toString());
         Assert.assertEquals(invoiceJsonWithItems.getInvoiceDate(), invoice.getInvoiceDate());
         Assert.assertEquals(invoiceJsonWithItems.getTargetDate(), invoice.getTargetDate());

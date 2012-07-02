@@ -94,7 +94,9 @@ public class TestBundleTimelineJson {
                 "\"currency\":\"" + payment.getCurrency() + "\"," +
                 "\"status\":\"" + payment.getStatus() + "\"}]," +
                 "\"invoices\":[{\"amount\":" + invoice.getAmount() + "," +
-                "\"credit\":" + invoice.getCredit() + "," +
+                "\"cba\":" + invoice.getCBA() + "," +
+                "\"creditAdj\":" + invoice.getCreditAdj() + "," +
+                "\"refundAdj\":" + invoice.getRefundAdj() + "," +
                 "\"invoiceId\":\"" + invoice.getInvoiceId() + "\"," +
                 "\"invoiceDate\":\"" + invoice.getInvoiceDate().toDateTimeISO().toString() + "\"," +
                 "\"targetDate\":\"" + invoice.getTargetDate() + "\"," +
@@ -134,13 +136,15 @@ public class TestBundleTimelineJson {
         final UUID accountId = UUID.randomUUID();
         final UUID invoiceId = UUID.randomUUID();
         final BigDecimal invoiceAmount = BigDecimal.TEN;
-        final BigDecimal credit = BigDecimal.ONE;
+        final BigDecimal cba = BigDecimal.ONE;
+        final BigDecimal creditAdj = BigDecimal.ONE;
+        final BigDecimal refundAdj = BigDecimal.ONE;
         final DateTime invoiceDate = DefaultClock.toUTCDateTime(new DateTime(DateTimeZone.UTC));
         final DateTime targetDate = DefaultClock.toUTCDateTime(new DateTime(DateTimeZone.UTC));
         final String invoiceNumber = UUID.randomUUID().toString();
         final BigDecimal balance = BigDecimal.ZERO;
 
-        return new InvoiceJsonSimple(invoiceAmount, credit, invoiceId.toString(), invoiceDate,
+        return new InvoiceJsonSimple(invoiceAmount, cba, creditAdj, refundAdj, invoiceId.toString(), invoiceDate,
                                      targetDate, invoiceNumber, balance, accountId.toString());
     }
 

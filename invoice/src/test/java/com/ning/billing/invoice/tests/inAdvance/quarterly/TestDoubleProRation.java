@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.invoice.tests.inAdvance.monthly;
+package com.ning.billing.invoice.tests.inAdvance.quarterly;
 
 import java.math.BigDecimal;
 
@@ -25,121 +25,130 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.invoice.model.InvalidDateSequenceException;
 import com.ning.billing.invoice.tests.inAdvance.ProRationInAdvanceTestBase;
 
-@Test(groups = {"fast", "invoicing", "proRation"})
-public class DoubleProRationTests extends ProRationInAdvanceTestBase {
+
+public class TestDoubleProRation extends ProRationInAdvanceTestBase {
     @Override
     protected BillingPeriod getBillingPeriod() {
-        return BillingPeriod.MONTHLY;
+        return BillingPeriod.QUARTERLY;
     }
 
-    @Test
+    @Test(groups = {"fast"})
     public void testDoubleProRation_TargetDateOnStartDate() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2011, 1, 1);
         final DateTime targetDate = buildDateTime(2011, 1, 1);
-        final DateTime endDate = buildDateTime(2011, 2, 27);
+        final DateTime endDate = buildDateTime(2011, 4, 27);
 
-        final BigDecimal expectedValue = FOURTEEN.divide(THIRTY_ONE, NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+        BigDecimal expectedValue = FOURTEEN.divide(NINETY_TWO, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+        expectedValue = expectedValue.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 15, expectedValue);
     }
 
-    @Test
+    @Test(groups = {"fast"})
     public void testDoubleProRation_TargetDateInFirstProRationPeriod() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2011, 1, 1);
         final DateTime targetDate = buildDateTime(2011, 1, 7);
-        final DateTime endDate = buildDateTime(2011, 2, 27);
+        final DateTime endDate = buildDateTime(2011, 4, 27);
 
-        final BigDecimal expectedValue = FOURTEEN.divide(THIRTY_ONE, NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+        BigDecimal expectedValue = FOURTEEN.divide(NINETY_TWO, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+        expectedValue = expectedValue.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 15, expectedValue);
     }
 
-    @Test
+    @Test(groups = {"fast"})
     public void testDoubleProRation_TargetDateOnFirstBillingCycleDate() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2011, 1, 1);
         final DateTime targetDate = buildDateTime(2011, 1, 15);
-        final DateTime endDate = buildDateTime(2011, 2, 27);
+        final DateTime endDate = buildDateTime(2011, 4, 27);
 
-        final BigDecimal expectedValue = ONE.add(FOURTEEN.divide(THIRTY_ONE, NUMBER_OF_DECIMALS, ROUNDING_METHOD));
+        BigDecimal expectedValue = ONE.add(FOURTEEN.divide(NINETY_TWO, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD));
+        expectedValue = expectedValue.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 15, expectedValue);
     }
 
-    @Test
+    @Test(groups = {"fast"})
     public void testDoubleProRation_TargetDateInFullBillingPeriod() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2011, 1, 1);
         final DateTime targetDate = buildDateTime(2011, 1, 22);
-        final DateTime endDate = buildDateTime(2011, 2, 27);
-
-        BigDecimal expectedValue;
-        expectedValue = FOURTEEN.divide(THIRTY_ONE, NUMBER_OF_DECIMALS, ROUNDING_METHOD);
-        expectedValue = expectedValue.add(ONE);
-
-        testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 15, expectedValue);
-    }
-
-    @Test
-    public void testDoubleProRation_TargetDateOnSecondBillingCycleDate() throws InvalidDateSequenceException {
-        final DateTime startDate = buildDateTime(2011, 1, 1);
-        final DateTime targetDate = buildDateTime(2011, 2, 27);
-        final DateTime endDate = buildDateTime(2011, 2, 27);
-
-        BigDecimal expectedValue;
-        expectedValue = FOURTEEN.divide(THIRTY_ONE, NUMBER_OF_DECIMALS, ROUNDING_METHOD);
-        expectedValue = expectedValue.add(ONE);
-        expectedValue = expectedValue.add(TWELVE.divide(TWENTY_EIGHT, NUMBER_OF_DECIMALS, ROUNDING_METHOD));
-
-        testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 15, expectedValue);
-    }
-
-    @Test
-    public void testDoubleProRation_TargetDateInSecondProRationPeriod() throws InvalidDateSequenceException {
-        final DateTime startDate = buildDateTime(2011, 1, 1);
-        final DateTime targetDate = buildDateTime(2011, 2, 26);
-        final DateTime endDate = buildDateTime(2011, 2, 27);
-
-        BigDecimal expectedValue;
-        expectedValue = FOURTEEN.divide(THIRTY_ONE, NUMBER_OF_DECIMALS, ROUNDING_METHOD);
-        expectedValue = expectedValue.add(ONE);
-        expectedValue = expectedValue.add(TWELVE.divide(TWENTY_EIGHT, NUMBER_OF_DECIMALS, ROUNDING_METHOD));
-
-        testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 15, expectedValue);
-    }
-
-    @Test
-    public void testDoubleProRation_TargetDateOnEndDate() throws InvalidDateSequenceException {
-        final DateTime startDate = buildDateTime(2011, 1, 1);
-        final DateTime targetDate = buildDateTime(2011, 2, 27);
-        final DateTime endDate = buildDateTime(2011, 2, 27);
-
-        BigDecimal expectedValue;
-        expectedValue = FOURTEEN.divide(THIRTY_ONE, NUMBER_OF_DECIMALS, ROUNDING_METHOD);
-        expectedValue = expectedValue.add(ONE);
-        expectedValue = expectedValue.add(TWELVE.divide(TWENTY_EIGHT, NUMBER_OF_DECIMALS, ROUNDING_METHOD));
-
-        testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 15, expectedValue);
-    }
-
-    @Test
-    public void testDoubleProRation_TargetDateAfterEndDate() throws InvalidDateSequenceException {
-        final DateTime startDate = buildDateTime(2011, 1, 1);
-        final DateTime targetDate = buildDateTime(2011, 3, 7);
-        final DateTime endDate = buildDateTime(2011, 2, 27);
-
-        BigDecimal expectedValue;
-        expectedValue = FOURTEEN.divide(THIRTY_ONE, NUMBER_OF_DECIMALS, ROUNDING_METHOD);
-        expectedValue = expectedValue.add(ONE);
-        expectedValue = expectedValue.add(TWELVE.divide(TWENTY_EIGHT, NUMBER_OF_DECIMALS, ROUNDING_METHOD));
-
-        testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 15, expectedValue);
-    }
-
-    @Test
-    public void testDoubleProRationWithMultiplePeriods_TargetDateInSecondFullBillingPeriod() throws InvalidDateSequenceException {
-        final DateTime startDate = buildDateTime(2011, 1, 1);
-        final DateTime targetDate = buildDateTime(2011, 2, 26);
         final DateTime endDate = buildDateTime(2011, 4, 27);
 
         BigDecimal expectedValue;
-        expectedValue = FOURTEEN.divide(THIRTY_ONE, NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+        expectedValue = FOURTEEN.divide(NINETY_TWO, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+        expectedValue = expectedValue.add(ONE);
+        expectedValue = expectedValue.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+
+        testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 15, expectedValue);
+    }
+
+    @Test(groups = {"fast"})
+    public void testDoubleProRation_TargetDateOnSecondBillingCycleDate() throws InvalidDateSequenceException {
+        final DateTime startDate = buildDateTime(2011, 1, 1);
+        final DateTime targetDate = buildDateTime(2011, 4, 15);
+        final DateTime endDate = buildDateTime(2011, 4, 27);
+
+        BigDecimal expectedValue;
+        expectedValue = FOURTEEN.divide(NINETY_TWO, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+        expectedValue = expectedValue.add(ONE);
+        expectedValue = expectedValue.add(TWELVE.divide(NINETY_ONE, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD));
+        expectedValue = expectedValue.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+
+        testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 15, expectedValue);
+    }
+
+    @Test(groups = {"fast"})
+    public void testDoubleProRation_TargetDateInSecondProRationPeriod() throws InvalidDateSequenceException {
+        final DateTime startDate = buildDateTime(2011, 1, 1);
+        final DateTime targetDate = buildDateTime(2011, 4, 26);
+        final DateTime endDate = buildDateTime(2011, 4, 27);
+
+        BigDecimal expectedValue;
+        expectedValue = FOURTEEN.divide(NINETY_TWO, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+        expectedValue = expectedValue.add(ONE);
+        expectedValue = expectedValue.add(TWELVE.divide(NINETY_ONE, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD));
+        expectedValue = expectedValue.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+
+        testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 15, expectedValue);
+    }
+
+    @Test(groups = {"fast"})
+    public void testDoubleProRation_TargetDateOnEndDate() throws InvalidDateSequenceException {
+        final DateTime startDate = buildDateTime(2011, 1, 1);
+        final DateTime targetDate = buildDateTime(2011, 4, 27);
+        final DateTime endDate = buildDateTime(2011, 4, 27);
+
+        BigDecimal expectedValue;
+        expectedValue = FOURTEEN.divide(NINETY_TWO, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+        expectedValue = expectedValue.add(ONE);
+        expectedValue = expectedValue.add(TWELVE.divide(NINETY_ONE, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD));
+        expectedValue = expectedValue.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+
+        testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 15, expectedValue);
+    }
+
+    @Test(groups = {"fast"})
+    public void testDoubleProRation_TargetDateAfterEndDate() throws InvalidDateSequenceException {
+        final DateTime startDate = buildDateTime(2011, 1, 1);
+        final DateTime targetDate = buildDateTime(2011, 5, 7);
+        final DateTime endDate = buildDateTime(2011, 4, 27);
+
+        BigDecimal expectedValue;
+        expectedValue = FOURTEEN.divide(NINETY_TWO, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+        expectedValue = expectedValue.add(ONE);
+        expectedValue = expectedValue.add(TWELVE.divide(NINETY_ONE, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD));
+        expectedValue = expectedValue.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
+
+        testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 15, expectedValue);
+    }
+
+    @Test(groups = {"fast"})
+    public void testDoubleProRationWithMultiplePeriods_TargetDateInSecondFullBillingPeriod() throws InvalidDateSequenceException {
+        final DateTime startDate = buildDateTime(2011, 1, 1);
+        final DateTime targetDate = buildDateTime(2011, 6, 26);
+        final DateTime endDate = buildDateTime(2011, 8, 27);
+
+        BigDecimal expectedValue;
+        expectedValue = FOURTEEN.divide(NINETY_TWO, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD);
         expectedValue = expectedValue.add(TWO);
+        expectedValue = expectedValue.setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
 
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 15, expectedValue);
     }

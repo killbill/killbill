@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -36,7 +36,7 @@ import com.ning.billing.util.bus.Bus.EventBusException;
 import com.ning.billing.util.bus.BusEvent;
 import com.ning.billing.util.globallocker.GlobalLock;
 import com.ning.billing.util.globallocker.GlobalLocker;
-import com.ning.billing.util.globallocker.GlobalLocker.LockerService;
+import com.ning.billing.util.globallocker.GlobalLocker.LockerType;
 import com.ning.billing.util.globallocker.LockFailedException;
 
 public abstract class ProcessorBase {
@@ -138,7 +138,7 @@ public abstract class ProcessorBase {
                 throws PaymentApiException {
             GlobalLock lock = null;
             try {
-                lock = locker.lockWithNumberOfTries(LockerService.PAYMENT, accountExternalKey, NB_LOCK_TRY);
+                lock = locker.lockWithNumberOfTries(LockerType.ACCOUNT, accountExternalKey, NB_LOCK_TRY);
                 return callback.doOperation();
             } catch (LockFailedException e) {
                 final String format = String.format("Failed to lock account %s", accountExternalKey);

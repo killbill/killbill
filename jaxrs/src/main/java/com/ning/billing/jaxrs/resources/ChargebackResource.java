@@ -166,7 +166,7 @@ public class ChargebackResource implements JaxrsResource {
                 return Response.status(Response.Status.NO_CONTENT).entity(error).build();
             }
 
-            final InvoicePayment chargeBack = invoicePaymentApi.processChargeback(invoicePayment.getId(), json.getChargebackAmount(),
+            final InvoicePayment chargeBack = invoicePaymentApi.createChargeback(invoicePayment.getId(), json.getChargebackAmount(),
                                                                                   context.createContext(createdBy, reason, comment));
             return uriBuilder.buildResponse(ChargebackResource.class, "getChargeback", chargeBack.getId());
         } catch (InvoiceApiException e) {

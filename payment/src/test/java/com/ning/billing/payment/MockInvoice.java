@@ -168,7 +168,7 @@ public class MockInvoice extends EntityBase implements Invoice {
     }
 
     @Override
-    public BigDecimal getAmountPaid() {
+    public BigDecimal getPaidAmount() {
         BigDecimal amountPaid = BigDecimal.ZERO;
         for (final InvoicePayment payment : payments) {
             if (payment.getAmount() != null) {
@@ -179,11 +179,11 @@ public class MockInvoice extends EntityBase implements Invoice {
     }
 
     @Override
-    public BigDecimal getAmountCharged() {
+    public BigDecimal getChargedAmount() {
         BigDecimal result = BigDecimal.ZERO;
 
         for (final InvoiceItem i : invoiceItems) {
-            if (!i.getInvoiceItemType().equals(InvoiceItemType.CREDIT)) {
+            if (!i.getInvoiceItemType().equals(InvoiceItemType.CBA_ADJ)) {
                 result = result.add(i.getAmount());
             }
         }
@@ -191,11 +191,11 @@ public class MockInvoice extends EntityBase implements Invoice {
     }
 
     @Override
-    public BigDecimal getAmountCredited() {
+    public BigDecimal getCreditAdjAmount() {
         BigDecimal result = BigDecimal.ZERO;
 
         for (final InvoiceItem i : invoiceItems) {
-            if (i.getInvoiceItemType().equals(InvoiceItemType.CREDIT)) {
+            if (i.getInvoiceItemType().equals(InvoiceItemType.CBA_ADJ)) {
                 result = result.add(i.getAmount());
             }
         }
@@ -204,7 +204,7 @@ public class MockInvoice extends EntityBase implements Invoice {
 
     @Override
     public BigDecimal getBalance() {
-        return getAmountCharged().subtract(getAmountPaid().subtract(getAmountCredited()));
+        return getChargedAmount().subtract(getPaidAmount());
     }
 
     @Override
@@ -223,7 +223,25 @@ public class MockInvoice extends EntityBase implements Invoice {
 
     @Override
     public String toString() {
-        return "DefaultInvoice [items=" + invoiceItems + ", payments=" + payments + ", id=" + id + ", accountId=" + accountId + ", invoiceDate=" + invoiceDate + ", targetDate=" + targetDate + ", currency=" + currency + ", amountPaid=" + getAmountPaid() + ", lastPaymentAttempt=" + getLastPaymentAttempt() + "]";
+        return "DefaultInvoice [items=" + invoiceItems + ", payments=" + payments + ", id=" + id + ", accountId=" + accountId + ", invoiceDate=" + invoiceDate + ", targetDate=" + targetDate + ", currency=" + currency + ", amountPaid=" + getPaidAmount() + ", lastPaymentAttempt=" + getLastPaymentAttempt() + "]";
+    }
+
+    @Override
+    public BigDecimal getCBAAmount() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public BigDecimal getTotalAdjAmount() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public BigDecimal getRefundAdjAmount() {
+        // TODO Auto-generated method stub
+        return null;
     }
 }
 

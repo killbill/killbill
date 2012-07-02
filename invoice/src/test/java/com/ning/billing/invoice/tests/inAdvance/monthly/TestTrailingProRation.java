@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.invoice.tests.inAdvance.quarterly;
+package com.ning.billing.invoice.tests.inAdvance.monthly;
 
 import java.math.BigDecimal;
 
@@ -25,67 +25,66 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.invoice.model.InvalidDateSequenceException;
 import com.ning.billing.invoice.tests.inAdvance.ProRationInAdvanceTestBase;
 
-@Test(groups = {"fast", "invoicing", "proRation"})
-public class TrailingProRationTests extends ProRationInAdvanceTestBase {
+public class TestTrailingProRation extends ProRationInAdvanceTestBase {
     @Override
     protected BillingPeriod getBillingPeriod() {
-        return BillingPeriod.QUARTERLY;
+        return BillingPeriod.MONTHLY;
     }
 
-    @Test
+    @Test(groups = {"fast"})
     public void testTargetDateOnStartDate() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2010, 6, 17);
-        final DateTime endDate = buildDateTime(2010, 9, 25);
+        final DateTime endDate = buildDateTime(2010, 7, 25);
         final DateTime targetDate = buildDateTime(2010, 6, 17);
 
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 17, ONE);
     }
 
-    @Test
+    @Test(groups = {"fast"})
     public void testTargetDateInFirstBillingPeriod() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2010, 6, 17);
-        final DateTime endDate = buildDateTime(2010, 9, 25);
+        final DateTime endDate = buildDateTime(2010, 7, 25);
         final DateTime targetDate = buildDateTime(2010, 6, 20);
 
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 17, ONE);
     }
 
-    @Test
+    @Test(groups = {"fast"})
     public void testTargetDateAtEndOfFirstBillingCycle() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2010, 6, 17);
-        final DateTime endDate = buildDateTime(2010, 9, 25);
-        final DateTime targetDate = buildDateTime(2010, 9, 17);
+        final DateTime endDate = buildDateTime(2010, 7, 25);
+        final DateTime targetDate = buildDateTime(2010, 7, 17);
 
-        final BigDecimal expectedValue = ONE.add(EIGHT.divide(NINETY_ONE, NUMBER_OF_DECIMALS, ROUNDING_METHOD));
+        final BigDecimal expectedValue = ONE.add(EIGHT.divide(THIRTY_ONE, NUMBER_OF_DECIMALS, ROUNDING_METHOD));
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 17, expectedValue);
     }
 
-    @Test
+    @Test(groups = {"fast"})
     public void testTargetDateInProRationPeriod() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2010, 6, 17);
-        final DateTime endDate = buildDateTime(2010, 9, 25);
-        final DateTime targetDate = buildDateTime(2010, 9, 18);
+        final DateTime endDate = buildDateTime(2010, 7, 25);
+        final DateTime targetDate = buildDateTime(2010, 7, 18);
 
-        final BigDecimal expectedValue = ONE.add(EIGHT.divide(NINETY_ONE, NUMBER_OF_DECIMALS, ROUNDING_METHOD));
+        final BigDecimal expectedValue = ONE.add(EIGHT.divide(THIRTY_ONE, NUMBER_OF_DECIMALS, ROUNDING_METHOD));
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 17, expectedValue);
     }
 
-    @Test
+    @Test(groups = {"fast"})
     public void testTargetDateOnEndDate() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2010, 6, 17);
-        final DateTime endDate = buildDateTime(2010, 9, 25);
+        final DateTime endDate = buildDateTime(2010, 7, 25);
 
-        final BigDecimal expectedValue = ONE.add(EIGHT.divide(NINETY_ONE, NUMBER_OF_DECIMALS, ROUNDING_METHOD));
+        final BigDecimal expectedValue = ONE.add(EIGHT.divide(THIRTY_ONE, NUMBER_OF_DECIMALS, ROUNDING_METHOD));
         testCalculateNumberOfBillingCycles(startDate, endDate, endDate, 17, expectedValue);
     }
 
-    @Test
+    @Test(groups = {"fast"})
     public void testTargetDateAfterEndDate() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2010, 6, 17);
-        final DateTime endDate = buildDateTime(2010, 9, 25);
-        final DateTime targetDate = buildDateTime(2010, 9, 30);
+        final DateTime endDate = buildDateTime(2010, 7, 25);
+        final DateTime targetDate = buildDateTime(2010, 7, 30);
 
-        final BigDecimal expectedValue = ONE.add(EIGHT.divide(NINETY_ONE, NUMBER_OF_DECIMALS, ROUNDING_METHOD));
+        final BigDecimal expectedValue = ONE.add(EIGHT.divide(THIRTY_ONE, NUMBER_OF_DECIMALS, ROUNDING_METHOD));
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 17, expectedValue);
     }
 }

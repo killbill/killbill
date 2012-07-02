@@ -17,6 +17,7 @@
 package com.ning.billing.invoice.dao;
 
 import java.io.IOException;
+import java.net.URL;
 
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
@@ -28,8 +29,9 @@ import org.testng.annotations.BeforeMethod;
 
 import com.ning.billing.config.InvoiceConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
-import com.ning.billing.invoice.model.DefaultInvoiceGenerator;
-import com.ning.billing.invoice.model.InvoiceGenerator;
+import com.ning.billing.invoice.generator.DefaultInvoiceGenerator;
+import com.ning.billing.invoice.generator.InvoiceGenerator;
+import com.ning.billing.invoice.glue.InvoiceModuleWithEmbeddedDb;
 import com.ning.billing.invoice.notification.MockNextBillingDatePoster;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.invoice.tests.InvoicingTestBase;
@@ -48,18 +50,15 @@ import com.ning.billing.util.tag.dao.MockTagDefinitionDao;
 import com.ning.billing.util.tag.dao.TagDao;
 import com.ning.billing.util.tag.dao.TagDefinitionDao;
 
+import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
-public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
+public class InvoiceDaoTestBase extends InvoicingTestBase {
     protected final TagEventBuilder tagEventBuilder = new TagEventBuilder();
 
     protected IDBI dbi;
     private MysqlTestingHelper mysqlTestingHelper;
     protected InvoiceDao invoiceDao;
-    protected RecurringInvoiceItemSqlDao recurringInvoiceItemDao;
-    protected FixedPriceInvoiceItemSqlDao fixedPriceInvoiceItemSqlDao;
-    protected CreditInvoiceItemSqlDao creditInvoiceItemSqlDao;
-
     protected InvoiceItemSqlDao invoiceItemSqlDao;
     protected InvoicePaymentSqlDao invoicePaymentDao;
     protected Clock clock;
@@ -89,17 +88,35 @@ public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
         }
     };
 
-    @BeforeClass(alwaysRun = true)
+    private static void loadSystemPropertiesFromClasspath(final String resource) {
+        final URL url = InvoiceModuleWithEmbeddedDb.class.getResource(resource);
+        assertNotNull(url);
+        try {
+            System.getProperties().load(url.openStream());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @BeforeClass(groups={"slow"})
     protected void setup() throws IOException {
+
+        loadSystemPropertiesFromClasspath("/resource.properties");
+
         mysqlTestingHelper = new MysqlTestingHelper();
         dbi = mysqlTestingHelper.getDBI();
 
         final String invoiceDdl = IOUtils.toString(DefaultInvoiceDao.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
         final String utilDdl = IOUtils.toString(DefaultInvoiceDao.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
 
+        clock = new ClockMock();
+
         mysqlTestingHelper.startMysql();
         mysqlTestingHelper.initDb(invoiceDdl);
         mysqlTestingHelper.initDb(utilDdl);
+
+        bus = new InMemoryBus();
+        bus.start();
 
         final NextBillingDatePoster nextBillingDatePoster = new MockNextBillingDatePoster();
         final TagDefinitionDao tagDefinitionDao = new MockTagDefinitionDao();
@@ -108,39 +125,34 @@ public abstract class InvoiceDaoTestBase extends InvoicingTestBase {
         invoiceDao = new DefaultInvoiceDao(dbi, nextBillingDatePoster, tagUserApi);
         invoiceDao.test();
 
-        recurringInvoiceItemDao = dbi.onDemand(RecurringInvoiceItemSqlDao.class);
-        fixedPriceInvoiceItemSqlDao = dbi.onDemand(FixedPriceInvoiceItemSqlDao.class);
-        creditInvoiceItemSqlDao = dbi.onDemand(CreditInvoiceItemSqlDao.class);
         invoiceItemSqlDao = dbi.onDemand(InvoiceItemSqlDao.class);
         invoicePaymentDao = dbi.onDemand(InvoicePaymentSqlDao.class);
 
-        clock = new ClockMock();
+
+
         context = new TestCallContext("Invoice Dao Tests");
         generator = new DefaultInvoiceGenerator(clock, invoiceConfig);
-        bus = new InMemoryBus();
-        bus.start();
+
+
 
         assertTrue(true);
     }
 
-    @BeforeMethod(alwaysRun = true)
+    @BeforeMethod(groups={"slow"})
     public void cleanupData() {
         dbi.inTransaction(new TransactionCallback<Void>() {
             @Override
             public Void inTransaction(final Handle h, final TransactionStatus status)
                     throws Exception {
                 h.execute("truncate table invoices");
-                h.execute("truncate table fixed_invoice_items");
-                h.execute("truncate table recurring_invoice_items");
-                h.execute("truncate table credit_invoice_items");
+                h.execute("truncate table invoice_items");
                 h.execute("truncate table invoice_payments");
-
                 return null;
             }
         });
     }
 
-    @AfterClass(alwaysRun = true)
+    @AfterClass(groups={"slow"})
     protected void tearDown() {
         bus.stop();
         mysqlTestingHelper.stopMysql();

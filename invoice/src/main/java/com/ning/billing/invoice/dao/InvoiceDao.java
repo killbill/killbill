@@ -31,6 +31,7 @@ import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.callcontext.CallContext;
 
 public interface InvoiceDao {
+
     void create(Invoice invoice, CallContext context);
 
     Invoice getById(final UUID id);
@@ -51,6 +52,8 @@ public interface InvoiceDao {
 
     BigDecimal getAccountBalance(final UUID accountId);
 
+    public BigDecimal getAccountCBA(final UUID accountId);
+
     List<Invoice> getUnpaidInvoicesByAccountId(final UUID accountId, final DateTime upToDate);
 
     void test();
@@ -62,6 +65,9 @@ public interface InvoiceDao {
     void removeWrittenOff(final UUID invoiceId, final CallContext context) throws TagApiException;
 
     InvoicePayment postChargeback(final UUID invoicePaymentId, final BigDecimal amount, final CallContext context) throws InvoiceApiException;
+
+    InvoicePayment createRefund(UUID paymentAttemptId,
+            BigDecimal amount, boolean isInvoiceAdjusted, CallContext context) throws InvoiceApiException;
 
     BigDecimal getRemainingAmountPaid(final UUID invoicePaymentId);
 
@@ -75,7 +81,8 @@ public interface InvoiceDao {
 
     InvoiceItem getCreditById(final UUID creditId) throws InvoiceApiException;
 
-    InvoiceItem insertCredit(final UUID accountId, final BigDecimal amount,
+    InvoiceItem insertCredit(final UUID accountId, final UUID invoiceId, final BigDecimal amount,
                              final DateTime effectiveDate, final Currency currency,
                              final CallContext context);
+
 }

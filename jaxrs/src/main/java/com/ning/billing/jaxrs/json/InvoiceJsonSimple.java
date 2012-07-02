@@ -32,25 +32,31 @@ public class InvoiceJsonSimple {
     private final DateTime invoiceDate;
     private final DateTime targetDate;
     private final String invoiceNumber;
-    private final BigDecimal credit;
     private final BigDecimal balance;
+    private final BigDecimal creditAdj;
+    private final BigDecimal refundAdj;
+    private final BigDecimal cba;
     private final String accountId;
 
     public InvoiceJsonSimple() {
-        this(BigDecimal.ZERO, BigDecimal.ZERO, null, null, null, null, BigDecimal.ZERO, null);
+        this(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO , BigDecimal.ZERO, null, null, null, null, BigDecimal.ZERO, null);
     }
 
     @JsonCreator
     public InvoiceJsonSimple(@JsonProperty("amount") final BigDecimal amount,
-                             @JsonProperty("credit") final BigDecimal credit,
-                             @JsonProperty("invoiceId") @Nullable final String invoiceId,
-                             @JsonProperty("invoiceDate") @Nullable final DateTime invoiceDate,
-                             @JsonProperty("targetDate") @Nullable final DateTime targetDate,
-                             @JsonProperty("invoiceNumber") @Nullable final String invoiceNumber,
-                             @JsonProperty("balance") final BigDecimal balance,
-                             @JsonProperty("accountId") @Nullable final String accountId) {
+            @JsonProperty("cba") final BigDecimal cba,
+            @JsonProperty("creditAdj") final BigDecimal creditAdj,
+            @JsonProperty("refundAdj") final BigDecimal refundAdj,
+            @JsonProperty("invoiceId") @Nullable final String invoiceId,
+            @JsonProperty("invoiceDate") @Nullable final DateTime invoiceDate,
+            @JsonProperty("targetDate") @Nullable final DateTime targetDate,
+            @JsonProperty("invoiceNumber") @Nullable final String invoiceNumber,
+            @JsonProperty("balance") final BigDecimal balance,
+            @JsonProperty("accountId") @Nullable final String accountId) {
         this.amount = amount;
-        this.credit = credit;
+        this.cba = cba;
+        this.creditAdj = creditAdj;
+        this.refundAdj = refundAdj;
         this.invoiceId = invoiceId;
         this.invoiceDate = invoiceDate;
         this.targetDate = targetDate;
@@ -60,16 +66,24 @@ public class InvoiceJsonSimple {
     }
 
     public InvoiceJsonSimple(final Invoice input) {
-        this(input.getAmountCharged(), input.getAmountCredited(), input.getId().toString(), input.getInvoiceDate(),
-             input.getTargetDate(), String.valueOf(input.getInvoiceNumber()), input.getBalance(), input.getAccountId().toString());
+        this(input.getChargedAmount(), input.getCBAAmount(), input.getCreditAdjAmount(), input.getRefundAdjAmount(), input.getId().toString(), input.getInvoiceDate(),
+                input.getTargetDate(), String.valueOf(input.getInvoiceNumber()), input.getBalance(), input.getAccountId().toString());
     }
 
     public BigDecimal getAmount() {
         return amount;
     }
 
-    public BigDecimal getCredit() {
-        return credit;
+    public BigDecimal getCBA() {
+        return cba;
+    }
+
+    public BigDecimal getCreditAdj() {
+        return creditAdj;
+    }
+
+    public BigDecimal getRefundAdj() {
+        return refundAdj;
     }
 
     public String getInvoiceId() {
@@ -118,8 +132,16 @@ public class InvoiceJsonSimple {
                 (balance != null && that.balance != null && balance.compareTo(that.balance) == 0))) {
             return false;
         }
-        if (!((credit == null && that.credit == null) ||
-                (credit != null && that.credit != null && credit.compareTo(that.credit) == 0))) {
+        if (!((cba == null && that.cba == null) ||
+                (cba != null && that.cba != null && cba.compareTo(that.cba) == 0))) {
+            return false;
+        }
+        if (!((creditAdj == null && that.creditAdj == null) ||
+                (creditAdj != null && that.creditAdj != null && creditAdj.compareTo(that.creditAdj) == 0))) {
+            return false;
+        }
+        if (!((refundAdj == null && that.refundAdj == null) ||
+                (refundAdj != null && that.refundAdj != null && refundAdj.compareTo(that.refundAdj) == 0))) {
             return false;
         }
         if (!((invoiceDate == null && that.invoiceDate == null) ||
@@ -143,7 +165,9 @@ public class InvoiceJsonSimple {
     @Override
     public int hashCode() {
         int result = amount != null ? amount.hashCode() : 0;
-        result = 31 * result + (credit != null ? credit.hashCode() : 0);
+        result = 31 * result + (cba != null ? cba.hashCode() : 0);
+        result = 31 * result + (creditAdj != null ? creditAdj.hashCode() : 0);
+        result = 31 * result + (refundAdj != null ? refundAdj.hashCode() : 0);
         result = 31 * result + (invoiceId != null ? invoiceId.hashCode() : 0);
         result = 31 * result + (invoiceDate != null ? invoiceDate.hashCode() : 0);
         result = 31 * result + (targetDate != null ? targetDate.hashCode() : 0);
