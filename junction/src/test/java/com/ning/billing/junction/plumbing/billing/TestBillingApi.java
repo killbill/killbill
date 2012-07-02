@@ -16,7 +16,6 @@
 
 package com.ning.billing.junction.plumbing.billing;
 
-
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -143,7 +142,6 @@ public class TestBillingApi {
 
     };
 
-
     private Clock clock;
     private Subscription subscription;
     private DateTime subscriptionStartDate;
@@ -165,42 +163,11 @@ public class TestBillingApi {
         //new SubscriptionBundleData( eventId,"TestKey", subId,  clock.getUTCNow().minusDays(4), null);
         bundles.add(bundle);
 
-
         effectiveSubscriptionTransitions = new LinkedList<EffectiveSubscriptionEvent>();
         final List<Subscription> subscriptions = new LinkedList<Subscription>();
 
         subscriptionStartDate = clock.getUTCNow().minusDays(3);
-        subscription = new MockSubscription() {
-            @Override
-            public List<EffectiveSubscriptionEvent> getBillingTransitions() {
-                return effectiveSubscriptionTransitions;
-            }
-
-            @Override
-            public List<EffectiveSubscriptionEvent> getAllTransitions() {
-                return effectiveSubscriptionTransitions;
-            }
-
-            @Override
-            public Plan getCurrentPlan() {
-                return subscriptionPlan;
-            }
-
-            @Override
-            public UUID getId() {
-                return subId;
-            }
-
-            @Override
-            public UUID getBundleId() {
-                return bunId;
-            }
-
-            @Override
-            public DateTime getStartDate() {
-                return subscriptionStartDate;
-            }
-        };
+        subscription = new MockSubscription(subId, bunId, subscriptionPlan, subscriptionStartDate, effectiveSubscriptionTransitions);
 
         subscriptions.add(subscription);
 
@@ -313,7 +280,6 @@ public class TestBillingApi {
                 nextPriceList.getName(), 1L, null,
                 SubscriptionTransitionType.CREATE, 0, null);
 
-
         effectiveSubscriptionTransitions.add(t);
 
         final AccountUserApi accountApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
@@ -380,7 +346,6 @@ public class TestBillingApi {
         final Plan nextPlan = catalogService.getFullCatalog().findPlan("PickupTrialEvergreen10USD", now);
         final PlanPhase nextPhase = nextPlan.getAllPhases()[1];
         final PriceList nextPriceList = catalogService.getFullCatalog().findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME, now);
-
 
         final EffectiveSubscriptionEvent t = new MockEffectiveSubscriptionEvent(
                 eventId, subId, bunId, then, now, null, null, null, null, SubscriptionState.ACTIVE,
@@ -462,7 +427,6 @@ public class TestBillingApi {
                 nextPriceList.getName(), 1L, null,
                 SubscriptionTransitionType.CREATE, 0, null);
 
-
         effectiveSubscriptionTransitions.add(t);
 
         final AccountUserApi accountApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
@@ -491,7 +455,6 @@ public class TestBillingApi {
         assertEquals(events.size(), 0);
     }
 
-
     @Test(enabled = true, groups = "fast")
     public void testBillingEventsAutoInvoicingOffBundle() throws CatalogApiException {
         final DateTime now = clock.getUTCNow();
@@ -505,7 +468,6 @@ public class TestBillingApi {
                 nextPlan.getName(), nextPhase.getName(),
                 nextPriceList.getName(), 1L, null,
                 SubscriptionTransitionType.CREATE, 0, null);
-
 
         effectiveSubscriptionTransitions.add(t);
 
