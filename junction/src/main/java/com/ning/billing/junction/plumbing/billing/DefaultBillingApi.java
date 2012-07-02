@@ -37,10 +37,10 @@ import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.entitlement.api.billing.BillingEvent;
 import com.ning.billing.entitlement.api.billing.ChargeThruApi;
 import com.ning.billing.entitlement.api.billing.EntitlementBillingApiException;
+import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.entitlement.api.user.SubscriptionEvent;
 import com.ning.billing.junction.api.BillingApi;
 import com.ning.billing.junction.api.BillingEventSet;
 import com.ning.billing.util.api.TagUserApi;
@@ -139,7 +139,7 @@ public class DefaultBillingApi implements BillingApi {
 
     private void addBillingEventsForSubscription(final List<Subscription> subscriptions, final SubscriptionBundle bundle, final Account account, final CallContext context, final DefaultBillingEventSet result) {
         for (final Subscription subscription : subscriptions) {
-            for (final SubscriptionEvent transition : subscription.getBillingTransitions()) {
+            for (final EffectiveSubscriptionEvent transition : subscription.getBillingTransitions()) {
                 try {
                     final int bcd = bcdCalculator.calculateBcd(bundle, subscription, transition, account);
 

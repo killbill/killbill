@@ -51,7 +51,6 @@ DROP TABLE IF EXISTS bundles;
 CREATE TABLE bundles (
     record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
     id char(36) NOT NULL,
-    start_date datetime, /*NOT NULL*/
     external_key varchar(64) NOT NULL,
     account_id char(36) NOT NULL,
     last_sys_update_date datetime,

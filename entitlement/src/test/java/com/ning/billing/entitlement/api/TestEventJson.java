@@ -23,9 +23,9 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.entitlement.api.timeline.DefaultRepairEntitlementEvent;
 import com.ning.billing.entitlement.api.timeline.RepairEntitlementEvent;
-import com.ning.billing.entitlement.api.user.DefaultSubscriptionEvent;
+import com.ning.billing.entitlement.api.user.DefaultEffectiveSubscriptionEvent;
+import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
-import com.ning.billing.entitlement.api.user.SubscriptionEvent;
 import com.ning.billing.util.jackson.ObjectMapper;
 
 public class TestEventJson {
@@ -35,12 +35,12 @@ public class TestEventJson {
     public void testSubscriptionEvent() throws Exception {
 
 
-        final SubscriptionEvent e = new DefaultSubscriptionEvent(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), new DateTime(), new DateTime(),
+        final EffectiveSubscriptionEvent e = new DefaultEffectiveSubscriptionEvent(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), new DateTime(), new DateTime(),
                                                            SubscriptionState.ACTIVE, "pro", "TRIAL", "DEFAULT", SubscriptionState.CANCELLED, null, null, null, 3L, UUID.randomUUID(), SubscriptionTransitionType.CANCEL, 0, new DateTime());
 
         final String json = mapper.writeValueAsString(e);
 
-        final Class<?> claz = Class.forName(DefaultSubscriptionEvent.class.getName());
+        final Class<?> claz = Class.forName(DefaultEffectiveSubscriptionEvent.class.getName());
         final Object obj = mapper.readValue(json, claz);
         Assert.assertTrue(obj.equals(e));
 

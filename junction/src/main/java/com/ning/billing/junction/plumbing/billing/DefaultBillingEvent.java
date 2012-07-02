@@ -31,8 +31,8 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.billing.BillingEvent;
 import com.ning.billing.entitlement.api.billing.BillingModeType;
+import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.SubscriptionEvent;
 
 public class DefaultBillingEvent implements BillingEvent {
     private final Account account;
@@ -51,7 +51,7 @@ public class DefaultBillingEvent implements BillingEvent {
     private final Long totalOrdering;
     private final DateTimeZone timeZone;
 
-    public DefaultBillingEvent(final Account account, final SubscriptionEvent transition, final Subscription subscription, final int billCycleDay, final Currency currency, final Catalog catalog) throws CatalogApiException {
+    public DefaultBillingEvent(final Account account, final EffectiveSubscriptionEvent transition, final Subscription subscription, final int billCycleDay, final Currency currency, final Catalog catalog) throws CatalogApiException {
 
         this.account = account;
         this.billCycleDay = billCycleDay;

@@ -35,7 +35,7 @@ import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.entitlement.api.billing.BillingEvent;
 import com.ning.billing.entitlement.api.billing.EntitlementBillingApiException;
-import com.ning.billing.entitlement.api.user.SubscriptionEvent;
+import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceCreationEvent;
@@ -95,7 +95,7 @@ public class InvoiceDispatcher {
         VERBOSE_OUTPUT = (verboseOutputValue != null) && Boolean.parseBoolean(verboseOutputValue);
     }
 
-    public void processSubscription(final SubscriptionEvent transition,
+    public void processSubscription(final EffectiveSubscriptionEvent transition,
                                     final CallContext context) throws InvoiceApiException {
         final UUID subscriptionId = transition.getSubscriptionId();
         final DateTime targetDate = transition.getEffectiveTransitionTime();

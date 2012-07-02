@@ -71,9 +71,9 @@ public interface Subscription extends Entity, Blockable {
 
     public ProductCategory getCategory();
 
-    public SubscriptionEvent getPendingTransition();
+    public EffectiveSubscriptionEvent getPendingTransition();
 
-    public SubscriptionEvent getPreviousTransition();
+    public EffectiveSubscriptionEvent getPreviousTransition();
 
-    public List<SubscriptionEvent> getBillingTransitions();
+    public List<EffectiveSubscriptionEvent> getBillingTransitions();
 }

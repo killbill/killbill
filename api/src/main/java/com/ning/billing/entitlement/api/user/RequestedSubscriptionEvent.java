@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2012 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -16,16 +16,5 @@
 
 package com.ning.billing.entitlement.api.user;
 
-import java.util.UUID;
-
-import com.ning.billing.junction.api.Blockable;
-import com.ning.billing.overdue.OverdueState;
-import com.ning.billing.util.entity.Entity;
-
-public interface SubscriptionBundle extends Blockable, Entity {
-    public UUID getAccountId();
-
-    public String getKey();
-
-    public OverdueState<SubscriptionBundle> getOverdueState();
+public interface RequestedSubscriptionEvent extends SubscriptionEvent {
 }

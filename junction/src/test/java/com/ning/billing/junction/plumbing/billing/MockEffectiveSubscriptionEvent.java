@@ -23,10 +23,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
+import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
-import com.ning.billing.entitlement.api.user.SubscriptionEvent;
 
-public class MockSubscriptionEvent implements SubscriptionEvent {
+public class MockEffectiveSubscriptionEvent implements EffectiveSubscriptionEvent {
 
     private final Long totalOrdering;
     private final UUID subscriptionId;
@@ -49,24 +49,24 @@ public class MockSubscriptionEvent implements SubscriptionEvent {
     private final DateTime startDate;
 
     @JsonCreator
-    public MockSubscriptionEvent(@JsonProperty("eventId") final UUID eventId,
-                                 @JsonProperty("subscriptionId") final UUID subscriptionId,
-                                 @JsonProperty("bundleId") final UUID bundleId,
-                                 @JsonProperty("requestedTransitionTime") final DateTime requestedTransitionTime,
-                                 @JsonProperty("effectiveTransitionTime") final DateTime effectiveTransitionTime,
-                                 @JsonProperty("previousState") final SubscriptionState previousState,
-                                 @JsonProperty("previousPlan") final String previousPlan,
-                                 @JsonProperty("previousPhase") final String previousPhase,
-                                 @JsonProperty("previousPriceList") final String previousPriceList,
-                                 @JsonProperty("nextState") final SubscriptionState nextState,
-                                 @JsonProperty("nextPlan") final String nextPlan,
-                                 @JsonProperty("nextPhase") final String nextPhase,
-                                 @JsonProperty("nextPriceList") final String nextPriceList,
-                                 @JsonProperty("totalOrdering") final Long totalOrdering,
-                                 @JsonProperty("userToken") final UUID userToken,
-                                 @JsonProperty("transitionType") final SubscriptionTransitionType transitionType,
-                                 @JsonProperty("remainingEventsForUserOperation") final Integer remainingEventsForUserOperation,
-                                 @JsonProperty("startDate") final DateTime startDate) {
+    public MockEffectiveSubscriptionEvent(@JsonProperty("eventId") final UUID eventId,
+                                          @JsonProperty("subscriptionId") final UUID subscriptionId,
+                                          @JsonProperty("bundleId") final UUID bundleId,
+                                          @JsonProperty("requestedTransitionTime") final DateTime requestedTransitionTime,
+                                          @JsonProperty("effectiveTransitionTime") final DateTime effectiveTransitionTime,
+                                          @JsonProperty("previousState") final SubscriptionState previousState,
+                                          @JsonProperty("previousPlan") final String previousPlan,
+                                          @JsonProperty("previousPhase") final String previousPhase,
+                                          @JsonProperty("previousPriceList") final String previousPriceList,
+                                          @JsonProperty("nextState") final SubscriptionState nextState,
+                                          @JsonProperty("nextPlan") final String nextPlan,
+                                          @JsonProperty("nextPhase") final String nextPhase,
+                                          @JsonProperty("nextPriceList") final String nextPriceList,
+                                          @JsonProperty("totalOrdering") final Long totalOrdering,
+                                          @JsonProperty("userToken") final UUID userToken,
+                                          @JsonProperty("transitionType") final SubscriptionTransitionType transitionType,
+                                          @JsonProperty("remainingEventsForUserOperation") final Integer remainingEventsForUserOperation,
+                                          @JsonProperty("startDate") final DateTime startDate) {
         super();
         this.eventId = eventId;
         this.subscriptionId = subscriptionId;
@@ -249,7 +249,7 @@ public class MockSubscriptionEvent implements SubscriptionEvent {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        final MockSubscriptionEvent other = (MockSubscriptionEvent) obj;
+        final MockEffectiveSubscriptionEvent other = (MockEffectiveSubscriptionEvent) obj;
         if (bundleId == null) {
             if (other.bundleId != null) {
                 return false;

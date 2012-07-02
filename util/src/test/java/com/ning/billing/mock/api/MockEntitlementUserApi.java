@@ -61,11 +61,6 @@ public class MockEntitlementUserApi implements EntitlementUserApi {
             }
 
             @Override
-            public DateTime getStartDate() {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
             public String getKey() {
                 return key;
             }
