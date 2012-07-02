@@ -13,21 +13,37 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
 package com.ning.billing.invoice.model;
 
-import javax.annotation.Nullable;
-import java.util.List;
+import java.math.BigDecimal;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.invoice.api.InvoiceApiException;
-import com.ning.billing.junction.api.BillingEventSet;
+import com.ning.billing.invoice.api.InvoiceItemType;
 
-public interface InvoiceGenerator {
-    public Invoice generateInvoice(UUID accountId, @Nullable BillingEventSet events, @Nullable List<Invoice> existingInvoices,
-                                   DateTime targetDate, Currency targetCurrency) throws InvoiceApiException;
+public class RefundAdjInvoiceItem extends AdjInvoiceItem {
+
+    public RefundAdjInvoiceItem(UUID invoiceId, UUID accountId, DateTime date,
+            BigDecimal amount, Currency currency) {
+        super(invoiceId, accountId, date, date, amount, currency);
+    }
+
+    public RefundAdjInvoiceItem(UUID id, UUID invoiceId, UUID accountId, DateTime date,
+            BigDecimal amount, Currency currency) {
+        super(id, invoiceId, accountId, date, date, amount, currency);
+    }
+
+    @Override
+    public InvoiceItemType getInvoiceItemType() {
+        return InvoiceItemType.REFUND_ADJ;
+    }
+
+    @Override
+    public String getDescription() {
+        return "refund-adj";
+    }
+
+
 }

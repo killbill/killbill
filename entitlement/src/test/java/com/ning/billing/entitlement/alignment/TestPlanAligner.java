@@ -128,11 +128,11 @@ public class TestPlanAligner {
 
         // Laser-Scope is START_OF_SUBSCRIPTION aligned on creation
         Assert.assertEquals(phases[0].getStartPhase(), subscriptionData.getStartDate());
-        Assert.assertEquals(phases[1].getStartPhase(), subscriptionData.getStartDate().plusDays(30));
+        Assert.assertEquals(phases[1].getStartPhase(), subscriptionData.getStartDate().plusMonths(1));
 
         // Verify the next phase via the other API
         final TimedPhase nextTimePhase = planAligner.getNextTimedPhase(subscriptionData, effectiveDate, effectiveDate);
-        Assert.assertEquals(nextTimePhase.getStartPhase(), subscriptionData.getStartDate().plusDays(30));
+        Assert.assertEquals(nextTimePhase.getStartPhase(), subscriptionData.getStartDate().plusMonths(1));
 
         // Now look at the past, before the subscription started
         final DateTime effectiveDateInThePast = subscriptionData.getStartDate().minusHours(10);
@@ -150,7 +150,7 @@ public class TestPlanAligner {
 
         // Try a change plan (simulate END_OF_TERM policy)
         final String newProductName = "telescopic-scope-monthly";
-        final DateTime effectiveChangeDate = subscriptionData.getStartDate().plusDays(30);
+        final DateTime effectiveChangeDate = subscriptionData.getStartDate().plusMonths(1);
         changeSubscription(effectiveChangeDate, subscriptionData, productName, newProductName, initialPhase);
 
         // All non rescue plans are START_OF_SUBSCRIPTION aligned on change. Since we're END_OF_TERM here, we'll

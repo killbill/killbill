@@ -22,11 +22,18 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.skife.jdbi.v2.Handle;
+import org.skife.jdbi.v2.IDBI;
+import org.skife.jdbi.v2.TransactionCallback;
+import org.skife.jdbi.v2.TransactionStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
+import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeSuite;
+import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
@@ -52,7 +59,7 @@ import com.ning.billing.invoice.api.InvoiceNotifier;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.invoice.dao.InvoiceDao;
-import com.ning.billing.invoice.model.InvoiceGenerator;
+import com.ning.billing.invoice.generator.InvoiceGenerator;
 import com.ning.billing.invoice.notification.NullInvoiceNotifier;
 import com.ning.billing.invoice.tests.InvoicingTestBase;
 import com.ning.billing.junction.api.BillingApi;
@@ -107,12 +114,32 @@ public class TestDefaultInvoiceMigrationApi extends InvoicingTestBase {
     private UUID migrationInvoiceId;
     private UUID regularInvoiceId;
 
+    private IDBI dbi;
+
+
     private static final BigDecimal MIGRATION_INVOICE_AMOUNT = new BigDecimal("100.00");
     private static final Currency MIGRATION_INVOICE_CURRENCY = Currency.USD;
 
     private final Clock clock = new ClockMock();
 
-    @BeforeClass(groups = {"slow"})
+    //@BeforeTest(groups = {"slow"})
+    public void cleanup() {
+        if (dbi !=  null) {
+            dbi.inTransaction(new TransactionCallback<Void>() {
+                @Override
+                public Void inTransaction(final Handle h, final TransactionStatus status)
+                throws Exception {
+                    h.execute("truncate table invoices");
+                    h.execute("truncate table invoice_items");
+                    h.execute("truncate table invoice_payments");
+                    return null;
+                }
+            });
+        }
+    }
+
+
+    @BeforeSuite(groups = {"slow"})
     public void setup() throws Exception {
         log.info("Starting set up");
         accountId = UUID.randomUUID();
@@ -127,7 +154,8 @@ public class TestDefaultInvoiceMigrationApi extends InvoicingTestBase {
 
         helper.initDb(invoiceDdl);
         helper.initDb(utilDdl);
-
+        dbi = helper.getDBI();
+        cleanup();
         busService.getBus().start();
 
         ((ZombieControl) billingApi).addResult("setChargedThroughDate", BrainDeadProxyFactory.ZOMBIE_VOID);
@@ -136,7 +164,7 @@ public class TestDefaultInvoiceMigrationApi extends InvoicingTestBase {
 
     }
 
-    @AfterClass(groups = {"slow"})
+    @AfterSuite(groups = {"slow"})
     public void tearDown() {
         try {
             ((DefaultBusService) busService).stopBus();
@@ -209,7 +237,6 @@ public class TestDefaultInvoiceMigrationApi extends InvoicingTestBase {
         return invoice.getId();
     }
 
-    // Check migration invoice is NOT returned for all user api invoice calls
     @Test(groups = {"slow"}, enabled = true)
     public void testUserApiAccess() {
         final List<Invoice> byAccount = invoiceUserApi.getInvoicesByAccount(accountId);
@@ -221,9 +248,7 @@ public class TestDefaultInvoiceMigrationApi extends InvoicingTestBase {
         Assert.assertEquals(byAccountAndDate.get(0).getId(), regularInvoiceId);
 
         final Collection<Invoice> unpaid = invoiceUserApi.getUnpaidInvoicesByAccountId(accountId, date_regular.plusDays(1));
-        Assert.assertEquals(unpaid.size(), 1);
-        Assert.assertEquals(regularInvoiceId, unpaid.iterator().next().getId());
-
+        Assert.assertEquals(unpaid.size(), 2);
     }
 
 

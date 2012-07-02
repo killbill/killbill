@@ -14,23 +14,20 @@
  * under the License.
  */
 
-package com.ning.billing.invoice.tests.inAdvance.annual;
+package com.ning.billing.invoice.generator;
 
-import java.math.BigDecimal;
+import javax.annotation.Nullable;
+import java.util.List;
+import java.util.UUID;
 
-import org.testng.annotations.Test;
+import org.joda.time.DateTime;
 
-import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.invoice.tests.inAdvance.GenericProRationTestBase;
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoiceApiException;
+import com.ning.billing.junction.api.BillingEventSet;
 
-public class GenericProRationTests extends GenericProRationTestBase {
-    @Override
-    protected BillingPeriod getBillingPeriod() {
-        return BillingPeriod.ANNUAL;
-    }
-
-    @Override
-    protected BigDecimal getDaysInTestPeriod() {
-        return THREE_HUNDRED_AND_SIXTY_FIVE;
-    }
+public interface InvoiceGenerator {
+    public Invoice generateInvoice(UUID accountId, @Nullable BillingEventSet events, @Nullable List<Invoice> existingInvoices,
+                                   DateTime targetDate, Currency targetCurrency) throws InvoiceApiException;
 }

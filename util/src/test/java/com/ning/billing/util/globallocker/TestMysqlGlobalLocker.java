@@ -32,7 +32,7 @@ import org.testng.annotations.Test;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.ning.billing.dbi.MysqlTestingHelper;
-import com.ning.billing.util.globallocker.GlobalLocker.LockerService;
+import com.ning.billing.util.globallocker.GlobalLocker.LockerType;
 import com.ning.billing.util.io.IOUtils;
 
 @Test(groups = "slow")
@@ -66,7 +66,7 @@ public class TestMysqlGlobalLocker {
         final String lockName = UUID.randomUUID().toString();
 
         final GlobalLocker locker = new MySqlGlobalLocker(dbi);
-        final GlobalLock lock = locker.lockWithNumberOfTries(LockerService.INVOICE, lockName, 3);
+        final GlobalLock lock = locker.lockWithNumberOfTries(LockerType.ACCOUNT, lockName, 3);
 
         dbi.inTransaction(new TransactionCallback<Void>() {
             @Override
@@ -76,11 +76,11 @@ public class TestMysqlGlobalLocker {
                 return null;
             }
         });
-        Assert.assertEquals(locker.isFree(LockerService.INVOICE, lockName), Boolean.FALSE);
+        Assert.assertEquals(locker.isFree(LockerType.ACCOUNT, lockName), Boolean.FALSE);
 
         boolean gotException = false;
         try {
-            locker.lockWithNumberOfTries(LockerService.INVOICE, lockName, 1);
+            locker.lockWithNumberOfTries(LockerType.ACCOUNT, lockName, 1);
         } catch (LockFailedException e) {
             gotException = true;
         }
@@ -88,7 +88,7 @@ public class TestMysqlGlobalLocker {
 
         lock.release();
 
-        Assert.assertEquals(locker.isFree(LockerService.INVOICE, lockName), Boolean.TRUE);
+        Assert.assertEquals(locker.isFree(LockerType.ACCOUNT, lockName), Boolean.TRUE);
     }
 
     public static final class TestMysqlGlobalLockerModule extends AbstractModule {

@@ -77,13 +77,6 @@ public interface InvoiceSqlDao extends EntitySqlDao<Invoice>, AuditSqlDao, Trans
     @RegisterMapper(UuidMapper.class)
     UUID getInvoiceIdByPaymentAttemptId(@Bind("paymentAttemptId") final String paymentAttemptId);
 
-    @SqlQuery
-    @RegisterMapper(BalanceMapper.class)
-    BigDecimal getAccountBalance(@Bind("accountId") final String accountId);
-
-    @SqlQuery
-    List<Invoice> getUnpaidInvoicesByAccountId(@Bind("accountId") final String accountId,
-                                               @Bind("upToDate") final Date upToDate);
 
     @BindingAnnotation(InvoiceBinder.InvoiceBinderFactory.class)
     @Retention(RetentionPolicy.RUNTIME)
@@ -119,24 +112,6 @@ public interface InvoiceSqlDao extends EntitySqlDao<Invoice>, AuditSqlDao, Trans
             final boolean isMigrationInvoice = result.getBoolean("migrated");
 
             return new DefaultInvoice(id, accountId, invoiceNumber, invoiceDate, targetDate, currency, isMigrationInvoice);
-        }
-    }
-
-    public static class BalanceMapper implements ResultSetMapper<BigDecimal> {
-        @Override
-        public BigDecimal map(final int index, final ResultSet result, final StatementContext context) throws SQLException {
-            BigDecimal amountInvoiced = result.getBigDecimal("amount_invoiced");
-            BigDecimal amountPaid = result.getBigDecimal("amount_paid");
-
-            if (amountInvoiced == null) {
-                amountInvoiced = BigDecimal.ZERO;
-            }
-
-            if (amountPaid == null) {
-                amountPaid = BigDecimal.ZERO;
-            }
-
-            return amountInvoiced.subtract(amountPaid);
         }
     }
 }

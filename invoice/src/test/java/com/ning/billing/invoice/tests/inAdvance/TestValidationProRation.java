@@ -29,8 +29,8 @@ import com.ning.billing.invoice.tests.ProRationTestBase;
 
 import static org.testng.Assert.assertEquals;
 
-@Test(groups = {"fast", "invoicing", "proRation"})
-public class ValidationProRationTests extends ProRationTestBase {
+public class TestValidationProRation extends ProRationTestBase {
+    @Override
     protected BillingPeriod getBillingPeriod() {
         return BillingPeriod.MONTHLY;
     }
@@ -40,7 +40,7 @@ public class ValidationProRationTests extends ProRationTestBase {
         return new InAdvanceBillingMode();
     }
 
-    @Test(expectedExceptions = InvalidDateSequenceException.class)
+    @Test(groups = {"fast"}, expectedExceptions = InvalidDateSequenceException.class)
     public void testTargetStartEnd() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2011, 1, 30);
         final DateTime endDate = buildDateTime(2011, 3, 15);
@@ -49,7 +49,7 @@ public class ValidationProRationTests extends ProRationTestBase {
         calculateNumberOfBillingCycles(startDate, endDate, targetDate, 15);
     }
 
-    @Test(expectedExceptions = InvalidDateSequenceException.class)
+    @Test(groups = {"fast"},expectedExceptions = InvalidDateSequenceException.class)
     public void testTargetEndStart() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2011, 4, 30);
         final DateTime endDate = buildDateTime(2011, 3, 15);
@@ -58,7 +58,7 @@ public class ValidationProRationTests extends ProRationTestBase {
         calculateNumberOfBillingCycles(startDate, endDate, targetDate, 15);
     }
 
-    @Test(expectedExceptions = InvalidDateSequenceException.class)
+    @Test(groups = {"fast"},expectedExceptions = InvalidDateSequenceException.class)
     public void testEndTargetStart() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2011, 3, 30);
         final DateTime endDate = buildDateTime(2011, 1, 15);
@@ -67,7 +67,7 @@ public class ValidationProRationTests extends ProRationTestBase {
         calculateNumberOfBillingCycles(startDate, endDate, targetDate, 15);
     }
 
-    @Test(expectedExceptions = InvalidDateSequenceException.class)
+    @Test(groups = {"fast"},expectedExceptions = InvalidDateSequenceException.class)
     public void testEndStartTarget() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2011, 1, 30);
         final DateTime endDate = buildDateTime(2011, 1, 15);
@@ -76,7 +76,7 @@ public class ValidationProRationTests extends ProRationTestBase {
         calculateNumberOfBillingCycles(startDate, endDate, targetDate, 15);
     }
 
-    @Test(expectedExceptions = InvalidDateSequenceException.class)
+    @Test(groups = {"fast"},expectedExceptions = InvalidDateSequenceException.class)
     public void testTargetStart() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2011, 4, 30);
         final DateTime targetDate = buildDateTime(2011, 2, 15);
@@ -84,7 +84,7 @@ public class ValidationProRationTests extends ProRationTestBase {
         calculateNumberOfBillingCycles(startDate, targetDate, 15);
     }
 
-    @Test
+    @Test(groups = {"fast"})
     public void testBigDecimalTruncation() {
         final BigDecimal value = new BigDecimal("1.3349573498567");
         final BigDecimal truncated = value.setScale(0, BigDecimal.ROUND_DOWN).setScale(NUMBER_OF_DECIMALS);
