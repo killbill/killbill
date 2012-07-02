@@ -37,6 +37,7 @@ import com.ning.billing.entitlement.api.SubscriptionFactory;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline.NewEvent;
 import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
+import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
@@ -323,7 +324,7 @@ public class DefaultEntitlementTimelineApi implements EntitlementTimelineApi {
         if (nbDeleted != deletedEvents.size()) {
             for (final SubscriptionTimeline.DeletedEvent d : deletedEvents) {
                 boolean found = false;
-                for (final SubscriptionTransitionData cur : data.getAllTransitions()) {
+                for (final EffectiveSubscriptionEvent cur : data.getAllTransitions()) {
                     if (cur.getId().equals(d.getEventId())) {
                         found = true;
                     }

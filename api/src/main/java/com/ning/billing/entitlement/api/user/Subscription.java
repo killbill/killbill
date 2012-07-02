@@ -31,7 +31,6 @@ import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.entity.Entity;
 
-
 public interface Subscription extends Entity, Blockable {
 
     public boolean cancel(DateTime requestedDate, boolean eot, CallContext context)
@@ -76,4 +75,6 @@ public interface Subscription extends Entity, Blockable {
     public EffectiveSubscriptionEvent getPreviousTransition();
 
     public List<EffectiveSubscriptionEvent> getBillingTransitions();
+
+    public List<EffectiveSubscriptionEvent> getAllTransitions();
 }

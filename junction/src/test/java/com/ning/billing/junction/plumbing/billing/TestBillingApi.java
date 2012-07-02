@@ -177,6 +177,11 @@ public class TestBillingApi {
             }
 
             @Override
+            public List<EffectiveSubscriptionEvent> getAllTransitions() {
+                return effectiveSubscriptionTransitions;
+            }
+
+            @Override
             public Plan getCurrentPlan() {
                 return subscriptionPlan;
             }

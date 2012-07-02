@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Plan;
@@ -35,11 +36,21 @@ import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.util.callcontext.CallContext;
 
 public class MockSubscription implements Subscription {
-    Subscription sub = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
+    private static final UUID ID = UUID.randomUUID();
+    private static final UUID BUNDLE_ID = UUID.randomUUID();
+    private static final DateTime START_DATE = new DateTime(DateTimeZone.UTC);
 
-    public UUID getId() {
-        return sub.getId();
+    private final SubscriptionState state;
+    private final Plan plan;
+    private final PlanPhase phase;
+
+    public MockSubscription(final SubscriptionState state, final Plan plan, final PlanPhase phase) {
+        this.state = state;
+        this.plan = plan;
+        this.phase = phase;
     }
+
+    Subscription sub = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
 
     public boolean cancel(final DateTime requestedDate, final boolean eot, final CallContext context) throws EntitlementUserApiException {
         return sub.cancel(requestedDate, eot, context);
@@ -59,16 +70,20 @@ public class MockSubscription implements Subscription {
         return sub.recreate(spec, requestedDate, context);
     }
 
+    public UUID getId() {
+        return ID;
+    }
+
     public UUID getBundleId() {
-        return sub.getBundleId();
+        return BUNDLE_ID;
     }
 
     public SubscriptionState getState() {
-        return sub.getState();
+        return state;
     }
 
     public DateTime getStartDate() {
-        return sub.getStartDate();
+        return START_DATE;
     }
 
     public DateTime getEndDate() {
@@ -76,7 +91,7 @@ public class MockSubscription implements Subscription {
     }
 
     public Plan getCurrentPlan() {
-        return sub.getCurrentPlan();
+        return plan;
     }
 
     public BlockingState getBlockingState() {
@@ -88,7 +103,7 @@ public class MockSubscription implements Subscription {
     }
 
     public PlanPhase getCurrentPhase() {
-        return sub.getCurrentPhase();
+        return phase;
     }
 
     public DateTime getChargedThroughDate() {
@@ -113,5 +128,10 @@ public class MockSubscription implements Subscription {
 
     public List<EffectiveSubscriptionEvent> getBillingTransitions() {
         return sub.getBillingTransitions();
+    }
+
+    @Override
+    public List<EffectiveSubscriptionEvent> getAllTransitions() {
+        return sub.getAllTransitions();
     }
 }
