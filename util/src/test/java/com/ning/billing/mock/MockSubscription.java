@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.junction.plumbing.billing;
+package com.ning.billing.mock;
 
 import java.util.List;
 import java.util.UUID;
@@ -114,6 +114,4 @@ public class MockSubscription implements Subscription {
     public List<EffectiveSubscriptionEvent> getBillingTransitions() {
         return sub.getBillingTransitions();
     }
-
-
 }

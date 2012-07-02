@@ -67,6 +67,8 @@ import com.ning.billing.junction.api.DefaultBlockingState;
 import com.ning.billing.lifecycle.KillbillService.ServiceException;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
+import com.ning.billing.mock.MockEffectiveSubscriptionEvent;
+import com.ning.billing.mock.MockSubscription;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.DefaultCallContextFactory;
@@ -193,8 +195,6 @@ public class TestBillingApi {
             public DateTime getStartDate() {
                 return subscriptionStartDate;
             }
-
-
         };
 
         subscriptions.add(subscription);

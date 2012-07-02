@@ -138,6 +138,4 @@ public class BlockingSubscription implements Subscription {
     public Subscription getDelegateSubscription() {
         return subscription;
     }
-
-
 }
