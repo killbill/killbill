@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.invoice.tests;
+package com.ning.billing.invoice.generator;
 
 import javax.annotation.Nullable;
 import java.math.BigDecimal;
@@ -26,6 +26,8 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.DefaultPrice;
@@ -47,17 +49,20 @@ import com.ning.billing.invoice.MockBillingEventSet;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
-import com.ning.billing.invoice.model.CreditInvoiceItem;
+import com.ning.billing.invoice.api.InvoicePayment.InvoicePaymentType;
+import com.ning.billing.invoice.generator.DefaultInvoiceGenerator;
+import com.ning.billing.invoice.generator.InvoiceGenerator;
+import com.ning.billing.invoice.model.CreditBalanceAdjInvoiceItem;
 import com.ning.billing.invoice.model.DefaultInvoice;
-import com.ning.billing.invoice.model.DefaultInvoiceGenerator;
 import com.ning.billing.invoice.model.DefaultInvoicePayment;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
-import com.ning.billing.invoice.model.InvoiceGenerator;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
+import com.ning.billing.invoice.tests.InvoicingTestBase;
 import com.ning.billing.junction.api.BillingEventSet;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.clock.DefaultClock;
 
 import static org.testng.Assert.assertEquals;
@@ -65,11 +70,15 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
-@Test(groups = {"fast", "invoicing", "invoiceGenerator"})
-public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
+public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
+
+    private static final Logger log = LoggerFactory.getLogger(TestDefaultInvoiceGenerator.class);
+
+    private final Clock clock = new ClockMock();
+
     private final InvoiceGenerator generator;
 
-    public DefaultInvoiceGeneratorTests() {
+    public TestDefaultInvoiceGenerator() {
         super();
 
         final Clock clock = new DefaultClock();
@@ -97,7 +106,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         this.generator = new DefaultInvoiceGenerator(clock, invoiceConfig);
     }
 
-    @Test
+    @Test(groups = {"fast"})
     public void testWithNullEventSetAndNullInvoiceSet() throws InvoiceApiException {
         final UUID accountId = UUID.randomUUID();
         final Invoice invoice = generator.generateInvoice(accountId, null, null, new DateTime(), Currency.USD);
@@ -105,7 +114,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         assertNull(invoice);
     }
 
-    @Test
+    @Test(groups = {"fast"})
     public void testWithEmptyEventSet() throws InvoiceApiException {
         final BillingEventSet events = new MockBillingEventSet();
 
@@ -115,7 +124,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         assertNull(invoice);
     }
 
-    @Test
+    @Test(groups = {"fast"})
     public void testWithSingleMonthlyEvent() throws InvoiceApiException, CatalogApiException {
         final BillingEventSet events = new MockBillingEventSet();
 
@@ -151,7 +160,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         return sub;
     }
 
-    @Test
+    @Test(groups = {"fast"})
     public void testWithSingleMonthlyEventWithLeadingProRation() throws InvoiceApiException, CatalogApiException {
         final BillingEventSet events = new MockBillingEventSet();
 
@@ -177,7 +186,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         assertEquals(invoice.getBalance(), expectedAmount);
     }
 
-    @Test
+    @Test(groups = {"fast"})
     public void testTwoMonthlySubscriptionsWithAlignedBillingDates() throws InvoiceApiException, CatalogApiException {
         final BillingEventSet events = new MockBillingEventSet();
 
@@ -206,7 +215,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         assertEquals(invoice.getBalance(), rate1.add(rate2).setScale(NUMBER_OF_DECIMALS));
     }
 
-    @Test
+    @Test(groups = {"fast"})
     public void testOnePlan_TwoMonthlyPhases_ChangeImmediate() throws InvoiceApiException, CatalogApiException {
         final BillingEventSet events = new MockBillingEventSet();
 
@@ -243,7 +252,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         assertEquals(invoice.getBalance(), expectedValue);
     }
 
-    @Test
+    @Test(groups = {"fast"})
     public void testOnePlan_ThreeMonthlyPhases_ChangeEOT() throws InvoiceApiException, CatalogApiException {
         final BillingEventSet events = new MockBillingEventSet();
 
@@ -274,7 +283,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         assertEquals(invoice.getBalance(), rate1.add(rate2).add(TWO.multiply(rate3)).setScale(NUMBER_OF_DECIMALS));
     }
 
-    @Test
+    @Test(groups = {"fast"})
     public void testSingleEventWithExistingInvoice() throws InvoiceApiException, CatalogApiException {
         final BillingEventSet events = new MockBillingEventSet();
 
@@ -301,7 +310,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
     }
 
     // TODO: modify this test to keep a running total of expected invoice amount over time
-    @Test
+    @Test(groups = {"fast"})
     public void testMultiplePlansWithUtterChaos() throws InvoiceApiException, CatalogApiException {
         // plan 1: change of phase from trial to discount followed by immediate cancellation; (covers phase change, cancel, pro-ration)
         // plan 2: single plan that moves from trial to discount to evergreen; BCD = 10 (covers phase change)
@@ -462,7 +471,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         testInvoiceGeneration(accountId, events, invoices, buildDateTime(2011, 10, 10), 1, expectedAmount);
     }
 
-    @Test
+    @Test(groups = {"fast"})
     public void testZeroDollarEvents() throws InvoiceApiException, CatalogApiException {
         final Plan plan = new MockPlan();
         final PlanPhase planPhase = createMockMonthlyPlanPhase(ZERO);
@@ -475,22 +484,24 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         assertEquals(invoice.getNumberOfItems(), 1);
     }
 
-    @Test
+    @Test(groups = {"fast"})
     public void testEndDateIsCorrect() throws InvoiceApiException, CatalogApiException {
         final Plan plan = new MockPlan();
         final PlanPhase planPhase = createMockMonthlyPlanPhase(ZERO);
         final BillingEventSet events = new MockBillingEventSet();
-        final DateTime targetDate = new DateTime();
-        events.add(createBillingEvent(UUID.randomUUID(), targetDate, plan, planPhase, targetDate.getDayOfMonth()));
+        final DateTime startDate = clock.getUTCNow().minusDays(1);
+        final DateTime targetDate = startDate.plusDays(1);
+
+        events.add(createBillingEvent(UUID.randomUUID(), startDate, plan, planPhase, startDate.getDayOfMonth()));
 
         final Invoice invoice = generator.generateInvoice(UUID.randomUUID(), events, null, targetDate, Currency.USD);
         final RecurringInvoiceItem item = (RecurringInvoiceItem) invoice.getInvoiceItems().get(0);
 
         // end date of the invoice item should be equal to exactly one month later
-        assertEquals(item.getEndDate().compareTo(targetDate.plusMonths(1)), 0);
+        assertEquals(item.getEndDate().compareTo(startDate.plusMonths(1)), 0);
     }
 
-    @Test
+    @Test(groups = {"fast"})
     public void testFixedPriceLifeCycle() throws InvoiceApiException {
         final UUID accountId = UUID.randomUUID();
         final Subscription subscription = createZombieSubscription();
@@ -533,7 +544,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         assertEquals(item.getStartDate().compareTo(changeDate), 0);
     }
 
-    @Test
+    @Test(groups = {"fast"})
     public void testMixedModeLifeCycle() throws InvoiceApiException, CatalogApiException {
         // create a subscription with a fixed price and recurring price
         final Plan plan1 = new MockPlan();
@@ -568,7 +579,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         assertEquals(invoice2.getBalance(), FIVE);
     }
 
-    @Test
+    @Test(groups = {"fast"})
     public void testFixedModePlanChange() throws InvoiceApiException, CatalogApiException {
         // create a subscription with a fixed price and recurring price
         final Plan plan1 = new MockPlan();
@@ -606,7 +617,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         assertEquals(invoice2.getBalance(), fixedCost2);
     }
 
-    @Test
+    @Test(groups = {"fast"})
     public void testInvoiceGenerationFailureScenario() throws InvoiceApiException, CatalogApiException {
         final BillingEventSet events = new MockBillingEventSet();
         final UUID subscriptionId = UUID.randomUUID();
@@ -661,7 +672,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         assertEquals(invoice4.getNumberOfItems(), 7);
     }
 
-    @Test(expectedExceptions = {InvoiceApiException.class})
+    @Test(groups = {"fast"}, expectedExceptions = {InvoiceApiException.class})
     public void testTargetDateRestrictionFailure() throws InvoiceApiException, CatalogApiException {
         final DateTime targetDate = DateTime.now().plusMonths(60);
         final BillingEventSet events = new MockBillingEventSet();
@@ -724,7 +735,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         assertEquals(invoice.getBalance(), expectedAmount);
     }
 
-    @Test
+    @Test(groups = {"fast"})
     public void testAddOnInvoiceGeneration() throws CatalogApiException, InvoiceApiException {
         final DateTime april25 = new DateTime(2012, 4, 25, 0, 0, 0, 0);
 
@@ -804,12 +815,15 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         events.add(createBillingEvent(originalSubscription.getId(), april25, originalPlan, originalPlanEvergreen, 25));
 
         final Invoice invoice1 = generator.generateInvoice(accountId, events, null, april25, Currency.USD);
+
+        printDetailInvoice(invoice1);
+
         assertEquals(invoice1.getNumberOfItems(), 1);
         final List<Invoice> invoices = new ArrayList<Invoice>();
         invoices.add(invoice1);
 
         // pay the invoice
-        invoice1.addPayment(new DefaultInvoicePayment(UUID.randomUUID(), invoice1.getId(), april25, TEN, Currency.USD));
+        invoice1.addPayment(new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, UUID.randomUUID(), invoice1.getId(), april25, TEN, Currency.USD));
         assertEquals(invoice1.getBalance().compareTo(ZERO), 0);
 
         // change the plan (i.e. repair) on start date
@@ -822,6 +836,8 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
 
         // generate a new invoice
         final Invoice invoice2 = generator.generateInvoice(accountId, events, invoices, april25, Currency.USD);
+
+        printDetailInvoice(invoice2);
         assertEquals(invoice2.getNumberOfItems(), 4);
         invoices.add(invoice2);
 
@@ -835,7 +851,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         assertEquals(invoice2.getBalance().compareTo(ZERO), 0);
 
         // ensure that the account has a credit balance
-        final BigDecimal creditBalance = invoice1.getAmountCredited().add(invoice2.getAmountCredited());
+        final BigDecimal creditBalance = invoice1.getCBAAmount().add(invoice2.getCBAAmount());
         assertTrue(creditBalance.compareTo(FIVE) == 0);
     }
 
@@ -865,7 +881,7 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         }
     }
 
-    @Test
+    @Test(groups = {"fast"})
     public void testAutoInvoiceOffAccount() throws Exception {
         final MockBillingEventSet events = new MockBillingEventSet();
         events.setAccountInvoiceOff(true);
@@ -933,7 +949,8 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         assertTrue(invoice3.getBalance().compareTo(FIFTEEN.multiply(TWO).add(TWELVE)) == 0);
     }
 
-    @Test
+
+    @Test(groups = {"fast"})
     public void testAccountCredit() throws CatalogApiException, InvoiceApiException {
         final BillingEventSet billingEventSet = new MockBillingEventSet();
 
@@ -954,16 +971,40 @@ public class DefaultInvoiceGeneratorTests extends InvoicingTestBase {
         assertEquals(initialInvoice.getBalance().compareTo(TEN), 0);
         invoices.add(initialInvoice);
 
+        printDetailInvoice(initialInvoice);
+
         // add account-level credit
         final DateTime creditDate = startDate.plusDays(5);
         final Invoice invoiceWithCredit = new DefaultInvoice(accountId, creditDate, creditDate, Currency.USD);
-        final InvoiceItem accountCredit = new CreditInvoiceItem(invoiceWithCredit.getId(), accountId, creditDate, FIVE, Currency.USD);
+        final InvoiceItem accountCredit = new CreditBalanceAdjInvoiceItem(invoiceWithCredit.getId(), accountId, creditDate, FIVE, Currency.USD);
         invoiceWithCredit.addInvoiceItem(accountCredit);
         invoices.add(invoiceWithCredit);
 
+        printDetailInvoice(invoiceWithCredit);
+
         // invoice one month after the initial subscription
         final Invoice finalInvoice = generator.generateInvoice(accountId, billingEventSet, invoices, startDate.plusMonths(1), Currency.USD);
+
+        printDetailInvoice(finalInvoice);
+
+        System.out.println("BALANCE = " + finalInvoice.getBalance());
         assertEquals(finalInvoice.getBalance().compareTo(FIVE), 0);
+        System.out.println("CBA = " + finalInvoice.getCBAAmount());
+        assertEquals(finalInvoice.getCBAAmount().compareTo(FIVE.negate()), 0);
         assertEquals(finalInvoice.getNumberOfItems(), 2);
     }
+
+    private void printDetailInvoice(final Invoice  invoice) {
+        log.info("--------------------  START DETAIL ----------------------");
+        log.info("Invoice " + invoice.getId() + ": BALANCE = " + invoice.getBalance()
+                + ", CBA = " + invoice.getCBAAmount()
+                + ", CHARGE_AMOUNT = " + invoice.getChargedAmount()
+                + ", ADJ_AMOUNT = " + invoice.getCreditAdjAmount());
+
+        for (InvoiceItem cur : invoice.getInvoiceItems()) {
+            log.info(cur.toString());
+        }
+        log.info("--------------------  END DETAIL ----------------------");
+    }
+
 }

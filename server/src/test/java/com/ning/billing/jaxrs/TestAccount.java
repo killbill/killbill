@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -16,12 +16,18 @@
 package com.ning.billing.jaxrs;
 
 
-import javax.ws.rs.core.Response.Status;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
+
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
+import javax.ws.rs.core.Response.Status;
 
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -42,11 +48,6 @@ import com.ning.billing.jaxrs.json.SubscriptionJsonNoEvents;
 import com.ning.billing.jaxrs.json.TagDefinitionJson;
 import com.ning.billing.jaxrs.resources.JaxrsResource;
 import com.ning.http.client.Response;
-
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
 
 
 public class TestAccount extends TestJaxrsBase {
@@ -268,7 +269,7 @@ public class TestAccount extends TestJaxrsBase {
 
         final Map<String, String> queryParams = new HashMap<String, String>();
         queryParams.put(JaxrsResource.QUERY_TAGS, input.getName());
-        final String uri = JaxrsResource.ACCOUNTS_PATH + "/" + JaxrsResource.TAGS + "/" + UUID.randomUUID().toString();
+        final String uri = JaxrsResource.ACCOUNTS_PATH + "/" + UUID.randomUUID().toString() + "/" + JaxrsResource.TAGS;
         response = doPost(uri, null, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
 
         assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
@@ -294,7 +295,7 @@ public class TestAccount extends TestJaxrsBase {
         customFields.add(new CustomFieldJson("3", "value3"));
         final String baseJson = mapper.writeValueAsString(customFields);
 
-        final String uri = JaxrsResource.ACCOUNTS_PATH + "/" + JaxrsResource.CUSTOM_FIELDS + "/" + UUID.randomUUID().toString();
+        final String uri = JaxrsResource.ACCOUNTS_PATH + "/" + UUID.randomUUID().toString() + "/" + JaxrsResource.CUSTOM_FIELDS;
         Response response = doPost(uri, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
 

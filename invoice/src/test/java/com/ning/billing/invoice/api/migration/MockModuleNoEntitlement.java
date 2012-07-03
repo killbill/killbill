@@ -16,6 +16,11 @@
 
 package com.ning.billing.invoice.api.migration;
 
+import static org.testng.Assert.assertNotNull;
+
+import java.io.IOException;
+import java.net.URL;
+
 import org.skife.config.ConfigurationObjectFactory;
 
 import com.ning.billing.invoice.MockModule;
@@ -64,5 +69,4 @@ public class MockModuleNoEntitlement extends MockModule {
 
 
     }
-
 }

@@ -121,14 +121,15 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
     }
 
     @Override
-    public BigDecimal getAmountCharged() {
-        return invoice.getAmountCharged();
+    public BigDecimal getChargedAmount() {
+        return invoice.getChargedAmount();
     }
 
     @Override
-    public BigDecimal getAmountCredited() {
-        return invoice.getAmountCredited();
+    public BigDecimal getCBAAmount() {
+        return invoice.getCBAAmount();
     }
+
 
     @Override
     public BigDecimal getBalance() {
@@ -166,8 +167,8 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
     }
 
     @Override
-    public BigDecimal getAmountPaid() {
-        return invoice.getAmountPaid();
+    public BigDecimal getPaidAmount() {
+        return invoice.getPaidAmount();
     }
 
     @Override
@@ -196,5 +197,20 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
 
     protected Invoice getInvoice() {
         return invoice;
+    }
+
+    @Override
+    public BigDecimal getTotalAdjAmount() {
+        return invoice.getTotalAdjAmount();
+    }
+
+    @Override
+    public BigDecimal getCreditAdjAmount() {
+        return invoice.getCreditAdjAmount();
+    }
+
+    @Override
+    public BigDecimal getRefundAdjAmount() {
+        return invoice.getRefundAdjAmount();
     }
 }

@@ -60,11 +60,12 @@ public class DefaultInvoiceItemFormatter implements InvoiceItemFormatter {
     public InvoiceItemType getInvoiceItemType() {
         return item.getInvoiceItemType();
     }
-
+/*
     @Override
     public InvoiceItem asReversingItem() {
         return item.asReversingItem();
     }
+    */
 
     @Override
     public String getDescription() {
@@ -129,5 +130,15 @@ public class DefaultInvoiceItemFormatter implements InvoiceItemFormatter {
     @Override
     public UUID getId() {
         return item.getId();
+    }
+
+    @Override
+    public BigDecimal getRate() {
+        return null;
+    }
+
+    @Override
+    public UUID getLinkedItemId() {
+        return null;
     }
 }

@@ -27,8 +27,8 @@ import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.invoice.api.InvoiceNotifier;
 import com.ning.billing.invoice.api.test.DefaultInvoiceTestApi;
 import com.ning.billing.invoice.api.test.InvoiceTestApi;
+import com.ning.billing.invoice.dao.InvoiceItemSqlDao;
 import com.ning.billing.invoice.dao.InvoicePaymentSqlDao;
-import com.ning.billing.invoice.dao.RecurringInvoiceItemSqlDao;
 import com.ning.billing.invoice.notification.MockNextBillingDateNotifier;
 import com.ning.billing.invoice.notification.MockNextBillingDatePoster;
 import com.ning.billing.invoice.notification.NextBillingDateNotifier;
@@ -72,8 +72,8 @@ public class InvoiceModuleWithEmbeddedDb extends DefaultInvoiceModule {
         return dbi;
     }
 
-    public RecurringInvoiceItemSqlDao getInvoiceItemSqlDao() {
-        return dbi.onDemand(RecurringInvoiceItemSqlDao.class);
+    public InvoiceItemSqlDao getInvoiceItemSqlDao() {
+        return dbi.onDemand(InvoiceItemSqlDao.class);
     }
 
     public InvoicePaymentSqlDao getInvoicePaymentSqlDao() {

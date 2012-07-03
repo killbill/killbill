@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -303,11 +303,11 @@ public class PaymentProcessor extends ProcessorBase {
                 payment = paymentDao.getPayment(paymentInput.getId());
 
                 invoicePaymentApi.notifyOfPaymentAttempt(invoice.getId(),
-                        paymentStatus == PaymentStatus.SUCCESS ? payment.getAmount() : null,
-                                paymentStatus == PaymentStatus.SUCCESS ? payment.getCurrency() : null,
-                                        lastAttempt.getId(),
-                                        lastAttempt.getEffectiveDate(),
-                                        context);
+                        payment.getAmount(),
+                        paymentStatus == PaymentStatus.SUCCESS ? payment.getCurrency() : null,
+                                lastAttempt.getId(),
+                                lastAttempt.getEffectiveDate(),
+                                context);
 
                 // Create Bus event
                 event = new DefaultPaymentInfoEvent(account.getId(),

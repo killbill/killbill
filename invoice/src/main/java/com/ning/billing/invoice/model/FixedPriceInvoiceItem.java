@@ -30,17 +30,12 @@ public class FixedPriceInvoiceItem extends InvoiceItemBase {
 
     public FixedPriceInvoiceItem(final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId, @Nullable final UUID subscriptionId, final String planName, final String phaseName,
                                  final DateTime startDate, final DateTime endDate, final BigDecimal amount, final Currency currency) {
-        super(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency, InvoiceItemType.FIXED);
+        super(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency);
     }
 
     public FixedPriceInvoiceItem(final UUID id, final UUID invoiceId, final UUID accountId, final UUID bundleId, final UUID subscriptionId, final String planName, final String phaseName,
                                  final DateTime startDate, final DateTime endDate, final BigDecimal amount, final Currency currency) {
-        super(id, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency, InvoiceItemType.FIXED);
-    }
-
-    @Override
-    public InvoiceItem asReversingItem() {
-        throw new UnsupportedOperationException();
+        super(id, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency);
     }
 
     @Override
@@ -150,5 +145,10 @@ public class FixedPriceInvoiceItem extends InvoiceItemBase {
         }
 
         return true;
+    }
+
+    @Override
+    public InvoiceItemType getInvoiceItemType() {
+        return InvoiceItemType.FIXED;
     }
 }

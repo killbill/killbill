@@ -115,8 +115,16 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     @Override
     public InvoiceItem insertCredit(final UUID accountId, final BigDecimal amount, final DateTime effectiveDate,
                                     final Currency currency, final CallContext context) throws InvoiceApiException {
-        return dao.insertCredit(accountId, amount, effectiveDate, currency, context);
+        return dao.insertCredit(accountId, null, amount, effectiveDate, currency, context);
     }
+
+    @Override
+    public InvoiceItem insertCreditForInvoice(UUID accountId, UUID invoiceId,
+            BigDecimal amount, DateTime effectiveDate, Currency currency,
+            CallContext context) throws InvoiceApiException {
+        return dao.insertCredit(accountId, invoiceId, amount, effectiveDate, currency, context);
+    }
+
 
     @Override
     public String getInvoiceAsHTML(final UUID invoiceId) throws AccountApiException, IOException, InvoiceApiException {

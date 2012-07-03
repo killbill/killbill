@@ -33,15 +33,17 @@ public class InvoiceJsonWithItems extends InvoiceJsonSimple {
 
     @JsonCreator
     public InvoiceJsonWithItems(@JsonProperty("amount") final BigDecimal amount,
-                                @JsonProperty("credit") final BigDecimal credit,
-                                @JsonProperty("invoiceId") final String invoiceId,
-                                @JsonProperty("invoiceDate") final DateTime invoiceDate,
-                                @JsonProperty("targetDate") final DateTime targetDate,
-                                @JsonProperty("invoiceNumber") final String invoiceNumber,
-                                @JsonProperty("balance") final BigDecimal balance,
-                                @JsonProperty("accountId") final String accountId,
-                                @JsonProperty("items") final List<InvoiceItemJsonSimple> items) {
-        super(amount, credit, invoiceId, invoiceDate, targetDate, invoiceNumber, balance, accountId);
+            @JsonProperty("cba") final BigDecimal cba,
+            @JsonProperty("creditAdj") final BigDecimal creditAdj,
+            @JsonProperty("refundAdj") final BigDecimal refundAdj,
+            @JsonProperty("invoiceId") final String invoiceId,
+            @JsonProperty("invoiceDate") final DateTime invoiceDate,
+            @JsonProperty("targetDate") final DateTime targetDate,
+            @JsonProperty("invoiceNumber") final String invoiceNumber,
+            @JsonProperty("balance") final BigDecimal balance,
+            @JsonProperty("accountId") final String accountId,
+            @JsonProperty("items") final List<InvoiceItemJsonSimple> items) {
+        super(amount, cba, creditAdj, refundAdj, invoiceId, invoiceDate, targetDate, invoiceNumber, balance, accountId);
         this.items = new ArrayList<InvoiceItemJsonSimple>(items);
     }
 

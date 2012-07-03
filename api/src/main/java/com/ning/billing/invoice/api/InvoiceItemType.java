@@ -19,9 +19,8 @@ package com.ning.billing.invoice.api;
 public enum InvoiceItemType {
     FIXED,
     RECURRING,
-    REVERSAL,
-    MIGRATION,
-    REFUND,
-    CHARGE_BACK,
-    CREDIT
+    REPAIR_ADJ,
+    CBA_ADJ,
+    CREDIT_ADJ,
+    REFUND_ADJ
 }

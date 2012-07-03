@@ -25,19 +25,12 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.entity.Entity;
 
 public interface InvoiceItem extends Entity, Comparable<InvoiceItem> {
+
+    InvoiceItemType getInvoiceItemType();
+
     UUID getInvoiceId();
 
     UUID getAccountId();
-
-    UUID getBundleId();
-
-    UUID getSubscriptionId();
-
-    String getPlanName();
-
-    String getPhaseName();
-
-    String getDescription();
 
     DateTime getStartDate();
 
@@ -47,7 +40,17 @@ public interface InvoiceItem extends Entity, Comparable<InvoiceItem> {
 
     Currency getCurrency();
 
-    InvoiceItemType getInvoiceItemType();
+    String getDescription();
 
-    InvoiceItem asReversingItem();
+    UUID getBundleId();
+
+    UUID getSubscriptionId();
+
+    String getPlanName();
+
+    String getPhaseName();
+
+    BigDecimal getRate();
+
+    UUID getLinkedItemId();
 }
