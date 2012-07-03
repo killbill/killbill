@@ -59,10 +59,16 @@ public class TestHtmlInvoiceGenerator {
     }
 
     @Test(groups = "fast")
-    public void testGenerateNullInvoice() throws Exception {
+    public void testGenerateEmptyInvoice() throws Exception {
         final Invoice invoice = Mockito.mock(Invoice.class);
         final String output = g.generateInvoice(createAccount(), invoice);
         Assert.assertNotNull(output);
+    }
+
+    @Test(groups = "fast")
+    public void testGenerateNullInvoice() throws Exception {
+        final String output = g.generateInvoice(createAccount(), null);
+        Assert.assertNull(output);
     }
 
     private Account createAccount() {
