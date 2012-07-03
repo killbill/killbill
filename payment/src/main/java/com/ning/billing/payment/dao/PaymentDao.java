@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -18,8 +18,14 @@ package com.ning.billing.payment.dao;
 import java.util.List;
 import java.util.UUID;
 
+import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.SqlQuery;
+
 import com.ning.billing.payment.api.PaymentStatus;
+import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
+import com.ning.billing.payment.dao.RefundSqlDao.RefundModelDaoBinder;
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallContextBinder;
 
 public interface PaymentDao {
 
@@ -42,6 +48,16 @@ public interface PaymentDao {
     public PaymentModelDao getPayment(final UUID paymentId);
 
     public List<PaymentAttemptModelDao> getAttemptsForPayment(final UUID paymentId);
+
+    public RefundModelDao insertRefund(RefundModelDao refundInfo, final CallContext context);
+
+    public void updateRefundStatus(UUID refundId, RefundStatus status, final CallContext context);
+
+    public RefundModelDao getRefund(UUID refundId);
+
+    public List<RefundModelDao> getRefundsForPayment(final UUID paymentId);
+
+    public List<RefundModelDao> getRefundsForAccount(final UUID accountId);
 
     public PaymentMethodModelDao insertPaymentMethod(final PaymentMethodModelDao paymentMethod, final CallContext context);
 
