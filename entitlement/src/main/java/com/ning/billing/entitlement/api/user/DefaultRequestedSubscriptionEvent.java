@@ -23,6 +23,7 @@ import org.joda.time.DateTime;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
+import com.ning.billing.entitlement.events.EntitlementEvent;
 
 public class DefaultRequestedSubscriptionEvent extends DefaultSubscriptionEvent implements RequestedSubscriptionEvent {
     public DefaultRequestedSubscriptionEvent(final SubscriptionTransitionData in, final DateTime startDate) {
@@ -51,5 +52,10 @@ public class DefaultRequestedSubscriptionEvent extends DefaultSubscriptionEvent 
         super(eventId, subscriptionId, bundleId, requestedTransitionTime, effectiveTransitionTime, previousState, previousPlan,
               previousPhase, previousPriceList, nextState, nextPlan, nextPhase, nextPriceList, totalOrdering, userToken,
               transitionType, remainingEventsForUserOperation, startDate);
+    }
+
+    public DefaultRequestedSubscriptionEvent(final SubscriptionData subscription, final EntitlementEvent nextEvent) {
+        this(nextEvent.getId(), nextEvent.getSubscriptionId(), subscription.getBundleId(), nextEvent.getRequestedDate(), nextEvent.getEffectiveDate(),
+             null, null, null, null, null, null, null, null, nextEvent.getTotalOrdering(), null, null, 0, null);
     }
 }

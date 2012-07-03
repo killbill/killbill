@@ -16,14 +16,10 @@
 
 package com.ning.billing.entitlement.engine.core;
 
-
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
-import javax.swing.text.html.HTMLDocument.HTMLReader.IsindexAction;
 
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -69,8 +65,6 @@ import com.ning.billing.util.notificationq.NotificationQueueService.Notification
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
 
 public class Engine implements EventListener, EntitlementService {
-
-
     public static final String NOTIFICATION_QUEUE_NAME = "subscription-events";
     public static final String ENTITLEMENT_SERVICE_NAME = "entitlement-service";
 
@@ -81,21 +75,20 @@ public class Engine implements EventListener, EntitlementService {
     private final PlanAligner planAligner;
     private final AddonUtils addonUtils;
     private final Bus eventBus;
-
     private final EntitlementConfig config;
     private final NotificationQueueService notificationQueueService;
     private final CallContextFactory factory;
     private final SubscriptionFactory subscriptionFactory;
+
     private NotificationQueue subscriptionEventQueue;
 
     @Inject
     public Engine(final Clock clock, final EntitlementDao dao, final PlanAligner planAligner,
-            final EntitlementConfig config,
-            final AddonUtils addonUtils, final Bus eventBus,
-            final NotificationQueueService notificationQueueService,
-            final SubscriptionFactory subscriptionFactory,
-            final CallContextFactory factory) {
-        super();
+                  final EntitlementConfig config,
+                  final AddonUtils addonUtils, final Bus eventBus,
+                  final NotificationQueueService notificationQueueService,
+                  final SubscriptionFactory subscriptionFactory,
+                  final CallContextFactory factory) {
         this.clock = clock;
         this.dao = dao;
         this.planAligner = planAligner;
@@ -114,32 +107,29 @@ public class Engine implements EventListener, EntitlementService {
 
     @LifecycleHandlerType(LifecycleLevel.INIT_SERVICE)
     public void initialize() {
-
         try {
-            subscriptionEventQueue = notificationQueueService.createNotificationQueue(ENTITLEMENT_SERVICE_NAME,
-                    NOTIFICATION_QUEUE_NAME,
-                    new NotificationQueueHandler() {
+            final NotificationQueueHandler queueHandler = new NotificationQueueHandler() {
                 @Override
                 public void handleReadyNotification(final NotificationKey inputKey, final DateTime eventDateTime) {
-
-                    if (! (inputKey instanceof EntitlementNotificationKey)) {
+                    if (!(inputKey instanceof EntitlementNotificationKey)) {
                         log.error("Entitlement service received an unexpected event type {}" + inputKey.getClass().getName());
                         return;
                     }
-                    EntitlementNotificationKey key = (EntitlementNotificationKey) inputKey;
-                    
-                     final EntitlementEvent event = dao.getEventById(key.getEventId());
+
+                    final EntitlementNotificationKey key = (EntitlementNotificationKey) inputKey;
+                    final EntitlementEvent event = dao.getEventById(key.getEventId());
                     if (event == null) {
                         log.warn("Failed to extract event for notification key {}", inputKey);
                         return;
                     }
+
                     final UUID userToken = (event.getType() == EventType.API_USER) ? ((ApiEvent) event).getUserToken() : null;
                     final CallContext context = factory.createCallContext("SubscriptionEventQueue", CallOrigin.INTERNAL, UserType.SYSTEM, userToken);
                     processEventReady(event, key.getSeqId(), context);
                 }
-            },
-            new NotificationConfig() {
+            };
 
+            final NotificationConfig notificationConfig = new NotificationConfig() {
                 @Override
                 public long getSleepTimeMs() {
                     return config.getSleepTimeMs();
@@ -149,8 +139,12 @@ public class Engine implements EventListener, EntitlementService {
                 public boolean isNotificationProcessingOff() {
                     return config.isNotificationProcessingOff();
                 }
-            }
-            );
+            };
+
+            subscriptionEventQueue = notificationQueueService.createNotificationQueue(ENTITLEMENT_SERVICE_NAME,
+                                                                                      NOTIFICATION_QUEUE_NAME,
+                                                                                      queueHandler,
+                                                                                      notificationConfig);
         } catch (NotificationQueueAlreadyExists e) {
             throw new RuntimeException(e);
         }
@@ -169,12 +163,12 @@ public class Engine implements EventListener, EntitlementService {
         }
     }
 
-
     @Override
     public void processEventReady(final EntitlementEvent event, final int seqId, final CallContext context) {
         if (!event.isActive()) {
             return;
         }
+
         final SubscriptionData subscription = (SubscriptionData) dao.getSubscriptionFromId(subscriptionFactory, event.getSubscriptionId());
         if (subscription == null) {
             log.warn("Failed to retrieve subscription for id %s", event.getSubscriptionId());
@@ -192,10 +186,10 @@ public class Engine implements EventListener, EntitlementService {
         int theRealSeqId = seqId;
         if (event.getType() == EventType.PHASE) {
             onPhaseEvent(subscription, context);
-        } else if (event.getType() == EventType.API_USER &&
-                subscription.getCategory() == ProductCategory.BASE) {
+        } else if (event.getType() == EventType.API_USER && subscription.getCategory() == ProductCategory.BASE) {
             theRealSeqId = onBasePlanEvent(subscription, (ApiEvent) event, context);
         }
+
         try {
             eventBus.post(subscription.getTransitionFromEvent(event, theRealSeqId));
         } catch (EventBusException e) {
@@ -203,41 +197,36 @@ public class Engine implements EventListener, EntitlementService {
         }
     }
 
-
     private void onPhaseEvent(final SubscriptionData subscription, final CallContext context) {
         try {
             final DateTime now = clock.getUTCNow();
             final TimedPhase nextTimedPhase = planAligner.getNextTimedPhase(subscription, now, now);
             final PhaseEvent nextPhaseEvent = (nextTimedPhase != null) ?
                     PhaseEventData.createNextPhaseEvent(nextTimedPhase.getPhase().getName(), subscription, now, nextTimedPhase.getStartPhase()) :
-                        null;
-                    if (nextPhaseEvent != null) {
-                        dao.createNextPhaseEvent(subscription.getId(), nextPhaseEvent, context);
-                    }
+                    null;
+            if (nextPhaseEvent != null) {
+                dao.createNextPhaseEvent(subscription, nextPhaseEvent, context);
+            }
         } catch (EntitlementError e) {
             log.error(String.format("Failed to insert next phase for subscription %s", subscription.getId()), e);
         }
     }
 
     private int onBasePlanEvent(final SubscriptionData baseSubscription, final ApiEvent event, final CallContext context) {
-
         final DateTime now = clock.getUTCNow();
-
-        final Product baseProduct = (baseSubscription.getState() == SubscriptionState.CANCELLED) ?
-                null : baseSubscription.getCurrentPlan().getProduct();
+        final Product baseProduct = (baseSubscription.getState() == SubscriptionState.CANCELLED) ? null : baseSubscription.getCurrentPlan().getProduct();
 
         final List<Subscription> subscriptions = dao.getSubscriptions(subscriptionFactory, baseSubscription.getBundleId());
 
-
         final Map<UUID, EntitlementEvent> addOnCancellations = new HashMap<UUID, EntitlementEvent>();
-
-        final Iterator<Subscription> it = subscriptions.iterator();
-        while (it.hasNext()) {
-            final SubscriptionData cur = (SubscriptionData) it.next();
+        final Map<UUID, SubscriptionData> addOnCancellationSubscriptions = new HashMap<UUID, SubscriptionData>();
+        for (final Subscription subscription : subscriptions) {
+            final SubscriptionData cur = (SubscriptionData) subscription;
             if (cur.getState() == SubscriptionState.CANCELLED ||
                     cur.getCategory() != ProductCategory.ADD_ON) {
                 continue;
             }
+
             final Plan addonCurrentPlan = cur.getCurrentPlan();
             if (baseProduct == null ||
                     addonUtils.isAddonIncluded(baseProduct, addonCurrentPlan) ||
@@ -246,23 +235,26 @@ public class Engine implements EventListener, EntitlementService {
                 // Perform AO cancellation using the effectiveDate of the BP
                 //
                 final EntitlementEvent cancelEvent = new ApiEventCancel(new ApiEventBuilder()
-                .setSubscriptionId(cur.getId())
-                .setActiveVersion(cur.getActiveVersion())
-                .setProcessedDate(now)
-                .setEffectiveDate(event.getEffectiveDate())
-                .setRequestedDate(now)
-                .setUserToken(context.getUserToken())
-                .setFromDisk(true));
+                                                                                .setSubscriptionId(cur.getId())
+                                                                                .setActiveVersion(cur.getActiveVersion())
+                                                                                .setProcessedDate(now)
+                                                                                .setEffectiveDate(event.getEffectiveDate())
+                                                                                .setRequestedDate(now)
+                                                                                .setUserToken(context.getUserToken())
+                                                                                .setFromDisk(true));
 
                 addOnCancellations.put(cur.getId(), cancelEvent);
+                addOnCancellationSubscriptions.put(cur.getId(), cur);
             }
         }
+
         final int addOnSize = addOnCancellations.size();
         int cancelSeq = addOnSize - 1;
         for (final UUID key : addOnCancellations.keySet()) {
-            dao.cancelSubscription(key, addOnCancellations.get(key), context, cancelSeq);
+            dao.cancelSubscription(addOnCancellationSubscriptions.get(key), addOnCancellations.get(key), context, cancelSeq);
             cancelSeq--;
         }
+
         return addOnSize;
     }
 }
