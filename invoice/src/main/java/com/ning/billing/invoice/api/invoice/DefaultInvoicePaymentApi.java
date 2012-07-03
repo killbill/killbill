@@ -111,8 +111,8 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
 
     @Override
     public InvoicePayment createRefund(UUID paymentAttemptId,
-            BigDecimal amount, boolean isInvoiceAdjusted, CallContext context)
+            BigDecimal amount, boolean isInvoiceAdjusted, UUID paymentCookieId, CallContext context)
             throws InvoiceApiException {
-        return dao.createRefund(paymentAttemptId, amount, isInvoiceAdjusted, context);
+        return dao.createRefund(paymentAttemptId, amount, isInvoiceAdjusted, paymentCookieId, context);
     }
 }

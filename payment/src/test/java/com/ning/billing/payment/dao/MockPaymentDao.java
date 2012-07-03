@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.ning.billing.payment.api.PaymentStatus;
+import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
 import com.ning.billing.util.callcontext.CallContext;
 
 public class MockPaymentDao implements PaymentDao {
@@ -166,5 +167,37 @@ public class MockPaymentDao implements PaymentDao {
                 break;
             }
         }
+    }
+
+    @Override
+    public RefundModelDao insertRefund(RefundModelDao refundInfo,
+            CallContext context) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void updateRefundStatus(UUID refundId, RefundStatus status,
+            CallContext context) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public RefundModelDao getRefund(UUID refundId) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public List<RefundModelDao> getRefundsForPayment(UUID paymentId) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public List<RefundModelDao> getRefundsForAccount(UUID accountId) {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

@@ -298,12 +298,13 @@ public class DefaultInvoiceDao implements InvoiceDao {
 
     @Override
     public InvoicePayment createRefund(final UUID paymentAttemptId,
-            final BigDecimal amount, final boolean isInvoiceAdjusted, final CallContext context)
+            final BigDecimal amount, final boolean isInvoiceAdjusted, final UUID paymentCookieId,  final CallContext context)
             throws InvoiceApiException {
 
         return invoicePaymentSqlDao.inTransaction(new Transaction<InvoicePayment, InvoicePaymentSqlDao>() {
             @Override
             public InvoicePayment inTransaction(final InvoicePaymentSqlDao transactional, final TransactionStatus status) throws Exception {
+
                 final InvoicePayment payment = transactional.getByPaymentAttemptId(paymentAttemptId.toString());
                 if (payment == null) {
                     throw new InvoiceApiException(ErrorCode.INVOICE_PAYMENT_BY_ATTEMPT_NOT_FOUND, paymentAttemptId);
@@ -322,7 +323,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
 
 
                 final InvoicePayment refund = new DefaultInvoicePayment(UUID.randomUUID(), InvoicePaymentType.REFUND, paymentAttemptId,
-                        payment.getInvoiceId(), context.getCreatedDate(), requestedPositiveAmount.negate(), payment.getCurrency(), payment.getId());
+                        payment.getInvoiceId(), context.getCreatedDate(), requestedPositiveAmount.negate(), payment.getCurrency(), paymentCookieId, payment.getId());
                 transactional.create(refund, context);
 
                 // Retrieve invoice after the Refund
@@ -382,7 +383,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
                     throw new InvoiceApiException(ErrorCode.INVOICE_PAYMENT_NOT_FOUND, invoicePaymentId.toString());
                 } else {
                     final InvoicePayment chargeBack = new DefaultInvoicePayment(UUID.randomUUID(), InvoicePaymentType.CHARGED_BACK, null,
-                            payment.getInvoiceId(), context.getCreatedDate(), requestedChargedBackAmout.negate(), payment.getCurrency(), payment.getId());
+                            payment.getInvoiceId(), context.getCreatedDate(), requestedChargedBackAmout.negate(), payment.getCurrency(), null, payment.getId());
                     invoicePaymentSqlDao.create(chargeBack, context);
                     return chargeBack;
                 }

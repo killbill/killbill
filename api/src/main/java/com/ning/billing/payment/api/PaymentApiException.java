@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -18,10 +18,15 @@ package com.ning.billing.payment.api;
 import com.ning.billing.BillingExceptionBase;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.invoice.api.InvoiceApiException;
 
 public class PaymentApiException extends BillingExceptionBase {
 
     private static final long serialVersionUID = 39445033L;
+
+    public PaymentApiException(final InvoiceApiException e) {
+        super(e, e.getCode(), e.getMessage());
+    }
 
     public PaymentApiException(final AccountApiException e) {
         super(e, e.getCode(), e.getMessage());

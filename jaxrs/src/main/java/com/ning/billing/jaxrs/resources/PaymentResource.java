@@ -26,14 +26,30 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
+import com.ning.billing.ErrorCode;
+import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.account.api.AccountData;
+import com.ning.billing.account.api.AccountUserApi;
+import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
+import com.ning.billing.jaxrs.json.RefundJson;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
 import com.ning.billing.jaxrs.util.TagHelper;
+import com.ning.billing.payment.api.Payment;
+import com.ning.billing.payment.api.PaymentApi;
+import com.ning.billing.payment.api.PaymentApiException;
+import com.ning.billing.payment.api.Refund;
 import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.dao.ObjectType;
@@ -48,13 +64,70 @@ public class PaymentResource extends JaxRsResourceBase {
     private static final String TAG_URI = JaxrsResource.TAGS + "/{" + ID_PARAM_NAME + ":" + UUID_PATTERN + "}";
 
     private final Context context;
+    private final PaymentApi paymentApi;
+    private final AccountUserApi accountApi;
 
     @Inject
-    public PaymentResource(final JaxrsUriBuilder uriBuilder, final TagUserApi tagUserApi,
-                           final TagHelper tagHelper, final CustomFieldUserApi customFieldUserApi,
-                           final Context context) {
+    public PaymentResource(final JaxrsUriBuilder uriBuilder,
+            final AccountUserApi accountApi,
+            final PaymentApi paymentApi,
+            final TagUserApi tagUserApi,
+            final TagHelper tagHelper,
+            final CustomFieldUserApi customFieldUserApi,
+            final Context context) {
         super(uriBuilder, tagUserApi, tagHelper, customFieldUserApi);
         this.context = context;
+        this.paymentApi = paymentApi;
+        this.accountApi = accountApi;
+    }
+
+
+    @GET
+    @Path("/{paymentId:" + UUID_PATTERN + "}/" + REFUNDS)
+    @Produces(APPLICATION_JSON)
+    public Response getRefunds(@PathParam("paymentId") final String paymentId) {
+
+        try {
+            List<Refund> refunds =  paymentApi.getPaymentRefunds(UUID.fromString(paymentId));
+            List<RefundJson> result = new ArrayList<RefundJson>(Collections2.transform(refunds, new Function<Refund, RefundJson>() {
+                @Override
+                public RefundJson apply(Refund input) {
+                    return new RefundJson(input);
+                }
+            }));
+            return Response.status(Status.OK).entity(result).build();
+        } catch (PaymentApiException e) {
+            return Response.status(Status.BAD_REQUEST).build();
+        }
+    }
+
+    @POST
+    @Path("/{paymentId:" + UUID_PATTERN + "}/" + REFUNDS)
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    public Response createRefund(final RefundJson json,
+            @PathParam("paymentId") final String paymentId,
+            @HeaderParam(HDR_CREATED_BY) final String createdBy,
+            @HeaderParam(HDR_REASON) final String reason,
+            @HeaderParam(HDR_COMMENT) final String comment) {
+
+        try {
+            final UUID paymentUuid = UUID.fromString(paymentId);
+            final Payment payment = paymentApi.getPayment(paymentUuid);
+
+            final Account account = accountApi.getAccountById(payment.getAccountId());
+
+            Refund result = paymentApi.createRefund(account, paymentUuid, json.getRefundAmount(), json.isAdjusted(), context.createContext(createdBy, reason, comment));
+            return uriBuilder.buildResponse(RefundResource.class, "getRefund", result.getId());
+        } catch (AccountApiException e) {
+            if (e.getCode() == ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID.getCode()) {
+                return Response.status(Status.NO_CONTENT).build();
+            } else {
+                return Response.status(Status.BAD_REQUEST).build();
+            }
+        } catch (PaymentApiException e) {
+            return Response.status(Status.BAD_REQUEST).build();
+        }
     }
 
     @GET

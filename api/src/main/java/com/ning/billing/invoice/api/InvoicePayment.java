@@ -39,6 +39,8 @@ public interface InvoicePayment extends Entity {
 
     UUID getLinkedInvoicePaymentId();
 
+    UUID getPaymentCookieId();
+
     public enum InvoicePaymentType {
         ATTEMPT,
         CHARGED_BACK,

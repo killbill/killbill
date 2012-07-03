@@ -260,7 +260,7 @@ public class MockInvoiceDao implements InvoiceDao {
 
     @Override
     public InvoicePayment createRefund(UUID paymentAttemptId,
-            BigDecimal amount, boolean isInvoiceAdjusted, CallContext context)
+            BigDecimal amount, boolean isInvoiceAdjusted, UUID paymentCookieId, CallContext context)
             throws InvoiceApiException {
         // TODO Auto-generated method stub
         return null;

@@ -159,6 +159,7 @@ public class ChargebackResource implements JaxrsResource {
                 return Response.status(Response.Status.NO_CONTENT).entity(error).build();
             }
 
+            // STEPH that does not seem to work, we need to find the correct attempt
             final UUID paymentAttemptId = attempts.iterator().next().getId();
             final InvoicePayment invoicePayment = invoicePaymentApi.getInvoicePayment(paymentAttemptId);
             if (invoicePayment == null) {
