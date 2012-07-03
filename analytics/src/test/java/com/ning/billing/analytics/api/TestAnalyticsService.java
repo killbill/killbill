@@ -38,7 +38,6 @@ import com.ning.billing.account.api.user.DefaultAccountCreationEvent;
 import com.ning.billing.analytics.AnalyticsTestModule;
 import com.ning.billing.analytics.MockDuration;
 import com.ning.billing.analytics.MockPhase;
-import com.ning.billing.analytics.MockPlan;
 import com.ning.billing.analytics.MockProduct;
 import com.ning.billing.analytics.TestWithEmbeddedDB;
 import com.ning.billing.analytics.dao.BusinessAccountSqlDao;
@@ -73,6 +72,7 @@ import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.mock.MockAccountBuilder;
+import com.ning.billing.mock.MockPlan;
 import com.ning.billing.payment.api.DefaultPaymentInfoEvent;
 import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.payment.api.PaymentStatus;
@@ -179,7 +179,6 @@ public class TestAnalyticsService extends TestWithEmbeddedDB {
         final DateTime effectiveTransitionTime = clock.getUTCNow();
         final DateTime requestedTransitionTime = clock.getUTCNow();
         final PriceList priceList = new MockPriceList().setName("something");
-
 
         transition = new DefaultEffectiveSubscriptionEvent(new SubscriptionTransitionData(
                 UUID.randomUUID(),

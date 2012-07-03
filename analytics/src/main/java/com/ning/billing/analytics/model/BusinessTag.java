@@ -17,7 +17,7 @@
 package com.ning.billing.analytics.model;
 
 public abstract class BusinessTag {
-    protected final String name;
+    private final String name;
 
     public BusinessTag(final String name) {
         this.name = name;

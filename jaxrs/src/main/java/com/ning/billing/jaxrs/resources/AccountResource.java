@@ -16,6 +16,14 @@
 
 package com.ning.billing.jaxrs.resources;
 
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.UUID;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -30,11 +38,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,15 +81,13 @@ import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.dao.ObjectType;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-
 @Singleton
 @Path(JaxrsResource.ACCOUNTS_PATH)
 public class AccountResource extends JaxRsResourceBase {
     private static final Logger log = LoggerFactory.getLogger(AccountResource.class);
     private static final String ID_PARAM_NAME = "accountId";
-    private static final String CUSTOM_FIELD_URI = JaxrsResource.CUSTOM_FIELDS + "/{" + ID_PARAM_NAME + ":" + UUID_PATTERN + "}";
-    private static final String TAG_URI = JaxrsResource.TAGS + "/{" + ID_PARAM_NAME + ":" + UUID_PATTERN + "}";
+    private static final String CUSTOM_FIELD_URI = JaxrsResource.CUSTOM_FIELDS;
+    private static final String TAG_URI = JaxrsResource.TAGS;
 
     private final AccountUserApi accountApi;
     private final EntitlementUserApi entitlementApi;
@@ -475,14 +476,14 @@ public class AccountResource extends JaxRsResourceBase {
      */
 
     @GET
-    @Path(CUSTOM_FIELD_URI)
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + CUSTOM_FIELD_URI)
     @Produces(APPLICATION_JSON)
     public Response getCustomFields(@PathParam(ID_PARAM_NAME) final String id) {
         return super.getCustomFields(UUID.fromString(id));
     }
 
     @POST
-    @Path(CUSTOM_FIELD_URI)
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + CUSTOM_FIELD_URI)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response createCustomFields(@PathParam(ID_PARAM_NAME) final String id,
@@ -495,7 +496,7 @@ public class AccountResource extends JaxRsResourceBase {
     }
 
     @DELETE
-    @Path(CUSTOM_FIELD_URI)
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + CUSTOM_FIELD_URI)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response deleteCustomFields(@PathParam(ID_PARAM_NAME) final String id,
@@ -512,15 +513,14 @@ public class AccountResource extends JaxRsResourceBase {
      */
 
     @GET
-    @Path(TAG_URI)
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + TAG_URI)
     @Produces(APPLICATION_JSON)
     public Response getTags(@PathParam(ID_PARAM_NAME) final String id) {
         return super.getTags(UUID.fromString(id));
     }
 
     @POST
-    @Path(TAG_URI)
-    @Consumes(APPLICATION_JSON)
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + TAG_URI)
     @Produces(APPLICATION_JSON)
     public Response createTags(@PathParam(ID_PARAM_NAME) final String id,
                                @QueryParam(QUERY_TAGS) final String tagList,
@@ -532,7 +532,7 @@ public class AccountResource extends JaxRsResourceBase {
     }
 
     @DELETE
-    @Path(TAG_URI)
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + TAG_URI)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response deleteTags(@PathParam(ID_PARAM_NAME) final String id,

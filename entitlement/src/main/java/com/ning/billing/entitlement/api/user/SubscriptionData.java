@@ -303,8 +303,19 @@ public class SubscriptionData extends EntityBase implements Subscription {
         return activeVersion;
     }
 
-    public List<SubscriptionTransitionData> getAllTransitions() {
-        return transitions;
+    @Override
+    public List<EffectiveSubscriptionEvent> getAllTransitions() {
+        if (transitions == null) {
+            return Collections.emptyList();
+        }
+
+        final List<EffectiveSubscriptionEvent> result = new ArrayList<EffectiveSubscriptionEvent>();
+        final SubscriptionTransitionDataIterator it = new SubscriptionTransitionDataIterator(clock, transitions, Order.ASC_FROM_PAST, Kind.ALL, Visibility.ALL, TimeLimit.ALL);
+        while (it.hasNext()) {
+            result.add(new DefaultEffectiveSubscriptionEvent(it.next(), startDate));
+        }
+
+        return result;
     }
 
     public SubscriptionTransitionData getInitialTransitionForCurrentPlan() {

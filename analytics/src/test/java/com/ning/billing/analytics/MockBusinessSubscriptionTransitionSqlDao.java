@@ -21,8 +21,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.sqlobject.Bind;
+import org.testng.Assert;
 
+import com.google.common.collect.ImmutableList;
 import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionBinder;
 import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionSqlDao;
 import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
@@ -36,6 +39,11 @@ public class MockBusinessSubscriptionTransitionSqlDao implements BusinessSubscri
     }
 
     @Override
+    public List<BusinessSubscriptionTransition> getTransitionForSubscription(@Bind("subscription_id") final String subscriptionId) {
+        return ImmutableList.<BusinessSubscriptionTransition>of();
+    }
+
+    @Override
     public int createTransition(@BusinessSubscriptionTransitionBinder final BusinessSubscriptionTransition transition) {
         if (content.get(transition.getExternalKey()) == null) {
             content.put(transition.getExternalKey(), new ArrayList<BusinessSubscriptionTransition>());
@@ -45,6 +53,50 @@ public class MockBusinessSubscriptionTransitionSqlDao implements BusinessSubscri
     }
 
     @Override
+    public void updateTransition(@Bind("total_ordering") final long totalOrdering, @BusinessSubscriptionTransitionBinder final BusinessSubscriptionTransition updatedFirstTransition) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void deleteTransitionsForBundle(@Bind("external_key") final String externalKey) {
+        content.put(externalKey, new ArrayList<BusinessSubscriptionTransition>());
+    }
+
+    @Override
     public void test() {
+    }
+
+    @Override
+    public void begin() {
+    }
+
+    @Override
+    public void commit() {
+    }
+
+    @Override
+    public void rollback() {
+    }
+
+    @Override
+    public void checkpoint(final String name) {
+    }
+
+    @Override
+    public void release(final String name) {
+    }
+
+    @Override
+    public void rollback(final String name) {
+    }
+
+    @Override
+    public <ReturnType> ReturnType inTransaction(final Transaction<ReturnType, BusinessSubscriptionTransitionSqlDao> func) {
+        try {
+            return func.inTransaction(this, null);
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+            return null;
+        }
     }
 }

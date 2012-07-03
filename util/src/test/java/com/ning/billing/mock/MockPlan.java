@@ -14,10 +14,11 @@
  * under the License.
  */
 
-package com.ning.billing.analytics;
+package com.ning.billing.mock;
 
 import java.util.Date;
 import java.util.Iterator;
+import java.util.UUID;
 
 import org.joda.time.DateTime;
 
@@ -30,6 +31,10 @@ import com.ning.billing.catalog.api.Product;
 public class MockPlan implements Plan {
     private final String name;
     private final Product product;
+
+    public MockPlan() {
+        this(UUID.randomUUID().toString(), new MockProduct());
+    }
 
     public MockPlan(final String name, final Product product) {
         this.name = name;
@@ -92,8 +97,7 @@ public class MockPlan implements Plan {
     }
 
     @Override
-    public DateTime dateOfFirstRecurringNonZeroCharge(
-            final DateTime subscriptionStartDate) {
+    public DateTime dateOfFirstRecurringNonZeroCharge(final DateTime subscriptionStartDate) {
         throw new UnsupportedOperationException();
     }
 }

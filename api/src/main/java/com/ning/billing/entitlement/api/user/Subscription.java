@@ -31,7 +31,6 @@ import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.entity.Entity;
 
-
 public interface Subscription extends Entity, Blockable {
 
     public boolean cancel(DateTime requestedDate, boolean eot, CallContext context)
@@ -40,7 +39,7 @@ public interface Subscription extends Entity, Blockable {
     public boolean uncancel(CallContext context)
             throws EntitlementUserApiException;
 
-    public boolean changePlan(String productName, BillingPeriod term, String planSet, DateTime requestedDate, CallContext context)
+    public boolean changePlan(String productName, BillingPeriod term, String priceList, DateTime requestedDate, CallContext context)
             throws EntitlementUserApiException;
 
     public boolean recreate(PlanPhaseSpecifier spec, DateTime requestedDate, CallContext context)
@@ -76,4 +75,6 @@ public interface Subscription extends Entity, Blockable {
     public EffectiveSubscriptionEvent getPreviousTransition();
 
     public List<EffectiveSubscriptionEvent> getBillingTransitions();
+
+    public List<EffectiveSubscriptionEvent> getAllTransitions();
 }

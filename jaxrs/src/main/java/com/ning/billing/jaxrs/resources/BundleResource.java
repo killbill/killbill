@@ -59,8 +59,8 @@ public class BundleResource extends JaxRsResourceBase {
 
     private static final Logger log = LoggerFactory.getLogger(BundleResource.class);
     private static final String ID_PARAM_NAME = "bundleId";
-    private static final String CUSTOM_FIELD_URI = JaxrsResource.CUSTOM_FIELDS + "/{" + ID_PARAM_NAME + ":" + UUID_PATTERN + "}";
-    private static final String TAG_URI = JaxrsResource.TAGS + "/{" + ID_PARAM_NAME + ":" + UUID_PATTERN + "}";
+    private static final String CUSTOM_FIELD_URI = JaxrsResource.CUSTOM_FIELDS;
+    private static final String TAG_URI = JaxrsResource.TAGS;
 
     private final EntitlementUserApi entitlementApi;
     private final Context context;
@@ -160,14 +160,14 @@ public class BundleResource extends JaxRsResourceBase {
     }
 
     @GET
-    @Path(CUSTOM_FIELD_URI)
+    @Path("/{bundleId:" + UUID_PATTERN + "}/" + CUSTOM_FIELD_URI)
     @Produces(APPLICATION_JSON)
     public Response getCustomFields(@PathParam(ID_PARAM_NAME) final String id) {
         return super.getCustomFields(UUID.fromString(id));
     }
 
     @POST
-    @Path(CUSTOM_FIELD_URI)
+    @Path("/{bundleId:" + UUID_PATTERN + "}/" + CUSTOM_FIELD_URI)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response createCustomFields(@PathParam(ID_PARAM_NAME) final String id,
@@ -180,7 +180,7 @@ public class BundleResource extends JaxRsResourceBase {
     }
 
     @DELETE
-    @Path(CUSTOM_FIELD_URI)
+    @Path("/{bundleId:" + UUID_PATTERN + "}/" + CUSTOM_FIELD_URI)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response deleteCustomFields(@PathParam(ID_PARAM_NAME) final String id,
@@ -193,14 +193,14 @@ public class BundleResource extends JaxRsResourceBase {
     }
 
     @GET
-    @Path(TAG_URI)
+    @Path("/{bundleId:" + UUID_PATTERN + "}/" + TAG_URI)
     @Produces(APPLICATION_JSON)
     public Response getTags(@PathParam(ID_PARAM_NAME) final String id) {
         return super.getTags(UUID.fromString(id));
     }
 
     @POST
-    @Path(TAG_URI)
+    @Path("/{bundleId:" + UUID_PATTERN + "}/" + TAG_URI)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response createTags(@PathParam(ID_PARAM_NAME) final String id,
@@ -213,7 +213,7 @@ public class BundleResource extends JaxRsResourceBase {
     }
 
     @DELETE
-    @Path(TAG_URI)
+    @Path("/{bundleId:" + UUID_PATTERN + "}/" + TAG_URI)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response deleteTags(@PathParam(ID_PARAM_NAME) final String id,

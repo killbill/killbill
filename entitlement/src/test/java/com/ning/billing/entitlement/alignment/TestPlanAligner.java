@@ -36,6 +36,7 @@ import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.io.VersionedCatalogLoader;
 import com.ning.billing.config.CatalogConfig;
 import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory;
+import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
@@ -201,7 +202,7 @@ public class TestPlanAligner {
 
         subscriptionData.rebuildTransitions(ImmutableList.<EntitlementEvent>of(previousEvent, event), catalogService.getFullCatalog());
 
-        final List<SubscriptionTransitionData> newTransitions = subscriptionData.getAllTransitions();
+        final List<EffectiveSubscriptionEvent> newTransitions = subscriptionData.getAllTransitions();
         Assert.assertEquals(newTransitions.size(), 2);
         Assert.assertNull(newTransitions.get(0).getPreviousPhase());
         Assert.assertEquals(newTransitions.get(0).getNextPhase(), newTransitions.get(1).getPreviousPhase());

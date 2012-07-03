@@ -22,18 +22,28 @@ import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
+import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 
 import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
 
 @ExternalizedSqlViaStringTemplate3()
 @RegisterMapper(BusinessSubscriptionTransitionMapper.class)
-public interface BusinessSubscriptionTransitionSqlDao {
+public interface BusinessSubscriptionTransitionSqlDao extends Transactional<BusinessSubscriptionTransitionSqlDao> {
     @SqlQuery
     List<BusinessSubscriptionTransition> getTransitions(@Bind("external_key") final String externalKey);
 
+    @SqlQuery
+    List<BusinessSubscriptionTransition> getTransitionForSubscription(@Bind("subscription_id") final String subscriptionId);
+
     @SqlUpdate
     int createTransition(@BusinessSubscriptionTransitionBinder final BusinessSubscriptionTransition transition);
+
+    @SqlUpdate
+    void updateTransition(@Bind("total_ordering") long totalOrdering, @BusinessSubscriptionTransitionBinder BusinessSubscriptionTransition updatedFirstTransition);
+
+    @SqlUpdate
+    void deleteTransitionsForBundle(@Bind("external_key") final String externalKey);
 
     @SqlUpdate
     void test();

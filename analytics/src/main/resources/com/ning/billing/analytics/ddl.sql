@@ -1,6 +1,7 @@
 drop table if exists bst;
 create table bst (
-  total_ordering bigint default 0
+  record_id int(11) unsigned not null auto_increment
+, total_ordering bigint default 0
 , external_key varchar(50) not null comment 'Bundle external key'
 , account_key varchar(50) not null comment 'Account external key'
 , requested_timestamp bigint not null
@@ -33,7 +34,7 @@ create table bst (
 , next_state varchar(32) default null
 , next_subscription_id varchar(100) default null
 , next_bundle_id varchar(100) default null
-, primary key(total_ordering)
+, primary key(record_id)
 ) engine=innodb comment 'Business Subscription Transitions, track bundles lifecycle';
 create index bst_key_index on bst (external_key, requested_timestamp asc);
 
