@@ -113,45 +113,6 @@ public class TestAnalyticsDao extends TestWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
-    public void testHandleDuplicatedEvents() {
-        final BusinessSubscriptionTransition transitionWithNullPrev = new BusinessSubscriptionTransition(
-                transition.getTotalOrdering(),
-                transition.getExternalKey(),
-                transition.getAccountKey(),
-                transition.getRequestedTimestamp(),
-                transition.getEvent(),
-                null,
-                transition.getNextSubscription()
-        );
-
-        businessSubscriptionTransitionSqlDao.createTransition(transitionWithNullPrev);
-        List<BusinessSubscriptionTransition> transitions = businessSubscriptionTransitionSqlDao.getTransitions(EXTERNAL_KEY);
-        Assert.assertEquals(transitions.size(), 1);
-        Assert.assertEquals(transitions.get(0), transitionWithNullPrev);
-        // Try to add the same transition, with the same UUID - we should only store one though
-        businessSubscriptionTransitionSqlDao.createTransition(transitionWithNullPrev);
-        transitions = businessSubscriptionTransitionSqlDao.getTransitions(EXTERNAL_KEY);
-        Assert.assertEquals(transitions.size(), 1);
-        Assert.assertEquals(transitions.get(0), transitionWithNullPrev);
-
-        // Try now to store a look-alike transition (same fields except UUID) - we should store it this time
-        final BusinessSubscriptionTransition secondTransitionWithNullPrev = new BusinessSubscriptionTransition(
-                12L,
-                transition.getExternalKey(),
-                transition.getAccountKey(),
-                transition.getRequestedTimestamp(),
-                transition.getEvent(),
-                null,
-                transition.getNextSubscription()
-        );
-        businessSubscriptionTransitionSqlDao.createTransition(secondTransitionWithNullPrev);
-        transitions = businessSubscriptionTransitionSqlDao.getTransitions(EXTERNAL_KEY);
-        Assert.assertEquals(transitions.size(), 2);
-        Assert.assertTrue(transitions.contains(transitionWithNullPrev));
-        Assert.assertTrue(transitions.contains(secondTransitionWithNullPrev));
-    }
-
-    @Test(groups = "slow")
     public void testTransitionsWithNullPrevSubscription() {
         final BusinessSubscriptionTransition transitionWithNullPrev = new BusinessSubscriptionTransition(
                 transition.getTotalOrdering(),
