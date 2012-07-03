@@ -40,7 +40,8 @@ create index bst_key_index on bst (external_key, requested_timestamp asc);
 
 drop table if exists bac;
 create table bac (
-  account_key varchar(50) not null
+  record_id int(11) unsigned not null auto_increment
+, account_key varchar(50) not null
 , name varchar(100) not null
 , created_date bigint not null
 , updated_date bigint not null
@@ -52,12 +53,14 @@ create table bac (
 , credit_card_type varchar(32) default null
 , billing_address_country varchar(100) default null
 , currency char(3) default null
+, primary key(record_id)
 ) engine=innodb comment 'Business ACcounts, keep a record of all accounts';
 create unique index bac_key_index on bac (account_key);
 
 drop table if exists bin;
 create table bin (
-  invoice_id char(36) not null
+  record_id int(11) unsigned not null auto_increment
+, invoice_id char(36) not null
 , created_date bigint not null
 , updated_date bigint not null
 , account_key varchar(50) not null
@@ -68,12 +71,14 @@ create table bin (
 , amount_paid numeric(10, 4) default 0 comment 'Sums of the successful payments made for this invoice minus the refunds associated with this invoice'
 , amount_charged numeric(10, 4) default 0 comment 'Sums of the invoice items amount'
 , amount_credited numeric(10, 4) default 0 comment 'Sums of the credit items'
+, primary key(record_id)
 ) engine=innodb comment 'Business INvoices, keep a record of generated invoices';
 create unique index bin_key_index on bin (invoice_id);
 
 drop table if exists bii;
 create table bii (
-  item_id char(36) not null
+  record_id int(11) unsigned not null auto_increment
+, item_id char(36) not null
 , created_date bigint not null
 , updated_date bigint not null
 , invoice_id char(36) not null
@@ -89,12 +94,14 @@ create table bii (
 , end_date bigint default null
 , amount numeric(10, 4) default 0
 , currency char(3) default null
+, primary key(record_id)
 ) engine=innodb comment 'Business Invoice Items, keep a record of all invoice items';
 create unique index bii_key_index on bii (item_id);
 
 drop table if exists bip;
 create table bip (
-  payment_id char(36) not null
+  record_id int(11) unsigned not null auto_increment
+, payment_id char(36) not null
 , created_date bigint not null
 , updated_date bigint not null
 , attempt_id char(36) not null
@@ -111,66 +118,85 @@ create table bip (
 , payment_method varchar(20) default null
 , card_type varchar(20) default null
 , card_country varchar(20) default null
+, primary key(record_id)
 ) engine=innodb comment 'Business Invoice Payments, track all payment attempts';
 create unique index bip_key_index on bip (attempt_id);
 
 drop table if exists bos;
 create table bos (
-  external_key varchar(50) not null comment 'Bundle external key'
+  record_id int(11) unsigned not null auto_increment
+, external_key varchar(50) not null comment 'Bundle external key'
 , status varchar(50) not null
 , start_date bigint default null
 , end_date bigint default null
+, primary key(record_id)
 ) engine=innodb comment 'Business Overdue Status, historical bundles overdue status';
 create unique index bos_key_index on bos (external_key, status);
 
 drop table if exists bac_tags;
 create table bac_tags (
-  account_key varchar(50) not null comment 'Account external key'
+  record_id int(11) unsigned not null auto_increment
+, account_key varchar(50) not null comment 'Account external key'
 , name varchar(20) not null
+, primary key(record_id)
 ) engine=innodb comment 'Tags associated to accounts';
 
 drop table if exists bac_fields;
 create table bac_fields (
-  account_key varchar(50) not null comment 'Account external key'
+  record_id int(11) unsigned not null auto_increment
+, account_key varchar(50) not null comment 'Account external key'
 , name varchar(30) not null
 , value varchar(255) default null
+, primary key(record_id)
 ) engine=innodb comment 'Custom fields associated to accounts';
 
 drop table if exists bst_tags;
 create table bst_tags (
-  external_key varchar(50) not null comment 'Bundle external key'
+  record_id int(11) unsigned not null auto_increment
+, external_key varchar(50) not null comment 'Bundle external key'
 , name varchar(20) not null
+, primary key(record_id)
 ) engine=innodb comment 'Tags associated to bundles';
 
 drop table if exists bst_fields;
 create table bst_fields (
-  external_key varchar(50) not null comment 'Bundle external key'
+  record_id int(11) unsigned not null auto_increment
+, external_key varchar(50) not null comment 'Bundle external key'
 , name varchar(30) not null
 , value varchar(255) default null
+, primary key(record_id)
 ) engine=innodb comment 'Custom fields associated to bundles';
 
 drop table if exists bin_tags;
 create table bin_tags (
-  invoice_id char(36) not null
+  record_id int(11) unsigned not null auto_increment
+, invoice_id char(36) not null
 , name varchar(20) not null
+, primary key(record_id)
 ) engine=innodb comment 'Tags associated to invoices';
 
 drop table if exists bin_fields;
 create table bin_fields (
-  invoice_id char(36) not null
+  record_id int(11) unsigned not null auto_increment
+, invoice_id char(36) not null
 , name varchar(30) not null
 , value varchar(255) default null
+, primary key(record_id)
 ) engine=innodb comment 'Custom fields associated to invoices';
 
 drop table if exists bip_tags;
 create table bip_tags (
-  payment_id char(36) not null
+  record_id int(11) unsigned not null auto_increment
+, payment_id char(36) not null
 , name varchar(20) not null
+, primary key(record_id)
 ) engine=innodb comment 'Tags associated to payments';
 
 drop table if exists bip_fields;
 create table bip_fields (
-  payment_id char(36) not null
+  record_id int(11) unsigned not null auto_increment
+, payment_id char(36) not null
 , name varchar(30) not null
 , value varchar(255) default null
+, primary key(record_id)
 ) engine=innodb comment 'Custom fields associated to payments';
