@@ -74,35 +74,4 @@ public class DefaultAnalyticsDao implements AnalyticsDao {
     public List<BusinessInvoiceItem> getInvoiceItemsForInvoice(final String invoiceId) {
         return invoiceItemSqlDao.getInvoiceItemsForInvoice(invoiceId);
     }
-
-    @Override
-    public void createInvoice(final String accountKey, final BusinessInvoice invoice, final Iterable<BusinessInvoiceItem> invoiceItems) {
-        invoiceSqlDao.inTransaction(new Transaction<Void, BusinessInvoiceSqlDao>() {
-            @Override
-            public Void inTransaction(final BusinessInvoiceSqlDao transactional, final TransactionStatus status) throws Exception {
-                // Create the invoice
-                transactional.createInvoice(invoice);
-
-                // Add associated invoice items
-                final BusinessInvoiceItemSqlDao invoiceItemSqlDao = transactional.become(BusinessInvoiceItemSqlDao.class);
-                for (final BusinessInvoiceItem invoiceItem : invoiceItems) {
-                    invoiceItemSqlDao.createInvoiceItem(invoiceItem);
-                }
-
-                // Update BAC
-                final BusinessAccountSqlDao accountSqlDao = transactional.become(BusinessAccountSqlDao.class);
-                final BusinessAccount account = accountSqlDao.getAccount(accountKey);
-                if (account == null) {
-                    throw new IllegalStateException("Account does not exist for key " + accountKey);
-                }
-                account.setBalance(account.getBalance().add(invoice.getBalance()));
-                account.setLastInvoiceDate(invoice.getInvoiceDate());
-                account.setTotalInvoiceBalance(account.getTotalInvoiceBalance().add(invoice.getBalance()));
-                account.setUpdatedDt(new DateTime(DateTimeZone.UTC));
-                accountSqlDao.saveAccount(account);
-
-                return null;
-            }
-        });
-    }
 }

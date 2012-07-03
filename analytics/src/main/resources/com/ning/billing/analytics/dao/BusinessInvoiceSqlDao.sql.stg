@@ -85,6 +85,10 @@ deleteInvoice(invoice_id) ::= <<
 delete from bin where invoice_id = :invoice_id;
 >>
 
+deleteInvoicesForAccount(account_key) ::= <<
+delete from bin where account_key = :account_key;
+>>
+
 test() ::= <<
 select 1 from bin;
 >>

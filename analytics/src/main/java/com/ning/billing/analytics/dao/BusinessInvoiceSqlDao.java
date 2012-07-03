@@ -47,5 +47,8 @@ public interface BusinessInvoiceSqlDao extends Transactional<BusinessInvoiceSqlD
     int deleteInvoice(@Bind("invoice_id") final String invoiceId);
 
     @SqlUpdate
+    void deleteInvoicesForAccount(@Bind("account_key") final String accountKey);
+
+    @SqlUpdate
     void test();
 }
