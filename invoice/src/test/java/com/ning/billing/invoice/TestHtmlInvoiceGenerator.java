@@ -22,7 +22,9 @@ import java.util.List;
 import java.util.Locale;
 
 import org.joda.time.DateTime;
+import org.mockito.Mockito;
 import org.skife.config.ConfigurationObjectFactory;
+import org.testng.Assert;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Test;
 
@@ -39,12 +41,10 @@ import com.ning.billing.util.email.templates.MustacheTemplateEngine;
 import com.ning.billing.util.email.templates.TemplateEngine;
 import com.ning.billing.util.template.translation.TranslatorConfig;
 
-import static org.testng.Assert.assertNotNull;
-
 public class TestHtmlInvoiceGenerator {
     private HtmlInvoiceGenerator g;
 
-    @BeforeSuite(groups = {"fast"})
+    @BeforeSuite(groups = "fast")
     public void setup() {
         final TranslatorConfig config = new ConfigurationObjectFactory(System.getProperties()).build(TranslatorConfig.class);
         final TemplateEngine templateEngine = new MustacheTemplateEngine();
@@ -52,11 +52,17 @@ public class TestHtmlInvoiceGenerator {
         g = new HtmlInvoiceGenerator(factory, templateEngine, config);
     }
 
-    @Test(groups = {"fast"})
+    @Test(groups = "fast")
     public void testGenerateInvoice() throws Exception {
         final String output = g.generateInvoice(createAccount(), createInvoice());
-        assertNotNull(output);
-        System.out.print(output);
+        Assert.assertNotNull(output);
+    }
+
+    @Test(groups = "fast")
+    public void testGenerateNullInvoice() throws Exception {
+        final Invoice invoice = Mockito.mock(Invoice.class);
+        final String output = g.generateInvoice(createAccount(), invoice);
+        Assert.assertNotNull(output);
     }
 
     private Account createAccount() {
@@ -109,7 +115,6 @@ public class TestHtmlInvoiceGenerator {
         zombie.addResult("getEndDate", endDate);
         zombie.addResult("getPlanName", planName);
         zombie.addResult("getDescription", networkName);
-
 
         return item;
     }
