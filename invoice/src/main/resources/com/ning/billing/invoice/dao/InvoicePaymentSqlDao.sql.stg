@@ -8,6 +8,7 @@ invoicePaymentFields(prefix) ::= <<
   <prefix>payment_attempt_date,
   <prefix>amount,
   <prefix>currency,
+  <prefix>payment_cookie_id,
   <prefix>linked_invoice_payment_id,
   <prefix>created_by,
   <prefix>created_date
@@ -16,13 +17,13 @@ invoicePaymentFields(prefix) ::= <<
 create() ::= <<
   INSERT INTO invoice_payments(<invoicePaymentFields()>)
   VALUES(:id, :type, :invoiceId, :paymentAttemptId, :paymentAttemptDate, :amount, :currency,
-         :linkedInvoicePaymentId, :userName, :createdDate);
+         :paymentCookieId, :linkedInvoicePaymentId, :userName, :createdDate);
 >>
 
 batchCreateFromTransaction() ::= <<
   INSERT INTO invoice_payments(<invoicePaymentFields()>)
   VALUES(:id, :type, :invoiceId, :paymentAttemptId, :paymentAttemptDate, :amount, :currency,
-        :linkedInvoicePaymentId, :userName, :createdDate);
+        :paymentCookieId, :linkedInvoicePaymentId, :userName, :createdDate);
 >>
 
 getByPaymentAttemptId() ::= <<
@@ -51,7 +52,7 @@ getPaymentsForInvoice() ::= <<
 notifyOfPaymentAttempt() ::= <<
   INSERT INTO invoice_payments(<invoicePaymentFields()>)
   VALUES(:id, :type, :invoiceId, :paymentAttemptId, :paymentAttemptDate, :amount, :currency,
-        :linkedInvoicePaymentId, :userName, :createdDate);
+        :paymentCookieId, :linkedInvoicePaymentId, :userName, :createdDate);
 >>
 
 getInvoicePayment() ::= <<

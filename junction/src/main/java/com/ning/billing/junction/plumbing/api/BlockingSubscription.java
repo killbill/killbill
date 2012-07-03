@@ -128,6 +128,11 @@ public class BlockingSubscription implements Subscription {
         return subscription.getBillingTransitions();
     }
 
+    @Override
+    public List<EffectiveSubscriptionEvent> getAllTransitions() {
+        return subscription.getAllTransitions();
+    }
+
     public BlockingState getBlockingState() {
         if (blockingState == null) {
             blockingState = blockingApi.getBlockingStateFor(this);
@@ -138,6 +143,4 @@ public class BlockingSubscription implements Subscription {
     public Subscription getDelegateSubscription() {
         return subscription;
     }
-
-
 }

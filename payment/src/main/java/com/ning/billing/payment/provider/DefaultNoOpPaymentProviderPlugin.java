@@ -192,8 +192,15 @@ public class DefaultNoOpPaymentProviderPlugin implements NoOpPaymentPluginApi {
     }
 
     @Override
-    public List<PaymentInfoPlugin> processRefund(final Account account)
-            throws PaymentPluginApiException {
-        return null;
+    public void processRefund(Account account, UUID paymentId,
+            BigDecimal refundAmout) throws PaymentPluginApiException {
     }
+
+    @Override
+    public int getNbRefundForPaymentAmount(Account account, UUID paymentId,
+            BigDecimal refundAmount) throws PaymentPluginApiException {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
 }

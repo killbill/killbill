@@ -33,8 +33,11 @@ public interface PaymentPluginApi {
     public PaymentInfoPlugin getPaymentInfo(UUID paymentId)
             throws PaymentPluginApiException;
 
-    public List<PaymentInfoPlugin> processRefund(Account account)
-            throws PaymentPluginApiException;
+    public void processRefund(Account account, UUID paymentId, BigDecimal refundAmout)
+    throws PaymentPluginApiException;
+
+    public int getNbRefundForPaymentAmount(final Account account, final UUID paymentId, final BigDecimal refundAmount)
+        throws PaymentPluginApiException;
 
     public String createPaymentProviderAccount(Account account)
             throws PaymentPluginApiException;

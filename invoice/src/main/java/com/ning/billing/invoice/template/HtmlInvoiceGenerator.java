@@ -16,6 +16,7 @@
 
 package com.ning.billing.invoice.template;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Locale;
@@ -42,7 +43,12 @@ public class HtmlInvoiceGenerator {
         this.config = config;
     }
 
-    public String generateInvoice(final Account account, final Invoice invoice) throws IOException {
+    public String generateInvoice(final Account account, @Nullable final Invoice invoice) throws IOException {
+        // Don't do anything if the invoice is null
+        if (invoice == null) {
+            return null;
+        }
+
         final Map<String, Object> data = new HashMap<String, Object>();
         final DefaultInvoiceTranslator invoiceTranslator = new DefaultInvoiceTranslator(config);
         final Locale locale = new Locale(account.getLocale());

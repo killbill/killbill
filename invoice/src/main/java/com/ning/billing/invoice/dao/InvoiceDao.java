@@ -67,7 +67,7 @@ public interface InvoiceDao {
     InvoicePayment postChargeback(final UUID invoicePaymentId, final BigDecimal amount, final CallContext context) throws InvoiceApiException;
 
     InvoicePayment createRefund(UUID paymentAttemptId,
-            BigDecimal amount, boolean isInvoiceAdjusted, CallContext context) throws InvoiceApiException;
+            BigDecimal amount, boolean isInvoiceAdjusted, UUID paymentCookieId,  CallContext context) throws InvoiceApiException;
 
     BigDecimal getRemainingAmountPaid(final UUID invoicePaymentId);
 

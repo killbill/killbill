@@ -14,13 +14,15 @@
  * under the License.
  */
 
-package com.ning.billing.junction.plumbing.billing;
+package com.ning.billing.mock;
 
 import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
+import com.google.common.collect.ImmutableList;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
@@ -31,15 +33,38 @@ import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.junction.api.BlockingState;
-import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.util.callcontext.CallContext;
 
 public class MockSubscription implements Subscription {
-    Subscription sub = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
+    private final UUID id;
+    private final UUID bundleId;
+    private final SubscriptionState state;
+    private final Plan plan;
+    private final PlanPhase phase;
+    private final DateTime startDate;
+    private final List<EffectiveSubscriptionEvent> transitions;
 
-    public UUID getId() {
-        return sub.getId();
+    public MockSubscription(final UUID id, final UUID bundleId, final Plan plan, final DateTime startDate, final List<EffectiveSubscriptionEvent> transitions) {
+        this.id = id;
+        this.bundleId = bundleId;
+        this.state = SubscriptionState.ACTIVE;
+        this.plan = plan;
+        this.phase = null;
+        this.startDate = startDate;
+        this.transitions = transitions;
     }
+
+    public MockSubscription(final SubscriptionState state, final Plan plan, final PlanPhase phase) {
+        this.id = UUID.randomUUID();
+        this.bundleId = UUID.randomUUID();
+        this.state = state;
+        this.plan = plan;
+        this.phase = phase;
+        this.startDate = new DateTime(DateTimeZone.UTC);
+        this.transitions = ImmutableList.<EffectiveSubscriptionEvent>of();
+    }
+
+    Subscription sub = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
 
     public boolean cancel(final DateTime requestedDate, final boolean eot, final CallContext context) throws EntitlementUserApiException {
         return sub.cancel(requestedDate, eot, context);
@@ -59,16 +84,20 @@ public class MockSubscription implements Subscription {
         return sub.recreate(spec, requestedDate, context);
     }
 
+    public UUID getId() {
+        return id;
+    }
+
     public UUID getBundleId() {
-        return sub.getBundleId();
+        return bundleId;
     }
 
     public SubscriptionState getState() {
-        return sub.getState();
+        return state;
     }
 
     public DateTime getStartDate() {
-        return sub.getStartDate();
+        return startDate;
     }
 
     public DateTime getEndDate() {
@@ -76,7 +105,7 @@ public class MockSubscription implements Subscription {
     }
 
     public Plan getCurrentPlan() {
-        return sub.getCurrentPlan();
+        return plan;
     }
 
     public BlockingState getBlockingState() {
@@ -84,11 +113,11 @@ public class MockSubscription implements Subscription {
     }
 
     public PriceList getCurrentPriceList() {
-        return sub.getCurrentPriceList();
+        return new MockPriceList();
     }
 
     public PlanPhase getCurrentPhase() {
-        return sub.getCurrentPhase();
+        return phase;
     }
 
     public DateTime getChargedThroughDate() {
@@ -112,8 +141,11 @@ public class MockSubscription implements Subscription {
     }
 
     public List<EffectiveSubscriptionEvent> getBillingTransitions() {
-        return sub.getBillingTransitions();
+        return transitions;
     }
 
-
+    @Override
+    public List<EffectiveSubscriptionEvent> getAllTransitions() {
+        return transitions;
+    }
 }

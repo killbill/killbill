@@ -24,6 +24,7 @@ import org.skife.jdbi.v2.sqlobject.mixins.CloseMe;
 import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 
 import com.google.inject.Inject;
+import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.entitlement.engine.addon.AddonUtils;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.clock.Clock;
@@ -35,8 +36,8 @@ public class MockEntitlementDaoSql extends AuditedEntitlementDao implements Mock
 
     @Inject
     public MockEntitlementDaoSql(final IDBI dbi, final Clock clock, final AddonUtils addonUtils, final NotificationQueueService notificationQueueService,
-                                 final Bus eventBus) {
-        super(dbi, clock, addonUtils, notificationQueueService, eventBus);
+                                 final Bus eventBus, final CatalogService catalogService) {
+        super(dbi, clock, addonUtils, notificationQueueService, eventBus, catalogService);
         this.resetDao = dbi.onDemand(ResetSqlDao.class);
     }
 

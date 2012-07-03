@@ -92,14 +92,15 @@ public class RepairEntitlementDao implements EntitlementDao, RepairEntitlementLi
     }
 
     @Override
-    public void recreateSubscription(final UUID subscriptionId,
+    public void recreateSubscription(final SubscriptionData subscription,
                                      final List<EntitlementEvent> recreateEvents, final CallContext context) {
-        addEvents(subscriptionId, recreateEvents);
+        addEvents(subscription.getId(), recreateEvents);
     }
 
     @Override
-    public void cancelSubscription(final UUID subscriptionId,
+    public void cancelSubscription(final SubscriptionData subscription,
                                    final EntitlementEvent cancelEvent, final CallContext context, final int cancelSeq) {
+        final UUID subscriptionId = subscription.getId();
         final long activeVersion = cancelEvent.getActiveVersion();
         addEvents(subscriptionId, Collections.singletonList(cancelEvent));
         final SubscriptionRepairEvent target = getRepairSubscriptionEvents(subscriptionId);
@@ -114,9 +115,9 @@ public class RepairEntitlementDao implements EntitlementDao, RepairEntitlementLi
     }
 
     @Override
-    public void changePlan(final UUID subscriptionId,
+    public void changePlan(final SubscriptionData subscription,
                            final List<EntitlementEvent> changeEvents, final CallContext context) {
-        addEvents(subscriptionId, changeEvents);
+        addEvents(subscription.getId(), changeEvents);
     }
 
     @Override
@@ -142,7 +143,7 @@ public class RepairEntitlementDao implements EntitlementDao, RepairEntitlementLi
     }
 
     @Override
-    public void uncancelSubscription(final UUID subscriptionId,
+    public void uncancelSubscription(final SubscriptionData subscription,
                                      final List<EntitlementEvent> uncancelEvents, final CallContext context) {
         throw new EntitlementError(NOT_IMPLEMENTED);
     }
@@ -204,7 +205,7 @@ public class RepairEntitlementDao implements EntitlementDao, RepairEntitlementLi
     }
 
     @Override
-    public void createNextPhaseEvent(final UUID subscriptionId,
+    public void createNextPhaseEvent(final SubscriptionData subscription,
                                      final EntitlementEvent nextPhase, final CallContext context) {
         throw new EntitlementError(NOT_IMPLEMENTED);
     }

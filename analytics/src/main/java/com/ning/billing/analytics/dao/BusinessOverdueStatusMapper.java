@@ -30,10 +30,11 @@ public class BusinessOverdueStatusMapper implements ResultSetMapper<BusinessOver
     @Override
     public BusinessOverdueStatus map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
         final String externalKey = r.getString(1);
-        final String status = r.getString(2);
-        final DateTime startDate = new DateTime(r.getLong(3), DateTimeZone.UTC);
-        final DateTime endDate = new DateTime(r.getLong(4), DateTimeZone.UTC);
+        final String accountKey = r.getString(2);
+        final String status = r.getString(3);
+        final DateTime startDate = new DateTime(r.getLong(4), DateTimeZone.UTC);
+        final DateTime endDate = new DateTime(r.getLong(5), DateTimeZone.UTC);
 
-        return new BusinessOverdueStatus(endDate, externalKey, startDate, status);
+        return new BusinessOverdueStatus(accountKey, endDate, externalKey, startDate, status);
     }
 }

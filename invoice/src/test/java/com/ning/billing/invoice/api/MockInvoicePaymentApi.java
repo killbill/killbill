@@ -108,7 +108,7 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi {
 
         if (existingPayment != null) {
             invoicePayments.add(new DefaultInvoicePayment(UUID.randomUUID(), InvoicePaymentType.CHARGED_BACK, null, null, DateTime.now(DateTimeZone.UTC), amount,
-                    Currency.USD, existingPayment.getId()));
+                    Currency.USD, null, existingPayment.getId()));
         }
 
         return existingPayment;
@@ -168,7 +168,7 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi {
 
     @Override
     public InvoicePayment createRefund(UUID paymentAttemptId,
-            BigDecimal amount, boolean isInvoiceAdjusted, CallContext context)
+            BigDecimal amount, boolean isInvoiceAdjusted, UUID paymentCookieId, CallContext context)
             throws InvoiceApiException {
         // TODO Auto-generated method stub
         return null;

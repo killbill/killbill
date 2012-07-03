@@ -259,7 +259,7 @@ public class TestChargeBacks  {
         zombie.addResult("getAmount", amount);
         zombie.addResult("getCurrency", CURRENCY);
         zombie.addResult("getLinkedInvoicePaymentId", BrainDeadProxyFactory.ZOMBIE_VOID);
-
+        zombie.addResult("getPaymentCookieId", BrainDeadProxyFactory.ZOMBIE_VOID);
         invoicePaymentApi.notifyOfPaymentAttempt(payment, context);
 
         return payment;

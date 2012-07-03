@@ -36,7 +36,6 @@ import com.ning.billing.analytics.model.BusinessSubscriptionEvent;
 import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
 import com.ning.billing.analytics.MockDuration;
 import com.ning.billing.analytics.MockPhase;
-import com.ning.billing.analytics.MockPlan;
 import com.ning.billing.analytics.MockProduct;
 import com.ning.billing.analytics.TestWithEmbeddedDB;
 import com.ning.billing.analytics.utils.Rounder;
@@ -50,6 +49,7 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.mock.MockPlan;
 
 public class TestAnalyticsDao extends TestWithEmbeddedDB {
     private static final Long TOTAL_ORDERING = 1L;
@@ -110,45 +110,6 @@ public class TestAnalyticsDao extends TestWithEmbeddedDB {
         } catch (Throwable t) {
             Assert.fail(t.toString());
         }
-    }
-
-    @Test(groups = "slow")
-    public void testHandleDuplicatedEvents() {
-        final BusinessSubscriptionTransition transitionWithNullPrev = new BusinessSubscriptionTransition(
-                transition.getTotalOrdering(),
-                transition.getExternalKey(),
-                transition.getAccountKey(),
-                transition.getRequestedTimestamp(),
-                transition.getEvent(),
-                null,
-                transition.getNextSubscription()
-        );
-
-        businessSubscriptionTransitionSqlDao.createTransition(transitionWithNullPrev);
-        List<BusinessSubscriptionTransition> transitions = businessSubscriptionTransitionSqlDao.getTransitions(EXTERNAL_KEY);
-        Assert.assertEquals(transitions.size(), 1);
-        Assert.assertEquals(transitions.get(0), transitionWithNullPrev);
-        // Try to add the same transition, with the same UUID - we should only store one though
-        businessSubscriptionTransitionSqlDao.createTransition(transitionWithNullPrev);
-        transitions = businessSubscriptionTransitionSqlDao.getTransitions(EXTERNAL_KEY);
-        Assert.assertEquals(transitions.size(), 1);
-        Assert.assertEquals(transitions.get(0), transitionWithNullPrev);
-
-        // Try now to store a look-alike transition (same fields except UUID) - we should store it this time
-        final BusinessSubscriptionTransition secondTransitionWithNullPrev = new BusinessSubscriptionTransition(
-                12L,
-                transition.getExternalKey(),
-                transition.getAccountKey(),
-                transition.getRequestedTimestamp(),
-                transition.getEvent(),
-                null,
-                transition.getNextSubscription()
-        );
-        businessSubscriptionTransitionSqlDao.createTransition(secondTransitionWithNullPrev);
-        transitions = businessSubscriptionTransitionSqlDao.getTransitions(EXTERNAL_KEY);
-        Assert.assertEquals(transitions.size(), 2);
-        Assert.assertTrue(transitions.contains(transitionWithNullPrev));
-        Assert.assertTrue(transitions.contains(secondTransitionWithNullPrev));
     }
 
     @Test(groups = "slow")

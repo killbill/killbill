@@ -95,7 +95,7 @@ public class TestAuditedTagDao {
         final String definitionName = UUID.randomUUID().toString().substring(0, 5);
         final String description = UUID.randomUUID().toString().substring(0, 5);
         final UUID objectId = UUID.randomUUID();
-        final ObjectType objectType = ObjectType.RECURRING_INVOICE_ITEM;
+        final ObjectType objectType = ObjectType.INVOICE_ITEM;
 
         // Verify the initial state
         Assert.assertEquals(eventsListener.getEvents().size(), 0);

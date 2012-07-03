@@ -68,6 +68,7 @@ import com.ning.billing.jaxrs.json.CustomFieldJson;
 import com.ning.billing.jaxrs.json.InvoiceEmailJson;
 import com.ning.billing.jaxrs.json.PaymentJsonSimple;
 import com.ning.billing.jaxrs.json.PaymentMethodJson;
+import com.ning.billing.jaxrs.json.RefundJson;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
 import com.ning.billing.jaxrs.util.TagHelper;
@@ -75,6 +76,7 @@ import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.PaymentMethod;
+import com.ning.billing.payment.api.Refund;
 import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.dao.ObjectType;
@@ -126,7 +128,11 @@ public class AccountResource extends JaxRsResourceBase {
             final AccountJson json = new AccountJson(account);
             return Response.status(Status.OK).entity(json).build();
         } catch (AccountApiException e) {
-            return Response.status(Status.NO_CONTENT).build();
+            if (e.getCode() == ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID.getCode()) {
+                return Response.status(Status.NO_CONTENT).build();
+            } else {
+                return Response.status(Status.BAD_REQUEST).build();
+            }
         }
 
     }
@@ -148,7 +154,11 @@ public class AccountResource extends JaxRsResourceBase {
             });
             return Response.status(Status.OK).entity(result).build();
         } catch (AccountApiException e) {
-            return Response.status(Status.NO_CONTENT).build();
+            if (e.getCode() == ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID.getCode()) {
+                return Response.status(Status.NO_CONTENT).build();
+            } else {
+                return Response.status(Status.BAD_REQUEST).build();
+            }
         }
     }
 
@@ -166,7 +176,11 @@ public class AccountResource extends JaxRsResourceBase {
             final AccountJson json = new AccountJson(account);
             return Response.status(Status.OK).entity(json).build();
         } catch (AccountApiException e) {
-            return Response.status(Status.NO_CONTENT).build();
+            if (e.getCode() == ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_KEY.getCode()) {
+                return Response.status(Status.NO_CONTENT).build();
+            } else {
+                return Response.status(Status.BAD_REQUEST).build();
+            }
         }
     }
 
@@ -253,7 +267,11 @@ public class AccountResource extends JaxRsResourceBase {
             final AccountTimelineJson json = new AccountTimelineJson(account, invoices, payments, bundlesTimeline);
             return Response.status(Status.OK).entity(json).build();
         } catch (AccountApiException e) {
-            return Response.status(Status.NO_CONTENT).build();
+            if (e.getCode() == ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID.getCode()) {
+                return Response.status(Status.NO_CONTENT).build();
+            } else {
+                return Response.status(Status.BAD_REQUEST).build();
+            }
         } catch (PaymentApiException e) {
             log.error(e.getMessage());
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
@@ -277,7 +295,11 @@ public class AccountResource extends JaxRsResourceBase {
 
             return Response.status(Status.OK).entity(invoiceEmailJson).build();
         } catch (AccountApiException e) {
-            return Response.status(Status.NOT_FOUND).build();
+            if (e.getCode() == ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID.getCode()) {
+                return Response.status(Status.NO_CONTENT).build();
+            } else {
+                return Response.status(Status.BAD_REQUEST).build();
+            }
         }
     }
 
@@ -300,7 +322,11 @@ public class AccountResource extends JaxRsResourceBase {
 
             return Response.status(Status.OK).build();
         } catch (AccountApiException e) {
-            return Response.status(Status.NOT_FOUND).build();
+            if (e.getCode() == ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID.getCode()) {
+                return Response.status(Status.NO_CONTENT).build();
+            } else {
+                return Response.status(Status.BAD_REQUEST).build();
+            }
         }
     }
 
@@ -322,7 +348,7 @@ public class AccountResource extends JaxRsResourceBase {
             }
             return Response.status(Status.OK).entity(result).build();
         } catch (PaymentApiException e) {
-            return Response.status(Status.NOT_FOUND).build();
+            return Response.status(Status.BAD_REQUEST).build();
         }
     }
 
@@ -343,9 +369,11 @@ public class AccountResource extends JaxRsResourceBase {
             final UUID paymentMethodId = paymentApi.addPaymentMethod(data.getPluginName(), account, isDefault, data.getPluginDetail(), context.createContext(createdBy, reason, comment));
             return uriBuilder.buildResponse(PaymentMethodResource.class, "getPaymentMethod", paymentMethodId, uriInfo.getBaseUri().toString());
         } catch (AccountApiException e) {
-            final String error = String.format("Failed to create account %s", json);
-            log.info(error, e);
-            return Response.status(Status.BAD_REQUEST).entity(error).build();
+            if (e.getCode() == ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID.getCode()) {
+                return Response.status(Status.NO_CONTENT).build();
+            } else {
+                return Response.status(Status.BAD_REQUEST).build();
+            }
         } catch (PaymentApiException e) {
             final String error = String.format("Failed to create payment Method  %s", json);
             log.info(error, e);
@@ -377,7 +405,11 @@ public class AccountResource extends JaxRsResourceBase {
         } catch (PaymentApiException e) {
             return Response.status(Status.NOT_FOUND).build();
         } catch (AccountApiException e) {
-            return Response.status(Status.NOT_FOUND).build();
+            if (e.getCode() == ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID.getCode()) {
+                return Response.status(Status.NO_CONTENT).build();
+            } else {
+                return Response.status(Status.BAD_REQUEST).build();
+            }
         }
     }
 
@@ -395,13 +427,49 @@ public class AccountResource extends JaxRsResourceBase {
             paymentApi.setDefaultPaymentMethod(account, UUID.fromString(paymentMethodId), context.createContext(createdBy, reason, comment));
             return Response.status(Status.OK).build();
         } catch (AccountApiException e) {
-            return Response.status(Status.BAD_REQUEST).build();
+            if (e.getCode() == ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID.getCode()) {
+                return Response.status(Status.NO_CONTENT).build();
+            } else {
+                return Response.status(Status.BAD_REQUEST).build();
+            }
         } catch (PaymentApiException e) {
             return Response.status(Status.NOT_FOUND).build();
         } catch (IllegalArgumentException e) {
             return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
         }
     }
+
+
+    /*
+     * ************************** REFUNDS ********************************
+     */
+    @GET
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + REFUNDS)
+    @Produces(APPLICATION_JSON)
+    public Response getRefunds(@PathParam("accountId") final String accountId) {
+
+        try {
+            final Account account = accountApi.getAccountById(UUID.fromString(accountId));
+            List<Refund> refunds =  paymentApi.getAccountRefunds(account);
+            List<RefundJson> result = new ArrayList<RefundJson>(Collections2.transform(refunds, new Function<Refund, RefundJson>() {
+                @Override
+                public RefundJson apply(Refund input) {
+                    return new RefundJson(input);
+                }
+            }));
+            return Response.status(Status.OK).entity(result).build();
+        } catch (AccountApiException e) {
+            if (e.getCode() == ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID.getCode()) {
+                return Response.status(Status.NO_CONTENT).build();
+            } else {
+                return Response.status(Status.BAD_REQUEST).build();
+            }
+        } catch (PaymentApiException e) {
+            return Response.status(Status.BAD_REQUEST).build();
+        }
+    }
+
+
 
     /*
      * *************************      CUSTOM FIELDS     *****************************
@@ -518,7 +586,11 @@ public class AccountResource extends JaxRsResourceBase {
         } catch (RuntimeException e) {
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
         } catch (AccountApiException e) {
-            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+            if (e.getCode() == ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID.getCode()) {
+                return Response.status(Status.NO_CONTENT).build();
+            } else {
+                return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+            }
         }
     }
 

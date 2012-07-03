@@ -122,13 +122,22 @@ public class BusinessTagRecorder {
             return;
         }
 
+        final Account account;
+        try {
+            account = accountApi.getAccountById(bundle.getAccountId());
+        } catch (AccountApiException e) {
+            log.warn("Ignoring tag addition of {} for bundle id {} and account id {} (account does not exist)", new Object[]{name, objectId.toString(), bundle.getAccountId()});
+            return;
+        }
+
         /*
          * Note: we store tags associated to bundles, not to subscriptions.
          * Subscriptions are in the core of killbill and not exposed in Analytics to avoid a hard dependency
          * (i.e. dashboards should not rely on killbill ids).
          */
+        final String accountKey = account.getExternalKey();
         final String externalKey = bundle.getKey();
-        subscriptionTransitionTagSqlDao.addTag(externalKey, name);
+        subscriptionTransitionTagSqlDao.addTag(accountKey, externalKey, name);
     }
 
     private void tagRemovedForBundle(final UUID objectId, final String name) {

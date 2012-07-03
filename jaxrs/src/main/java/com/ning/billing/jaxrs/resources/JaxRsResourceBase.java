@@ -42,10 +42,11 @@ import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;
 
 public abstract class JaxRsResourceBase implements JaxrsResource {
-    private final JaxrsUriBuilder uriBuilder;
-    private final TagUserApi tagUserApi;
-    private final TagHelper tagHelper;
-    private final CustomFieldUserApi customFieldUserApi;
+
+    protected final JaxrsUriBuilder uriBuilder;
+    protected final TagUserApi tagUserApi;
+    protected final TagHelper tagHelper;
+    protected final CustomFieldUserApi customFieldUserApi;
 
     protected abstract ObjectType getObjectType();
 

@@ -22,9 +22,10 @@ public enum ObjectType {
     BUNDLE("subscription bundle"),
     INVOICE("invoice"),
     PAYMENT("payment"),
-    RECURRING_INVOICE_ITEM("recurring_invoice_item"),
+    INVOICE_ITEM("invoice item"),
     SUBSCRIPTION("subscription"),
-    PAYMENT_METHOD("payment method");
+    PAYMENT_METHOD("payment method"),
+    REFUND("refund");
 
     private final String objectName;
 

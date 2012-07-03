@@ -42,7 +42,7 @@ public interface InvoicePaymentApi {
 
     public void notifyOfPaymentAttempt(UUID invoiceId, BigDecimal amountOutstanding, Currency currency, UUID paymentAttemptId, DateTime paymentAttemptDate, CallContext context);
 
-    public InvoicePayment createRefund(UUID paymentAttemptId, BigDecimal amount, boolean isInvoiceAdjusted, CallContext context) throws InvoiceApiException;
+    public InvoicePayment createRefund(UUID paymentAttemptId, BigDecimal amount, boolean isInvoiceAdjusted, UUID paymentCookieId, CallContext context) throws InvoiceApiException;
 
     public InvoicePayment createChargeback(UUID invoicePaymentId, BigDecimal amount, CallContext context) throws InvoiceApiException;
 

@@ -33,16 +33,17 @@ public class DefaultInvoicePayment extends EntityBase implements InvoicePayment 
     private final DateTime paymentDate;
     private final BigDecimal amount;
     private final Currency currency;
-    private final UUID reversedInvoicePaymentId;
+    private final UUID paymentCookieId;
+    private final UUID linkedInvoicePaymentId;
 
     public DefaultInvoicePayment(final InvoicePaymentType type, final UUID paymentAttemptId, final UUID invoiceId, final DateTime paymentDate,
                                  final BigDecimal amount, final Currency currency) {
-        this(UUID.randomUUID(), type, paymentAttemptId, invoiceId, paymentDate, amount, currency, null);
+        this(UUID.randomUUID(), type, paymentAttemptId, invoiceId, paymentDate, amount, currency, null, null);
     }
 
     public DefaultInvoicePayment(final UUID id, final InvoicePaymentType type, final UUID paymentAttemptId, final UUID invoiceId, final DateTime paymentDate,
-                                 @Nullable final BigDecimal amount, @Nullable final Currency currency,
-                                 @Nullable final UUID reversedInvoicePaymentId) {
+                                 @Nullable final BigDecimal amount, @Nullable final Currency currency, final UUID paymentCookieId,
+                                 @Nullable final UUID linkedInvoicePaymentId) {
         super(id);
         this.type = type;
         this.paymentAttemptId = paymentAttemptId;
@@ -50,7 +51,8 @@ public class DefaultInvoicePayment extends EntityBase implements InvoicePayment 
         this.invoiceId = invoiceId;
         this.paymentDate = paymentDate;
         this.currency = currency;
-        this.reversedInvoicePaymentId = reversedInvoicePaymentId;
+        this.paymentCookieId = paymentCookieId;
+        this.linkedInvoicePaymentId = linkedInvoicePaymentId;
     }
 
     @Override
@@ -85,6 +87,12 @@ public class DefaultInvoicePayment extends EntityBase implements InvoicePayment 
 
     @Override
     public UUID getLinkedInvoicePaymentId() {
-        return reversedInvoicePaymentId;
+        return linkedInvoicePaymentId;
     }
+
+    @Override
+    public UUID getPaymentCookieId() {
+        return paymentCookieId;
+    }
+
 }

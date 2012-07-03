@@ -33,7 +33,7 @@ public interface BusinessSubscriptionTransitionTagSqlDao {
     List<BusinessSubscriptionTransitionTag> getTagsForBusinessSubscriptionTransition(@Bind("external_key") final String externalKey);
 
     @SqlUpdate
-    int addTag(@Bind("external_key") final String externalKey, @Bind("name") final String name);
+    int addTag(@Bind("account_key") final String accountKey, @Bind("external_key") final String externalKey, @Bind("name") final String name);
 
     @SqlUpdate
     int removeTag(@Bind("external_key") final String externalKey, @Bind("name") final String name);

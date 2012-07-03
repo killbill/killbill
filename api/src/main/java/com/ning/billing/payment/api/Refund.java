@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -15,6 +15,15 @@
  */
 package com.ning.billing.payment.api;
 
-public interface Refund {
+import java.math.BigDecimal;
+import java.util.UUID;
 
+import com.ning.billing.catalog.api.Currency;
+
+public interface Refund {
+    public UUID getId();
+    public UUID getPaymentId();
+    public boolean isAdjusted();
+    public BigDecimal getRefundAmount();
+    public Currency getCurrency();
 }

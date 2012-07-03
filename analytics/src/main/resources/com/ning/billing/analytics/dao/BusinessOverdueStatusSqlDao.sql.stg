@@ -3,6 +3,7 @@ group BusinessOverdueStatus;
 getOverdueStatusesForBundle(external_key) ::= <<
 select
   external_key
+, account_key
 , status
 , start_date
 , end_date
@@ -15,11 +16,13 @@ order by start_date asc
 createOverdueStatus() ::= <<
 insert into bos (
   external_key
+, account_key
 , status
 , start_date
 , end_date
 ) values (
   :external_key
+, :account_key
 , :status
 , :start_date
 , :end_date

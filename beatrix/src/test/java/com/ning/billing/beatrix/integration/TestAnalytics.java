@@ -38,11 +38,14 @@ import com.ning.billing.analytics.model.BusinessInvoiceItem;
 import com.ning.billing.analytics.model.BusinessSubscriptionEvent;
 import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
 import com.ning.billing.analytics.utils.Rounder;
+import com.ning.billing.api.TestApiListener;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.PhaseType;
+import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
+import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
@@ -52,8 +55,12 @@ import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.tag.TagDefinition;
 
+import static org.testng.Assert.assertTrue;
+
 @Guice(modules = BeatrixModule.class)
 public class TestAnalytics extends TestIntegrationBase {
+    private Plan subscriptionPlan;
+
     @BeforeMethod(groups = "slow")
     public void setUpAnalyticsHandler() throws Exception {
         busService.getBus().register(analyticsListener);
@@ -65,7 +72,46 @@ public class TestAnalytics extends TestIntegrationBase {
     }
 
     @Test(groups = "slow")
-    public void testAnalyticsEvents() throws Exception {
+    public void testCreateAndCancelSubscription() throws Exception {
+        // Create an account
+        final Account account = verifyAccountCreation();
+
+        // Create a bundle
+        final SubscriptionBundle bundle = verifyFirstBundle(account);
+
+        // Add a subscription
+        Subscription subscription = verifyFirstSubscription(account, bundle);
+
+        // Move after trial
+        clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS);
+        busHandler.pushExpectedEvent(TestApiListener.NextEvent.PHASE);
+        busHandler.pushExpectedEvent(TestApiListener.NextEvent.INVOICE);
+        busHandler.pushExpectedEvent(TestApiListener.NextEvent.PAYMENT);
+        Assert.assertTrue(busHandler.isCompleted(DELAY));
+
+        // Check BST - nothing should have changed
+        verifyBSTWithTrialAndEvergreenPhases(account, bundle, subscription);
+
+        // Cancel end of term - refetch the subscription to have the CTD set
+        // (otherwise, cancellation would be immediate)
+        subscription = entitlementUserApi.getSubscriptionFromId(subscription.getId());
+        subscription.cancel(clock.getUTCNow(), true, context);
+
+        waitALittle();
+
+        verifyBSTWithTrialAndEvergreenPhasesAndCancellation(account, bundle, subscription);
+
+        // Move after cancel date
+        clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS + 100);
+        assertTrue(busHandler.isCompleted(DELAY));
+        waitALittle();
+
+        // Check BST received the system cancel event
+        verifyBSTWithTrialAndEvergreenPhasesAndCancellationAndSystemCancellation(account, bundle, subscription);
+    }
+
+    @Test(groups = "slow")
+    public void testCreateAndUpdateSubscription() throws Exception {
         // Create an account
         final Account account = verifyAccountCreation();
 
@@ -192,35 +238,12 @@ public class TestAnalytics extends TestIntegrationBase {
         final String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
         final PlanPhaseSpecifier phaseSpecifier = new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null);
         final Subscription subscription = entitlementUserApi.createSubscription(bundle.getId(), phaseSpecifier, null, context);
+        subscriptionPlan = subscription.getCurrentPlan();
 
         waitALittle();
 
-        // BST should have one transition
-        final List<BusinessSubscriptionTransition> transitions = analyticsUserApi.getTransitionsForBundle(bundle.getKey());
-        Assert.assertEquals(transitions.size(), 1);
-        final BusinessSubscriptionTransition transition = transitions.get(0);
-        Assert.assertEquals(transition.getExternalKey(), bundle.getKey());
-        Assert.assertEquals(transition.getAccountKey(), account.getExternalKey());
-        Assert.assertEquals(transition.getEvent().getCategory(), phaseSpecifier.getProductCategory());
-        Assert.assertEquals(transition.getEvent().getEventType(), BusinessSubscriptionEvent.EventType.ADD);
-
-        // This is the first transition
-        Assert.assertNull(transition.getPreviousSubscription());
-
-        Assert.assertEquals(transition.getNextSubscription().getBillingPeriod(), subscription.getCurrentPhase().getBillingPeriod().toString());
-        Assert.assertEquals(transition.getNextSubscription().getBundleId(), subscription.getBundleId());
-        Assert.assertEquals(transition.getNextSubscription().getCurrency(), account.getCurrency().toString());
-        Assert.assertEquals(transition.getNextSubscription().getPhase(), subscription.getCurrentPhase().getPhaseType().toString());
-        // Trial: fixed price of zero
-        Assert.assertEquals(transition.getNextSubscription().getPrice().doubleValue(), subscription.getCurrentPhase().getFixedPrice().getPrice(account.getCurrency()).doubleValue());
-        Assert.assertEquals(transition.getNextSubscription().getPriceList(), subscription.getCurrentPriceList().getName());
-        Assert.assertEquals(transition.getNextSubscription().getProductCategory(), subscription.getCurrentPlan().getProduct().getCategory());
-        Assert.assertEquals(transition.getNextSubscription().getProductName(), subscription.getCurrentPlan().getProduct().getName());
-        Assert.assertEquals(transition.getNextSubscription().getProductType(), subscription.getCurrentPlan().getProduct().getCatalogName());
-        Assert.assertEquals(transition.getNextSubscription().getSlug(), subscription.getCurrentPhase().getName());
-        Assert.assertEquals(transition.getNextSubscription().getStartDate(), subscription.getStartDate());
-        Assert.assertEquals(transition.getNextSubscription().getState(), subscription.getState());
-        Assert.assertEquals(transition.getNextSubscription().getSubscriptionId(), subscription.getId());
+        // Verify BST
+        verifyBSTWithTrialAndEvergreenPhases(account, bundle, subscription);
 
         // Make sure the account balance is still zero
         final BusinessAccount businessAccount = analyticsUserApi.getAccountByKey(account.getExternalKey());
@@ -260,6 +283,118 @@ public class TestAnalytics extends TestIntegrationBase {
         return subscription;
     }
 
+    private void verifyBSTWithTrialAndEvergreenPhases(final Account account, final SubscriptionBundle bundle, final Subscription subscription) throws CatalogApiException {
+        // BST should have two transitions
+        final List<BusinessSubscriptionTransition> transitions = analyticsUserApi.getTransitionsForBundle(bundle.getKey());
+        Assert.assertEquals(transitions.size(), 2);
+
+        verifyTrialAndEvergreenPhases(account, bundle, subscription);
+    }
+
+    private void verifyBSTWithTrialAndEvergreenPhasesAndCancellation(final Account account, final SubscriptionBundle bundle, final Subscription subscription) throws CatalogApiException {
+        // BST should have three transitions
+        final List<BusinessSubscriptionTransition> transitions = analyticsUserApi.getTransitionsForBundle(bundle.getKey());
+        Assert.assertEquals(transitions.size(), 3);
+
+        verifyTrialAndEvergreenPhases(account, bundle, subscription);
+        verifyCancellationTransition(account, bundle);
+    }
+
+    private void verifyBSTWithTrialAndEvergreenPhasesAndCancellationAndSystemCancellation(final Account account, final SubscriptionBundle bundle, final Subscription subscription) throws CatalogApiException {
+        // BST should have four transitions
+        final List<BusinessSubscriptionTransition> transitions = analyticsUserApi.getTransitionsForBundle(bundle.getKey());
+        Assert.assertEquals(transitions.size(), 4);
+
+        verifyTrialAndEvergreenPhases(account, bundle, subscription);
+        verifyCancellationTransition(account, bundle);
+        verifySystemCancellationTransition(account, bundle);
+    }
+
+    private void verifyTrialAndEvergreenPhases(final Account account, final SubscriptionBundle bundle, final Subscription subscription) throws CatalogApiException {
+        final Product currentProduct = subscriptionPlan.getProduct();
+        final List<BusinessSubscriptionTransition> transitions = analyticsUserApi.getTransitionsForBundle(bundle.getKey());
+
+        // Check the first transition (into trial phase)
+        final BusinessSubscriptionTransition initialTransition = transitions.get(0);
+        Assert.assertEquals(initialTransition.getExternalKey(), bundle.getKey());
+        Assert.assertEquals(initialTransition.getAccountKey(), account.getExternalKey());
+        Assert.assertEquals(initialTransition.getEvent().getCategory(), currentProduct.getCategory());
+        Assert.assertEquals(initialTransition.getEvent().getEventType(), BusinessSubscriptionEvent.EventType.ADD);
+
+        // This is the first transition
+        Assert.assertNull(initialTransition.getPreviousSubscription());
+
+        Assert.assertEquals(initialTransition.getNextSubscription().getBillingPeriod(), BillingPeriod.NO_BILLING_PERIOD.toString());
+        Assert.assertEquals(initialTransition.getNextSubscription().getBundleId(), subscription.getBundleId());
+        Assert.assertEquals(initialTransition.getNextSubscription().getCurrency(), account.getCurrency().toString());
+        Assert.assertEquals(initialTransition.getNextSubscription().getPhase(), PhaseType.TRIAL.toString());
+        // Trial: fixed price of zero
+        Assert.assertEquals(initialTransition.getNextSubscription().getPrice().doubleValue(), (double) 0);
+        Assert.assertEquals(initialTransition.getNextSubscription().getPriceList(), subscription.getCurrentPriceList().getName());
+        Assert.assertEquals(initialTransition.getNextSubscription().getProductCategory(), currentProduct.getCategory());
+        Assert.assertEquals(initialTransition.getNextSubscription().getProductName(), currentProduct.getName());
+        Assert.assertEquals(initialTransition.getNextSubscription().getProductType(), currentProduct.getCatalogName());
+        Assert.assertEquals(initialTransition.getNextSubscription().getSlug(), currentProduct.getName().toLowerCase() + "-monthly-trial");
+        Assert.assertEquals(initialTransition.getNextSubscription().getStartDate(), subscription.getStartDate());
+        Assert.assertEquals(initialTransition.getNextSubscription().getState(), Subscription.SubscriptionState.ACTIVE);
+        Assert.assertEquals(initialTransition.getNextSubscription().getSubscriptionId(), subscription.getId());
+
+        // Check the second transition (from trial to evergreen)
+        final BusinessSubscriptionTransition futureTransition = transitions.get(1);
+        Assert.assertEquals(futureTransition.getExternalKey(), bundle.getKey());
+        Assert.assertEquals(futureTransition.getAccountKey(), account.getExternalKey());
+        Assert.assertEquals(futureTransition.getEvent().getCategory(), currentProduct.getCategory());
+        Assert.assertEquals(futureTransition.getEvent().getEventType(), BusinessSubscriptionEvent.EventType.SYSTEM_CHANGE);
+
+        Assert.assertEquals(futureTransition.getPreviousSubscription(), initialTransition.getNextSubscription());
+
+        // The billing period should have changed (NO_BILLING_PERIOD for the trial period)
+        Assert.assertEquals(futureTransition.getNextSubscription().getBillingPeriod(), BillingPeriod.MONTHLY.toString());
+        Assert.assertEquals(futureTransition.getNextSubscription().getBundleId(), subscription.getBundleId());
+        Assert.assertEquals(initialTransition.getNextSubscription().getCurrency(), account.getCurrency().toString());
+        // From trial to evergreen
+        Assert.assertEquals(futureTransition.getNextSubscription().getPhase(), PhaseType.EVERGREEN.toString());
+        Assert.assertTrue(futureTransition.getNextSubscription().getPrice().doubleValue() > 0);
+        Assert.assertEquals(futureTransition.getNextSubscription().getPriceList(), subscription.getCurrentPriceList().getName());
+        Assert.assertEquals(futureTransition.getNextSubscription().getProductCategory(), currentProduct.getCategory());
+        Assert.assertEquals(futureTransition.getNextSubscription().getProductName(), currentProduct.getName());
+        Assert.assertEquals(futureTransition.getNextSubscription().getProductType(), currentProduct.getCatalogName());
+        Assert.assertEquals(futureTransition.getNextSubscription().getSlug(), currentProduct.getName().toLowerCase() + "-monthly-evergreen");
+        // 30 days trial
+        Assert.assertEquals(futureTransition.getNextSubscription().getStartDate(), subscription.getStartDate().plusDays(30));
+        Assert.assertEquals(futureTransition.getNextSubscription().getState(), Subscription.SubscriptionState.ACTIVE);
+        Assert.assertEquals(futureTransition.getNextSubscription().getSubscriptionId(), subscription.getId());
+    }
+
+    private void verifyCancellationTransition(final Account account, final SubscriptionBundle bundle) throws CatalogApiException {
+        final Product currentProduct = subscriptionPlan.getProduct();
+        final List<BusinessSubscriptionTransition> transitions = analyticsUserApi.getTransitionsForBundle(bundle.getKey());
+
+        final BusinessSubscriptionTransition cancellationRequest = transitions.get(2);
+        Assert.assertEquals(cancellationRequest.getExternalKey(), bundle.getKey());
+        Assert.assertEquals(cancellationRequest.getAccountKey(), account.getExternalKey());
+        Assert.assertEquals(cancellationRequest.getEvent().getCategory(), currentProduct.getCategory());
+        Assert.assertEquals(cancellationRequest.getEvent().getEventType(), BusinessSubscriptionEvent.EventType.CANCEL);
+
+        Assert.assertNull(cancellationRequest.getNextSubscription());
+        // The actual content has already been checked in verifyTrialAndEvergreenPhases
+        Assert.assertEquals(cancellationRequest.getPreviousSubscription(), transitions.get(1).getNextSubscription());
+    }
+
+    private void verifySystemCancellationTransition(final Account account, final SubscriptionBundle bundle) throws CatalogApiException {
+        final List<BusinessSubscriptionTransition> transitions = analyticsUserApi.getTransitionsForBundle(bundle.getKey());
+
+        final BusinessSubscriptionTransition systemCancellation = transitions.get(3);
+        Assert.assertEquals(systemCancellation.getExternalKey(), bundle.getKey());
+        Assert.assertEquals(systemCancellation.getAccountKey(), account.getExternalKey());
+        Assert.assertEquals(systemCancellation.getEvent().getCategory(), ProductCategory.BASE);
+        Assert.assertEquals(systemCancellation.getEvent().getEventType(), BusinessSubscriptionEvent.EventType.SYSTEM_CANCEL);
+
+        Assert.assertNull(systemCancellation.getNextSubscription());
+        // The actual content has already been checked in verifyTrialAndEvergreenPhases
+        Assert.assertEquals(systemCancellation.getPreviousSubscription(), transitions.get(1).getNextSubscription());
+    }
+
     private void verifyChangePlan(final Account account, final SubscriptionBundle bundle, final Subscription subscription) throws EntitlementUserApiException, InterruptedException {
         final String newProductName = "Assault-Rifle";
         final BillingPeriod newTerm = BillingPeriod.MONTHLY;
@@ -269,9 +404,9 @@ public class TestAnalytics extends TestIntegrationBase {
 
         waitALittle();
 
-        // BST should have two transitions
+        // BST should have three transitions (a ADD_BASE, CHANGE_BASE and SYSTEM_CHANGE_BASE)
         final List<BusinessSubscriptionTransition> transitions = analyticsUserApi.getTransitionsForBundle(bundle.getKey());
-        Assert.assertEquals(transitions.size(), 2);
+        Assert.assertEquals(transitions.size(), 3);
         final BusinessSubscriptionTransition previousTransition = transitions.get(0);
         final BusinessSubscriptionTransition transition = transitions.get(1);
         Assert.assertEquals(transition.getExternalKey(), bundle.getKey());
@@ -317,6 +452,6 @@ public class TestAnalytics extends TestIntegrationBase {
 
     private void waitALittle() throws InterruptedException {
         // We especially need to wait for entitlement events
-        Thread.sleep(2000);
+        Thread.sleep(4000);
     }
 }

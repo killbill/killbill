@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -25,6 +25,7 @@ import org.skife.jdbi.v2.TransactionStatus;
 
 import com.google.inject.Inject;
 import com.ning.billing.payment.api.PaymentStatus;
+import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
 import com.ning.billing.payment.retry.PluginFailureRetryService.PluginFailureRetryServiceScheduler;
 import com.ning.billing.util.ChangeType;
 import com.ning.billing.util.callcontext.CallContext;
@@ -34,9 +35,11 @@ import com.ning.billing.util.dao.TableName;
 
 public class AuditedPaymentDao implements PaymentDao {
 
+
     private final PaymentSqlDao paymentSqlDao;
     private final PaymentAttemptSqlDao paymentAttemptSqlDao;
     private final PaymentMethodSqlDao paymentMethodSqlDao;
+    private final RefundSqlDao refundSqlDao;
     //private final TimedoutPaymentRetryServiceScheduler timedoutSchduler;
 
     @Inject
@@ -44,6 +47,7 @@ public class AuditedPaymentDao implements PaymentDao {
         this.paymentSqlDao = dbi.onDemand(PaymentSqlDao.class);
         this.paymentAttemptSqlDao = dbi.onDemand(PaymentAttemptSqlDao.class);
         this.paymentMethodSqlDao = dbi.onDemand(PaymentMethodSqlDao.class);
+        this.refundSqlDao = dbi.onDemand(RefundSqlDao.class);
         // this.timedoutSchduler = timedoutSchduler;
     }
 
@@ -92,10 +96,10 @@ public class AuditedPaymentDao implements PaymentDao {
         }).size();
     }
 
-    
+
     private void scheduleTimeoutRetryFromTransaction(final UUID paymentId, final PaymentAttemptSqlDao transactional, final boolean scheduleTimeoutRetry) {
 
-        if (scheduleTimeoutRetry) { 
+        if (scheduleTimeoutRetry) {
             int retryAttempt = getNbTimedoutAttemptsFromTransaction(paymentId, transactional) + 1;
             timedoutSchduler.scheduleRetryFromTransaction(paymentId, retryAttempt, transactional);
         }
@@ -223,6 +227,74 @@ public class AuditedPaymentDao implements PaymentDao {
             }
         });
     }
+
+    @Override
+    public RefundModelDao insertRefund(final RefundModelDao refundInfo, final CallContext context) {
+        return refundSqlDao.inTransaction(new Transaction<RefundModelDao, RefundSqlDao>() {
+
+            @Override
+            public RefundModelDao inTransaction(RefundSqlDao transactional,
+                    TransactionStatus status) throws Exception {
+                transactional.insertRefund(refundInfo, context);
+                return refundInfo;
+            }
+        });
+    }
+
+
+    @Override
+    public void updateRefundStatus(final UUID refundId,
+            final RefundStatus status, final CallContext context) {
+        refundSqlDao.inTransaction(new Transaction<Void, RefundSqlDao>() {
+
+            @Override
+            public Void inTransaction(RefundSqlDao transactional,
+                    TransactionStatus status) throws Exception {
+                transactional.updateStatus(refundId.toString(), status.toString());
+                return null;
+            }
+        });
+    }
+
+    @Override
+    public RefundModelDao getRefund(final UUID refundId) {
+        return refundSqlDao.inTransaction(new Transaction<RefundModelDao, RefundSqlDao>() {
+
+            @Override
+            public RefundModelDao inTransaction(RefundSqlDao transactional,
+                    TransactionStatus status) throws Exception {
+                return transactional.getById(refundId.toString());
+            }
+        });
+    }
+
+
+    @Override
+    public List<RefundModelDao> getRefundsForPayment(final UUID paymentId) {
+        return refundSqlDao.inTransaction(new Transaction<List<RefundModelDao>, RefundSqlDao>() {
+
+            @Override
+            public List<RefundModelDao> inTransaction(RefundSqlDao transactional,
+                    TransactionStatus status) throws Exception {
+                return transactional.getRefundsForPayment(paymentId.toString());
+            }
+        });
+    }
+
+
+    @Override
+    public List<RefundModelDao> getRefundsForAccount(final UUID accountId) {
+        return refundSqlDao.inTransaction(new Transaction<List<RefundModelDao>, RefundSqlDao>() {
+
+            @Override
+            public List<RefundModelDao> inTransaction(RefundSqlDao transactional,
+                    TransactionStatus status) throws Exception {
+                return transactional.getRefundsForAccount(accountId.toString());
+            }
+        });
+    }
+
+
 
     @Override
     public PaymentMethodModelDao getPaymentMethod(final UUID paymentMethodId) {

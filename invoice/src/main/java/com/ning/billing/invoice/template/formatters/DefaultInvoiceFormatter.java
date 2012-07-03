@@ -29,6 +29,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.invoice.template.formatters;
 
 import java.math.BigDecimal;
@@ -41,6 +42,9 @@ import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
+import com.google.common.base.Objects;
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
@@ -48,6 +52,9 @@ import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.formatters.InvoiceFormatter;
 import com.ning.billing.util.template.translation.TranslatorConfig;
 
+/**
+ * Format invoice fields. Note that the Mustache engine won't accept null values.
+ */
 public class DefaultInvoiceFormatter implements InvoiceFormatter {
     private final TranslatorConfig config;
     private final Invoice invoice;
@@ -63,7 +70,7 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
 
     @Override
     public Integer getInvoiceNumber() {
-        return invoice.getInvoiceNumber();
+        return Objects.firstNonNull(invoice.getInvoiceNumber(), 0);
     }
 
     @Override
@@ -87,7 +94,7 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
 
     @Override
     public <T extends InvoiceItem> List<InvoiceItem> getInvoiceItems(final Class<T> clazz) {
-        return invoice.getInvoiceItems(clazz);
+        return Objects.firstNonNull(invoice.getInvoiceItems(clazz), ImmutableList.<InvoiceItem>of());
     }
 
     @Override
@@ -107,7 +114,7 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
 
     @Override
     public List<InvoicePayment> getPayments() {
-        return invoice.getPayments();
+        return Objects.firstNonNull(invoice.getPayments(), ImmutableList.<InvoicePayment>of());
     }
 
     @Override
@@ -122,18 +129,17 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
 
     @Override
     public BigDecimal getChargedAmount() {
-        return invoice.getChargedAmount();
+        return Objects.firstNonNull(invoice.getChargedAmount(), BigDecimal.ZERO);
     }
 
     @Override
     public BigDecimal getCBAAmount() {
-        return invoice.getCBAAmount();
+        return Objects.firstNonNull(invoice.getCBAAmount(), BigDecimal.ZERO);
     }
-
 
     @Override
     public BigDecimal getBalance() {
-        return invoice.getBalance();
+        return Objects.firstNonNull(invoice.getBalance(), BigDecimal.ZERO);
     }
 
     @Override
@@ -168,12 +174,17 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
 
     @Override
     public BigDecimal getPaidAmount() {
-        return invoice.getPaidAmount();
+        return Objects.firstNonNull(invoice.getPaidAmount(), BigDecimal.ZERO);
     }
 
     @Override
     public String getFormattedInvoiceDate() {
-        return invoice.getInvoiceDate().toString(dateFormatter);
+        final DateTime invoiceDate = invoice.getInvoiceDate();
+        if (invoiceDate == null) {
+            return "";
+        } else {
+            return Strings.nullToEmpty(invoiceDate.toString(dateFormatter));
+        }
     }
 
     @Override
@@ -201,16 +212,16 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
 
     @Override
     public BigDecimal getTotalAdjAmount() {
-        return invoice.getTotalAdjAmount();
+        return Objects.firstNonNull(invoice.getTotalAdjAmount(), BigDecimal.ZERO);
     }
 
     @Override
     public BigDecimal getCreditAdjAmount() {
-        return invoice.getCreditAdjAmount();
+        return Objects.firstNonNull(invoice.getCreditAdjAmount(), BigDecimal.ZERO);
     }
 
     @Override
     public BigDecimal getRefundAdjAmount() {
-        return invoice.getRefundAdjAmount();
+        return Objects.firstNonNull(invoice.getRefundAdjAmount(), BigDecimal.ZERO);
     }
 }

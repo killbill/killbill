@@ -111,10 +111,11 @@ public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePayment>, Tran
             final BigDecimal amount = result.getBigDecimal("amount");
             final String currencyString = result.getString("currency");
             final Currency currency = (currencyString == null) ? null : Currency.valueOf(currencyString);
+            final UUID paymentCookieId = getUUID(result, "payment_cookie_id");
             final UUID linkedInvoicePaymentId = getUUID(result, "linked_invoice_payment_id");
 
             return new DefaultInvoicePayment(id, type, paymentAttemptId, invoiceId, paymentAttemptDate,
-                                             amount, currency, linkedInvoicePaymentId);
+                                             amount, currency, paymentCookieId, linkedInvoicePaymentId);
         }
     }
 
@@ -136,6 +137,7 @@ public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePayment>, Tran
                         q.bind("amount", payment.getAmount());
                         final Currency currency = payment.getCurrency();
                         q.bind("currency", (currency == null) ? null : currency.toString());
+                        q.bind("paymentCookieId", uuidToString(payment.getPaymentCookieId()));
                         q.bind("linkedInvoicePaymentId", uuidToString(payment.getLinkedInvoicePaymentId()));
                     }
                 };

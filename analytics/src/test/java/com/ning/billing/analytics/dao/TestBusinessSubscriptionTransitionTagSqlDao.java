@@ -38,6 +38,7 @@ public class TestBusinessSubscriptionTransitionTagSqlDao extends TestWithEmbedde
 
     @Test(groups = "slow")
     public void testCRUD() throws Exception {
+        final String accountKey = UUID.randomUUID().toString();
         final String externalKey = UUID.randomUUID().toString();
         final String name = UUID.randomUUID().toString().substring(0, 20);
 
@@ -46,7 +47,7 @@ public class TestBusinessSubscriptionTransitionTagSqlDao extends TestWithEmbedde
         Assert.assertEquals(subscriptionTransitionTagSqlDao.removeTag(externalKey, name), 0);
 
         // Add an entry
-        Assert.assertEquals(subscriptionTransitionTagSqlDao.addTag(externalKey, name), 1);
+        Assert.assertEquals(subscriptionTransitionTagSqlDao.addTag(accountKey, externalKey, name), 1);
         final List<BusinessSubscriptionTransitionTag> tagsForBusinessSubscriptionTransition = subscriptionTransitionTagSqlDao.getTagsForBusinessSubscriptionTransition(externalKey);
         Assert.assertEquals(tagsForBusinessSubscriptionTransition.size(), 1);
 
@@ -62,14 +63,15 @@ public class TestBusinessSubscriptionTransitionTagSqlDao extends TestWithEmbedde
 
     @Test(groups = "slow")
     public void testSegmentation() throws Exception {
+        final String accountKey = UUID.randomUUID().toString();
         final String externalKey1 = UUID.randomUUID().toString();
         final String name1 = UUID.randomUUID().toString().substring(0, 20);
         final String externalKey2 = UUID.randomUUID().toString();
         final String name2 = UUID.randomUUID().toString().substring(0, 20);
 
         // Add a tag to both transitions
-        Assert.assertEquals(subscriptionTransitionTagSqlDao.addTag(externalKey1, name1), 1);
-        Assert.assertEquals(subscriptionTransitionTagSqlDao.addTag(externalKey2, name2), 1);
+        Assert.assertEquals(subscriptionTransitionTagSqlDao.addTag(accountKey, externalKey1, name1), 1);
+        Assert.assertEquals(subscriptionTransitionTagSqlDao.addTag(accountKey, externalKey2, name2), 1);
 
         Assert.assertEquals(subscriptionTransitionTagSqlDao.getTagsForBusinessSubscriptionTransition(externalKey1).size(), 1);
         Assert.assertEquals(subscriptionTransitionTagSqlDao.getTagsForBusinessSubscriptionTransition(externalKey2).size(), 1);
