@@ -404,9 +404,9 @@ public class TestAnalytics extends TestIntegrationBase {
 
         waitALittle();
 
-        // BST should have two transitions
+        // BST should have three transitions (a ADD_BASE, CHANGE_BASE and SYSTEM_CHANGE_BASE)
         final List<BusinessSubscriptionTransition> transitions = analyticsUserApi.getTransitionsForBundle(bundle.getKey());
-        Assert.assertEquals(transitions.size(), 2);
+        Assert.assertEquals(transitions.size(), 3);
         final BusinessSubscriptionTransition previousTransition = transitions.get(0);
         final BusinessSubscriptionTransition transition = transitions.get(1);
         Assert.assertEquals(transition.getExternalKey(), bundle.getKey());
