@@ -37,7 +37,7 @@ getTransitions(external_key) ::= <<
   , next_bundle_id
   from bst
   where external_key=:external_key
-  order by prev_start_date, next_start_date, requested_timestamp asc
+  order by requested_timestamp asc
   ;
 >>
 
@@ -190,6 +190,12 @@ updateTransition() ::= <<
   , next_subscription_id = :next_subscription_id
   , next_bundle_id = :next_bundle_id
   where total_ordering = :total_ordering
+>>
+
+deleteTransitionsForBundle(external_key) ::= <<
+  delete from bst
+  where external_key=:external_key
+  ;
 >>
 
 test() ::= <<

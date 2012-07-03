@@ -58,6 +58,11 @@ public class MockBusinessSubscriptionTransitionSqlDao implements BusinessSubscri
     }
 
     @Override
+    public void deleteTransitionsForBundle(@Bind("external_key") final String externalKey) {
+        content.put(externalKey, new ArrayList<BusinessSubscriptionTransition>());
+    }
+
+    @Override
     public void test() {
     }
 

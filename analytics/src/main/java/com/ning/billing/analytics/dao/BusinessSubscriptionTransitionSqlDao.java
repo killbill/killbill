@@ -43,5 +43,8 @@ public interface BusinessSubscriptionTransitionSqlDao extends Transactional<Busi
     void updateTransition(@Bind("total_ordering") long totalOrdering, @BusinessSubscriptionTransitionBinder BusinessSubscriptionTransition updatedFirstTransition);
 
     @SqlUpdate
+    void deleteTransitionsForBundle(@Bind("external_key") final String externalKey);
+
+    @SqlUpdate
     void test();
 }

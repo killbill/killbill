@@ -98,10 +98,11 @@ public class TestAnalytics extends TestIntegrationBase {
         subscription.cancel(clock.getUTCNow(), true, context);
 
         waitALittle();
+
         verifyBSTWithTrialAndEvergreenPhasesAndCancellation(account, bundle, subscription);
 
         // Move after cancel date
-        clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS);
+        clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS + 100);
         assertTrue(busHandler.isCompleted(DELAY));
         waitALittle();
 
@@ -296,7 +297,7 @@ public class TestAnalytics extends TestIntegrationBase {
         Assert.assertEquals(transitions.size(), 3);
 
         verifyTrialAndEvergreenPhases(account, bundle, subscription);
-        verifyCancellationTransition(account, bundle, subscription);
+        verifyCancellationTransition(account, bundle);
     }
 
     private void verifyBSTWithTrialAndEvergreenPhasesAndCancellationAndSystemCancellation(final Account account, final SubscriptionBundle bundle, final Subscription subscription) throws CatalogApiException {
@@ -305,8 +306,8 @@ public class TestAnalytics extends TestIntegrationBase {
         Assert.assertEquals(transitions.size(), 4);
 
         verifyTrialAndEvergreenPhases(account, bundle, subscription);
-        verifyCancellationTransition(account, bundle, subscription);
-        verifySystemCancellationTransition(account, bundle, subscription);
+        verifyCancellationTransition(account, bundle);
+        verifySystemCancellationTransition(account, bundle);
     }
 
     private void verifyTrialAndEvergreenPhases(final Account account, final SubscriptionBundle bundle, final Subscription subscription) throws CatalogApiException {
@@ -365,7 +366,7 @@ public class TestAnalytics extends TestIntegrationBase {
         Assert.assertEquals(futureTransition.getNextSubscription().getSubscriptionId(), subscription.getId());
     }
 
-    private void verifyCancellationTransition(final Account account, final SubscriptionBundle bundle, final Subscription subscription) throws CatalogApiException {
+    private void verifyCancellationTransition(final Account account, final SubscriptionBundle bundle) throws CatalogApiException {
         final Product currentProduct = subscriptionPlan.getProduct();
         final List<BusinessSubscriptionTransition> transitions = analyticsUserApi.getTransitionsForBundle(bundle.getKey());
 
@@ -380,16 +381,13 @@ public class TestAnalytics extends TestIntegrationBase {
         Assert.assertEquals(cancellationRequest.getPreviousSubscription(), transitions.get(1).getNextSubscription());
     }
 
-    private void verifySystemCancellationTransition(final Account account, final SubscriptionBundle bundle, final Subscription subscription) throws CatalogApiException {
-        final Plan currentPlan = subscription.getCurrentPlan();
-        final Product currentProduct = currentPlan.getProduct();
-
+    private void verifySystemCancellationTransition(final Account account, final SubscriptionBundle bundle) throws CatalogApiException {
         final List<BusinessSubscriptionTransition> transitions = analyticsUserApi.getTransitionsForBundle(bundle.getKey());
 
         final BusinessSubscriptionTransition systemCancellation = transitions.get(3);
         Assert.assertEquals(systemCancellation.getExternalKey(), bundle.getKey());
         Assert.assertEquals(systemCancellation.getAccountKey(), account.getExternalKey());
-        Assert.assertEquals(systemCancellation.getEvent().getCategory(), currentProduct.getCategory());
+        Assert.assertEquals(systemCancellation.getEvent().getCategory(), ProductCategory.BASE);
         Assert.assertEquals(systemCancellation.getEvent().getEventType(), BusinessSubscriptionEvent.EventType.SYSTEM_CANCEL);
 
         Assert.assertNull(systemCancellation.getNextSubscription());

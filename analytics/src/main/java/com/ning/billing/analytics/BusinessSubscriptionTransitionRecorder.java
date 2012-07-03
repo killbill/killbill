@@ -16,7 +16,9 @@
 
 package com.ning.billing.analytics;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.Transaction;
@@ -34,10 +36,14 @@ import com.ning.billing.analytics.model.BusinessSubscriptionEvent;
 import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.entitlement.api.SubscriptionTransitionType;
+import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
+import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionEvent;
+import com.ning.billing.util.clock.Clock;
 
 public class BusinessSubscriptionTransitionRecorder {
     private static final Logger log = LoggerFactory.getLogger(BusinessSubscriptionTransitionRecorder.class);
@@ -46,90 +52,194 @@ public class BusinessSubscriptionTransitionRecorder {
     private final EntitlementUserApi entitlementApi;
     private final AccountUserApi accountApi;
     private final CatalogService catalogService;
+    private final Clock clock;
 
     @Inject
-    public BusinessSubscriptionTransitionRecorder(final BusinessSubscriptionTransitionSqlDao sqlDao, final CatalogService catalogService, final EntitlementUserApi entitlementApi, final AccountUserApi accountApi) {
+    public BusinessSubscriptionTransitionRecorder(final BusinessSubscriptionTransitionSqlDao sqlDao,
+                                                  final CatalogService catalogService,
+                                                  final EntitlementUserApi entitlementApi,
+                                                  final AccountUserApi accountApi,
+                                                  final Clock clock) {
         this.sqlDao = sqlDao;
         this.catalogService = catalogService;
         this.entitlementApi = entitlementApi;
         this.accountApi = accountApi;
+        this.clock = clock;
     }
 
-    public void subscriptionCreated(final SubscriptionEvent created) throws AccountApiException, EntitlementUserApiException {
-        final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionCreated(created.getNextPlan(), catalogService.getFullCatalog(), created.getEffectiveTransitionTime(), created.getSubscriptionStartDate());
-        recordTransition(event, created);
-    }
-
-    public void subscriptionRecreated(final SubscriptionEvent recreated) throws AccountApiException, EntitlementUserApiException {
-        final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionRecreated(recreated.getNextPlan(), catalogService.getFullCatalog(), recreated.getEffectiveTransitionTime(), recreated.getSubscriptionStartDate());
-        recordTransition(event, recreated);
-    }
-
-    public void subscriptionCancelled(final SubscriptionEvent cancelled) throws AccountApiException, EntitlementUserApiException {
-        // cancelled.getNextPlan() is null here - need to look at the previous one to create the correct event name
-        final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionCancelled(cancelled.getPreviousPlan(), catalogService.getFullCatalog(), cancelled.getEffectiveTransitionTime(), cancelled.getSubscriptionStartDate());
-        recordTransition(event, cancelled);
-    }
-
-    public void subscriptionChanged(final SubscriptionEvent changed) throws AccountApiException, EntitlementUserApiException {
-        final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionChanged(changed.getNextPlan(), catalogService.getFullCatalog(), changed.getEffectiveTransitionTime(), changed.getSubscriptionStartDate());
-        recordTransition(event, changed);
-    }
-
-    public void subscriptionPhaseChanged(final SubscriptionEvent phaseChanged) throws AccountApiException, EntitlementUserApiException {
-        final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionPhaseChanged(phaseChanged.getNextPlan(), phaseChanged.getNextState(), catalogService.getFullCatalog(), phaseChanged.getEffectiveTransitionTime(), phaseChanged.getSubscriptionStartDate());
-        recordTransition(event, phaseChanged);
-    }
-
-    void recordTransition(final BusinessSubscriptionEvent event, final SubscriptionEvent transition) throws AccountApiException, EntitlementUserApiException {
-        Currency currency = null;
-        String externalKey = null;
-        String accountKey = null;
-
-        // Retrieve key and currency via the bundle
-        final SubscriptionBundle bundle = entitlementApi.getBundleFromId(transition.getBundleId());
-        if (bundle != null) {
-            externalKey = bundle.getKey();
-
-            final Account account = accountApi.getAccountById(bundle.getAccountId());
-            if (account != null) {
-                accountKey = account.getExternalKey();
-                currency = account.getCurrency();
-            }
+    public void rebuildTransitionsForBundle(final UUID bundleId) {
+        final SubscriptionBundle bundle;
+        try {
+            bundle = entitlementApi.getBundleFromId(bundleId);
+        } catch (EntitlementUserApiException e) {
+            log.warn("Ignoring update for bundle {}: bundle does not exist", bundleId);
+            return;
         }
 
-        // The SubscriptionEvent interface gives us all the prev/next information we need but the start date
-        // of the previous phase. We need to retrieve it from our own transitions table
-        DateTime previousEffectiveTransitionTime = null;
-        // For (re-)creation events, the prev subscription will always be null
-        if (!BusinessSubscriptionEvent.EventType.ADD.equals(event.getEventType()) && !BusinessSubscriptionEvent.EventType.RE_ADD.equals(event.getEventType())) {
-            final List<BusinessSubscriptionTransition> transitions = sqlDao.getTransitions(externalKey);
-            if (transitions != null && transitions.size() > 0) {
-                for (final BusinessSubscriptionTransition candidate : transitions) {
-                    if (candidate != null && candidate.getNextSubscription() != null && candidate.getNextSubscription().getStartDate().isBefore(transition.getEffectiveTransitionTime())) {
-                        previousEffectiveTransitionTime = candidate.getNextSubscription().getStartDate();
+        final Account account;
+        try {
+            account = accountApi.getAccountById(bundle.getAccountId());
+        } catch (AccountApiException e) {
+            log.warn("Ignoring update for bundle {}: account {} does not exist", bundleId, bundle.getAccountId());
+            return;
+        }
+
+        final List<Subscription> subscriptions = entitlementApi.getSubscriptionsForBundle(bundleId);
+
+        final String externalKey = bundle.getKey();
+        final String accountKey = account.getExternalKey();
+        final Currency currency = account.getCurrency();
+
+        sqlDao.inTransaction(new Transaction<Void, BusinessSubscriptionTransitionSqlDao>() {
+            @Override
+            public Void inTransaction(final BusinessSubscriptionTransitionSqlDao transactional, final TransactionStatus status) throws Exception {
+                log.info("Started rebuilding transitions for bundle {}", externalKey);
+                transactional.deleteTransitionsForBundle(externalKey);
+
+                final ArrayList<BusinessSubscriptionTransition> transitions = new ArrayList<BusinessSubscriptionTransition>();
+                for (final Subscription subscription : subscriptions) {
+                    for (final EffectiveSubscriptionEvent event : subscription.getAllTransitions()) {
+                        final BusinessSubscriptionEvent businessEvent = getBusinessSubscriptionFromEvent(event);
+                        if (businessEvent == null) {
+                            continue;
+                        }
+
+                        final BusinessSubscription prevSubscription = createPreviousBusinessSubscription(event, businessEvent, transitions, currency);
+                        final BusinessSubscription nextSubscription = createNextBusinessSubscription(event, businessEvent, currency);
+                        final BusinessSubscriptionTransition transition = new BusinessSubscriptionTransition(
+                                event.getTotalOrdering(),
+                                externalKey,
+                                accountKey,
+                                event.getRequestedTransitionTime(),
+                                businessEvent,
+                                prevSubscription,
+                                nextSubscription
+                        );
+
+                        transactional.createTransition(transition);
+                        transitions.add(transition);
+                        log.info("Adding transition {}", transition);
+
+                        // We need to manually add the system cancel event
+                        if (SubscriptionTransitionType.CANCEL.equals(event.getTransitionType()) &&
+                                clock.getUTCNow().isAfter(event.getEffectiveTransitionTime())) {
+                            final BusinessSubscriptionTransition systemCancelTransition = new BusinessSubscriptionTransition(
+                                    event.getTotalOrdering(),
+                                    externalKey,
+                                    accountKey,
+                                    event.getRequestedTransitionTime(),
+                                    new BusinessSubscriptionEvent(BusinessSubscriptionEvent.EventType.SYSTEM_CANCEL, businessEvent.getCategory()),
+                                    prevSubscription,
+                                    nextSubscription
+                            );
+                            transactional.createTransition(systemCancelTransition);
+                            transitions.add(systemCancelTransition);
+                            log.info("Adding transition {}", systemCancelTransition);
+                        }
                     }
                 }
+
+                log.info("Finished rebuilding transitions for bundle {}", externalKey);
+                return null;
+            }
+        });
+    }
+
+    private BusinessSubscriptionEvent getBusinessSubscriptionFromEvent(final SubscriptionEvent event) throws AccountApiException, EntitlementUserApiException {
+        switch (event.getTransitionType()) {
+            // A subscription enters either through migration or as newly created subscription
+            case MIGRATE_ENTITLEMENT:
+            case CREATE:
+                return subscriptionCreated(event);
+            case RE_CREATE:
+                return subscriptionRecreated(event);
+            case CANCEL:
+                return subscriptionCancelled(event);
+            case CHANGE:
+                return subscriptionChanged(event);
+            case PHASE:
+                return subscriptionPhaseChanged(event);
+            // TODO - should we really ignore these?
+            case MIGRATE_BILLING:
+            case UNCANCEL:
+                return null;
+            default:
+                log.warn("Unexpected event type " + event.getTransitionType());
+                return null;
+        }
+    }
+
+    private BusinessSubscriptionEvent subscriptionCreated(final SubscriptionEvent created) throws AccountApiException, EntitlementUserApiException {
+        return BusinessSubscriptionEvent.subscriptionCreated(created.getNextPlan(), catalogService.getFullCatalog(), created.getEffectiveTransitionTime(), created.getSubscriptionStartDate());
+    }
+
+    private BusinessSubscriptionEvent subscriptionRecreated(final SubscriptionEvent recreated) throws AccountApiException, EntitlementUserApiException {
+        return BusinessSubscriptionEvent.subscriptionRecreated(recreated.getNextPlan(), catalogService.getFullCatalog(), recreated.getEffectiveTransitionTime(), recreated.getSubscriptionStartDate());
+    }
+
+    private BusinessSubscriptionEvent subscriptionCancelled(final SubscriptionEvent cancelled) throws AccountApiException, EntitlementUserApiException {
+        // cancelled.getNextPlan() is null here - need to look at the previous one to create the correct event name
+        return BusinessSubscriptionEvent.subscriptionCancelled(cancelled.getPreviousPlan(), catalogService.getFullCatalog(), cancelled.getEffectiveTransitionTime(), cancelled.getSubscriptionStartDate());
+    }
+
+    private BusinessSubscriptionEvent subscriptionChanged(final SubscriptionEvent changed) throws AccountApiException, EntitlementUserApiException {
+        return BusinessSubscriptionEvent.subscriptionChanged(changed.getNextPlan(), catalogService.getFullCatalog(), changed.getEffectiveTransitionTime(), changed.getSubscriptionStartDate());
+    }
+
+    private BusinessSubscriptionEvent subscriptionPhaseChanged(final SubscriptionEvent phaseChanged) throws AccountApiException, EntitlementUserApiException {
+        return BusinessSubscriptionEvent.subscriptionPhaseChanged(phaseChanged.getNextPlan(), phaseChanged.getNextState(), catalogService.getFullCatalog(), phaseChanged.getEffectiveTransitionTime(), phaseChanged.getSubscriptionStartDate());
+    }
+
+    private BusinessSubscription createNextBusinessSubscription(final EffectiveSubscriptionEvent event, final BusinessSubscriptionEvent businessEvent, final Currency currency) {
+        final BusinessSubscription nextSubscription;
+        if (BusinessSubscriptionEvent.EventType.CANCEL.equals(businessEvent.getEventType()) ||
+                BusinessSubscriptionEvent.EventType.SYSTEM_CANCEL.equals(businessEvent.getEventType())) {
+            nextSubscription = null;
+        } else {
+            nextSubscription = new BusinessSubscription(event.getNextPriceList(), event.getNextPlan(), event.getNextPhase(),
+                                                        currency, event.getEffectiveTransitionTime(), event.getNextState(),
+                                                        event.getSubscriptionId(), event.getBundleId(), catalogService.getFullCatalog());
+        }
+
+        return nextSubscription;
+    }
+
+    private BusinessSubscription createPreviousBusinessSubscription(final EffectiveSubscriptionEvent event,
+                                                                    final BusinessSubscriptionEvent businessEvent,
+                                                                    final ArrayList<BusinessSubscriptionTransition> transitions,
+                                                                    final Currency currency) {
+        if (BusinessSubscriptionEvent.EventType.ADD.equals(businessEvent.getEventType()) ||
+                BusinessSubscriptionEvent.EventType.RE_ADD.equals(businessEvent.getEventType())) {
+            return null;
+        }
+
+        final BusinessSubscriptionTransition prevTransition = getPreviousBusinessSubscriptionTransitionForEvent(event, transitions);
+        return new BusinessSubscription(event.getPreviousPriceList(), event.getPreviousPlan(), event.getPreviousPhase(),
+                                        currency, prevTransition.getNextSubscription().getStartDate(), event.getPreviousState(),
+                                        event.getSubscriptionId(), event.getBundleId(), catalogService.getFullCatalog());
+    }
+
+    private BusinessSubscriptionTransition getPreviousBusinessSubscriptionTransitionForEvent(final EffectiveSubscriptionEvent event,
+                                                                                             final ArrayList<BusinessSubscriptionTransition> transitions) {
+        BusinessSubscriptionTransition transition = null;
+        for (final BusinessSubscriptionTransition candidate : transitions) {
+            final BusinessSubscription nextSubscription = candidate.getNextSubscription();
+            if (nextSubscription == null || !nextSubscription.getStartDate().isBefore(event.getEffectiveTransitionTime())) {
+                continue;
+            }
+
+            if (nextSubscription.getSubscriptionId().equals(event.getSubscriptionId())) {
+                transition = candidate;
             }
         }
 
-        // TODO Support currency changes
-        final BusinessSubscription prevSubscription;
-        if (previousEffectiveTransitionTime == null) {
-            prevSubscription = null;
-        } else {
-            prevSubscription = new BusinessSubscription(transition.getPreviousPriceList(), transition.getPreviousPlan(), transition.getPreviousPhase(), currency, previousEffectiveTransitionTime, transition.getPreviousState(), transition.getSubscriptionId(), transition.getBundleId(), catalogService.getFullCatalog());
-        }
-        final BusinessSubscription nextSubscription;
-
-        // next plan is null for CANCEL events
-        if (transition.getNextPlan() == null) {
-            nextSubscription = null;
-        } else {
-            nextSubscription = new BusinessSubscription(transition.getNextPriceList(), transition.getNextPlan(), transition.getNextPhase(), currency, transition.getEffectiveTransitionTime(), transition.getNextState(), transition.getSubscriptionId(), transition.getBundleId(), catalogService.getFullCatalog());
+        if (transition == null) {
+            log.error("Unable to retrieve the previous transition - THIS SHOULD NEVER HAPPEN");
+            // Fall back to the latest one?
+            transition = transitions.get(transitions.size() - 1);
         }
 
-        record(transition.getTotalOrdering(), externalKey, accountKey, transition.getRequestedTransitionTime(), event, prevSubscription, nextSubscription);
+        return transition;
     }
 
     // Public for internal reasons
@@ -143,59 +253,6 @@ public class BusinessSubscriptionTransitionRecorder {
                 prevSubscription,
                 nextSubscription
         );
-
-        log.info(transition.getEvent() + " " + transition);
-        sqlDao.inTransaction(new Transaction<Void, BusinessSubscriptionTransitionSqlDao>() {
-            @Override
-            public Void inTransaction(final BusinessSubscriptionTransitionSqlDao transactional, final TransactionStatus status) throws Exception {
-                final String subscriptionId;
-                if (nextSubscription != null && nextSubscription.getSubscriptionId() != null) {
-                    subscriptionId = nextSubscription.getSubscriptionId().toString();
-                } else {
-                    subscriptionId = prevSubscription.getSubscriptionId().toString();
-                }
-
-                // There is no ordering guaranteed with events on the bus. This can be problematic on e.g. subscription creation:
-                // the requested future change from trial to evergreen could be received before the actual creation event.
-                // In this case, we would have two subscriptions in BST, with both null for the previous transition.
-                // To work around this, we need to update bst as we go
-                if (BusinessSubscriptionEvent.EventType.ADD.equals(event.getEventType())) {
-                    final List<BusinessSubscriptionTransition> transitions = transactional.getTransitionForSubscription(subscriptionId);
-                    if (transitions != null && transitions.size() > 0) {
-                        final BusinessSubscriptionTransition firstTransition = transitions.get(0);
-                        // Ignore (re-)creation events here, the previous subscription is expected to be null
-                        if (!BusinessSubscriptionEvent.EventType.ADD.equals(firstTransition.getEvent().getEventType()) &&
-                                !BusinessSubscriptionEvent.EventType.RE_ADD.equals(firstTransition.getEvent().getEventType()) &&
-                                firstTransition.getPreviousSubscription() == null) {
-                            final BusinessSubscriptionTransition updatedFirstTransition = new BusinessSubscriptionTransition(
-                                    firstTransition.getTotalOrdering(),
-                                    firstTransition.getExternalKey(),
-                                    firstTransition.getAccountKey(),
-                                    firstTransition.getRequestedTimestamp(),
-                                    firstTransition.getEvent(),
-                                    nextSubscription,
-                                    firstTransition.getNextSubscription()
-                            );
-                            transactional.updateTransition(updatedFirstTransition.getTotalOrdering(), updatedFirstTransition);
-                        }
-                    }
-                }
-
-                // Ignore duplicates: for e.g. phase events, we may already have recorded the transition when the change
-                // was requested. In that case, ignore it
-                final List<BusinessSubscriptionTransition> currentTransitions = transactional.getTransitionForSubscription(subscriptionId);
-                if (currentTransitions != null && currentTransitions.size() > 0) {
-                    for (final BusinessSubscriptionTransition currentTransition : currentTransitions) {
-                        if (currentTransition.isDuplicateOf(transition)) {
-                            return null;
-                        }
-                    }
-                }
-
-                transactional.createTransition(transition);
-
-                return null;
-            }
-        });
+        sqlDao.createTransition(transition);
     }
 }
