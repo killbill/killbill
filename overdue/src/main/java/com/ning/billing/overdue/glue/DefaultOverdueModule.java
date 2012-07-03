@@ -48,6 +48,7 @@ public class DefaultOverdueModule extends AbstractModule implements OverdueModul
         bind(ExtendedOverdueService.class).to(DefaultOverdueService.class).asEagerSingleton();
         bind(OverdueCheckNotifier.class).to(DefaultOverdueCheckNotifier.class).asEagerSingleton();
         bind(OverdueCheckPoster.class).to(DefaultOverdueCheckPoster.class).asEagerSingleton();
+        
     }
 
     protected void installOverdueService() {

@@ -17,9 +17,13 @@
 package com.ning.billing.overdue.applicator;
 
 
+import static com.jayway.awaitility.Awaitility.await;
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.UUID;
+import java.util.concurrent.Callable;
 
 import org.testng.annotations.Test;
 
@@ -31,14 +35,24 @@ import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.OverdueTestBase;
 import com.ning.billing.overdue.config.OverdueConfig;
+import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.config.XMLLoader;
 
 public class TestOverdueStateApplicator extends OverdueTestBase {
     @Inject
     OverdueStateApplicator<SubscriptionBundle> applicator;
 
+    @Inject
+    OverdueBusListenerTester listener;
+    
+    @Inject 
+    Bus bus;
+    
+
     @Test(groups = {"slow"}, enabled = true)
     public void testApplicator() throws Exception {
+        bus.register(listener);
+        bus.start();
         final InputStream is = new ByteArrayInputStream(configXml.getBytes());
         config = XMLLoader.getObjectFromStreamNoValidation(is, OverdueConfig.class);
         overdueWrapperFactory.setOverdueConfig(config);
@@ -51,6 +65,13 @@ public class TestOverdueStateApplicator extends OverdueTestBase {
         state = config.getBundleStateSet().findState("OD1");
         applicator.apply(bundle, BlockingApi.CLEAR_STATE_NAME, state);
         checkStateApplied(state);
+//        await().atMost(10, SECONDS).until(new Callable<Boolean>() {
+//            @Override
+//            public Boolean call() throws Exception {
+//                return listener.getEventsReceived().size() == 1;
+//            }
+//        });
+        
 
 
         state = config.getBundleStateSet().findState("OD2");

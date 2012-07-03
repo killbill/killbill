@@ -18,31 +18,39 @@ package com.ning.billing.overdue.applicator;
 
 import org.joda.time.DateTime;
 import org.joda.time.Period;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.BlockingApi;
+import com.ning.billing.junction.api.BlockingApiException;
 import com.ning.billing.junction.api.DefaultBlockingState;
 import com.ning.billing.ovedue.notification.OverdueCheckPoster;
 import com.ning.billing.overdue.OverdueApiException;
+import com.ning.billing.overdue.OverdueChangeEvent;
 import com.ning.billing.overdue.OverdueService;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.config.api.OverdueError;
+import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.clock.Clock;
 
 public class OverdueStateApplicator<T extends Blockable> {
+    private static final Logger log = LoggerFactory.getLogger(OverdueStateApplicator.class);
 
     private final BlockingApi blockingApi;
     private final Clock clock;
     private final OverdueCheckPoster poster;
+    private final Bus bus;
 
 
     @Inject
-    public OverdueStateApplicator(final BlockingApi accessApi, final Clock clock, final OverdueCheckPoster poster) {
+    public OverdueStateApplicator(final BlockingApi accessApi, final Clock clock, final OverdueCheckPoster poster, final Bus bus) {
         this.blockingApi = accessApi;
         this.clock = clock;
         this.poster = poster;
+        this.bus = bus;
     }
 
     public void apply(final T overdueable, final String previousOverdueStateName, final OverdueState<T> nextOverdueState) throws OverdueError {
@@ -65,8 +73,18 @@ public class OverdueStateApplicator<T extends Blockable> {
         if (nextOverdueState.isClearState()) {
             clear(overdueable);
         }
+        
+        try {
+            bus.post(createOverdueEvent(overdueable, previousOverdueStateName, nextOverdueState.getName()));
+        } catch (Exception e) {
+            log.error("Error posting overdue change event to bus",e);
+        }
     }
 
+
+    private OverdueChangeEvent createOverdueEvent(T overdueable, String previousOverdueStateName, String nextOverdueStateName) throws BlockingApiException {
+        return new DefaultOverdueChangeEvent(overdueable.getId(), Blockable.Type.get(overdueable), previousOverdueStateName, nextOverdueStateName, null);
+    }
 
     protected void storeNewState(final T blockable, final OverdueState<T> nextOverdueState) throws OverdueError {
         try {

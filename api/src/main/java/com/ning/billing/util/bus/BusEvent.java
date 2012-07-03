@@ -35,7 +35,8 @@ public interface BusEvent {
         CONTROL_TAGDEFINITION_CREATION,
         CONTROL_TAGDEFINITION_DELETION,
         USER_TAGDEFINITION_CREATION,
-        USER_TAGDEFINITION_DELETION
+        USER_TAGDEFINITION_DELETION,
+        OVERDUE_CHANGE
     }
 
     public BusEventType getBusEventType();
