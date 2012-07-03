@@ -113,7 +113,7 @@ public class MockSubscription implements Subscription {
     }
 
     public PriceList getCurrentPriceList() {
-        return sub.getCurrentPriceList();
+        return new MockPriceList();
     }
 
     public PlanPhase getCurrentPhase() {

@@ -36,7 +36,6 @@ import com.ning.billing.analytics.model.BusinessSubscriptionEvent;
 import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
 import com.ning.billing.analytics.MockDuration;
 import com.ning.billing.analytics.MockPhase;
-import com.ning.billing.analytics.MockPlan;
 import com.ning.billing.analytics.MockProduct;
 import com.ning.billing.analytics.TestWithEmbeddedDB;
 import com.ning.billing.analytics.utils.Rounder;
@@ -50,6 +49,7 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.mock.MockPlan;
 
 public class TestAnalyticsDao extends TestWithEmbeddedDB {
     private static final Long TOTAL_ORDERING = 1L;
