@@ -27,6 +27,9 @@ import com.ning.billing.analytics.model.BusinessSubscriptionTransitionTag;
 public class BusinessSubscriptionTransitionTagMapper implements ResultSetMapper<BusinessSubscriptionTransitionTag> {
     @Override
     public BusinessSubscriptionTransitionTag map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
-        return new BusinessSubscriptionTransitionTag(r.getString(1), r.getString(2));
+        final String externalKey = r.getString(1);
+        final String accountKey = r.getString(2);
+        final String name = r.getString(3);
+        return new BusinessSubscriptionTransitionTag(accountKey, externalKey, name);
     }
 }

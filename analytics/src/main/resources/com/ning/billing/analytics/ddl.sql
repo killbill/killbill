@@ -126,6 +126,7 @@ drop table if exists bos;
 create table bos (
   record_id int(11) unsigned not null auto_increment
 , external_key varchar(50) not null comment 'Bundle external key'
+, account_key varchar(50) not null comment 'Account external key'
 , status varchar(50) not null
 , start_date bigint default null
 , end_date bigint default null
@@ -154,6 +155,7 @@ drop table if exists bst_tags;
 create table bst_tags (
   record_id int(11) unsigned not null auto_increment
 , external_key varchar(50) not null comment 'Bundle external key'
+, account_key varchar(50) not null comment 'Account external key'
 , name varchar(20) not null
 , primary key(record_id)
 ) engine=innodb comment 'Tags associated to bundles';
@@ -162,6 +164,7 @@ drop table if exists bst_fields;
 create table bst_fields (
   record_id int(11) unsigned not null auto_increment
 , external_key varchar(50) not null comment 'Bundle external key'
+, account_key varchar(50) not null comment 'Account external key'
 , name varchar(30) not null
 , value varchar(255) default null
 , primary key(record_id)

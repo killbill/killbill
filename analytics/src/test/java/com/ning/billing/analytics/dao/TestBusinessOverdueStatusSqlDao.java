@@ -39,8 +39,9 @@ public class TestBusinessOverdueStatusSqlDao extends TestWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testCreate() throws Exception {
+        final String accountKey = UUID.randomUUID().toString();
         final String externalKey = UUID.randomUUID().toString();
-        final BusinessOverdueStatus firstOverdueStatus = createOverdueStatus(externalKey);
+        final BusinessOverdueStatus firstOverdueStatus = createOverdueStatus(accountKey, externalKey);
 
         // Verify initial state
         Assert.assertEquals(overdueStatusSqlDao.getOverdueStatusesForBundle(externalKey).size(), 0);
@@ -53,7 +54,7 @@ public class TestBusinessOverdueStatusSqlDao extends TestWithEmbeddedDB {
         Assert.assertEquals(overdueStatusSqlDao.getOverdueStatusesForBundle(externalKey).get(0), firstOverdueStatus);
 
         // Add a second one
-        final BusinessOverdueStatus secondOverdueStatus = createOverdueStatus(externalKey);
+        final BusinessOverdueStatus secondOverdueStatus = createOverdueStatus(accountKey, externalKey);
         Assert.assertEquals(overdueStatusSqlDao.createOverdueStatus(secondOverdueStatus), 1);
 
         // Retrieve both
@@ -72,11 +73,11 @@ public class TestBusinessOverdueStatusSqlDao extends TestWithEmbeddedDB {
         }
     }
 
-    private BusinessOverdueStatus createOverdueStatus(final String externalKey) {
+    private BusinessOverdueStatus createOverdueStatus(final String accountKey, final String externalKey) {
         final DateTime endDate = new DateTime(DateTimeZone.UTC);
         final DateTime startDate = new DateTime(DateTimeZone.UTC);
         final String status = UUID.randomUUID().toString();
 
-        return new BusinessOverdueStatus(endDate, externalKey, startDate, status);
+        return new BusinessOverdueStatus(accountKey, endDate, externalKey, startDate, status);
     }
 }

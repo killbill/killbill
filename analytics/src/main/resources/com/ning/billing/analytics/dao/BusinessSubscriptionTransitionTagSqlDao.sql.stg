@@ -3,6 +3,7 @@ group BusinessSubscriptionTransitionTag;
 getTagsForBusinessSubscriptionTransition(external_key) ::=<<
 select
   external_key
+, account_key
 , name
 from bst_tags
 where external_key = :external_key
@@ -12,9 +13,11 @@ where external_key = :external_key
 addTag(external_key, name) ::=<<
 insert into bst_tags (
   external_key
+, account_key
 , name
 ) values (
   :external_key
+, :account_key
 , :name
 );
 >>

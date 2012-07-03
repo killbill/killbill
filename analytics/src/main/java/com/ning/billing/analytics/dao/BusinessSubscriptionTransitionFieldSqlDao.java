@@ -33,7 +33,8 @@ public interface BusinessSubscriptionTransitionFieldSqlDao {
     List<BusinessSubscriptionTransitionField> getFieldsForBusinessSubscriptionTransition(@Bind("external_key") final String externalKey);
 
     @SqlUpdate
-    int addField(@Bind("external_key") final String externalKey, @Bind("name") final String name, @Bind("value") final String value);
+    int addField(@Bind("account_key") final String accountKey, @Bind("external_key") final String externalKey,
+                 @Bind("name") final String name, @Bind("value") final String value);
 
     @SqlUpdate
     int removeField(@Bind("external_key") final String externalKey, @Bind("name") final String name);

@@ -27,6 +27,10 @@ import com.ning.billing.analytics.model.BusinessSubscriptionTransitionField;
 public class BusinessSubscriptionTransitionFieldMapper implements ResultSetMapper<BusinessSubscriptionTransitionField> {
     @Override
     public BusinessSubscriptionTransitionField map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
-        return new BusinessSubscriptionTransitionField(r.getString(1), r.getString(2), r.getString(3));
+        final String externalKey = r.getString(1);
+        final String accountKey = r.getString(2);
+        final String name = r.getString(3);
+        final String value = r.getString(4);
+        return new BusinessSubscriptionTransitionField(accountKey, externalKey, name, value);
     }
 }

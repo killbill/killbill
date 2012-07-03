@@ -38,6 +38,7 @@ public class TestBusinessSubscriptionTransitionFieldSqlDao extends TestWithEmbed
 
     @Test(groups = "slow")
     public void testCRUD() throws Exception {
+        final String accountKey = UUID.randomUUID().toString();
         final String externalKey = UUID.randomUUID().toString();
         final String name = UUID.randomUUID().toString().substring(0, 30);
         final String value = UUID.randomUUID().toString();
@@ -47,7 +48,7 @@ public class TestBusinessSubscriptionTransitionFieldSqlDao extends TestWithEmbed
         Assert.assertEquals(subscriptionTransitionFieldSqlDao.removeField(externalKey, name), 0);
 
         // Add an entry
-        Assert.assertEquals(subscriptionTransitionFieldSqlDao.addField(externalKey, name, value), 1);
+        Assert.assertEquals(subscriptionTransitionFieldSqlDao.addField(accountKey, externalKey, name, value), 1);
         final List<BusinessSubscriptionTransitionField> fieldsForBusinessSubscriptionTransition = subscriptionTransitionFieldSqlDao.getFieldsForBusinessSubscriptionTransition(externalKey);
         Assert.assertEquals(fieldsForBusinessSubscriptionTransition.size(), 1);
 
@@ -64,14 +65,15 @@ public class TestBusinessSubscriptionTransitionFieldSqlDao extends TestWithEmbed
 
     @Test(groups = "slow")
     public void testSegmentation() throws Exception {
+        final String accountKey = UUID.randomUUID().toString();
         final String externalKey1 = UUID.randomUUID().toString();
         final String name1 = UUID.randomUUID().toString().substring(0, 30);
         final String externalKey2 = UUID.randomUUID().toString();
         final String name2 = UUID.randomUUID().toString().substring(0, 30);
 
         // Add a field to both transitions
-        Assert.assertEquals(subscriptionTransitionFieldSqlDao.addField(externalKey1, name1, UUID.randomUUID().toString()), 1);
-        Assert.assertEquals(subscriptionTransitionFieldSqlDao.addField(externalKey2, name2, UUID.randomUUID().toString()), 1);
+        Assert.assertEquals(subscriptionTransitionFieldSqlDao.addField(accountKey, externalKey1, name1, UUID.randomUUID().toString()), 1);
+        Assert.assertEquals(subscriptionTransitionFieldSqlDao.addField(accountKey, externalKey2, name2, UUID.randomUUID().toString()), 1);
 
         Assert.assertEquals(subscriptionTransitionFieldSqlDao.getFieldsForBusinessSubscriptionTransition(externalKey1).size(), 1);
         Assert.assertEquals(subscriptionTransitionFieldSqlDao.getFieldsForBusinessSubscriptionTransition(externalKey2).size(), 1);

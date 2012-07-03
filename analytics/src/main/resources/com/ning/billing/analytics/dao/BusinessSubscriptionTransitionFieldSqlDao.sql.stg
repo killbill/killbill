@@ -3,6 +3,7 @@ group BusinessSubscriptionTransitionField;
 getFieldsForBusinessSubscriptionTransition(external_key) ::=<<
 select
   external_key
+, account_key
 , name
 , value
 from bst_fields
@@ -13,10 +14,12 @@ where external_key = :external_key
 addField(external_key, name, value) ::=<<
 insert into bst_fields (
   external_key
+, account_key
 , name
 , value
 ) values (
   :external_key
+, :account_key
 , :name
 , :value
 );

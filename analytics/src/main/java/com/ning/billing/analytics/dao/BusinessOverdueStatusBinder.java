@@ -38,6 +38,7 @@ public @interface BusinessOverdueStatusBinder {
         public Binder build(final Annotation annotation) {
             return new Binder<BusinessOverdueStatusBinder, BusinessOverdueStatus>() {
                 public void bind(final SQLStatement q, final BusinessOverdueStatusBinder bind, final BusinessOverdueStatus overdueStatus) {
+                    q.bind("account_key", overdueStatus.getAccountKey());
                     q.bind("external_key", overdueStatus.getExternalKey());
                     q.bind("status", overdueStatus.getStatus());
 
