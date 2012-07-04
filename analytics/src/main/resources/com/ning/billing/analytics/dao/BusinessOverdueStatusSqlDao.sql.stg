@@ -32,6 +32,10 @@ insert into bos (
 );
 >>
 
+deleteOverdueStatusesForBundle(bundle_id) ::= <<
+delete from bos where bundle_id = :bundle_id;
+>>
+
 test() ::= <<
 select 1 from bos;
 >>

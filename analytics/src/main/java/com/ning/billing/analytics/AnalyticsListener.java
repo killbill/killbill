@@ -27,6 +27,7 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.RequestedSubscriptionEvent;
 import com.ning.billing.invoice.api.EmptyInvoiceEvent;
 import com.ning.billing.invoice.api.InvoiceCreationEvent;
+import com.ning.billing.overdue.OverdueChangeEvent;
 import com.ning.billing.payment.api.PaymentErrorEvent;
 import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.util.tag.api.ControlTagCreationEvent;
@@ -42,16 +43,19 @@ public class AnalyticsListener {
     private final BusinessSubscriptionTransitionRecorder bstRecorder;
     private final BusinessAccountRecorder bacRecorder;
     private final BusinessInvoiceRecorder invoiceRecorder;
+    private final BusinessOverdueStatusRecorder bosRecorder;
     private final BusinessTagRecorder tagRecorder;
 
     @Inject
     public AnalyticsListener(final BusinessSubscriptionTransitionRecorder bstRecorder,
                              final BusinessAccountRecorder bacRecorder,
                              final BusinessInvoiceRecorder invoiceRecorder,
+                             final BusinessOverdueStatusRecorder bosRecorder,
                              final BusinessTagRecorder tagRecorder) {
         this.bstRecorder = bstRecorder;
         this.bacRecorder = bacRecorder;
         this.invoiceRecorder = invoiceRecorder;
+        this.bosRecorder = bosRecorder;
         this.tagRecorder = tagRecorder;
     }
 
@@ -106,6 +110,11 @@ public class AnalyticsListener {
     @Subscribe
     public void handlePaymentError(final PaymentErrorEvent paymentError) {
         // TODO - we can't tie the error back to an account yet
+    }
+
+    @Subscribe
+    public void handleOverdueChange(final OverdueChangeEvent changeEvent) {
+        bosRecorder.overdueStatusChanged(changeEvent.getOverdueObjectType(), changeEvent.getOverdueObjectId());
     }
 
     @Subscribe
