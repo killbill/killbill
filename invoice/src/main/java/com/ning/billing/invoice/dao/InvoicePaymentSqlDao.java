@@ -83,6 +83,10 @@ public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePayment>, Tran
     @SqlQuery
     InvoicePayment getInvoicePayment(@Bind("paymentAttemptId") final String paymentAttemptId);
 
+    @SqlQuery
+    InvoicePayment getPaymentsForCookieId(@Bind("paymentCookieId") final String paymentCookieId);
+
+
     @SqlUpdate
     void notifyOfPaymentAttempt(@InvoicePaymentBinder final InvoicePayment invoicePayment,
                                 @CallContextBinder final CallContext context);

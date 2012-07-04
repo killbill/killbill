@@ -18,14 +18,9 @@ package com.ning.billing.payment.dao;
 import java.util.List;
 import java.util.UUID;
 
-import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.SqlQuery;
-
 import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
-import com.ning.billing.payment.dao.RefundSqlDao.RefundModelDaoBinder;
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallContextBinder;
 
 public interface PaymentDao {
 
@@ -34,10 +29,7 @@ public interface PaymentDao {
 
     public PaymentAttemptModelDao insertNewAttemptForPayment(final UUID paymentId, final PaymentAttemptModelDao attempt, final boolean scheduleTimeoutRetry, final CallContext context);
 
-
-    public void updateStatusForPayment(final UUID paymentId, final PaymentStatus paymentStatus, final CallContext context);
-
-    public void updateStatusForPaymentWithAttempt(final UUID paymentId, final PaymentStatus paymentStatus, final String paymentError, final UUID attemptId, final CallContext context);
+    public void updateStatusForPaymentWithAttempt(final UUID paymentId, final PaymentStatus paymentStatus, final String paymentError, final String extPaymentRefId, final UUID attemptId, final CallContext context);
 
     public PaymentAttemptModelDao getPaymentAttempt(final UUID attemptId);
 

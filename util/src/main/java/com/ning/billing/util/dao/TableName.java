@@ -31,6 +31,7 @@ public enum TableName {
     PAYMENT_METHODS("payment_methods"),
     SUBSCRIPTIONS("subscriptions"),
     SUBSCRIPTION_EVENTS("subscription_events"),
+    REFUNDS("refunds"),
     TAG_HISTORY("tag_history");
 
     private final String tableName;

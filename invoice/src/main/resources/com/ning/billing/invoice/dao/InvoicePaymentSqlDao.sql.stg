@@ -43,6 +43,12 @@ getById() ::= <<
   WHERE id = :id;
 >>
 
+getPaymentsForCookieId() ::= <<
+  SELECT <invoicePaymentFields()>
+  FROM invoice_payments
+  WHERE payment_cookie_id = :paymentCookieId;
+>>
+
 getPaymentsForInvoice() ::= <<
   SELECT <invoicePaymentFields()>
   FROM invoice_payments

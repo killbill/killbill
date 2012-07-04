@@ -230,7 +230,7 @@ public class TestAnalyticsService extends TestWithEmbeddedDB {
         invoiceCreationNotification = new DefaultInvoiceCreationEvent(invoice.getId(), account.getId(),
                                                                       INVOICE_AMOUNT, ACCOUNT_CURRENCY, clock.getUTCNow(), null);
 
-        paymentInfoNotification = new DefaultPaymentInfoEvent(account.getId(), invoices.get(0).getId(), null, invoices.get(0).getBalance(), -1, PaymentStatus.UNKNOWN, null, new DateTime());
+        paymentInfoNotification = new DefaultPaymentInfoEvent(account.getId(), invoices.get(0).getId(), null, invoices.get(0).getBalance(), -1, PaymentStatus.UNKNOWN, null, null, new DateTime());
 
         //STEPH talk to Pierre
         /*

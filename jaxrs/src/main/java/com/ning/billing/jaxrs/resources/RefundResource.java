@@ -33,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
+import com.ning.billing.ErrorCode;
 import com.ning.billing.jaxrs.json.RefundJson;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
@@ -71,8 +72,11 @@ public class RefundResource extends JaxRsResourceBase {
             Refund refund = paymentApi.getRefund(UUID.fromString(refundId));
             return Response.status(Status.OK).entity(new RefundJson(refund)).build();
         } catch (PaymentApiException e) {
-            // STEPH NO_CONTENT if oes not exist
-            return Response.status(Status.BAD_REQUEST).build();
+            if (e.getCode() == ErrorCode.PAYMENT_NO_SUCH_REFUND.getCode()) {
+                return Response.status(Status.NO_CONTENT).build();
+            } else {
+                return Response.status(Status.BAD_REQUEST).build();
+            }
         }
     }
 

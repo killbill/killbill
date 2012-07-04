@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -33,6 +34,7 @@ import com.google.common.collect.Collections2;
 import com.google.inject.name.Named;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
@@ -123,7 +125,7 @@ public class RefundProcessor extends ProcessorBase {
                     if (nbExistingRefunds > foundPluginCompletedRefunds) {
                         log.info("Found existing plugin refund for paymentId {}, skip plugin", paymentId);
                     } else {
-                        // If there is no such exitng refund we create it
+                        // If there is no such existng refund we create it
                         plugin.processRefund(account, paymentId, refundAmount);
                     }
                     paymentDao.updateRefundStatus(refundInfo.getId(), RefundStatus.PLUGIN_COMPLETED, context);
@@ -153,6 +155,7 @@ public class RefundProcessor extends ProcessorBase {
         if (filteredInput.size() == 0) {
             throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_REFUND, refundId);
         }
+
         if (completePluginCompletedRefund(filteredInput)) {
             result = paymentDao.getRefund(refundId);
         }
@@ -200,23 +203,42 @@ public class RefundProcessor extends ProcessorBase {
 
     private boolean completePluginCompletedRefund(final List<RefundModelDao> refunds) throws PaymentApiException {
 
-        boolean fixedTheWorld = false;
-        try {
-            final CallContext context = factory.createCallContext("RefundProcessor", CallOrigin.INTERNAL, UserType.SYSTEM);
-            for (RefundModelDao cur : refunds) {
-                if (cur.getRefundStatus() == RefundStatus.PLUGIN_COMPLETED) {
-                    final PaymentAttemptModelDao successfulAttempt = getPaymentAttempt(cur.getPaymentId());
-                    if (successfulAttempt != null) {
-                        invoicePaymentApi.createRefund(successfulAttempt.getId(), cur.getAmount(), cur.isAdjsuted(), cur.getId(), context);
-                        paymentDao.updateRefundStatus(cur.getId(), RefundStatus.COMPLETED, context);
-                        fixedTheWorld = true;
-                    }
-                }
+
+        final Collection<RefundModelDao> refundsToBeFixed = Collections2.filter(refunds, new Predicate<RefundModelDao>() {
+            @Override
+            public boolean apply(RefundModelDao in) {
+                return in.getRefundStatus() == RefundStatus.PLUGIN_COMPLETED;
             }
-        } catch (InvoiceApiException e) {
+        });
+        if (refundsToBeFixed.size() == 0) {
+            return false;
+        }
+
+        try {
+            Account account = accountUserApi.getAccountById(refundsToBeFixed.iterator().next().getAccountId());
+            new WithAccountLock<Void>().processAccountWithLock(locker, account.getExternalKey(), new WithAccountLockCallback<Void>() {
+
+                @Override
+                public Void doOperation() throws PaymentApiException {
+                    try {
+                        final CallContext context = factory.createCallContext("RefundProcessor", CallOrigin.INTERNAL, UserType.SYSTEM);
+                        for (RefundModelDao cur : refundsToBeFixed) {
+                            final PaymentAttemptModelDao successfulAttempt = getPaymentAttempt(cur.getPaymentId());
+                            if (successfulAttempt != null) {
+                                invoicePaymentApi.createRefund(successfulAttempt.getId(), cur.getAmount(), cur.isAdjsuted(), cur.getId(), context);
+                                paymentDao.updateRefundStatus(cur.getId(), RefundStatus.COMPLETED, context);
+                            }
+                        }
+                    } catch (InvoiceApiException e) {
+                        throw new PaymentApiException(e);
+                    }
+                    return null;
+                }
+            });
+            return true;
+        } catch (AccountApiException e) {
             throw new PaymentApiException(e);
         }
-        return fixedTheWorld;
     }
 
     private PaymentAttemptModelDao getPaymentAttempt(final UUID paymentId) {

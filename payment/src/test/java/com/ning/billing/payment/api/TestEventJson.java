@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -39,7 +39,7 @@ public class TestEventJson {
 
     @Test(groups = {"fast"})
     public void testPaymentInfoEvent() throws Exception {
-        final PaymentInfoEvent e = new DefaultPaymentInfoEvent(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), new BigDecimal(12.9), new Integer(13), PaymentStatus.SUCCESS, UUID.randomUUID(), new DateTime());
+        final PaymentInfoEvent e = new DefaultPaymentInfoEvent(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), new BigDecimal(12.9), new Integer(13), PaymentStatus.SUCCESS, "ext-ref-12345", UUID.randomUUID(), new DateTime());
         final String json = mapper.writeValueAsString(e);
 
         final Class<?> clazz = Class.forName(DefaultPaymentInfoEvent.class.getName());

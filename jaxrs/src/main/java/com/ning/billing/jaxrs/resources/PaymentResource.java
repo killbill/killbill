@@ -26,6 +26,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.core.Response.Status;
 
 import java.util.ArrayList;
@@ -109,7 +110,8 @@ public class PaymentResource extends JaxRsResourceBase {
             @PathParam("paymentId") final String paymentId,
             @HeaderParam(HDR_CREATED_BY) final String createdBy,
             @HeaderParam(HDR_REASON) final String reason,
-            @HeaderParam(HDR_COMMENT) final String comment) {
+            @HeaderParam(HDR_COMMENT) final String comment,
+            @javax.ws.rs.core.Context final UriInfo uriInfo) {
 
         try {
             final UUID paymentUuid = UUID.fromString(paymentId);
@@ -118,7 +120,7 @@ public class PaymentResource extends JaxRsResourceBase {
             final Account account = accountApi.getAccountById(payment.getAccountId());
 
             Refund result = paymentApi.createRefund(account, paymentUuid, json.getRefundAmount(), json.isAdjusted(), context.createContext(createdBy, reason, comment));
-            return uriBuilder.buildResponse(RefundResource.class, "getRefund", result.getId());
+            return uriBuilder.buildResponse(RefundResource.class, "getRefund", result.getId(), uriInfo.getBaseUri().toString());
         } catch (AccountApiException e) {
             if (e.getCode() == ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID.getCode()) {
                 return Response.status(Status.NO_CONTENT).build();

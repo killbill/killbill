@@ -584,7 +584,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         balance = invoiceDao.getAccountBalance(accountId);
         assertEquals(balance.compareTo(new BigDecimal("0.00")), 0);
 
-        invoiceDao.createRefund(paymentAttemptId, refund1, withAdjustment, null, context);
+        invoiceDao.createRefund(paymentAttemptId, refund1, withAdjustment, UUID.randomUUID(), context);
         balance = invoiceDao.getAccountBalance(accountId);
         if (withAdjustment) {
             assertEquals(balance.compareTo(BigDecimal.ZERO), 0);
@@ -678,7 +678,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         assertEquals(cba.compareTo(new BigDecimal("10.00")), 0);
 
         // PARTIAL REFUND on the payment
-        invoiceDao.createRefund(paymentAttemptId, refundAmount, withAdjustment, null, context);
+        invoiceDao.createRefund(paymentAttemptId, refundAmount, withAdjustment, UUID.randomUUID(), context);
 
         balance = invoiceDao.getAccountBalance(accountId);
         assertEquals(balance.compareTo(expectedFinalBalance), 0);

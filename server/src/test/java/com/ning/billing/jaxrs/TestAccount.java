@@ -44,6 +44,7 @@ import com.ning.billing.jaxrs.json.BundleJsonNoSubscriptions;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
 import com.ning.billing.jaxrs.json.PaymentJsonSimple;
 import com.ning.billing.jaxrs.json.PaymentMethodJson;
+import com.ning.billing.jaxrs.json.RefundJson;
 import com.ning.billing.jaxrs.json.SubscriptionJsonNoEvents;
 import com.ning.billing.jaxrs.json.TagDefinitionJson;
 import com.ning.billing.jaxrs.resources.JaxrsResource;
@@ -233,7 +234,7 @@ public class TestAccount extends TestJaxrsBase {
     }
 
     @Test(groups = "slow", enabled = true)
-    public void testAccountPayments() throws Exception {
+    public void testAccountPaymentsWithRefund() throws Exception {
 
         //clock.setTime(new DateTime(2012, 4, 25, 0, 3, 42, 0));
 
@@ -250,13 +251,21 @@ public class TestAccount extends TestJaxrsBase {
         crappyWaitForLackOfProperSynchonization();
 
 
-        final String uri = JaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAccountId() + "/" + JaxrsResource.PAYMENTS;
+        String uri = JaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAccountId() + "/" + JaxrsResource.PAYMENTS;
 
-        final Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
-        final String baseJson = response.getResponseBody();
-        final List<PaymentJsonSimple> objFromJson = mapper.readValue(baseJson, new TypeReference<List<PaymentJsonSimple>>() {});
+        String baseJson = response.getResponseBody();
+        List<PaymentJsonSimple> objFromJson = mapper.readValue(baseJson, new TypeReference<List<PaymentJsonSimple>>() {});
         Assert.assertEquals(objFromJson.size(), 1);
+
+        uri = JaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAccountId() + "/" + JaxrsResource.REFUNDS;
+        response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+        baseJson = response.getResponseBody();
+        List<RefundJson> objRefundFromJson = mapper.readValue(baseJson, new TypeReference<List<RefundJson>>() {});
+        Assert.assertEquals(objRefundFromJson.size(), 0);
+
     }
 
     @Test(groups = "slow", enabled = true)

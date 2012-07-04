@@ -53,7 +53,7 @@ public class MockPaymentDao implements PaymentDao {
 
     @Override
     public void updateStatusForPaymentWithAttempt(final UUID paymentId,
-                                                  final PaymentStatus paymentStatus, final String paymentError, final UUID attemptId,
+                                                  final PaymentStatus paymentStatus, final String paymentError,  final String extpaymentRefId, final UUID attemptId,
                                                   final CallContext context) {
         synchronized (this) {
             final PaymentModelDao entry = payments.remove(paymentId);
@@ -66,18 +66,6 @@ public class MockPaymentDao implements PaymentDao {
             }
         }
     }
-
-    @Override
-    public void updateStatusForPayment(final UUID paymentId,
-                                       final PaymentStatus paymentStatus, final CallContext context) {
-        synchronized (this) {
-            final PaymentModelDao entry = payments.remove(paymentId);
-            if (entry != null) {
-                payments.put(paymentId, new PaymentModelDao(entry, paymentStatus));
-            }
-        }
-    }
-
 
     @Override
     public PaymentAttemptModelDao getPaymentAttempt(final UUID attemptId) {

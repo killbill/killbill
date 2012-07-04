@@ -29,28 +29,29 @@ import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
 import com.ning.billing.util.dao.BinderBase;
 import com.ning.billing.util.dao.EntityHistory;
 
-@BindingAnnotation(PaymentHistoryBinder.PaymentHistoryBinderFactory.class)
+
+@BindingAnnotation(RefundHistoryBinder.RefundHistoryBinderFactory.class)
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.PARAMETER})
-public @interface PaymentHistoryBinder {
-    public static class PaymentHistoryBinderFactory extends BinderBase implements BinderFactory {
+public @interface RefundHistoryBinder {
+
+
+    public static class RefundHistoryBinderFactory extends BinderBase implements BinderFactory {
         @Override
-        public Binder<PaymentHistoryBinder, EntityHistory<PaymentModelDao>> build(final Annotation annotation) {
-            return new Binder<PaymentHistoryBinder, EntityHistory<PaymentModelDao>>() {
+        public Binder<RefundHistoryBinder, EntityHistory<RefundModelDao>> build(final Annotation annotation) {
+            return new Binder<RefundHistoryBinder, EntityHistory<RefundModelDao>>() {
                 @Override
-                public void bind(final SQLStatement<?> q, final PaymentHistoryBinder bind, final EntityHistory<PaymentModelDao> history) {
+                public void bind(final SQLStatement<?> q, final RefundHistoryBinder bind, final EntityHistory<RefundModelDao> history) {
                     q.bind("recordId", history.getValue());
                     q.bind("changeType", history.getChangeType().toString());
-                    final PaymentModelDao payment = history.getEntity();
-                    q.bind("id", payment.getId().toString());
-                    q.bind("accountId", payment.getAccountId().toString());
-                    q.bind("invoiceId", payment.getInvoiceId().toString());
-                    q.bind("paymentMethodId", ""); //payment.getPaymentMethodId().toString());
-                    q.bind("amount", payment.getAmount());
-                    q.bind("currency", payment.getCurrency().toString());
-                    q.bind("paymentStatus", payment.getPaymentStatus().toString());
-                    q.bind("externalPaymentRefId", payment.getExtPaymentRefId());
-                    q.bind("effectiveDate", getDate(payment.getEffectiveDate()));
+                    final RefundModelDao refund = history.getEntity();
+                    q.bind("id", refund.getId().toString());
+                    q.bind("accountId", refund.getAccountId().toString());
+                    q.bind("paymentId", refund.getPaymentId().toString());
+                    q.bind("amount", refund.getAmount());
+                    q.bind("currency", refund.getCurrency().toString());
+                    q.bind("isAdjusted", refund.isAdjsuted());
+                    q.bind("refundStatus", refund.getRefundStatus().toString());
                 }
             };
         }

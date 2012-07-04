@@ -315,12 +315,17 @@ public class DefaultInvoiceDao implements InvoiceDao {
                     throw new InvoiceApiException(ErrorCode.REFUND_AMOUNT_IS_POSITIVE);
                 }
 
-                // No that we check signs, let's work with positive numbers, this makes things simpler
+                // Now that we checked signs, let's work with positive numbers, this makes things simpler
                 final BigDecimal requestedPositiveAmount = requestedAmount.negate();
                 if (requestedPositiveAmount.compareTo(maxRefundAmount) > 0) {
                     throw new InvoiceApiException(ErrorCode.REFUND_AMOUNT_TOO_HIGH, requestedPositiveAmount, maxRefundAmount);
                 }
 
+                // Before we go further, check if that refund already got inserted
+                final InvoicePayment existingRefund = transactional.getPaymentsForCookieId(paymentCookieId.toString());
+                if (existingRefund != null) {
+                    return existingRefund;
+                }
 
                 final InvoicePayment refund = new DefaultInvoicePayment(UUID.randomUUID(), InvoicePaymentType.REFUND, paymentAttemptId,
                         payment.getInvoiceId(), context.getCreatedDate(), requestedPositiveAmount.negate(), payment.getCurrency(), paymentCookieId, payment.getId());

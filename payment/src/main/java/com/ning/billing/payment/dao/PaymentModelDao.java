@@ -36,11 +36,12 @@ public class PaymentModelDao extends EntityBase {
     private final DateTime effectiveDate;
     private final Integer paymentNumber;
     private final PaymentStatus paymentStatus;
+    private final String extPaymentRefId;
 
 
     public PaymentModelDao(final UUID id, final UUID accountId, final UUID invoiceId, final UUID paymentMethodId,
                            final Integer paymentNumber, final BigDecimal amount, final Currency currency,
-                           final PaymentStatus paymentStatus, final DateTime effectiveDate) {
+                           final PaymentStatus paymentStatus, final DateTime effectiveDate, final String extPaymentRefId) {
         super(id);
         this.accountId = accountId;
         this.invoiceId = invoiceId;
@@ -50,16 +51,16 @@ public class PaymentModelDao extends EntityBase {
         this.currency = currency;
         this.paymentStatus = paymentStatus;
         this.effectiveDate = effectiveDate;
+        this.extPaymentRefId = extPaymentRefId;
     }
 
     public PaymentModelDao(final UUID accountId, final UUID invoiceId,
                            final BigDecimal amount, final Currency currency, final DateTime effectiveDate) {
-        this(UUID.randomUUID(), accountId, invoiceId, null, INVALID_PAYMENT_NUMBER, amount, currency, PaymentStatus.UNKNOWN, effectiveDate);
+        this(UUID.randomUUID(), accountId, invoiceId, null, INVALID_PAYMENT_NUMBER, amount, currency, PaymentStatus.UNKNOWN, effectiveDate, null);
     }
 
     public PaymentModelDao(final PaymentModelDao src, final PaymentStatus newPaymentStatus) {
-        this(src.getId(), src.getAccountId(), src.getInvoiceId(), null, src.getPaymentNumber(), src.getAmount(), src.getCurrency(), newPaymentStatus, src.getEffectiveDate())
-        ;
+        this(src.getId(), src.getAccountId(), src.getInvoiceId(), null, src.getPaymentNumber(), src.getAmount(), src.getCurrency(), newPaymentStatus, src.getEffectiveDate(), null);
     }
 
     public UUID getAccountId() {
@@ -92,5 +93,9 @@ public class PaymentModelDao extends EntityBase {
 
     public DateTime getEffectiveDate() {
         return effectiveDate;
+    }
+
+    public String getExtPaymentRefId() {
+        return extPaymentRefId;
     }
 }

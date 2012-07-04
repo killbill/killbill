@@ -39,6 +39,7 @@ import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextBinder;
 import com.ning.billing.util.dao.BinderBase;
+import com.ning.billing.util.dao.EntityHistory;
 import com.ning.billing.util.dao.MapperBase;
 import com.ning.billing.util.entity.dao.UpdatableEntitySqlDao;
 
@@ -53,7 +54,7 @@ public interface RefundSqlDao extends Transactional<RefundSqlDao>, UpdatableEnti
                        @CallContextBinder final CallContext context);
 
     @SqlUpdate
-    void updateStatus(@Bind("id") final String refundId, @Bind("refund_status") final String status);
+    void updateStatus(@Bind("id") final String refundId, @Bind("refundStatus") final String status);
 
     @SqlQuery
     RefundModelDao getRefund(@Bind("id") final String refundId);
@@ -64,6 +65,11 @@ public interface RefundSqlDao extends Transactional<RefundSqlDao>, UpdatableEnti
     @SqlQuery
     List<RefundModelDao> getRefundsForAccount(@Bind("accountId") final String accountId);
 
+    @Override
+    @SqlUpdate
+    public void insertHistoryFromTransaction(@RefundHistoryBinder final EntityHistory<RefundModelDao> payment,
+                                             @CallContextBinder final CallContext context);
+
 
     public static final class RefundModelDaoBinder extends BinderBase implements Binder<Bind, RefundModelDao> {
         @Override
@@ -73,8 +79,8 @@ public interface RefundSqlDao extends Transactional<RefundSqlDao>, UpdatableEnti
             stmt.bind("paymentId", refund.getPaymentId().toString());
             stmt.bind("amount", refund.getAmount());
             stmt.bind("currency", refund.getCurrency().toString());
-            stmt.bind("is_adjusted", refund.isAdjsuted());
-            stmt.bind("refund_status", refund.getRefundStatus().toString());
+            stmt.bind("isAdjusted", refund.isAdjsuted());
+            stmt.bind("refundStatus", refund.getRefundStatus().toString());
         }
     }
 

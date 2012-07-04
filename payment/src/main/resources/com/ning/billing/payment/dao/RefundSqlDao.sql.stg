@@ -1,0 +1,92 @@
+group RefundSqlDao;
+
+refundFields(prefix) ::= <<
+<prefix>id,
+<prefix>account_id,
+<prefix>payment_id,
+<prefix>amount,  
+<prefix>currency,
+<prefix>is_adjusted,
+<prefix>refund_status,    
+<prefix>created_by,
+<prefix>created_date,
+<prefix>updated_by,
+<prefix>updated_date
+>>
+
+insertRefund() ::= <<
+    INSERT INTO refunds (<refundFields()>)
+    VALUES (:id, :accountId, :paymentId, :amount, :currency, :isAdjusted, :refundStatus, :userName, :createdDate, :userName, :createdDate);
+>>
+
+updateStatus() ::= <<
+    UPDATE refunds
+    SET refund_status = :refundStatus
+    WHERE id = :id;
+>>
+
+getRefund() ::= <<
+    SELECT <refundFields()>
+    FROM refunds
+    WHERE id = :id;
+>>
+
+getRefundsForPayment()  ::= <<
+    SELECT <refundFields()>
+    FROM refunds
+    WHERE payment_id = :paymentId;
+>>
+
+getRefundsForAccount()  ::= <<
+    SELECT <refundFields()>
+    FROM refunds
+    WHERE account_id = :accountId;
+>> 
+
+getRecordId() ::= <<
+    SELECT record_id
+    FROM refunds
+    WHERE id = :id;
+>>
+
+historyFields(prefix) ::= <<
+    <prefix>record_id,
+    <prefix>id,
+    <prefix>account_id,
+    <prefix>payment_id,
+    <prefix>amount,  
+    <prefix>currency,
+    <prefix>is_adjusted,
+    <prefix>refund_status,    
+    <prefix>created_by,
+    <prefix>created_date,
+    <prefix>updated_by,
+    <prefix>updated_date
+>>
+
+insertHistoryFromTransaction() ::= <<
+    INSERT INTO refund_history (<historyFields()>)
+    VALUES (:recordId, :id, :accountId, :paymentId, :amount, :currency,  :isAdjusted, :refundStatus, :userName, :createdDate, :userName, :createdDate);
+>>
+
+getHistoryRecordId() ::= <<
+    SELECT MAX(history_record_id)
+    FROM payment_method_history
+    WHERE record_id = :recordId;
+>>
+
+auditFields(prefix) ::= <<
+    <prefix>table_name,
+    <prefix>record_id,
+    <prefix>change_type,
+    <prefix>change_date,
+    <prefix>changed_by,
+    <prefix>reason_code,
+    <prefix>comments,
+    <prefix>user_token
+>>
+
+insertAuditFromTransaction() ::= <<
+    INSERT INTO audit_log(<auditFields()>)
+    VALUES(:tableName, :recordId, :changeType, :createdDate, :userName, :reasonCode, :comment, :userToken);
+>>

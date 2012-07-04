@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -24,6 +24,7 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.IDBI;
+import org.testng.Assert;
 import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.BeforeTest;
@@ -34,6 +35,7 @@ import com.ning.billing.dbi.DBIProvider;
 import com.ning.billing.dbi.DbiConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.payment.api.PaymentStatus;
+import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TestCallContext;
 import com.ning.billing.util.clock.Clock;
@@ -42,6 +44,8 @@ import com.ning.billing.util.io.IOUtils;
 
 import static junit.framework.Assert.assertNull;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.fail;
 
 public class TestPaymentDao {
     private static final CallContext context = new TestCallContext("PaymentTests");
@@ -89,6 +93,57 @@ public class TestPaymentDao {
     }
 
 
+
+
+    @Test(groups = {"slow"})
+    public void testRefund() {
+
+        final UUID accountId = UUID.randomUUID();
+        final UUID paymentId1 = UUID.randomUUID();
+        final BigDecimal amount1 = new BigDecimal(13);
+        final Currency currency = Currency.USD;
+
+        RefundModelDao refund1 =  new RefundModelDao(accountId, paymentId1, amount1, currency, true);
+
+        paymentDao.insertRefund(refund1, context);
+        RefundModelDao refundCheck = paymentDao.getRefund(refund1.getId());
+        assertNotNull(refundCheck);
+        assertEquals(refundCheck.getAccountId(), accountId);
+        assertEquals(refundCheck.getPaymentId(), paymentId1);
+        assertEquals(refundCheck.getAmount().compareTo(amount1), 0);
+        assertEquals(refundCheck.getCurrency(), currency);
+        assertEquals(refundCheck.isAdjsuted(), true);
+        assertEquals(refundCheck.getRefundStatus(), RefundStatus.CREATED);
+
+        final BigDecimal amount2 = new BigDecimal(7.00);
+        final UUID paymentId2 = UUID.randomUUID();
+
+        RefundModelDao refund2 =  new RefundModelDao(accountId, paymentId2, amount2, currency, true);
+        paymentDao.insertRefund(refund2, context);
+        paymentDao.updateRefundStatus(refund2.getId(), RefundStatus.COMPLETED, context);
+
+        List<RefundModelDao> refundChecks = paymentDao.getRefundsForPayment(paymentId1);
+        assertEquals(refundChecks.size(), 1);
+
+        refundChecks = paymentDao.getRefundsForPayment(paymentId2);
+        assertEquals(refundChecks.size(), 1);
+
+        refundChecks = paymentDao.getRefundsForAccount(accountId);
+        assertEquals(refundChecks.size(), 2);
+        for (RefundModelDao cur : refundChecks) {
+            if (cur.getPaymentId().equals(paymentId1)) {
+                assertEquals(cur.getAmount().compareTo(amount1), 0);
+                assertEquals(cur.getRefundStatus(), RefundStatus.CREATED);
+            } else if (cur.getPaymentId().equals(paymentId2)) {
+                assertEquals(cur.getAmount().compareTo(amount2), 0);
+                assertEquals(cur.getRefundStatus(), RefundStatus.COMPLETED);
+            } else {
+                fail("Unexpected refund");
+            }
+        }
+    }
+
+
     @Test(groups = {"slow"})
     public void testUpdateStatus() {
 
@@ -105,7 +160,7 @@ public class TestPaymentDao {
         final PaymentStatus paymentStatus = PaymentStatus.SUCCESS;
         final String paymentError = "No error";
 
-        paymentDao.updateStatusForPaymentWithAttempt(payment.getId(), paymentStatus, paymentError, attempt.getId(), context);
+        paymentDao.updateStatusForPaymentWithAttempt(payment.getId(), paymentStatus, paymentError, null, attempt.getId(), context);
 
         final List<PaymentModelDao> payments = paymentDao.getPaymentsForInvoice(invoiceId);
         assertEquals(payments.size(), 1);

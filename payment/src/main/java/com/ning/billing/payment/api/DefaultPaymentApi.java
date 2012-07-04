@@ -81,8 +81,7 @@ public class DefaultPaymentApi implements PaymentApi {
 
     @Override
     public Refund getRefund(UUID refundId) throws PaymentApiException {
-        // TODO Auto-generated method stub
-        return null;
+        return refundProcessor.getRefund(refundId);
     }
 
     @Override
