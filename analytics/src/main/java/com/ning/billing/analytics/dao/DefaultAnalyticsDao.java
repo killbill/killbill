@@ -57,7 +57,7 @@ public class DefaultAnalyticsDao implements AnalyticsDao {
 
     @Override
     public List<BusinessInvoice> getInvoicesByKey(final String accountKey) {
-        return invoiceSqlDao.getInvoicesForAccount(accountKey);
+        return invoiceSqlDao.getInvoicesForAccountByKey(accountKey);
     }
 
     @Override

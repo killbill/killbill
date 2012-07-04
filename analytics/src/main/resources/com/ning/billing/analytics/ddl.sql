@@ -61,8 +61,10 @@ drop table if exists bin;
 create table bin (
   record_id int(11) unsigned not null auto_increment
 , invoice_id char(36) not null
+, invoice_number bigint default null
 , created_date bigint not null
 , updated_date bigint not null
+, account_id char(36) not null
 , account_key varchar(50) not null
 , invoice_date bigint not null
 , target_date bigint not null

@@ -42,8 +42,9 @@ public class TestBusinessInvoiceSqlDao extends TestWithEmbeddedDB {
     @Test(groups = "slow")
     public void testCRUD() throws Exception {
         final UUID invoiceId = UUID.randomUUID();
+        final UUID accountId = UUID.randomUUID();
         final String accountKey = UUID.randomUUID().toString();
-        final BusinessInvoice invoice = createInvoice(invoiceId, accountKey);
+        final BusinessInvoice invoice = createInvoice(accountId, invoiceId, accountKey);
 
         // Verify initial state
         Assert.assertNull(invoiceSqlDao.getInvoice(invoice.getInvoiceId().toString()));
@@ -54,43 +55,38 @@ public class TestBusinessInvoiceSqlDao extends TestWithEmbeddedDB {
 
         // Retrieve it
         Assert.assertEquals(invoiceSqlDao.getInvoice(invoice.getInvoiceId().toString()), invoice);
-        Assert.assertEquals(invoiceSqlDao.getInvoicesForAccount(invoice.getAccountKey()).size(), 1);
-        Assert.assertEquals(invoiceSqlDao.getInvoicesForAccount(invoice.getAccountKey()).get(0), invoice);
-
-        // Update and retrieve it
-        invoice.setInvoiceDate(new DateTime(DateTimeZone.UTC));
-        Assert.assertEquals(invoiceSqlDao.updateInvoice(invoice), 1);
-        Assert.assertEquals(invoiceSqlDao.getInvoice(invoice.getInvoiceId().toString()), invoice);
-        Assert.assertEquals(invoiceSqlDao.getInvoicesForAccount(invoice.getAccountKey()).size(), 1);
-        Assert.assertEquals(invoiceSqlDao.getInvoicesForAccount(invoice.getAccountKey()).get(0), invoice);
+        Assert.assertEquals(invoiceSqlDao.getInvoicesForAccount(invoice.getAccountId().toString()).size(), 1);
+        Assert.assertEquals(invoiceSqlDao.getInvoicesForAccount(invoice.getAccountId().toString()).get(0), invoice);
 
         // Delete it
         Assert.assertEquals(invoiceSqlDao.deleteInvoice(invoice.getInvoiceId().toString()), 1);
         Assert.assertNull(invoiceSqlDao.getInvoice(invoice.getInvoiceId().toString()));
-        Assert.assertEquals(invoiceSqlDao.getInvoicesForAccount(invoice.getAccountKey()).size(), 0);
+        Assert.assertEquals(invoiceSqlDao.getInvoicesForAccount(invoice.getAccountId().toString()).size(), 0);
     }
 
     @Test(groups = "slow")
     public void testSegmentation() throws Exception {
         final UUID invoiceId1 = UUID.randomUUID();
+        final UUID accountId1 = UUID.randomUUID();
         final String accountKey1 = UUID.randomUUID().toString();
-        final BusinessInvoice invoice1 = createInvoice(invoiceId1, accountKey1);
+        final BusinessInvoice invoice1 = createInvoice(invoiceId1, accountId1, accountKey1);
         final UUID invoiceId2 = UUID.randomUUID();
+        final UUID accountId2 = UUID.randomUUID();
         final String accountKey2 = UUID.randomUUID().toString();
-        final BusinessInvoice invoice2 = createInvoice(invoiceId2, accountKey2);
+        final BusinessInvoice invoice2 = createInvoice(invoiceId2, accountId2, accountKey2);
 
         // Create both invoices
         Assert.assertEquals(invoiceSqlDao.createInvoice(invoice1), 1);
         Assert.assertEquals(invoiceSqlDao.createInvoice(invoice2), 1);
 
-        Assert.assertEquals(invoiceSqlDao.getInvoicesForAccount(accountKey1).size(), 1);
-        Assert.assertEquals(invoiceSqlDao.getInvoicesForAccount(accountKey2).size(), 1);
+        Assert.assertEquals(invoiceSqlDao.getInvoicesForAccount(accountId1.toString()).size(), 1);
+        Assert.assertEquals(invoiceSqlDao.getInvoicesForAccount(accountId2.toString()).size(), 1);
 
         // Remove the first invoice
         Assert.assertEquals(invoiceSqlDao.deleteInvoice(invoice1.getInvoiceId().toString()), 1);
 
-        Assert.assertEquals(invoiceSqlDao.getInvoicesForAccount(accountKey1).size(), 0);
-        Assert.assertEquals(invoiceSqlDao.getInvoicesForAccount(accountKey2).size(), 1);
+        Assert.assertEquals(invoiceSqlDao.getInvoicesForAccount(accountId1.toString()).size(), 0);
+        Assert.assertEquals(invoiceSqlDao.getInvoicesForAccount(accountId2.toString()).size(), 1);
     }
 
     @Test(groups = "slow")
@@ -103,7 +99,7 @@ public class TestBusinessInvoiceSqlDao extends TestWithEmbeddedDB {
         }
     }
 
-    private BusinessInvoice createInvoice(final UUID invoiceId, final String accountKey) {
+    private BusinessInvoice createInvoice(final UUID invoiceId, final UUID accountId, final String accountKey) {
         final BigDecimal amountCharged = BigDecimal.ZERO;
         final BigDecimal amountCredited = BigDecimal.ONE;
         final BigDecimal amountPaid = BigDecimal.TEN;
@@ -114,7 +110,7 @@ public class TestBusinessInvoiceSqlDao extends TestWithEmbeddedDB {
         final DateTime targetDate = new DateTime(DateTimeZone.UTC);
         final DateTime updatedDate = new DateTime(DateTimeZone.UTC);
 
-        return new BusinessInvoice(accountKey, amountCharged, amountCredited, amountPaid, balance,
-                                   createdDate, currency, invoiceDate, invoiceId, targetDate, updatedDate);
+        return new BusinessInvoice(accountId, accountKey, amountCharged, amountCredited, amountPaid, balance,
+                                   createdDate, currency, invoiceDate, invoiceId, 12, targetDate, updatedDate);
     }
 }

@@ -33,18 +33,20 @@ public class BusinessInvoiceMapper implements ResultSetMapper<BusinessInvoice> {
     @Override
     public BusinessInvoice map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
         final UUID invoiceId = UUID.fromString(r.getString(1));
-        final DateTime createdDate = new DateTime(r.getLong(2), DateTimeZone.UTC);
-        final DateTime updatedDate = new DateTime(r.getLong(3), DateTimeZone.UTC);
-        final String accountKey = r.getString(4);
-        final DateTime invoiceDate = new DateTime(r.getLong(5), DateTimeZone.UTC);
-        final DateTime targetDate = new DateTime(r.getLong(6), DateTimeZone.UTC);
-        final Currency currency = Currency.valueOf(r.getString(7));
-        final BigDecimal balance = BigDecimal.valueOf(r.getDouble(8));
-        final BigDecimal amountPaid = BigDecimal.valueOf(r.getDouble(9));
-        final BigDecimal amountCharged = BigDecimal.valueOf(r.getDouble(10));
-        final BigDecimal amountCredited = BigDecimal.valueOf(r.getDouble(11));
+        final Integer invoiceNumber = r.getInt(2);
+        final DateTime createdDate = new DateTime(r.getLong(3), DateTimeZone.UTC);
+        final DateTime updatedDate = new DateTime(r.getLong(4), DateTimeZone.UTC);
+        final UUID accountId = UUID.fromString(r.getString(5));
+        final String accountKey = r.getString(6);
+        final DateTime invoiceDate = new DateTime(r.getLong(7), DateTimeZone.UTC);
+        final DateTime targetDate = new DateTime(r.getLong(8), DateTimeZone.UTC);
+        final Currency currency = Currency.valueOf(r.getString(9));
+        final BigDecimal balance = BigDecimal.valueOf(r.getDouble(10));
+        final BigDecimal amountPaid = BigDecimal.valueOf(r.getDouble(11));
+        final BigDecimal amountCharged = BigDecimal.valueOf(r.getDouble(12));
+        final BigDecimal amountCredited = BigDecimal.valueOf(r.getDouble(13));
 
-        return new BusinessInvoice(accountKey, amountCharged, amountCredited, amountPaid, balance, createdDate, currency,
-                                   invoiceDate, invoiceId, targetDate, updatedDate);
+        return new BusinessInvoice(accountId, accountKey, amountCharged, amountCredited, amountPaid, balance, createdDate, currency,
+                                   invoiceDate, invoiceId, invoiceNumber, targetDate, updatedDate);
     }
 }

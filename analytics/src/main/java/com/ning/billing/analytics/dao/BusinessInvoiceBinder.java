@@ -43,6 +43,12 @@ public @interface BusinessInvoiceBinder {
                 public void bind(final SQLStatement q, final BusinessInvoiceBinder bind, final BusinessInvoice invoice) {
                     q.bind("invoice_id", invoice.getInvoiceId().toString());
 
+                    if (invoice.getInvoiceNumber() != null) {
+                        q.bind("invoice_number", invoice.getInvoiceNumber());
+                    } else {
+                        q.bindNull("invoice_number", Types.BIGINT);
+                    }
+
                     final DateTime dateTimeNow = new DateTime(DateTimeZone.UTC);
                     if (invoice.getCreatedDate() != null) {
                         q.bind("created_date", invoice.getCreatedDate().getMillis());
@@ -56,6 +62,7 @@ public @interface BusinessInvoiceBinder {
                         q.bind("updated_date", dateTimeNow.getMillis());
                     }
 
+                    q.bind("account_id", invoice.getAccountId().toString());
                     q.bind("account_key", invoice.getAccountKey());
 
                     if (invoice.getInvoiceDate() != null) {

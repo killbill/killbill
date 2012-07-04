@@ -3,8 +3,10 @@ group BusinessInvoice;
 getInvoice(invoice_id) ::= <<
 select
   invoice_id
+, invoice_number
 , created_date
 , updated_date
+, account_id
 , account_key
 , invoice_date
 , target_date
@@ -19,11 +21,34 @@ limit 1
 ;
 >>
 
-getInvoicesForAccount(account_key) ::= <<
+getInvoicesForAccount(account_id) ::= <<
 select
   invoice_id
+, invoice_number
 , created_date
 , updated_date
+, account_id
+, account_key
+, invoice_date
+, target_date
+, currency
+, balance
+, amount_paid
+, amount_charged
+, amount_credited
+from bin
+where account_id = :account_id
+order by created_date asc
+;
+>>
+
+getInvoicesForAccountByKey(account_key) ::= <<
+select
+  invoice_id
+, invoice_number
+, created_date
+, updated_date
+, account_id
 , account_key
 , invoice_date
 , target_date
@@ -41,8 +66,10 @@ order by created_date asc
 createInvoice() ::= <<
 insert into bin (
   invoice_id
+, invoice_number
 , created_date
 , updated_date
+, account_id
 , account_key
 , invoice_date
 , target_date
@@ -53,8 +80,10 @@ insert into bin (
 , amount_credited
 ) values (
   :invoice_id
+, :invoice_number
 , :created_date
 , :updated_date
+, :account_id
 , :account_key
 , :invoice_date
 , :target_date
@@ -69,6 +98,7 @@ insert into bin (
 updateInvoice() ::= <<
 update bin set
   updated_date = :updated_date
+, invoice_number = :invoice_number
 , account_key = :account_key
 , invoice_date = :invoice_date
 , target_date = :target_date
@@ -85,8 +115,8 @@ deleteInvoice(invoice_id) ::= <<
 delete from bin where invoice_id = :invoice_id;
 >>
 
-deleteInvoicesForAccount(account_key) ::= <<
-delete from bin where account_key = :account_key;
+deleteInvoicesForAccount(account_id) ::= <<
+delete from bin where account_id = :account_id;
 >>
 
 test() ::= <<

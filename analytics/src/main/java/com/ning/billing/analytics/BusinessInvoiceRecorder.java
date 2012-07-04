@@ -83,7 +83,7 @@ public class BusinessInvoiceRecorder {
             @Override
             public Void inTransaction(final BusinessInvoiceSqlDao transactional, final TransactionStatus status) throws Exception {
                 log.info("Started rebuilding transitions for account id {}", accountId);
-                deleteInvoicesAndInvoiceItemsForAccountInTransaction(transactional, accountKey);
+                deleteInvoicesAndInvoiceItemsForAccountInTransaction(transactional, accountId);
 
                 for (final Invoice invoice : invoiceApi.getInvoicesByAccount(accountId)) {
                     createInvoiceInTransaction(transactional, accountKey, invoice);
@@ -95,10 +95,10 @@ public class BusinessInvoiceRecorder {
         });
     }
 
-    private void deleteInvoicesAndInvoiceItemsForAccountInTransaction(final BusinessInvoiceSqlDao transactional, final String accountKey) {
+    private void deleteInvoicesAndInvoiceItemsForAccountInTransaction(final BusinessInvoiceSqlDao transactional, final UUID accountId) {
         // We don't use on cascade delete here as we don't want the database layer to be generic - hence we have
         // to delete the invoice items manually.
-        final List<BusinessInvoice> invoicesToDelete = transactional.getInvoicesForAccount(accountKey);
+        final List<BusinessInvoice> invoicesToDelete = transactional.getInvoicesForAccount(accountId.toString());
         final BusinessInvoiceItemSqlDao invoiceItemSqlDao = transactional.become(BusinessInvoiceItemSqlDao.class);
         for (final BusinessInvoice businessInvoice : invoicesToDelete) {
             final List<BusinessInvoiceItem> invoiceItemsForInvoice = invoiceItemSqlDao.getInvoiceItemsForInvoice(businessInvoice.getInvoiceId().toString());
@@ -107,7 +107,7 @@ public class BusinessInvoiceRecorder {
             }
         }
 
-        transactional.deleteInvoicesForAccount(accountKey);
+        transactional.deleteInvoicesForAccount(accountId.toString());
     }
 
     private void createInvoiceInTransaction(final BusinessInvoiceSqlDao transactional, final String accountKey, final Invoice invoice) {
