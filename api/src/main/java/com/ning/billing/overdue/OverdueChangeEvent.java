@@ -22,12 +22,11 @@ import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.util.bus.BusEvent;
 
 public interface OverdueChangeEvent extends BusEvent {
-
     UUID getOverdueObjectId();
-    
+
     Blockable.Type getOverdueObjectType();
-    
+
     String getPreviousOverdueStateName();
-    
+
     String getNextOverdueStateName();
 }

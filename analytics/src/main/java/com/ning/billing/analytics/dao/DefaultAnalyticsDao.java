@@ -23,6 +23,7 @@ import com.ning.billing.analytics.model.BusinessAccount;
 import com.ning.billing.analytics.model.BusinessAccountTag;
 import com.ning.billing.analytics.model.BusinessInvoice;
 import com.ning.billing.analytics.model.BusinessInvoiceItem;
+import com.ning.billing.analytics.model.BusinessOverdueStatus;
 import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
 
 public class DefaultAnalyticsDao implements AnalyticsDao {
@@ -31,18 +32,21 @@ public class DefaultAnalyticsDao implements AnalyticsDao {
     private final BusinessInvoiceSqlDao invoiceSqlDao;
     private final BusinessInvoiceItemSqlDao invoiceItemSqlDao;
     private final BusinessAccountTagSqlDao accountTagSqlDao;
+    private final BusinessOverdueStatusSqlDao overdueStatusSqlDao;
 
     @Inject
     public DefaultAnalyticsDao(final BusinessAccountSqlDao accountSqlDao,
                                final BusinessSubscriptionTransitionSqlDao subscriptionTransitionSqlDao,
                                final BusinessInvoiceSqlDao invoiceSqlDao,
                                final BusinessInvoiceItemSqlDao invoiceItemSqlDao,
-                               final BusinessAccountTagSqlDao accountTagSqlDao) {
+                               final BusinessAccountTagSqlDao accountTagSqlDao,
+                               final BusinessOverdueStatusSqlDao overdueStatusSqlDao) {
         this.accountSqlDao = accountSqlDao;
         this.subscriptionTransitionSqlDao = subscriptionTransitionSqlDao;
         this.invoiceSqlDao = invoiceSqlDao;
         this.invoiceItemSqlDao = invoiceItemSqlDao;
         this.accountTagSqlDao = accountTagSqlDao;
+        this.overdueStatusSqlDao = overdueStatusSqlDao;
     }
 
     @Override
@@ -68,5 +72,10 @@ public class DefaultAnalyticsDao implements AnalyticsDao {
     @Override
     public List<BusinessInvoiceItem> getInvoiceItemsForInvoice(final String invoiceId) {
         return invoiceItemSqlDao.getInvoiceItemsForInvoice(invoiceId);
+    }
+
+    @Override
+    public List<BusinessOverdueStatus> getOverdueStatusesForBundleByKey(final String externalKey) {
+        return overdueStatusSqlDao.getOverdueStatusesForBundle(externalKey);
     }
 }

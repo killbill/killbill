@@ -33,6 +33,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.AccountService;
@@ -56,8 +57,10 @@ import com.ning.billing.invoice.api.InvoiceService;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.invoice.model.InvoicingConfiguration;
 import com.ning.billing.junction.plumbing.api.BlockingSubscription;
+import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
+import com.ning.billing.payment.provider.MockPaymentProviderPlugin;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.callcontext.CallContext;
@@ -123,6 +126,13 @@ public class TestIntegrationBase implements TestListenerStatus {
 
     @Inject
     protected PaymentApi paymentApi;
+
+    @Named(BeatrixModule.PLUGIN_NAME)
+    @Inject
+    protected MockPaymentProviderPlugin paymentPlugin;
+
+    @Inject
+    protected OverdueWrapperFactory overdueWrapperFactory;
 
     @Inject
     protected AccountUserApi accountUserApi;

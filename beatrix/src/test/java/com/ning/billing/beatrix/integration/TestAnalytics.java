@@ -16,6 +16,8 @@
 
 package com.ning.billing.beatrix.integration;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
@@ -50,8 +52,10 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.overdue.config.OverdueConfig;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagDefinitionApiException;
+import com.ning.billing.util.config.XMLLoader;
 import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.tag.TagDefinition;
 
@@ -63,6 +67,53 @@ public class TestAnalytics extends TestIntegrationBase {
 
     @BeforeMethod(groups = "slow")
     public void setUpAnalyticsHandler() throws Exception {
+        final String configXml = "<overdueConfig>" +
+                "   <bundleOverdueStates>" +
+                "       <state name=\"OD3\">" +
+                "           <condition>" +
+                "               <timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
+                "                   <unit>DAYS</unit><number>50</number>" +
+                "               </timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
+                "           </condition>" +
+                "           <externalMessage>Reached OD3</externalMessage>" +
+                "           <blockChanges>true</blockChanges>" +
+                "           <disableEntitlementAndChangesBlocked>true</disableEntitlementAndChangesBlocked>" +
+                "           <autoReevaluationInterval>" +
+                "               <unit>DAYS</unit><number>5</number>" +
+                "           </autoReevaluationInterval>" +
+                "       </state>" +
+                "       <state name=\"OD2\">" +
+                "           <condition>" +
+                "               <timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
+                "                   <unit>DAYS</unit><number>40</number>" +
+                "               </timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
+                "           </condition>" +
+                "           <externalMessage>Reached OD2</externalMessage>" +
+                "           <blockChanges>true</blockChanges>" +
+                "           <disableEntitlementAndChangesBlocked>true</disableEntitlementAndChangesBlocked>" +
+                "           <autoReevaluationInterval>" +
+                "               <unit>DAYS</unit><number>5</number>" +
+                "           </autoReevaluationInterval>" +
+                "       </state>" +
+                "       <state name=\"OD1\">" +
+                "           <condition>" +
+                "               <timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
+                "                   <unit>DAYS</unit><number>30</number>" +
+                "               </timeSinceEarliestUnpaidInvoiceEqualsOrExceeds>" +
+                "           </condition>" +
+                "           <externalMessage>Reached OD1</externalMessage>" +
+                "           <blockChanges>true</blockChanges>" +
+                "           <disableEntitlementAndChangesBlocked>false</disableEntitlementAndChangesBlocked>" +
+                "           <autoReevaluationInterval>" +
+                "               <unit>DAYS</unit><number>100</number>" + // this number is intentionally too high
+                "           </autoReevaluationInterval>" +
+                "       </state>" +
+                "   </bundleOverdueStates>" +
+                "</overdueConfig>";
+        final InputStream is = new ByteArrayInputStream(configXml.getBytes());
+        final OverdueConfig config = XMLLoader.getObjectFromStreamNoValidation(is, OverdueConfig.class);
+        overdueWrapperFactory.setOverdueConfig(config);
+
         busService.getBus().register(analyticsListener);
     }
 
@@ -129,6 +180,105 @@ public class TestAnalytics extends TestIntegrationBase {
 
         // Upgrade the subscription
         verifyChangePlan(account, bundle, subscription);
+    }
+
+    @Test(groups = "slow")
+    public void testOverdue() throws Exception {
+        paymentPlugin.makeAllInvoicesFailWithError(true);
+
+        // Create an account
+        final Account account = verifyAccountCreation();
+
+        // Create a bundle
+        final SubscriptionBundle bundle = verifyFirstBundle(account);
+
+        // Add a subscription
+        busHandler.pushExpectedEvents(TestApiListener.NextEvent.CREATE, TestApiListener.NextEvent.INVOICE);
+        final Subscription subscription = verifyFirstSubscription(account, bundle);
+        assertTrue(busHandler.isCompleted(DELAY));
+
+        // Verify the initial overdue status
+        Assert.assertEquals(analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey()).size(), 0);
+
+        // Move after trial
+        busHandler.pushExpectedEvents(TestApiListener.NextEvent.PHASE, TestApiListener.NextEvent.INVOICE, TestApiListener.NextEvent.PAYMENT_ERROR);
+        clock.addDays(30); // DAY 30 have to get out of trial before first payment
+        Assert.assertTrue(busHandler.isCompleted(DELAY));
+
+        // Check BST - nothing should have changed
+        verifyBSTWithTrialAndEvergreenPhases(account, bundle, subscription);
+
+        // Verify overdue status - we should still be in clear state
+        Assert.assertEquals(analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey()).size(), 0);
+
+        clock.addDays(15); // DAY 45 - 15 days after invoice
+        assertTrue(busHandler.isCompleted(DELAY));
+
+        // Check BST - nothing should have changed
+        verifyBSTWithTrialAndEvergreenPhases(account, bundle, subscription);
+
+        // Verify overdue status - we should still be in clear state
+        Assert.assertEquals(analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey()).size(), 0);
+
+        busHandler.pushExpectedEvents(TestApiListener.NextEvent.INVOICE, TestApiListener.NextEvent.PAYMENT_ERROR);
+        clock.addDays(20); // DAY 65 - 35 days after invoice
+        assertTrue(busHandler.isCompleted(DELAY));
+        waitALittle();
+
+        // Verify overdue status - we should be in OD1
+        Assert.assertEquals(analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey()).size(), 1);
+        Assert.assertEquals(analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey()).get(0).getStatus(), "OD1");
+        Assert.assertEquals(analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey()).get(0).getBundleId(), bundle.getId());
+        Assert.assertEquals(analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey()).get(0).getExternalKey(), bundle.getKey());
+        Assert.assertEquals(analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey()).get(0).getAccountKey(), account.getExternalKey());
+
+        clock.addDays(2); // DAY 67 - 37 days after invoice
+        assertTrue(busHandler.isCompleted(DELAY));
+        waitALittle();
+        // Verify overdue status - we should still be in OD1
+        Assert.assertEquals(analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey()).size(), 1);
+        Assert.assertEquals(analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey()).get(0).getStatus(), "OD1");
+        Assert.assertEquals(analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey()).get(0).getBundleId(), bundle.getId());
+        Assert.assertEquals(analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey()).get(0).getExternalKey(), bundle.getKey());
+        Assert.assertEquals(analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey()).get(0).getAccountKey(), account.getExternalKey());
+
+        clock.addDays(8); // DAY 75 - 45 days after invoice
+        assertTrue(busHandler.isCompleted(DELAY));
+        waitALittle();
+        // Verify overdue status - we should be in OD2
+        Assert.assertEquals(analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey()).size(), 2);
+        Assert.assertEquals(analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey()).get(0).getStatus(), "OD1");
+        Assert.assertEquals(analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey()).get(1).getStatus(), "OD2");
+        Assert.assertEquals(analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey()).get(0).getEndDate(),
+                            analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey()).get(1).getStartDate());
+        Assert.assertEquals(analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey()).get(0).getBundleId(), bundle.getId());
+        Assert.assertEquals(analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey()).get(0).getExternalKey(), bundle.getKey());
+        Assert.assertEquals(analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey()).get(0).getAccountKey(), account.getExternalKey());
+        Assert.assertEquals(analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey()).get(1).getBundleId(), bundle.getId());
+        Assert.assertEquals(analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey()).get(1).getExternalKey(), bundle.getKey());
+        Assert.assertEquals(analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey()).get(1).getAccountKey(), account.getExternalKey());
+
+        clock.addDays(10); // DAY 85 - 55 days after invoice
+        assertTrue(busHandler.isCompleted(DELAY));
+        waitALittle();
+        // Verify overdue status - we should be in OD3
+        Assert.assertEquals(analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey()).size(), 3);
+        Assert.assertEquals(analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey()).get(0).getStatus(), "OD1");
+        Assert.assertEquals(analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey()).get(1).getStatus(), "OD2");
+        Assert.assertEquals(analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey()).get(2).getStatus(), "OD3");
+        Assert.assertEquals(analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey()).get(0).getEndDate(),
+                            analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey()).get(1).getStartDate());
+        Assert.assertEquals(analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey()).get(1).getEndDate(),
+                            analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey()).get(2).getStartDate());
+        Assert.assertEquals(analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey()).get(0).getBundleId(), bundle.getId());
+        Assert.assertEquals(analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey()).get(0).getExternalKey(), bundle.getKey());
+        Assert.assertEquals(analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey()).get(0).getAccountKey(), account.getExternalKey());
+        Assert.assertEquals(analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey()).get(1).getBundleId(), bundle.getId());
+        Assert.assertEquals(analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey()).get(1).getExternalKey(), bundle.getKey());
+        Assert.assertEquals(analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey()).get(1).getAccountKey(), account.getExternalKey());
+        Assert.assertEquals(analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey()).get(2).getBundleId(), bundle.getId());
+        Assert.assertEquals(analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey()).get(2).getExternalKey(), bundle.getKey());
+        Assert.assertEquals(analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey()).get(2).getAccountKey(), account.getExternalKey());
     }
 
     private Account verifyAccountCreation() throws Exception {

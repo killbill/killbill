@@ -22,18 +22,23 @@ import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
+import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
+import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 
 import com.ning.billing.analytics.model.BusinessOverdueStatus;
 
 @ExternalizedSqlViaStringTemplate3()
 @RegisterMapper(BusinessOverdueStatusMapper.class)
-public interface BusinessOverdueStatusSqlDao {
+public interface BusinessOverdueStatusSqlDao extends Transactional<BusinessOverdueStatusSqlDao>, Transmogrifier {
     @SqlQuery
     List<BusinessOverdueStatus> getOverdueStatusesForBundle(@Bind("external_key") final String externalKey);
 
     @SqlUpdate
     int createOverdueStatus(@BusinessOverdueStatusBinder final BusinessOverdueStatus status);
+
+    @SqlUpdate
+    void deleteOverdueStatusesForBundle(@Bind("bundle_id") final String bundleId);
 
     @SqlUpdate
     void test();
