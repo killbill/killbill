@@ -39,6 +39,7 @@ public @interface BusinessOverdueStatusBinder {
             return new Binder<BusinessOverdueStatusBinder, BusinessOverdueStatus>() {
                 public void bind(final SQLStatement q, final BusinessOverdueStatusBinder bind, final BusinessOverdueStatus overdueStatus) {
                     q.bind("account_key", overdueStatus.getAccountKey());
+                    q.bind("bundle_id", overdueStatus.getBundleId().toString());
                     q.bind("external_key", overdueStatus.getExternalKey());
                     q.bind("status", overdueStatus.getStatus());
 

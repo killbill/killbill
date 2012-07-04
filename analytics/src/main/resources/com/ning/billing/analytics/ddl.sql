@@ -125,6 +125,7 @@ create unique index bip_key_index on bip (attempt_id);
 drop table if exists bos;
 create table bos (
   record_id int(11) unsigned not null auto_increment
+, bundle_id char(36) not null
 , external_key varchar(50) not null comment 'Bundle external key'
 , account_key varchar(50) not null comment 'Account external key'
 , status varchar(50) not null

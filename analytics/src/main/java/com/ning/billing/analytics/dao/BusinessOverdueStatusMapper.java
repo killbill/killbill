@@ -18,6 +18,7 @@ package com.ning.billing.analytics.dao;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -29,12 +30,13 @@ import com.ning.billing.analytics.model.BusinessOverdueStatus;
 public class BusinessOverdueStatusMapper implements ResultSetMapper<BusinessOverdueStatus> {
     @Override
     public BusinessOverdueStatus map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
-        final String externalKey = r.getString(1);
-        final String accountKey = r.getString(2);
-        final String status = r.getString(3);
-        final DateTime startDate = new DateTime(r.getLong(4), DateTimeZone.UTC);
-        final DateTime endDate = new DateTime(r.getLong(5), DateTimeZone.UTC);
+        final UUID bundleId = UUID.fromString(r.getString(1));
+        final String externalKey = r.getString(2);
+        final String accountKey = r.getString(3);
+        final String status = r.getString(4);
+        final DateTime startDate = new DateTime(r.getLong(5), DateTimeZone.UTC);
+        final DateTime endDate = new DateTime(r.getLong(6), DateTimeZone.UTC);
 
-        return new BusinessOverdueStatus(accountKey, endDate, externalKey, startDate, status);
+        return new BusinessOverdueStatus(accountKey, bundleId, endDate, externalKey, startDate, status);
     }
 }
