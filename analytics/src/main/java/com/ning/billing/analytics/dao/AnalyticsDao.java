@@ -34,6 +34,4 @@ public interface AnalyticsDao {
     List<BusinessAccountTag> getTagsForAccount(final String accountKey);
 
     List<BusinessInvoiceItem> getInvoiceItemsForInvoice(final String invoiceId);
-
-    void createInvoice(final String accountKey, final BusinessInvoice invoice, final Iterable<BusinessInvoiceItem> invoiceItems);
 }

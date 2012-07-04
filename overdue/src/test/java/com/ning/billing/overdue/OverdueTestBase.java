@@ -52,6 +52,7 @@ import com.ning.billing.mock.glue.MockPaymentModule;
 import com.ning.billing.mock.glue.TestDbiModule;
 import com.ning.billing.overdue.applicator.ApplicatorMockJunctionModule;
 import com.ning.billing.overdue.applicator.ApplicatorMockJunctionModule.ApplicatorBlockingApi;
+import com.ning.billing.overdue.applicator.OverdueListenerTesterModule;
 import com.ning.billing.overdue.applicator.TestOverdueStateApplicator;
 import com.ning.billing.overdue.config.OverdueConfig;
 import com.ning.billing.overdue.glue.DefaultOverdueModule;
@@ -64,7 +65,7 @@ import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.io.IOUtils;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
 
-@Guice(modules = {DefaultOverdueModule.class, MockClockModule.class, ApplicatorMockJunctionModule.class, CatalogModule.class, MockInvoiceModule.class, MockPaymentModule.class, BusModule.class, NotificationQueueModule.class, TestDbiModule.class})
+@Guice(modules = {DefaultOverdueModule.class,OverdueListenerTesterModule.class, MockClockModule.class, ApplicatorMockJunctionModule.class, CatalogModule.class, MockInvoiceModule.class, MockPaymentModule.class, NotificationQueueModule.class, TestDbiModule.class})
 public class OverdueTestBase {
     protected final String configXml =
             "<overdueConfig>" +

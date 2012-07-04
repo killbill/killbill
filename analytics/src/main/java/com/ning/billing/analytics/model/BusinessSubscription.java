@@ -18,7 +18,6 @@ package com.ning.billing.analytics.model;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -60,10 +59,10 @@ public class BusinessSubscription {
     private final String currency;
     private final DateTime startDate;
     private final SubscriptionState state;
-    private final UUID subscriptionId;
-    private final UUID bundleId;
 
-    public BusinessSubscription(final String productName, final String productType, final ProductCategory productCategory, final String slug, final String phase, final String billingPeriod, final BigDecimal price, final String priceList, final BigDecimal mrr, final String currency, final DateTime startDate, final SubscriptionState state, final UUID subscriptionId, final UUID bundleId) {
+    public BusinessSubscription(final String productName, final String productType, final ProductCategory productCategory,
+                                final String slug, final String phase, final String billingPeriod, final BigDecimal price,
+                                final String priceList, final BigDecimal mrr, final String currency, final DateTime startDate, final SubscriptionState state) {
         this.productName = productName;
         this.productType = productType;
         this.productCategory = productCategory;
@@ -76,8 +75,6 @@ public class BusinessSubscription {
         this.currency = currency;
         this.startDate = startDate;
         this.state = state;
-        this.subscriptionId = subscriptionId;
-        this.bundleId = bundleId;
     }
 
     /**
@@ -91,10 +88,13 @@ public class BusinessSubscription {
      * @param catalog      Catalog to use
      */
     BusinessSubscription(final Subscription subscription, final Currency currency, final Catalog catalog) {
-        this(subscription.getCurrentPriceList() == null ? null : subscription.getCurrentPriceList().getName(), subscription.getCurrentPlan().getName(), subscription.getCurrentPhase().getName(), currency, subscription.getStartDate(), subscription.getState(), subscription.getId(), subscription.getBundleId(), catalog);
+        this(subscription.getCurrentPriceList() == null ? null : subscription.getCurrentPriceList().getName(),
+             subscription.getCurrentPlan().getName(), subscription.getCurrentPhase().getName(), currency,
+             subscription.getStartDate(), subscription.getState(), catalog);
     }
 
-    public BusinessSubscription(final String priceList, final String currentPlan, final String currentPhase, final Currency currency, final DateTime startDate, final SubscriptionState state, final UUID subscriptionId, final UUID bundleId, final Catalog catalog) {
+    public BusinessSubscription(final String priceList, final String currentPlan, final String currentPhase, final Currency currency,
+                                final DateTime startDate, final SubscriptionState state, final Catalog catalog) {
         Plan thePlan = null;
         PlanPhase thePhase = null;
         try {
@@ -165,11 +165,10 @@ public class BusinessSubscription {
 
         this.startDate = startDate;
         this.state = state;
-        this.subscriptionId = subscriptionId;
-        this.bundleId = bundleId;
     }
 
-    public BusinessSubscription(final String priceList, final Plan currentPlan, final PlanPhase currentPhase, final Currency currency, final DateTime startDate, final SubscriptionState state, final UUID subscriptionId, final UUID bundleId) {
+    public BusinessSubscription(final String priceList, final Plan currentPlan, final PlanPhase currentPhase, final Currency currency,
+                                final DateTime startDate, final SubscriptionState state) {
         this.priceList = priceList;
 
         // Record plan information
@@ -231,16 +230,10 @@ public class BusinessSubscription {
 
         this.startDate = startDate;
         this.state = state;
-        this.subscriptionId = subscriptionId;
-        this.bundleId = bundleId;
     }
 
     public String getBillingPeriod() {
         return billingPeriod;
-    }
-
-    public UUID getBundleId() {
-        return bundleId;
     }
 
     public String getCurrency() {
@@ -295,10 +288,6 @@ public class BusinessSubscription {
         return state;
     }
 
-    public UUID getSubscriptionId() {
-        return subscriptionId;
-    }
-
     static BigDecimal getMrrFromISubscription(final Duration duration, final BigDecimal price) {
         if (duration == null || duration.getUnit() == null || duration.getNumber() == 0) {
             return BigDecimal.ZERO;
@@ -334,8 +323,6 @@ public class BusinessSubscription {
         sb.append(", currency='").append(currency).append('\'');
         sb.append(", startDate=").append(startDate);
         sb.append(", state=").append(state);
-        sb.append(", subscriptionId=").append(subscriptionId);
-        sb.append(", bundleId=").append(bundleId);
         sb.append('}');
         return sb.toString();
     }
@@ -352,9 +339,6 @@ public class BusinessSubscription {
         final BusinessSubscription that = (BusinessSubscription) o;
 
         if (billingPeriod != null ? !billingPeriod.equals(that.billingPeriod) : that.billingPeriod != null) {
-            return false;
-        }
-        if (bundleId != null ? !bundleId.equals(that.bundleId) : that.bundleId != null) {
             return false;
         }
         if (currency != null ? !currency.equals(that.currency) : that.currency != null) {
@@ -390,9 +374,6 @@ public class BusinessSubscription {
         if (state != that.state) {
             return false;
         }
-        if (subscriptionId != null ? !subscriptionId.equals(that.subscriptionId) : that.subscriptionId != null) {
-            return false;
-        }
 
         return true;
     }
@@ -410,8 +391,6 @@ public class BusinessSubscription {
         result = 31 * result + (currency != null ? currency.hashCode() : 0);
         result = 31 * result + (startDate != null ? startDate.hashCode() : 0);
         result = 31 * result + (state != null ? state.hashCode() : 0);
-        result = 31 * result + (subscriptionId != null ? subscriptionId.hashCode() : 0);
-        result = 31 * result + (bundleId != null ? bundleId.hashCode() : 0);
         result = 31 * result + (billingPeriod != null ? billingPeriod.hashCode() : 0);
         return result;
     }

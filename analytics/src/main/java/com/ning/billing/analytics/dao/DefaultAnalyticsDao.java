@@ -19,11 +19,6 @@ package com.ning.billing.analytics.dao;
 import javax.inject.Inject;
 import java.util.List;
 
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.skife.jdbi.v2.Transaction;
-import org.skife.jdbi.v2.TransactionStatus;
-
 import com.ning.billing.analytics.model.BusinessAccount;
 import com.ning.billing.analytics.model.BusinessAccountTag;
 import com.ning.billing.analytics.model.BusinessInvoice;
@@ -52,7 +47,7 @@ public class DefaultAnalyticsDao implements AnalyticsDao {
 
     @Override
     public BusinessAccount getAccountByKey(final String accountKey) {
-        return accountSqlDao.getAccount(accountKey);
+        return accountSqlDao.getAccountByKey(accountKey);
     }
 
     @Override
@@ -62,7 +57,7 @@ public class DefaultAnalyticsDao implements AnalyticsDao {
 
     @Override
     public List<BusinessInvoice> getInvoicesByKey(final String accountKey) {
-        return invoiceSqlDao.getInvoicesForAccount(accountKey);
+        return invoiceSqlDao.getInvoicesForAccountByKey(accountKey);
     }
 
     @Override
@@ -73,36 +68,5 @@ public class DefaultAnalyticsDao implements AnalyticsDao {
     @Override
     public List<BusinessInvoiceItem> getInvoiceItemsForInvoice(final String invoiceId) {
         return invoiceItemSqlDao.getInvoiceItemsForInvoice(invoiceId);
-    }
-
-    @Override
-    public void createInvoice(final String accountKey, final BusinessInvoice invoice, final Iterable<BusinessInvoiceItem> invoiceItems) {
-        invoiceSqlDao.inTransaction(new Transaction<Void, BusinessInvoiceSqlDao>() {
-            @Override
-            public Void inTransaction(final BusinessInvoiceSqlDao transactional, final TransactionStatus status) throws Exception {
-                // Create the invoice
-                transactional.createInvoice(invoice);
-
-                // Add associated invoice items
-                final BusinessInvoiceItemSqlDao invoiceItemSqlDao = transactional.become(BusinessInvoiceItemSqlDao.class);
-                for (final BusinessInvoiceItem invoiceItem : invoiceItems) {
-                    invoiceItemSqlDao.createInvoiceItem(invoiceItem);
-                }
-
-                // Update BAC
-                final BusinessAccountSqlDao accountSqlDao = transactional.become(BusinessAccountSqlDao.class);
-                final BusinessAccount account = accountSqlDao.getAccount(accountKey);
-                if (account == null) {
-                    throw new IllegalStateException("Account does not exist for key " + accountKey);
-                }
-                account.setBalance(account.getBalance().add(invoice.getBalance()));
-                account.setLastInvoiceDate(invoice.getInvoiceDate());
-                account.setTotalInvoiceBalance(account.getTotalInvoiceBalance().add(invoice.getBalance()));
-                account.setUpdatedDt(new DateTime(DateTimeZone.UTC));
-                accountSqlDao.saveAccount(account);
-
-                return null;
-            }
-        });
     }
 }

@@ -43,6 +43,8 @@ public class TestBusinessSubscriptionTransitionRecorder extends AnalyticsTestSui
     public void testCreateAddOn() throws Exception {
         final UUID bundleId = UUID.randomUUID();
         final UUID externalKey = UUID.randomUUID();
+        final UUID accountId = UUID.randomUUID();
+        final UUID subscriptionId = UUID.randomUUID();
 
         // Setup the catalog
         final CatalogService catalogService = Mockito.mock(CatalogService.class);
@@ -54,6 +56,7 @@ public class TestBusinessSubscriptionTransitionRecorder extends AnalyticsTestSui
         // Setup the entitlement API
         final SubscriptionBundle bundle = Mockito.mock(SubscriptionBundle.class);
         Mockito.when(bundle.getId()).thenReturn(bundleId);
+        Mockito.when(bundle.getAccountId()).thenReturn(accountId);
         Mockito.when(bundle.getKey()).thenReturn(externalKey.toString());
         final EntitlementUserApi entitlementApi = Mockito.mock(EntitlementUserApi.class);
         Mockito.when(entitlementApi.getBundleFromId(Mockito.<UUID>any())).thenReturn(bundle);
@@ -68,13 +71,14 @@ public class TestBusinessSubscriptionTransitionRecorder extends AnalyticsTestSui
         final EffectiveSubscriptionEvent eventEffective = Mockito.mock(EffectiveSubscriptionEvent.class);
         Mockito.when(eventEffective.getId()).thenReturn(UUID.randomUUID());
         Mockito.when(eventEffective.getTransitionType()).thenReturn(SubscriptionTransitionType.CREATE);
-        Mockito.when(eventEffective.getSubscriptionId()).thenReturn(UUID.randomUUID());
+        Mockito.when(eventEffective.getSubscriptionId()).thenReturn(subscriptionId);
         Mockito.when(eventEffective.getRequestedTransitionTime()).thenReturn(new DateTime(DateTimeZone.UTC));
         Mockito.when(eventEffective.getNextPlan()).thenReturn(UUID.randomUUID().toString());
         Mockito.when(eventEffective.getEffectiveTransitionTime()).thenReturn(new DateTime(DateTimeZone.UTC));
         Mockito.when(eventEffective.getSubscriptionStartDate()).thenReturn(new DateTime(DateTimeZone.UTC));
 
         final Subscription subscription = Mockito.mock(Subscription.class);
+        Mockito.when(subscription.getId()).thenReturn(subscriptionId);
         Mockito.when(subscription.getAllTransitions()).thenReturn(ImmutableList.<EffectiveSubscriptionEvent>of(eventEffective));
         Mockito.when(entitlementApi.getSubscriptionsForBundle(Mockito.<UUID>any())).thenReturn(ImmutableList.<Subscription>of(subscription));
 

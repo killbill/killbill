@@ -26,16 +26,18 @@ import com.ning.billing.analytics.AnalyticsTestSuite;
 public class TestBusinessAccountTag extends AnalyticsTestSuite {
     @Test(groups = "fast")
     public void testEquals() throws Exception {
+        final UUID accountId = UUID.randomUUID();
         final String accountKey = UUID.randomUUID().toString();
         final String name = UUID.randomUUID().toString();
-        final BusinessAccountTag accountTag = new BusinessAccountTag(accountKey, name);
+        final BusinessAccountTag accountTag = new BusinessAccountTag(accountId, accountKey, name);
         Assert.assertSame(accountTag, accountTag);
         Assert.assertEquals(accountTag, accountTag);
         Assert.assertTrue(accountTag.equals(accountTag));
+        Assert.assertEquals(accountTag.getAccountId(), accountId);
         Assert.assertEquals(accountTag.getAccountKey(), accountKey);
         Assert.assertEquals(accountTag.getName(), name);
 
-        final BusinessAccountTag otherAccountTag = new BusinessAccountTag(UUID.randomUUID().toString(), UUID.randomUUID().toString());
+        final BusinessAccountTag otherAccountTag = new BusinessAccountTag(UUID.randomUUID(), UUID.randomUUID().toString(), UUID.randomUUID().toString());
         Assert.assertFalse(accountTag.equals(otherAccountTag));
     }
 }

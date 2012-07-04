@@ -25,14 +25,14 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.ning.billing.analytics.AnalyticsTestSuite;
-import com.ning.billing.analytics.model.BusinessAccount;
 
 public class TestBusinessAccount extends AnalyticsTestSuite {
     private BusinessAccount account;
 
     @BeforeMethod(groups = "fast")
     public void setUp() throws Exception {
-        account = new BusinessAccount("pierre", UUID.randomUUID().toString(), BigDecimal.ONE, new DateTime(), BigDecimal.TEN, "ERROR_NOT_ENOUGH_FUNDS", "CreditCard", "Visa", "");
+        account = new BusinessAccount(UUID.randomUUID(), "pierre", UUID.randomUUID().toString(), BigDecimal.ONE, new DateTime(),
+                                      BigDecimal.TEN, "ERROR_NOT_ENOUGH_FUNDS", "CreditCard", "Visa", "");
     }
 
     @Test(groups = "fast")
@@ -41,7 +41,8 @@ public class TestBusinessAccount extends AnalyticsTestSuite {
         Assert.assertEquals(account, account);
         Assert.assertTrue(account.equals(account));
 
-        final BusinessAccount otherAccount = new BusinessAccount("pierre cardin", UUID.randomUUID().toString(), BigDecimal.ONE, new DateTime(), BigDecimal.TEN, "ERROR_NOT_ENOUGH_FUNDS", "CreditCard", "Visa", "");
+        final BusinessAccount otherAccount = new BusinessAccount(UUID.randomUUID(), "pierre cardin", UUID.randomUUID().toString(), BigDecimal.ONE, new DateTime(),
+                                                                 BigDecimal.TEN, "ERROR_NOT_ENOUGH_FUNDS", "CreditCard", "Visa", "");
         Assert.assertFalse(account.equals(otherAccount));
     }
 }

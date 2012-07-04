@@ -57,11 +57,13 @@ public class AnalyticsListener {
 
     @Subscribe
     public void handleEffectiveSubscriptionTransitionChange(final EffectiveSubscriptionEvent eventEffective) throws AccountApiException, EntitlementUserApiException {
+        // The event is used as a trigger to rebuild all transitions for this bundle
         bstRecorder.rebuildTransitionsForBundle(eventEffective.getBundleId());
     }
 
     @Subscribe
     public void handleRequestedSubscriptionTransitionChange(final RequestedSubscriptionEvent eventRequested) throws AccountApiException, EntitlementUserApiException {
+        // The event is used as a trigger to rebuild all transitions for this bundle
         bstRecorder.rebuildTransitionsForBundle(eventRequested.getBundleId());
     }
 
@@ -87,8 +89,8 @@ public class AnalyticsListener {
 
     @Subscribe
     public void handleInvoiceCreation(final InvoiceCreationEvent event) {
-        // TODO - follow same logic as entitlements to support repair
-        invoiceRecorder.invoiceCreated(event.getInvoiceId());
+        // The event is used as a trigger to rebuild all invoices and invoice items for this account
+        invoiceRecorder.rebuildInvoicesForAccount(event.getAccountId());
     }
 
     @Subscribe

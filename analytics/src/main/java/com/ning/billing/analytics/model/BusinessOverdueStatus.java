@@ -16,19 +16,34 @@
 
 package com.ning.billing.analytics.model;
 
+import java.util.UUID;
+
 import org.joda.time.DateTime;
 
 public class BusinessOverdueStatus {
+    private final String accountKey;
+    private final UUID bundleId;
     private final String externalKey;
     private final String status;
     private final DateTime startDate;
     private final DateTime endDate;
 
-    public BusinessOverdueStatus(final DateTime endDate, final String externalKey, final DateTime startDate, final String status) {
+    public BusinessOverdueStatus(final String accountKey, final UUID bundleId, final DateTime endDate,
+                                 final String externalKey, final DateTime startDate, final String status) {
+        this.accountKey = accountKey;
+        this.bundleId = bundleId;
         this.endDate = endDate;
         this.externalKey = externalKey;
         this.startDate = startDate;
         this.status = status;
+    }
+
+    public String getAccountKey() {
+        return accountKey;
+    }
+
+    public UUID getBundleId() {
+        return bundleId;
     }
 
     public DateTime getEndDate() {
@@ -51,7 +66,9 @@ public class BusinessOverdueStatus {
     public String toString() {
         final StringBuilder sb = new StringBuilder();
         sb.append("BusinessOverdueStatus");
-        sb.append("{endDate=").append(endDate);
+        sb.append("{accountKey=").append(accountKey);
+        sb.append(", bundleId='").append(bundleId).append('\'');
+        sb.append(", endDate='").append(endDate).append('\'');
         sb.append(", externalKey='").append(externalKey).append('\'');
         sb.append(", status='").append(status).append('\'');
         sb.append(", startDate=").append(startDate);
@@ -70,6 +87,12 @@ public class BusinessOverdueStatus {
 
         final BusinessOverdueStatus that = (BusinessOverdueStatus) o;
 
+        if (accountKey != null ? !accountKey.equals(that.accountKey) : that.accountKey != null) {
+            return false;
+        }
+        if (bundleId != null ? !bundleId.equals(that.bundleId) : that.bundleId != null) {
+            return false;
+        }
         if (endDate != null ? !endDate.equals(that.endDate) : that.endDate != null) {
             return false;
         }
@@ -88,7 +111,9 @@ public class BusinessOverdueStatus {
 
     @Override
     public int hashCode() {
-        int result = externalKey != null ? externalKey.hashCode() : 0;
+        int result = accountKey != null ? accountKey.hashCode() : 0;
+        result = 31 * result + (bundleId != null ? bundleId.hashCode() : 0);
+        result = 31 * result + (externalKey != null ? externalKey.hashCode() : 0);
         result = 31 * result + (status != null ? status.hashCode() : 0);
         result = 31 * result + (startDate != null ? startDate.hashCode() : 0);
         result = 31 * result + (endDate != null ? endDate.hashCode() : 0);

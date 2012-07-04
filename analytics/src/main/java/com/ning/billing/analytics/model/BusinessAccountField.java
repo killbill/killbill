@@ -16,12 +16,20 @@
 
 package com.ning.billing.analytics.model;
 
+import java.util.UUID;
+
 public class BusinessAccountField extends BusinessField {
+    private final UUID accountId;
     private final String accountKey;
 
-    public BusinessAccountField(final String accountKey, final String name, final String value) {
+    public BusinessAccountField(final UUID accountId, final String accountKey, final String name, final String value) {
         super(name, value);
+        this.accountId = accountId;
         this.accountKey = accountKey;
+    }
+
+    public UUID getAccountId() {
+        return accountId;
     }
 
     public String getAccountKey() {
@@ -32,7 +40,8 @@ public class BusinessAccountField extends BusinessField {
     public String toString() {
         final StringBuilder sb = new StringBuilder();
         sb.append("BusinessAccountField");
-        sb.append("{accountKey='").append(accountKey).append('\'');
+        sb.append("{accountId='").append(accountId).append('\'');
+        sb.append(", accountKey='").append(accountKey).append('\'');
         sb.append(", name='").append(getName()).append('\'');
         sb.append(", value='").append(getValue()).append('\'');
         sb.append('}');
@@ -50,6 +59,9 @@ public class BusinessAccountField extends BusinessField {
 
         final BusinessAccountField that = (BusinessAccountField) o;
 
+        if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
+            return false;
+        }
         if (accountKey != null ? !accountKey.equals(that.accountKey) : that.accountKey != null) {
             return false;
         }
@@ -65,7 +77,8 @@ public class BusinessAccountField extends BusinessField {
 
     @Override
     public int hashCode() {
-        int result = accountKey != null ? accountKey.hashCode() : 0;
+        int result = accountId != null ? accountId.hashCode() : 0;
+        result = 31 * result + (accountKey != null ? accountKey.hashCode() : 0);
         result = 31 * result + (getName() != null ? getName().hashCode() : 0);
         result = 31 * result + (getValue() != null ? getValue().hashCode() : 0);
         return result;

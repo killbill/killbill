@@ -95,6 +95,7 @@ public class TestAnalyticsService extends TestWithEmbeddedDB {
 
     private static final Long TOTAL_ORDERING = 11L;
     private static final String EXTERNAL_KEY = "12345";
+    private static final UUID ACCOUNT_ID = UUID.randomUUID();
     private static final String ACCOUNT_KEY = "pierre-12345";
     private static final Currency ACCOUNT_CURRENCY = Currency.EUR;
     private static final BigDecimal INVOICE_AMOUNT = BigDecimal.valueOf(1243.11);
@@ -201,12 +202,15 @@ public class TestAnalyticsService extends TestWithEmbeddedDB {
                 true), null);
         expectedTransition = new BusinessSubscriptionTransition(
                 TOTAL_ORDERING,
+                transition.getBundleId(),
                 EXTERNAL_KEY,
+                ACCOUNT_ID,
                 ACCOUNT_KEY,
+                transition.getSubscriptionId(),
                 requestedTransitionTime,
                 BusinessSubscriptionEvent.subscriptionCreated(plan.getName(), catalog, new DateTime(), new DateTime()),
                 null,
-                new BusinessSubscription(priceList.getName(), plan.getName(), phase.getName(), ACCOUNT_CURRENCY, effectiveTransitionTime, Subscription.SubscriptionState.ACTIVE, subscriptionId, bundle.getId(), catalog)
+                new BusinessSubscription(priceList.getName(), plan.getName(), phase.getName(), ACCOUNT_CURRENCY, effectiveTransitionTime, Subscription.SubscriptionState.ACTIVE, catalog)
         );
     }
 
@@ -256,7 +260,7 @@ public class TestAnalyticsService extends TestWithEmbeddedDB {
             Assert.fail("Unable to start the bus or service! " + t);
         }
 
-        Assert.assertNull(accountSqlDao.getAccount(ACCOUNT_KEY));
+        Assert.assertNull(accountSqlDao.getAccountByKey(ACCOUNT_KEY));
 
         // Send events and wait for the async part...
         bus.post(transition);
@@ -267,12 +271,12 @@ public class TestAnalyticsService extends TestWithEmbeddedDB {
         Assert.assertEquals(subscriptionSqlDao.getTransitions(EXTERNAL_KEY).get(0), expectedTransition);
 
         // Test invoice integration - the account creation notification has triggered a BAC update
-        Assert.assertTrue(accountSqlDao.getAccount(ACCOUNT_KEY).getTotalInvoiceBalance().compareTo(INVOICE_AMOUNT) == 0);
+        Assert.assertTrue(accountSqlDao.getAccountByKey(ACCOUNT_KEY).getTotalInvoiceBalance().compareTo(INVOICE_AMOUNT) == 0);
 
         // Post the same invoice event again - the invoice balance shouldn't change
         bus.post(invoiceCreationNotification);
         Thread.sleep(5000);
-        Assert.assertTrue(accountSqlDao.getAccount(ACCOUNT_KEY).getTotalInvoiceBalance().compareTo(INVOICE_AMOUNT) == 0);
+        Assert.assertTrue(accountSqlDao.getAccountByKey(ACCOUNT_KEY).getTotalInvoiceBalance().compareTo(INVOICE_AMOUNT) == 0);
 
         // Test payment integration - the fields have already been populated, just make sure the code is exercised
         bus.post(paymentInfoNotification);
