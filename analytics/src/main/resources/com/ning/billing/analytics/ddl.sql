@@ -163,6 +163,7 @@ create table bst_tags (
 drop table if exists bst_fields;
 create table bst_fields (
   record_id int(11) unsigned not null auto_increment
+, bundle_id char(36) not null
 , external_key varchar(50) not null comment 'Bundle external key'
 , account_key varchar(50) not null comment 'Account external key'
 , name varchar(30) not null

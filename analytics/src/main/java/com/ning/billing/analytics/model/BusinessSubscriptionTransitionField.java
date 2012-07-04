@@ -16,18 +16,27 @@
 
 package com.ning.billing.analytics.model;
 
+import java.util.UUID;
+
 public class BusinessSubscriptionTransitionField extends BusinessField {
     private final String accountKey;
+    private final UUID bundleId;
     private final String externalKey;
 
-    public BusinessSubscriptionTransitionField(final String accountKey, final String externalKey, final String name, final String value) {
+    public BusinessSubscriptionTransitionField(final String accountKey, final UUID bundleId, final String externalKey,
+                                               final String name, final String value) {
         super(name, value);
         this.accountKey = accountKey;
+        this.bundleId = bundleId;
         this.externalKey = externalKey;
     }
 
     public String getAccountKey() {
         return accountKey;
+    }
+
+    public UUID getBundleId() {
+        return bundleId;
     }
 
     public String getExternalKey() {
@@ -39,6 +48,7 @@ public class BusinessSubscriptionTransitionField extends BusinessField {
         final StringBuilder sb = new StringBuilder();
         sb.append("BusinessSubscriptionTransitionField");
         sb.append("{accountKey='").append(accountKey).append('\'');
+        sb.append(", bundleId='").append(bundleId).append('\'');
         sb.append(", externalKey='").append(externalKey).append('\'');
         sb.append(", name='").append(getName()).append('\'');
         sb.append(", value='").append(getValue()).append('\'');
@@ -60,6 +70,9 @@ public class BusinessSubscriptionTransitionField extends BusinessField {
         if (accountKey != null ? !accountKey.equals(that.accountKey) : that.accountKey != null) {
             return false;
         }
+        if (bundleId != null ? !bundleId.equals(that.bundleId) : that.bundleId != null) {
+            return false;
+        }
         if (externalKey != null ? !externalKey.equals(that.externalKey) : that.externalKey != null) {
             return false;
         }
@@ -76,6 +89,7 @@ public class BusinessSubscriptionTransitionField extends BusinessField {
     @Override
     public int hashCode() {
         int result = accountKey != null ? accountKey.hashCode() : 0;
+        result = 31 * result + (bundleId != null ? bundleId.hashCode() : 0);
         result = 31 * result + (externalKey != null ? externalKey.hashCode() : 0);
         result = 31 * result + (getName() != null ? getName().hashCode() : 0);
         result = 31 * result + (getValue() != null ? getValue().hashCode() : 0);
