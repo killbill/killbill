@@ -19,6 +19,7 @@ package com.ning.billing.overdue.applicator;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.Blockable.Type;
@@ -45,6 +46,7 @@ public class DefaultOverdueChangeEvent implements OverdueChangeEvent {
         this.userToken = userToken;
     }
     
+    @JsonIgnore
     @Override
     public BusEventType getBusEventType() {
         return BusEventType.OVERDUE_CHANGE;

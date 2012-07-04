@@ -22,8 +22,11 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+
+import junit.framework.Assert;
 
 import org.testng.annotations.Test;
 
@@ -32,6 +35,7 @@ import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
+import com.ning.billing.overdue.OverdueChangeEvent;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.OverdueTestBase;
 import com.ning.billing.overdue.config.OverdueConfig;
@@ -65,22 +69,37 @@ public class TestOverdueStateApplicator extends OverdueTestBase {
         state = config.getBundleStateSet().findState("OD1");
         applicator.apply(bundle, BlockingApi.CLEAR_STATE_NAME, state);
         checkStateApplied(state);
-//        await().atMost(10, SECONDS).until(new Callable<Boolean>() {
-//            @Override
-//            public Boolean call() throws Exception {
-//                return listener.getEventsReceived().size() == 1;
-//            }
-//        });
+        checkBussEvent("OD1");
         
 
 
         state = config.getBundleStateSet().findState("OD2");
         applicator.apply(bundle, BlockingApi.CLEAR_STATE_NAME, state);
         checkStateApplied(state);
+        checkBussEvent("OD2");
+        
 
         state = config.getBundleStateSet().findState("OD3");
         applicator.apply(bundle, BlockingApi.CLEAR_STATE_NAME, state);
         checkStateApplied(state);
+        checkBussEvent("OD3");
+        bus.stop();
+
+    }
+
+
+    private void checkBussEvent(final String state) throws Exception {
+        await().atMost(10, SECONDS).until(new Callable<Boolean>() {
+            @Override
+            public Boolean call() throws Exception {
+                List<OverdueChangeEvent> events = listener.getEventsReceived();
+                return events.size() == 1;
+            }
+        });
+        List<OverdueChangeEvent> events = listener.getEventsReceived();
+        Assert.assertEquals(1, events.size());
+        Assert.assertEquals(state, events.get(0).getNextOverdueStateName());
+        listener.clearEventsReceived();
 
     }
 
