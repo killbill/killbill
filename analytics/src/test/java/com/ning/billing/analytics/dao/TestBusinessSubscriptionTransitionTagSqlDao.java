@@ -45,7 +45,7 @@ public class TestBusinessSubscriptionTransitionTagSqlDao extends TestWithEmbedde
 
         // Verify initial state
         Assert.assertEquals(subscriptionTransitionTagSqlDao.getTagsForBusinessSubscriptionTransition(externalKey).size(), 0);
-        Assert.assertEquals(subscriptionTransitionTagSqlDao.removeTag(externalKey, name), 0);
+        Assert.assertEquals(subscriptionTransitionTagSqlDao.removeTag(bundleId.toString(), name), 0);
 
         // Add an entry
         Assert.assertEquals(subscriptionTransitionTagSqlDao.addTag(accountKey, bundleId.toString(), externalKey, name), 1);
