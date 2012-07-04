@@ -2,7 +2,8 @@ group BusinessAccountField;
 
 getFieldsForAccount(account_key) ::=<<
 select
-  account_key
+  account_id
+, account_key
 , name
 , value
 from bac_fields
@@ -12,18 +13,20 @@ where account_key = :account_key
 
 addField(account_key, name, value) ::=<<
 insert into bac_fields (
-  account_key
+  account_id
+, account_key
 , name
 , value
 ) values (
-  :account_key
+  :account_id
+, :account_key
 , :name
 , :value
 );
 >>
 
-removeField(account_key, name) ::= <<
-delete from bac_fields where account_key = :account_key and name = :name;
+removeField(account_id, name) ::= <<
+delete from bac_fields where account_id = :account_id and name = :name;
 >>
 
 test() ::= <<

@@ -33,10 +33,11 @@ public interface BusinessAccountFieldSqlDao {
     List<BusinessAccountField> getFieldsForAccount(@Bind("account_key") final String accountKey);
 
     @SqlUpdate
-    int addField(@Bind("account_key") final String accountKey, @Bind("name") final String name, @Bind("value") final String value);
+    int addField(@Bind("account_id") final String accountId, @Bind("account_key") final String accountKey,
+                 @Bind("name") final String name, @Bind("value") final String value);
 
     @SqlUpdate
-    int removeField(@Bind("account_key") final String accountKey, @Bind("name") final String name);
+    int removeField(@Bind("account_id") final String accountId, @Bind("name") final String name);
 
     @SqlUpdate
     void test();

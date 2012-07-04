@@ -145,6 +145,7 @@ create table bac_tags (
 drop table if exists bac_fields;
 create table bac_fields (
   record_id int(11) unsigned not null auto_increment
+, account_id char(36) not null
 , account_key varchar(50) not null comment 'Account external key'
 , name varchar(30) not null
 , value varchar(255) default null
