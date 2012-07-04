@@ -12,7 +12,7 @@ where external_key = :external_key
 ;
 >>
 
-addField(external_key, name, value) ::=<<
+addField(bundle_id, external_key, name, value) ::=<<
 insert into bst_fields (
   bundle_id
 , external_key

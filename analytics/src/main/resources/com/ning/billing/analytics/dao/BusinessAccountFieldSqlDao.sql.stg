@@ -11,7 +11,7 @@ where account_key = :account_key
 ;
 >>
 
-addField(account_key, name, value) ::=<<
+addField(account_id, account_key, name, value) ::=<<
 insert into bac_fields (
   account_id
 , account_key

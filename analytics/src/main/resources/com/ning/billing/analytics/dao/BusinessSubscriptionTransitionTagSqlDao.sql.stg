@@ -11,7 +11,7 @@ where external_key = :external_key
 ;
 >>
 
-addTag(external_key, name) ::=<<
+addTag(bundle_id, external_key, name) ::=<<
 insert into bst_tags (
   bundle_id
 , external_key
