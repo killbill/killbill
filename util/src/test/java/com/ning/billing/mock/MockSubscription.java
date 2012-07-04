@@ -66,80 +66,99 @@ public class MockSubscription implements Subscription {
 
     Subscription sub = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
 
+    @Override
     public boolean cancel(final DateTime requestedDate, final boolean eot, final CallContext context) throws EntitlementUserApiException {
         return sub.cancel(requestedDate, eot, context);
     }
 
+    @Override
     public boolean uncancel(final CallContext context) throws EntitlementUserApiException {
         return sub.uncancel(context);
     }
 
+    @Override
     public boolean changePlan(final String productName, final BillingPeriod term, final String planSet, final DateTime requestedDate,
                               final CallContext context) throws EntitlementUserApiException {
         return sub.changePlan(productName, term, planSet, requestedDate, context);
     }
 
+    @Override
     public boolean recreate(final PlanPhaseSpecifier spec, final DateTime requestedDate, final CallContext context)
             throws EntitlementUserApiException {
         return sub.recreate(spec, requestedDate, context);
     }
 
+    @Override
     public UUID getId() {
         return id;
     }
 
+    @Override
     public UUID getBundleId() {
         return bundleId;
     }
 
+    @Override
     public SubscriptionState getState() {
         return state;
     }
 
+    @Override
     public DateTime getStartDate() {
         return startDate;
     }
 
+    @Override
     public DateTime getEndDate() {
         return sub.getEndDate();
     }
 
+    @Override
     public Plan getCurrentPlan() {
         return plan;
     }
 
+    @Override
     public BlockingState getBlockingState() {
         return sub.getBlockingState();
     }
 
+    @Override
     public PriceList getCurrentPriceList() {
         return new MockPriceList();
     }
 
+    @Override
     public PlanPhase getCurrentPhase() {
         return phase;
     }
 
+    @Override
     public DateTime getChargedThroughDate() {
         return sub.getChargedThroughDate();
     }
 
+    @Override
     public DateTime getPaidThroughDate() {
         return sub.getPaidThroughDate();
     }
 
+    @Override
     public ProductCategory getCategory() {
         return sub.getCategory();
     }
 
+    @Override
     public EffectiveSubscriptionEvent getPendingTransition() {
         return sub.getPendingTransition();
     }
 
+    @Override
     public EffectiveSubscriptionEvent getPreviousTransition() {
         return sub.getPreviousTransition();
     }
 
+    @Override
     public List<EffectiveSubscriptionEvent> getBillingTransitions() {
         return transitions;
     }
@@ -147,5 +166,11 @@ public class MockSubscription implements Subscription {
     @Override
     public List<EffectiveSubscriptionEvent> getAllTransitions() {
         return transitions;
+    }
+
+    @Override
+    public DateTime getFutureEndDate() {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

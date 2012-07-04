@@ -117,12 +117,17 @@ public abstract class TestUserApiCancel extends TestApiBase {
             assertFalse(testListener.isCompleted(3000));
             testListener.reset();
 
+            DateTime futureEndDate = subscription.getFutureEndDate();
+            Assert.assertNotNull(futureEndDate);
+
             // MOVE TO EOT + RECHECK
             testListener.pushExpectedEvent(NextEvent.CANCEL);
             it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(1));
             clock.addDeltaFromReality(it.toDurationMillis());
             final DateTime future = clock.getUTCNow();
             assertTrue(testListener.isCompleted(5000));
+
+            assertTrue(futureEndDate.compareTo(subscription.getEndDate()) == 0);
 
             final PlanPhase currentPhase = subscription.getCurrentPhase();
             assertNull(currentPhase);
