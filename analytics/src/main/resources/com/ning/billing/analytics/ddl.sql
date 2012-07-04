@@ -154,6 +154,7 @@ create table bac_fields (
 drop table if exists bst_tags;
 create table bst_tags (
   record_id int(11) unsigned not null auto_increment
+, bundle_id char(36) not null
 , external_key varchar(50) not null comment 'Bundle external key'
 , account_key varchar(50) not null comment 'Account external key'
 , name varchar(20) not null

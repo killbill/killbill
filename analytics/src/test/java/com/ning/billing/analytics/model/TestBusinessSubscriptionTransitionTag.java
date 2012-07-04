@@ -27,19 +27,23 @@ public class TestBusinessSubscriptionTransitionTag extends AnalyticsTestSuite {
     @Test(groups = "fast")
     public void testEquals() throws Exception {
         final String accountKey = UUID.randomUUID().toString();
+        final UUID bundleId = UUID.randomUUID();
         final String externalKey = UUID.randomUUID().toString();
         final String name = UUID.randomUUID().toString();
         final BusinessSubscriptionTransitionTag subscriptionTransitionTag = new BusinessSubscriptionTransitionTag(accountKey,
+                                                                                                                  bundleId,
                                                                                                                   externalKey,
                                                                                                                   name);
         Assert.assertSame(subscriptionTransitionTag, subscriptionTransitionTag);
         Assert.assertEquals(subscriptionTransitionTag, subscriptionTransitionTag);
         Assert.assertTrue(subscriptionTransitionTag.equals(subscriptionTransitionTag));
         Assert.assertEquals(subscriptionTransitionTag.getAccountKey(), accountKey);
+        Assert.assertEquals(subscriptionTransitionTag.getBundleId(), bundleId);
         Assert.assertEquals(subscriptionTransitionTag.getExternalKey(), externalKey);
         Assert.assertEquals(subscriptionTransitionTag.getName(), name);
 
         final BusinessSubscriptionTransitionTag otherTransitionTag = new BusinessSubscriptionTransitionTag(UUID.randomUUID().toString(),
+                                                                                                           UUID.randomUUID(),
                                                                                                            UUID.randomUUID().toString(),
                                                                                                            UUID.randomUUID().toString());
         Assert.assertFalse(subscriptionTransitionTag.equals(otherTransitionTag));
