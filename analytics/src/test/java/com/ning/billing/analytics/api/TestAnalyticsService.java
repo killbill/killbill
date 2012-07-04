@@ -95,6 +95,7 @@ public class TestAnalyticsService extends TestWithEmbeddedDB {
 
     private static final Long TOTAL_ORDERING = 11L;
     private static final String EXTERNAL_KEY = "12345";
+    private static final UUID ACCOUNT_ID = UUID.randomUUID();
     private static final String ACCOUNT_KEY = "pierre-12345";
     private static final Currency ACCOUNT_CURRENCY = Currency.EUR;
     private static final BigDecimal INVOICE_AMOUNT = BigDecimal.valueOf(1243.11);
@@ -201,12 +202,15 @@ public class TestAnalyticsService extends TestWithEmbeddedDB {
                 true), null);
         expectedTransition = new BusinessSubscriptionTransition(
                 TOTAL_ORDERING,
+                transition.getBundleId(),
                 EXTERNAL_KEY,
+                ACCOUNT_ID,
                 ACCOUNT_KEY,
+                transition.getSubscriptionId(),
                 requestedTransitionTime,
                 BusinessSubscriptionEvent.subscriptionCreated(plan.getName(), catalog, new DateTime(), new DateTime()),
                 null,
-                new BusinessSubscription(priceList.getName(), plan.getName(), phase.getName(), ACCOUNT_CURRENCY, effectiveTransitionTime, Subscription.SubscriptionState.ACTIVE, subscriptionId, bundle.getId(), catalog)
+                new BusinessSubscription(priceList.getName(), plan.getName(), phase.getName(), ACCOUNT_CURRENCY, effectiveTransitionTime, Subscription.SubscriptionState.ACTIVE, catalog)
         );
     }
 

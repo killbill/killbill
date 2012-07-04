@@ -316,8 +316,11 @@ public class TestAnalytics extends TestIntegrationBase {
 
         // Check the first transition (into trial phase)
         final BusinessSubscriptionTransition initialTransition = transitions.get(0);
+        Assert.assertEquals(initialTransition.getBundleId(), bundle.getId());
         Assert.assertEquals(initialTransition.getExternalKey(), bundle.getKey());
+        Assert.assertEquals(initialTransition.getAccountId(), account.getId());
         Assert.assertEquals(initialTransition.getAccountKey(), account.getExternalKey());
+        Assert.assertEquals(initialTransition.getSubscriptionId(), subscription.getId());
         Assert.assertEquals(initialTransition.getEvent().getCategory(), currentProduct.getCategory());
         Assert.assertEquals(initialTransition.getEvent().getEventType(), BusinessSubscriptionEvent.EventType.ADD);
 
@@ -325,7 +328,6 @@ public class TestAnalytics extends TestIntegrationBase {
         Assert.assertNull(initialTransition.getPreviousSubscription());
 
         Assert.assertEquals(initialTransition.getNextSubscription().getBillingPeriod(), BillingPeriod.NO_BILLING_PERIOD.toString());
-        Assert.assertEquals(initialTransition.getNextSubscription().getBundleId(), subscription.getBundleId());
         Assert.assertEquals(initialTransition.getNextSubscription().getCurrency(), account.getCurrency().toString());
         Assert.assertEquals(initialTransition.getNextSubscription().getPhase(), PhaseType.TRIAL.toString());
         // Trial: fixed price of zero
@@ -337,7 +339,6 @@ public class TestAnalytics extends TestIntegrationBase {
         Assert.assertEquals(initialTransition.getNextSubscription().getSlug(), currentProduct.getName().toLowerCase() + "-monthly-trial");
         Assert.assertEquals(initialTransition.getNextSubscription().getStartDate(), subscription.getStartDate());
         Assert.assertEquals(initialTransition.getNextSubscription().getState(), Subscription.SubscriptionState.ACTIVE);
-        Assert.assertEquals(initialTransition.getNextSubscription().getSubscriptionId(), subscription.getId());
 
         // Check the second transition (from trial to evergreen)
         final BusinessSubscriptionTransition futureTransition = transitions.get(1);
@@ -350,7 +351,6 @@ public class TestAnalytics extends TestIntegrationBase {
 
         // The billing period should have changed (NO_BILLING_PERIOD for the trial period)
         Assert.assertEquals(futureTransition.getNextSubscription().getBillingPeriod(), BillingPeriod.MONTHLY.toString());
-        Assert.assertEquals(futureTransition.getNextSubscription().getBundleId(), subscription.getBundleId());
         Assert.assertEquals(initialTransition.getNextSubscription().getCurrency(), account.getCurrency().toString());
         // From trial to evergreen
         Assert.assertEquals(futureTransition.getNextSubscription().getPhase(), PhaseType.EVERGREEN.toString());
@@ -363,7 +363,6 @@ public class TestAnalytics extends TestIntegrationBase {
         // 30 days trial
         Assert.assertEquals(futureTransition.getNextSubscription().getStartDate(), subscription.getStartDate().plusDays(30));
         Assert.assertEquals(futureTransition.getNextSubscription().getState(), Subscription.SubscriptionState.ACTIVE);
-        Assert.assertEquals(futureTransition.getNextSubscription().getSubscriptionId(), subscription.getId());
     }
 
     private void verifyCancellationTransition(final Account account, final SubscriptionBundle bundle) throws CatalogApiException {
@@ -409,8 +408,11 @@ public class TestAnalytics extends TestIntegrationBase {
         Assert.assertEquals(transitions.size(), 3);
         final BusinessSubscriptionTransition previousTransition = transitions.get(0);
         final BusinessSubscriptionTransition transition = transitions.get(1);
+        Assert.assertEquals(transition.getBundleId(), bundle.getId());
         Assert.assertEquals(transition.getExternalKey(), bundle.getKey());
+        Assert.assertEquals(transition.getAccountId(), account.getId());
         Assert.assertEquals(transition.getAccountKey(), account.getExternalKey());
+        Assert.assertEquals(transition.getSubscriptionId(), subscription.getId());
         Assert.assertEquals(transition.getEvent().getCategory(), ProductCategory.BASE);
         Assert.assertEquals(transition.getEvent().getEventType(), BusinessSubscriptionEvent.EventType.CHANGE);
 
@@ -421,7 +423,6 @@ public class TestAnalytics extends TestIntegrationBase {
         // Verify the next subscription
         // No billing period for the trial phase
         Assert.assertEquals(transition.getNextSubscription().getBillingPeriod(), BillingPeriod.NO_BILLING_PERIOD.toString());
-        Assert.assertEquals(transition.getNextSubscription().getBundleId(), subscription.getBundleId());
         Assert.assertEquals(transition.getNextSubscription().getCurrency(), account.getCurrency().toString());
         Assert.assertEquals(transition.getNextSubscription().getPhase(), PhaseType.TRIAL.toString());
         // We're still in trial
@@ -433,8 +434,6 @@ public class TestAnalytics extends TestIntegrationBase {
         Assert.assertEquals(transition.getNextSubscription().getSlug(), subscription.getCurrentPhase().getName());
         Assert.assertEquals(transition.getNextSubscription().getStartDate(), requestedDate);
         Assert.assertEquals(transition.getNextSubscription().getState(), Subscription.SubscriptionState.ACTIVE);
-        // It's still the same subscription
-        Assert.assertEquals(transition.getNextSubscription().getSubscriptionId(), subscription.getId());
 
         // The account should have two invoices for the trial phase of both subscriptions
         Assert.assertEquals(analyticsUserApi.getInvoicesForAccount(account.getExternalKey()).size(), 2);

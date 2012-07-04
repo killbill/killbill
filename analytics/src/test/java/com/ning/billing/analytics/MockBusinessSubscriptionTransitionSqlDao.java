@@ -32,6 +32,7 @@ import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
 
 public class MockBusinessSubscriptionTransitionSqlDao implements BusinessSubscriptionTransitionSqlDao {
     private final Map<String, List<BusinessSubscriptionTransition>> content = new HashMap<String, List<BusinessSubscriptionTransition>>();
+    private final Map<String, String> keyForBundleId = new HashMap<String, String>();
 
     @Override
     public List<BusinessSubscriptionTransition> getTransitions(@Bind("event_key") final String key) {
@@ -49,17 +50,13 @@ public class MockBusinessSubscriptionTransitionSqlDao implements BusinessSubscri
             content.put(transition.getExternalKey(), new ArrayList<BusinessSubscriptionTransition>());
         }
         content.get(transition.getExternalKey()).add(transition);
+        keyForBundleId.put(transition.getBundleId().toString(), transition.getExternalKey());
         return 1;
     }
 
     @Override
-    public void updateTransition(@Bind("total_ordering") final long totalOrdering, @BusinessSubscriptionTransitionBinder final BusinessSubscriptionTransition updatedFirstTransition) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void deleteTransitionsForBundle(@Bind("external_key") final String externalKey) {
-        content.put(externalKey, new ArrayList<BusinessSubscriptionTransition>());
+    public void deleteTransitionsForBundle(@Bind("bundle_id") final String bundleId) {
+        content.put(keyForBundleId.get(bundleId), new ArrayList<BusinessSubscriptionTransition>());
     }
 
     @Override

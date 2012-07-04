@@ -2,8 +2,11 @@ drop table if exists bst;
 create table bst (
   record_id int(11) unsigned not null auto_increment
 , total_ordering bigint default 0
+, bundle_id char(36) not null
+, account_id char(36) not null
 , external_key varchar(50) not null comment 'Bundle external key'
 , account_key varchar(50) not null comment 'Account external key'
+, subscription_id char(36) not null
 , requested_timestamp bigint not null
 , event varchar(50) not null
 , prev_product_name varchar(32) default null
@@ -18,8 +21,6 @@ create table bst (
 , prev_currency varchar(32) default null
 , prev_start_date bigint default null
 , prev_state varchar(32) default null
-, prev_subscription_id varchar(100) default null
-, prev_bundle_id varchar(100) default null
 , next_product_name varchar(32) default null
 , next_product_type varchar(32) default null
 , next_product_category varchar(32) default null
@@ -32,8 +33,6 @@ create table bst (
 , next_currency varchar(32) default null
 , next_start_date bigint default null
 , next_state varchar(32) default null
-, next_subscription_id varchar(100) default null
-, next_bundle_id varchar(100) default null
 , primary key(record_id)
 ) engine=innodb comment 'Business Subscription Transitions, track bundles lifecycle';
 create index bst_key_index on bst (external_key, requested_timestamp asc);

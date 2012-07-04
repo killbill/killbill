@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
 import org.slf4j.Logger;
@@ -86,15 +85,13 @@ public class BusinessSubscriptionTransitionRecorder {
 
         final List<Subscription> subscriptions = entitlementApi.getSubscriptionsForBundle(bundleId);
 
-        final String externalKey = bundle.getKey();
-        final String accountKey = account.getExternalKey();
         final Currency currency = account.getCurrency();
 
         sqlDao.inTransaction(new Transaction<Void, BusinessSubscriptionTransitionSqlDao>() {
             @Override
             public Void inTransaction(final BusinessSubscriptionTransitionSqlDao transactional, final TransactionStatus status) throws Exception {
-                log.info("Started rebuilding transitions for bundle {}", externalKey);
-                transactional.deleteTransitionsForBundle(externalKey);
+                log.info("Started rebuilding transitions for bundle id {}", bundleId);
+                transactional.deleteTransitionsForBundle(bundleId.toString());
 
                 final ArrayList<BusinessSubscriptionTransition> transitions = new ArrayList<BusinessSubscriptionTransition>();
                 for (final Subscription subscription : subscriptions) {
@@ -108,8 +105,11 @@ public class BusinessSubscriptionTransitionRecorder {
                         final BusinessSubscription nextSubscription = createNextBusinessSubscription(event, businessEvent, currency);
                         final BusinessSubscriptionTransition transition = new BusinessSubscriptionTransition(
                                 event.getTotalOrdering(),
-                                externalKey,
-                                accountKey,
+                                bundleId,
+                                bundle.getKey(),
+                                bundle.getAccountId(),
+                                account.getExternalKey(),
+                                subscription.getId(),
                                 event.getRequestedTransitionTime(),
                                 businessEvent,
                                 prevSubscription,
@@ -125,8 +125,11 @@ public class BusinessSubscriptionTransitionRecorder {
                                 clock.getUTCNow().isAfter(event.getEffectiveTransitionTime())) {
                             final BusinessSubscriptionTransition systemCancelTransition = new BusinessSubscriptionTransition(
                                     event.getTotalOrdering(),
-                                    externalKey,
-                                    accountKey,
+                                    bundleId,
+                                    bundle.getKey(),
+                                    bundle.getAccountId(),
+                                    account.getExternalKey(),
+                                    subscription.getId(),
                                     event.getRequestedTransitionTime(),
                                     new BusinessSubscriptionEvent(BusinessSubscriptionEvent.EventType.SYSTEM_CANCEL, businessEvent.getCategory()),
                                     prevSubscription,
@@ -139,7 +142,7 @@ public class BusinessSubscriptionTransitionRecorder {
                     }
                 }
 
-                log.info("Finished rebuilding transitions for bundle {}", externalKey);
+                log.info("Finished rebuilding transitions for bundle id {}", bundleId);
                 return null;
             }
         });
@@ -198,7 +201,7 @@ public class BusinessSubscriptionTransitionRecorder {
         } else {
             nextSubscription = new BusinessSubscription(event.getNextPriceList(), event.getNextPlan(), event.getNextPhase(),
                                                         currency, event.getEffectiveTransitionTime(), event.getNextState(),
-                                                        event.getSubscriptionId(), event.getBundleId(), catalogService.getFullCatalog());
+                                                        catalogService.getFullCatalog());
         }
 
         return nextSubscription;
@@ -216,7 +219,7 @@ public class BusinessSubscriptionTransitionRecorder {
         final BusinessSubscriptionTransition prevTransition = getPreviousBusinessSubscriptionTransitionForEvent(event, transitions);
         return new BusinessSubscription(event.getPreviousPriceList(), event.getPreviousPlan(), event.getPreviousPhase(),
                                         currency, prevTransition.getNextSubscription().getStartDate(), event.getPreviousState(),
-                                        event.getSubscriptionId(), event.getBundleId(), catalogService.getFullCatalog());
+                                        catalogService.getFullCatalog());
     }
 
     private BusinessSubscriptionTransition getPreviousBusinessSubscriptionTransitionForEvent(final EffectiveSubscriptionEvent event,
@@ -228,7 +231,7 @@ public class BusinessSubscriptionTransitionRecorder {
                 continue;
             }
 
-            if (nextSubscription.getSubscriptionId().equals(event.getSubscriptionId())) {
+            if (candidate.getSubscriptionId().equals(event.getSubscriptionId())) {
                 transition = candidate;
             }
         }
@@ -240,19 +243,5 @@ public class BusinessSubscriptionTransitionRecorder {
         }
 
         return transition;
-    }
-
-    // Public for internal reasons
-    public void record(final Long totalOrdering, final String externalKey, final String accountKey, final DateTime requestedDateTime, final BusinessSubscriptionEvent event, final BusinessSubscription prevSubscription, final BusinessSubscription nextSubscription) {
-        final BusinessSubscriptionTransition transition = new BusinessSubscriptionTransition(
-                totalOrdering,
-                externalKey,
-                accountKey,
-                requestedDateTime,
-                event,
-                prevSubscription,
-                nextSubscription
-        );
-        sqlDao.createTransition(transition);
     }
 }
