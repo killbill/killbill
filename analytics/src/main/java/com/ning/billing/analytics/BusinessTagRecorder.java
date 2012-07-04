@@ -100,17 +100,8 @@ public class BusinessTagRecorder {
         accountTagSqlDao.addTag(accountId.toString(), accountKey, name);
     }
 
-    private void tagRemovedForAccount(final UUID objectId, final String name) {
-        final Account account;
-        try {
-            account = accountApi.getAccountById(objectId);
-        } catch (AccountApiException e) {
-            log.warn("Ignoring tag removal of {} for account id {} (account does not exist)", name, objectId.toString());
-            return;
-        }
-
-        final String accountKey = account.getExternalKey();
-        accountTagSqlDao.removeTag(accountKey, name);
+    private void tagRemovedForAccount(final UUID accountId, final String name) {
+        accountTagSqlDao.removeTag(accountId.toString(), name);
     }
 
     private void tagAddedForBundle(final UUID bundleId, final String name) {
@@ -138,17 +129,8 @@ public class BusinessTagRecorder {
         subscriptionTransitionTagSqlDao.addTag(accountKey, bundleId.toString(), externalKey, name);
     }
 
-    private void tagRemovedForBundle(final UUID objectId, final String name) {
-        final SubscriptionBundle bundle;
-        try {
-            bundle = entitlementUserApi.getBundleFromId(objectId);
-        } catch (EntitlementUserApiException e) {
-            log.warn("Ignoring tag removal of {} for bundle id {} (bundle does not exist)", name, objectId.toString());
-            return;
-        }
-
-        final String externalKey = bundle.getKey();
-        subscriptionTransitionTagSqlDao.removeTag(externalKey, name);
+    private void tagRemovedForBundle(final UUID bundleId, final String name) {
+        subscriptionTransitionTagSqlDao.removeTag(bundleId.toString(), name);
     }
 
     private void tagAddedForInvoice(final UUID objectId, final String name) {
