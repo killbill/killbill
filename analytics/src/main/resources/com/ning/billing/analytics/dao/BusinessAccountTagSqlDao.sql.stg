@@ -2,25 +2,28 @@ group BusinessAccountTag;
 
 getTagsForAccount(account_key) ::=<<
 select
-  account_key
+  account_id
+, account_key
 , name
 from bac_tags
 where account_key = :account_key
 ;
 >>
 
-addTag(account_key, name) ::=<<
+addTag(account_id, account_key, name) ::=<<
 insert into bac_tags (
-  account_key
+  account_id
+, account_key
 , name
 ) values (
-  :account_key
+  :account_id
+, :account_key
 , :name
 );
 >>
 
-removeTag(account_key, name) ::= <<
-delete from bac_tags where account_key = :account_key and name = :name;
+removeTag(account_id, name) ::= <<
+delete from bac_tags where account_id = :account_id and name = :name;
 >>
 
 test() ::= <<

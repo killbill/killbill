@@ -137,6 +137,7 @@ create unique index bos_key_index on bos (external_key, status);
 drop table if exists bac_tags;
 create table bac_tags (
   record_id int(11) unsigned not null auto_increment
+, account_id char(36) not null
 , account_key varchar(50) not null comment 'Account external key'
 , name varchar(20) not null
 , primary key(record_id)

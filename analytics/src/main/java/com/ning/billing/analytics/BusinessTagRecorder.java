@@ -87,17 +87,17 @@ public class BusinessTagRecorder {
         }
     }
 
-    private void tagAddedForAccount(final UUID objectId, final String name) {
+    private void tagAddedForAccount(final UUID accountId, final String name) {
         final Account account;
         try {
-            account = accountApi.getAccountById(objectId);
+            account = accountApi.getAccountById(accountId);
         } catch (AccountApiException e) {
-            log.warn("Ignoring tag addition of {} for account id {} (account does not exist)", name, objectId.toString());
+            log.warn("Ignoring tag addition of {} for account id {} (account does not exist)", name, accountId.toString());
             return;
         }
 
         final String accountKey = account.getExternalKey();
-        accountTagSqlDao.addTag(accountKey, name);
+        accountTagSqlDao.addTag(accountId.toString(), accountKey, name);
     }
 
     private void tagRemovedForAccount(final UUID objectId, final String name) {
