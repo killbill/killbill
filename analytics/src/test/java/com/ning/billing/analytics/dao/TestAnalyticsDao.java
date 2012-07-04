@@ -30,14 +30,14 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import com.ning.billing.analytics.model.BusinessAccount;
-import com.ning.billing.analytics.model.BusinessSubscription;
-import com.ning.billing.analytics.model.BusinessSubscriptionEvent;
-import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
 import com.ning.billing.analytics.MockDuration;
 import com.ning.billing.analytics.MockPhase;
 import com.ning.billing.analytics.MockProduct;
 import com.ning.billing.analytics.TestWithEmbeddedDB;
+import com.ning.billing.analytics.model.BusinessAccount;
+import com.ning.billing.analytics.model.BusinessSubscription;
+import com.ning.billing.analytics.model.BusinessSubscriptionEvent;
+import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
 import com.ning.billing.analytics.utils.Rounder;
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogApiException;
@@ -99,7 +99,7 @@ public class TestAnalyticsDao extends TestWithEmbeddedDB {
     }
 
     private void setupBusinessAccount() {
-        account = new BusinessAccount(ACCOUNT_KEY, UUID.randomUUID().toString(), BigDecimal.ONE, new DateTime(DateTimeZone.UTC), BigDecimal.TEN, "ERROR_NOT_ENOUGH_FUNDS", "CreditCard", "Visa", "FRANCE");
+        account = new BusinessAccount(UUID.randomUUID(), ACCOUNT_KEY, UUID.randomUUID().toString(), BigDecimal.ONE, new DateTime(DateTimeZone.UTC), BigDecimal.TEN, "ERROR_NOT_ENOUGH_FUNDS", "CreditCard", "Visa", "FRANCE");
 
         final IDBI dbi = helper.getDBI();
         businessAccountSqlDao = dbi.onDemand(BusinessAccountSqlDao.class);
@@ -251,7 +251,7 @@ public class TestAnalyticsDao extends TestWithEmbeddedDB {
     public void testCreateSaveAndRetrieveAccounts() {
         // Create and retrieve an account
         businessAccountSqlDao.createAccount(account);
-        final BusinessAccount foundAccount = businessAccountSqlDao.getAccount(ACCOUNT_KEY);
+        final BusinessAccount foundAccount = businessAccountSqlDao.getAccountByKey(ACCOUNT_KEY);
         Assert.assertNotNull(foundAccount.getCreatedDt());
         Assert.assertEquals(foundAccount.getCreatedDt(), foundAccount.getUpdatedDt());
         // Verify the dates by backfilling them
@@ -265,12 +265,12 @@ public class TestAnalyticsDao extends TestWithEmbeddedDB {
         account.setPaymentMethod("PayPal");
         businessAccountSqlDao.saveAccount(account);
         // Verify the save worked as expected
-        account = businessAccountSqlDao.getAccount(ACCOUNT_KEY);
+        account = businessAccountSqlDao.getAccountByKey(ACCOUNT_KEY);
         Assert.assertEquals(Rounder.round(BigDecimal.TEN), account.getRoundedBalance());
         Assert.assertEquals("PayPal", account.getPaymentMethod());
         Assert.assertTrue(account.getUpdatedDt().compareTo(previousUpdatedDt) > 0);
 
         // ACCOUNT not found
-        Assert.assertNull(businessAccountSqlDao.getAccount("Doesn't exist"));
+        Assert.assertNull(businessAccountSqlDao.getAccountByKey("Doesn't exist"));
     }
 }

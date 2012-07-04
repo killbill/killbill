@@ -41,6 +41,7 @@ create index bst_key_index on bst (external_key, requested_timestamp asc);
 drop table if exists bac;
 create table bac (
   record_id int(11) unsigned not null auto_increment
+, account_id char(36) not null
 , account_key varchar(50) not null
 , name varchar(100) not null
 , created_date bigint not null

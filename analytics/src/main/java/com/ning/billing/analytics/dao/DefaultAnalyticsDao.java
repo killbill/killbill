@@ -19,11 +19,6 @@ package com.ning.billing.analytics.dao;
 import javax.inject.Inject;
 import java.util.List;
 
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.skife.jdbi.v2.Transaction;
-import org.skife.jdbi.v2.TransactionStatus;
-
 import com.ning.billing.analytics.model.BusinessAccount;
 import com.ning.billing.analytics.model.BusinessAccountTag;
 import com.ning.billing.analytics.model.BusinessInvoice;
@@ -52,7 +47,7 @@ public class DefaultAnalyticsDao implements AnalyticsDao {
 
     @Override
     public BusinessAccount getAccountByKey(final String accountKey) {
-        return accountSqlDao.getAccount(accountKey);
+        return accountSqlDao.getAccountByKey(accountKey);
     }
 
     @Override

@@ -49,6 +49,7 @@ public @interface BusinessAccountBinder {
                     }
                     q.bind("updated_date", dateTimeNow.getMillis());
 
+                    q.bind("account_id", account.getAccountId().toString());
                     q.bind("account_key", account.getKey());
                     q.bind("balance", account.getRoundedBalance());
                     q.bind("name", account.getName());

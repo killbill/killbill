@@ -59,7 +59,7 @@ public class BusinessAccountRecorder {
         final Account account;
         try {
             account = accountApi.getAccountByKey(data.getExternalKey());
-            final BusinessAccount bac = new BusinessAccount();
+            final BusinessAccount bac = new BusinessAccount(account.getId());
             updateBusinessAccountFromAccount(account, bac);
 
             log.info("ACCOUNT CREATION " + bac);
@@ -92,9 +92,9 @@ public class BusinessAccountRecorder {
         try {
             final Account account = accountApi.getAccountById(accountId);
 
-            BusinessAccount bac = sqlDao.getAccount(account.getExternalKey());
+            BusinessAccount bac = sqlDao.getAccount(accountId.toString());
             if (bac == null) {
-                bac = new BusinessAccount();
+                bac = new BusinessAccount(accountId);
                 updateBusinessAccountFromAccount(account, bac);
                 log.info("ACCOUNT CREATION " + bac);
                 sqlDao.createAccount(bac);

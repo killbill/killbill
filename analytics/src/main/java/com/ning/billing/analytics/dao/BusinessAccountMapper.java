@@ -19,6 +19,7 @@ package com.ning.billing.analytics.dao;
 import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -31,18 +32,19 @@ public class BusinessAccountMapper implements ResultSetMapper<BusinessAccount> {
     @Override
     public BusinessAccount map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
         final BusinessAccount account = new BusinessAccount(
-                r.getString(1),
-                r.getString(5),
-                BigDecimal.valueOf(r.getDouble(4)),
-                r.getLong(6) == 0 ? null : new DateTime(r.getLong(6), DateTimeZone.UTC),
-                BigDecimal.valueOf(r.getDouble(7)),
-                r.getString(8),
+                UUID.fromString(r.getString(1)),
+                r.getString(2),
+                r.getString(6),
+                BigDecimal.valueOf(r.getDouble(5)),
+                r.getLong(7) == 0 ? null : new DateTime(r.getLong(7), DateTimeZone.UTC),
+                BigDecimal.valueOf(r.getDouble(8)),
                 r.getString(9),
                 r.getString(10),
-                r.getString(11)
+                r.getString(11),
+                r.getString(12)
         );
-        account.setCreatedDt(new DateTime(r.getLong(2), DateTimeZone.UTC));
-        account.setUpdatedDt(new DateTime(r.getLong(3), DateTimeZone.UTC));
+        account.setCreatedDt(new DateTime(r.getLong(3), DateTimeZone.UTC));
+        account.setUpdatedDt(new DateTime(r.getLong(4), DateTimeZone.UTC));
 
         return account;
     }

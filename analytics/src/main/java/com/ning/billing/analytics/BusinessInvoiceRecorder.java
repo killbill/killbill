@@ -123,10 +123,10 @@ public class BusinessInvoiceRecorder {
             }
         }
 
-        createInvoiceInTransaction(transactional, accountKey, businessInvoice, businessInvoiceItems);
+        createInvoiceInTransaction(transactional, invoice.getAccountId(), businessInvoice, businessInvoiceItems);
     }
 
-    private void createInvoiceInTransaction(final BusinessInvoiceSqlDao transactional, final String accountKey,
+    private void createInvoiceInTransaction(final BusinessInvoiceSqlDao transactional, final UUID accountId,
                                             final BusinessInvoice invoice, final Iterable<BusinessInvoiceItem> invoiceItems) {
         // Create the invoice
         log.info("Adding invoice {}", invoice);
@@ -141,9 +141,9 @@ public class BusinessInvoiceRecorder {
 
         // Update BAC
         final BusinessAccountSqlDao accountSqlDao = transactional.become(BusinessAccountSqlDao.class);
-        final BusinessAccount account = accountSqlDao.getAccount(accountKey);
+        final BusinessAccount account = accountSqlDao.getAccount(accountId.toString());
         if (account == null) {
-            throw new IllegalStateException("Account does not exist for key " + accountKey);
+            throw new IllegalStateException("Account does not exist for id " + accountId);
         }
         account.setBalance(account.getBalance().add(invoice.getBalance()));
         account.setLastInvoiceDate(invoice.getInvoiceDate());

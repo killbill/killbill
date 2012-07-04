@@ -30,7 +30,10 @@ import com.ning.billing.analytics.model.BusinessAccount;
 @RegisterMapper(BusinessAccountMapper.class)
 public interface BusinessAccountSqlDao extends Transactional<BusinessAccountSqlDao>, Transmogrifier {
     @SqlQuery
-    BusinessAccount getAccount(@Bind("account_key") final String key);
+    BusinessAccount getAccount(@Bind("account_id") final String accountId);
+
+    @SqlQuery
+    BusinessAccount getAccountByKey(@Bind("account_key") String accountKey);
 
     @SqlUpdate
     int createAccount(@BusinessAccountBinder final BusinessAccount account);
