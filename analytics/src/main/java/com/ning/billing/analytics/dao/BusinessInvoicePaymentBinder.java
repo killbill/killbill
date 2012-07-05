@@ -56,7 +56,7 @@ public @interface BusinessInvoicePaymentBinder {
                         q.bind("updated_date", dateTimeNow.getMillis());
                     }
 
-                    q.bind("attempt_id", invoicePayment.getAttemptId().toString());
+                    q.bind("ext_payment_ref_id", invoicePayment.getExtPaymentRefId());
                     q.bind("account_key", invoicePayment.getAccountKey());
                     q.bind("invoice_id", invoicePayment.getInvoiceId().toString());
 

@@ -22,18 +22,17 @@ import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
+import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
+import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 
 import com.ning.billing.analytics.model.BusinessInvoicePayment;
 
 @ExternalizedSqlViaStringTemplate3()
 @RegisterMapper(BusinessInvoicePaymentMapper.class)
-public interface BusinessInvoicePaymentSqlDao {
+public interface BusinessInvoicePaymentSqlDao extends Transactional<BusinessInvoicePaymentSqlDao>, Transmogrifier {
     @SqlQuery
-    BusinessInvoicePayment getInvoicePaymentForPaymentAttempt(@Bind("attempt_id") final String attemptId);
-
-    @SqlQuery
-    List<BusinessInvoicePayment> getInvoicePaymentsForPayment(@Bind("payment_id") final String paymentId);
+    BusinessInvoicePayment getInvoicePayment(@Bind("payment_id") final String paymentId);
 
     @SqlQuery
     List<BusinessInvoicePayment> getInvoicePaymentsForAccountByKey(@Bind("account_key") final String accountKey);
@@ -42,7 +41,7 @@ public interface BusinessInvoicePaymentSqlDao {
     int createInvoicePayment(@BusinessInvoicePaymentBinder final BusinessInvoicePayment payment);
 
     @SqlUpdate
-    int deleteInvoicePaymentForPaymentAttempt(@Bind("attempt_id") final String attemptId);
+    int deleteInvoicePayment(@Bind("payment_id") final String paymentId);
 
     @SqlUpdate
     void test();

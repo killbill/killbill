@@ -1,36 +1,11 @@
 group BusinessInvoicePayment;
 
-getInvoicePaymentForPaymentAttempt(attempt_id) ::= <<
+getInvoicePayment(payment_id) ::= <<
 select
   payment_id
 , created_date
 , updated_date
-, attempt_id
-, account_key
-, invoice_id
-, effective_date
-, amount
-, currency
-, payment_error
-, processing_status
-, requested_amount
-, plugin_name
-, payment_type
-, payment_method
-, card_type
-, card_country
-from bip
-where attempt_id = :attempt_id
-limit 1
-;
->>
-
-getInvoicePaymentsForPayment(payment_id) ::= <<
-select
-  payment_id
-, created_date
-, updated_date
-, attempt_id
+, ext_payment_ref_id
 , account_key
 , invoice_id
 , effective_date
@@ -46,16 +21,16 @@ select
 , card_country
 from bip
 where payment_id = :payment_id
-order by created_date asc
+limit 1
 ;
 >>
 
-getInvoicePaymentsForAccount(account_key) ::= <<
+getInvoicePaymentsForAccountByKey(account_key) ::= <<
 select
   payment_id
 , created_date
 , updated_date
-, attempt_id
+, ext_payment_ref_id
 , account_key
 , invoice_id
 , effective_date
@@ -80,7 +55,7 @@ insert into bip (
   payment_id
 , created_date
 , updated_date
-, attempt_id
+, ext_payment_ref_id
 , account_key
 , invoice_id
 , effective_date
@@ -98,7 +73,7 @@ insert into bip (
   :payment_id
 , :created_date
 , :updated_date
-, :attempt_id
+, :ext_payment_ref_id
 , :account_key
 , :invoice_id
 , :effective_date
@@ -115,8 +90,8 @@ insert into bip (
 );
 >>
 
-deleteInvoicePaymentForPaymentAttempt(attempt_id) ::= <<
-delete from bip where attempt_id = :attempt_id
+deleteInvoicePayment(payment_id) ::= <<
+delete from bip where payment_id = :payment_id
 >>
 
 test() ::= <<

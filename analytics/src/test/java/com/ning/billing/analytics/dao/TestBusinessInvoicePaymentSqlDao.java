@@ -41,60 +41,53 @@ public class TestBusinessInvoicePaymentSqlDao extends TestWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testCRUD() throws Exception {
-        final UUID attemptId = UUID.randomUUID();
+        final String extPaymentRefId = UUID.randomUUID().toString();
         final String accountKey = UUID.randomUUID().toString();
-        final BusinessInvoicePayment invoicePayment = createInvoicePayment(attemptId, accountKey);
+        final BusinessInvoicePayment invoicePayment = createInvoicePayment(extPaymentRefId, accountKey);
 
         // Verify initial state
-        Assert.assertNull(invoicePaymentSqlDao.getInvoicePaymentForPaymentAttempt(invoicePayment.getAttemptId().toString()));
-        Assert.assertEquals(invoicePaymentSqlDao.deleteInvoicePaymentForPaymentAttempt(invoicePayment.getAttemptId().toString()), 0);
+        Assert.assertNull(invoicePaymentSqlDao.getInvoicePayment(invoicePayment.getPaymentId().toString()));
+        Assert.assertEquals(invoicePaymentSqlDao.getInvoicePaymentsForAccountByKey(invoicePayment.getAccountKey()).size(), 0);
 
         // Add the invoice payment
         Assert.assertEquals(invoicePaymentSqlDao.createInvoicePayment(invoicePayment), 1);
 
         // Retrieve it
-        Assert.assertEquals(invoicePaymentSqlDao.getInvoicePaymentForPaymentAttempt(invoicePayment.getAttemptId().toString()), invoicePayment);
+        Assert.assertEquals(invoicePaymentSqlDao.getInvoicePayment(invoicePayment.getPaymentId().toString()), invoicePayment);
         Assert.assertEquals(invoicePaymentSqlDao.getInvoicePaymentsForAccountByKey(invoicePayment.getAccountKey()).size(), 1);
         Assert.assertEquals(invoicePaymentSqlDao.getInvoicePaymentsForAccountByKey(invoicePayment.getAccountKey()).get(0), invoicePayment);
-        Assert.assertEquals(invoicePaymentSqlDao.getInvoicePaymentsForPayment(invoicePayment.getPaymentId().toString()).size(), 1);
-        Assert.assertEquals(invoicePaymentSqlDao.getInvoicePaymentsForPayment(invoicePayment.getPaymentId().toString()).get(0), invoicePayment);
 
         // Delete it
-        Assert.assertEquals(invoicePaymentSqlDao.deleteInvoicePaymentForPaymentAttempt(invoicePayment.getAttemptId().toString()), 1);
-        Assert.assertNull(invoicePaymentSqlDao.getInvoicePaymentForPaymentAttempt(invoicePayment.getAttemptId().toString()));
+        Assert.assertEquals(invoicePaymentSqlDao.deleteInvoicePayment(invoicePayment.getPaymentId().toString()), 1);
+        Assert.assertNull(invoicePaymentSqlDao.getInvoicePayment(invoicePayment.getPaymentId().toString()));
         Assert.assertEquals(invoicePaymentSqlDao.getInvoicePaymentsForAccountByKey(invoicePayment.getAccountKey()).size(), 0);
-        Assert.assertEquals(invoicePaymentSqlDao.getInvoicePaymentsForPayment(invoicePayment.getPaymentId().toString()).size(), 0);
     }
 
     @Test(groups = "slow")
     public void testSegmentation() throws Exception {
-        final UUID attemptId1 = UUID.randomUUID();
+        final String extPaymentRefId1 = UUID.randomUUID().toString();
         final String accountKey1 = UUID.randomUUID().toString();
-        final BusinessInvoicePayment invoicePayment1 = createInvoicePayment(attemptId1, accountKey1);
-        final UUID attemptId2 = UUID.randomUUID();
+        final BusinessInvoicePayment invoicePayment1 = createInvoicePayment(extPaymentRefId1, accountKey1);
+        final String extPaymentRefId2 = UUID.randomUUID().toString();
         final String accountKey2 = UUID.randomUUID().toString();
-        final BusinessInvoicePayment invoicePayment2 = createInvoicePayment(attemptId2, accountKey2);
+        final BusinessInvoicePayment invoicePayment2 = createInvoicePayment(extPaymentRefId2, accountKey2);
 
         // Create both invoice payments
         Assert.assertEquals(invoicePaymentSqlDao.createInvoicePayment(invoicePayment1), 1);
         Assert.assertEquals(invoicePaymentSqlDao.createInvoicePayment(invoicePayment2), 1);
 
-        Assert.assertEquals(invoicePaymentSqlDao.getInvoicePaymentForPaymentAttempt(invoicePayment1.getAttemptId().toString()), invoicePayment1);
-        Assert.assertEquals(invoicePaymentSqlDao.getInvoicePaymentForPaymentAttempt(invoicePayment2.getAttemptId().toString()), invoicePayment2);
+        Assert.assertEquals(invoicePaymentSqlDao.getInvoicePayment(invoicePayment1.getPaymentId().toString()), invoicePayment1);
+        Assert.assertEquals(invoicePaymentSqlDao.getInvoicePayment(invoicePayment2.getPaymentId().toString()), invoicePayment2);
         Assert.assertEquals(invoicePaymentSqlDao.getInvoicePaymentsForAccountByKey(invoicePayment1.getAccountKey()).size(), 1);
         Assert.assertEquals(invoicePaymentSqlDao.getInvoicePaymentsForAccountByKey(invoicePayment2.getAccountKey()).size(), 1);
-        Assert.assertEquals(invoicePaymentSqlDao.getInvoicePaymentsForPayment(invoicePayment1.getPaymentId().toString()).size(), 1);
-        Assert.assertEquals(invoicePaymentSqlDao.getInvoicePaymentsForPayment(invoicePayment2.getPaymentId().toString()).size(), 1);
 
         // Remove the first invoice payment
-        Assert.assertEquals(invoicePaymentSqlDao.deleteInvoicePaymentForPaymentAttempt(invoicePayment1.getAttemptId().toString()), 1);
+        Assert.assertEquals(invoicePaymentSqlDao.deleteInvoicePayment(invoicePayment1.getPaymentId().toString()), 1);
 
-        Assert.assertNull(invoicePaymentSqlDao.getInvoicePaymentForPaymentAttempt(invoicePayment1.getAttemptId().toString()));
-        Assert.assertEquals(invoicePaymentSqlDao.getInvoicePaymentForPaymentAttempt(invoicePayment2.getAttemptId().toString()), invoicePayment2);
+        Assert.assertNull(invoicePaymentSqlDao.getInvoicePayment(invoicePayment1.getPaymentId().toString()));
+        Assert.assertEquals(invoicePaymentSqlDao.getInvoicePayment(invoicePayment2.getPaymentId().toString()), invoicePayment2);
         Assert.assertEquals(invoicePaymentSqlDao.getInvoicePaymentsForAccountByKey(invoicePayment1.getAccountKey()).size(), 0);
         Assert.assertEquals(invoicePaymentSqlDao.getInvoicePaymentsForAccountByKey(invoicePayment2.getAccountKey()).size(), 1);
-        Assert.assertEquals(invoicePaymentSqlDao.getInvoicePaymentsForPayment(invoicePayment1.getPaymentId().toString()).size(), 0);
-        Assert.assertEquals(invoicePaymentSqlDao.getInvoicePaymentsForPayment(invoicePayment2.getPaymentId().toString()).size(), 1);
     }
 
     @Test(groups = "slow")
@@ -107,7 +100,7 @@ public class TestBusinessInvoicePaymentSqlDao extends TestWithEmbeddedDB {
         }
     }
 
-    private BusinessInvoicePayment createInvoicePayment(final UUID attemptId, final String accountKey) {
+    private BusinessInvoicePayment createInvoicePayment(final String extPaymentRefId, final String accountKey) {
         final BigDecimal amount = BigDecimal.ONE;
         final String cardCountry = UUID.randomUUID().toString().substring(0, 20);
         final String cardType = UUID.randomUUID().toString().substring(0, 20);
@@ -124,7 +117,7 @@ public class TestBusinessInvoicePaymentSqlDao extends TestWithEmbeddedDB {
         final BigDecimal requestedAmount = BigDecimal.ZERO;
         final DateTime updatedDate = new DateTime(DateTimeZone.UTC);
 
-        return new BusinessInvoicePayment(accountKey, amount, attemptId,
+        return new BusinessInvoicePayment(accountKey, amount, extPaymentRefId,
                                           cardCountry, cardType, createdDate,
                                           currency, effectiveDate, invoiceId,
                                           paymentError, paymentId, paymentMethod,

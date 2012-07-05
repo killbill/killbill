@@ -25,6 +25,7 @@ import com.ning.billing.analytics.model.BusinessAccount;
 import com.ning.billing.analytics.model.BusinessAccountTag;
 import com.ning.billing.analytics.model.BusinessInvoice;
 import com.ning.billing.analytics.model.BusinessInvoiceItem;
+import com.ning.billing.analytics.model.BusinessInvoicePayment;
 import com.ning.billing.analytics.model.BusinessOverdueStatus;
 import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
 
@@ -59,5 +60,9 @@ public class DefaultAnalyticsUserApi {
 
     public List<BusinessInvoiceItem> getInvoiceItemsForInvoice(final UUID invoiceId) {
         return analyticsDao.getInvoiceItemsForInvoice(invoiceId.toString());
+    }
+
+    public List<BusinessInvoicePayment> getInvoicePaymentsForAccount(final String accountKey) {
+        return analyticsDao.getInvoicePaymentsForAccountByKey(accountKey);
     }
 }

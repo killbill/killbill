@@ -27,7 +27,7 @@ import com.ning.billing.catalog.api.Currency;
 public class BusinessInvoicePayment {
     private final UUID paymentId;
     private final DateTime createdDate;
-    private final UUID attemptId;
+    private final String extPaymentRefId;
     private final DateTime updatedDate;
     private final String accountKey;
     private final UUID invoiceId;
@@ -43,7 +43,7 @@ public class BusinessInvoicePayment {
     private final String cardType;
     private final String cardCountry;
 
-    public BusinessInvoicePayment(final String accountKey, final BigDecimal amount, final UUID attemptId,
+    public BusinessInvoicePayment(final String accountKey, final BigDecimal amount, final String extPaymentRefId,
                                   final String cardCountry, final String cardType, final DateTime createdDate,
                                   final Currency currency, final DateTime effectiveDate, final UUID invoiceId,
                                   final String paymentError, final UUID paymentId, final String paymentMethod,
@@ -51,7 +51,7 @@ public class BusinessInvoicePayment {
                                   final BigDecimal requestedAmount, final DateTime updatedDate) {
         this.accountKey = accountKey;
         this.amount = amount;
-        this.attemptId = attemptId;
+        this.extPaymentRefId = extPaymentRefId;
         this.cardCountry = cardCountry;
         this.cardType = cardType;
         this.createdDate = createdDate;
@@ -68,8 +68,8 @@ public class BusinessInvoicePayment {
         this.updatedDate = updatedDate;
     }
 
-    public UUID getAttemptId() {
-        return attemptId;
+    public String getExtPaymentRefId() {
+        return extPaymentRefId;
     }
 
     public DateTime getCreatedDate() {
@@ -143,7 +143,7 @@ public class BusinessInvoicePayment {
         sb.append("{accountKey='").append(accountKey).append('\'');
         sb.append(", paymentId=").append(paymentId);
         sb.append(", createdDate=").append(createdDate);
-        sb.append(", attemptId=").append(attemptId);
+        sb.append(", extPaymentRefId=").append(extPaymentRefId);
         sb.append(", updatedDate=").append(updatedDate);
         sb.append(", invoiceId=").append(invoiceId);
         sb.append(", effectiveDate=").append(effectiveDate);
@@ -178,7 +178,7 @@ public class BusinessInvoicePayment {
         if (amount != null ? Rounder.round(amount) != Rounder.round(that.amount) : that.amount != null) {
             return false;
         }
-        if (attemptId != null ? !attemptId.equals(that.attemptId) : that.attemptId != null) {
+        if (extPaymentRefId != null ? !extPaymentRefId.equals(that.extPaymentRefId) : that.extPaymentRefId != null) {
             return false;
         }
         if (cardCountry != null ? !cardCountry.equals(that.cardCountry) : that.cardCountry != null) {
@@ -231,7 +231,7 @@ public class BusinessInvoicePayment {
     public int hashCode() {
         int result = paymentId != null ? paymentId.hashCode() : 0;
         result = 31 * result + (createdDate != null ? createdDate.hashCode() : 0);
-        result = 31 * result + (attemptId != null ? attemptId.hashCode() : 0);
+        result = 31 * result + (extPaymentRefId != null ? extPaymentRefId.hashCode() : 0);
         result = 31 * result + (updatedDate != null ? updatedDate.hashCode() : 0);
         result = 31 * result + (accountKey != null ? accountKey.hashCode() : 0);
         result = 31 * result + (invoiceId != null ? invoiceId.hashCode() : 0);

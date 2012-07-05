@@ -35,7 +35,7 @@ public class BusinessInvoicePaymentMapper implements ResultSetMapper<BusinessInv
         final UUID paymentId = UUID.fromString(r.getString(1));
         final DateTime createdDate = new DateTime(r.getLong(2), DateTimeZone.UTC);
         final DateTime updatedDate = new DateTime(r.getLong(3), DateTimeZone.UTC);
-        final UUID attemptId = UUID.fromString(r.getString(4));
+        final String extPaymentRefId = r.getString(4);
         final String accountKey = r.getString(5);
         final UUID invoiceId = UUID.fromString(r.getString(6));
         final DateTime effectiveDate = new DateTime(r.getLong(7), DateTimeZone.UTC);
@@ -50,7 +50,7 @@ public class BusinessInvoicePaymentMapper implements ResultSetMapper<BusinessInv
         final String cardType = r.getString(16);
         final String cardCountry = r.getString(17);
 
-        return new BusinessInvoicePayment(accountKey, amount, attemptId, cardCountry, cardType, createdDate, currency,
+        return new BusinessInvoicePayment(accountKey, amount, extPaymentRefId, cardCountry, cardType, createdDate, currency,
                                           effectiveDate, invoiceId, paymentError, paymentId, paymentMethod, paymentType,
                                           pluginName, processingStatus, requestedAmount, updatedDate);
     }

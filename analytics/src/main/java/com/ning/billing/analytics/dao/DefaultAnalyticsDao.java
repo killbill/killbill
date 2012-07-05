@@ -23,6 +23,7 @@ import com.ning.billing.analytics.model.BusinessAccount;
 import com.ning.billing.analytics.model.BusinessAccountTag;
 import com.ning.billing.analytics.model.BusinessInvoice;
 import com.ning.billing.analytics.model.BusinessInvoiceItem;
+import com.ning.billing.analytics.model.BusinessInvoicePayment;
 import com.ning.billing.analytics.model.BusinessOverdueStatus;
 import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
 
@@ -33,6 +34,7 @@ public class DefaultAnalyticsDao implements AnalyticsDao {
     private final BusinessInvoiceItemSqlDao invoiceItemSqlDao;
     private final BusinessAccountTagSqlDao accountTagSqlDao;
     private final BusinessOverdueStatusSqlDao overdueStatusSqlDao;
+    private final BusinessInvoicePaymentSqlDao invoicePaymentSqlDao;
 
     @Inject
     public DefaultAnalyticsDao(final BusinessAccountSqlDao accountSqlDao,
@@ -40,13 +42,15 @@ public class DefaultAnalyticsDao implements AnalyticsDao {
                                final BusinessInvoiceSqlDao invoiceSqlDao,
                                final BusinessInvoiceItemSqlDao invoiceItemSqlDao,
                                final BusinessAccountTagSqlDao accountTagSqlDao,
-                               final BusinessOverdueStatusSqlDao overdueStatusSqlDao) {
+                               final BusinessOverdueStatusSqlDao overdueStatusSqlDao,
+                               final BusinessInvoicePaymentSqlDao invoicePaymentSqlDao) {
         this.accountSqlDao = accountSqlDao;
         this.subscriptionTransitionSqlDao = subscriptionTransitionSqlDao;
         this.invoiceSqlDao = invoiceSqlDao;
         this.invoiceItemSqlDao = invoiceItemSqlDao;
         this.accountTagSqlDao = accountTagSqlDao;
         this.overdueStatusSqlDao = overdueStatusSqlDao;
+        this.invoicePaymentSqlDao = invoicePaymentSqlDao;
     }
 
     @Override
@@ -77,5 +81,10 @@ public class DefaultAnalyticsDao implements AnalyticsDao {
     @Override
     public List<BusinessOverdueStatus> getOverdueStatusesForBundleByKey(final String externalKey) {
         return overdueStatusSqlDao.getOverdueStatusesForBundleByKey(externalKey);
+    }
+
+    @Override
+    public List<BusinessInvoicePayment> getInvoicePaymentsForAccountByKey(final String accountKey) {
+        return invoicePaymentSqlDao.getInvoicePaymentsForAccountByKey(accountKey);
     }
 }

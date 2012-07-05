@@ -44,6 +44,7 @@ public class AnalyticsListener {
     private final BusinessAccountRecorder bacRecorder;
     private final BusinessInvoiceRecorder invoiceRecorder;
     private final BusinessOverdueStatusRecorder bosRecorder;
+    private final BusinessInvoicePaymentRecorder bipRecorder;
     private final BusinessTagRecorder tagRecorder;
 
     @Inject
@@ -51,11 +52,13 @@ public class AnalyticsListener {
                              final BusinessAccountRecorder bacRecorder,
                              final BusinessInvoiceRecorder invoiceRecorder,
                              final BusinessOverdueStatusRecorder bosRecorder,
+                             final BusinessInvoicePaymentRecorder bipRecorder,
                              final BusinessTagRecorder tagRecorder) {
         this.bstRecorder = bstRecorder;
         this.bacRecorder = bacRecorder;
         this.invoiceRecorder = invoiceRecorder;
         this.bosRecorder = bosRecorder;
+        this.bipRecorder = bipRecorder;
         this.tagRecorder = tagRecorder;
     }
 
@@ -104,12 +107,18 @@ public class AnalyticsListener {
 
     @Subscribe
     public void handlePaymentInfo(final PaymentInfoEvent paymentInfo) {
-        bacRecorder.accountUpdated(paymentInfo);
+        bipRecorder.invoicePaymentPosted(paymentInfo.getAccountId(),
+                                         paymentInfo.getPaymentId(),
+                                         paymentInfo.getExtPaymentRefId(),
+                                         paymentInfo.getStatus().toString());
     }
 
     @Subscribe
     public void handlePaymentError(final PaymentErrorEvent paymentError) {
-        // TODO - we can't tie the error back to an account yet
+        bipRecorder.invoicePaymentPosted(paymentError.getAccountId(),
+                                         paymentError.getPaymentId(),
+                                         null,
+                                         paymentError.getMessage());
     }
 
     @Subscribe
