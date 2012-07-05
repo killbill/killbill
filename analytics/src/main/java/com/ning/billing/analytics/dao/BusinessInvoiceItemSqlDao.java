@@ -44,9 +44,6 @@ public interface BusinessInvoiceItemSqlDao extends Transactional<BusinessInvoice
     int createInvoiceItem(@BusinessInvoiceItemBinder final BusinessInvoiceItem invoiceItem);
 
     @SqlUpdate
-    int updateInvoiceItem(@BusinessInvoiceItemBinder final BusinessInvoiceItem invoiceItem);
-
-    @SqlUpdate
     int deleteInvoiceItem(@Bind("item_id") final String itemId);
 
     @SqlUpdate

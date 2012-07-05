@@ -115,26 +115,6 @@ insert into bip (
 );
 >>
 
-updateInvoicePaymentForPaymentAttempt() ::= <<
-update bip set
-  updated_date = :updated_date
-, account_key = :account_key
-, invoice_id = :invoice_id
-, effective_date = :effective_date
-, amount = :amount
-, currency = :currency
-, payment_error = :payment_error
-, processing_status = :processing_status
-, requested_amount = :requested_amount
-, plugin_name = :plugin_name
-, payment_type = :payment_type
-, payment_method = :payment_method
-, card_type = :card_type
-, card_country = :card_country
-where attempt_id = :attempt_id
-;
->>
-
 deleteInvoicePaymentForPaymentAttempt(attempt_id) ::= <<
 delete from bip where attempt_id = :attempt_id
 >>

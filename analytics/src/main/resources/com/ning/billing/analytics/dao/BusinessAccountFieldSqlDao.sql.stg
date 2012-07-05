@@ -1,6 +1,6 @@
 group BusinessAccountField;
 
-getFieldsForAccount(account_key) ::=<<
+getFieldsForAccountByKey(account_key) ::=<<
 select
   account_id
 , account_key

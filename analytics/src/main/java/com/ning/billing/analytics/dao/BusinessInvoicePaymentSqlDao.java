@@ -42,9 +42,6 @@ public interface BusinessInvoicePaymentSqlDao {
     int createInvoicePayment(@BusinessInvoicePaymentBinder final BusinessInvoicePayment payment);
 
     @SqlUpdate
-    int updateInvoicePaymentForPaymentAttempt(@BusinessInvoicePaymentBinder final BusinessInvoicePayment payment);
-
-    @SqlUpdate
     int deleteInvoicePaymentForPaymentAttempt(@Bind("attempt_id") final String attemptId);
 
     @SqlUpdate
