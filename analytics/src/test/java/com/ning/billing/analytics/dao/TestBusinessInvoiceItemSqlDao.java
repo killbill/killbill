@@ -59,15 +59,6 @@ public class TestBusinessInvoiceItemSqlDao extends TestWithEmbeddedDB {
         Assert.assertEquals(invoiceItemSqlDao.getInvoiceItemsForInvoice(invoiceItem.getInvoiceId().toString()).size(), 1);
         Assert.assertEquals(invoiceItemSqlDao.getInvoiceItemsForInvoice(invoiceItem.getInvoiceId().toString()).get(0), invoiceItem);
 
-        // Update and retrieve it
-        invoiceItem.setProductName(UUID.randomUUID().toString().substring(0, 20));
-        Assert.assertEquals(invoiceItemSqlDao.updateInvoiceItem(invoiceItem), 1);
-        Assert.assertEquals(invoiceItemSqlDao.getInvoiceItem(invoiceItem.getItemId().toString()), invoiceItem);
-        Assert.assertEquals(invoiceItemSqlDao.getInvoiceItemsForBundleByKey(invoiceItem.getExternalKey()).size(), 1);
-        Assert.assertEquals(invoiceItemSqlDao.getInvoiceItemsForBundleByKey(invoiceItem.getExternalKey()).get(0), invoiceItem);
-        Assert.assertEquals(invoiceItemSqlDao.getInvoiceItemsForInvoice(invoiceItem.getInvoiceId().toString()).size(), 1);
-        Assert.assertEquals(invoiceItemSqlDao.getInvoiceItemsForInvoice(invoiceItem.getInvoiceId().toString()).get(0), invoiceItem);
-
         // Delete it
         Assert.assertEquals(invoiceItemSqlDao.deleteInvoiceItem(invoiceItem.getItemId().toString()), 1);
         Assert.assertNull(invoiceItemSqlDao.getInvoiceItem(invoiceItem.getItemId().toString()));

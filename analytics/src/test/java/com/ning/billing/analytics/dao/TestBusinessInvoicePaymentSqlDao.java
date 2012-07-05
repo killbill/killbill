@@ -59,15 +59,6 @@ public class TestBusinessInvoicePaymentSqlDao extends TestWithEmbeddedDB {
         Assert.assertEquals(invoicePaymentSqlDao.getInvoicePaymentsForPayment(invoicePayment.getPaymentId().toString()).size(), 1);
         Assert.assertEquals(invoicePaymentSqlDao.getInvoicePaymentsForPayment(invoicePayment.getPaymentId().toString()).get(0), invoicePayment);
 
-        // Update and retrieve it
-        invoicePayment.setCardType(UUID.randomUUID().toString().substring(0, 20));
-        Assert.assertEquals(invoicePaymentSqlDao.updateInvoicePaymentForPaymentAttempt(invoicePayment), 1);
-        Assert.assertEquals(invoicePaymentSqlDao.getInvoicePaymentForPaymentAttempt(invoicePayment.getAttemptId().toString()), invoicePayment);
-        Assert.assertEquals(invoicePaymentSqlDao.getInvoicePaymentsForAccountByKey(invoicePayment.getAccountKey()).size(), 1);
-        Assert.assertEquals(invoicePaymentSqlDao.getInvoicePaymentsForAccountByKey(invoicePayment.getAccountKey()).get(0), invoicePayment);
-        Assert.assertEquals(invoicePaymentSqlDao.getInvoicePaymentsForPayment(invoicePayment.getPaymentId().toString()).size(), 1);
-        Assert.assertEquals(invoicePaymentSqlDao.getInvoicePaymentsForPayment(invoicePayment.getPaymentId().toString()).get(0), invoicePayment);
-
         // Delete it
         Assert.assertEquals(invoicePaymentSqlDao.deleteInvoicePaymentForPaymentAttempt(invoicePayment.getAttemptId().toString()), 1);
         Assert.assertNull(invoicePaymentSqlDao.getInvoicePaymentForPaymentAttempt(invoicePayment.getAttemptId().toString()));

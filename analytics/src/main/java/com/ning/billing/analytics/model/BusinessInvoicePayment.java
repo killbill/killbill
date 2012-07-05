@@ -28,21 +28,20 @@ public class BusinessInvoicePayment {
     private final UUID paymentId;
     private final DateTime createdDate;
     private final UUID attemptId;
-
-    private DateTime updatedDate;
-    private String accountKey;
-    private UUID invoiceId;
-    private DateTime effectiveDate;
-    private BigDecimal amount;
-    private Currency currency;
-    private String paymentError;
-    private String processingStatus;
-    private BigDecimal requestedAmount;
-    private String pluginName;
-    private String paymentType;
-    private String paymentMethod;
-    private String cardType;
-    private String cardCountry;
+    private final DateTime updatedDate;
+    private final String accountKey;
+    private final UUID invoiceId;
+    private final DateTime effectiveDate;
+    private final BigDecimal amount;
+    private final Currency currency;
+    private final String paymentError;
+    private final String processingStatus;
+    private final BigDecimal requestedAmount;
+    private final String pluginName;
+    private final String paymentType;
+    private final String paymentMethod;
+    private final String cardType;
+    private final String cardCountry;
 
     public BusinessInvoicePayment(final String accountKey, final BigDecimal amount, final UUID attemptId,
                                   final String cardCountry, final String cardType, final DateTime createdDate,
@@ -85,112 +84,56 @@ public class BusinessInvoicePayment {
         return accountKey;
     }
 
-    public void setAccountKey(final String accountKey) {
-        this.accountKey = accountKey;
-    }
-
     public BigDecimal getAmount() {
         return amount;
-    }
-
-    public void setAmount(final BigDecimal amount) {
-        this.amount = amount;
     }
 
     public String getCardCountry() {
         return cardCountry;
     }
 
-    public void setCardCountry(final String cardCountry) {
-        this.cardCountry = cardCountry;
-    }
-
     public String getCardType() {
         return cardType;
-    }
-
-    public void setCardType(final String cardType) {
-        this.cardType = cardType;
     }
 
     public Currency getCurrency() {
         return currency;
     }
 
-    public void setCurrency(final Currency currency) {
-        this.currency = currency;
-    }
-
     public DateTime getEffectiveDate() {
         return effectiveDate;
-    }
-
-    public void setEffectiveDate(final DateTime effectiveDate) {
-        this.effectiveDate = effectiveDate;
     }
 
     public UUID getInvoiceId() {
         return invoiceId;
     }
 
-    public void setInvoiceId(final UUID invoiceId) {
-        this.invoiceId = invoiceId;
-    }
-
     public String getPaymentError() {
         return paymentError;
-    }
-
-    public void setPaymentError(final String paymentError) {
-        this.paymentError = paymentError;
     }
 
     public String getPaymentMethod() {
         return paymentMethod;
     }
 
-    public void setPaymentMethod(final String paymentMethod) {
-        this.paymentMethod = paymentMethod;
-    }
-
     public String getPaymentType() {
         return paymentType;
-    }
-
-    public void setPaymentType(final String paymentType) {
-        this.paymentType = paymentType;
     }
 
     public String getPluginName() {
         return pluginName;
     }
 
-    public void setPluginName(final String pluginName) {
-        this.pluginName = pluginName;
-    }
-
     public String getProcessingStatus() {
         return processingStatus;
-    }
-
-    public void setProcessingStatus(final String processingStatus) {
-        this.processingStatus = processingStatus;
     }
 
     public BigDecimal getRequestedAmount() {
         return requestedAmount;
     }
 
-    public void setRequestedAmount(final BigDecimal requestedAmount) {
-        this.requestedAmount = requestedAmount;
-    }
-
     public DateTime getUpdatedDate() {
         return updatedDate;
-    }
-
-    public void setUpdatedDate(final DateTime updatedDate) {
-        this.updatedDate = updatedDate;
     }
 
     @Override

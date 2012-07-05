@@ -78,22 +78,5 @@ public class TestBusinessInvoicePayment extends AnalyticsTestSuite {
                                                                                       null, null, null, null, paymentId, null,
                                                                                       null, null, null, null, null);
         Assert.assertFalse(invoicePayment.equals(otherInvoicePayment));
-
-        // Test setters
-        otherInvoicePayment.setAccountKey(accountKey);
-        otherInvoicePayment.setAmount(amount);
-        otherInvoicePayment.setCardCountry(cardCountry);
-        otherInvoicePayment.setCardType(cardType);
-        otherInvoicePayment.setCurrency(currency);
-        otherInvoicePayment.setEffectiveDate(effectiveDate);
-        otherInvoicePayment.setInvoiceId(invoiceId);
-        otherInvoicePayment.setPaymentError(paymentError);
-        otherInvoicePayment.setPaymentMethod(paymentMethod);
-        otherInvoicePayment.setPaymentType(paymentType);
-        otherInvoicePayment.setPluginName(pluginName);
-        otherInvoicePayment.setProcessingStatus(processingStatus);
-        otherInvoicePayment.setRequestedAmount(requestedAmount);
-        otherInvoicePayment.setUpdatedDate(updatedDate);
-        Assert.assertTrue(invoicePayment.equals(otherInvoicePayment));
     }
 }

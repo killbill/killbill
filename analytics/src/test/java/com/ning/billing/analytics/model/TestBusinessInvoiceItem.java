@@ -73,22 +73,5 @@ public class TestBusinessInvoiceItem extends AnalyticsTestSuite {
         final BusinessInvoiceItem otherInvoiceItem = new BusinessInvoiceItem(null, null, createdDate, null, null, null, null, itemId,
                                                                              null, null, null, null, null, null, null, null);
         Assert.assertFalse(invoiceItem.equals(otherInvoiceItem));
-
-        // Test setters
-        otherInvoiceItem.setAmount(amount);
-        otherInvoiceItem.setBillingPeriod(billingPeriod);
-        otherInvoiceItem.setCurrency(currency);
-        otherInvoiceItem.setEndDate(endDate);
-        otherInvoiceItem.setExternalKey(externalKey);
-        otherInvoiceItem.setInvoiceId(invoiceId);
-        otherInvoiceItem.setItemType(itemType);
-        otherInvoiceItem.setPhase(phase);
-        otherInvoiceItem.setProductCategory(productCategory);
-        otherInvoiceItem.setProductName(productName);
-        otherInvoiceItem.setProductType(productType);
-        otherInvoiceItem.setSlug(slug);
-        otherInvoiceItem.setStartDate(startDate);
-        otherInvoiceItem.setUpdatedDate(updatedDate);
-        Assert.assertTrue(invoiceItem.equals(otherInvoiceItem));
     }
 }
