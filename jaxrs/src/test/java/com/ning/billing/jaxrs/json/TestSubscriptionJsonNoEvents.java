@@ -76,7 +76,7 @@ public class TestSubscriptionJsonNoEvents {
                 "\"productCategory\":\"" + subscriptionJsonNoEvents.getProductCategory() + "\"," +
                 "\"billingPeriod\":\"" + subscriptionJsonNoEvents.getBillingPeriod() + "\"," +
                 "\"priceList\":\"" + subscriptionJsonNoEvents.getPriceList() + "\"," +
-                "\"chargedThroughDate\":\"" + subscriptionJsonNoEvents.getChargedThroughDate().toDateTimeISO().toString() +
+                "\"chargedThroughDate\":\"" + subscriptionJsonNoEvents.getChargedThroughDate().toDateTimeISO().toString() + "\"," +
                 "\"cancelledDate\":\"" + subscriptionJsonNoEvents.getCancelledDate().toDateTimeISO().toString() + "\"}");
 
         final SubscriptionJsonNoEvents fromJson = mapper.readValue(asJson, SubscriptionJsonNoEvents.class);
