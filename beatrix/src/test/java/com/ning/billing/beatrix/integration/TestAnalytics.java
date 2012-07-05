@@ -120,6 +120,8 @@ public class TestAnalytics extends TestIntegrationBase {
     @AfterMethod(groups = "slow")
     public void tearDownAnalyticsHandler() throws Exception {
         busService.getBus().unregister(analyticsListener);
+        // Reset the payment plugin for other tests
+        paymentPlugin.clear();
     }
 
     @Test(groups = "slow")
