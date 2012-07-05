@@ -261,10 +261,11 @@ public class PaymentProcessor extends ProcessorBase {
     }
 
     private Payment processNewPaymentWithAccountLocked(final PaymentPluginApi plugin, final Account account, final Invoice invoice,
-            final BigDecimal requestedAmount, final boolean isInstantPayment, final CallContext context) throws PaymentApiException {
+                                                       final BigDecimal requestedAmount, final boolean isInstantPayment, final CallContext context) throws PaymentApiException {
 
         final boolean scheduleRetryForPayment = !isInstantPayment;
-        final PaymentModelDao payment = new PaymentModelDao(account.getId(), invoice.getId(), requestedAmount.setScale(2, RoundingMode.HALF_EVEN), invoice.getCurrency(), invoice.getTargetDate());
+        final PaymentModelDao payment = new PaymentModelDao(account.getId(), invoice.getId(), account.getPaymentMethodId(),
+                                                            requestedAmount.setScale(2, RoundingMode.HALF_EVEN), invoice.getCurrency(), invoice.getTargetDate());
         final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(account.getId(), invoice.getId(), payment.getId(), clock.getUTCNow(), requestedAmount);
 
         final PaymentModelDao savedPayment = paymentDao.insertPaymentWithAttempt(payment, attempt, scheduleRetryForPayment, context);
