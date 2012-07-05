@@ -85,8 +85,8 @@ public class TestBusinessSubscriptionTransitionRecorder extends AnalyticsTestSui
         final BusinessSubscriptionTransitionRecorder recorder = new BusinessSubscriptionTransitionRecorder(sqlDao, catalogService, entitlementApi, accountApi, new DefaultClock());
         recorder.rebuildTransitionsForBundle(bundle.getId());
 
-        Assert.assertEquals(sqlDao.getTransitions(externalKey.toString()).size(), 1);
-        final BusinessSubscriptionTransition transition = sqlDao.getTransitions(externalKey.toString()).get(0);
+        Assert.assertEquals(sqlDao.getTransitionsByKey(externalKey.toString()).size(), 1);
+        final BusinessSubscriptionTransition transition = sqlDao.getTransitionsByKey(externalKey.toString()).get(0);
         Assert.assertEquals(transition.getTotalOrdering(), (long) eventEffective.getTotalOrdering());
         Assert.assertEquals(transition.getAccountKey(), externalKey.toString());
         // Make sure all the prev_ columns are null

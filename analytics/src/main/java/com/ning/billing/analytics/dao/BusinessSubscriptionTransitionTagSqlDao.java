@@ -30,7 +30,7 @@ import com.ning.billing.analytics.model.BusinessSubscriptionTransitionTag;
 @RegisterMapper(BusinessSubscriptionTransitionTagMapper.class)
 public interface BusinessSubscriptionTransitionTagSqlDao {
     @SqlQuery
-    List<BusinessSubscriptionTransitionTag> getTagsForBusinessSubscriptionTransition(@Bind("external_key") final String externalKey);
+    List<BusinessSubscriptionTransitionTag> getTagsForBusinessSubscriptionTransitionByKey(@Bind("external_key") final String externalKey);
 
     @SqlUpdate
     int addTag(@Bind("account_key") final String accountKey, @Bind("bundle_id") final String bundleId,

@@ -30,7 +30,7 @@ import com.ning.billing.analytics.model.BusinessSubscriptionTransitionField;
 @RegisterMapper(BusinessSubscriptionTransitionFieldMapper.class)
 public interface BusinessSubscriptionTransitionFieldSqlDao {
     @SqlQuery
-    List<BusinessSubscriptionTransitionField> getFieldsForBusinessSubscriptionTransition(@Bind("external_key") final String externalKey);
+    List<BusinessSubscriptionTransitionField> getFieldsForBusinessSubscriptionTransitionByKey(@Bind("external_key") final String externalKey);
 
     @SqlUpdate
     int addField(@Bind("account_key") final String accountKey, @Bind("bundle_id") final String bundleId, @Bind("external_key") final String externalKey,

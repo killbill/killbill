@@ -115,11 +115,11 @@ public class TestBusinessTagRecorder extends TestWithEmbeddedDB {
         final Account account = accountUserApi.createAccount(accountData, callContext);
         final UUID accountId = account.getId();
 
-        Assert.assertEquals(accountTagSqlDao.getTagsForAccount(accountKey).size(), 0);
+        Assert.assertEquals(accountTagSqlDao.getTagsForAccountByKey(accountKey).size(), 0);
         tagRecorder.tagAdded(ObjectType.ACCOUNT, accountId, name);
-        Assert.assertEquals(accountTagSqlDao.getTagsForAccount(accountKey).size(), 1);
+        Assert.assertEquals(accountTagSqlDao.getTagsForAccountByKey(accountKey).size(), 1);
         tagRecorder.tagRemoved(ObjectType.ACCOUNT, accountId, name);
-        Assert.assertEquals(accountTagSqlDao.getTagsForAccount(accountKey).size(), 0);
+        Assert.assertEquals(accountTagSqlDao.getTagsForAccountByKey(accountKey).size(), 0);
     }
 
     @Test(groups = "slow")
@@ -135,10 +135,10 @@ public class TestBusinessTagRecorder extends TestWithEmbeddedDB {
         final SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(account.getId(), externalKey, callContext);
         final UUID bundleId = bundle.getId();
 
-        Assert.assertEquals(subscriptionTransitionTagSqlDao.getTagsForBusinessSubscriptionTransition(externalKey).size(), 0);
+        Assert.assertEquals(subscriptionTransitionTagSqlDao.getTagsForBusinessSubscriptionTransitionByKey(externalKey).size(), 0);
         tagRecorder.tagAdded(ObjectType.BUNDLE, bundleId, name);
-        Assert.assertEquals(subscriptionTransitionTagSqlDao.getTagsForBusinessSubscriptionTransition(externalKey).size(), 1);
+        Assert.assertEquals(subscriptionTransitionTagSqlDao.getTagsForBusinessSubscriptionTransitionByKey(externalKey).size(), 1);
         tagRecorder.tagRemoved(ObjectType.BUNDLE, bundleId, name);
-        Assert.assertEquals(subscriptionTransitionTagSqlDao.getTagsForBusinessSubscriptionTransition(externalKey).size(), 0);
+        Assert.assertEquals(subscriptionTransitionTagSqlDao.getTagsForBusinessSubscriptionTransitionByKey(externalKey).size(), 0);
     }
 }

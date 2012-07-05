@@ -31,7 +31,7 @@ import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
 @RegisterMapper(BusinessSubscriptionTransitionMapper.class)
 public interface BusinessSubscriptionTransitionSqlDao extends Transactional<BusinessSubscriptionTransitionSqlDao> {
     @SqlQuery
-    List<BusinessSubscriptionTransition> getTransitions(@Bind("external_key") final String externalKey);
+    List<BusinessSubscriptionTransition> getTransitionsByKey(@Bind("external_key") final String externalKey);
 
     @SqlQuery
     List<BusinessSubscriptionTransition> getTransitionForSubscription(@Bind("subscription_id") final String subscriptionId);

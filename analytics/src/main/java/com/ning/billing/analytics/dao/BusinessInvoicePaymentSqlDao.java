@@ -36,7 +36,7 @@ public interface BusinessInvoicePaymentSqlDao {
     List<BusinessInvoicePayment> getInvoicePaymentsForPayment(@Bind("payment_id") final String paymentId);
 
     @SqlQuery
-    List<BusinessInvoicePayment> getInvoicePaymentsForAccount(@Bind("account_key") final String accountKey);
+    List<BusinessInvoicePayment> getInvoicePaymentsForAccountByKey(@Bind("account_key") final String accountKey);
 
     @SqlUpdate
     int createInvoicePayment(@BusinessInvoicePaymentBinder final BusinessInvoicePayment payment);

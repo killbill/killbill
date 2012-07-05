@@ -267,8 +267,8 @@ public class TestAnalyticsService extends TestWithEmbeddedDB {
         bus.post(accountCreationNotification);
         Thread.sleep(5000);
 
-        Assert.assertEquals(subscriptionSqlDao.getTransitions(EXTERNAL_KEY).size(), 1);
-        Assert.assertEquals(subscriptionSqlDao.getTransitions(EXTERNAL_KEY).get(0), expectedTransition);
+        Assert.assertEquals(subscriptionSqlDao.getTransitionsByKey(EXTERNAL_KEY).size(), 1);
+        Assert.assertEquals(subscriptionSqlDao.getTransitionsByKey(EXTERNAL_KEY).get(0), expectedTransition);
 
         // Test invoice integration - the account creation notification has triggered a BAC update
         Assert.assertTrue(accountSqlDao.getAccountByKey(ACCOUNT_KEY).getTotalInvoiceBalance().compareTo(INVOICE_AMOUNT) == 0);

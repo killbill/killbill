@@ -30,7 +30,7 @@ import com.ning.billing.analytics.model.BusinessAccountField;
 @RegisterMapper(BusinessAccountFieldMapper.class)
 public interface BusinessAccountFieldSqlDao {
     @SqlQuery
-    List<BusinessAccountField> getFieldsForAccount(@Bind("account_key") final String accountKey);
+    List<BusinessAccountField> getFieldsForAccountByKey(@Bind("account_key") final String accountKey);
 
     @SqlUpdate
     int addField(@Bind("account_id") final String accountId, @Bind("account_key") final String accountKey,

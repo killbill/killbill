@@ -131,7 +131,7 @@ public class TestAnalyticsDao extends TestWithEmbeddedDB {
         );
         businessSubscriptionTransitionSqlDao.createTransition(transitionWithNullPrev);
 
-        final List<BusinessSubscriptionTransition> transitions = businessSubscriptionTransitionSqlDao.getTransitions(EXTERNAL_KEY);
+        final List<BusinessSubscriptionTransition> transitions = businessSubscriptionTransitionSqlDao.getTransitionsByKey(EXTERNAL_KEY);
         Assert.assertEquals(transitions.size(), 1);
         Assert.assertEquals(transitions.get(0), transitionWithNullPrev);
     }
@@ -152,7 +152,7 @@ public class TestAnalyticsDao extends TestWithEmbeddedDB {
         );
         businessSubscriptionTransitionSqlDao.createTransition(transitionWithNullNext);
 
-        final List<BusinessSubscriptionTransition> transitions = businessSubscriptionTransitionSqlDao.getTransitions(EXTERNAL_KEY);
+        final List<BusinessSubscriptionTransition> transitions = businessSubscriptionTransitionSqlDao.getTransitionsByKey(EXTERNAL_KEY);
         Assert.assertEquals(transitions.size(), 1);
         Assert.assertEquals(transitions.get(0), transitionWithNullNext);
     }
@@ -174,7 +174,7 @@ public class TestAnalyticsDao extends TestWithEmbeddedDB {
         );
         businessSubscriptionTransitionSqlDao.createTransition(transitionWithNullFields);
 
-        final List<BusinessSubscriptionTransition> transitions = businessSubscriptionTransitionSqlDao.getTransitions(EXTERNAL_KEY);
+        final List<BusinessSubscriptionTransition> transitions = businessSubscriptionTransitionSqlDao.getTransitionsByKey(EXTERNAL_KEY);
         Assert.assertEquals(transitions.size(), 1);
         Assert.assertEquals(transitions.get(0), transitionWithNullFields);
     }
@@ -196,7 +196,7 @@ public class TestAnalyticsDao extends TestWithEmbeddedDB {
         );
         businessSubscriptionTransitionSqlDao.createTransition(transitionWithNullPlanAndPhase);
 
-        final List<BusinessSubscriptionTransition> transitions = businessSubscriptionTransitionSqlDao.getTransitions(EXTERNAL_KEY);
+        final List<BusinessSubscriptionTransition> transitions = businessSubscriptionTransitionSqlDao.getTransitionsByKey(EXTERNAL_KEY);
         Assert.assertEquals(transitions.size(), 1);
         Assert.assertEquals(transitions.get(0).getExternalKey(), transition.getExternalKey());
         Assert.assertEquals(transitions.get(0).getRequestedTimestamp(), transition.getRequestedTimestamp());
@@ -222,7 +222,7 @@ public class TestAnalyticsDao extends TestWithEmbeddedDB {
         );
         businessSubscriptionTransitionSqlDao.createTransition(transitionWithNullPlan);
 
-        final List<BusinessSubscriptionTransition> transitions = businessSubscriptionTransitionSqlDao.getTransitions(EXTERNAL_KEY);
+        final List<BusinessSubscriptionTransition> transitions = businessSubscriptionTransitionSqlDao.getTransitionsByKey(EXTERNAL_KEY);
         Assert.assertEquals(transitions.size(), 1);
         // Null Plan but Phase - we don't turn the subscription into a null
         Assert.assertEquals(transitions.get(0), transitionWithNullPlan);
@@ -245,7 +245,7 @@ public class TestAnalyticsDao extends TestWithEmbeddedDB {
         );
         businessSubscriptionTransitionSqlDao.createTransition(transitionWithNullPhase);
 
-        final List<BusinessSubscriptionTransition> transitions = businessSubscriptionTransitionSqlDao.getTransitions(EXTERNAL_KEY);
+        final List<BusinessSubscriptionTransition> transitions = businessSubscriptionTransitionSqlDao.getTransitionsByKey(EXTERNAL_KEY);
         Assert.assertEquals(transitions.size(), 1);
         Assert.assertEquals(transitions.get(0).getExternalKey(), transition.getExternalKey());
         Assert.assertEquals(transitions.get(0).getRequestedTimestamp(), transition.getRequestedTimestamp());
@@ -261,11 +261,11 @@ public class TestAnalyticsDao extends TestWithEmbeddedDB {
     public void testCreateAndRetrieveTransitions() {
         businessSubscriptionTransitionSqlDao.createTransition(transition);
 
-        final List<BusinessSubscriptionTransition> transitions = businessSubscriptionTransitionSqlDao.getTransitions(EXTERNAL_KEY);
+        final List<BusinessSubscriptionTransition> transitions = businessSubscriptionTransitionSqlDao.getTransitionsByKey(EXTERNAL_KEY);
         Assert.assertEquals(transitions.size(), 1);
         Assert.assertEquals(transitions.get(0), transition);
 
-        Assert.assertEquals(businessSubscriptionTransitionSqlDao.getTransitions("Doesn't exist").size(), 0);
+        Assert.assertEquals(businessSubscriptionTransitionSqlDao.getTransitionsByKey("Doesn't exist").size(), 0);
     }
 
     @Test(groups = "slow")

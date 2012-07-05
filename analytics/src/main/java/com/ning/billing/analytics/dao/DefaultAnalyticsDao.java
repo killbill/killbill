@@ -56,7 +56,7 @@ public class DefaultAnalyticsDao implements AnalyticsDao {
 
     @Override
     public List<BusinessSubscriptionTransition> getTransitionsByKey(final String externalKey) {
-        return subscriptionTransitionSqlDao.getTransitions(externalKey);
+        return subscriptionTransitionSqlDao.getTransitionsByKey(externalKey);
     }
 
     @Override
@@ -66,7 +66,7 @@ public class DefaultAnalyticsDao implements AnalyticsDao {
 
     @Override
     public List<BusinessAccountTag> getTagsForAccount(final String accountKey) {
-        return accountTagSqlDao.getTagsForAccount(accountKey);
+        return accountTagSqlDao.getTagsForAccountByKey(accountKey);
     }
 
     @Override
@@ -76,6 +76,6 @@ public class DefaultAnalyticsDao implements AnalyticsDao {
 
     @Override
     public List<BusinessOverdueStatus> getOverdueStatusesForBundleByKey(final String externalKey) {
-        return overdueStatusSqlDao.getOverdueStatusesForBundle(externalKey);
+        return overdueStatusSqlDao.getOverdueStatusesForBundleByKey(externalKey);
     }
 }

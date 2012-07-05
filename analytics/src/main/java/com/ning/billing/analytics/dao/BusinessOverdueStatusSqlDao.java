@@ -32,7 +32,7 @@ import com.ning.billing.analytics.model.BusinessOverdueStatus;
 @RegisterMapper(BusinessOverdueStatusMapper.class)
 public interface BusinessOverdueStatusSqlDao extends Transactional<BusinessOverdueStatusSqlDao>, Transmogrifier {
     @SqlQuery
-    List<BusinessOverdueStatus> getOverdueStatusesForBundle(@Bind("external_key") final String externalKey);
+    List<BusinessOverdueStatus> getOverdueStatusesForBundleByKey(@Bind("external_key") final String externalKey);
 
     @SqlUpdate
     int createOverdueStatus(@BusinessOverdueStatusBinder final BusinessOverdueStatus status);
