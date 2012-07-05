@@ -101,6 +101,9 @@ public class BusinessInvoicePaymentRecorder {
         invoicePaymentSqlDao.inTransaction(new Transaction<Void, BusinessInvoicePaymentSqlDao>() {
             @Override
             public Void inTransaction(final BusinessInvoicePaymentSqlDao transactional, final TransactionStatus status) throws Exception {
+                // Delete the existing payment if it exists - this is to make the call idempotent
+                transactional.deleteInvoicePayment(payment.getId().toString());
+
                 // Create the bip record
                 final BusinessInvoicePayment invoicePayment = new BusinessInvoicePayment(
                         account.getExternalKey(),
