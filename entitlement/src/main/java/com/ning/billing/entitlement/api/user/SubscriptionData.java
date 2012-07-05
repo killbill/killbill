@@ -146,6 +146,24 @@ public class SubscriptionData extends EntityBase implements Subscription {
     }
 
     @Override
+    public DateTime getFutureEndDate() {
+        if (transitions == null) {
+            return null;
+        }
+        final SubscriptionTransitionDataIterator it = new SubscriptionTransitionDataIterator(
+                clock, transitions, Order.ASC_FROM_PAST, Kind.ENTITLEMENT,
+                Visibility.ALL, TimeLimit.FUTURE_ONLY);
+        while (it.hasNext()) {
+            final SubscriptionTransitionData cur = it.next();
+            if (cur.getTransitionType() == SubscriptionTransitionType.CANCEL) {
+                return cur.getEffectiveTransitionTime();
+            }
+        }
+        return null;
+    }
+
+
+    @Override
     public boolean cancel(final DateTime requestedDate, final boolean eot,
                           final CallContext context) throws EntitlementUserApiException {
         return apiService.cancel(this, requestedDate, eot, context);
@@ -264,6 +282,7 @@ public class SubscriptionData extends EntityBase implements Subscription {
         return true;
     }
 
+    @Override
     public List<EffectiveSubscriptionEvent> getBillingTransitions() {
 
         if (transitions == null) {
@@ -343,20 +362,9 @@ public class SubscriptionData extends EntityBase implements Subscription {
         throw new EntitlementError(String.format("Failed to find InitialTransitionForCurrentPlan id = %s", getId()));
     }
 
+
     public boolean isSubscriptionFutureCancelled() {
-        if (transitions == null) {
-            return false;
-        }
-        final SubscriptionTransitionDataIterator it = new SubscriptionTransitionDataIterator(
-                clock, transitions, Order.ASC_FROM_PAST, Kind.ENTITLEMENT,
-                Visibility.ALL, TimeLimit.FUTURE_ONLY);
-        while (it.hasNext()) {
-            final SubscriptionTransitionData cur = it.next();
-            if (cur.getTransitionType() == SubscriptionTransitionType.CANCEL) {
-                return true;
-            }
-        }
-        return false;
+        return getFutureEndDate() != null;
     }
 
     public DateTime getPlanChangeEffectiveDate(final ActionPolicy policy,

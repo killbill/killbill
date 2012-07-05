@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -192,11 +192,12 @@ public class TestJaxrsBase {
             }
         }
 
+        @Override
         protected void installKillbillModules() {
 
             /*
              * For a lack of getting module override working, copy all install modules from parent class...
-             * 
+             *
             super.installKillbillModules();
             Modules.override(new com.ning.billing.payment.setup.PaymentModule()).with(new PaymentMockModule());
             */
@@ -258,7 +259,7 @@ public class TestJaxrsBase {
         mapper.registerModule(new JodaModule());
         mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
-        //mapper.setPropertyNamingStrategy(new PropertyNamingStrategy.LowerCaseWithUnderscoresStrategy());        
+        //mapper.setPropertyNamingStrategy(new PropertyNamingStrategy.LowerCaseWithUnderscoresStrategy());
 
         busHandler = new TestApiListener(null);
         this.helper = listener.getMysqlTestingHelper();
@@ -427,7 +428,7 @@ public class TestJaxrsBase {
 
     protected SubscriptionJsonNoEvents createSubscription(final String bundleId, final String productName, final String productCategory, final String billingPeriod, final boolean waitCompletion) throws Exception {
 
-        final SubscriptionJsonNoEvents input = new SubscriptionJsonNoEvents(null, bundleId, null, productName, productCategory, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        final SubscriptionJsonNoEvents input = new SubscriptionJsonNoEvents(null, bundleId, null, productName, productCategory, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, null, null);
         String baseJson = mapper.writeValueAsString(input);
 
 

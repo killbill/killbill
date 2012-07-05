@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -36,6 +36,7 @@ import com.ning.billing.jaxrs.resources.JaxrsResource;
 import com.ning.http.client.Response;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
 public class TestSubscription extends TestJaxrsBase {
@@ -80,7 +81,7 @@ public class TestSubscription extends TestJaxrsBase {
                                                                          newProductName,
                                                                          subscriptionJson.getProductCategory(),
                                                                          subscriptionJson.getBillingPeriod(),
-                                                                         subscriptionJson.getPriceList(), null);
+                                                                         subscriptionJson.getPriceList(), null, null);
         baseJson = mapper.writeValueAsString(newInput);
 
         final Map<String, String> queryParams = getQueryParamsForCallCompletion(CALL_COMPLETION_TIMEOUT_SEC);
@@ -96,11 +97,21 @@ public class TestSubscription extends TestJaxrsBase {
 
         crappyWaitForLackOfProperSynchonization();
 
-        //      
+        //
         // Cancel EOT
         uri = JaxrsResource.SUBSCRIPTIONS_PATH + "/" + subscriptionJson.getSubscriptionId().toString();
         response = doDelete(uri, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+
+
+        // Retrieves to check EndDate
+        uri = JaxrsResource.SUBSCRIPTIONS_PATH + "/" + subscriptionJson.getSubscriptionId().toString();
+        response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+        baseJson = response.getResponseBody();
+        objFromJson = mapper.readValue(baseJson, SubscriptionJsonNoEvents.class);
+        assertNotNull(objFromJson.getCancelledDate());
+        assertTrue(objFromJson.getCancelledDate().compareTo(clock.getUTCNow()) > 0);
 
         // Uncancel
         uri = JaxrsResource.SUBSCRIPTIONS_PATH + "/" + subscriptionJson.getSubscriptionId().toString() + "/uncancel";
@@ -111,7 +122,8 @@ public class TestSubscription extends TestJaxrsBase {
     @Test(groups = "slow", enabled = true)
     public void testWithNonExistentSubscription() throws Exception {
         final String uri = JaxrsResource.SUBSCRIPTIONS_PATH + "/" + UUID.randomUUID().toString();
-        final SubscriptionJsonNoEvents subscriptionJson = new SubscriptionJsonNoEvents(null, UUID.randomUUID().toString(), null, "Pistol", ProductCategory.BASE.toString(), BillingPeriod.MONTHLY.toString(), PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        final SubscriptionJsonNoEvents subscriptionJson = new SubscriptionJsonNoEvents(null, UUID.randomUUID().toString(), null, "Pistol", ProductCategory.BASE.toString(), BillingPeriod.MONTHLY.toString(),
+                PriceListSet.DEFAULT_PRICELIST_NAME, null, null);
         final String baseJson = mapper.writeValueAsString(subscriptionJson);
 
         Response response = doPut(uri, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
