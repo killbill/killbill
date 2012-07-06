@@ -22,6 +22,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.sql.Types;
+import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -76,6 +77,14 @@ public @interface BusinessInvoicePaymentBinder {
                     q.bind("payment_method", invoicePayment.getPaymentMethod());
                     q.bind("card_type", invoicePayment.getCardType());
                     q.bind("card_country", invoicePayment.getCardCountry());
+                    q.bind("invoice_payment_type", invoicePayment.getInvoicePaymentType());
+
+                    final UUID linkedInvoicePaymentId = invoicePayment.getLinkedInvoicePaymentId();
+                    if (linkedInvoicePaymentId != null) {
+                        q.bind("linked_invoice_payment_id", linkedInvoicePaymentId.toString());
+                    } else {
+                        q.bindNull("linked_invoice_payment_id", Types.VARCHAR);
+                    }
                 }
             };
         }

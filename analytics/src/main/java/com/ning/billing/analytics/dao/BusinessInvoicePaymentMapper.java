@@ -49,9 +49,19 @@ public class BusinessInvoicePaymentMapper implements ResultSetMapper<BusinessInv
         final String paymentMethod = r.getString(15);
         final String cardType = r.getString(16);
         final String cardCountry = r.getString(17);
+        final String invoicePaymentType = r.getString(18);
+        final String linkedInvoicePaymentIdString = r.getString(19);
+
+        final UUID linkedInvoicePaymentId;
+        if (linkedInvoicePaymentIdString != null) {
+            linkedInvoicePaymentId = UUID.fromString(linkedInvoicePaymentIdString);
+        } else {
+            linkedInvoicePaymentId = null;
+        }
 
         return new BusinessInvoicePayment(accountKey, amount, extPaymentRefId, cardCountry, cardType, createdDate, currency,
                                           effectiveDate, invoiceId, paymentError, paymentId, paymentMethod, paymentType,
-                                          pluginName, processingStatus, requestedAmount, updatedDate);
+                                          pluginName, processingStatus, requestedAmount, updatedDate, invoicePaymentType,
+                                          linkedInvoicePaymentId);
     }
 }

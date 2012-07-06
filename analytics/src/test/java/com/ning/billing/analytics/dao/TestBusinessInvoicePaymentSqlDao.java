@@ -116,12 +116,15 @@ public class TestBusinessInvoicePaymentSqlDao extends TestWithEmbeddedDB {
         final String processingStatus = UUID.randomUUID().toString();
         final BigDecimal requestedAmount = BigDecimal.ZERO;
         final DateTime updatedDate = new DateTime(DateTimeZone.UTC);
+        final String invoicePaymentType = UUID.randomUUID().toString().substring(0, 10);
+        final UUID linkedInvoicePaymentId = UUID.randomUUID();
 
         return new BusinessInvoicePayment(accountKey, amount, extPaymentRefId,
                                           cardCountry, cardType, createdDate,
                                           currency, effectiveDate, invoiceId,
                                           paymentError, paymentId, paymentMethod,
                                           paymentType, pluginName, processingStatus,
-                                          requestedAmount, updatedDate);
+                                          requestedAmount, updatedDate, invoicePaymentType,
+                                          linkedInvoicePaymentId);
     }
 }

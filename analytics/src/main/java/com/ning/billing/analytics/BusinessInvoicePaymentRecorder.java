@@ -32,6 +32,8 @@ import com.ning.billing.analytics.dao.BusinessAccountSqlDao;
 import com.ning.billing.analytics.dao.BusinessInvoicePaymentSqlDao;
 import com.ning.billing.analytics.dao.BusinessInvoiceSqlDao;
 import com.ning.billing.analytics.model.BusinessInvoicePayment;
+import com.ning.billing.invoice.api.InvoicePayment;
+import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentApiException;
@@ -44,6 +46,7 @@ public class BusinessInvoicePaymentRecorder {
 
     private final BusinessInvoicePaymentSqlDao invoicePaymentSqlDao;
     private final AccountUserApi accountApi;
+    private final InvoicePaymentApi invoicePaymentApi;
     private final PaymentApi paymentApi;
     private final Clock clock;
     private final BusinessInvoiceRecorder invoiceRecorder;
@@ -51,10 +54,11 @@ public class BusinessInvoicePaymentRecorder {
 
     @Inject
     public BusinessInvoicePaymentRecorder(final BusinessInvoicePaymentSqlDao invoicePaymentSqlDao, final AccountUserApi accountApi,
-                                          final PaymentApi paymentApi, final Clock clock, final BusinessInvoiceRecorder invoiceRecorder,
-                                          final BusinessAccountRecorder accountRecorder) {
+                                          final InvoicePaymentApi invoicePaymentApi, final PaymentApi paymentApi, final Clock clock,
+                                          final BusinessInvoiceRecorder invoiceRecorder, final BusinessAccountRecorder accountRecorder) {
         this.invoicePaymentSqlDao = invoicePaymentSqlDao;
         this.accountApi = accountApi;
+        this.invoicePaymentApi = invoicePaymentApi;
         this.paymentApi = paymentApi;
         this.clock = clock;
         this.invoiceRecorder = invoiceRecorder;
@@ -78,6 +82,8 @@ public class BusinessInvoicePaymentRecorder {
             return;
         }
 
+        final InvoicePayment invoicePayment = invoicePaymentApi.getInvoicePayment(paymentId);
+
         final PaymentMethod paymentMethod;
         try {
             paymentMethod = paymentApi.getPaymentMethod(account, payment.getPaymentMethodId(), true);
@@ -86,11 +92,11 @@ public class BusinessInvoicePaymentRecorder {
             return;
         }
 
-        createPayment(account, payment, paymentMethod, extPaymentRefId, message);
+        createPayment(account, invoicePayment, payment, paymentMethod, extPaymentRefId, message);
     }
 
-    private void createPayment(final Account account, final Payment payment, final PaymentMethod paymentMethod,
-                               final String extPaymentRefId, final String message) {
+    private void createPayment(final Account account, @Nullable final InvoicePayment invoicePayment, final Payment payment,
+                               final PaymentMethod paymentMethod, final String extPaymentRefId, final String message) {
         final PaymentMethodPlugin pluginDetail = paymentMethod.getPluginDetail();
         // TODO - make it generic
         final String cardCountry = pluginDetail != null ? pluginDetail.getValueString("country") : null;
@@ -104,8 +110,19 @@ public class BusinessInvoicePaymentRecorder {
                 // Delete the existing payment if it exists - this is to make the call idempotent
                 transactional.deleteInvoicePayment(payment.getId().toString());
 
+                // invoicePayment may be null on payment failures
+                final String invoicePaymentType;
+                final UUID linkedInvoicePaymentId;
+                if (invoicePayment != null) {
+                    invoicePaymentType = invoicePayment.getType().toString();
+                    linkedInvoicePaymentId = invoicePayment.getLinkedInvoicePaymentId();
+                } else {
+                    invoicePaymentType = null;
+                    linkedInvoicePaymentId = null;
+                }
+
                 // Create the bip record
-                final BusinessInvoicePayment invoicePayment = new BusinessInvoicePayment(
+                final BusinessInvoicePayment businessInvoicePayment = new BusinessInvoicePayment(
                         account.getExternalKey(),
                         payment.getAmount(),
                         extPaymentRefId,
@@ -122,9 +139,10 @@ public class BusinessInvoicePaymentRecorder {
                         paymentMethod.getPluginName(),
                         payment.getPaymentStatus().toString(),
                         payment.getAmount(),
-                        clock.getUTCNow()
-                );
-                transactional.createInvoicePayment(invoicePayment);
+                        clock.getUTCNow(),
+                        invoicePaymentType,
+                        linkedInvoicePaymentId);
+                transactional.createInvoicePayment(businessInvoicePayment);
 
                 // Update bin to get the latest invoice(s) balance(s)
                 final BusinessInvoiceSqlDao invoiceSqlDao = transactional.become(BusinessInvoiceSqlDao.class);
@@ -134,7 +152,7 @@ public class BusinessInvoicePaymentRecorder {
                 final BusinessAccountSqlDao accountSqlDao = transactional.become(BusinessAccountSqlDao.class);
                 accountRecorder.updateAccountInTransaction(account, accountSqlDao);
 
-                log.info("Added payment {}", invoicePayment);
+                log.info("Added payment {}", businessInvoicePayment);
                 return null;
             }
         });

@@ -47,12 +47,15 @@ public class TestBusinessInvoicePayment extends AnalyticsTestSuite {
         final String processingStatus = UUID.randomUUID().toString();
         final BigDecimal requestedAmount = BigDecimal.ZERO;
         final DateTime updatedDate = new DateTime(DateTimeZone.UTC);
+        final String invoicePaymentType = UUID.randomUUID().toString();
+        final UUID linkedInvoicePaymentId = UUID.randomUUID();
         final BusinessInvoicePayment invoicePayment = new BusinessInvoicePayment(accountKey, amount, extPaymentRefId,
                                                                                  cardCountry, cardType, createdDate,
                                                                                  currency, effectiveDate, invoiceId,
                                                                                  paymentError, paymentId, paymentMethod,
                                                                                  paymentType, pluginName, processingStatus,
-                                                                                 requestedAmount, updatedDate);
+                                                                                 requestedAmount, updatedDate, invoicePaymentType,
+                                                                                 linkedInvoicePaymentId);
         Assert.assertSame(invoicePayment, invoicePayment);
         Assert.assertEquals(invoicePayment, invoicePayment);
         Assert.assertTrue(invoicePayment.equals(invoicePayment));
@@ -73,10 +76,12 @@ public class TestBusinessInvoicePayment extends AnalyticsTestSuite {
         Assert.assertEquals(invoicePayment.getProcessingStatus(), processingStatus);
         Assert.assertEquals(invoicePayment.getRequestedAmount(), requestedAmount);
         Assert.assertEquals(invoicePayment.getUpdatedDate(), updatedDate);
+        Assert.assertEquals(invoicePayment.getInvoicePaymentType(), invoicePaymentType);
+        Assert.assertEquals(invoicePayment.getLinkedInvoicePaymentId(), linkedInvoicePaymentId);
 
         final BusinessInvoicePayment otherInvoicePayment = new BusinessInvoicePayment(null, null, extPaymentRefId, null, null, createdDate,
                                                                                       null, null, null, null, paymentId, null,
-                                                                                      null, null, null, null, null);
+                                                                                      null, null, null, null, null, null, null);
         Assert.assertFalse(invoicePayment.equals(otherInvoicePayment));
     }
 }

@@ -16,6 +16,7 @@
 
 package com.ning.billing.analytics.model;
 
+import javax.annotation.Nullable;
 import java.math.BigDecimal;
 import java.util.UUID;
 
@@ -42,13 +43,16 @@ public class BusinessInvoicePayment {
     private final String paymentMethod;
     private final String cardType;
     private final String cardCountry;
+    private final String invoicePaymentType;
+    private final UUID linkedInvoicePaymentId;
 
     public BusinessInvoicePayment(final String accountKey, final BigDecimal amount, final String extPaymentRefId,
                                   final String cardCountry, final String cardType, final DateTime createdDate,
                                   final Currency currency, final DateTime effectiveDate, final UUID invoiceId,
                                   final String paymentError, final UUID paymentId, final String paymentMethod,
                                   final String paymentType, final String pluginName, final String processingStatus,
-                                  final BigDecimal requestedAmount, final DateTime updatedDate) {
+                                  final BigDecimal requestedAmount, final DateTime updatedDate, @Nullable final String invoicePaymentType,
+                                  @Nullable final UUID linkedInvoicePaymentId) {
         this.accountKey = accountKey;
         this.amount = amount;
         this.extPaymentRefId = extPaymentRefId;
@@ -66,6 +70,8 @@ public class BusinessInvoicePayment {
         this.processingStatus = processingStatus;
         this.requestedAmount = requestedAmount;
         this.updatedDate = updatedDate;
+        this.invoicePaymentType = invoicePaymentType;
+        this.linkedInvoicePaymentId = linkedInvoicePaymentId;
     }
 
     public String getExtPaymentRefId() {
@@ -136,6 +142,14 @@ public class BusinessInvoicePayment {
         return updatedDate;
     }
 
+    public String getInvoicePaymentType() {
+        return invoicePaymentType;
+    }
+
+    public UUID getLinkedInvoicePaymentId() {
+        return linkedInvoicePaymentId;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
@@ -157,6 +171,8 @@ public class BusinessInvoicePayment {
         sb.append(", paymentMethod='").append(paymentMethod).append('\'');
         sb.append(", cardType='").append(cardType).append('\'');
         sb.append(", cardCountry='").append(cardCountry).append('\'');
+        sb.append(", invoicePaymentType='").append(invoicePaymentType).append('\'');
+        sb.append(", linkedInvoicePaymentId='").append(linkedInvoicePaymentId).append('\'');
         sb.append('}');
         return sb.toString();
     }
@@ -221,6 +237,12 @@ public class BusinessInvoicePayment {
             return false;
         }
         if (updatedDate != null ? !updatedDate.equals(that.updatedDate) : that.updatedDate != null) {
+            return false;
+        }
+        if (invoicePaymentType != null ? !invoicePaymentType.equals(that.invoicePaymentType) : that.invoicePaymentType != null) {
+            return false;
+        }
+        if (linkedInvoicePaymentId != null ? !linkedInvoicePaymentId.equals(that.linkedInvoicePaymentId) : that.linkedInvoicePaymentId != null) {
             return false;
         }
 

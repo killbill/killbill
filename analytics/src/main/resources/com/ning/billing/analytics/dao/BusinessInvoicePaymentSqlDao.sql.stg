@@ -19,6 +19,8 @@ select
 , payment_method
 , card_type
 , card_country
+, invoice_payment_type
+, linked_invoice_payment_id
 from bip
 where payment_id = :payment_id
 limit 1
@@ -44,6 +46,8 @@ select
 , payment_method
 , card_type
 , card_country
+, invoice_payment_type
+, linked_invoice_payment_id
 from bip
 where account_key = :account_key
 order by created_date asc
@@ -69,6 +73,8 @@ insert into bip (
 , payment_method
 , card_type
 , card_country
+, invoice_payment_type
+, linked_invoice_payment_id
 ) values (
   :payment_id
 , :created_date
@@ -87,6 +93,8 @@ insert into bip (
 , :payment_method
 , :card_type
 , :card_country
+, :invoice_payment_type
+, :linked_invoice_payment_id
 );
 >>
 
