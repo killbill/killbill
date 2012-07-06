@@ -26,7 +26,7 @@ public class DefaultCatalogTranslator extends DefaultTranslatorBase {
 
     @Override
     protected String getBundlePath() {
-        return "com/ning/billing/util/template/translation/CatalogTranslation";
+        return config.getCatalogBundlePath();
     }
 
     @Override
