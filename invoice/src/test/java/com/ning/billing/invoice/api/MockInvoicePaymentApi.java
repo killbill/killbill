@@ -39,9 +39,9 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi {
     }
 
     @Override
-    public void notifyOfPaymentAttempt(final InvoicePayment invoicePayment, final CallContext context) {
+    public void notifyOfPayment(final InvoicePayment invoicePayment, final CallContext context) {
         for (final InvoicePayment existingInvoicePayment : invoicePayments) {
-            if (existingInvoicePayment.getInvoiceId().equals(invoicePayment.getInvoiceId()) && existingInvoicePayment.getPaymentAttemptId().equals(invoicePayment.getPaymentAttemptId())) {
+            if (existingInvoicePayment.getInvoiceId().equals(invoicePayment.getInvoiceId()) && existingInvoicePayment.getPaymentId().equals(invoicePayment.getPaymentId())) {
                 invoicePayments.remove(existingInvoicePayment);
             }
         }
@@ -71,9 +71,9 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi {
     }
 
     @Override
-    public Invoice getInvoiceForPaymentAttemptId(final UUID paymentAttemptId) {
+    public Invoice getInvoiceForPaymentId(final UUID paymentId) {
         for (final InvoicePayment invoicePayment : invoicePayments) {
-            if (invoicePayment.getPaymentAttemptId().equals(paymentAttemptId)) {
+            if (invoicePayment.getPaymentId().equals(paymentId)) {
                 return getInvoice(invoicePayment.getInvoiceId());
             }
         }
@@ -81,9 +81,9 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi {
     }
 
     @Override
-    public InvoicePayment getInvoicePayment(final UUID paymentAttemptId) {
+    public InvoicePayment getInvoicePayment(final UUID paymentId) {
         for (final InvoicePayment invoicePayment : invoicePayments) {
-            if (paymentAttemptId.equals(invoicePayment.getPaymentAttemptId())) {
+            if (paymentId.equals(invoicePayment.getPaymentId())) {
                 return invoicePayment;
             }
         }
@@ -91,9 +91,9 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi {
     }
 
     @Override
-    public void notifyOfPaymentAttempt(final UUID invoiceId, final BigDecimal amountOutstanding, final Currency currency, final UUID paymentAttemptId, final DateTime paymentAttemptDate, final CallContext context) {
-        final InvoicePayment invoicePayment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentAttemptId, invoiceId, paymentAttemptDate, amountOutstanding, currency);
-        notifyOfPaymentAttempt(invoicePayment, context);
+    public void notifyOfPayment(final UUID invoiceId, final BigDecimal amountOutstanding, final Currency currency, final UUID paymentId, final DateTime paymentDate, final CallContext context) {
+        final InvoicePayment invoicePayment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentId, invoiceId, paymentDate, amountOutstanding, currency);
+        notifyOfPayment(invoicePayment, context);
     }
 
     @Override
@@ -157,7 +157,7 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi {
     }
 
     @Override
-    public List<InvoicePayment> getChargebacksByPaymentAttemptId(final UUID paymentAttemptId) {
+    public List<InvoicePayment> getChargebacksByPaymentId(final UUID paymentId) {
         throw new UnsupportedOperationException();
     }
 
@@ -167,7 +167,7 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi {
     }
 
     @Override
-    public InvoicePayment createRefund(UUID paymentAttemptId,
+    public InvoicePayment createRefund(UUID paymentId,
             BigDecimal amount, boolean isInvoiceAdjusted, UUID paymentCookieId, CallContext context)
             throws InvoiceApiException {
         // TODO Auto-generated method stub

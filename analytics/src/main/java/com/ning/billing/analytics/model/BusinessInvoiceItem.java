@@ -31,21 +31,20 @@ import com.ning.billing.invoice.api.InvoiceItem;
 public class BusinessInvoiceItem {
     private final UUID itemId;
     private final DateTime createdDate;
-
-    private DateTime updatedDate;
-    private UUID invoiceId;
-    private String itemType;
-    private String externalKey;
-    private String productName;
-    private String productType;
-    private String productCategory;
-    private String slug;
-    private String phase;
-    private String billingPeriod;
-    private DateTime startDate;
-    private DateTime endDate;
-    private BigDecimal amount;
-    private Currency currency;
+    private final DateTime updatedDate;
+    private final UUID invoiceId;
+    private final String itemType;
+    private final String externalKey;
+    private final String productName;
+    private final String productType;
+    private final String productCategory;
+    private final String slug;
+    private final String phase;
+    private final String billingPeriod;
+    private final DateTime startDate;
+    private final DateTime endDate;
+    private final BigDecimal amount;
+    private final Currency currency;
 
     public BusinessInvoiceItem(final BigDecimal amount, final String billingPeriod, final DateTime createdDate,
                                final Currency currency, final DateTime endDate, final String externalKey,
@@ -89,112 +88,56 @@ public class BusinessInvoiceItem {
         return amount;
     }
 
-    public void setAmount(final BigDecimal amount) {
-        this.amount = amount;
-    }
-
     public String getBillingPeriod() {
         return billingPeriod;
-    }
-
-    public void setBillingPeriod(final String billingPeriod) {
-        this.billingPeriod = billingPeriod;
     }
 
     public Currency getCurrency() {
         return currency;
     }
 
-    public void setCurrency(final Currency currency) {
-        this.currency = currency;
-    }
-
     public DateTime getEndDate() {
         return endDate;
-    }
-
-    public void setEndDate(final DateTime endDate) {
-        this.endDate = endDate;
     }
 
     public String getExternalKey() {
         return externalKey;
     }
 
-    public void setExternalKey(final String externalKey) {
-        this.externalKey = externalKey;
-    }
-
     public UUID getInvoiceId() {
         return invoiceId;
-    }
-
-    public void setInvoiceId(final UUID invoiceId) {
-        this.invoiceId = invoiceId;
     }
 
     public String getItemType() {
         return itemType;
     }
 
-    public void setItemType(final String itemType) {
-        this.itemType = itemType;
-    }
-
     public String getPhase() {
         return phase;
-    }
-
-    public void setPhase(final String phase) {
-        this.phase = phase;
     }
 
     public String getProductCategory() {
         return productCategory;
     }
 
-    public void setProductCategory(final String productCategory) {
-        this.productCategory = productCategory;
-    }
-
     public String getProductName() {
         return productName;
-    }
-
-    public void setProductName(final String productName) {
-        this.productName = productName;
     }
 
     public String getProductType() {
         return productType;
     }
 
-    public void setProductType(final String productType) {
-        this.productType = productType;
-    }
-
     public String getSlug() {
         return slug;
-    }
-
-    public void setSlug(final String slug) {
-        this.slug = slug;
     }
 
     public DateTime getStartDate() {
         return startDate;
     }
 
-    public void setStartDate(final DateTime startDate) {
-        this.startDate = startDate;
-    }
-
     public DateTime getUpdatedDate() {
         return updatedDate;
-    }
-
-    public void setUpdatedDate(final DateTime updatedDate) {
-        this.updatedDate = updatedDate;
     }
 
     @Override

@@ -59,7 +59,6 @@ public class ChargebackResource implements JaxrsResource {
 
     private final JaxrsUriBuilder uriBuilder;
     private final InvoicePaymentApi invoicePaymentApi;
-    private final PaymentApi paymentApi;
     private final Context context;
 
     @Inject
@@ -69,7 +68,6 @@ public class ChargebackResource implements JaxrsResource {
                               final Context context) {
         this.uriBuilder = uriBuilder;
         this.invoicePaymentApi = invoicePaymentApi;
-        this.paymentApi = paymentApi;
         this.context = context;
     }
 
@@ -106,20 +104,7 @@ public class ChargebackResource implements JaxrsResource {
     public Response getForPayment(@PathParam("paymentId") final String paymentId) {
 
         try {
-            final Payment payment = paymentApi.getPayment(UUID.fromString(paymentId));
-            final Collection<PaymentAttempt> attempts = Collections2.filter(payment.getAttempts(), new Predicate<PaymentAttempt>() {
-                @Override
-                public boolean apply(final PaymentAttempt input) {
-                    return input.getPaymentStatus() == PaymentStatus.SUCCESS;
-                }
-            });
-            if (attempts.size() == 0) {
-                final String error = String.format("Failed to locate successful payment attempts for paymentId %s", paymentId);
-                return Response.status(Response.Status.NO_CONTENT).entity(error).build();
-            }
-            final UUID paymentAttemptId = attempts.iterator().next().getId();
-
-            final List<InvoicePayment> chargebacks = invoicePaymentApi.getChargebacksByPaymentAttemptId(paymentAttemptId);
+            final List<InvoicePayment> chargebacks = invoicePaymentApi.getChargebacksByPaymentId(UUID.fromString(paymentId));
             if (chargebacks.size() == 0) {
                 return Response.status(Response.Status.NO_CONTENT).build();
             }
@@ -130,9 +115,6 @@ public class ChargebackResource implements JaxrsResource {
             final ChargebackCollectionJson json = new ChargebackCollectionJson(accountId, chargebacksJson);
 
             return Response.status(Response.Status.OK).entity(json).build();
-        } catch (PaymentApiException e) {
-            final String error = String.format("Failed to locate payment attempt for payment id %s", paymentId);
-            return Response.status(Response.Status.NO_CONTENT).entity(error).build();
         } catch (InvoiceApiException e) {
             final String error = String.format("Failed to locate account for payment id %s", paymentId);
             return Response.status(Response.Status.NO_CONTENT).entity(error).build();
@@ -147,24 +129,10 @@ public class ChargebackResource implements JaxrsResource {
                                      @HeaderParam(HDR_REASON) final String reason,
                                      @HeaderParam(HDR_COMMENT) final String comment) {
         try {
-            final Payment payment = paymentApi.getPayment(UUID.fromString(json.getPaymentId()));
-            final Collection<PaymentAttempt> attempts = Collections2.filter(payment.getAttempts(), new Predicate<PaymentAttempt>() {
-                @Override
-                public boolean apply(final PaymentAttempt input) {
-                    return input.getPaymentStatus() == PaymentStatus.SUCCESS;
-                }
-            });
-            if (attempts.size() == 0) {
-                final String error = String.format("Failed to locate successful payment attempts for paymentId %s", json.getPaymentId());
-                return Response.status(Response.Status.NO_CONTENT).entity(error).build();
-            }
-
-            // STEPH that does not seem to work, we need to find the correct attempt
-            final UUID paymentAttemptId = attempts.iterator().next().getId();
-            final InvoicePayment invoicePayment = invoicePaymentApi.getInvoicePayment(paymentAttemptId);
+            final InvoicePayment invoicePayment = invoicePaymentApi.getInvoicePayment(UUID.fromString(json.getPaymentId()));
             if (invoicePayment == null) {
-                final String error = String.format("Failed to locate invoice payment for paymentAttemptId %s", paymentAttemptId);
-                return Response.status(Response.Status.NO_CONTENT).entity(error).build();
+                final String error = String.format("Failed to locate invoice payment for paymentAttemptId %s", json.getPaymentId());
+                return Response.status(Response.Status.BAD_REQUEST).entity(error).build();
             }
 
             final InvoicePayment chargeBack = invoicePaymentApi.createChargeback(invoicePayment.getId(), json.getChargebackAmount(),
@@ -175,8 +143,6 @@ public class ChargebackResource implements JaxrsResource {
             log.info(error, e);
             return Response.status(Response.Status.BAD_REQUEST).entity(error).build();
         } catch (IllegalArgumentException e) {
-            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
-        } catch (PaymentApiException e) {
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
         }
     }

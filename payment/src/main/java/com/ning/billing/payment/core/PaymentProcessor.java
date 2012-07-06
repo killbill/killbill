@@ -204,7 +204,6 @@ public class PaymentProcessor extends ProcessorBase {
 
     public Payment createPayment(final Account account, final UUID invoiceId, final BigDecimal inputAmount, final CallContext context, final boolean isInstantPayment)
     throws PaymentApiException {
-
         final PaymentPluginApi plugin = getPaymentProviderPlugin(account);
 
         try {
@@ -354,7 +353,7 @@ public class PaymentProcessor extends ProcessorBase {
 
     final PaymentStatus paymentStatus =  PaymentStatus.AUTO_PAY_OFF;
 
-    final PaymentModelDao paymentInfo = new PaymentModelDao(account.getId(), invoice.getId(), requestedAmount, invoice.getCurrency(), invoice.getTargetDate(), paymentStatus);
+    final PaymentModelDao paymentInfo = new PaymentModelDao(account.getId(), invoice.getId(), account.getPaymentMethodId(), requestedAmount, invoice.getCurrency(), invoice.getTargetDate(), paymentStatus);
     final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(account.getId(), invoice.getId(), paymentInfo.getId(), paymentStatus, clock.getUTCNow(), requestedAmount);
 
     paymentDao.insertPaymentWithAttempt(paymentInfo, attempt, context);
@@ -363,9 +362,10 @@ public class PaymentProcessor extends ProcessorBase {
 
 
     private Payment processNewPaymentWithAccountLocked(final PaymentPluginApi plugin, final Account account, final Invoice invoice,
-            final BigDecimal requestedAmount, final boolean isInstantPayment, final CallContext context) throws PaymentApiException {
+                                                       final BigDecimal requestedAmount, final boolean isInstantPayment, final CallContext context) throws PaymentApiException {
 
-        final PaymentModelDao payment = new PaymentModelDao(account.getId(), invoice.getId(), requestedAmount.setScale(2, RoundingMode.HALF_EVEN), invoice.getCurrency(), invoice.getTargetDate());
+
+        final PaymentModelDao payment = new PaymentModelDao(account.getId(), invoice.getId(), account.getPaymentMethodId(), requestedAmount.setScale(2, RoundingMode.HALF_EVEN), invoice.getCurrency(), invoice.getTargetDate());
         final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(account.getId(), invoice.getId(), payment.getId(), clock.getUTCNow(), requestedAmount);
 
         final PaymentModelDao savedPayment = paymentDao.insertPaymentWithAttempt(payment, attempt, context);
@@ -385,9 +385,8 @@ public class PaymentProcessor extends ProcessorBase {
 
         BusEvent event = null;
         List<PaymentAttemptModelDao> allAttempts = null;
-        PaymentAttemptModelDao lastAttempt = null;
         PaymentModelDao payment = null;
-        PaymentStatus paymentStatus = PaymentStatus.UNKNOWN;
+        PaymentStatus paymentStatus;
         try {
 
             final PaymentInfoPlugin paymentPluginInfo = plugin.processPayment(account.getExternalKey(), paymentInput.getId(), attemptInput.getRequestedAmount());
@@ -399,15 +398,14 @@ public class PaymentProcessor extends ProcessorBase {
 
                 // Fetch latest objects
                 allAttempts = paymentDao.getAttemptsForPayment(paymentInput.getId());
-                lastAttempt = allAttempts.get(allAttempts.size() - 1);
-                payment = paymentDao.getPayment(paymentInput.getId());
 
-                invoicePaymentApi.notifyOfPaymentAttempt(invoice.getId(),
-                        payment.getAmount(),
-                        paymentStatus == PaymentStatus.SUCCESS ? payment.getCurrency() : null,
-                                lastAttempt.getId(),
-                                lastAttempt.getEffectiveDate(),
-                                context);
+                payment = paymentDao.getPayment(paymentInput.getId());
+                invoicePaymentApi.notifyOfPayment(invoice.getId(),
+                                                  payment.getAmount(),
+                                                  paymentStatus == PaymentStatus.SUCCESS ? payment.getCurrency() : null,
+                                                  payment.getId(),
+                                                  payment.getEffectiveDate(),
+                                                  context);
 
                 // Create Bus event
                 event = new DefaultPaymentInfoEvent(account.getId(),

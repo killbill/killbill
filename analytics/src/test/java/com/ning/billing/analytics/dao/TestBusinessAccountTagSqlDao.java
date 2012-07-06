@@ -43,12 +43,12 @@ public class TestBusinessAccountTagSqlDao extends TestWithEmbeddedDB {
         final String name = UUID.randomUUID().toString().substring(0, 20);
 
         // Verify initial state
-        Assert.assertEquals(accountTagSqlDao.getTagsForAccount(accountKey).size(), 0);
+        Assert.assertEquals(accountTagSqlDao.getTagsForAccountByKey(accountKey).size(), 0);
         Assert.assertEquals(accountTagSqlDao.removeTag(accountId.toString(), name), 0);
 
         // Add an entry
         Assert.assertEquals(accountTagSqlDao.addTag(accountId.toString(), accountKey, name), 1);
-        final List<BusinessAccountTag> tagsForAccount = accountTagSqlDao.getTagsForAccount(accountKey);
+        final List<BusinessAccountTag> tagsForAccount = accountTagSqlDao.getTagsForAccountByKey(accountKey);
         Assert.assertEquals(tagsForAccount.size(), 1);
 
         // Retrieve it
@@ -59,7 +59,7 @@ public class TestBusinessAccountTagSqlDao extends TestWithEmbeddedDB {
 
         // Delete it
         Assert.assertEquals(accountTagSqlDao.removeTag(accountId.toString(), name), 1);
-        Assert.assertEquals(accountTagSqlDao.getTagsForAccount(accountKey).size(), 0);
+        Assert.assertEquals(accountTagSqlDao.getTagsForAccountByKey(accountKey).size(), 0);
     }
 
     @Test(groups = "slow")
@@ -75,14 +75,14 @@ public class TestBusinessAccountTagSqlDao extends TestWithEmbeddedDB {
         Assert.assertEquals(accountTagSqlDao.addTag(accountId1.toString(), accountKey1, name1), 1);
         Assert.assertEquals(accountTagSqlDao.addTag(accountId2.toString(), accountKey2, name2), 1);
 
-        Assert.assertEquals(accountTagSqlDao.getTagsForAccount(accountKey1).size(), 1);
-        Assert.assertEquals(accountTagSqlDao.getTagsForAccount(accountKey2).size(), 1);
+        Assert.assertEquals(accountTagSqlDao.getTagsForAccountByKey(accountKey1).size(), 1);
+        Assert.assertEquals(accountTagSqlDao.getTagsForAccountByKey(accountKey2).size(), 1);
 
         // Remove the tag for the first account
         Assert.assertEquals(accountTagSqlDao.removeTag(accountId1.toString(), name1), 1);
 
-        Assert.assertEquals(accountTagSqlDao.getTagsForAccount(accountKey1).size(), 0);
-        Assert.assertEquals(accountTagSqlDao.getTagsForAccount(accountKey2).size(), 1);
+        Assert.assertEquals(accountTagSqlDao.getTagsForAccountByKey(accountKey1).size(), 0);
+        Assert.assertEquals(accountTagSqlDao.getTagsForAccountByKey(accountKey2).size(), 1);
     }
 
     @Test(groups = "slow")

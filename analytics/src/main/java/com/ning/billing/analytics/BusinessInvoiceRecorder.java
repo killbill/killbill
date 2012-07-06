@@ -69,6 +69,16 @@ public class BusinessInvoiceRecorder {
     }
 
     public void rebuildInvoicesForAccount(final UUID accountId) {
+        sqlDao.inTransaction(new Transaction<Void, BusinessInvoiceSqlDao>() {
+            @Override
+            public Void inTransaction(final BusinessInvoiceSqlDao transactional, final TransactionStatus status) throws Exception {
+                rebuildInvoicesForAccountInTransaction(accountId, transactional);
+                return null;
+            }
+        });
+    }
+
+    public void rebuildInvoicesForAccountInTransaction(final UUID accountId, final BusinessInvoiceSqlDao transactional) {
         // Lookup the associated account
         final String accountKey;
         try {
@@ -79,20 +89,14 @@ public class BusinessInvoiceRecorder {
             return;
         }
 
-        sqlDao.inTransaction(new Transaction<Void, BusinessInvoiceSqlDao>() {
-            @Override
-            public Void inTransaction(final BusinessInvoiceSqlDao transactional, final TransactionStatus status) throws Exception {
-                log.info("Started rebuilding transitions for account id {}", accountId);
-                deleteInvoicesAndInvoiceItemsForAccountInTransaction(transactional, accountId);
+        log.info("Started rebuilding transitions for account id {}", accountId);
+        deleteInvoicesAndInvoiceItemsForAccountInTransaction(transactional, accountId);
 
-                for (final Invoice invoice : invoiceApi.getInvoicesByAccount(accountId)) {
-                    createInvoiceInTransaction(transactional, accountKey, invoice);
-                }
+        for (final Invoice invoice : invoiceApi.getInvoicesByAccount(accountId)) {
+            createInvoiceInTransaction(transactional, accountKey, invoice);
+        }
 
-                log.info("Finished rebuilding transitions for account id {}", accountId);
-                return null;
-            }
-        });
+        log.info("Finished rebuilding transitions for account id {}", accountId);
     }
 
     private void deleteInvoicesAndInvoiceItemsForAccountInTransaction(final BusinessInvoiceSqlDao transactional, final UUID accountId) {

@@ -56,11 +56,11 @@ create() ::= <<
   VALUES (:id, :accountId, :invoiceDate, :targetDate, :currency, :migrated, :userName, :createdDate);
 >>
 
-getInvoiceIdByPaymentAttemptId() ::= <<
+getInvoiceIdByPaymentId() ::= <<
   SELECT i.id
     FROM invoices i, invoice_payments ip
    WHERE ip.invoice_id = i.id
-     AND ip.payment_attempt_id = :paymentAttemptId
+     AND ip.payment_id = :paymentId
 >>
 
 

@@ -65,8 +65,8 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
 
     @Override
-    public void notifyOfPaymentAttempt(final InvoicePayment invoicePayment, final CallContext context) {
-        dao.notifyOfPaymentAttempt(invoicePayment, context);
+    public void notifyOfPayment(final InvoicePayment invoicePayment, final CallContext context) {
+        dao.notifyOfPayment(invoicePayment, context);
     }
 
     @Override
@@ -89,7 +89,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     public Invoice triggerInvoiceGeneration(final UUID accountId,
                                             final DateTime targetDate, final boolean dryRun,
                                             final CallContext context) throws InvoiceApiException {
-        Invoice result = dispatcher.processAccount(accountId, targetDate, dryRun, context);
+        final Invoice result = dispatcher.processAccount(accountId, targetDate, dryRun, context);
         if (result == null) {
             throw new InvoiceApiException(ErrorCode.INVOICE_NOTHING_TO_DO, accountId, targetDate);
         } else {

@@ -61,8 +61,7 @@ public class BusinessInvoice {
     }
 
     public BusinessInvoice(final String accountKey, final Invoice invoice) {
-        // TODO STEPH this is probably not what we want (CBA versus credit)
-        this(invoice.getAccountId(), accountKey, invoice.getChargedAmount(), invoice.getCBAAmount(), invoice.getPaidAmount(), invoice.getBalance(),
+        this(invoice.getAccountId(), accountKey, invoice.getChargedAmount(), invoice.getCreditAdjAmount(), invoice.getPaidAmount(), invoice.getBalance(),
              new DateTime(DateTimeZone.UTC), invoice.getCurrency(), invoice.getInvoiceDate(), invoice.getId(), invoice.getInvoiceNumber(), invoice.getTargetDate(),
              new DateTime(DateTimeZone.UTC));
     }

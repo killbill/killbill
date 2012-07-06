@@ -38,7 +38,6 @@ public class PaymentModelDao extends EntityBase {
     private final PaymentStatus paymentStatus;
     private final String extPaymentRefId;
 
-
     public PaymentModelDao(final UUID id, final UUID accountId, final UUID invoiceId, final UUID paymentMethodId,
                            final Integer paymentNumber, final BigDecimal amount, final Currency currency,
                            final PaymentStatus paymentStatus, final DateTime effectiveDate, final String extPaymentRefId) {
@@ -54,18 +53,18 @@ public class PaymentModelDao extends EntityBase {
         this.extPaymentRefId = extPaymentRefId;
     }
 
-    public PaymentModelDao(final UUID accountId, final UUID invoiceId,
+    public PaymentModelDao(final UUID accountId, final UUID invoiceId, final UUID paymentMethodId,
             final BigDecimal amount, final Currency currency, final DateTime effectiveDate, final PaymentStatus paymentStatus) {
-        this(UUID.randomUUID(), accountId, invoiceId, null, INVALID_PAYMENT_NUMBER, amount, currency, paymentStatus, effectiveDate, null);
+        this(UUID.randomUUID(), accountId, invoiceId, paymentMethodId, INVALID_PAYMENT_NUMBER, amount, currency, paymentStatus, effectiveDate, null);
     }
 
-    public PaymentModelDao(final UUID accountId, final UUID invoiceId,
+    public PaymentModelDao(final UUID accountId, final UUID invoiceId, final UUID paymentMethodId,
             final BigDecimal amount, final Currency currency, final DateTime effectiveDate) {
-        this(UUID.randomUUID(), accountId, invoiceId, null, INVALID_PAYMENT_NUMBER, amount, currency, PaymentStatus.UNKNOWN, effectiveDate, null);
+        this(UUID.randomUUID(), accountId, invoiceId, paymentMethodId, INVALID_PAYMENT_NUMBER, amount, currency, PaymentStatus.UNKNOWN, effectiveDate, null);
     }
 
     public PaymentModelDao(final PaymentModelDao src, final PaymentStatus newPaymentStatus) {
-        this(src.getId(), src.getAccountId(), src.getInvoiceId(), null, src.getPaymentNumber(), src.getAmount(), src.getCurrency(), newPaymentStatus, src.getEffectiveDate(), null);
+        this(src.getId(), src.getAccountId(), src.getInvoiceId(), src.getPaymentMethodId(), src.getPaymentNumber(), src.getAmount(), src.getCurrency(), newPaymentStatus, src.getEffectiveDate(), null);
     }
 
     public UUID getAccountId() {

@@ -75,7 +75,7 @@ public interface InvoiceSqlDao extends EntitySqlDao<Invoice>, AuditSqlDao, Trans
 
     @SqlQuery
     @RegisterMapper(UuidMapper.class)
-    UUID getInvoiceIdByPaymentAttemptId(@Bind("paymentAttemptId") final String paymentAttemptId);
+    UUID getInvoiceIdByPaymentId(@Bind("paymentId") final String paymentId);
 
 
     @BindingAnnotation(InvoiceBinder.InvoiceBinderFactory.class)

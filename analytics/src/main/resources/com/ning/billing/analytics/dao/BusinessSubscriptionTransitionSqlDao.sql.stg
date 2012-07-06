@@ -1,6 +1,6 @@
 group BusinessSubscriptionTransition;
 
-getTransitions(external_key) ::= <<
+getTransitionsByKey(external_key) ::= <<
   select
     total_ordering
   , bundle_id

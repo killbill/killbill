@@ -53,5 +53,4 @@ public class MockInvoiceModule extends AbstractModule implements InvoiceModule {
         installInvoiceMigrationApi();
         installInvoiceTestApi();
     }
-
 }

@@ -54,7 +54,7 @@ public interface Invoice extends Entity {
 
     Currency getCurrency();
 
-    DateTime getLastPaymentAttempt();
+    DateTime getLastPaymentDate();
 
     BigDecimal getPaidAmount();
 

@@ -41,9 +41,9 @@ public class DefaultAccount extends EntityBase implements Account {
     private final String externalKey;
     private final String email;
     private final String name;
-    private final int firstNameLength;
+    private final Integer firstNameLength;
     private final Currency currency;
-    private final int billCycleDay;
+    private final Integer billCycleDay;
     private final UUID paymentMethodId;
     private final DateTimeZone timeZone;
     private final String locale;
@@ -55,8 +55,8 @@ public class DefaultAccount extends EntityBase implements Account {
     private final String country;
     private final String postalCode;
     private final String phone;
-    private final boolean isMigrated;
-    private final boolean isNotifiedForInvoices;
+    private final Boolean isMigrated;
+    private final Boolean isNotifiedForInvoices;
 
     public DefaultAccount(final AccountData data) {
         this(UUID.randomUUID(), data);
@@ -81,13 +81,13 @@ public class DefaultAccount extends EntityBase implements Account {
     * This call is used for testing and update from an existing account
     */
     public DefaultAccount(final UUID id, final String externalKey, final String email,
-                          final String name, final int firstNameLength,
-                          final Currency currency, final int billCycleDay, final UUID paymentMethodId,
+                          final String name, final Integer firstNameLength,
+                          final Currency currency, final Integer billCycleDay, final UUID paymentMethodId,
                           final DateTimeZone timeZone, final String locale,
                           final String address1, final String address2, final String companyName,
                           final String city, final String stateOrProvince, final String country,
                           final String postalCode, final String phone,
-                          final boolean isMigrated, final boolean isNotifiedForInvoices) {
+                          final Boolean isMigrated, final Boolean isNotifiedForInvoices) {
         super(id);
         this.externalKey = externalKey;
         this.email = email;

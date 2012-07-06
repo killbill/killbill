@@ -82,7 +82,7 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, UpdatableEn
             stmt.bind("id", payment.getId().toString());
             stmt.bind("accountId", payment.getAccountId().toString());
             stmt.bind("invoiceId", payment.getInvoiceId().toString());
-            stmt.bind("paymentMethodId", "");
+            stmt.bind("paymentMethodId", payment.getPaymentMethodId().toString());
             stmt.bind("amount", payment.getAmount());
             stmt.bind("currency", payment.getCurrency().toString());
             stmt.bind("effectiveDate", getDate(payment.getEffectiveDate()));
@@ -99,7 +99,7 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, UpdatableEn
             final UUID id = getUUID(rs, "id");
             final UUID accountId = getUUID(rs, "account_id");
             final UUID invoiceId = getUUID(rs, "invoice_id");
-            final UUID paymentMethodId = null; //getUUID(rs, "payment_method_id"); // STEPH needs to be fixed!
+            final UUID paymentMethodId = getUUID(rs, "payment_method_id");
             final Integer paymentNumber = rs.getInt("payment_number");
             final BigDecimal amount = rs.getBigDecimal("amount");
             final DateTime effectiveDate = getDate(rs, "effective_date");

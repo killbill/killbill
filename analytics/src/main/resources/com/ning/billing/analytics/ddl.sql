@@ -106,7 +106,7 @@ create table bip (
 , payment_id char(36) not null
 , created_date bigint not null
 , updated_date bigint not null
-, attempt_id char(36) not null
+, ext_payment_ref_id varchar(64) default null
 , account_key varchar(50) not null comment 'Account external key'
 , invoice_id char(36) not null
 , effective_date bigint default null
@@ -120,9 +120,11 @@ create table bip (
 , payment_method varchar(20) default null
 , card_type varchar(20) default null
 , card_country varchar(20) default null
+, invoice_payment_type varchar(24) default null
+, linked_invoice_payment_id char(36) default null
 , primary key(record_id)
-) engine=innodb comment 'Business Invoice Payments, track all payment attempts';
-create unique index bip_key_index on bip (attempt_id);
+) engine=innodb comment 'Business Invoice Payments, track all payments';
+create unique index bip_key_index on bip (payment_id);
 
 drop table if exists bos;
 create table bos (

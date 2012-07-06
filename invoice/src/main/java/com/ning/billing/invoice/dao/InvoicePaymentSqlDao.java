@@ -62,7 +62,7 @@ public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePayment>, Tran
     List<Long> getRecordIds(@Bind("invoiceId") final String invoiceId);
 
     @SqlQuery
-    public InvoicePayment getByPaymentAttemptId(@Bind("paymentAttemptId") final String paymentAttemptId);
+    public InvoicePayment getByPaymentId(@Bind("paymentId") final String paymentId);
 
     @Override
     @SqlQuery
@@ -70,26 +70,22 @@ public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePayment>, Tran
 
     @Override
     @SqlUpdate
-    public void create(@InvoicePaymentBinder final InvoicePayment invoicePayment,
-                       @CallContextBinder final CallContext context);
+    public void create(@InvoicePaymentBinder final InvoicePayment invoicePayment, @CallContextBinder final CallContext context);
 
     @SqlBatch(transactional = false)
-    void batchCreateFromTransaction(@InvoicePaymentBinder final List<InvoicePayment> items,
-                                    @CallContextBinder final CallContext context);
+    void batchCreateFromTransaction(@InvoicePaymentBinder final List<InvoicePayment> items, @CallContextBinder final CallContext context);
 
     @SqlQuery
     public List<InvoicePayment> getPaymentsForInvoice(@Bind("invoiceId") final String invoiceId);
 
     @SqlQuery
-    InvoicePayment getInvoicePayment(@Bind("paymentAttemptId") final String paymentAttemptId);
+    InvoicePayment getInvoicePayment(@Bind("paymentId") final String paymentId);
 
     @SqlQuery
     InvoicePayment getPaymentsForCookieId(@Bind("paymentCookieId") final String paymentCookieId);
 
-
     @SqlUpdate
-    void notifyOfPaymentAttempt(@InvoicePaymentBinder final InvoicePayment invoicePayment,
-                                @CallContextBinder final CallContext context);
+    void notifyOfPayment(@InvoicePaymentBinder final InvoicePayment invoicePayment, @CallContextBinder final CallContext context);
 
     @SqlQuery
     BigDecimal getRemainingAmountPaid(@Bind("invoicePaymentId") final String invoicePaymentId);
@@ -102,23 +98,23 @@ public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePayment>, Tran
     List<InvoicePayment> getChargeBacksByAccountId(@Bind("accountId") final String accountId);
 
     @SqlQuery
-    List<InvoicePayment> getChargebacksByAttemptPaymentId(@Bind("paymentAttemptId") final String paymentAttemptId);
+    List<InvoicePayment> getChargebacksByPaymentId(@Bind("paymentId") final String paymentId);
 
     public static class InvoicePaymentMapper extends MapperBase implements ResultSetMapper<InvoicePayment> {
         @Override
         public InvoicePayment map(final int index, final ResultSet result, final StatementContext context) throws SQLException {
             final UUID id = getUUID(result, "id");
             final InvoicePaymentType type = InvoicePaymentType.valueOf(result.getString("type"));
-            final UUID paymentAttemptId = getUUID(result, "payment_attempt_id");
+            final UUID paymentId = getUUID(result, "payment_id");
             final UUID invoiceId = getUUID(result, "invoice_id");
-            final DateTime paymentAttemptDate = getDate(result, "payment_attempt_date");
+            final DateTime paymentDate = getDate(result, "payment_date");
             final BigDecimal amount = result.getBigDecimal("amount");
             final String currencyString = result.getString("currency");
             final Currency currency = (currencyString == null) ? null : Currency.valueOf(currencyString);
             final UUID paymentCookieId = getUUID(result, "payment_cookie_id");
             final UUID linkedInvoicePaymentId = getUUID(result, "linked_invoice_payment_id");
 
-            return new DefaultInvoicePayment(id, type, paymentAttemptId, invoiceId, paymentAttemptDate,
+            return new DefaultInvoicePayment(id, type, paymentId, invoiceId, paymentDate,
                                              amount, currency, paymentCookieId, linkedInvoicePaymentId);
         }
     }
@@ -136,8 +132,8 @@ public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePayment>, Tran
                         q.bind("id", payment.getId().toString());
                         q.bind("type", payment.getType().toString());
                         q.bind("invoiceId", payment.getInvoiceId().toString());
-                        q.bind("paymentAttemptId", uuidToString(payment.getPaymentAttemptId()));
-                        q.bind("paymentAttemptDate", payment.getPaymentAttemptDate().toDate());
+                        q.bind("paymentId", uuidToString(payment.getPaymentId()));
+                        q.bind("paymentDate", payment.getPaymentDate().toDate());
                         q.bind("amount", payment.getAmount());
                         final Currency currency = payment.getCurrency();
                         q.bind("currency", (currency == null) ? null : currency.toString());

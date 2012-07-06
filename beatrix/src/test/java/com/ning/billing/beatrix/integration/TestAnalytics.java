@@ -53,6 +53,7 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.overdue.config.OverdueConfig;
+import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.config.XMLLoader;
@@ -199,6 +200,13 @@ public class TestAnalytics extends TestIntegrationBase {
         final Subscription subscription = verifyFirstSubscription(account, bundle);
         assertTrue(busHandler.isCompleted(DELAY));
 
+        // Verify the initial state of payments
+        Assert.assertEquals(analyticsUserApi.getInvoicePaymentsForAccount(account.getExternalKey()).size(), 0);
+
+        // Verify the account payment fields
+        Assert.assertEquals(analyticsUserApi.getAccountByKey(account.getExternalKey()).getBalance().doubleValue(), Rounder.round(BigDecimal.ZERO));
+        Assert.assertNull(analyticsUserApi.getAccountByKey(account.getExternalKey()).getLastPaymentStatus());
+
         // Verify the initial overdue status
         Assert.assertEquals(analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey()).size(), 0);
 
@@ -206,9 +214,28 @@ public class TestAnalytics extends TestIntegrationBase {
         busHandler.pushExpectedEvents(TestApiListener.NextEvent.PHASE, TestApiListener.NextEvent.INVOICE, TestApiListener.NextEvent.PAYMENT_ERROR);
         clock.addDays(30); // DAY 30 have to get out of trial before first payment
         Assert.assertTrue(busHandler.isCompleted(DELAY));
+        waitALittle();
 
         // Check BST - nothing should have changed
         verifyBSTWithTrialAndEvergreenPhases(account, bundle, subscription);
+
+        // Verify the payments - we should have received one
+        Assert.assertEquals(analyticsUserApi.getInvoicePaymentsForAccount(account.getExternalKey()).size(), 1);
+        Assert.assertEquals(analyticsUserApi.getInvoicePaymentsForAccount(account.getExternalKey()).get(0).getAccountKey(), account.getExternalKey());
+        Assert.assertTrue(analyticsUserApi.getInvoicePaymentsForAccount(account.getExternalKey()).get(0).getAmount().compareTo(BigDecimal.ZERO) > 0);
+        Assert.assertTrue(analyticsUserApi.getInvoicePaymentsForAccount(account.getExternalKey()).get(0).getRequestedAmount().compareTo(BigDecimal.ZERO) > 0);
+        Assert.assertNull(analyticsUserApi.getInvoicePaymentsForAccount(account.getExternalKey()).get(0).getExtPaymentRefId());
+        Assert.assertEquals(analyticsUserApi.getInvoicePaymentsForAccount(account.getExternalKey()).get(0).getProcessingStatus(), PaymentStatus.PAYMENT_FAILURE.toString());
+        Assert.assertEquals(analyticsUserApi.getInvoicePaymentsForAccount(account.getExternalKey()).get(0).getPluginName(), BeatrixModule.PLUGIN_NAME);
+
+        // Verify the account object has been updated
+        Assert.assertEquals(analyticsUserApi.getAccountByKey(account.getExternalKey()).getBalance(),
+                            analyticsUserApi.getInvoicePaymentsForAccount(account.getExternalKey()).get(0).getAmount());
+
+        // Verify the invoice balance isn't zero and is equal to the payment amount (don't look at the first, trial, invoice)
+        Assert.assertTrue(analyticsUserApi.getInvoicesForAccount(account.getExternalKey()).get(1).getBalance().compareTo(BigDecimal.ZERO) > 0);
+        Assert.assertEquals(analyticsUserApi.getInvoicesForAccount(account.getExternalKey()).get(1).getBalance(),
+                            analyticsUserApi.getInvoicePaymentsForAccount(account.getExternalKey()).get(0).getAmount());
 
         // Verify overdue status - we should still be in clear state
         Assert.assertEquals(analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey()).size(), 0);

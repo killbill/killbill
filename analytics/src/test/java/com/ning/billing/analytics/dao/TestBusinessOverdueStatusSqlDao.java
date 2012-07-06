@@ -45,23 +45,23 @@ public class TestBusinessOverdueStatusSqlDao extends TestWithEmbeddedDB {
         final BusinessOverdueStatus firstOverdueStatus = createOverdueStatus(accountKey, bundleId, externalKey);
 
         // Verify initial state
-        Assert.assertEquals(overdueStatusSqlDao.getOverdueStatusesForBundle(externalKey).size(), 0);
+        Assert.assertEquals(overdueStatusSqlDao.getOverdueStatusesForBundleByKey(externalKey).size(), 0);
 
         // Add the overdue status
         Assert.assertEquals(overdueStatusSqlDao.createOverdueStatus(firstOverdueStatus), 1);
 
         // Retrieve it
-        Assert.assertEquals(overdueStatusSqlDao.getOverdueStatusesForBundle(externalKey).size(), 1);
-        Assert.assertEquals(overdueStatusSqlDao.getOverdueStatusesForBundle(externalKey).get(0), firstOverdueStatus);
+        Assert.assertEquals(overdueStatusSqlDao.getOverdueStatusesForBundleByKey(externalKey).size(), 1);
+        Assert.assertEquals(overdueStatusSqlDao.getOverdueStatusesForBundleByKey(externalKey).get(0), firstOverdueStatus);
 
         // Add a second one
         final BusinessOverdueStatus secondOverdueStatus = createOverdueStatus(accountKey, bundleId, externalKey);
         Assert.assertEquals(overdueStatusSqlDao.createOverdueStatus(secondOverdueStatus), 1);
 
         // Retrieve both
-        Assert.assertEquals(overdueStatusSqlDao.getOverdueStatusesForBundle(externalKey).size(), 2);
-        Assert.assertEquals(overdueStatusSqlDao.getOverdueStatusesForBundle(externalKey).get(0), firstOverdueStatus);
-        Assert.assertEquals(overdueStatusSqlDao.getOverdueStatusesForBundle(externalKey).get(1), secondOverdueStatus);
+        Assert.assertEquals(overdueStatusSqlDao.getOverdueStatusesForBundleByKey(externalKey).size(), 2);
+        Assert.assertEquals(overdueStatusSqlDao.getOverdueStatusesForBundleByKey(externalKey).get(0), firstOverdueStatus);
+        Assert.assertEquals(overdueStatusSqlDao.getOverdueStatusesForBundleByKey(externalKey).get(1), secondOverdueStatus);
     }
 
     @Test(groups = "slow")

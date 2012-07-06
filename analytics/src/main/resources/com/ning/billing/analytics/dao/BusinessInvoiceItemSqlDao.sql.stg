@@ -48,7 +48,7 @@ order by created_date asc
 ;
 >>
 
-getInvoiceItemsForBundle(external_key) ::= <<
+getInvoiceItemsForBundleByKey(external_key) ::= <<
 select
   item_id
 , created_date
@@ -108,26 +108,6 @@ insert into bii (
 , :amount
 , :currency
 );
->>
-
-updateInvoiceItem() ::= <<
-update bii set
-  updated_date = :updated_date
-, invoice_id = :invoice_id
-, item_type = :item_type
-, external_key = :external_key
-, product_name = :product_name
-, product_type = :product_type
-, product_category = :product_category
-, slug = :slug
-, phase = :phase
-, billing_period = :billing_period
-, start_date = :start_date
-, end_date = :end_date
-, amount = :amount
-, currency = :currency
-where item_id = :item_id
-;
 >>
 
 deleteInvoiceItem(item_id) ::= <<

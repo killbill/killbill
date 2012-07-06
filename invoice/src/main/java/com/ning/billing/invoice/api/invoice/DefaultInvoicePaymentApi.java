@@ -43,8 +43,8 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
     }
 
     @Override
-    public void notifyOfPaymentAttempt(final InvoicePayment invoicePayment, final CallContext context) {
-        dao.notifyOfPaymentAttempt(invoicePayment, context);
+    public void notifyOfPayment(final InvoicePayment invoicePayment, final CallContext context) {
+        dao.notifyOfPayment(invoicePayment, context);
     }
 
     @Override
@@ -58,20 +58,20 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
     }
 
     @Override
-    public Invoice getInvoiceForPaymentAttemptId(final UUID paymentAttemptId) {
-        final UUID invoiceIdStr = dao.getInvoiceIdByPaymentAttemptId(paymentAttemptId);
+    public Invoice getInvoiceForPaymentId(final UUID paymentId) {
+        final UUID invoiceIdStr = dao.getInvoiceIdByPaymentId(paymentId);
         return invoiceIdStr == null ? null : dao.getById(invoiceIdStr);
     }
 
     @Override
-    public InvoicePayment getInvoicePayment(final UUID paymentAttemptId) {
-        return dao.getInvoicePayment(paymentAttemptId);
+    public InvoicePayment getInvoicePayment(final UUID paymentId) {
+        return dao.getInvoicePayment(paymentId);
     }
 
     @Override
-    public void notifyOfPaymentAttempt(final UUID invoiceId, final BigDecimal amount, final Currency currency, final UUID paymentAttemptId, final DateTime paymentAttemptDate, final CallContext context) {
-        final InvoicePayment invoicePayment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentAttemptId, invoiceId, paymentAttemptDate, amount, currency);
-        dao.notifyOfPaymentAttempt(invoicePayment, context);
+    public void notifyOfPayment(final UUID invoiceId, final BigDecimal amount, final Currency currency, final UUID paymentId, final DateTime paymentDate, final CallContext context) {
+        final InvoicePayment invoicePayment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentId, invoiceId, paymentDate, amount, currency);
+        dao.notifyOfPayment(invoicePayment, context);
     }
 
     @Override
@@ -95,8 +95,8 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
     }
 
     @Override
-    public List<InvoicePayment> getChargebacksByPaymentAttemptId(final UUID paymentAttemptId) {
-        return dao.getChargebacksByPaymentAttemptId(paymentAttemptId);
+    public List<InvoicePayment> getChargebacksByPaymentId(final UUID paymentId) {
+        return dao.getChargebacksByPaymentId(paymentId);
     }
 
     @Override
@@ -110,9 +110,8 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
     }
 
     @Override
-    public InvoicePayment createRefund(UUID paymentAttemptId,
-            BigDecimal amount, boolean isInvoiceAdjusted, UUID paymentCookieId, CallContext context)
-            throws InvoiceApiException {
-        return dao.createRefund(paymentAttemptId, amount, isInvoiceAdjusted, paymentCookieId, context);
+    public InvoicePayment createRefund(final UUID paymentId, final BigDecimal amount, final boolean isInvoiceAdjusted,
+                                       final UUID paymentCookieId, final CallContext context) throws InvoiceApiException {
+        return dao.createRefund(paymentId, amount, isInvoiceAdjusted, paymentCookieId, context);
     }
 }

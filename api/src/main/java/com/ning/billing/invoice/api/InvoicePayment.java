@@ -25,13 +25,13 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.entity.Entity;
 
 public interface InvoicePayment extends Entity {
-    UUID getPaymentAttemptId();
+    UUID getPaymentId();
 
     InvoicePaymentType getType();
 
     UUID getInvoiceId();
 
-    DateTime getPaymentAttemptDate();
+    DateTime getPaymentDate();
 
     BigDecimal getAmount();
 

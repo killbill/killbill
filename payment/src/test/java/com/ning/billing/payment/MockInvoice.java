@@ -150,21 +150,21 @@ public class MockInvoice extends EntityBase implements Invoice {
     }
 
     @Override
-    public DateTime getLastPaymentAttempt() {
-        DateTime lastPaymentAttempt = null;
+    public DateTime getLastPaymentDate() {
+        DateTime lastPayment = null;
 
-        for (final InvoicePayment paymentAttempt : payments) {
-            final DateTime paymentAttemptDate = paymentAttempt.getPaymentAttemptDate();
-            if (lastPaymentAttempt == null) {
-                lastPaymentAttempt = paymentAttemptDate;
+        for (final InvoicePayment payment : payments) {
+            final DateTime paymentDate = payment.getPaymentDate();
+            if (lastPayment == null) {
+                lastPayment = paymentDate;
             }
 
-            if (lastPaymentAttempt.isBefore(paymentAttemptDate)) {
-                lastPaymentAttempt = paymentAttemptDate;
+            if (lastPayment.isBefore(paymentDate)) {
+                lastPayment = paymentDate;
             }
         }
 
-        return lastPaymentAttempt;
+        return lastPayment;
     }
 
     @Override
@@ -213,7 +213,7 @@ public class MockInvoice extends EntityBase implements Invoice {
             return false;
         }
 
-        final DateTime lastPaymentAttempt = getLastPaymentAttempt();
+        final DateTime lastPaymentAttempt = getLastPaymentDate();
         if (lastPaymentAttempt == null) {
             return true;
         }
@@ -223,24 +223,21 @@ public class MockInvoice extends EntityBase implements Invoice {
 
     @Override
     public String toString() {
-        return "DefaultInvoice [items=" + invoiceItems + ", payments=" + payments + ", id=" + id + ", accountId=" + accountId + ", invoiceDate=" + invoiceDate + ", targetDate=" + targetDate + ", currency=" + currency + ", amountPaid=" + getPaidAmount() + ", lastPaymentAttempt=" + getLastPaymentAttempt() + "]";
+        return "DefaultInvoice [items=" + invoiceItems + ", payments=" + payments + ", id=" + id + ", accountId=" + accountId + ", invoiceDate=" + invoiceDate + ", targetDate=" + targetDate + ", currency=" + currency + ", amountPaid=" + getPaidAmount() + ", lastPaymentDate=" + getLastPaymentDate() + "]";
     }
 
     @Override
     public BigDecimal getCBAAmount() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public BigDecimal getTotalAdjAmount() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public BigDecimal getRefundAdjAmount() {
-        // TODO Auto-generated method stub
         return null;
     }
 }

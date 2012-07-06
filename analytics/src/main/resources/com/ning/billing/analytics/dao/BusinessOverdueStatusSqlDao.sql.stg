@@ -1,6 +1,6 @@
 group BusinessOverdueStatus;
 
-getOverdueStatusesForBundle(external_key) ::= <<
+getOverdueStatusesForBundleByKey(external_key) ::= <<
 select
   bundle_id
 , external_key

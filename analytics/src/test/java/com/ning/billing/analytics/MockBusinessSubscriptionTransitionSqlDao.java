@@ -35,7 +35,7 @@ public class MockBusinessSubscriptionTransitionSqlDao implements BusinessSubscri
     private final Map<String, String> keyForBundleId = new HashMap<String, String>();
 
     @Override
-    public List<BusinessSubscriptionTransition> getTransitions(@Bind("event_key") final String key) {
+    public List<BusinessSubscriptionTransition> getTransitionsByKey(@Bind("event_key") final String key) {
         return content.get(key);
     }
 

@@ -144,21 +144,21 @@ public class DefaultInvoice extends EntityBase implements Invoice {
     }
 
     @Override
-    public DateTime getLastPaymentAttempt() {
-        DateTime lastPaymentAttempt = null;
+    public DateTime getLastPaymentDate() {
+        DateTime lastPaymentDate = null;
 
         for (final InvoicePayment paymentAttempt : payments) {
-            final DateTime paymentAttemptDate = paymentAttempt.getPaymentAttemptDate();
-            if (lastPaymentAttempt == null) {
-                lastPaymentAttempt = paymentAttemptDate;
+            final DateTime paymentDate = paymentAttempt.getPaymentDate();
+            if (lastPaymentDate == null) {
+                lastPaymentDate = paymentDate;
             }
 
-            if (lastPaymentAttempt.isBefore(paymentAttemptDate)) {
-                lastPaymentAttempt = paymentAttemptDate;
+            if (lastPaymentDate.isBefore(paymentDate)) {
+                lastPaymentDate = paymentDate;
             }
         }
 
-        return lastPaymentAttempt;
+        return lastPaymentDate;
     }
 
     @Override
@@ -208,13 +208,13 @@ public class DefaultInvoice extends EntityBase implements Invoice {
             return false;
         }
 
-        final DateTime lastPaymentAttempt = getLastPaymentAttempt();
-        return (lastPaymentAttempt == null) || lastPaymentAttempt.plusDays(numberOfDays).isAfter(targetDate);
+        final DateTime lastPayment = getLastPaymentDate();
+        return (lastPayment == null) || lastPayment.plusDays(numberOfDays).isAfter(targetDate);
     }
 
     @Override
     public String toString() {
-        return "DefaultInvoice [items=" + invoiceItems + ", payments=" + payments + ", id=" + id + ", accountId=" + accountId + ", invoiceDate=" + invoiceDate + ", targetDate=" + targetDate + ", currency=" + currency + ", amountPaid=" + getPaidAmount() + ", lastPaymentAttempt=" + getLastPaymentAttempt() + "]";
+        return "DefaultInvoice [items=" + invoiceItems + ", payments=" + payments + ", id=" + id + ", accountId=" + accountId + ", invoiceDate=" + invoiceDate + ", targetDate=" + targetDate + ", currency=" + currency + ", amountPaid=" + getPaidAmount() + ", lastPaymentDate=" + getLastPaymentDate() + "]";
     }
 
 }

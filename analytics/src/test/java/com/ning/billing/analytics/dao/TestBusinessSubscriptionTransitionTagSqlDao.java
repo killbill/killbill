@@ -44,12 +44,12 @@ public class TestBusinessSubscriptionTransitionTagSqlDao extends TestWithEmbedde
         final String name = UUID.randomUUID().toString().substring(0, 20);
 
         // Verify initial state
-        Assert.assertEquals(subscriptionTransitionTagSqlDao.getTagsForBusinessSubscriptionTransition(externalKey).size(), 0);
+        Assert.assertEquals(subscriptionTransitionTagSqlDao.getTagsForBusinessSubscriptionTransitionByKey(externalKey).size(), 0);
         Assert.assertEquals(subscriptionTransitionTagSqlDao.removeTag(bundleId.toString(), name), 0);
 
         // Add an entry
         Assert.assertEquals(subscriptionTransitionTagSqlDao.addTag(accountKey, bundleId.toString(), externalKey, name), 1);
-        final List<BusinessSubscriptionTransitionTag> tagsForBusinessSubscriptionTransition = subscriptionTransitionTagSqlDao.getTagsForBusinessSubscriptionTransition(externalKey);
+        final List<BusinessSubscriptionTransitionTag> tagsForBusinessSubscriptionTransition = subscriptionTransitionTagSqlDao.getTagsForBusinessSubscriptionTransitionByKey(externalKey);
         Assert.assertEquals(tagsForBusinessSubscriptionTransition.size(), 1);
 
         // Retrieve it
@@ -60,7 +60,7 @@ public class TestBusinessSubscriptionTransitionTagSqlDao extends TestWithEmbedde
 
         // Delete it
         Assert.assertEquals(subscriptionTransitionTagSqlDao.removeTag(bundleId.toString(), name), 1);
-        Assert.assertEquals(subscriptionTransitionTagSqlDao.getTagsForBusinessSubscriptionTransition(externalKey).size(), 0);
+        Assert.assertEquals(subscriptionTransitionTagSqlDao.getTagsForBusinessSubscriptionTransitionByKey(externalKey).size(), 0);
     }
 
     @Test(groups = "slow")
@@ -77,14 +77,14 @@ public class TestBusinessSubscriptionTransitionTagSqlDao extends TestWithEmbedde
         Assert.assertEquals(subscriptionTransitionTagSqlDao.addTag(accountKey, bundleId1.toString(), externalKey1, name1), 1);
         Assert.assertEquals(subscriptionTransitionTagSqlDao.addTag(accountKey, bundleId2.toString(), externalKey2, name2), 1);
 
-        Assert.assertEquals(subscriptionTransitionTagSqlDao.getTagsForBusinessSubscriptionTransition(externalKey1).size(), 1);
-        Assert.assertEquals(subscriptionTransitionTagSqlDao.getTagsForBusinessSubscriptionTransition(externalKey2).size(), 1);
+        Assert.assertEquals(subscriptionTransitionTagSqlDao.getTagsForBusinessSubscriptionTransitionByKey(externalKey1).size(), 1);
+        Assert.assertEquals(subscriptionTransitionTagSqlDao.getTagsForBusinessSubscriptionTransitionByKey(externalKey2).size(), 1);
 
         // Remove the tag for the first transition
         Assert.assertEquals(subscriptionTransitionTagSqlDao.removeTag(bundleId1.toString(), name1), 1);
 
-        Assert.assertEquals(subscriptionTransitionTagSqlDao.getTagsForBusinessSubscriptionTransition(externalKey1).size(), 0);
-        Assert.assertEquals(subscriptionTransitionTagSqlDao.getTagsForBusinessSubscriptionTransition(externalKey2).size(), 1);
+        Assert.assertEquals(subscriptionTransitionTagSqlDao.getTagsForBusinessSubscriptionTransitionByKey(externalKey1).size(), 0);
+        Assert.assertEquals(subscriptionTransitionTagSqlDao.getTagsForBusinessSubscriptionTransitionByKey(externalKey2).size(), 1);
     }
 
     @Test(groups = "slow")

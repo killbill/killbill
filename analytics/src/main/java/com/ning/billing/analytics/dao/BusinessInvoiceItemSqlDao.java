@@ -38,13 +38,10 @@ public interface BusinessInvoiceItemSqlDao extends Transactional<BusinessInvoice
     List<BusinessInvoiceItem> getInvoiceItemsForInvoice(@Bind("invoice_id") final String invoiceId);
 
     @SqlQuery
-    List<BusinessInvoiceItem> getInvoiceItemsForBundle(@Bind("external_key") final String externalKey);
+    List<BusinessInvoiceItem> getInvoiceItemsForBundleByKey(@Bind("external_key") final String externalKey);
 
     @SqlUpdate
     int createInvoiceItem(@BusinessInvoiceItemBinder final BusinessInvoiceItem invoiceItem);
-
-    @SqlUpdate
-    int updateInvoiceItem(@BusinessInvoiceItemBinder final BusinessInvoiceItem invoiceItem);
 
     @SqlUpdate
     int deleteInvoiceItem(@Bind("item_id") final String itemId);
