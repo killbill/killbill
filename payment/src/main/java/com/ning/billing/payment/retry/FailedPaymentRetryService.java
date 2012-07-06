@@ -77,7 +77,7 @@ public class FailedPaymentRetryService extends BaseRetryService implements Retry
             if (timeOfRetry == null) {
                 return false;
             }
-            return scheduleRetry(paymentId, timeOfRetry);
+            return super.scheduleRetry(paymentId, timeOfRetry);
         }
 
 

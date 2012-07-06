@@ -16,8 +16,6 @@
 
 package com.ning.billing.payment.bus;
 
-import java.util.Map;
-import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,24 +35,15 @@ import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.DefaultCallContext;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.dao.ObjectType;
-import com.ning.billing.util.tag.ControlTagType;
-import com.ning.billing.util.tag.Tag;
+
 
 public class InvoiceHandler {
 
     public static final String PAYMENT_PROVIDER_KEY = "paymentProvider";
 
-    /*
-    private final static int NB_PAYMENT_THREADS = 3; // STEPH
-    private final static String PAYMENT_GROUP_NAME = "payment-grp";
-    private final static String PAYMENT_TH_NAME = "payment-th";
-*/
-
     private final PaymentProcessor paymentProcessor;
     private final AccountUserApi accountUserApi;
     private final Clock clock;
-    private final TagUserApi tagUserApi;
 
 
     private static final Logger log = LoggerFactory.getLogger(InvoiceHandler.class);
@@ -66,7 +55,6 @@ public class InvoiceHandler {
                           final TagUserApi tagUserApi) {
         this.clock = clock;
         this.accountUserApi = accountUserApi;
-        this.tagUserApi = tagUserApi;
         this.paymentProcessor = paymentProcessor;
     }
 
@@ -79,11 +67,9 @@ public class InvoiceHandler {
 
         Account account = null;
         try {
-            account = accountUserApi.getAccountById(event.getAccountId());
-            if (isAccountAutoPayOff(account.getId())) {
-                return;
-            }
+
             final CallContext context = new DefaultCallContext("PaymentRequestProcessor", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken(), clock);
+            account = accountUserApi.getAccountById(event.getAccountId());
             paymentProcessor.createPayment(account, event.getInvoiceId(), null, context, false);
         } catch (AccountApiException e) {
             log.error("Failed to process invoice payment", e);
@@ -92,16 +78,6 @@ public class InvoiceHandler {
                 log.error("Failed to process invoice payment", e);
             }
         }
-    }
-
-    private boolean isAccountAutoPayOff(final UUID accountId) {
-        final Map<String, Tag> accountTags = tagUserApi.getTags(accountId, ObjectType.ACCOUNT);
-        for (final Tag cur : accountTags.values()) {
-            if (cur.getTagDefinitionName().equals(ControlTagType.AUTO_PAY_OFF.toString())) {
-                return true;
-            }
-        }
-        return false;
     }
 }
 

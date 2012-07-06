@@ -34,7 +34,7 @@ public class MockPaymentDao implements PaymentDao {
 
     @Override
     public PaymentModelDao insertPaymentWithAttempt(final PaymentModelDao paymentInfo, final PaymentAttemptModelDao attempt,
-                                                    final boolean scheduleTimeoutRetry, final CallContext context) {
+                                                    final CallContext context) {
         synchronized (this) {
             payments.put(paymentInfo.getId(), paymentInfo);
             attempts.put(attempt.getId(), attempt);
@@ -44,7 +44,7 @@ public class MockPaymentDao implements PaymentDao {
 
     @Override
     public PaymentAttemptModelDao insertNewAttemptForPayment(final UUID paymentId,
-                                                             final PaymentAttemptModelDao attempt, final boolean scheduleTimeoutRetry, final CallContext context) {
+                                                             final PaymentAttemptModelDao attempt, final CallContext context) {
         synchronized (this) {
             attempts.put(attempt.getId(), attempt);
         }

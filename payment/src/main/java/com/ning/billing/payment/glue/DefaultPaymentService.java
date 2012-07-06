@@ -25,6 +25,8 @@ import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentService;
 import com.ning.billing.payment.bus.InvoiceHandler;
+import com.ning.billing.payment.bus.TagHandler;
+import com.ning.billing.payment.retry.AutoPayRetryService;
 import com.ning.billing.payment.retry.FailedPaymentRetryService;
 import com.ning.billing.payment.retry.PluginFailureRetryService;
 import com.ning.billing.util.bus.Bus;
@@ -35,23 +37,30 @@ public class DefaultPaymentService implements PaymentService {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultPaymentService.class);
 
-    // STEPH for retry crappiness
     public static final String SERVICE_NAME = "payment-service";
 
-    private final InvoiceHandler requestProcessor;
+    private final InvoiceHandler invoiceHandler;
+    private final TagHandler tagHandler;
     private final Bus eventBus;
     private final PaymentApi api;
     private final FailedPaymentRetryService failedRetryService;
     private final PluginFailureRetryService timedoutRetryService;
+    private final AutoPayRetryService autoPayoffRetryService;
 
     @Inject
-    public DefaultPaymentService(final InvoiceHandler requestProcessor, final PaymentApi api, final Bus eventBus,
-                                 final FailedPaymentRetryService failedRetryService, final PluginFailureRetryService timedoutRetryService) {
-        this.requestProcessor = requestProcessor;
+    public DefaultPaymentService(final InvoiceHandler invoiceHandler,
+            final TagHandler tagHandler,
+            final PaymentApi api, final Bus eventBus,
+            final FailedPaymentRetryService failedRetryService,
+            final PluginFailureRetryService timedoutRetryService,
+            final AutoPayRetryService autoPayoffRetryService) {
+        this.invoiceHandler = invoiceHandler;
+        this.tagHandler = tagHandler;
         this.eventBus = eventBus;
         this.api = api;
         this.failedRetryService = failedRetryService;
         this.timedoutRetryService = timedoutRetryService;
+        this.autoPayoffRetryService = autoPayoffRetryService;
     }
 
     @Override
@@ -63,12 +72,14 @@ public class DefaultPaymentService implements PaymentService {
     public void initialize() throws NotificationQueueAlreadyExists {
         failedRetryService.initialize(SERVICE_NAME);
         timedoutRetryService.initialize(SERVICE_NAME);
+        autoPayoffRetryService.initialize(SERVICE_NAME);
     }
 
     @LifecycleHandlerType(LifecycleHandlerType.LifecycleLevel.REGISTER_EVENTS)
     public void registerForNotifications() {
         try {
-            eventBus.register(requestProcessor);
+            eventBus.register(invoiceHandler);
+            eventBus.register(tagHandler);
         } catch (Bus.EventBusException e) {
             log.error("Unable to register with the EventBus!", e);
         }
@@ -78,12 +89,14 @@ public class DefaultPaymentService implements PaymentService {
     public void start() {
         failedRetryService.start();
         timedoutRetryService.start();
+        autoPayoffRetryService.start();
     }
 
     @LifecycleHandlerType(LifecycleLevel.STOP_SERVICE)
     public void stop() throws NoSuchNotificationQueue {
         failedRetryService.stop();
         timedoutRetryService.stop();
+        autoPayoffRetryService.stop();
     }
 
     @Override

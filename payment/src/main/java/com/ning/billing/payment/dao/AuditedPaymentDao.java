@@ -40,7 +40,6 @@ public class AuditedPaymentDao implements PaymentDao {
     private final PaymentAttemptSqlDao paymentAttemptSqlDao;
     private final PaymentMethodSqlDao paymentMethodSqlDao;
     private final RefundSqlDao refundSqlDao;
-    //private final TimedoutPaymentRetryServiceScheduler timedoutSchduler;
 
     @Inject
     public AuditedPaymentDao(final IDBI dbi, final PluginFailureRetryServiceScheduler timedoutSchduler) {
@@ -48,13 +47,12 @@ public class AuditedPaymentDao implements PaymentDao {
         this.paymentAttemptSqlDao = dbi.onDemand(PaymentAttemptSqlDao.class);
         this.paymentMethodSqlDao = dbi.onDemand(PaymentMethodSqlDao.class);
         this.refundSqlDao = dbi.onDemand(RefundSqlDao.class);
-        // this.timedoutSchduler = timedoutSchduler;
     }
 
 
     @Override
     public PaymentAttemptModelDao insertNewAttemptForPayment(final UUID paymentId,
-                                                             final PaymentAttemptModelDao attempt, final boolean scheduleTimeoutRetry, final CallContext context) {
+                                                             final PaymentAttemptModelDao attempt, final CallContext context) {
 
         return paymentAttemptSqlDao.inTransaction(new Transaction<PaymentAttemptModelDao, PaymentAttemptSqlDao>() {
             @Override
@@ -70,7 +68,7 @@ public class AuditedPaymentDao implements PaymentDao {
 
 
     @Override
-    public PaymentModelDao insertPaymentWithAttempt(final PaymentModelDao payment, final PaymentAttemptModelDao attempt, final boolean scheduleTimeoutRetry, final CallContext context) {
+    public PaymentModelDao insertPaymentWithAttempt(final PaymentModelDao payment, final PaymentAttemptModelDao attempt, final CallContext context) {
 
         return paymentSqlDao.inTransaction(new Transaction<PaymentModelDao, PaymentSqlDao>() {
 
@@ -84,28 +82,6 @@ public class AuditedPaymentDao implements PaymentDao {
             }
         });
     }
-
-    /*
-    private int getNbTimedoutAttemptsFromTransaction(final UUID paymentId, final PaymentAttemptSqlDao transactional) {
-        List<PaymentAttemptModelDao> attempts = transactional.getPaymentAttempts(paymentId.toString());
-        return Collections2.filter(attempts, new Predicate<PaymentAttemptModelDao>() {
-            @Override
-            public boolean apply(PaymentAttemptModelDao input) {
-                return input.getPaymentStatus() == PaymentStatus.TIMEDOUT;
-            }
-        }).size();
-    }
-
-
-    private void scheduleTimeoutRetryFromTransaction(final UUID paymentId, final PaymentAttemptSqlDao transactional, final boolean scheduleTimeoutRetry) {
-
-        if (scheduleTimeoutRetry) {
-            int retryAttempt = getNbTimedoutAttemptsFromTransaction(paymentId, transactional) + 1;
-            timedoutSchduler.scheduleRetryFromTransaction(paymentId, retryAttempt, transactional);
-        }
-    }
-*/
-
 
     private PaymentModelDao insertPaymentFromTransaction(final PaymentModelDao payment, final CallContext context, final PaymentSqlDao transactional) {
         transactional.insertPayment(payment, context);
