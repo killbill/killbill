@@ -168,8 +168,8 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
     }
 
     @Override
-    public DateTime getLastPaymentAttempt() {
-        return invoice.getLastPaymentAttempt();
+    public DateTime getLastPaymentDate() {
+        return invoice.getLastPaymentDate();
     }
 
     @Override

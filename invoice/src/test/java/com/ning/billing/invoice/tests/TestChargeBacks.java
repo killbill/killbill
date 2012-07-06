@@ -202,8 +202,8 @@ public class TestChargeBacks  {
     }
 
     @Test(groups = {"slow"})
-    public void testGetChargeBacksByPaymentAttemptIdWithEmptyReturnSet() throws InvoiceApiException {
-        final List<InvoicePayment> chargebacks = invoicePaymentApi.getChargebacksByPaymentAttemptId(UUID.randomUUID());
+    public void testGetChargeBacksByPaymentIdWithEmptyReturnSet() throws InvoiceApiException {
+        final List<InvoicePayment> chargebacks = invoicePaymentApi.getChargebacksByPaymentId(UUID.randomUUID());
         assertNotNull(chargebacks);
         assertEquals(chargebacks.size(), 0);
     }
@@ -216,7 +216,7 @@ public class TestChargeBacks  {
         // create a partial charge back
         invoicePaymentApi.createChargeback(payment.getId(), FIFTEEN, context);
 
-        final List<InvoicePayment> chargebacks = invoicePaymentApi.getChargebacksByPaymentAttemptId(payment.getPaymentAttemptId());
+        final List<InvoicePayment> chargebacks = invoicePaymentApi.getChargebacksByPaymentId(payment.getPaymentId());
         assertNotNull(chargebacks);
         assertEquals(chargebacks.size(), 1);
         assertEquals(chargebacks.get(0).getLinkedInvoicePaymentId(), payment.getId());
@@ -254,13 +254,13 @@ public class TestChargeBacks  {
         zombie.addResult("getId", UUID.randomUUID());
         zombie.addResult("getType", InvoicePaymentType.ATTEMPT);
         zombie.addResult("getInvoiceId", invoiceId);
-        zombie.addResult("getPaymentAttemptId", UUID.randomUUID());
-        zombie.addResult("getPaymentAttemptDate", clock.getUTCNow());
+        zombie.addResult("getPaymentId", UUID.randomUUID());
+        zombie.addResult("getPaymentDate", clock.getUTCNow());
         zombie.addResult("getAmount", amount);
         zombie.addResult("getCurrency", CURRENCY);
         zombie.addResult("getLinkedInvoicePaymentId", BrainDeadProxyFactory.ZOMBIE_VOID);
         zombie.addResult("getPaymentCookieId", BrainDeadProxyFactory.ZOMBIE_VOID);
-        invoicePaymentApi.notifyOfPaymentAttempt(payment, context);
+        invoicePaymentApi.notifyOfPayment(payment, context);
 
         return payment;
     }

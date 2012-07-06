@@ -111,9 +111,9 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         assertEquals(savedInvoice.getInvoiceItems().size(), 1);
 
         final BigDecimal paymentAmount = new BigDecimal("11.00");
-        final UUID paymentAttemptId = UUID.randomUUID();
+        final UUID paymentId = UUID.randomUUID();
 
-        invoiceDao.notifyOfPaymentAttempt(new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT,paymentAttemptId, invoiceId, clock.getUTCNow().plusDays(12), paymentAmount, Currency.USD), context);
+        invoiceDao.notifyOfPayment(new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT,paymentId, invoiceId, clock.getUTCNow().plusDays(12), paymentAmount, Currency.USD), context);
 
         final Invoice retrievedInvoice = invoiceDao.getById(invoiceId);
         assertNotNull(retrievedInvoice);
@@ -130,36 +130,36 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
     }
 
     @Test(groups = {"slow"})
-    public void testAddPayment() {
+    public void testAddPayment1() {
         final UUID accountId = UUID.randomUUID();
         final DateTime targetDate = new DateTime(2011, 10, 6, 0, 0, 0, 0);
         Invoice invoice = new DefaultInvoice(accountId, clock.getUTCNow(), targetDate, Currency.USD);
 
-        final UUID paymentAttemptId = UUID.randomUUID();
-        final DateTime paymentAttemptDate = new DateTime(2011, 6, 24, 12, 14, 36, 0);
+        final UUID paymentId = UUID.randomUUID();
+        final DateTime paymentDate = new DateTime(2011, 6, 24, 12, 14, 36, 0);
         final BigDecimal paymentAmount = new BigDecimal("14.0");
 
         invoiceDao.create(invoice, context);
-        invoiceDao.notifyOfPaymentAttempt(new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentAttemptId, invoice.getId(), paymentAttemptDate, paymentAmount, Currency.USD), context);
+        invoiceDao.notifyOfPayment(new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentId, invoice.getId(), paymentDate, paymentAmount, Currency.USD), context);
 
         invoice = invoiceDao.getById(invoice.getId());
         assertEquals(invoice.getPaidAmount().compareTo(paymentAmount), 0);
-        assertEquals(invoice.getLastPaymentAttempt().compareTo(paymentAttemptDate), 0);
+        assertEquals(invoice.getLastPaymentDate().compareTo(paymentDate), 0);
         assertEquals(invoice.getNumberOfPayments(), 1);
     }
 
     @Test(groups = {"slow"})
-    public void testAddPaymentAttempt() {
+    public void testAddPayment2() {
         final UUID accountId = UUID.randomUUID();
         final DateTime targetDate = new DateTime(2011, 10, 6, 0, 0, 0, 0);
         Invoice invoice = new DefaultInvoice(accountId, clock.getUTCNow(), targetDate, Currency.USD);
 
-        final DateTime paymentAttemptDate = new DateTime(2011, 6, 24, 12, 14, 36, 0);
+        final DateTime paymentDate = new DateTime(2011, 6, 24, 12, 14, 36, 0);
 
         invoiceDao.create(invoice, context);
-        invoiceDao.notifyOfPaymentAttempt(new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, UUID.randomUUID(), invoice.getId(), paymentAttemptDate, invoice.getBalance(), Currency.USD), context);
+        invoiceDao.notifyOfPayment(new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, UUID.randomUUID(), invoice.getId(), paymentDate, invoice.getBalance(), Currency.USD), context);
         invoice = invoiceDao.getById(invoice.getId());
-        assertEquals(invoice.getLastPaymentAttempt().compareTo(paymentAttemptDate), 0);
+        assertEquals(invoice.getLastPaymentDate().compareTo(paymentDate), 0);
     }
 
     @Test(groups = {"slow"})
@@ -577,14 +577,14 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         assertEquals(balance.compareTo(new BigDecimal("20.00")), 0);
 
         // Pay the whole thing
-        final UUID paymentAttemptId = UUID.randomUUID();
+        final UUID paymentId = UUID.randomUUID();
         final BigDecimal payment1 = rate1;
-        final InvoicePayment payment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentAttemptId, invoice1.getId(), new DateTime(), payment1, Currency.USD);
+        final InvoicePayment payment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentId, invoice1.getId(), new DateTime(), payment1, Currency.USD);
         invoicePaymentDao.create(payment, context);
         balance = invoiceDao.getAccountBalance(accountId);
         assertEquals(balance.compareTo(new BigDecimal("0.00")), 0);
 
-        invoiceDao.createRefund(paymentAttemptId, refund1, withAdjustment, UUID.randomUUID(), context);
+        invoiceDao.createRefund(paymentId, refund1, withAdjustment, UUID.randomUUID(), context);
         balance = invoiceDao.getAccountBalance(accountId);
         if (withAdjustment) {
             assertEquals(balance.compareTo(BigDecimal.ZERO), 0);
@@ -653,9 +653,9 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         assertEquals(balance.compareTo(new BigDecimal("25.00")), 0);
 
         // Pay the whole thing
-        final UUID paymentAttemptId = UUID.randomUUID();
+        final UUID paymentId = UUID.randomUUID();
         final BigDecimal payment1 = amount1.add(rate1);
-        final InvoicePayment payment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentAttemptId, invoice1.getId(), new DateTime(), payment1, Currency.USD);
+        final InvoicePayment payment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentId, invoice1.getId(), new DateTime(), payment1, Currency.USD);
         invoicePaymentDao.create(payment, context);
         balance = invoiceDao.getAccountBalance(accountId);
         assertEquals(balance.compareTo(new BigDecimal("0.00")), 0);
@@ -678,7 +678,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         assertEquals(cba.compareTo(new BigDecimal("10.00")), 0);
 
         // PARTIAL REFUND on the payment
-        invoiceDao.createRefund(paymentAttemptId, refundAmount, withAdjustment, UUID.randomUUID(), context);
+        invoiceDao.createRefund(paymentId, refundAmount, withAdjustment, UUID.randomUUID(), context);
 
         balance = invoiceDao.getAccountBalance(accountId);
         assertEquals(balance.compareTo(expectedFinalBalance), 0);

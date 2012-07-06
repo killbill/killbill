@@ -241,11 +241,11 @@ public class DefaultInvoiceDao implements InvoiceDao {
 
 
     @Override
-    public void notifyOfPaymentAttempt(final InvoicePayment invoicePayment, final CallContext context) {
+    public void notifyOfPayment(final InvoicePayment invoicePayment, final CallContext context) {
         invoicePaymentSqlDao.inTransaction(new Transaction<Void, InvoicePaymentSqlDao>() {
             @Override
             public Void inTransaction(final InvoicePaymentSqlDao transactional, final TransactionStatus status) throws Exception {
-                transactional.notifyOfPaymentAttempt(invoicePayment, context);
+                transactional.notifyOfPayment(invoicePayment, context);
 
                 final String invoicePaymentId = invoicePayment.getId().toString();
                 final Long recordId = transactional.getRecordId(invoicePaymentId);
@@ -263,10 +263,10 @@ public class DefaultInvoiceDao implements InvoiceDao {
             @Override
             public List<Invoice> inTransaction(final InvoiceSqlDao invoiceDao, final TransactionStatus status) throws Exception {
 
-                List<Invoice> invoices = getAllInvoicesByAccountFromTransaction(accountId, invoiceDao);
-                Collection<Invoice> unpaidInvoices = Collections2.filter(invoices, new Predicate<Invoice>() {
+                final List<Invoice> invoices = getAllInvoicesByAccountFromTransaction(accountId, invoiceDao);
+                final Collection<Invoice> unpaidInvoices = Collections2.filter(invoices, new Predicate<Invoice>() {
                     @Override
-                    public boolean apply(Invoice in) {
+                    public boolean apply(final Invoice in) {
                         return (in.getBalance().compareTo(BigDecimal.ZERO) >= 1) && !in.getTargetDate().isAfter(upToDate);
                     }
                 });
@@ -276,13 +276,13 @@ public class DefaultInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public UUID getInvoiceIdByPaymentAttemptId(final UUID paymentAttemptId) {
-        return invoiceSqlDao.getInvoiceIdByPaymentAttemptId(paymentAttemptId.toString());
+    public UUID getInvoiceIdByPaymentId(final UUID paymentId) {
+        return invoiceSqlDao.getInvoiceIdByPaymentId(paymentId.toString());
     }
 
     @Override
-    public InvoicePayment getInvoicePayment(final UUID paymentAttemptId) {
-        return invoicePaymentSqlDao.getInvoicePayment(paymentAttemptId.toString());
+    public InvoicePayment getInvoicePayment(final UUID paymentId) {
+        return invoicePaymentSqlDao.getInvoicePayment(paymentId.toString());
     }
 
     @Override
@@ -297,17 +297,16 @@ public class DefaultInvoiceDao implements InvoiceDao {
 
 
     @Override
-    public InvoicePayment createRefund(final UUID paymentAttemptId,
-            final BigDecimal amount, final boolean isInvoiceAdjusted, final UUID paymentCookieId,  final CallContext context)
+    public InvoicePayment createRefund(final UUID paymentId, final BigDecimal amount, final boolean isInvoiceAdjusted, final UUID paymentCookieId,  final CallContext context)
             throws InvoiceApiException {
 
         return invoicePaymentSqlDao.inTransaction(new Transaction<InvoicePayment, InvoicePaymentSqlDao>() {
             @Override
             public InvoicePayment inTransaction(final InvoicePaymentSqlDao transactional, final TransactionStatus status) throws Exception {
 
-                final InvoicePayment payment = transactional.getByPaymentAttemptId(paymentAttemptId.toString());
+                final InvoicePayment payment = transactional.getByPaymentId(paymentId.toString());
                 if (payment == null) {
-                    throw new InvoiceApiException(ErrorCode.INVOICE_PAYMENT_BY_ATTEMPT_NOT_FOUND, paymentAttemptId);
+                    throw new InvoiceApiException(ErrorCode.INVOICE_PAYMENT_BY_ATTEMPT_NOT_FOUND, paymentId);
                 }
                 final BigDecimal maxRefundAmount = payment.getAmount() == null ? BigDecimal.ZERO : payment.getAmount();
                 final BigDecimal requestedAmount = amount == null ? maxRefundAmount : amount;
@@ -327,7 +326,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
                     return existingRefund;
                 }
 
-                final InvoicePayment refund = new DefaultInvoicePayment(UUID.randomUUID(), InvoicePaymentType.REFUND, paymentAttemptId,
+                final InvoicePayment refund = new DefaultInvoicePayment(UUID.randomUUID(), InvoicePaymentType.REFUND, paymentId,
                         payment.getInvoiceId(), context.getCreatedDate(), requestedPositiveAmount.negate(), payment.getCurrency(), paymentCookieId, payment.getId());
                 transactional.create(refund, context);
 
@@ -417,8 +416,8 @@ public class DefaultInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public List<InvoicePayment> getChargebacksByPaymentAttemptId(final UUID paymentAttemptId) {
-        return invoicePaymentSqlDao.getChargebacksByAttemptPaymentId(paymentAttemptId.toString());
+    public List<InvoicePayment> getChargebacksByPaymentId(final UUID paymentId) {
+        return invoicePaymentSqlDao.getChargebacksByPaymentId(paymentId.toString());
     }
 
     @Override

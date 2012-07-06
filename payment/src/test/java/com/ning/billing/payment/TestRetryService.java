@@ -104,7 +104,7 @@ public class TestRetryService {
         mockPaymentProviderPlugin.clear();
 
         context = new DefaultCallContext("RetryServiceTests", CallOrigin.INTERNAL, UserType.TEST, clock);
-        ((ZombieControl) invoicePaymentApi).addResult("notifyOfPaymentAttempt", BrainDeadProxyFactory.ZOMBIE_VOID);
+        ((ZombieControl) invoicePaymentApi).addResult("notifyOfPayment", BrainDeadProxyFactory.ZOMBIE_VOID);
     }
 
     @AfterMethod(groups = "fast")

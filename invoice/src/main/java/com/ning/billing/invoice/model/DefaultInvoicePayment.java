@@ -27,7 +27,7 @@ import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.util.entity.EntityBase;
 
 public class DefaultInvoicePayment extends EntityBase implements InvoicePayment {
-    private final UUID paymentAttemptId;
+    private final UUID paymentId;
     private final InvoicePaymentType type;
     private final UUID invoiceId;
     private final DateTime paymentDate;
@@ -36,17 +36,17 @@ public class DefaultInvoicePayment extends EntityBase implements InvoicePayment 
     private final UUID paymentCookieId;
     private final UUID linkedInvoicePaymentId;
 
-    public DefaultInvoicePayment(final InvoicePaymentType type, final UUID paymentAttemptId, final UUID invoiceId, final DateTime paymentDate,
+    public DefaultInvoicePayment(final InvoicePaymentType type, final UUID paymentId, final UUID invoiceId, final DateTime paymentDate,
                                  final BigDecimal amount, final Currency currency) {
-        this(UUID.randomUUID(), type, paymentAttemptId, invoiceId, paymentDate, amount, currency, null, null);
+        this(UUID.randomUUID(), type, paymentId, invoiceId, paymentDate, amount, currency, null, null);
     }
 
-    public DefaultInvoicePayment(final UUID id, final InvoicePaymentType type, final UUID paymentAttemptId, final UUID invoiceId, final DateTime paymentDate,
-                                 @Nullable final BigDecimal amount, @Nullable final Currency currency, final UUID paymentCookieId,
+    public DefaultInvoicePayment(final UUID id, final InvoicePaymentType type, final UUID paymentId, final UUID invoiceId, final DateTime paymentDate,
+                                 @Nullable final BigDecimal amount, @Nullable final Currency currency, @Nullable final UUID paymentCookieId,
                                  @Nullable final UUID linkedInvoicePaymentId) {
         super(id);
         this.type = type;
-        this.paymentAttemptId = paymentAttemptId;
+        this.paymentId = paymentId;
         this.amount = amount;
         this.invoiceId = invoiceId;
         this.paymentDate = paymentDate;
@@ -61,8 +61,8 @@ public class DefaultInvoicePayment extends EntityBase implements InvoicePayment 
     }
 
     @Override
-    public UUID getPaymentAttemptId() {
-        return paymentAttemptId;
+    public UUID getPaymentId() {
+        return paymentId;
     }
 
     @Override
@@ -71,7 +71,7 @@ public class DefaultInvoicePayment extends EntityBase implements InvoicePayment 
     }
 
     @Override
-    public DateTime getPaymentAttemptDate() {
+    public DateTime getPaymentDate() {
         return paymentDate;
     }
 

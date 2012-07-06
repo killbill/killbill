@@ -27,22 +27,22 @@ import com.ning.billing.util.callcontext.CallContext;
 
 public interface InvoicePaymentApi {
     /**
-     * @param accountId
+     * @param accountId id of the account
      * @return All invoices, including migrated invoices
      */
     public List<Invoice> getAllInvoicesByAccount(UUID accountId);
 
     public Invoice getInvoice(UUID invoiceId);
 
-    public Invoice getInvoiceForPaymentAttemptId(UUID paymentAttemptId);
+    public Invoice getInvoiceForPaymentId(UUID paymentId);
 
-    public InvoicePayment getInvoicePayment(UUID paymentAttemptId);
+    public InvoicePayment getInvoicePayment(UUID paymentId);
 
-    public void notifyOfPaymentAttempt(InvoicePayment invoicePayment, CallContext context);
+    public void notifyOfPayment(InvoicePayment invoicePayment, CallContext context);
 
-    public void notifyOfPaymentAttempt(UUID invoiceId, BigDecimal amountOutstanding, Currency currency, UUID paymentAttemptId, DateTime paymentAttemptDate, CallContext context);
+    public void notifyOfPayment(UUID invoiceId, BigDecimal amountOutstanding, Currency currency, UUID paymentId, DateTime paymentDate, CallContext context);
 
-    public InvoicePayment createRefund(UUID paymentAttemptId, BigDecimal amount, boolean isInvoiceAdjusted, UUID paymentCookieId, CallContext context) throws InvoiceApiException;
+    public InvoicePayment createRefund(UUID paymentId, BigDecimal amount, boolean isInvoiceAdjusted, UUID paymentCookieId, CallContext context) throws InvoiceApiException;
 
     public InvoicePayment createChargeback(UUID invoicePaymentId, BigDecimal amount, CallContext context) throws InvoiceApiException;
 
@@ -54,7 +54,7 @@ public interface InvoicePaymentApi {
 
     public UUID getAccountIdFromInvoicePaymentId(UUID uuid) throws InvoiceApiException;
 
-    public List<InvoicePayment> getChargebacksByPaymentAttemptId(UUID paymentAttemptId);
+    public List<InvoicePayment> getChargebacksByPaymentId(UUID paymentId);
 
     public InvoicePayment getChargebackById(UUID chargebackId) throws InvoiceApiException;
 }

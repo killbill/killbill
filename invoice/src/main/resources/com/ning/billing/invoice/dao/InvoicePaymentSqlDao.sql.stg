@@ -4,8 +4,8 @@ invoicePaymentFields(prefix) ::= <<
   <prefix>id,
   <prefix>type,
   <prefix>invoice_id,
-  <prefix>payment_attempt_id,
-  <prefix>payment_attempt_date,
+  <prefix>payment_id,
+  <prefix>payment_date,
   <prefix>amount,
   <prefix>currency,
   <prefix>payment_cookie_id,
@@ -16,20 +16,20 @@ invoicePaymentFields(prefix) ::= <<
 
 create() ::= <<
   INSERT INTO invoice_payments(<invoicePaymentFields()>)
-  VALUES(:id, :type, :invoiceId, :paymentAttemptId, :paymentAttemptDate, :amount, :currency,
+  VALUES(:id, :type, :invoiceId, :paymentId, :paymentDate, :amount, :currency,
          :paymentCookieId, :linkedInvoicePaymentId, :userName, :createdDate);
 >>
 
 batchCreateFromTransaction() ::= <<
   INSERT INTO invoice_payments(<invoicePaymentFields()>)
-  VALUES(:id, :type, :invoiceId, :paymentAttemptId, :paymentAttemptDate, :amount, :currency,
+  VALUES(:id, :type, :invoiceId, :paymentId, :paymentDate, :amount, :currency,
         :paymentCookieId, :linkedInvoicePaymentId, :userName, :createdDate);
 >>
 
-getByPaymentAttemptId() ::= <<
+getByPaymentId() ::= <<
   SELECT <invoicePaymentFields()>
   FROM invoice_payments
-  WHERE payment_attempt_id = :paymentAttemptId;
+  WHERE payment_id = :paymentId;
 >>
 
 get() ::= <<
@@ -55,16 +55,16 @@ getPaymentsForInvoice() ::= <<
   WHERE invoice_id = :invoiceId;
 >>
 
-notifyOfPaymentAttempt() ::= <<
+notifyOfPayment() ::= <<
   INSERT INTO invoice_payments(<invoicePaymentFields()>)
-  VALUES(:id, :type, :invoiceId, :paymentAttemptId, :paymentAttemptDate, :amount, :currency,
+  VALUES(:id, :type, :invoiceId, :paymentId, :paymentDate, :amount, :currency,
         :paymentCookieId, :linkedInvoicePaymentId, :userName, :createdDate);
 >>
 
 getInvoicePayment() ::= <<
     SELECT <invoicePaymentFields()>
     FROM invoice_payments
-    WHERE payment_attempt_id = :paymentAttemptId;
+    WHERE payment_id = :paymentId;
 >>
 
 getRecordId() ::= <<
@@ -121,10 +121,10 @@ getChargeBacksByAccountId() ::= <<
     AND linked_invoice_payment_id IS NOT NULL;
 >>
 
-getChargebacksByAttemptPaymentId() ::= <<
+getChargebacksByPaymentId() ::= <<
     SELECT <invoicePaymentFields()>
     FROM invoice_payments
     WHERE linked_invoice_payment_id IN
-        (SELECT id FROM invoice_payments WHERE payment_attempt_id = :paymentAttemptId);
+        (SELECT id FROM invoice_payments WHERE payment_id = :paymentId);
 >>
 ;

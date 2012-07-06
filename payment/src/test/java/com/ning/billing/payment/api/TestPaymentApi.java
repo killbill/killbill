@@ -64,7 +64,6 @@ import static org.testng.Assert.fail;
 @Guice(modules = {PaymentTestModuleWithMocks.class, MockClockModule.class, MockJunctionModule.class, CallContextModule.class})
 @Test(groups = "fast")
 public class TestPaymentApi {
-
     private static final Logger log = LoggerFactory.getLogger(TestPaymentApi.class);
 
     @Inject
@@ -81,7 +80,6 @@ public class TestPaymentApi {
     protected CallContext context;
 
     private Account account;
-
 
     @Inject
     public TestPaymentApi(final Clock clock) {
@@ -103,8 +101,7 @@ public class TestPaymentApi {
         eventBus.stop();
     }
 
-
-    @Test(enabled = true)
+    @Test
     public void testSimplePaymentWithNoAmount() throws Exception {
         final BigDecimal invoiceAmount = new BigDecimal("10.0011");
         final BigDecimal requestedAmount = null;
@@ -113,7 +110,7 @@ public class TestPaymentApi {
         testSimplePayment(invoiceAmount, requestedAmount, expectedAmount);
     }
 
-    @Test(enabled = true)
+    @Test
     public void testSimplePaymentWithInvoiceAmount() throws Exception {
         final BigDecimal invoiceAmount = new BigDecimal("10.0011");
         final BigDecimal requestedAmount = invoiceAmount;
@@ -122,7 +119,7 @@ public class TestPaymentApi {
         testSimplePayment(invoiceAmount, requestedAmount, expectedAmount);
     }
 
-    @Test(enabled = true)
+    @Test
     public void testSimplePaymentWithLowerAmount() throws Exception {
         final BigDecimal invoiceAmount = new BigDecimal("10.0011");
         final BigDecimal requestedAmount = new BigDecimal("8.0091");
@@ -131,7 +128,7 @@ public class TestPaymentApi {
         testSimplePayment(invoiceAmount, requestedAmount, expectedAmount);
     }
 
-    @Test(enabled = true)
+    @Test
     public void testSimplePaymentWithInvalidAmount() throws Exception {
         final BigDecimal invoiceAmount = new BigDecimal("10.0011");
         final BigDecimal requestedAmount = new BigDecimal("80.0091");
@@ -140,17 +137,14 @@ public class TestPaymentApi {
         testSimplePayment(invoiceAmount, requestedAmount, expectedAmount);
     }
 
-
     private void testSimplePayment(final BigDecimal invoiceAmount, final BigDecimal requestedAmount, final BigDecimal expectedAmount) throws Exception {
-
-        ((ZombieControl) invoicePaymentApi).addResult("notifyOfPaymentAttempt", BrainDeadProxyFactory.ZOMBIE_VOID);
+        ((ZombieControl) invoicePaymentApi).addResult("notifyOfPayment", BrainDeadProxyFactory.ZOMBIE_VOID);
 
         final DateTime now = new DateTime(DateTimeZone.UTC);
         final Invoice invoice = testHelper.createTestInvoice(account, now, Currency.USD);
 
         final UUID subscriptionId = UUID.randomUUID();
         final UUID bundleId = UUID.randomUUID();
-
 
         invoice.addInvoiceItem(new MockRecurringInvoiceItem(invoice.getId(), account.getId(),
                                                             subscriptionId,
@@ -188,17 +182,14 @@ public class TestPaymentApi {
         }
     }
 
-    @Test(enabled = true)
+    @Test
     public void testPaymentMethods() throws Exception {
-
         List<PaymentMethod> methods = paymentApi.getPaymentMethods(account, false);
         assertEquals(methods.size(), 1);
 
         final PaymentMethod initDefaultMethod = methods.get(0);
         assertEquals(initDefaultMethod.getId(), account.getPaymentMethodId());
 
-
-        //((ZombieControl)accountApi).addResult("updateAccount", );
         final PaymentMethodPlugin newPaymenrMethod = new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), true, null);
         final UUID newPaymentMethodId = paymentApi.addPaymentMethod(PaymentTestModuleWithMocks.PLUGIN_TEST_NAME, account, true, newPaymenrMethod, context);
         ((ZombieControl) account).addResult("getPaymentMethodId", newPaymentMethodId);
@@ -220,6 +211,4 @@ public class TestPaymentApi {
         methods = paymentApi.getPaymentMethods(account, false);
         assertEquals(methods.size(), 1);
     }
-
-
 }
