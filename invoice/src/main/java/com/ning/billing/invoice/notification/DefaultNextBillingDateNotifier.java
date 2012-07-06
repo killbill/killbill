@@ -38,7 +38,6 @@ import com.ning.billing.util.notificationq.NotificationQueueService.Notification
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
 
 public class DefaultNextBillingDateNotifier implements NextBillingDateNotifier {
-
     private static final Logger log = LoggerFactory.getLogger(DefaultNextBillingDateNotifier.class);
 
     public static final String NEXT_BILLING_DATE_NOTIFIER_QUEUE = "next-billing-date-queue";
@@ -47,13 +46,12 @@ public class DefaultNextBillingDateNotifier implements NextBillingDateNotifier {
     private final InvoiceConfig config;
     private final EntitlementUserApi entitlementUserApi;
 
-
     private NotificationQueue nextBillingQueue;
     private final InvoiceListener listener;
 
     @Inject
     public DefaultNextBillingDateNotifier(final NotificationQueueService notificationQueueService,
-            final InvoiceConfig config, final EntitlementUserApi entitlementUserApi, final InvoiceListener listener) {
+                                          final InvoiceConfig config, final EntitlementUserApi entitlementUserApi, final InvoiceListener listener) {
         this.notificationQueueService = notificationQueueService;
         this.config = config;
         this.entitlementUserApi = entitlementUserApi;
@@ -62,17 +60,27 @@ public class DefaultNextBillingDateNotifier implements NextBillingDateNotifier {
 
     @Override
     public void initialize() throws NotificationQueueAlreadyExists {
-        nextBillingQueue = notificationQueueService.createNotificationQueue(DefaultInvoiceService.INVOICE_SERVICE_NAME,
-                NEXT_BILLING_DATE_NOTIFIER_QUEUE,
-                new NotificationQueueHandler() {
+        final NotificationConfig notificationConfig = new NotificationConfig() {
+            @Override
+            public long getSleepTimeMs() {
+                return config.getSleepTimeMs();
+            }
+
+            @Override
+            public boolean isNotificationProcessingOff() {
+                return config.isNotificationProcessingOff();
+            }
+        };
+
+        final NotificationQueueHandler notificationQueueHandler = new NotificationQueueHandler() {
             @Override
             public void handleReadyNotification(final NotificationKey notificationKey, final DateTime eventDate) {
                 try {
-                    
-                    if (! (notificationKey instanceof NextBillingDateNotificationKey)) {
+                    if (!(notificationKey instanceof NextBillingDateNotificationKey)) {
                         log.error("Invoice service received an unexpected event type {}", notificationKey.getClass().getName());
                         return;
                     }
+
                     final NextBillingDateNotificationKey key = (NextBillingDateNotificationKey) notificationKey;
                     try {
                         final Subscription subscription = entitlementUserApi.getSubscriptionFromId(key.getUuidKey());
@@ -87,23 +95,13 @@ public class DefaultNextBillingDateNotifier implements NextBillingDateNotifier {
                 } catch (IllegalArgumentException e) {
                     log.error("The key returned from the NextBillingNotificationQueue is not a valid UUID", e);
                 }
-
             }
-        },
-        new NotificationConfig() {
+        };
 
-            @Override
-            public long getSleepTimeMs() {
-                return config.getSleepTimeMs();
-            }
-
-            @Override
-            public boolean isNotificationProcessingOff() {
-                return config.isNotificationProcessingOff();
-            }
-        }
-        );
-
+        nextBillingQueue = notificationQueueService.createNotificationQueue(DefaultInvoiceService.INVOICE_SERVICE_NAME,
+                                                                            NEXT_BILLING_DATE_NOTIFIER_QUEUE,
+                                                                            notificationQueueHandler,
+                                                                            notificationConfig);
     }
 
     @Override
@@ -122,6 +120,4 @@ public class DefaultNextBillingDateNotifier implements NextBillingDateNotifier {
     private void processEvent(final UUID subscriptionId, final DateTime eventDateTime) {
         listener.handleNextBillingDateEvent(subscriptionId, eventDateTime);
     }
-
-
 }
