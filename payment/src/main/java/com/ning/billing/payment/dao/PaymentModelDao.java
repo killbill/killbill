@@ -60,7 +60,7 @@ public class PaymentModelDao extends EntityBase {
     }
 
     public PaymentModelDao(final PaymentModelDao src, final PaymentStatus newPaymentStatus) {
-        this(src.getId(), src.getAccountId(), src.getInvoiceId(), null, src.getPaymentNumber(), src.getAmount(), src.getCurrency(), newPaymentStatus, src.getEffectiveDate(), null);
+        this(src.getId(), src.getAccountId(), src.getInvoiceId(), src.getPaymentMethodId(), src.getPaymentNumber(), src.getAmount(), src.getCurrency(), newPaymentStatus, src.getEffectiveDate(), null);
     }
 
     public UUID getAccountId() {
