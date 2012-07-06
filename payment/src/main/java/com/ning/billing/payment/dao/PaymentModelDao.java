@@ -55,7 +55,12 @@ public class PaymentModelDao extends EntityBase {
     }
 
     public PaymentModelDao(final UUID accountId, final UUID invoiceId,
-                           final BigDecimal amount, final Currency currency, final DateTime effectiveDate) {
+            final BigDecimal amount, final Currency currency, final DateTime effectiveDate, final PaymentStatus paymentStatus) {
+        this(UUID.randomUUID(), accountId, invoiceId, null, INVALID_PAYMENT_NUMBER, amount, currency, paymentStatus, effectiveDate, null);
+    }
+
+    public PaymentModelDao(final UUID accountId, final UUID invoiceId,
+            final BigDecimal amount, final Currency currency, final DateTime effectiveDate) {
         this(UUID.randomUUID(), accountId, invoiceId, null, INVALID_PAYMENT_NUMBER, amount, currency, PaymentStatus.UNKNOWN, effectiveDate, null);
     }
 

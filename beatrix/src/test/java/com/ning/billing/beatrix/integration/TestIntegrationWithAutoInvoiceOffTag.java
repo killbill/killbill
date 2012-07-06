@@ -79,9 +79,9 @@ public class TestIntegrationWithAutoInvoiceOffTag extends TestIntegrationBase {
     @Test(groups = {"slow"}, enabled = true)
     public void testAutoInvoiceOffAccount() throws Exception {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
-        addTag(account.getId(), ObjectType.ACCOUNT);
+        add_AUTO_INVOICING_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
 
-        // set next invoice to fail and create network 
+        // set next invoice to fail and create network
         busHandler.pushExpectedEvents(NextEvent.CREATE);
         final SubscriptionData baseSubscription = subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(),
                                                                                                                    new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, context));
@@ -111,7 +111,7 @@ public class TestIntegrationWithAutoInvoiceOffTag extends TestIntegrationBase {
     public void testAutoInvoiceOffSingleSubscription() throws Exception {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
-        // set next invoice to fail and create network 
+        // set next invoice to fail and create network
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.INVOICE);
         final SubscriptionData baseSubscription = subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(),
                                                                                                                    new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, context));
@@ -122,7 +122,7 @@ public class TestIntegrationWithAutoInvoiceOffTag extends TestIntegrationBase {
         assertEquals(invoices.size(), 1); // first invoice is generated immediately after creation can't reliably stop it
 
 
-        addTag(baseSubscription.getBundleId(), ObjectType.BUNDLE);
+        add_AUTO_INVOICING_OFF_Tag(baseSubscription.getBundleId(), ObjectType.BUNDLE);
 
         busHandler.pushExpectedEvents(NextEvent.PHASE);
         clock.addDays(40); // DAY 40 out of trial
@@ -138,7 +138,7 @@ public class TestIntegrationWithAutoInvoiceOffTag extends TestIntegrationBase {
     public void testAutoInvoiceOffMultipleSubscriptions() throws Exception {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
-        // set next invoice to fail and create network 
+        // set next invoice to fail and create network
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.INVOICE);
         final SubscriptionData baseSubscription = subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(),
                                                                                                                    new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, context));
@@ -156,7 +156,7 @@ public class TestIntegrationWithAutoInvoiceOffTag extends TestIntegrationBase {
         Collection<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId());
         assertEquals(invoices.size(), 2); // first invoice is generated immediately after creation can't reliably stop it
 
-        addTag(baseSubscription.getBundleId(), ObjectType.BUNDLE);
+        add_AUTO_INVOICING_OFF_Tag(baseSubscription.getBundleId(), ObjectType.BUNDLE);
 
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.PHASE, NextEvent.INVOICE);
         clock.addDays(40); // DAY 40 out of trial
@@ -167,7 +167,7 @@ public class TestIntegrationWithAutoInvoiceOffTag extends TestIntegrationBase {
     }
 
 
-    private void addTag(final UUID id, final ObjectType type) throws TagDefinitionApiException, TagApiException {
+    private void add_AUTO_INVOICING_OFF_Tag(final UUID id, final ObjectType type) throws TagDefinitionApiException, TagApiException {
         final TagDefinition def = tagApi.getTagDefinition(ControlTagType.AUTO_INVOICING_OFF.name());
         tagApi.addTag(id, type, def, context);
         final Map<String, Tag> tags = tagApi.getTags(id, type);

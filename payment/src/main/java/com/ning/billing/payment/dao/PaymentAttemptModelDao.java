@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -44,6 +44,10 @@ public class PaymentAttemptModelDao extends EntityBase {
         this.effectiveDate = effectiveDate;
         this.requestedAmount = requestedAmount;
         this.paymentError = paymentError;
+    }
+
+    public PaymentAttemptModelDao(final UUID accountId, final UUID invoiceId, final UUID paymentId, final PaymentStatus paymentStatus, final DateTime effectiveDate, final BigDecimal requestedAmount) {
+        this(UUID.randomUUID(), accountId, invoiceId, paymentId, paymentStatus, effectiveDate, requestedAmount, null);
     }
 
     public PaymentAttemptModelDao(final UUID accountId, final UUID invoiceId, final UUID paymentId, final DateTime effectiveDate, final BigDecimal requestedAmount) {

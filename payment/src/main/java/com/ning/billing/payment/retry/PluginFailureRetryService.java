@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -78,7 +78,7 @@ public class PluginFailureRetryService extends BaseRetryService implements Retry
             if (nextRetryDate == null) {
                 return false;
             }
-            return scheduleRetry(paymentId, nextRetryDate);
+            return super.scheduleRetry(paymentId, nextRetryDate);
         }
 
         public boolean scheduleRetryFromTransaction(final UUID paymentId, final int retryAttempt, final Transmogrifier transactionalDao) {
