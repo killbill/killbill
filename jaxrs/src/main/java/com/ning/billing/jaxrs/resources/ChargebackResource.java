@@ -59,7 +59,6 @@ public class ChargebackResource implements JaxrsResource {
 
     private final JaxrsUriBuilder uriBuilder;
     private final InvoicePaymentApi invoicePaymentApi;
-    private final PaymentApi paymentApi;
     private final Context context;
 
     @Inject
@@ -69,7 +68,6 @@ public class ChargebackResource implements JaxrsResource {
                               final Context context) {
         this.uriBuilder = uriBuilder;
         this.invoicePaymentApi = invoicePaymentApi;
-        this.paymentApi = paymentApi;
         this.context = context;
     }
 
@@ -134,7 +132,7 @@ public class ChargebackResource implements JaxrsResource {
             final InvoicePayment invoicePayment = invoicePaymentApi.getInvoicePayment(UUID.fromString(json.getPaymentId()));
             if (invoicePayment == null) {
                 final String error = String.format("Failed to locate invoice payment for paymentAttemptId %s", json.getPaymentId());
-                return Response.status(Response.Status.NO_CONTENT).entity(error).build();
+                return Response.status(Response.Status.BAD_REQUEST).entity(error).build();
             }
 
             final InvoicePayment chargeBack = invoicePaymentApi.createChargeback(invoicePayment.getId(), json.getChargebackAmount(),
