@@ -39,7 +39,6 @@ import com.ning.billing.util.clock.ClockMock;
 public class TestBillingStateCalculator {
     Clock clock = new ClockMock();
     InvoiceUserApi invoiceApi = Mockito.mock(InvoiceUserApi.class);
-    private int hash = 0;
     DateTime now;
 
     public BillingStateCalculator<SubscriptionBundle> createBSCalc() {

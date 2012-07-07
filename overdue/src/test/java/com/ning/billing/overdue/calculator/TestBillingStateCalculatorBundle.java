@@ -16,6 +16,7 @@
 
 package com.ning.billing.overdue.calculator;
 
+import javax.annotation.Nullable;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +28,8 @@ import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
 import com.ning.billing.catalog.MockPlan;
 import com.ning.billing.catalog.MockPriceList;
 import com.ning.billing.catalog.api.Plan;
@@ -62,28 +65,32 @@ public class TestBillingStateCalculatorBundle extends TestBillingStateCalculator
         now = new DateTime();
         final List<Invoice> invoices = new ArrayList<Invoice>(5);
         invoices.add(createInvoice(now, BigDecimal.ZERO, createInvoiceItems(new UUID[]{thisBundleId, thatBundleId})));
-        invoices.add(createInvoice(now, BigDecimal.TEN, createInvoiceItems(new UUID[]{thatBundleId})));
-        invoices.add(createInvoice(now, new BigDecimal("100.00"), createInvoiceItems(new UUID[]{thatBundleId, thisBundleId, thatBundleId})));
-        invoices.add(createInvoice(now, new BigDecimal("1000.00"), createInvoiceItems(new UUID[]{thisBundleId})));
-        invoices.add(createInvoice(now, new BigDecimal("10000.00"), createInvoiceItems(new UUID[]{thatBundleId, thisBundleId})));
+        // Will not be seen below
+        invoices.add(createInvoice(now.plusDays(1), BigDecimal.TEN, createInvoiceItems(new UUID[]{thatBundleId})));
+        invoices.add(createInvoice(now.plusDays(2), new BigDecimal("100.00"), createInvoiceItems(new UUID[]{thatBundleId, thisBundleId, thatBundleId})));
+        invoices.add(createInvoice(now.plusDays(3), new BigDecimal("1000.00"), createInvoiceItems(new UUID[]{thisBundleId})));
+        invoices.add(createInvoice(now.plusDays(4), new BigDecimal("10000.00"), createInvoiceItems(new UUID[]{thatBundleId, thisBundleId})));
 
         final Clock clock = new ClockMock();
         final InvoiceUserApi invoiceApi = Mockito.mock(InvoiceUserApi.class);
         final EntitlementUserApi entitlementApi = Mockito.mock(EntitlementUserApi.class);
-        Mockito.when(invoiceApi.getUnpaidInvoicesByAccountId(Mockito.<UUID>any(), Mockito.<DateTime>any())).thenReturn(invoices);
+        Mockito.when(invoiceApi.getUnpaidInvoicesByAccountId(Mockito.<UUID>any(), Mockito.<DateTime>any())).thenReturn(Collections2.filter(invoices, new Predicate<Invoice>() {
+            @Override
+            public boolean apply(@Nullable final Invoice invoice) {
+                return invoice != null && BigDecimal.ZERO.compareTo(invoice.getBalance()) < 0;
+            }
+        }));
 
         final BillingStateCalculatorBundle calc = new BillingStateCalculatorBundle(entitlementApi, invoiceApi, clock);
         final SortedSet<Invoice> resultinvoices = calc.unpaidInvoicesForBundle(thisBundleId, new UUID(0L, 0L));
 
-        Assert.assertEquals(resultinvoices.size(), 4);
-        Assert.assertEquals(BigDecimal.ZERO.compareTo(resultinvoices.first().getBalance()), 0);
+        Assert.assertEquals(resultinvoices.size(), 3);
+        Assert.assertEquals(new BigDecimal("100.0").compareTo(resultinvoices.first().getBalance()), 0);
         Assert.assertEquals(new BigDecimal("10000.0").compareTo(resultinvoices.last().getBalance()), 0);
-
     }
 
     @Test(groups = {"fast"}, enabled = true)
     public void testcalculateBillingStateForBundle() throws Exception {
-
         final UUID thisBundleId = new UUID(0L, 0L);
         final UUID thatBundleId = new UUID(0L, 1L);
 
@@ -131,9 +138,7 @@ public class TestBillingStateCalculatorBundle extends TestBillingStateCalculator
 
     @Test(groups = {"fast"}, enabled = true)
     public void testcalculateBillingStateForBundleNoOverdueInvoices() throws Exception {
-
         final UUID thisBundleId = new UUID(0L, 0L);
-        final UUID thatBundleId = new UUID(0L, 1L);
 
         now = new DateTime();
         final List<Invoice> invoices = new ArrayList<Invoice>(5);
