@@ -16,7 +16,6 @@
 
 package com.ning.billing.overdue;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,9 +33,7 @@ import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.catalog.MockPlan;
 import com.ning.billing.catalog.MockPriceList;
-import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.glue.CatalogModule;
-import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
@@ -53,7 +50,6 @@ import com.ning.billing.mock.glue.TestDbiModule;
 import com.ning.billing.overdue.applicator.ApplicatorMockJunctionModule;
 import com.ning.billing.overdue.applicator.ApplicatorMockJunctionModule.ApplicatorBlockingApi;
 import com.ning.billing.overdue.applicator.OverdueListenerTesterModule;
-import com.ning.billing.overdue.applicator.TestOverdueStateApplicator;
 import com.ning.billing.overdue.config.OverdueConfig;
 import com.ning.billing.overdue.glue.DefaultOverdueModule;
 import com.ning.billing.overdue.service.DefaultOverdueService;
@@ -61,11 +57,10 @@ import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
 import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.glue.NotificationQueueModule;
-import com.ning.billing.util.io.IOUtils;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
 
 @Guice(modules = {DefaultOverdueModule.class, OverdueListenerTesterModule.class, MockClockModule.class, ApplicatorMockJunctionModule.class, CatalogModule.class, MockInvoiceModule.class, MockPaymentModule.class, NotificationQueueModule.class, TestDbiModule.class})
-public class OverdueTestBase {
+public abstract class OverdueTestBase extends OverdueTestSuiteWithEmbeddedDB {
     protected final String configXml =
             "<overdueConfig>" +
                     "   <bundleOverdueStates>" +
@@ -129,30 +124,18 @@ public class OverdueTestBase {
 
     protected Account account;
     protected SubscriptionBundle bundle;
-    protected String productName;
-    protected BillingPeriod term;
-    protected String planSetName;
 
     @Inject
     EntitlementUserApi entitlementApi;
 
     @Inject
     protected DefaultOverdueService service;
+
     @Inject
     protected BusService busService;
-    @Inject
-    protected MysqlTestingHelper helper;
-
-    protected void setupMySQL() throws IOException {
-        final String utilDdl = IOUtils.toString(TestOverdueStateApplicator.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
-        helper.startMysql();
-        helper.initDb(utilDdl);
-    }
 
     @BeforeClass(groups = "slow")
     public void setup() throws Exception {
-
-        setupMySQL();
         service.registerForBus();
         try {
             service.initialize();
@@ -166,14 +149,11 @@ public class OverdueTestBase {
 
     @AfterClass(groups = "slow")
     public void tearDown() throws Exception {
-        helper.stopMysql();
         service.stop();
     }
 
     @BeforeMethod(groups = "slow")
     public void setupTest() throws Exception {
-        // Pre test cleanup
-        helper.cleanupAllTables();
         clock.resetDeltaFromReality();
     }
 

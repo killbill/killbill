@@ -23,6 +23,7 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 
 import org.mockito.Mockito;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.google.inject.Inject;
@@ -34,7 +35,6 @@ import com.ning.billing.overdue.OverdueTestBase;
 import com.ning.billing.overdue.config.OverdueConfig;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.config.XMLLoader;
-import junit.framework.Assert;
 
 import static com.jayway.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -49,7 +49,7 @@ public class TestOverdueStateApplicator extends OverdueTestBase {
     @Inject
     Bus bus;
 
-    @Test(groups = {"slow"}, enabled = true)
+    @Test(groups = "slow")
     public void testApplicator() throws Exception {
         bus.register(listener);
         bus.start();
@@ -83,16 +83,13 @@ public class TestOverdueStateApplicator extends OverdueTestBase {
         await().atMost(10, SECONDS).until(new Callable<Boolean>() {
             @Override
             public Boolean call() throws Exception {
-                List<OverdueChangeEvent> events = listener.getEventsReceived();
+                final List<OverdueChangeEvent> events = listener.getEventsReceived();
                 return events.size() == 1;
             }
         });
-        List<OverdueChangeEvent> events = listener.getEventsReceived();
+        final List<OverdueChangeEvent> events = listener.getEventsReceived();
         Assert.assertEquals(1, events.size());
         Assert.assertEquals(state, events.get(0).getNextOverdueStateName());
         listener.clearEventsReceived();
-
     }
-
-
 }

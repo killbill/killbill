@@ -32,11 +32,12 @@ import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceUserApi;
+import com.ning.billing.overdue.OverdueTestSuite;
 import com.ning.billing.overdue.config.api.BillingState;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 
-public class TestBillingStateCalculator {
+public class TestBillingStateCalculator extends OverdueTestSuite {
     Clock clock = new ClockMock();
     InvoiceUserApi invoiceApi = Mockito.mock(InvoiceUserApi.class);
     DateTime now;
@@ -69,7 +70,7 @@ public class TestBillingStateCalculator {
         return invoice;
     }
 
-    @Test(groups = {"fast"}, enabled = true)
+    @Test(groups = "fast")
     public void testUnpaidInvoices() {
         final BillingStateCalculator<SubscriptionBundle> calc = createBSCalc();
         final SortedSet<Invoice> invoices = calc.unpaidInvoicesForAccount(new UUID(0L, 0L));
@@ -79,17 +80,15 @@ public class TestBillingStateCalculator {
         Assert.assertEquals(new BigDecimal("100.0").compareTo(invoices.last().getBalance()), 0);
     }
 
-    @Test(groups = {"fast"}, enabled = true)
+    @Test(groups = "fast")
     public void testSum() {
-
         final BillingStateCalculator<SubscriptionBundle> calc = createBSCalc();
         final SortedSet<Invoice> invoices = calc.unpaidInvoicesForAccount(new UUID(0L, 0L));
         Assert.assertEquals(new BigDecimal("110.0").compareTo(calc.sumBalance(invoices)), 0);
     }
 
-    @Test(groups = {"fast"}, enabled = true)
+    @Test(groups = "fast")
     public void testEarliest() {
-
         final BillingStateCalculator<SubscriptionBundle> calc = createBSCalc();
         final SortedSet<Invoice> invoices = calc.unpaidInvoicesForAccount(new UUID(0L, 0L));
         Assert.assertEquals(calc.earliest(invoices).getInvoiceDate(), now);

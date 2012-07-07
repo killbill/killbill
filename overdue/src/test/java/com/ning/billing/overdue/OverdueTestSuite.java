@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2012 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -14,18 +14,9 @@
  * under the License.
  */
 
-package com.ning.billing.overdue.config.io;
+package com.ning.billing.overdue;
 
-import org.testng.annotations.Test;
+import com.ning.billing.KillbillTestSuite;
 
-import com.google.common.io.Resources;
-import com.ning.billing.overdue.OverdueTestSuite;
-import com.ning.billing.overdue.config.OverdueConfig;
-import com.ning.billing.util.config.XMLLoader;
-
-public class TestReadConfig extends OverdueTestSuite {
-    @Test(groups = "fast")
-    public void testConfigLoad() throws Exception {
-        XMLLoader.getObjectFromString(Resources.getResource("OverdueConfig.xml").toExternalForm(), OverdueConfig.class);
-    }
+public abstract class OverdueTestSuite extends KillbillTestSuite {
 }

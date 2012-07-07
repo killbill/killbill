@@ -33,6 +33,7 @@ import org.testng.annotations.Test;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
+import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.catalog.DefaultCatalogService;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.config.CatalogConfig;
@@ -51,6 +52,7 @@ import com.ning.billing.ovedue.notification.DefaultOverdueCheckNotifier;
 import com.ning.billing.ovedue.notification.DefaultOverdueCheckPoster;
 import com.ning.billing.ovedue.notification.OverdueCheckPoster;
 import com.ning.billing.overdue.OverdueProperties;
+import com.ning.billing.overdue.OverdueTestSuiteWithEmbeddedDB;
 import com.ning.billing.overdue.glue.DefaultOverdueModule;
 import com.ning.billing.overdue.listener.OverdueListener;
 import com.ning.billing.util.bus.Bus;
@@ -73,12 +75,11 @@ import com.ning.billing.util.tag.dao.TagDao;
 import static com.jayway.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
-public class TestOverdueCheckNotifier {
+public class TestOverdueCheckNotifier extends OverdueTestSuiteWithEmbeddedDB {
     private Clock clock;
     private DefaultOverdueCheckNotifier notifier;
 
     private Bus eventBus;
-    private MysqlTestingHelper helper;
     private OverdueListenerMock listener;
     private NotificationQueueService notificationQueueService;
 
@@ -103,14 +104,11 @@ public class TestOverdueCheckNotifier {
         public UUID getLatestSubscriptionId() {
             return latestSubscriptionId;
         }
-
     }
 
-    @BeforeClass(groups = {"slow"})
+    @BeforeClass(groups = "slow")
     public void setup() throws ServiceException, IOException, ClassNotFoundException, SQLException, EntitlementUserApiException {
-        //TestApiBase.loadSystemPropertiesFromClasspath("/entitlement.properties");
         final Injector g = Guice.createInjector(Stage.PRODUCTION, new MockInvoiceModule(), new MockPaymentModule(), new BusModule(), new DefaultOverdueModule() {
-
             protected void configure() {
                 super.configure();
                 bind(Clock.class).to(ClockMock.class).asEagerSingleton();
@@ -121,7 +119,7 @@ public class TestOverdueCheckNotifier {
                 final CatalogConfig catalogConfig = new ConfigurationObjectFactory(System.getProperties()).build(CatalogConfig.class);
                 bind(CatalogConfig.class).toInstance(catalogConfig);
                 bind(CatalogService.class).to(DefaultCatalogService.class).asEagerSingleton();
-                final MysqlTestingHelper helper = new MysqlTestingHelper();
+                final MysqlTestingHelper helper = KillbillTestSuiteWithEmbeddedDB.getMysqlTestingHelper();
                 bind(MysqlTestingHelper.class).toInstance(helper);
                 final IDBI dbi = helper.getDBI();
                 bind(IDBI.class).toInstance(dbi);
@@ -136,7 +134,6 @@ public class TestOverdueCheckNotifier {
         clock = g.getInstance(Clock.class);
 
         eventBus = g.getInstance(Bus.class);
-        helper = g.getInstance(MysqlTestingHelper.class);
         notificationQueueService = g.getInstance(NotificationQueueService.class);
 
         final OverdueProperties properties = g.getInstance(OverdueProperties.class);
@@ -149,22 +146,12 @@ public class TestOverdueCheckNotifier {
         notifier = new DefaultOverdueCheckNotifier(notificationQueueService,
                                                    properties, listener);
 
-        startMysql();
         eventBus.start();
         notifier.initialize();
         notifier.start();
     }
 
-    private void startMysql() throws IOException, ClassNotFoundException, SQLException {
-        final String ddl = IOUtils.toString(NotificationSqlDao.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
-        final String testDdl = IOUtils.toString(NotificationSqlDao.class.getResourceAsStream("/com/ning/billing/util/ddl_test.sql"));
-
-        helper.startMysql();
-        helper.initDb(ddl);
-        helper.initDb(testDdl);
-    }
-
-    @Test(enabled = true, groups = "slow")
+    @Test(groups = "slow")
     public void test() throws Exception {
         final UUID subscriptionId = new UUID(0L, 1L);
         final Blockable blockable = Mockito.mock(Subscription.class);
@@ -193,6 +180,5 @@ public class TestOverdueCheckNotifier {
     public void tearDown() {
         eventBus.stop();
         notifier.stop();
-        helper.stopMysql();
     }
 }

@@ -27,6 +27,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.junction.api.Blockable;
+import com.ning.billing.overdue.OverdueTestSuite;
 import com.ning.billing.overdue.config.api.BillingState;
 import com.ning.billing.overdue.config.api.PaymentResponse;
 import com.ning.billing.util.config.XMLLoader;
@@ -35,12 +36,11 @@ import com.ning.billing.util.tag.DefaultControlTag;
 import com.ning.billing.util.tag.DescriptiveTag;
 import com.ning.billing.util.tag.Tag;
 
-public class TestCondition {
-
+public class TestCondition extends OverdueTestSuite {
     @XmlRootElement(name = "condition")
     private static class MockCondition extends DefaultCondition<Blockable> {}
 
-    @Test(groups = {"fast"}, enabled = true)
+    @Test(groups = "fast")
     public void testNumberOfUnpaidInvoicesEqualsOrExceeds() throws Exception {
         final String xml =
                 "<condition>" +
@@ -59,7 +59,7 @@ public class TestCondition {
         Assert.assertTrue(c.evaluate(state2, new DateTime()));
     }
 
-    @Test(groups = {"fast"}, enabled = true)
+    @Test(groups = "fast")
     public void testTotalUnpaidInvoiceBalanceEqualsOrExceeds() throws Exception {
         final String xml =
                 "<condition>" +
@@ -78,8 +78,7 @@ public class TestCondition {
         Assert.assertTrue(c.evaluate(state2, new DateTime()));
     }
 
-
-    @Test(groups = {"fast"}, enabled = true)
+    @Test(groups = "fast")
     public void testTimeSinceEarliestUnpaidInvoiceEqualsOrExceeds() throws Exception {
         final String xml =
                 "<condition>" +
@@ -100,7 +99,7 @@ public class TestCondition {
         Assert.assertTrue(c.evaluate(state2, now));
     }
 
-    @Test(groups = {"fast"}, enabled = true)
+    @Test(groups = "fast")
     public void testResponseForLastFailedPaymentIn() throws Exception {
         final String xml =
                 "<condition>" +
@@ -121,7 +120,7 @@ public class TestCondition {
         Assert.assertTrue(c.evaluate(state2, now));
     }
 
-    @Test(groups = {"fast"}, enabled = true)
+    @Test(groups = "fast")
     public void testHasControlTag() throws Exception {
         final String xml =
                 "<condition>" +
@@ -136,15 +135,13 @@ public class TestCondition {
         final BillingState<Blockable> state0 = new BillingState<Blockable>(new UUID(0L, 1L), 0, BigDecimal.ZERO, null, unpaidInvoiceId, PaymentResponse.LOST_OR_STOLEN_CARD, new Tag[]{new DefaultControlTag(ControlTagType.AUTO_INVOICING_OFF), new DescriptiveTag("Tag")});
         final BillingState<Blockable> state1 = new BillingState<Blockable>(new UUID(0L, 1L), 1, new BigDecimal("100.00"), now.minusDays(10), unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{new DefaultControlTag(ControlTagType.OVERDUE_ENFORCEMENT_OFF)});
         final BillingState<Blockable> state2 = new BillingState<Blockable>(new UUID(0L, 1L), 1, new BigDecimal("200.00"), now.minusDays(20), unpaidInvoiceId,
-                                                                     PaymentResponse.DO_NOT_HONOR,
-                                                                     new Tag[]{new DefaultControlTag(ControlTagType.OVERDUE_ENFORCEMENT_OFF),
-                                                                             new DefaultControlTag(ControlTagType.AUTO_INVOICING_OFF),
-                                                                             new DescriptiveTag("Tag")});
+                                                                           PaymentResponse.DO_NOT_HONOR,
+                                                                           new Tag[]{new DefaultControlTag(ControlTagType.OVERDUE_ENFORCEMENT_OFF),
+                                                                                   new DefaultControlTag(ControlTagType.AUTO_INVOICING_OFF),
+                                                                                   new DescriptiveTag("Tag")});
 
         Assert.assertTrue(!c.evaluate(state0, now));
         Assert.assertTrue(c.evaluate(state1, now));
         Assert.assertTrue(c.evaluate(state2, now));
     }
-
-
 }

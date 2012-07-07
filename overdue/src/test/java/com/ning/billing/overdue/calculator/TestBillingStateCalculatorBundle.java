@@ -46,7 +46,6 @@ import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 
 public class TestBillingStateCalculatorBundle extends TestBillingStateCalculator {
-
     private List<InvoiceItem> createInvoiceItems(final UUID[] bundleIds) {
         final List<InvoiceItem> result = new ArrayList<InvoiceItem>();
         for (final UUID id : bundleIds) {
@@ -57,7 +56,7 @@ public class TestBillingStateCalculatorBundle extends TestBillingStateCalculator
         return result;
     }
 
-    @Test(groups = {"fast"}, enabled = true)
+    @Test(groups = "fast")
     public void testUnpaidInvoiceForBundle() {
         final UUID thisBundleId = new UUID(0L, 0L);
         final UUID thatBundleId = new UUID(0L, 1L);
@@ -89,7 +88,7 @@ public class TestBillingStateCalculatorBundle extends TestBillingStateCalculator
         Assert.assertEquals(new BigDecimal("10000.0").compareTo(resultinvoices.last().getBalance()), 0);
     }
 
-    @Test(groups = {"fast"}, enabled = true)
+    @Test(groups = "fast")
     public void testcalculateBillingStateForBundle() throws Exception {
         final UUID thisBundleId = new UUID(0L, 0L);
         final UUID thatBundleId = new UUID(0L, 1L);
@@ -136,7 +135,7 @@ public class TestBillingStateCalculatorBundle extends TestBillingStateCalculator
 
     }
 
-    @Test(groups = {"fast"}, enabled = true)
+    @Test(groups = "fast")
     public void testcalculateBillingStateForBundleNoOverdueInvoices() throws Exception {
         final UUID thisBundleId = new UUID(0L, 0L);
 
