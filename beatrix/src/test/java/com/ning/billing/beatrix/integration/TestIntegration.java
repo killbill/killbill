@@ -95,12 +95,15 @@ public class TestIntegration extends TestIntegrationBase {
 
     @Test(groups = {"slow", "stress"}, enabled = true)
     public void stressTestDebug() throws Exception {
-        final int maxIterations = 5;
+        final int maxIterations = 10;
         for (int curIteration = 0; curIteration < maxIterations; curIteration++) {
             log.info("################################  ITERATION " + curIteration + "  #########################");
-            Thread.sleep(1000);
+            if (curIteration != 0) {
+                setupTest();
+            }
             testRepairChangeBPWithAddonIncluded();
-            setupTest();
+            cleanupTest();
+            Thread.sleep(1000);
         }
     }
 

@@ -17,6 +17,7 @@
 package com.ning.billing.invoice.notification;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -26,7 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.ning.billing.invoice.api.DefaultInvoiceService;
-import com.ning.billing.util.notificationq.NotificationKey;
+import com.ning.billing.util.notificationq.Notification;
 import com.ning.billing.util.notificationq.NotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotificationQueue;
@@ -45,14 +46,24 @@ public class DefaultNextBillingDatePoster implements NextBillingDatePoster {
     }
 
     @Override
-    public void insertNextBillingNotification(final Transmogrifier transactionalDao, final UUID acountId, final UUID subscriptionId, final DateTime futureNotificationTime) {
+    public void insertNextBillingNotification(final Transmogrifier transactionalDao, final UUID accountId, final UUID subscriptionId, final DateTime futureNotificationTime) {
         final NotificationQueue nextBillingQueue;
         try {
+
+
             nextBillingQueue = notificationQueueService.getNotificationQueue(DefaultInvoiceService.INVOICE_SERVICE_NAME,
                                                                              DefaultNextBillingDateNotifier.NEXT_BILLING_DATE_NOTIFIER_QUEUE);
             log.info("Queuing next billing date notification. id: {}, timestamp: {}", subscriptionId.toString(), futureNotificationTime.toString());
 
-            nextBillingQueue.recordFutureNotificationFromTransaction(transactionalDao, futureNotificationTime, acountId, new NextBillingDateNotificationKey(subscriptionId));
+
+            List<Notification> existingNotifications =  nextBillingQueue.getNotificationForAccountAndDate(accountId, futureNotificationTime);
+            if (existingNotifications.size() > 0) {
+                log.info(String.format("%s : notification for account %s and date %s already exist, skip...",
+                        DefaultNextBillingDateNotifier.NEXT_BILLING_DATE_NOTIFIER_QUEUE, accountId, futureNotificationTime));
+                return;
+            }
+
+            nextBillingQueue.recordFutureNotificationFromTransaction(transactionalDao, futureNotificationTime, accountId, new NextBillingDateNotificationKey(subscriptionId));
         } catch (NoSuchNotificationQueue e) {
             log.error("Attempting to put items on a non-existent queue (NextBillingDateNotifier).", e);
         } catch (IOException e) {
