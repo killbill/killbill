@@ -17,6 +17,8 @@
 package com.ning.billing.util.notificationq;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
@@ -31,7 +33,7 @@ public interface NotificationQueue extends QueueLifecycle {
      * @param futureNotificationTime the time at which the notification is ready
      * @param notificationKey        the key for that notification
      */
-    public void recordFutureNotification(final DateTime futureNotificationTime, final NotificationKey notificationKey)
+    public void recordFutureNotification(final DateTime futureNotificationTime, final UUID accountId, final NotificationKey notificationKey)
         throws IOException;
 
     /**
@@ -42,7 +44,9 @@ public interface NotificationQueue extends QueueLifecycle {
      * @param notificationKey        the key for that notification
      */
     public void recordFutureNotificationFromTransaction(final Transmogrifier transactionalDao,
-                                                        final DateTime futureNotificationTime, final NotificationKey notificationKey)
+                                                        final DateTime futureNotificationTime,
+                                                        final UUID accountId,
+                                                        final NotificationKey notificationKey)
         throws IOException;
 
 
@@ -52,6 +56,13 @@ public interface NotificationQueue extends QueueLifecycle {
      * @param key
      */
     public void removeNotificationsByKey(final NotificationKey notificationKey);
+
+
+
+    public List<Notification> getNotificationForAccountAndDate(final UUID accountId, final DateTime effectiveDate);
+
+    public void removeNotification(final UUID notificationId);
+
 
     /**
      * This is only valid when the queue has been configured with isNotificationProcessingOff is true

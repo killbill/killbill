@@ -63,6 +63,9 @@ import static org.testng.Assert.assertEquals;
 @Guice(modules = TestNotificationQueue.TestNotificationQueueModule.class)
 public class TestNotificationQueue {
     Logger log = LoggerFactory.getLogger(TestNotificationQueue.class);
+
+    private static final UUID accountId = UUID.randomUUID();
+
     @Inject
     private IDBI dbi;
 
@@ -86,9 +89,9 @@ public class TestNotificationQueue {
         helper.initDb(testDdl);
     }
 
-    
+
     private final static class TestNotificationKey implements NotificationKey, Comparable<TestNotificationKey> {
-        
+
         private final String value;
 
         @JsonCreator
@@ -106,8 +109,8 @@ public class TestNotificationQueue {
             return value.compareTo(arg0.value);
         }
     }
-    
-    
+
+
     @BeforeSuite(groups = "slow")
     public void setup() throws Exception {
         startMysql();
@@ -184,7 +187,7 @@ public class TestNotificationQueue {
 
                 transactional.insertDummy(obj);
                 queue.recordFutureNotificationFromTransaction(transactional,
-                        readyTime, notificationKey);
+                        readyTime, accountId, notificationKey);
                 log.info("Posted key: " + notificationKey);
 
                 return null;
@@ -245,7 +248,7 @@ public class TestNotificationQueue {
 
                     transactional.insertDummy(obj);
                     queue.recordFutureNotificationFromTransaction(transactional,
-                            now.plus((currentIteration + 1) * nextReadyTimeIncrementMs), notificationKey);
+                            now.plus((currentIteration + 1) * nextReadyTimeIncrementMs), accountId, notificationKey);
                     return null;
                 }
             });
@@ -348,7 +351,7 @@ public class TestNotificationQueue {
         final NotificationKey notificationKeyFred = new TestNotificationKey("Fred");
 
 
-        final NotificationKey notificationKeyBarney = new TestNotificationKey("Barney"); 
+        final NotificationKey notificationKeyBarney = new TestNotificationKey("Barney");
 
         expectedNotificationsFred.put(notificationKeyFred, Boolean.FALSE);
         expectedNotificationsFred.put(notificationKeyBarney, Boolean.FALSE);
@@ -362,10 +365,10 @@ public class TestNotificationQueue {
 
                 transactional.insertDummy(obj);
                 queueFred.recordFutureNotificationFromTransaction(transactional,
-                        readyTime, notificationKeyFred);
+                        readyTime, accountId, notificationKeyFred);
                 log.info("posted key: " + notificationKeyFred.toString());
                 queueBarney.recordFutureNotificationFromTransaction(transactional,
-                        readyTime, notificationKeyBarney);
+                        readyTime, accountId, notificationKeyBarney);
                 log.info("posted key: " + notificationKeyBarney.toString());
 
                 return null;
@@ -444,11 +447,11 @@ public class TestNotificationQueue {
                     final TransactionStatus status) throws Exception {
 
                 queue.recordFutureNotificationFromTransaction(transactional,
-                        start.plus(nextReadyTimeIncrementMs), notificationKey);
+                        start.plus(nextReadyTimeIncrementMs), accountId, notificationKey);
                 queue.recordFutureNotificationFromTransaction(transactional,
-                        start.plus(2 * nextReadyTimeIncrementMs), notificationKey);
+                        start.plus(2 * nextReadyTimeIncrementMs), accountId, notificationKey);
                 queue.recordFutureNotificationFromTransaction(transactional,
-                        start.plus(3 * nextReadyTimeIncrementMs), notificationKey2);
+                        start.plus(3 * nextReadyTimeIncrementMs), accountId, notificationKey2);
                 return null;
             }
         });

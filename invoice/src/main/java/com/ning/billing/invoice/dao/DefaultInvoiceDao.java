@@ -160,8 +160,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
                     audits.addAll(createAudits(TableName.INVOICE_ITEMS, recordIdList));
 
                     final List<InvoiceItem> recurringInvoiceItems = invoice.getInvoiceItems(RecurringInvoiceItem.class);
-
-                    notifyOfFutureBillingEvents(transactional, invoice, recurringInvoiceItems, billCycleDay);
+                    notifyOfFutureBillingEvents(transactional, invoice.getAccountId(), billCycleDay, recurringInvoiceItems);
 
                     final List<InvoicePayment> invoicePayments = invoice.getPayments();
                     final InvoicePaymentSqlDao invoicePaymentSqlDao = transactional.become(InvoicePaymentSqlDao.class);
@@ -507,7 +506,8 @@ public class DefaultInvoiceDao implements InvoiceDao {
         invoice.addPayments(invoicePayments);
     }
 
-    private void notifyOfFutureBillingEvents(final InvoiceSqlDao dao, final Invoice invoice, final List<InvoiceItem> invoiceItems, final int billCycleDay) {
+
+    private void notifyOfFutureBillingEvents(final InvoiceSqlDao dao, final UUID accountId, final int billCycleDay, final List<InvoiceItem> invoiceItems) {
         DateTime nextBCD = null;
         UUID subscriptionForNextBCD = null;
         for (final InvoiceItem item : invoiceItems) {
@@ -523,7 +523,6 @@ public class DefaultInvoiceDao implements InvoiceDao {
                 }
             }
         }
-
         // We need to be notified if and only if the maximum end date of the invoiced recurring items is equal
         // to the next bill cycle day.
         // We take the maximum because we're guaranteed to have invoiced all subscriptions up until that date
@@ -531,8 +530,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
         // Also, we only need to get notified on the BDC. For other invoice events (e.g. phase changes),
         // we'll be notified by entitlement.
         if (subscriptionForNextBCD != null && nextBCD != null && nextBCD.getDayOfMonth() == billCycleDay) {
-            final UUID accountId = invoice.getAccountId();
-            nextBillingDatePoster.insertNextBillingNotification(dao, subscriptionForNextBCD, nextBCD);
+            nextBillingDatePoster.insertNextBillingNotification(dao, accountId, subscriptionForNextBCD, nextBCD);
         }
     }
 }

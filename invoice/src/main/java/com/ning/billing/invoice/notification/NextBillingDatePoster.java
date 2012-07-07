@@ -23,7 +23,7 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
 public interface NextBillingDatePoster {
 
-    void insertNextBillingNotification(Transmogrifier transactionalDao,
+    void insertNextBillingNotification(Transmogrifier transactionalDao, UUID accountId,
                                        UUID subscriptionId, DateTime futureNotificationTime);
 
 }

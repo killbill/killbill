@@ -625,6 +625,7 @@ public class AuditedEntitlementDao implements EntitlementDao {
         });
     }
 
+    @Override
     public void repair(final UUID accountId, final UUID bundleId, final List<SubscriptionDataRepair> inRepair, final CallContext context) {
         subscriptionsDao.inTransaction(new Transaction<Void, SubscriptionSqlDao>() {
             @Override
@@ -673,7 +674,7 @@ public class AuditedEntitlementDao implements EntitlementDao {
         try {
             final NotificationQueue subscriptionEventQueue = notificationQueueService.getNotificationQueue(Engine.ENTITLEMENT_SERVICE_NAME,
                                                                                                            Engine.NOTIFICATION_QUEUE_NAME);
-            subscriptionEventQueue.recordFutureNotificationFromTransaction(transactionalDao, effectiveDate, notificationKey);
+            subscriptionEventQueue.recordFutureNotificationFromTransaction(transactionalDao, effectiveDate, null, notificationKey);
         } catch (NoSuchNotificationQueue e) {
             throw new RuntimeException(e);
         } catch (IOException e) {
