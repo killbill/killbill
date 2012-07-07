@@ -13,24 +13,9 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
 package com.ning.billing.invoice.api;
 
-import java.math.BigDecimal;
-import java.util.UUID;
 
-import org.joda.time.DateTime;
-
-import com.ning.billing.catalog.api.Currency;
-
-public interface InvoiceCreationEvent extends InvoiceEvent {
-
-    public UUID getInvoiceId();
-
-    public BigDecimal getAmountOwed();
-
-    public Currency getCurrency();
-
-    public DateTime getInvoiceCreationDate();
+public interface NullInvoiceEvent extends InvoiceEvent {
 
 }

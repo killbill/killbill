@@ -49,7 +49,7 @@ import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.invoice.api.EmptyInvoiceEvent;
+import com.ning.billing.invoice.api.NullInvoiceEvent;
 import com.ning.billing.invoice.api.InvoiceCreationEvent;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
 import com.ning.billing.jaxrs.json.SubscriptionJsonNoEvents;
@@ -295,7 +295,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
         }
 
         @Override
-        public void onEmptyInvoice(final EmptyInvoiceEvent curEvent) {
+        public void onEmptyInvoice(final NullInvoiceEvent curEvent) {
             log.info(String.format("Got event EmptyInvoiceNotification token = %s ", curEvent.getUserToken())); 
             notifyForCompletion();
         }

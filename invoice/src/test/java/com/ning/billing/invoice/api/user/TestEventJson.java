@@ -23,7 +23,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.invoice.api.EmptyInvoiceEvent;
+import com.ning.billing.invoice.api.NullInvoiceEvent;
 import com.ning.billing.invoice.api.InvoiceCreationEvent;
 import com.ning.billing.util.jackson.ObjectMapper;
 
@@ -45,11 +45,11 @@ public class TestEventJson {
     @Test(groups = {"fast"})
     public void testEmptyInvoiceEvent() throws Exception {
 
-        final EmptyInvoiceEvent e = new DefaultEmptyInvoiceEvent(UUID.randomUUID(), new DateTime(), UUID.randomUUID());
+        final NullInvoiceEvent e = new DefaultNullInvoiceEvent(UUID.randomUUID(), new DateTime(), UUID.randomUUID());
 
         final String json = mapper.writeValueAsString(e);
 
-        final Class<?> claz = Class.forName(DefaultEmptyInvoiceEvent.class.getName());
+        final Class<?> claz = Class.forName(DefaultNullInvoiceEvent.class.getName());
         final Object obj = mapper.readValue(json, claz);
         Assert.assertTrue(obj.equals(e));
     }

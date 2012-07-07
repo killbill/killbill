@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -15,8 +15,10 @@
  */
 package com.ning.billing.invoice.api;
 
+import java.util.UUID;
+
 import com.ning.billing.util.bus.BusEvent;
 
-public interface EmptyInvoiceEvent extends BusEvent {
-
+public interface InvoiceEvent extends BusEvent {
+    public UUID getAccountId();
 }

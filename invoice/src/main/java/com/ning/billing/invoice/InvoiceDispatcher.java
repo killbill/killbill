@@ -41,7 +41,7 @@ import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceCreationEvent;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceNotifier;
-import com.ning.billing.invoice.api.user.DefaultEmptyInvoiceEvent;
+import com.ning.billing.invoice.api.user.DefaultNullInvoiceEvent;
 import com.ning.billing.invoice.api.user.DefaultInvoiceCreationEvent;
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.generator.InvoiceGenerator;
@@ -159,7 +159,7 @@ public class InvoiceDispatcher {
                 log.info("Generated null invoice.");
                 outputDebugData(billingEvents, invoices);
                 if (!dryRun) {
-                    final BusEvent event = new DefaultEmptyInvoiceEvent(accountId, clock.getUTCNow(), context.getUserToken());
+                    final BusEvent event = new DefaultNullInvoiceEvent(accountId, clock.getUTCNow(), context.getUserToken());
                     postEvent(event, accountId);
                 }
             } else {

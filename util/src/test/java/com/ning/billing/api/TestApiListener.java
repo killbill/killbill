@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -28,6 +28,7 @@ import com.google.common.eventbus.Subscribe;
 import com.ning.billing.entitlement.api.timeline.RepairEntitlementEvent;
 import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.invoice.api.InvoiceCreationEvent;
+import com.ning.billing.invoice.api.InvoiceEvent;
 import com.ning.billing.payment.api.PaymentErrorEvent;
 import com.ning.billing.payment.api.PaymentInfoEvent;
 
@@ -122,11 +123,10 @@ public class TestApiListener {
     }
 
     @Subscribe
-    public void handleInvoiceEvents(final InvoiceCreationEvent event) {
+    public void handleInvoiceEvents(final InvoiceEvent event) {
         log.info(String.format("TestApiListener Got Invoice event %s", event.toString()));
         assertEqualsNicely(NextEvent.INVOICE);
         notifyIfStackEmpty();
-
     }
 
     @Subscribe

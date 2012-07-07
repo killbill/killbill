@@ -93,6 +93,18 @@ public class TestIntegration extends TestIntegrationBase {
     }
 
 
+    @Test(groups = {"slow", "stress"}, enabled = true)
+    public void stressTestDebug() throws Exception {
+        final int maxIterations = 5;
+        for (int curIteration = 0; curIteration < maxIterations; curIteration++) {
+            log.info("################################  ITERATION " + curIteration + "  #########################");
+            Thread.sleep(1000);
+            testRepairChangeBPWithAddonIncluded();
+            setupTest();
+        }
+    }
+
+
     @Test(groups = "slow", enabled = true)
     public void testRepairChangeBPWithAddonIncluded() throws Exception {
 
@@ -146,9 +158,13 @@ public class TestIntegration extends TestIntegrationBase {
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
         busHandler.pushExpectedEvent(NextEvent.PAYMENT);
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
-        busHandler.pushExpectedEvent(NextEvent.PAYMENT);
+        busHandler.pushExpectedEvent(NextEvent.INVOICE);
         log.info("Moving clock from" + clock.getUTCNow() + " to " + clock.getUTCNow().plusDays(28));
         clock.addDays(28);// 26 / 5
+
+
+        Thread.sleep(1000000);
+
         assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
 
