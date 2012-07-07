@@ -41,7 +41,6 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
-@Test(groups = "slow")
 @Guice(modules = {BeatrixModule.class})
 public class TestIntegration extends TestIntegrationBase {
     @Test(groups = "slow", enabled = true)
