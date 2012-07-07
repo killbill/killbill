@@ -112,6 +112,7 @@ public class TestNextBillingDateNotifier {
         //TestApiBase.loadSystemPropertiesFromClasspath("/entitlement.properties");
         final Injector g = Guice.createInjector(Stage.PRODUCTION, new AbstractModule() {
 
+            @Override
             protected void configure() {
                 install(new MockClockModule());
                 install(new BusModule(BusType.MEMORY));
@@ -165,6 +166,8 @@ public class TestNextBillingDateNotifier {
 
     @Test(enabled = true, groups = "slow")
     public void testInvoiceNotifier() throws Exception {
+
+        final UUID accountId = UUID.randomUUID();
         final UUID subscriptionId = new UUID(0L, 1L);
         final DateTime now = new DateTime();
         final DateTime readyTime = now.plusMillis(2000);
@@ -180,7 +183,7 @@ public class TestNextBillingDateNotifier {
             public Void inTransaction(final DummySqlTest transactional,
                                       final TransactionStatus status) throws Exception {
 
-                poster.insertNextBillingNotification(transactional, subscriptionId, readyTime);
+                poster.insertNextBillingNotification(transactional, accountId, subscriptionId, readyTime);
                 return null;
             }
         });

@@ -32,11 +32,12 @@ public class DefaultNotification extends EntityBase implements Notification {
     private final String notificationKeyClass;
     private final String notificationKey;
     private final DateTime effectiveDate;
+    private final UUID accountId;
 
 
     public DefaultNotification(final long ordering, final UUID id, final String createdOwner, final String owner, final String queueName, final DateTime nextAvailableDate,
                                final PersistentQueueEntryLifecycleState lifecycleState,
-                               final String notificationKeyClass, final String notificationKey, final DateTime effectiveDate) {
+                               final String notificationKeyClass, final String notificationKey, final UUID accountId, final DateTime effectiveDate) {
         super(id);
         this.ordering = ordering;
         this.owner = owner;
@@ -46,11 +47,12 @@ public class DefaultNotification extends EntityBase implements Notification {
         this.lifecycleState = lifecycleState;
         this.notificationKeyClass = notificationKeyClass;
         this.notificationKey = notificationKey;
+        this.accountId = accountId;
         this.effectiveDate = effectiveDate;
     }
 
-    public DefaultNotification(final String queueName, final String createdOwner, final String notificationKeyClass, final String notificationKey, final DateTime effectiveDate) {
-        this(-1L, UUID.randomUUID(), createdOwner, null, queueName, null, PersistentQueueEntryLifecycleState.AVAILABLE, notificationKeyClass, notificationKey, effectiveDate);
+    public DefaultNotification(final String queueName, final String createdOwner, final String notificationKeyClass, final String notificationKey, final UUID accountId, final DateTime effectiveDate) {
+        this(-1L, UUID.randomUUID(), createdOwner, null, queueName, null, PersistentQueueEntryLifecycleState.AVAILABLE, notificationKeyClass, notificationKey, accountId, effectiveDate);
     }
 
     @Override
@@ -97,7 +99,7 @@ public class DefaultNotification extends EntityBase implements Notification {
         return notificationKeyClass;
     }
 
-    
+
     @Override
     public String getNotificationKey() {
         return notificationKey;
@@ -116,5 +118,10 @@ public class DefaultNotification extends EntityBase implements Notification {
     @Override
     public String getCreatedOwner() {
         return createdOwner;
+    }
+
+    @Override
+    public UUID getAccountId() {
+        return accountId;
     }
 }

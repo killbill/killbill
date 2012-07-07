@@ -171,7 +171,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
 
                     List<InvoiceItem> recurringInvoiceItems = invoice.getInvoiceItems(RecurringInvoiceItem.class);
 
-                    notifyOfFutureBillingEvents(transactional, recurringInvoiceItems);
+                    notifyOfFutureBillingEvents(transactional, invoice.getAccountId(), recurringInvoiceItems);
 
                     final List<InvoicePayment> invoicePayments = invoice.getPayments();
                     final InvoicePaymentSqlDao invoicePaymentSqlDao = transactional.become(InvoicePaymentSqlDao.class);
@@ -525,7 +525,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
         invoice.addPayments(invoicePayments);
     }
 
-    private void notifyOfFutureBillingEvents(final InvoiceSqlDao dao, final List<InvoiceItem> invoiceItems) {
+    private void notifyOfFutureBillingEvents(final InvoiceSqlDao dao, final UUID accountId, final List<InvoiceItem> invoiceItems) {
         DateTime nextBCD = null;
         UUID subscriptionForNextBCD = null;
         for (final InvoiceItem item : invoiceItems) {
@@ -544,7 +544,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
             }
         }
         if (subscriptionForNextBCD != null) {
-            nextBillingDatePoster.insertNextBillingNotification(dao, subscriptionForNextBCD, nextBCD);
+            nextBillingDatePoster.insertNextBillingNotification(dao, accountId, subscriptionForNextBCD, nextBCD);
         }
     }
 }

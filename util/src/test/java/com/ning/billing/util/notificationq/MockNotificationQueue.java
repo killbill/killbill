@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.TreeSet;
+import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
@@ -51,17 +52,17 @@ public class MockNotificationQueue extends NotificationQueueBase implements Noti
     }
 
     @Override
-    public void recordFutureNotification(final DateTime futureNotificationTime, final NotificationKey notificationKey) throws IOException {
+    public void recordFutureNotification(final DateTime futureNotificationTime, final UUID accountId, final NotificationKey notificationKey) throws IOException {
         final String json = objectMapper.writeValueAsString(notificationKey);
-        final Notification notification = new DefaultNotification("MockQueue", getHostname(), notificationKey.getClass().getName(), json, futureNotificationTime);
+        final Notification notification = new DefaultNotification("MockQueue", getHostname(), notificationKey.getClass().getName(), json, accountId, futureNotificationTime);
         synchronized (notifications) {
             notifications.add(notification);
         }
     }
 
     @Override
-    public void recordFutureNotificationFromTransaction(final Transmogrifier transactionalDao, final DateTime futureNotificationTime, final NotificationKey notificationKey) throws IOException {
-        recordFutureNotification(futureNotificationTime, notificationKey);
+    public void recordFutureNotificationFromTransaction(final Transmogrifier transactionalDao, final DateTime futureNotificationTime, final UUID accountId, final NotificationKey notificationKey) throws IOException {
+        recordFutureNotification(futureNotificationTime, accountId, notificationKey);
     }
 
     public List<Notification> getPendingEvents() {
@@ -98,7 +99,7 @@ public class MockNotificationQueue extends NotificationQueueBase implements Noti
             final DefaultNotification processedNotification = new DefaultNotification(-1L, cur.getId(), getHostname(), getHostname(),
                                                                                       "MockQueue", getClock().getUTCNow().plus(CLAIM_TIME_MS),
                                                                                       PersistentQueueEntryLifecycleState.PROCESSED, cur.getNotificationKeyClass(),
-                                                                                      cur.getNotificationKey(), cur.getEffectiveDate());
+                                                                                      cur.getNotificationKey(), cur.getAccountId(), cur.getEffectiveDate());
             oldNotifications.add(cur);
             processedNotifications.add(processedNotification);
         }
@@ -130,5 +131,18 @@ public class MockNotificationQueue extends NotificationQueueBase implements Noti
                 notifications.removeAll(toClearNotifications);
             }
         }
+    }
+
+    @Override
+    public List<Notification> getNotificationForAccountAndDate(UUID accountId,
+            DateTime effectiveDate) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void removeNotification(UUID notificationId) {
+        // TODO Auto-generated method stub
+
     }
 }

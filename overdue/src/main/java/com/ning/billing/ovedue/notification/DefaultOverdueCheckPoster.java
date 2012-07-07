@@ -50,11 +50,11 @@ public class DefaultOverdueCheckPoster implements OverdueCheckPoster {
                                                                               DefaultOverdueCheckNotifier.OVERDUE_CHECK_NOTIFIER_QUEUE);
             log.info("Queuing overdue check notification. id: {}, timestamp: {}", overdueable.getId().toString(), futureNotificationTime.toString());
 
-            checkOverdueQueue.recordFutureNotification(futureNotificationTime, new OverdueCheckNotificationKey(overdueable.getId()));
+            checkOverdueQueue.recordFutureNotification(futureNotificationTime, null, new OverdueCheckNotificationKey(overdueable.getId()));
         } catch (NoSuchNotificationQueue e) {
             log.error("Attempting to put items on a non-existent queue (DefaultOverdueCheck).", e);
         } catch (IOException e) {
-            log.error("Failed to serialize notifcationKey for {}", overdueable.toString());            
+            log.error("Failed to serialize notifcationKey for {}", overdueable.toString());
         }
     }
 

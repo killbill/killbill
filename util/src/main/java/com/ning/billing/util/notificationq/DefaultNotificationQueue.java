@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.IDBI;
@@ -69,23 +70,26 @@ public class DefaultNotificationQueue extends NotificationQueueBase {
     }
 
     @Override
-    public void recordFutureNotification(final DateTime futureNotificationTime, final NotificationKey notificationKey) throws IOException {
-        recordFutureNotificationInternal(futureNotificationTime, notificationKey, dao);
+    public void recordFutureNotification(final DateTime futureNotificationTime, final UUID accountId, final NotificationKey notificationKey) throws IOException {
+        recordFutureNotificationInternal(futureNotificationTime, accountId, notificationKey, dao);
     }
 
     @Override
     public void recordFutureNotificationFromTransaction(final Transmogrifier transactionalDao,
                                                         final DateTime futureNotificationTime,
+                                                        final UUID accountId,
                                                         final NotificationKey notificationKey) throws IOException {
         final NotificationSqlDao transactionalNotificationDao = transactionalDao.become(NotificationSqlDao.class);
-        recordFutureNotificationInternal(futureNotificationTime, notificationKey, transactionalNotificationDao);
+        recordFutureNotificationInternal(futureNotificationTime, accountId, notificationKey, transactionalNotificationDao);
     }
 
     private void recordFutureNotificationInternal(final DateTime futureNotificationTime,
-                                                  final NotificationKey notificationKey,
+            final UUID accountId,
+            final NotificationKey notificationKey,
+
                                                   final NotificationSqlDao thisDao) throws IOException {
         final String json = objectMapper.writeValueAsString(notificationKey);
-        final Notification notification = new DefaultNotification(getFullQName(), getHostname(), notificationKey.getClass().getName(), json, futureNotificationTime);
+        final Notification notification = new DefaultNotification(getFullQName(), getHostname(), notificationKey.getClass().getName(), json, accountId, futureNotificationTime);
         thisDao.insertNotification(notification);
     }
 
@@ -132,5 +136,15 @@ public class DefaultNotificationQueue extends NotificationQueueBase {
     @Override
     public void removeNotificationsByKey(final NotificationKey notificationKey) {
         dao.removeNotificationsByKey(notificationKey.toString());
+    }
+
+    @Override
+    public List<Notification> getNotificationForAccountAndDate(final UUID accountId, final DateTime effectiveDate) {
+        return dao.getNotificationForAccountAndDate(accountId.toString(), effectiveDate.toDate());
+    }
+
+    @Override
+    public void removeNotification(UUID notificationId) {
+        dao.removeNotification(notificationId.toString());
     }
 }

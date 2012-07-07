@@ -40,6 +40,7 @@ import com.ning.billing.util.io.IOUtils;
 import com.ning.billing.util.notificationq.DefaultNotification;
 import com.ning.billing.util.notificationq.Notification;
 import com.ning.billing.util.notificationq.dao.NotificationSqlDao.NotificationSqlMapper;
+import com.ning.billing.util.queue.PersistentQueueBase;
 import com.ning.billing.util.queue.PersistentQueueEntryLifecycle.PersistentQueueEntryLifecycleState;
 
 import static org.testng.Assert.assertEquals;
@@ -48,6 +49,8 @@ import static org.testng.Assert.assertNotNull;
 @Test(groups = "slow")
 @Guice(modules = TestNotificationSqlDao.TestNotificationSqlDaoModule.class)
 public class TestNotificationSqlDao {
+
+    private static final UUID accountId = UUID.randomUUID();
     private static final String hostname = "Yop";
 
     @Inject
@@ -102,7 +105,7 @@ public class TestNotificationSqlDao {
 
         final String notificationKey = UUID.randomUUID().toString();
         final DateTime effDt = new DateTime();
-        final Notification notif = new DefaultNotification("testBasic", hostname, notificationKey.getClass().getName(), notificationKey, effDt);
+        final Notification notif = new DefaultNotification("testBasic", hostname, notificationKey.getClass().getName(), notificationKey, accountId, effDt);
         dao.insertNotification(notif);
 
         Thread.sleep(1000);
@@ -141,6 +144,36 @@ public class TestNotificationSqlDao {
 
     }
 
+
+
+    @Test
+    public void testGetByAccountAndDate() throws InterruptedException {
+
+
+        final String notificationKey = UUID.randomUUID().toString();
+        final DateTime effDt = new DateTime();
+        final Notification notif1 = new DefaultNotification("testBasic1", hostname, notificationKey.getClass().getName(), notificationKey, accountId, effDt);
+        dao.insertNotification(notif1);
+
+        final Notification notif2 = new DefaultNotification("testBasic2", hostname, notificationKey.getClass().getName(), notificationKey, accountId, effDt);
+        dao.insertNotification(notif2);
+
+
+        List<Notification> notifications =  dao.getNotificationForAccountAndDate(accountId.toString(), effDt.toDate());
+        assertEquals(notifications.size(), 2);
+        for (Notification cur : notifications) {
+            Assert.assertEquals(cur.getProcessingState(), PersistentQueueEntryLifecycleState.AVAILABLE);
+            dao.removeNotification(cur.getId().toString());
+        }
+
+        notifications =  dao.getNotificationForAccountAndDate(accountId.toString(), effDt.toDate());
+        assertEquals(notifications.size(), 2);
+        for (Notification cur : notifications) {
+            Assert.assertEquals(cur.getProcessingState(), PersistentQueueEntryLifecycleState.REMOVED);
+        }
+    }
+
+
     private Notification fetchNotification(final String notificationId) {
         final Notification res = dbi.withHandle(new HandleCallback<Notification>() {
 
@@ -149,7 +182,8 @@ public class TestNotificationSqlDao {
                 final Notification res = handle.createQuery("   select" +
                                                                     " record_id " +
                                                                     ", id" +
-                                                                    ", class_name" +                                                                    
+                                                                    ", class_name" +
+                                                                    ", account_id" +
                                                                     ", notification_key" +
                                                                     ", created_date" +
                                                                     ", creating_owner" +

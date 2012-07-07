@@ -45,18 +45,18 @@ public class DefaultNextBillingDatePoster implements NextBillingDatePoster {
     }
 
     @Override
-    public void insertNextBillingNotification(final Transmogrifier transactionalDao, final UUID subscriptionId, final DateTime futureNotificationTime) {
+    public void insertNextBillingNotification(final Transmogrifier transactionalDao, final UUID acountId, final UUID subscriptionId, final DateTime futureNotificationTime) {
         final NotificationQueue nextBillingQueue;
         try {
             nextBillingQueue = notificationQueueService.getNotificationQueue(DefaultInvoiceService.INVOICE_SERVICE_NAME,
                                                                              DefaultNextBillingDateNotifier.NEXT_BILLING_DATE_NOTIFIER_QUEUE);
             log.info("Queuing next billing date notification. id: {}, timestamp: {}", subscriptionId.toString(), futureNotificationTime.toString());
 
-            nextBillingQueue.recordFutureNotificationFromTransaction(transactionalDao, futureNotificationTime, new NextBillingDateNotificationKey(subscriptionId));
+            nextBillingQueue.recordFutureNotificationFromTransaction(transactionalDao, futureNotificationTime, acountId, new NextBillingDateNotificationKey(subscriptionId));
         } catch (NoSuchNotificationQueue e) {
             log.error("Attempting to put items on a non-existent queue (NextBillingDateNotifier).", e);
         } catch (IOException e) {
-            log.error("Failed to serialize notficationKey for subscriptionId {}", subscriptionId);            
+            log.error("Failed to serialize notficationKey for subscriptionId {}", subscriptionId);
         }
     }
 }

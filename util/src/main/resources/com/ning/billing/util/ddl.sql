@@ -103,6 +103,7 @@ CREATE TABLE notifications (
     id char(36) NOT NULL,
     created_date datetime NOT NULL,
     class_name varchar(256) NOT NULL,
+    account_id  char(36) NOT NULL,
 	notification_key varchar(2048) NOT NULL,
 	creating_owner char(50) NOT NULL,
     effective_date datetime NOT NULL,

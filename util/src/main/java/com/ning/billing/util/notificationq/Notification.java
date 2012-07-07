@@ -16,6 +16,8 @@
 
 package com.ning.billing.util.notificationq;
 
+import java.util.UUID;
+
 import org.joda.time.DateTime;
 
 import com.ning.billing.util.entity.Entity;
@@ -25,10 +27,12 @@ public interface Notification extends PersistentQueueEntryLifecycle, Entity {
     public Long getOrdering();
 
     public String getNotificationKeyClass();
-    
+
     public String getNotificationKey();
 
     public DateTime getEffectiveDate();
 
     public String getQueueName();
+
+    public UUID getAccountId();
 }
