@@ -17,7 +17,6 @@
 package com.ning.billing.util.globallocker;
 
 public class MockGlobalLocker implements GlobalLocker {
-
     @Override
     public GlobalLock lockWithNumberOfTries(final LockerType service,
                                             final String lockKey, final int retry) {

@@ -32,10 +32,8 @@ import com.ning.billing.catalog.api.Duration;
 import com.ning.billing.catalog.api.TimeUnit;
 
 public class ClockMock implements Clock {
-
     private MutablePeriod delta = new MutablePeriod();
     private static final Logger log = LoggerFactory.getLogger(ClockMock.class);
-
 
     @Override
     public synchronized DateTime getNow(final DateTimeZone tz) {
@@ -146,6 +144,4 @@ public class ClockMock implements Clock {
                 return new Period();
         }
     }
-
-
 }

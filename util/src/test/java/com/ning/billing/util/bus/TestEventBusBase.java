@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.util.bus;
 
 import java.util.UUID;
@@ -28,10 +29,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
+import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.bus.BusEvent.BusEventType;
 
-public class TestEventBusBase {
-
+public abstract class TestEventBusBase extends UtilTestSuiteWithEmbeddedDB {
     protected static final Logger log = LoggerFactory.getLogger(TestEventBusBase.class);
 
     @Inject
@@ -47,9 +48,7 @@ public class TestEventBusBase {
         eventBus.stop();
     }
 
-
     public static class MyEvent implements BusEvent {
-
         private final String name;
         private final Long value;
         private final UUID userToken;
@@ -102,14 +101,12 @@ public class TestEventBusBase {
         }
     }
 
-
     public static final class MyOtherEvent implements BusEvent {
 
         private final String name;
         private final Double value;
         private final UUID userToken;
         private final String type;
-
 
         @JsonCreator
         public MyOtherEvent(@JsonProperty("name") final String name,
@@ -159,7 +156,6 @@ public class TestEventBusBase {
 
         private volatile int gotEvents;
 
-
         public MyEventHandler(final int exp) {
             this.expectedEvents = exp;
             this.gotEvents = 0;
@@ -206,15 +202,12 @@ public class TestEventBusBase {
             eventBus.post(new MyEventWithException("my-event", 1L, UUID.randomUUID(), BusEventType.ACCOUNT_CHANGE.toString()));
 
             Thread.sleep(50000);
-        } catch (Exception e) {
-
+        } catch (Exception ignored) {
         }
-
     }
 
     public void testSimple() {
         try {
-
             final int nbEvents = 5;
             final MyEventHandler handler = new MyEventHandler(nbEvents);
             eventBus.register(handler);
@@ -232,7 +225,6 @@ public class TestEventBusBase {
 
     public void testDifferentType() {
         try {
-
             final MyEventHandler handler = new MyEventHandler(1);
             eventBus.register(handler);
 
@@ -246,6 +238,5 @@ public class TestEventBusBase {
         } catch (Exception e) {
             Assert.fail("", e);
         }
-
     }
 }

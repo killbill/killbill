@@ -23,16 +23,17 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableMap;
+import com.ning.billing.util.UtilTestSuite;
 import com.ning.billing.util.template.translation.DefaultCatalogTranslator;
 import com.ning.billing.util.template.translation.Translator;
 import com.ning.billing.util.template.translation.TranslatorConfig;
 
 import static org.testng.Assert.assertEquals;
 
-public class DefaultCatalogTranslationTest {
+public class DefaultCatalogTranslationTest extends UtilTestSuite {
     private Translator translation;
 
-    @BeforeClass(groups = {"fast", "email"})
+    @BeforeClass(groups = "fast")
     public void setup() {
         final ConfigSource configSource = new ConfigSource() {
             private final Map<String, String> properties = ImmutableMap.<String, String>of("killbill.template.invoiceFormatterFactoryClass",

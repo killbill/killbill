@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2012 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -14,25 +14,9 @@
  * under the License.
  */
 
-package com.ning.billing.util.bus;
+package com.ning.billing.util;
 
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+import com.ning.billing.KillbillTestSuite;
 
-public class TestEventBus extends TestEventBusBase {
-    @BeforeClass(groups = "slow")
-    public void setup() throws Exception {
-        eventBus = new InMemoryBus();
-        super.setup();
-    }
-
-    @Test(groups = "slow")
-    public void testSimple() {
-        super.testSimple();
-    }
-
-    @Test(groups = "slow")
-    public void testDifferentType() {
-        super.testDifferentType();
-    }
+public abstract class UtilTestSuite extends KillbillTestSuite {
 }

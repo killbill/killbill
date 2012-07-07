@@ -21,8 +21,10 @@ import org.skife.config.ConfigurationObjectFactory;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-@Test(groups = {"slow", "email"})
-public class EmailSenderTest {
+import com.ning.billing.util.UtilTestSuite;
+
+@Test(groups = "slow")
+public class EmailSenderTest extends UtilTestSuite {
     private EmailConfig config;
 
     @BeforeClass

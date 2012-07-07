@@ -23,7 +23,9 @@ import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-public class TestDefaultTranslatorBase {
+import com.ning.billing.util.UtilTestSuite;
+
+public class TestDefaultTranslatorBase extends UtilTestSuite {
     private final class TestTranslatorBase extends DefaultTranslatorBase {
         public TestTranslatorBase(final TranslatorConfig config) {
             super(config);

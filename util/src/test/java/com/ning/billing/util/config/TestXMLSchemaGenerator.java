@@ -23,9 +23,10 @@ import java.io.InputStream;
 
 import org.testng.annotations.Test;
 
+import com.ning.billing.util.UtilTestSuite;
 import com.ning.billing.util.io.IOUtils;
 
-public class TestXMLSchemaGenerator {
+public class TestXMLSchemaGenerator extends UtilTestSuite {
     @Test(groups = "fast", enabled = false)
     public void test() throws IOException, TransformerException, JAXBException {
         final InputStream stream = XMLSchemaGenerator.xmlSchema(XmlTestClass.class);
