@@ -24,6 +24,7 @@ import java.util.SortedSet;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -31,16 +32,13 @@ import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceUserApi;
-import com.ning.billing.mock.BrainDeadProxyFactory;
-import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.overdue.config.api.BillingState;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 
 public class TestBillingStateCalculator {
     Clock clock = new ClockMock();
-    InvoiceUserApi invoiceApi = BrainDeadProxyFactory.createBrainDeadProxyFor(InvoiceUserApi.class);
-    private int hash = 0;
+    InvoiceUserApi invoiceApi = Mockito.mock(InvoiceUserApi.class);
     DateTime now;
 
     public BillingStateCalculator<SubscriptionBundle> createBSCalc() {
@@ -50,7 +48,7 @@ public class TestBillingStateCalculator {
         invoices.add(createInvoice(now.plusDays(1), BigDecimal.TEN, null));
         invoices.add(createInvoice(now.plusDays(2), new BigDecimal("100.0"), null));
 
-        ((ZombieControl) invoiceApi).addResult("getUnpaidInvoicesByAccountId", invoices);
+        Mockito.when(invoiceApi.getUnpaidInvoicesByAccountId(Mockito.<UUID>any(), Mockito.<DateTime>any())).thenReturn(invoices);
 
         return new BillingStateCalculator<SubscriptionBundle>(invoiceApi, clock) {
             @Override
@@ -62,12 +60,11 @@ public class TestBillingStateCalculator {
     }
 
     public Invoice createInvoice(final DateTime date, final BigDecimal balance, final List<InvoiceItem> invoiceItems) {
-        final Invoice invoice = BrainDeadProxyFactory.createBrainDeadProxyFor(Invoice.class);
-        ((ZombieControl) invoice).addResult("getBalance", balance);
-        ((ZombieControl) invoice).addResult("getInvoiceDate", date);
-        ((ZombieControl) invoice).addResult("hashCode", hash++);
-        ((ZombieControl) invoice).addResult("getInvoiceItems", invoiceItems);
-        ((ZombieControl) invoice).addResult("getId", UUID.randomUUID());
+        final Invoice invoice = Mockito.mock(Invoice.class);
+        Mockito.when(invoice.getBalance()).thenReturn(balance);
+        Mockito.when(invoice.getInvoiceDate()).thenReturn(date);
+        Mockito.when(invoice.getInvoiceItems()).thenReturn(invoiceItems);
+        Mockito.when(invoice.getId()).thenReturn(UUID.randomUUID());
 
         return invoice;
     }
@@ -97,6 +94,4 @@ public class TestBillingStateCalculator {
         final SortedSet<Invoice> invoices = calc.unpaidInvoicesForAccount(new UUID(0L, 0L));
         Assert.assertEquals(calc.earliest(invoices).getInvoiceDate(), now);
     }
-
-
 }
