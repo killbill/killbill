@@ -102,6 +102,10 @@ public class TestDefaultInvoiceMigrationApi extends InvoicingTestBase {
     @Inject
     private BillingApi billingApi;
 
+    @Inject
+    private AccountUserApi accountUserApi;
+
+    private Account account;
     private UUID accountId;
     private UUID subscriptionId;
     private DateTime date_migrated;
@@ -152,9 +156,14 @@ public class TestDefaultInvoiceMigrationApi extends InvoicingTestBase {
         cleanup();
         busService.getBus().start();
 
+        account = Mockito.mock(Account.class);
+        Mockito.when(accountUserApi.getAccountById(accountId)).thenReturn(account);
+        Mockito.when(account.getCurrency()).thenReturn(Currency.USD);
+        Mockito.when(account.getId()).thenReturn(accountId);
+        Mockito.when(account.isNotifiedForInvoices()).thenReturn(true);
+
         migrationInvoiceId = createAndCheckMigrationInvoice();
         regularInvoiceId = generateRegularInvoice();
-
     }
 
     @AfterSuite(groups = {"slow"})
@@ -188,13 +197,6 @@ public class TestDefaultInvoiceMigrationApi extends InvoicingTestBase {
     }
 
     private UUID generateRegularInvoice() throws Exception {
-        final AccountUserApi accountUserApi = Mockito.mock(AccountUserApi.class);
-        final Account account = Mockito.mock(Account.class);
-        Mockito.when(accountUserApi.getAccountById(accountId)).thenReturn(account);
-        Mockito.when(account.getCurrency()).thenReturn(Currency.USD);
-        Mockito.when(account.getId()).thenReturn(accountId);
-        Mockito.when(account.isNotifiedForInvoices()).thenReturn(true);
-
         final Subscription subscription = Mockito.mock(Subscription.class);
         Mockito.when(subscription.getId()).thenReturn(subscriptionId);
         Mockito.when(subscription.getBundleId()).thenReturn(new UUID(0L, 0L));
@@ -261,10 +263,8 @@ public class TestDefaultInvoiceMigrationApi extends InvoicingTestBase {
         final BigDecimal balanceOfAllInvoices = migrationInvoice.getBalance().add(regularInvoice.getBalance());
 
         final BigDecimal accountBalance = invoiceUserApi.getAccountBalance(accountId);
-        System.out.println("ACCOUNT balance: " + accountBalance + " should equal the Balance Of All Invoices: " + balanceOfAllInvoices);
+        log.info("ACCOUNT balance: " + accountBalance + " should equal the Balance Of All Invoices: " + balanceOfAllInvoices);
         Assert.assertEquals(accountBalance.compareTo(balanceOfAllInvoices), 0);
-
-
     }
 
     private boolean checkContains(final List<Invoice> invoices, final UUID invoiceId) {
