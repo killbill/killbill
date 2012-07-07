@@ -39,7 +39,7 @@ import com.ning.billing.analytics.AnalyticsTestModule;
 import com.ning.billing.analytics.MockDuration;
 import com.ning.billing.analytics.MockPhase;
 import com.ning.billing.analytics.MockProduct;
-import com.ning.billing.analytics.TestWithEmbeddedDB;
+import com.ning.billing.analytics.AnalyticsTestSuiteWithEmbeddedDB;
 import com.ning.billing.analytics.dao.BusinessAccountSqlDao;
 import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionSqlDao;
 import com.ning.billing.analytics.model.BusinessSubscription;
@@ -88,7 +88,7 @@ import com.ning.billing.util.clock.DefaultClock;
 import static org.testng.Assert.fail;
 
 @Guice(modules = {AnalyticsTestModule.class})
-public class TestAnalyticsService extends TestWithEmbeddedDB {
+public class TestAnalyticsService extends AnalyticsTestSuiteWithEmbeddedDB {
     final Product product = new MockProduct("platinum", "subscription", ProductCategory.BASE);
     final Plan plan = new MockPlan("platinum-monthly", product);
     final PlanPhase phase = new MockPhase(PhaseType.EVERGREEN, plan, MockDuration.UNLIMITED(), 25.95);

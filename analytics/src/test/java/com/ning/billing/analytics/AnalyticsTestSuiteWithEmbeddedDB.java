@@ -16,7 +16,7 @@
 
 package com.ning.billing.analytics;
 
-import com.ning.billing.KillbillTestSuite;
+import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
 
-public abstract class AnalyticsTestSuite extends KillbillTestSuite {
+public abstract class AnalyticsTestSuiteWithEmbeddedDB extends KillbillTestSuiteWithEmbeddedDB {
 }

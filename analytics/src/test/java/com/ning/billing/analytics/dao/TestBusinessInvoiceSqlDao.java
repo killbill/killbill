@@ -26,11 +26,11 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.ning.billing.analytics.TestWithEmbeddedDB;
+import com.ning.billing.analytics.AnalyticsTestSuiteWithEmbeddedDB;
 import com.ning.billing.analytics.model.BusinessInvoice;
 import com.ning.billing.catalog.api.Currency;
 
-public class TestBusinessInvoiceSqlDao extends TestWithEmbeddedDB {
+public class TestBusinessInvoiceSqlDao extends AnalyticsTestSuiteWithEmbeddedDB {
     private BusinessInvoiceSqlDao invoiceSqlDao;
 
     @BeforeMethod(groups = "slow")
