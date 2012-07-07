@@ -33,8 +33,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 
+import com.google.common.io.Resources;
 import com.mysql.management.MysqldResource;
 import com.mysql.management.MysqldResourceI;
+import com.ning.billing.util.io.IOUtils;
 
 /**
  * Utility class to embed MySQL for testing purposes
@@ -171,6 +173,19 @@ public class MysqlTestingHelper {
     public IDBI getDBI() {
         final String dbiString = "jdbc:mysql://localhost:" + port + "/" + DB_NAME + "?createDatabaseIfNotExist=true&allowMultiQueries=true";
         return new DBI(dbiString, USERNAME, PASSWORD);
+    }
+
+    public void initDb() throws IOException {
+        for (final String pack : new String[]{"account", "analytics", "entitlement", "util", "payment", "invoice", "junction"}) {
+            final String ddl;
+            try {
+                ddl = IOUtils.toString(Resources.getResource("com/ning/billing/" + pack + "/ddl.sql").openStream());
+            } catch (IllegalArgumentException ignored) {
+                // The test doesn't have this module ddl in the classpath - that's fine
+                continue;
+            }
+            initDb(ddl);
+        }
     }
 
     public void initDb(final String ddl) throws IOException {

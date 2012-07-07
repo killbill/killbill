@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.account.api.user;
 
 import java.util.ArrayList;
@@ -22,18 +23,18 @@ import java.util.UUID;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.ning.billing.account.AccountTestSuite;
 import com.ning.billing.account.api.AccountChangeEvent;
 import com.ning.billing.account.api.ChangedField;
 import com.ning.billing.account.api.DefaultChangedField;
 import com.ning.billing.account.api.user.DefaultAccountCreationEvent.DefaultAccountData;
 import com.ning.billing.util.jackson.ObjectMapper;
 
-public class TestEventJson {
+public class TestEventJson extends AccountTestSuite {
     private final ObjectMapper mapper = new ObjectMapper();
 
-    @Test(groups = {"fast"})
+    @Test(groups = "fast")
     public void testDefaultAccountChangeEvent() throws Exception {
-
         final List<ChangedField> changes = new ArrayList<ChangedField>();
         changes.add(new DefaultChangedField("fieldXX", "valueX", "valueXXX"));
         changes.add(new DefaultChangedField("fieldYY", "valueY", "valueYYY"));
@@ -46,17 +47,15 @@ public class TestEventJson {
         Assert.assertTrue(obj.equals(e));
     }
 
-    @Test(groups = {"fast"})
+    @Test(groups = "fast")
     public void testAccountCreationEvent() throws Exception {
-
         final DefaultAccountData data = new DefaultAccountData("dsfdsf", "bobo", 3, "bobo@yahoo.com", 12, "USD", UUID.randomUUID(),
-                                                         "UTC", "US", "21 avenue", "", "Gling", "San Franciso", "CA", "94110", "USA", "4126789887", false, false);
+                                                               "UTC", "US", "21 avenue", "", "Gling", "San Franciso", "CA", "94110", "USA", "4126789887", false, false);
         final DefaultAccountCreationEvent e = new DefaultAccountCreationEvent(data, UUID.randomUUID(), UUID.randomUUID());
 
         final String json = mapper.writeValueAsString(e);
         final Class<?> claz = Class.forName(DefaultAccountCreationEvent.class.getName());
         final Object obj = mapper.readValue(json, claz);
         Assert.assertTrue(obj.equals(e));
-
     }
 }

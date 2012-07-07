@@ -126,7 +126,6 @@ public class TestAccountDao extends AccountDaoTestBase {
         assertEquals(account.getExternalKey(), key);
         assertEquals(account.getName(), name);
         assertEquals(account.getFirstNameLength(), firstNameLength);
-
     }
 
     @Test
@@ -359,9 +358,9 @@ public class TestAccountDao extends AccountDaoTestBase {
 
         final String buggyKey = "extKey1338";
         final DefaultAccount updatedAccountData = new DefaultAccount(accountId, buggyKey, "myemail1337@glam.com",
-                                                                 "John Smith", 4, Currency.USD, 15, null,
-                                                                 null, null, null, null, null, null, null, null, null, null,
-                                                                 false, false);
+                                                                     "John Smith", 4, Currency.USD, 15, null,
+                                                                     null, null, null, null, null, null, null, null, null, null,
+                                                                     false, false);
         accountDao.update(updatedAccountData, context);
         Assert.assertNull(accountDao.getAccountByKey(buggyKey));
     }
