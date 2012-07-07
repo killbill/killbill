@@ -20,6 +20,7 @@ import java.lang.reflect.Method;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.ITestResult;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 
@@ -34,9 +35,10 @@ public class KillbillTestSuite {
     }
 
     @AfterMethod(alwaysRun = true)
-    public void endTestSuite(final Method method) throws Exception {
+    public void endTestSuite(final Method method, final ITestResult result) throws Exception {
         log.info("***************************************************************************************************");
-        log.info("***   Ending test {}:{}", method.getDeclaringClass().getName(), method.getName());
+        log.info("***   Ending test {}:{} {} ({} s.)", new Object[]{method.getDeclaringClass().getName(), method.getName(),
+                result.isSuccess() ? "SUCCESS" : "!!! FAILURE !!!", (result.getEndMillis() - result.getStartMillis()) / 1000});
         log.info("***************************************************************************************************");
     }
 }
