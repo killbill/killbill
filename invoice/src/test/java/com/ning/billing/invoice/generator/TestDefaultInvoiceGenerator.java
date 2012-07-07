@@ -27,6 +27,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
@@ -51,8 +52,6 @@ import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment.InvoicePaymentType;
-import com.ning.billing.invoice.generator.DefaultInvoiceGenerator;
-import com.ning.billing.invoice.generator.InvoiceGenerator;
 import com.ning.billing.invoice.model.CreditBalanceAdjInvoiceItem;
 import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.invoice.model.DefaultInvoicePayment;
@@ -60,8 +59,6 @@ import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.invoice.tests.InvoicingTestBase;
 import com.ning.billing.junction.api.BillingEventSet;
-import com.ning.billing.mock.BrainDeadProxyFactory;
-import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.clock.DefaultClock;
@@ -151,9 +148,9 @@ public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
     }
 
     private Subscription createZombieSubscription(final UUID subscriptionId) {
-        final Subscription sub = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
-        ((ZombieControl) sub).addResult("getId", subscriptionId);
-        ((ZombieControl) sub).addResult("getBundleId", UUID.randomUUID());
+        final Subscription sub = Mockito.mock(Subscription.class);
+        Mockito.when(sub.getId()).thenReturn(subscriptionId);
+        Mockito.when(sub.getBundleId()).thenReturn(UUID.randomUUID());
 
         return sub;
     }
@@ -947,7 +944,6 @@ public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
         assertTrue(invoice3.getBalance().compareTo(FIFTEEN.multiply(TWO).add(TWELVE)) == 0);
     }
 
-
     @Test(groups = {"fast"})
     public void testAccountCredit() throws CatalogApiException, InvoiceApiException {
         final BillingEventSet billingEventSet = new MockBillingEventSet();
@@ -992,12 +988,12 @@ public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
         assertEquals(finalInvoice.getNumberOfItems(), 2);
     }
 
-    private void printDetailInvoice(final Invoice  invoice) {
+    private void printDetailInvoice(final Invoice invoice) {
         log.info("--------------------  START DETAIL ----------------------");
         log.info("Invoice " + invoice.getId() + ": BALANCE = " + invoice.getBalance()
-                + ", CBA = " + invoice.getCBAAmount()
-                + ", CHARGE_AMOUNT = " + invoice.getChargedAmount()
-                + ", ADJ_AMOUNT = " + invoice.getCreditAdjAmount());
+                         + ", CBA = " + invoice.getCBAAmount()
+                         + ", CHARGE_AMOUNT = " + invoice.getChargedAmount()
+                         + ", ADJ_AMOUNT = " + invoice.getCreditAdjAmount());
 
         for (InvoiceItem cur : invoice.getInvoiceItems()) {
             log.info(cur.toString());

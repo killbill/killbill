@@ -22,6 +22,7 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 
 import org.joda.time.DateTime;
+import org.mockito.Mockito;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
@@ -42,13 +43,12 @@ import com.ning.billing.dbi.DBIProvider;
 import com.ning.billing.dbi.DbiConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
+import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.invoice.InvoiceDispatcher;
 import com.ning.billing.invoice.InvoiceListener;
 import com.ning.billing.invoice.glue.InvoiceModuleWithMocks;
 import com.ning.billing.lifecycle.KillbillService;
-import com.ning.billing.mock.BrainDeadProxyFactory;
-import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.mock.glue.MockClockModule;
 import com.ning.billing.mock.glue.MockJunctionModule;
 import com.ning.billing.util.bus.Bus;
@@ -108,7 +108,7 @@ public class TestNextBillingDateNotifier {
     }
 
     @BeforeClass(groups = {"slow"})
-    public void setup() throws KillbillService.ServiceException, IOException, ClassNotFoundException, SQLException {
+    public void setup() throws KillbillService.ServiceException, IOException, ClassNotFoundException, SQLException, EntitlementUserApiException {
         //TestApiBase.loadSystemPropertiesFromClasspath("/entitlement.properties");
         final Injector g = Guice.createInjector(Stage.PRODUCTION, new AbstractModule() {
 
@@ -145,9 +145,9 @@ public class TestNextBillingDateNotifier {
         notificationQueueService = g.getInstance(NotificationQueueService.class);
         final InvoiceDispatcher dispatcher = g.getInstance(InvoiceDispatcher.class);
 
-        final Subscription subscription = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
-        final EntitlementUserApi entitlementUserApi = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementUserApi.class);
-        ((ZombieControl) entitlementUserApi).addResult("getSubscriptionFromId", subscription);
+        final Subscription subscription = Mockito.mock(Subscription.class);
+        final EntitlementUserApi entitlementUserApi = Mockito.mock(EntitlementUserApi.class);
+        Mockito.when(entitlementUserApi.getSubscriptionFromId(Mockito.<UUID>any())).thenReturn(subscription);
 
         final CallContextFactory factory = new DefaultCallContextFactory(clock);
         listener = new InvoiceListenerMock(factory, dispatcher);
@@ -163,7 +163,6 @@ public class TestNextBillingDateNotifier {
         helper.initDb(testDdl);
     }
 
-
     @Test(enabled = true, groups = "slow")
     public void testInvoiceNotifier() throws Exception {
 
@@ -177,7 +176,6 @@ public class TestNextBillingDateNotifier {
         notifier.initialize();
         notifier.start();
 
-
         dao.inTransaction(new Transaction<Void, DummySqlTest>() {
             @Override
             public Void inTransaction(final DummySqlTest transactional,
@@ -188,10 +186,8 @@ public class TestNextBillingDateNotifier {
             }
         });
 
-
         // Move time in the future after the notification effectiveDate
         ((ClockMock) clock).setDeltaFromReality(3000);
-
 
         await().atMost(1, MINUTES).until(new Callable<Boolean>() {
             @Override

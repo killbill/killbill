@@ -26,7 +26,6 @@ import java.util.concurrent.TimeoutException;
 
 import org.joda.time.DateTime;
 import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
@@ -37,8 +36,6 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.config.PaymentConfig;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
-import com.ning.billing.mock.BrainDeadProxyFactory;
-import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.mock.glue.MockClockModule;
 import com.ning.billing.mock.glue.MockJunctionModule;
 import com.ning.billing.payment.api.Payment;
@@ -104,7 +101,6 @@ public class TestRetryService {
         mockPaymentProviderPlugin.clear();
 
         context = new DefaultCallContext("RetryServiceTests", CallOrigin.INTERNAL, UserType.TEST, clock);
-        ((ZombieControl) invoicePaymentApi).addResult("notifyOfPayment", BrainDeadProxyFactory.ZOMBIE_VOID);
     }
 
     @AfterMethod(groups = "fast")
@@ -136,7 +132,6 @@ public class TestRetryService {
     public void testAbortedPlugin() throws Exception {
         testSchedulesRetryInternal(paymentConfig.getPluginFailureRetryMaxAttempts() + 1, FailureType.PLUGIN_EXCEPTION);
     }
-
 
     @Test(groups = "fast")
     public void testFailedPaymentWithOneSuccessfulRetry() throws Exception {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2012 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -16,27 +16,28 @@
 
 package com.ning.billing.mock.glue;
 
+import org.mockito.Mockito;
+
 import com.google.inject.AbstractModule;
 import com.ning.billing.glue.InvoiceModule;
 import com.ning.billing.invoice.api.InvoiceMigrationApi;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.api.InvoiceUserApi;
-import com.ning.billing.mock.BrainDeadProxyFactory;
 
 public class MockInvoiceModule extends AbstractModule implements InvoiceModule {
     @Override
     public void installInvoiceUserApi() {
-        bind(InvoiceUserApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(InvoiceUserApi.class));
+        bind(InvoiceUserApi.class).toInstance(Mockito.mock(InvoiceUserApi.class));
     }
 
     @Override
     public void installInvoicePaymentApi() {
-        bind(InvoicePaymentApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(InvoicePaymentApi.class));
+        bind(InvoicePaymentApi.class).toInstance(Mockito.mock(InvoicePaymentApi.class));
     }
 
     @Override
     public void installInvoiceMigrationApi() {
-        bind(InvoiceMigrationApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(InvoiceMigrationApi.class));
+        bind(InvoiceMigrationApi.class).toInstance(Mockito.mock(InvoiceMigrationApi.class));
     }
 
     @Override

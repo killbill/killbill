@@ -21,6 +21,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.mockito.Mockito;
 
 import com.google.common.collect.ImmutableList;
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -64,7 +65,7 @@ public class MockSubscription implements Subscription {
         this.transitions = ImmutableList.<EffectiveSubscriptionEvent>of();
     }
 
-    Subscription sub = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
+    Subscription sub = Mockito.mock(Subscription.class);
 
     @Override
     public boolean cancel(final DateTime requestedDate, final boolean eot, final CallContext context) throws EntitlementUserApiException {

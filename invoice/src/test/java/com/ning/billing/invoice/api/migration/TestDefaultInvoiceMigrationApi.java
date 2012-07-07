@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.mockito.Mockito;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.TransactionCallback;
@@ -29,11 +30,8 @@ import org.skife.jdbi.v2.TransactionStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterSuite;
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeSuite;
-import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
@@ -64,8 +62,6 @@ import com.ning.billing.invoice.notification.NullInvoiceNotifier;
 import com.ning.billing.invoice.tests.InvoicingTestBase;
 import com.ning.billing.junction.api.BillingApi;
 import com.ning.billing.junction.api.BillingEventSet;
-import com.ning.billing.mock.BrainDeadProxyFactory;
-import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.bus.DefaultBusService;
 import com.ning.billing.util.callcontext.CallContext;
@@ -116,7 +112,6 @@ public class TestDefaultInvoiceMigrationApi extends InvoicingTestBase {
 
     private IDBI dbi;
 
-
     private static final BigDecimal MIGRATION_INVOICE_AMOUNT = new BigDecimal("100.00");
     private static final Currency MIGRATION_INVOICE_CURRENCY = Currency.USD;
 
@@ -124,11 +119,11 @@ public class TestDefaultInvoiceMigrationApi extends InvoicingTestBase {
 
     //@BeforeTest(groups = {"slow"})
     public void cleanup() {
-        if (dbi !=  null) {
+        if (dbi != null) {
             dbi.inTransaction(new TransactionCallback<Void>() {
                 @Override
                 public Void inTransaction(final Handle h, final TransactionStatus status)
-                throws Exception {
+                        throws Exception {
                     h.execute("truncate table invoices");
                     h.execute("truncate table invoice_items");
                     h.execute("truncate table invoice_payments");
@@ -137,7 +132,6 @@ public class TestDefaultInvoiceMigrationApi extends InvoicingTestBase {
             });
         }
     }
-
 
     @BeforeSuite(groups = {"slow"})
     public void setup() throws Exception {
@@ -158,7 +152,6 @@ public class TestDefaultInvoiceMigrationApi extends InvoicingTestBase {
         cleanup();
         busService.getBus().start();
 
-        ((ZombieControl) billingApi).addResult("setChargedThroughDate", BrainDeadProxyFactory.ZOMBIE_VOID);
         migrationInvoiceId = createAndCheckMigrationInvoice();
         regularInvoiceId = generateRegularInvoice();
 
@@ -195,16 +188,16 @@ public class TestDefaultInvoiceMigrationApi extends InvoicingTestBase {
     }
 
     private UUID generateRegularInvoice() throws Exception {
-        final AccountUserApi accountUserApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
-        final Account account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
-        ((ZombieControl) accountUserApi).addResult("getAccountById", account);
-        ((ZombieControl) account).addResult("getCurrency", Currency.USD);
-        ((ZombieControl) account).addResult("getId", accountId);
-        ((ZombieControl) account).addResult("isNotifiedForInvoices", true);
+        final AccountUserApi accountUserApi = Mockito.mock(AccountUserApi.class);
+        final Account account = Mockito.mock(Account.class);
+        Mockito.when(accountUserApi.getAccountById(accountId)).thenReturn(account);
+        Mockito.when(account.getCurrency()).thenReturn(Currency.USD);
+        Mockito.when(account.getId()).thenReturn(accountId);
+        Mockito.when(account.isNotifiedForInvoices()).thenReturn(true);
 
-        final Subscription subscription = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
-        ((ZombieControl) subscription).addResult("getId", subscriptionId);
-        ((ZombieControl) subscription).addResult("getBundleId", new UUID(0L, 0L));
+        final Subscription subscription = Mockito.mock(Subscription.class);
+        Mockito.when(subscription.getId()).thenReturn(subscriptionId);
+        Mockito.when(subscription.getBundleId()).thenReturn(new UUID(0L, 0L));
         final BillingEventSet events = new MockBillingEventSet();
         final Plan plan = MockPlan.createBicycleNoTrialEvergreen1USD();
         final PlanPhase planPhase = MockPlanPhase.create1USDMonthlyEvergreen();
@@ -215,7 +208,7 @@ public class TestDefaultInvoiceMigrationApi extends InvoicingTestBase {
                                           fixedPrice, BigDecimal.ONE, currency, BillingPeriod.MONTHLY, 1,
                                           BillingModeType.IN_ADVANCE, "", 1L, SubscriptionTransitionType.CREATE));
 
-        ((ZombieControl) billingApi).addResult("getBillingEventsForAccountAndUpdateAccountBCD", events);
+        Mockito.when(billingApi.getBillingEventsForAccountAndUpdateAccountBCD(accountId)).thenReturn(events);
 
         final InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
         final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountUserApi, billingApi,
@@ -251,7 +244,6 @@ public class TestDefaultInvoiceMigrationApi extends InvoicingTestBase {
         Assert.assertEquals(unpaid.size(), 2);
     }
 
-
     // Check migration invoice IS returned for payment api calls
     @Test(groups = {"slow"}, enabled = true)
     public void testPaymentApi() {
@@ -260,7 +252,6 @@ public class TestDefaultInvoiceMigrationApi extends InvoicingTestBase {
         Assert.assertTrue(checkContains(allByAccount, regularInvoiceId));
         Assert.assertTrue(checkContains(allByAccount, migrationInvoiceId));
     }
-
 
     // ACCOUNT balance should reflect total of migration and non-migration invoices
     @Test(groups = {"slow"}, enabled = true)
