@@ -94,7 +94,7 @@ public class MysqlTestingHelper {
         Assert.assertTrue(dataDir.mkdir());
 
         final PrintStream out = new PrintStream(new LoggingOutputStream(log), true);
-        mysqldResource = new MysqldResource(dbDir, dataDir, "5.1.40", out, out);
+        mysqldResource = new MysqldResource(dbDir, dataDir, null, out, out);
 
         final Map<String, String> dbOpts = new HashMap<String, String>();
         dbOpts.put(MysqldResourceI.PORT, Integer.toString(port));
