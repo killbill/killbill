@@ -16,11 +16,13 @@
 
 package com.ning.billing.catalog.rules;
 
-import java.io.File;
+import java.net.URI;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.google.common.io.Resources;
+import com.ning.billing.catalog.CatalogTestSuite;
 import com.ning.billing.catalog.StandaloneCatalog;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PlanAlignmentCreate;
@@ -28,22 +30,22 @@ import com.ning.billing.catalog.api.PlanSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.util.config.XMLLoader;
 
-public class TestLoadRules {
-
-    @Test
+public class TestLoadRules extends CatalogTestSuite {
+    @Test(groups = "fast")
     public void test() throws Exception {
-        final StandaloneCatalog catalog = XMLLoader.getObjectFromUri(new File("src/test/resources/WeaponsHireSmall.xml").toURI(), StandaloneCatalog.class);
+        final URI uri = new URI(Resources.getResource("WeaponsHireSmall.xml").toExternalForm());
+        final StandaloneCatalog catalog = XMLLoader.getObjectFromUri(uri, StandaloneCatalog.class);
         Assert.assertNotNull(catalog);
         final PlanRules rules = catalog.getPlanRules();
 
         final PlanSpecifier specifier = new PlanSpecifier("Laser-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY,
-                                                    "DEFAULT");
+                                                          "DEFAULT");
 
         final PlanAlignmentCreate alignment = rules.getPlanCreateAlignment(specifier, catalog);
         Assert.assertEquals(alignment, PlanAlignmentCreate.START_OF_SUBSCRIPTION);
 
         final PlanSpecifier specifier2 = new PlanSpecifier("Extra-Ammo", ProductCategory.ADD_ON, BillingPeriod.MONTHLY,
-                                                     "DEFAULT");
+                                                           "DEFAULT");
 
         final PlanAlignmentCreate alignment2 = rules.getPlanCreateAlignment(specifier2, catalog);
         Assert.assertEquals(alignment2, PlanAlignmentCreate.START_OF_BUNDLE);

@@ -27,12 +27,11 @@ import org.testng.annotations.Test;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.config.ValidationErrors;
 
-public class TestPlan {
+public class TestPlan extends CatalogTestSuite {
     private static final Logger log = LoggerFactory.getLogger(TestPlan.class);
 
-    @Test(groups = {"fast"}, enabled = true)
+    @Test(groups = "fast")
     public void testDateValidation() {
-
         final StandaloneCatalog c = new MockCatalog();
         c.setSupportedCurrencies(new Currency[]{Currency.GBP, Currency.EUR, Currency.USD, Currency.BRL, Currency.MXN});
         final DefaultPlan p1 = MockPlan.createBicycleTrialEvergreen1USD();
@@ -40,10 +39,9 @@ public class TestPlan {
         final ValidationErrors errors = p1.validate(c, new ValidationErrors());
         Assert.assertEquals(errors.size(), 1);
         errors.log(log);
-
     }
 
-    @Test(groups = {"fast"}, enabled = true)
+    @Test(groups = "fast")
     public void testDataCalc() {
         final DefaultPlan p0 = MockPlan.createBicycleTrialEvergreen1USD();
 
@@ -55,6 +53,5 @@ public class TestPlan {
         Assert.assertEquals(p0.dateOfFirstRecurringNonZeroCharge(requestedDate).compareTo(requestedDate.plusDays(30)), 0);
         Assert.assertEquals(p1.dateOfFirstRecurringNonZeroCharge(requestedDate).compareTo(requestedDate.plusDays(100)), 0);
         Assert.assertEquals(p2.dateOfFirstRecurringNonZeroCharge(requestedDate).compareTo(requestedDate.plusDays(0)), 0);
-
     }
 }

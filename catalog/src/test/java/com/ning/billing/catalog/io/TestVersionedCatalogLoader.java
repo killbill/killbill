@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.catalog.io;
 
 import javax.xml.bind.JAXBException;
@@ -26,47 +27,43 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.joda.time.DateTime;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 import org.xml.sax.SAXException;
 
 import com.google.common.io.Resources;
+import com.ning.billing.catalog.CatalogTestSuite;
 import com.ning.billing.catalog.StandaloneCatalog;
 import com.ning.billing.catalog.VersionedCatalog;
 import com.ning.billing.catalog.api.InvalidConfigException;
 import com.ning.billing.lifecycle.KillbillService.ServiceException;
 import com.ning.billing.util.clock.DefaultClock;
 
-import static org.testng.AssertJUnit.assertEquals;
-
-public class TestVersionedCatalogLoader {
+public class TestVersionedCatalogLoader extends CatalogTestSuite {
     private final VersionedCatalogLoader loader = new VersionedCatalogLoader(new DefaultClock());
 
-
-    @Test(enabled = true)
-    public void testAppendToURI() throws MalformedURLException, IOException, URISyntaxException {
+    @Test(groups = "fast")
+    public void testAppendToURI() throws IOException, URISyntaxException {
         final URL u1 = new URL("http://www.ning.com/foo");
-        assertEquals("http://www.ning.com/foo/bar", loader.appendToURI(u1, "bar").toString());
+        Assert.assertEquals(loader.appendToURI(u1, "bar").toString(), "http://www.ning.com/foo/bar");
 
         final URL u2 = new URL("http://www.ning.com/foo/");
-        assertEquals("http://www.ning.com/foo/bar", loader.appendToURI(u2, "bar").toString());
-
+        Assert.assertEquals(loader.appendToURI(u2, "bar").toString(), "http://www.ning.com/foo/bar");
     }
 
-
-    @Test(enabled = true)
+    @Test(groups = "fast")
     public void testFindXmlFileReferences() throws MalformedURLException, URISyntaxException {
         final String page = "dg.xml\n" +
                 "replica.foo\n" +
                 "snv1/\n" +
                 "viking.xml\n";
         final List<URI> urls = loader.findXmlFileReferences(page, new URL("http://ning.com/"));
-        assertEquals(2, urls.size());
-        assertEquals("http://ning.com/dg.xml", urls.get(0).toString());
-        assertEquals("http://ning.com/viking.xml", urls.get(1).toString());
-
+        Assert.assertEquals(urls.size(), 2);
+        Assert.assertEquals(urls.get(0).toString(), "http://ning.com/dg.xml");
+        Assert.assertEquals(urls.get(1).toString(), "http://ning.com/viking.xml");
     }
 
-    @Test(enabled = true)
+    @Test(groups = "fast")
     public void testExtractHrefs() {
         final String page = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">" +
                 "<html>" +
@@ -86,12 +83,12 @@ public class TestVersionedCatalogLoader {
                 "<address>Apache/2.2.3 (CentOS) Server at <a href=\"mailto:kate@ning.com\">gepo.ningops.net</a> Port 80</address>" +
                 "</body></html>";
         final List<String> hrefs = loader.extractHrefs(page);
-        assertEquals(8, hrefs.size());
-        assertEquals("/config/trunk/", hrefs.get(0));
-        assertEquals("dg.xml", hrefs.get(1));
+        Assert.assertEquals(hrefs.size(), 8);
+        Assert.assertEquals(hrefs.get(0), "/config/trunk/");
+        Assert.assertEquals(hrefs.get(1), "dg.xml");
     }
 
-    @Test(enabled = true)
+    @Test(groups = "fast")
     public void testFindXmlUrlReferences() throws MalformedURLException, URISyntaxException {
         final String page = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">" +
                 "<html>" +
@@ -111,22 +108,21 @@ public class TestVersionedCatalogLoader {
                 "<address>Apache/2.2.3 (CentOS) Server at <a href=\"mailto:kate@ning.com\">gepo.ningops.net</a> Port 80</address>" +
                 "</body></html>";
         final List<URI> uris = loader.findXmlUrlReferences(page, new URL("http://ning.com/"));
-        assertEquals(2, uris.size());
-        assertEquals("http://ning.com/dg.xml", uris.get(0).toString());
-        assertEquals("http://ning.com/viking.xml", uris.get(1).toString());
-
+        Assert.assertEquals(uris.size(), 2);
+        Assert.assertEquals(uris.get(0).toString(), "http://ning.com/dg.xml");
+        Assert.assertEquals(uris.get(1).toString(), "http://ning.com/viking.xml");
     }
 
-    @Test(enabled = true)
-    public void testLoad() throws MalformedURLException, IOException, SAXException, InvalidConfigException, JAXBException, TransformerException, URISyntaxException, ServiceException {
+    @Test(groups = "fast")
+    public void testLoad() throws IOException, SAXException, InvalidConfigException, JAXBException, TransformerException, URISyntaxException, ServiceException {
         final VersionedCatalog c = loader.load(Resources.getResource("versionedCatalog").toString());
-        assertEquals(3, c.size());
+        Assert.assertEquals(c.size(), 3);
         final Iterator<StandaloneCatalog> it = c.iterator();
         DateTime dt = new DateTime("2011-01-01T00:00:00+00:00");
-        assertEquals(dt.toDate(), it.next().getEffectiveDate());
+        Assert.assertEquals(it.next().getEffectiveDate(), dt.toDate());
         dt = new DateTime("2011-02-02T00:00:00+00:00");
-        assertEquals(dt.toDate(), it.next().getEffectiveDate());
+        Assert.assertEquals(it.next().getEffectiveDate(), dt.toDate());
         dt = new DateTime("2011-03-03T00:00:00+00:00");
-        assertEquals(dt.toDate(), it.next().getEffectiveDate());
+        Assert.assertEquals(it.next().getEffectiveDate(), dt.toDate());
     }
 }

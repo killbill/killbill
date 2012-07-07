@@ -22,9 +22,8 @@ import org.testng.annotations.Test;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.PhaseType;
 
-public class TestStandaloneCatalog {
-
-    @Test
+public class TestStandaloneCatalog extends CatalogTestSuite {
+    @Test(groups = "fast")
     public void testFindPhase() throws CatalogApiException {
         final DefaultPlanPhase phaseTrial1 = new MockPlanPhase().setPhaseType(PhaseType.TRIAL);
         final DefaultPlanPhase phaseTrial2 = new MockPlanPhase().setPhaseType(PhaseType.TRIAL);
@@ -44,9 +43,5 @@ public class TestStandaloneCatalog {
         Assert.assertEquals(cat.findCurrentPhase("TestPlan2-discount"), phaseDiscount2);
         Assert.assertEquals(cat.findCurrentPhase("TestPlan1-trial"), phaseTrial1);
         Assert.assertEquals(cat.findCurrentPhase("TestPlan2-trial"), phaseTrial2);
-
-
     }
-
-
 }

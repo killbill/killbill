@@ -16,18 +16,22 @@
 
 package com.ning.billing.catalog.io;
 
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.google.common.io.Resources;
+import com.ning.billing.catalog.CatalogTestSuite;
 import com.ning.billing.catalog.StandaloneCatalog;
 import com.ning.billing.util.config.XMLLoader;
 
-public class TestXMLReader {
-
-    @Test(enabled = true)
-    public void testCatalogLoad() throws Exception {
-        XMLLoader.getObjectFromString(Resources.getResource("WeaponsHire.xml").toExternalForm(), StandaloneCatalog.class);
-        XMLLoader.getObjectFromString(Resources.getResource("WeaponsHireSmall.xml").toExternalForm(), StandaloneCatalog.class);
+public class TestXMLReader extends CatalogTestSuite {
+    @Test(groups = "fast")
+    public void testCatalogLoad() {
+        try {
+            XMLLoader.getObjectFromString(Resources.getResource("WeaponsHire.xml").toExternalForm(), StandaloneCatalog.class);
+            XMLLoader.getObjectFromString(Resources.getResource("WeaponsHireSmall.xml").toExternalForm(), StandaloneCatalog.class);
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
     }
-
 }
