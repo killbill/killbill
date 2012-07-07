@@ -306,7 +306,6 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
 
         final BillingPeriod billingPeriod = thisEvent.getBillingPeriod();
         if (billingPeriod != BillingPeriod.NO_BILLING_PERIOD) {
-
             final BillingMode billingMode = instantiateBillingMode(thisEvent.getBillingMode());
             final DateTime startDate = thisEvent.getEffectiveDate();
             final DateTime tzAdjustedStartDate = startDate.toDateTime(thisEvent.getTimeZone());
