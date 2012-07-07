@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.mockito.Mockito;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.exceptions.TransactionFailedException;
 import org.testng.annotations.BeforeSuite;
@@ -44,8 +45,6 @@ import com.ning.billing.invoice.glue.InvoiceModuleWithEmbeddedDb;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.invoice.notification.MockNextBillingDatePoster;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
-import com.ning.billing.mock.BrainDeadProxyFactory;
-import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TestCallContext;
@@ -63,7 +62,7 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
-public class TestChargeBacks  {
+public class TestChargeBacks {
     private static final BigDecimal FIFTEEN = new BigDecimal("15.00");
     private static final BigDecimal THIRTY = new BigDecimal("30.00");
     private static final BigDecimal ONE_MILLION = new BigDecimal("1000000.00");
@@ -73,10 +72,8 @@ public class TestChargeBacks  {
     private final Clock clock = new ClockMock();
     private static final Currency CURRENCY = Currency.EUR;
 
-
     @BeforeSuite(groups = {"slow"})
     public void setup() throws IOException {
-
         loadSystemPropertiesFromClasspath("/resource.properties");
 
         final MysqlTestingHelper helper = new MysqlTestingHelper();
@@ -102,7 +99,6 @@ public class TestChargeBacks  {
         context = new TestCallContext("Charge back tests");
     }
 
-
     private static void loadSystemPropertiesFromClasspath(final String resource) {
         final URL url = InvoiceModuleWithEmbeddedDb.class.getResource(resource);
         assertNotNull(url);
@@ -112,7 +108,6 @@ public class TestChargeBacks  {
             throw new RuntimeException(e);
         }
     }
-
 
     @Test(groups = {"slow"})
     public void testCompleteChargeBack() throws InvoiceApiException {
@@ -223,20 +218,20 @@ public class TestChargeBacks  {
     }
 
     private Invoice createAndPersistInvoice(final BigDecimal amount) {
-        final Invoice invoice = BrainDeadProxyFactory.createBrainDeadProxyFor(Invoice.class);
+        final Invoice invoice = Mockito.mock(Invoice.class);
         final UUID invoiceId = UUID.randomUUID();
         final UUID accountId = UUID.randomUUID();
-        final ZombieControl zombie = (ZombieControl) invoice;
-        zombie.addResult("getId", invoiceId);
-        zombie.addResult("getAccountId", accountId);
-        zombie.addResult("getInvoiceDate", clock.getUTCNow());
-        zombie.addResult("getTargetDate", clock.getUTCNow());
-        zombie.addResult("getCurrency", CURRENCY);
-        zombie.addResult("isMigrationInvoice", false);
+
+        Mockito.when(invoice.getId()).thenReturn(invoiceId);
+        Mockito.when(invoice.getAccountId()).thenReturn(accountId);
+        Mockito.when(invoice.getInvoiceDate()).thenReturn(clock.getUTCNow());
+        Mockito.when(invoice.getTargetDate()).thenReturn(clock.getUTCNow());
+        Mockito.when(invoice.getCurrency()).thenReturn(CURRENCY);
+        Mockito.when(invoice.isMigrationInvoice()).thenReturn(false);
 
         final List<InvoiceItem> items = new ArrayList<InvoiceItem>();
         items.add(createInvoiceItem(invoiceId, accountId, amount));
-        zombie.addResult("getInvoiceItems", items);
+        Mockito.when(invoice.getInvoiceItems()).thenReturn(items);
 
         invoiceSqlDao.create(invoice, context);
 
@@ -249,17 +244,15 @@ public class TestChargeBacks  {
     }
 
     private InvoicePayment createAndPersistPayment(final UUID invoiceId, final BigDecimal amount) {
-        final InvoicePayment payment = BrainDeadProxyFactory.createBrainDeadProxyFor(InvoicePayment.class);
-        final ZombieControl zombie = (ZombieControl) payment;
-        zombie.addResult("getId", UUID.randomUUID());
-        zombie.addResult("getType", InvoicePaymentType.ATTEMPT);
-        zombie.addResult("getInvoiceId", invoiceId);
-        zombie.addResult("getPaymentId", UUID.randomUUID());
-        zombie.addResult("getPaymentDate", clock.getUTCNow());
-        zombie.addResult("getAmount", amount);
-        zombie.addResult("getCurrency", CURRENCY);
-        zombie.addResult("getLinkedInvoicePaymentId", BrainDeadProxyFactory.ZOMBIE_VOID);
-        zombie.addResult("getPaymentCookieId", BrainDeadProxyFactory.ZOMBIE_VOID);
+        final InvoicePayment payment = Mockito.mock(InvoicePayment.class);
+        Mockito.when(payment.getId()).thenReturn(UUID.randomUUID());
+        Mockito.when(payment.getType()).thenReturn(InvoicePaymentType.ATTEMPT);
+        Mockito.when(payment.getInvoiceId()).thenReturn(invoiceId);
+        Mockito.when(payment.getPaymentId()).thenReturn(UUID.randomUUID());
+        Mockito.when(payment.getPaymentDate()).thenReturn(clock.getUTCNow());
+        Mockito.when(payment.getAmount()).thenReturn(amount);
+        Mockito.when(payment.getCurrency()).thenReturn(CURRENCY);
+
         invoicePaymentApi.notifyOfPayment(payment, context);
 
         return payment;
