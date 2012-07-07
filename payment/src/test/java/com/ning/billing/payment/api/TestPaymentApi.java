@@ -23,6 +23,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -38,7 +39,6 @@ import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
-import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.mock.glue.MockClockModule;
 import com.ning.billing.mock.glue.MockJunctionModule;
 import com.ning.billing.payment.MockRecurringInvoiceItem;
@@ -189,7 +189,7 @@ public class TestPaymentApi {
 
         final PaymentMethodPlugin newPaymenrMethod = new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), true, null);
         final UUID newPaymentMethodId = paymentApi.addPaymentMethod(PaymentTestModuleWithMocks.PLUGIN_TEST_NAME, account, true, newPaymenrMethod, context);
-        ((ZombieControl) account).addResult("getPaymentMethodId", newPaymentMethodId);
+        Mockito.when(account.getPaymentMethodId()).thenReturn(newPaymentMethodId);
 
         methods = paymentApi.getPaymentMethods(account, false);
         assertEquals(methods.size(), 2);
