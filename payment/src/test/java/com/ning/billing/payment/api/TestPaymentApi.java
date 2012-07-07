@@ -42,6 +42,7 @@ import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.mock.glue.MockClockModule;
 import com.ning.billing.mock.glue.MockJunctionModule;
 import com.ning.billing.payment.MockRecurringInvoiceItem;
+import com.ning.billing.payment.PaymentTestSuite;
 import com.ning.billing.payment.TestHelper;
 import com.ning.billing.payment.api.Payment.PaymentAttempt;
 import com.ning.billing.payment.glue.PaymentTestModuleWithMocks;
@@ -61,8 +62,7 @@ import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 @Guice(modules = {PaymentTestModuleWithMocks.class, MockClockModule.class, MockJunctionModule.class, CallContextModule.class})
-@Test(groups = "fast")
-public class TestPaymentApi {
+public class TestPaymentApi extends PaymentTestSuite {
     private static final Logger log = LoggerFactory.getLogger(TestPaymentApi.class);
 
     @Inject
@@ -85,22 +85,22 @@ public class TestPaymentApi {
         context = new DefaultCallContext("Payment Tests", CallOrigin.INTERNAL, UserType.SYSTEM, clock);
     }
 
-    @BeforeClass
+    @BeforeClass(groups = "fast")
     public void setupClass() throws Exception {
         account = testHelper.createTestAccount("yoyo.yahoo.com");
     }
 
-    @BeforeMethod(alwaysRun = true)
+    @BeforeMethod(groups = "fast")
     public void setUp() throws EventBusException {
         eventBus.start();
     }
 
-    @AfterMethod(alwaysRun = true)
+    @AfterMethod(groups = "fast")
     public void tearDown() throws EventBusException {
         eventBus.stop();
     }
 
-    @Test
+    @Test(groups = "fast")
     public void testSimplePaymentWithNoAmount() throws Exception {
         final BigDecimal invoiceAmount = new BigDecimal("10.0011");
         final BigDecimal requestedAmount = null;
@@ -109,7 +109,7 @@ public class TestPaymentApi {
         testSimplePayment(invoiceAmount, requestedAmount, expectedAmount);
     }
 
-    @Test
+    @Test(groups = "fast")
     public void testSimplePaymentWithInvoiceAmount() throws Exception {
         final BigDecimal invoiceAmount = new BigDecimal("10.0011");
         final BigDecimal requestedAmount = invoiceAmount;
@@ -118,7 +118,7 @@ public class TestPaymentApi {
         testSimplePayment(invoiceAmount, requestedAmount, expectedAmount);
     }
 
-    @Test
+    @Test(groups = "fast")
     public void testSimplePaymentWithLowerAmount() throws Exception {
         final BigDecimal invoiceAmount = new BigDecimal("10.0011");
         final BigDecimal requestedAmount = new BigDecimal("8.0091");
@@ -127,7 +127,7 @@ public class TestPaymentApi {
         testSimplePayment(invoiceAmount, requestedAmount, expectedAmount);
     }
 
-    @Test
+    @Test(groups = "fast")
     public void testSimplePaymentWithInvalidAmount() throws Exception {
         final BigDecimal invoiceAmount = new BigDecimal("10.0011");
         final BigDecimal requestedAmount = new BigDecimal("80.0091");
@@ -179,7 +179,7 @@ public class TestPaymentApi {
         }
     }
 
-    @Test
+    @Test(groups = "fast")
     public void testPaymentMethods() throws Exception {
         List<PaymentMethod> methods = paymentApi.getPaymentMethods(account, false);
         assertEquals(methods.size(), 1);

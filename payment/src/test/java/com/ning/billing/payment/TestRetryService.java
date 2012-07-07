@@ -64,7 +64,7 @@ import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 @Guice(modules = {PaymentTestModuleWithMocks.class, MockClockModule.class, MockJunctionModule.class, CallContextModule.class})
-public class TestRetryService {
+public class TestRetryService extends PaymentTestSuite {
     @Inject
     private PaymentConfig paymentConfig;
     @Inject

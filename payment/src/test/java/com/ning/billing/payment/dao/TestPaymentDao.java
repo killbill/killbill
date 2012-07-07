@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.payment.dao;
 
 import java.io.IOException;
@@ -24,30 +25,30 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.IDBI;
-import org.testng.Assert;
 import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
+import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.dbi.DBIProvider;
 import com.ning.billing.dbi.DbiConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
+import com.ning.billing.payment.PaymentTestSuiteWithEmbeddedDB;
 import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TestCallContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;
-import com.ning.billing.util.io.IOUtils;
 
-import static junit.framework.Assert.assertNull;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
 import static org.testng.Assert.fail;
 
-public class TestPaymentDao {
+public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
     private static final CallContext context = new TestCallContext("PaymentTests");
 
     private PaymentDao paymentDao;
@@ -55,24 +56,17 @@ public class TestPaymentDao {
     private IDBI dbi;
     private Clock clock;
 
-    @BeforeSuite(groups = {"slow"})
-    public void startMysql() throws IOException {
-        final String paymentddl = IOUtils.toString(MysqlTestingHelper.class.getResourceAsStream("/com/ning/billing/payment/ddl.sql"));
-        final String utilddl = IOUtils.toString(MysqlTestingHelper.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
-
+    @BeforeSuite(groups = "slow")
+    public void setup() throws IOException {
         clock = new DefaultClock();
 
         setupDb();
-
-        helper.startMysql();
-        helper.initDb(paymentddl);
-        helper.initDb(utilddl);
 
         paymentDao = new AuditedPaymentDao(dbi, null);
     }
 
     private void setupDb() {
-        helper = new MysqlTestingHelper();
+        helper = KillbillTestSuiteWithEmbeddedDB.getMysqlTestingHelper();
         if (helper.isUsingLocalInstance()) {
             final DbiConfig config = new ConfigurationObjectFactory(System.getProperties()).build(DbiConfig.class);
             final DBIProvider provider = new DBIProvider(config);
@@ -82,28 +76,14 @@ public class TestPaymentDao {
         }
     }
 
-    @AfterSuite(groups = {"slow"})
-    public void stopMysql() {
-        helper.stopMysql();
-    }
-
-    @BeforeTest(groups = {"slow"})
-    public void cleanupDb() {
-        helper.cleanupAllTables();
-    }
-
-
-
-
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testRefund() {
-
         final UUID accountId = UUID.randomUUID();
         final UUID paymentId1 = UUID.randomUUID();
         final BigDecimal amount1 = new BigDecimal(13);
         final Currency currency = Currency.USD;
 
-        RefundModelDao refund1 =  new RefundModelDao(accountId, paymentId1, amount1, currency, true);
+        RefundModelDao refund1 = new RefundModelDao(accountId, paymentId1, amount1, currency, true);
 
         paymentDao.insertRefund(refund1, context);
         RefundModelDao refundCheck = paymentDao.getRefund(refund1.getId());
@@ -118,7 +98,7 @@ public class TestPaymentDao {
         final BigDecimal amount2 = new BigDecimal(7.00);
         final UUID paymentId2 = UUID.randomUUID();
 
-        RefundModelDao refund2 =  new RefundModelDao(accountId, paymentId2, amount2, currency, true);
+        RefundModelDao refund2 = new RefundModelDao(accountId, paymentId2, amount2, currency, true);
         paymentDao.insertRefund(refund2, context);
         paymentDao.updateRefundStatus(refund2.getId(), RefundStatus.COMPLETED, context);
 
@@ -142,7 +122,6 @@ public class TestPaymentDao {
             }
         }
     }
-
 
     @Test(groups = "slow")
     public void testUpdateStatus() {
@@ -208,7 +187,6 @@ public class TestPaymentDao {
         assertEquals(savedPayment.getEffectiveDate().compareTo(effectiveDate), 0);
         assertEquals(savedPayment.getPaymentStatus(), PaymentStatus.UNKNOWN);
 
-
         PaymentAttemptModelDao savedAttempt = paymentDao.getPaymentAttempt(attempt.getId());
         assertEquals(savedAttempt.getId(), attempt.getId());
         assertEquals(savedAttempt.getPaymentId(), payment.getId());
@@ -239,7 +217,7 @@ public class TestPaymentDao {
 
     }
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testNewAttempt() {
         final UUID accountId = UUID.randomUUID();
         final UUID invoiceId = UUID.randomUUID();
@@ -278,7 +256,6 @@ public class TestPaymentDao {
         assertEquals(savedAttempt1.getPaymentError(), null);
         assertEquals(savedAttempt1.getRequestedAmount().compareTo(amount), 0);
 
-
         final PaymentAttemptModelDao savedAttempt2 = attempts.get(1);
         assertEquals(savedAttempt2.getPaymentId(), payment.getId());
         assertEquals(savedAttempt2.getAccountId(), accountId);
@@ -288,7 +265,7 @@ public class TestPaymentDao {
         assertEquals(savedAttempt2.getRequestedAmount().compareTo(newAmount), 0);
     }
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testPaymentMethod() {
 
         final UUID paymentMethodId = UUID.randomUUID();
@@ -318,7 +295,5 @@ public class TestPaymentDao {
 
         final PaymentMethodModelDao deletedPaymentMethod = paymentDao.getPaymentMethod(paymentMethodId);
         assertNull(deletedPaymentMethod);
-
-
     }
 }
