@@ -71,7 +71,6 @@ import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
-
     private static final Logger log = LoggerFactory.getLogger(TestDefaultInvoiceGenerator.class);
 
     private final Clock clock = new ClockMock();
@@ -79,8 +78,6 @@ public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
     private final InvoiceGenerator generator;
 
     public TestDefaultInvoiceGenerator() {
-        super();
-
         final Clock clock = new DefaultClock();
         final InvoiceConfig invoiceConfig = new InvoiceConfig() {
             @Override

@@ -46,7 +46,7 @@ public class MockInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public void create(final Invoice invoice, final CallContext context) {
+    public void create(final Invoice invoice, final int billCycleDay, final CallContext context) {
         synchronized (monitor) {
             invoices.put(invoice.getId(), invoice);
         }

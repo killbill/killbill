@@ -114,7 +114,7 @@ public class TestInvoiceItemDao extends InvoiceDaoTestBase {
         final DateTime targetDate = new DateTime(2011, 5, 23, 0, 0, 0, 0);
         final DefaultInvoice invoice = new DefaultInvoice(accountId, clock.getUTCNow(), targetDate, Currency.USD);
 
-        invoiceDao.create(invoice, context);
+        invoiceDao.create(invoice, targetDate.getDayOfMonth(), context);
 
         final UUID invoiceId = invoice.getId();
         final DateTime startDate = new DateTime(2011, 3, 1, 0, 0, 0, 0);

@@ -31,7 +31,7 @@ import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.callcontext.CallContext;
 
 public interface InvoiceDao {
-    void create(Invoice invoice, CallContext context);
+    void create(final Invoice invoice, final int billCycleDay, final CallContext context);
 
     Invoice getById(final UUID id);
 

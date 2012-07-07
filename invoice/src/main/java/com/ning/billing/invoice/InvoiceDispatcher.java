@@ -172,7 +172,7 @@ public class InvoiceDispatcher {
                 }
                 outputDebugData(billingEvents, invoices);
                 if (!dryRun) {
-                    invoiceDao.create(invoice, context);
+                    invoiceDao.create(invoice, account.getBillCycleDay(), context);
 
                     final List<InvoiceItem> fixedPriceInvoiceItems = invoice.getInvoiceItems(FixedPriceInvoiceItem.class);
                     final List<InvoiceItem> recurringInvoiceItems = invoice.getInvoiceItems(RecurringInvoiceItem.class);

@@ -20,8 +20,13 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
+import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
@@ -35,23 +40,35 @@ import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
 
 public class DefaultInvoiceMigrationApi implements InvoiceMigrationApi {
+    private static final Logger log = LoggerFactory.getLogger(DefaultInvoiceMigrationApi.class);
 
+    private final AccountUserApi accountUserApi;
     private final DefaultInvoiceDao dao;
     private final Clock clock;
 
     @Inject
-    public DefaultInvoiceMigrationApi(final DefaultInvoiceDao dao, final Clock clock) {
+    public DefaultInvoiceMigrationApi(final AccountUserApi accountUserApi, final DefaultInvoiceDao dao, final Clock clock) {
+        this.accountUserApi = accountUserApi;
         this.dao = dao;
         this.clock = clock;
     }
 
     @Override
     public UUID createMigrationInvoice(final UUID accountId, final DateTime targetDate, final BigDecimal balance, final Currency currency) {
+        final Account account;
+        try {
+            account = accountUserApi.getAccountById(accountId);
+        } catch (AccountApiException e) {
+            log.warn("Unable to find account for id {}", accountId);
+            return null;
+        }
+
         final CallContext context = new DefaultCallContextFactory(clock).createMigrationCallContext("Migration", CallOrigin.INTERNAL, UserType.MIGRATION, clock.getUTCNow(), clock.getUTCNow());
         final Invoice migrationInvoice = new MigrationInvoice(accountId, clock.getUTCNow(), targetDate, currency);
         final InvoiceItem migrationInvoiceItem = new MigrationInvoiceItem(migrationInvoice.getId(), accountId, targetDate, balance, currency);
         migrationInvoice.addInvoiceItem(migrationInvoiceItem);
-        dao.create(migrationInvoice, context);
+
+        dao.create(migrationInvoice, account.getBillCycleDay(), context);
         return migrationInvoice.getId();
     }
 }

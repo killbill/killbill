@@ -139,13 +139,11 @@ public class DefaultInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public void create(final Invoice invoice, final CallContext context) {
+    public void create(final Invoice invoice, final int billCycleDay, final CallContext context) {
         invoiceSqlDao.inTransaction(new Transaction<Void, InvoiceSqlDao>() {
             @Override
             public Void inTransaction(final InvoiceSqlDao transactional, final TransactionStatus status) throws Exception {
-
                 final Invoice currentInvoice = transactional.getById(invoice.getId().toString());
-
                 if (currentInvoice == null) {
                     final List<EntityAudit> audits = new ArrayList<EntityAudit>();
 
@@ -163,7 +161,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
 
                     final List<InvoiceItem> recurringInvoiceItems = invoice.getInvoiceItems(RecurringInvoiceItem.class);
 
-                    notifyOfFutureBillingEvents(transactional, recurringInvoiceItems);
+                    notifyOfFutureBillingEvents(transactional, invoice, recurringInvoiceItems, billCycleDay);
 
                     final List<InvoicePayment> invoicePayments = invoice.getPayments();
                     final InvoicePaymentSqlDao invoicePaymentSqlDao = transactional.become(InvoicePaymentSqlDao.class);
@@ -509,11 +507,10 @@ public class DefaultInvoiceDao implements InvoiceDao {
         invoice.addPayments(invoicePayments);
     }
 
-    private void notifyOfFutureBillingEvents(final InvoiceSqlDao dao, final List<InvoiceItem> invoiceItems) {
+    private void notifyOfFutureBillingEvents(final InvoiceSqlDao dao, final Invoice invoice, final List<InvoiceItem> invoiceItems, final int billCycleDay) {
         DateTime nextBCD = null;
         UUID subscriptionForNextBCD = null;
         for (final InvoiceItem item : invoiceItems) {
-
             if (item.getInvoiceItemType() == InvoiceItemType.RECURRING) {
                 final RecurringInvoiceItem recurringInvoiceItem = (RecurringInvoiceItem) item;
                 if ((recurringInvoiceItem.getEndDate() != null) &&
@@ -526,7 +523,15 @@ public class DefaultInvoiceDao implements InvoiceDao {
                 }
             }
         }
-        if (subscriptionForNextBCD != null) {
+
+        // We need to be notified if and only if the maximum end date of the invoiced recurring items is equal
+        // to the next bill cycle day.
+        // We take the maximum because we're guaranteed to have invoiced all subscriptions up until that date
+        // (and no further processing is needed).
+        // Also, we only need to get notified on the BDC. For other invoice events (e.g. phase changes),
+        // we'll be notified by entitlement.
+        if (subscriptionForNextBCD != null && nextBCD != null && nextBCD.getDayOfMonth() == billCycleDay) {
+            final UUID accountId = invoice.getAccountId();
             nextBillingDatePoster.insertNextBillingNotification(dao, subscriptionForNextBCD, nextBCD);
         }
     }
