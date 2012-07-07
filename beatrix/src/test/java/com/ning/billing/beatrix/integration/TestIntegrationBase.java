@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.beatrix.integration;
 
 import java.io.IOException;
@@ -87,7 +88,6 @@ public class TestIntegrationBase implements TestListenerStatus {
     protected static final Logger log = LoggerFactory.getLogger(TestIntegration.class);
     protected static long AT_LEAST_ONE_MONTH_MS = 31L * 24L * 3600L * 1000L;
 
-
     protected static final long DELAY = 5000;
 
     @Inject
@@ -148,7 +148,6 @@ public class TestIntegrationBase implements TestListenerStatus {
 
     protected TestApiListener busHandler;
 
-
     private boolean isListenerFailed;
     private String listenerFailedMsg;
 
@@ -163,7 +162,6 @@ public class TestIntegrationBase implements TestListenerStatus {
         isListenerFailed = false;
         listenerFailedMsg = null;
     }
-
 
     protected void assertListenerStatus() {
         if (isListenerFailed) {
@@ -192,15 +190,12 @@ public class TestIntegrationBase implements TestListenerStatus {
         helper.initDb(junctionDb);
     }
 
-
     @BeforeClass(groups = "slow")
     public void setup() throws Exception {
-
         setupMySQL();
 
         context = new DefaultCallContextFactory(clock).createCallContext("Integration Test", CallOrigin.TEST, UserType.TEST);
         busHandler = new TestApiListener(this);
-
     }
 
     @AfterClass(groups = "slow")
@@ -208,10 +203,8 @@ public class TestIntegrationBase implements TestListenerStatus {
         helper.stopMysql();
     }
 
-
     @BeforeMethod(groups = "slow")
     public void setupTest() throws Exception {
-
         log.warn("\n");
         log.warn("RESET TEST FRAMEWORK\n\n");
 
@@ -235,7 +228,6 @@ public class TestIntegrationBase implements TestListenerStatus {
 
         log.warn("DONE WITH TEST\n");
     }
-
 
     protected void verifyTestResult(final UUID accountId, final UUID subscriptionId,
                                     final DateTime startDate, final DateTime endDate,
@@ -303,10 +295,10 @@ public class TestIntegrationBase implements TestListenerStatus {
                 return UUID.randomUUID().toString();
             }
         };
+
         paymentApi.addPaymentMethod(BeatrixModule.PLUGIN_NAME, account, true, info, context);
         return accountUserApi.getAccountById(account.getId());
     }
-
 
     protected AccountData getAccountData(final int billingDay) {
         final String someRandomKey = UUID.randomUUID().toString();
