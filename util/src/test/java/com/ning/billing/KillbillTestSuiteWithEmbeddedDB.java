@@ -34,14 +34,14 @@ public class KillbillTestSuiteWithEmbeddedDB extends KillbillTestSuite {
     }
 
     @BeforeSuite(groups = "slow")
-    public void startMysql() throws IOException, ClassNotFoundException, SQLException, URISyntaxException {
+    public void startMysqlBeforeTestSuite() throws IOException, ClassNotFoundException, SQLException, URISyntaxException {
         helper.startMysql();
         helper.initDb();
         helper.cleanupAllTables();
     }
 
     @BeforeMethod(groups = "slow")
-    public void cleanup() {
+    public void cleanupTablesBetweenMethods() {
         try {
             helper.cleanupAllTables();
         } catch (Exception ignored) {
@@ -49,7 +49,7 @@ public class KillbillTestSuiteWithEmbeddedDB extends KillbillTestSuite {
     }
 
     @AfterSuite(groups = "slow")
-    public void shutdownMysql() throws IOException, ClassNotFoundException, SQLException, URISyntaxException {
+    public void shutdownMysqlAfterTestSuite() throws IOException, ClassNotFoundException, SQLException, URISyntaxException {
         try {
             helper.cleanupAllTables();
             helper.stopMysql();

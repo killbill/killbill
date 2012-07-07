@@ -27,14 +27,14 @@ public class KillbillTestSuite {
     private static final Logger log = LoggerFactory.getLogger(KillbillTestSuite.class);
 
     @BeforeMethod(alwaysRun = true)
-    public void startTest(final Method method) throws Exception {
+    public void startTestSuite(final Method method) throws Exception {
         log.info("***************************************************************************************************");
         log.info("*** Starting test {}:{}", method.getDeclaringClass().getName(), method.getName());
         log.info("***************************************************************************************************");
     }
 
     @AfterMethod(alwaysRun = true)
-    public void endTest(final Method method) throws Exception {
+    public void endTestSuite(final Method method) throws Exception {
         log.info("***************************************************************************************************");
         log.info("***   Ending test {}:{}", method.getDeclaringClass().getName(), method.getName());
         log.info("***************************************************************************************************");
