@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2012 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -16,6 +16,8 @@
 
 package com.ning.billing.mock.glue;
 
+import org.mockito.Mockito;
+
 import com.google.inject.AbstractModule;
 import com.ning.billing.entitlement.api.EntitlementService;
 import com.ning.billing.entitlement.api.billing.ChargeThruApi;
@@ -23,41 +25,27 @@ import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi;
 import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.glue.EntitlementModule;
-import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.util.glue.RealImplementation;
 
 public class MockEntitlementModule extends AbstractModule implements EntitlementModule {
-
-    /* (non-Javadoc)
-    * @see com.ning.billing.mock.glue.EntitlementModule#installEntitlementService()
-    */
     @Override
     public void installEntitlementService() {
-        bind(EntitlementService.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementService.class));
+        bind(EntitlementService.class).toInstance(Mockito.mock(EntitlementService.class));
     }
 
-    /* (non-Javadoc)
-    * @see com.ning.billing.mock.glue.EntitlementModule#installEntitlementUserApi()
-    */
     @Override
     public void installEntitlementUserApi() {
-        bind(EntitlementUserApi.class).annotatedWith(RealImplementation.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementUserApi.class));
+        bind(EntitlementUserApi.class).annotatedWith(RealImplementation.class).toInstance(Mockito.mock(EntitlementUserApi.class));
     }
 
-    /* (non-Javadoc)
-    * @see com.ning.billing.mock.glue.EntitlementModule#installEntitlementMigrationApi()
-    */
     @Override
     public void installEntitlementMigrationApi() {
-        bind(EntitlementMigrationApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementMigrationApi.class));
+        bind(EntitlementMigrationApi.class).toInstance(Mockito.mock(EntitlementMigrationApi.class));
     }
 
-    /* (non-Javadoc)
-    * @see com.ning.billing.mock.glue.EntitlementModule#installChargeThruApi()
-    */
     @Override
     public void installChargeThruApi() {
-        bind(ChargeThruApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(ChargeThruApi.class));
+        bind(ChargeThruApi.class).toInstance(Mockito.mock(ChargeThruApi.class));
     }
 
     @Override
@@ -71,6 +59,6 @@ public class MockEntitlementModule extends AbstractModule implements Entitlement
 
     @Override
     public void installEntitlementTimelineApi() {
-        bind(EntitlementTimelineApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementTimelineApi.class));
+        bind(EntitlementTimelineApi.class).toInstance(Mockito.mock(EntitlementTimelineApi.class));
     }
 }

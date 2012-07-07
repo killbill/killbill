@@ -38,7 +38,6 @@ import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
-import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.mock.glue.MockClockModule;
 import com.ning.billing.mock.glue.MockJunctionModule;
@@ -138,8 +137,6 @@ public class TestPaymentApi {
     }
 
     private void testSimplePayment(final BigDecimal invoiceAmount, final BigDecimal requestedAmount, final BigDecimal expectedAmount) throws Exception {
-        ((ZombieControl) invoicePaymentApi).addResult("notifyOfPayment", BrainDeadProxyFactory.ZOMBIE_VOID);
-
         final DateTime now = new DateTime(DateTimeZone.UTC);
         final Invoice invoice = testHelper.createTestInvoice(account, now, Currency.USD);
 
