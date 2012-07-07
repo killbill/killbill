@@ -161,13 +161,8 @@ public class TestIntegration extends TestIntegrationBase {
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
         log.info("Moving clock from" + clock.getUTCNow() + " to " + clock.getUTCNow().plusDays(28));
         clock.addDays(28);// 26 / 5
-
-
-        Thread.sleep(1000000);
-
         assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
-
 
         busHandler.pushExpectedEvent(NextEvent.PHASE);
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
@@ -177,12 +172,10 @@ public class TestIntegration extends TestIntegrationBase {
         assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
 
-
         log.info("Moving clock from" + clock.getUTCNow() + " to " + clock.getUTCNow().plusDays(10));
         clock.addDays(10);// 8 / 6
         assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
-
 
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
         busHandler.pushExpectedEvent(NextEvent.PAYMENT);
@@ -195,8 +188,6 @@ public class TestIntegration extends TestIntegrationBase {
         clock.addDays(3);
         assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
-
-
     }
 
 
