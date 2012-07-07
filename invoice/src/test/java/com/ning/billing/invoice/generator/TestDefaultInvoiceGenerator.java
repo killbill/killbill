@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
@@ -71,7 +72,6 @@ import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
-
     private static final Logger log = LoggerFactory.getLogger(TestDefaultInvoiceGenerator.class);
 
     private final Clock clock = new ClockMock();
@@ -79,8 +79,6 @@ public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
     private final InvoiceGenerator generator;
 
     public TestDefaultInvoiceGenerator() {
-        super();
-
         final Clock clock = new DefaultClock();
         final InvoiceConfig invoiceConfig = new InvoiceConfig() {
             @Override
@@ -497,8 +495,8 @@ public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
         final Invoice invoice = generator.generateInvoice(UUID.randomUUID(), events, null, targetDate, Currency.USD);
         final RecurringInvoiceItem item = (RecurringInvoiceItem) invoice.getInvoiceItems().get(0);
 
-        // end date of the invoice item should be equal to exactly one month later
-        assertEquals(item.getEndDate().compareTo(startDate.plusMonths(1)), 0);
+        // end date of the invoice item should be equal to exactly one month later (rounded)
+        assertDatesEqualRounded(item.getEndDate(), startDate.plusMonths(1));
     }
 
     @Test(groups = {"fast"})
@@ -632,7 +630,7 @@ public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
         final PlanPhase phase3 = createMockMonthlyPlanPhase(new BigDecimal("19.95"), null, PhaseType.EVERGREEN);
 
         // set up billing events
-        final DateTime creationDate = new DateTime(2012, 3, 6, 21, 36, 18, 896);
+        final DateTime creationDate = new DateTime(2012, 3, 6, 21, 36, 18, 896, DateTimeZone.UTC);
         events.add(createBillingEvent(subscriptionId, creationDate, plan1, phase1, BILL_CYCLE_DAY));
 
         // trialPhaseEndDate = 2012/4/5
@@ -654,7 +652,7 @@ public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
         final Invoice invoice2 = generator.generateInvoice(accountId, events, invoiceList, trialPhaseEndDate, Currency.USD);
         assertNotNull(invoice2);
         assertEquals(invoice2.getNumberOfItems(), 1);
-        assertEquals(invoice2.getInvoiceItems().get(0).getStartDate().compareTo(trialPhaseEndDate), 0);
+        assertDatesEqualRounded(invoice2.getInvoiceItems().get(0).getStartDate(), trialPhaseEndDate);
         assertEquals(invoice2.getBalance().compareTo(new BigDecimal("3.21")), 0);
 
         invoiceList.add(invoice2);
@@ -662,7 +660,7 @@ public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
         final Invoice invoice3 = generator.generateInvoice(accountId, events, invoiceList, targetDate, Currency.USD);
         assertNotNull(invoice3);
         assertEquals(invoice3.getNumberOfItems(), 1);
-        assertEquals(invoice3.getInvoiceItems().get(0).getStartDate().compareTo(targetDate), 0);
+        assertDatesEqualRounded(invoice3.getInvoiceItems().get(0).getStartDate(), targetDate);
         assertEquals(invoice3.getBalance().compareTo(DISCOUNT_PRICE), 0);
 
         invoiceList.add(invoice3);
@@ -1007,4 +1005,9 @@ public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
         log.info("--------------------  END DETAIL ----------------------");
     }
 
+    private void assertDatesEqualRounded(final DateTime date1, final DateTime date2) {
+        assertEquals(date1.toDateTime(DateTimeZone.UTC).getDayOfMonth(), date2.toDateTime(DateTimeZone.UTC).getDayOfMonth());
+        assertEquals(date1.toDateTime(DateTimeZone.UTC).getMonthOfYear(), date2.toDateTime(DateTimeZone.UTC).getMonthOfYear());
+        assertEquals(date1.toDateTime(DateTimeZone.UTC).getYear(), date2.toDateTime(DateTimeZone.UTC).getYear());
+    }
 }

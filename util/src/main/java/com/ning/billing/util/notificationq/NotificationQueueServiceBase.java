@@ -31,7 +31,6 @@ import com.ning.billing.config.NotificationConfig;
 import com.ning.billing.util.clock.Clock;
 
 public abstract class NotificationQueueServiceBase implements NotificationQueueService {
-
     protected final Logger log = LoggerFactory.getLogger(DefaultNotificationQueueService.class);
 
     protected final Clock clock;
@@ -44,10 +43,10 @@ public abstract class NotificationQueueServiceBase implements NotificationQueueS
         this.queues = new TreeMap<String, NotificationQueue>();
     }
 
-
     @Override
     public NotificationQueue createNotificationQueue(final String svcName,
-                                                     final String queueName, final NotificationQueueHandler handler,
+                                                     final String queueName,
+                                                     final NotificationQueueHandler handler,
                                                      final NotificationConfig config) throws NotificationQueueAlreadyExists {
         if (svcName == null || queueName == null || handler == null || config == null) {
             throw new RuntimeException("Need to specify all parameters");
@@ -71,7 +70,7 @@ public abstract class NotificationQueueServiceBase implements NotificationQueueS
     public NotificationQueue getNotificationQueue(final String svcName,
                                                   final String queueName) throws NoSuchNotificationQueue {
 
-        NotificationQueue result = null;
+        NotificationQueue result;
         final String compositeName = getCompositeName(svcName, queueName);
         synchronized (queues) {
             result = queues.get(compositeName);
@@ -82,7 +81,6 @@ public abstract class NotificationQueueServiceBase implements NotificationQueueS
         }
         return result;
     }
-
 
     public void deleteNotificationQueue(final String svcName, final String queueName)
             throws NoSuchNotificationQueue {
@@ -96,7 +94,6 @@ public abstract class NotificationQueueServiceBase implements NotificationQueueS
             queues.remove(compositeName);
         }
     }
-
 
     //
     // Test ONLY
@@ -144,8 +141,16 @@ public abstract class NotificationQueueServiceBase implements NotificationQueueS
                                                                          String queueName, NotificationQueueHandler handler,
                                                                          NotificationConfig config);
 
-
     public static String getCompositeName(final String svcName, final String queueName) {
         return svcName + ":" + queueName;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append("NotificationQueueServiceBase");
+        sb.append("{queues=").append(queues);
+        sb.append('}');
+        return sb.toString();
     }
 }

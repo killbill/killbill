@@ -25,8 +25,6 @@ import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.invoice.api.InvoiceNotifier;
-import com.ning.billing.invoice.api.test.DefaultInvoiceTestApi;
-import com.ning.billing.invoice.api.test.InvoiceTestApi;
 import com.ning.billing.invoice.dao.InvoiceItemSqlDao;
 import com.ning.billing.invoice.dao.InvoicePaymentSqlDao;
 import com.ning.billing.invoice.notification.MockNextBillingDateNotifier;
@@ -117,7 +115,6 @@ public class InvoiceModuleWithEmbeddedDb extends DefaultInvoiceModule {
 
         super.configure();
 
-        bind(InvoiceTestApi.class).to(DefaultInvoiceTestApi.class).asEagerSingleton();
         install(new BusModule());
         install(new TemplateModule());
 

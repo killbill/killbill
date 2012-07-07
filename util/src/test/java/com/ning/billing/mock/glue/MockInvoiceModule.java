@@ -21,11 +21,9 @@ import com.ning.billing.glue.InvoiceModule;
 import com.ning.billing.invoice.api.InvoiceMigrationApi;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.api.InvoiceUserApi;
-import com.ning.billing.invoice.api.test.InvoiceTestApi;
 import com.ning.billing.mock.BrainDeadProxyFactory;
 
 public class MockInvoiceModule extends AbstractModule implements InvoiceModule {
-
     @Override
     public void installInvoiceUserApi() {
         bind(InvoiceUserApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(InvoiceUserApi.class));
@@ -42,15 +40,9 @@ public class MockInvoiceModule extends AbstractModule implements InvoiceModule {
     }
 
     @Override
-    public void installInvoiceTestApi() {
-        bind(InvoiceTestApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(InvoiceTestApi.class));
-    }
-
-    @Override
     protected void configure() {
         installInvoiceUserApi();
         installInvoicePaymentApi();
         installInvoiceMigrationApi();
-        installInvoiceTestApi();
     }
 }
