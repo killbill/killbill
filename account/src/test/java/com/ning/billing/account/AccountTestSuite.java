@@ -18,5 +18,5 @@ package com.ning.billing.account;
 
 import com.ning.billing.KillbillTestSuite;
 
-public class AccountTestSuite extends KillbillTestSuite {
+public abstract class AccountTestSuite extends KillbillTestSuite {
 }
