@@ -46,6 +46,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.inject.Module;
+import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.account.glue.AccountModule;
 import com.ning.billing.analytics.setup.AnalyticsModule;
 import com.ning.billing.api.TestApiListener;
@@ -71,6 +72,7 @@ import com.ning.billing.jaxrs.resources.JaxrsResource;
 import com.ning.billing.junction.glue.DefaultJunctionModule;
 import com.ning.billing.payment.glue.PaymentModule;
 import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;
+import com.ning.billing.server.ServerTestSuiteWithEmbeddedDB;
 import com.ning.billing.server.listeners.KillbillGuiceListener;
 import com.ning.billing.server.modules.KillbillServerModule;
 import com.ning.billing.util.clock.Clock;
@@ -95,7 +97,7 @@ import com.ning.jetty.core.server.HttpServer;
 
 import static org.testng.Assert.assertNotNull;
 
-public class TestJaxrsBase {
+public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
     protected static final String PLUGIN_NAME = "noop";
 
     // STEPH
@@ -110,7 +112,7 @@ public class TestJaxrsBase {
 
     private static TestKillbillGuiceListener listener;
 
-    private MysqlTestingHelper helper;
+    private final MysqlTestingHelper helper = KillbillTestSuiteWithEmbeddedDB.getMysqlTestingHelper();
     private HttpServer server;
 
     protected CoreConfig config;
@@ -236,19 +238,7 @@ public class TestJaxrsBase {
 
     @BeforeMethod(groups = "slow")
     public void cleanupBeforeMethod(final Method method) {
-        log.info("***************************************************************************************************");
-        log.info("*** Starting test {}:{}", method.getDeclaringClass().getName(), method.getName());
-        log.info("***************************************************************************************************");
-
         busHandler.reset();
-        helper.cleanupAllTables();
-    }
-
-    @AfterMethod(groups = "slow")
-    public void endTest(final Method method) throws Exception {
-        log.info("***************************************************************************************************");
-        log.info("***   Ending test {}:{}", method.getDeclaringClass().getName(), method.getName());
-        log.info("***************************************************************************************************");
     }
 
     @BeforeClass(groups = "slow")
@@ -262,28 +252,7 @@ public class TestJaxrsBase {
         //mapper.setPropertyNamingStrategy(new PropertyNamingStrategy.LowerCaseWithUnderscoresStrategy());
 
         busHandler = new TestApiListener(null);
-        this.helper = listener.getMysqlTestingHelper();
         this.clock = (ClockMock) listener.getClock();
-    }
-
-    private void setupMySQL() throws IOException {
-        final String accountDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/account/ddl.sql"));
-        final String entitlementDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/entitlement/ddl.sql"));
-        final String invoiceDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
-        final String paymentDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/payment/ddl.sql"));
-        final String utilDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
-        final String analyticsDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/analytics/ddl.sql"));
-        final String junctionDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/junction/ddl.sql"));
-
-        helper.startMysql();
-
-        helper.initDb(accountDdl);
-        helper.initDb(entitlementDdl);
-        helper.initDb(invoiceDdl);
-        helper.initDb(paymentDdl);
-        helper.initDb(utilDdl);
-        helper.initDb(analyticsDdl);
-        helper.initDb(junctionDdl);
     }
 
     private void loadConfig() {
@@ -294,11 +263,9 @@ public class TestJaxrsBase {
 
     @BeforeSuite(groups = "slow")
     public void setup() throws Exception {
-
         loadSystemPropertiesFromClasspath("/killbill.properties");
         loadConfig();
 
-        this.helper = new MysqlTestingHelper();
         this.clock = new ClockMock();
         listener = new TestKillbillGuiceListener(helper, clock);
         server = new HttpServer();
@@ -313,9 +280,6 @@ public class TestJaxrsBase {
         };
         server.configure(config, eventListeners, new HashMap<FilterHolder, String>());
 
-        setupMySQL();
-        helper.cleanupAllTables();
-
         server.start();
     }
 
@@ -324,10 +288,6 @@ public class TestJaxrsBase {
         try {
             server.stop();
         } catch (Exception ignored) {
-        }
-
-        if (helper != null) {
-            helper.stopMysql();
         }
     }
 
