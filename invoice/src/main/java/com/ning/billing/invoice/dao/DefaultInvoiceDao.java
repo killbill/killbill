@@ -26,6 +26,7 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
+import org.joda.time.MutableDateTime;
 import org.joda.time.field.ZeroIsMaxDateTimeField;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
@@ -180,11 +181,12 @@ public class DefaultInvoiceDao implements InvoiceDao {
 
                     transactional.insertAuditFromTransaction(audits, context);
                 }
-
                 return null;
             }
         });
     }
+
+
 
     private List<EntityAudit> createAudits(final TableName tableName, final List<Long> recordIdList) {
         final List<EntityAudit> entityAuditList = new ArrayList<EntityAudit>();
@@ -524,15 +526,25 @@ public class DefaultInvoiceDao implements InvoiceDao {
     }
 
     private void notifyOfFutureBillingEvents(final InvoiceSqlDao dao, final List<InvoiceItem> invoiceItems) {
+        DateTime nextBCD = null;
+        UUID subscriptionForNextBCD = null;
         for (final InvoiceItem item : invoiceItems) {
+
+
             if (item.getInvoiceItemType() == InvoiceItemType.RECURRING) {
                 final RecurringInvoiceItem recurringInvoiceItem = (RecurringInvoiceItem) item;
                 if ((recurringInvoiceItem.getEndDate() != null) &&
                         (recurringInvoiceItem.getAmount() == null ||
                                 recurringInvoiceItem.getAmount().compareTo(BigDecimal.ZERO) >= 0)) {
-                    nextBillingDatePoster.insertNextBillingNotification(dao, item.getSubscriptionId(), recurringInvoiceItem.getEndDate());
+                    if (nextBCD == null || nextBCD.compareTo(recurringInvoiceItem.getEndDate()) > 0) {
+                        nextBCD = recurringInvoiceItem.getEndDate();
+                        subscriptionForNextBCD = recurringInvoiceItem.getSubscriptionId();
+                    }
                 }
             }
+        }
+        if (subscriptionForNextBCD != null) {
+            nextBillingDatePoster.insertNextBillingNotification(dao, subscriptionForNextBCD, nextBCD);
         }
     }
 }
