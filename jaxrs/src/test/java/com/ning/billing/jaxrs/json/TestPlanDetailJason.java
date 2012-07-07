@@ -30,8 +30,9 @@ import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.Product;
+import com.ning.billing.jaxrs.JaxrsTestSuite;
 
-public class TestPlanDetailJason {
+public class TestPlanDetailJason extends JaxrsTestSuite {
     private static final ObjectMapper mapper = new ObjectMapper();
 
     @Test(groups = "fast")

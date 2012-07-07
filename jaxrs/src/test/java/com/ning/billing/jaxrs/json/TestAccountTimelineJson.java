@@ -16,5 +16,7 @@
 
 package com.ning.billing.jaxrs.json;
 
-public class TestAccountTimelineJson {
+import com.ning.billing.jaxrs.JaxrsTestSuite;
+
+public class TestAccountTimelineJson extends JaxrsTestSuite {
 }

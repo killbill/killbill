@@ -32,8 +32,9 @@ import com.google.common.collect.ImmutableList;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.jaxrs.JaxrsTestSuite;
 
-public class TestInvoiceJsonWithItems {
+public class TestInvoiceJsonWithItems extends JaxrsTestSuite {
     private static final ObjectMapper mapper = new ObjectMapper();
 
     static {

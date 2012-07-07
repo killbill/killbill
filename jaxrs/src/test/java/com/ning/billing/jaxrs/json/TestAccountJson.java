@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.jaxrs.json;
 
 import java.util.UUID;
@@ -24,9 +25,10 @@ import org.testng.annotations.Test;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.jaxrs.JaxrsTestSuite;
 import com.ning.billing.mock.MockAccountBuilder;
 
-public class TestAccountJson {
+public class TestAccountJson extends JaxrsTestSuite {
     private static final ObjectMapper mapper = new ObjectMapper();
 
     @Test(groups = "fast")

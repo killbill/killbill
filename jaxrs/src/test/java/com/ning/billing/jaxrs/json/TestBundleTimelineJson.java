@@ -35,9 +35,10 @@ import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline;
+import com.ning.billing.jaxrs.JaxrsTestSuite;
 import com.ning.billing.util.clock.DefaultClock;
 
-public class TestBundleTimelineJson {
+public class TestBundleTimelineJson extends JaxrsTestSuite {
     private static final ObjectMapper mapper = new ObjectMapper();
 
     static {
@@ -157,7 +158,6 @@ public class TestBundleTimelineJson {
         final Integer retryCount = Integer.MAX_VALUE;
         final String currency = "USD";
         final String status = UUID.randomUUID().toString();
-
 
         return new PaymentJsonSimple(amount, paidAmount, accountId.toString(), invoiceId.toString(), paymentId.toString(),
                                      paymentRequestedDate, paymentEffectiveDate, retryCount,

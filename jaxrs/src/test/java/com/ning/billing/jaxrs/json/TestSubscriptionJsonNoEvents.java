@@ -35,8 +35,9 @@ import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.jaxrs.JaxrsTestSuite;
 
-public class TestSubscriptionJsonNoEvents {
+public class TestSubscriptionJsonNoEvents extends JaxrsTestSuite {
     private static final ObjectMapper mapper = new ObjectMapper();
 
     static {
