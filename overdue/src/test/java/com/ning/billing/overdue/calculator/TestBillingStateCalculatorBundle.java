@@ -23,6 +23,7 @@ import java.util.SortedSet;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -36,8 +37,6 @@ import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceUserApi;
-import com.ning.billing.mock.BrainDeadProxyFactory;
-import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.overdue.config.api.BillingStateBundle;
 import com.ning.billing.overdue.config.api.PaymentResponse;
 import com.ning.billing.util.clock.Clock;
@@ -45,12 +44,11 @@ import com.ning.billing.util.clock.ClockMock;
 
 public class TestBillingStateCalculatorBundle extends TestBillingStateCalculator {
 
-
     private List<InvoiceItem> createInvoiceItems(final UUID[] bundleIds) {
         final List<InvoiceItem> result = new ArrayList<InvoiceItem>();
         for (final UUID id : bundleIds) {
-            final InvoiceItem ii = BrainDeadProxyFactory.createBrainDeadProxyFor(InvoiceItem.class);
-            ((ZombieControl) ii).addResult("getBundleId", id);
+            final InvoiceItem ii = Mockito.mock(InvoiceItem.class);
+            Mockito.when(ii.getBundleId()).thenReturn(id);
             result.add(ii);
         }
         return result;
@@ -69,12 +67,10 @@ public class TestBillingStateCalculatorBundle extends TestBillingStateCalculator
         invoices.add(createInvoice(now, new BigDecimal("1000.00"), createInvoiceItems(new UUID[]{thisBundleId})));
         invoices.add(createInvoice(now, new BigDecimal("10000.00"), createInvoiceItems(new UUID[]{thatBundleId, thisBundleId})));
 
-
         final Clock clock = new ClockMock();
-        final InvoiceUserApi invoiceApi = BrainDeadProxyFactory.createBrainDeadProxyFor(InvoiceUserApi.class);
-        final EntitlementUserApi entitlementApi = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementUserApi.class);
-        ((ZombieControl) invoiceApi).addResult("getUnpaidInvoicesByAccountId", invoices);
-
+        final InvoiceUserApi invoiceApi = Mockito.mock(InvoiceUserApi.class);
+        final EntitlementUserApi entitlementApi = Mockito.mock(EntitlementUserApi.class);
+        Mockito.when(invoiceApi.getUnpaidInvoicesByAccountId(Mockito.<UUID>any(), Mockito.<DateTime>any())).thenReturn(invoices);
 
         final BillingStateCalculatorBundle calc = new BillingStateCalculatorBundle(entitlementApi, invoiceApi, clock);
         final SortedSet<Invoice> resultinvoices = calc.unpaidInvoicesForBundle(thisBundleId, new UUID(0L, 0L));
@@ -99,24 +95,23 @@ public class TestBillingStateCalculatorBundle extends TestBillingStateCalculator
         invoices.add(createInvoice(now.minusDays(2), new BigDecimal("1000.00"), createInvoiceItems(new UUID[]{thisBundleId})));
         invoices.add(createInvoice(now.minusDays(1), new BigDecimal("10000.00"), createInvoiceItems(new UUID[]{thatBundleId, thisBundleId})));
 
-
         final Clock clock = new ClockMock();
-        final InvoiceUserApi invoiceApi = BrainDeadProxyFactory.createBrainDeadProxyFor(InvoiceUserApi.class);
-        ((ZombieControl) invoiceApi).addResult("getUnpaidInvoicesByAccountId", invoices);
+        final InvoiceUserApi invoiceApi = Mockito.mock(InvoiceUserApi.class);
+        Mockito.when(invoiceApi.getUnpaidInvoicesByAccountId(Mockito.<UUID>any(), Mockito.<DateTime>any())).thenReturn(invoices);
 
-        final SubscriptionBundle bundle = BrainDeadProxyFactory.createBrainDeadProxyFor(SubscriptionBundle.class);
-        ((ZombieControl) bundle).addResult("getId", thisBundleId);
-        ((ZombieControl) bundle).addResult("getAccountId", UUID.randomUUID());
+        final SubscriptionBundle bundle = Mockito.mock(SubscriptionBundle.class);
+        Mockito.when(bundle.getId()).thenReturn(thisBundleId);
+        Mockito.when(bundle.getAccountId()).thenReturn(UUID.randomUUID());
 
-        final EntitlementUserApi entitlementApi = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementUserApi.class);
-        final Subscription subscription = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
-        ((ZombieControl) entitlementApi).addResult("getBaseSubscription", subscription);
+        final EntitlementUserApi entitlementApi = Mockito.mock(EntitlementUserApi.class);
+        final Subscription subscription = Mockito.mock(Subscription.class);
+        Mockito.when(entitlementApi.getBaseSubscription(Mockito.<UUID>any())).thenReturn(subscription);
 
         final Plan plan = MockPlan.createBicycleNoTrialEvergreen1USD();
         final PriceList pricelist = new MockPriceList();
-        ((ZombieControl) subscription).addResult("getCurrentPlan", plan);
-        ((ZombieControl) subscription).addResult("getCurrentPriceList", pricelist);
-        ((ZombieControl) subscription).addResult("getCurrentPhase", plan.getFinalPhase());
+        Mockito.when(subscription.getCurrentPlan()).thenReturn(plan);
+        Mockito.when(subscription.getCurrentPriceList()).thenReturn(pricelist);
+        Mockito.when(subscription.getCurrentPhase()).thenReturn(plan.getFinalPhase());
 
         final BillingStateCalculatorBundle calc = new BillingStateCalculatorBundle(entitlementApi, invoiceApi, clock);
 
@@ -134,7 +129,6 @@ public class TestBillingStateCalculatorBundle extends TestBillingStateCalculator
 
     }
 
-
     @Test(groups = {"fast"}, enabled = true)
     public void testcalculateBillingStateForBundleNoOverdueInvoices() throws Exception {
 
@@ -145,22 +139,22 @@ public class TestBillingStateCalculatorBundle extends TestBillingStateCalculator
         final List<Invoice> invoices = new ArrayList<Invoice>(5);
 
         final Clock clock = new ClockMock();
-        final InvoiceUserApi invoiceApi = BrainDeadProxyFactory.createBrainDeadProxyFor(InvoiceUserApi.class);
-        ((ZombieControl) invoiceApi).addResult("getUnpaidInvoicesByAccountId", invoices);
+        final InvoiceUserApi invoiceApi = Mockito.mock(InvoiceUserApi.class);
+        Mockito.when(invoiceApi.getUnpaidInvoicesByAccountId(Mockito.<UUID>any(), Mockito.<DateTime>any())).thenReturn(invoices);
 
-        final SubscriptionBundle bundle = BrainDeadProxyFactory.createBrainDeadProxyFor(SubscriptionBundle.class);
-        ((ZombieControl) bundle).addResult("getId", thisBundleId);
-        ((ZombieControl) bundle).addResult("getAccountId", UUID.randomUUID());
+        final SubscriptionBundle bundle = Mockito.mock(SubscriptionBundle.class);
+        Mockito.when(bundle.getId()).thenReturn(thisBundleId);
+        Mockito.when(bundle.getAccountId()).thenReturn(UUID.randomUUID());
 
-        final EntitlementUserApi entitlementApi = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementUserApi.class);
-        final Subscription subscription = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
-        ((ZombieControl) entitlementApi).addResult("getBaseSubscription", subscription);
+        final EntitlementUserApi entitlementApi = Mockito.mock(EntitlementUserApi.class);
+        final Subscription subscription = Mockito.mock(Subscription.class);
+        Mockito.when(entitlementApi.getBaseSubscription(Mockito.<UUID>any())).thenReturn(subscription);
 
         final Plan plan = MockPlan.createBicycleNoTrialEvergreen1USD();
         final PriceList pricelist = new MockPriceList();
-        ((ZombieControl) subscription).addResult("getCurrentPlan", plan);
-        ((ZombieControl) subscription).addResult("getCurrentPriceList", pricelist);
-        ((ZombieControl) subscription).addResult("getCurrentPhase", plan.getFinalPhase());
+        Mockito.when(subscription.getCurrentPlan()).thenReturn(plan);
+        Mockito.when(subscription.getCurrentPriceList()).thenReturn(pricelist);
+        Mockito.when(subscription.getCurrentPhase()).thenReturn(plan.getFinalPhase());
 
         final BillingStateCalculatorBundle calc = new BillingStateCalculatorBundle(entitlementApi, invoiceApi, clock);
 
@@ -181,6 +175,4 @@ public class TestBillingStateCalculatorBundle extends TestBillingStateCalculator
     public void testCorrectBehaviorForNoOverdueConfig() {
         //TODO with no overdue config the system should be fine - take no action but see no NPEs
     }
-
-
 }
