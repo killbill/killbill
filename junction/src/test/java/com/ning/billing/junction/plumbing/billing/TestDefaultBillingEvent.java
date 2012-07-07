@@ -25,6 +25,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -41,15 +42,13 @@ import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.billing.BillingEvent;
 import com.ning.billing.entitlement.api.billing.BillingModeType;
 import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.mock.BrainDeadProxyFactory;
-import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 
 public class TestDefaultBillingEvent {
     public static final UUID ID_ZERO = new UUID(0L, 0L);
     public static final UUID ID_ONE = new UUID(0L, 1L);
     public static final UUID ID_TWO = new UUID(0L, 2L);
 
-    @Test(groups = {"fast"})
+    @Test(groups = "fast")
     public void testEventOrderingSubscription() {
 
         final BillingEvent event0 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-31T00:02:04.000Z"), SubscriptionTransitionType.CREATE);
@@ -68,9 +67,8 @@ public class TestDefaultBillingEvent {
         Assert.assertEquals(event2, it.next());
     }
 
-    @Test(groups = {"fast"})
+    @Test(groups = "fast")
     public void testEventOrderingDate() {
-
         final BillingEvent event0 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-01T00:02:04.000Z"), SubscriptionTransitionType.CREATE);
         final BillingEvent event1 = createEvent(subscription(ID_ZERO), new DateTime("2012-02-01T00:02:04.000Z"), SubscriptionTransitionType.CREATE);
         final BillingEvent event2 = createEvent(subscription(ID_ZERO), new DateTime("2012-03-01T00:02:04.000Z"), SubscriptionTransitionType.CREATE);
@@ -87,9 +85,8 @@ public class TestDefaultBillingEvent {
         Assert.assertEquals(event2, it.next());
     }
 
-    @Test(groups = {"fast"})
+    @Test(groups = "fast")
     public void testEventTotalOrdering() {
-
         final BillingEvent event0 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-01T00:02:04.000Z"), SubscriptionTransitionType.CREATE, 1L);
         final BillingEvent event1 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-01T00:02:04.000Z"), SubscriptionTransitionType.CANCEL, 2L);
         final BillingEvent event2 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-01T00:02:04.000Z"), SubscriptionTransitionType.RE_CREATE, 3L);
@@ -106,9 +103,8 @@ public class TestDefaultBillingEvent {
         Assert.assertEquals(event2, it.next());
     }
 
-    @Test(groups = {"fast"})
+    @Test(groups = "fast")
     public void testEventOrderingMix() {
-
         final BillingEvent event0 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-01T00:02:04.000Z"), SubscriptionTransitionType.CREATE);
         final BillingEvent event1 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-02T00:02:04.000Z"), SubscriptionTransitionType.CHANGE);
         final BillingEvent event2 = createEvent(subscription(ID_ONE), new DateTime("2012-01-01T00:02:04.000Z"), SubscriptionTransitionType.CANCEL);
@@ -149,9 +145,8 @@ public class TestDefaultBillingEvent {
     }
 
     private Subscription subscription(final UUID id) {
-        final Subscription subscription = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
-        ((ZombieControl) subscription).addResult("getId", id);
+        final Subscription subscription = Mockito.mock(Subscription.class);
+        Mockito.when(subscription.getId()).thenReturn(id);
         return subscription;
     }
-
 }

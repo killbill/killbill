@@ -19,6 +19,7 @@ package com.ning.billing.junction.blocking;
 import java.util.SortedSet;
 import java.util.UUID;
 
+import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -28,6 +29,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
+import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.junction.api.Blockable;
@@ -37,18 +39,14 @@ import com.ning.billing.junction.api.DefaultBlockingState;
 import com.ning.billing.junction.block.BlockingChecker;
 import com.ning.billing.junction.block.DefaultBlockingChecker;
 import com.ning.billing.junction.dao.BlockingStateDao;
-import com.ning.billing.mock.BrainDeadProxyFactory;
-import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.util.clock.Clock;
 
 public class TestBlockingChecker {
-
     private BlockingState bundleState;
     private BlockingState subscriptionState;
     private BlockingState accountState;
 
     private final BlockingStateDao dao = new BlockingStateDao() {
-
         @Override
         public BlockingState getBlockingStateFor(final Blockable blockable) {
             if (blockable.getId() == account.getId()) {
@@ -92,43 +90,44 @@ public class TestBlockingChecker {
     private Account account;
     private SubscriptionBundle bundle;
 
-    @BeforeClass(groups = {"fast"})
+    @BeforeClass(groups = "fast")
     public void setup() {
-        account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
-        ((ZombieControl) account).addResult("getId", UUID.randomUUID());
+        final UUID accountId = UUID.randomUUID();
+        account = Mockito.mock(Account.class);
+        Mockito.when(account.getId()).thenReturn(accountId);
 
-        bundle = BrainDeadProxyFactory.createBrainDeadProxyFor(SubscriptionBundle.class);
-        ((ZombieControl) bundle).addResult("getAccountId", account.getId());
-        ((ZombieControl) bundle).addResult("getId", UUID.randomUUID());
-        ((ZombieControl) bundle).addResult("getKey", "key");
+        bundle = Mockito.mock(SubscriptionBundle.class);
+        Mockito.when(bundle.getAccountId()).thenReturn(accountId);
+        final UUID bundleId = UUID.randomUUID();
+        Mockito.when(bundle.getId()).thenReturn(bundleId);
+        Mockito.when(bundle.getKey()).thenReturn("key");
 
-        subscription = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class);
-        ((ZombieControl) subscription).addResult("getId", UUID.randomUUID());
-        ((ZombieControl) subscription).addResult("getBundleId", bundle.getId());
-
+        subscription = Mockito.mock(Subscription.class);
+        Mockito.when(subscription.getId()).thenReturn(UUID.randomUUID());
+        Mockito.when(subscription.getBundleId()).thenReturn(bundleId);
 
         final Injector i = Guice.createInjector(new AbstractModule() {
-
             @Override
             protected void configure() {
                 bind(BlockingChecker.class).to(DefaultBlockingChecker.class).asEagerSingleton();
 
                 bind(BlockingStateDao.class).toInstance(dao);
 
-                final EntitlementUserApi entitlementUserApi = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementUserApi.class);
+                final EntitlementUserApi entitlementUserApi = Mockito.mock(EntitlementUserApi.class);
                 bind(EntitlementUserApi.class).toInstance(entitlementUserApi);
-                ((ZombieControl) entitlementUserApi).addResult("getBundleFromId", bundle);
-
+                try {
+                    Mockito.when(entitlementUserApi.getBundleFromId(Mockito.<UUID>any())).thenReturn(bundle);
+                } catch (EntitlementUserApiException e) {
+                    Assert.fail(e.toString());
+                }
             }
-
         });
         checker = i.getInstance(BlockingChecker.class);
     }
 
-
     private void setStateBundle(final boolean bC, final boolean bE, final boolean bB) {
         bundleState = new DefaultBlockingState(UUID.randomUUID(), "state", Blockable.Type.SUBSCRIPTION_BUNDLE, "test-service", bC, bE, bB);
-        ((ZombieControl) bundle).addResult("getBlockingState", bundleState);
+        Mockito.when(bundle.getBlockingState()).thenReturn(bundleState);
     }
 
     private void setStateAccount(final boolean bC, final boolean bE, final boolean bB) {
@@ -137,10 +136,10 @@ public class TestBlockingChecker {
 
     private void setStateSubscription(final boolean bC, final boolean bE, final boolean bB) {
         subscriptionState = new DefaultBlockingState(UUID.randomUUID(), "state", Blockable.Type.SUBSCRIPTION_BUNDLE, "test-service", bC, bE, bB);
-        ((ZombieControl) subscription).addResult("getBlockingState", subscriptionState);
+        Mockito.when(subscription.getBlockingState()).thenReturn(subscriptionState);
     }
 
-    @Test(groups = {"fast"}, enabled = true)
+    @Test(groups = "fast")
     public void testSubscriptionChecker() throws Exception {
         setStateAccount(false, false, false);
         setStateBundle(false, false, false);
@@ -212,7 +211,6 @@ public class TestBlockingChecker {
             //Expected behavior
         }
 
-
         //BLOCKED ACCOUNT
         setStateSubscription(false, false, false);
         setStateBundle(false, false, false);
@@ -245,11 +243,9 @@ public class TestBlockingChecker {
         } catch (BlockingApiException e) {
             //Expected behavior
         }
-
-
     }
 
-    @Test(groups = {"fast"}, enabled = true)
+    @Test(groups = "fast")
     public void testBundleChecker() throws Exception {
         setStateAccount(false, false, false);
         setStateBundle(false, false, false);
@@ -290,7 +286,6 @@ public class TestBlockingChecker {
             //Expected behavior
         }
 
-
         //BLOCKED ACCOUNT
         setStateSubscription(false, false, false);
         setStateBundle(false, false, false);
@@ -323,11 +318,9 @@ public class TestBlockingChecker {
         } catch (BlockingApiException e) {
             //Expected behavior
         }
-
-
     }
 
-    @Test(groups = {"fast"}, enabled = true)
+    @Test(groups = "fast")
     public void testAccountChecker() throws Exception {
         setStateAccount(false, false, false);
         setStateBundle(false, false, false);
@@ -368,9 +361,5 @@ public class TestBlockingChecker {
         } catch (BlockingApiException e) {
             //Expected behavior
         }
-
-
     }
-
-
 }

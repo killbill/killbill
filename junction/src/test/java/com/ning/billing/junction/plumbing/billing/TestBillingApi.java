@@ -29,12 +29,14 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.MockCatalog;
 import com.ning.billing.catalog.MockCatalogService;
@@ -54,6 +56,7 @@ import com.ning.billing.entitlement.api.billing.BillingEvent;
 import com.ning.billing.entitlement.api.billing.BillingModeType;
 import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
+import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
@@ -64,8 +67,6 @@ import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.junction.api.DefaultBlockingState;
 import com.ning.billing.lifecycle.KillbillService.ServiceException;
-import com.ning.billing.mock.BrainDeadProxyFactory;
-import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.mock.MockEffectiveSubscriptionEvent;
 import com.ning.billing.mock.MockSubscription;
 import com.ning.billing.util.api.TagUserApi;
@@ -84,7 +85,6 @@ import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 public class TestBillingApi {
-
     class MockPrice implements InternationalPrice {
         private final BigDecimal price;
 
@@ -101,7 +101,6 @@ public class TestBillingApi {
         public Price[] getPrices() {
             return new Price[]{
                     new Price() {
-
                         @Override
                         public Currency getCurrency() {
                             return Currency.USD;
@@ -155,10 +154,10 @@ public class TestBillingApi {
     }
 
     @BeforeMethod(groups = {"fast", "slow"})
-    public void setupEveryTime() {
+    public void setupEveryTime() throws EntitlementUserApiException {
         final List<SubscriptionBundle> bundles = new ArrayList<SubscriptionBundle>();
-        final SubscriptionBundle bundle = BrainDeadProxyFactory.createBrainDeadProxyFor(SubscriptionBundle.class);
-        ((ZombieControl) bundle).addResult("getId", bunId);
+        final SubscriptionBundle bundle = Mockito.mock(SubscriptionBundle.class);
+        Mockito.when(bundle.getId()).thenReturn(bunId);
 
         //new SubscriptionBundleData( eventId,"TestKey", subId,  clock.getUTCNow().minusDays(4), null);
         bundles.add(bundle);
@@ -171,26 +170,27 @@ public class TestBillingApi {
 
         subscriptions.add(subscription);
 
-        entitlementApi = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementUserApi.class);
-        ((ZombieControl) entitlementApi).addResult("getBundlesForAccount", bundles);
-        ((ZombieControl) entitlementApi).addResult("getSubscriptionsForBundle", subscriptions);
-        ((ZombieControl) entitlementApi).addResult("getSubscriptionFromId", subscription);
-        ((ZombieControl) entitlementApi).addResult("getBundleFromId", bundle);
-        ((ZombieControl) entitlementApi).addResult("getBaseSubscription", subscription);
+        entitlementApi = Mockito.mock(EntitlementUserApi.class);
+        Mockito.when(entitlementApi.getBundlesForAccount(Mockito.<UUID>any())).thenReturn(bundles);
+        Mockito.when(entitlementApi.getSubscriptionsForBundle(Mockito.<UUID>any())).thenReturn(subscriptions);
+        Mockito.when(entitlementApi.getSubscriptionFromId(Mockito.<UUID>any())).thenReturn(subscription);
+        Mockito.when(entitlementApi.getBundleFromId(Mockito.<UUID>any())).thenReturn(bundle);
+        Mockito.when(entitlementApi.getBaseSubscription(Mockito.<UUID>any())).thenReturn(subscription);
 
         tagApi = mock(TagUserApi.class);
 
         assertTrue(true);
     }
 
-    @Test(enabled = true, groups = "fast")
-    public void testBillingEventsEmpty() {
+    @Test(groups = "fast")
+    public void testBillingEventsEmpty() throws AccountApiException {
         final UUID accountId = UUID.randomUUID();
-        final Account account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
-        ((ZombieControl) account).addResult("getId", accountId).addResult("getCurrency", Currency.USD);
+        final Account account = Mockito.mock(Account.class);
+        Mockito.when(account.getId()).thenReturn(accountId);
+        Mockito.when(account.getCurrency()).thenReturn(Currency.USD);
 
-        final AccountUserApi accountApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
-        ((ZombieControl) accountApi).addResult("getAccountById", account);
+        final AccountUserApi accountApi = Mockito.mock(AccountUserApi.class);
+        Mockito.when(accountApi.getAccountById(Mockito.<UUID>any())).thenReturn(account);
 
         final BillCycleDayCalculator bcdCalculator = new BillCycleDayCalculator(catalogService, entitlementApi);
         final CallContextFactory factory = new DefaultCallContextFactory(clock);
@@ -201,8 +201,8 @@ public class TestBillingApi {
         Assert.assertEquals(events.size(), 0);
     }
 
-    @Test(enabled = true, groups = "fast")
-    public void testBillingEventsNoBillingPeriod() throws CatalogApiException {
+    @Test(groups = "fast")
+    public void testBillingEventsNoBillingPeriod() throws CatalogApiException, AccountApiException {
         final DateTime now = clock.getUTCNow();
         final DateTime then = now.minusDays(1);
         final Plan nextPlan = catalogService.getFullCatalog().findPlan("PickupTrialEvergreen10USD", now);
@@ -217,13 +217,13 @@ public class TestBillingApi {
 
         effectiveSubscriptionTransitions.add(t);
 
-        final AccountUserApi accountApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
-        final Account account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
-        ((ZombieControl) account).addResult("getBillCycleDay", 32);
-        ((ZombieControl) account).addResult("getCurrency", Currency.USD);
-        ((ZombieControl) account).addResult("getId", UUID.randomUUID());
-        ((ZombieControl) account).addResult("getTimeZone", DateTimeZone.UTC);
-        ((ZombieControl) accountApi).addResult("getAccountById", account);
+        final AccountUserApi accountApi = Mockito.mock(AccountUserApi.class);
+        final Account account = Mockito.mock(Account.class);
+        Mockito.when(account.getBillCycleDay()).thenReturn(32);
+        Mockito.when(account.getCurrency()).thenReturn(Currency.USD);
+        Mockito.when(account.getId()).thenReturn(UUID.randomUUID());
+        Mockito.when(account.getTimeZone()).thenReturn(DateTimeZone.UTC);
+        Mockito.when(accountApi.getAccountById(Mockito.<UUID>any())).thenReturn(account);
 
         final BillCycleDayCalculator bcdCalculator = new BillCycleDayCalculator(catalogService, entitlementApi);
         final CallContextFactory factory = new DefaultCallContextFactory(clock);
@@ -234,7 +234,7 @@ public class TestBillingApi {
     }
 
     @Test(enabled = false, groups = "fast")
-    public void testBillingEventsAnnual() throws CatalogApiException {
+    public void testBillingEventsAnnual() throws CatalogApiException, AccountApiException {
         final DateTime now = clock.getUTCNow();
         final DateTime then = now.minusDays(1);
         final Plan nextPlan = catalogService.getFullCatalog().findPlan("PickupTrialEvergreen10USD", now);
@@ -248,14 +248,15 @@ public class TestBillingApi {
 
         effectiveSubscriptionTransitions.add(t);
 
-        final Account account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
-        ((ZombieControl) account).addResult("getBillCycleDay", 1).addResult("getTimeZone", DateTimeZone.UTC)
-                                 .addResult("getCurrency", Currency.USD);
+        final Account account = Mockito.mock(Account.class);
+        Mockito.when(account.getBillCycleDay()).thenReturn(1);
+        Mockito.when(account.getTimeZone()).thenReturn(DateTimeZone.UTC);
+        Mockito.when(account.getCurrency()).thenReturn(Currency.USD);
 
         ((MockCatalog) catalogService.getFullCatalog()).setBillingAlignment(BillingAlignment.SUBSCRIPTION);
 
-        final AccountUserApi accountApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
-        ((ZombieControl) accountApi).addResult("getAccountById", account);
+        final AccountUserApi accountApi = Mockito.mock(AccountUserApi.class);
+        Mockito.when(accountApi.getAccountById(Mockito.<UUID>any())).thenReturn(account);
 
         final BillCycleDayCalculator bcdCalculator = new BillCycleDayCalculator(catalogService, entitlementApi);
         final CallContextFactory factory = new DefaultCallContextFactory(clock);
@@ -266,8 +267,8 @@ public class TestBillingApi {
         checkFirstEvent(events, nextPlan, subscription.getStartDate().plusDays(30).getDayOfMonth(), subId, now, nextPhase, SubscriptionTransitionType.CREATE.toString());
     }
 
-    @Test(enabled = true, groups = "fast")
-    public void testBillingEventsMonthly() throws CatalogApiException {
+    @Test(groups = "fast")
+    public void testBillingEventsMonthly() throws CatalogApiException, AccountApiException {
         final DateTime now = clock.getUTCNow();
         final DateTime then = now.minusDays(1);
         final Plan nextPlan = catalogService.getFullCatalog().findPlan("PickupTrialEvergreen10USD", now);
@@ -282,13 +283,13 @@ public class TestBillingApi {
 
         effectiveSubscriptionTransitions.add(t);
 
-        final AccountUserApi accountApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
-        final Account account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
-        ((ZombieControl) account).addResult("getBillCycleDay", 32);
-        ((ZombieControl) account).addResult("getCurrency", Currency.USD);
-        ((ZombieControl) account).addResult("getId", UUID.randomUUID());
-        ((ZombieControl) account).addResult("getTimeZone", DateTimeZone.UTC);
-        ((ZombieControl) accountApi).addResult("getAccountById", account);
+        final AccountUserApi accountApi = Mockito.mock(AccountUserApi.class);
+        final Account account = Mockito.mock(Account.class);
+        Mockito.when(account.getBillCycleDay()).thenReturn(32);
+        Mockito.when(account.getCurrency()).thenReturn(Currency.USD);
+        Mockito.when(account.getId()).thenReturn(UUID.randomUUID());
+        Mockito.when(account.getTimeZone()).thenReturn(DateTimeZone.UTC);
+        Mockito.when(accountApi.getAccountById(Mockito.<UUID>any())).thenReturn(account);
 
         ((MockCatalog) catalogService.getFullCatalog()).setBillingAlignment(BillingAlignment.ACCOUNT);
 
@@ -302,7 +303,7 @@ public class TestBillingApi {
     }
 
     @Test(enabled = false, groups = "fast")
-    public void testBillingEventsAddOn() throws CatalogApiException {
+    public void testBillingEventsAddOn() throws CatalogApiException, AccountApiException {
         final DateTime now = clock.getUTCNow();
         final DateTime then = now.minusDays(1);
         final Plan nextPlan = catalogService.getFullCatalog().findPlan("Horn1USD", now);
@@ -317,14 +318,15 @@ public class TestBillingApi {
 
         effectiveSubscriptionTransitions.add(t);
 
-        final Account account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
-        ((ZombieControl) account).addResult("getBillCycleDay", 1).addResult("getTimeZone", DateTimeZone.UTC);
-        ((ZombieControl) account).addResult("getCurrency", Currency.USD);
-        ((ZombieControl) account).addResult("getId", UUID.randomUUID());
-        ((ZombieControl) account).addResult("getTimeZone", DateTimeZone.UTC);
+        final Account account = Mockito.mock(Account.class);
+        Mockito.when(account.getBillCycleDay()).thenReturn(1);
+        Mockito.when(account.getTimeZone()).thenReturn(DateTimeZone.UTC);
+        Mockito.when(account.getCurrency()).thenReturn(Currency.USD);
+        Mockito.when(account.getId()).thenReturn(UUID.randomUUID());
+        Mockito.when(account.getTimeZone()).thenReturn(DateTimeZone.UTC);
 
-        final AccountUserApi accountApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
-        ((ZombieControl) accountApi).addResult("getAccountById", account);
+        final AccountUserApi accountApi = Mockito.mock(AccountUserApi.class);
+        Mockito.when(accountApi.getAccountById(Mockito.<UUID>any())).thenReturn(account);
 
         ((MockCatalog) catalogService.getFullCatalog()).setBillingAlignment(BillingAlignment.BUNDLE);
 
@@ -339,8 +341,8 @@ public class TestBillingApi {
         checkFirstEvent(events, nextPlan, subscription.getStartDate().plusDays(30).getDayOfMonth(), subId, now, nextPhase, SubscriptionTransitionType.CREATE.toString());
     }
 
-    @Test(enabled = true, groups = "fast")
-    public void testBillingEventsWithBlock() throws CatalogApiException {
+    @Test(groups = "fast")
+    public void testBillingEventsWithBlock() throws CatalogApiException, AccountApiException {
         final DateTime now = clock.getUTCNow();
         final DateTime then = now.minusDays(1);
         final Plan nextPlan = catalogService.getFullCatalog().findPlan("PickupTrialEvergreen10USD", now);
@@ -355,13 +357,13 @@ public class TestBillingApi {
 
         effectiveSubscriptionTransitions.add(t);
 
-        final AccountUserApi accountApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
-        final Account account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
-        ((ZombieControl) account).addResult("getBillCycleDay", 32);
-        ((ZombieControl) account).addResult("getCurrency", Currency.USD);
-        ((ZombieControl) account).addResult("getTimeZone", DateTimeZone.UTC);
-        ((ZombieControl) accountApi).addResult("getAccountById", account);
-        ((ZombieControl) account).addResult("getId", UUID.randomUUID());
+        final AccountUserApi accountApi = Mockito.mock(AccountUserApi.class);
+        final Account account = Mockito.mock(Account.class);
+        Mockito.when(account.getBillCycleDay()).thenReturn(32);
+        Mockito.when(account.getCurrency()).thenReturn(Currency.USD);
+        Mockito.when(account.getTimeZone()).thenReturn(DateTimeZone.UTC);
+        Mockito.when(accountApi.getAccountById(Mockito.<UUID>any())).thenReturn(account);
+        Mockito.when(account.getId()).thenReturn(UUID.randomUUID());
 
         ((MockCatalog) catalogService.getFullCatalog()).setBillingAlignment(BillingAlignment.ACCOUNT);
 
@@ -370,7 +372,6 @@ public class TestBillingApi {
         blockingStates.add(new DefaultBlockingState(bunId, CLEAR_BUNDLE, Blockable.Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now.plusDays(2)));
 
         final BlockingCalculator blockingCal = new BlockingCalculator(new BlockingApi() {
-
             @Override
             public <T extends Blockable> void setBlockingState(final BlockingState state) {
             }
@@ -410,11 +411,10 @@ public class TestBillingApi {
         checkEvent(it.next(), nextPlan, 32, subId, now, nextPhase, SubscriptionTransitionType.CREATE.toString(), nextPhase.getFixedPrice(), nextPhase.getRecurringPrice());
         checkEvent(it.next(), nextPlan, 32, subId, now.plusDays(1), nextPhase, SubscriptionTransitionType.CANCEL.toString(), new MockPrice("0"), new MockPrice("0"));
         checkEvent(it.next(), nextPlan, 32, subId, now.plusDays(2), nextPhase, SubscriptionTransitionType.RE_CREATE.toString(), nextPhase.getFixedPrice(), nextPhase.getRecurringPrice());
-
     }
 
-    @Test(enabled = true, groups = "fast")
-    public void testBillingEventsAutoInvoicingOffAccount() throws CatalogApiException {
+    @Test(groups = "fast")
+    public void testBillingEventsAutoInvoicingOffAccount() throws CatalogApiException, AccountApiException {
         final DateTime now = clock.getUTCNow();
         final DateTime then = now.minusDays(1);
         final Plan nextPlan = catalogService.getFullCatalog().findPlan("PickupTrialEvergreen10USD", now);
@@ -429,12 +429,12 @@ public class TestBillingApi {
 
         effectiveSubscriptionTransitions.add(t);
 
-        final AccountUserApi accountApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
-        final Account account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
-        ((ZombieControl) account).addResult("getBillCycleDay", 32);
-        ((ZombieControl) account).addResult("getCurrency", Currency.USD);
-        ((ZombieControl) account).addResult("getId", UUID.randomUUID());
-        ((ZombieControl) accountApi).addResult("getAccountById", account);
+        final AccountUserApi accountApi = Mockito.mock(AccountUserApi.class);
+        final Account account = Mockito.mock(Account.class);
+        Mockito.when(account.getBillCycleDay()).thenReturn(32);
+        Mockito.when(account.getCurrency()).thenReturn(Currency.USD);
+        Mockito.when(account.getId()).thenReturn(UUID.randomUUID());
+        Mockito.when(accountApi.getAccountById(Mockito.<UUID>any())).thenReturn(account);
 
         final Map<String, Tag> tags = new HashMap<String, Tag>();
         final Tag aioTag = mock(Tag.class);
@@ -455,8 +455,8 @@ public class TestBillingApi {
         assertEquals(events.size(), 0);
     }
 
-    @Test(enabled = true, groups = "fast")
-    public void testBillingEventsAutoInvoicingOffBundle() throws CatalogApiException {
+    @Test(groups = "fast")
+    public void testBillingEventsAutoInvoicingOffBundle() throws CatalogApiException, AccountApiException {
         final DateTime now = clock.getUTCNow();
         final DateTime then = now.minusDays(1);
         final Plan nextPlan = catalogService.getFullCatalog().findPlan("PickupTrialEvergreen10USD", now);
@@ -471,12 +471,12 @@ public class TestBillingApi {
 
         effectiveSubscriptionTransitions.add(t);
 
-        final AccountUserApi accountApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
-        final Account account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
-        ((ZombieControl) account).addResult("getBillCycleDay", 32);
-        ((ZombieControl) account).addResult("getCurrency", Currency.USD);
-        ((ZombieControl) account).addResult("getId", UUID.randomUUID());
-        ((ZombieControl) accountApi).addResult("getAccountById", account);
+        final AccountUserApi accountApi = Mockito.mock(AccountUserApi.class);
+        final Account account = Mockito.mock(Account.class);
+        Mockito.when(account.getBillCycleDay()).thenReturn(32);
+        Mockito.when(account.getCurrency()).thenReturn(Currency.USD);
+        Mockito.when(account.getId()).thenReturn(UUID.randomUUID());
+        Mockito.when(accountApi.getAccountById(Mockito.<UUID>any())).thenReturn(account);
 
         final Map<String, Tag> tags = new HashMap<String, Tag>();
         final Tag aioTag = mock(Tag.class);

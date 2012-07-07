@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.SortedSet;
 import java.util.UUID;
 
+import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -38,8 +39,6 @@ import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.junction.api.DefaultBlockingState;
 import com.ning.billing.junction.dao.TestBlockingDao;
-import com.ning.billing.mock.BrainDeadProxyFactory;
-import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.mock.glue.MockEntitlementModule;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.io.IOUtils;
@@ -57,7 +56,7 @@ public class TestBlockingApi {
     @Inject
     private ClockMock clock;
 
-    @BeforeClass(groups = {"slow"})
+    @BeforeClass(groups = "slow")
     public void setup() throws IOException {
         log.info("Starting set up TestBlockingApi");
 
@@ -67,7 +66,7 @@ public class TestBlockingApi {
         helper.initDb(utilDdl);
     }
 
-    @BeforeMethod(groups = {"slow"})
+    @BeforeMethod(groups = "slow")
     public void clean() {
         helper.cleanupTable("blocking_states");
         clock.resetDeltaFromReality();
@@ -78,9 +77,8 @@ public class TestBlockingApi {
         helper.stopMysql();
     }
 
-    @Test(groups = {"slow"}, enabled = true)
+    @Test(groups = "slow")
     public void testApi() {
-
         final UUID uuid = UUID.randomUUID();
         final String overdueStateName = "WayPassedItMan";
         final String service = "TEST";
@@ -97,15 +95,14 @@ public class TestBlockingApi {
         final BlockingState state2 = new DefaultBlockingState(uuid, overdueStateName2, Blockable.Type.SUBSCRIPTION_BUNDLE, service, blockChange, blockEntitlement, blockBilling);
         api.setBlockingState(state2);
 
-        final SubscriptionBundle bundle = BrainDeadProxyFactory.createBrainDeadProxyFor(SubscriptionBundle.class);
-        ((ZombieControl) bundle).addResult("getId", uuid);
+        final SubscriptionBundle bundle = Mockito.mock(SubscriptionBundle.class);
+        Mockito.when(bundle.getId()).thenReturn(uuid);
 
         Assert.assertEquals(api.getBlockingStateFor(bundle).getStateName(), overdueStateName2);
         Assert.assertEquals(api.getBlockingStateFor(bundle.getId()).getStateName(), overdueStateName2);
-
     }
 
-    @Test(groups = {"slow"}, enabled = true)
+    @Test(groups = "slow")
     public void testApiHistory() throws Exception {
         final UUID uuid = UUID.randomUUID();
         final String overdueStateName = "WayPassedItMan";
@@ -124,9 +121,8 @@ public class TestBlockingApi {
         final BlockingState state2 = new DefaultBlockingState(uuid, overdueStateName2, Blockable.Type.SUBSCRIPTION_BUNDLE, service, blockChange, blockEntitlement, blockBilling);
         api.setBlockingState(state2);
 
-        final SubscriptionBundle bundle = BrainDeadProxyFactory.createBrainDeadProxyFor(SubscriptionBundle.class);
-        ((ZombieControl) bundle).addResult("getId", uuid);
-
+        final SubscriptionBundle bundle = Mockito.mock(SubscriptionBundle.class);
+        Mockito.when(bundle.getId()).thenReturn(uuid);
 
         final SortedSet<BlockingState> history1 = api.getBlockingHistory(bundle);
         final SortedSet<BlockingState> history2 = api.getBlockingHistory(bundle.getId());
@@ -138,7 +134,5 @@ public class TestBlockingApi {
         Assert.assertEquals(history2.size(), 2);
         Assert.assertEquals(history2.first().getStateName(), overdueStateName);
         Assert.assertEquals(history2.last().getStateName(), overdueStateName2);
-
     }
-
 }
