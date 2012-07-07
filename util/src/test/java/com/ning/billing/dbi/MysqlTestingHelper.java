@@ -19,6 +19,7 @@ package com.ning.billing.dbi;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.net.ServerSocket;
 import java.util.HashMap;
 import java.util.List;
@@ -92,7 +93,8 @@ public class MysqlTestingHelper {
         Assert.assertTrue(dataDir.delete());
         Assert.assertTrue(dataDir.mkdir());
 
-        mysqldResource = new MysqldResource(dbDir, dataDir);
+        final PrintStream out = new PrintStream(new LoggingOutputStream(log), true);
+        mysqldResource = new MysqldResource(dbDir, dataDir, "5.1.40", out, out);
 
         final Map<String, String> dbOpts = new HashMap<String, String>();
         dbOpts.put(MysqldResourceI.PORT, Integer.toString(port));
@@ -117,7 +119,7 @@ public class MysqlTestingHelper {
             return;
         }
 
-        log.info("Deleting table: " + table);
+        log.debug("Deleting table: " + table);
         final IDBI dbi = getDBI();
         dbi.withHandle(new HandleCallback<Void>() {
             @Override
@@ -196,7 +198,7 @@ public class MysqlTestingHelper {
         dbi.withHandle(new HandleCallback<Void>() {
             @Override
             public Void withHandle(final Handle handle) throws Exception {
-                log.info("Executing DDL script: " + ddl);
+                log.debug("Executing DDL script: " + ddl);
                 handle.createScript(ddl).execute();
                 return null;
             }
