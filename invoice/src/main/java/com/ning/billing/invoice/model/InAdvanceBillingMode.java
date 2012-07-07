@@ -77,7 +77,6 @@ public class InAdvanceBillingMode implements BillingMode {
                 results.add(new RecurringInvoiceItemData(lastBillingCycleDate, effectiveEndDate, trailingProRationPeriods));
             }
         }
-
         return results;
     }
 

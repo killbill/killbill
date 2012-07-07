@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.Months;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -296,6 +297,16 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         return items;
     }
 
+
+    private DateTime roundDateTimeToDate(final DateTime input, final DateTimeZone timeZone) {
+        if (input == null) {
+            return null;
+        }
+        final DateTime tzAdjustedStartDate = input.toDateTime(timeZone);
+        final DateTime roundedStartDate = new DateTime(tzAdjustedStartDate.getYear(), tzAdjustedStartDate.getMonthOfYear(), tzAdjustedStartDate.getDayOfMonth(), 0, 0, timeZone);
+        return roundedStartDate;
+    }
+
     List<InvoiceItem> processEvents(final UUID invoiceId, final UUID accountId, final BillingEvent thisEvent, @Nullable final BillingEvent nextEvent,
             final DateTime targetDate, final Currency currency) throws InvoiceApiException {
         final List<InvoiceItem> items = new ArrayList<InvoiceItem>();
@@ -307,17 +318,21 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         final BillingPeriod billingPeriod = thisEvent.getBillingPeriod();
         if (billingPeriod != BillingPeriod.NO_BILLING_PERIOD) {
             final BillingMode billingMode = instantiateBillingMode(thisEvent.getBillingMode());
+            // Invoice granularity is day; (if not some comparison might fail)
             final DateTime startDate = thisEvent.getEffectiveDate();
-            final DateTime tzAdjustedStartDate = startDate.toDateTime(thisEvent.getTimeZone());
-            final DateTime roundedStartDate = new DateTime(tzAdjustedStartDate.getYear(), tzAdjustedStartDate.getMonthOfYear(), tzAdjustedStartDate.getDayOfMonth(), 0, 0, thisEvent.getTimeZone());
+            final DateTime roundedStartDate = roundDateTimeToDate(startDate, thisEvent.getTimeZone());
+            final DateTime roundedTargetDate = roundDateTimeToDate(targetDate, thisEvent.getTimeZone());
+
             log.info(String.format("start = %s, rounded = %s, target = %s, in = %s", startDate, roundedStartDate, targetDate, (!roundedStartDate.isAfter(targetDate)) ? "in" : "out"));
             if (!roundedStartDate.isAfter(targetDate)) {
                 final DateTime endDate = (nextEvent == null) ? null : nextEvent.getEffectiveDate();
+
+                final DateTime roundedEndDate = roundDateTimeToDate(endDate, thisEvent.getTimeZone());
                 final int billCycleDay = thisEvent.getBillCycleDay();
 
                 final List<RecurringInvoiceItemData> itemData;
                 try {
-                    itemData = billingMode.calculateInvoiceItemData(startDate, endDate, targetDate, billCycleDay, billingPeriod);
+                    itemData = billingMode.calculateInvoiceItemData(roundedStartDate, roundedEndDate, roundedTargetDate, billCycleDay, billingPeriod);
                 } catch (InvalidDateSequenceException e) {
                     throw new InvoiceApiException(ErrorCode.INVOICE_INVALID_DATE_SEQUENCE, startDate, endDate, targetDate);
                 }

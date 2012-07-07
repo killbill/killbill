@@ -173,7 +173,6 @@ public class DefaultInvoiceDao implements InvoiceDao {
 
                     transactional.insertAuditFromTransaction(audits, context);
                 }
-
                 return null;
             }
         });
@@ -511,15 +510,24 @@ public class DefaultInvoiceDao implements InvoiceDao {
     }
 
     private void notifyOfFutureBillingEvents(final InvoiceSqlDao dao, final List<InvoiceItem> invoiceItems) {
+        DateTime nextBCD = null;
+        UUID subscriptionForNextBCD = null;
         for (final InvoiceItem item : invoiceItems) {
+
             if (item.getInvoiceItemType() == InvoiceItemType.RECURRING) {
                 final RecurringInvoiceItem recurringInvoiceItem = (RecurringInvoiceItem) item;
                 if ((recurringInvoiceItem.getEndDate() != null) &&
                         (recurringInvoiceItem.getAmount() == null ||
                                 recurringInvoiceItem.getAmount().compareTo(BigDecimal.ZERO) >= 0)) {
-                    nextBillingDatePoster.insertNextBillingNotification(dao, item.getSubscriptionId(), recurringInvoiceItem.getEndDate());
+                    if (nextBCD == null || nextBCD.compareTo(recurringInvoiceItem.getEndDate()) > 0) {
+                        nextBCD = recurringInvoiceItem.getEndDate();
+                        subscriptionForNextBCD = recurringInvoiceItem.getSubscriptionId();
+                    }
                 }
             }
+        }
+        if (subscriptionForNextBCD != null) {
+            nextBillingDatePoster.insertNextBillingNotification(dao, subscriptionForNextBCD, nextBCD);
         }
     }
 }
