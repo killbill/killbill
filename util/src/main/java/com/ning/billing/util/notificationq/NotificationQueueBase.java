@@ -44,8 +44,7 @@ public abstract class NotificationQueueBase extends PersistentQueueBase implemen
     private final NotificationConfig config;
     private final Clock clock;
     private final String hostname;
-
-    private AtomicLong nbProcessedEvents;
+    private final AtomicLong nbProcessedEvents;
 
     // Package visibility on purpose
     NotificationQueueBase(final Clock clock, final String svcName, final String queueName, final NotificationQueueHandler handler, final NotificationConfig config) {
