@@ -61,6 +61,17 @@ public class DefaultNullInvoiceEvent implements NullInvoiceEvent {
     }
 
     @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append("DefaultNullInvoiceEvent");
+        sb.append("{accountId=").append(accountId);
+        sb.append(", processingDate=").append(processingDate);
+        sb.append(", userToken=").append(userToken);
+        sb.append('}');
+        return sb.toString();
+    }
+
+    @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
@@ -108,6 +119,4 @@ public class DefaultNullInvoiceEvent implements NullInvoiceEvent {
         }
         return true;
     }
-
-
 }
