@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.entitlement.api.timeline;
 
 import java.util.Collections;
@@ -39,9 +40,7 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 
 import static org.testng.Assert.assertEquals;
 
-
 public abstract class TestApiBaseRepair extends TestApiBase {
-
     protected static final Logger log = LoggerFactory.getLogger(TestApiBaseRepair.class);
 
     public interface TestWithExceptionCallback {
@@ -58,7 +57,6 @@ public abstract class TestApiBaseRepair extends TestApiBase {
             }
         }
     }
-
 
     protected SubscriptionTimeline createSubscriptionRepair(final UUID id, final List<DeletedEvent> deletedEvents, final List<NewEvent> newEvents) {
         return new SubscriptionTimeline() {
@@ -111,9 +109,8 @@ public abstract class TestApiBaseRepair extends TestApiBase {
     protected ExistingEvent createExistingEventForAssertion(final SubscriptionTransitionType type,
                                                             final String productName, final PhaseType phaseType, final ProductCategory category, final String priceListName, final BillingPeriod billingPeriod,
                                                             final DateTime effectiveDateTime) {
-
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, category, billingPeriod, priceListName, phaseType);
-        final ExistingEvent ev = new ExistingEvent() {
+        return new ExistingEvent() {
             @Override
             public SubscriptionTransitionType getSubscriptionTransitionType() {
                 return type;
@@ -139,7 +136,6 @@ public abstract class TestApiBaseRepair extends TestApiBase {
                 return effectiveDateTime;
             }
         };
-        return ev;
     }
 
     protected SubscriptionTimeline getSubscriptionRepair(final UUID id, final BundleTimeline bundleRepair) {
@@ -148,12 +144,11 @@ public abstract class TestApiBaseRepair extends TestApiBase {
                 return cur;
             }
         }
-        Assert.fail("Failed to find SubscriptionReapir " + id);
+        Assert.fail("Failed to find SubscriptionRepair " + id);
         return null;
     }
 
     protected void validateExistingEventForAssertion(final ExistingEvent expected, final ExistingEvent input) {
-
         log.info(String.format("Got %s -> Expected %s", input.getPlanPhaseSpecifier().getProductName(), expected.getPlanPhaseSpecifier().getProductName()));
         assertEquals(input.getPlanPhaseSpecifier().getProductName(), expected.getPlanPhaseSpecifier().getProductName());
         log.info(String.format("Got %s -> Expected %s", input.getPlanPhaseSpecifier().getPhaseType(), expected.getPlanPhaseSpecifier().getPhaseType()));
@@ -178,7 +173,6 @@ public abstract class TestApiBaseRepair extends TestApiBase {
     }
 
     protected NewEvent createNewEvent(final SubscriptionTransitionType type, final DateTime requestedDate, final PlanPhaseSpecifier spec) {
-
         return new NewEvent() {
             @Override
             public SubscriptionTransitionType getSubscriptionTransitionType() {
@@ -228,5 +222,4 @@ public abstract class TestApiBaseRepair extends TestApiBase {
             }
         });
     }
-
 }

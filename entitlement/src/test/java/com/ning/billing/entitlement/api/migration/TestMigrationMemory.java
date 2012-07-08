@@ -23,7 +23,6 @@ import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.entitlement.glue.MockEngineModuleMemory;
 
-@Test(groups = "fast")
 public class TestMigrationMemory extends TestMigration {
     @Override
     protected Injector getInjector() {
@@ -31,26 +30,25 @@ public class TestMigrationMemory extends TestMigration {
     }
 
     @Override
-    @Test(enabled = true, groups = "fast")
+    @Test(groups = "fast")
     public void testSingleBasePlan() {
         super.testSingleBasePlan();
     }
 
     @Override
-    @Test(enabled = true, groups = "fast")
+    @Test(groups = "fast")
     public void testSingleBasePlanFutureCancelled() {
         super.testSingleBasePlanFutureCancelled();
     }
 
     @Override
-    @Test(enabled = true, groups = "fast")
+    @Test(groups = "fast")
     public void testPlanWithAddOn() {
         super.testPlanWithAddOn();
     }
 
-
     @Override
-    @Test(enabled = true, groups = "fast")
+    @Test(groups = "fast")
     public void testSingleBasePlanWithPendingPhase() {
         super.testSingleBasePlanWithPendingPhase();
     }

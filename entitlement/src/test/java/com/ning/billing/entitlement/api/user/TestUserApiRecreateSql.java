@@ -24,20 +24,19 @@ import com.google.inject.Stage;
 import com.ning.billing.entitlement.glue.MockEngineModuleSql;
 
 public class TestUserApiRecreateSql extends TestUserApiRecreate {
-
     @Override
     protected Injector getInjector() {
         return Guice.createInjector(Stage.DEVELOPMENT, new MockEngineModuleSql());
     }
 
     @Override
-    @Test(enabled = true, groups = {"slow"})
+    @Test(groups = "slow")
     protected void testRecreateWithBPCanceledThroughSubscription() {
         super.testRecreateWithBPCanceledThroughSubscription();
     }
 
     @Override
-    @Test(enabled = true, groups = {"slow"})
+    @Test(groups = "slow")
     protected void testCreateWithBPCanceledFromUserApi() {
         super.testRecreateWithBPCanceledThroughSubscription();
     }

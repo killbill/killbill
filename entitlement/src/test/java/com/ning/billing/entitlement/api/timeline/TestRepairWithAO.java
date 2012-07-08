@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.entitlement.api.timeline;
 
 import java.util.Collections;
@@ -48,17 +49,13 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
 public class TestRepairWithAO extends TestApiBaseRepair {
-
     @Override
     public Injector getInjector() {
         return Guice.createInjector(Stage.DEVELOPMENT, new MockEngineModuleSql());
     }
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testRepairChangeBPWithAddonIncluded() throws Exception {
-
-        log.info("Starting testRepairChangeBPWithAddonIncluded");
-
         final String baseProduct = "Shotgun";
         final BillingPeriod baseTerm = BillingPeriod.MONTHLY;
         final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
@@ -149,7 +146,6 @@ public class TestRepairWithAO extends TestApiBaseRepair {
             validateExistingEventForAssertion(e, bpRepair.getExistingEvents().get(index++));
         }
 
-
         SubscriptionData newAoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId());
         assertEquals(newAoSubscription.getState(), SubscriptionState.ACTIVE);
         assertEquals(newAoSubscription.getAllTransitions().size(), 2);
@@ -160,7 +156,6 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         assertEquals(newAoSubscription2.getAllTransitions().size(), 2);
         assertEquals(newAoSubscription2.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
 
-
         SubscriptionData newBaseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId());
         assertEquals(newBaseSubscription.getState(), SubscriptionState.ACTIVE);
         assertEquals(newBaseSubscription.getAllTransitions().size(), 2);
@@ -170,7 +165,6 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         testListener.pushExpectedEvent(NextEvent.REPAIR_BUNDLE);
         final BundleTimeline realRunBundleRepair = repairApi.repairBundle(bundleRepair, dryRun, context);
         assertTrue(testListener.isCompleted(5000));
-
 
         aoRepair = getSubscriptionRepair(aoSubscription.getId(), realRunBundleRepair);
         assertEquals(aoRepair.getExistingEvents().size(), 2);
@@ -203,18 +197,14 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         assertEquals(newAoSubscription2.getAllTransitions().size(), 2);
         assertEquals(newAoSubscription2.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
 
-
         newBaseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId());
         assertEquals(newBaseSubscription.getState(), SubscriptionState.ACTIVE);
         assertEquals(newBaseSubscription.getAllTransitions().size(), 3);
         assertEquals(newBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
     }
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testRepairChangeBPWithAddonNonAvailable() throws Exception {
-
-        log.info("Starting testRepairChangeBPWithAddonNonAvailable");
-
         final String baseProduct = "Shotgun";
         final BillingPeriod baseTerm = BillingPeriod.MONTHLY;
         final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
@@ -332,11 +322,8 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         assertEquals(newBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
     }
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testRepairCancelBP_EOT_WithAddons() throws Exception {
-
-        log.info("Starting testRepairCancelBP_EOT_WithAddons");
-
         final String baseProduct = "Shotgun";
         final BillingPeriod baseTerm = BillingPeriod.MONTHLY;
         final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
@@ -347,7 +334,6 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         // MOVE CLOCK A LITTLE BIT-- STILL IN TRIAL
         Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(4));
         clock.addDeltaFromReality(it.toDurationMillis());
-
 
         final SubscriptionData aoSubscription = createSubscription("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
 
@@ -475,12 +461,8 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         assertEquals(newBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
     }
 
-
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testRepairCancelAO() throws Exception {
-
-        log.info("Starting testRepairCancelAO");
-
         final String baseProduct = "Shotgun";
         final BillingPeriod baseTerm = BillingPeriod.MONTHLY;
         final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
@@ -507,7 +489,6 @@ public class TestRepairWithAO extends TestApiBaseRepair {
 
         SubscriptionTimeline aoRepair = getSubscriptionRepair(aoSubscription.getId(), bundleRepair);
         assertEquals(aoRepair.getExistingEvents().size(), 2);
-
 
         final List<DeletedEvent> des = new LinkedList<SubscriptionTimeline.DeletedEvent>();
         des.add(createDeletedEvent(aoRepair.getExistingEvents().get(1).getEventId()));
@@ -552,7 +533,6 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         final BundleTimeline realRunBundleRepair = repairApi.repairBundle(bRepair, dryRun, context);
         assertTrue(testListener.isCompleted(5000));
 
-
         aoRepair = getSubscriptionRepair(aoSubscription.getId(), realRunBundleRepair);
         assertEquals(aoRepair.getExistingEvents().size(), 2);
         index = 0;
@@ -571,12 +551,8 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         assertEquals(newBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
     }
 
-
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testRepairRecreateAO() throws Exception {
-
-        log.info("Starting testRepairRecreateAO");
-
         final String baseProduct = "Shotgun";
         final BillingPeriod baseTerm = BillingPeriod.MONTHLY;
         final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
@@ -604,7 +580,6 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         SubscriptionTimeline aoRepair = getSubscriptionRepair(aoSubscription.getId(), bundleRepair);
         assertEquals(aoRepair.getExistingEvents().size(), 2);
 
-
         final List<DeletedEvent> des = new LinkedList<SubscriptionTimeline.DeletedEvent>();
         des.add(createDeletedEvent(aoRepair.getExistingEvents().get(0).getEventId()));
         des.add(createDeletedEvent(aoRepair.getExistingEvents().get(1).getEventId()));
@@ -622,7 +597,6 @@ public class TestRepairWithAO extends TestApiBaseRepair {
 
         aoRepair = getSubscriptionRepair(aoSubscription.getId(), dryRunBundleRepair);
         assertEquals(aoRepair.getExistingEvents().size(), 2);
-
 
         final List<ExistingEvent> expected = new LinkedList<SubscriptionTimeline.ExistingEvent>();
         expected.add(createExistingEventForAssertion(SubscriptionTransitionType.CREATE, "Telescopic-Scope", PhaseType.DISCOUNT,
@@ -668,11 +642,8 @@ public class TestRepairWithAO extends TestApiBaseRepair {
     // . Both multi phase
     // . Telescopic-Scope (bundle align) and Laser-Scope is Subscription align
     //
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testRepairChangeAOOK() throws Exception {
-
-        log.info("Starting testRepairChangeAOOK");
-
         final String baseProduct = "Shotgun";
         final BillingPeriod baseTerm = BillingPeriod.MONTHLY;
         final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
@@ -716,7 +687,6 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         aoRepair = getSubscriptionRepair(aoSubscription.getId(), dryRunBundleRepair);
         assertEquals(aoRepair.getExistingEvents().size(), 3);
 
-
         final List<ExistingEvent> expected = new LinkedList<SubscriptionTimeline.ExistingEvent>();
         expected.add(createExistingEventForAssertion(SubscriptionTransitionType.CREATE, "Telescopic-Scope", PhaseType.DISCOUNT,
                                                      ProductCategory.ADD_ON, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, aoSubscription.getStartDate()));
@@ -750,7 +720,6 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         newAoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId());
         assertEquals(newAoSubscription.getState(), SubscriptionState.ACTIVE);
         assertEquals(newAoSubscription.getAllTransitions().size(), 3);
-
 
         assertEquals(newAoSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
         assertEquals(newAoSubscription.getBundleId(), bundle.getId());

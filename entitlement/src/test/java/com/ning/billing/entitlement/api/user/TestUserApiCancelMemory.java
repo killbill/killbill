@@ -25,33 +25,31 @@ import com.ning.billing.entitlement.api.billing.EntitlementBillingApiException;
 import com.ning.billing.entitlement.glue.MockEngineModuleMemory;
 
 public class TestUserApiCancelMemory extends TestUserApiCancel {
-
-
     @Override
     protected Injector getInjector() {
         return Guice.createInjector(Stage.PRODUCTION, new MockEngineModuleMemory());
     }
 
     @Override
-    @Test(enabled = true, groups = {"fast"})
+    @Test(groups = "fast")
     public void testCancelSubscriptionIMM() {
         super.testCancelSubscriptionIMM();
     }
 
     @Override
-    @Test(enabled = true, groups = {"fast"})
+    @Test(groups = "fast")
     public void testCancelSubscriptionEOTWithChargeThroughDate() throws EntitlementBillingApiException {
         super.testCancelSubscriptionEOTWithChargeThroughDate();
     }
 
     @Override
-    @Test(enabled = true, groups = {"fast"})
+    @Test(groups = "fast")
     public void testCancelSubscriptionEOTWithNoChargeThroughDate() {
         super.testCancelSubscriptionEOTWithNoChargeThroughDate();
     }
 
     @Override
-    @Test(enabled = true, groups = {"fast"})
+    @Test(groups = "fast")
     public void testUncancel() throws EntitlementBillingApiException {
         super.testUncancel();
     }

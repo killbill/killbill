@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.entitlement.api.timeline;
 
 import java.util.Collections;
@@ -53,17 +54,13 @@ import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 public class TestRepairBP extends TestApiBaseRepair {
-
     @Override
     public Injector getInjector() {
         return Guice.createInjector(Stage.DEVELOPMENT, new MockEngineModuleSql());
     }
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testFetchBundleRepair() throws Exception {
-
-        log.info("Starting testFetchBundleRepair");
-
         final String baseProduct = "Shotgun";
         final BillingPeriod baseTerm = BillingPeriod.MONTHLY;
         final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
@@ -126,11 +123,8 @@ public class TestRepairBP extends TestApiBaseRepair {
     }
 
     //TODO MDW: Temporary disable need to look at this with Stephane
-    @Test(groups = {"slow"}, enabled = false)
+    @Test(groups = "slow", enabled = false)
     public void testBPRepairWithCancellationOnstart() throws Exception {
-
-        log.info("Starting testBPRepairWithCancellationOnstart");
-
         final String baseProduct = "Shotgun";
         final DateTime startDate = clock.getUTCNow();
 
@@ -205,7 +199,6 @@ public class TestRepairBP extends TestApiBaseRepair {
         final SubscriptionData realRunBaseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId());
         assertEquals(realRunBaseSubscription.getAllTransitions().size(), 2);
 
-
         assertEquals(realRunBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
         assertEquals(realRunBaseSubscription.getBundleId(), bundle.getId());
         assertEquals(realRunBaseSubscription.getStartDate(), startDate);
@@ -215,11 +208,8 @@ public class TestRepairBP extends TestApiBaseRepair {
         assertListenerStatus();
     }
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testBPRepairReplaceCreateBeforeTrial() throws Exception {
-
-        log.info("Starting testBPRepairReplaceCreateBeforeTrial");
-
         final String baseProduct = "Shotgun";
         final String newBaseProduct = "Assault-Rifle";
 
@@ -237,11 +227,8 @@ public class TestRepairBP extends TestApiBaseRepair {
         assertListenerStatus();
     }
 
-    @Test(groups = {"slow"}, enabled = true)
+    @Test(groups = "slow")
     public void testBPRepairReplaceCreateInTrial() throws Exception {
-
-        log.info("Starting testBPRepairReplaceCreateInTrial");
-
         final String baseProduct = "Shotgun";
         final String newBaseProduct = "Assault-Rifle";
 
@@ -283,12 +270,8 @@ public class TestRepairBP extends TestApiBaseRepair {
         assertListenerStatus();
     }
 
-
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testBPRepairReplaceCreateAfterTrial() throws Exception {
-
-        log.info("Starting testBPRepairReplaceCreateAfterTrial");
-
         final String baseProduct = "Shotgun";
         final String newBaseProduct = "Assault-Rifle";
 
@@ -306,12 +289,8 @@ public class TestRepairBP extends TestApiBaseRepair {
         assertListenerStatus();
     }
 
-
     private UUID testBPRepairCreate(final boolean inTrial, final DateTime startDate, final int clockShift,
                                     final String baseProduct, final String newBaseProduct, final List<ExistingEvent> expectedEvents) throws Exception {
-
-        log.info("Starting testBPRepairCreate");
-
         // CREATE BP
         final Subscription baseSubscription = createSubscription(baseProduct, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, startDate);
 
@@ -400,7 +379,6 @@ public class TestRepairBP extends TestApiBaseRepair {
         final SubscriptionData realRunBaseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId());
         assertEquals(realRunBaseSubscription.getAllTransitions().size(), 2);
 
-
         assertEquals(realRunBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
         assertEquals(realRunBaseSubscription.getBundleId(), bundle.getId());
         assertEquals(realRunBaseSubscription.getStartDate(), newCreateTime);
@@ -418,11 +396,8 @@ public class TestRepairBP extends TestApiBaseRepair {
         return baseSubscription.getId();
     }
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testBPRepairAddChangeInTrial() throws Exception {
-
-        log.info("Starting testBPRepairAddChangeInTrial");
-
         final String baseProduct = "Shotgun";
         final String newBaseProduct = "Assault-Rifle";
 
@@ -465,11 +440,8 @@ public class TestRepairBP extends TestApiBaseRepair {
         assertListenerStatus();
     }
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testBPRepairAddChangeAfterTrial() throws Exception {
-
-        log.info("Starting testBPRepairAddChangeAfterTrial");
-
         final String baseProduct = "Shotgun";
         final String newBaseProduct = "Assault-Rifle";
 
@@ -489,11 +461,8 @@ public class TestRepairBP extends TestApiBaseRepair {
         assertListenerStatus();
     }
 
-
     private UUID testBPRepairAddChange(final boolean inTrial, final DateTime startDate, final int clockShift,
                                        final String baseProduct, final String newBaseProduct, final List<ExistingEvent> expectedEvents, final int expectedTransitions) throws Exception {
-
-
         // CREATE BP
         final Subscription baseSubscription = createSubscription(baseProduct, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, startDate);
 
@@ -559,7 +528,6 @@ public class TestRepairBP extends TestApiBaseRepair {
             assertEquals(currentPhase.getPhaseType(), PhaseType.EVERGREEN);
         }
 
-
         // SECOND RE-ISSUE CALL-- NON DRY RUN
         dryRun = false;
         testListener.pushExpectedEvent(NextEvent.REPAIR_BUNDLE);
@@ -579,7 +547,6 @@ public class TestRepairBP extends TestApiBaseRepair {
         }
         final SubscriptionData realRunBaseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId());
         assertEquals(realRunBaseSubscription.getAllTransitions().size(), expectedTransitions);
-
 
         assertEquals(realRunBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
         assertEquals(realRunBaseSubscription.getBundleId(), bundle.getId());
@@ -601,11 +568,8 @@ public class TestRepairBP extends TestApiBaseRepair {
         return baseSubscription.getId();
     }
 
-    @Test(groups = {"slow"})
-    public void testRepairWithFurureCancelEvent() throws Exception {
-
-        log.info("Starting testRepairWithFurureCancelEvent");
-
+    @Test(groups = "slow")
+    public void testRepairWithFutureCancelEvent() throws Exception {
         final DateTime startDate = clock.getUTCNow();
 
         // CREATE BP
@@ -623,10 +587,8 @@ public class TestRepairBP extends TestApiBaseRepair {
         billingApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate, context);
         baseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId());
 
-
         final DateTime requestedChange = clock.getUTCNow();
         baseSubscription.changePlan("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, requestedChange, context);
-
 
         // CHECK CHANGE DID NOT OCCUR YET
         Plan currentPlan = baseSubscription.getCurrentPlan();
@@ -634,7 +596,6 @@ public class TestRepairBP extends TestApiBaseRepair {
         assertEquals(currentPlan.getProduct().getName(), "Shotgun");
         assertEquals(currentPlan.getProduct().getCategory(), ProductCategory.BASE);
         assertEquals(currentPlan.getBillingPeriod(), BillingPeriod.MONTHLY);
-
 
         final DateTime repairTime = clock.getUTCNow().minusDays(1);
         final BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
@@ -675,13 +636,9 @@ public class TestRepairBP extends TestApiBaseRepair {
         assertListenerStatus();
     }
 
-
     // Needs real SQL backend to be tested properly
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testENT_REPAIR_VIEW_CHANGED_newEvent() throws Exception {
-
-        log.info("Starting testENT_REPAIR_VIEW_CHANGED_newEvent");
-
         final TestWithException test = new TestWithException();
         final DateTime startDate = clock.getUTCNow();
 
@@ -713,11 +670,8 @@ public class TestRepairBP extends TestApiBaseRepair {
         }, ErrorCode.ENT_REPAIR_VIEW_CHANGED);
     }
 
-    @Test(groups = {"slow"}, enabled = false)
+    @Test(groups = "slow", enabled = false)
     public void testENT_REPAIR_VIEW_CHANGED_ctd() throws Exception {
-
-        log.info("Starting testENT_REPAIR_VIEW_CHANGED_ctd");
-
         final TestWithException test = new TestWithException();
         final DateTime startDate = clock.getUTCNow();
 
@@ -748,5 +702,4 @@ public class TestRepairBP extends TestApiBaseRepair {
             }
         }, ErrorCode.ENT_REPAIR_VIEW_CHANGED);
     }
-
 }

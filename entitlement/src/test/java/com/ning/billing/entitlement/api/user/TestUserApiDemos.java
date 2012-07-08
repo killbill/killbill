@@ -46,7 +46,6 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
 public class TestUserApiDemos extends TestApiBase {
-
     @Override
     protected Injector getInjector() {
         return Guice.createInjector(Stage.DEVELOPMENT, new MockEngineModuleSql());
@@ -67,10 +66,8 @@ public class TestUserApiDemos extends TestApiBase {
      * 7. Move to next Phase
      * 8. Cancel EOT
      */
-    @Test(enabled = true, groups = "demos")
+    @Test(enabled = false, groups = {"slow", "demos"})
     public void testDemo1() throws EntitlementBillingApiException {
-
-        log.info("Starting testSubscriptionWithAddOn");
         try {
             System.out.println("DEMO 1 START");
 
@@ -173,14 +170,11 @@ public class TestUserApiDemos extends TestApiBase {
 
     }
 
-
     private void displayState(final UUID subscriptionId, final String stepMsg) {
-
         System.out.println("");
         System.out.println("******\t STEP " + stepMsg + " **************");
         try {
             final SubscriptionData subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscriptionId);
-
 
             final Plan currentPlan = subscription.getCurrentPlan();
             final PlanPhase currentPhase = subscription.getCurrentPhase();
@@ -203,7 +197,7 @@ public class TestUserApiDemos extends TestApiBase {
 
     }
 
-    @Test(enabled = true, groups = {"stress"})
+    @Test(enabled = false, groups = {"slow", "stress"})
     public void stressTest() throws Exception {
         for (int i = 0; i < 100; i++) {
             cleanupTest();

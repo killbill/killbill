@@ -24,41 +24,38 @@ import com.google.inject.Stage;
 import com.ning.billing.entitlement.glue.MockEngineModuleMemory;
 
 public class TestUserApiCreateMemory extends TestUserApiCreate {
-
-
     @Override
     protected Injector getInjector() {
         return Guice.createInjector(Stage.PRODUCTION, new MockEngineModuleMemory());
     }
 
     @Override
-    @Test(enabled = true, groups = {"fast"})
+    @Test(groups = "fast")
     public void testCreateWithRequestedDate() {
         super.testCreateWithRequestedDate();
     }
 
     @Override
-    @Test(enabled = true, groups = {"fast"})
+    @Test(groups = "fast")
     public void testCreateWithInitialPhase() {
         super.testSimpleSubscriptionThroughPhases();
     }
 
     @Override
-    @Test(enabled = true, groups = {"fast"})
+    @Test(groups = "fast")
     public void testSimpleCreateSubscription() {
         super.testSimpleCreateSubscription();
     }
 
     @Override
-    @Test(enabled = true, groups = {"fast"})
+    @Test(groups = "fast")
     protected void testSimpleSubscriptionThroughPhases() {
         super.testSimpleSubscriptionThroughPhases();
     }
 
     @Override
-    @Test(enabled = true, groups = {"fast"})
+    @Test(groups = "fast")
     protected void testSubscriptionWithAddOn() {
         super.testSubscriptionWithAddOn();
     }
-
 }
