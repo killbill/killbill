@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.Interval;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
@@ -46,28 +47,28 @@ public class TestIntegration extends TestIntegrationBase {
     @Test(groups = "slow", enabled = true)
     public void testBasePlanCompleteWithBillingDayInPast() throws Exception {
         log.info("Starting testBasePlanCompleteWithBillingDayInPast");
-        final DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0);
+        final DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0, testTimeZone);
         testBasePlanComplete(startDate, 31, false);
     }
 
     @Test(groups = "slow", enabled = true)
     public void testBasePlanCompleteWithBillingDayPresent() throws Exception {
         log.info("Starting testBasePlanCompleteWithBillingDayPresent");
-        final DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0);
+        final DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0, testTimeZone);
         testBasePlanComplete(startDate, 1, false);
     }
 
     @Test(groups = "slow", enabled = true)
     public void testBasePlanCompleteWithBillingDayAlignedWithTrial() throws Exception {
         log.info("Starting testBasePlanCompleteWithBillingDayAlignedWithTrial");
-        final DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0);
+        final DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0, testTimeZone);
         testBasePlanComplete(startDate, 2, false);
     }
 
     @Test(groups = "slow", enabled = true)
     public void testBasePlanCompleteWithBillingDayInFuture() throws Exception {
         log.info("Starting testBasePlanCompleteWithBillingDayInFuture");
-        final DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0);
+        final DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0, testTimeZone);
         testBasePlanComplete(startDate, 3, true);
     }
 
@@ -114,7 +115,7 @@ public class TestIntegration extends TestIntegrationBase {
 
         log.info("Starting testRepairChangeBPWithAddonIncluded");
 
-        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 13, 42, 0);
+        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 13, 42, 0, testTimeZone);
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
 
         final Account account = createAccountWithPaymentMethod(getAccountData(25));
@@ -204,7 +205,7 @@ public class TestIntegration extends TestIntegrationBase {
         final UUID accountId = account.getId();
         assertNotNull(account);
 
-        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
+        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0, testTimeZone);
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
 
         final SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(account.getId(), "someBundle", context);
@@ -232,7 +233,7 @@ public class TestIntegration extends TestIntegrationBase {
 
         log.info("Starting testWithRecreatePlan");
 
-        final DateTime initialDate = new DateTime(2012, 2, 1, 0, 3, 42, 0);
+        final DateTime initialDate = new DateTime(2012, 2, 1, 0, 3, 42, 0, testTimeZone);
         final int billingDay = 2;
 
         log.info("Beginning test with BCD of " + billingDay);
@@ -303,7 +304,6 @@ public class TestIntegration extends TestIntegrationBase {
 
     private void testBasePlanComplete(final DateTime initialCreationDate, final int billingDay,
                                       final boolean proRationExpected) throws Exception {
-
         log.info("Beginning test with BCD of " + billingDay);
         final Account account = createAccountWithPaymentMethod(getAccountData(billingDay));
         final UUID accountId = account.getId();
@@ -506,7 +506,7 @@ public class TestIntegration extends TestIntegrationBase {
 
         log.info("Starting testForMultipleRecurringPhases");
 
-        final DateTime initialCreationDate = new DateTime(2012, 2, 1, 0, 3, 42, 0);
+        final DateTime initialCreationDate = new DateTime(2012, 2, 1, 0, 3, 42, 0, testTimeZone);
         clock.setDeltaFromReality(initialCreationDate.getMillis() - clock.getUTCNow().getMillis());
 
         final Account account = createAccountWithPaymentMethod(getAccountData(2));

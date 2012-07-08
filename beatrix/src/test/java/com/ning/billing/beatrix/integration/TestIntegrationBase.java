@@ -56,6 +56,7 @@ import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceService;
 import com.ning.billing.invoice.api.InvoiceUserApi;
+import com.ning.billing.invoice.generator.InvoiceDateUtils;
 import com.ning.billing.invoice.model.InvoicingConfiguration;
 import com.ning.billing.junction.plumbing.api.BlockingSubscription;
 import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
@@ -77,6 +78,8 @@ import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 public class TestIntegrationBase implements TestListenerStatus {
+    protected static final DateTimeZone testTimeZone = DateTimeZone.UTC;
+
     protected static final int NUMBER_OF_DECIMALS = InvoicingConfiguration.getNumberOfDecimals();
     protected static final int ROUNDING_METHOD = InvoicingConfiguration.getRoundingMode();
 
@@ -244,9 +247,12 @@ public class TestIntegrationBase implements TestListenerStatus {
 
         boolean wasFound = false;
 
+        // Make sure to round the dates in the comparisons as the invoice items dates are rounded
+        final DateTime roundedStartDate = InvoiceDateUtils.roundDateTimeToDate(startDate, testTimeZone);
+        final DateTime roundedEndDate = InvoiceDateUtils.roundDateTimeToDate(endDate, testTimeZone);
         for (final InvoiceItem item : invoiceItems) {
-            if (item.getStartDate().compareTo(startDate) == 0) {
-                if (item.getEndDate().compareTo(endDate) == 0) {
+            if (item.getStartDate().compareTo(roundedStartDate) == 0) {
+                if (item.getEndDate().compareTo(roundedEndDate) == 0) {
                     if (item.getAmount().compareTo(amount) == 0) {
                         wasFound = true;
                         break;
@@ -263,7 +269,8 @@ public class TestIntegrationBase implements TestListenerStatus {
         assertNotNull(ctd);
         log.info("Checking CTD: " + ctd.toString() + "; clock is " + clock.getUTCNow().toString());
         assertTrue(clock.getUTCNow().isBefore(ctd));
-        assertTrue(ctd.compareTo(chargeThroughDate) == 0);
+        // The CTD is rounded too
+        assertTrue(ctd.compareTo(InvoiceDateUtils.roundDateTimeToDate(chargeThroughDate, testTimeZone)) == 0);
     }
 
     protected SubscriptionData subscriptionDataFromSubscription(final Subscription sub) {

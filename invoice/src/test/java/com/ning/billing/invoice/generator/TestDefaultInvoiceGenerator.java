@@ -536,7 +536,7 @@ public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
         assertNotNull(invoice2);
         assertEquals(invoice2.getNumberOfItems(), 1);
         final FixedPriceInvoiceItem item = (FixedPriceInvoiceItem) invoice2.getInvoiceItems().get(0);
-        assertEquals(item.getStartDate().compareTo(changeDate), 0);
+        assertDatesEqualRounded(item.getStartDate(), changeDate);
     }
 
     @Test(groups = "fast")
