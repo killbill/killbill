@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -52,6 +53,7 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.invoice.generator.InvoiceDateUtils;
 import com.ning.billing.overdue.config.OverdueConfig;
 import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.util.api.TagApiException;
@@ -447,8 +449,9 @@ public class TestAnalytics extends TestIntegrationBase {
         // No billing period for the trial item
         Assert.assertEquals(invoiceItem.getBillingPeriod(), subscription.getCurrentPhase().getBillingPeriod().toString());
         Assert.assertEquals(invoiceItem.getCurrency(), account.getCurrency());
-        // The subscription end date is null (evergreen)
-        Assert.assertEquals(invoiceItem.getEndDate(), subscription.getStartDate().plus(subscription.getCurrentPhase().getDuration().toJodaPeriod()));
+        final DateTime subscriptionEndDate = subscription.getStartDate().plus(subscription.getCurrentPhase().getDuration().toJodaPeriod());
+        final DateTime roundedSubscriptionEndDate = InvoiceDateUtils.roundDateTimeToDate(subscriptionEndDate, DateTimeZone.UTC);
+        Assert.assertEquals(invoiceItem.getEndDate(), roundedSubscriptionEndDate);
         Assert.assertEquals(invoiceItem.getExternalKey(), bundle.getKey());
         Assert.assertEquals(invoiceItem.getInvoiceId(), invoice.getInvoiceId());
         Assert.assertEquals(invoiceItem.getItemType(), "FIXED");
@@ -457,7 +460,9 @@ public class TestAnalytics extends TestIntegrationBase {
         Assert.assertEquals(invoiceItem.getProductName(), subscription.getCurrentPlan().getProduct().getName());
         Assert.assertEquals(invoiceItem.getProductType(), subscription.getCurrentPlan().getProduct().getCatalogName());
         Assert.assertEquals(invoiceItem.getSlug(), subscription.getCurrentPhase().getName());
-        Assert.assertEquals(invoiceItem.getStartDate(), subscription.getStartDate());
+        final DateTime subscriptionStartDate = subscription.getStartDate();
+        final DateTime roundedSubscriptionStartDate = InvoiceDateUtils.roundDateTimeToDate(subscriptionStartDate, DateTimeZone.UTC);
+        Assert.assertEquals(invoiceItem.getStartDate(), roundedSubscriptionStartDate);
 
         return subscription;
     }
