@@ -506,7 +506,6 @@ public class DefaultInvoiceDao implements InvoiceDao {
         invoice.addPayments(invoicePayments);
     }
 
-
     private void notifyOfFutureBillingEvents(final InvoiceSqlDao dao, final UUID accountId, final int billCycleDay, final List<InvoiceItem> invoiceItems) {
         DateTime nextBCD = null;
         UUID subscriptionForNextBCD = null;
@@ -529,8 +528,14 @@ public class DefaultInvoiceDao implements InvoiceDao {
         // (and no further processing is needed).
         // Also, we only need to get notified on the BDC. For other invoice events (e.g. phase changes),
         // we'll be notified by entitlement.
-        if (subscriptionForNextBCD != null && nextBCD != null && nextBCD.getDayOfMonth() == billCycleDay) {
-            nextBillingDatePoster.insertNextBillingNotification(dao, accountId, subscriptionForNextBCD, nextBCD);
+        if (subscriptionForNextBCD != null && nextBCD != null) {
+            final int lastDayOfMonth = nextBCD.dayOfMonth().withMaximumValue().getDayOfMonth();
+            final int nextBCDDay = nextBCD.getDayOfMonth();
+            // Small trick here in case the bill cycle day doesn't exist for that month, e.g. the bill cycle day
+            // is on the 31st, but the month has only 30 days
+            if (nextBCDDay == billCycleDay || (lastDayOfMonth == nextBCDDay && billCycleDay > lastDayOfMonth)) {
+                nextBillingDatePoster.insertNextBillingNotification(dao, accountId, subscriptionForNextBCD, nextBCD);
+            }
         }
     }
 }
