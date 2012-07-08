@@ -25,7 +25,8 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 
 public class KillbillTestSuite {
-    private static final Logger log = LoggerFactory.getLogger(KillbillTestSuite.class);
+    // Use the simple name here to save screen real estate
+    private static final Logger log = LoggerFactory.getLogger(KillbillTestSuite.class.getSimpleName());
 
     @BeforeMethod(alwaysRun = true)
     public void startTestSuite(final Method method) throws Exception {
