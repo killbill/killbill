@@ -31,7 +31,7 @@ public class TestTrailingProRation extends ProRationInAdvanceTestBase {
         return BillingPeriod.MONTHLY;
     }
 
-    @Test(groups = {"fast"})
+    @Test(groups = "fast")
     public void testTargetDateOnStartDate() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2010, 6, 17);
         final DateTime endDate = buildDateTime(2010, 7, 25);
@@ -40,7 +40,7 @@ public class TestTrailingProRation extends ProRationInAdvanceTestBase {
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 17, ONE);
     }
 
-    @Test(groups = {"fast"})
+    @Test(groups = "fast")
     public void testTargetDateInFirstBillingPeriod() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2010, 6, 17);
         final DateTime endDate = buildDateTime(2010, 7, 25);
@@ -49,7 +49,7 @@ public class TestTrailingProRation extends ProRationInAdvanceTestBase {
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 17, ONE);
     }
 
-    @Test(groups = {"fast"})
+    @Test(groups = "fast")
     public void testTargetDateAtEndOfFirstBillingCycle() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2010, 6, 17);
         final DateTime endDate = buildDateTime(2010, 7, 25);
@@ -59,7 +59,7 @@ public class TestTrailingProRation extends ProRationInAdvanceTestBase {
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 17, expectedValue);
     }
 
-    @Test(groups = {"fast"})
+    @Test(groups = "fast")
     public void testTargetDateInProRationPeriod() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2010, 6, 17);
         final DateTime endDate = buildDateTime(2010, 7, 25);
@@ -69,7 +69,7 @@ public class TestTrailingProRation extends ProRationInAdvanceTestBase {
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 17, expectedValue);
     }
 
-    @Test(groups = {"fast"})
+    @Test(groups = "fast")
     public void testTargetDateOnEndDate() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2010, 6, 17);
         final DateTime endDate = buildDateTime(2010, 7, 25);
@@ -78,7 +78,7 @@ public class TestTrailingProRation extends ProRationInAdvanceTestBase {
         testCalculateNumberOfBillingCycles(startDate, endDate, endDate, 17, expectedValue);
     }
 
-    @Test(groups = {"fast"})
+    @Test(groups = "fast")
     public void testTargetDateAfterEndDate() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2010, 6, 17);
         final DateTime endDate = buildDateTime(2010, 7, 25);

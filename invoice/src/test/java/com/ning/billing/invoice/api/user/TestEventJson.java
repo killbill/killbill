@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.invoice.api.user;
 
 import java.math.BigDecimal;
@@ -23,14 +24,15 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.invoice.api.NullInvoiceEvent;
+import com.ning.billing.invoice.InvoiceTestSuite;
 import com.ning.billing.invoice.api.InvoiceCreationEvent;
+import com.ning.billing.invoice.api.NullInvoiceEvent;
 import com.ning.billing.util.jackson.ObjectMapper;
 
-public class TestEventJson {
+public class TestEventJson extends InvoiceTestSuite {
     private final ObjectMapper mapper = new ObjectMapper();
 
-    @Test(groups = {"fast"})
+    @Test(groups = "fast")
     public void testInvoiceCreationEvent() throws Exception {
 
         final InvoiceCreationEvent e = new DefaultInvoiceCreationEvent(UUID.randomUUID(), UUID.randomUUID(), new BigDecimal(12.0), Currency.USD, new DateTime(), UUID.randomUUID());
@@ -42,7 +44,7 @@ public class TestEventJson {
         Assert.assertTrue(obj.equals(e));
     }
 
-    @Test(groups = {"fast"})
+    @Test(groups = "fast")
     public void testEmptyInvoiceEvent() throws Exception {
 
         final NullInvoiceEvent e = new DefaultNullInvoiceEvent(UUID.randomUUID(), new DateTime(), UUID.randomUUID());

@@ -29,8 +29,10 @@ import org.skife.jdbi.v2.exceptions.TransactionFailedException;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Test;
 
+import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.dbi.MysqlTestingHelper;
+import com.ning.billing.invoice.InvoiceTestSuiteWithEmbeddedDB;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
@@ -50,7 +52,6 @@ import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TestCallContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
-import com.ning.billing.util.io.IOUtils;
 import com.ning.billing.util.tag.api.DefaultTagUserApi;
 import com.ning.billing.util.tag.dao.MockTagDao;
 import com.ning.billing.util.tag.dao.MockTagDefinitionDao;
@@ -62,7 +63,7 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
-public class TestChargeBacks {
+public class TestChargeBacks extends InvoiceTestSuiteWithEmbeddedDB {
     private static final BigDecimal FIFTEEN = new BigDecimal("15.00");
     private static final BigDecimal THIRTY = new BigDecimal("30.00");
     private static final BigDecimal ONE_MILLION = new BigDecimal("1000000.00");
@@ -72,19 +73,12 @@ public class TestChargeBacks {
     private final Clock clock = new ClockMock();
     private static final Currency CURRENCY = Currency.EUR;
 
-    @BeforeSuite(groups = {"slow"})
+    @BeforeSuite(groups = "slow")
     public void setup() throws IOException {
         loadSystemPropertiesFromClasspath("/resource.properties");
 
-        final MysqlTestingHelper helper = new MysqlTestingHelper();
+        final MysqlTestingHelper helper = KillbillTestSuiteWithEmbeddedDB.getMysqlTestingHelper();
         final IDBI dbi = helper.getDBI();
-
-        final String invoiceDdl = IOUtils.toString(DefaultInvoiceDao.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
-        final String utilDdl = IOUtils.toString(DefaultInvoiceDao.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
-
-        helper.startMysql();
-        helper.initDb(invoiceDdl);
-        helper.initDb(utilDdl);
 
         invoiceSqlDao = dbi.onDemand(InvoiceSqlDao.class);
         invoiceSqlDao.test();
@@ -109,7 +103,7 @@ public class TestChargeBacks {
         }
     }
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testCompleteChargeBack() throws InvoiceApiException {
         final Invoice invoice = createAndPersistInvoice(THIRTY);
         final InvoicePayment payment = createAndPersistPayment(invoice.getId(), THIRTY);
@@ -122,7 +116,7 @@ public class TestChargeBacks {
         assertTrue(amount.compareTo(BigDecimal.ZERO) == 0);
     }
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testPartialChargeBack() throws InvoiceApiException {
         final Invoice invoice = createAndPersistInvoice(THIRTY);
         final InvoicePayment payment = createAndPersistPayment(invoice.getId(), THIRTY);
@@ -135,7 +129,7 @@ public class TestChargeBacks {
         assertTrue(amount.compareTo(FIFTEEN) == 0);
     }
 
-    @Test(groups = {"slow"}, expectedExceptions = InvoiceApiException.class)
+    @Test(groups = "slow", expectedExceptions = InvoiceApiException.class)
     public void testChargeBackLargerThanPaymentAmount() throws InvoiceApiException {
         try {
             final Invoice invoice = createAndPersistInvoice(THIRTY);
@@ -149,7 +143,7 @@ public class TestChargeBacks {
         }
     }
 
-    @Test(groups = {"slow"}, expectedExceptions = InvoiceApiException.class)
+    @Test(groups = "slow", expectedExceptions = InvoiceApiException.class)
     public void testNegativeChargeBackAmount() throws InvoiceApiException {
         try {
             final Invoice invoice = createAndPersistInvoice(THIRTY);
@@ -162,7 +156,7 @@ public class TestChargeBacks {
         }
     }
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testGetAccountIdFromPaymentIdHappyPath() throws InvoiceApiException {
         final Invoice invoice = createAndPersistInvoice(THIRTY);
         final InvoicePayment payment = createAndPersistPayment(invoice.getId(), THIRTY);
@@ -170,19 +164,19 @@ public class TestChargeBacks {
         assertEquals(accountId, invoice.getAccountId());
     }
 
-    @Test(groups = {"slow"}, expectedExceptions = InvoiceApiException.class)
+    @Test(groups = "slow", expectedExceptions = InvoiceApiException.class)
     public void testGetAccountIdFromPaymentIdBadPaymentId() throws InvoiceApiException {
         invoicePaymentApi.getAccountIdFromInvoicePaymentId(UUID.randomUUID());
     }
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testGetChargeBacksByAccountIdWithEmptyReturnSet() throws InvoiceApiException {
         final List<InvoicePayment> chargebacks = invoicePaymentApi.getChargebacksByAccountId(UUID.randomUUID());
         assertNotNull(chargebacks);
         assertEquals(chargebacks.size(), 0);
     }
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testGetChargeBacksByAccountIdHappyPath() throws InvoiceApiException {
         final Invoice invoice = createAndPersistInvoice(THIRTY);
         final InvoicePayment payment = createAndPersistPayment(invoice.getId(), THIRTY);
@@ -196,14 +190,14 @@ public class TestChargeBacks {
         assertEquals(chargebacks.get(0).getLinkedInvoicePaymentId(), payment.getId());
     }
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testGetChargeBacksByPaymentIdWithEmptyReturnSet() throws InvoiceApiException {
         final List<InvoicePayment> chargebacks = invoicePaymentApi.getChargebacksByPaymentId(UUID.randomUUID());
         assertNotNull(chargebacks);
         assertEquals(chargebacks.size(), 0);
     }
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testGetChargeBacksByInvoicePaymentIdHappyPath() throws InvoiceApiException {
         final Invoice invoice = createAndPersistInvoice(THIRTY);
         final InvoicePayment payment = createAndPersistPayment(invoice.getId(), THIRTY);

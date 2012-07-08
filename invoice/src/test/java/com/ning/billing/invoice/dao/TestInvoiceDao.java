@@ -69,7 +69,7 @@ import static org.testng.Assert.assertTrue;
 
 public class TestInvoiceDao extends InvoiceDaoTestBase {
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testCreationAndRetrievalByAccount() {
         final UUID accountId = UUID.randomUUID();
         final Invoice invoice = new DefaultInvoice(accountId, clock.getUTCNow(), clock.getUTCNow(), Currency.USD);
@@ -88,7 +88,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         assertTrue(thisInvoice.getBalance().compareTo(BigDecimal.ZERO) == 0);
     }
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testInvoicePayment() {
         final UUID accountId = UUID.randomUUID();
         final Invoice invoice = new DefaultInvoice(accountId, clock.getUTCNow(), clock.getUTCNow(), Currency.USD);
@@ -122,13 +122,13 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         assertEquals(retrievedInvoice.getPaidAmount().compareTo(new BigDecimal("11.00")), 0);
     }
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testRetrievalForNonExistentInvoiceId() {
         final Invoice invoice = invoiceDao.getById(UUID.randomUUID());
         assertNull(invoice);
     }
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testAddPayment1() {
         final UUID accountId = UUID.randomUUID();
         final DateTime targetDate = new DateTime(2011, 10, 6, 0, 0, 0, 0);
@@ -147,7 +147,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         assertEquals(invoice.getNumberOfPayments(), 1);
     }
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testAddPayment2() {
         final UUID accountId = UUID.randomUUID();
         final DateTime targetDate = new DateTime(2011, 10, 6, 0, 0, 0, 0);
@@ -161,7 +161,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         assertEquals(invoice.getLastPaymentDate().compareTo(paymentDate), 0);
     }
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testGetInvoicesBySubscriptionForRecurringItems() {
         final UUID accountId = UUID.randomUUID();
         final UUID bundleId = UUID.randomUUID();
@@ -237,7 +237,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         assertEquals(items4.size(), 1);
     }
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testGetInvoicesBySubscriptionForFixedItems() {
         final UUID accountId = UUID.randomUUID();
         final UUID bundleId = UUID.randomUUID();
@@ -313,7 +313,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         assertEquals(items4.size(), 1);
     }
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testGetInvoicesBySubscriptionForRecurringAndFixedItems() {
         final UUID accountId = UUID.randomUUID();
         final UUID bundleId = UUID.randomUUID();
@@ -416,7 +416,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         assertEquals(items4.size(), 2);
     }
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testGetInvoicesForAccountAfterDate() {
         final UUID accountId = UUID.randomUUID();
         final DateTime targetDate1 = new DateTime(2011, 10, 6, 0, 0, 0, 0);
@@ -444,7 +444,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         assertEquals(invoices.size(), 0);
     }
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testAccountBalance() {
         final UUID accountId = UUID.randomUUID();
         final UUID bundleId = UUID.randomUUID();
@@ -474,7 +474,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         assertEquals(balance.compareTo(rate1.add(rate2).subtract(payment1)), 0);
     }
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testAccountBalanceWithCredit() {
         final UUID accountId = UUID.randomUUID();
         final UUID bundleId = UUID.randomUUID();
@@ -498,7 +498,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         assertEquals(balance.compareTo(BigDecimal.ZERO), 0);
     }
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testAccountBalanceWithNoPayments() {
         final UUID accountId = UUID.randomUUID();
         final UUID bundleId = UUID.randomUUID();
@@ -524,7 +524,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         assertEquals(balance.compareTo(rate1.add(rate2)), 0);
     }
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testAccountBalanceWithNoInvoiceItems() {
         final UUID accountId = UUID.randomUUID();
         final DateTime targetDate1 = new DateTime(2011, 10, 6, 0, 0, 0, 0);
@@ -539,12 +539,12 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         assertEquals(balance.compareTo(BigDecimal.ZERO.subtract(payment1)), 0);
     }
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testAccountBalanceWithRefundNoAdj() throws InvoiceApiException {
         testAccountBalanceWithRefundInternal(false);
     }
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testAccountBalanceWithRefundAndAdj() throws InvoiceApiException {
         testAccountBalanceWithRefundInternal(true);
     }
@@ -588,28 +588,28 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         }
     }
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testAccountBalanceWithSmallRefundAndCBANoAdj() throws InvoiceApiException {
         BigDecimal refundAmount = new BigDecimal("-7.00");
         BigDecimal expectedBalance = new BigDecimal("-3.00");
         testAccountBalanceWithRefundAndCBAInternal(false, refundAmount, expectedBalance);
     }
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testAccountBalanceWithSmallRefundAndCBAWithAdj() throws InvoiceApiException {
         BigDecimal refundAmount = new BigDecimal("-7.00");
         BigDecimal expectedBalance = new BigDecimal("-3.00");
         testAccountBalanceWithRefundAndCBAInternal(true, refundAmount, expectedBalance);
     }
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testAccountBalanceWithLargeRefundAndCBANoAdj() throws InvoiceApiException {
         BigDecimal refundAmount = new BigDecimal("-20.00");
         BigDecimal expectedBalance = new BigDecimal("10.00");
         testAccountBalanceWithRefundAndCBAInternal(false, refundAmount, expectedBalance);
     }
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testAccountBalanceWithLargeRefundAndCBAWithAdj() throws InvoiceApiException {
         BigDecimal refundAmount = new BigDecimal("-20.00");
         BigDecimal expectedBalance = BigDecimal.ZERO;
@@ -682,7 +682,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
 
     }
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testAccountBalanceWithAllSortsOfThings() {
         final UUID accountId = UUID.randomUUID();
         final UUID bundleId = UUID.randomUUID();
@@ -770,7 +770,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
 
     }
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testGetUnpaidInvoicesByAccountId() {
         final UUID accountId = UUID.randomUUID();
         final UUID bundleId = UUID.randomUUID();
@@ -830,7 +830,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
      * this test verifies that immediate changes give the correct results
      *
      */
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testInvoiceGenerationForImmediateChanges() throws InvoiceApiException, CatalogApiException {
         final UUID accountId = UUID.randomUUID();
         final List<Invoice> invoiceList = new ArrayList<Invoice>();
@@ -885,7 +885,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         assertEquals(savedInvoice2.getBalance(), FIFTEEN);
     }
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testInvoiceForFreeTrial() throws InvoiceApiException, CatalogApiException {
         final Currency currency = Currency.USD;
         final DefaultPrice price = new DefaultPrice(BigDecimal.ZERO, Currency.USD);
@@ -917,7 +917,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         return subscription;
     }
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testInvoiceForFreeTrialWithRecurringDiscount() throws InvoiceApiException, CatalogApiException {
         final Currency currency = Currency.USD;
 
@@ -976,14 +976,14 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         //invoiceDao.create(invoice3, invoice3.getTargetDate().getDayOfMonth(), context);
     }
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testInvoiceForEmptyEventSet() throws InvoiceApiException {
         final BillingEventSet events = new MockBillingEventSet();
         final Invoice invoice = generator.generateInvoice(UUID.randomUUID(), events, null, new DateTime(), Currency.USD);
         assertNull(invoice);
     }
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testMixedModeInvoicePersistence() throws InvoiceApiException, CatalogApiException {
         final Currency currency = Currency.USD;
         final DefaultPrice zeroPrice = new DefaultPrice(BigDecimal.ZERO, Currency.USD);
@@ -1026,7 +1026,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         assertEquals(savedInvoice.getBalance().compareTo(cheapAmount), 0);
     }
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testInvoiceNumber() throws InvoiceApiException {
         final Currency currency = Currency.USD;
         final DateTime targetDate1 = DateTime.now().plusMonths(1);
@@ -1069,7 +1069,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         assertNotNull(invoice2.getInvoiceNumber());
     }
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testAddingWrittenOffTag() throws InvoiceApiException, TagApiException {
         final Subscription subscription = getZombieSubscription();
 
@@ -1100,7 +1100,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         assertTrue(tags.containsKey(ControlTagType.WRITTEN_OFF.toString()));
     }
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testRemoveWrittenOffTag() throws InvoiceApiException, TagApiException {
         final Subscription subscription = getZombieSubscription();
 

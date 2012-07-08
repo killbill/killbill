@@ -31,7 +31,7 @@ public class TestProRation extends ProRationInAdvanceTestBase {
         return BillingPeriod.MONTHLY;
     }
 
-    @Test(groups = {"fast"})
+    @Test(groups = "fast")
     public void testSinglePlan_WithPhaseChange() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2011, 2, 10);
         final DateTime phaseChangeDate = buildDateTime(2011, 2, 24);
@@ -41,7 +41,7 @@ public class TestProRation extends ProRationInAdvanceTestBase {
         testCalculateNumberOfBillingCycles(phaseChangeDate, targetDate, 10, ONE_HALF);
     }
 
-    @Test(groups = {"fast"})
+    @Test(groups = "fast")
     public void testSinglePlan_WithPhaseChange_BeforeBillCycleDay() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2011, 2, 3);
         final DateTime phaseChangeDate = buildDateTime(2011, 2, 17);
@@ -51,7 +51,7 @@ public class TestProRation extends ProRationInAdvanceTestBase {
         testCalculateNumberOfBillingCycles(phaseChangeDate, targetDate, 3, ONE_HALF);
     }
 
-    @Test(groups = {"fast"})
+    @Test(groups = "fast")
     public void testSinglePlan_WithPhaseChange_OnBillCycleDay() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2011, 2, 3);
         final DateTime phaseChangeDate = buildDateTime(2011, 2, 17);
@@ -61,7 +61,7 @@ public class TestProRation extends ProRationInAdvanceTestBase {
         testCalculateNumberOfBillingCycles(phaseChangeDate, targetDate, 3, ONE_AND_A_HALF);
     }
 
-    @Test(groups = {"fast"})
+    @Test(groups = "fast")
     public void testSinglePlan_WithPhaseChange_AfterBillCycleDay() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2011, 2, 3);
         final DateTime phaseChangeDate = buildDateTime(2011, 2, 17);
@@ -71,7 +71,7 @@ public class TestProRation extends ProRationInAdvanceTestBase {
         testCalculateNumberOfBillingCycles(phaseChangeDate, targetDate, 3, ONE_AND_A_HALF);
     }
 
-    @Test(groups = {"fast"})
+    @Test(groups = "fast")
     public void testPlanChange_WithChangeOfBillCycleDayToLaterDay() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2011, 2, 1);
         final DateTime planChangeDate = buildDateTime(2011, 2, 15);
@@ -81,7 +81,7 @@ public class TestProRation extends ProRationInAdvanceTestBase {
         testCalculateNumberOfBillingCycles(planChangeDate, targetDate, 15, ONE);
     }
 
-    @Test(groups = {"fast"})
+    @Test(groups = "fast")
     public void testPlanChange_WithChangeOfBillCycleDayToEarlierDay() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2011, 2, 20);
         final DateTime planChangeDate = buildDateTime(2011, 3, 6);
@@ -91,7 +91,7 @@ public class TestProRation extends ProRationInAdvanceTestBase {
         testCalculateNumberOfBillingCycles(planChangeDate, targetDate, 6, ONE);
     }
 
-    @Test(groups = {"fast"})
+    @Test(groups = "fast")
     public void testSinglePlan_CrossingYearBoundary() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2010, 12, 15);
         final DateTime targetDate = buildDateTime(2011, 1, 16);
@@ -99,7 +99,7 @@ public class TestProRation extends ProRationInAdvanceTestBase {
         testCalculateNumberOfBillingCycles(startDate, targetDate, 15, TWO);
     }
 
-    @Test(groups = {"fast"})
+    @Test(groups = "fast")
     public void testSinglePlan_LeapYear_StartingMidFebruary() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2012, 2, 15);
         final DateTime targetDate = buildDateTime(2012, 3, 15);
@@ -107,7 +107,7 @@ public class TestProRation extends ProRationInAdvanceTestBase {
         testCalculateNumberOfBillingCycles(startDate, targetDate, 15, TWO);
     }
 
-    @Test(groups = {"fast"})
+    @Test(groups = "fast")
     public void testSinglePlan_LeapYear_StartingBeforeFebruary() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2012, 1, 15);
         final DateTime targetDate = buildDateTime(2012, 2, 3);
@@ -115,7 +115,7 @@ public class TestProRation extends ProRationInAdvanceTestBase {
         testCalculateNumberOfBillingCycles(startDate, targetDate, 15, ONE);
     }
 
-    @Test(groups = {"fast"})
+    @Test(groups = "fast")
     public void testSinglePlan_LeapYear_IncludingAllOfFebruary() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2012, 1, 30);
         final DateTime targetDate = buildDateTime(2012, 3, 1);
@@ -123,7 +123,7 @@ public class TestProRation extends ProRationInAdvanceTestBase {
         testCalculateNumberOfBillingCycles(startDate, targetDate, 30, TWO);
     }
 
-    @Test(groups = {"fast"})
+    @Test(groups = "fast")
     public void testSinglePlan_ChangeBCDTo31() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2011, 2, 1);
         final DateTime planChangeDate = buildDateTime(2011, 2, 14);
@@ -138,7 +138,7 @@ public class TestProRation extends ProRationInAdvanceTestBase {
         testCalculateNumberOfBillingCycles(planChangeDate, targetDate, 31, expectedValue);
     }
 
-    @Test(groups = {"fast"})
+    @Test(groups = "fast")
     public void testSinglePlan_ChangeBCD() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2011, 2, 1);
         final DateTime planChangeDate = buildDateTime(2011, 2, 14);
@@ -153,7 +153,7 @@ public class TestProRation extends ProRationInAdvanceTestBase {
         testCalculateNumberOfBillingCycles(planChangeDate, targetDate, 27, expectedValue);
     }
 
-    @Test(groups = {"fast"})
+    @Test(groups = "fast")
     public void testSinglePlan_LeapYearFebruaryProRation() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2012, 2, 1);
         final DateTime endDate = buildDateTime(2012, 2, 15);
@@ -165,7 +165,7 @@ public class TestProRation extends ProRationInAdvanceTestBase {
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 1, expectedValue);
     }
 
-    @Test(groups = {"fast"})
+    @Test(groups = "fast")
     public void testPlanChange_BeforeBillingDay() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2011, 2, 7);
         final DateTime changeDate = buildDateTime(2011, 2, 15);
@@ -179,7 +179,7 @@ public class TestProRation extends ProRationInAdvanceTestBase {
         testCalculateNumberOfBillingCycles(changeDate, targetDate, 15, THREE);
     }
 
-    @Test(groups = {"fast"})
+    @Test(groups = "fast")
     public void testPlanChange_OnBillingDay() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2011, 2, 7);
         final DateTime changeDate = buildDateTime(2011, 3, 7);
@@ -192,7 +192,7 @@ public class TestProRation extends ProRationInAdvanceTestBase {
         testCalculateNumberOfBillingCycles(changeDate, targetDate, 15, expectedValue);
     }
 
-    @Test(groups = {"fast"})
+    @Test(groups = "fast")
     public void testPlanChange_AfterBillingDay() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2011, 2, 7);
         final DateTime changeDate = buildDateTime(2011, 3, 10);
@@ -207,7 +207,7 @@ public class TestProRation extends ProRationInAdvanceTestBase {
         testCalculateNumberOfBillingCycles(changeDate, targetDate, 15, expectedValue);
     }
 
-    @Test(groups = {"fast"})
+    @Test(groups = "fast")
     public void testPlanChange_DoubleProRation() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2011, 1, 31);
         final DateTime planChangeDate = buildDateTime(2011, 3, 10);
@@ -224,7 +224,7 @@ public class TestProRation extends ProRationInAdvanceTestBase {
         testCalculateNumberOfBillingCycles(planChangeDate, targetDate, 15, expectedValue);
     }
 
-    @Test(groups = {"fast"})
+    @Test(groups = "fast")
     public void testStartTargetEnd() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2010, 12, 15);
         final DateTime targetDate = buildDateTime(2011, 3, 15);

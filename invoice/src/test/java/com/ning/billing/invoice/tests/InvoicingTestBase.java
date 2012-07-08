@@ -31,9 +31,10 @@ import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.billing.BillingEvent;
 import com.ning.billing.entitlement.api.billing.BillingModeType;
 import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.invoice.InvoiceTestSuiteWithEmbeddedDB;
 import com.ning.billing.invoice.model.InvoicingConfiguration;
 
-public abstract class InvoicingTestBase {
+public abstract class InvoicingTestBase extends InvoiceTestSuiteWithEmbeddedDB {
     protected static final int NUMBER_OF_DECIMALS = InvoicingConfiguration.getNumberOfDecimals();
     protected static final int ROUNDING_METHOD = InvoicingConfiguration.getRoundingMode();
 

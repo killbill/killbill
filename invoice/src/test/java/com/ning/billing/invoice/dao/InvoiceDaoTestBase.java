@@ -27,6 +27,7 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
+import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.config.InvoiceConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.invoice.generator.DefaultInvoiceGenerator;
@@ -42,7 +43,6 @@ import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TestCallContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
-import com.ning.billing.util.io.IOUtils;
 import com.ning.billing.util.tag.api.DefaultTagUserApi;
 import com.ning.billing.util.tag.api.user.TagEventBuilder;
 import com.ning.billing.util.tag.dao.AuditedTagDao;
@@ -57,7 +57,6 @@ public class InvoiceDaoTestBase extends InvoicingTestBase {
     protected final TagEventBuilder tagEventBuilder = new TagEventBuilder();
 
     protected IDBI dbi;
-    private MysqlTestingHelper mysqlTestingHelper;
     protected InvoiceDao invoiceDao;
     protected InvoiceItemSqlDao invoiceItemSqlDao;
     protected InvoicePaymentSqlDao invoicePaymentDao;
@@ -98,22 +97,15 @@ public class InvoiceDaoTestBase extends InvoicingTestBase {
         }
     }
 
-    @BeforeClass(groups={"slow"})
+    @BeforeClass(groups = "slow")
     protected void setup() throws IOException {
 
         loadSystemPropertiesFromClasspath("/resource.properties");
 
-        mysqlTestingHelper = new MysqlTestingHelper();
+        final MysqlTestingHelper mysqlTestingHelper = KillbillTestSuiteWithEmbeddedDB.getMysqlTestingHelper();
         dbi = mysqlTestingHelper.getDBI();
 
-        final String invoiceDdl = IOUtils.toString(DefaultInvoiceDao.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
-        final String utilDdl = IOUtils.toString(DefaultInvoiceDao.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
-
         clock = new ClockMock();
-
-        mysqlTestingHelper.startMysql();
-        mysqlTestingHelper.initDb(invoiceDdl);
-        mysqlTestingHelper.initDb(utilDdl);
 
         bus = new InMemoryBus();
         bus.start();
@@ -128,34 +120,15 @@ public class InvoiceDaoTestBase extends InvoicingTestBase {
         invoiceItemSqlDao = dbi.onDemand(InvoiceItemSqlDao.class);
         invoicePaymentDao = dbi.onDemand(InvoicePaymentSqlDao.class);
 
-
-
         context = new TestCallContext("Invoice Dao Tests");
         generator = new DefaultInvoiceGenerator(clock, invoiceConfig);
-
-
 
         assertTrue(true);
     }
 
-    @BeforeMethod(groups={"slow"})
-    public void cleanupData() {
-        dbi.inTransaction(new TransactionCallback<Void>() {
-            @Override
-            public Void inTransaction(final Handle h, final TransactionStatus status)
-                    throws Exception {
-                h.execute("truncate table invoices");
-                h.execute("truncate table invoice_items");
-                h.execute("truncate table invoice_payments");
-                return null;
-            }
-        });
-    }
-
-    @AfterClass(groups={"slow"})
+    @AfterClass(groups = "slow")
     protected void tearDown() {
         bus.stop();
-        mysqlTestingHelper.stopMysql();
         assertTrue(true);
     }
 }

@@ -22,6 +22,7 @@ import java.net.URL;
 import org.mockito.Mockito;
 import org.skife.jdbi.v2.IDBI;
 
+import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.dbi.MysqlTestingHelper;
@@ -48,7 +49,7 @@ import com.ning.billing.util.notificationq.NotificationQueueService;
 import static org.testng.Assert.assertNotNull;
 
 public class InvoiceModuleWithEmbeddedDb extends DefaultInvoiceModule {
-    private final MysqlTestingHelper helper = new MysqlTestingHelper();
+    private final MysqlTestingHelper helper = KillbillTestSuiteWithEmbeddedDB.getMysqlTestingHelper();
 
     private void installNotificationQueue() {
         bind(NotificationQueueService.class).to(MockNotificationQueueService.class).asEagerSingleton();

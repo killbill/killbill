@@ -62,7 +62,6 @@ import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.globallocker.GlobalLocker;
-import com.ning.billing.util.io.IOUtils;
 
 @Guice(modules = {MockModule.class})
 public class TestInvoiceDispatcher extends InvoicingTestBase {
@@ -96,13 +95,6 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
 
     @BeforeSuite(groups = {"slow"})
     public void setup() throws Exception {
-        final String invoiceDdl = IOUtils.toString(TestInvoiceDispatcher.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
-        final String utilDdl = IOUtils.toString(TestInvoiceDispatcher.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
-
-        helper.startMysql();
-
-        helper.initDb(invoiceDdl);
-        helper.initDb(utilDdl);
         notifier.initialize();
         notifier.start();
 
@@ -116,7 +108,6 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
         try {
             ((DefaultBusService) busService).stopBus();
             notifier.stop();
-            helper.stopMysql();
         } catch (Exception e) {
             log.warn("Failed to tearDown test properly ", e);
         }
@@ -179,5 +170,4 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
     }
 
     //MDW add a test to cover when the account auto-invoice-off tag is present
-
 }
