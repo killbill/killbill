@@ -32,6 +32,7 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.junction.JunctionTestSuite;
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.BlockingApiException;
 import com.ning.billing.junction.api.BlockingState;
@@ -41,7 +42,7 @@ import com.ning.billing.junction.block.DefaultBlockingChecker;
 import com.ning.billing.junction.dao.BlockingStateDao;
 import com.ning.billing.util.clock.Clock;
 
-public class TestBlockingChecker {
+public class TestBlockingChecker extends JunctionTestSuite {
     private BlockingState bundleState;
     private BlockingState subscriptionState;
     private BlockingState accountState;

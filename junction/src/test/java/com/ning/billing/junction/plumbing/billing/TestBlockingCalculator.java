@@ -45,6 +45,7 @@ import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.billing.BillingEvent;
 import com.ning.billing.entitlement.api.billing.BillingModeType;
 import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.junction.JunctionTestSuite;
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.Blockable.Type;
 import com.ning.billing.junction.api.BlockingApi;
@@ -59,7 +60,7 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 
-public class TestBlockingCalculator {
+public class TestBlockingCalculator extends JunctionTestSuite {
     private static final String DISABLED_BUNDLE = "disabled-bundle";
     private static final String CLEAR_BUNDLE = "clear-bundle";
 

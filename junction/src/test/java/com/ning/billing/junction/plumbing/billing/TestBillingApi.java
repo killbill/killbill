@@ -60,6 +60,7 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.junction.JunctionTestSuite;
 import com.ning.billing.junction.api.BillingApi;
 import com.ning.billing.junction.api.BillingEventSet;
 import com.ning.billing.junction.api.Blockable;
@@ -84,7 +85,7 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
-public class TestBillingApi {
+public class TestBillingApi extends JunctionTestSuite {
     class MockPrice implements InternationalPrice {
         private final BigDecimal price;
 
@@ -110,7 +111,6 @@ public class TestBillingApi {
                         public BigDecimal getValue() throws CurrencyValueNull {
                             return price;
                         }
-
                     }
             };
         }
@@ -136,9 +136,7 @@ public class TestBillingApi {
     private final BlockingCalculator blockCalculator = new BlockingCalculator(null) {
         @Override
         public void insertBlockingEvents(final SortedSet<BillingEvent> billingEvents) {
-
         }
-
     };
 
     private Clock clock;
@@ -147,13 +145,13 @@ public class TestBillingApi {
     private Plan subscriptionPlan;
     private TagUserApi tagApi;
 
-    @BeforeSuite(groups = {"fast", "slow"})
+    @BeforeSuite(groups = "fast")
     public void setup() throws ServiceException {
         catalogService = new MockCatalogService(new MockCatalog());
         clock = new ClockMock();
     }
 
-    @BeforeMethod(groups = {"fast", "slow"})
+    @BeforeMethod(groups = "fast")
     public void setupEveryTime() throws EntitlementUserApiException {
         final List<SubscriptionBundle> bundles = new ArrayList<SubscriptionBundle>();
         final SubscriptionBundle bundle = Mockito.mock(SubscriptionBundle.class);

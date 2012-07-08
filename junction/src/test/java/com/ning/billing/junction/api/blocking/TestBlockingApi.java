@@ -16,65 +16,37 @@
 
 package com.ning.billing.junction.api.blocking;
 
-import java.io.IOException;
 import java.util.SortedSet;
 import java.util.UUID;
 
 import org.mockito.Mockito;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import com.google.inject.Inject;
-import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.junction.JunctionTestSuiteWithEmbeddedDB;
 import com.ning.billing.junction.MockModule;
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.junction.api.DefaultBlockingState;
-import com.ning.billing.junction.dao.TestBlockingDao;
 import com.ning.billing.mock.glue.MockEntitlementModule;
 import com.ning.billing.util.clock.ClockMock;
-import com.ning.billing.util.io.IOUtils;
 
 @Guice(modules = {MockModule.class, MockEntitlementModule.class})
-public class TestBlockingApi {
-    private final Logger log = LoggerFactory.getLogger(TestBlockingDao.class);
-
-    @Inject
-    private MysqlTestingHelper helper;
-
+public class TestBlockingApi extends JunctionTestSuiteWithEmbeddedDB {
     @Inject
     private BlockingApi api;
 
     @Inject
     private ClockMock clock;
 
-    @BeforeClass(groups = "slow")
-    public void setup() throws IOException {
-        log.info("Starting set up TestBlockingApi");
-
-        final String utilDdl = IOUtils.toString(TestBlockingDao.class.getResourceAsStream("/com/ning/billing/junction/ddl.sql"));
-
-        helper.startMysql();
-        helper.initDb(utilDdl);
-    }
-
     @BeforeMethod(groups = "slow")
     public void clean() {
-        helper.cleanupTable("blocking_states");
         clock.resetDeltaFromReality();
-    }
-
-    @AfterClass(groups = "slow")
-    public void stopMysql() {
-        helper.stopMysql();
     }
 
     @Test(groups = "slow")

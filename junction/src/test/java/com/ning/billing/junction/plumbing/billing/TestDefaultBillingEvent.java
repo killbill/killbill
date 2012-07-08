@@ -42,8 +42,9 @@ import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.billing.BillingEvent;
 import com.ning.billing.entitlement.api.billing.BillingModeType;
 import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.junction.JunctionTestSuite;
 
-public class TestDefaultBillingEvent {
+public class TestDefaultBillingEvent extends JunctionTestSuite {
     public static final UUID ID_ZERO = new UUID(0L, 0L);
     public static final UUID ID_ONE = new UUID(0L, 1L);
     public static final UUID ID_TWO = new UUID(0L, 2L);
