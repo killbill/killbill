@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -51,7 +51,7 @@ public class TestInvoice extends TestJaxrsBase {
         final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
 
-        final AccountJson accountJson = createAccount("poupou", "qhddffrwe", "poupou@yahoo.com");
+        final AccountJson accountJson = createAccountWithDefaultPaymentMethod("poupou", "qhddffrwe", "poupou@yahoo.com");
         assertNotNull(accountJson);
 
         final BundleJsonNoSubscriptions bundleJson = createBundle(accountJson.getAccountId(), "9967599");

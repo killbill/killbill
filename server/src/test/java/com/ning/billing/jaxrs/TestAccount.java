@@ -298,13 +298,17 @@ public class TestAccount extends TestJaxrsBase {
     @Test(groups = "slow", enabled = true)
     public void testCustomFields() throws Exception {
 
+
+        final AccountJson accountJson = createAccount("yoyoq", "gfgrqe", "yoyoq@yahoo.com");
+        assertNotNull(accountJson);
+
         final List<CustomFieldJson> customFields = new LinkedList<CustomFieldJson>();
         customFields.add(new CustomFieldJson("1", "value1"));
         customFields.add(new CustomFieldJson("2", "value2"));
         customFields.add(new CustomFieldJson("3", "value3"));
         final String baseJson = mapper.writeValueAsString(customFields);
 
-        final String uri = JaxrsResource.ACCOUNTS_PATH + "/" + UUID.randomUUID().toString() + "/" + JaxrsResource.CUSTOM_FIELDS;
+        final String uri = JaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAccountId() + "/" + JaxrsResource.CUSTOM_FIELDS;
         Response response = doPost(uri, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
 
