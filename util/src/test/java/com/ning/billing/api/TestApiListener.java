@@ -123,7 +123,7 @@ public class TestApiListener {
     }
 
     @Subscribe
-    public void handleInvoiceEvents(final InvoiceEvent event) {
+    public void handleInvoiceEvents(final InvoiceCreationEvent event) {
         log.info(String.format("TestApiListener Got Invoice event %s", event.toString()));
         assertEqualsNicely(NextEvent.INVOICE);
         notifyIfStackEmpty();
