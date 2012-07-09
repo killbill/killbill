@@ -43,7 +43,7 @@ public class BillingExceptionBase extends Exception {
     }
 
     public BillingExceptionBase(@Nullable final Throwable cause, final ErrorCode code, final Object... args) {
-        String tmp;
+        final String tmp;
         try {
             tmp = String.format(code.getFormat(), args);
         } catch (RuntimeException e) {
