@@ -28,6 +28,7 @@ import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.ning.billing.KillbillTestSuite;
 import com.ning.billing.catalog.DefaultCatalogService;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.PhaseType;
@@ -39,7 +40,6 @@ import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory;
 import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
-import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.user.ApiEventBase;
 import com.ning.billing.entitlement.events.user.ApiEventBuilder;
@@ -47,7 +47,7 @@ import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.util.clock.DefaultClock;
 
-public class TestPlanAligner {
+public class TestPlanAligner extends KillbillTestSuite {
     private static final String priceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
     private final DefaultClock clock = new DefaultClock();

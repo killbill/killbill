@@ -39,17 +39,13 @@ import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
 public class TestUserApiScenarios extends TestApiBase {
-
     @Override
     protected Injector getInjector() {
         return Guice.createInjector(Stage.DEVELOPMENT, new MockEngineModuleSql());
     }
 
-    @Test(groups = {"slow"}, enabled = true)
+    @Test(groups = "slow")
     public void testChangeIMMCancelUncancelChangeEOT() throws EntitlementBillingApiException {
-
-        log.info("Starting testChangeIMMCancelUncancelChangeEOT");
-
         try {
             SubscriptionData subscription = createSubscription("Assault-Rifle", BillingPeriod.MONTHLY, "gunclubDiscount");
             final PlanPhase trialPhase = subscription.getCurrentPhase();

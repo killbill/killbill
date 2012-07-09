@@ -25,10 +25,10 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.ning.billing.analytics.TestWithEmbeddedDB;
+import com.ning.billing.analytics.AnalyticsTestSuiteWithEmbeddedDB;
 import com.ning.billing.analytics.model.BusinessOverdueStatus;
 
-public class TestBusinessOverdueStatusSqlDao extends TestWithEmbeddedDB {
+public class TestBusinessOverdueStatusSqlDao extends AnalyticsTestSuiteWithEmbeddedDB {
     private BusinessOverdueStatusSqlDao overdueStatusSqlDao;
 
     @BeforeMethod(groups = "slow")

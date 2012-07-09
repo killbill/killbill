@@ -24,32 +24,31 @@ import com.google.inject.Stage;
 import com.ning.billing.entitlement.glue.MockEngineModuleSql;
 
 public class TestUserApiCreateSql extends TestUserApiCreate {
-
     @Override
     protected Injector getInjector() {
         return Guice.createInjector(Stage.DEVELOPMENT, new MockEngineModuleSql());
     }
 
     @Override
-    @Test(enabled = true, groups = {"slow"})
+    @Test(groups = "slow")
     public void testCreateWithRequestedDate() {
         super.testCreateWithRequestedDate();
     }
 
     @Override
-    @Test(enabled = true, groups = {"slow"})
+    @Test(groups = "slow")
     public void testCreateWithInitialPhase() {
         super.testCreateWithInitialPhase();
     }
 
     @Override
-    @Test(enabled = true, groups = {"slow"})
+    @Test(groups = "slow")
     public void testSimpleCreateSubscription() {
         super.testSimpleCreateSubscription();
     }
 
     @Override
-    @Test(enabled = true, groups = {"slow"})
+    @Test(groups = "slow")
     protected void testSimpleSubscriptionThroughPhases() {
         super.testSimpleSubscriptionThroughPhases();
     }
@@ -59,5 +58,4 @@ public class TestUserApiCreateSql extends TestUserApiCreate {
     protected void testSubscriptionWithAddOn() {
         super.testSubscriptionWithAddOn();
     }
-
 }

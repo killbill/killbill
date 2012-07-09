@@ -31,7 +31,7 @@ public class TestDoubleProRation extends ProRationInAdvanceTestBase {
         return BillingPeriod.ANNUAL;
     }
 
-    @Test(groups = {"fast"})
+    @Test(groups = "fast")
     public void testDoubleProRation_TargetDateOnStartDate() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2011, 1, 1);
         final DateTime targetDate = buildDateTime(2011, 1, 1);
@@ -41,7 +41,7 @@ public class TestDoubleProRation extends ProRationInAdvanceTestBase {
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 15, expectedValue);
     }
 
-    @Test(groups = {"fast"})
+    @Test(groups = "fast")
     public void testDoubleProRation_TargetDateInFirstProRationPeriod() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2011, 1, 1);
         final DateTime targetDate = buildDateTime(2011, 1, 7);
@@ -51,7 +51,7 @@ public class TestDoubleProRation extends ProRationInAdvanceTestBase {
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 15, expectedValue);
     }
 
-    @Test(groups = {"fast"})
+    @Test(groups = "fast")
     public void testDoubleProRation_TargetDateOnFirstBillingCycleDate() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2011, 1, 1);
         final DateTime targetDate = buildDateTime(2011, 1, 15);
@@ -61,7 +61,7 @@ public class TestDoubleProRation extends ProRationInAdvanceTestBase {
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 15, expectedValue);
     }
 
-    @Test(groups = {"fast"})
+    @Test(groups = "fast")
     public void testDoubleProRation_TargetDateInFullBillingPeriod() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2011, 1, 1);
         final DateTime targetDate = buildDateTime(2011, 1, 22);
@@ -74,7 +74,7 @@ public class TestDoubleProRation extends ProRationInAdvanceTestBase {
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 15, expectedValue);
     }
 
-    @Test(groups = {"fast"})
+    @Test(groups = "fast")
     public void testDoubleProRation_TargetDateOnSecondBillingCycleDate() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2011, 1, 1);
         final DateTime targetDate = buildDateTime(2012, 1, 15);
@@ -89,7 +89,7 @@ public class TestDoubleProRation extends ProRationInAdvanceTestBase {
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 15, expectedValue);
     }
 
-    @Test(groups = {"fast"})
+    @Test(groups = "fast")
     public void testDoubleProRation_TargetDateInSecondProRationPeriod() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2011, 1, 1);
         final DateTime targetDate = buildDateTime(2012, 1, 17);
@@ -104,7 +104,7 @@ public class TestDoubleProRation extends ProRationInAdvanceTestBase {
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 15, expectedValue);
     }
 
-    @Test(groups = {"fast"})
+    @Test(groups = "fast")
     public void testDoubleProRation_TargetDateOnEndDate() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2011, 1, 1);
         final DateTime targetDate = buildDateTime(2012, 1, 27);
@@ -119,7 +119,7 @@ public class TestDoubleProRation extends ProRationInAdvanceTestBase {
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 15, expectedValue);
     }
 
-    @Test(groups = {"fast"})
+    @Test(groups = "fast")
     public void testDoubleProRation_TargetDateAfterEndDate() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2011, 1, 1);
         final DateTime targetDate = buildDateTime(2012, 3, 7);
@@ -134,7 +134,7 @@ public class TestDoubleProRation extends ProRationInAdvanceTestBase {
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 15, expectedValue);
     }
 
-    @Test(groups = {"fast"})
+    @Test(groups = "fast")
     public void testDoubleProRationWithMultiplePeriods_TargetDateInSecondFullBillingPeriod() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2011, 1, 1);
         final DateTime targetDate = buildDateTime(2012, 2, 26);

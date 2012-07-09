@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2012 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -14,11 +14,9 @@
  * under the License.
  */
 
-package com.ning.billing.invoice.api.test;
+package com.ning.billing.overdue;
 
-import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
 
-public interface InvoiceTestApi {
-    public void create(Invoice invoice, CallContext context);
+public abstract class OverdueTestSuiteWithEmbeddedDB extends KillbillTestSuiteWithEmbeddedDB {
 }

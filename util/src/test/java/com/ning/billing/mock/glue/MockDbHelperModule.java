@@ -20,21 +20,19 @@ import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.IDBI;
 
 import com.google.inject.AbstractModule;
+import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.dbi.DBIProvider;
 import com.ning.billing.dbi.DbiConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
 
 public class MockDbHelperModule extends AbstractModule {
-
-
     @Override
     protected void configure() {
         installMysqlTestingHelper();
     }
 
     public void installMysqlTestingHelper() {
-
-        final MysqlTestingHelper helper = new MysqlTestingHelper();
+        final MysqlTestingHelper helper = KillbillTestSuiteWithEmbeddedDB.getMysqlTestingHelper();
         bind(MysqlTestingHelper.class).toInstance(helper);
         if (helper.isUsingLocalInstance()) {
             bind(IDBI.class).toProvider(DBIProvider.class).asEagerSingleton();
@@ -44,7 +42,5 @@ public class MockDbHelperModule extends AbstractModule {
             final IDBI dbi = helper.getDBI();
             bind(IDBI.class).toInstance(dbi);
         }
-
     }
-
 }

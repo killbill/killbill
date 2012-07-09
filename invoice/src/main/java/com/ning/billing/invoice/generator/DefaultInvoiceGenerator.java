@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.Months;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -296,31 +297,38 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         return items;
     }
 
+    // Turn a set of events into a list of invoice items. Note that the dates on the invoice items will be rounded (granularity of a day)
     List<InvoiceItem> processEvents(final UUID invoiceId, final UUID accountId, final BillingEvent thisEvent, @Nullable final BillingEvent nextEvent,
             final DateTime targetDate, final Currency currency) throws InvoiceApiException {
         final List<InvoiceItem> items = new ArrayList<InvoiceItem>();
-        final InvoiceItem fixedPriceInvoiceItem = generateFixedPriceItem(invoiceId, accountId, thisEvent, targetDate, currency);
+
+        final DateTime roundedTargetDate = InvoiceDateUtils.roundDateTimeToDate(targetDate, thisEvent.getTimeZone());
+
+        // Handle fixed price items
+        final InvoiceItem fixedPriceInvoiceItem = generateFixedPriceItem(invoiceId, accountId, thisEvent, roundedTargetDate, currency);
         if (fixedPriceInvoiceItem != null) {
             items.add(fixedPriceInvoiceItem);
         }
 
+        // Handle recurring items
         final BillingPeriod billingPeriod = thisEvent.getBillingPeriod();
         if (billingPeriod != BillingPeriod.NO_BILLING_PERIOD) {
-
             final BillingMode billingMode = instantiateBillingMode(thisEvent.getBillingMode());
+            // Invoice granularity is day; (if not some comparison might fail)
             final DateTime startDate = thisEvent.getEffectiveDate();
-            final DateTime tzAdjustedStartDate = startDate.toDateTime(thisEvent.getTimeZone());
-            final DateTime roundedStartDate = new DateTime(tzAdjustedStartDate.getYear(), tzAdjustedStartDate.getMonthOfYear(), tzAdjustedStartDate.getDayOfMonth(), 0, 0, thisEvent.getTimeZone());
-            log.info(String.format("start = %s, rounded = %s, target = %s, in = %s", startDate, roundedStartDate, targetDate, (!roundedStartDate.isAfter(targetDate)) ? "in" : "out"));
-            if (!roundedStartDate.isAfter(targetDate)) {
+            final DateTime roundedStartDate = InvoiceDateUtils.roundDateTimeToDate(startDate, thisEvent.getTimeZone());
+
+            if (!roundedStartDate.isAfter(roundedTargetDate)) {
                 final DateTime endDate = (nextEvent == null) ? null : nextEvent.getEffectiveDate();
+
+                final DateTime roundedEndDate = InvoiceDateUtils.roundDateTimeToDate(endDate, thisEvent.getTimeZone());
                 final int billCycleDay = thisEvent.getBillCycleDay();
 
                 final List<RecurringInvoiceItemData> itemData;
                 try {
-                    itemData = billingMode.calculateInvoiceItemData(startDate, endDate, targetDate, billCycleDay, billingPeriod);
+                    itemData = billingMode.calculateInvoiceItemData(roundedStartDate, roundedEndDate, roundedTargetDate, billCycleDay, billingPeriod);
                 } catch (InvalidDateSequenceException e) {
-                    throw new InvoiceApiException(ErrorCode.INVOICE_INVALID_DATE_SEQUENCE, startDate, endDate, targetDate);
+                    throw new InvoiceApiException(ErrorCode.INVOICE_INVALID_DATE_SEQUENCE, startDate, endDate, roundedTargetDate);
                 }
 
                 for (final RecurringInvoiceItemData itemDatum : itemData) {
@@ -356,20 +364,23 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
     }
 
     InvoiceItem generateFixedPriceItem(final UUID invoiceId, final UUID accountId, final BillingEvent thisEvent,
-            final DateTime targetDate, final Currency currency) {
-        if (thisEvent.getEffectiveDate().isAfter(targetDate)) {
+                                       final DateTime roundedTargetDate, final Currency currency) {
+        final DateTime roundedStartDate = InvoiceDateUtils.roundDateTimeToDate(thisEvent.getEffectiveDate(), thisEvent.getTimeZone());
+
+        if (roundedStartDate.isAfter(roundedTargetDate)) {
             return null;
         } else {
             final BigDecimal fixedPrice = thisEvent.getFixedPrice();
 
             if (fixedPrice != null) {
                 final Duration duration = thisEvent.getPlanPhase().getDuration();
-                final DateTime endDate = duration.addToDateTime(thisEvent.getEffectiveDate());
+                final DateTime endDate = InvoiceDateUtils.roundDateTimeToDate(duration.addToDateTime(roundedStartDate), thisEvent.getTimeZone());
 
                 return new FixedPriceInvoiceItem(invoiceId, accountId, thisEvent.getSubscription().getBundleId(),
-                        thisEvent.getSubscription().getId(),
-                        thisEvent.getPlan().getName(), thisEvent.getPlanPhase().getName(),
-                        thisEvent.getEffectiveDate(), endDate, fixedPrice, currency);
+                                                 thisEvent.getSubscription().getId(),
+                                                 thisEvent.getPlan().getName(), thisEvent.getPlanPhase().getName(),
+                                                 roundedStartDate, endDate,
+                                                 fixedPrice, currency);
             } else {
                 return null;
             }

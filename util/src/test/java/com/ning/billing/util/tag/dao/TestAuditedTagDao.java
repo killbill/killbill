@@ -32,6 +32,7 @@ import org.testng.annotations.Test;
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
 import com.ning.billing.dbi.MysqlTestingHelper;
+import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.BusEvent;
 import com.ning.billing.util.callcontext.CallContext;
@@ -48,7 +49,7 @@ import com.ning.billing.util.tag.TestTagStore;
 import com.ning.billing.util.tag.api.TagEvent;
 
 @Guice(modules = MockTagStoreModuleSql.class)
-public class TestAuditedTagDao {
+public class TestAuditedTagDao extends UtilTestSuiteWithEmbeddedDB {
     @Inject
     private MysqlTestingHelper helper;
 
@@ -69,25 +70,19 @@ public class TestAuditedTagDao {
 
     @BeforeClass(groups = "slow")
     public void setup() throws IOException {
-        final String utilDdl = IOUtils.toString(TestTagStore.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
-
-        helper.startMysql();
-        helper.initDb(utilDdl);
-
         context = new DefaultCallContextFactory(clock).createCallContext("Tag DAO test", CallOrigin.TEST, UserType.TEST, UUID.randomUUID());
         bus.start();
     }
 
     @BeforeMethod(groups = "slow")
-    public void cleanup() throws Bus.EventBusException {
+    public void cleanupBeforeMethod() throws Bus.EventBusException {
         eventsListener = new EventsListener();
         bus.register(eventsListener);
     }
 
     @AfterClass(groups = "slow")
-    public void stopMysql() {
+    public void tearDown() {
         bus.stop();
-        helper.stopMysql();
     }
 
     @Test(groups = "slow")

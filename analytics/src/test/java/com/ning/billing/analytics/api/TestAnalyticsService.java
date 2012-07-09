@@ -39,7 +39,7 @@ import com.ning.billing.analytics.AnalyticsTestModule;
 import com.ning.billing.analytics.MockDuration;
 import com.ning.billing.analytics.MockPhase;
 import com.ning.billing.analytics.MockProduct;
-import com.ning.billing.analytics.TestWithEmbeddedDB;
+import com.ning.billing.analytics.AnalyticsTestSuiteWithEmbeddedDB;
 import com.ning.billing.analytics.dao.BusinessAccountSqlDao;
 import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionSqlDao;
 import com.ning.billing.analytics.model.BusinessSubscription;
@@ -88,7 +88,7 @@ import com.ning.billing.util.clock.DefaultClock;
 import static org.testng.Assert.fail;
 
 @Guice(modules = {AnalyticsTestModule.class})
-public class TestAnalyticsService extends TestWithEmbeddedDB {
+public class TestAnalyticsService extends AnalyticsTestSuiteWithEmbeddedDB {
     final Product product = new MockProduct("platinum", "subscription", ProductCategory.BASE);
     final Plan plan = new MockPlan("platinum-monthly", product);
     final PlanPhase phase = new MockPhase(PhaseType.EVERGREEN, plan, MockDuration.UNLIMITED(), 25.95);
@@ -225,7 +225,7 @@ public class TestAnalyticsService extends TestWithEmbeddedDB {
                 INVOICE_AMOUNT, ACCOUNT_CURRENCY);
         invoice.addInvoiceItem(invoiceItem);
 
-        invoiceDao.create(invoice, context);
+        invoiceDao.create(invoice, invoice.getTargetDate().getDayOfMonth(), context);
         final List<Invoice> invoices = invoiceDao.getInvoicesByAccount(account.getId());
         Assert.assertEquals(invoices.size(), 1);
         Assert.assertEquals(invoices.get(0).getInvoiceItems().size(), 1);

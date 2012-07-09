@@ -30,8 +30,9 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.jaxrs.JaxrsTestSuite;
 
-public class TestInvoiceItemJsonSimple {
+public class TestInvoiceItemJsonSimple extends JaxrsTestSuite {
     private static final ObjectMapper mapper = new ObjectMapper();
 
     static {

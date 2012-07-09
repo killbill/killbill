@@ -47,7 +47,7 @@ import static org.testng.Assert.assertTrue;
 public class TestChargeback extends TestJaxrsBase {
     @Test(groups = "slow")
     public void testAddChargeback() throws Exception {
-        final PaymentJsonSimple payment = createInvoicePayment();
+        final PaymentJsonSimple payment = createAccountWithInvoiceAndPayment();
         final ChargebackJson input = new ChargebackJson(null, null, BigDecimal.TEN, payment.getPaymentId(), null);
         final String jsonInput = mapper.writeValueAsString(input);
 
@@ -124,12 +124,12 @@ public class TestChargeback extends TestJaxrsBase {
         //assertEquals(response.getStatusCode(), javax.ws.rs.core.Response.Status.NO_CONTENT.getStatusCode(), response.getResponseBody());
     }
 
-    private PaymentJsonSimple createInvoicePayment() throws Exception {
-        final InvoiceJsonSimple invoice = createInvoice();
+    private PaymentJsonSimple createAccountWithInvoiceAndPayment() throws Exception {
+        final InvoiceJsonSimple invoice = createAccountWithInvoice();
         return getPayment(invoice);
     }
 
-    private InvoiceJsonSimple createInvoice() throws Exception {
+    private InvoiceJsonSimple createAccountWithInvoice() throws Exception {
         // Create account
         final AccountJson accountJson = createAccountWithDefaultPaymentMethod(UUID.randomUUID().toString(), UUID.randomUUID().toString(), "nohup@yahoo.com");
 

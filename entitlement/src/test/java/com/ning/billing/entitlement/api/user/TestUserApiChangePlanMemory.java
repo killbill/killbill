@@ -25,46 +25,43 @@ import com.ning.billing.entitlement.api.billing.EntitlementBillingApiException;
 import com.ning.billing.entitlement.glue.MockEngineModuleMemory;
 
 public class TestUserApiChangePlanMemory extends TestUserApiChangePlan {
-
     @Override
     protected Injector getInjector() {
         return Guice.createInjector(Stage.PRODUCTION, new MockEngineModuleMemory());
     }
 
-
     @Override
-    @Test(enabled = true, groups = {"fast"})
+    @Test(groups = "fast")
     public void testChangePlanBundleAlignEOTWithNoChargeThroughDate() {
         super.testChangePlanBundleAlignEOTWithNoChargeThroughDate();
     }
 
     @Override
-    @Test(enabled = true, groups = {"fast"})
+    @Test(groups = "fast")
     public void testChangePlanBundleAlignEOTWithChargeThroughDate() throws EntitlementBillingApiException {
         super.testChangePlanBundleAlignEOTWithChargeThroughDate();
     }
 
     @Override
-    @Test(enabled = true, groups = {"fast"})
+    @Test(groups = "fast")
     public void testChangePlanBundleAlignIMM() {
         super.testChangePlanBundleAlignIMM();
     }
 
     @Override
-    @Test(enabled = true, groups = {"fast"})
+    @Test(groups = "fast")
     public void testMultipleChangeLastIMM() throws EntitlementBillingApiException {
         super.testMultipleChangeLastIMM();
     }
 
     @Override
-    @Test(enabled = true, groups = {"fast"})
+    @Test(groups = "fast")
     public void testMultipleChangeLastEOT() throws EntitlementBillingApiException {
         super.testMultipleChangeLastEOT();
     }
 
-
     @Override
-    @Test(enabled = true, groups = {"fast"})
+    @Test(groups = "fast")
     public void testCorrectPhaseAlignmentOnChange() {
         super.testCorrectPhaseAlignmentOnChange();
     }

@@ -27,13 +27,12 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
+import com.ning.billing.beatrix.BeatrixTestSuite;
 import com.ning.billing.lifecycle.KillbillService;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
 
-
-public class TestLifecycle {
-
+public class TestLifecycle extends BeatrixTestSuite {
     private static final Logger log = LoggerFactory.getLogger(TestLifecycle.class);
 
     private Service1 s1;
@@ -42,7 +41,6 @@ public class TestLifecycle {
     private DefaultLifecycle lifecycle;
 
     public static class ServiceBase {
-
         private int count = 0;
 
         public ServiceBase() {
@@ -63,7 +61,6 @@ public class TestLifecycle {
     }
 
     public static class Service1 extends ServiceBase implements KillbillService {
-
         @LifecycleHandlerType(LifecycleLevel.INIT_BUS)
         public void initBus() {
             log.info("Service1 : got INIT_BUS");
@@ -89,7 +86,6 @@ public class TestLifecycle {
     }
 
     public static class Service2 extends ServiceBase implements KillbillService {
-
         @LifecycleHandlerType(LifecycleLevel.LOAD_CATALOG)
         public void loadCatalog() {
             log.info("Service2 : got LOAD_CATALOG");
@@ -120,8 +116,7 @@ public class TestLifecycle {
         }
     }
 
-
-    @BeforeClass(alwaysRun = true)
+    @BeforeClass(groups = "fast")
     public void setup() {
         final Injector g = Guice.createInjector(Stage.DEVELOPMENT, new TestLifecycleModule());
         s1 = g.getInstance(Service1.class);
@@ -129,7 +124,7 @@ public class TestLifecycle {
         lifecycle = g.getInstance(DefaultLifecycle.class);
     }
 
-    @Test(enabled = true, groups = {"fast"})
+    @Test(groups = "fast")
     public void testLifecycle() {
         s1.reset();
         s2.reset();
@@ -153,7 +148,6 @@ public class TestLifecycle {
     }
 
     public static class LifecycleNoWarn extends DefaultLifecycle {
-
         @Inject
         public LifecycleNoWarn(final Injector injector) {
             super(injector);
@@ -165,14 +159,12 @@ public class TestLifecycle {
     }
 
     public static class TestLifecycleModule extends AbstractModule {
-
         @Override
         protected void configure() {
             bind(DefaultLifecycle.class).to(LifecycleNoWarn.class).asEagerSingleton();
             bind(Service1.class).asEagerSingleton();
             bind(Service2.class).asEagerSingleton();
         }
-
     }
 }
 

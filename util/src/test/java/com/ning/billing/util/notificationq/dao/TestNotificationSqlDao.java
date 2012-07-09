@@ -16,8 +16,6 @@
 
 package com.ning.billing.util.notificationq.dao;
 
-import java.io.IOException;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.UUID;
 
@@ -27,7 +25,6 @@ import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.testng.Assert;
-import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Guice;
@@ -35,8 +32,9 @@ import org.testng.annotations.Test;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
+import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.dbi.MysqlTestingHelper;
-import com.ning.billing.util.io.IOUtils;
+import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.notificationq.DefaultNotification;
 import com.ning.billing.util.notificationq.Notification;
 import com.ning.billing.util.notificationq.dao.NotificationSqlDao.NotificationSqlMapper;
@@ -45,9 +43,9 @@ import com.ning.billing.util.queue.PersistentQueueEntryLifecycle.PersistentQueue
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
-@Test(groups = "slow")
 @Guice(modules = TestNotificationSqlDao.TestNotificationSqlDaoModule.class)
-public class TestNotificationSqlDao {
+public class TestNotificationSqlDao extends UtilTestSuiteWithEmbeddedDB {
+    private static final UUID accountId = UUID.randomUUID();
     private static final String hostname = "Yop";
 
     @Inject
@@ -58,34 +56,14 @@ public class TestNotificationSqlDao {
 
     private NotificationSqlDao dao;
 
-    private void startMysql() throws IOException, ClassNotFoundException, SQLException {
-        final String ddl = IOUtils.toString(NotificationSqlDao.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
-        helper.startMysql();
-        helper.initDb(ddl);
-    }
-
     @BeforeSuite(groups = "slow")
     public void setup() {
-        try {
-            startMysql();
-            dao = dbi.onDemand(NotificationSqlDao.class);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        dao = dbi.onDemand(NotificationSqlDao.class);
     }
-
-    @AfterSuite(groups = "slow")
-    public void stopMysql() {
-        if (helper != null) {
-            helper.stopMysql();
-        }
-    }
-
 
     @BeforeTest(groups = "slow")
     public void cleanupDb() {
         dbi.withHandle(new HandleCallback<Void>() {
-
             @Override
             public Void withHandle(final Handle handle) throws Exception {
                 handle.execute("delete from notifications");
@@ -95,14 +73,13 @@ public class TestNotificationSqlDao {
         });
     }
 
-    @Test
+    @Test(groups = "slow")
     public void testBasic() throws InterruptedException {
-
         final String ownerId = UUID.randomUUID().toString();
 
         final String notificationKey = UUID.randomUUID().toString();
         final DateTime effDt = new DateTime();
-        final Notification notif = new DefaultNotification("testBasic", hostname, notificationKey.getClass().getName(), notificationKey, effDt);
+        final Notification notif = new DefaultNotification("testBasic", hostname, notificationKey.getClass().getName(), notificationKey, accountId, effDt);
         dao.insertNotification(notif);
 
         Thread.sleep(1000);
@@ -126,7 +103,7 @@ public class TestNotificationSqlDao {
         notification = fetchNotification(notification.getId().toString());
         assertEquals(notification.getNotificationKey(), notificationKey);
         validateDate(notification.getEffectiveDate(), effDt);
-        assertEquals(notification.getOwner().toString(), ownerId);
+        assertEquals(notification.getOwner(), ownerId);
         assertEquals(notification.getProcessingState(), PersistentQueueEntryLifecycleState.IN_PROCESSING);
         validateDate(notification.getNextAvailableDate(), nextAvailable);
 
@@ -138,35 +115,56 @@ public class TestNotificationSqlDao {
         //assertEquals(notification.getOwner(), null);
         assertEquals(notification.getProcessingState(), PersistentQueueEntryLifecycleState.PROCESSED);
         validateDate(notification.getNextAvailableDate(), nextAvailable);
+    }
 
+    @Test(groups = "slow")
+    public void testGetByAccountAndDate() throws InterruptedException {
+        final String notificationKey = UUID.randomUUID().toString();
+        final DateTime effDt = new DateTime();
+        final Notification notif1 = new DefaultNotification("testBasic1", hostname, notificationKey.getClass().getName(), notificationKey, accountId, effDt);
+        dao.insertNotification(notif1);
+
+        final Notification notif2 = new DefaultNotification("testBasic2", hostname, notificationKey.getClass().getName(), notificationKey, accountId, effDt);
+        dao.insertNotification(notif2);
+
+        List<Notification> notifications = dao.getNotificationForAccountAndDate(accountId.toString(), effDt.toDate());
+        assertEquals(notifications.size(), 2);
+        for (final Notification cur : notifications) {
+            Assert.assertEquals(cur.getProcessingState(), PersistentQueueEntryLifecycleState.AVAILABLE);
+            dao.removeNotification(cur.getId().toString());
+        }
+
+        notifications = dao.getNotificationForAccountAndDate(accountId.toString(), effDt.toDate());
+        assertEquals(notifications.size(), 2);
+        for (final Notification cur : notifications) {
+            Assert.assertEquals(cur.getProcessingState(), PersistentQueueEntryLifecycleState.REMOVED);
+        }
     }
 
     private Notification fetchNotification(final String notificationId) {
-        final Notification res = dbi.withHandle(new HandleCallback<Notification>() {
-
+        return dbi.withHandle(new HandleCallback<Notification>() {
             @Override
             public Notification withHandle(final Handle handle) throws Exception {
-                final Notification res = handle.createQuery("   select" +
-                                                                    " record_id " +
-                                                                    ", id" +
-                                                                    ", class_name" +                                                                    
-                                                                    ", notification_key" +
-                                                                    ", created_date" +
-                                                                    ", creating_owner" +
-                                                                    ", effective_date" +
-                                                                    ", queue_name" +
-                                                                    ", processing_owner" +
-                                                                    ", processing_available_date" +
-                                                                    ", processing_state" +
-                                                                    "    from notifications " +
-                                                                    " where " +
-                                                                    " id = '" + notificationId + "';")
-                                               .map(new NotificationSqlMapper())
-                                               .first();
-                return res;
+                return handle.createQuery("   select" +
+                                                  " record_id " +
+                                                  ", id" +
+                                                  ", class_name" +
+                                                  ", account_id" +
+                                                  ", notification_key" +
+                                                  ", created_date" +
+                                                  ", creating_owner" +
+                                                  ", effective_date" +
+                                                  ", queue_name" +
+                                                  ", processing_owner" +
+                                                  ", processing_available_date" +
+                                                  ", processing_state" +
+                                                  "    from notifications " +
+                                                  " where " +
+                                                  " id = '" + notificationId + "';")
+                             .map(new NotificationSqlMapper())
+                             .first();
             }
         });
-        return res;
     }
 
     private void validateDate(DateTime input, DateTime expected) {
@@ -192,8 +190,7 @@ public class TestNotificationSqlDao {
     public static class TestNotificationSqlDaoModule extends AbstractModule {
         @Override
         protected void configure() {
-
-            final MysqlTestingHelper helper = new MysqlTestingHelper();
+            final MysqlTestingHelper helper = KillbillTestSuiteWithEmbeddedDB.getMysqlTestingHelper();
             bind(MysqlTestingHelper.class).toInstance(helper);
             final IDBI dbi = helper.getDBI();
             bind(IDBI.class).toInstance(dbi);

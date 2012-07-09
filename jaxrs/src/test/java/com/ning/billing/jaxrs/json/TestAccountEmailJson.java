@@ -23,8 +23,9 @@ import org.testng.annotations.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ning.billing.account.api.AccountEmail;
+import com.ning.billing.jaxrs.JaxrsTestSuite;
 
-public class TestAccountEmailJson {
+public class TestAccountEmailJson extends JaxrsTestSuite {
     private static final ObjectMapper mapper = new ObjectMapper();
 
     @Test(groups = "fast")

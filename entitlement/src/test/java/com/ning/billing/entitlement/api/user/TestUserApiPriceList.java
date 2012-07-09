@@ -20,18 +20,14 @@ import com.google.inject.Injector;
 import com.ning.billing.entitlement.api.TestApiBase;
 
 public class TestUserApiPriceList extends TestApiBase {
-
     @Override
     protected Injector getInjector() {
         return null;
     }
 
     protected void testChangeDefaultToDiscountToDefault() {
-
     }
 
     protected void testChangeDiscountToDefaultoDiscount() {
-
     }
-
 }

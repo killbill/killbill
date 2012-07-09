@@ -36,9 +36,10 @@ import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.timeline.BundleTimeline;
 import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.jaxrs.JaxrsTestSuite;
 import com.ning.billing.util.clock.DefaultClock;
 
-public class TestBundleJsonWithSubscriptions {
+public class TestBundleJsonWithSubscriptions extends JaxrsTestSuite {
     private static final ObjectMapper mapper = new ObjectMapper();
 
     static {

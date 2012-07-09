@@ -16,19 +16,20 @@
 
 package com.ning.billing.mock.glue;
 
+import org.mockito.Mockito;
+
 import com.google.inject.AbstractModule;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.glue.JunctionModule;
 import com.ning.billing.junction.api.BillingApi;
 import com.ning.billing.junction.api.BlockingApi;
-import com.ning.billing.mock.BrainDeadProxyFactory;
 
 public class MockJunctionModule extends AbstractModule implements JunctionModule {
-    private final BillingApi billingApi = BrainDeadProxyFactory.createBrainDeadProxyFor(BillingApi.class);
-    private final BlockingApi blockingApi = BrainDeadProxyFactory.createBrainDeadProxyFor(BlockingApi.class);
-    private final AccountUserApi userApi = BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class);
-    private final EntitlementUserApi entUserApi = BrainDeadProxyFactory.createBrainDeadProxyFor(EntitlementUserApi.class);
+    private final BillingApi billingApi = Mockito.mock(BillingApi.class);
+    private final BlockingApi blockingApi = Mockito.mock(BlockingApi.class);
+    private final AccountUserApi userApi = Mockito.mock(AccountUserApi.class);
+    private final EntitlementUserApi entUserApi = Mockito.mock(EntitlementUserApi.class);
 
     @Override
     protected void configure() {
@@ -42,7 +43,6 @@ public class MockJunctionModule extends AbstractModule implements JunctionModule
     public void installBillingApi() {
         bind(BillingApi.class).toInstance(billingApi);
     }
-
 
     @Override
     public void installAccountUserApi() {

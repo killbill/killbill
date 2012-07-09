@@ -25,7 +25,7 @@ import com.ning.billing.entitlement.api.timeline.RepairEntitlementEvent;
 import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.RequestedSubscriptionEvent;
-import com.ning.billing.invoice.api.EmptyInvoiceEvent;
+import com.ning.billing.invoice.api.NullInvoiceEvent;
 import com.ning.billing.invoice.api.InvoiceCreationEvent;
 import com.ning.billing.overdue.OverdueChangeEvent;
 import com.ning.billing.payment.api.PaymentErrorEvent;
@@ -101,7 +101,7 @@ public class AnalyticsListener {
     }
 
     @Subscribe
-    public void handleNullInvoice(final EmptyInvoiceEvent event) {
+    public void handleNullInvoice(final NullInvoiceEvent event) {
         // Ignored for now
     }
 

@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -23,15 +23,15 @@ import org.joda.time.DateTime;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.ning.billing.invoice.api.EmptyInvoiceEvent;
+import com.ning.billing.invoice.api.NullInvoiceEvent;
 
-public class DefaultEmptyInvoiceEvent implements EmptyInvoiceEvent {
+public class DefaultNullInvoiceEvent implements NullInvoiceEvent {
     private final UUID accountId;
     private final DateTime processingDate;
     private final UUID userToken;
 
     @JsonCreator
-    public DefaultEmptyInvoiceEvent(@JsonProperty("accountId") final UUID accountId,
+    public DefaultNullInvoiceEvent(@JsonProperty("accountId") final UUID accountId,
                                     @JsonProperty("processingDate") final DateTime processingDate,
                                     @JsonProperty("userToken") final UUID userToken) {
         super();
@@ -51,12 +51,24 @@ public class DefaultEmptyInvoiceEvent implements EmptyInvoiceEvent {
         return userToken;
     }
 
+    @Override
     public UUID getAccountId() {
         return accountId;
     }
 
     public DateTime getProcessingDate() {
         return processingDate;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append("DefaultNullInvoiceEvent");
+        sb.append("{accountId=").append(accountId);
+        sb.append(", processingDate=").append(processingDate);
+        sb.append(", userToken=").append(userToken);
+        sb.append('}');
+        return sb.toString();
     }
 
     @Override
@@ -83,7 +95,7 @@ public class DefaultEmptyInvoiceEvent implements EmptyInvoiceEvent {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        final DefaultEmptyInvoiceEvent other = (DefaultEmptyInvoiceEvent) obj;
+        final DefaultNullInvoiceEvent other = (DefaultNullInvoiceEvent) obj;
         if (accountId == null) {
             if (other.accountId != null) {
                 return false;
@@ -107,6 +119,4 @@ public class DefaultEmptyInvoiceEvent implements EmptyInvoiceEvent {
         }
         return true;
     }
-
-
 }

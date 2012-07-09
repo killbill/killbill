@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.analytics;
+package com.ning.billing;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -24,11 +24,9 @@ import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
 
-import com.google.common.io.Resources;
 import com.ning.billing.dbi.MysqlTestingHelper;
-import com.ning.billing.util.io.IOUtils;
 
-public abstract class TestWithEmbeddedDB extends AnalyticsTestSuite {
+public class KillbillTestSuiteWithEmbeddedDB extends KillbillTestSuite {
     protected static final MysqlTestingHelper helper = new MysqlTestingHelper();
 
     public static MysqlTestingHelper getMysqlTestingHelper() {
@@ -36,19 +34,14 @@ public abstract class TestWithEmbeddedDB extends AnalyticsTestSuite {
     }
 
     @BeforeSuite(groups = "slow")
-    public void startMysql() throws IOException, ClassNotFoundException, SQLException, URISyntaxException {
+    public void startMysqlBeforeTestSuite() throws IOException, ClassNotFoundException, SQLException, URISyntaxException {
         helper.startMysql();
-
-        for (final String pack : new String[]{"account", "analytics", "entitlement", "util", "payment", "invoice", "junction"}) {
-            final String ddl = IOUtils.toString(Resources.getResource("com/ning/billing/" + pack + "/ddl.sql").openStream());
-            helper.initDb(ddl);
-        }
-
+        helper.initDb();
         helper.cleanupAllTables();
     }
 
     @BeforeMethod(groups = "slow")
-    public void cleanup() {
+    public void cleanupTablesBetweenMethods() {
         try {
             helper.cleanupAllTables();
         } catch (Exception ignored) {
@@ -56,9 +49,8 @@ public abstract class TestWithEmbeddedDB extends AnalyticsTestSuite {
     }
 
     @AfterSuite(groups = "slow")
-    public void shutdownMysql() throws IOException, ClassNotFoundException, SQLException, URISyntaxException {
+    public void shutdownMysqlAfterTestSuite() throws IOException, ClassNotFoundException, SQLException, URISyntaxException {
         try {
-            helper.cleanupAllTables();
             helper.stopMysql();
         } catch (Exception ignored) {
         }

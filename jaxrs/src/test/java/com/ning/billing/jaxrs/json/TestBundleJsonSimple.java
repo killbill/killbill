@@ -22,8 +22,9 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ning.billing.jaxrs.JaxrsTestSuite;
 
-public class TestBundleJsonSimple {
+public class TestBundleJsonSimple extends JaxrsTestSuite {
     private static final ObjectMapper mapper = new ObjectMapper();
 
     @Test(groups = "fast")

@@ -31,12 +31,9 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
 public abstract class TestUserApiRecreate extends TestApiBase {
-
     private static final Logger log = LoggerFactory.getLogger(TestUserApiRecreate.class);
 
-
     protected void testRecreateWithBPCanceledThroughSubscription() {
-        log.info("Starting testRecreateWithBPCanceledThroughSubscription");
         try {
             testCreateAndRecreate(false);
             assertListenerStatus();
@@ -47,7 +44,6 @@ public abstract class TestUserApiRecreate extends TestApiBase {
     }
 
     protected void testCreateWithBPCanceledFromUserApi() {
-        log.info("Starting testCreateWithBPCanceledFromUserApi");
         try {
             testCreateAndRecreate(true);
             assertListenerStatus();
@@ -57,9 +53,7 @@ public abstract class TestUserApiRecreate extends TestApiBase {
         }
     }
 
-
     private SubscriptionData testCreateAndRecreate(final boolean fromUserAPi) throws EntitlementUserApiException {
-
         final DateTime init = clock.getUTCNow();
         final DateTime requestedDate = init.minusYears(1);
 
@@ -103,12 +97,11 @@ public abstract class TestUserApiRecreate extends TestApiBase {
         testListener.pushExpectedEvent(NextEvent.PHASE);
         testListener.pushExpectedEvent(NextEvent.RE_CREATE);
 
-        // Avoid ordering issue for events at exact same date; this is actually a real good test, we
+        // Avoid ordering issue for events at exact same date; this is actually a real good test,
         // we test it at Beatrix level. At this level that would work for sql tests but not for in memory.
         try {
             Thread.sleep(1000);
-        } catch (InterruptedException e) {
-
+        } catch (InterruptedException ignored) {
         }
 
         if (fromUserAPi) {

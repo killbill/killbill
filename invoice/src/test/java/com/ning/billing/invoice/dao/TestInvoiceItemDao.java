@@ -35,8 +35,7 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
 public class TestInvoiceItemDao extends InvoiceDaoTestBase {
-
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testInvoiceItemCreation() {
         final UUID accountId = UUID.randomUUID();
         final UUID invoiceId = UUID.randomUUID();
@@ -64,7 +63,7 @@ public class TestInvoiceItemDao extends InvoiceDaoTestBase {
         // assertEquals(thisItem.getCreatedDate().compareTo(item.getCreatedDate()), 0);
     }
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testGetInvoiceItemsBySubscriptionId() {
         final UUID accountId = UUID.randomUUID();
         final UUID subscriptionId = UUID.randomUUID();
@@ -85,7 +84,7 @@ public class TestInvoiceItemDao extends InvoiceDaoTestBase {
         assertEquals(items.size(), 3);
     }
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testGetInvoiceItemsByInvoiceId() {
         final UUID accountId = UUID.randomUUID();
         final UUID invoiceId = UUID.randomUUID();
@@ -107,14 +106,14 @@ public class TestInvoiceItemDao extends InvoiceDaoTestBase {
         assertEquals(items.size(), 5);
     }
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testGetInvoiceItemsByAccountId() {
         final UUID accountId = UUID.randomUUID();
         final UUID bundleId = UUID.randomUUID();
         final DateTime targetDate = new DateTime(2011, 5, 23, 0, 0, 0, 0);
         final DefaultInvoice invoice = new DefaultInvoice(accountId, clock.getUTCNow(), targetDate, Currency.USD);
 
-        invoiceDao.create(invoice, context);
+        invoiceDao.create(invoice, targetDate.getDayOfMonth(), context);
 
         final UUID invoiceId = invoice.getId();
         final DateTime startDate = new DateTime(2011, 3, 1, 0, 0, 0, 0);
@@ -131,7 +130,7 @@ public class TestInvoiceItemDao extends InvoiceDaoTestBase {
         assertEquals(items.size(), 1);
     }
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testCreditBalanceInvoiceSqlDao() {
         final UUID invoiceId = UUID.randomUUID();
         final UUID accountId = UUID.randomUUID();
@@ -144,7 +143,7 @@ public class TestInvoiceItemDao extends InvoiceDaoTestBase {
         assertEquals(savedItem, creditInvoiceItem);
     }
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testFixedPriceInvoiceSqlDao() {
         final UUID invoiceId = UUID.randomUUID();
         final UUID accountId = UUID.randomUUID();

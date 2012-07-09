@@ -41,123 +41,91 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
-@Test(groups = "slow")
 @Guice(modules = {BeatrixModule.class})
 public class TestIntegration extends TestIntegrationBase {
-    @Test(groups = "slow", enabled = true)
+    @Test(groups = "slow")
     public void testBasePlanCompleteWithBillingDayInPast() throws Exception {
         log.info("Starting testBasePlanCompleteWithBillingDayInPast");
-        final DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0);
+        final DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0, testTimeZone);
         testBasePlanComplete(startDate, 31, false);
     }
 
-    @Test(groups = "slow", enabled = true)
+    @Test(groups = "slow")
     public void testBasePlanCompleteWithBillingDayPresent() throws Exception {
         log.info("Starting testBasePlanCompleteWithBillingDayPresent");
-        final DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0);
+        final DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0, testTimeZone);
         testBasePlanComplete(startDate, 1, false);
     }
 
-    @Test(groups = "slow", enabled = true)
+    @Test(groups = "slow")
     public void testBasePlanCompleteWithBillingDayAlignedWithTrial() throws Exception {
         log.info("Starting testBasePlanCompleteWithBillingDayAlignedWithTrial");
-        final DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0);
+        final DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0, testTimeZone);
         testBasePlanComplete(startDate, 2, false);
     }
 
-    @Test(groups = "slow", enabled = true)
+    @Test(groups = "slow")
     public void testBasePlanCompleteWithBillingDayInFuture() throws Exception {
         log.info("Starting testBasePlanCompleteWithBillingDayInFuture");
-        final DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0);
+        final DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0, testTimeZone);
         testBasePlanComplete(startDate, 3, true);
     }
 
-    @Test(groups = {"slow", "stress"}, enabled = false)
+    @Test(groups = {"stress"})
     public void stressTest() throws Exception {
-        final int maxIterations = 7;
+        final int maxIterations = 100;
         for (int curIteration = 0; curIteration < maxIterations; curIteration++) {
+            if (curIteration != 0) {
+                setupTest();
+            }
+
             log.info("################################  ITERATION " + curIteration + "  #########################");
             Thread.sleep(1000);
-            setupTest();
             testBasePlanCompleteWithBillingDayPresent();
             Thread.sleep(1000);
+            cleanupTest();
             setupTest();
             testBasePlanCompleteWithBillingDayInPast();
             Thread.sleep(1000);
+            cleanupTest();
             setupTest();
             testBasePlanCompleteWithBillingDayAlignedWithTrial();
             Thread.sleep(1000);
+            cleanupTest();
             setupTest();
             testBasePlanCompleteWithBillingDayInFuture();
+            if (curIteration < maxIterations - 1) {
+                cleanupTest();
+                Thread.sleep(1000);
+            }
+
         }
     }
 
 
-//    // STEPH set to disabled until test written properly and fixed
-//    @Test(groups = "slow", enabled = true)
-//    public void testRepairChangeBPWithAddonIncluded() throws Exception {
-//        
-//        log.info("Starting testRepairChangeBPWithAddonIncluded");
-//        
-//        DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
-//        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
-//        
-//        Account account = createAccountWithPaymentMethod(getAccountData(25));
-//        assertNotNull(account);
-//
-//        SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever", context);
-//
-//        String productName = "Shotgun";
-//        BillingPeriod term = BillingPeriod.MONTHLY;
-//        String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
-//
-//        busHandler.pushExpectedEvent(NextEvent.CREATE);
-//        busHandler.pushExpectedEvent(NextEvent.INVOICE);
-//        SubscriptionData baseSubscription = subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(),
-//                new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, context));
-//        assertNotNull(baseSubscription);
-//        assertTrue(busHandler.isCompleted(DELAY));
-//   
-//        // MOVE CLOCK A LITTLE BIT-- STILL IN TRIAL
-//        Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(3));
-//        clock.addDeltaFromReality(it.toDurationMillis());
-//
-//        busHandler.pushExpectedEvent(NextEvent.CREATE);
-//        busHandler.pushExpectedEvent(NextEvent.INVOICE);
-//        busHandler.pushExpectedEvent(NextEvent.PAYMENT);
-//        subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(),
-//                new PlanPhaseSpecifier("Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null), null, context));
-//        assertTrue(busHandler.isCompleted(DELAY));
-//        
-//        busHandler.pushExpectedEvent(NextEvent.CREATE);
-//        busHandler.pushExpectedEvent(NextEvent.INVOICE);
-//        busHandler.pushExpectedEvent(NextEvent.PAYMENT);
-//        subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(),
-//                new PlanPhaseSpecifier("Laser-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null), null, context)); 
-//        assertTrue(busHandler.isCompleted(DELAY));
-//        
-//
-//        // 26 / 5
-//        int duration = 28;
-//        it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(duration));
-//        busHandler.pushExpectedEvent(NextEvent.PHASE);
-//        busHandler.pushExpectedEvent(NextEvent.PHASE);
-//        busHandler.pushExpectedEvent(NextEvent.PHASE);            
-//        busHandler.pushExpectedEvent(NextEvent.INVOICE);
-//        busHandler.pushExpectedEvent(NextEvent.PAYMENT);
-//        clock.addDeltaFromReality(it.toDurationMillis());
-//        assertTrue(busHandler.isCompleted(DELAY));
-//        
-//        assertListenerStatus();
-//    }
+    @Test(groups = {"stress"})
+    public void stressTestDebug() throws Exception {
+        final int maxIterations = 100;
+        for (int curIteration = 0; curIteration < maxIterations; curIteration++) {
+            log.info("################################  ITERATION " + curIteration + "  #########################");
+            if (curIteration != 0) {
+                setupTest();
+            }
+            testAddonsWithMultipleAlignments();
+            if (curIteration < maxIterations - 1) {
+                cleanupTest();
+                Thread.sleep(1000);
+            }
+        }
+    }
 
-    // STEPH set to disabled until test written properly and fixed
-    @Test(groups = "slow", enabled = false)
-    public void testRepairChangeBPWithAddonIncluded() throws Exception {
+
+    @Test(groups = "slow")
+    public void testAddonsWithMultipleAlignments() throws Exception {
 
         log.info("Starting testRepairChangeBPWithAddonIncluded");
 
-        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 13, 42, 0);
+        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 13, 42, 0, testTimeZone);
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
 
         final Account account = createAccountWithPaymentMethod(getAccountData(25));
@@ -199,18 +167,15 @@ public class TestIntegration extends TestIntegrationBase {
         assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
 
-        // MOVE CLOCK A LITTLE BIT MORE -- EITHER STAY IN TRIAL OR GET OUT   
+        // MOVE CLOCK A LITTLE BIT MORE -- EITHER STAY IN TRIAL OR GET OUT
         busHandler.pushExpectedEvent(NextEvent.PHASE);
         busHandler.pushExpectedEvent(NextEvent.PHASE);
-        busHandler.pushExpectedEvent(NextEvent.INVOICE);
         busHandler.pushExpectedEvent(NextEvent.PAYMENT);
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
-        busHandler.pushExpectedEvent(NextEvent.PAYMENT);
         log.info("Moving clock from" + clock.getUTCNow() + " to " + clock.getUTCNow().plusDays(28));
         clock.addDays(28);// 26 / 5
         assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
-
 
         busHandler.pushExpectedEvent(NextEvent.PHASE);
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
@@ -220,12 +185,10 @@ public class TestIntegration extends TestIntegrationBase {
         assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
 
-
         log.info("Moving clock from" + clock.getUTCNow() + " to " + clock.getUTCNow().plusDays(10));
         clock.addDays(10);// 8 / 6
         assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
-
 
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
         busHandler.pushExpectedEvent(NextEvent.PAYMENT);
@@ -238,8 +201,6 @@ public class TestIntegration extends TestIntegrationBase {
         clock.addDays(3);
         assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
-
-
     }
 
 
@@ -252,7 +213,7 @@ public class TestIntegration extends TestIntegrationBase {
         final UUID accountId = account.getId();
         assertNotNull(account);
 
-        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
+        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0, testTimeZone);
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
 
         final SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(account.getId(), "someBundle", context);
@@ -275,12 +236,12 @@ public class TestIntegration extends TestIntegrationBase {
         // TODO: Jeff implement repair
     }
 
-    @Test(groups = "slow", enabled = true)
+    @Test(groups = "slow")
     public void testWithRecreatePlan() throws Exception {
 
         log.info("Starting testWithRecreatePlan");
 
-        final DateTime initialDate = new DateTime(2012, 2, 1, 0, 3, 42, 0);
+        final DateTime initialDate = new DateTime(2012, 2, 1, 0, 3, 42, 0, testTimeZone);
         final int billingDay = 2;
 
         log.info("Beginning test with BCD of " + billingDay);
@@ -351,7 +312,6 @@ public class TestIntegration extends TestIntegrationBase {
 
     private void testBasePlanComplete(final DateTime initialCreationDate, final int billingDay,
                                       final boolean proRationExpected) throws Exception {
-
         log.info("Beginning test with BCD of " + billingDay);
         final Account account = createAccountWithPaymentMethod(getAccountData(billingDay));
         final UUID accountId = account.getId();
@@ -554,7 +514,7 @@ public class TestIntegration extends TestIntegrationBase {
 
         log.info("Starting testForMultipleRecurringPhases");
 
-        final DateTime initialCreationDate = new DateTime(2012, 2, 1, 0, 3, 42, 0);
+        final DateTime initialCreationDate = new DateTime(2012, 2, 1, 0, 3, 42, 0, testTimeZone);
         clock.setDeltaFromReality(initialCreationDate.getMillis() - clock.getUTCNow().getMillis());
 
         final Account account = createAccountWithPaymentMethod(getAccountData(2));

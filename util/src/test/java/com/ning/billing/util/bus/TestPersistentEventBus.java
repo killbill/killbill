@@ -13,17 +13,17 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.util.bus;
 
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.IDBI;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
+import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.dbi.DBIProvider;
 import com.ning.billing.dbi.DbiConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
@@ -31,27 +31,11 @@ import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.BusModule.BusType;
-import com.ning.billing.util.io.IOUtils;
 
 @Guice(modules = TestPersistentEventBus.PersistentBusModuleTest.class)
 public class TestPersistentEventBus extends TestEventBusBase {
     @Inject
     private MysqlTestingHelper helper;
-
-    @BeforeClass(groups = {"slow"})
-    public void setup() throws Exception {
-        helper.startMysql();
-        final String ddl = IOUtils.toString(TestPersistentEventBus.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
-        helper.initDb(ddl);
-        cleanup();
-        super.setup();
-    }
-
-    @BeforeMethod(groups = {"slow"})
-    public void cleanup() {
-        helper.cleanupTable("bus_events");
-        helper.cleanupTable("claimed_bus_events");
-    }
 
     public static class PersistentBusModuleTest extends AbstractModule {
         @Override
@@ -61,7 +45,7 @@ public class TestPersistentEventBus extends TestEventBusBase {
             bind(Clock.class).to(ClockMock.class).asEagerSingleton();
             bind(ClockMock.class).asEagerSingleton();
 
-            final MysqlTestingHelper helper = new MysqlTestingHelper();
+            final MysqlTestingHelper helper = KillbillTestSuiteWithEmbeddedDB.getMysqlTestingHelper();
             bind(MysqlTestingHelper.class).toInstance(helper);
             if (helper.isUsingLocalInstance()) {
                 bind(IDBI.class).toProvider(DBIProvider.class).asEagerSingleton();
@@ -75,16 +59,14 @@ public class TestPersistentEventBus extends TestEventBusBase {
         }
     }
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testSimple() {
         super.testSimple();
     }
 
     // Until Guava fixes exception handling, r13?
-    @Test(groups = {"slow"}, enabled = false)
+    @Test(groups = "slow", enabled = false)
     public void testSimpleWithException() {
         super.testSimpleWithException();
-
     }
-
 }

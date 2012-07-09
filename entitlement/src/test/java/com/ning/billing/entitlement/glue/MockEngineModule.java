@@ -16,20 +16,19 @@
 
 package com.ning.billing.entitlement.glue;
 
+import org.mockito.Mockito;
+
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.glue.CatalogModule;
-import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.mock.glue.MockClockModule;
 import com.ning.billing.util.glue.CallContextModule;
 
 public class MockEngineModule extends DefaultEntitlementModule {
-
-
     @Override
     protected void configure() {
         super.configure();
         install(new CatalogModule());
-        bind(AccountUserApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class));
+        bind(AccountUserApi.class).toInstance(Mockito.mock(AccountUserApi.class));
         install(new MockClockModule());
         install(new CallContextModule());
     }

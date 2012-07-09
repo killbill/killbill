@@ -16,24 +16,20 @@
 
 package com.ning.billing.catalog;
 
+import org.mockito.Mockito;
+
 import com.google.inject.AbstractModule;
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogService;
-import com.ning.billing.mock.BrainDeadProxyFactory;
-import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 
 public class MockCatalogModule extends AbstractModule {
-
     @Override
     protected void configure() {
-        CatalogService catalogService = BrainDeadProxyFactory.createBrainDeadProxyFor(CatalogService.class);
-        ((ZombieControl) catalogService).addResult("getCurrentCatalog", new MockCatalog());
+        final Catalog catalog = Mockito.mock(Catalog.class);
 
-        catalogService = BrainDeadProxyFactory.createBrainDeadProxyFor(CatalogService.class);
-        final Catalog catalog = BrainDeadProxyFactory.createBrainDeadProxyFor(Catalog.class);
-
-        ((ZombieControl) catalogService).addResult("getFullCatalog", catalog);
-
+        final CatalogService catalogService = Mockito.mock(CatalogService.class);
+        Mockito.when(catalogService.getCurrentCatalog()).thenReturn(new MockCatalog());
+        Mockito.when(catalogService.getFullCatalog()).thenReturn(catalog);
         bind(CatalogService.class).toInstance(catalogService);
     }
 }

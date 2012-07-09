@@ -52,7 +52,7 @@ public class TestSubscription extends TestJaxrsBase {
         final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
 
-        final AccountJson accountJson = createAccount("xil", "shdxilhkkl", "xil@yahoo.com");
+        final AccountJson accountJson = createAccountWithDefaultPaymentMethod("xil", "shdxilhkkl", "xil@yahoo.com");
         final BundleJsonNoSubscriptions bundleJson = createBundle(accountJson.getAccountId(), "99999");
 
         final String productName = "Shotgun";
@@ -60,7 +60,7 @@ public class TestSubscription extends TestJaxrsBase {
 
         final SubscriptionJsonNoEvents subscriptionJson = createSubscription(bundleJson.getBundleId(), productName, ProductCategory.BASE.toString(), term.toString(), true);
         Assert.assertNotNull(subscriptionJson.getChargedThroughDate());
-        Assert.assertEquals(subscriptionJson.getChargedThroughDate(), subscriptionJson.getStartDate().plusDays(30));
+        Assert.assertEquals(subscriptionJson.getChargedThroughDate().toString(), "2012-05-25T00:00:00.000Z");
 
         String uri = JaxrsResource.SUBSCRIPTIONS_PATH + "/" + subscriptionJson.getSubscriptionId().toString();
 

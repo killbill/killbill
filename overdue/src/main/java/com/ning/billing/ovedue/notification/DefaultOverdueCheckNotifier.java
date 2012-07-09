@@ -35,20 +35,19 @@ import com.ning.billing.util.notificationq.NotificationQueueService.Notification
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
 
 public class DefaultOverdueCheckNotifier implements OverdueCheckNotifier {
-
     private static final Logger log = LoggerFactory.getLogger(DefaultOverdueCheckNotifier.class);
 
     public static final String OVERDUE_CHECK_NOTIFIER_QUEUE = "overdue-check-queue";
 
     private final NotificationQueueService notificationQueueService;
     private final OverdueProperties config;
-
-    private NotificationQueue overdueQueue;
     private final OverdueListener listener;
 
+    private NotificationQueue overdueQueue;
+
     @Inject
-    public DefaultOverdueCheckNotifier(final NotificationQueueService notificationQueueService,
-            final OverdueProperties config, final OverdueListener listener) {
+    public DefaultOverdueCheckNotifier(final NotificationQueueService notificationQueueService, final OverdueProperties config,
+                                       final OverdueListener listener) {
         this.notificationQueueService = notificationQueueService;
         this.config = config;
         this.listener = listener;
@@ -56,38 +55,41 @@ public class DefaultOverdueCheckNotifier implements OverdueCheckNotifier {
 
     @Override
     public void initialize() {
-        try {
-            overdueQueue = notificationQueueService.createNotificationQueue(DefaultOverdueService.OVERDUE_SERVICE_NAME,
-                    OVERDUE_CHECK_NOTIFIER_QUEUE,
-                    new NotificationQueueHandler() {
-                @Override
-                public void handleReadyNotification(final NotificationKey notificationKey, final DateTime eventDate) {
-                    try {
-                        if (! (notificationKey instanceof OverdueCheckNotificationKey)) {
-                            log.error("Overdue service received Unexpected notificationKey {}", notificationKey.getClass().getName());
-                            return;
-                        }
-                        final OverdueCheckNotificationKey key = (OverdueCheckNotificationKey) notificationKey; 
-                        processEvent(key.getUuidKey(), eventDate);
-                    } catch (IllegalArgumentException e) {
-                        log.error("The key returned from the NextBillingNotificationQueue is not a valid UUID", e);
+        final NotificationConfig notificationConfig = new NotificationConfig() {
+            @Override
+            public boolean isNotificationProcessingOff() {
+                return config.isNotificationProcessingOff();
+            }
+
+            @Override
+            public long getSleepTimeMs() {
+                return config.getSleepTimeMs();
+            }
+        };
+
+        final NotificationQueueHandler notificationQueueHandler = new NotificationQueueHandler() {
+            @Override
+            public void handleReadyNotification(final NotificationKey notificationKey, final DateTime eventDate) {
+                try {
+                    if (!(notificationKey instanceof OverdueCheckNotificationKey)) {
+                        log.error("Overdue service received Unexpected notificationKey {}", notificationKey.getClass().getName());
                         return;
                     }
 
-                }
-            },
-            new NotificationConfig() {
-                @Override
-                public boolean isNotificationProcessingOff() {
-                    return config.isNotificationProcessingOff();
+                    final OverdueCheckNotificationKey key = (OverdueCheckNotificationKey) notificationKey;
+                    processEvent(key.getUuidKey(), eventDate);
+                } catch (IllegalArgumentException e) {
+                    log.error("The key returned from the NextBillingNotificationQueue is not a valid UUID", e);
                 }
 
-                @Override
-                public long getSleepTimeMs() {
-                    return config.getSleepTimeMs();
-                }
             }
-            );
+        };
+
+        try {
+            overdueQueue = notificationQueueService.createNotificationQueue(DefaultOverdueService.OVERDUE_SERVICE_NAME,
+                                                                            OVERDUE_CHECK_NOTIFIER_QUEUE,
+                                                                            notificationQueueHandler,
+                                                                            notificationConfig);
         } catch (NotificationQueueAlreadyExists e) {
             throw new RuntimeException(e);
         }
@@ -113,6 +115,4 @@ public class DefaultOverdueCheckNotifier implements OverdueCheckNotifier {
     private void processEvent(final UUID overdueableId, final DateTime eventDateTime) {
         listener.handleNextOverdueCheck(overdueableId);
     }
-
-
 }

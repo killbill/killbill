@@ -24,11 +24,9 @@ import com.ning.billing.junction.api.BlockingApiException;
 import com.ning.billing.junction.block.BlockingChecker;
 
 public class MockBlockingChecker implements BlockingChecker {
-
     @Override
     public void checkBlockedChange(final Blockable blockable) throws BlockingApiException {
         // Intentionally blank
-
     }
 
     @Override
@@ -55,5 +53,4 @@ public class MockBlockingChecker implements BlockingChecker {
     public void checkBlockedBilling(final UUID bundleId, final Type type) throws BlockingApiException {
         // Intentionally blank
     }
-
 }

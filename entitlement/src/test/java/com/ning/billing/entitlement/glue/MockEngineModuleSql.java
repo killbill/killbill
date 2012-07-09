@@ -16,11 +16,11 @@
 
 package com.ning.billing.entitlement.glue;
 
-
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.IDBI;
 
 import com.google.inject.name.Names;
+import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.dbi.DBIProvider;
 import com.ning.billing.dbi.DbiConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
@@ -34,8 +34,6 @@ import com.ning.billing.util.glue.CustomFieldModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 
 public class MockEngineModuleSql extends MockEngineModule {
-
-
     @Override
     protected void installEntitlementDao() {
         bind(EntitlementDao.class).to(MockEntitlementDaoSql.class).asEagerSingleton();
@@ -44,9 +42,8 @@ public class MockEngineModuleSql extends MockEngineModule {
         bind(RepairEntitlementDao.class).asEagerSingleton();
     }
 
-
     protected void installDBI() {
-        final MysqlTestingHelper helper = new MysqlTestingHelper();
+        final MysqlTestingHelper helper = KillbillTestSuiteWithEmbeddedDB.getMysqlTestingHelper();
         bind(MysqlTestingHelper.class).toInstance(helper);
         if (helper.isUsingLocalInstance()) {
             bind(IDBI.class).toProvider(DBIProvider.class).asEagerSingleton();

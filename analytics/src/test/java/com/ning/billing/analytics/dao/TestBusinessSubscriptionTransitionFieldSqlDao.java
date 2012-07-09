@@ -24,10 +24,10 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.ning.billing.analytics.TestWithEmbeddedDB;
+import com.ning.billing.analytics.AnalyticsTestSuiteWithEmbeddedDB;
 import com.ning.billing.analytics.model.BusinessSubscriptionTransitionField;
 
-public class TestBusinessSubscriptionTransitionFieldSqlDao extends TestWithEmbeddedDB {
+public class TestBusinessSubscriptionTransitionFieldSqlDao extends AnalyticsTestSuiteWithEmbeddedDB {
     private BusinessSubscriptionTransitionFieldSqlDao subscriptionTransitionFieldSqlDao;
 
     @BeforeMethod(groups = "slow")

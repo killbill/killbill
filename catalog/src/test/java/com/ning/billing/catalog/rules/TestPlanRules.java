@@ -22,6 +22,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
+import com.ning.billing.catalog.CatalogTestSuite;
 import com.ning.billing.catalog.DefaultPriceList;
 import com.ning.billing.catalog.DefaultProduct;
 import com.ning.billing.catalog.MockCatalog;
@@ -36,12 +37,11 @@ import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PlanSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 
-public class TestPlanRules {
-    Logger log = LoggerFactory.getLogger(TestPlanRules.class);
-
+public class TestPlanRules extends CatalogTestSuite {
+    private final Logger log = LoggerFactory.getLogger(TestPlanRules.class);
     private MockCatalog cat = null;
 
-    @BeforeTest
+    @BeforeTest(groups = "fast")
     public void setup() {
         cat = new MockCatalog();
 
@@ -57,7 +57,7 @@ public class TestPlanRules {
                 setPriceListCase(new CasePriceList[]{casePriceList});
     }
 
-    @Test
+    @Test(groups = "fast")
     public void testCannotChangeToSamePlan() throws CatalogApiException {
         final DefaultProduct product1 = cat.getCurrentProducts()[0];
         final DefaultPriceList priceList1 = cat.findCurrentPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
@@ -73,10 +73,9 @@ public class TestPlanRules {
         } catch (CatalogApiException e) {
             Assert.fail("", e);
         }
-
     }
 
-    @Test
+    @Test(groups = "fast")
     public void testExistingPriceListIsKept() throws CatalogApiException {
         final DefaultProduct product1 = cat.getCurrentProducts()[0];
         final DefaultPriceList priceList1 = cat.findCurrentPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
@@ -97,11 +96,9 @@ public class TestPlanRules {
         Assert.assertEquals(result.getPolicy(), ActionPolicy.END_OF_TERM);
         Assert.assertEquals(result.getAlignment(), PlanAlignmentChange.START_OF_SUBSCRIPTION);
         Assert.assertEquals(result.getNewPriceList(), priceList1);
-
     }
 
-
-    @Test
+    @Test(groups = "fast")
     public void testBaseCase() throws CatalogApiException {
         final DefaultProduct product1 = cat.getCurrentProducts()[0];
         final DefaultProduct product2 = cat.getCurrentProducts()[1];
@@ -124,8 +121,5 @@ public class TestPlanRules {
         Assert.assertEquals(result.getPolicy(), ActionPolicy.END_OF_TERM);
         Assert.assertEquals(result.getAlignment(), PlanAlignmentChange.START_OF_SUBSCRIPTION);
         Assert.assertEquals(result.getNewPriceList(), priceList2);
-
     }
-
-
 }

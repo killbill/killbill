@@ -141,6 +141,22 @@ public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEv
         return extPaymentRefId;
     }
 
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append("DefaultPaymentInfoEvent");
+        sb.append("{accountId=").append(accountId);
+        sb.append(", invoiceId=").append(invoiceId);
+        sb.append(", paymentId=").append(paymentId);
+        sb.append(", amount=").append(amount);
+        sb.append(", paymentNumber=").append(paymentNumber);
+        sb.append(", status=").append(status);
+        sb.append(", userToken=").append(userToken);
+        sb.append(", effectiveDate=").append(effectiveDate);
+        sb.append(", extPaymentRefId='").append(extPaymentRefId).append('\'');
+        sb.append('}');
+        return sb.toString();
+    }
 
     @Override
     public int hashCode() {

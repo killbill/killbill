@@ -13,13 +13,13 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.catalog;
 
 import javax.xml.bind.JAXBException;
 import javax.xml.transform.TransformerException;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.Date;
 
@@ -41,26 +41,23 @@ import com.ning.billing.catalog.io.VersionedCatalogLoader;
 import com.ning.billing.lifecycle.KillbillService.ServiceException;
 import com.ning.billing.util.clock.DefaultClock;
 
-import static org.testng.AssertJUnit.assertEquals;
-
-public class TestVersionedCatalog {
+public class TestVersionedCatalog extends CatalogTestSuite {
     private static final Logger log = LoggerFactory.getLogger(TestVersionedCatalog.class);
     private final VersionedCatalogLoader loader = new VersionedCatalogLoader(new DefaultClock());
     private VersionedCatalog vc;
 
-    @BeforeClass(groups = {"fast"})
+    @BeforeClass(groups = "fast")
     public void setUp() throws ServiceException {
         vc = loader.load(Resources.getResource("versionedCatalog").toString());
     }
 
-    @Test(groups = {"fast"}, enabled = true)
-    public void testAddCatalog() throws MalformedURLException, IOException, SAXException, InvalidConfigException, JAXBException, TransformerException, URISyntaxException, ServiceException, CatalogApiException {
+    @Test(groups = "fast")
+    public void testAddCatalog() throws IOException, SAXException, InvalidConfigException, JAXBException, TransformerException, URISyntaxException, ServiceException, CatalogApiException {
         vc.add(new StandaloneCatalog(new Date()));
-        assertEquals(4, vc.size());
+        Assert.assertEquals(vc.size(), 4);
     }
 
-
-    @Test(groups = {"fast"}, enabled = true)
+    @Test(groups = "fast")
     public void testFindPlanWithDates() throws Exception {
         final DateTime dt0 = new DateTime("2010-01-01T00:00:00+00:00");
         final DateTime dt1 = new DateTime("2011-01-01T00:01:00+00:00");
@@ -99,7 +96,7 @@ public class TestVersionedCatalog {
 
     }
 
-    @Test(groups = {"fast"}, enabled = true)
+    @Test(groups = "fast")
     public void testErrorOnDateTooEarly() {
         final DateTime dt0 = new DateTime("1977-01-01T00:00:00+00:00");
         try {

@@ -35,13 +35,11 @@ import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.formatters.InvoiceFormatterFactory;
 import com.ning.billing.invoice.template.HtmlInvoiceGenerator;
 import com.ning.billing.invoice.template.formatters.DefaultInvoiceFormatterFactory;
-import com.ning.billing.mock.BrainDeadProxyFactory;
-import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.util.email.templates.MustacheTemplateEngine;
 import com.ning.billing.util.email.templates.TemplateEngine;
 import com.ning.billing.util.template.translation.TranslatorConfig;
 
-public class TestHtmlInvoiceGenerator {
+public class TestHtmlInvoiceGenerator extends InvoiceTestSuite {
     private HtmlInvoiceGenerator g;
 
     @BeforeSuite(groups = "fast")
@@ -72,20 +70,19 @@ public class TestHtmlInvoiceGenerator {
     }
 
     private Account createAccount() {
-        final Account account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
-        final ZombieControl zombieControl = (ZombieControl) account;
-        zombieControl.addResult("getExternalKey", "1234abcd");
-        zombieControl.addResult("getName", "Jim Smith");
-        zombieControl.addResult("getFirstNameLength", 3);
-        zombieControl.addResult("getEmail", "jim.smith@mail.com");
-        zombieControl.addResult("getLocale", Locale.US.toString());
-        zombieControl.addResult("getAddress1", "123 Some Street");
-        zombieControl.addResult("getAddress2", "Apt 456");
-        zombieControl.addResult("getCity", "Some City");
-        zombieControl.addResult("getStateOrProvince", "Some State");
-        zombieControl.addResult("getPostalCode", "12345-6789");
-        zombieControl.addResult("getCountry", "USA");
-        zombieControl.addResult("getPhone", "123-456-7890");
+        final Account account = Mockito.mock(Account.class);
+        Mockito.when(account.getExternalKey()).thenReturn("1234abcd");
+        Mockito.when(account.getName()).thenReturn("Jim Smith");
+        Mockito.when(account.getFirstNameLength()).thenReturn(3);
+        Mockito.when(account.getEmail()).thenReturn("jim.smith@mail.com");
+        Mockito.when(account.getLocale()).thenReturn(Locale.US.toString());
+        Mockito.when(account.getAddress1()).thenReturn("123 Some Street");
+        Mockito.when(account.getAddress2()).thenReturn("Apt 456");
+        Mockito.when(account.getCity()).thenReturn("Some City");
+        Mockito.when(account.getStateOrProvince()).thenReturn("Some State");
+        Mockito.when(account.getPostalCode()).thenReturn("12345-6789");
+        Mockito.when(account.getCountry()).thenReturn("USA");
+        Mockito.when(account.getPhone()).thenReturn("123-456-7890");
 
         return account;
     }
@@ -96,31 +93,29 @@ public class TestHtmlInvoiceGenerator {
 
         final BigDecimal price1 = new BigDecimal("29.95");
         final BigDecimal price2 = new BigDecimal("59.95");
-        final Invoice dummyInvoice = BrainDeadProxyFactory.createBrainDeadProxyFor(Invoice.class);
-        final ZombieControl zombie = (ZombieControl) dummyInvoice;
-        zombie.addResult("getInvoiceDate", startDate);
-        zombie.addResult("getInvoiceNumber", 42);
-        zombie.addResult("getCurrency", Currency.USD);
-        zombie.addResult("getChargedAmount", price1.add(price2));
-        zombie.addResult("getPaidAmount", BigDecimal.ZERO);
-        zombie.addResult("getBalance", price1.add(price2));
+        final Invoice dummyInvoice = Mockito.mock(Invoice.class);
+        Mockito.when(dummyInvoice.getInvoiceDate()).thenReturn(startDate);
+        Mockito.when(dummyInvoice.getInvoiceNumber()).thenReturn(42);
+        Mockito.when(dummyInvoice.getCurrency()).thenReturn(Currency.USD);
+        Mockito.when(dummyInvoice.getChargedAmount()).thenReturn(price1.add(price2));
+        Mockito.when(dummyInvoice.getPaidAmount()).thenReturn(BigDecimal.ZERO);
+        Mockito.when(dummyInvoice.getBalance()).thenReturn(price1.add(price2));
 
         final List<InvoiceItem> items = new ArrayList<InvoiceItem>();
         items.add(createInvoiceItem(price1, "Domain 1", startDate, endDate, "ning-plus"));
         items.add(createInvoiceItem(price2, "Domain 2", startDate, endDate, "ning-pro"));
-        zombie.addResult("getInvoiceItems", items);
+        Mockito.when(dummyInvoice.getInvoiceItems()).thenReturn(items);
 
         return dummyInvoice;
     }
 
     private InvoiceItem createInvoiceItem(final BigDecimal amount, final String networkName, final DateTime startDate, final DateTime endDate, final String planName) {
-        final InvoiceItem item = BrainDeadProxyFactory.createBrainDeadProxyFor(InvoiceItem.class);
-        final ZombieControl zombie = (ZombieControl) item;
-        zombie.addResult("getAmount", amount);
-        zombie.addResult("getStartDate", startDate);
-        zombie.addResult("getEndDate", endDate);
-        zombie.addResult("getPlanName", planName);
-        zombie.addResult("getDescription", networkName);
+        final InvoiceItem item = Mockito.mock(InvoiceItem.class);
+        Mockito.when(item.getAmount()).thenReturn(amount);
+        Mockito.when(item.getStartDate()).thenReturn(startDate);
+        Mockito.when(item.getEndDate()).thenReturn(endDate);
+        Mockito.when(item.getPlanName()).thenReturn(planName);
+        Mockito.when(item.getDescription()).thenReturn(networkName);
 
         return item;
     }

@@ -16,27 +16,7 @@
 
 package com.ning.billing.analytics;
 
-import java.lang.reflect.Method;
+import com.ning.billing.KillbillTestSuite;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
-
-public abstract class AnalyticsTestSuite {
-    private static final Logger log = LoggerFactory.getLogger(AnalyticsTestSuite.class);
-
-    @BeforeMethod(alwaysRun = true)
-    public void startTest(final Method method) throws Exception {
-        log.info("***************************************************************************************************");
-        log.info("*** Starting test {}:{}", method.getDeclaringClass().getName(), method.getName());
-        log.info("***************************************************************************************************");
-    }
-
-    @AfterMethod(alwaysRun = true)
-    public void endTest(final Method method) throws Exception {
-        log.info("***************************************************************************************************");
-        log.info("***   Ending test {}:{}", method.getDeclaringClass().getName(), method.getName());
-        log.info("***************************************************************************************************");
-    }
+public abstract class AnalyticsTestSuite extends KillbillTestSuite {
 }

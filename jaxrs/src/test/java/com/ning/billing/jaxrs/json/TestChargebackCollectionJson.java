@@ -28,8 +28,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.common.collect.ImmutableList;
+import com.ning.billing.jaxrs.JaxrsTestSuite;
 
-public class TestChargebackCollectionJson {
+public class TestChargebackCollectionJson extends JaxrsTestSuite {
     private static final ObjectMapper mapper = new ObjectMapper();
 
     static {

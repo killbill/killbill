@@ -26,10 +26,10 @@ import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.util.config.ValidationErrors;
 
-public class TestPlanPhase {
-    Logger log = LoggerFactory.getLogger(TestPlanPhase.class);
+public class TestPlanPhase extends CatalogTestSuite {
+    private final Logger log = LoggerFactory.getLogger(TestPlanPhase.class);
 
-    @Test(enabled = true)
+    @Test(groups = "fast")
     public void testValidation() {
         log.info("Testing Plan Phase Validation");
 
@@ -42,15 +42,15 @@ public class TestPlanPhase {
         pp = MockPlanPhase.createUSDMonthlyEvergreen("1.00", null).setBillCycleDuration(BillingPeriod.NO_BILLING_PERIOD).setPlan(MockPlan.createBicycleNoTrialEvergreen1USD());// new MockPlanPhase().setBillCycleDuration(BillingPeriod.NO_BILLING_PERIOD).setRecurringPrice(new MockInternationalPrice());
         errors = pp.validate(new MockCatalog(), new ValidationErrors());
         errors.log(log);
-        Assert.assertEquals(errors.size(), 1);
+        Assert.assertEquals(errors.size(), 2);
 
         pp = MockPlanPhase.createUSDMonthlyEvergreen(null, null).setBillCycleDuration(BillingPeriod.NO_BILLING_PERIOD).setPlan(MockPlan.createBicycleNoTrialEvergreen1USD());//new MockPlanPhase().setRecurringPrice(null).setFixedPrice(null).setBillCycleDuration(BillingPeriod.NO_BILLING_PERIOD);
         errors = pp.validate(new MockCatalog(), new ValidationErrors());
         errors.log(log);
-        Assert.assertEquals(errors.size(), 1);
+        Assert.assertEquals(errors.size(), 2);
     }
 
-    @Test
+    @Test(groups = "fast")
     public void testPhaseNames() throws CatalogApiException {
         final String planName = "Foo";
         final String planNameExt = planName + "-";
@@ -71,12 +71,9 @@ public class TestPlanPhase {
         Assert.assertEquals(ppnFixedTerm, planNameExt + "fixedterm");
         Assert.assertEquals(ppnDiscount, planNameExt + "discount");
 
-
         Assert.assertEquals(DefaultPlanPhase.planName(ppnDiscount), planName);
         Assert.assertEquals(DefaultPlanPhase.planName(ppnTrial), planName);
         Assert.assertEquals(DefaultPlanPhase.planName(ppnEvergreen), planName);
         Assert.assertEquals(DefaultPlanPhase.planName(ppnFixedTerm), planName);
-
-
     }
 }

@@ -42,8 +42,6 @@ import com.ning.billing.payment.api.DefaultRefund;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.payment.api.Refund;
-import com.ning.billing.payment.core.ProcessorBase.WithAccountLock;
-import com.ning.billing.payment.core.ProcessorBase.WithAccountLockCallback;
 import com.ning.billing.payment.dao.PaymentAttemptModelDao;
 import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.dao.RefundModelDao;
@@ -91,7 +89,6 @@ public class RefundProcessor extends ProcessorBase {
             public Refund doOperation() throws PaymentApiException {
                 try {
 
-
                     final PaymentAttemptModelDao successfulAttempt = getPaymentAttempt(paymentId);
                     if (successfulAttempt == null) {
                         throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_SUCCESS_PAYMENT, paymentId);
@@ -130,7 +127,7 @@ public class RefundProcessor extends ProcessorBase {
                     }
                     paymentDao.updateRefundStatus(refundInfo.getId(), RefundStatus.PLUGIN_COMPLETED, context);
 
-                    invoicePaymentApi.createRefund(successfulAttempt.getId(), refundAmount, isAdjusted, refundInfo.getId(), context);
+                    invoicePaymentApi.createRefund(paymentId, refundAmount, isAdjusted, refundInfo.getId(), context);
 
                     paymentDao.updateRefundStatus(refundInfo.getId(), RefundStatus.COMPLETED, context);
 
@@ -223,11 +220,8 @@ public class RefundProcessor extends ProcessorBase {
                     try {
                         final CallContext context = factory.createCallContext("RefundProcessor", CallOrigin.INTERNAL, UserType.SYSTEM);
                         for (RefundModelDao cur : refundsToBeFixed) {
-                            final PaymentAttemptModelDao successfulAttempt = getPaymentAttempt(cur.getPaymentId());
-                            if (successfulAttempt != null) {
-                                invoicePaymentApi.createRefund(successfulAttempt.getId(), cur.getAmount(), cur.isAdjsuted(), cur.getId(), context);
-                                paymentDao.updateRefundStatus(cur.getId(), RefundStatus.COMPLETED, context);
-                            }
+                            invoicePaymentApi.createRefund(cur.getPaymentId(), cur.getAmount(), cur.isAdjsuted(), cur.getId(), context);
+                            paymentDao.updateRefundStatus(cur.getId(), RefundStatus.COMPLETED, context);
                         }
                     } catch (InvoiceApiException e) {
                         throw new PaymentApiException(e);

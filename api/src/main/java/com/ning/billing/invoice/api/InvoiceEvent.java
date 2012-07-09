@@ -13,24 +13,12 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+package com.ning.billing.invoice.api;
 
-package com.ning.billing.invoice.api.test;
+import java.util.UUID;
 
-import com.google.inject.Inject;
-import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.invoice.dao.InvoiceDao;
-import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.bus.BusEvent;
 
-public class DefaultInvoiceTestApi implements InvoiceTestApi {
-    private final InvoiceDao invoiceDao;
-
-    @Inject
-    public DefaultInvoiceTestApi(final InvoiceDao invoiceDao) {
-        this.invoiceDao = invoiceDao;
-    }
-
-    @Override
-    public void create(final Invoice invoice, final CallContext context) {
-        invoiceDao.create(invoice, context);
-    }
+public interface InvoiceEvent extends BusEvent {
+    public UUID getAccountId();
 }

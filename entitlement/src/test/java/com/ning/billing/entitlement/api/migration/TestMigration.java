@@ -47,11 +47,7 @@ import static org.testng.Assert.assertTrue;
 
 public abstract class TestMigration extends TestApiBase {
     public void testSingleBasePlan() {
-
         try {
-
-            log.info("Starting testSingleBasePlan");
-
             final DateTime startDate = clock.getUTCNow().minusMonths(2);
             final DateTime beforeMigration = clock.getUTCNow();
             final EntitlementAccountMigration toBeMigrated = createAccountWithRegularBasePlan(startDate);
@@ -84,7 +80,6 @@ public abstract class TestMigration extends TestApiBase {
 
     public void testPlanWithAddOn() {
         try {
-            log.info("Starting testPlanWithAddOn");
             final DateTime beforeMigration = clock.getUTCNow();
             final DateTime initalBPStart = clock.getUTCNow().minusMonths(3);
             final DateTime initalAddonStart = clock.getUTCNow().minusMonths(1).plusDays(7);
@@ -134,7 +129,6 @@ public abstract class TestMigration extends TestApiBase {
     public void testSingleBasePlanFutureCancelled() {
 
         try {
-            log.info("Starting testSingleBasePlanFutureCancelled");
             final DateTime startDate = clock.getUTCNow().minusMonths(1);
             final DateTime beforeMigration = clock.getUTCNow();
             final EntitlementAccountMigration toBeMigrated = createAccountWithRegularBasePlanFutreCancelled(startDate);
@@ -159,7 +153,6 @@ public abstract class TestMigration extends TestApiBase {
             assertEquals(subscription.getCurrentPlan().getName(), "assault-rifle-annual");
             assertEquals(subscription.getChargedThroughDate(), startDate.plusYears(1));
 
-
             testListener.pushExpectedEvent(NextEvent.MIGRATE_BILLING);
             testListener.pushExpectedEvent(NextEvent.CANCEL);
 
@@ -176,17 +169,13 @@ public abstract class TestMigration extends TestApiBase {
             assertNull(subscription.getCurrentPlan());
 
             assertListenerStatus();
-
         } catch (EntitlementMigrationApiException e) {
             Assert.fail("", e);
         }
     }
 
     public void testSingleBasePlanWithPendingPhase() {
-
         try {
-
-            log.info("Starting testSingleBasePlanWithPendingPhase");
             final DateTime trialDate = clock.getUTCNow().minusDays(10);
             final EntitlementAccountMigration toBeMigrated = createAccountFuturePendingPhase(trialDate);
 
@@ -226,16 +215,13 @@ public abstract class TestMigration extends TestApiBase {
             assertEquals(subscription.getCurrentPhase().getName(), "assault-rifle-monthly-evergreen");
 
             assertListenerStatus();
-
         } catch (EntitlementMigrationApiException e) {
             Assert.fail("", e);
         }
     }
 
     public void testSingleBasePlanWithPendingChange() {
-
         try {
-            log.info("Starting testSingleBasePlanWithPendingChange");
             final DateTime beforeMigration = clock.getUTCNow();
             final EntitlementAccountMigration toBeMigrated = createAccountFuturePendingChange();
             final DateTime afterMigration = clock.getUTCNow();
@@ -279,25 +265,19 @@ public abstract class TestMigration extends TestApiBase {
         }
     }
 
-
     private EntitlementAccountMigration createAccountTest(final List<List<EntitlementSubscriptionMigrationCaseWithCTD>> cases) {
-
         return new EntitlementAccountMigration() {
-
             private final UUID accountId = UUID.randomUUID();
 
             @Override
             public EntitlementBundleMigration[] getBundles() {
                 final List<EntitlementBundleMigration> bundles = new ArrayList<EntitlementBundleMigration>();
                 final EntitlementBundleMigration bundle0 = new EntitlementBundleMigration() {
-
                     @Override
                     public EntitlementSubscriptionMigration[] getSubscriptions() {
-
                         final EntitlementSubscriptionMigration[] result = new EntitlementSubscriptionMigration[cases.size()];
 
                         for (int i = 0; i < cases.size(); i++) {
-
                             final List<EntitlementSubscriptionMigrationCaseWithCTD> curCases = cases.get(i);
                             final EntitlementSubscriptionMigration subscription = new EntitlementSubscriptionMigration() {
                                 @Override
@@ -362,7 +342,6 @@ public abstract class TestMigration extends TestApiBase {
                 null,
                 null));
 
-
         final List<List<EntitlementSubscriptionMigrationCaseWithCTD>> input = new ArrayList<List<EntitlementSubscriptionMigrationCaseWithCTD>>();
         input.add(cases);
         input.add(firstAddOnCases);
@@ -392,7 +371,6 @@ public abstract class TestMigration extends TestApiBase {
         input.add(cases);
         return createAccountTest(input);
     }
-
 
     private EntitlementAccountMigration createAccountFuturePendingPhase(final DateTime trialDate) {
         final List<EntitlementSubscriptionMigrationCaseWithCTD> cases = new LinkedList<EntitlementSubscriptionMigrationCaseWithCTD>();
@@ -429,9 +407,7 @@ public abstract class TestMigration extends TestApiBase {
         return createAccountTest(input);
     }
 
-
     public static class EntitlementSubscriptionMigrationCaseWithCTD implements EntitlementSubscriptionMigrationCase {
-
         private final PlanPhaseSpecifier pps;
         private final DateTime effDt;
         private final DateTime cancelDt;

@@ -36,6 +36,7 @@ import org.testng.annotations.Test;
 
 import com.google.inject.Inject;
 import com.ning.billing.dbi.MysqlTestingHelper;
+import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.bus.Bus;
@@ -57,7 +58,7 @@ import static org.testng.Assert.fail;
 
 @Test(groups = {"slow"})
 @Guice(modules = MockTagStoreModuleSql.class)
-public class TestTagStore {
+public class TestTagStore extends UtilTestSuiteWithEmbeddedDB {
     @Inject
     private MysqlTestingHelper helper;
 
@@ -83,17 +84,10 @@ public class TestTagStore {
 
     @BeforeClass(groups = "slow")
     protected void setup() throws IOException {
-        // Health check test to make sure MySQL is setup properly
         try {
-            final String utilDdl = IOUtils.toString(TestTagStore.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
-
-            helper.startMysql();
-            helper.initDb(utilDdl);
-
             context = new DefaultCallContextFactory(clock).createCallContext("Tag store test", CallOrigin.TEST, UserType.TEST);
             bus.start();
 
-            cleanupTags();
             tagDefinitionDao.create("tag1", "First tag", context);
             testTag = tagDefinitionDao.create("testTag", "Second tag", context);
         } catch (Throwable t) {
@@ -103,27 +97,8 @@ public class TestTagStore {
     }
 
     @AfterClass(groups = "slow")
-    public void stopMysql() {
+    public void tearDown() {
         bus.stop();
-        if (helper != null) {
-            helper.stopMysql();
-        }
-    }
-
-    private void cleanupTags() {
-        try {
-            helper.getDBI().withHandle(new HandleCallback<Void>() {
-                @Override
-                public Void withHandle(final Handle handle) throws Exception {
-                    handle.createScript("delete from tag_definitions").execute();
-                    handle.createScript("delete from tag_definition_history").execute();
-                    handle.createScript("delete from tags").execute();
-                    handle.createScript("delete from tag_history").execute();
-                    return null;
-                }
-            });
-        } catch (Throwable ignore) {
-        }
     }
 
     @Test(groups = "slow")

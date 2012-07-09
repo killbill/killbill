@@ -30,7 +30,7 @@ import com.ning.billing.overdue.config.OverdueConfig;
 import com.ning.billing.util.config.XMLLoader;
 
 public class TestOverdueWrapper extends OverdueTestBase {
-    @Test(groups = {"fast"}, enabled = true)
+    @Test(groups = "slow")
     public void testWrapperBasic() throws Exception {
         final InputStream is = new ByteArrayInputStream(configXml.getBytes());
         config = XMLLoader.getObjectFromStreamNoValidation(is, OverdueConfig.class);
@@ -46,7 +46,6 @@ public class TestOverdueWrapper extends OverdueTestBase {
         wrapper.refresh();
         checkStateApplied(state);
 
-
         state = config.getBundleStateSet().findState("OD2");
         bundle = createBundle(clock.getUTCNow().minusDays(41));
         wrapper = overdueWrapperFactory.createOverdueWrapperFor(bundle);
@@ -58,14 +57,11 @@ public class TestOverdueWrapper extends OverdueTestBase {
         wrapper = overdueWrapperFactory.createOverdueWrapperFor(bundle);
         wrapper.refresh();
         checkStateApplied(state);
-
     }
 
-    @Test(groups = {"fast"}, enabled = true)
+    @Test(groups = "slow")
     public void testWrapperNoConfig() throws Exception {
-
         overdueWrapperFactory.setOverdueConfig(null);
-
 
         final SubscriptionBundle bundle;
         final OverdueWrapper<SubscriptionBundle> wrapper;
@@ -78,10 +74,8 @@ public class TestOverdueWrapper extends OverdueTestBase {
         wrapper = overdueWrapperFactory.createOverdueWrapperFor(bundle);
         final OverdueState<SubscriptionBundle> result = wrapper.refresh();
 
-
         Assert.assertEquals(result.getName(), state.getName());
         Assert.assertEquals(result.blockChanges(), state.blockChanges());
         Assert.assertEquals(result.disableEntitlementAndChangesBlocked(), state.disableEntitlementAndChangesBlocked());
-
     }
 }

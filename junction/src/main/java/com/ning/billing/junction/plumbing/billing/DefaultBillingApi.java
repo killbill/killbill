@@ -111,10 +111,10 @@ public class DefaultBillingApi implements BillingApi {
 
 
     private void debugLog(final SortedSet<BillingEvent> result, final String title) {
-        log.debug(title);
+        log.info(title);
         final Iterator<BillingEvent> i = result.iterator();
         while (i.hasNext()) {
-            log.debug(i.next().toString());
+            log.info(i.next().toString());
         }
 
     }

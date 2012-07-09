@@ -22,9 +22,11 @@ import java.net.URI;
 
 import org.testng.annotations.Test;
 
+import com.ning.billing.util.UtilTestSuite;
+
 import static org.testng.Assert.assertEquals;
 
-public class TestXMLWriter {
+public class TestXMLWriter extends UtilTestSuite {
     public static final String TEST_XML =
             "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" +
                     "<xmlTestClass>" +
@@ -33,7 +35,7 @@ public class TestXMLWriter {
                     "<lala>42</lala>" +
                     "</xmlTestClass>";
 
-    @Test
+    @Test(groups = "fast")
     public void test() throws Exception {
         final InputStream is = new ByteArrayInputStream(TEST_XML.getBytes());
         final XmlTestClass test = XMLLoader.getObjectFromStream(new URI("internal:/"), is, XmlTestClass.class);
@@ -42,11 +44,7 @@ public class TestXMLWriter {
         assertEquals(test.getLala(), 42);
 
         final String output = XMLWriter.writeXML(test, XmlTestClass.class);
-
-        System.out.println(output);
+        //System.out.println(output);
         assertEquals(output.replaceAll("\\s", ""), TEST_XML.replaceAll("\\s", ""));
-
     }
-
-
 }

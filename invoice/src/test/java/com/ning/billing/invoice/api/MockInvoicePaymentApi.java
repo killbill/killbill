@@ -170,7 +170,6 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi {
     public InvoicePayment createRefund(UUID paymentId,
             BigDecimal amount, boolean isInvoiceAdjusted, UUID paymentCookieId, CallContext context)
             throws InvoiceApiException {
-        // TODO Auto-generated method stub
         return null;
     }
 }

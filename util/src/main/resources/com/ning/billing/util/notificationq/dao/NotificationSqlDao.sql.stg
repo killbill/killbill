@@ -5,6 +5,7 @@ getReadyNotifications() ::= <<
       record_id
       , id
       , class_name
+      , account_id
       , notification_key
       , created_date
       , creating_owner
@@ -28,6 +29,35 @@ getReadyNotifications() ::= <<
       , record_id
     limit :max
     ;
+>>
+
+getNotificationForAccountAndDate() ::= <<
+   select
+     record_id
+     , id
+     , class_name
+     , account_id
+     , notification_key
+     , created_date
+     , creating_owner
+     , effective_date
+     , queue_name
+     , processing_owner
+     , processing_available_date
+     , processing_state
+   from notifications
+   where
+   account_id = :accountId AND effective_date = :effectiveDate
+   ;
+>>
+
+removeNotification()  ::= <<
+  update notifications
+    set
+  processing_state = 'REMOVED'
+    where
+  id = :id
+; 
 >>
 
 claimNotification() ::= <<
@@ -66,6 +96,7 @@ insertNotification() ::= <<
     insert into notifications (
       id
       , class_name
+      , account_id
       , notification_key
       , created_date
       , creating_owner
@@ -77,6 +108,7 @@ insertNotification() ::= <<
     ) values (
       :id
       , :className
+      , :accountId
       , :notificationKey
       , :createdDate
       , :creatingOwner

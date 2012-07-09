@@ -31,7 +31,7 @@ public class TestProRation extends ProRationInAdvanceTestBase {
         return BillingPeriod.ANNUAL;
     }
 
-    @Test(groups = {"fast"})
+    @Test(groups = "fast")
     public void testSinglePlan_PrecedingProRation() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2011, 1, 31);
         final DateTime targetDate = buildDateTime(2011, 2, 24);
@@ -40,7 +40,7 @@ public class TestProRation extends ProRationInAdvanceTestBase {
         testCalculateNumberOfBillingCycles(startDate, targetDate, 15, expectedValue);
     }
 
-    @Test(groups = {"fast"})
+    @Test(groups = "fast")
     public void testSinglePlan_PrecedingProRation_CrossingYearBoundary() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2010, 12, 15);
         final DateTime targetDate = buildDateTime(2011, 1, 13);
@@ -49,8 +49,8 @@ public class TestProRation extends ProRationInAdvanceTestBase {
         testCalculateNumberOfBillingCycles(startDate, targetDate, 4, expectedValue);
     }
 
-    // Test fails, needs to be investigated
-    @Test(groups = {"fast"}, enabled=false)
+    // TODO Test fails, needs to be investigated
+    @Test(groups = "fast", enabled=false)
     public void testSinglePlanDoubleProRation() throws InvalidDateSequenceException {
         final DateTime startDate = buildDateTime(2011, 1, 10);
         final DateTime endDate = buildDateTime(2012, 3, 4);

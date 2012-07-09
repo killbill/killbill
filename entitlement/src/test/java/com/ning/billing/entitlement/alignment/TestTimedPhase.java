@@ -22,9 +22,10 @@ import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.ning.billing.KillbillTestSuite;
 import com.ning.billing.catalog.api.PlanPhase;
 
-public class TestTimedPhase {
+public class TestTimedPhase extends KillbillTestSuite {
     @Test(groups = "fast")
     public void testConstructor() throws Exception {
         final PlanPhase planPhase = Mockito.mock(PlanPhase.class);

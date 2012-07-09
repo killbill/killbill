@@ -60,7 +60,7 @@ import com.ning.billing.util.clock.DefaultClock;
 import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.notificationq.DefaultNotificationQueueService;
 
-public class TestBusinessTagRecorder extends TestWithEmbeddedDB {
+public class TestBusinessTagRecorder extends AnalyticsTestSuiteWithEmbeddedDB {
     private BusinessAccountTagSqlDao accountTagSqlDao;
     private BusinessSubscriptionTransitionTagSqlDao subscriptionTransitionTagSqlDao;
     private InMemoryBus eventBus;

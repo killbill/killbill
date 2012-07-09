@@ -24,6 +24,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.ning.billing.account.AccountTestSuite;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.DefaultAccount;
@@ -37,7 +38,7 @@ import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextFactory;
 
-public class TestDefaultAccountUserApi {
+public class TestDefaultAccountUserApi extends AccountTestSuite {
     private final CallContextFactory factory = Mockito.mock(CallContextFactory.class);
     private final CallContext callContext = Mockito.mock(CallContext.class);
 

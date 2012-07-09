@@ -18,15 +18,10 @@ package com.ning.billing.account.dao;
 
 import java.io.IOException;
 
-import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
-import org.skife.jdbi.v2.TransactionCallback;
-import org.skife.jdbi.v2.TransactionStatus;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
 
-import com.ning.billing.dbi.MysqlTestingHelper;
+import com.ning.billing.account.AccountTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.bus.DefaultBusService;
@@ -37,14 +32,11 @@ import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
-import com.ning.billing.util.io.IOUtils;
 import com.ning.billing.util.tag.api.user.TagEventBuilder;
 
 import static org.testng.Assert.fail;
 
-public abstract class AccountDaoTestBase {
-    private final MysqlTestingHelper helper = new MysqlTestingHelper();
-
+public abstract class AccountDaoTestBase extends AccountTestSuiteWithEmbeddedDB {
     protected final TagEventBuilder tagEventBuilder = new TagEventBuilder();
 
     protected AccountDao accountDao;
@@ -53,17 +45,9 @@ public abstract class AccountDaoTestBase {
     protected Bus bus;
     protected CallContext context;
 
-    @BeforeClass(alwaysRun = true)
+    @BeforeClass(groups = "slow")
     protected void setup() throws IOException {
-        // Health check test to make sure MySQL is setup properly
         try {
-            final String accountDdl = IOUtils.toString(AccountSqlDao.class.getResourceAsStream("/com/ning/billing/account/ddl.sql"));
-            final String utilDdl = IOUtils.toString(AccountSqlDao.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
-
-            helper.startMysql();
-            helper.initDb(accountDdl);
-            helper.initDb(utilDdl);
-
             dbi = helper.getDBI();
 
             bus = new InMemoryBus();
@@ -71,9 +55,11 @@ public abstract class AccountDaoTestBase {
             ((DefaultBusService) busService).startBus();
 
             accountDao = new AuditedAccountDao(dbi, bus);
+            // Health check test to make sure MySQL is setup properly
             accountDao.test();
 
             accountEmailDao = new AuditedAccountEmailDao(dbi);
+            // Health check test to make sure MySQL is setup properly
             accountEmailDao.test();
 
             final Clock clock = new ClockMock();
@@ -81,28 +67,5 @@ public abstract class AccountDaoTestBase {
         } catch (Throwable t) {
             fail(t.toString());
         }
-    }
-
-    @AfterClass(alwaysRun = true)
-    public void stopMysql() {
-        helper.stopMysql();
-    }
-
-    @BeforeMethod(alwaysRun = true)
-    public void cleanupData() {
-        dbi.inTransaction(new TransactionCallback<Void>() {
-            @Override
-            public Void inTransaction(final Handle h, final TransactionStatus status) throws Exception {
-                h.execute("truncate table accounts");
-                h.execute("truncate table notifications");
-                h.execute("truncate table bus_events");
-                h.execute("truncate table claimed_bus_events");
-                h.execute("truncate table claimed_notifications");
-                h.execute("truncate table tag_definitions");
-                h.execute("truncate table tags");
-                h.execute("truncate table custom_fields");
-                return null;
-            }
-        });
     }
 }
