@@ -16,12 +16,12 @@
 
 package com.ning.billing;
 
+import javax.annotation.Nullable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 public class BillingExceptionBase extends Exception {
-
     private static final Logger log = LoggerFactory.getLogger(BillingExceptionBase.class);
 
     private static final long serialVersionUID = 165720101383L;
@@ -42,9 +42,8 @@ public class BillingExceptionBase extends Exception {
         this.cause = cause;
     }
 
-
-    public BillingExceptionBase(final Throwable cause, final ErrorCode code, final Object... args) {
-        String tmp = null;
+    public BillingExceptionBase(@Nullable final Throwable cause, final ErrorCode code, final Object... args) {
+        String tmp;
         try {
             tmp = String.format(code.getFormat(), args);
         } catch (RuntimeException e) {
@@ -74,4 +73,14 @@ public class BillingExceptionBase extends Exception {
         return code;
     }
 
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append("BillingExceptionBase");
+        sb.append("{cause=").append(cause);
+        sb.append(", code=").append(code);
+        sb.append(", formattedMsg='").append(formattedMsg).append('\'');
+        sb.append('}');
+        return sb.toString();
+    }
 }

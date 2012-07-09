@@ -445,7 +445,7 @@ public class PaymentProcessor extends ProcessorBase {
 
             paymentDao.updateStatusForPaymentWithAttempt(paymentInput.getId(), paymentStatus,  e.getMessage(), null, attemptInput.getId(), context);
 
-            throw new PaymentApiException(ErrorCode.PAYMENT_CREATE_PAYMENT, account.getId(), e.getMessage());
+            throw new PaymentApiException(ErrorCode.PAYMENT_CREATE_PAYMENT, account.getId(), e.toString());
 
         } finally {
             if (event != null) {
