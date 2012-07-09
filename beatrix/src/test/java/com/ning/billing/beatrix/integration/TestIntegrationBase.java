@@ -43,6 +43,7 @@ import com.ning.billing.analytics.AnalyticsListener;
 import com.ning.billing.analytics.api.user.DefaultAnalyticsUserApi;
 import com.ning.billing.api.TestApiListener;
 import com.ning.billing.api.TestListenerStatus;
+import com.ning.billing.beatrix.BeatrixTestSuiteWithEmbeddedDB;
 import com.ning.billing.beatrix.lifecycle.Lifecycle;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.dbi.MysqlTestingHelper;
@@ -77,7 +78,7 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
-public class TestIntegrationBase implements TestListenerStatus {
+public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implements TestListenerStatus {
     protected static final DateTimeZone testTimeZone = DateTimeZone.UTC;
 
     protected static final int NUMBER_OF_DECIMALS = InvoicingConfiguration.getNumberOfDecimals();
@@ -173,46 +174,16 @@ public class TestIntegrationBase implements TestListenerStatus {
         }
     }
 
-    protected void setupMySQL() throws IOException {
-        final String accountDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/account/ddl.sql"));
-        final String analyticsDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/analytics/ddl.sql"));
-        final String entitlementDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/entitlement/ddl.sql"));
-        final String invoiceDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
-        final String paymentDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/payment/ddl.sql"));
-        final String utilDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
-        final String junctionDb = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/junction/ddl.sql"));
-
-        helper.startMysql();
-
-        helper.initDb(accountDdl);
-        helper.initDb(analyticsDdl);
-        helper.initDb(entitlementDdl);
-        helper.initDb(invoiceDdl);
-        helper.initDb(paymentDdl);
-        helper.initDb(utilDdl);
-        helper.initDb(junctionDb);
-    }
-
     @BeforeClass(groups = "slow")
     public void setup() throws Exception {
-        setupMySQL();
-
         context = new DefaultCallContextFactory(clock).createCallContext("Integration Test", CallOrigin.TEST, UserType.TEST);
         busHandler = new TestApiListener(this);
-    }
-
-    @AfterClass(groups = "slow")
-    public void tearDown() throws Exception {
-        helper.stopMysql();
     }
 
     @BeforeMethod(groups = "slow")
     public void setupTest() throws Exception {
         log.warn("\n");
         log.warn("RESET TEST FRAMEWORK\n\n");
-
-        // Pre test cleanup
-        helper.cleanupAllTables();
 
         clock.resetDeltaFromReality();
         resetTestListenerStatus();
