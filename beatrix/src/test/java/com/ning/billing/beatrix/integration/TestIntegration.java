@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.Interval;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
@@ -44,56 +43,67 @@ import static org.testng.Assert.assertTrue;
 
 @Guice(modules = {BeatrixModule.class})
 public class TestIntegration extends TestIntegrationBase {
-    @Test(groups = "slow", enabled = true)
+    @Test(groups = "slow")
     public void testBasePlanCompleteWithBillingDayInPast() throws Exception {
         log.info("Starting testBasePlanCompleteWithBillingDayInPast");
         final DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0, testTimeZone);
         testBasePlanComplete(startDate, 31, false);
     }
 
-    @Test(groups = "slow", enabled = true)
+    @Test(groups = "slow")
     public void testBasePlanCompleteWithBillingDayPresent() throws Exception {
         log.info("Starting testBasePlanCompleteWithBillingDayPresent");
         final DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0, testTimeZone);
         testBasePlanComplete(startDate, 1, false);
     }
 
-    @Test(groups = "slow", enabled = true)
+    @Test(groups = "slow")
     public void testBasePlanCompleteWithBillingDayAlignedWithTrial() throws Exception {
         log.info("Starting testBasePlanCompleteWithBillingDayAlignedWithTrial");
         final DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0, testTimeZone);
         testBasePlanComplete(startDate, 2, false);
     }
 
-    @Test(groups = "slow", enabled = true)
+    @Test(groups = "slow")
     public void testBasePlanCompleteWithBillingDayInFuture() throws Exception {
         log.info("Starting testBasePlanCompleteWithBillingDayInFuture");
         final DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0, testTimeZone);
         testBasePlanComplete(startDate, 3, true);
     }
 
-    @Test(groups = {"slow", "stress"}, enabled = false)
+    @Test(groups = {"stress"})
     public void stressTest() throws Exception {
-        final int maxIterations = 7;
+        final int maxIterations = 100;
         for (int curIteration = 0; curIteration < maxIterations; curIteration++) {
+            if (curIteration != 0) {
+                setupTest();
+            }
+
             log.info("################################  ITERATION " + curIteration + "  #########################");
             Thread.sleep(1000);
-            setupTest();
             testBasePlanCompleteWithBillingDayPresent();
             Thread.sleep(1000);
+            cleanupTest();
             setupTest();
             testBasePlanCompleteWithBillingDayInPast();
             Thread.sleep(1000);
+            cleanupTest();
             setupTest();
             testBasePlanCompleteWithBillingDayAlignedWithTrial();
             Thread.sleep(1000);
+            cleanupTest();
             setupTest();
             testBasePlanCompleteWithBillingDayInFuture();
+            if (curIteration < maxIterations - 1) {
+                cleanupTest();
+                Thread.sleep(1000);
+            }
+
         }
     }
 
 
-    @Test(groups = {"stress"}, enabled = true)
+    @Test(groups = {"stress"})
     public void stressTestDebug() throws Exception {
         final int maxIterations = 100;
         for (int curIteration = 0; curIteration < maxIterations; curIteration++) {
@@ -110,7 +120,7 @@ public class TestIntegration extends TestIntegrationBase {
     }
 
 
-    @Test(groups = "slow", enabled = true)
+    @Test(groups = "slow")
     public void testAddonsWithMultipleAlignments() throws Exception {
 
         log.info("Starting testRepairChangeBPWithAddonIncluded");
@@ -226,7 +236,7 @@ public class TestIntegration extends TestIntegrationBase {
         // TODO: Jeff implement repair
     }
 
-    @Test(groups = "slow", enabled = true)
+    @Test(groups = "slow")
     public void testWithRecreatePlan() throws Exception {
 
         log.info("Starting testWithRecreatePlan");
