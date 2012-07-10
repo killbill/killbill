@@ -83,7 +83,7 @@ public class AuditedTagDao extends AuditedCollectionDaoBase<Tag, Tag> implements
 
                 // Gather the tag ids for this object id
                 final List<Mapper<UUID, Long>> recordIds = tagSqlDao.getRecordIds(objectId.toString(), objectType);
-                final Map<UUID, Long> recordIdMap = convertToHistoryMap(recordIds);
+                final Map<UUID, Long> recordIdMap = convertToHistoryMap(recordIds, objectType);
 
                 // Update the history table
                 final List<EntityHistory<Tag>> entityHistories = convertToHistory(tagList, recordIdMap, ChangeType.INSERT);
@@ -131,7 +131,7 @@ public class AuditedTagDao extends AuditedCollectionDaoBase<Tag, Tag> implements
 
                     // Before the deletion, gather the tag ids for this object id
                     final List<Mapper<UUID, Long>> recordIds = tagSqlDao.getRecordIds(objectId.toString(), objectType);
-                    final Map<UUID, Long> recordIdMap = convertToHistoryMap(recordIds);
+                    final Map<UUID, Long> recordIdMap = convertToHistoryMap(recordIds, objectType);
 
                     // Delete the tag
                     tagSqlDao.deleteFromTransaction(objectId.toString(), objectType, tagList, context);
@@ -163,6 +163,7 @@ public class AuditedTagDao extends AuditedCollectionDaoBase<Tag, Tag> implements
                 }
             });
         } catch (TransactionFailedException exception) {
+
             if (exception.getCause() instanceof TagDefinitionApiException) {
                 throw (TagApiException) exception.getCause();
             } else {
