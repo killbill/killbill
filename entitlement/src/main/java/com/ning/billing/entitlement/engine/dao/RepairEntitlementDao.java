@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -16,6 +16,7 @@
 
 package com.ning.billing.entitlement.engine.dao;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -26,6 +27,8 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
 import com.ning.billing.entitlement.api.SubscriptionFactory;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData;
 import com.ning.billing.entitlement.api.timeline.RepairEntitlementLifecycleDao;
@@ -43,27 +46,69 @@ public class RepairEntitlementDao implements EntitlementDao, RepairEntitlementLi
 
     private final ThreadLocal<Map<UUID, SubscriptionRepairEvent>> preThreadsInRepairSubscriptions = new ThreadLocal<Map<UUID, SubscriptionRepairEvent>>();
 
+
+    private final static class EntitlementEventWithOrderingId {
+
+        private final EntitlementEvent event;
+        private final long orderingId;
+
+        public EntitlementEventWithOrderingId(EntitlementEvent event, long orderingId) {
+            this.event = event;
+            this.orderingId = orderingId;
+        }
+
+        public EntitlementEvent getEvent() {
+            return event;
+        }
+        public long getOrderingId() {
+            return orderingId;
+        }
+
+    }
+
     private static final class SubscriptionRepairEvent {
-        private final Set<EntitlementEvent> events;
+
+        private final Set<EntitlementEventWithOrderingId> events;
+        private long curOrderingId;
 
         public SubscriptionRepairEvent(final List<EntitlementEvent> initialEvents) {
-            events = new TreeSet<EntitlementEvent>(new Comparator<EntitlementEvent>() {
+            this.events = new TreeSet<EntitlementEventWithOrderingId>(new Comparator<EntitlementEventWithOrderingId>() {
                 @Override
-                public int compare(final EntitlementEvent o1, final EntitlementEvent o2) {
-                    return o1.compareTo(o2);
+                public int compare(final EntitlementEventWithOrderingId o1, final EntitlementEventWithOrderingId o2) {
+                    int result = o1.getEvent().getEffectiveDate().compareTo(o2.getEvent().getEffectiveDate());
+                    if (result == 0) {
+                        if (o1.getOrderingId() < o2.getOrderingId()) {
+                            return -1;
+                        } else if (o1.getOrderingId() > o2.getOrderingId()) {
+                            return 1;
+                        } else {
+                            throw new RuntimeException("Repair entitlement events should not have the same orderingId");
+                        }
+                    }
+                    return result;
                 }
             });
+
+            this.curOrderingId = 0;
+
             if (initialEvents != null) {
-                events.addAll(initialEvents);
+                addEvents(initialEvents);
             }
         }
 
-        public Set<EntitlementEvent> getEvents() {
-            return events;
+        public List<EntitlementEvent> getEvents() {
+            return new ArrayList<EntitlementEvent>(Collections2.transform(events, new Function<EntitlementEventWithOrderingId, EntitlementEvent>() {
+                @Override
+                public EntitlementEvent apply(EntitlementEventWithOrderingId in) {
+                    return in.getEvent();
+                }
+            }));
         }
 
         public void addEvents(final List<EntitlementEvent> newEvents) {
-            events.addAll(newEvents);
+            for (EntitlementEvent cur : newEvents) {
+                events.add(new EntitlementEventWithOrderingId(cur, curOrderingId++));
+            }
         }
     }
 
