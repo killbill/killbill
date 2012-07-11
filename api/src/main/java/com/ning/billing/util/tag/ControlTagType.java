@@ -19,19 +19,25 @@ package com.ning.billing.util.tag;
 import java.util.UUID;
 
 public enum ControlTagType {
-    AUTO_PAY_OFF("Suspends payments until removed.", true, false),
-    AUTO_INVOICING_OFF("Suspends invoicing until removed.", false, true),
-    OVERDUE_ENFORCEMENT_OFF("Suspends overdue enforcement behaviour until removed.", false, false),
-    WRITTEN_OFF("Indicated that an invoice is written off. No billing or payment effect.", false, false);
+    AUTO_PAY_OFF(new UUID(0, 1), "Suspends payments until removed.", true, false),
+    AUTO_INVOICING_OFF(new UUID(0, 2), "Suspends invoicing until removed.", false, true),
+    OVERDUE_ENFORCEMENT_OFF(new UUID(0, 3), "Suspends overdue enforcement behaviour until removed.", false, false),
+    WRITTEN_OFF(new UUID(0, 4), "Indicated that an invoice is written off. No billing or payment effect.", false, false);
 
+    private final UUID id;
     private final String description;
     private final boolean autoPaymentOff;
     private final boolean autoInvoicingOff;
 
-    ControlTagType(final String description, final boolean autoPaymentOff, final boolean autoInvoicingOff) {
+    ControlTagType(final UUID id, final String description, final boolean autoPaymentOff, final boolean autoInvoicingOff) {
+        this.id = id;
         this.description = description;
         this.autoPaymentOff = autoPaymentOff;
         this.autoInvoicingOff = autoInvoicingOff;
+    }
+
+    public UUID getId() {
+        return id;
     }
 
     public String getDescription() {
@@ -65,7 +71,7 @@ public enum ControlTagType {
 
             @Override
             public UUID getId() {
-                return null;
+                return id;
             }
         };
     }
