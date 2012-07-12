@@ -18,6 +18,7 @@ package com.ning.billing.invoice.generator;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.MutableDateTime;
 
 public class InvoiceDateUtils {
     public static DateTime roundDateTimeToDate(final DateTime input, final DateTimeZone timeZone) {
@@ -27,5 +28,22 @@ public class InvoiceDateUtils {
         final DateTime tzAdjustedStartDate = input.toDateTime(timeZone);
 
         return new DateTime(tzAdjustedStartDate.getYear(), tzAdjustedStartDate.getMonthOfYear(), tzAdjustedStartDate.getDayOfMonth(), 0, 0, timeZone);
+    }
+
+    public static DateTime calculateBillingCycleDateOnOrAfter(final DateTime date, final int billingCycleDay) {
+        final int lastDayOfMonth = date.dayOfMonth().getMaximumValue();
+
+        final MutableDateTime tmp = date.toMutableDateTime();
+        if (billingCycleDay > lastDayOfMonth) {
+            tmp.setDayOfMonth(lastDayOfMonth);
+        } else {
+            tmp.setDayOfMonth(billingCycleDay);
+        }
+        DateTime proposedDate = tmp.toDateTime();
+
+        while (proposedDate.isBefore(date)) {
+            proposedDate = proposedDate.plusMonths(1);
+        }
+        return proposedDate;
     }
 }

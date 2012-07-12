@@ -26,6 +26,7 @@ import org.joda.time.Months;
 import org.joda.time.MutableDateTime;
 
 import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.invoice.generator.InvoiceDateUtils;
 
 public class InAdvanceBillingMode implements BillingMode {
     private static final int ROUNDING_METHOD = InvoicingConfiguration.getRoundingMode();
@@ -49,7 +50,7 @@ public class InAdvanceBillingMode implements BillingMode {
         final List<RecurringInvoiceItemData> results = new ArrayList<RecurringInvoiceItemData>();
 
         // beginning from the start date, find the first billing date
-        final DateTime firstBillingCycleDate = calculateBillingCycleDateOnOrAfter(startDate, billingCycleDay);
+        final DateTime firstBillingCycleDate = InvoiceDateUtils.calculateBillingCycleDateOnOrAfter(startDate, billingCycleDay);
 
         // add pro-ration item if needed
         if (firstBillingCycleDate.isAfter(startDate)) {
@@ -92,7 +93,7 @@ public class InAdvanceBillingMode implements BillingMode {
         }
 
         // beginning from the start date, find the first billing date
-        final DateTime firstBillingCycleDate = calculateBillingCycleDateOnOrAfter(startDate, billingCycleDay);
+        final DateTime firstBillingCycleDate = InvoiceDateUtils.calculateBillingCycleDateOnOrAfter(startDate, billingCycleDay);
 
         // add pro-ration item if needed
         if (firstBillingCycleDate.isAfter(startDate)) {
@@ -122,23 +123,6 @@ public class InAdvanceBillingMode implements BillingMode {
         }
 
         return results;
-    }
-
-    private DateTime calculateBillingCycleDateOnOrAfter(final DateTime date, final int billingCycleDay) {
-        final int lastDayOfMonth = date.dayOfMonth().getMaximumValue();
-
-        final MutableDateTime tmp = date.toMutableDateTime();
-        if (billingCycleDay > lastDayOfMonth) {
-            tmp.setDayOfMonth(lastDayOfMonth);
-        } else {
-            tmp.setDayOfMonth(billingCycleDay);
-        }
-        DateTime proposedDate = tmp.toDateTime();
-
-        while (proposedDate.isBefore(date)) {
-            proposedDate = proposedDate.plusMonths(1);
-        }
-        return proposedDate;
     }
 
     private BigDecimal calculateProRationBeforeFirstBillingPeriod(final DateTime startDate, final DateTime nextBillingCycleDate, final BillingPeriod billingPeriod) {

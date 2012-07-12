@@ -87,7 +87,7 @@ public class TestChargeBacks extends InvoiceTestSuiteWithEmbeddedDB {
         final TagDefinitionDao tagDefinitionDao = new MockTagDefinitionDao();
         final TagDao tagDao = new MockTagDao();
         final TagUserApi tagUserApi = new DefaultTagUserApi(tagDefinitionDao, tagDao);
-        final InvoiceDao invoiceDao = new DefaultInvoiceDao(dbi, nextBillingDatePoster, tagUserApi);
+        final InvoiceDao invoiceDao = new DefaultInvoiceDao(dbi, nextBillingDatePoster, tagUserApi, clock);
         invoicePaymentApi = new DefaultInvoicePaymentApi(invoiceDao);
 
         context = new TestCallContext("Charge back tests");

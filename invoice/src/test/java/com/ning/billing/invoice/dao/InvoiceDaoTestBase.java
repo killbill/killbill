@@ -19,13 +19,9 @@ package com.ning.billing.invoice.dao;
 import java.io.IOException;
 import java.net.URL;
 
-import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
-import org.skife.jdbi.v2.TransactionCallback;
-import org.skife.jdbi.v2.TransactionStatus;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
 
 import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.config.InvoiceConfig;
@@ -114,7 +110,7 @@ public class InvoiceDaoTestBase extends InvoicingTestBase {
         final TagDefinitionDao tagDefinitionDao = new MockTagDefinitionDao();
         final TagDao tagDao = new AuditedTagDao(dbi, tagEventBuilder, bus);
         final TagUserApi tagUserApi = new DefaultTagUserApi(tagDefinitionDao, tagDao);
-        invoiceDao = new DefaultInvoiceDao(dbi, nextBillingDatePoster, tagUserApi);
+        invoiceDao = new DefaultInvoiceDao(dbi, nextBillingDatePoster, tagUserApi, clock);
         invoiceDao.test();
 
         invoiceItemSqlDao = dbi.onDemand(InvoiceItemSqlDao.class);

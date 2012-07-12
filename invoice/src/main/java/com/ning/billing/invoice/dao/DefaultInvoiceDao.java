@@ -38,6 +38,7 @@ import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.InvoicePayment.InvoicePaymentType;
+import com.ning.billing.invoice.generator.InvoiceDateUtils;
 import com.ning.billing.invoice.model.CreditAdjInvoiceItem;
 import com.ning.billing.invoice.model.CreditBalanceAdjInvoiceItem;
 import com.ning.billing.invoice.model.DefaultInvoice;
@@ -49,6 +50,7 @@ import com.ning.billing.util.ChangeType;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.dao.EntityAudit;
 import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.dao.TableName;
@@ -60,16 +62,19 @@ public class DefaultInvoiceDao implements InvoiceDao {
     private final TagUserApi tagUserApi;
     private final NextBillingDatePoster nextBillingDatePoster;
     private final InvoiceItemSqlDao invoiceItemSqlDao;
+    private final Clock clock;
 
     @Inject
     public DefaultInvoiceDao(final IDBI dbi,
                              final NextBillingDatePoster nextBillingDatePoster,
-                             final TagUserApi tagUserApi) {
+                             final TagUserApi tagUserApi,
+                             final Clock clock) {
         this.invoiceSqlDao = dbi.onDemand(InvoiceSqlDao.class);
         this.invoicePaymentSqlDao = dbi.onDemand(InvoicePaymentSqlDao.class);
         this.invoiceItemSqlDao = dbi.onDemand(InvoiceItemSqlDao.class);
         this.nextBillingDatePoster = nextBillingDatePoster;
         this.tagUserApi = tagUserApi;
+        this.clock = clock;
     }
 
     @Override
@@ -507,35 +512,29 @@ public class DefaultInvoiceDao implements InvoiceDao {
     }
 
     private void notifyOfFutureBillingEvents(final InvoiceSqlDao dao, final UUID accountId, final int billCycleDay, final List<InvoiceItem> invoiceItems) {
-        DateTime nextBCD = null;
-        UUID subscriptionForNextBCD = null;
+        UUID subscriptionForNextNotification = null;
+        boolean shouldBeNotified = false;
         for (final InvoiceItem item : invoiceItems) {
             if (item.getInvoiceItemType() == InvoiceItemType.RECURRING) {
                 final RecurringInvoiceItem recurringInvoiceItem = (RecurringInvoiceItem) item;
                 if ((recurringInvoiceItem.getEndDate() != null) &&
-                        (recurringInvoiceItem.getAmount() == null ||
-                                recurringInvoiceItem.getAmount().compareTo(BigDecimal.ZERO) >= 0)) {
-                    if (nextBCD == null || nextBCD.compareTo(recurringInvoiceItem.getEndDate()) > 0) {
-                        nextBCD = recurringInvoiceItem.getEndDate();
-                        subscriptionForNextBCD = recurringInvoiceItem.getSubscriptionId();
-                    }
+                    (recurringInvoiceItem.getAmount() == null ||
+                     recurringInvoiceItem.getAmount().compareTo(BigDecimal.ZERO) >= 0)) {
+                    subscriptionForNextNotification = recurringInvoiceItem.getSubscriptionId();
+                    shouldBeNotified = true;
+                    break;
                 }
             }
         }
-        // We need to be notified if and only if the maximum end date of the invoiced recurring items is equal
-        // to the next bill cycle day.
-        // We take the maximum because we're guaranteed to have invoiced all subscriptions up until that date
-        // (and no further processing is needed).
-        // Also, we only need to get notified on the BDC. For other invoice events (e.g. phase changes),
+
+        // We only need to get notified on the BCD. For other invoice events (e.g. phase changes),
         // we'll be notified by entitlement.
-        if (subscriptionForNextBCD != null && nextBCD != null) {
-            final int lastDayOfMonth = nextBCD.dayOfMonth().withMaximumValue().getDayOfMonth();
-            final int nextBCDDay = nextBCD.getDayOfMonth();
-            // Small trick here in case the bill cycle day doesn't exist for that month, e.g. the bill cycle day
-            // is on the 31st, but the month has only 30 days
-            if (nextBCDDay == billCycleDay || (lastDayOfMonth == nextBCDDay && billCycleDay > lastDayOfMonth)) {
-                nextBillingDatePoster.insertNextBillingNotification(dao, accountId, subscriptionForNextBCD, nextBCD);
-            }
+        if (shouldBeNotified) {
+            // We could be notified at any time during the day at the billCycleDay - use the current time to
+            // spread the load
+            final DateTime nextNotificationDateTime = InvoiceDateUtils.calculateBillingCycleDateOnOrAfter(clock.getUTCNow(), billCycleDay);
+            // NextBillingDatePoster will ignore duplicates
+            nextBillingDatePoster.insertNextBillingNotification(dao, accountId, subscriptionForNextNotification, nextNotificationDateTime);
         }
     }
 }
