@@ -23,6 +23,7 @@ import org.joda.time.DateTime;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ning.billing.payment.api.Payment;
+import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.util.clock.DefaultClock;
 
 public class PaymentJsonSimple {
@@ -85,7 +86,7 @@ public class PaymentJsonSimple {
 
     public PaymentJsonSimple(final Payment src) {
         this.amount = src.getAmount();
-        this.paidAmount = src.getAmount();
+        this.paidAmount =  src.getPaymentStatus() == PaymentStatus.SUCCESS ?  src.getAmount() : BigDecimal.ZERO;
         this.invoiceId = src.getInvoiceId().toString();
         this.accountId = src.getAccountId().toString();
         this.paymentId = src.getId().toString();

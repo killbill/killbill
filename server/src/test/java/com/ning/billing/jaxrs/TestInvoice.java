@@ -61,9 +61,8 @@ public class TestInvoice extends TestJaxrsBase {
         assertNotNull(subscriptionJson);
 
         // MOVE AFTER TRIAL
-        final Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(3).plusDays(1));
+        final Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(30));
         clock.addDeltaFromReality(it.toDurationMillis());
-
         crappyWaitForLackOfProperSynchonization();
 
         String uri = JaxrsResource.INVOICES_PATH;
@@ -76,7 +75,7 @@ public class TestInvoice extends TestJaxrsBase {
         List<InvoiceJsonSimple> objFromJson = mapper.readValue(baseJson, new TypeReference<List<InvoiceJsonSimple>>() {});
         assertNotNull(objFromJson);
         log.info(baseJson);
-        assertEquals(objFromJson.size(), 4);
+        assertEquals(objFromJson.size(), 2);
 
         // Check we can retrieve an individual invoice
         uri = JaxrsResource.INVOICES_PATH + "/" + objFromJson.get(0).getInvoiceId();
@@ -115,7 +114,7 @@ public class TestInvoice extends TestJaxrsBase {
         objFromJson = mapper.readValue(baseJson, new TypeReference<List<InvoiceJsonSimple>>() {});
         assertNotNull(objFromJson);
         log.info(baseJson);
-        assertEquals(objFromJson.size(), 5);
+        assertEquals(objFromJson.size(), 3);
     }
 
     @Test(groups = "slow")

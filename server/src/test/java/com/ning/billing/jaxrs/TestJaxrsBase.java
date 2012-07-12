@@ -511,7 +511,8 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
     public AccountJson getAccountJson(final String name, final String externalKey, final String email) {
         final String accountId = UUID.randomUUID().toString();
         final int length = 4;
-        final int billCycleDay = 12;
+        // Let junction figure it out
+        final int billCycleDay = 0;
         final String currency = "USD";
         final String timeZone = "UTC";
         final String address1 = "12 rue des ecoles";
