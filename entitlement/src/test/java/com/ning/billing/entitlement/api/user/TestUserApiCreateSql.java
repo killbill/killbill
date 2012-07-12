@@ -54,7 +54,7 @@ public class TestUserApiCreateSql extends TestUserApiCreate {
     }
 
     @Override
-    @Test(enabled = false, groups = {"slow"})
+    @Test(groups = {"slow"})
     protected void testSubscriptionWithAddOn() {
         super.testSubscriptionWithAddOn();
     }

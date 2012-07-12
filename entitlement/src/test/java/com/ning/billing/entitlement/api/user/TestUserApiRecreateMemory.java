@@ -30,13 +30,13 @@ public class TestUserApiRecreateMemory extends TestUserApiRecreate {
     }
 
     @Override
-    @Test(enabled = false, groups = "fast")
+    @Test(groups = "fast")
     protected void testRecreateWithBPCanceledThroughSubscription() {
         super.testRecreateWithBPCanceledThroughSubscription();
     }
 
     @Override
-    @Test(enabled = false, groups = "fast")
+    @Test(groups = "fast")
     protected void testCreateWithBPCanceledFromUserApi() {
         super.testRecreateWithBPCanceledThroughSubscription();
     }
