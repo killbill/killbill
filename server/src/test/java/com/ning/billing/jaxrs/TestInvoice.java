@@ -130,8 +130,7 @@ public class TestInvoice extends TestJaxrsBase {
         final SubscriptionJsonNoEvents subscriptionJson = createSubscription(bundleJson.getBundleId(), "Shotgun", ProductCategory.BASE.toString(), BillingPeriod.MONTHLY.toString(), true);
         assertNotNull(subscriptionJson);
 
-        // MOVE AFTER TRIAL
-        clock.addMonths(3);
+        clock.addDays(31);
 
         crappyWaitForLackOfProperSynchonization();
 
@@ -144,7 +143,7 @@ public class TestInvoice extends TestJaxrsBase {
         final List<InvoiceJsonSimple> invoices = mapper.readValue(baseJson, new TypeReference<List<InvoiceJsonSimple>>() {});
         assertNotNull(invoices);
         log.info(baseJson);
-        assertEquals(invoices.size(), 4);
+        assertEquals(invoices.size(), 2);
 
         for (final InvoiceJsonSimple cur : invoices) {
 

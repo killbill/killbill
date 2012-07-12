@@ -125,7 +125,7 @@ public class TestAccount extends TestJaxrsBase {
         assertNotNull(subscriptionJson);
 
         // MOVE AFTER TRIAL
-        clock.addMonths(3);
+        clock.addDays(31);
 
         crappyWaitForLackOfProperSynchonization();
 
@@ -138,8 +138,8 @@ public class TestAccount extends TestJaxrsBase {
         assertNotNull(objFromJson);
         log.info(baseJson);
 
-        Assert.assertEquals(objFromJson.getPayments().size(), 3);
-        Assert.assertEquals(objFromJson.getInvoices().size(), 4);
+        Assert.assertEquals(objFromJson.getPayments().size(), 1);
+        Assert.assertEquals(objFromJson.getInvoices().size(), 2);
         Assert.assertEquals(objFromJson.getBundles().size(), 1);
         Assert.assertEquals(objFromJson.getBundles().get(0).getSubscriptions().size(), 1);
         Assert.assertEquals(objFromJson.getBundles().get(0).getSubscriptions().get(0).getEvents().size(), 2);

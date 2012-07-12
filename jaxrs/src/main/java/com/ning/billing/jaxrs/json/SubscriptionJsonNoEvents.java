@@ -67,9 +67,14 @@ public class SubscriptionJsonNoEvents extends SubscriptionJsonSimple {
     }
 
     public SubscriptionJsonNoEvents(final Subscription data) {
-        this(data.getId().toString(), data.getBundleId().toString(), data.getStartDate(), data.getCurrentPlan().getProduct().getName(),
-             data.getCurrentPlan().getProduct().getCategory().toString(), data.getCurrentPlan().getBillingPeriod().toString(),
-             data.getCurrentPriceList().getName(), data.getChargedThroughDate(),
+        this(data.getId().toString(),
+             data.getBundleId().toString(),
+             data.getStartDate(),
+             data.getCurrentPlan() != null ? data.getCurrentPlan().getProduct().getName() : null,
+             data.getCurrentPlan() != null ?data.getCurrentPlan().getProduct().getCategory().toString() : null,
+             data.getCurrentPlan() != null ?data.getCurrentPlan().getBillingPeriod().toString() : null,
+             data.getCurrentPriceList() != null ? data.getCurrentPriceList().getName() : null,
+             data.getChargedThroughDate(),
              data.getEndDate() != null ? data.getEndDate() : data.getFutureEndDate());
     }
 

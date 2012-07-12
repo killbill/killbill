@@ -92,7 +92,7 @@ public class TestSubscription extends TestJaxrsBase {
         assertTrue(objFromJson.equalsNoSubscriptionIdNoStartDateNoCTD(newInput));
 
         // MOVE AFTER TRIAL
-        final Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(3).plusDays(1));
+        final Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(31));
         clock.addDeltaFromReality(it.toDurationMillis());
 
         crappyWaitForLackOfProperSynchonization();
@@ -107,6 +107,7 @@ public class TestSubscription extends TestJaxrsBase {
         // Retrieves to check EndDate
         uri = JaxrsResource.SUBSCRIPTIONS_PATH + "/" + subscriptionJson.getSubscriptionId().toString();
         response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+
         assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
         baseJson = response.getResponseBody();
         objFromJson = mapper.readValue(baseJson, SubscriptionJsonNoEvents.class);
