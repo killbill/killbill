@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -187,6 +187,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
         clock.resetDeltaFromReality();
         resetTestListenerStatus();
+        busHandler.reset();
 
         // Start services
         lifecycle.fireStartupSequencePriorEventRegistration();
