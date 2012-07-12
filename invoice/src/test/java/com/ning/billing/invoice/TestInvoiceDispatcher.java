@@ -125,6 +125,7 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
         Mockito.when(account.getCurrency()).thenReturn(Currency.USD);
         Mockito.when(account.getId()).thenReturn(accountId);
         Mockito.when(account.isNotifiedForInvoices()).thenReturn(true);
+        Mockito.when(account.getBillCycleDay()).thenReturn(30);
 
         final Subscription subscription = Mockito.mock(Subscription.class);
         Mockito.when(subscription.getId()).thenReturn(subscriptionId);

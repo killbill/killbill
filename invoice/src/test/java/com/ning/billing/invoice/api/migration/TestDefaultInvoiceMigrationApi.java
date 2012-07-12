@@ -129,6 +129,7 @@ public class TestDefaultInvoiceMigrationApi extends InvoicingTestBase {
         Mockito.when(account.getCurrency()).thenReturn(Currency.USD);
         Mockito.when(account.getId()).thenReturn(accountId);
         Mockito.when(account.isNotifiedForInvoices()).thenReturn(true);
+        Mockito.when(account.getBillCycleDay()).thenReturn(31);
 
         migrationInvoiceId = createAndCheckMigrationInvoice();
         regularInvoiceId = generateRegularInvoice();
