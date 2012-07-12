@@ -122,8 +122,7 @@ public class TestRepairBP extends TestApiBaseRepair {
         assertListenerStatus();
     }
 
-    //TODO MDW: Temporary disable need to look at this with Stephane
-    @Test(groups = "slow", enabled = false)
+    @Test(groups = "slow")
     public void testBPRepairWithCancellationOnstart() throws Exception {
         final String baseProduct = "Shotgun";
         final DateTime startDate = clock.getUTCNow();

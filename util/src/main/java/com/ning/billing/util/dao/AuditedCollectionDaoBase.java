@@ -16,6 +16,7 @@
 
 package com.ning.billing.util.dao;
 
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -112,7 +113,7 @@ public abstract class AuditedCollectionDaoBase<T extends Entity, V> implements A
         // Find all pairs <entity id, record id> (including those that are about to be deleted) for this parent object
         final List<Mapper<UUID, Long>> recordIds = dao.getRecordIds(objectId.toString(), objectType);
         // Flip the map to look up the record id associated with an entity id
-        final Map<UUID, Long> recordIdMap = convertToHistoryMap(recordIds);
+        final Map<UUID, Long> recordIdMap = convertToHistoryMap(recordIds, objectType);
 
         // Perform the deletes
         if (objsToRemove.size() != 0) {
@@ -169,7 +170,12 @@ public abstract class AuditedCollectionDaoBase<T extends Entity, V> implements A
 
         for (final T entity : entities) {
             final UUID id = entity.getId();
-            histories.add(new EntityHistory<T>(id, recordIds.get(id), entity, changeType));
+
+            final Long recordId = recordIds.get(id);
+            if (recordId == null) {
+                throw new IllegalStateException("recordId for object " + entity.getClass() + " is null ");
+            }
+            histories.add(new EntityHistory<T>(id, recordId, entity, changeType));
         }
 
         return histories;
@@ -187,9 +193,16 @@ public abstract class AuditedCollectionDaoBase<T extends Entity, V> implements A
         return audits;
     }
 
-    protected Map<UUID, Long> convertToHistoryMap(final List<Mapper<UUID, Long>> recordIds) {
+    protected Map<UUID, Long> convertToHistoryMap(final List<Mapper<UUID, Long>> recordIds, final ObjectType objectType) {
         final Map<UUID, Long> recordIdMap = new HashMap<UUID, Long>();
         for (final Mapper<UUID, Long> recordId : recordIds) {
+            if (recordId.getKey() == null) {
+                throw new IllegalStateException("UUID for object " + objectType + " is null for recordId " + recordId.getValue());
+            }
+            if (recordId.getValue() == null) {
+                throw new IllegalStateException("recordId for object " + objectType + " is null for UUID " + recordId.getKey());
+            }
+
             recordIdMap.put(recordId.getKey(), recordId.getValue());
         }
 
