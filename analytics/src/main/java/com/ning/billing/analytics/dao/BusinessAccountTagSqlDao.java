@@ -30,13 +30,13 @@ import com.ning.billing.analytics.model.BusinessAccountTag;
 @RegisterMapper(BusinessAccountTagMapper.class)
 public interface BusinessAccountTagSqlDao {
     @SqlQuery
-    List<BusinessAccountTag> getTagsForAccount(@Bind("account_key") final String accountKey);
+    List<BusinessAccountTag> getTagsForAccountByKey(@Bind("account_key") final String accountKey);
 
     @SqlUpdate
-    int addTag(@Bind("account_key") final String accountKey, @Bind("name") final String name);
+    int addTag(@Bind("account_id") final String accountId, @Bind("account_key") final String accountKey, @Bind("name") final String name);
 
     @SqlUpdate
-    int removeTag(@Bind("account_key") final String accountKey, @Bind("name") final String name);
+    int removeTag(@Bind("account_id") final String accountId, @Bind("name") final String name);
 
     @SqlUpdate
     void test();

@@ -18,6 +18,7 @@ package com.ning.billing.analytics.dao;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.UUID;
 
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
@@ -27,6 +28,10 @@ import com.ning.billing.analytics.model.BusinessAccountField;
 public class BusinessAccountFieldMapper implements ResultSetMapper<BusinessAccountField> {
     @Override
     public BusinessAccountField map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
-        return new BusinessAccountField(r.getString(1), r.getString(2), r.getString(3));
+        final UUID accountId = UUID.fromString(r.getString(1));
+        final String accountKey = r.getString(2);
+        final String name = r.getString(3);
+        final String value = r.getString(4);
+        return new BusinessAccountField(accountId, accountKey, name, value);
     }
 }

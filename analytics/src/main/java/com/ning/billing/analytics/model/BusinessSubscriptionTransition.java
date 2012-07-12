@@ -16,42 +16,60 @@
 
 package com.ning.billing.analytics.model;
 
+import java.util.UUID;
+
 import org.joda.time.DateTime;
 
 /**
  * Describe a state change between two BusinessSubscription
- * <p/>
- * The key is unique identifier that ties sets of subscriptions together.
  */
 public class BusinessSubscriptionTransition {
     private final long totalOrdering;
+    private final UUID bundleId;
     private final String externalKey;
+    private final UUID accountId;
     private final String accountKey;
+    private final UUID subscriptionId;
     private final DateTime requestedTimestamp;
     private final BusinessSubscriptionEvent event;
     private final BusinessSubscription previousSubscription;
     private final BusinessSubscription nextSubscription;
 
-    public BusinessSubscriptionTransition(final Long totalOrdering, final String externalKey, final String accountKey, final DateTime requestedTimestamp, final BusinessSubscriptionEvent event, final BusinessSubscription previousSubscription, final BusinessSubscription nextSubscription) {
+    public BusinessSubscriptionTransition(final Long totalOrdering, final UUID bundleId, final String externalKey,
+                                          final UUID accountId, final String accountKey, final UUID subscriptionId,
+                                          final DateTime requestedTimestamp, final BusinessSubscriptionEvent event,
+                                          final BusinessSubscription previousSubscription, final BusinessSubscription nextSubscription) {
         if (totalOrdering == null) {
-            throw new IllegalArgumentException("An event must have a total ordering");
+            throw new IllegalArgumentException("A transition must have a total ordering");
+        }
+        if (bundleId == null) {
+            throw new IllegalArgumentException("A transition must have a bundle id");
         }
         if (externalKey == null) {
-            throw new IllegalArgumentException("An event must have an external key");
+            throw new IllegalArgumentException("A transition must have an external key");
+        }
+        if (accountId == null) {
+            throw new IllegalArgumentException("A transition must have an account key");
+        }
+        if (subscriptionId == null) {
+            throw new IllegalArgumentException("A transition must have a subscription id");
         }
         if (accountKey == null) {
-            throw new IllegalArgumentException("An event must have an account key");
+            throw new IllegalArgumentException("A transition must have an account key");
         }
         if (requestedTimestamp == null) {
-            throw new IllegalArgumentException("An event must have a requestedTimestamp");
+            throw new IllegalArgumentException("A transition must have a requested timestamp");
         }
         if (event == null) {
             throw new IllegalArgumentException("No event specified");
         }
 
         this.totalOrdering = totalOrdering;
+        this.bundleId = bundleId;
         this.externalKey = externalKey;
+        this.accountId = accountId;
         this.accountKey = accountKey;
+        this.subscriptionId = subscriptionId;
         this.requestedTimestamp = requestedTimestamp;
         this.event = event;
         this.previousSubscription = previousSubscription;
@@ -66,8 +84,16 @@ public class BusinessSubscriptionTransition {
         return event;
     }
 
+    public UUID getBundleId() {
+        return bundleId;
+    }
+
     public String getExternalKey() {
         return externalKey;
+    }
+
+    public UUID getAccountId() {
+        return accountId;
     }
 
     public String getAccountKey() {
@@ -82,6 +108,10 @@ public class BusinessSubscriptionTransition {
         return previousSubscription;
     }
 
+    public UUID getSubscriptionId() {
+        return subscriptionId;
+    }
+
     public DateTime getRequestedTimestamp() {
         return requestedTimestamp;
     }
@@ -90,9 +120,12 @@ public class BusinessSubscriptionTransition {
     public String toString() {
         final StringBuilder sb = new StringBuilder();
         sb.append("BusinessSubscriptionTransition");
-        sb.append("{accountKey='").append(accountKey).append('\'');
+        sb.append("{accountId='").append(accountId).append('\'');
+        sb.append(", accountKey=").append(accountKey);
         sb.append(", totalOrdering=").append(totalOrdering);
-        sb.append(", key='").append(externalKey).append('\'');
+        sb.append(", bundleId='").append(bundleId).append('\'');
+        sb.append(", externalKey='").append(externalKey).append('\'');
+        sb.append(", subscriptionId='").append(subscriptionId).append('\'');
         sb.append(", requestedTimestamp=").append(requestedTimestamp);
         sb.append(", event=").append(event);
         sb.append(", previousSubscription=").append(previousSubscription);
@@ -112,13 +145,35 @@ public class BusinessSubscriptionTransition {
 
         final BusinessSubscriptionTransition that = (BusinessSubscriptionTransition) o;
 
+        return totalOrdering == that.totalOrdering && isDuplicateOf(that);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = (int) (totalOrdering ^ (totalOrdering >>> 32));
+        result = 31 * result + (bundleId != null ? bundleId.hashCode() : 0);
+        result = 31 * result + (externalKey != null ? externalKey.hashCode() : 0);
+        result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
+        result = 31 * result + (accountKey != null ? accountKey.hashCode() : 0);
+        result = 31 * result + (subscriptionId != null ? subscriptionId.hashCode() : 0);
+        result = 31 * result + (requestedTimestamp != null ? requestedTimestamp.hashCode() : 0);
+        result = 31 * result + (event != null ? event.hashCode() : 0);
+        result = 31 * result + (previousSubscription != null ? previousSubscription.hashCode() : 0);
+        result = 31 * result + (nextSubscription != null ? nextSubscription.hashCode() : 0);
+        return result;
+    }
+
+    public boolean isDuplicateOf(final BusinessSubscriptionTransition that) {
+        if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
+            return false;
+        }
         if (accountKey != null ? !accountKey.equals(that.accountKey) : that.accountKey != null) {
             return false;
         }
         if (event != null ? !event.equals(that.event) : that.event != null) {
             return false;
         }
-        if (totalOrdering != that.totalOrdering) {
+        if (bundleId != null ? !bundleId.equals(that.bundleId) : that.bundleId != null) {
             return false;
         }
         if (externalKey != null ? !externalKey.equals(that.externalKey) : that.externalKey != null) {
@@ -130,22 +185,13 @@ public class BusinessSubscriptionTransition {
         if (previousSubscription != null ? !previousSubscription.equals(that.previousSubscription) : that.previousSubscription != null) {
             return false;
         }
+        if (subscriptionId != null ? !subscriptionId.equals(that.subscriptionId) : that.subscriptionId != null) {
+            return false;
+        }
         if (requestedTimestamp != null ? !requestedTimestamp.equals(that.requestedTimestamp) : that.requestedTimestamp != null) {
             return false;
         }
 
         return true;
-    }
-
-    @Override
-    public int hashCode() {
-        int result = (int) (totalOrdering ^ (totalOrdering >>> 32));
-        result = 31 * result + (externalKey != null ? externalKey.hashCode() : 0);
-        result = 31 * result + (accountKey != null ? accountKey.hashCode() : 0);
-        result = 31 * result + (requestedTimestamp != null ? requestedTimestamp.hashCode() : 0);
-        result = 31 * result + (event != null ? event.hashCode() : 0);
-        result = 31 * result + (previousSubscription != null ? previousSubscription.hashCode() : 0);
-        result = 31 * result + (nextSubscription != null ? nextSubscription.hashCode() : 0);
-        return result;
     }
 }

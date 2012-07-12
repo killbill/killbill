@@ -13,10 +13,10 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.payment.plugin.api;
 
 public class PaymentPluginApiException extends Exception {
-
     private static final long serialVersionUID = 15642965L;
 
     private final String errorType;
@@ -33,5 +33,15 @@ public class PaymentPluginApiException extends Exception {
 
     public String getErrorMessage() {
         return errorMessage;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append("PaymentPluginApiException");
+        sb.append("{errorMessage='").append(errorMessage).append('\'');
+        sb.append(", errorType='").append(errorType).append('\'');
+        sb.append('}');
+        return sb.toString();
     }
 }

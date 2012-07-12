@@ -16,12 +16,26 @@
 
 package com.ning.billing.analytics.model;
 
+import java.util.UUID;
+
 public class BusinessSubscriptionTransitionTag extends BusinessTag {
+    private final String accountKey;
+    private final UUID bundleId;
     private final String externalKey;
 
-    public BusinessSubscriptionTransitionTag(final String externalKey, final String name) {
+    public BusinessSubscriptionTransitionTag(final String accountKey, final UUID bundleId, final String externalKey, final String name) {
         super(name);
+        this.accountKey = accountKey;
+        this.bundleId = bundleId;
         this.externalKey = externalKey;
+    }
+
+    public String getAccountKey() {
+        return accountKey;
+    }
+
+    public UUID getBundleId() {
+        return bundleId;
     }
 
     public String getExternalKey() {
@@ -32,8 +46,10 @@ public class BusinessSubscriptionTransitionTag extends BusinessTag {
     public String toString() {
         final StringBuilder sb = new StringBuilder();
         sb.append("BusinessSubscriptionTransitionTag");
-        sb.append("{externalKey='").append(externalKey).append('\'');
-        sb.append(", name='").append(name).append('\'');
+        sb.append("{accountKey='").append(accountKey).append('\'');
+        sb.append(", bundleId='").append(bundleId).append('\'');
+        sb.append(", externalKey='").append(externalKey).append('\'');
+        sb.append(", name='").append(getName()).append('\'');
         sb.append('}');
         return sb.toString();
     }
@@ -49,10 +65,16 @@ public class BusinessSubscriptionTransitionTag extends BusinessTag {
 
         final BusinessSubscriptionTransitionTag that = (BusinessSubscriptionTransitionTag) o;
 
+        if (accountKey != null ? !accountKey.equals(that.accountKey) : that.accountKey != null) {
+            return false;
+        }
+        if (bundleId != null ? !bundleId.equals(that.bundleId) : that.bundleId != null) {
+            return false;
+        }
         if (externalKey != null ? !externalKey.equals(that.externalKey) : that.externalKey != null) {
             return false;
         }
-        if (name != null ? !name.equals(that.name) : that.name != null) {
+        if (getName() != null ? !getName().equals(that.getName()) : that.getName() != null) {
             return false;
         }
 
@@ -61,8 +83,10 @@ public class BusinessSubscriptionTransitionTag extends BusinessTag {
 
     @Override
     public int hashCode() {
-        int result = externalKey != null ? externalKey.hashCode() : 0;
-        result = 31 * result + (name != null ? name.hashCode() : 0);
+        int result = accountKey != null ? accountKey.hashCode() : 0;
+        result = 31 * result + (bundleId != null ? bundleId.hashCode() : 0);
+        result = 31 * result + (externalKey != null ? externalKey.hashCode() : 0);
+        result = 31 * result + (getName() != null ? getName().hashCode() : 0);
         return result;
     }
 }

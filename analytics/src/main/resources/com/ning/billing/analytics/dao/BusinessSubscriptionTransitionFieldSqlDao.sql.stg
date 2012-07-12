@@ -1,8 +1,10 @@
 group BusinessSubscriptionTransitionField;
 
-getFieldsForBusinessSubscriptionTransition(external_key) ::=<<
+getFieldsForBusinessSubscriptionTransitionByKey(external_key) ::=<<
 select
-  external_key
+  bundle_id
+, external_key
+, account_key
 , name
 , value
 from bst_fields
@@ -10,20 +12,24 @@ where external_key = :external_key
 ;
 >>
 
-addField(external_key, name, value) ::=<<
+addField(bundle_id, external_key, name, value) ::=<<
 insert into bst_fields (
-  external_key
+  bundle_id
+, external_key
+, account_key
 , name
 , value
 ) values (
-  :external_key
+  :bundle_id
+, :external_key
+, :account_key
 , :name
 , :value
 );
 >>
 
-removeField(external_key, name) ::= <<
-delete from bst_fields where external_key = :external_key and name = :name;
+removeField(bundle_id, name) ::= <<
+delete from bst_fields where bundle_id = :bundle_id and name = :name;
 >>
 
 test() ::= <<

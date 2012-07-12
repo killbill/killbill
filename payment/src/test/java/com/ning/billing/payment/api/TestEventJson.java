@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.payment.api;
 
 import java.math.BigDecimal;
@@ -22,12 +23,13 @@ import org.joda.time.DateTime;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.ning.billing.payment.PaymentTestSuite;
 import com.ning.billing.util.jackson.ObjectMapper;
 
-public class TestEventJson {
+public class TestEventJson extends PaymentTestSuite {
     private final ObjectMapper mapper = new ObjectMapper();
 
-    @Test(groups = {"fast"})
+    @Test(groups = "fast")
     public void testPaymentErrorEvent() throws Exception {
         final PaymentErrorEvent e = new DefaultPaymentErrorEvent(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "no message", UUID.randomUUID());
         final String json = mapper.writeValueAsString(e);
@@ -37,9 +39,9 @@ public class TestEventJson {
         Assert.assertTrue(obj.equals(e));
     }
 
-    @Test(groups = {"fast"})
+    @Test(groups = "fast")
     public void testPaymentInfoEvent() throws Exception {
-        final PaymentInfoEvent e = new DefaultPaymentInfoEvent(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), new BigDecimal(12.9), new Integer(13), PaymentStatus.SUCCESS, UUID.randomUUID(), new DateTime());
+        final PaymentInfoEvent e = new DefaultPaymentInfoEvent(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), new BigDecimal(12.9), new Integer(13), PaymentStatus.SUCCESS, "ext-ref-12345", UUID.randomUUID(), new DateTime());
         final String json = mapper.writeValueAsString(e);
 
         final Class<?> clazz = Class.forName(DefaultPaymentInfoEvent.class.getName());

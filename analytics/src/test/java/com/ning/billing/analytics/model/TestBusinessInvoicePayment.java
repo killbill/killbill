@@ -32,7 +32,7 @@ public class TestBusinessInvoicePayment extends AnalyticsTestSuite {
     public void testEquals() throws Exception {
         final String accountKey = UUID.randomUUID().toString();
         final BigDecimal amount = BigDecimal.ONE;
-        final UUID attemptId = UUID.randomUUID();
+        final String extPaymentRefId = UUID.randomUUID().toString();
         final String cardCountry = UUID.randomUUID().toString();
         final String cardType = UUID.randomUUID().toString();
         final DateTime createdDate = new DateTime(DateTimeZone.UTC);
@@ -47,18 +47,21 @@ public class TestBusinessInvoicePayment extends AnalyticsTestSuite {
         final String processingStatus = UUID.randomUUID().toString();
         final BigDecimal requestedAmount = BigDecimal.ZERO;
         final DateTime updatedDate = new DateTime(DateTimeZone.UTC);
-        final BusinessInvoicePayment invoicePayment = new BusinessInvoicePayment(accountKey, amount, attemptId,
+        final String invoicePaymentType = UUID.randomUUID().toString();
+        final UUID linkedInvoicePaymentId = UUID.randomUUID();
+        final BusinessInvoicePayment invoicePayment = new BusinessInvoicePayment(accountKey, amount, extPaymentRefId,
                                                                                  cardCountry, cardType, createdDate,
                                                                                  currency, effectiveDate, invoiceId,
                                                                                  paymentError, paymentId, paymentMethod,
                                                                                  paymentType, pluginName, processingStatus,
-                                                                                 requestedAmount, updatedDate);
+                                                                                 requestedAmount, updatedDate, invoicePaymentType,
+                                                                                 linkedInvoicePaymentId);
         Assert.assertSame(invoicePayment, invoicePayment);
         Assert.assertEquals(invoicePayment, invoicePayment);
         Assert.assertTrue(invoicePayment.equals(invoicePayment));
         Assert.assertEquals(invoicePayment.getAccountKey(), accountKey);
         Assert.assertEquals(invoicePayment.getAmount(), amount);
-        Assert.assertEquals(invoicePayment.getAttemptId(), attemptId);
+        Assert.assertEquals(invoicePayment.getExtPaymentRefId(), extPaymentRefId);
         Assert.assertEquals(invoicePayment.getCardCountry(), cardCountry);
         Assert.assertEquals(invoicePayment.getCardType(), cardType);
         Assert.assertEquals(invoicePayment.getCreatedDate(), createdDate);
@@ -73,27 +76,12 @@ public class TestBusinessInvoicePayment extends AnalyticsTestSuite {
         Assert.assertEquals(invoicePayment.getProcessingStatus(), processingStatus);
         Assert.assertEquals(invoicePayment.getRequestedAmount(), requestedAmount);
         Assert.assertEquals(invoicePayment.getUpdatedDate(), updatedDate);
+        Assert.assertEquals(invoicePayment.getInvoicePaymentType(), invoicePaymentType);
+        Assert.assertEquals(invoicePayment.getLinkedInvoicePaymentId(), linkedInvoicePaymentId);
 
-        final BusinessInvoicePayment otherInvoicePayment = new BusinessInvoicePayment(null, null, attemptId, null, null, createdDate,
+        final BusinessInvoicePayment otherInvoicePayment = new BusinessInvoicePayment(null, null, extPaymentRefId, null, null, createdDate,
                                                                                       null, null, null, null, paymentId, null,
-                                                                                      null, null, null, null, null);
+                                                                                      null, null, null, null, null, null, null);
         Assert.assertFalse(invoicePayment.equals(otherInvoicePayment));
-
-        // Test setters
-        otherInvoicePayment.setAccountKey(accountKey);
-        otherInvoicePayment.setAmount(amount);
-        otherInvoicePayment.setCardCountry(cardCountry);
-        otherInvoicePayment.setCardType(cardType);
-        otherInvoicePayment.setCurrency(currency);
-        otherInvoicePayment.setEffectiveDate(effectiveDate);
-        otherInvoicePayment.setInvoiceId(invoiceId);
-        otherInvoicePayment.setPaymentError(paymentError);
-        otherInvoicePayment.setPaymentMethod(paymentMethod);
-        otherInvoicePayment.setPaymentType(paymentType);
-        otherInvoicePayment.setPluginName(pluginName);
-        otherInvoicePayment.setProcessingStatus(processingStatus);
-        otherInvoicePayment.setRequestedAmount(requestedAmount);
-        otherInvoicePayment.setUpdatedDate(updatedDate);
-        Assert.assertTrue(invoicePayment.equals(otherInvoicePayment));
     }
 }

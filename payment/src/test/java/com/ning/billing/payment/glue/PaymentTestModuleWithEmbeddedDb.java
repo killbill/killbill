@@ -17,15 +17,17 @@
 package com.ning.billing.payment.glue;
 
 import java.util.HashMap;
+import java.util.UUID;
+
+import org.mockito.Mockito;
 
 import com.google.inject.Provider;
 import com.ning.billing.config.PaymentConfig;
-import com.ning.billing.mock.BrainDeadProxyFactory;
-import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.InMemoryBus;
+import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.glue.GlobalLockerModule;
 import com.ning.billing.util.notificationq.DefaultNotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService;
@@ -35,11 +37,10 @@ public class PaymentTestModuleWithEmbeddedDb extends PaymentModule {
     public static class MockTagApiProvider implements Provider<TagUserApi> {
         @Override
         public TagUserApi get() {
-            final TagUserApi api = BrainDeadProxyFactory.createBrainDeadProxyFor(TagUserApi.class);
-            ((ZombieControl) api).addResult("getTags", new HashMap<String, Tag>());
+            final TagUserApi api = Mockito.mock(TagUserApi.class);
+            Mockito.when(api.getTags(Mockito.<UUID>any(), Mockito.<ObjectType>any())).thenReturn(new HashMap<String, Tag>());
             return api;
         }
-
     }
 
     @Override

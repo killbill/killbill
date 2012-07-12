@@ -87,61 +87,50 @@ public class BusinessTagRecorder {
         }
     }
 
-    private void tagAddedForAccount(final UUID objectId, final String name) {
+    private void tagAddedForAccount(final UUID accountId, final String name) {
         final Account account;
         try {
-            account = accountApi.getAccountById(objectId);
+            account = accountApi.getAccountById(accountId);
         } catch (AccountApiException e) {
-            log.warn("Ignoring tag addition of {} for account id {} (account does not exist)", name, objectId.toString());
+            log.warn("Ignoring tag addition of {} for account id {} (account does not exist)", name, accountId.toString());
             return;
         }
 
         final String accountKey = account.getExternalKey();
-        accountTagSqlDao.addTag(accountKey, name);
+        accountTagSqlDao.addTag(accountId.toString(), accountKey, name);
     }
 
-    private void tagRemovedForAccount(final UUID objectId, final String name) {
-        final Account account;
-        try {
-            account = accountApi.getAccountById(objectId);
-        } catch (AccountApiException e) {
-            log.warn("Ignoring tag removal of {} for account id {} (account does not exist)", name, objectId.toString());
-            return;
-        }
-
-        final String accountKey = account.getExternalKey();
-        accountTagSqlDao.removeTag(accountKey, name);
+    private void tagRemovedForAccount(final UUID accountId, final String name) {
+        accountTagSqlDao.removeTag(accountId.toString(), name);
     }
 
-    private void tagAddedForBundle(final UUID objectId, final String name) {
+    private void tagAddedForBundle(final UUID bundleId, final String name) {
         final SubscriptionBundle bundle;
         try {
-            bundle = entitlementUserApi.getBundleFromId(objectId);
+            bundle = entitlementUserApi.getBundleFromId(bundleId);
         } catch (EntitlementUserApiException e) {
-            log.warn("Ignoring tag addition of {} for bundle id {} (bundle does not exist)", name, objectId.toString());
+            log.warn("Ignoring tag addition of {} for bundle id {} (bundle does not exist)", name, bundleId.toString());
+            return;
+        }
+
+        final Account account;
+        try {
+            account = accountApi.getAccountById(bundle.getAccountId());
+        } catch (AccountApiException e) {
+            log.warn("Ignoring tag addition of {} for bundle id {} and account id {} (account does not exist)", new Object[]{name, bundleId.toString(), bundle.getAccountId()});
             return;
         }
 
         /*
          * Note: we store tags associated to bundles, not to subscriptions.
-         * Subscriptions are in the core of killbill and not exposed in Analytics to avoid a hard dependency
-         * (i.e. dashboards should not rely on killbill ids).
          */
+        final String accountKey = account.getExternalKey();
         final String externalKey = bundle.getKey();
-        subscriptionTransitionTagSqlDao.addTag(externalKey, name);
+        subscriptionTransitionTagSqlDao.addTag(accountKey, bundleId.toString(), externalKey, name);
     }
 
-    private void tagRemovedForBundle(final UUID objectId, final String name) {
-        final SubscriptionBundle bundle;
-        try {
-            bundle = entitlementUserApi.getBundleFromId(objectId);
-        } catch (EntitlementUserApiException e) {
-            log.warn("Ignoring tag removal of {} for bundle id {} (bundle does not exist)", name, objectId.toString());
-            return;
-        }
-
-        final String externalKey = bundle.getKey();
-        subscriptionTransitionTagSqlDao.removeTag(externalKey, name);
+    private void tagRemovedForBundle(final UUID bundleId, final String name) {
+        subscriptionTransitionTagSqlDao.removeTag(bundleId.toString(), name);
     }
 
     private void tagAddedForInvoice(final UUID objectId, final String name) {

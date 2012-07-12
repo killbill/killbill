@@ -26,20 +26,28 @@ import com.ning.billing.analytics.AnalyticsTestSuite;
 public class TestBusinessSubscriptionTransitionField extends AnalyticsTestSuite {
     @Test(groups = "fast")
     public void testEquals() throws Exception {
+        final String accountKey = UUID.randomUUID().toString();
+        final UUID bundleId = UUID.randomUUID();
         final String externalKey = UUID.randomUUID().toString();
         final String name = UUID.randomUUID().toString();
         final String value = UUID.randomUUID().toString();
-        final BusinessSubscriptionTransitionField subscriptionTransitionField = new BusinessSubscriptionTransitionField(externalKey,
+        final BusinessSubscriptionTransitionField subscriptionTransitionField = new BusinessSubscriptionTransitionField(accountKey,
+                                                                                                                        bundleId,
+                                                                                                                        externalKey,
                                                                                                                         name,
                                                                                                                         value);
         Assert.assertSame(subscriptionTransitionField, subscriptionTransitionField);
         Assert.assertEquals(subscriptionTransitionField, subscriptionTransitionField);
         Assert.assertTrue(subscriptionTransitionField.equals(subscriptionTransitionField));
+        Assert.assertEquals(subscriptionTransitionField.getAccountKey(), accountKey);
+        Assert.assertEquals(subscriptionTransitionField.getBundleId(), bundleId);
         Assert.assertEquals(subscriptionTransitionField.getExternalKey(), externalKey);
         Assert.assertEquals(subscriptionTransitionField.getName(), name);
         Assert.assertEquals(subscriptionTransitionField.getValue(), value);
 
         final BusinessSubscriptionTransitionField otherSubscriptionField = new BusinessSubscriptionTransitionField(UUID.randomUUID().toString(),
+                                                                                                                   UUID.randomUUID(),
+                                                                                                                   UUID.randomUUID().toString(),
                                                                                                                    UUID.randomUUID().toString(),
                                                                                                                    UUID.randomUUID().toString());
         Assert.assertFalse(subscriptionTransitionField.equals(otherSubscriptionField));

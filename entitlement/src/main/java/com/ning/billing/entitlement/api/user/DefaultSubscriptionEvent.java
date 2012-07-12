@@ -1,5 +1,5 @@
-/* 
- * Copyright 2010-2011 Ning, Inc.
+/*
+ * Copyright 2010-2012 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.entitlement.api.user;
 
 import java.util.UUID;
@@ -23,28 +24,25 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
-import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 
-public class DefaultSubscriptionEvent implements SubscriptionEvent {
-
+public abstract class DefaultSubscriptionEvent implements SubscriptionEvent {
     private final Long totalOrdering;
     private final UUID subscriptionId;
     private final UUID bundleId;
     private final UUID eventId;
     private final DateTime requestedTransitionTime;
     private final DateTime effectiveTransitionTime;
-    private final SubscriptionState previousState;
+    private final Subscription.SubscriptionState previousState;
     private final String previousPriceList;
     private final String previousPlan;
     private final String previousPhase;
-    private final SubscriptionState nextState;
+    private final Subscription.SubscriptionState nextState;
     private final String nextPriceList;
     private final String nextPlan;
     private final String nextPhase;
     private final Integer remainingEventsForUserOperation;
     private final UUID userToken;
     private final SubscriptionTransitionType transitionType;
-
     private final DateTime startDate;
 
     public DefaultSubscriptionEvent(final SubscriptionTransitionData in, final DateTime startDate) {
@@ -74,11 +72,11 @@ public class DefaultSubscriptionEvent implements SubscriptionEvent {
                                     @JsonProperty("bundleId") final UUID bundleId,
                                     @JsonProperty("requestedTransitionTime") final DateTime requestedTransitionTime,
                                     @JsonProperty("effectiveTransitionTime") final DateTime effectiveTransitionTime,
-                                    @JsonProperty("previousState") final SubscriptionState previousState,
+                                    @JsonProperty("previousState") final Subscription.SubscriptionState previousState,
                                     @JsonProperty("previousPlan") final String previousPlan,
                                     @JsonProperty("previousPhase") final String previousPhase,
                                     @JsonProperty("previousPriceList") final String previousPriceList,
-                                    @JsonProperty("nextState") final SubscriptionState nextState,
+                                    @JsonProperty("nextState") final Subscription.SubscriptionState nextState,
                                     @JsonProperty("nextPlan") final String nextPlan,
                                     @JsonProperty("nextPhase") final String nextPhase,
                                     @JsonProperty("nextPriceList") final String nextPriceList,
@@ -87,7 +85,6 @@ public class DefaultSubscriptionEvent implements SubscriptionEvent {
                                     @JsonProperty("transitionType") final SubscriptionTransitionType transitionType,
                                     @JsonProperty("remainingEventsForUserOperation") final Integer remainingEventsForUserOperation,
                                     @JsonProperty("startDate") final DateTime startDate) {
-        super();
         this.eventId = eventId;
         this.subscriptionId = subscriptionId;
         this.bundleId = bundleId;
@@ -130,9 +127,8 @@ public class DefaultSubscriptionEvent implements SubscriptionEvent {
         return bundleId;
     }
 
-
     @Override
-    public SubscriptionState getPreviousState() {
+    public Subscription.SubscriptionState getPreviousState() {
         return previousState;
     }
 
@@ -157,10 +153,9 @@ public class DefaultSubscriptionEvent implements SubscriptionEvent {
     }
 
     @Override
-    public SubscriptionState getNextState() {
+    public Subscription.SubscriptionState getNextState() {
         return nextState;
     }
-
 
     @Override
     public String getPreviousPriceList() {
@@ -181,7 +176,6 @@ public class DefaultSubscriptionEvent implements SubscriptionEvent {
     public Integer getRemainingEventsForUserOperation() {
         return remainingEventsForUserOperation;
     }
-
 
     @Override
     public DateTime getRequestedTransitionTime() {
@@ -209,197 +203,121 @@ public class DefaultSubscriptionEvent implements SubscriptionEvent {
         return startDate;
     }
 
-
     @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result
-                + ((bundleId == null) ? 0 : bundleId.hashCode());
-        result = prime
-                * result
-                + ((effectiveTransitionTime == null) ? 0
-                : effectiveTransitionTime.hashCode());
-        result = prime * result + ((eventId == null) ? 0 : eventId.hashCode());
-        result = prime * result
-                + ((nextPhase == null) ? 0 : nextPhase.hashCode());
-        result = prime * result
-                + ((nextPlan == null) ? 0 : nextPlan.hashCode());
-        result = prime * result
-                + ((nextPriceList == null) ? 0 : nextPriceList.hashCode());
-        result = prime * result
-                + ((nextState == null) ? 0 : nextState.hashCode());
-        result = prime * result
-                + ((previousPhase == null) ? 0 : previousPhase.hashCode());
-        result = prime * result
-                + ((previousPlan == null) ? 0 : previousPlan.hashCode());
-        result = prime
-                * result
-                + ((previousPriceList == null) ? 0 : previousPriceList
-                .hashCode());
-        result = prime * result
-                + ((previousState == null) ? 0 : previousState.hashCode());
-        result = prime
-                * result
-                + ((remainingEventsForUserOperation == null) ? 0
-                : remainingEventsForUserOperation.hashCode());
-        result = prime
-                * result
-                + ((requestedTransitionTime == null) ? 0
-                : requestedTransitionTime.hashCode());
-        result = prime * result
-                + ((subscriptionId == null) ? 0 : subscriptionId.hashCode());
-        result = prime * result
-                + ((totalOrdering == null) ? 0 : totalOrdering.hashCode());
-        result = prime * result
-                + ((transitionType == null) ? 0 : transitionType.hashCode());
-        result = prime * result
-                + ((userToken == null) ? 0 : userToken.hashCode());
-        return result;
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append(getClass().getSimpleName());
+        sb.append("{bundleId=").append(bundleId);
+        sb.append(", totalOrdering=").append(totalOrdering);
+        sb.append(", subscriptionId=").append(subscriptionId);
+        sb.append(", eventId=").append(eventId);
+        sb.append(", requestedTransitionTime=").append(requestedTransitionTime);
+        sb.append(", effectiveTransitionTime=").append(effectiveTransitionTime);
+        sb.append(", previousState=").append(previousState);
+        sb.append(", previousPriceList='").append(previousPriceList).append('\'');
+        sb.append(", previousPlan='").append(previousPlan).append('\'');
+        sb.append(", previousPhase='").append(previousPhase).append('\'');
+        sb.append(", nextState=").append(nextState);
+        sb.append(", nextPriceList='").append(nextPriceList).append('\'');
+        sb.append(", nextPlan='").append(nextPlan).append('\'');
+        sb.append(", nextPhase='").append(nextPhase).append('\'');
+        sb.append(", remainingEventsForUserOperation=").append(remainingEventsForUserOperation);
+        sb.append(", userToken=").append(userToken);
+        sb.append(", transitionType=").append(transitionType);
+        sb.append(", startDate=").append(startDate);
+        sb.append('}');
+        return sb.toString();
     }
 
     @Override
-    public boolean equals(final Object obj) {
-        if (this == obj) {
+    public boolean equals(final Object o) {
+        if (this == o) {
             return true;
         }
-        if (obj == null) {
+        if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
+
+        final DefaultSubscriptionEvent that = (DefaultSubscriptionEvent) o;
+
+        if (bundleId != null ? !bundleId.equals(that.bundleId) : that.bundleId != null) {
             return false;
         }
-        final DefaultSubscriptionEvent other = (DefaultSubscriptionEvent) obj;
-        if (bundleId == null) {
-            if (other.bundleId != null) {
-                return false;
-            }
-        } else if (!bundleId.equals(other.bundleId)) {
+        if (effectiveTransitionTime != null ? effectiveTransitionTime.compareTo(that.effectiveTransitionTime) != 0 : that.effectiveTransitionTime != null) {
             return false;
         }
-        if (effectiveTransitionTime == null) {
-            if (other.effectiveTransitionTime != null) {
-                return false;
-            }
-        } else if (effectiveTransitionTime
-                .compareTo(other.effectiveTransitionTime) != 0) {
+        if (eventId != null ? !eventId.equals(that.eventId) : that.eventId != null) {
             return false;
         }
-        if (eventId == null) {
-            if (other.eventId != null) {
-                return false;
-            }
-        } else if (!eventId.equals(other.eventId)) {
+        if (nextPhase != null ? !nextPhase.equals(that.nextPhase) : that.nextPhase != null) {
             return false;
         }
-        if (nextPhase == null) {
-            if (other.nextPhase != null) {
-                return false;
-            }
-        } else if (!nextPhase.equals(other.nextPhase)) {
+        if (nextPlan != null ? !nextPlan.equals(that.nextPlan) : that.nextPlan != null) {
             return false;
         }
-        if (nextPlan == null) {
-            if (other.nextPlan != null) {
-                return false;
-            }
-        } else if (!nextPlan.equals(other.nextPlan)) {
+        if (nextPriceList != null ? !nextPriceList.equals(that.nextPriceList) : that.nextPriceList != null) {
             return false;
         }
-        if (nextPriceList == null) {
-            if (other.nextPriceList != null) {
-                return false;
-            }
-        } else if (!nextPriceList.equals(other.nextPriceList)) {
+        if (nextState != that.nextState) {
             return false;
         }
-        if (nextState != other.nextState) {
+        if (previousPhase != null ? !previousPhase.equals(that.previousPhase) : that.previousPhase != null) {
             return false;
         }
-        if (previousPhase == null) {
-            if (other.previousPhase != null) {
-                return false;
-            }
-        } else if (!previousPhase.equals(other.previousPhase)) {
+        if (previousPlan != null ? !previousPlan.equals(that.previousPlan) : that.previousPlan != null) {
             return false;
         }
-        if (previousPlan == null) {
-            if (other.previousPlan != null) {
-                return false;
-            }
-        } else if (!previousPlan.equals(other.previousPlan)) {
+        if (previousPriceList != null ? !previousPriceList.equals(that.previousPriceList) : that.previousPriceList != null) {
             return false;
         }
-        if (previousPriceList == null) {
-            if (other.previousPriceList != null) {
-                return false;
-            }
-        } else if (!previousPriceList.equals(other.previousPriceList)) {
+        if (previousState != that.previousState) {
             return false;
         }
-        if (previousState != other.previousState) {
+        if (remainingEventsForUserOperation != null ? !remainingEventsForUserOperation.equals(that.remainingEventsForUserOperation) : that.remainingEventsForUserOperation != null) {
             return false;
         }
-        if (remainingEventsForUserOperation == null) {
-            if (other.remainingEventsForUserOperation != null) {
-                return false;
-            }
-        } else if (!remainingEventsForUserOperation
-                .equals(other.remainingEventsForUserOperation)) {
+        if (requestedTransitionTime != null ? requestedTransitionTime.compareTo(that.requestedTransitionTime) != 0 : that.requestedTransitionTime != null) {
             return false;
         }
-        if (requestedTransitionTime == null) {
-            if (other.requestedTransitionTime != null) {
-                return false;
-            }
-        } else if (requestedTransitionTime
-                .compareTo(other.requestedTransitionTime) != 0) {
+        if (startDate != null ? startDate.compareTo(that.startDate) != 0 : that.startDate != null) {
             return false;
         }
-        if (subscriptionId == null) {
-            if (other.subscriptionId != null) {
-                return false;
-            }
-        } else if (!subscriptionId.equals(other.subscriptionId)) {
+        if (subscriptionId != null ? !subscriptionId.equals(that.subscriptionId) : that.subscriptionId != null) {
             return false;
         }
-        if (totalOrdering == null) {
-            if (other.totalOrdering != null) {
-                return false;
-            }
-        } else if (!totalOrdering.equals(other.totalOrdering)) {
+        if (totalOrdering != null ? !totalOrdering.equals(that.totalOrdering) : that.totalOrdering != null) {
             return false;
         }
-        if (transitionType != other.transitionType) {
+        if (transitionType != that.transitionType) {
             return false;
         }
-        if (userToken == null) {
-            if (other.userToken != null) {
-                return false;
-            }
-        } else if (!userToken.equals(other.userToken)) {
+        if (userToken != null ? !userToken.equals(that.userToken) : that.userToken != null) {
             return false;
         }
+
         return true;
     }
 
     @Override
-    public String toString() {
-        return "DefaultSubscriptionEvent [transitionType=" + transitionType
-                + ", effectiveTransitionTime=" + effectiveTransitionTime
-                + ", totalOrdering=" + totalOrdering
-                + ", subscriptionId=" + subscriptionId + ", bundleId="
-                + bundleId + ", eventId=" + eventId
-                + ", requestedTransitionTime=" + requestedTransitionTime
-                + ", previousState=" + previousState + ", previousPriceList="
-                + previousPriceList + ", previousPlan=" + previousPlan
-                + ", previousPhase=" + previousPhase + ", nextState="
-                + nextState + ", nextPriceList=" + nextPriceList
-                + ", nextPlan=" + nextPlan + ", nextPhase=" + nextPhase
-                + ", remainingEventsForUserOperation="
-                + remainingEventsForUserOperation + ", userToken=" + userToken
-                + ", startDate=" + startDate + "]";
-
+    public int hashCode() {
+        int result = totalOrdering != null ? totalOrdering.hashCode() : 0;
+        result = 31 * result + (subscriptionId != null ? subscriptionId.hashCode() : 0);
+        result = 31 * result + (bundleId != null ? bundleId.hashCode() : 0);
+        result = 31 * result + (eventId != null ? eventId.hashCode() : 0);
+        result = 31 * result + (requestedTransitionTime != null ? requestedTransitionTime.hashCode() : 0);
+        result = 31 * result + (effectiveTransitionTime != null ? effectiveTransitionTime.hashCode() : 0);
+        result = 31 * result + (previousState != null ? previousState.hashCode() : 0);
+        result = 31 * result + (previousPriceList != null ? previousPriceList.hashCode() : 0);
+        result = 31 * result + (previousPlan != null ? previousPlan.hashCode() : 0);
+        result = 31 * result + (previousPhase != null ? previousPhase.hashCode() : 0);
+        result = 31 * result + (nextState != null ? nextState.hashCode() : 0);
+        result = 31 * result + (nextPriceList != null ? nextPriceList.hashCode() : 0);
+        result = 31 * result + (nextPlan != null ? nextPlan.hashCode() : 0);
+        result = 31 * result + (nextPhase != null ? nextPhase.hashCode() : 0);
+        result = 31 * result + (remainingEventsForUserOperation != null ? remainingEventsForUserOperation.hashCode() : 0);
+        result = 31 * result + (userToken != null ? userToken.hashCode() : 0);
+        result = 31 * result + (transitionType != null ? transitionType.hashCode() : 0);
+        result = 31 * result + (startDate != null ? startDate.hashCode() : 0);
+        return result;
     }
-
 }

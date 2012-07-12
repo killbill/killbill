@@ -25,6 +25,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.ning.billing.invoice.InvoiceTestSuite;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.callcontext.CallContext;
@@ -37,7 +38,7 @@ import com.ning.billing.util.tag.dao.MockTagDefinitionDao;
 import com.ning.billing.util.tag.dao.TagDao;
 import com.ning.billing.util.tag.dao.TagDefinitionDao;
 
-public class TestDefaultInvoiceDao {
+public class TestDefaultInvoiceDao extends InvoiceTestSuite {
     private TagUserApi tagUserApi;
     private DefaultInvoiceDao dao;
 

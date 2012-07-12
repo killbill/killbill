@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -78,6 +78,9 @@ public interface JaxrsResource {
 
     public static final String PAYMENTS = "payments";
     public static final String PAYMENTS_PATH = PREFIX + "/" + PAYMENTS;
+
+    public static final String REFUNDS = "refunds";
+    public static final String REFUNDS_PATH = PREFIX + "/" + "refunds";
 
     public static final String PAYMENT_METHODS = "paymentMethods";
     public static final String PAYMENT_METHODS_PATH = PREFIX + "/" + PAYMENT_METHODS;

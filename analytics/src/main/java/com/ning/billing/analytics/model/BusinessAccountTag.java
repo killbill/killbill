@@ -16,12 +16,20 @@
 
 package com.ning.billing.analytics.model;
 
+import java.util.UUID;
+
 public class BusinessAccountTag extends BusinessTag {
+    private final UUID accountId;
     private final String accountKey;
 
-    public BusinessAccountTag(final String accountKey, final String name) {
+    public BusinessAccountTag(final UUID accountId, final String accountKey, final String name) {
         super(name);
+        this.accountId = accountId;
         this.accountKey = accountKey;
+    }
+
+    public UUID getAccountId() {
+        return accountId;
     }
 
     public String getAccountKey() {
@@ -32,8 +40,9 @@ public class BusinessAccountTag extends BusinessTag {
     public String toString() {
         final StringBuilder sb = new StringBuilder();
         sb.append("BusinessAccountTag");
-        sb.append("{accountKey='").append(accountKey).append('\'');
-        sb.append(", name='").append(name).append('\'');
+        sb.append("{accountId='").append(accountId).append('\'');
+        sb.append(", accountKey='").append(accountKey).append('\'');
+        sb.append(", name='").append(getName()).append('\'');
         sb.append('}');
         return sb.toString();
     }
@@ -49,10 +58,13 @@ public class BusinessAccountTag extends BusinessTag {
 
         final BusinessAccountTag that = (BusinessAccountTag) o;
 
+        if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
+            return false;
+        }
         if (accountKey != null ? !accountKey.equals(that.accountKey) : that.accountKey != null) {
             return false;
         }
-        if (name != null ? !name.equals(that.name) : that.name != null) {
+        if (getName() != null ? !getName().equals(that.getName()) : that.getName() != null) {
             return false;
         }
 
@@ -61,8 +73,9 @@ public class BusinessAccountTag extends BusinessTag {
 
     @Override
     public int hashCode() {
-        int result = accountKey != null ? accountKey.hashCode() : 0;
-        result = 31 * result + (name != null ? name.hashCode() : 0);
+        int result = accountId != null ? accountId.hashCode() : 0;
+        result = 31 * result + (accountKey != null ? accountKey.hashCode() : 0);
+        result = 31 * result + (getName() != null ? getName().hashCode() : 0);
         return result;
     }
 }

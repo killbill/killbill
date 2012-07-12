@@ -27,7 +27,7 @@ public class MySqlGlobalLocker implements GlobalLocker {
 
     private static final Logger logger = LoggerFactory.getLogger(MySqlGlobalLocker.class);
 
-    private static final long DEFAULT_TIMEOUT = 3L; // 3 seconds
+    private static final long DEFAULT_TIMEOUT = 5L; // 5 seconds
 
     private final IDBI dbi;
     private long timeout;
@@ -43,7 +43,7 @@ public class MySqlGlobalLocker implements GlobalLocker {
     }
 
     @Override
-    public GlobalLock lockWithNumberOfTries(final LockerService service, final String lockKey, final int retry) {
+    public GlobalLock lockWithNumberOfTries(final LockerType service, final String lockKey, final int retry) {
 
         final String lockName = getLockName(service, lockKey);
         int tries_left = retry;
@@ -82,7 +82,7 @@ public class MySqlGlobalLocker implements GlobalLocker {
     }
 
     @Override
-    public Boolean isFree(final LockerService service, final String lockKey) {
+    public Boolean isFree(final LockerType service, final String lockKey) {
 
         final String lockName = getLockName(service, lockKey);
         final Handle h = dbi.open();
@@ -96,7 +96,7 @@ public class MySqlGlobalLocker implements GlobalLocker {
         }
     }
 
-    private String getLockName(final LockerService service, final String lockKey) {
+    private String getLockName(final LockerType service, final String lockKey) {
         final StringBuilder tmp = new StringBuilder()
                 .append(service.toString())
                 .append("-")

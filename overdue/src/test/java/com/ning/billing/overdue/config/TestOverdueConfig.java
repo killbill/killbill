@@ -21,11 +21,11 @@ import java.io.InputStream;
 
 import org.testng.annotations.Test;
 
+import com.ning.billing.overdue.OverdueTestSuite;
 import com.ning.billing.util.config.XMLLoader;
 
-public class TestOverdueConfig {
-
-    @Test
+public class TestOverdueConfig extends OverdueTestSuite {
+    @Test(groups = "fast")
     public void testParseConfig() throws Exception {
         final String xml = "<overdueConfig>" +
                 "   <bundleOverdueStates>" +
@@ -59,7 +59,5 @@ public class TestOverdueConfig {
                 "</overdueConfig>";
         final InputStream is = new ByteArrayInputStream(xml.getBytes());
         final OverdueConfig c = XMLLoader.getObjectFromStreamNoValidation(is, OverdueConfig.class);
-
     }
-
 }

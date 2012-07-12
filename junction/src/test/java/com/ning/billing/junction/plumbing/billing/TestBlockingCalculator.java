@@ -27,6 +27,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.mockito.Mockito;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -44,6 +45,7 @@ import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.billing.BillingEvent;
 import com.ning.billing.entitlement.api.billing.BillingModeType;
 import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.junction.JunctionTestSuite;
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.Blockable.Type;
 import com.ning.billing.junction.api.BlockingApi;
@@ -51,8 +53,6 @@ import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.junction.api.DefaultBlockingState;
 import com.ning.billing.junction.dao.BlockingStateDao;
 import com.ning.billing.junction.plumbing.billing.BlockingCalculator.DisabledDuration;
-import com.ning.billing.mock.BrainDeadProxyFactory;
-import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 
@@ -60,9 +60,7 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 
-
-public class TestBlockingCalculator {
-
+public class TestBlockingCalculator extends JunctionTestSuite {
     private static final String DISABLED_BUNDLE = "disabled-bundle";
     private static final String CLEAR_BUNDLE = "clear-bundle";
 
@@ -79,37 +77,29 @@ public class TestBlockingCalculator {
 
     @BeforeClass
     public void setUpBeforeClass() throws Exception {
-
         clock = new ClockMock();
 
         final Injector i = Guice.createInjector(new AbstractModule() {
-
             @Override
             protected void configure() {
-                blockingApi = BrainDeadProxyFactory.createBrainDeadProxyFor(BlockingApi.class);
-                account = BrainDeadProxyFactory.createBrainDeadProxyFor(Account.class);
-                subscription1 = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class, Comparable.class);
-                subscription2 = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class, Comparable.class);
-                subscription3 = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class, Comparable.class);
-                subscription4 = BrainDeadProxyFactory.createBrainDeadProxyFor(Subscription.class, Comparable.class);
-                ((ZombieControl) account).addResult("getId", UUID.randomUUID());
-                ((ZombieControl) subscription1).addResult("getBundleId", bundleId1);
-                ((ZombieControl) subscription2).addResult("getBundleId", bundleId1);
-                ((ZombieControl) subscription3).addResult("getBundleId", bundleId1);
-                ((ZombieControl) subscription4).addResult("getBundleId", bundleId2);
-                ((ZombieControl) subscription1).addResult("compareTo", 1);
-                ((ZombieControl) subscription2).addResult("compareTo", 1);
-                ((ZombieControl) subscription3).addResult("compareTo", 1);
-                ((ZombieControl) subscription4).addResult("compareTo", 1);
-                ((ZombieControl) subscription1).addResult("getId", UUID.randomUUID());
-                ((ZombieControl) subscription2).addResult("getId", UUID.randomUUID());
-                ((ZombieControl) subscription3).addResult("getId", UUID.randomUUID());
-                ((ZombieControl) subscription4).addResult("getId", UUID.randomUUID());
+                blockingApi = Mockito.mock(BlockingApi.class);
+                account = Mockito.mock(Account.class);
+                subscription1 = Mockito.mock(Subscription.class);
+                subscription2 = Mockito.mock(Subscription.class);
+                subscription3 = Mockito.mock(Subscription.class);
+                subscription4 = Mockito.mock(Subscription.class);
+                Mockito.when(account.getId()).thenReturn(UUID.randomUUID());
+                Mockito.when(subscription1.getBundleId()).thenReturn(bundleId1);
+                Mockito.when(subscription2.getBundleId()).thenReturn(bundleId1);
+                Mockito.when(subscription3.getBundleId()).thenReturn(bundleId1);
+                Mockito.when(subscription4.getBundleId()).thenReturn(bundleId2);
+                Mockito.when(subscription1.getId()).thenReturn(UUID.randomUUID());
+                Mockito.when(subscription2.getId()).thenReturn(UUID.randomUUID());
+                Mockito.when(subscription3.getId()).thenReturn(UUID.randomUUID());
+                Mockito.when(subscription4.getId()).thenReturn(UUID.randomUUID());
 
-
-                bind(BlockingStateDao.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(BlockingStateDao.class));
+                bind(BlockingStateDao.class).toInstance(Mockito.mock(BlockingStateDao.class));
                 bind(BlockingApi.class).toInstance(blockingApi);
-
             }
 
         });
@@ -117,19 +107,17 @@ public class TestBlockingCalculator {
 
     }
 
-    @Test
     // S1-S2-S3 subscriptions in B1
     // B1 -----[--------]
     // S1 --A-------------------------------------
     // S2 --B------C------------------------------
     // S3 ------------------D---------------------
 
-
     //Result
     // S1 --A--[-------]--------------------------
     // S2 --B--[-------]--------------------------
     // S3 ------------------D---------------------
-
+    @Test
     public void testInsertBlockingEvents() {
         final DateTime now = clock.getUTCNow();
         final List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
@@ -149,8 +137,7 @@ public class TestBlockingCalculator {
         blockingStates.add(new DefaultBlockingState(bundleId1, DISABLED_BUNDLE, Blockable.Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now));
         blockingStates.add(new DefaultBlockingState(bundleId1, CLEAR_BUNDLE, Blockable.Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now.plusDays(2)));
 
-        ((ZombieControl) blockingApi).addResult("getBlockingHistory", blockingStates);
-
+        Mockito.when(blockingApi.getBlockingHistory(Mockito.<Blockable>anyObject())).thenReturn(blockingStates);
 
         odc.insertBlockingEvents(billingEvents);
 
@@ -258,7 +245,6 @@ public class TestBlockingCalculator {
         billingEvents.add(e1);
         billingEvents.add(e2);
 
-
         final SortedSet<BillingEvent> results = odc.eventsToRemove(disabledDuration, billingEvents, subscription1);
 
         assertEquals(results.size(), 1);
@@ -298,7 +284,6 @@ public class TestBlockingCalculator {
         disabledDuration.add(new DisabledDuration(now, now.plusDays(2)));
         final BillingEvent e2 = createRealEvent(now.plusDays(1), subscription1);
         billingEvents.add(e2);
-
 
         final SortedSet<BillingEvent> results = odc.eventsToRemove(disabledDuration, billingEvents, subscription1);
 
@@ -566,7 +551,6 @@ public class TestBlockingCalculator {
                                        description, totalOrdering, type, tz);
     }
 
-
     @Test
     public void testFilter() {
         final SortedSet<BillingEvent> events = new TreeSet<BillingEvent>();
@@ -653,9 +637,9 @@ public class TestBlockingCalculator {
     }
 
     private BillingEvent createBillingEvent(final Subscription subscription) {
-        final BillingEvent result = BrainDeadProxyFactory.createBrainDeadProxyFor(BillingEvent.class, Comparable.class);
-        ((ZombieControl) result).addResult("getSubscription", subscription);
-        ((ZombieControl) result).addResult("compareTo", 1);
+        final BillingEvent result = Mockito.mock(BillingEvent.class);
+        Mockito.when(result.getSubscription()).thenReturn(subscription);
+        Mockito.when(result.compareTo(Mockito.<BillingEvent>any())).thenReturn(1);
         return result;
     }
 
@@ -702,7 +686,6 @@ public class TestBlockingCalculator {
         assertNotNull(pairs.get(0).getEnd());
         assertEquals(pairs.get(0).getEnd(), now.plusDays(2));
 
-
         //two or more disableds in a row
         blockingEvents = new TreeSet<BlockingState>();
         blockingEvents.add(new DefaultBlockingState(ovdId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now));
@@ -717,7 +700,6 @@ public class TestBlockingCalculator {
         assertNotNull(pairs.get(0).getEnd());
         assertEquals(pairs.get(0).getEnd(), now.plusDays(3));
 
-
         blockingEvents = new TreeSet<BlockingState>();
         blockingEvents.add(new DefaultBlockingState(ovdId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now));
         blockingEvents.add(new DefaultBlockingState(ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now.plusDays(1)));
@@ -731,6 +713,5 @@ public class TestBlockingCalculator {
         assertEquals(pairs.get(0).getStart(), now.plusDays(1));
         assertNotNull(pairs.get(0).getEnd());
         assertEquals(pairs.get(0).getEnd(), now.plusDays(4));
-
     }
 }

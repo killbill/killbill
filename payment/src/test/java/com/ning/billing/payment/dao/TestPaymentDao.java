@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.payment.dao;
 
 import java.io.IOException;
@@ -29,21 +30,25 @@ import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
+import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.dbi.DBIProvider;
 import com.ning.billing.dbi.DbiConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
+import com.ning.billing.payment.PaymentTestSuiteWithEmbeddedDB;
 import com.ning.billing.payment.api.PaymentStatus;
+import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TestCallContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;
-import com.ning.billing.util.io.IOUtils;
 
-import static junit.framework.Assert.assertNull;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
+import static org.testng.Assert.fail;
 
-public class TestPaymentDao {
+public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
     private static final CallContext context = new TestCallContext("PaymentTests");
 
     private PaymentDao paymentDao;
@@ -51,24 +56,17 @@ public class TestPaymentDao {
     private IDBI dbi;
     private Clock clock;
 
-    @BeforeSuite(groups = {"slow"})
-    public void startMysql() throws IOException {
-        final String paymentddl = IOUtils.toString(MysqlTestingHelper.class.getResourceAsStream("/com/ning/billing/payment/ddl.sql"));
-        final String utilddl = IOUtils.toString(MysqlTestingHelper.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
-
+    @BeforeSuite(groups = "slow")
+    public void setup() throws IOException {
         clock = new DefaultClock();
 
         setupDb();
-
-        helper.startMysql();
-        helper.initDb(paymentddl);
-        helper.initDb(utilddl);
 
         paymentDao = new AuditedPaymentDao(dbi, null);
     }
 
     private void setupDb() {
-        helper = new MysqlTestingHelper();
+        helper = KillbillTestSuiteWithEmbeddedDB.getMysqlTestingHelper();
         if (helper.isUsingLocalInstance()) {
             final DbiConfig config = new ConfigurationObjectFactory(System.getProperties()).build(DbiConfig.class);
             final DBIProvider provider = new DBIProvider(config);
@@ -78,34 +76,70 @@ public class TestPaymentDao {
         }
     }
 
-    @AfterSuite(groups = {"slow"})
-    public void stopMysql() {
-        helper.stopMysql();
+    @Test(groups = "slow")
+    public void testRefund() {
+        final UUID accountId = UUID.randomUUID();
+        final UUID paymentId1 = UUID.randomUUID();
+        final BigDecimal amount1 = new BigDecimal(13);
+        final Currency currency = Currency.USD;
+
+        RefundModelDao refund1 = new RefundModelDao(accountId, paymentId1, amount1, currency, true);
+
+        paymentDao.insertRefund(refund1, context);
+        RefundModelDao refundCheck = paymentDao.getRefund(refund1.getId());
+        assertNotNull(refundCheck);
+        assertEquals(refundCheck.getAccountId(), accountId);
+        assertEquals(refundCheck.getPaymentId(), paymentId1);
+        assertEquals(refundCheck.getAmount().compareTo(amount1), 0);
+        assertEquals(refundCheck.getCurrency(), currency);
+        assertEquals(refundCheck.isAdjsuted(), true);
+        assertEquals(refundCheck.getRefundStatus(), RefundStatus.CREATED);
+
+        final BigDecimal amount2 = new BigDecimal(7.00);
+        final UUID paymentId2 = UUID.randomUUID();
+
+        RefundModelDao refund2 = new RefundModelDao(accountId, paymentId2, amount2, currency, true);
+        paymentDao.insertRefund(refund2, context);
+        paymentDao.updateRefundStatus(refund2.getId(), RefundStatus.COMPLETED, context);
+
+        List<RefundModelDao> refundChecks = paymentDao.getRefundsForPayment(paymentId1);
+        assertEquals(refundChecks.size(), 1);
+
+        refundChecks = paymentDao.getRefundsForPayment(paymentId2);
+        assertEquals(refundChecks.size(), 1);
+
+        refundChecks = paymentDao.getRefundsForAccount(accountId);
+        assertEquals(refundChecks.size(), 2);
+        for (RefundModelDao cur : refundChecks) {
+            if (cur.getPaymentId().equals(paymentId1)) {
+                assertEquals(cur.getAmount().compareTo(amount1), 0);
+                assertEquals(cur.getRefundStatus(), RefundStatus.CREATED);
+            } else if (cur.getPaymentId().equals(paymentId2)) {
+                assertEquals(cur.getAmount().compareTo(amount2), 0);
+                assertEquals(cur.getRefundStatus(), RefundStatus.COMPLETED);
+            } else {
+                fail("Unexpected refund");
+            }
+        }
     }
 
-    @BeforeTest(groups = {"slow"})
-    public void cleanupDb() {
-        helper.cleanupAllTables();
-    }
-
-
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testUpdateStatus() {
-
         final UUID accountId = UUID.randomUUID();
         final UUID invoiceId = UUID.randomUUID();
+        final UUID paymentMethodId = UUID.randomUUID();
         final BigDecimal amount = new BigDecimal(13);
         final Currency currency = Currency.USD;
         final DateTime effectiveDate = clock.getUTCNow();
 
-        final PaymentModelDao payment = new PaymentModelDao(accountId, invoiceId, amount, currency, effectiveDate);
+        final PaymentModelDao payment = new PaymentModelDao(accountId, invoiceId, paymentMethodId, amount, currency, effectiveDate);
         final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(accountId, invoiceId, payment.getId(), clock.getUTCNow(), amount);
-        PaymentModelDao savedPayment = paymentDao.insertPaymentWithAttempt(payment, attempt, true, context);
+        PaymentModelDao savedPayment = paymentDao.insertPaymentWithAttempt(payment, attempt, context);
 
         final PaymentStatus paymentStatus = PaymentStatus.SUCCESS;
         final String paymentError = "No error";
 
-        paymentDao.updateStatusForPaymentWithAttempt(payment.getId(), paymentStatus, paymentError, attempt.getId(), context);
+        paymentDao.updateStatusForPaymentWithAttempt(payment.getId(), paymentStatus, paymentError, null, attempt.getId(), context);
 
         final List<PaymentModelDao> payments = paymentDao.getPaymentsForInvoice(invoiceId);
         assertEquals(payments.size(), 1);
@@ -113,7 +147,7 @@ public class TestPaymentDao {
         assertEquals(savedPayment.getId(), payment.getId());
         assertEquals(savedPayment.getAccountId(), accountId);
         assertEquals(savedPayment.getInvoiceId(), invoiceId);
-        assertEquals(savedPayment.getPaymentMethodId(), null);
+        assertEquals(savedPayment.getPaymentMethodId(), paymentMethodId);
         assertEquals(savedPayment.getAmount().compareTo(amount), 0);
         assertEquals(savedPayment.getCurrency(), currency);
         assertEquals(savedPayment.getEffectiveDate().compareTo(effectiveDate), 0);
@@ -131,28 +165,27 @@ public class TestPaymentDao {
         assertEquals(savedAttempt.getRequestedAmount().compareTo(amount), 0);
     }
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testPaymentWithAttempt() {
-
         final UUID accountId = UUID.randomUUID();
         final UUID invoiceId = UUID.randomUUID();
+        final UUID paymentMethodId = UUID.randomUUID();
         final BigDecimal amount = new BigDecimal(13);
         final Currency currency = Currency.USD;
         final DateTime effectiveDate = clock.getUTCNow();
 
-        final PaymentModelDao payment = new PaymentModelDao(accountId, invoiceId, amount, currency, effectiveDate);
+        final PaymentModelDao payment = new PaymentModelDao(accountId, invoiceId, paymentMethodId, amount, currency, effectiveDate);
         final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(accountId, invoiceId, payment.getId(), clock.getUTCNow(), amount);
 
-        PaymentModelDao savedPayment = paymentDao.insertPaymentWithAttempt(payment, attempt, true, context);
+        PaymentModelDao savedPayment = paymentDao.insertPaymentWithAttempt(payment, attempt, context);
         assertEquals(savedPayment.getId(), payment.getId());
         assertEquals(savedPayment.getAccountId(), accountId);
         assertEquals(savedPayment.getInvoiceId(), invoiceId);
-        assertEquals(savedPayment.getPaymentMethodId(), null);
+        assertEquals(savedPayment.getPaymentMethodId(), paymentMethodId);
         assertEquals(savedPayment.getAmount().compareTo(amount), 0);
         assertEquals(savedPayment.getCurrency(), currency);
         assertEquals(savedPayment.getEffectiveDate().compareTo(effectiveDate), 0);
         assertEquals(savedPayment.getPaymentStatus(), PaymentStatus.UNKNOWN);
-
 
         PaymentAttemptModelDao savedAttempt = paymentDao.getPaymentAttempt(attempt.getId());
         assertEquals(savedAttempt.getId(), attempt.getId());
@@ -167,7 +200,7 @@ public class TestPaymentDao {
         assertEquals(savedPayment.getId(), payment.getId());
         assertEquals(savedPayment.getAccountId(), accountId);
         assertEquals(savedPayment.getInvoiceId(), invoiceId);
-        assertEquals(savedPayment.getPaymentMethodId(), null);
+        assertEquals(savedPayment.getPaymentMethodId(), paymentMethodId);
         assertEquals(savedPayment.getAmount().compareTo(amount), 0);
         assertEquals(savedPayment.getCurrency(), currency);
         assertEquals(savedPayment.getEffectiveDate().compareTo(effectiveDate), 0);
@@ -184,21 +217,22 @@ public class TestPaymentDao {
 
     }
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testNewAttempt() {
         final UUID accountId = UUID.randomUUID();
         final UUID invoiceId = UUID.randomUUID();
+        final UUID paymentMethodId = UUID.randomUUID();
         final BigDecimal amount = new BigDecimal(13);
         final Currency currency = Currency.USD;
         final DateTime effectiveDate = clock.getUTCNow();
 
-        final PaymentModelDao payment = new PaymentModelDao(accountId, invoiceId, amount, currency, effectiveDate);
+        final PaymentModelDao payment = new PaymentModelDao(accountId, invoiceId, paymentMethodId, amount, currency, effectiveDate);
         final PaymentAttemptModelDao firstAttempt = new PaymentAttemptModelDao(accountId, invoiceId, payment.getId(), clock.getUTCNow(), amount);
-        PaymentModelDao savedPayment = paymentDao.insertPaymentWithAttempt(payment, firstAttempt, true, context);
+        PaymentModelDao savedPayment = paymentDao.insertPaymentWithAttempt(payment, firstAttempt, context);
 
         final BigDecimal newAmount = new BigDecimal(15.23).setScale(2, RoundingMode.HALF_EVEN);
         final PaymentAttemptModelDao secondAttempt = new PaymentAttemptModelDao(accountId, invoiceId, payment.getId(), clock.getUTCNow(), newAmount);
-        paymentDao.insertNewAttemptForPayment(payment.getId(), secondAttempt, true, context);
+        paymentDao.insertNewAttemptForPayment(payment.getId(), secondAttempt, context);
 
         final List<PaymentModelDao> payments = paymentDao.getPaymentsForInvoice(invoiceId);
         assertEquals(payments.size(), 1);
@@ -206,7 +240,7 @@ public class TestPaymentDao {
         assertEquals(savedPayment.getId(), payment.getId());
         assertEquals(savedPayment.getAccountId(), accountId);
         assertEquals(savedPayment.getInvoiceId(), invoiceId);
-        assertEquals(savedPayment.getPaymentMethodId(), null);
+        assertEquals(savedPayment.getPaymentMethodId(), paymentMethodId);
         assertEquals(savedPayment.getAmount().compareTo(newAmount), 0);
         assertEquals(savedPayment.getCurrency(), currency);
         assertEquals(savedPayment.getEffectiveDate().compareTo(effectiveDate), 0);
@@ -222,7 +256,6 @@ public class TestPaymentDao {
         assertEquals(savedAttempt1.getPaymentError(), null);
         assertEquals(savedAttempt1.getRequestedAmount().compareTo(amount), 0);
 
-
         final PaymentAttemptModelDao savedAttempt2 = attempts.get(1);
         assertEquals(savedAttempt2.getPaymentId(), payment.getId());
         assertEquals(savedAttempt2.getAccountId(), accountId);
@@ -232,7 +265,7 @@ public class TestPaymentDao {
         assertEquals(savedAttempt2.getRequestedAmount().compareTo(newAmount), 0);
     }
 
-    @Test(groups = {"slow"})
+    @Test(groups = "slow")
     public void testPaymentMethod() {
 
         final UUID paymentMethodId = UUID.randomUUID();
@@ -262,7 +295,5 @@ public class TestPaymentDao {
 
         final PaymentMethodModelDao deletedPaymentMethod = paymentDao.getPaymentMethod(paymentMethodId);
         assertNull(deletedPaymentMethod);
-
-
     }
 }

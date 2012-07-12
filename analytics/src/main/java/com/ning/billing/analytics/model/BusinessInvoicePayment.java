@@ -16,6 +16,7 @@
 
 package com.ning.billing.analytics.model;
 
+import javax.annotation.Nullable;
 import java.math.BigDecimal;
 import java.util.UUID;
 
@@ -27,32 +28,34 @@ import com.ning.billing.catalog.api.Currency;
 public class BusinessInvoicePayment {
     private final UUID paymentId;
     private final DateTime createdDate;
-    private final UUID attemptId;
+    private final String extPaymentRefId;
+    private final DateTime updatedDate;
+    private final String accountKey;
+    private final UUID invoiceId;
+    private final DateTime effectiveDate;
+    private final BigDecimal amount;
+    private final Currency currency;
+    private final String paymentError;
+    private final String processingStatus;
+    private final BigDecimal requestedAmount;
+    private final String pluginName;
+    private final String paymentType;
+    private final String paymentMethod;
+    private final String cardType;
+    private final String cardCountry;
+    private final String invoicePaymentType;
+    private final UUID linkedInvoicePaymentId;
 
-    private DateTime updatedDate;
-    private String accountKey;
-    private UUID invoiceId;
-    private DateTime effectiveDate;
-    private BigDecimal amount;
-    private Currency currency;
-    private String paymentError;
-    private String processingStatus;
-    private BigDecimal requestedAmount;
-    private String pluginName;
-    private String paymentType;
-    private String paymentMethod;
-    private String cardType;
-    private String cardCountry;
-
-    public BusinessInvoicePayment(final String accountKey, final BigDecimal amount, final UUID attemptId,
+    public BusinessInvoicePayment(final String accountKey, final BigDecimal amount, final String extPaymentRefId,
                                   final String cardCountry, final String cardType, final DateTime createdDate,
                                   final Currency currency, final DateTime effectiveDate, final UUID invoiceId,
                                   final String paymentError, final UUID paymentId, final String paymentMethod,
                                   final String paymentType, final String pluginName, final String processingStatus,
-                                  final BigDecimal requestedAmount, final DateTime updatedDate) {
+                                  final BigDecimal requestedAmount, final DateTime updatedDate, @Nullable final String invoicePaymentType,
+                                  @Nullable final UUID linkedInvoicePaymentId) {
         this.accountKey = accountKey;
         this.amount = amount;
-        this.attemptId = attemptId;
+        this.extPaymentRefId = extPaymentRefId;
         this.cardCountry = cardCountry;
         this.cardType = cardType;
         this.createdDate = createdDate;
@@ -67,10 +70,12 @@ public class BusinessInvoicePayment {
         this.processingStatus = processingStatus;
         this.requestedAmount = requestedAmount;
         this.updatedDate = updatedDate;
+        this.invoicePaymentType = invoicePaymentType;
+        this.linkedInvoicePaymentId = linkedInvoicePaymentId;
     }
 
-    public UUID getAttemptId() {
-        return attemptId;
+    public String getExtPaymentRefId() {
+        return extPaymentRefId;
     }
 
     public DateTime getCreatedDate() {
@@ -85,112 +90,64 @@ public class BusinessInvoicePayment {
         return accountKey;
     }
 
-    public void setAccountKey(final String accountKey) {
-        this.accountKey = accountKey;
-    }
-
     public BigDecimal getAmount() {
         return amount;
-    }
-
-    public void setAmount(final BigDecimal amount) {
-        this.amount = amount;
     }
 
     public String getCardCountry() {
         return cardCountry;
     }
 
-    public void setCardCountry(final String cardCountry) {
-        this.cardCountry = cardCountry;
-    }
-
     public String getCardType() {
         return cardType;
-    }
-
-    public void setCardType(final String cardType) {
-        this.cardType = cardType;
     }
 
     public Currency getCurrency() {
         return currency;
     }
 
-    public void setCurrency(final Currency currency) {
-        this.currency = currency;
-    }
-
     public DateTime getEffectiveDate() {
         return effectiveDate;
-    }
-
-    public void setEffectiveDate(final DateTime effectiveDate) {
-        this.effectiveDate = effectiveDate;
     }
 
     public UUID getInvoiceId() {
         return invoiceId;
     }
 
-    public void setInvoiceId(final UUID invoiceId) {
-        this.invoiceId = invoiceId;
-    }
-
     public String getPaymentError() {
         return paymentError;
-    }
-
-    public void setPaymentError(final String paymentError) {
-        this.paymentError = paymentError;
     }
 
     public String getPaymentMethod() {
         return paymentMethod;
     }
 
-    public void setPaymentMethod(final String paymentMethod) {
-        this.paymentMethod = paymentMethod;
-    }
-
     public String getPaymentType() {
         return paymentType;
-    }
-
-    public void setPaymentType(final String paymentType) {
-        this.paymentType = paymentType;
     }
 
     public String getPluginName() {
         return pluginName;
     }
 
-    public void setPluginName(final String pluginName) {
-        this.pluginName = pluginName;
-    }
-
     public String getProcessingStatus() {
         return processingStatus;
-    }
-
-    public void setProcessingStatus(final String processingStatus) {
-        this.processingStatus = processingStatus;
     }
 
     public BigDecimal getRequestedAmount() {
         return requestedAmount;
     }
 
-    public void setRequestedAmount(final BigDecimal requestedAmount) {
-        this.requestedAmount = requestedAmount;
-    }
-
     public DateTime getUpdatedDate() {
         return updatedDate;
     }
 
-    public void setUpdatedDate(final DateTime updatedDate) {
-        this.updatedDate = updatedDate;
+    public String getInvoicePaymentType() {
+        return invoicePaymentType;
+    }
+
+    public UUID getLinkedInvoicePaymentId() {
+        return linkedInvoicePaymentId;
     }
 
     @Override
@@ -200,7 +157,7 @@ public class BusinessInvoicePayment {
         sb.append("{accountKey='").append(accountKey).append('\'');
         sb.append(", paymentId=").append(paymentId);
         sb.append(", createdDate=").append(createdDate);
-        sb.append(", attemptId=").append(attemptId);
+        sb.append(", extPaymentRefId=").append(extPaymentRefId);
         sb.append(", updatedDate=").append(updatedDate);
         sb.append(", invoiceId=").append(invoiceId);
         sb.append(", effectiveDate=").append(effectiveDate);
@@ -214,6 +171,8 @@ public class BusinessInvoicePayment {
         sb.append(", paymentMethod='").append(paymentMethod).append('\'');
         sb.append(", cardType='").append(cardType).append('\'');
         sb.append(", cardCountry='").append(cardCountry).append('\'');
+        sb.append(", invoicePaymentType='").append(invoicePaymentType).append('\'');
+        sb.append(", linkedInvoicePaymentId='").append(linkedInvoicePaymentId).append('\'');
         sb.append('}');
         return sb.toString();
     }
@@ -235,7 +194,7 @@ public class BusinessInvoicePayment {
         if (amount != null ? Rounder.round(amount) != Rounder.round(that.amount) : that.amount != null) {
             return false;
         }
-        if (attemptId != null ? !attemptId.equals(that.attemptId) : that.attemptId != null) {
+        if (extPaymentRefId != null ? !extPaymentRefId.equals(that.extPaymentRefId) : that.extPaymentRefId != null) {
             return false;
         }
         if (cardCountry != null ? !cardCountry.equals(that.cardCountry) : that.cardCountry != null) {
@@ -280,6 +239,12 @@ public class BusinessInvoicePayment {
         if (updatedDate != null ? !updatedDate.equals(that.updatedDate) : that.updatedDate != null) {
             return false;
         }
+        if (invoicePaymentType != null ? !invoicePaymentType.equals(that.invoicePaymentType) : that.invoicePaymentType != null) {
+            return false;
+        }
+        if (linkedInvoicePaymentId != null ? !linkedInvoicePaymentId.equals(that.linkedInvoicePaymentId) : that.linkedInvoicePaymentId != null) {
+            return false;
+        }
 
         return true;
     }
@@ -288,7 +253,7 @@ public class BusinessInvoicePayment {
     public int hashCode() {
         int result = paymentId != null ? paymentId.hashCode() : 0;
         result = 31 * result + (createdDate != null ? createdDate.hashCode() : 0);
-        result = 31 * result + (attemptId != null ? attemptId.hashCode() : 0);
+        result = 31 * result + (extPaymentRefId != null ? extPaymentRefId.hashCode() : 0);
         result = 31 * result + (updatedDate != null ? updatedDate.hashCode() : 0);
         result = 31 * result + (accountKey != null ? accountKey.hashCode() : 0);
         result = 31 * result + (invoiceId != null ? invoiceId.hashCode() : 0);

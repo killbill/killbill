@@ -27,6 +27,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.account.api.AccountService;
 import com.ning.billing.account.glue.AccountModule;
 import com.ning.billing.analytics.setup.AnalyticsModule;
@@ -65,7 +66,6 @@ import static org.testng.Assert.assertNotNull;
 
 
 public class BeatrixModule extends AbstractModule {
-
     public static final String PLUGIN_NAME = "yoyo";
 
     @Override
@@ -77,7 +77,7 @@ public class BeatrixModule extends AbstractModule {
         bind(ClockMock.class).asEagerSingleton();
         bind(Lifecycle.class).to(SubsetDefaultLifecycle.class).asEagerSingleton();
 
-        final MysqlTestingHelper helper = new MysqlTestingHelper();
+        final MysqlTestingHelper helper = KillbillTestSuiteWithEmbeddedDB.getMysqlTestingHelper();
         bind(MysqlTestingHelper.class).toInstance(helper);
         final IDBI dbi;
         if (helper.isUsingLocalInstance()) {

@@ -1,26 +1,32 @@
 group BusinessSubscriptionTransitionTag;
 
-getTagsForBusinessSubscriptionTransition(external_key) ::=<<
+getTagsForBusinessSubscriptionTransitionByKey(external_key) ::=<<
 select
-  external_key
+  bundle_id
+, external_key
+, account_key
 , name
 from bst_tags
 where external_key = :external_key
 ;
 >>
 
-addTag(external_key, name) ::=<<
+addTag(bundle_id, external_key, name) ::=<<
 insert into bst_tags (
-  external_key
+  bundle_id
+, external_key
+, account_key
 , name
 ) values (
-  :external_key
+  :bundle_id
+, :external_key
+, :account_key
 , :name
 );
 >>
 
-removeTag(external_key, name) ::= <<
-delete from bst_tags where external_key = :external_key and name = :name;
+removeTag(bundle_id, name) ::= <<
+delete from bst_tags where bundle_id = :bundle_id and name = :name;
 >>
 
 test() ::= <<

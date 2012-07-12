@@ -1,8 +1,29 @@
 group BusinessAccount;
 
-getAccount(account_key) ::= <<
+getAccount(account_id) ::= <<
   select
-    account_key
+    account_id
+  , account_key
+  , created_date
+  , updated_date
+  , balance
+  , name
+  , last_invoice_date
+  , total_invoice_balance
+  , last_payment_status
+  , payment_method
+  , credit_card_type
+  , billing_address_country
+  from bac
+  where account_id=:account_id
+  limit 1
+  ;
+>>
+
+getAccountByKey(account_key) ::= <<
+  select
+    account_id
+  , account_key
   , created_date
   , updated_date
   , balance
@@ -21,7 +42,8 @@ getAccount(account_key) ::= <<
 
 createAccount() ::= <<
   insert into bac(
-    account_key
+    account_id
+  , account_key
   , created_date
   , updated_date
   , balance
@@ -33,7 +55,8 @@ createAccount() ::= <<
   , credit_card_type
   , billing_address_country
   ) values (
-    :account_key
+    :account_id
+  , :account_key
   , :created_date
   , :updated_date
   , :balance
@@ -58,7 +81,7 @@ saveAccount() ::= <<
   , payment_method=:payment_method
   , credit_card_type=:credit_card_type
   , billing_address_country=:billing_address_country
-  where account_key=:account_key
+  where account_id=:account_id
   ;
 >>
 

@@ -49,17 +49,13 @@ import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 public class TestUserApiAddOn extends TestApiBase {
-
     @Override
     public Injector getInjector() {
         return Guice.createInjector(Stage.DEVELOPMENT, new MockEngineModuleSql());
     }
 
-    @Test(enabled = true, groups = {"slow"})
+    @Test(groups = "slow")
     public void testCreateCancelAddon() {
-
-        log.info("Starting testCreateCancelAddon");
-
         try {
             final String baseProduct = "Shotgun";
             final BillingPeriod baseTerm = BillingPeriod.MONTHLY;
@@ -89,13 +85,9 @@ public class TestUserApiAddOn extends TestApiBase {
         }
     }
 
-    @Test(enabled = true, groups = {"slow"})
+    @Test(groups = "slow")
     public void testCancelBPWithAddon() {
-
-        log.info("Starting testCancelBPWithAddon");
-
         try {
-
             final String baseProduct = "Shotgun";
             final BillingPeriod baseTerm = BillingPeriod.MONTHLY;
             final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
@@ -154,14 +146,9 @@ public class TestUserApiAddOn extends TestApiBase {
         }
     }
 
-
-    @Test(enabled = true, groups = {"slow"})
+    @Test(groups = "slow")
     public void testChangeBPWithAddonIncluded() {
-
-        log.info("Starting testChangeBPWithAddonIncluded");
-
         try {
-
             final String baseProduct = "Shotgun";
             final BillingPeriod baseTerm = BillingPeriod.MONTHLY;
             final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
@@ -221,13 +208,9 @@ public class TestUserApiAddOn extends TestApiBase {
         }
     }
 
-    @Test(enabled = true, groups = {"slow"})
+    @Test(groups = "slow")
     public void testChangeBPWithAddonNonAvailable() {
-
-        log.info("Starting testChangeBPWithAddonNonAvailable");
-
         try {
-
             final String baseProduct = "Shotgun";
             final BillingPeriod baseTerm = BillingPeriod.MONTHLY;
             final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
@@ -286,7 +269,6 @@ public class TestUserApiAddOn extends TestApiBase {
             clock.addDeltaFromReality(it.toDurationMillis());
             assertTrue(testListener.isCompleted(5000));
 
-
             // REFETCH AO SUBSCRIPTION AND CHECK THIS CANCELLED
             aoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId());
             assertEquals(aoSubscription.getState(), SubscriptionState.CANCELLED);
@@ -297,12 +279,8 @@ public class TestUserApiAddOn extends TestApiBase {
         }
     }
 
-
-    @Test(enabled = true, groups = {"slow"})
+    @Test(groups = "slow")
     public void testAddonCreateWithBundleAlign() {
-
-        log.info("Starting testAddonCreateWithBundleAlign");
-
         try {
             final String aoProduct = "Telescopic-Scope";
             final BillingPeriod aoTerm = BillingPeriod.MONTHLY;
@@ -310,9 +288,9 @@ public class TestUserApiAddOn extends TestApiBase {
 
             // This is just to double check our test catalog gives us what we want before we start the test
             final PlanSpecifier planSpecifier = new PlanSpecifier(aoProduct,
-                                                            ProductCategory.ADD_ON,
-                                                            aoTerm,
-                                                            aoPriceList);
+                                                                  ProductCategory.ADD_ON,
+                                                                  aoTerm,
+                                                                  aoPriceList);
             final PlanAlignmentCreate alignement = catalog.planCreateAlignment(planSpecifier, clock.getUTCNow());
             assertEquals(alignement, PlanAlignmentCreate.START_OF_BUNDLE);
 
@@ -324,11 +302,8 @@ public class TestUserApiAddOn extends TestApiBase {
         }
     }
 
-    @Test(enabled = true, groups = {"slow"})
+    @Test(groups = "slow")
     public void testAddonCreateWithSubscriptionAlign() {
-
-        log.info("Starting testAddonCreateWithSubscriptionAlign");
-
         try {
             final String aoProduct = "Laser-Scope";
             final BillingPeriod aoTerm = BillingPeriod.MONTHLY;
@@ -336,9 +311,9 @@ public class TestUserApiAddOn extends TestApiBase {
 
             // This is just to double check our test catalog gives us what we want before we start the test
             final PlanSpecifier planSpecifier = new PlanSpecifier(aoProduct,
-                                                            ProductCategory.ADD_ON,
-                                                            aoTerm,
-                                                            aoPriceList);
+                                                                  ProductCategory.ADD_ON,
+                                                                  aoTerm,
+                                                                  aoPriceList);
             final PlanAlignmentCreate alignement = catalog.planCreateAlignment(planSpecifier, clock.getUTCNow());
             assertEquals(alignement, PlanAlignmentCreate.START_OF_SUBSCRIPTION);
 
@@ -350,11 +325,8 @@ public class TestUserApiAddOn extends TestApiBase {
         }
     }
 
-
     private void testAddonCreateInternal(final String aoProduct, final BillingPeriod aoTerm, final String aoPriceList, final PlanAlignmentCreate expAlignement) {
-
         try {
-
             final String baseProduct = "Shotgun";
             final BillingPeriod baseTerm = BillingPeriod.MONTHLY;
             final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
@@ -386,7 +358,7 @@ public class TestUserApiAddOn extends TestApiBase {
             assertEquals(aoSubscription.getBundleStartDate(), baseSubscription.getBundleStartDate());
 
             // CHECK next AO PHASE EVENT IS INDEED A MONTH AFTER BP STARTED => BUNDLE ALIGNMENT
-            SubscriptionEvent aoPendingTranstion = aoSubscription.getPendingTransition();
+            EffectiveSubscriptionEvent aoPendingTranstion = aoSubscription.getPendingTransition();
 
             if (expAlignement == PlanAlignmentCreate.START_OF_BUNDLE) {
                 assertEquals(aoPendingTranstion.getEffectiveTransitionTime(), baseSubscription.getStartDate().plusMonths(1));
@@ -404,7 +376,6 @@ public class TestUserApiAddOn extends TestApiBase {
             clock.addDeltaFromReality(it.toDurationMillis());
             assertTrue(testListener.isCompleted(5000));
 
-
             // CHECK EVERYTHING AGAIN
             aoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId());
 
@@ -418,11 +389,9 @@ public class TestUserApiAddOn extends TestApiBase {
             assertNotNull(aoCurrentPhase);
             assertEquals(aoCurrentPhase.getPhaseType(), PhaseType.EVERGREEN);
 
-
             aoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId());
             aoPendingTranstion = aoSubscription.getPendingTransition();
             assertNull(aoPendingTranstion);
-
         } catch (EntitlementUserApiException e) {
             Assert.fail(e.getMessage());
         }

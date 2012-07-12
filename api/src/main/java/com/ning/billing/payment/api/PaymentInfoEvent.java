@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -38,4 +38,6 @@ public interface PaymentInfoEvent extends Entity, BusEvent {
     public Integer getPaymentNumber();
 
     public PaymentStatus getStatus();
+
+    public String getExtPaymentRefId();
 }

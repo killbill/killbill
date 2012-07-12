@@ -36,6 +36,7 @@ import com.ning.billing.util.callcontext.CallContext;
 public class MockEntitlementUserApi implements EntitlementUserApi {
     private final Map<UUID, String> subscriptionBundles = new HashMap<UUID, String>();
     private final Map<UUID, UUID> accountForBundle = new HashMap<UUID, UUID>();
+    private final Map<UUID, Subscription> subscriptionsById = new HashMap<UUID, Subscription>();
 
     public synchronized void addBundle(final UUID bundleUUID, final String externalKey, final UUID accountId) {
         subscriptionBundles.put(bundleUUID, externalKey);
@@ -58,11 +59,6 @@ public class MockEntitlementUserApi implements EntitlementUserApi {
             @Override
             public UUID getId() {
                 return id;
-            }
-
-            @Override
-            public DateTime getStartDate() {
-                throw new UnsupportedOperationException();
             }
 
             @Override

@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -26,8 +26,9 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Joiner;
 import com.google.common.eventbus.Subscribe;
 import com.ning.billing.entitlement.api.timeline.RepairEntitlementEvent;
-import com.ning.billing.entitlement.api.user.SubscriptionEvent;
+import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.invoice.api.InvoiceCreationEvent;
+import com.ning.billing.invoice.api.InvoiceEvent;
 import com.ning.billing.payment.api.PaymentErrorEvent;
 import com.ning.billing.payment.api.PaymentInfoEvent;
 
@@ -81,9 +82,9 @@ public class TestApiListener {
     }
 
     @Subscribe
-    public void handleEntitlementEvents(final SubscriptionEvent event) {
-        log.info(String.format("TestApiListener Got subscription event %s", event.toString()));
-        switch (event.getTransitionType()) {
+    public void handleEntitlementEvents(final EffectiveSubscriptionEvent eventEffective) {
+        log.info(String.format("TestApiListener Got subscription event %s", eventEffective.toString()));
+        switch (eventEffective.getTransitionType()) {
             case MIGRATE_ENTITLEMENT:
                 assertEqualsNicely(NextEvent.MIGRATE_ENTITLEMENT);
                 notifyIfStackEmpty();
@@ -117,7 +118,7 @@ public class TestApiListener {
                 notifyIfStackEmpty();
                 break;
             default:
-                throw new RuntimeException("Unexpected event type " + event.getRequestedTransitionTime());
+                throw new RuntimeException("Unexpected event type " + eventEffective.getRequestedTransitionTime());
         }
     }
 
@@ -126,7 +127,6 @@ public class TestApiListener {
         log.info(String.format("TestApiListener Got Invoice event %s", event.toString()));
         assertEqualsNicely(NextEvent.INVOICE);
         notifyIfStackEmpty();
-
     }
 
     @Subscribe

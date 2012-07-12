@@ -37,13 +37,8 @@ import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 public abstract class TestUserApiCancel extends TestApiBase {
-
     protected void testCancelSubscriptionIMM() {
-
-        log.info("Starting testCancelSubscriptionIMM");
-
         try {
-
             final DateTime init = clock.getUTCNow();
 
             final String prod = "Shotgun";
@@ -76,12 +71,8 @@ public abstract class TestUserApiCancel extends TestApiBase {
         }
     }
 
-
     protected void testCancelSubscriptionEOTWithChargeThroughDate() throws EntitlementBillingApiException {
-        log.info("Starting testCancelSubscriptionEOTWithChargeThroughDate");
-
         try {
-
             final String prod = "Shotgun";
             final BillingPeriod term = BillingPeriod.MONTHLY;
             final String planSet = PriceListSet.DEFAULT_PRICELIST_NAME;
@@ -117,12 +108,17 @@ public abstract class TestUserApiCancel extends TestApiBase {
             assertFalse(testListener.isCompleted(3000));
             testListener.reset();
 
+            DateTime futureEndDate = subscription.getFutureEndDate();
+            Assert.assertNotNull(futureEndDate);
+
             // MOVE TO EOT + RECHECK
             testListener.pushExpectedEvent(NextEvent.CANCEL);
             it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(1));
             clock.addDeltaFromReality(it.toDurationMillis());
             final DateTime future = clock.getUTCNow();
             assertTrue(testListener.isCompleted(5000));
+
+            assertTrue(futureEndDate.compareTo(subscription.getEndDate()) == 0);
 
             final PlanPhase currentPhase = subscription.getCurrentPhase();
             assertNull(currentPhase);
@@ -134,13 +130,8 @@ public abstract class TestUserApiCancel extends TestApiBase {
         }
     }
 
-
     protected void testCancelSubscriptionEOTWithNoChargeThroughDate() {
-
-        log.info("Starting testCancelSubscriptionEOTWithNoChargeThroughDate");
-
         try {
-
             final String prod = "Shotgun";
             final BillingPeriod term = BillingPeriod.MONTHLY;
             final String planSet = PriceListSet.DEFAULT_PRICELIST_NAME;
@@ -183,11 +174,7 @@ public abstract class TestUserApiCancel extends TestApiBase {
     // are as they used to be and we can move forward without hitting cancellation
     //
     protected void testUncancel() throws EntitlementBillingApiException {
-
-        log.info("Starting testUncancel");
-
         try {
-
             final String prod = "Shotgun";
             final BillingPeriod term = BillingPeriod.MONTHLY;
             final String planSet = PriceListSet.DEFAULT_PRICELIST_NAME;

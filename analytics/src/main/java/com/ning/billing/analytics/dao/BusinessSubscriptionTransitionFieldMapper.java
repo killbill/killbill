@@ -18,6 +18,7 @@ package com.ning.billing.analytics.dao;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.UUID;
 
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
@@ -27,6 +28,11 @@ import com.ning.billing.analytics.model.BusinessSubscriptionTransitionField;
 public class BusinessSubscriptionTransitionFieldMapper implements ResultSetMapper<BusinessSubscriptionTransitionField> {
     @Override
     public BusinessSubscriptionTransitionField map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
-        return new BusinessSubscriptionTransitionField(r.getString(1), r.getString(2), r.getString(3));
+        final UUID bundleId = UUID.fromString(r.getString(1));
+        final String externalKey = r.getString(2);
+        final String accountKey = r.getString(3);
+        final String name = r.getString(4);
+        final String value = r.getString(5);
+        return new BusinessSubscriptionTransitionField(accountKey, bundleId, externalKey, name, value);
     }
 }

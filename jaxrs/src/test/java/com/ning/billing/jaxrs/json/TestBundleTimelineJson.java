@@ -35,9 +35,10 @@ import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline;
+import com.ning.billing.jaxrs.JaxrsTestSuite;
 import com.ning.billing.util.clock.DefaultClock;
 
-public class TestBundleTimelineJson {
+public class TestBundleTimelineJson extends JaxrsTestSuite {
     private static final ObjectMapper mapper = new ObjectMapper();
 
     static {
@@ -94,7 +95,9 @@ public class TestBundleTimelineJson {
                 "\"currency\":\"" + payment.getCurrency() + "\"," +
                 "\"status\":\"" + payment.getStatus() + "\"}]," +
                 "\"invoices\":[{\"amount\":" + invoice.getAmount() + "," +
-                "\"credit\":" + invoice.getCredit() + "," +
+                "\"cba\":" + invoice.getCBA() + "," +
+                "\"creditAdj\":" + invoice.getCreditAdj() + "," +
+                "\"refundAdj\":" + invoice.getRefundAdj() + "," +
                 "\"invoiceId\":\"" + invoice.getInvoiceId() + "\"," +
                 "\"invoiceDate\":\"" + invoice.getInvoiceDate().toDateTimeISO().toString() + "\"," +
                 "\"targetDate\":\"" + invoice.getTargetDate() + "\"," +
@@ -134,13 +137,15 @@ public class TestBundleTimelineJson {
         final UUID accountId = UUID.randomUUID();
         final UUID invoiceId = UUID.randomUUID();
         final BigDecimal invoiceAmount = BigDecimal.TEN;
-        final BigDecimal credit = BigDecimal.ONE;
+        final BigDecimal cba = BigDecimal.ONE;
+        final BigDecimal creditAdj = BigDecimal.ONE;
+        final BigDecimal refundAdj = BigDecimal.ONE;
         final DateTime invoiceDate = DefaultClock.toUTCDateTime(new DateTime(DateTimeZone.UTC));
         final DateTime targetDate = DefaultClock.toUTCDateTime(new DateTime(DateTimeZone.UTC));
         final String invoiceNumber = UUID.randomUUID().toString();
         final BigDecimal balance = BigDecimal.ZERO;
 
-        return new InvoiceJsonSimple(invoiceAmount, credit, invoiceId.toString(), invoiceDate,
+        return new InvoiceJsonSimple(invoiceAmount, cba, creditAdj, refundAdj, invoiceId.toString(), invoiceDate,
                                      targetDate, invoiceNumber, balance, accountId.toString());
     }
 
@@ -153,7 +158,6 @@ public class TestBundleTimelineJson {
         final Integer retryCount = Integer.MAX_VALUE;
         final String currency = "USD";
         final String status = UUID.randomUUID().toString();
-
 
         return new PaymentJsonSimple(amount, paidAmount, accountId.toString(), invoiceId.toString(), paymentId.toString(),
                                      paymentRequestedDate, paymentEffectiveDate, retryCount,

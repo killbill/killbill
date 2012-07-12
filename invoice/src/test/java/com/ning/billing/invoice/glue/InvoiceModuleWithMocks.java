@@ -28,7 +28,6 @@ import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.globallocker.MockGlobalLocker;
 import com.ning.billing.util.template.translation.TranslatorConfig;
 
-
 public class InvoiceModuleWithMocks extends DefaultInvoiceModule {
     @Override
     protected void installInvoiceDao() {
@@ -39,7 +38,6 @@ public class InvoiceModuleWithMocks extends DefaultInvoiceModule {
 
     @Override
     protected void installInvoiceListener() {
-
     }
 
     @Override
@@ -52,11 +50,9 @@ public class InvoiceModuleWithMocks extends DefaultInvoiceModule {
 
     @Override
     protected void installInvoiceService() {
-
     }
 
     @Override
     public void installInvoiceMigrationApi() {
-
     }
 }

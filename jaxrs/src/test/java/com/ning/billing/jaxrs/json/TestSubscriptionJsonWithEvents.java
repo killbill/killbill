@@ -35,9 +35,10 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline;
 import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.jaxrs.JaxrsTestSuite;
 import com.ning.billing.util.clock.DefaultClock;
 
-public class TestSubscriptionJsonWithEvents {
+public class TestSubscriptionJsonWithEvents extends JaxrsTestSuite {
     private static final ObjectMapper mapper = new ObjectMapper();
 
     static {
@@ -63,7 +64,6 @@ public class TestSubscriptionJsonWithEvents {
                                                                                                      ImmutableList.<SubscriptionJsonWithEvents.SubscriptionReadEventJson>of(newEvent),
                                                                                                      null,
                                                                                                      null);
-
 
         final String asJson = mapper.writeValueAsString(subscriptionJsonWithEvents);
         final SubscriptionJsonWithEvents.SubscriptionReadEventJson event = subscriptionJsonWithEvents.getEvents().get(0);

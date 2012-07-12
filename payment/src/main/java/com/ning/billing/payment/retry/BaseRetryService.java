@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -66,7 +66,7 @@ public abstract class BaseRetryService implements RetryService {
         },
         config);
     }
-    
+
     @Override
     public void start() {
         retryQueue.startQueue();
@@ -80,6 +80,7 @@ public abstract class BaseRetryService implements RetryService {
         }
     }
 
+    @Override
     public abstract String getQueueName();
 
 
@@ -125,9 +126,9 @@ public abstract class BaseRetryService implements RetryService {
                 final NotificationKey key = new PaymentRetryNotificationKey(paymentId);
                 if (retryQueue != null) {
                     if (transactionalDao == null) {
-                        retryQueue.recordFutureNotification(timeOfRetry, key);
+                        retryQueue.recordFutureNotification(timeOfRetry, null, key);
                     } else {
-                        retryQueue.recordFutureNotificationFromTransaction(transactionalDao, timeOfRetry, key);
+                        retryQueue.recordFutureNotificationFromTransaction(transactionalDao, timeOfRetry, null, key);
                     }
                 }
             } catch (NoSuchNotificationQueue e) {

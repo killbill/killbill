@@ -18,6 +18,7 @@ package com.ning.billing.invoice.dao;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -26,17 +27,23 @@ import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.invoice.api.InvoicePayment;
-import com.ning.billing.invoice.model.CreditInvoiceItem;
+import com.ning.billing.invoice.api.InvoicePayment.InvoicePaymentType;
+import com.ning.billing.invoice.model.CreditAdjInvoiceItem;
+import com.ning.billing.invoice.model.CreditBalanceAdjInvoiceItem;
 import com.ning.billing.invoice.model.DefaultInvoice;
-import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
+import com.ning.billing.invoice.model.DefaultInvoicePayment;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
+import com.ning.billing.invoice.model.RefundAdjInvoiceItem;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.util.ChangeType;
 import com.ning.billing.util.api.TagApiException;
@@ -50,9 +57,9 @@ import com.ning.billing.util.tag.ControlTagType;
 public class DefaultInvoiceDao implements InvoiceDao {
     private final InvoiceSqlDao invoiceSqlDao;
     private final InvoicePaymentSqlDao invoicePaymentSqlDao;
-    private final CreditInvoiceItemSqlDao creditInvoiceItemSqlDao;
     private final TagUserApi tagUserApi;
     private final NextBillingDatePoster nextBillingDatePoster;
+    private final InvoiceItemSqlDao invoiceItemSqlDao;
 
     @Inject
     public DefaultInvoiceDao(final IDBI dbi,
@@ -60,7 +67,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
                              final TagUserApi tagUserApi) {
         this.invoiceSqlDao = dbi.onDemand(InvoiceSqlDao.class);
         this.invoicePaymentSqlDao = dbi.onDemand(InvoicePaymentSqlDao.class);
-        this.creditInvoiceItemSqlDao = dbi.onDemand(CreditInvoiceItemSqlDao.class);
+        this.invoiceItemSqlDao = dbi.onDemand(InvoiceItemSqlDao.class);
         this.nextBillingDatePoster = nextBillingDatePoster;
         this.tagUserApi = tagUserApi;
     }
@@ -71,9 +78,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
             @Override
             public List<Invoice> inTransaction(final InvoiceSqlDao invoiceDao, final TransactionStatus status) throws Exception {
                 final List<Invoice> invoices = invoiceDao.getInvoicesByAccount(accountId.toString());
-
                 populateChildren(invoices, invoiceDao);
-
                 return invoices;
             }
         });
@@ -84,11 +89,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
         return invoiceSqlDao.inTransaction(new Transaction<List<Invoice>, InvoiceSqlDao>() {
             @Override
             public List<Invoice> inTransaction(final InvoiceSqlDao invoiceDao, final TransactionStatus status) throws Exception {
-                final List<Invoice> invoices = invoiceDao.getAllInvoicesByAccount(accountId.toString());
-
-                populateChildren(invoices, invoiceDao);
-
-                return invoices;
+                return getAllInvoicesByAccountFromTransaction(accountId, invoiceDao);
             }
         });
     }
@@ -138,14 +139,11 @@ public class DefaultInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public void create(final Invoice invoice, final CallContext context) {
+    public void create(final Invoice invoice, final int billCycleDay, final CallContext context) {
         invoiceSqlDao.inTransaction(new Transaction<Void, InvoiceSqlDao>() {
             @Override
             public Void inTransaction(final InvoiceSqlDao transactional, final TransactionStatus status) throws Exception {
-
-                // STEPH this seems useless
                 final Invoice currentInvoice = transactional.getById(invoice.getId().toString());
-
                 if (currentInvoice == null) {
                     final List<EntityAudit> audits = new ArrayList<EntityAudit>();
 
@@ -155,25 +153,14 @@ public class DefaultInvoiceDao implements InvoiceDao {
 
                     List<Long> recordIdList;
 
+                    final List<InvoiceItem> invoiceItems = invoice.getInvoiceItems();
+                    final InvoiceItemSqlDao transInvoiceItemSqlDao = transactional.become(InvoiceItemSqlDao.class);
+                    transInvoiceItemSqlDao.batchCreateFromTransaction(invoiceItems, context);
+                    recordIdList = transInvoiceItemSqlDao.getRecordIds(invoice.getId().toString());
+                    audits.addAll(createAudits(TableName.INVOICE_ITEMS, recordIdList));
+
                     final List<InvoiceItem> recurringInvoiceItems = invoice.getInvoiceItems(RecurringInvoiceItem.class);
-                    final RecurringInvoiceItemSqlDao recurringInvoiceItemDao = transactional.become(RecurringInvoiceItemSqlDao.class);
-                    recurringInvoiceItemDao.batchCreateFromTransaction(recurringInvoiceItems, context);
-                    recordIdList = recurringInvoiceItemDao.getRecordIds(invoice.getId().toString());
-                    audits.addAll(createAudits(TableName.RECURRING_INVOICE_ITEMS, recordIdList));
-
-                    notifyOfFutureBillingEvents(transactional, recurringInvoiceItems);
-
-                    final List<InvoiceItem> fixedPriceInvoiceItems = invoice.getInvoiceItems(FixedPriceInvoiceItem.class);
-                    final FixedPriceInvoiceItemSqlDao fixedPriceInvoiceItemDao = transactional.become(FixedPriceInvoiceItemSqlDao.class);
-                    fixedPriceInvoiceItemDao.batchCreateFromTransaction(fixedPriceInvoiceItems, context);
-                    recordIdList = fixedPriceInvoiceItemDao.getRecordIds(invoice.getId().toString());
-                    audits.addAll(createAudits(TableName.FIXED_INVOICE_ITEMS, recordIdList));
-
-                    final List<InvoiceItem> creditInvoiceItems = invoice.getInvoiceItems(CreditInvoiceItem.class);
-                    final CreditInvoiceItemSqlDao creditInvoiceItemSqlDao = transactional.become(CreditInvoiceItemSqlDao.class);
-                    creditInvoiceItemSqlDao.batchCreateFromTransaction(creditInvoiceItems, context);
-                    recordIdList = creditInvoiceItemSqlDao.getRecordIds(invoice.getId().toString());
-                    audits.addAll(createAudits(TableName.CREDIT_INVOICE_ITEMS, recordIdList));
+                    notifyOfFutureBillingEvents(transactional, invoice.getAccountId(), billCycleDay, recurringInvoiceItems);
 
                     final List<InvoicePayment> invoicePayments = invoice.getPayments();
                     final InvoicePaymentSqlDao invoicePaymentSqlDao = transactional.become(InvoicePaymentSqlDao.class);
@@ -183,7 +170,6 @@ public class DefaultInvoiceDao implements InvoiceDao {
 
                     transactional.insertAuditFromTransaction(audits, context);
                 }
-
                 return null;
             }
         });
@@ -214,15 +200,39 @@ public class DefaultInvoiceDao implements InvoiceDao {
 
     @Override
     public BigDecimal getAccountBalance(final UUID accountId) {
-        return invoiceSqlDao.getAccountBalance(accountId.toString());
+
+        return invoiceSqlDao.inTransaction(new Transaction<BigDecimal, InvoiceSqlDao>() {
+            @Override
+            public BigDecimal inTransaction(final InvoiceSqlDao transactional, final TransactionStatus status) throws Exception {
+                BigDecimal cba = BigDecimal.ZERO;
+
+                BigDecimal accountBalance = BigDecimal.ZERO;
+                final List<Invoice> invoices = getAllInvoicesByAccountFromTransaction(accountId, transactional);
+                for (final Invoice cur : invoices) {
+                    accountBalance = accountBalance.add(cur.getBalance());
+                    cba = cba.add(cur.getCBAAmount());
+                }
+                return accountBalance.subtract(cba);
+            }
+        });
     }
 
     @Override
-    public void notifyOfPaymentAttempt(final InvoicePayment invoicePayment, final CallContext context) {
+    public BigDecimal getAccountCBA(final UUID accountId) {
+        return invoiceSqlDao.inTransaction(new Transaction<BigDecimal, InvoiceSqlDao>() {
+            @Override
+            public BigDecimal inTransaction(final InvoiceSqlDao transactional, final TransactionStatus status) throws Exception {
+                return getAccountCBAFromTransaction(accountId, transactional);
+            }
+        });
+    }
+
+    @Override
+    public void notifyOfPayment(final InvoicePayment invoicePayment, final CallContext context) {
         invoicePaymentSqlDao.inTransaction(new Transaction<Void, InvoicePaymentSqlDao>() {
             @Override
             public Void inTransaction(final InvoicePaymentSqlDao transactional, final TransactionStatus status) throws Exception {
-                transactional.notifyOfPaymentAttempt(invoicePayment, context);
+                transactional.notifyOfPayment(invoicePayment, context);
 
                 final String invoicePaymentId = invoicePayment.getId().toString();
                 final Long recordId = transactional.getRecordId(invoicePaymentId);
@@ -239,23 +249,27 @@ public class DefaultInvoiceDao implements InvoiceDao {
         return invoiceSqlDao.inTransaction(new Transaction<List<Invoice>, InvoiceSqlDao>() {
             @Override
             public List<Invoice> inTransaction(final InvoiceSqlDao invoiceDao, final TransactionStatus status) throws Exception {
-                final List<Invoice> invoices = invoiceSqlDao.getUnpaidInvoicesByAccountId(accountId.toString(), upToDate.toDate());
 
-                populateChildren(invoices, invoiceDao);
-
-                return invoices;
+                final List<Invoice> invoices = getAllInvoicesByAccountFromTransaction(accountId, invoiceDao);
+                final Collection<Invoice> unpaidInvoices = Collections2.filter(invoices, new Predicate<Invoice>() {
+                    @Override
+                    public boolean apply(final Invoice in) {
+                        return (in.getBalance().compareTo(BigDecimal.ZERO) >= 1) && !in.getTargetDate().isAfter(upToDate);
+                    }
+                });
+                return new ArrayList<Invoice>(unpaidInvoices);
             }
         });
     }
 
     @Override
-    public UUID getInvoiceIdByPaymentAttemptId(final UUID paymentAttemptId) {
-        return invoiceSqlDao.getInvoiceIdByPaymentAttemptId(paymentAttemptId.toString());
+    public UUID getInvoiceIdByPaymentId(final UUID paymentId) {
+        return invoiceSqlDao.getInvoiceIdByPaymentId(paymentId.toString());
     }
 
     @Override
-    public InvoicePayment getInvoicePayment(final UUID paymentAttemptId) {
-        return invoicePaymentSqlDao.getInvoicePayment(paymentAttemptId.toString());
+    public InvoicePayment getInvoicePayment(final UUID paymentId) {
+        return invoicePaymentSqlDao.getInvoicePayment(paymentId.toString());
     }
 
     @Override
@@ -269,21 +283,97 @@ public class DefaultInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public InvoicePayment postChargeback(final UUID invoicePaymentId, final BigDecimal amount, final CallContext context) throws InvoiceApiException {
+    public InvoicePayment createRefund(final UUID paymentId, final BigDecimal amount, final boolean isInvoiceAdjusted, final UUID paymentCookieId, final CallContext context)
+            throws InvoiceApiException {
         return invoicePaymentSqlDao.inTransaction(new Transaction<InvoicePayment, InvoicePaymentSqlDao>() {
             @Override
             public InvoicePayment inTransaction(final InvoicePaymentSqlDao transactional, final TransactionStatus status) throws Exception {
+
+                final InvoicePayment payment = transactional.getByPaymentId(paymentId.toString());
+                if (payment == null) {
+                    throw new InvoiceApiException(ErrorCode.INVOICE_PAYMENT_BY_ATTEMPT_NOT_FOUND, paymentId);
+                }
+                final BigDecimal maxRefundAmount = payment.getAmount() == null ? BigDecimal.ZERO : payment.getAmount();
+                final BigDecimal requestedAmount = amount == null ? maxRefundAmount : amount;
+                if (requestedAmount.compareTo(BigDecimal.ZERO) >= 0) {
+                    throw new InvoiceApiException(ErrorCode.REFUND_AMOUNT_IS_POSITIVE);
+                }
+
+                // Now that we checked signs, let's work with positive numbers, this makes things simpler
+                final BigDecimal requestedPositiveAmount = requestedAmount.negate();
+                if (requestedPositiveAmount.compareTo(maxRefundAmount) > 0) {
+                    throw new InvoiceApiException(ErrorCode.REFUND_AMOUNT_TOO_HIGH, requestedPositiveAmount, maxRefundAmount);
+                }
+
+                // Before we go further, check if that refund already got inserted
+                final InvoicePayment existingRefund = transactional.getPaymentsForCookieId(paymentCookieId.toString());
+                if (existingRefund != null) {
+                    return existingRefund;
+                }
+
+                final InvoicePayment refund = new DefaultInvoicePayment(UUID.randomUUID(), InvoicePaymentType.REFUND, paymentId,
+                                                                        payment.getInvoiceId(), context.getCreatedDate(), requestedPositiveAmount.negate(),
+                                                                        payment.getCurrency(), paymentCookieId, payment.getId());
+                transactional.create(refund, context);
+
+                // Retrieve invoice after the Refund
+                final InvoiceSqlDao transInvoiceDao = transactional.become(InvoiceSqlDao.class);
+                final Invoice invoice = transInvoiceDao.getById(payment.getInvoiceId().toString());
+                if (invoice != null) {
+                    populateChildren(invoice, transInvoiceDao);
+                } else {
+                    throw new IllegalStateException("Invoice shouldn't be null for payment " + payment.getId());
+                }
+
+                final BigDecimal invoiceBalanceAfterRefund = invoice.getBalance();
+                final InvoiceItemSqlDao transInvoiceItemDao = transInvoiceDao.become(InvoiceItemSqlDao.class);
+
+                // If we have an existing CBA > 0, we need to adjust it
+                //final BigDecimal cbaAmountAfterRefund = invoice.getCBAAmount();
+                final BigDecimal accountCbaAvailable = getAccountCBAFromTransaction(invoice.getAccountId(), transInvoiceDao);
+                BigDecimal cbaAdjAmount = BigDecimal.ZERO;
+                if (accountCbaAvailable.compareTo(BigDecimal.ZERO) > 0) {
+                    cbaAdjAmount = (requestedPositiveAmount.compareTo(accountCbaAvailable) > 0) ? accountCbaAvailable.negate() : requestedPositiveAmount.negate();
+                    final InvoiceItem cbaAdjItem = new CreditBalanceAdjInvoiceItem(invoice.getId(), invoice.getAccountId(), context.getCreatedDate(), cbaAdjAmount, invoice.getCurrency());
+                    transInvoiceItemDao.create(cbaAdjItem, context);
+                }
+                final BigDecimal requestedPositiveAmountAfterCbaAdj = requestedPositiveAmount.add(cbaAdjAmount);
+
+                if (isInvoiceAdjusted) {
+                    final BigDecimal maxBalanceToAdjust = (invoiceBalanceAfterRefund.compareTo(BigDecimal.ZERO) <= 0) ? BigDecimal.ZERO : invoiceBalanceAfterRefund;
+                    final BigDecimal requestedPositiveAmountToAdjust = requestedPositiveAmountAfterCbaAdj.compareTo(maxBalanceToAdjust) > 0 ? maxBalanceToAdjust : requestedPositiveAmountAfterCbaAdj;
+                    if (requestedPositiveAmountToAdjust.compareTo(BigDecimal.ZERO) > 0) {
+                        final InvoiceItem adjItem = new RefundAdjInvoiceItem(invoice.getId(), invoice.getAccountId(), context.getCreatedDate(), requestedPositiveAmountToAdjust.negate(), invoice.getCurrency());
+                        transInvoiceItemDao.create(adjItem, context);
+                    }
+                }
+                return refund;
+            }
+        });
+    }
+
+    @Override
+    public InvoicePayment postChargeback(final UUID invoicePaymentId, final BigDecimal amount, final CallContext context) throws InvoiceApiException {
+
+        return invoicePaymentSqlDao.inTransaction(new Transaction<InvoicePayment, InvoicePaymentSqlDao>() {
+            @Override
+            public InvoicePayment inTransaction(final InvoicePaymentSqlDao transactional, final TransactionStatus status) throws Exception {
+                final BigDecimal maxChargedBackAmount = getRemainingAmountPaidFromTransaction(invoicePaymentId, transactional);
+                final BigDecimal requestedChargedBackAmout = (amount == null) ? maxChargedBackAmount : amount;
+                if (requestedChargedBackAmout.compareTo(BigDecimal.ZERO) <= 0) {
+                    throw new InvoiceApiException(ErrorCode.CHARGE_BACK_AMOUNT_IS_NEGATIVE);
+                }
+                if (requestedChargedBackAmout.compareTo(maxChargedBackAmount) > 0) {
+                    throw new InvoiceApiException(ErrorCode.CHARGE_BACK_AMOUNT_TOO_HIGH, requestedChargedBackAmout, maxChargedBackAmount);
+                }
+
                 final InvoicePayment payment = invoicePaymentSqlDao.getById(invoicePaymentId.toString());
                 if (payment == null) {
                     throw new InvoiceApiException(ErrorCode.INVOICE_PAYMENT_NOT_FOUND, invoicePaymentId.toString());
                 } else {
-                    if (amount.compareTo(BigDecimal.ZERO) < 0) {
-                        throw new InvoiceApiException(ErrorCode.CHARGE_BACK_AMOUNT_IS_NEGATIVE);
-                    }
-
-                    final InvoicePayment chargeBack = payment.asChargeBack(amount, context.getCreatedDate());
+                    final InvoicePayment chargeBack = new DefaultInvoicePayment(UUID.randomUUID(), InvoicePaymentType.CHARGED_BACK, null,
+                                                                                payment.getInvoiceId(), context.getCreatedDate(), requestedChargedBackAmout.negate(), payment.getCurrency(), null, payment.getId());
                     invoicePaymentSqlDao.create(chargeBack, context);
-
                     return chargeBack;
                 }
             }
@@ -292,8 +382,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
 
     @Override
     public BigDecimal getRemainingAmountPaid(final UUID invoicePaymentId) {
-        final BigDecimal amount = invoicePaymentSqlDao.getRemainingAmountPaid(invoicePaymentId.toString());
-        return amount == null ? BigDecimal.ZERO : amount;
+        return getRemainingAmountPaidFromTransaction(invoicePaymentId, invoicePaymentSqlDao);
     }
 
     @Override
@@ -312,8 +401,8 @@ public class DefaultInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public List<InvoicePayment> getChargebacksByPaymentAttemptId(final UUID paymentAttemptId) {
-        return invoicePaymentSqlDao.getChargebacksByAttemptPaymentId(paymentAttemptId.toString());
+    public List<InvoicePayment> getChargebacksByPaymentId(final UUID paymentId) {
+        return invoicePaymentSqlDao.getChargebacksByPaymentId(paymentId.toString());
     }
 
     @Override
@@ -328,26 +417,45 @@ public class DefaultInvoiceDao implements InvoiceDao {
 
     @Override
     public InvoiceItem getCreditById(final UUID creditId) throws InvoiceApiException {
-        return creditInvoiceItemSqlDao.getById(creditId.toString());
+        return invoiceItemSqlDao.getById(creditId.toString());
     }
 
-    // TODO: make this transactional
     @Override
-    public InvoiceItem insertCredit(final UUID accountId, final BigDecimal amount,
+    public InvoiceItem insertCredit(final UUID accountId, final UUID invoiceId, final BigDecimal amount,
                                     final DateTime effectiveDate, final Currency currency,
                                     final CallContext context) {
-        final Invoice invoice = new DefaultInvoice(accountId, effectiveDate, effectiveDate, currency);
-        invoiceSqlDao.create(invoice, context);
 
-        final InvoiceItem credit = new CreditInvoiceItem(invoice.getId(), accountId, effectiveDate, amount, currency);
-        creditInvoiceItemSqlDao.create(credit, context);
+        return invoiceSqlDao.inTransaction(new Transaction<InvoiceItem, InvoiceSqlDao>() {
+            @Override
+            public InvoiceItem inTransaction(final InvoiceSqlDao transactional, final TransactionStatus status) throws Exception {
+                UUID invoiceIdForRefund = invoiceId;
+                if (invoiceIdForRefund == null) {
+                    final Invoice invoiceForRefund = new DefaultInvoice(accountId, effectiveDate, effectiveDate, currency);
+                    transactional.create(invoiceForRefund, context);
+                    invoiceIdForRefund = invoiceForRefund.getId();
+                }
 
-        return credit;
+                final InvoiceItem credit = new CreditAdjInvoiceItem(invoiceIdForRefund, accountId, effectiveDate, amount, currency);
+                final InvoiceItemSqlDao transInvoiceItemDao = transactional.become(InvoiceItemSqlDao.class);
+                transInvoiceItemDao.create(credit, context);
+                return credit;
+            }
+        });
     }
 
     @Override
     public void test() {
         invoiceSqlDao.test();
+    }
+
+    private BigDecimal getAccountCBAFromTransaction(final UUID accountId, final InvoiceSqlDao transactional) {
+        BigDecimal cba = BigDecimal.ZERO;
+        final List<Invoice> invoices = getAllInvoicesByAccountFromTransaction(accountId, transactional);
+        for (final Invoice cur : invoices) {
+            cba = cba.add(cur.getCBAAmount());
+        }
+
+        return cba;
     }
 
     private void populateChildren(final Invoice invoice, final InvoiceSqlDao invoiceSqlDao) {
@@ -360,26 +468,29 @@ public class DefaultInvoiceDao implements InvoiceDao {
         getInvoicePaymentsWithinTransaction(invoices, invoiceSqlDao);
     }
 
+    private List<Invoice> getAllInvoicesByAccountFromTransaction(final UUID accountId, final InvoiceSqlDao transactional) {
+        final List<Invoice> invoices = transactional.getAllInvoicesByAccount(accountId.toString());
+        populateChildren(invoices, transactional);
+        return invoices;
+    }
+
+    private BigDecimal getRemainingAmountPaidFromTransaction(final UUID invoicePaymentId, final InvoicePaymentSqlDao transactional) {
+        final BigDecimal amount = transactional.getRemainingAmountPaid(invoicePaymentId.toString());
+        return amount == null ? BigDecimal.ZERO : amount;
+    }
+
     private void getInvoiceItemsWithinTransaction(final List<Invoice> invoices, final InvoiceSqlDao invoiceDao) {
         for (final Invoice invoice : invoices) {
             getInvoiceItemsWithinTransaction(invoice, invoiceDao);
         }
     }
 
-    private void getInvoiceItemsWithinTransaction(final Invoice invoice, final InvoiceSqlDao invoiceDao) {
+    private void getInvoiceItemsWithinTransaction(final Invoice invoice, final InvoiceSqlDao transactional) {
         final String invoiceId = invoice.getId().toString();
 
-        final RecurringInvoiceItemSqlDao recurringInvoiceItemDao = invoiceDao.become(RecurringInvoiceItemSqlDao.class);
-        final List<InvoiceItem> recurringInvoiceItems = recurringInvoiceItemDao.getInvoiceItemsByInvoice(invoiceId);
-        invoice.addInvoiceItems(recurringInvoiceItems);
-
-        final FixedPriceInvoiceItemSqlDao fixedPriceInvoiceItemDao = invoiceDao.become(FixedPriceInvoiceItemSqlDao.class);
-        final List<InvoiceItem> fixedPriceInvoiceItems = fixedPriceInvoiceItemDao.getInvoiceItemsByInvoice(invoiceId);
-        invoice.addInvoiceItems(fixedPriceInvoiceItems);
-
-        final CreditInvoiceItemSqlDao creditInvoiceItemSqlDao = invoiceDao.become(CreditInvoiceItemSqlDao.class);
-        final List<InvoiceItem> creditInvoiceItems = creditInvoiceItemSqlDao.getInvoiceItemsByInvoice(invoiceId);
-        invoice.addInvoiceItems(creditInvoiceItems);
+        final InvoiceItemSqlDao transInvoiceItemSqlDao = transactional.become(InvoiceItemSqlDao.class);
+        final List<InvoiceItem> items = transInvoiceItemSqlDao.getInvoiceItemsByInvoice(invoiceId);
+        invoice.addInvoiceItems(items);
     }
 
     private void getInvoicePaymentsWithinTransaction(final List<Invoice> invoices, final InvoiceSqlDao invoiceDao) {
@@ -395,15 +506,35 @@ public class DefaultInvoiceDao implements InvoiceDao {
         invoice.addPayments(invoicePayments);
     }
 
-    private void notifyOfFutureBillingEvents(final InvoiceSqlDao dao, final List<InvoiceItem> invoiceItems) {
+    private void notifyOfFutureBillingEvents(final InvoiceSqlDao dao, final UUID accountId, final int billCycleDay, final List<InvoiceItem> invoiceItems) {
+        DateTime nextBCD = null;
+        UUID subscriptionForNextBCD = null;
         for (final InvoiceItem item : invoiceItems) {
-            if (item instanceof RecurringInvoiceItem) {
+            if (item.getInvoiceItemType() == InvoiceItemType.RECURRING) {
                 final RecurringInvoiceItem recurringInvoiceItem = (RecurringInvoiceItem) item;
                 if ((recurringInvoiceItem.getEndDate() != null) &&
                         (recurringInvoiceItem.getAmount() == null ||
                                 recurringInvoiceItem.getAmount().compareTo(BigDecimal.ZERO) >= 0)) {
-                    nextBillingDatePoster.insertNextBillingNotification(dao, item.getSubscriptionId(), recurringInvoiceItem.getEndDate());
+                    if (nextBCD == null || nextBCD.compareTo(recurringInvoiceItem.getEndDate()) > 0) {
+                        nextBCD = recurringInvoiceItem.getEndDate();
+                        subscriptionForNextBCD = recurringInvoiceItem.getSubscriptionId();
+                    }
                 }
+            }
+        }
+        // We need to be notified if and only if the maximum end date of the invoiced recurring items is equal
+        // to the next bill cycle day.
+        // We take the maximum because we're guaranteed to have invoiced all subscriptions up until that date
+        // (and no further processing is needed).
+        // Also, we only need to get notified on the BDC. For other invoice events (e.g. phase changes),
+        // we'll be notified by entitlement.
+        if (subscriptionForNextBCD != null && nextBCD != null) {
+            final int lastDayOfMonth = nextBCD.dayOfMonth().withMaximumValue().getDayOfMonth();
+            final int nextBCDDay = nextBCD.getDayOfMonth();
+            // Small trick here in case the bill cycle day doesn't exist for that month, e.g. the bill cycle day
+            // is on the 31st, but the month has only 30 days
+            if (nextBCDDay == billCycleDay || (lastDayOfMonth == nextBCDDay && billCycleDay > lastDayOfMonth)) {
+                nextBillingDatePoster.insertNextBillingNotification(dao, accountId, subscriptionForNextBCD, nextBCD);
             }
         }
     }

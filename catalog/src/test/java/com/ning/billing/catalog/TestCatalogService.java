@@ -24,9 +24,8 @@ import com.ning.billing.config.CatalogConfig;
 import com.ning.billing.lifecycle.KillbillService.ServiceException;
 import com.ning.billing.util.clock.DefaultClock;
 
-public class TestCatalogService {
-
-    @Test
+public class TestCatalogService extends CatalogTestSuite {
+    @Test(groups = "fast")
     public void testCatalogServiceDirectory() throws ServiceException {
         final DefaultCatalogService service = new DefaultCatalogService(new CatalogConfig() {
             @Override
@@ -40,7 +39,7 @@ public class TestCatalogService {
         Assert.assertEquals(service.getFullCatalog().getCatalogName(), "WeaponsHireSmall");
     }
 
-    @Test
+    @Test(groups = "fast")
     public void testCatalogServiceFile() throws ServiceException {
         final DefaultCatalogService service = new DefaultCatalogService(new CatalogConfig() {
             @Override

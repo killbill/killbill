@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.catalog;
 
 import java.math.BigDecimal;
@@ -28,10 +29,10 @@ import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.config.ValidationErrors;
 
-public class TestInternationalPrice {
+public class TestInternationalPrice extends CatalogTestSuite {
     private static final Logger log = LoggerFactory.getLogger(TestInternationalPrice.class);
 
-    @Test
+    @Test(groups = "fast")
     public void testZeroValue() throws URISyntaxException, CatalogApiException {
         final StandaloneCatalog c = new MockCatalog();
         c.setSupportedCurrencies(new Currency[]{Currency.GBP, Currency.EUR, Currency.USD, Currency.BRL, Currency.MXN});
@@ -59,10 +60,9 @@ public class TestInternationalPrice {
         Assert.assertEquals(p1.getPrice(Currency.USD), new BigDecimal(1));
         Assert.assertEquals(p1.getPrice(Currency.BRL), new BigDecimal(1));
         Assert.assertEquals(p1.getPrice(Currency.MXN), new BigDecimal(1));
-
     }
 
-    @Test
+    @Test(groups = "fast")
     public void testPriceInitialization() throws URISyntaxException, CatalogApiException {
         final StandaloneCatalog c = new MockCatalog();
         c.setSupportedCurrencies(new Currency[]{Currency.GBP, Currency.EUR, Currency.USD, Currency.BRL, Currency.MXN});
@@ -71,7 +71,7 @@ public class TestInternationalPrice {
         Assert.assertEquals(c.getCurrentPlans()[0].getFinalPhase().getRecurringPrice().getPrice(Currency.GBP), new BigDecimal(0));
     }
 
-    @Test
+    @Test(groups = "fast")
     public void testNegativeValuePrices() {
         final StandaloneCatalog c = new MockCatalog();
         c.setSupportedCurrencies(new Currency[]{Currency.GBP, Currency.EUR, Currency.USD, Currency.BRL, Currency.MXN});
@@ -89,6 +89,4 @@ public class TestInternationalPrice {
         errors.log(log);
         Assert.assertEquals(errors.size(), 3);
     }
-
-
 }

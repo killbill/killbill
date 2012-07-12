@@ -19,15 +19,12 @@ package com.ning.billing.analytics.dao;
 import javax.inject.Inject;
 import java.util.List;
 
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.skife.jdbi.v2.Transaction;
-import org.skife.jdbi.v2.TransactionStatus;
-
 import com.ning.billing.analytics.model.BusinessAccount;
 import com.ning.billing.analytics.model.BusinessAccountTag;
 import com.ning.billing.analytics.model.BusinessInvoice;
 import com.ning.billing.analytics.model.BusinessInvoiceItem;
+import com.ning.billing.analytics.model.BusinessInvoicePayment;
+import com.ning.billing.analytics.model.BusinessOverdueStatus;
 import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
 
 public class DefaultAnalyticsDao implements AnalyticsDao {
@@ -36,38 +33,44 @@ public class DefaultAnalyticsDao implements AnalyticsDao {
     private final BusinessInvoiceSqlDao invoiceSqlDao;
     private final BusinessInvoiceItemSqlDao invoiceItemSqlDao;
     private final BusinessAccountTagSqlDao accountTagSqlDao;
+    private final BusinessOverdueStatusSqlDao overdueStatusSqlDao;
+    private final BusinessInvoicePaymentSqlDao invoicePaymentSqlDao;
 
     @Inject
     public DefaultAnalyticsDao(final BusinessAccountSqlDao accountSqlDao,
                                final BusinessSubscriptionTransitionSqlDao subscriptionTransitionSqlDao,
                                final BusinessInvoiceSqlDao invoiceSqlDao,
                                final BusinessInvoiceItemSqlDao invoiceItemSqlDao,
-                               final BusinessAccountTagSqlDao accountTagSqlDao) {
+                               final BusinessAccountTagSqlDao accountTagSqlDao,
+                               final BusinessOverdueStatusSqlDao overdueStatusSqlDao,
+                               final BusinessInvoicePaymentSqlDao invoicePaymentSqlDao) {
         this.accountSqlDao = accountSqlDao;
         this.subscriptionTransitionSqlDao = subscriptionTransitionSqlDao;
         this.invoiceSqlDao = invoiceSqlDao;
         this.invoiceItemSqlDao = invoiceItemSqlDao;
         this.accountTagSqlDao = accountTagSqlDao;
+        this.overdueStatusSqlDao = overdueStatusSqlDao;
+        this.invoicePaymentSqlDao = invoicePaymentSqlDao;
     }
 
     @Override
     public BusinessAccount getAccountByKey(final String accountKey) {
-        return accountSqlDao.getAccount(accountKey);
+        return accountSqlDao.getAccountByKey(accountKey);
     }
 
     @Override
     public List<BusinessSubscriptionTransition> getTransitionsByKey(final String externalKey) {
-        return subscriptionTransitionSqlDao.getTransitions(externalKey);
+        return subscriptionTransitionSqlDao.getTransitionsByKey(externalKey);
     }
 
     @Override
     public List<BusinessInvoice> getInvoicesByKey(final String accountKey) {
-        return invoiceSqlDao.getInvoicesForAccount(accountKey);
+        return invoiceSqlDao.getInvoicesForAccountByKey(accountKey);
     }
 
     @Override
     public List<BusinessAccountTag> getTagsForAccount(final String accountKey) {
-        return accountTagSqlDao.getTagsForAccount(accountKey);
+        return accountTagSqlDao.getTagsForAccountByKey(accountKey);
     }
 
     @Override
@@ -76,33 +79,12 @@ public class DefaultAnalyticsDao implements AnalyticsDao {
     }
 
     @Override
-    public void createInvoice(final String accountKey, final BusinessInvoice invoice, final Iterable<BusinessInvoiceItem> invoiceItems) {
-        invoiceSqlDao.inTransaction(new Transaction<Void, BusinessInvoiceSqlDao>() {
-            @Override
-            public Void inTransaction(final BusinessInvoiceSqlDao transactional, final TransactionStatus status) throws Exception {
-                // Create the invoice
-                transactional.createInvoice(invoice);
+    public List<BusinessOverdueStatus> getOverdueStatusesForBundleByKey(final String externalKey) {
+        return overdueStatusSqlDao.getOverdueStatusesForBundleByKey(externalKey);
+    }
 
-                // Add associated invoice items
-                final BusinessInvoiceItemSqlDao invoiceItemSqlDao = transactional.become(BusinessInvoiceItemSqlDao.class);
-                for (final BusinessInvoiceItem invoiceItem : invoiceItems) {
-                    invoiceItemSqlDao.createInvoiceItem(invoiceItem);
-                }
-
-                // Update BAC
-                final BusinessAccountSqlDao accountSqlDao = transactional.become(BusinessAccountSqlDao.class);
-                final BusinessAccount account = accountSqlDao.getAccount(accountKey);
-                if (account == null) {
-                    throw new IllegalStateException("Account does not exist for key " + accountKey);
-                }
-                account.setBalance(account.getBalance().add(invoice.getBalance()));
-                account.setLastInvoiceDate(invoice.getInvoiceDate());
-                account.setTotalInvoiceBalance(account.getTotalInvoiceBalance().add(invoice.getBalance()));
-                account.setUpdatedDt(new DateTime(DateTimeZone.UTC));
-                accountSqlDao.saveAccount(account);
-
-                return null;
-            }
-        });
+    @Override
+    public List<BusinessInvoicePayment> getInvoicePaymentsForAccountByKey(final String accountKey) {
+        return invoicePaymentSqlDao.getInvoicePaymentsForAccountByKey(accountKey);
     }
 }

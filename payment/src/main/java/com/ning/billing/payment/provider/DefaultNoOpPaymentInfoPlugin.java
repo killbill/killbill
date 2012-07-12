@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -68,6 +68,12 @@ public class DefaultNoOpPaymentInfoPlugin implements PaymentInfoPlugin {
 
     @Override
     public String getGatewayErrorCode() {
+        return null;
+    }
+
+
+    @Override
+    public String getExternalReferenceId() {
         return null;
     }
 }

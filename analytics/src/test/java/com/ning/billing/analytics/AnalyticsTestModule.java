@@ -62,7 +62,7 @@ public class AnalyticsTestModule extends AnalyticsModule {
         install(new DefaultJunctionModule());
 
         // Install the Dao layer
-        final MysqlTestingHelper helper = TestWithEmbeddedDB.getMysqlTestingHelper();
+        final MysqlTestingHelper helper = AnalyticsTestSuiteWithEmbeddedDB.getMysqlTestingHelper();
         bind(MysqlTestingHelper.class).toInstance(helper);
         final IDBI dbi = helper.getDBI();
         bind(IDBI.class).toInstance(dbi);

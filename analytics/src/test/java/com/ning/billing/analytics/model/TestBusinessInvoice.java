@@ -30,6 +30,7 @@ import com.ning.billing.catalog.api.Currency;
 public class TestBusinessInvoice extends AnalyticsTestSuite {
     @Test(groups = "fast")
     public void testEquals() throws Exception {
+        final UUID accountId = UUID.randomUUID();
         final String accountKey = UUID.randomUUID().toString();
         final BigDecimal amountCharged = BigDecimal.ZERO;
         final BigDecimal amountCredited = BigDecimal.ONE;
@@ -39,13 +40,15 @@ public class TestBusinessInvoice extends AnalyticsTestSuite {
         final Currency currency = Currency.MXN;
         final DateTime invoiceDate = new DateTime(DateTimeZone.UTC);
         final UUID invoiceId = UUID.randomUUID();
+        final Integer invoiceNumber = 15;
         final DateTime targetDate = new DateTime(DateTimeZone.UTC);
         final DateTime updatedDate = new DateTime(DateTimeZone.UTC);
-        final BusinessInvoice invoice = new BusinessInvoice(accountKey, amountCharged, amountCredited, amountPaid, balance,
-                                                            createdDate, currency, invoiceDate, invoiceId, targetDate, updatedDate);
+        final BusinessInvoice invoice = new BusinessInvoice(accountId, accountKey, amountCharged, amountCredited, amountPaid, balance,
+                                                            createdDate, currency, invoiceDate, invoiceId, invoiceNumber, targetDate, updatedDate);
         Assert.assertSame(invoice, invoice);
         Assert.assertEquals(invoice, invoice);
         Assert.assertTrue(invoice.equals(invoice));
+        Assert.assertEquals(invoice.getAccountId(), accountId);
         Assert.assertEquals(invoice.getAccountKey(), accountKey);
         Assert.assertEquals(invoice.getAmountCharged(), amountCharged);
         Assert.assertEquals(invoice.getAmountCredited(), amountCredited);
@@ -55,23 +58,12 @@ public class TestBusinessInvoice extends AnalyticsTestSuite {
         Assert.assertEquals(invoice.getCurrency(), currency);
         Assert.assertEquals(invoice.getInvoiceDate(), invoiceDate);
         Assert.assertEquals(invoice.getInvoiceId(), invoiceId);
+        Assert.assertEquals(invoice.getInvoiceNumber(), invoiceNumber);
         Assert.assertEquals(invoice.getTargetDate(), targetDate);
         Assert.assertEquals(invoice.getUpdatedDate(), updatedDate);
 
-        final BusinessInvoice otherInvoice = new BusinessInvoice(null, null, null, null, null, createdDate, null,
-                                                                 null, invoiceId, null, null);
+        final BusinessInvoice otherInvoice = new BusinessInvoice(null, null, null, null, null, null, createdDate, null,
+                                                                 null, invoiceId, 0, null, null);
         Assert.assertFalse(invoice.equals(otherInvoice));
-
-        // Test setters
-        otherInvoice.setAccountKey(accountKey);
-        otherInvoice.setAmountCharged(amountCharged);
-        otherInvoice.setAmountCredited(amountCredited);
-        otherInvoice.setAmountPaid(amountPaid);
-        otherInvoice.setBalance(balance);
-        otherInvoice.setCurrency(currency);
-        otherInvoice.setInvoiceDate(invoiceDate);
-        otherInvoice.setTargetDate(targetDate);
-        otherInvoice.setUpdatedDate(updatedDate);
-        Assert.assertTrue(invoice.equals(otherInvoice));
     }
 }

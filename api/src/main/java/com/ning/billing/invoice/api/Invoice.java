@@ -54,13 +54,19 @@ public interface Invoice extends Entity {
 
     Currency getCurrency();
 
-    DateTime getLastPaymentAttempt();
+    DateTime getLastPaymentDate();
 
-    BigDecimal getAmountPaid();
+    BigDecimal getPaidAmount();
 
-    BigDecimal getAmountCharged();
+    BigDecimal getChargedAmount();
 
-    BigDecimal getAmountCredited();
+    BigDecimal getCBAAmount();
+
+    BigDecimal getTotalAdjAmount();
+
+    BigDecimal getCreditAdjAmount();
+
+    BigDecimal getRefundAdjAmount();
 
     BigDecimal getBalance();
 

@@ -27,10 +27,7 @@ import org.testng.annotations.Test;
 import com.ning.billing.analytics.AnalyticsTestSuite;
 import com.ning.billing.analytics.MockDuration;
 import com.ning.billing.analytics.MockPhase;
-import com.ning.billing.analytics.MockPlan;
 import com.ning.billing.analytics.MockProduct;
-import com.ning.billing.analytics.MockSubscription;
-import com.ning.billing.analytics.model.BusinessSubscription;
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Duration;
@@ -40,6 +37,8 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.mock.MockPlan;
+import com.ning.billing.mock.MockSubscription;
 
 import static com.ning.billing.catalog.api.Currency.USD;
 

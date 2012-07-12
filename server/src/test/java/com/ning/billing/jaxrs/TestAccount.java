@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -16,12 +16,18 @@
 package com.ning.billing.jaxrs;
 
 
-import javax.ws.rs.core.Response.Status;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
+
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
+import javax.ws.rs.core.Response.Status;
 
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -38,15 +44,11 @@ import com.ning.billing.jaxrs.json.BundleJsonNoSubscriptions;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
 import com.ning.billing.jaxrs.json.PaymentJsonSimple;
 import com.ning.billing.jaxrs.json.PaymentMethodJson;
+import com.ning.billing.jaxrs.json.RefundJson;
 import com.ning.billing.jaxrs.json.SubscriptionJsonNoEvents;
 import com.ning.billing.jaxrs.json.TagDefinitionJson;
 import com.ning.billing.jaxrs.resources.JaxrsResource;
 import com.ning.http.client.Response;
-
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
 
 
 public class TestAccount extends TestJaxrsBase {
@@ -232,7 +234,7 @@ public class TestAccount extends TestJaxrsBase {
     }
 
     @Test(groups = "slow", enabled = true)
-    public void testAccountPayments() throws Exception {
+    public void testAccountPaymentsWithRefund() throws Exception {
 
         //clock.setTime(new DateTime(2012, 4, 25, 0, 3, 42, 0));
 
@@ -249,13 +251,21 @@ public class TestAccount extends TestJaxrsBase {
         crappyWaitForLackOfProperSynchonization();
 
 
-        final String uri = JaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAccountId() + "/" + JaxrsResource.PAYMENTS;
+        String uri = JaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAccountId() + "/" + JaxrsResource.PAYMENTS;
 
-        final Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
-        final String baseJson = response.getResponseBody();
-        final List<PaymentJsonSimple> objFromJson = mapper.readValue(baseJson, new TypeReference<List<PaymentJsonSimple>>() {});
+        String baseJson = response.getResponseBody();
+        List<PaymentJsonSimple> objFromJson = mapper.readValue(baseJson, new TypeReference<List<PaymentJsonSimple>>() {});
         Assert.assertEquals(objFromJson.size(), 1);
+
+        uri = JaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAccountId() + "/" + JaxrsResource.REFUNDS;
+        response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+        baseJson = response.getResponseBody();
+        List<RefundJson> objRefundFromJson = mapper.readValue(baseJson, new TypeReference<List<RefundJson>>() {});
+        Assert.assertEquals(objRefundFromJson.size(), 0);
+
     }
 
     @Test(groups = "slow", enabled = true)
@@ -268,7 +278,7 @@ public class TestAccount extends TestJaxrsBase {
 
         final Map<String, String> queryParams = new HashMap<String, String>();
         queryParams.put(JaxrsResource.QUERY_TAGS, input.getName());
-        final String uri = JaxrsResource.ACCOUNTS_PATH + "/" + JaxrsResource.TAGS + "/" + UUID.randomUUID().toString();
+        final String uri = JaxrsResource.ACCOUNTS_PATH + "/" + UUID.randomUUID().toString() + "/" + JaxrsResource.TAGS;
         response = doPost(uri, null, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
 
         assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
@@ -288,13 +298,17 @@ public class TestAccount extends TestJaxrsBase {
     @Test(groups = "slow", enabled = true)
     public void testCustomFields() throws Exception {
 
+
+        final AccountJson accountJson = createAccount("yoyoq", "gfgrqe", "yoyoq@yahoo.com");
+        assertNotNull(accountJson);
+
         final List<CustomFieldJson> customFields = new LinkedList<CustomFieldJson>();
         customFields.add(new CustomFieldJson("1", "value1"));
         customFields.add(new CustomFieldJson("2", "value2"));
         customFields.add(new CustomFieldJson("3", "value3"));
         final String baseJson = mapper.writeValueAsString(customFields);
 
-        final String uri = JaxrsResource.ACCOUNTS_PATH + "/" + JaxrsResource.CUSTOM_FIELDS + "/" + UUID.randomUUID().toString();
+        final String uri = JaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAccountId() + "/" + JaxrsResource.CUSTOM_FIELDS;
         Response response = doPost(uri, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
 

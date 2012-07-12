@@ -19,10 +19,7 @@ package com.ning.billing.util.bus;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-@Test(groups = {"slow"})
 public class TestEventBus extends TestEventBusBase {
-
-
     @BeforeClass(groups = "slow")
     public void setup() throws Exception {
         eventBus = new InMemoryBus();

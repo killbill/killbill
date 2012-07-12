@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -31,8 +31,17 @@ public interface PaymentApi {
     public Payment createPayment(final Account account, final UUID invoiceId, final BigDecimal amount, final CallContext context)
             throws PaymentApiException;
 
-    public Refund createRefund(final Account account, final UUID paymentId, final CallContext context)
-            throws PaymentApiException;
+    public Refund getRefund(final UUID refundId)
+    throws PaymentApiException;
+
+    public Refund createRefund(final Account account, final UUID paymentId, final BigDecimal refundAmount, final boolean isAdjusted, final CallContext context)
+    throws PaymentApiException;
+
+    public List<Refund> getAccountRefunds(final Account account)
+    throws PaymentApiException;
+
+    public List<Refund> getPaymentRefunds(final UUID paymentId)
+    throws PaymentApiException;
 
     public List<Payment> getInvoicePayments(final UUID invoiceId)
             throws PaymentApiException;

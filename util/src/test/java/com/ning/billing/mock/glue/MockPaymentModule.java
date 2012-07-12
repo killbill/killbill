@@ -16,16 +16,14 @@
 
 package com.ning.billing.mock.glue;
 
+import org.mockito.Mockito;
+
 import com.google.inject.AbstractModule;
-import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.payment.api.PaymentApi;
 
 public class MockPaymentModule extends AbstractModule {
-
     @Override
     protected void configure() {
-
-        bind(PaymentApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(PaymentApi.class));
-
+        bind(PaymentApi.class).toInstance(Mockito.mock(PaymentApi.class));
     }
 }

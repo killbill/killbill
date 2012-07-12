@@ -40,8 +40,11 @@ public @interface BusinessSubscriptionTransitionBinder {
             return new Binder<BusinessSubscriptionTransitionBinder, BusinessSubscriptionTransition>() {
                 public void bind(final SQLStatement q, final BusinessSubscriptionTransitionBinder bind, final BusinessSubscriptionTransition arg) {
                     q.bind("total_ordering", arg.getTotalOrdering());
+                    q.bind("bundle_id", arg.getBundleId().toString());
                     q.bind("external_key", arg.getExternalKey());
+                    q.bind("account_id", arg.getAccountId().toString());
                     q.bind("account_key", arg.getAccountKey());
+                    q.bind("subscription_id", arg.getSubscriptionId().toString());
                     q.bind("requested_timestamp", arg.getRequestedTimestamp().getMillis());
                     q.bind("event", arg.getEvent().toString());
 
@@ -59,8 +62,6 @@ public @interface BusinessSubscriptionTransitionBinder {
                         q.bindNull("prev_currency", Types.VARCHAR);
                         q.bindNull("prev_start_date", Types.BIGINT);
                         q.bindNull("prev_state", Types.VARCHAR);
-                        q.bindNull("prev_subscription_id", Types.VARCHAR);
-                        q.bindNull("prev_bundle_id", Types.VARCHAR);
                     } else {
                         q.bind("prev_product_name", previousSubscription.getProductName());
                         q.bind("prev_product_type", previousSubscription.getProductType());
@@ -86,16 +87,6 @@ public @interface BusinessSubscriptionTransitionBinder {
                         } else {
                             q.bind("prev_state", previousSubscription.getState().toString());
                         }
-                        if (previousSubscription.getSubscriptionId() == null) {
-                            q.bindNull("prev_subscription_id", Types.VARCHAR);
-                        } else {
-                            q.bind("prev_subscription_id", previousSubscription.getSubscriptionId().toString());
-                        }
-                        if (previousSubscription.getBundleId() == null) {
-                            q.bindNull("prev_bundle_id", Types.VARCHAR);
-                        } else {
-                            q.bind("prev_bundle_id", previousSubscription.getBundleId().toString());
-                        }
                     }
 
                     final BusinessSubscription nextSubscription = arg.getNextSubscription();
@@ -112,8 +103,6 @@ public @interface BusinessSubscriptionTransitionBinder {
                         q.bindNull("next_currency", Types.VARCHAR);
                         q.bindNull("next_start_date", Types.BIGINT);
                         q.bindNull("next_state", Types.VARCHAR);
-                        q.bindNull("next_subscription_id", Types.VARCHAR);
-                        q.bindNull("next_bundle_id", Types.VARCHAR);
                     } else {
                         q.bind("next_product_name", nextSubscription.getProductName());
                         q.bind("next_product_type", nextSubscription.getProductType());
@@ -138,16 +127,6 @@ public @interface BusinessSubscriptionTransitionBinder {
                             q.bindNull("next_state", Types.VARCHAR);
                         } else {
                             q.bind("next_state", nextSubscription.getState().toString());
-                        }
-                        if (nextSubscription.getSubscriptionId() == null) {
-                            q.bindNull("next_subscription_id", Types.VARCHAR);
-                        } else {
-                            q.bind("next_subscription_id", nextSubscription.getSubscriptionId().toString());
-                        }
-                        if (nextSubscription.getBundleId() == null) {
-                            q.bindNull("next_bundle_id", Types.VARCHAR);
-                        } else {
-                            q.bind("next_bundle_id", nextSubscription.getBundleId().toString());
                         }
                     }
                 }

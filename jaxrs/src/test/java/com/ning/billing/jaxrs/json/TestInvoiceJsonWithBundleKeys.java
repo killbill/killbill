@@ -29,8 +29,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.jaxrs.JaxrsTestSuite;
 
-public class TestInvoiceJsonWithBundleKeys {
+public class TestInvoiceJsonWithBundleKeys extends JaxrsTestSuite {
     private static final ObjectMapper mapper = new ObjectMapper();
 
     static {
@@ -41,7 +42,9 @@ public class TestInvoiceJsonWithBundleKeys {
     @Test(groups = "fast")
     public void testJson() throws Exception {
         final BigDecimal amount = BigDecimal.TEN;
-        final BigDecimal credit = BigDecimal.ONE;
+        final BigDecimal cba = BigDecimal.ONE;
+        final BigDecimal creditAdj = BigDecimal.ONE;
+        final BigDecimal refundAdj = BigDecimal.ONE;
         final String invoiceId = UUID.randomUUID().toString();
         final DateTime invoiceDate = new DateTime(DateTimeZone.UTC);
         final DateTime targetDate = new DateTime(DateTimeZone.UTC);
@@ -49,10 +52,12 @@ public class TestInvoiceJsonWithBundleKeys {
         final BigDecimal balance = BigDecimal.ZERO;
         final String accountId = UUID.randomUUID().toString();
         final String bundleKeys = UUID.randomUUID().toString();
-        final InvoiceJsonWithBundleKeys invoiceJsonSimple = new InvoiceJsonWithBundleKeys(amount, credit, invoiceId, invoiceDate,
+        final InvoiceJsonWithBundleKeys invoiceJsonSimple = new InvoiceJsonWithBundleKeys(amount, cba, creditAdj, refundAdj, invoiceId, invoiceDate,
                                                                                           targetDate, invoiceNumber, balance, accountId, bundleKeys);
         Assert.assertEquals(invoiceJsonSimple.getAmount(), amount);
-        Assert.assertEquals(invoiceJsonSimple.getCredit(), credit);
+        Assert.assertEquals(invoiceJsonSimple.getCBA(), cba);
+        Assert.assertEquals(invoiceJsonSimple.getCreditAdj(), creditAdj);
+        Assert.assertEquals(invoiceJsonSimple.getRefundAdj(), refundAdj);
         Assert.assertEquals(invoiceJsonSimple.getInvoiceId(), invoiceId);
         Assert.assertEquals(invoiceJsonSimple.getInvoiceDate(), invoiceDate);
         Assert.assertEquals(invoiceJsonSimple.getTargetDate(), targetDate);
@@ -63,7 +68,9 @@ public class TestInvoiceJsonWithBundleKeys {
 
         final String asJson = mapper.writeValueAsString(invoiceJsonSimple);
         Assert.assertEquals(asJson, "{\"amount\":" + invoiceJsonSimple.getAmount().toString() + "," +
-                "\"credit\":" + invoiceJsonSimple.getCredit().toString() + "," +
+                "\"cba\":" + invoiceJsonSimple.getCBA().toString() + "," +
+                "\"creditAdj\":" + invoiceJsonSimple.getCreditAdj().toString() + "," +
+                "\"refundAdj\":" + invoiceJsonSimple.getRefundAdj().toString() + "," +
                 "\"invoiceId\":\"" + invoiceJsonSimple.getInvoiceId() + "\"," +
                 "\"invoiceDate\":\"" + invoiceJsonSimple.getInvoiceDate().toDateTimeISO().toString() + "\"," +
                 "\"targetDate\":\"" + invoiceJsonSimple.getTargetDate().toDateTimeISO().toString() + "\"," +
@@ -79,8 +86,10 @@ public class TestInvoiceJsonWithBundleKeys {
     @Test(groups = "fast")
     public void testFromInvoice() throws Exception {
         final Invoice invoice = Mockito.mock(Invoice.class);
-        Mockito.when(invoice.getAmountCharged()).thenReturn(BigDecimal.TEN);
-        Mockito.when(invoice.getAmountCredited()).thenReturn(BigDecimal.ONE);
+        Mockito.when(invoice.getChargedAmount()).thenReturn(BigDecimal.TEN);
+        Mockito.when(invoice.getCBAAmount()).thenReturn(BigDecimal.ONE);
+        Mockito.when(invoice.getCreditAdjAmount()).thenReturn(BigDecimal.ONE);
+        Mockito.when(invoice.getRefundAdjAmount()).thenReturn(BigDecimal.ONE);
         Mockito.when(invoice.getId()).thenReturn(UUID.randomUUID());
         Mockito.when(invoice.getInvoiceDate()).thenReturn(new DateTime(DateTimeZone.UTC));
         Mockito.when(invoice.getTargetDate()).thenReturn(new DateTime(DateTimeZone.UTC));
@@ -91,8 +100,10 @@ public class TestInvoiceJsonWithBundleKeys {
         final String bundleKeys = UUID.randomUUID().toString();
 
         final InvoiceJsonWithBundleKeys invoiceJsonWithBundleKeys = new InvoiceJsonWithBundleKeys(invoice, bundleKeys);
-        Assert.assertEquals(invoiceJsonWithBundleKeys.getAmount(), invoice.getAmountCharged());
-        Assert.assertEquals(invoiceJsonWithBundleKeys.getCredit(), invoice.getAmountCredited());
+        Assert.assertEquals(invoiceJsonWithBundleKeys.getAmount(), invoice.getChargedAmount());
+        Assert.assertEquals(invoiceJsonWithBundleKeys.getCBA(), invoice.getCBAAmount());
+        Assert.assertEquals(invoiceJsonWithBundleKeys.getCreditAdj(), invoice.getCreditAdjAmount());
+        Assert.assertEquals(invoiceJsonWithBundleKeys.getRefundAdj(), invoice.getRefundAdjAmount());
         Assert.assertEquals(invoiceJsonWithBundleKeys.getInvoiceId(), invoice.getId().toString());
         Assert.assertEquals(invoiceJsonWithBundleKeys.getInvoiceDate(), invoice.getInvoiceDate());
         Assert.assertEquals(invoiceJsonWithBundleKeys.getTargetDate(), invoice.getTargetDate());

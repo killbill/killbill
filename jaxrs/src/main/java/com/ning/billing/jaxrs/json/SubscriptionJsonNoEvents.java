@@ -39,6 +39,8 @@ public class SubscriptionJsonNoEvents extends SubscriptionJsonSimple {
 
     private final DateTime chargedThroughDate;
 
+    private final DateTime cancelledDate;
+
     @JsonCreator
     public SubscriptionJsonNoEvents(@JsonProperty("subscriptionId") @Nullable final String subscriptionId,
                                     @JsonProperty("bundleId") @Nullable final String bundleId,
@@ -47,7 +49,8 @@ public class SubscriptionJsonNoEvents extends SubscriptionJsonSimple {
                                     @JsonProperty("productCategory") @Nullable final String productCategory,
                                     @JsonProperty("billingPeriod") @Nullable final String billingPeriod,
                                     @JsonProperty("priceList") @Nullable final String priceList,
-                                    @JsonProperty("chargedThroughDate") @Nullable final DateTime chargedThroughDate) {
+                                    @JsonProperty("chargedThroughDate") @Nullable final DateTime chargedThroughDate,
+                                    @JsonProperty("cancelledDate") @Nullable final DateTime cancelledDate) {
         super(subscriptionId);
         this.bundleId = bundleId;
         this.startDate = startDate;
@@ -56,18 +59,21 @@ public class SubscriptionJsonNoEvents extends SubscriptionJsonSimple {
         this.billingPeriod = billingPeriod;
         this.priceList = priceList;
         this.chargedThroughDate = chargedThroughDate;
+        this.cancelledDate = cancelledDate;
     }
 
     public SubscriptionJsonNoEvents() {
-        this(null, null, null, null, null, null, null, null);
+        this(null, null, null, null, null, null, null, null, null);
     }
 
     public SubscriptionJsonNoEvents(final Subscription data) {
         this(data.getId().toString(), data.getBundleId().toString(), data.getStartDate(), data.getCurrentPlan().getProduct().getName(),
              data.getCurrentPlan().getProduct().getCategory().toString(), data.getCurrentPlan().getBillingPeriod().toString(),
-             data.getCurrentPriceList().getName(), data.getChargedThroughDate());
+             data.getCurrentPriceList().getName(), data.getChargedThroughDate(),
+             data.getEndDate() != null ? data.getEndDate() : data.getFutureEndDate());
     }
 
+    @Override
     public String getSubscriptionId() {
         return subscriptionId;
     }
@@ -98,6 +104,10 @@ public class SubscriptionJsonNoEvents extends SubscriptionJsonSimple {
 
     public DateTime getChargedThroughDate() {
         return chargedThroughDate;
+    }
+
+    public DateTime getCancelledDate() {
+        return cancelledDate;
     }
 
     @Override

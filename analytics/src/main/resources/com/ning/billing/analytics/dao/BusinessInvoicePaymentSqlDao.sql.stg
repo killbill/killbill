@@ -1,11 +1,11 @@
 group BusinessInvoicePayment;
 
-getInvoicePaymentForPaymentAttempt(attempt_id) ::= <<
+getInvoicePayment(payment_id) ::= <<
 select
   payment_id
 , created_date
 , updated_date
-, attempt_id
+, ext_payment_ref_id
 , account_key
 , invoice_id
 , effective_date
@@ -19,18 +19,20 @@ select
 , payment_method
 , card_type
 , card_country
+, invoice_payment_type
+, linked_invoice_payment_id
 from bip
-where attempt_id = :attempt_id
+where payment_id = :payment_id
 limit 1
 ;
 >>
 
-getInvoicePaymentsForPayment(payment_id) ::= <<
+getInvoicePaymentsForAccountByKey(account_key) ::= <<
 select
   payment_id
 , created_date
 , updated_date
-, attempt_id
+, ext_payment_ref_id
 , account_key
 , invoice_id
 , effective_date
@@ -44,31 +46,8 @@ select
 , payment_method
 , card_type
 , card_country
-from bip
-where payment_id = :payment_id
-order by created_date asc
-;
->>
-
-getInvoicePaymentsForAccount(account_key) ::= <<
-select
-  payment_id
-, created_date
-, updated_date
-, attempt_id
-, account_key
-, invoice_id
-, effective_date
-, amount
-, currency
-, payment_error
-, processing_status
-, requested_amount
-, plugin_name
-, payment_type
-, payment_method
-, card_type
-, card_country
+, invoice_payment_type
+, linked_invoice_payment_id
 from bip
 where account_key = :account_key
 order by created_date asc
@@ -80,7 +59,7 @@ insert into bip (
   payment_id
 , created_date
 , updated_date
-, attempt_id
+, ext_payment_ref_id
 , account_key
 , invoice_id
 , effective_date
@@ -94,11 +73,13 @@ insert into bip (
 , payment_method
 , card_type
 , card_country
+, invoice_payment_type
+, linked_invoice_payment_id
 ) values (
   :payment_id
 , :created_date
 , :updated_date
-, :attempt_id
+, :ext_payment_ref_id
 , :account_key
 , :invoice_id
 , :effective_date
@@ -112,31 +93,13 @@ insert into bip (
 , :payment_method
 , :card_type
 , :card_country
+, :invoice_payment_type
+, :linked_invoice_payment_id
 );
 >>
 
-updateInvoicePaymentForPaymentAttempt() ::= <<
-update bip set
-  updated_date = :updated_date
-, account_key = :account_key
-, invoice_id = :invoice_id
-, effective_date = :effective_date
-, amount = :amount
-, currency = :currency
-, payment_error = :payment_error
-, processing_status = :processing_status
-, requested_amount = :requested_amount
-, plugin_name = :plugin_name
-, payment_type = :payment_type
-, payment_method = :payment_method
-, card_type = :card_type
-, card_country = :card_country
-where attempt_id = :attempt_id
-;
->>
-
-deleteInvoicePaymentForPaymentAttempt(attempt_id) ::= <<
-delete from bip where attempt_id = :attempt_id
+deleteInvoicePayment(payment_id) ::= <<
+delete from bip where payment_id = :payment_id
 >>
 
 test() ::= <<

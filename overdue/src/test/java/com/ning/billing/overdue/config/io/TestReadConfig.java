@@ -19,13 +19,13 @@ package com.ning.billing.overdue.config.io;
 import org.testng.annotations.Test;
 
 import com.google.common.io.Resources;
+import com.ning.billing.overdue.OverdueTestSuite;
 import com.ning.billing.overdue.config.OverdueConfig;
 import com.ning.billing.util.config.XMLLoader;
 
-public class TestReadConfig {
-    @Test(enabled = true)
+public class TestReadConfig extends OverdueTestSuite {
+    @Test(groups = "fast")
     public void testConfigLoad() throws Exception {
         XMLLoader.getObjectFromString(Resources.getResource("OverdueConfig.xml").toExternalForm(), OverdueConfig.class);
     }
-
 }

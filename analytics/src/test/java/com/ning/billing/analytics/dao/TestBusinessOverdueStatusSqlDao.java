@@ -25,10 +25,10 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.ning.billing.analytics.TestWithEmbeddedDB;
+import com.ning.billing.analytics.AnalyticsTestSuiteWithEmbeddedDB;
 import com.ning.billing.analytics.model.BusinessOverdueStatus;
 
-public class TestBusinessOverdueStatusSqlDao extends TestWithEmbeddedDB {
+public class TestBusinessOverdueStatusSqlDao extends AnalyticsTestSuiteWithEmbeddedDB {
     private BusinessOverdueStatusSqlDao overdueStatusSqlDao;
 
     @BeforeMethod(groups = "slow")
@@ -39,27 +39,29 @@ public class TestBusinessOverdueStatusSqlDao extends TestWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testCreate() throws Exception {
+        final String accountKey = UUID.randomUUID().toString();
+        final UUID bundleId = UUID.randomUUID();
         final String externalKey = UUID.randomUUID().toString();
-        final BusinessOverdueStatus firstOverdueStatus = createOverdueStatus(externalKey);
+        final BusinessOverdueStatus firstOverdueStatus = createOverdueStatus(accountKey, bundleId, externalKey);
 
         // Verify initial state
-        Assert.assertEquals(overdueStatusSqlDao.getOverdueStatusesForBundle(externalKey).size(), 0);
+        Assert.assertEquals(overdueStatusSqlDao.getOverdueStatusesForBundleByKey(externalKey).size(), 0);
 
         // Add the overdue status
         Assert.assertEquals(overdueStatusSqlDao.createOverdueStatus(firstOverdueStatus), 1);
 
         // Retrieve it
-        Assert.assertEquals(overdueStatusSqlDao.getOverdueStatusesForBundle(externalKey).size(), 1);
-        Assert.assertEquals(overdueStatusSqlDao.getOverdueStatusesForBundle(externalKey).get(0), firstOverdueStatus);
+        Assert.assertEquals(overdueStatusSqlDao.getOverdueStatusesForBundleByKey(externalKey).size(), 1);
+        Assert.assertEquals(overdueStatusSqlDao.getOverdueStatusesForBundleByKey(externalKey).get(0), firstOverdueStatus);
 
         // Add a second one
-        final BusinessOverdueStatus secondOverdueStatus = createOverdueStatus(externalKey);
+        final BusinessOverdueStatus secondOverdueStatus = createOverdueStatus(accountKey, bundleId, externalKey);
         Assert.assertEquals(overdueStatusSqlDao.createOverdueStatus(secondOverdueStatus), 1);
 
         // Retrieve both
-        Assert.assertEquals(overdueStatusSqlDao.getOverdueStatusesForBundle(externalKey).size(), 2);
-        Assert.assertEquals(overdueStatusSqlDao.getOverdueStatusesForBundle(externalKey).get(0), firstOverdueStatus);
-        Assert.assertEquals(overdueStatusSqlDao.getOverdueStatusesForBundle(externalKey).get(1), secondOverdueStatus);
+        Assert.assertEquals(overdueStatusSqlDao.getOverdueStatusesForBundleByKey(externalKey).size(), 2);
+        Assert.assertEquals(overdueStatusSqlDao.getOverdueStatusesForBundleByKey(externalKey).get(0), firstOverdueStatus);
+        Assert.assertEquals(overdueStatusSqlDao.getOverdueStatusesForBundleByKey(externalKey).get(1), secondOverdueStatus);
     }
 
     @Test(groups = "slow")
@@ -72,11 +74,11 @@ public class TestBusinessOverdueStatusSqlDao extends TestWithEmbeddedDB {
         }
     }
 
-    private BusinessOverdueStatus createOverdueStatus(final String externalKey) {
+    private BusinessOverdueStatus createOverdueStatus(final String accountKey, final UUID bundleId, final String externalKey) {
         final DateTime endDate = new DateTime(DateTimeZone.UTC);
         final DateTime startDate = new DateTime(DateTimeZone.UTC);
         final String status = UUID.randomUUID().toString();
 
-        return new BusinessOverdueStatus(endDate, externalKey, startDate, status);
+        return new BusinessOverdueStatus(accountKey, bundleId, endDate, externalKey, startDate, status);
     }
 }

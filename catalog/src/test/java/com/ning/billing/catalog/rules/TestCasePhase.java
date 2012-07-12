@@ -22,6 +22,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.ErrorCode;
+import com.ning.billing.catalog.CatalogTestSuite;
 import com.ning.billing.catalog.DefaultPriceList;
 import com.ning.billing.catalog.DefaultProduct;
 import com.ning.billing.catalog.MockCatalog;
@@ -32,9 +33,8 @@ import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
 
-public class TestCasePhase {
+public class TestCasePhase extends CatalogTestSuite {
     protected class CaseResult extends CasePhase<Result> {
-
         @XmlElement(required = true)
         private final Result policy;
 
@@ -55,13 +55,12 @@ public class TestCasePhase {
         }
     }
 
-    @Test(enabled = true)
+    @Test(groups = "fast")
     public void testBasic() {
         final MockCatalog cat = new MockCatalog();
 
         final DefaultProduct product = cat.getCurrentProducts()[0];
         final DefaultPriceList priceList = cat.getPriceLists().getDefaultPricelist();
-
 
         final CaseResult cr = new CaseResult(
                 product,
@@ -79,13 +78,12 @@ public class TestCasePhase {
         assertionNull(cr, product.getName(), ProductCategory.BASE, BillingPeriod.MONTHLY, priceList.getName(), PhaseType.TRIAL, cat);
     }
 
-    @Test(enabled = true)
+    @Test(groups = "fast")
     public void testWildCardProduct() {
         final MockCatalog cat = new MockCatalog();
 
         final DefaultProduct product = cat.getCurrentProducts()[0];
         final DefaultPriceList priceList = cat.getPriceLists().getDefaultPricelist();
-
 
         final CaseResult cr = new CaseResult(
                 null,
@@ -103,13 +101,12 @@ public class TestCasePhase {
         assertionNull(cr, product.getName(), ProductCategory.BASE, BillingPeriod.MONTHLY, priceList.getName(), PhaseType.TRIAL, cat);
     }
 
-    @Test(enabled = true)
+    @Test(groups = "fast")
     public void testWildCardProductCategory() {
         final MockCatalog cat = new MockCatalog();
 
         final DefaultProduct product = cat.getCurrentProducts()[0];
         final DefaultPriceList priceList = cat.getPriceLists().getDefaultPricelist();
-
 
         final CaseResult cr = new CaseResult(
                 product,
@@ -127,13 +124,12 @@ public class TestCasePhase {
         assertionNull(cr, product.getName(), ProductCategory.BASE, BillingPeriod.MONTHLY, priceList.getName(), PhaseType.TRIAL, cat);
     }
 
-    @Test(enabled = true)
+    @Test(groups = "fast")
     public void testWildCardBillingPeriod() {
         final MockCatalog cat = new MockCatalog();
 
         final DefaultProduct product = cat.getCurrentProducts()[0];
         final DefaultPriceList priceList = cat.getPriceLists().getDefaultPricelist();
-
 
         final CaseResult cr = new CaseResult(
                 product,
@@ -151,13 +147,12 @@ public class TestCasePhase {
         assertionNull(cr, product.getName(), ProductCategory.BASE, BillingPeriod.MONTHLY, priceList.getName(), PhaseType.TRIAL, cat);
     }
 
-    @Test(enabled = true)
+    @Test(groups = "fast")
     public void testWildCardPriceList() {
         final MockCatalog cat = new MockCatalog();
 
         final DefaultProduct product = cat.getCurrentProducts()[0];
         final DefaultPriceList priceList = cat.getPriceLists().getDefaultPricelist();
-
 
         final CaseResult cr = new CaseResult(
                 product,
@@ -175,13 +170,12 @@ public class TestCasePhase {
         assertionNull(cr, product.getName(), ProductCategory.BASE, BillingPeriod.MONTHLY, priceList.getName(), PhaseType.TRIAL, cat);
     }
 
-    @Test(enabled = true)
+    @Test(groups = "fast")
     public void testWildCardPhaseType() {
         final MockCatalog cat = new MockCatalog();
 
         final DefaultProduct product = cat.getCurrentProducts()[0];
         final DefaultPriceList priceList = cat.getPriceLists().getDefaultPricelist();
-
 
         final CaseResult cr = new CaseResult(
                 product,
@@ -199,13 +193,12 @@ public class TestCasePhase {
         assertion(Result.FOO, cr, product.getName(), ProductCategory.BASE, BillingPeriod.MONTHLY, priceList.getName(), PhaseType.TRIAL, cat);
     }
 
-    @Test(enabled = true)
+    @Test(groups = "fast")
     public void testOrder() throws CatalogApiException {
         final MockCatalog cat = new MockCatalog();
 
         final DefaultProduct product = cat.getCurrentProducts()[0];
         final DefaultPriceList priceList = cat.getPriceLists().getDefaultPricelist();
-
 
         final CaseResult cr0 = new CaseResult(
                 product,
@@ -248,17 +241,16 @@ public class TestCasePhase {
                 Result.LALA);
 
         final Result r1 = CasePhase.getResult(new CaseResult[]{cr0, cr1, cr2, cr3, cr4},
-                                        new PlanPhaseSpecifier(product.getName(), product.getCategory(), BillingPeriod.MONTHLY, priceList.getName(), PhaseType.EVERGREEN), cat);
+                                              new PlanPhaseSpecifier(product.getName(), product.getCategory(), BillingPeriod.MONTHLY, priceList.getName(), PhaseType.EVERGREEN), cat);
 
         Assert.assertEquals(Result.FOO, r1);
 
         final Result r2 = CasePhase.getResult(new CaseResult[]{cr0, cr1, cr2, cr3, cr4},
-                                        new PlanPhaseSpecifier(product.getName(), product.getCategory(), BillingPeriod.ANNUAL, priceList.getName(), PhaseType.EVERGREEN), cat);
+                                              new PlanPhaseSpecifier(product.getName(), product.getCategory(), BillingPeriod.ANNUAL, priceList.getName(), PhaseType.EVERGREEN), cat);
 
         Assert.assertEquals(Result.DIPSY, r2);
 
     }
-
 
     protected void assertionNull(final CaseResult cr, final String productName, final ProductCategory productCategory, final BillingPeriod bp, final String priceListName, final PhaseType phaseType, final StandaloneCatalog cat) {
         try {
@@ -267,7 +259,6 @@ public class TestCasePhase {
             Assert.fail("", e);
         }
     }
-
 
     protected void assertionException(final CaseResult cr, final String productName, final ProductCategory productCategory, final BillingPeriod bp, final String priceListName, final PhaseType phaseType, final StandaloneCatalog cat) {
         try {
@@ -285,6 +276,4 @@ public class TestCasePhase {
             Assert.fail("", e);
         }
     }
-
-
 }

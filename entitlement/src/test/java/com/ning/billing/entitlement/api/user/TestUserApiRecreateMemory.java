@@ -24,8 +24,6 @@ import com.google.inject.Stage;
 import com.ning.billing.entitlement.glue.MockEngineModuleMemory;
 
 public class TestUserApiRecreateMemory extends TestUserApiRecreate {
-
-
     @Override
     protected Injector getInjector() {
         return Guice.createInjector(Stage.PRODUCTION, new MockEngineModuleMemory());

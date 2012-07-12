@@ -23,7 +23,6 @@ import org.joda.time.DateTime;
 import com.ning.billing.util.clock.DefaultClock;
 
 public class TestCallContext implements CallContext {
-
     private final String userName;
     private final DateTime updatedDate;
     private final DateTime createdDate;

@@ -35,7 +35,6 @@ import com.google.inject.Inject;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.catalog.api.TimeUnit;
-import com.ning.billing.config.EntitlementConfig;
 import com.ning.billing.entitlement.api.SubscriptionFactory;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData.BundleMigrationData;
@@ -59,8 +58,7 @@ import com.ning.billing.util.notificationq.NotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotificationQueue;
 
-public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlementDao {
-
+public class MockEntitlementDaoMemory implements EntitlementDao {
     protected static final Logger log = LoggerFactory.getLogger(EntitlementDao.class);
 
     private final List<SubscriptionBundle> bundles;
@@ -71,12 +69,11 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
     private final CatalogService catalogService;
 
     @Inject
-    public MockEntitlementDaoMemory(final Clock clock, final EntitlementConfig config,
+    public MockEntitlementDaoMemory(final Clock clock,
                                     final NotificationQueueService notificationQueueService,
                                     final CatalogService catalogService) {
         super();
         this.clock = clock;
-        final EntitlementConfig config1 = config;
         this.catalogService = catalogService;
         this.notificationQueueService = notificationQueueService;
         this.bundles = new ArrayList<SubscriptionBundle>();
@@ -84,7 +81,6 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
         this.events = new TreeSet<EntitlementEvent>();
     }
 
-    @Override
     public void reset() {
         bundles.clear();
         subscriptions.clear();
@@ -154,7 +150,6 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
         return Collections.emptyList();
     }
 
-
     @Override
     public void createSubscription(final SubscriptionData subscription, final List<EntitlementEvent> initialEvents,
                                    final CallContext context) {
@@ -169,7 +164,7 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
     }
 
     @Override
-    public void recreateSubscription(final UUID subscriptionId,
+    public void recreateSubscription(final SubscriptionData subscription,
                                      final List<EntitlementEvent> recreateEvents, final CallContext context) {
 
         synchronized (events) {
@@ -220,7 +215,6 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
         }
     }
 
-
     @Override
     public Subscription getBaseSubscription(final SubscriptionFactory factory, final UUID bundleId) {
         for (final Subscription cur : subscriptions) {
@@ -233,12 +227,11 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
     }
 
     @Override
-    public void createNextPhaseEvent(final UUID subscriptionId, final EntitlementEvent nextPhase,
+    public void createNextPhaseEvent(final SubscriptionData subscription, final EntitlementEvent nextPhase,
                                      final CallContext context) {
-        cancelNextPhaseEvent(subscriptionId);
+        cancelNextPhaseEvent(subscription.getId());
         insertEvent(nextPhase);
     }
-
 
     private Subscription buildSubscription(final SubscriptionFactory factory, final SubscriptionData in) {
         if (factory != null) {
@@ -271,20 +264,20 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
     }
 
     @Override
-    public void cancelSubscription(final UUID subscriptionId, final EntitlementEvent cancelEvent,
+    public void cancelSubscription(final SubscriptionData subscription, final EntitlementEvent cancelEvent,
                                    final CallContext context, final int seqId) {
         synchronized (events) {
-            cancelNextPhaseEvent(subscriptionId);
+            cancelNextPhaseEvent(subscription.getId());
             insertEvent(cancelEvent);
         }
     }
 
     @Override
-    public void changePlan(final UUID subscriptionId, final List<EntitlementEvent> changeEvents,
+    public void changePlan(final SubscriptionData subscription, final List<EntitlementEvent> changeEvents,
                            final CallContext context) {
         synchronized (events) {
-            cancelNextChangeEvent(subscriptionId);
-            cancelNextPhaseEvent(subscriptionId);
+            cancelNextChangeEvent(subscription.getId());
+            cancelNextPhaseEvent(subscription.getId());
             events.addAll(changeEvents);
             for (final EntitlementEvent cur : changeEvents) {
                 recordFutureNotificationFromTransaction(null, cur.getEffectiveDate(), new EntitlementNotificationKey(cur.getId()));
@@ -298,7 +291,6 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
             recordFutureNotificationFromTransaction(null, event.getEffectiveDate(), new EntitlementNotificationKey(event.getId()));
         }
     }
-
 
     private void cancelNextPhaseEvent(final UUID subscriptionId) {
 
@@ -326,7 +318,6 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
         }
     }
 
-
     private void cancelNextChangeEvent(final UUID subscriptionId) {
 
         synchronized (events) {
@@ -348,7 +339,7 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
     }
 
     @Override
-    public void uncancelSubscription(final UUID subscriptionId, final List<EntitlementEvent> uncancelEvents,
+    public void uncancelSubscription(final SubscriptionData subscription, final List<EntitlementEvent> uncancelEvents,
                                      final CallContext context) {
 
         synchronized (events) {
@@ -356,7 +347,7 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
             final Iterator<EntitlementEvent> it = events.descendingIterator();
             while (it.hasNext()) {
                 final EntitlementEvent cur = it.next();
-                if (cur.getSubscriptionId() != subscriptionId) {
+                if (cur.getSubscriptionId() != subscription.getId()) {
                     continue;
                 }
                 if (cur.getType() == EventType.API_USER &&
@@ -373,7 +364,6 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
             }
         }
     }
-
 
     @Override
     public void migrate(final UUID accountId, final AccountMigrationData accountData, final CallContext context) {
@@ -410,18 +400,17 @@ public class MockEntitlementDaoMemory implements EntitlementDao, MockEntitlement
     private void recordFutureNotificationFromTransaction(final Transmogrifier transactionalDao, final DateTime effectiveDate, final NotificationKey notificationKey) {
         try {
             final NotificationQueue subscriptionEventQueue = notificationQueueService.getNotificationQueue(Engine.ENTITLEMENT_SERVICE_NAME,
-                                                                                                     Engine.NOTIFICATION_QUEUE_NAME);
-            subscriptionEventQueue.recordFutureNotificationFromTransaction(transactionalDao, effectiveDate, notificationKey);
+                                                                                                           Engine.NOTIFICATION_QUEUE_NAME);
+            subscriptionEventQueue.recordFutureNotificationFromTransaction(transactionalDao, effectiveDate, null, notificationKey);
         } catch (NoSuchNotificationQueue e) {
             throw new RuntimeException(e);
         } catch (IOException e) {
-            throw new RuntimeException(e);            
+            throw new RuntimeException(e);
         }
     }
 
     @Override
     public Map<UUID, List<EntitlementEvent>> getEventsForBundle(final UUID bundleId) {
-        // TODO Auto-generated method stub
         return null;
     }
 

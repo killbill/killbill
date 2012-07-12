@@ -25,7 +25,10 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.dbi.MysqlTestingHelper;
+import com.ning.billing.util.UtilTestSuite;
+import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.globallocker.TestMysqlGlobalLocker;
 import com.ning.billing.util.io.IOUtils;
 import com.ning.billing.util.validation.dao.DatabaseSchemaDao;
@@ -36,8 +39,8 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
-public class TestValidationManager {
-    private final MysqlTestingHelper helper = new MysqlTestingHelper();
+public class TestValidationManager extends UtilTestSuiteWithEmbeddedDB {
+    private final MysqlTestingHelper helper = KillbillTestSuiteWithEmbeddedDB.getMysqlTestingHelper();
     private static final String TABLE_NAME = "validation_test";
 
     private ValidationManager vm;
@@ -57,19 +60,7 @@ public class TestValidationManager {
 
     private void setupDatabase() throws IOException {
         final String testDdl = IOUtils.toString(TestMysqlGlobalLocker.class.getResourceAsStream("/com/ning/billing/util/ddl_test.sql"));
-        helper.startMysql();
         helper.initDb(testDdl);
-    }
-
-    @AfterClass(groups = "slow")
-    public void tearDown() {
-        stopDatabase();
-    }
-
-    private void stopDatabase() {
-        if (helper != null) {
-            helper.stopMysql();
-        }
     }
 
     @Test(groups = "slow")

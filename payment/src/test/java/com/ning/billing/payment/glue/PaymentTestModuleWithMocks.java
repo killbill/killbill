@@ -20,22 +20,26 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Map;
 import java.util.Properties;
+import java.util.UUID;
 
+import org.mockito.Mockito;
 import org.skife.config.ConfigSource;
 import org.skife.config.SimplePropertyConfigSource;
 
+import com.google.common.collect.ImmutableMap;
 import com.ning.billing.config.PaymentConfig;
 import com.ning.billing.mock.glue.MockInvoiceModule;
 import com.ning.billing.mock.glue.MockNotificationQueueModule;
-import com.ning.billing.mock.glue.TestDbiModule;
 import com.ning.billing.payment.dao.MockPaymentDao;
 import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;
+import com.ning.billing.util.api.TagUserApi;
+import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.globallocker.MockGlobalLocker;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.BusModule.BusType;
-import com.ning.billing.util.glue.TagStoreModule;
+import com.ning.billing.util.tag.Tag;
 
 import static org.testng.Assert.assertNotNull;
 
@@ -89,8 +93,11 @@ public class PaymentTestModuleWithMocks extends PaymentModule {
         install(new BusModule(BusType.MEMORY));
         install(new MockNotificationQueueModule());
         install(new MockInvoiceModule());
-        install(new TestDbiModule());
-        install(new TagStoreModule());
+
+        final TagUserApi tagUserApi = Mockito.mock(TagUserApi.class);
+        bind(TagUserApi.class).toInstance(tagUserApi);
+        Mockito.when(tagUserApi.getTags(Mockito.<UUID>any(), Mockito.<ObjectType>any())).thenReturn(ImmutableMap.<String, Tag>of());
+
         bind(GlobalLocker.class).to(MockGlobalLocker.class).asEagerSingleton();
     }
 }

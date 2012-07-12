@@ -55,6 +55,11 @@ public abstract class DefaultTranslatorBase implements Translator {
         if ((bundle != null) && (bundle.containsKey(originalText))) {
             return bundle.getString(originalText);
         } else {
+            if (config.getDefaultLocale() == null) {
+                log.warn(String.format(ErrorCode.MISSING_DEFAULT_TRANSLATION_RESOURCE.toString(), getTranslationType()));
+                return originalText;
+            }
+
             final Locale defaultLocale = new Locale(config.getDefaultLocale());
             try {
                 bundle = getBundle(defaultLocale, bundlePath);
@@ -102,6 +107,8 @@ public abstract class DefaultTranslatorBase implements Translator {
             } else {
                 return new PropertyResourceBundle(inputStream);
             }
+        } catch (IllegalArgumentException iae) {
+            return null;
         } catch (MissingResourceException mrex) {
             return null;
         } catch (URISyntaxException e) {

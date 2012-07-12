@@ -35,8 +35,9 @@ import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.jaxrs.JaxrsTestSuite;
 
-public class TestSubscriptionJsonNoEvents {
+public class TestSubscriptionJsonNoEvents extends JaxrsTestSuite {
     private static final ObjectMapper mapper = new ObjectMapper();
 
     static {
@@ -54,9 +55,11 @@ public class TestSubscriptionJsonNoEvents {
         final String billingPeriod = UUID.randomUUID().toString();
         final String priceList = UUID.randomUUID().toString();
         final DateTime chargedThroughDate = new DateTime(DateTimeZone.UTC);
+        final DateTime endDate = new DateTime(DateTimeZone.UTC);
+
         final SubscriptionJsonNoEvents subscriptionJsonNoEvents = new SubscriptionJsonNoEvents(subscriptionId, bundleId, startDate,
                                                                                                productName, productCategory, billingPeriod,
-                                                                                               priceList, chargedThroughDate);
+                                                                                               priceList, chargedThroughDate, endDate);
         Assert.assertEquals(subscriptionJsonNoEvents.getSubscriptionId(), subscriptionId);
         Assert.assertEquals(subscriptionJsonNoEvents.getBundleId(), bundleId);
         Assert.assertEquals(subscriptionJsonNoEvents.getStartDate(), startDate);
@@ -74,7 +77,8 @@ public class TestSubscriptionJsonNoEvents {
                 "\"productCategory\":\"" + subscriptionJsonNoEvents.getProductCategory() + "\"," +
                 "\"billingPeriod\":\"" + subscriptionJsonNoEvents.getBillingPeriod() + "\"," +
                 "\"priceList\":\"" + subscriptionJsonNoEvents.getPriceList() + "\"," +
-                "\"chargedThroughDate\":\"" + subscriptionJsonNoEvents.getChargedThroughDate().toDateTimeISO().toString() + "\"}");
+                "\"chargedThroughDate\":\"" + subscriptionJsonNoEvents.getChargedThroughDate().toDateTimeISO().toString() + "\"," +
+                "\"cancelledDate\":\"" + subscriptionJsonNoEvents.getCancelledDate().toDateTimeISO().toString() + "\"}");
 
         final SubscriptionJsonNoEvents fromJson = mapper.readValue(asJson, SubscriptionJsonNoEvents.class);
         Assert.assertEquals(fromJson, subscriptionJsonNoEvents);

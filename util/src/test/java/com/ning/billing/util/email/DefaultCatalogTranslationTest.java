@@ -23,17 +23,17 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableMap;
+import com.ning.billing.util.UtilTestSuite;
 import com.ning.billing.util.template.translation.DefaultCatalogTranslator;
 import com.ning.billing.util.template.translation.Translator;
 import com.ning.billing.util.template.translation.TranslatorConfig;
 
 import static org.testng.Assert.assertEquals;
 
-@Test(groups = {"fast", "email"})
-public class DefaultCatalogTranslationTest {
+public class DefaultCatalogTranslationTest extends UtilTestSuite {
     private Translator translation;
 
-    @BeforeClass(groups = {"fast", "email"})
+    @BeforeClass(groups = "fast")
     public void setup() {
         final ConfigSource configSource = new ConfigSource() {
             private final Map<String, String> properties = ImmutableMap.<String, String>of("killbill.template.invoiceFormatterFactoryClass",
@@ -49,49 +49,49 @@ public class DefaultCatalogTranslationTest {
         translation = new DefaultCatalogTranslator(config);
     }
 
-    @Test(groups = {"fast", "email"}, enabled = false)
+    @Test(groups = "fast")
     public void testInitialization() {
-        final String ningPlusText = "ning-plus";
-        final String ningProText = "ning-pro";
+        final String shotgunMonthly = "shotgun-monthly";
+        final String shotgunAnnual = "shotgun-annual";
         final String badText = "Bad text";
 
-        assertEquals(translation.getTranslation(Locale.US, ningPlusText), "Plus");
-        assertEquals(translation.getTranslation(Locale.US, ningProText), "Pro");
+        assertEquals(translation.getTranslation(Locale.US, shotgunMonthly), "Monthly shotgun plan");
+        assertEquals(translation.getTranslation(Locale.US, shotgunAnnual), "Annual shotgun plan");
         assertEquals(translation.getTranslation(Locale.US, badText), badText);
 
-        assertEquals(translation.getTranslation(Locale.CANADA_FRENCH, ningPlusText), "Plus en francais");
-        assertEquals(translation.getTranslation(Locale.CANADA_FRENCH, ningProText), "Pro");
+        assertEquals(translation.getTranslation(Locale.CANADA_FRENCH, shotgunMonthly), "Fusil de chasse mensuel");
+        assertEquals(translation.getTranslation(Locale.CANADA_FRENCH, shotgunAnnual), "Fusil de chasse annuel");
         assertEquals(translation.getTranslation(Locale.CANADA_FRENCH, badText), badText);
 
-        assertEquals(translation.getTranslation(Locale.CHINA, ningPlusText), "Plus");
-        assertEquals(translation.getTranslation(Locale.CHINA, ningProText), "Pro");
+        assertEquals(translation.getTranslation(Locale.CHINA, shotgunMonthly), "Monthly shotgun plan");
+        assertEquals(translation.getTranslation(Locale.CHINA, shotgunAnnual), "Annual shotgun plan");
         assertEquals(translation.getTranslation(Locale.CHINA, badText), badText);
     }
 
-    @Test(enabled = false)
+    @Test(groups = "fast")
     public void testExistingTranslation() {
-        // if the translation exists, return the translation
-        final String originalText = "ning-plus";
-        assertEquals(translation.getTranslation(Locale.US, originalText), "Plus");
+        // If the translation exists, return the translation
+        final String originalText = "shotgun-monthly";
+        assertEquals(translation.getTranslation(Locale.US, originalText), "Monthly shotgun plan");
     }
 
-    @Test
+    @Test(groups = "fast")
     public void testMissingTranslation() {
-        // if the translation is missing from the file, return the original text
+        // If the translation is missing from the file, return the original text
         final String originalText = "missing translation";
         assertEquals(translation.getTranslation(Locale.US, originalText), originalText);
     }
 
-    @Test(enabled = false)
+    @Test(groups = "fast")
     public void testMissingTranslationFileWithEnglishText() {
-        // if the translation file doesn't exist, return the "English" translation
-        final String originalText = "ning-plus";
-        assertEquals(translation.getTranslation(Locale.CHINA, originalText), "Plus");
+        // If the translation file doesn't exist, return the "English" translation
+        final String originalText = "shotgun-monthly";
+        assertEquals(translation.getTranslation(Locale.CHINA, originalText), "Monthly shotgun plan");
     }
 
-    @Test
+    @Test(groups = "fast")
     public void testMissingFileAndText() {
-        // if the file is missing, and the "English" translation is missing, return the original text
+        // If the file is missing, and the "English" translation is missing, return the original text
         final String originalText = "missing translation";
         assertEquals(translation.getTranslation(Locale.CHINA, originalText), originalText);
     }

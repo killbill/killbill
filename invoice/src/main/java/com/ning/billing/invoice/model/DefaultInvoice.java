@@ -144,25 +144,25 @@ public class DefaultInvoice extends EntityBase implements Invoice {
     }
 
     @Override
-    public DateTime getLastPaymentAttempt() {
-        DateTime lastPaymentAttempt = null;
+    public DateTime getLastPaymentDate() {
+        DateTime lastPaymentDate = null;
 
         for (final InvoicePayment paymentAttempt : payments) {
-            final DateTime paymentAttemptDate = paymentAttempt.getPaymentAttemptDate();
-            if (lastPaymentAttempt == null) {
-                lastPaymentAttempt = paymentAttemptDate;
+            final DateTime paymentDate = paymentAttempt.getPaymentDate();
+            if (lastPaymentDate == null) {
+                lastPaymentDate = paymentDate;
             }
 
-            if (lastPaymentAttempt.isBefore(paymentAttemptDate)) {
-                lastPaymentAttempt = paymentAttemptDate;
+            if (lastPaymentDate.isBefore(paymentDate)) {
+                lastPaymentDate = paymentDate;
             }
         }
 
-        return lastPaymentAttempt;
+        return lastPaymentDate;
     }
 
     @Override
-    public BigDecimal getAmountPaid() {
+    public BigDecimal getPaidAmount() {
         BigDecimal amountPaid = BigDecimal.ZERO;
         for (final InvoicePayment payment : payments) {
             if (payment.getAmount() != null) {
@@ -173,19 +173,33 @@ public class DefaultInvoice extends EntityBase implements Invoice {
     }
 
     @Override
-    public BigDecimal getAmountCharged() {
-        return invoiceItems.getAmountCharged();
+    public BigDecimal getChargedAmount() {
+        return invoiceItems.getChargedAmount();
     }
 
     @Override
-    public BigDecimal getAmountCredited() {
-        return invoiceItems.getAmountCredited();
+    public BigDecimal getCBAAmount() {
+        return invoiceItems.getCBAAmount();
     }
 
+    @Override
+    public BigDecimal getTotalAdjAmount() {
+        return invoiceItems.getTotalAdjAmount();
+    }
+
+    @Override
+    public BigDecimal getCreditAdjAmount() {
+        return invoiceItems.getCreditAdjAmount();
+    }
+
+    @Override
+    public BigDecimal getRefundAdjAmount() {
+        return invoiceItems.getRefundAdjAmount();
+    }
     @Override
     public BigDecimal getBalance() {
-        // credits offset payments
-        return getAmountCharged().subtract(getAmountPaid().subtract(getAmountCredited()));
+        final BigDecimal balance = getChargedAmount().add(getTotalAdjAmount()).add(getCBAAmount()).subtract(getPaidAmount());;
+        return balance;
     }
 
     @Override
@@ -194,13 +208,14 @@ public class DefaultInvoice extends EntityBase implements Invoice {
             return false;
         }
 
-        final DateTime lastPaymentAttempt = getLastPaymentAttempt();
-        return (lastPaymentAttempt == null) || lastPaymentAttempt.plusDays(numberOfDays).isAfter(targetDate);
+        final DateTime lastPayment = getLastPaymentDate();
+        return (lastPayment == null) || lastPayment.plusDays(numberOfDays).isAfter(targetDate);
     }
 
     @Override
     public String toString() {
-        return "DefaultInvoice [items=" + invoiceItems + ", payments=" + payments + ", id=" + id + ", accountId=" + accountId + ", invoiceDate=" + invoiceDate + ", targetDate=" + targetDate + ", currency=" + currency + ", amountPaid=" + getAmountPaid() + ", lastPaymentAttempt=" + getLastPaymentAttempt() + "]";
+        return "DefaultInvoice [items=" + invoiceItems + ", payments=" + payments + ", id=" + id + ", accountId=" + accountId + ", invoiceDate=" + invoiceDate + ", targetDate=" + targetDate + ", currency=" + currency + ", amountPaid=" + getPaidAmount() + ", lastPaymentDate=" + getLastPaymentDate() + "]";
     }
+
 }
 

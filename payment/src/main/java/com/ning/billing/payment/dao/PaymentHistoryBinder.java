@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -49,6 +49,7 @@ public @interface PaymentHistoryBinder {
                     q.bind("amount", payment.getAmount());
                     q.bind("currency", payment.getCurrency().toString());
                     q.bind("paymentStatus", payment.getPaymentStatus().toString());
+                    q.bind("externalPaymentRefId", payment.getExtPaymentRefId());
                     q.bind("effectiveDate", getDate(payment.getEffectiveDate()));
                 }
             };

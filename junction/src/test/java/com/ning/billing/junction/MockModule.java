@@ -22,10 +22,7 @@ import com.ning.billing.mock.glue.MockClockModule;
 import com.ning.billing.mock.glue.MockDbHelperModule;
 import com.ning.billing.util.glue.CallContextModule;
 
-
 public class MockModule extends DefaultJunctionModule {
-    public static final String PLUGIN_NAME = "Booboo";
-
     @Override
     protected void configure() {
         super.configure();
@@ -38,13 +35,10 @@ public class MockModule extends DefaultJunctionModule {
 
     @Override
     public void installBillingApi() {
-        // no billinggApi
+        // no billing Api
     }
 
     @Override
     public void installAccountUserApi() {
-
     }
-
-
 }

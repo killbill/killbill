@@ -208,6 +208,9 @@ public class InvoiceResource extends JaxRsResourceBase {
                                          @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                          @HeaderParam(HDR_REASON) final String reason,
                                          @HeaderParam(HDR_COMMENT) final String comment) {
+        if (externalPayment) {
+            return Response.status(Status.BAD_REQUEST).entity("External payments have not been implemented yet").build();
+        }
         try {
             final Account account = accountApi.getAccountById(UUID.fromString(payment.getAccountId()));
             paymentApi.createPayment(account, UUID.fromString(payment.getInvoiceId()), null, context.createContext(createdBy, reason, comment));

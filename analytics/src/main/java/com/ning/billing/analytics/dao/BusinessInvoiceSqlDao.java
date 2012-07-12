@@ -35,16 +35,19 @@ public interface BusinessInvoiceSqlDao extends Transactional<BusinessInvoiceSqlD
     BusinessInvoice getInvoice(@Bind("invoice_id") final String invoiceId);
 
     @SqlQuery
-    List<BusinessInvoice> getInvoicesForAccount(@Bind("account_key") final String accountKey);
+    List<BusinessInvoice> getInvoicesForAccount(@Bind("account_id") final String accountId);
+
+    @SqlQuery
+    List<BusinessInvoice> getInvoicesForAccountByKey(@Bind("account_key") final String accountKey);
 
     @SqlUpdate
     int createInvoice(@BusinessInvoiceBinder final BusinessInvoice invoice);
 
     @SqlUpdate
-    int updateInvoice(@BusinessInvoiceBinder final BusinessInvoice invoice);
+    int deleteInvoice(@Bind("invoice_id") final String invoiceId);
 
     @SqlUpdate
-    int deleteInvoice(@Bind("invoice_id") final String invoiceId);
+    void deleteInvoicesForAccount(@Bind("account_id") final String accountId);
 
     @SqlUpdate
     void test();

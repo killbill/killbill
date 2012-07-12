@@ -25,20 +25,25 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.entity.Entity;
 
 public interface InvoicePayment extends Entity {
-    UUID getPaymentAttemptId();
+    UUID getPaymentId();
+
+    InvoicePaymentType getType();
 
     UUID getInvoiceId();
 
-    DateTime getPaymentAttemptDate();
+    DateTime getPaymentDate();
 
     BigDecimal getAmount();
 
     Currency getCurrency();
 
-    UUID getReversedInvoicePaymentId();
+    UUID getLinkedInvoicePaymentId();
 
-    /*
-     * @param chargeBackAmount BigDecimal pass the amount as a positive number
-     */
-    InvoicePayment asChargeBack(BigDecimal chargeBackAmount, DateTime chargeBackDate) throws InvoiceApiException;
+    UUID getPaymentCookieId();
+
+    public enum InvoicePaymentType {
+        ATTEMPT,
+        CHARGED_BACK,
+        REFUND
+    }
 }

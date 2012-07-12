@@ -150,25 +150,25 @@ public class MockInvoice extends EntityBase implements Invoice {
     }
 
     @Override
-    public DateTime getLastPaymentAttempt() {
-        DateTime lastPaymentAttempt = null;
+    public DateTime getLastPaymentDate() {
+        DateTime lastPayment = null;
 
-        for (final InvoicePayment paymentAttempt : payments) {
-            final DateTime paymentAttemptDate = paymentAttempt.getPaymentAttemptDate();
-            if (lastPaymentAttempt == null) {
-                lastPaymentAttempt = paymentAttemptDate;
+        for (final InvoicePayment payment : payments) {
+            final DateTime paymentDate = payment.getPaymentDate();
+            if (lastPayment == null) {
+                lastPayment = paymentDate;
             }
 
-            if (lastPaymentAttempt.isBefore(paymentAttemptDate)) {
-                lastPaymentAttempt = paymentAttemptDate;
+            if (lastPayment.isBefore(paymentDate)) {
+                lastPayment = paymentDate;
             }
         }
 
-        return lastPaymentAttempt;
+        return lastPayment;
     }
 
     @Override
-    public BigDecimal getAmountPaid() {
+    public BigDecimal getPaidAmount() {
         BigDecimal amountPaid = BigDecimal.ZERO;
         for (final InvoicePayment payment : payments) {
             if (payment.getAmount() != null) {
@@ -179,11 +179,11 @@ public class MockInvoice extends EntityBase implements Invoice {
     }
 
     @Override
-    public BigDecimal getAmountCharged() {
+    public BigDecimal getChargedAmount() {
         BigDecimal result = BigDecimal.ZERO;
 
         for (final InvoiceItem i : invoiceItems) {
-            if (!i.getInvoiceItemType().equals(InvoiceItemType.CREDIT)) {
+            if (!i.getInvoiceItemType().equals(InvoiceItemType.CBA_ADJ)) {
                 result = result.add(i.getAmount());
             }
         }
@@ -191,11 +191,11 @@ public class MockInvoice extends EntityBase implements Invoice {
     }
 
     @Override
-    public BigDecimal getAmountCredited() {
+    public BigDecimal getCreditAdjAmount() {
         BigDecimal result = BigDecimal.ZERO;
 
         for (final InvoiceItem i : invoiceItems) {
-            if (i.getInvoiceItemType().equals(InvoiceItemType.CREDIT)) {
+            if (i.getInvoiceItemType().equals(InvoiceItemType.CBA_ADJ)) {
                 result = result.add(i.getAmount());
             }
         }
@@ -204,7 +204,7 @@ public class MockInvoice extends EntityBase implements Invoice {
 
     @Override
     public BigDecimal getBalance() {
-        return getAmountCharged().subtract(getAmountPaid().subtract(getAmountCredited()));
+        return getChargedAmount().subtract(getPaidAmount());
     }
 
     @Override
@@ -213,7 +213,7 @@ public class MockInvoice extends EntityBase implements Invoice {
             return false;
         }
 
-        final DateTime lastPaymentAttempt = getLastPaymentAttempt();
+        final DateTime lastPaymentAttempt = getLastPaymentDate();
         if (lastPaymentAttempt == null) {
             return true;
         }
@@ -223,7 +223,22 @@ public class MockInvoice extends EntityBase implements Invoice {
 
     @Override
     public String toString() {
-        return "DefaultInvoice [items=" + invoiceItems + ", payments=" + payments + ", id=" + id + ", accountId=" + accountId + ", invoiceDate=" + invoiceDate + ", targetDate=" + targetDate + ", currency=" + currency + ", amountPaid=" + getAmountPaid() + ", lastPaymentAttempt=" + getLastPaymentAttempt() + "]";
+        return "DefaultInvoice [items=" + invoiceItems + ", payments=" + payments + ", id=" + id + ", accountId=" + accountId + ", invoiceDate=" + invoiceDate + ", targetDate=" + targetDate + ", currency=" + currency + ", amountPaid=" + getPaidAmount() + ", lastPaymentDate=" + getLastPaymentDate() + "]";
+    }
+
+    @Override
+    public BigDecimal getCBAAmount() {
+        return null;
+    }
+
+    @Override
+    public BigDecimal getTotalAdjAmount() {
+        return null;
+    }
+
+    @Override
+    public BigDecimal getRefundAdjAmount() {
+        return null;
     }
 }
 

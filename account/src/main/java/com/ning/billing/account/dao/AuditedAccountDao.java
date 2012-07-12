@@ -140,11 +140,11 @@ public class AuditedAccountDao implements AccountDao {
                     transactional.update(account, context);
 
                     final Long recordId = accountSqlDao.getRecordId(accountId.toString());
-                    final EntityHistory<Account> history = new EntityHistory<Account>(accountId, recordId, account, ChangeType.INSERT);
+                    final EntityHistory<Account> history = new EntityHistory<Account>(accountId, recordId, account, ChangeType.UPDATE);
                     accountSqlDao.insertHistoryFromTransaction(history, context);
 
                     final Long historyRecordId = accountSqlDao.getHistoryRecordId(recordId);
-                    final EntityAudit audit = new EntityAudit(TableName.ACCOUNT_HISTORY, historyRecordId, ChangeType.INSERT);
+                    final EntityAudit audit = new EntityAudit(TableName.ACCOUNT_HISTORY, historyRecordId, ChangeType.UPDATE);
                     accountSqlDao.insertAuditFromTransaction(audit, context);
 
                     final AccountChangeEvent changeEvent = new DefaultAccountChangeEvent(accountId, context.getUserToken(), currentAccount, account);

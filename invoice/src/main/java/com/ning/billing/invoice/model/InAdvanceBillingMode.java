@@ -77,7 +77,6 @@ public class InAdvanceBillingMode implements BillingMode {
                 results.add(new RecurringInvoiceItemData(lastBillingCycleDate, effectiveEndDate, trailingProRationPeriods));
             }
         }
-
         return results;
     }
 
@@ -137,7 +136,6 @@ public class InAdvanceBillingMode implements BillingMode {
         DateTime proposedDate = tmp.toDateTime();
 
         while (proposedDate.isBefore(date)) {
-            // STEPH could be an annual ?
             proposedDate = proposedDate.plusMonths(1);
         }
         return proposedDate;

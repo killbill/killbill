@@ -47,9 +47,9 @@ public class ChargebackJson {
 
     public ChargebackJson(final InvoicePayment chargeback) {
         this.requestedDate = null;
-        this.effectiveDate = chargeback.getPaymentAttemptDate();
+        this.effectiveDate = chargeback.getPaymentDate();
         this.chargebackAmount = chargeback.getAmount().negate();
-        this.paymentId = chargeback.getReversedInvoicePaymentId().toString();
+        this.paymentId = chargeback.getLinkedInvoicePaymentId().toString();
         this.reason = null;
     }
 

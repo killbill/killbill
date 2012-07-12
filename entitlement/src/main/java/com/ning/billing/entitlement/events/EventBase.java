@@ -23,7 +23,6 @@ import org.joda.time.DateTime;
 import com.ning.billing.entitlement.events.user.ApiEvent;
 
 public abstract class EventBase implements EntitlementEvent {
-
     private final long totalOrdering;
     private final UUID uuid;
     private final UUID subscriptionId;
@@ -41,30 +40,9 @@ public abstract class EventBase implements EntitlementEvent {
         this.requestedDate = builder.getRequestedDate();
         this.effectiveDate = builder.getEffectiveDate();
         this.processedDate = builder.getProcessedDate();
-
         this.activeVersion = builder.getActiveVersion();
         this.isActive = builder.isActive();
     }
-/*
-    public EventBase(UUID subscriptionId, DateTime requestedDate,
-            DateTime effectiveDate, DateTime processedDate,
-            long activeVersion, boolean isActive) {
-        this(UUID.randomUUID(), subscriptionId, requestedDate, effectiveDate, processedDate, activeVersion, isActive);
-    }
-
-    public EventBase(UUID id, UUID subscriptionId, DateTime requestedDate,
-            DateTime effectiveDate, DateTime processedDate,
-            long activeVersion, boolean isActive) {
-        this.uuid = id;
-        this.subscriptionId = subscriptionId;
-        this.requestedDate = requestedDate;
-        this.effectiveDate = effectiveDate;
-        this.processedDate = processedDate;
-
-        this.activeVersion = activeVersion;
-        this.isActive = isActive;
-    }
-*/
 
     @Override
     public DateTime getRequestedDate() {
@@ -90,7 +68,6 @@ public abstract class EventBase implements EntitlementEvent {
     public long getTotalOrdering() {
         return totalOrdering;
     }
-
 
     @Override
     public UUID getId() {
@@ -122,7 +99,6 @@ public abstract class EventBase implements EntitlementEvent {
         this.isActive = true;
     }
 
-
     //
     // Really used for unit tests only as the sql implementation relies on date first and then event insertion
     //
@@ -135,7 +111,7 @@ public abstract class EventBase implements EntitlementEvent {
     @Override
     public int compareTo(final EntitlementEvent other) {
         if (other == null) {
-            throw new NullPointerException("IEvent is compared to a null instance");
+            throw new IllegalArgumentException("IEvent is compared to a null instance");
         }
 
         if (effectiveDate.isBefore(other.getEffectiveDate())) {
@@ -159,7 +135,6 @@ public abstract class EventBase implements EntitlementEvent {
         }
     }
 
-
     @Override
     public boolean equals(final Object other) {
         if (!(other instanceof EntitlementEvent)) {
@@ -170,6 +145,4 @@ public abstract class EventBase implements EntitlementEvent {
 
     @Override
     public abstract EventType getType();
-
-
 }

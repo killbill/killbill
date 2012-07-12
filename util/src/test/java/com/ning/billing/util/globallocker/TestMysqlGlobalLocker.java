@@ -24,49 +24,39 @@ import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.TransactionCallback;
 import org.skife.jdbi.v2.TransactionStatus;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
+import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.dbi.MysqlTestingHelper;
-import com.ning.billing.util.globallocker.GlobalLocker.LockerService;
+import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
+import com.ning.billing.util.globallocker.GlobalLocker.LockerType;
 import com.ning.billing.util.io.IOUtils;
 
-@Test(groups = "slow")
 @Guice(modules = TestMysqlGlobalLocker.TestMysqlGlobalLockerModule.class)
-public class TestMysqlGlobalLocker {
-
+public class TestMysqlGlobalLocker extends UtilTestSuiteWithEmbeddedDB {
     @Inject
     private IDBI dbi;
 
     @Inject
     private MysqlTestingHelper helper;
 
-    @BeforeClass(groups = "slow")
+    @BeforeMethod(groups = "slow")
     public void setup() throws IOException {
         final String testDdl = IOUtils.toString(TestMysqlGlobalLocker.class.getResourceAsStream("/com/ning/billing/util/ddl_test.sql"));
-        helper.startMysql();
         helper.initDb(testDdl);
     }
 
-    @AfterClass(groups = "slow")
-    public void tearDown() {
-        if (helper != null) {
-            helper.stopMysql();
-        }
-    }
-
     // Used as a manual test to validate the simple DAO by stepping through that locking is done and release correctly
-    @Test(groups = "slow", enabled = true)
+    @Test(groups = "slow")
     public void testSimpleLocking() {
-
         final String lockName = UUID.randomUUID().toString();
 
         final GlobalLocker locker = new MySqlGlobalLocker(dbi);
-        final GlobalLock lock = locker.lockWithNumberOfTries(LockerService.INVOICE, lockName, 3);
+        final GlobalLock lock = locker.lockWithNumberOfTries(LockerType.ACCOUNT, lockName, 3);
 
         dbi.inTransaction(new TransactionCallback<Void>() {
             @Override
@@ -76,11 +66,11 @@ public class TestMysqlGlobalLocker {
                 return null;
             }
         });
-        Assert.assertEquals(locker.isFree(LockerService.INVOICE, lockName), Boolean.FALSE);
+        Assert.assertEquals(locker.isFree(LockerType.ACCOUNT, lockName), Boolean.FALSE);
 
         boolean gotException = false;
         try {
-            locker.lockWithNumberOfTries(LockerService.INVOICE, lockName, 1);
+            locker.lockWithNumberOfTries(LockerType.ACCOUNT, lockName, 1);
         } catch (LockFailedException e) {
             gotException = true;
         }
@@ -88,14 +78,13 @@ public class TestMysqlGlobalLocker {
 
         lock.release();
 
-        Assert.assertEquals(locker.isFree(LockerService.INVOICE, lockName), Boolean.TRUE);
+        Assert.assertEquals(locker.isFree(LockerType.ACCOUNT, lockName), Boolean.TRUE);
     }
 
     public static final class TestMysqlGlobalLockerModule extends AbstractModule {
-
         @Override
         protected void configure() {
-            final MysqlTestingHelper helper = new MysqlTestingHelper();
+            final MysqlTestingHelper helper = KillbillTestSuiteWithEmbeddedDB.getMysqlTestingHelper();
             bind(MysqlTestingHelper.class).toInstance(helper);
             final IDBI dbi = helper.getDBI();
             bind(IDBI.class).toInstance(dbi);

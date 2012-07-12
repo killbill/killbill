@@ -24,10 +24,10 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.ning.billing.analytics.TestWithEmbeddedDB;
+import com.ning.billing.analytics.AnalyticsTestSuiteWithEmbeddedDB;
 import com.ning.billing.analytics.model.BusinessSubscriptionTransitionField;
 
-public class TestBusinessSubscriptionTransitionFieldSqlDao extends TestWithEmbeddedDB {
+public class TestBusinessSubscriptionTransitionFieldSqlDao extends AnalyticsTestSuiteWithEmbeddedDB {
     private BusinessSubscriptionTransitionFieldSqlDao subscriptionTransitionFieldSqlDao;
 
     @BeforeMethod(groups = "slow")
@@ -38,49 +38,55 @@ public class TestBusinessSubscriptionTransitionFieldSqlDao extends TestWithEmbed
 
     @Test(groups = "slow")
     public void testCRUD() throws Exception {
+        final String accountKey = UUID.randomUUID().toString();
+        final UUID bundleId = UUID.randomUUID();
         final String externalKey = UUID.randomUUID().toString();
         final String name = UUID.randomUUID().toString().substring(0, 30);
         final String value = UUID.randomUUID().toString();
 
         // Verify initial state
-        Assert.assertEquals(subscriptionTransitionFieldSqlDao.getFieldsForBusinessSubscriptionTransition(externalKey).size(), 0);
-        Assert.assertEquals(subscriptionTransitionFieldSqlDao.removeField(externalKey, name), 0);
+        Assert.assertEquals(subscriptionTransitionFieldSqlDao.getFieldsForBusinessSubscriptionTransitionByKey(externalKey).size(), 0);
+        Assert.assertEquals(subscriptionTransitionFieldSqlDao.removeField(bundleId.toString(), name), 0);
 
         // Add an entry
-        Assert.assertEquals(subscriptionTransitionFieldSqlDao.addField(externalKey, name, value), 1);
-        final List<BusinessSubscriptionTransitionField> fieldsForBusinessSubscriptionTransition = subscriptionTransitionFieldSqlDao.getFieldsForBusinessSubscriptionTransition(externalKey);
+        Assert.assertEquals(subscriptionTransitionFieldSqlDao.addField(accountKey, bundleId.toString(), externalKey, name, value), 1);
+        final List<BusinessSubscriptionTransitionField> fieldsForBusinessSubscriptionTransition = subscriptionTransitionFieldSqlDao.getFieldsForBusinessSubscriptionTransitionByKey(externalKey);
         Assert.assertEquals(fieldsForBusinessSubscriptionTransition.size(), 1);
 
         // Retrieve it
         final BusinessSubscriptionTransitionField subscriptionTransitionField = fieldsForBusinessSubscriptionTransition.get(0);
+        Assert.assertEquals(subscriptionTransitionField.getBundleId(), bundleId);
         Assert.assertEquals(subscriptionTransitionField.getExternalKey(), externalKey);
         Assert.assertEquals(subscriptionTransitionField.getName(), name);
         Assert.assertEquals(subscriptionTransitionField.getValue(), value);
 
         // Delete it
-        Assert.assertEquals(subscriptionTransitionFieldSqlDao.removeField(externalKey, name), 1);
-        Assert.assertEquals(subscriptionTransitionFieldSqlDao.getFieldsForBusinessSubscriptionTransition(externalKey).size(), 0);
+        Assert.assertEquals(subscriptionTransitionFieldSqlDao.removeField(bundleId.toString(), name), 1);
+        Assert.assertEquals(subscriptionTransitionFieldSqlDao.getFieldsForBusinessSubscriptionTransitionByKey(externalKey).size(), 0);
     }
 
     @Test(groups = "slow")
     public void testSegmentation() throws Exception {
+        final String accountKey = UUID.randomUUID().toString();
+        final UUID bundleId1 = UUID.randomUUID();
         final String externalKey1 = UUID.randomUUID().toString();
         final String name1 = UUID.randomUUID().toString().substring(0, 30);
+        final UUID bundleId2 = UUID.randomUUID();
         final String externalKey2 = UUID.randomUUID().toString();
         final String name2 = UUID.randomUUID().toString().substring(0, 30);
 
         // Add a field to both transitions
-        Assert.assertEquals(subscriptionTransitionFieldSqlDao.addField(externalKey1, name1, UUID.randomUUID().toString()), 1);
-        Assert.assertEquals(subscriptionTransitionFieldSqlDao.addField(externalKey2, name2, UUID.randomUUID().toString()), 1);
+        Assert.assertEquals(subscriptionTransitionFieldSqlDao.addField(accountKey, bundleId1.toString(), externalKey1, name1, UUID.randomUUID().toString()), 1);
+        Assert.assertEquals(subscriptionTransitionFieldSqlDao.addField(accountKey, bundleId2.toString(), externalKey2, name2, UUID.randomUUID().toString()), 1);
 
-        Assert.assertEquals(subscriptionTransitionFieldSqlDao.getFieldsForBusinessSubscriptionTransition(externalKey1).size(), 1);
-        Assert.assertEquals(subscriptionTransitionFieldSqlDao.getFieldsForBusinessSubscriptionTransition(externalKey2).size(), 1);
+        Assert.assertEquals(subscriptionTransitionFieldSqlDao.getFieldsForBusinessSubscriptionTransitionByKey(externalKey1).size(), 1);
+        Assert.assertEquals(subscriptionTransitionFieldSqlDao.getFieldsForBusinessSubscriptionTransitionByKey(externalKey2).size(), 1);
 
         // Remove the field for the first transition
-        Assert.assertEquals(subscriptionTransitionFieldSqlDao.removeField(externalKey1, name1), 1);
+        Assert.assertEquals(subscriptionTransitionFieldSqlDao.removeField(bundleId1.toString(), name1), 1);
 
-        Assert.assertEquals(subscriptionTransitionFieldSqlDao.getFieldsForBusinessSubscriptionTransition(externalKey1).size(), 0);
-        Assert.assertEquals(subscriptionTransitionFieldSqlDao.getFieldsForBusinessSubscriptionTransition(externalKey2).size(), 1);
+        Assert.assertEquals(subscriptionTransitionFieldSqlDao.getFieldsForBusinessSubscriptionTransitionByKey(externalKey1).size(), 0);
+        Assert.assertEquals(subscriptionTransitionFieldSqlDao.getFieldsForBusinessSubscriptionTransitionByKey(externalKey2).size(), 1);
     }
 
     @Test(groups = "slow")

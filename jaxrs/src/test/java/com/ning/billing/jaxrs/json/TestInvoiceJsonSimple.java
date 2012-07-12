@@ -29,8 +29,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.jaxrs.JaxrsTestSuite;
 
-public class TestInvoiceJsonSimple {
+public class TestInvoiceJsonSimple extends JaxrsTestSuite {
     private static final ObjectMapper mapper = new ObjectMapper();
 
     static {
@@ -41,17 +42,21 @@ public class TestInvoiceJsonSimple {
     @Test(groups = "fast")
     public void testJson() throws Exception {
         final BigDecimal amount = BigDecimal.TEN;
-        final BigDecimal credit = BigDecimal.ONE;
+        final BigDecimal cba = BigDecimal.ONE;
+        final BigDecimal creditAdj = BigDecimal.ONE;
+        final BigDecimal refundAdj = BigDecimal.ONE;
         final String invoiceId = UUID.randomUUID().toString();
         final DateTime invoiceDate = new DateTime(DateTimeZone.UTC);
         final DateTime targetDate = new DateTime(DateTimeZone.UTC);
         final String invoiceNumber = UUID.randomUUID().toString();
         final BigDecimal balance = BigDecimal.ZERO;
         final String accountId = UUID.randomUUID().toString();
-        final InvoiceJsonSimple invoiceJsonSimple = new InvoiceJsonSimple(amount, credit, invoiceId, invoiceDate,
+        final InvoiceJsonSimple invoiceJsonSimple = new InvoiceJsonSimple(amount, cba, creditAdj, refundAdj, invoiceId, invoiceDate,
                                                                           targetDate, invoiceNumber, balance, accountId);
         Assert.assertEquals(invoiceJsonSimple.getAmount(), amount);
-        Assert.assertEquals(invoiceJsonSimple.getCredit(), credit);
+        Assert.assertEquals(invoiceJsonSimple.getCBA(), cba);
+        Assert.assertEquals(invoiceJsonSimple.getCreditAdj(), creditAdj);
+        Assert.assertEquals(invoiceJsonSimple.getRefundAdj(), refundAdj);
         Assert.assertEquals(invoiceJsonSimple.getInvoiceId(), invoiceId);
         Assert.assertEquals(invoiceJsonSimple.getInvoiceDate(), invoiceDate);
         Assert.assertEquals(invoiceJsonSimple.getTargetDate(), targetDate);
@@ -61,7 +66,9 @@ public class TestInvoiceJsonSimple {
 
         final String asJson = mapper.writeValueAsString(invoiceJsonSimple);
         Assert.assertEquals(asJson, "{\"amount\":" + invoiceJsonSimple.getAmount().toString() + "," +
-                "\"credit\":" + invoiceJsonSimple.getCredit().toString() + "," +
+                "\"cba\":" + invoiceJsonSimple.getCBA().toString() + "," +
+                "\"creditAdj\":" + invoiceJsonSimple.getCreditAdj().toString() + "," +
+                "\"refundAdj\":" + invoiceJsonSimple.getRefundAdj().toString() + "," +
                 "\"invoiceId\":\"" + invoiceJsonSimple.getInvoiceId() + "\"," +
                 "\"invoiceDate\":\"" + invoiceJsonSimple.getInvoiceDate().toDateTimeISO().toString() + "\"," +
                 "\"targetDate\":\"" + invoiceJsonSimple.getTargetDate().toDateTimeISO().toString() + "\"," +
@@ -76,8 +83,10 @@ public class TestInvoiceJsonSimple {
     @Test(groups = "fast")
     public void testFromInvoice() throws Exception {
         final Invoice invoice = Mockito.mock(Invoice.class);
-        Mockito.when(invoice.getAmountCharged()).thenReturn(BigDecimal.TEN);
-        Mockito.when(invoice.getAmountCredited()).thenReturn(BigDecimal.ONE);
+        Mockito.when(invoice.getChargedAmount()).thenReturn(BigDecimal.TEN);
+        Mockito.when(invoice.getCBAAmount()).thenReturn(BigDecimal.ONE);
+        Mockito.when(invoice.getCreditAdjAmount()).thenReturn(BigDecimal.ONE);
+        Mockito.when(invoice.getRefundAdjAmount()).thenReturn(BigDecimal.ONE);
         Mockito.when(invoice.getId()).thenReturn(UUID.randomUUID());
         Mockito.when(invoice.getInvoiceDate()).thenReturn(new DateTime(DateTimeZone.UTC));
         Mockito.when(invoice.getTargetDate()).thenReturn(new DateTime(DateTimeZone.UTC));
@@ -86,8 +95,10 @@ public class TestInvoiceJsonSimple {
         Mockito.when(invoice.getAccountId()).thenReturn(UUID.randomUUID());
 
         final InvoiceJsonSimple invoiceJsonSimple = new InvoiceJsonSimple(invoice);
-        Assert.assertEquals(invoiceJsonSimple.getAmount(), invoice.getAmountCharged());
-        Assert.assertEquals(invoiceJsonSimple.getCredit(), invoice.getAmountCredited());
+        Assert.assertEquals(invoiceJsonSimple.getAmount(), invoice.getChargedAmount());
+        Assert.assertEquals(invoiceJsonSimple.getCBA(), invoice.getCBAAmount());
+        Assert.assertEquals(invoiceJsonSimple.getCreditAdj(), invoice.getCreditAdjAmount());
+        Assert.assertEquals(invoiceJsonSimple.getRefundAdj(), invoice.getRefundAdjAmount());
         Assert.assertEquals(invoiceJsonSimple.getInvoiceId(), invoice.getId().toString());
         Assert.assertEquals(invoiceJsonSimple.getInvoiceDate(), invoice.getInvoiceDate());
         Assert.assertEquals(invoiceJsonSimple.getTargetDate(), invoice.getTargetDate());

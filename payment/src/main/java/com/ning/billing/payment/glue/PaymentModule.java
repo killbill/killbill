@@ -33,6 +33,7 @@ import com.ning.billing.payment.api.DefaultPaymentApi;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentService;
 import com.ning.billing.payment.bus.InvoiceHandler;
+import com.ning.billing.payment.bus.TagHandler;
 import com.ning.billing.payment.core.PaymentMethodProcessor;
 import com.ning.billing.payment.core.PaymentProcessor;
 import com.ning.billing.payment.core.RefundProcessor;
@@ -40,6 +41,8 @@ import com.ning.billing.payment.dao.AuditedPaymentDao;
 import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.provider.DefaultPaymentProviderPluginRegistry;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
+import com.ning.billing.payment.retry.AutoPayRetryService;
+import com.ning.billing.payment.retry.AutoPayRetryService.AutoPayRetryServiceScheduler;
 import com.ning.billing.payment.retry.FailedPaymentRetryService;
 import com.ning.billing.payment.retry.FailedPaymentRetryService.FailedPaymentRetryServiceScheduler;
 import com.ning.billing.payment.retry.PluginFailureRetryService;
@@ -76,8 +79,10 @@ public class PaymentModule extends AbstractModule {
     protected void installRetryEngines() {
         bind(FailedPaymentRetryService.class).asEagerSingleton();
         bind(PluginFailureRetryService.class).asEagerSingleton();
+        bind(AutoPayRetryService.class).asEagerSingleton();
         bind(FailedPaymentRetryServiceScheduler.class).asEagerSingleton();
         bind(PluginFailureRetryServiceScheduler.class).asEagerSingleton();
+        bind(AutoPayRetryServiceScheduler.class).asEagerSingleton();
     }
 
     protected void installProcessors() {
@@ -105,6 +110,7 @@ public class PaymentModule extends AbstractModule {
         bind(PaymentProviderPluginRegistry.class).to(DefaultPaymentProviderPluginRegistry.class).asEagerSingleton();
         bind(PaymentApi.class).to(DefaultPaymentApi.class).asEagerSingleton();
         bind(InvoiceHandler.class).asEagerSingleton();
+        bind(TagHandler.class).asEagerSingleton();
         bind(PaymentService.class).to(DefaultPaymentService.class).asEagerSingleton();
         installPaymentProviderPlugins(paymentConfig);
         installPaymentDao();

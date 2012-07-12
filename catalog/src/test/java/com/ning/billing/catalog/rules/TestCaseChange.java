@@ -22,6 +22,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.ErrorCode;
+import com.ning.billing.catalog.CatalogTestSuite;
 import com.ning.billing.catalog.DefaultPriceList;
 import com.ning.billing.catalog.DefaultProduct;
 import com.ning.billing.catalog.MockCatalog;
@@ -34,12 +35,8 @@ import com.ning.billing.catalog.api.PlanSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertNull;
-
-public class TestCaseChange {
+public class TestCaseChange extends CatalogTestSuite {
     protected static class CaseChangeResult extends CaseChange<Result> {
-
         @XmlElement(required = true)
         private final Result result;
 
@@ -68,7 +65,7 @@ public class TestCaseChange {
         }
     }
 
-    @Test(enabled = true)
+    @Test(groups = "fast")
     public void testBasic() throws CatalogApiException {
         final MockCatalog cat = new MockCatalog();
 
@@ -77,7 +74,6 @@ public class TestCaseChange {
 
         final DefaultProduct product2 = cat.getCurrentProducts()[2];
         final DefaultPriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
-
 
         final CaseChangeResult cr = new CaseChangeResult(
                 product1, product2,
@@ -158,7 +154,7 @@ public class TestCaseChange {
                       PhaseType.TRIAL, cat);
     }
 
-    @Test(enabled = true)
+    @Test(groups = "fast")
     public void testWildcardFromProduct() throws CatalogApiException {
         final MockCatalog cat = new MockCatalog();
 
@@ -167,7 +163,6 @@ public class TestCaseChange {
 
         final DefaultProduct product2 = cat.getCurrentProducts()[2];
         final DefaultPriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
-
 
         final CaseChangeResult cr = new CaseChangeResult(
                 null, product2,
@@ -241,7 +236,7 @@ public class TestCaseChange {
                       PhaseType.TRIAL, cat);
     }
 
-    @Test(enabled = true)
+    @Test(groups = "fast")
     public void testWildcardToProduct() throws CatalogApiException {
         final MockCatalog cat = new MockCatalog();
 
@@ -250,7 +245,6 @@ public class TestCaseChange {
 
         final DefaultProduct product2 = cat.getCurrentProducts()[2];
         final DefaultPriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
-
 
         final CaseChangeResult cr = new CaseChangeResult(
                 product1, null,
@@ -331,7 +325,7 @@ public class TestCaseChange {
                       PhaseType.TRIAL, cat);
     }
 
-    @Test(enabled = true)
+    @Test(groups = "fast")
     public void testWildcardFromProductCategory() throws CatalogApiException {
         final MockCatalog cat = new MockCatalog();
 
@@ -340,7 +334,6 @@ public class TestCaseChange {
 
         final DefaultProduct product2 = cat.getCurrentProducts()[2];
         final DefaultPriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
-
 
         final CaseChangeResult cr = new CaseChangeResult(
                 product1, product2,
@@ -421,7 +414,7 @@ public class TestCaseChange {
                       PhaseType.TRIAL, cat);
     }
 
-    @Test(enabled = true)
+    @Test(groups = "fast")
     public void testWildcardToProductCategory() throws CatalogApiException {
         final MockCatalog cat = new MockCatalog();
 
@@ -430,7 +423,6 @@ public class TestCaseChange {
 
         final DefaultProduct product2 = cat.getCurrentProducts()[2];
         final DefaultPriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
-
 
         final CaseChangeResult cr = new CaseChangeResult(
                 product1, product2,
@@ -511,7 +503,7 @@ public class TestCaseChange {
                       PhaseType.TRIAL, cat);
     }
 
-    @Test(enabled = true)
+    @Test(groups = "fast")
     public void testWildcardFromBillingPeriod() throws CatalogApiException {
         final MockCatalog cat = new MockCatalog();
 
@@ -520,7 +512,6 @@ public class TestCaseChange {
 
         final DefaultProduct product2 = cat.getCurrentProducts()[2];
         final DefaultPriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
-
 
         final CaseChangeResult cr = new CaseChangeResult(
                 product1, product2,
@@ -601,8 +592,7 @@ public class TestCaseChange {
                       PhaseType.TRIAL, cat);
     }
 
-
-    @Test(enabled = true)
+    @Test(groups = "fast")
     public void testWildCardToBillingPeriod() throws CatalogApiException {
         final MockCatalog cat = new MockCatalog();
 
@@ -611,7 +601,6 @@ public class TestCaseChange {
 
         final DefaultProduct product2 = cat.getCurrentProducts()[2];
         final DefaultPriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
-
 
         final CaseChangeResult cr = new CaseChangeResult(
                 product1, product2,
@@ -692,7 +681,7 @@ public class TestCaseChange {
                       PhaseType.TRIAL, cat);
     }
 
-    @Test(enabled = true)
+    @Test(groups = "fast")
     public void testWildCardFromPriceList() throws CatalogApiException {
         final MockCatalog cat = new MockCatalog();
 
@@ -701,7 +690,6 @@ public class TestCaseChange {
 
         final DefaultProduct product2 = cat.getCurrentProducts()[2];
         final DefaultPriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
-
 
         final CaseChangeResult cr = new CaseChangeResult(
                 product1, product2,
@@ -782,7 +770,7 @@ public class TestCaseChange {
                       PhaseType.TRIAL, cat);
     }
 
-    @Test(enabled = true)
+    @Test(groups = "fast")
     public void testWildcardToPriceList() throws CatalogApiException {
         final MockCatalog cat = new MockCatalog();
 
@@ -791,7 +779,6 @@ public class TestCaseChange {
 
         final DefaultProduct product2 = cat.getCurrentProducts()[2];
         final DefaultPriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
-
 
         final CaseChangeResult cr = new CaseChangeResult(
                 product1, product2,
@@ -872,7 +859,7 @@ public class TestCaseChange {
                       PhaseType.TRIAL, cat);
     }
 
-    @Test(enabled = true)
+    @Test(groups = "fast")
     public void testWildcardPlanPhase() throws CatalogApiException {
         final MockCatalog cat = new MockCatalog();
 
@@ -881,7 +868,6 @@ public class TestCaseChange {
 
         final DefaultProduct product2 = cat.getCurrentProducts()[2];
         final DefaultPriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
-
 
         final CaseChangeResult cr = new CaseChangeResult(
                 product1, product2,
@@ -962,8 +948,7 @@ public class TestCaseChange {
                   PhaseType.TRIAL, cat);
     }
 
-
-    @Test(enabled = true)
+    @Test(groups = "fast")
     public void testOrder() throws CatalogApiException {
         final MockCatalog cat = new MockCatalog();
 
@@ -972,7 +957,6 @@ public class TestCaseChange {
 
         final DefaultProduct product2 = cat.getCurrentProducts()[2];
         final DefaultPriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
-
 
         final CaseChangeResult cr0 = new CaseChangeResult(
                 product1, product2,
@@ -1015,19 +999,17 @@ public class TestCaseChange {
                 Result.LALA);
 
         final Result r1 = CaseChange.getResult(new CaseChangeResult[]{cr0, cr1, cr2, cr3, cr4},
-                                         new PlanPhaseSpecifier(product1.getName(), product1.getCategory(), BillingPeriod.MONTHLY, priceList1.getName(), PhaseType.EVERGREEN),
-                                         new PlanSpecifier(product2.getName(), product2.getCategory(), BillingPeriod.MONTHLY, priceList2.getName()), cat);
+                                               new PlanPhaseSpecifier(product1.getName(), product1.getCategory(), BillingPeriod.MONTHLY, priceList1.getName(), PhaseType.EVERGREEN),
+                                               new PlanSpecifier(product2.getName(), product2.getCategory(), BillingPeriod.MONTHLY, priceList2.getName()), cat);
 
-        assertEquals(Result.FOO, r1);
+        Assert.assertEquals(r1, Result.FOO);
 
         final Result r2 = CaseChange.getResult(new CaseChangeResult[]{cr0, cr1, cr2, cr3, cr4},
-                                         new PlanPhaseSpecifier(product1.getName(), product1.getCategory(), BillingPeriod.MONTHLY, priceList1.getName(), PhaseType.EVERGREEN),
-                                         new PlanSpecifier(product2.getName(), product2.getCategory(), BillingPeriod.ANNUAL, priceList2.getName()), cat);
+                                               new PlanPhaseSpecifier(product1.getName(), product1.getCategory(), BillingPeriod.MONTHLY, priceList1.getName(), PhaseType.EVERGREEN),
+                                               new PlanSpecifier(product2.getName(), product2.getCategory(), BillingPeriod.ANNUAL, priceList2.getName()), cat);
 
-        assertEquals(Result.DIPSY, r2);
-
+        Assert.assertEquals(r2, Result.DIPSY);
     }
-
 
     protected void assertionNull(final CaseChangeResult cr,
                                  final String fromProductName, final String toProductName,
@@ -1036,8 +1018,8 @@ public class TestCaseChange {
                                  final String fromPriceListName, final String toPriceListName,
                                  final PhaseType phaseType, final StandaloneCatalog cat) {
         try {
-            assertNull(cr.getResult(new PlanPhaseSpecifier(fromProductName, fromProductCategory, fromBp, fromPriceListName, phaseType),
-                                    new PlanSpecifier(toProductName, toProductCategory, toBp, toPriceListName), cat));
+            Assert.assertNull(cr.getResult(new PlanPhaseSpecifier(fromProductName, fromProductCategory, fromBp, fromPriceListName, phaseType),
+                                           new PlanSpecifier(toProductName, toProductCategory, toBp, toPriceListName), cat));
         } catch (CatalogApiException e) {
             Assert.fail("", e);
         }
@@ -1065,11 +1047,10 @@ public class TestCaseChange {
                              final String fromPriceListName, final String toPriceListName,
                              final PhaseType phaseType, final StandaloneCatalog cat) {
         try {
-            assertEquals(result, cr.getResult(new PlanPhaseSpecifier(fromProductName, fromProductCategory, fromBp, fromPriceListName, phaseType),
-                                              new PlanSpecifier(toProductName, toProductCategory, toBp, toPriceListName), cat));
+            Assert.assertEquals(result, cr.getResult(new PlanPhaseSpecifier(fromProductName, fromProductCategory, fromBp, fromPriceListName, phaseType),
+                                                     new PlanSpecifier(toProductName, toProductCategory, toBp, toPriceListName), cat));
         } catch (CatalogApiException e) {
             Assert.fail("", e);
         }
     }
-
 }

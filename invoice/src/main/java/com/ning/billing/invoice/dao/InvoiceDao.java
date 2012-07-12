@@ -31,7 +31,7 @@ import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.callcontext.CallContext;
 
 public interface InvoiceDao {
-    void create(Invoice invoice, CallContext context);
+    void create(final Invoice invoice, final int billCycleDay, final CallContext context);
 
     Invoice getById(final UUID id);
 
@@ -43,13 +43,15 @@ public interface InvoiceDao {
 
     List<Invoice> getInvoicesBySubscription(final UUID subscriptionId);
 
-    UUID getInvoiceIdByPaymentAttemptId(final UUID paymentAttemptId);
+    UUID getInvoiceIdByPaymentId(final UUID paymentId);
 
-    InvoicePayment getInvoicePayment(final UUID paymentAttemptId);
+    InvoicePayment getInvoicePayment(final UUID paymentId);
 
-    void notifyOfPaymentAttempt(final InvoicePayment invoicePayment, final CallContext context);
+    void notifyOfPayment(final InvoicePayment invoicePayment, final CallContext context);
 
     BigDecimal getAccountBalance(final UUID accountId);
+
+    public BigDecimal getAccountCBA(final UUID accountId);
 
     List<Invoice> getUnpaidInvoicesByAccountId(final UUID accountId, final DateTime upToDate);
 
@@ -63,19 +65,21 @@ public interface InvoiceDao {
 
     InvoicePayment postChargeback(final UUID invoicePaymentId, final BigDecimal amount, final CallContext context) throws InvoiceApiException;
 
+    InvoicePayment createRefund(UUID paymentId, BigDecimal amount, boolean isInvoiceAdjusted, UUID paymentCookieId, CallContext context) throws InvoiceApiException;
+
     BigDecimal getRemainingAmountPaid(final UUID invoicePaymentId);
 
     UUID getAccountIdFromInvoicePaymentId(final UUID invoicePaymentId) throws InvoiceApiException;
 
     List<InvoicePayment> getChargebacksByAccountId(final UUID accountId);
 
-    List<InvoicePayment> getChargebacksByPaymentAttemptId(final UUID paymentAttemptId);
+    List<InvoicePayment> getChargebacksByPaymentId(final UUID paymentId);
 
     InvoicePayment getChargebackById(final UUID chargebackId) throws InvoiceApiException;
 
     InvoiceItem getCreditById(final UUID creditId) throws InvoiceApiException;
 
-    InvoiceItem insertCredit(final UUID accountId, final BigDecimal amount,
-                             final DateTime effectiveDate, final Currency currency,
-                             final CallContext context);
+    InvoiceItem insertCredit(final UUID accountId, final UUID invoiceId, final BigDecimal amount,
+                             final DateTime effectiveDate, final Currency currency, final CallContext context);
+
 }

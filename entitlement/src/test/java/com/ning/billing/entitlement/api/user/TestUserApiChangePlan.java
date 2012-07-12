@@ -43,8 +43,6 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
 public abstract class TestUserApiChangePlan extends TestApiBase {
-
-
     private void checkChangePlan(final SubscriptionData subscription, final String expProduct, final ProductCategory expCategory,
                                  final BillingPeriod expBillingPeriod, final PhaseType expPhase) {
 
@@ -59,19 +57,13 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
         assertEquals(currentPhase.getPhaseType(), expPhase);
     }
 
-
     protected void testChangePlanBundleAlignEOTWithNoChargeThroughDate() {
         tChangePlanBundleAlignEOTWithNoChargeThroughDate("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, "Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
     }
 
-
     private void tChangePlanBundleAlignEOTWithNoChargeThroughDate(final String fromProd, final BillingPeriod fromTerm, final String fromPlanSet,
                                                                   final String toProd, final BillingPeriod toTerm, final String toPlanSet) {
-
-        log.info("Starting testChangePlanBundleAlignEOTWithNoChargeThroughDate");
-
         try {
-
             // CREATE
             final SubscriptionData subscription = createSubscription(fromProd, fromTerm, fromPlanSet);
 
@@ -102,24 +94,18 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
         }
     }
 
-
     protected void testChangePlanBundleAlignEOTWithChargeThroughDate() throws EntitlementBillingApiException {
-        log.info("Starting testChangePlanBundleAlignEOTWithChargeThroughDate");
         testChangePlanBundleAlignEOTWithChargeThroughDate("Shotgun", BillingPeriod.ANNUAL, "gunclubDiscount", "Pistol", BillingPeriod.ANNUAL, "gunclubDiscount");
     }
 
     private void testChangePlanBundleAlignEOTWithChargeThroughDate(final String fromProd, final BillingPeriod fromTerm, final String fromPlanSet,
                                                                    final String toProd, final BillingPeriod toTerm, final String toPlanSet) throws EntitlementBillingApiException {
-
-
         try {
-
             // CREATE
             SubscriptionData subscription = createSubscription(fromProd, fromTerm, fromPlanSet);
             final PlanPhase trialPhase = subscription.getCurrentPhase();
             final DateTime expectedPhaseTrialChange = DefaultClock.addDuration(subscription.getStartDate(), trialPhase.getDuration());
             assertEquals(trialPhase.getPhaseType(), PhaseType.TRIAL);
-
 
             // MOVE TO NEXT PHASE
             testListener.pushExpectedEvent(NextEvent.PHASE);
@@ -128,7 +114,6 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
             assertTrue(testListener.isCompleted(5000));
             PlanPhase currentPhase = subscription.getCurrentPhase();
             assertEquals(currentPhase.getPhaseType(), PhaseType.DISCOUNT);
-
 
             // SET CTD
             final Duration ctd = getDurationMonth(1);
@@ -155,7 +140,6 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
             final List<EntitlementEvent> events = dao.getPendingEventsForSubscription(subscription.getId());
             assertTrue(events.get(0) instanceof ApiEvent);
 
-
             // MOVE TO EOT
             testListener.pushExpectedEvent(NextEvent.CHANGE);
             it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(1));
@@ -172,19 +156,14 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
         }
     }
 
-
     protected void testChangePlanBundleAlignIMM() {
         tChangePlanBundleAlignIMM("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, "Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
     }
 
-
     private void tChangePlanBundleAlignIMM(final String fromProd, final BillingPeriod fromTerm, final String fromPlanSet,
                                            final String toProd, final BillingPeriod toTerm, final String toPlanSet) {
 
-        log.info("Starting testChangePlanBundleAlignIMM");
-
         try {
-
             final SubscriptionData subscription = createSubscription(fromProd, fromTerm, fromPlanSet);
 
             testListener.pushExpectedEvent(NextEvent.CHANGE);
@@ -217,17 +196,13 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
         }
     }
 
-
     protected void testChangePlanChangePlanAlignEOTWithChargeThroughDate() throws EntitlementBillingApiException {
-        log.info("Starting testChangePlanChangePlanAlignEOTWithChargeThroughDate");
         tChangePlanChangePlanAlignEOTWithChargeThroughDate("Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, "Assault-Rifle", BillingPeriod.ANNUAL, "rescue");
     }
 
     private void tChangePlanChangePlanAlignEOTWithChargeThroughDate(final String fromProd, final BillingPeriod fromTerm, final String fromPlanSet,
                                                                     final String toProd, final BillingPeriod toTerm, final String toPlanSet) throws EntitlementBillingApiException {
-
         try {
-
             DateTime currentTime = clock.getUTCNow();
 
             SubscriptionData subscription = createSubscription(fromProd, fromTerm, fromPlanSet);
@@ -308,8 +283,6 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
     }
 
     protected void testMultipleChangeLastIMM() throws EntitlementBillingApiException {
-
-        log.info("Starting testMultipleChangeLastIMM");
         try {
             SubscriptionData subscription = createSubscription("Assault-Rifle", BillingPeriod.MONTHLY, "gunclubDiscount");
             final PlanPhase trialPhase = subscription.getCurrentPhase();
@@ -361,10 +334,7 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
     }
 
     protected void testMultipleChangeLastEOT() throws EntitlementBillingApiException {
-
-        log.info("Starting testMultipleChangeLastEOT");
         try {
-
             SubscriptionData subscription = createSubscription("Assault-Rifle", BillingPeriod.ANNUAL, "gunclubDiscount");
             final PlanPhase trialPhase = subscription.getCurrentPhase();
             assertEquals(trialPhase.getPhaseType(), PhaseType.TRIAL);
@@ -425,7 +395,6 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
             assertNotNull(currentPhase);
             assertEquals(currentPhase.getPhaseType(), PhaseType.DISCOUNT);
 
-
             // MOVE TO NEXT PHASE
             testListener.pushExpectedEvent(NextEvent.PHASE);
             it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(6));
@@ -449,13 +418,8 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
         }
     }
 
-
     protected void testCorrectPhaseAlignmentOnChange() {
-
-        log.info("Starting testCorrectPhaseAlignmentOnChange");
-
         try {
-
             SubscriptionData subscription = createSubscription("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
             PlanPhase trialPhase = subscription.getCurrentPhase();
             assertEquals(trialPhase.getPhaseType(), PhaseType.TRIAL);
@@ -463,7 +427,6 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
             // MOVE 2 DAYS AHEAD
             Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(2));
             clock.addDeltaFromReality(it.toDurationMillis());
-
 
             // CHANGE IMMEDIATE TO A 3 PHASES PLAN
             testListener.reset();
@@ -495,7 +458,7 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId());
 
             final DateTime expectedNextPhaseDate = subscription.getStartDate().plusDays(30).plusMonths(6);
-            final SubscriptionEvent nextPhase = subscription.getPendingTransition();
+            final EffectiveSubscriptionEvent nextPhase = subscription.getPendingTransition();
             final DateTime nextPhaseEffectiveDate = nextPhase.getEffectiveTransitionTime();
 
             assertEquals(nextPhaseEffectiveDate, expectedNextPhaseDate);
@@ -506,5 +469,4 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
             Assert.fail(e.getMessage());
         }
     }
-
 }

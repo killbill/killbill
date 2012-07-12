@@ -22,10 +22,12 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountChangeEvent;
 import com.ning.billing.account.api.AccountCreationEvent;
 import com.ning.billing.entitlement.api.timeline.RepairEntitlementEvent;
+import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
-import com.ning.billing.entitlement.api.user.SubscriptionEvent;
-import com.ning.billing.invoice.api.EmptyInvoiceEvent;
+import com.ning.billing.entitlement.api.user.RequestedSubscriptionEvent;
+import com.ning.billing.invoice.api.NullInvoiceEvent;
 import com.ning.billing.invoice.api.InvoiceCreationEvent;
+import com.ning.billing.overdue.OverdueChangeEvent;
 import com.ning.billing.payment.api.PaymentErrorEvent;
 import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.util.tag.api.ControlTagCreationEvent;
@@ -41,46 +43,41 @@ public class AnalyticsListener {
     private final BusinessSubscriptionTransitionRecorder bstRecorder;
     private final BusinessAccountRecorder bacRecorder;
     private final BusinessInvoiceRecorder invoiceRecorder;
+    private final BusinessOverdueStatusRecorder bosRecorder;
+    private final BusinessInvoicePaymentRecorder bipRecorder;
     private final BusinessTagRecorder tagRecorder;
 
     @Inject
     public AnalyticsListener(final BusinessSubscriptionTransitionRecorder bstRecorder,
                              final BusinessAccountRecorder bacRecorder,
                              final BusinessInvoiceRecorder invoiceRecorder,
+                             final BusinessOverdueStatusRecorder bosRecorder,
+                             final BusinessInvoicePaymentRecorder bipRecorder,
                              final BusinessTagRecorder tagRecorder) {
         this.bstRecorder = bstRecorder;
         this.bacRecorder = bacRecorder;
         this.invoiceRecorder = invoiceRecorder;
+        this.bosRecorder = bosRecorder;
+        this.bipRecorder = bipRecorder;
         this.tagRecorder = tagRecorder;
     }
 
     @Subscribe
-    public void handleSubscriptionTransitionChange(final SubscriptionEvent event) throws AccountApiException, EntitlementUserApiException {
-        switch (event.getTransitionType()) {
-            // A subscription enters either through migration or as newly created subscription
-            case MIGRATE_ENTITLEMENT:
-            case CREATE:
-                bstRecorder.subscriptionCreated(event);
-                break;
-            case RE_CREATE:
-                bstRecorder.subscriptionRecreated(event);
-                break;
-            case MIGRATE_BILLING:
-                break;
-            case CANCEL:
-                bstRecorder.subscriptionCancelled(event);
-                break;
-            case CHANGE:
-                bstRecorder.subscriptionChanged(event);
-                break;
-            case UNCANCEL:
-                break;
-            case PHASE:
-                bstRecorder.subscriptionPhaseChanged(event);
-                break;
-            default:
-                throw new RuntimeException("Unexpected event type " + event.getTransitionType());
-        }
+    public void handleEffectiveSubscriptionTransitionChange(final EffectiveSubscriptionEvent eventEffective) throws AccountApiException, EntitlementUserApiException {
+        // The event is used as a trigger to rebuild all transitions for this bundle
+        bstRecorder.rebuildTransitionsForBundle(eventEffective.getBundleId());
+    }
+
+    @Subscribe
+    public void handleRequestedSubscriptionTransitionChange(final RequestedSubscriptionEvent eventRequested) throws AccountApiException, EntitlementUserApiException {
+        // The event is used as a trigger to rebuild all transitions for this bundle
+        bstRecorder.rebuildTransitionsForBundle(eventRequested.getBundleId());
+    }
+
+    @Subscribe
+    public void handleRepairEntitlement(final RepairEntitlementEvent event) {
+        // In case of repair, just rebuild all transitions
+        bstRecorder.rebuildTransitionsForBundle(event.getBundleId());
     }
 
     @Subscribe
@@ -99,22 +96,34 @@ public class AnalyticsListener {
 
     @Subscribe
     public void handleInvoiceCreation(final InvoiceCreationEvent event) {
-        invoiceRecorder.invoiceCreated(event.getInvoiceId());
+        // The event is used as a trigger to rebuild all invoices and invoice items for this account
+        invoiceRecorder.rebuildInvoicesForAccount(event.getAccountId());
     }
 
     @Subscribe
-    public void handleNullInvoice(final EmptyInvoiceEvent event) {
+    public void handleNullInvoice(final NullInvoiceEvent event) {
         // Ignored for now
     }
 
     @Subscribe
     public void handlePaymentInfo(final PaymentInfoEvent paymentInfo) {
-        bacRecorder.accountUpdated(paymentInfo);
+        bipRecorder.invoicePaymentPosted(paymentInfo.getAccountId(),
+                                         paymentInfo.getPaymentId(),
+                                         paymentInfo.getExtPaymentRefId(),
+                                         paymentInfo.getStatus().toString());
     }
 
     @Subscribe
     public void handlePaymentError(final PaymentErrorEvent paymentError) {
-        // TODO - we can't tie the error back to an account yet
+        bipRecorder.invoicePaymentPosted(paymentError.getAccountId(),
+                                         paymentError.getPaymentId(),
+                                         null,
+                                         paymentError.getMessage());
+    }
+
+    @Subscribe
+    public void handleOverdueChange(final OverdueChangeEvent changeEvent) {
+        bosRecorder.overdueStatusChanged(changeEvent.getOverdueObjectType(), changeEvent.getOverdueObjectId());
     }
 
     @Subscribe
@@ -154,11 +163,6 @@ public class AnalyticsListener {
 
     @Subscribe
     public void handleUserTagDefinitionDeletion(final UserTagDefinitionDeletionEvent event) {
-        // Ignored for now
-    }
-
-    @Subscribe
-    public void handleRepairEntitlement(final RepairEntitlementEvent event) {
         // Ignored for now
     }
 }

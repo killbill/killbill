@@ -36,7 +36,7 @@ public class DefaultInvoiceTranslator extends DefaultTranslatorBase implements I
 
     @Override
     protected String getBundlePath() {
-        return config.getBundlePath();
+        return config.getInvoiceTemplateBundlePath();
     }
 
     @Override

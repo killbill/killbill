@@ -78,11 +78,32 @@ public class DefaultPaymentApi implements PaymentApi {
     }
 
 
+
     @Override
-    public Refund createRefund(final Account account, final UUID paymentId, final CallContext context)
-            throws PaymentApiException {
-        return refundProcessor.createRefund(account, paymentId, context);
+    public Refund getRefund(UUID refundId) throws PaymentApiException {
+        return refundProcessor.getRefund(refundId);
     }
+
+    @Override
+    public Refund createRefund(Account account, UUID paymentId,
+            BigDecimal refundAmount, boolean isAdjusted, CallContext context)
+            throws PaymentApiException {
+        return refundProcessor.createRefund(account, paymentId, refundAmount, isAdjusted, context);
+
+    }
+
+    @Override
+    public List<Refund> getAccountRefunds(Account account)
+            throws PaymentApiException {
+        return refundProcessor.getAccountRefunds(account);
+    }
+
+    @Override
+    public List<Refund> getPaymentRefunds(UUID paymentId)
+            throws PaymentApiException {
+        return refundProcessor.getPaymentRefunds(paymentId);
+    }
+
 
     @Override
     public Set<String> getAvailablePlugins() {
@@ -118,6 +139,7 @@ public class DefaultPaymentApi implements PaymentApi {
         return methodProcessor.getPaymentMethods(account, withPluginDetail);
     }
 
+    @Override
     public PaymentMethod getPaymentMethodById(final UUID paymentMethodId)
             throws PaymentApiException {
         return methodProcessor.getPaymentMethodById(paymentMethodId);

@@ -23,7 +23,7 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
 public class MockNextBillingDatePoster implements NextBillingDatePoster {
     @Override
-    public void insertNextBillingNotification(final Transmogrifier transactionalDao, final UUID subscriptionId, final DateTime futureNotificationTime) {
+    public void insertNextBillingNotification(final Transmogrifier transactionalDao, final UUID accountId, final UUID subscriptionId, final DateTime futureNotificationTime) {
         // do nothing
     }
 }

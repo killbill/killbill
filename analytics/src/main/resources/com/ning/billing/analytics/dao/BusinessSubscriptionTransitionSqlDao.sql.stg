@@ -1,10 +1,13 @@
 group BusinessSubscriptionTransition;
 
-getTransitions(external_key) ::= <<
+getTransitionsByKey(external_key) ::= <<
   select
     total_ordering
+  , bundle_id
   , external_key
+  , account_id
   , account_key
+  , subscription_id
   , requested_timestamp
   , event
   , prev_product_name
@@ -19,8 +22,6 @@ getTransitions(external_key) ::= <<
   , prev_currency
   , prev_start_date
   , prev_state
-  , prev_subscription_id
-  , prev_bundle_id
   , next_product_name
   , next_product_type
   , next_product_category
@@ -33,19 +34,20 @@ getTransitions(external_key) ::= <<
   , next_currency
   , next_start_date
   , next_state
-  , next_subscription_id
-  , next_bundle_id
   from bst
   where external_key=:external_key
   order by requested_timestamp asc
   ;
 >>
 
-createTransition() ::= <<
-  insert ignore into bst(
+getTransitionForSubscription(subscription_id) ::= <<
+  select
     total_ordering
+  , bundle_id
   , external_key
+  , account_id
   , account_key
+  , subscription_id
   , requested_timestamp
   , event
   , prev_product_name
@@ -60,8 +62,6 @@ createTransition() ::= <<
   , prev_currency
   , prev_start_date
   , prev_state
-  , prev_subscription_id
-  , prev_bundle_id
   , next_product_name
   , next_product_type
   , next_product_category
@@ -74,12 +74,53 @@ createTransition() ::= <<
   , next_currency
   , next_start_date
   , next_state
-  , next_subscription_id
-  , next_bundle_id
+  from bst
+  where subscription_id = :subscription_id
+  order by requested_timestamp asc
+  ;
+>>
+
+createTransition() ::= <<
+  insert into bst(
+    total_ordering
+  , bundle_id
+  , external_key
+  , account_id
+  , account_key
+  , subscription_id
+  , requested_timestamp
+  , event
+  , prev_product_name
+  , prev_product_type
+  , prev_product_category
+  , prev_slug
+  , prev_phase
+  , prev_billing_period
+  , prev_price
+  , prev_price_list
+  , prev_mrr
+  , prev_currency
+  , prev_start_date
+  , prev_state
+  , next_product_name
+  , next_product_type
+  , next_product_category
+  , next_slug
+  , next_phase
+  , next_billing_period
+  , next_price
+  , next_price_list
+  , next_mrr
+  , next_currency
+  , next_start_date
+  , next_state
   ) values (
     :total_ordering
+  , :bundle_id
   , :external_key
+  , :account_id
   , :account_key
+  , :subscription_id
   , :requested_timestamp
   , :event
   , :prev_product_name
@@ -94,8 +135,6 @@ createTransition() ::= <<
   , :prev_currency
   , :prev_start_date
   , :prev_state
-  , :prev_subscription_id
-  , :prev_bundle_id
   , :next_product_name
   , :next_product_type
   , :next_product_category
@@ -108,9 +147,13 @@ createTransition() ::= <<
   , :next_currency
   , :next_start_date
   , :next_state
-  , :next_subscription_id
-  , :next_bundle_id
   );
+>>
+
+deleteTransitionsForBundle(bundle_id) ::= <<
+  delete from bst
+  where bundle_id=:bundle_id
+  ;
 >>
 
 test() ::= <<

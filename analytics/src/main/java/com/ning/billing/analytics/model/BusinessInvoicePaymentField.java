@@ -35,8 +35,8 @@ public class BusinessInvoicePaymentField extends BusinessField {
         final StringBuilder sb = new StringBuilder();
         sb.append("BusinessPaymentField");
         sb.append("{paymentId='").append(paymentId).append('\'');
-        sb.append(", name='").append(name).append('\'');
-        sb.append(", value='").append(value).append('\'');
+        sb.append(", name='").append(getName()).append('\'');
+        sb.append(", value='").append(getValue()).append('\'');
         sb.append('}');
         return sb.toString();
     }
@@ -55,10 +55,10 @@ public class BusinessInvoicePaymentField extends BusinessField {
         if (paymentId != null ? !paymentId.equals(that.paymentId) : that.paymentId != null) {
             return false;
         }
-        if (name != null ? !name.equals(that.name) : that.name != null) {
+        if (getName() != null ? !getName().equals(that.getName()) : that.getName() != null) {
             return false;
         }
-        if (value != null ? !value.equals(that.value) : that.value != null) {
+        if (getValue() != null ? !getValue().equals(that.getValue()) : that.getValue() != null) {
             return false;
         }
 
@@ -68,8 +68,8 @@ public class BusinessInvoicePaymentField extends BusinessField {
     @Override
     public int hashCode() {
         int result = paymentId != null ? paymentId.hashCode() : 0;
-        result = 31 * result + (name != null ? name.hashCode() : 0);
-        result = 31 * result + (value != null ? value.hashCode() : 0);
+        result = 31 * result + (getName() != null ? getName().hashCode() : 0);
+        result = 31 * result + (getValue() != null ? getValue().hashCode() : 0);
         return result;
     }
 }

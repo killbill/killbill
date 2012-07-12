@@ -23,6 +23,7 @@ import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.tag.TagDefinition;
 
 public interface TagEvent extends BusEvent {
+
     UUID getTagId();
 
     UUID getObjectId();

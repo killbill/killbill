@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.beatrix.integration;
 
 import java.io.IOException;
@@ -33,6 +34,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.AccountService;
@@ -41,6 +43,7 @@ import com.ning.billing.analytics.AnalyticsListener;
 import com.ning.billing.analytics.api.user.DefaultAnalyticsUserApi;
 import com.ning.billing.api.TestApiListener;
 import com.ning.billing.api.TestListenerStatus;
+import com.ning.billing.beatrix.BeatrixTestSuiteWithEmbeddedDB;
 import com.ning.billing.beatrix.lifecycle.Lifecycle;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.dbi.MysqlTestingHelper;
@@ -54,10 +57,13 @@ import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceService;
 import com.ning.billing.invoice.api.InvoiceUserApi;
+import com.ning.billing.invoice.generator.InvoiceDateUtils;
 import com.ning.billing.invoice.model.InvoicingConfiguration;
 import com.ning.billing.junction.plumbing.api.BlockingSubscription;
+import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
+import com.ning.billing.payment.provider.MockPaymentProviderPlugin;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.callcontext.CallContext;
@@ -72,7 +78,9 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
-public class TestIntegrationBase implements TestListenerStatus {
+public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implements TestListenerStatus {
+    protected static final DateTimeZone testTimeZone = DateTimeZone.UTC;
+
     protected static final int NUMBER_OF_DECIMALS = InvoicingConfiguration.getNumberOfDecimals();
     protected static final int ROUNDING_METHOD = InvoicingConfiguration.getRoundingMode();
 
@@ -83,7 +91,6 @@ public class TestIntegrationBase implements TestListenerStatus {
 
     protected static final Logger log = LoggerFactory.getLogger(TestIntegration.class);
     protected static long AT_LEAST_ONE_MONTH_MS = 31L * 24L * 3600L * 1000L;
-
 
     protected static final long DELAY = 5000;
 
@@ -124,6 +131,13 @@ public class TestIntegrationBase implements TestListenerStatus {
     @Inject
     protected PaymentApi paymentApi;
 
+    @Named(BeatrixModule.PLUGIN_NAME)
+    @Inject
+    protected MockPaymentProviderPlugin paymentPlugin;
+
+    @Inject
+    protected OverdueWrapperFactory overdueWrapperFactory;
+
     @Inject
     protected AccountUserApi accountUserApi;
 
@@ -137,7 +151,6 @@ public class TestIntegrationBase implements TestListenerStatus {
     protected AnalyticsListener analyticsListener;
 
     protected TestApiListener busHandler;
-
 
     private boolean isListenerFailed;
     private String listenerFailedMsg;
@@ -154,7 +167,6 @@ public class TestIntegrationBase implements TestListenerStatus {
         listenerFailedMsg = null;
     }
 
-
     protected void assertListenerStatus() {
         if (isListenerFailed) {
             log.error(listenerFailedMsg);
@@ -162,51 +174,16 @@ public class TestIntegrationBase implements TestListenerStatus {
         }
     }
 
-    protected void setupMySQL() throws IOException {
-        final String accountDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/account/ddl.sql"));
-        final String analyticsDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/analytics/ddl.sql"));
-        final String entitlementDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/entitlement/ddl.sql"));
-        final String invoiceDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/invoice/ddl.sql"));
-        final String paymentDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/payment/ddl.sql"));
-        final String utilDdl = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
-        final String junctionDb = IOUtils.toString(TestIntegration.class.getResourceAsStream("/com/ning/billing/junction/ddl.sql"));
-
-        helper.startMysql();
-
-        helper.initDb(accountDdl);
-        helper.initDb(analyticsDdl);
-        helper.initDb(entitlementDdl);
-        helper.initDb(invoiceDdl);
-        helper.initDb(paymentDdl);
-        helper.initDb(utilDdl);
-        helper.initDb(junctionDb);
-    }
-
-
     @BeforeClass(groups = "slow")
     public void setup() throws Exception {
-
-        setupMySQL();
-
         context = new DefaultCallContextFactory(clock).createCallContext("Integration Test", CallOrigin.TEST, UserType.TEST);
         busHandler = new TestApiListener(this);
-
     }
-
-    @AfterClass(groups = "slow")
-    public void tearDown() throws Exception {
-        helper.stopMysql();
-    }
-
 
     @BeforeMethod(groups = "slow")
     public void setupTest() throws Exception {
-
         log.warn("\n");
         log.warn("RESET TEST FRAMEWORK\n\n");
-
-        // Pre test cleanup
-        helper.cleanupAllTables();
 
         clock.resetDeltaFromReality();
         resetTestListenerStatus();
@@ -226,7 +203,6 @@ public class TestIntegrationBase implements TestListenerStatus {
         log.warn("DONE WITH TEST\n");
     }
 
-
     protected void verifyTestResult(final UUID accountId, final UUID subscriptionId,
                                     final DateTime startDate, final DateTime endDate,
                                     final BigDecimal amount, final DateTime chargeThroughDate,
@@ -242,9 +218,12 @@ public class TestIntegrationBase implements TestListenerStatus {
 
         boolean wasFound = false;
 
+        // Make sure to round the dates in the comparisons as the invoice items dates are rounded
+        final DateTime roundedStartDate = InvoiceDateUtils.roundDateTimeToDate(startDate, testTimeZone);
+        final DateTime roundedEndDate = InvoiceDateUtils.roundDateTimeToDate(endDate, testTimeZone);
         for (final InvoiceItem item : invoiceItems) {
-            if (item.getStartDate().compareTo(startDate) == 0) {
-                if (item.getEndDate().compareTo(endDate) == 0) {
+            if (item.getStartDate().compareTo(roundedStartDate) == 0) {
+                if (item.getEndDate().compareTo(roundedEndDate) == 0) {
                     if (item.getAmount().compareTo(amount) == 0) {
                         wasFound = true;
                         break;
@@ -261,7 +240,8 @@ public class TestIntegrationBase implements TestListenerStatus {
         assertNotNull(ctd);
         log.info("Checking CTD: " + ctd.toString() + "; clock is " + clock.getUTCNow().toString());
         assertTrue(clock.getUTCNow().isBefore(ctd));
-        assertTrue(ctd.compareTo(chargeThroughDate) == 0);
+        // The CTD is rounded too
+        assertTrue(ctd.compareTo(InvoiceDateUtils.roundDateTimeToDate(chargeThroughDate, testTimeZone)) == 0);
     }
 
     protected SubscriptionData subscriptionDataFromSubscription(final Subscription sub) {
@@ -293,10 +273,10 @@ public class TestIntegrationBase implements TestListenerStatus {
                 return UUID.randomUUID().toString();
             }
         };
+
         paymentApi.addPaymentMethod(BeatrixModule.PLUGIN_NAME, account, true, info, context);
         return accountUserApi.getAccountById(account.getId());
     }
-
 
     protected AccountData getAccountData(final int billingDay) {
         final String someRandomKey = UUID.randomUUID().toString();

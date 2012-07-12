@@ -28,11 +28,12 @@ import org.testng.annotations.Test;
 import org.xml.sax.SAXException;
 
 import com.ning.billing.catalog.api.InvalidConfigException;
+import com.ning.billing.util.UtilTestSuite;
 
 import static org.testng.Assert.assertEquals;
 
 
-public class TestXMLLoader {
+public class TestXMLLoader extends UtilTestSuite {
     public static final String TEST_XML =
             "<xmlTestClass>" +
                     "	<foo>foo</foo>" +
@@ -40,7 +41,7 @@ public class TestXMLLoader {
                     "	<lala>42</lala>" +
                     "</xmlTestClass>";
 
-    @Test
+    @Test(groups = "fast")
     public void test() throws SAXException, InvalidConfigException, JAXBException, IOException, TransformerException, URISyntaxException, ValidationException {
         final InputStream is = new ByteArrayInputStream(TEST_XML.getBytes());
         final XmlTestClass test = XMLLoader.getObjectFromStream(new URI("internal:/"), is, XmlTestClass.class);
@@ -48,6 +49,4 @@ public class TestXMLLoader {
         assertEquals(test.getBar(), 1.0);
         assertEquals(test.getLala(), 42);
     }
-
-
 }

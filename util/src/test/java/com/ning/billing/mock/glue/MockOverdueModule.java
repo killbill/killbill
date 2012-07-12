@@ -16,21 +16,20 @@
 
 package com.ning.billing.mock.glue;
 
+import org.mockito.Mockito;
+
 import com.google.inject.AbstractModule;
 import com.ning.billing.glue.OverdueModule;
-import com.ning.billing.mock.BrainDeadProxyFactory;
 import com.ning.billing.overdue.OverdueUserApi;
 
 public class MockOverdueModule extends AbstractModule implements OverdueModule {
-
     @Override
     public void installOverdueUserApi() {
-        bind(OverdueUserApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(OverdueUserApi.class));
+        bind(OverdueUserApi.class).toInstance(Mockito.mock(OverdueUserApi.class));
     }
 
     @Override
     protected void configure() {
         installOverdueUserApi();
     }
-
 }

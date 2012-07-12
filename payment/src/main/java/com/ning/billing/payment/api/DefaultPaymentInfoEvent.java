@@ -36,6 +36,7 @@ public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEv
     private final PaymentStatus status;
     private final UUID userToken;
     private final DateTime effectiveDate;
+    private final String extPaymentRefId;
 
     @JsonCreator
     public DefaultPaymentInfoEvent(@JsonProperty("id") final UUID id,
@@ -45,6 +46,7 @@ public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEv
                                    @JsonProperty("amount") final BigDecimal amount,
                                    @JsonProperty("paymentNumber") final Integer paymentNumber,
                                    @JsonProperty("status") final PaymentStatus status,
+                                   @JsonProperty("extPaymentRefId") final String extPaymentRefId,
                                    @JsonProperty("userToken") final UUID userToken,
                                    @JsonProperty("effectiveDate") final DateTime effectiveDate) {
         super(id);
@@ -54,6 +56,7 @@ public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEv
         this.amount = amount;
         this.paymentNumber = paymentNumber;
         this.status = status;
+        this.extPaymentRefId = extPaymentRefId;
         this.userToken = userToken;
         this.effectiveDate = effectiveDate;
     }
@@ -61,8 +64,8 @@ public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEv
 
     public DefaultPaymentInfoEvent(final UUID accountId, final UUID invoiceId,
                                    final UUID paymentId, final BigDecimal amount, final Integer paymentNumber,
-                                   final PaymentStatus status, final UUID userToken, final DateTime effectiveDate) {
-        this(UUID.randomUUID(), accountId, invoiceId, paymentId, amount, paymentNumber, status, userToken, effectiveDate);
+                                   final PaymentStatus status, final String extPaymentRefId, final UUID userToken, final DateTime effectiveDate) {
+        this(UUID.randomUUID(), accountId, invoiceId, paymentId, amount, paymentNumber, status, extPaymentRefId, userToken, effectiveDate);
     }
 
     public DefaultPaymentInfoEvent(final DefaultPaymentInfoEvent src) {
@@ -73,6 +76,7 @@ public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEv
              src.amount,
              src.paymentNumber,
              src.status,
+             src.extPaymentRefId,
              src.userToken,
              src.effectiveDate);
     }
@@ -132,6 +136,27 @@ public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEv
         return status;
     }
 
+    @Override
+    public String getExtPaymentRefId() {
+        return extPaymentRefId;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append("DefaultPaymentInfoEvent");
+        sb.append("{accountId=").append(accountId);
+        sb.append(", invoiceId=").append(invoiceId);
+        sb.append(", paymentId=").append(paymentId);
+        sb.append(", amount=").append(amount);
+        sb.append(", paymentNumber=").append(paymentNumber);
+        sb.append(", status=").append(status);
+        sb.append(", userToken=").append(userToken);
+        sb.append(", effectiveDate=").append(effectiveDate);
+        sb.append(", extPaymentRefId='").append(extPaymentRefId).append('\'');
+        sb.append('}');
+        return sb.toString();
+    }
 
     @Override
     public int hashCode() {

@@ -28,22 +28,24 @@ import com.ning.billing.invoice.api.Invoice;
 
 public class BusinessInvoice {
     private final UUID invoiceId;
+    private final Integer invoiceNumber;
     private final DateTime createdDate;
+    private final DateTime updatedDate;
+    private final UUID accountId;
+    private final String accountKey;
+    private final DateTime invoiceDate;
+    private final DateTime targetDate;
+    private final Currency currency;
+    private final BigDecimal balance;
+    private final BigDecimal amountPaid;
+    private final BigDecimal amountCharged;
+    private final BigDecimal amountCredited;
 
-    private DateTime updatedDate;
-    private String accountKey;
-    private DateTime invoiceDate;
-    private DateTime targetDate;
-    private Currency currency;
-    private BigDecimal balance;
-    private BigDecimal amountPaid;
-    private BigDecimal amountCharged;
-    private BigDecimal amountCredited;
-
-    public BusinessInvoice(final String accountKey, final BigDecimal amountCharged, final BigDecimal amountCredited,
+    public BusinessInvoice(final UUID accountId, final String accountKey, final BigDecimal amountCharged, final BigDecimal amountCredited,
                            final BigDecimal amountPaid, final BigDecimal balance, final DateTime createdDate,
-                           final Currency currency, final DateTime invoiceDate, final UUID invoiceId,
+                           final Currency currency, final DateTime invoiceDate, final UUID invoiceId, final Integer invoiceNumber,
                            final DateTime targetDate, final DateTime updatedDate) {
+        this.accountId = accountId;
         this.accountKey = accountKey;
         this.amountCharged = amountCharged;
         this.amountCredited = amountCredited;
@@ -53,104 +55,79 @@ public class BusinessInvoice {
         this.currency = currency;
         this.invoiceDate = invoiceDate;
         this.invoiceId = invoiceId;
+        this.invoiceNumber = invoiceNumber;
         this.targetDate = targetDate;
         this.updatedDate = updatedDate;
     }
 
     public BusinessInvoice(final String accountKey, final Invoice invoice) {
-        this(accountKey, invoice.getAmountCharged(), invoice.getAmountCredited(), invoice.getAmountPaid(), invoice.getBalance(),
-             new DateTime(DateTimeZone.UTC), invoice.getCurrency(), invoice.getInvoiceDate(), invoice.getId(), invoice.getTargetDate(),
+        this(invoice.getAccountId(), accountKey, invoice.getChargedAmount(), invoice.getCreditAdjAmount(), invoice.getPaidAmount(), invoice.getBalance(),
+             new DateTime(DateTimeZone.UTC), invoice.getCurrency(), invoice.getInvoiceDate(), invoice.getId(), invoice.getInvoiceNumber(), invoice.getTargetDate(),
              new DateTime(DateTimeZone.UTC));
     }
 
-    public DateTime getCreatedDate() {
-        return createdDate;
-    }
-
-    public UUID getInvoiceId() {
-        return invoiceId;
+    public UUID getAccountId() {
+        return accountId;
     }
 
     public String getAccountKey() {
         return accountKey;
     }
 
-    public void setAccountKey(final String accountKey) {
-        this.accountKey = accountKey;
-    }
-
     public BigDecimal getAmountCharged() {
         return amountCharged;
-    }
-
-    public void setAmountCharged(final BigDecimal amountCharged) {
-        this.amountCharged = amountCharged;
     }
 
     public BigDecimal getAmountCredited() {
         return amountCredited;
     }
 
-    public void setAmountCredited(final BigDecimal amountCredited) {
-        this.amountCredited = amountCredited;
-    }
-
     public BigDecimal getAmountPaid() {
         return amountPaid;
-    }
-
-    public void setAmountPaid(final BigDecimal amountPaid) {
-        this.amountPaid = amountPaid;
     }
 
     public BigDecimal getBalance() {
         return balance;
     }
 
-    public void setBalance(final BigDecimal balance) {
-        this.balance = balance;
+    public DateTime getCreatedDate() {
+        return createdDate;
     }
 
     public Currency getCurrency() {
         return currency;
     }
 
-    public void setCurrency(final Currency currency) {
-        this.currency = currency;
-    }
-
     public DateTime getInvoiceDate() {
         return invoiceDate;
     }
 
-    public void setInvoiceDate(final DateTime invoiceDate) {
-        this.invoiceDate = invoiceDate;
+    public UUID getInvoiceId() {
+        return invoiceId;
+    }
+
+    public Integer getInvoiceNumber() {
+        return invoiceNumber;
     }
 
     public DateTime getTargetDate() {
         return targetDate;
     }
 
-    public void setTargetDate(final DateTime targetDate) {
-        this.targetDate = targetDate;
-    }
-
     public DateTime getUpdatedDate() {
         return updatedDate;
-    }
-
-    public void setUpdatedDate(final DateTime updatedDate) {
-        this.updatedDate = updatedDate;
     }
 
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
         sb.append("BusinessInvoice");
-        sb.append("{accountKey='").append(accountKey).append('\'');
+        sb.append("{accountId=").append(accountId);
         sb.append(", invoiceId=").append(invoiceId);
+        sb.append(", invoiceNumber=").append(invoiceNumber);
         sb.append(", createdDate=").append(createdDate);
         sb.append(", updatedDate=").append(updatedDate);
+        sb.append(", accountKey='").append(accountKey).append('\'');
         sb.append(", invoiceDate=").append(invoiceDate);
         sb.append(", targetDate=").append(targetDate);
         sb.append(", currency=").append(currency);
@@ -173,6 +150,9 @@ public class BusinessInvoice {
 
         final BusinessInvoice that = (BusinessInvoice) o;
 
+        if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
+            return false;
+        }
         if (accountKey != null ? !accountKey.equals(that.accountKey) : that.accountKey != null) {
             return false;
         }
@@ -188,22 +168,25 @@ public class BusinessInvoice {
         if (balance != null ? Rounder.round(balance) != Rounder.round(that.balance) : that.balance != null) {
             return false;
         }
-        if (createdDate != null ? !createdDate.equals(that.createdDate) : that.createdDate != null) {
+        if (createdDate != null ? createdDate.compareTo(that.createdDate) != 0 : that.createdDate != null) {
             return false;
         }
         if (currency != that.currency) {
             return false;
         }
-        if (invoiceDate != null ? !invoiceDate.equals(that.invoiceDate) : that.invoiceDate != null) {
+        if (invoiceDate != null ? invoiceDate.compareTo(that.invoiceDate) != 0 : that.invoiceDate != null) {
             return false;
         }
         if (invoiceId != null ? !invoiceId.equals(that.invoiceId) : that.invoiceId != null) {
             return false;
         }
-        if (targetDate != null ? !targetDate.equals(that.targetDate) : that.targetDate != null) {
+        if (invoiceNumber != null ? !invoiceNumber.equals(that.invoiceNumber) : that.invoiceNumber != null) {
             return false;
         }
-        if (updatedDate != null ? !updatedDate.equals(that.updatedDate) : that.updatedDate != null) {
+        if (targetDate != null ? targetDate.compareTo(that.targetDate) != 0 : that.targetDate != null) {
+            return false;
+        }
+        if (updatedDate != null ? updatedDate.compareTo(that.updatedDate) != 0 : that.updatedDate != null) {
             return false;
         }
 
@@ -213,8 +196,10 @@ public class BusinessInvoice {
     @Override
     public int hashCode() {
         int result = invoiceId != null ? invoiceId.hashCode() : 0;
+        result = 31 * result + (invoiceNumber != null ? invoiceNumber.hashCode() : 0);
         result = 31 * result + (createdDate != null ? createdDate.hashCode() : 0);
         result = 31 * result + (updatedDate != null ? updatedDate.hashCode() : 0);
+        result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
         result = 31 * result + (accountKey != null ? accountKey.hashCode() : 0);
         result = 31 * result + (invoiceDate != null ? invoiceDate.hashCode() : 0);
         result = 31 * result + (targetDate != null ? targetDate.hashCode() : 0);

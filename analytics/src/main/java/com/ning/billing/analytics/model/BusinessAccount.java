@@ -17,6 +17,7 @@
 package com.ning.billing.analytics.model;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 import org.joda.time.DateTime;
 
@@ -27,6 +28,7 @@ public class BusinessAccount {
     private DateTime createdDt = null;
     private DateTime updatedDt = null;
 
+    private final UUID accountId;
     private String key;
     private String name;
     private BigDecimal balance;
@@ -37,10 +39,14 @@ public class BusinessAccount {
     private String creditCardType;
     private String billingAddressCountry;
 
-    public BusinessAccount() {
+    public BusinessAccount(final UUID accountId) {
+        this.accountId = accountId;
     }
 
-    public BusinessAccount(final String key, final String name, final BigDecimal balance, final DateTime lastInvoiceDate, final BigDecimal totalInvoiceBalance, final String lastPaymentStatus, final String paymentMethod, final String creditCardType, final String billingAddressCountry) {
+    public BusinessAccount(final UUID accountId, final String key, final String name, final BigDecimal balance,
+                           final DateTime lastInvoiceDate, final BigDecimal totalInvoiceBalance, final String lastPaymentStatus,
+                           final String paymentMethod, final String creditCardType, final String billingAddressCountry) {
+        this.accountId = accountId;
         this.key = key;
         this.balance = balance;
         this.billingAddressCountry = billingAddressCountry;
@@ -50,6 +56,10 @@ public class BusinessAccount {
         this.name = name;
         this.paymentMethod = paymentMethod;
         this.totalInvoiceBalance = totalInvoiceBalance;
+    }
+
+    public UUID getAccountId() {
+        return accountId;
     }
 
     public String getKey() {
@@ -155,6 +165,7 @@ public class BusinessAccount {
         sb.append("{balance=").append(balance);
         sb.append(", createdDt=").append(createdDt);
         sb.append(", updatedDt=").append(updatedDt);
+        sb.append(", accountId='").append(accountId).append('\'');
         sb.append(", key='").append(key).append('\'');
         sb.append(", name='").append(name).append('\'');
         sb.append(", lastInvoiceDate=").append(lastInvoiceDate);
@@ -190,6 +201,9 @@ public class BusinessAccount {
         if (creditCardType != null ? !creditCardType.equals(that.creditCardType) : that.creditCardType != null) {
             return false;
         }
+        if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
+            return false;
+        }
         if (key != null ? !key.equals(that.key) : that.key != null) {
             return false;
         }
@@ -219,6 +233,7 @@ public class BusinessAccount {
     public int hashCode() {
         int result = createdDt != null ? createdDt.hashCode() : 0;
         result = 31 * result + (updatedDt != null ? updatedDt.hashCode() : 0);
+        result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
         result = 31 * result + (key != null ? key.hashCode() : 0);
         result = 31 * result + (name != null ? name.hashCode() : 0);
         result = 31 * result + (balance != null ? balance.hashCode() : 0);

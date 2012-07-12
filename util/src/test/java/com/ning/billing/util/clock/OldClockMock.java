@@ -158,6 +158,4 @@ public class OldClockMock extends DefaultClock {
     public String toString() {
         return getUTCNow().toString();
     }
-
-
 }

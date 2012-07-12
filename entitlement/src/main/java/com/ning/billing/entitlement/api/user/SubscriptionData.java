@@ -54,35 +54,33 @@ import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.entity.EntityBase;
 
 public class SubscriptionData extends EntityBase implements Subscription {
-
     private static final Logger log = LoggerFactory.getLogger(SubscriptionData.class);
 
+    private final Clock clock;
+    private final SubscriptionApiService apiService;
 
-    protected final Clock clock;
-    protected final SubscriptionApiService apiService;
     //
     // Final subscription fields
     //
-    protected final UUID bundleId;
-    protected final DateTime startDate;
-    protected final DateTime bundleStartDate;
-    protected final ProductCategory category;
+    private final UUID bundleId;
+    private final DateTime startDate;
+    private final DateTime bundleStartDate;
+    private final ProductCategory category;
 
     //
     // Those can be modified through non User APIs, and a new Subscription
     // object would be created
     //
-    protected final long activeVersion;
-    protected final DateTime chargedThroughDate;
-    protected final DateTime paidThroughDate;
-
+    private final long activeVersion;
+    private final DateTime chargedThroughDate;
+    private final DateTime paidThroughDate;
 
     //
     // User APIs (create, change, cancel,...) will recompute those each time,
     // so the user holding that subscription object get the correct state when
     // the call completes
     //
-    protected LinkedList<SubscriptionTransitionData> transitions;
+    private LinkedList<SubscriptionTransitionData> transitions;
 
     // Transient object never returned at the API
     public SubscriptionData(final SubscriptionBuilder builder) {
@@ -140,12 +138,30 @@ public class SubscriptionData extends EntityBase implements Subscription {
 
     @Override
     public DateTime getEndDate() {
-        final SubscriptionEvent latestTransition = getPreviousTransition();
+        final EffectiveSubscriptionEvent latestTransition = getPreviousTransition();
         if (latestTransition.getNextState() == SubscriptionState.CANCELLED) {
             return latestTransition.getEffectiveTransitionTime();
         }
         return null;
     }
+
+    @Override
+    public DateTime getFutureEndDate() {
+        if (transitions == null) {
+            return null;
+        }
+        final SubscriptionTransitionDataIterator it = new SubscriptionTransitionDataIterator(
+                clock, transitions, Order.ASC_FROM_PAST, Kind.ENTITLEMENT,
+                Visibility.ALL, TimeLimit.FUTURE_ONLY);
+        while (it.hasNext()) {
+            final SubscriptionTransitionData cur = it.next();
+            if (cur.getTransitionType() == SubscriptionTransitionType.CANCEL) {
+                return cur.getEffectiveTransitionTime();
+            }
+        }
+        return null;
+    }
+
 
     @Override
     public boolean cancel(final DateTime requestedDate, final boolean eot,
@@ -174,12 +190,12 @@ public class SubscriptionData extends EntityBase implements Subscription {
     }
 
     @Override
-    public SubscriptionEvent getPendingTransition() {
+    public EffectiveSubscriptionEvent getPendingTransition() {
         final SubscriptionTransitionData data = getPendingTransitionData();
         if (data == null) {
             return null;
         }
-        return new DefaultSubscriptionEvent(data, startDate);
+        return new DefaultEffectiveSubscriptionEvent(data, startDate);
     }
 
     @Override
@@ -198,12 +214,12 @@ public class SubscriptionData extends EntityBase implements Subscription {
     }
 
     @Override
-    public SubscriptionEvent getPreviousTransition() {
+    public EffectiveSubscriptionEvent getPreviousTransition() {
         final SubscriptionTransitionData data = getPreviousTransitionData();
         if (data == null) {
             return null;
         }
-        return new DefaultSubscriptionEvent(data, startDate);
+        return new DefaultEffectiveSubscriptionEvent(data, startDate);
     }
 
     protected SubscriptionTransitionData getPreviousTransitionData() {
@@ -266,30 +282,30 @@ public class SubscriptionData extends EntityBase implements Subscription {
         return true;
     }
 
-    public List<SubscriptionEvent> getBillingTransitions() {
+    @Override
+    public List<EffectiveSubscriptionEvent> getBillingTransitions() {
 
         if (transitions == null) {
             return Collections.emptyList();
         }
-        final List<SubscriptionEvent> result = new ArrayList<SubscriptionEvent>();
+        final List<EffectiveSubscriptionEvent> result = new ArrayList<EffectiveSubscriptionEvent>();
         final SubscriptionTransitionDataIterator it = new SubscriptionTransitionDataIterator(
                 clock, transitions, Order.ASC_FROM_PAST, Kind.BILLING,
                 Visibility.ALL, TimeLimit.ALL);
         while (it.hasNext()) {
-            result.add(new DefaultSubscriptionEvent(it.next(), startDate));
+            result.add(new DefaultEffectiveSubscriptionEvent(it.next(), startDate));
         }
         return result;
     }
 
-
-    public SubscriptionEvent getTransitionFromEvent(final EntitlementEvent event, final int seqId) {
+    public EffectiveSubscriptionEvent getTransitionFromEvent(final EntitlementEvent event, final int seqId) {
         if (transitions == null || event == null) {
             return null;
         }
         for (final SubscriptionTransitionData cur : transitions) {
             if (cur.getId().equals(event.getId())) {
                 final SubscriptionTransitionData withSeq = new SubscriptionTransitionData(cur, seqId);
-                return new DefaultSubscriptionEvent(withSeq, startDate);
+                return new DefaultEffectiveSubscriptionEvent(withSeq, startDate);
             }
         }
         return null;
@@ -306,20 +322,33 @@ public class SubscriptionData extends EntityBase implements Subscription {
         return activeVersion;
     }
 
+    @Override
+    public List<EffectiveSubscriptionEvent> getAllTransitions() {
+        if (transitions == null) {
+            return Collections.emptyList();
+        }
 
-    public List<SubscriptionTransitionData> getAllTransitions() {
-        return transitions;
+        final List<EffectiveSubscriptionEvent> result = new ArrayList<EffectiveSubscriptionEvent>();
+        final SubscriptionTransitionDataIterator it = new SubscriptionTransitionDataIterator(clock, transitions, Order.ASC_FROM_PAST, Kind.ALL, Visibility.ALL, TimeLimit.ALL);
+        while (it.hasNext()) {
+            result.add(new DefaultEffectiveSubscriptionEvent(it.next(), startDate));
+        }
+
+        return result;
     }
 
     public SubscriptionTransitionData getInitialTransitionForCurrentPlan() {
         if (transitions == null) {
-            throw new EntitlementError(String.format(
-                    "No transitions for subscription %s", getId()));
+            throw new EntitlementError(String.format("No transitions for subscription %s", getId()));
         }
 
-        final SubscriptionTransitionDataIterator it = new SubscriptionTransitionDataIterator(
-                clock, transitions, Order.DESC_FROM_FUTURE, Kind.ENTITLEMENT,
-                Visibility.ALL, TimeLimit.PAST_OR_PRESENT_ONLY);
+        final SubscriptionTransitionDataIterator it = new SubscriptionTransitionDataIterator(clock,
+                                                                                             transitions,
+                                                                                             Order.DESC_FROM_FUTURE,
+                                                                                             Kind.ENTITLEMENT,
+                                                                                             Visibility.ALL,
+                                                                                             TimeLimit.PAST_OR_PRESENT_ONLY);
+
         while (it.hasNext()) {
             final SubscriptionTransitionData cur = it.next();
             if (cur.getTransitionType() == SubscriptionTransitionType.CREATE
@@ -329,25 +358,13 @@ public class SubscriptionData extends EntityBase implements Subscription {
                 return cur;
             }
         }
-        throw new EntitlementError(String.format(
-                "Failed to find InitialTransitionForCurrentPlan id = %s",
-                getId().toString()));
+
+        throw new EntitlementError(String.format("Failed to find InitialTransitionForCurrentPlan id = %s", getId()));
     }
 
+
     public boolean isSubscriptionFutureCancelled() {
-        if (transitions == null) {
-            return false;
-        }
-        final SubscriptionTransitionDataIterator it = new SubscriptionTransitionDataIterator(
-                clock, transitions, Order.ASC_FROM_PAST, Kind.ENTITLEMENT,
-                Visibility.ALL, TimeLimit.FUTURE_ONLY);
-        while (it.hasNext()) {
-            final SubscriptionTransitionData cur = it.next();
-            if (cur.getTransitionType() == SubscriptionTransitionType.CANCEL) {
-                return true;
-            }
-        }
-        return false;
+        return getFutureEndDate() != null;
     }
 
     public DateTime getPlanChangeEffectiveDate(final ActionPolicy policy,
@@ -482,10 +499,9 @@ public class SubscriptionData extends EntityBase implements Subscription {
                 nextPhase = (nextPhaseName != null) ? catalog.findPhase(nextPhaseName, cur.getRequestedDate(), getStartDate()) : null;
                 nextPriceList = (nextPriceListName != null) ? catalog.findPriceList(nextPriceListName, cur.getRequestedDate()) : null;
             } catch (CatalogApiException e) {
-                log.error(String.format(
-                        "Failed to build transition for subscription %s", id),
-                          e);
+                log.error(String.format("Failed to build transition for subscription %s", id), e);
             }
+
             final SubscriptionTransitionData transition = new SubscriptionTransitionData(
                     cur.getId(), id, bundleId, cur.getType(), apiEventType,
                     cur.getRequestedDate(), cur.getEffectiveDate(),

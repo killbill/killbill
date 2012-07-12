@@ -22,6 +22,7 @@ public enum ErrorCode {
      */
     NOT_IMPLEMENTED(1, "Api not implemented yet"),
     DATA_TRUNCATION(2, "Data truncation error. (%s)"),
+    UNEXPECTED_ERROR(3, "%s"),
     /*
      *
      * Range 1000 : ENTITLEMENTS
@@ -184,7 +185,7 @@ public enum ErrorCode {
     INVOICE_TARGET_DATE_TOO_FAR_IN_THE_FUTURE(4005, "The target date was too far in the future. Target Date: %s"),
     INVOICE_NOT_FOUND(4006, "No invoice could be found for id %s."),
     INVOICE_NOTHING_TO_DO(4007, "No invoice to generate for account %s and date %s"),
-    
+
     /*
      *
      * Range 4900: Invoice payment
@@ -193,21 +194,25 @@ public enum ErrorCode {
     INVOICE_PAYMENT_NOT_FOUND(4900, "No invoice payment could be found for id %s."),
     CHARGE_BACK_AMOUNT_TOO_HIGH(4901, "Tried to charge back %s of a %s payment."),
     CHARGE_BACK_AMOUNT_IS_NEGATIVE(4902, "Charge backs for negative amounts are not permitted"),
-    CHARGE_BACK_COULD_NOT_FIND_ACCOUNT_ID(4093, "Could not find chargeback for id %s."),
-    CHARGE_BACK_DOES_NOT_EXIST(4093, "Could not find chargeback for id %s."),
+    CHARGE_BACK_COULD_NOT_FIND_ACCOUNT_ID(4003, "Could not find chargeback for id %s."),
+    CHARGE_BACK_DOES_NOT_EXIST(4004, "Could not find chargeback for id %s."),
+    INVOICE_PAYMENT_BY_ATTEMPT_NOT_FOUND(4905, "No invoice payment could be found for paymentAttempt id %s."),
+    REFUND_AMOUNT_TOO_HIGH(4906, "Tried to refund %s of a %s payment."),
+    REFUND_AMOUNT_IS_POSITIVE(4907, "Refund for positve amounts are not permitted"),
+
     /*
-     * 
+     *
      * Range 5000: Overdue system
-     * 
+     *
      */
     OVERDUE_CAT_ERROR_ENCOUNTERED(5001, "Catalog error encountered on Overdueable: id='%s', type='%s'"),
     OVERDUE_TYPE_NOT_SUPPORTED(5002, "Overdue of this type is not supported: id='%s', type='%s'"),
     OVERDUE_NO_REEVALUATION_INTERVAL(5003, "No valid reevaluation interval for state (name: %s)"),
     OVERDUE_NOT_CONFIGURED(5004, "No configuration was found for the overdue system"),
     /*
-     * 
+     *
      * Range 6000: Blocking system
-     * 
+     *
      */
     BLOCK_BLOCKED_ACTION(6000, "The action %s is block on this %s with id=%s"),
     BLOCK_TYPE_NOT_SUPPORTED(6001, "The Blockable type '%s' is not supported"),
@@ -240,6 +245,9 @@ public enum ErrorCode {
     PAYMENT_NO_SUCH_PAYMENT(7020, "Payment %s does not exist"),
     PAYMENT_NO_DEFAULT_PAYMENT_METHOD(7021, "Account %s does not have a default payment method set"),
     PAYMENT_DEL_DEFAULT_PAYMENT_METHOD(7022, "Cannot delete default payment method for account %s"),
+    PAYMENT_NO_SUCH_REFUND(7023, "Refund %s does not exist"),
+    PAYMENT_NO_SUCH_SUCCESS_PAYMENT(7024, "Payment %s did not succeed"),
+    PAYMENT_REFUND_AMOUNT_TOO_LARGE(7025, "Refund amount if larger than payment"),
 
     PAYMENT_PLUGIN_TIMEOUT(7100, "Plugin timeout for account %s and invoice %s"),
     PAYMENT_PLUGIN_ACCOUNT_INIT(7101, "Account initialization for account %s and plugin % s failed: %s"),

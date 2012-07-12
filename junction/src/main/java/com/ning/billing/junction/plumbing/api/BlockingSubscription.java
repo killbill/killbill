@@ -27,9 +27,9 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.entitlement.api.user.SubscriptionEvent;
 import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.junction.api.BlockingApiException;
 import com.ning.billing.junction.api.BlockingState;
@@ -49,18 +49,22 @@ public class BlockingSubscription implements Subscription {
         this.checker = checker;
     }
 
+    @Override
     public UUID getId() {
         return subscription.getId();
     }
 
+    @Override
     public boolean cancel(final DateTime requestedDate, final boolean eot, final CallContext context) throws EntitlementUserApiException {
         return subscription.cancel(requestedDate, eot, context);
     }
 
+    @Override
     public boolean uncancel(final CallContext context) throws EntitlementUserApiException {
         return subscription.uncancel(context);
     }
 
+    @Override
     public boolean changePlan(final String productName, final BillingPeriod term, final String planSet, final DateTime requestedDate,
                               final CallContext context) throws EntitlementUserApiException {
         try {
@@ -71,63 +75,88 @@ public class BlockingSubscription implements Subscription {
         return subscription.changePlan(productName, term, planSet, requestedDate, context);
     }
 
+    @Override
     public boolean recreate(final PlanPhaseSpecifier spec, final DateTime requestedDate, final CallContext context)
             throws EntitlementUserApiException {
         return subscription.recreate(spec, requestedDate, context);
     }
 
+    @Override
     public UUID getBundleId() {
         return subscription.getBundleId();
     }
 
+    @Override
     public SubscriptionState getState() {
         return subscription.getState();
     }
 
+    @Override
     public DateTime getStartDate() {
         return subscription.getStartDate();
     }
 
+    @Override
     public DateTime getEndDate() {
         return subscription.getEndDate();
     }
 
+    @Override
+    public DateTime getFutureEndDate() {
+        return subscription.getFutureEndDate();
+    }
+
+    @Override
     public Plan getCurrentPlan() {
         return subscription.getCurrentPlan();
     }
 
+    @Override
     public PriceList getCurrentPriceList() {
         return subscription.getCurrentPriceList();
     }
 
+    @Override
     public PlanPhase getCurrentPhase() {
         return subscription.getCurrentPhase();
     }
 
+    @Override
     public DateTime getChargedThroughDate() {
         return subscription.getChargedThroughDate();
     }
 
+    @Override
     public DateTime getPaidThroughDate() {
         return subscription.getPaidThroughDate();
     }
 
+    @Override
     public ProductCategory getCategory() {
         return subscription.getCategory();
     }
 
-    public SubscriptionEvent getPendingTransition() {
+    @Override
+    public EffectiveSubscriptionEvent getPendingTransition() {
         return subscription.getPendingTransition();
     }
 
-    public SubscriptionEvent getPreviousTransition() {
+    @Override
+    public EffectiveSubscriptionEvent getPreviousTransition() {
         return subscription.getPreviousTransition();
     }
 
-    public List<SubscriptionEvent> getBillingTransitions() {
+    @Override
+    public List<EffectiveSubscriptionEvent> getBillingTransitions() {
         return subscription.getBillingTransitions();
     }
 
+    @Override
+    public List<EffectiveSubscriptionEvent> getAllTransitions() {
+        return subscription.getAllTransitions();
+    }
+
+    @Override
     public BlockingState getBlockingState() {
         if (blockingState == null) {
             blockingState = blockingApi.getBlockingStateFor(this);
@@ -138,6 +167,5 @@ public class BlockingSubscription implements Subscription {
     public Subscription getDelegateSubscription() {
         return subscription;
     }
-
 
 }

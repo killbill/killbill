@@ -19,24 +19,20 @@ package com.ning.billing.invoice.glue;
 import java.io.IOException;
 import java.net.URL;
 
+import org.mockito.Mockito;
 import org.skife.jdbi.v2.IDBI;
 
+import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.invoice.api.InvoiceNotifier;
-import com.ning.billing.invoice.api.test.DefaultInvoiceTestApi;
-import com.ning.billing.invoice.api.test.InvoiceTestApi;
-import com.ning.billing.invoice.dao.InvoicePaymentSqlDao;
-import com.ning.billing.invoice.dao.RecurringInvoiceItemSqlDao;
 import com.ning.billing.invoice.notification.MockNextBillingDateNotifier;
 import com.ning.billing.invoice.notification.MockNextBillingDatePoster;
 import com.ning.billing.invoice.notification.NextBillingDateNotifier;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.invoice.notification.NullInvoiceNotifier;
 import com.ning.billing.junction.api.BillingApi;
-import com.ning.billing.mock.BrainDeadProxyFactory;
-import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 import com.ning.billing.mock.glue.MockEntitlementModule;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.DefaultCallContextFactory;
@@ -53,32 +49,7 @@ import com.ning.billing.util.notificationq.NotificationQueueService;
 import static org.testng.Assert.assertNotNull;
 
 public class InvoiceModuleWithEmbeddedDb extends DefaultInvoiceModule {
-    private final MysqlTestingHelper helper = new MysqlTestingHelper();
-    private IDBI dbi;
-
-    public void startDb() throws IOException {
-        helper.startMysql();
-    }
-
-    public void initDb(final String ddl) throws IOException {
-        helper.initDb(ddl);
-    }
-
-    public void stopDb() {
-        helper.stopMysql();
-    }
-
-    public IDBI getDbi() {
-        return dbi;
-    }
-
-    public RecurringInvoiceItemSqlDao getInvoiceItemSqlDao() {
-        return dbi.onDemand(RecurringInvoiceItemSqlDao.class);
-    }
-
-    public InvoicePaymentSqlDao getInvoicePaymentSqlDao() {
-        return dbi.onDemand(InvoicePaymentSqlDao.class);
-    }
+    private final MysqlTestingHelper helper = KillbillTestSuiteWithEmbeddedDB.getMysqlTestingHelper();
 
     private void installNotificationQueue() {
         bind(NotificationQueueService.class).to(MockNotificationQueueService.class).asEagerSingleton();
@@ -95,7 +66,7 @@ public class InvoiceModuleWithEmbeddedDb extends DefaultInvoiceModule {
     public void configure() {
         loadSystemPropertiesFromClasspath("/resource.properties");
 
-        dbi = helper.getDBI();
+        final IDBI dbi = helper.getDBI();
         bind(IDBI.class).toInstance(dbi);
 
         bind(Clock.class).to(DefaultClock.class).asEagerSingleton();
@@ -104,11 +75,9 @@ public class InvoiceModuleWithEmbeddedDb extends DefaultInvoiceModule {
         install(new TagStoreModule());
 
         installNotificationQueue();
-//      install(new AccountModule());
-        bind(AccountUserApi.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(AccountUserApi.class));
+        bind(AccountUserApi.class).toInstance(Mockito.mock(AccountUserApi.class));
 
-        final BillingApi billingApi = BrainDeadProxyFactory.createBrainDeadProxyFor(BillingApi.class);
-        ((ZombieControl) billingApi).addResult("setChargedThroughDateFromTransaction", BrainDeadProxyFactory.ZOMBIE_VOID);
+        final BillingApi billingApi = Mockito.mock(BillingApi.class);
         bind(BillingApi.class).toInstance(billingApi);
 
         install(new CatalogModule());
@@ -117,10 +86,8 @@ public class InvoiceModuleWithEmbeddedDb extends DefaultInvoiceModule {
 
         super.configure();
 
-        bind(InvoiceTestApi.class).to(DefaultInvoiceTestApi.class).asEagerSingleton();
         install(new BusModule());
         install(new TemplateModule());
-
     }
 
     private static void loadSystemPropertiesFromClasspath(final String resource) {

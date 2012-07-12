@@ -1,0 +1,82 @@
+group InvoiceItemSqlDao;
+
+fields(prefix) ::= <<
+  <prefix>id,
+  <prefix>type,  
+  <prefix>invoice_id,
+  <prefix>account_id,
+  <prefix>bundle_id,
+  <prefix>subscription_id,
+  <prefix>plan_name,
+  <prefix>phase_name,
+  <prefix>start_date,
+  <prefix>end_date,
+  <prefix>amount,
+  <prefix>rate,
+  <prefix>currency,
+  <prefix>linked_item_id,
+  <prefix>created_by,
+  <prefix>created_date
+>>
+
+getById() ::= <<
+  SELECT <fields()>
+  FROM invoice_items
+  WHERE id = :id;
+>>
+
+getInvoiceItemsByInvoice() ::= <<
+  SELECT <fields()>
+  FROM invoice_items
+  WHERE invoice_id = :invoiceId;
+>>
+
+getInvoiceItemsByAccount() ::= <<
+  SELECT <fields()>
+  FROM invoice_items
+  WHERE account_id = :accountId;
+>>
+
+getInvoiceItemsBySubscription() ::= <<
+  SELECT <fields()>
+  FROM invoice_items
+  WHERE subscription_id = :subscriptionId;
+>>
+
+create() ::= <<
+  INSERT INTO invoice_items(<fields()>)
+  VALUES(:id, :type, :invoiceId, :accountId, :bundleId, :subscriptionId, :planName, :phaseName, :startDate, :endDate, :amount, :rate, :currency, :linkedItemId, :userName, :createdDate);
+>>
+
+batchCreateFromTransaction() ::= <<
+  INSERT INTO invoice_items(<fields()>)
+  VALUES(:id, :type,:invoiceId, :accountId, :bundleId, :subscriptionId, :planName, :phaseName, :startDate, :endDate, :amount, :rate, :currency, :linkedItemId, :userName, :createdDate);
+>>
+
+getRecordIds() ::= <<
+    SELECT record_id, id
+    FROM invoice_items
+    WHERE invoice_id = :invoiceId;
+>>
+
+auditFields(prefix) ::= <<
+    <prefix>table_name,
+    <prefix>record_id,
+    <prefix>change_type,
+    <prefix>change_date,
+    <prefix>changed_by,
+    <prefix>reason_code,
+    <prefix>comments,
+    <prefix>user_token
+>>
+
+insertAuditFromTransaction() ::= <<
+    INSERT INTO audit_log(<auditFields()>)
+    VALUES(:tableName, :recordId, :changeType, :createdDate, :userName, :reasonCode, :comment, :userToken);
+>>
+
+test() ::= <<
+  SELECT 1
+  FROM invoice_items;
+>>
+;

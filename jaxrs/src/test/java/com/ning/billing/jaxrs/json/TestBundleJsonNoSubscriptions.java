@@ -24,8 +24,9 @@ import org.testng.annotations.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.jaxrs.JaxrsTestSuite;
 
-public class TestBundleJsonNoSubscriptions {
+public class TestBundleJsonNoSubscriptions extends JaxrsTestSuite {
     private static final ObjectMapper mapper = new ObjectMapper();
 
     @Test(groups = "fast")

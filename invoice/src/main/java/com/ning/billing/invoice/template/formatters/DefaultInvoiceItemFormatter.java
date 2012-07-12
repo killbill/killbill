@@ -23,6 +23,8 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
 
+import com.google.common.base.Objects;
+import com.google.common.base.Strings;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
@@ -31,6 +33,9 @@ import com.ning.billing.util.template.translation.DefaultCatalogTranslator;
 import com.ning.billing.util.template.translation.Translator;
 import com.ning.billing.util.template.translation.TranslatorConfig;
 
+/**
+ * Format invoice item fields. Note that the Mustache engine won't accept null values.
+ */
 public class DefaultInvoiceItemFormatter implements InvoiceItemFormatter {
     private final Translator translator;
 
@@ -48,7 +53,7 @@ public class DefaultInvoiceItemFormatter implements InvoiceItemFormatter {
 
     @Override
     public BigDecimal getAmount() {
-        return item.getAmount();
+        return Objects.firstNonNull(item.getAmount(), BigDecimal.ZERO);
     }
 
     @Override
@@ -62,13 +67,8 @@ public class DefaultInvoiceItemFormatter implements InvoiceItemFormatter {
     }
 
     @Override
-    public InvoiceItem asReversingItem() {
-        return item.asReversingItem();
-    }
-
-    @Override
     public String getDescription() {
-        return item.getDescription();
+        return Strings.nullToEmpty(item.getDescription());
     }
 
     @Override
@@ -83,12 +83,12 @@ public class DefaultInvoiceItemFormatter implements InvoiceItemFormatter {
 
     @Override
     public String getFormattedStartDate() {
-        return item.getStartDate().toString(dateFormatter);
+        return Strings.nullToEmpty(item.getStartDate().toString(dateFormatter));
     }
 
     @Override
     public String getFormattedEndDate() {
-        return item.getEndDate().toString(dateFormatter);
+        return Strings.nullToEmpty(item.getEndDate().toString(dateFormatter));
     }
 
     @Override
@@ -113,12 +113,12 @@ public class DefaultInvoiceItemFormatter implements InvoiceItemFormatter {
 
     @Override
     public String getPlanName() {
-        return translator.getTranslation(locale, item.getPlanName());
+        return Strings.nullToEmpty(translator.getTranslation(locale, item.getPlanName()));
     }
 
     @Override
     public String getPhaseName() {
-        return translator.getTranslation(locale, item.getPhaseName());
+        return Strings.nullToEmpty(translator.getTranslation(locale, item.getPhaseName()));
     }
 
     @Override
@@ -129,5 +129,15 @@ public class DefaultInvoiceItemFormatter implements InvoiceItemFormatter {
     @Override
     public UUID getId() {
         return item.getId();
+    }
+
+    @Override
+    public BigDecimal getRate() {
+        return BigDecimal.ZERO;
+    }
+
+    @Override
+    public UUID getLinkedItemId() {
+        return null;
     }
 }

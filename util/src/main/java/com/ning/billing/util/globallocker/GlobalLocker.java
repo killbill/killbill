@@ -18,24 +18,12 @@ package com.ning.billing.util.globallocker;
 
 public interface GlobalLocker {
 
-    GlobalLock lockWithNumberOfTries(final LockerService service, final String lockKey, final int retry);
+    GlobalLock lockWithNumberOfTries(final LockerType service, final String lockKey, final int retry);
 
-    Boolean isFree(final LockerService service, final String lockKey);
+    Boolean isFree(final LockerType service, final String lockKey);
 
-    public enum LockerService {
-
-        INVOICE("invoice"),
-        PAYMENT("payment");
-
-        private final String svcName;
-
-        LockerService(final String svcName) {
-            this.svcName = svcName;
-        }
-
-        @Override
-        public String toString() {
-            return svcName;
-        }
+    public enum LockerType {
+        // Global ACCOUNT locking
+        ACCOUNT
     }
 }

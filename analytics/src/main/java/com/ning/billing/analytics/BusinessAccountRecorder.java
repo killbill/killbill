@@ -36,7 +36,6 @@ import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentApiException;
-import com.ning.billing.payment.api.PaymentInfoEvent;
 
 public class BusinessAccountRecorder {
     private static final Logger log = LoggerFactory.getLogger(BusinessAccountRecorder.class);
@@ -59,25 +58,11 @@ public class BusinessAccountRecorder {
         final Account account;
         try {
             account = accountApi.getAccountByKey(data.getExternalKey());
-            final BusinessAccount bac = new BusinessAccount();
+            final BusinessAccount bac = new BusinessAccount(account.getId());
             updateBusinessAccountFromAccount(account, bac);
 
             log.info("ACCOUNT CREATION " + bac);
             sqlDao.createAccount(bac);
-        } catch (AccountApiException e) {
-            log.warn("Error encountered creating BusinessAccount", e);
-        }
-    }
-
-    /**
-     * Notification handler for Payment creations
-     *
-     * @param paymentInfo payment object (from the payment plugin)
-     */
-    public void accountUpdated(final PaymentInfoEvent paymentInfo) {
-        try {
-            final Account account = accountApi.getAccountById(paymentInfo.getAccountId());
-            accountUpdated(account.getId());
         } catch (AccountApiException e) {
             log.warn("Error encountered creating BusinessAccount", e);
         }
@@ -89,22 +74,28 @@ public class BusinessAccountRecorder {
      * @param accountId account id associated with the created invoice
      */
     public void accountUpdated(final UUID accountId) {
+        final Account account;
         try {
-            final Account account = accountApi.getAccountById(accountId);
-
-            BusinessAccount bac = sqlDao.getAccount(account.getExternalKey());
-            if (bac == null) {
-                bac = new BusinessAccount();
-                updateBusinessAccountFromAccount(account, bac);
-                log.info("ACCOUNT CREATION " + bac);
-                sqlDao.createAccount(bac);
-            } else {
-                updateBusinessAccountFromAccount(account, bac);
-                log.info("ACCOUNT UPDATE " + bac);
-                sqlDao.saveAccount(bac);
-            }
+            account = accountApi.getAccountById(accountId);
         } catch (AccountApiException e) {
             log.warn("Error encountered creating BusinessAccount", e);
+            return;
+        }
+
+        updateAccountInTransaction(account, sqlDao);
+    }
+
+    public void updateAccountInTransaction(final Account account, final BusinessAccountSqlDao transactional) {
+        BusinessAccount bac = transactional.getAccount(account.getId().toString());
+        if (bac == null) {
+            bac = new BusinessAccount(account.getId());
+            updateBusinessAccountFromAccount(account, bac);
+            log.info("ACCOUNT CREATION " + bac);
+            transactional.createAccount(bac);
+        } else {
+            updateBusinessAccountFromAccount(account, bac);
+            log.info("ACCOUNT UPDATE " + bac);
+            transactional.saveAccount(bac);
         }
     }
 
@@ -142,7 +133,7 @@ public class BusinessAccountRecorder {
                         if (lastPaymentDate == null || cur.getEffectiveDate().isAfter(lastPaymentDate)) {
                             lastPaymentDate = cur.getEffectiveDate();
                             lastPaymentStatus = cur.getPaymentStatus().toString();
-                            // STEPH talk to Pierre
+                            // TODO STEPH talk to Pierre
                             paymentMethod = null;
                             creditCardType = null;
                             billingAddressCountry = null;

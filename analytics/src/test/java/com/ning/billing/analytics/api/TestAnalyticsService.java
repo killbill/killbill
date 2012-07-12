@@ -38,9 +38,8 @@ import com.ning.billing.account.api.user.DefaultAccountCreationEvent;
 import com.ning.billing.analytics.AnalyticsTestModule;
 import com.ning.billing.analytics.MockDuration;
 import com.ning.billing.analytics.MockPhase;
-import com.ning.billing.analytics.MockPlan;
 import com.ning.billing.analytics.MockProduct;
-import com.ning.billing.analytics.TestWithEmbeddedDB;
+import com.ning.billing.analytics.AnalyticsTestSuiteWithEmbeddedDB;
 import com.ning.billing.analytics.dao.BusinessAccountSqlDao;
 import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionSqlDao;
 import com.ning.billing.analytics.model.BusinessSubscription;
@@ -57,12 +56,12 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.entitlement.api.user.DefaultSubscriptionEvent;
+import com.ning.billing.entitlement.api.user.DefaultEffectiveSubscriptionEvent;
+import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.entitlement.api.user.SubscriptionEvent;
 import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
@@ -73,6 +72,7 @@ import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.mock.MockAccountBuilder;
+import com.ning.billing.mock.MockPlan;
 import com.ning.billing.payment.api.DefaultPaymentInfoEvent;
 import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.payment.api.PaymentStatus;
@@ -88,13 +88,14 @@ import com.ning.billing.util.clock.DefaultClock;
 import static org.testng.Assert.fail;
 
 @Guice(modules = {AnalyticsTestModule.class})
-public class TestAnalyticsService extends TestWithEmbeddedDB {
+public class TestAnalyticsService extends AnalyticsTestSuiteWithEmbeddedDB {
     final Product product = new MockProduct("platinum", "subscription", ProductCategory.BASE);
     final Plan plan = new MockPlan("platinum-monthly", product);
     final PlanPhase phase = new MockPhase(PhaseType.EVERGREEN, plan, MockDuration.UNLIMITED(), 25.95);
 
     private static final Long TOTAL_ORDERING = 11L;
     private static final String EXTERNAL_KEY = "12345";
+    private static final UUID ACCOUNT_ID = UUID.randomUUID();
     private static final String ACCOUNT_KEY = "pierre-12345";
     private static final Currency ACCOUNT_CURRENCY = Currency.EUR;
     private static final BigDecimal INVOICE_AMOUNT = BigDecimal.valueOf(1243.11);
@@ -126,7 +127,7 @@ public class TestAnalyticsService extends TestWithEmbeddedDB {
     @Inject
     private BusinessAccountSqlDao accountSqlDao;
 
-    private SubscriptionEvent transition;
+    private EffectiveSubscriptionEvent transition;
     private BusinessSubscriptionTransition expectedTransition;
 
     private AccountCreationEvent accountCreationNotification;
@@ -180,8 +181,7 @@ public class TestAnalyticsService extends TestWithEmbeddedDB {
         final DateTime requestedTransitionTime = clock.getUTCNow();
         final PriceList priceList = new MockPriceList().setName("something");
 
-
-        transition = new DefaultSubscriptionEvent(new SubscriptionTransitionData(
+        transition = new DefaultEffectiveSubscriptionEvent(new SubscriptionTransitionData(
                 UUID.randomUUID(),
                 subscriptionId,
                 bundle.getId(),
@@ -202,12 +202,15 @@ public class TestAnalyticsService extends TestWithEmbeddedDB {
                 true), null);
         expectedTransition = new BusinessSubscriptionTransition(
                 TOTAL_ORDERING,
+                transition.getBundleId(),
                 EXTERNAL_KEY,
+                ACCOUNT_ID,
                 ACCOUNT_KEY,
+                transition.getSubscriptionId(),
                 requestedTransitionTime,
                 BusinessSubscriptionEvent.subscriptionCreated(plan.getName(), catalog, new DateTime(), new DateTime()),
                 null,
-                new BusinessSubscription(priceList.getName(), plan.getName(), phase.getName(), ACCOUNT_CURRENCY, effectiveTransitionTime, Subscription.SubscriptionState.ACTIVE, subscriptionId, bundle.getId(), catalog)
+                new BusinessSubscription(priceList.getName(), plan.getName(), phase.getName(), ACCOUNT_CURRENCY, effectiveTransitionTime, Subscription.SubscriptionState.ACTIVE, catalog)
         );
     }
 
@@ -222,7 +225,7 @@ public class TestAnalyticsService extends TestWithEmbeddedDB {
                 INVOICE_AMOUNT, ACCOUNT_CURRENCY);
         invoice.addInvoiceItem(invoiceItem);
 
-        invoiceDao.create(invoice, context);
+        invoiceDao.create(invoice, invoice.getTargetDate().getDayOfMonth(), context);
         final List<Invoice> invoices = invoiceDao.getInvoicesByAccount(account.getId());
         Assert.assertEquals(invoices.size(), 1);
         Assert.assertEquals(invoices.get(0).getInvoiceItems().size(), 1);
@@ -231,7 +234,7 @@ public class TestAnalyticsService extends TestWithEmbeddedDB {
         invoiceCreationNotification = new DefaultInvoiceCreationEvent(invoice.getId(), account.getId(),
                                                                       INVOICE_AMOUNT, ACCOUNT_CURRENCY, clock.getUTCNow(), null);
 
-        paymentInfoNotification = new DefaultPaymentInfoEvent(account.getId(), invoices.get(0).getId(), null, invoices.get(0).getBalance(), -1, PaymentStatus.UNKNOWN, null, new DateTime());
+        paymentInfoNotification = new DefaultPaymentInfoEvent(account.getId(), invoices.get(0).getId(), null, invoices.get(0).getBalance(), -1, PaymentStatus.UNKNOWN, null, null, new DateTime());
 
         //STEPH talk to Pierre
         /*
@@ -257,23 +260,23 @@ public class TestAnalyticsService extends TestWithEmbeddedDB {
             Assert.fail("Unable to start the bus or service! " + t);
         }
 
-        Assert.assertNull(accountSqlDao.getAccount(ACCOUNT_KEY));
+        Assert.assertNull(accountSqlDao.getAccountByKey(ACCOUNT_KEY));
 
         // Send events and wait for the async part...
         bus.post(transition);
         bus.post(accountCreationNotification);
         Thread.sleep(5000);
 
-        Assert.assertEquals(subscriptionSqlDao.getTransitions(EXTERNAL_KEY).size(), 1);
-        Assert.assertEquals(subscriptionSqlDao.getTransitions(EXTERNAL_KEY).get(0), expectedTransition);
+        Assert.assertEquals(subscriptionSqlDao.getTransitionsByKey(EXTERNAL_KEY).size(), 1);
+        Assert.assertEquals(subscriptionSqlDao.getTransitionsByKey(EXTERNAL_KEY).get(0), expectedTransition);
 
         // Test invoice integration - the account creation notification has triggered a BAC update
-        Assert.assertTrue(accountSqlDao.getAccount(ACCOUNT_KEY).getTotalInvoiceBalance().compareTo(INVOICE_AMOUNT) == 0);
+        Assert.assertTrue(accountSqlDao.getAccountByKey(ACCOUNT_KEY).getTotalInvoiceBalance().compareTo(INVOICE_AMOUNT) == 0);
 
         // Post the same invoice event again - the invoice balance shouldn't change
         bus.post(invoiceCreationNotification);
         Thread.sleep(5000);
-        Assert.assertTrue(accountSqlDao.getAccount(ACCOUNT_KEY).getTotalInvoiceBalance().compareTo(INVOICE_AMOUNT) == 0);
+        Assert.assertTrue(accountSqlDao.getAccountByKey(ACCOUNT_KEY).getTotalInvoiceBalance().compareTo(INVOICE_AMOUNT) == 0);
 
         // Test payment integration - the fields have already been populated, just make sure the code is exercised
         bus.post(paymentInfoNotification);

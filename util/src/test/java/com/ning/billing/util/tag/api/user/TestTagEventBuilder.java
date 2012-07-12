@@ -21,6 +21,7 @@ import java.util.UUID;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.ning.billing.util.UtilTestSuite;
 import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.tag.DefaultTagDefinition;
 import com.ning.billing.util.tag.TagDefinition;
@@ -35,7 +36,7 @@ import com.ning.billing.util.tag.api.UserTagDefinitionCreationEvent;
 import com.ning.billing.util.tag.api.UserTagDefinitionDeletionEvent;
 import com.ning.billing.util.tag.api.UserTagDeletionEvent;
 
-public class TestTagEventBuilder {
+public class TestTagEventBuilder extends UtilTestSuite {
     @Test(groups = "fast")
     public void testNewUserTagDefinitionCreationEvent() throws Exception {
         final UUID tagDefinitionId = UUID.randomUUID();

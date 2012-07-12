@@ -22,11 +22,12 @@ import java.util.UUID;
 import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.dbi.MysqlTestingHelper;
+import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.DefaultCallContextFactory;
@@ -36,28 +37,20 @@ import com.ning.billing.util.customfield.dao.AuditedCustomFieldDao;
 import com.ning.billing.util.customfield.dao.CustomFieldDao;
 import com.ning.billing.util.customfield.dao.CustomFieldSqlDao;
 import com.ning.billing.util.dao.ObjectType;
-import com.ning.billing.util.io.IOUtils;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.fail;
 
-@Test(groups = {"util", "slow"})
-public class TestFieldStore {
-    Logger log = LoggerFactory.getLogger(TestFieldStore.class);
-    private final MysqlTestingHelper helper = new MysqlTestingHelper();
+public class TestFieldStore extends UtilTestSuiteWithEmbeddedDB {
+    private final Logger log = LoggerFactory.getLogger(TestFieldStore.class);
+    private final MysqlTestingHelper helper = KillbillTestSuiteWithEmbeddedDB.getMysqlTestingHelper();
     private CallContext context;
     private IDBI dbi;
     private CustomFieldDao customFieldDao;
 
-    @BeforeClass(groups = {"util", "slow"})
+    @BeforeClass(groups = "slow")
     protected void setup() throws IOException {
-        // Health check test to make sure MySQL is setup properly
         try {
-            final String utilDdl = IOUtils.toString(TestFieldStore.class.getResourceAsStream("/com/ning/billing/util/ddl.sql"));
-
-            helper.startMysql();
-            helper.initDb(utilDdl);
-
             dbi = helper.getDBI();
             customFieldDao = new AuditedCustomFieldDao(dbi);
             context = new DefaultCallContextFactory(new ClockMock()).createCallContext("Fezzik", CallOrigin.TEST, UserType.TEST);
@@ -67,14 +60,7 @@ public class TestFieldStore {
         }
     }
 
-    @AfterClass(groups = {"util", "slow"})
-    public void stopMysql() {
-        if (helper != null) {
-            helper.stopMysql();
-        }
-    }
-
-    @Test
+    @Test(groups = "slow")
     public void testFieldStore() {
         final UUID id = UUID.randomUUID();
         final ObjectType objectType = ObjectType.ACCOUNT;

@@ -16,20 +16,18 @@
 
 package com.ning.billing.junction;
 
+import org.mockito.Mockito;
+
 import com.google.inject.AbstractModule;
 import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.junction.dao.BlockingStateDao;
-import com.ning.billing.mock.BrainDeadProxyFactory;
-import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
 
 public class MockBlockingModule extends AbstractModule {
-    public static final String CLEAR_STATE = "Clear";
-
     @Override
     protected void configure() {
-        final BlockingApi BlockingApi = BrainDeadProxyFactory.createBrainDeadProxyFor(BlockingApi.class);
-        ((ZombieControl) BlockingApi).addResult("getOverdueStateNameFor", MockBlockingModule.CLEAR_STATE);
-        bind(BlockingStateDao.class).toInstance(BrainDeadProxyFactory.createBrainDeadProxyFor(BlockingStateDao.class));
-        bind(BlockingApi.class).toInstance(BlockingApi);
+        bind(BlockingStateDao.class).toInstance(Mockito.mock(BlockingStateDao.class));
+
+        final BlockingApi blockingApi = Mockito.mock(BlockingApi.class);
+        bind(BlockingApi.class).toInstance(blockingApi);
     }
 }

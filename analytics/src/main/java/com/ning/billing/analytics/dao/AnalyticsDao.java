@@ -22,6 +22,8 @@ import com.ning.billing.analytics.model.BusinessAccount;
 import com.ning.billing.analytics.model.BusinessAccountTag;
 import com.ning.billing.analytics.model.BusinessInvoice;
 import com.ning.billing.analytics.model.BusinessInvoiceItem;
+import com.ning.billing.analytics.model.BusinessInvoicePayment;
+import com.ning.billing.analytics.model.BusinessOverdueStatus;
 import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
 
 public interface AnalyticsDao {
@@ -35,5 +37,7 @@ public interface AnalyticsDao {
 
     List<BusinessInvoiceItem> getInvoiceItemsForInvoice(final String invoiceId);
 
-    void createInvoice(final String accountKey, final BusinessInvoice invoice, final Iterable<BusinessInvoiceItem> invoiceItems);
+    List<BusinessOverdueStatus> getOverdueStatusesForBundleByKey(final String externalKey);
+
+    List<BusinessInvoicePayment> getInvoicePaymentsForAccountByKey(final String accountKey);
 }

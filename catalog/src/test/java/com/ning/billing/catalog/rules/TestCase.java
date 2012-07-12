@@ -23,6 +23,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.ErrorCode;
+import com.ning.billing.catalog.CatalogTestSuite;
 import com.ning.billing.catalog.DefaultPriceList;
 import com.ning.billing.catalog.DefaultProduct;
 import com.ning.billing.catalog.MockCatalog;
@@ -33,13 +34,8 @@ import com.ning.billing.catalog.api.PlanSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertNull;
-
-public class TestCase {
-
+public class TestCase extends CatalogTestSuite {
     protected class CaseResult extends Case<Result> {
-
         @XmlElement(required = true)
         private final Result policy;
 
@@ -107,13 +103,12 @@ public class TestCase {
         }
     }
 
-    @Test(enabled = true)
+    @Test(groups = "fast")
     public void testBasic() throws CatalogApiException {
         final MockCatalog cat = new MockCatalog();
 
         final DefaultProduct product = cat.getCurrentProducts()[0];
         final DefaultPriceList priceList = cat.findCurrentPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
-
 
         final CaseResult cr = new CaseResult(
                 product,
@@ -129,13 +124,12 @@ public class TestCase {
         assertionException(cr, product.getName(), ProductCategory.BASE, BillingPeriod.MONTHLY, "dipsy", cat);
     }
 
-    @Test(enabled = true)
+    @Test(groups = "fast")
     public void testWildCardProduct() throws CatalogApiException {
         final MockCatalog cat = new MockCatalog();
 
         final DefaultProduct product = cat.getCurrentProducts()[0];
         final DefaultPriceList priceList = cat.findCurrentPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
-
 
         final CaseResult cr = new CaseResult(
                 null,
@@ -152,13 +146,12 @@ public class TestCase {
         assertionException(cr, product.getName(), ProductCategory.BASE, BillingPeriod.MONTHLY, "dipsy", cat);
     }
 
-    @Test(enabled = true)
+    @Test(groups = "fast")
     public void testWildCardProductCategory() throws CatalogApiException {
         final MockCatalog cat = new MockCatalog();
 
         final DefaultProduct product = cat.getCurrentProducts()[0];
         final DefaultPriceList priceList = cat.findCurrentPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
-
 
         final CaseResult cr = new CaseResult(
                 product,
@@ -175,13 +168,12 @@ public class TestCase {
         assertionException(cr, product.getName(), ProductCategory.BASE, BillingPeriod.MONTHLY, "dipsy", cat);
     }
 
-    @Test(enabled = true)
+    @Test(groups = "fast")
     public void testWildCardBillingPeriod() throws CatalogApiException {
         final MockCatalog cat = new MockCatalog();
 
         final DefaultProduct product = cat.getCurrentProducts()[0];
         final DefaultPriceList priceList = cat.findCurrentPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
-
 
         final CaseResult cr = new CaseResult(
                 product,
@@ -198,13 +190,12 @@ public class TestCase {
         assertionException(cr, product.getName(), ProductCategory.BASE, BillingPeriod.MONTHLY, "dipsy", cat);
     }
 
-    @Test(enabled = true)
+    @Test(groups = "fast")
     public void testWildCardPriceList() throws CatalogApiException {
         final MockCatalog cat = new MockCatalog();
 
         final DefaultProduct product = cat.getCurrentProducts()[0];
         final DefaultPriceList priceList = cat.findCurrentPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
-
 
         final CaseResult cr = new CaseResult(
                 product,
@@ -227,7 +218,6 @@ public class TestCase {
 
         final DefaultProduct product = cat.getCurrentProducts()[0];
         final DefaultPriceList priceList = cat.findCurrentPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
-
 
         final CaseResult cr0 = new CaseResult(
                 product,
@@ -258,17 +248,16 @@ public class TestCase {
                 Result.LALA);
 
         final Result r1 = Case.getResult(new CaseResult[]{cr0, cr1, cr2, cr3},
-                                   new PlanSpecifier(product.getName(), product.getCategory(), BillingPeriod.MONTHLY, priceList.getName()), cat);
-        assertEquals(Result.FOO, r1);
+                                         new PlanSpecifier(product.getName(), product.getCategory(), BillingPeriod.MONTHLY, priceList.getName()), cat);
+        Assert.assertEquals(r1, Result.FOO);
 
         final Result r2 = Case.getResult(new CaseResult[]{cr0, cr1, cr2},
-                                   new PlanSpecifier(product.getName(), product.getCategory(), BillingPeriod.ANNUAL, priceList.getName()), cat);
-        assertEquals(Result.DIPSY, r2);
+                                         new PlanSpecifier(product.getName(), product.getCategory(), BillingPeriod.ANNUAL, priceList.getName()), cat);
+        Assert.assertEquals(r2, Result.DIPSY);
     }
 
-
     protected void assertionNull(final CaseResult cr, final String productName, final ProductCategory productCategory, final BillingPeriod bp, final String priceListName, final StandaloneCatalog cat) throws CatalogApiException {
-        assertNull(cr.getResult(new PlanSpecifier(productName, productCategory, bp, priceListName), cat));
+        Assert.assertNull(cr.getResult(new PlanSpecifier(productName, productCategory, bp, priceListName), cat));
     }
 
     protected void assertionException(final CaseResult cr, final String productName, final ProductCategory productCategory, final BillingPeriod bp, final String priceListName, final StandaloneCatalog cat) {
@@ -281,8 +270,6 @@ public class TestCase {
     }
 
     protected void assertion(final Result result, final CaseResult cr, final String productName, final ProductCategory productCategory, final BillingPeriod bp, final String priceListName, final StandaloneCatalog cat) throws CatalogApiException {
-        assertEquals(result, cr.getResult(new PlanSpecifier(productName, productCategory, bp, priceListName), cat));
+        Assert.assertEquals(result, cr.getResult(new PlanSpecifier(productName, productCategory, bp, priceListName), cat));
     }
-
-
 }

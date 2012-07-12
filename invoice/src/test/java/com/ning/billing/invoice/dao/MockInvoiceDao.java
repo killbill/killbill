@@ -46,7 +46,7 @@ public class MockInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public void create(final Invoice invoice, final CallContext context) {
+    public void create(final Invoice invoice, final int billCycleDay, final CallContext context) {
         synchronized (monitor) {
             invoices.put(invoice.getId(), invoice);
         }
@@ -124,11 +124,11 @@ public class MockInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public UUID getInvoiceIdByPaymentAttemptId(final UUID paymentAttemptId) {
+    public UUID getInvoiceIdByPaymentId(final UUID paymentId) {
         synchronized (monitor) {
             for (final Invoice invoice : invoices.values()) {
                 for (final InvoicePayment payment : invoice.getPayments()) {
-                    if (paymentAttemptId.equals(payment.getPaymentAttemptId())) {
+                    if (paymentId.equals(payment.getPaymentId())) {
                         return invoice.getId();
                     }
                 }
@@ -138,11 +138,11 @@ public class MockInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public InvoicePayment getInvoicePayment(final UUID paymentAttemptId) {
+    public InvoicePayment getInvoicePayment(final UUID paymentId) {
         synchronized (monitor) {
             for (final Invoice invoice : invoices.values()) {
                 for (final InvoicePayment payment : invoice.getPayments()) {
-                    if (paymentAttemptId.equals(payment.getPaymentAttemptId())) {
+                    if (paymentId.equals(payment.getPaymentId())) {
                         return payment;
                     }
                 }
@@ -153,7 +153,7 @@ public class MockInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public void notifyOfPaymentAttempt(final InvoicePayment invoicePayment, final CallContext context) {
+    public void notifyOfPayment(final InvoicePayment invoicePayment, final CallContext context) {
         synchronized (monitor) {
             final Invoice invoice = invoices.get(invoicePayment.getInvoiceId());
             if (invoice != null) {
@@ -233,7 +233,7 @@ public class MockInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public List<InvoicePayment> getChargebacksByPaymentAttemptId(final UUID paymentAttemptId) {
+    public List<InvoicePayment> getChargebacksByPaymentId(final UUID paymentId) {
         throw new UnsupportedOperationException();
     }
 
@@ -248,7 +248,22 @@ public class MockInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public InvoiceItem insertCredit(final UUID accountId, final BigDecimal amount, final DateTime effectiveDate, final Currency currency, final CallContext context) {
+    public InvoiceItem insertCredit(final UUID accountId, final UUID invoiceId, final BigDecimal amount, final DateTime effectiveDate, final Currency currency, final CallContext context) {
         throw new UnsupportedOperationException();
     }
+
+    @Override
+    public BigDecimal getAccountCBA(UUID accountId) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public InvoicePayment createRefund(UUID paymentId,
+            BigDecimal amount, boolean isInvoiceAdjusted, UUID paymentCookieId, CallContext context)
+            throws InvoiceApiException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
 }

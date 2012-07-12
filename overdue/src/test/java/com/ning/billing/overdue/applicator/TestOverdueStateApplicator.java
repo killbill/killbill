@@ -16,52 +16,80 @@
 
 package com.ning.billing.overdue.applicator;
 
-
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.Callable;
 
+import org.mockito.Mockito;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.google.inject.Inject;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.junction.api.BlockingApi;
-import com.ning.billing.mock.BrainDeadProxyFactory;
-import com.ning.billing.mock.BrainDeadProxyFactory.ZombieControl;
+import com.ning.billing.overdue.OverdueChangeEvent;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.OverdueTestBase;
 import com.ning.billing.overdue.config.OverdueConfig;
+import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.config.XMLLoader;
+
+import static com.jayway.awaitility.Awaitility.await;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class TestOverdueStateApplicator extends OverdueTestBase {
     @Inject
     OverdueStateApplicator<SubscriptionBundle> applicator;
 
-    @Test(groups = {"slow"}, enabled = true)
+    @Inject
+    OverdueBusListenerTester listener;
+
+    @Inject
+    Bus bus;
+
+    @Test(groups = "slow")
     public void testApplicator() throws Exception {
+        bus.register(listener);
+        bus.start();
         final InputStream is = new ByteArrayInputStream(configXml.getBytes());
         config = XMLLoader.getObjectFromStreamNoValidation(is, OverdueConfig.class);
         overdueWrapperFactory.setOverdueConfig(config);
 
-        final SubscriptionBundle bundle = BrainDeadProxyFactory.createBrainDeadProxyFor(SubscriptionBundle.class);
-        ((ZombieControl) bundle).addResult("getId", UUID.randomUUID());
+        final SubscriptionBundle bundle = Mockito.mock(SubscriptionBundle.class);
+        Mockito.when(bundle.getId()).thenReturn(UUID.randomUUID());
 
         OverdueState<SubscriptionBundle> state;
 
         state = config.getBundleStateSet().findState("OD1");
         applicator.apply(bundle, BlockingApi.CLEAR_STATE_NAME, state);
         checkStateApplied(state);
-
+        checkBussEvent("OD1");
 
         state = config.getBundleStateSet().findState("OD2");
         applicator.apply(bundle, BlockingApi.CLEAR_STATE_NAME, state);
         checkStateApplied(state);
+        checkBussEvent("OD2");
 
         state = config.getBundleStateSet().findState("OD3");
         applicator.apply(bundle, BlockingApi.CLEAR_STATE_NAME, state);
         checkStateApplied(state);
-
+        checkBussEvent("OD3");
+        bus.stop();
     }
 
-
+    private void checkBussEvent(final String state) throws Exception {
+        await().atMost(10, SECONDS).until(new Callable<Boolean>() {
+            @Override
+            public Boolean call() throws Exception {
+                final List<OverdueChangeEvent> events = listener.getEventsReceived();
+                return events.size() == 1;
+            }
+        });
+        final List<OverdueChangeEvent> events = listener.getEventsReceived();
+        Assert.assertEquals(1, events.size());
+        Assert.assertEquals(state, events.get(0).getNextOverdueStateName());
+        listener.clearEventsReceived();
+    }
 }
