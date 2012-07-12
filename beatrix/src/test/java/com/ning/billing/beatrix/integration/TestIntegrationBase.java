@@ -90,7 +90,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     protected static final BigDecimal THIRTY_ONE = new BigDecimal("31.0000").setScale(NUMBER_OF_DECIMALS);
 
     protected static final Logger log = LoggerFactory.getLogger(TestIntegration.class);
-    protected static long AT_LEAST_ONE_MONTH_MS = 31L * 24L * 3600L * 1000L;
+    protected static long AT_LEAST_ONE_MONTH_MS = 31L * 24L * 3600L * 1000L + 2000L;
 
     protected static final long DELAY = 5000;
 

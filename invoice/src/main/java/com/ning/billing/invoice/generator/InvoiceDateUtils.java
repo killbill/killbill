@@ -30,6 +30,7 @@ public class InvoiceDateUtils {
         return new DateTime(tzAdjustedStartDate.getYear(), tzAdjustedStartDate.getMonthOfYear(), tzAdjustedStartDate.getDayOfMonth(), 0, 0, timeZone);
     }
 
+    // Note: date has to be in UTC
     public static DateTime calculateBillingCycleDateOnOrAfter(final DateTime date, final int billingCycleDay) {
         final int lastDayOfMonth = date.dayOfMonth().getMaximumValue();
 
@@ -42,6 +43,16 @@ public class InvoiceDateUtils {
         DateTime proposedDate = tmp.toDateTime();
 
         while (proposedDate.isBefore(date)) {
+            proposedDate = proposedDate.plusMonths(1);
+        }
+        return proposedDate;
+    }
+
+    // Note: date has to be in UTC
+    public static DateTime calculateBillingCycleDateAfter(final DateTime date, final int billingCycleDay) {
+        DateTime proposedDate = calculateBillingCycleDateOnOrAfter(date, billingCycleDay);
+
+        if (date.compareTo(proposedDate) == 0) {
             proposedDate = proposedDate.plusMonths(1);
         }
         return proposedDate;

@@ -538,7 +538,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
         if (shouldBeNotified) {
             // We could be notified at any time during the day at the billCycleDay - use the current time to
             // spread the load
-            final DateTime nextNotificationDateTime = InvoiceDateUtils.calculateBillingCycleDateOnOrAfter(clock.getUTCNow(), billCycleDay);
+            final DateTime nextNotificationDateTime = InvoiceDateUtils.calculateBillingCycleDateAfter(clock.getUTCNow(), billCycleDay);
             // NextBillingDatePoster will ignore duplicates
             nextBillingDatePoster.insertNextBillingNotification(dao, accountId, subscriptionForNextNotification, nextNotificationDateTime);
         }

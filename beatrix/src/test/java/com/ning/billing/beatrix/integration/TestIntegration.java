@@ -17,6 +17,7 @@
 package com.ning.billing.beatrix.integration;
 
 import java.math.BigDecimal;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.UUID;
 
@@ -36,6 +37,9 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.generator.InvoiceDateUtils;
+
+import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -45,30 +49,45 @@ import static org.testng.Assert.assertTrue;
 public class TestIntegration extends TestIntegrationBase {
     @Test(groups = "slow")
     public void testBasePlanCompleteWithBillingDayInPast() throws Exception {
-        log.info("Starting testBasePlanCompleteWithBillingDayInPast");
         final DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0, testTimeZone);
-        testBasePlanComplete(startDate, 31, false);
-    }
-
-    @Test(groups = "slow")
-    public void testBasePlanCompleteWithBillingDayPresent() throws Exception {
-        log.info("Starting testBasePlanCompleteWithBillingDayPresent");
-        final DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0, testTimeZone);
-        testBasePlanComplete(startDate, 1, false);
+        final LinkedHashMap<DateTime, List<NextEvent>> expectedStates = new LinkedHashMap<DateTime, List<NextEvent>>();
+        expectedStates.put(new DateTime(2012, 2, 28, 0, 3, 45, 0, testTimeZone), ImmutableList.<NextEvent>of());
+        expectedStates.put(new DateTime(2012, 2, 29, 0, 3, 45, 0, testTimeZone), ImmutableList.<NextEvent>of());
+        expectedStates.put(new DateTime(2012, 3, 1, 0, 3, 45, 0, testTimeZone), ImmutableList.<NextEvent>of());
+        expectedStates.put(new DateTime(2012, 3, 2, 0, 3, 45, 0, testTimeZone), ImmutableList.<NextEvent>of(NextEvent.PHASE,
+                                                                                                            NextEvent.INVOICE,
+                                                                                                            NextEvent.PAYMENT));
+        expectedStates.put(new DateTime(2012, 3, 3, 0, 3, 45, 0, testTimeZone), ImmutableList.<NextEvent>of());
+        testBasePlanComplete(startDate, expectedStates, 31, false);
     }
 
     @Test(groups = "slow")
     public void testBasePlanCompleteWithBillingDayAlignedWithTrial() throws Exception {
-        log.info("Starting testBasePlanCompleteWithBillingDayAlignedWithTrial");
         final DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0, testTimeZone);
-        testBasePlanComplete(startDate, 2, false);
+        final LinkedHashMap<DateTime, List<NextEvent>> expectedStates = new LinkedHashMap<DateTime, List<NextEvent>>();
+        expectedStates.put(new DateTime(2012, 2, 28, 0, 3, 45, 0, testTimeZone), ImmutableList.<NextEvent>of());
+        expectedStates.put(new DateTime(2012, 2, 29, 0, 3, 45, 0, testTimeZone), ImmutableList.<NextEvent>of());
+        expectedStates.put(new DateTime(2012, 3, 1, 0, 3, 45, 0, testTimeZone), ImmutableList.<NextEvent>of());
+        expectedStates.put(new DateTime(2012, 3, 2, 0, 3, 45, 0, testTimeZone), ImmutableList.<NextEvent>of(NextEvent.PHASE,
+                                                                                                            NextEvent.INVOICE,
+                                                                                                            NextEvent.PAYMENT));
+        expectedStates.put(new DateTime(2012, 3, 3, 0, 3, 45, 0, testTimeZone), ImmutableList.<NextEvent>of());
+        testBasePlanComplete(startDate, expectedStates, 2, false);
     }
 
     @Test(groups = "slow")
     public void testBasePlanCompleteWithBillingDayInFuture() throws Exception {
-        log.info("Starting testBasePlanCompleteWithBillingDayInFuture");
         final DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0, testTimeZone);
-        testBasePlanComplete(startDate, 3, true);
+        final LinkedHashMap<DateTime, List<NextEvent>> expectedStates = new LinkedHashMap<DateTime, List<NextEvent>>();
+        expectedStates.put(new DateTime(2012, 2, 28, 0, 3, 45, 0, testTimeZone), ImmutableList.<NextEvent>of());
+        expectedStates.put(new DateTime(2012, 2, 29, 0, 3, 45, 0, testTimeZone), ImmutableList.<NextEvent>of());
+        expectedStates.put(new DateTime(2012, 3, 1, 0, 3, 45, 0, testTimeZone), ImmutableList.<NextEvent>of());
+        expectedStates.put(new DateTime(2012, 3, 2, 0, 3, 45, 0, testTimeZone), ImmutableList.<NextEvent>of(NextEvent.PHASE,
+                                                                                                            NextEvent.INVOICE,
+                                                                                                            NextEvent.PAYMENT));
+        expectedStates.put(new DateTime(2012, 3, 3, 0, 3, 45, 0, testTimeZone), ImmutableList.<NextEvent>of(NextEvent.INVOICE,
+                                                                                                            NextEvent.PAYMENT));
+        testBasePlanComplete(startDate, expectedStates, 3, true);
     }
 
     @Test(groups = {"stress"})
@@ -80,9 +99,6 @@ public class TestIntegration extends TestIntegrationBase {
             }
 
             log.info("################################  ITERATION " + curIteration + "  #########################");
-            Thread.sleep(1000);
-            testBasePlanCompleteWithBillingDayPresent();
-            Thread.sleep(1000);
             cleanupTest();
             setupTest();
             testBasePlanCompleteWithBillingDayInPast();
@@ -98,10 +114,8 @@ public class TestIntegration extends TestIntegrationBase {
                 cleanupTest();
                 Thread.sleep(1000);
             }
-
         }
     }
-
 
     @Test(groups = {"stress"})
     public void stressTestDebug() throws Exception {
@@ -122,9 +136,6 @@ public class TestIntegration extends TestIntegrationBase {
 
     @Test(groups = "slow")
     public void testAddonsWithMultipleAlignments() throws Exception {
-
-        log.info("Starting testRepairChangeBPWithAddonIncluded");
-
         final DateTime initialDate = new DateTime(2012, 4, 25, 0, 13, 42, 0, testTimeZone);
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
 
@@ -140,7 +151,7 @@ public class TestIntegration extends TestIntegrationBase {
         busHandler.pushExpectedEvent(NextEvent.CREATE);
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
         final SubscriptionData baseSubscription = subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(),
-                                                                                                                   new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, context));
+                                                                                                                         new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, context));
         assertNotNull(baseSubscription);
         assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
@@ -163,7 +174,7 @@ public class TestIntegration extends TestIntegrationBase {
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
         busHandler.pushExpectedEvent(NextEvent.PAYMENT);
         final SubscriptionData aoSubscription2 = subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(),
-                                                                                                                  new PlanPhaseSpecifier("Laser-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null), null, context));
+                                                                                                                        new PlanPhaseSpecifier("Laser-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null), null, context));
         assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
 
@@ -238,9 +249,6 @@ public class TestIntegration extends TestIntegrationBase {
 
     @Test(groups = "slow")
     public void testWithRecreatePlan() throws Exception {
-
-        log.info("Starting testWithRecreatePlan");
-
         final DateTime initialDate = new DateTime(2012, 2, 1, 0, 3, 42, 0, testTimeZone);
         final int billingDay = 2;
 
@@ -310,8 +318,8 @@ public class TestIntegration extends TestIntegrationBase {
         assertListenerStatus();
     }
 
-    private void testBasePlanComplete(final DateTime initialCreationDate, final int billingDay,
-                                      final boolean proRationExpected) throws Exception {
+    private void testBasePlanComplete(final DateTime initialCreationDate, final LinkedHashMap<DateTime, List<NextEvent>> expectedStates,
+                                      final int billingDay, final boolean proRationExpected) throws Exception {
         log.info("Beginning test with BCD of " + billingDay);
         final Account account = createAccountWithPaymentMethod(getAccountData(billingDay));
         final UUID accountId = account.getId();
@@ -365,24 +373,15 @@ public class TestIntegration extends TestIntegrationBase {
         verifyTestResult(accountId, subscription.getId(), startDate, endDate, rate, endDate, invoiceItemCount);
 
         //
-        // MOVE TIME TO AFTER TRIAL AND EXPECT BOTH EVENTS :  NextEvent.PHASE NextEvent.INVOICE
+        // MOVE TIME
         //
-        busHandler.pushExpectedEvent(NextEvent.PHASE);
-        busHandler.pushExpectedEvent(NextEvent.INVOICE);
-        busHandler.pushExpectedEvent(NextEvent.PAYMENT);
-
-        if (proRationExpected) {
-            busHandler.pushExpectedEvent(NextEvent.INVOICE);
-            busHandler.pushExpectedEvent(NextEvent.PAYMENT);
+        for (final DateTime dateTimeToSet : expectedStates.keySet()) {
+            for (final NextEvent expectedEvent : expectedStates.get(dateTimeToSet)) {
+                busHandler.pushExpectedEvent(expectedEvent);
+            }
+            clock.setTime(dateTimeToSet);
+            assertTrue(busHandler.isCompleted(DELAY));
         }
-
-        clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS);
-
-        // STEPH
-        /*
-        Thread.sleep(6000000);
-        */
-        assertTrue(busHandler.isCompleted(DELAY));
 
         startDate = subscription.getCurrentPhaseStart();
         rate = subscription.getCurrentPhase().getRecurringPrice().getPrice(Currency.USD);
@@ -440,7 +439,7 @@ public class TestIntegration extends TestIntegrationBase {
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
         busHandler.pushExpectedEvent(NextEvent.PAYMENT);
         //clock.addDeltaFromReality(ctd.getMillis() - clock.getUTCNow().getMillis());
-        clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS + 1000);
+        clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS);
 
         //waitForDebug();
 
