@@ -144,6 +144,12 @@ public class DefaultInvoiceDao implements InvoiceDao {
     }
 
     @Override
+    public Invoice getByNumber(final Integer number) {
+        // The invoice number is just the record id
+        return invoiceSqlDao.getByRecordId(number.longValue());
+    }
+
+    @Override
     public void create(final Invoice invoice, final int billCycleDay, final CallContext context) {
         invoiceSqlDao.inTransaction(new Transaction<Void, InvoiceSqlDao>() {
             @Override

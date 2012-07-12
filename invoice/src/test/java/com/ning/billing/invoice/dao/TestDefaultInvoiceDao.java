@@ -26,6 +26,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.ning.billing.invoice.InvoiceTestSuite;
+import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.callcontext.CallContext;
@@ -40,17 +41,31 @@ import com.ning.billing.util.tag.dao.TagDao;
 import com.ning.billing.util.tag.dao.TagDefinitionDao;
 
 public class TestDefaultInvoiceDao extends InvoiceTestSuite {
+    private InvoiceSqlDao invoiceSqlDao;
     private TagUserApi tagUserApi;
     private DefaultInvoiceDao dao;
 
     @BeforeMethod(groups = "fast")
     public void setUp() throws Exception {
         final IDBI idbi = Mockito.mock(IDBI.class);
+        invoiceSqlDao = Mockito.mock(InvoiceSqlDao.class);
+        Mockito.when(idbi.onDemand(InvoiceSqlDao.class)).thenReturn(invoiceSqlDao);
+
         final NextBillingDatePoster poster = Mockito.mock(NextBillingDatePoster.class);
         final TagDefinitionDao tagDefinitionDao = new MockTagDefinitionDao();
         final TagDao tagDao = new MockTagDao();
         tagUserApi = new DefaultTagUserApi(tagDefinitionDao, tagDao);
         dao = new DefaultInvoiceDao(idbi, poster, tagUserApi, Mockito.mock(Clock.class));
+    }
+
+    @Test(groups = "fast")
+    public void testFindByNumber() throws Exception {
+        final Integer number = Integer.MAX_VALUE;
+        final Invoice invoice = Mockito.mock(Invoice.class);
+        Mockito.when(invoiceSqlDao.getByRecordId(number.longValue())).thenReturn(invoice);
+
+        Assert.assertEquals(dao.getByNumber(number), invoice);
+        Assert.assertNull(dao.getByNumber(Integer.MIN_VALUE));
     }
 
     @Test(groups = "fast")

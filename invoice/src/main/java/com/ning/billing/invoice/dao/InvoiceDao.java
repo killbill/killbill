@@ -35,6 +35,8 @@ public interface InvoiceDao {
 
     Invoice getById(final UUID id);
 
+    Invoice getByNumber(final Integer number);
+
     List<Invoice> get();
 
     List<Invoice> getInvoicesByAccount(final UUID accountId);

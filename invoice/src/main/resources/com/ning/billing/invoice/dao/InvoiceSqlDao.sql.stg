@@ -51,6 +51,12 @@ getById() ::= <<
   WHERE id = :id;
 >>
 
+getByRecordId() ::= <<
+  SELECT record_id as invoice_number, <invoiceFields()>
+  FROM invoices
+  WHERE record_id = :recordId;
+>>
+
 create() ::= <<
   INSERT INTO invoices(<invoiceFields()>)
   VALUES (:id, :accountId, :invoiceDate, :targetDate, :currency, :migrated, :userName, :createdDate);

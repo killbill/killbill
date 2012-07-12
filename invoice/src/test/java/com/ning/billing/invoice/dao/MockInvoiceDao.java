@@ -67,6 +67,19 @@ public class MockInvoiceDao implements InvoiceDao {
     }
 
     @Override
+    public Invoice getByNumber(final Integer number) {
+        synchronized (monitor) {
+            for (final Invoice invoice : invoices.values()) {
+                if (invoice.getInvoiceNumber().equals(number)) {
+                    return invoice;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    @Override
     public List<Invoice> get() {
         synchronized (monitor) {
             return new ArrayList<Invoice>(invoices.values());

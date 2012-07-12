@@ -81,6 +81,11 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
 
     @Override
+    public Invoice getInvoiceByNumber(final Integer number) {
+        return dao.getByNumber(number);
+    }
+
+    @Override
     public List<Invoice> getUnpaidInvoicesByAccountId(final UUID accountId, final DateTime upToDate) {
         return dao.getUnpaidInvoicesByAccountId(accountId, upToDate);
     }

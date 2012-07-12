@@ -38,6 +38,8 @@ public interface InvoiceUserApi {
 
     public Invoice getInvoice(UUID invoiceId);
 
+    public Invoice getInvoiceByNumber(Integer number);
+
     public void notifyOfPayment(InvoicePayment invoicePayment, CallContext context);
 
     public Collection<Invoice> getUnpaidInvoicesByAccountId(UUID accountId, DateTime upToDate);
