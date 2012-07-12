@@ -50,4 +50,8 @@ public interface EmailConfig extends KillbillConfig {
     @Config("killbill.mail.useSSL")
     @Default("false")
     boolean useSSL();
+
+    @Config("killbill.mail.invoiceEmailSubject")
+    @Default("Your invoice")
+    String getInvoiceEmailSubject();
 }

@@ -64,8 +64,7 @@ public class EmailInvoiceNotifier implements InvoiceNotifier {
             throw new InvoiceApiException(e, ErrorCode.EMAIL_SENDING_FAILED);
         }
 
-        // TODO: get subject
-        final String subject = "";
+        final String subject = config.getInvoiceEmailSubject();
 
         final EmailSender sender = new DefaultEmailSender(config);
         try {
