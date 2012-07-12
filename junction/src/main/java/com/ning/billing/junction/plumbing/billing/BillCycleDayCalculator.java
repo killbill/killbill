@@ -102,7 +102,14 @@ public class BillCycleDayCalculator {
 
     private int calculateBcdFromSubscription(final Subscription subscription, final Plan plan, final Account account) throws AccountApiException {
         final DateTime date = plan.dateOfFirstRecurringNonZeroCharge(subscription.getStartDate());
-        return date.toDateTime(account.getTimeZone()).getDayOfMonth();
+        // There are really two kind of billCycleDay:
+        // - a System billingCycleDay which should be computed from UTC time (in order to get the correct notification time at
+        //   the end of each service period
+        // - a User billingCycleDay which should align with the account timezone
+        //
+        // TODO At this point we only compute the system one; should we need two filds in the account table
+        //return date.toDateTime(account.getTimeZone()).getDayOfMonth();
+        return date.getDayOfMonth();
     }
 
 }

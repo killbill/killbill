@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -621,7 +621,7 @@ public class TestRepairBP extends TestApiBaseRepair {
         // SET CTD to BASE SUBSCRIPTION SP CANCEL OCCURS EOT
         final DateTime newChargedThroughDate = baseSubscription.getStartDate().plusDays(30).plusMonths(1);
         billingApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate, context);
-        baseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId());
+        baseSubscription = entitlementApi.getSubscriptionFromId(baseSubscription.getId());
 
 
         final DateTime requestedChange = clock.getUTCNow();
@@ -656,7 +656,7 @@ public class TestRepairBP extends TestApiBaseRepair {
         repairApi.repairBundle(bRepair, dryRun, context);
         assertTrue(testListener.isCompleted(5000));
 
-        baseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId());
+        baseSubscription = entitlementApi.getSubscriptionFromId(baseSubscription.getId());
 
         assertEquals(((SubscriptionData) baseSubscription).getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
         assertEquals(baseSubscription.getBundleId(), bundle.getId());
@@ -713,7 +713,7 @@ public class TestRepairBP extends TestApiBaseRepair {
         }, ErrorCode.ENT_REPAIR_VIEW_CHANGED);
     }
 
-    @Test(groups = {"slow"}, enabled = false)
+    @Test(groups = "slow")
     public void testENT_REPAIR_VIEW_CHANGED_ctd() throws Exception {
 
         log.info("Starting testENT_REPAIR_VIEW_CHANGED_ctd");
