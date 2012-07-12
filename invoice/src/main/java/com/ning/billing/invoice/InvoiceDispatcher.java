@@ -44,6 +44,7 @@ import com.ning.billing.invoice.api.InvoiceNotifier;
 import com.ning.billing.invoice.api.user.DefaultNullInvoiceEvent;
 import com.ning.billing.invoice.api.user.DefaultInvoiceCreationEvent;
 import com.ning.billing.invoice.dao.InvoiceDao;
+import com.ning.billing.invoice.generator.InvoiceDateUtils;
 import com.ning.billing.invoice.generator.InvoiceGenerator;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
@@ -176,12 +177,11 @@ public class InvoiceDispatcher {
 
                     final List<InvoiceItem> fixedPriceInvoiceItems = invoice.getInvoiceItems(FixedPriceInvoiceItem.class);
                     final List<InvoiceItem> recurringInvoiceItems = invoice.getInvoiceItems(RecurringInvoiceItem.class);
-                    setChargedThroughDates(fixedPriceInvoiceItems, recurringInvoiceItems, context);
+                    setChargedThroughDates(account.getBillCycleDay(), fixedPriceInvoiceItems, recurringInvoiceItems, context);
 
                     final InvoiceCreationEvent event = new DefaultInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
                                                                                        invoice.getBalance(), invoice.getCurrency(),
-                                                                                       invoice.getInvoiceDate(),
-                                                                                       context.getUserToken());
+                                                                                       invoice.getInvoiceDate(), context.getUserToken());
 
                     postEvent(event, accountId);
                 }
@@ -198,12 +198,13 @@ public class InvoiceDispatcher {
         }
     }
 
-    private void setChargedThroughDates(final Collection<InvoiceItem> fixedPriceItems,
-                                        final Collection<InvoiceItem> recurringItems, final CallContext context) {
-
+    private void setChargedThroughDates(final int billCycleDay,
+                                        final Collection<InvoiceItem> fixedPriceItems,
+                                        final Collection<InvoiceItem> recurringItems,
+                                        final CallContext context) {
         final Map<UUID, DateTime> chargeThroughDates = new HashMap<UUID, DateTime>();
-        addInvoiceItemsToChargeThroughDates(chargeThroughDates, fixedPriceItems);
-        addInvoiceItemsToChargeThroughDates(chargeThroughDates, recurringItems);
+        addInvoiceItemsToChargeThroughDates(billCycleDay, chargeThroughDates, fixedPriceItems);
+        addInvoiceItemsToChargeThroughDates(billCycleDay, chargeThroughDates, recurringItems);
 
         for (final UUID subscriptionId : chargeThroughDates.keySet()) {
             if (subscriptionId != null) {
@@ -222,15 +223,18 @@ public class InvoiceDispatcher {
         }
     }
 
-
-    private void addInvoiceItemsToChargeThroughDates(final Map<UUID, DateTime> chargeThroughDates, final Collection<InvoiceItem> items) {
+    private void addInvoiceItemsToChargeThroughDates(final int billCycleDay,
+                                                     final Map<UUID, DateTime> chargeThroughDates,
+                                                     final Collection<InvoiceItem> items) {
         for (final InvoiceItem item : items) {
             final UUID subscriptionId = item.getSubscriptionId();
             final DateTime endDate = item.getEndDate();
 
             if (chargeThroughDates.containsKey(subscriptionId)) {
                 if (chargeThroughDates.get(subscriptionId).isBefore(endDate)) {
-                    chargeThroughDates.put(subscriptionId, endDate);
+                    // The CTD should always align with the BCD - note that the BCD is computed from UTC, hence we
+                    // can't use endDate as a CTD here
+                    chargeThroughDates.put(subscriptionId, InvoiceDateUtils.calculateBillingCycleDateOnOrAfter(endDate, billCycleDay));
                 }
             } else {
                 chargeThroughDates.put(subscriptionId, endDate);
