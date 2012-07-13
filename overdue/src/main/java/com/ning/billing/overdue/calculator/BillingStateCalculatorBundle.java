@@ -70,28 +70,38 @@ public class BillingStateCalculatorBundle extends BillingStateCalculator<Subscri
             }
             final PaymentResponse responseForLastFailedPayment = PaymentResponse.INSUFFICIENT_FUNDS; //TODO MDW
             final Tag[] tags = new Tag[]{}; //TODO MDW
-            final Product basePlanProduct = basePlan.getCurrentPlan().getProduct();
-            final BillingPeriod basePlanBillingPeriod = basePlan.getCurrentPlan().getBillingPeriod();
-            final PriceList basePlanPriceList = basePlan.getCurrentPriceList();
-            final PhaseType basePlanPhaseType = basePlan.getCurrentPhase().getPhaseType();
 
+            final Product basePlanProduct;
+            final BillingPeriod basePlanBillingPeriod;
+            final PriceList basePlanPriceList;
+            final PhaseType basePlanPhaseType;
+            if (basePlan.getCurrentPlan() == null) {
+                // The subscription has been cancelled since
+                basePlanProduct = null;
+                basePlanBillingPeriod = null;
+                basePlanPriceList = null;
+                basePlanPhaseType = null;
+            } else {
+                basePlanProduct = basePlan.getCurrentPlan().getProduct();
+                basePlanBillingPeriod = basePlan.getCurrentPlan().getBillingPeriod();
+                basePlanPriceList = basePlan.getCurrentPriceList();
+                basePlanPhaseType = basePlan.getCurrentPhase().getPhaseType();
+            }
 
-            return new BillingStateBundle(
-                    id,
-                    numberOfUnpaidInvoices,
-                    unpaidInvoiceBalance,
-                    dateOfEarliestUnpaidInvoice,
-                    idOfEarliestUnpaidInvoice,
-                    responseForLastFailedPayment,
-                    tags,
-                    basePlanProduct,
-                    basePlanBillingPeriod,
-                    basePlanPriceList,
-                    basePlanPhaseType);
+            return new BillingStateBundle(id,
+                                          numberOfUnpaidInvoices,
+                                          unpaidInvoiceBalance,
+                                          dateOfEarliestUnpaidInvoice,
+                                          idOfEarliestUnpaidInvoice,
+                                          responseForLastFailedPayment,
+                                          tags,
+                                          basePlanProduct,
+                                          basePlanBillingPeriod,
+                                          basePlanPriceList,
+                                          basePlanPhaseType);
         } catch (EntitlementUserApiException e) {
             throw new OverdueError(e);
         }
-
     }
 
     public SortedSet<Invoice> unpaidInvoicesForBundle(final UUID bundleId, final UUID accountId) {
