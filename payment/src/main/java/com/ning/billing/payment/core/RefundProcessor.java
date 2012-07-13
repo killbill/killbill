@@ -104,7 +104,7 @@ public class RefundProcessor extends ProcessorBase {
                     List<RefundModelDao> existingRefunds = paymentDao.getRefundsForPayment(paymentId);
                     for (RefundModelDao cur : existingRefunds) {
 
-                        final BigDecimal existingPositiveAmount = cur.getAmount().negate();
+                        final BigDecimal existingPositiveAmount = cur.getAmount();
                         if (existingPositiveAmount.compareTo(refundAmount) == 0) {
                             if (cur.getRefundStatus() == RefundStatus.CREATED) {
                                 if (refundInfo == null) {
