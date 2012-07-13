@@ -29,6 +29,14 @@
             <artifactId>killbill-util</artifactId>
         </dependency>
         <dependency>
+            <!-- We don't really need Guava - we need jsr305. Guava uses the com.google.code.findbugs
+            implementation, so let's use the same one. But since we don't explicitly depend on it elsewhere
+            (this should be fixed), let's depend on it transitively for now -->
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
             <scope>provided</scope>
@@ -93,12 +101,6 @@
             <artifactId>mysql-connector-mxj-db-files</artifactId>
             <scope>test</scope>
         </dependency>
-        <!-- Strangely this is needed in order to run the tests in local db mode -->
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-           <scope>test</scope>
-         </dependency>
     </dependencies>
     <build>
         <plugins>

@@ -20,6 +20,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
 
 import com.google.inject.Inject;
@@ -213,9 +215,8 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
     }
 
     @Override
-    public List<SubscriptionStatusDryRun> getDryRunChangePlanStatus(final UUID subscriptionId, final String baseProductName, final DateTime requestedDate)
+    public List<SubscriptionStatusDryRun> getDryRunChangePlanStatus(final UUID subscriptionId, @Nullable final String baseProductName, final DateTime requestedDate)
             throws EntitlementUserApiException {
-
         final Subscription subscription = dao.getSubscriptionFromId(subscriptionFactory, subscriptionId);
         if (subscription == null) {
             throw new EntitlementUserApiException(ErrorCode.ENT_INVALID_SUBSCRIPTION_ID, subscriptionId);
@@ -232,10 +233,11 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
                 continue;
             }
 
-            DryRunChangeReason reason = null;
-            if (addonUtils.isAddonIncludedFromProdName(baseProductName, requestedDate, cur.getCurrentPlan())) {
+            final DryRunChangeReason reason;
+            // If baseProductName is null, it's a cancellation dry-run. In this case, return all addons, so they are cancelled
+            if (baseProductName != null && addonUtils.isAddonIncludedFromProdName(baseProductName, requestedDate, cur.getCurrentPlan())) {
                 reason = DryRunChangeReason.AO_INCLUDED_IN_NEW_PLAN;
-            } else if (addonUtils.isAddonAvailableFromProdName(baseProductName, requestedDate, cur.getCurrentPlan())) {
+            } else if (baseProductName != null && addonUtils.isAddonAvailableFromProdName(baseProductName, requestedDate, cur.getCurrentPlan())) {
                 reason = DryRunChangeReason.AO_AVAILABLE_IN_NEW_PLAN;
             } else {
                 reason = DryRunChangeReason.AO_NOT_AVAILABLE_IN_NEW_PLAN;

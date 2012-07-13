@@ -30,6 +30,8 @@ import org.testng.annotations.Test;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
+
 import com.ning.billing.catalog.MockPlan;
 import com.ning.billing.catalog.MockPriceList;
 import com.ning.billing.catalog.api.Plan;
@@ -54,6 +56,26 @@ public class TestBillingStateCalculatorBundle extends TestBillingStateCalculator
             result.add(ii);
         }
         return result;
+    }
+
+    @Test(groups = "fast")
+    public void testBillingStateAfterCancellation() throws Exception {
+        Mockito.when(invoiceApi.getUnpaidInvoicesByAccountId(Mockito.<UUID>any(), Mockito.<DateTime>any())).thenReturn(ImmutableList.<Invoice>of());
+
+        final UUID bundleId = UUID.randomUUID();
+        final SubscriptionBundle bundle = Mockito.mock(SubscriptionBundle.class);
+        Mockito.when(bundle.getId()).thenReturn(bundleId);
+
+        final EntitlementUserApi entitlementApi = Mockito.mock(EntitlementUserApi.class);
+        final Subscription subscription = Mockito.mock(Subscription.class);
+        Mockito.when(entitlementApi.getBaseSubscription(bundleId)).thenReturn(subscription);
+
+        final BillingStateCalculatorBundle calc = new BillingStateCalculatorBundle(entitlementApi, invoiceApi, clock);
+        final BillingStateBundle billingStateBundle = calc.calculateBillingState(bundle);
+        Assert.assertNull(billingStateBundle.getBasePlanBillingPeriod());
+        Assert.assertNull(billingStateBundle.getBasePlanPhaseType());
+        Assert.assertNull(billingStateBundle.getBasePlanPriceList());
+        Assert.assertNull(billingStateBundle.getBasePlanProduct());
     }
 
     @Test(groups = "fast")

@@ -16,10 +16,11 @@
 
 package com.ning.billing.analytics;
 
-import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+
+import javax.inject.Inject;
 
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
@@ -89,14 +90,14 @@ public class BusinessInvoiceRecorder {
             return;
         }
 
-        log.info("Started rebuilding transitions for account id {}", accountId);
+        log.info("Started rebuilding invoices for account id {}", accountId);
         deleteInvoicesAndInvoiceItemsForAccountInTransaction(transactional, accountId);
 
         for (final Invoice invoice : invoiceApi.getInvoicesByAccount(accountId)) {
             createInvoiceInTransaction(transactional, accountKey, invoice);
         }
 
-        log.info("Finished rebuilding transitions for account id {}", accountId);
+        log.info("Finished rebuilding invoices for account id {}", accountId);
     }
 
     private void deleteInvoicesAndInvoiceItemsForAccountInTransaction(final BusinessInvoiceSqlDao transactional, final UUID accountId) {
@@ -107,10 +108,12 @@ public class BusinessInvoiceRecorder {
         for (final BusinessInvoice businessInvoice : invoicesToDelete) {
             final List<BusinessInvoiceItem> invoiceItemsForInvoice = invoiceItemSqlDao.getInvoiceItemsForInvoice(businessInvoice.getInvoiceId().toString());
             for (final BusinessInvoiceItem invoiceItemToDelete : invoiceItemsForInvoice) {
+                log.info("Deleting invoice item {}", invoiceItemToDelete.getItemId());
                 invoiceItemSqlDao.deleteInvoiceItem(invoiceItemToDelete.getItemId().toString());
             }
         }
 
+        log.info("Deleting invoices for account {}", accountId);
         transactional.deleteInvoicesForAccount(accountId.toString());
     }
 
@@ -153,6 +156,7 @@ public class BusinessInvoiceRecorder {
         account.setLastInvoiceDate(invoice.getInvoiceDate());
         account.setTotalInvoiceBalance(account.getTotalInvoiceBalance().add(invoice.getBalance()));
         account.setUpdatedDt(clock.getUTCNow());
+        log.info("Updating account {}", account);
         accountSqlDao.saveAccount(account);
     }
 
