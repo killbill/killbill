@@ -16,7 +16,6 @@
 
 package com.ning.billing.junction.plumbing.billing;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
@@ -26,7 +25,6 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
@@ -51,6 +49,8 @@ import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.Tag;
+
+import com.google.inject.Inject;
 
 public class DefaultBillingApi implements BillingApi {
     private static final String API_USER_NAME = "Billing Api";
@@ -97,7 +97,6 @@ public class DefaultBillingApi implements BillingApi {
             }
 
             addBillingEventsForBundles(bundles, account, context, result);
-
         } catch (AccountApiException e) {
             log.warn("Failed while getting BillingEvent", e);
         }
@@ -111,17 +110,14 @@ public class DefaultBillingApi implements BillingApi {
 
 
     private void debugLog(final SortedSet<BillingEvent> result, final String title) {
-        log.info(title);
-        final Iterator<BillingEvent> i = result.iterator();
-        while (i.hasNext()) {
-            log.info(i.next().toString());
+        log.debug(title);
+        for (final BillingEvent aResult : result) {
+            log.debug(aResult.toString());
         }
-
     }
 
     private void addBillingEventsForBundles(final List<SubscriptionBundle> bundles, final Account account, final CallContext context,
                                             final DefaultBillingEventSet result) {
-
         for (final SubscriptionBundle bundle : bundles) {
             final List<Subscription> subscriptions = entitlementUserApi.getSubscriptionsForBundle(bundle.getId());
 
@@ -153,11 +149,10 @@ public class DefaultBillingApi implements BillingApi {
                     result.add(event);
                 } catch (CatalogApiException e) {
                     log.error("Failing to identify catalog components while creating BillingEvent from transition: " +
-                                      transition.getId().toString(), e);
+                              transition.getId().toString(), e);
                 } catch (Exception e) {
                     log.warn("Failed while getting BillingEvent", e);
                 }
-
             }
         }
     }
