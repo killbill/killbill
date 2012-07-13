@@ -37,7 +37,8 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.invoice.generator.InvoiceDateUtils;
+import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.invoice.api.InvoiceItemType;
 
 import com.google.common.collect.ImmutableList;
 
@@ -47,6 +48,79 @@ import static org.testng.Assert.assertTrue;
 
 @Guice(modules = {BeatrixModule.class})
 public class TestIntegration extends TestIntegrationBase {
+    @Test(groups = "slow")
+    public void testCancelBPWithAOTheSameDay() throws Exception {
+        // We take april as it has 30 days (easier to play with BCD)
+        final DateTime today = new DateTime(2012, 4, 1, 0, 0, 0, 0, testTimeZone);
+        final DateTime trialEndDate = new DateTime(2012, 5, 1, 0, 0, 0, 0, testTimeZone);
+        final Account account = createAccountWithPaymentMethod(getAccountData(1));
+
+        // Set clock to the initial start date
+        clock.setDeltaFromReality(today.getMillis() - clock.getUTCNow().getMillis());
+        final SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever", context);
+
+        final String productName = "Shotgun";
+        final BillingPeriod term = BillingPeriod.MONTHLY;
+        final String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
+
+        //
+        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
+        //
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.INVOICE);
+        final PlanPhaseSpecifier bpPlanPhaseSpecifier = new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null);
+        final SubscriptionData bpSubscription = subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(),
+                                                                                                                       bpPlanPhaseSpecifier,
+                                                                                                                       null,
+                                                                                                                       context));
+        assertNotNull(bpSubscription);
+        assertTrue(busHandler.isCompleted(DELAY));
+        assertListenerStatus();
+
+        //
+        // ADD ADD_ON ON THE SAME DAY
+        //
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.INVOICE, NextEvent.PAYMENT);
+        final PlanPhaseSpecifier addonPlanPhaseSpecifier = new PlanPhaseSpecifier("Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        final SubscriptionData aoSubscription = subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(), addonPlanPhaseSpecifier, null, context));
+        assertTrue(busHandler.isCompleted(DELAY));
+        assertListenerStatus();
+
+        //
+        // CANCEL BP ON THE SAME DAY (we should have two cancellations, BP and AO)
+        //
+        busHandler.pushExpectedEvents(NextEvent.CANCEL, NextEvent.CANCEL, NextEvent.INVOICE);
+        bpSubscription.cancel(clock.getUTCNow(), false, context);
+        assertTrue(busHandler.isCompleted(DELAY));
+        assertListenerStatus();
+
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId());
+        assertEquals(invoices.size(), 3);
+        // The first invoice is for the trial BP
+        assertEquals(invoices.get(0).getNumberOfItems(), 1);
+        assertEquals(invoices.get(0).getInvoiceItems().get(0).getStartDate().compareTo(today), 0);
+        assertEquals(invoices.get(0).getInvoiceItems().get(0).getEndDate().compareTo(trialEndDate), 0);
+        // The second invoice should be adjusted for the AO (we paid for the full period)
+        assertEquals(invoices.get(1).getNumberOfItems(), 3);
+        for (final InvoiceItem item : invoices.get(1).getInvoiceItems()) {
+            if (InvoiceItemType.RECURRING.equals(item.getInvoiceItemType())) {
+                assertEquals(item.getStartDate().compareTo(today), 0);
+                assertEquals(item.getEndDate().compareTo(trialEndDate), 0);
+                assertEquals(item.getAmount().compareTo(new BigDecimal("399.9500")), 0);
+            } else if (InvoiceItemType.REPAIR_ADJ.equals(item.getInvoiceItemType())) {
+                assertEquals(item.getStartDate().compareTo(today), 0);
+                assertEquals(item.getEndDate().compareTo(trialEndDate), 0);
+                assertEquals(item.getAmount().compareTo(new BigDecimal("-399.9500")), 0);
+            } else {
+                assertEquals(item.getInvoiceItemType(), InvoiceItemType.CBA_ADJ);
+                assertEquals(item.getStartDate().compareTo(today), 0);
+                assertEquals(item.getEndDate().compareTo(today), 0);
+                assertEquals(item.getAmount().compareTo(new BigDecimal("399.9500")), 0);
+            }
+        }
+        // Null invoice
+        assertEquals(invoices.get(2).getNumberOfItems(), 0);
+    }
+
     @Test(groups = "slow")
     public void testBasePlanCompleteWithBillingDayInPast() throws Exception {
         final DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0, testTimeZone);

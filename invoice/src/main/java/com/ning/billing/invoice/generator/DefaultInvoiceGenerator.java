@@ -146,7 +146,9 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         for (final UUID invoiceId : amountOwedByInvoice.keySet()) {
             final BigDecimal invoiceBalance = amountOwedByInvoice.get(invoiceId);
             if (invoiceBalance.compareTo(BigDecimal.ZERO) < 0) {
-                proposedItems.add(new CreditBalanceAdjInvoiceItem(invoiceId, accountId, clock.getUTCNow(), invoiceBalance.negate(), currency));
+                final DateTime creditDate = InvoiceDateUtils.roundDateTimeToDate(clock.getUTCNow(), DateTimeZone.UTC);
+                final CreditBalanceAdjInvoiceItem creditInvoiceItem = new CreditBalanceAdjInvoiceItem(invoiceId, accountId, creditDate, invoiceBalance.negate(), currency);
+                proposedItems.add(creditInvoiceItem);
             }
         }
     }
@@ -156,7 +158,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
             if (existingItem.getInvoiceItemType() == InvoiceItemType.RECURRING ||
                     existingItem.getInvoiceItemType() == InvoiceItemType.FIXED) {
                 final BigDecimal amountNegated = existingItem.getAmount() == null ? null : existingItem.getAmount().negate();
-                RepairAdjInvoiceItem repairItem  = new RepairAdjInvoiceItem(existingItem.getInvoiceId(), existingItem.getAccountId(), existingItem.getStartDate(),existingItem.getEndDate(), amountNegated, existingItem.getCurrency(), existingItem.getId());
+                final RepairAdjInvoiceItem repairItem  = new RepairAdjInvoiceItem(existingItem.getInvoiceId(), existingItem.getAccountId(), existingItem.getStartDate(),existingItem.getEndDate(), amountNegated, existingItem.getCurrency(), existingItem.getId());
                 proposedItems.add(repairItem);
             }
         }
@@ -192,7 +194,9 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         }
 
         if (creditAmount.compareTo(BigDecimal.ZERO) < 0) {
-            proposedItems.add(new CreditBalanceAdjInvoiceItem(invoiceId, accountId, clock.getUTCNow(), creditAmount, targetCurrency));
+            final DateTime creditDate = InvoiceDateUtils.roundDateTimeToDate(clock.getUTCNow(), DateTimeZone.UTC);
+            final CreditBalanceAdjInvoiceItem creditInvoiceItem = new CreditBalanceAdjInvoiceItem(invoiceId, accountId, creditDate, creditAmount, targetCurrency);
+            proposedItems.add(creditInvoiceItem);
         }
     }
 

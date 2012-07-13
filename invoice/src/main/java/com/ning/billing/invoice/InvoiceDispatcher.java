@@ -100,8 +100,7 @@ public class InvoiceDispatcher {
                                     final CallContext context) throws InvoiceApiException {
         final UUID subscriptionId = transition.getSubscriptionId();
         final DateTime targetDate = transition.getEffectiveTransitionTime();
-        log.info("Got subscription transition from InvoiceListener. id: " + subscriptionId.toString() + "; targetDate: " + targetDate.toString());
-        log.info("Transition type: " + transition.getTransitionType().toString());
+        log.info("Got subscription transition: type: " + transition.getTransitionType().toString() + "; id: " + subscriptionId.toString() + "; targetDate: " + targetDate.toString());
         processSubscription(subscriptionId, targetDate, context);
     }
 
