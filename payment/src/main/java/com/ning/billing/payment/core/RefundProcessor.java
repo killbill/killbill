@@ -94,13 +94,16 @@ public class RefundProcessor extends ProcessorBase {
                     if (payment == null) {
                         throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_SUCCESS_PAYMENT, paymentId);
                     }
-                    if (payment.getAmount().compareTo(refundAmount) < 0) {
-                        throw new PaymentApiException(ErrorCode.PAYMENT_REFUND_AMOUNT_TOO_LARGE);
-                    }
 
-                    // Look for that refund entry and count any 'similar' refund left in CREATED state (same amount, same paymentId)
+                    //
+                    // We are looking for multiple things:
+                    // 1. Compute totalAmountRefunded based on all Refund entries that made it to the plugin.
+                    // 2. If we find a CREATED entry (that did not make it to the plugin) with the same amount, we reuse the entry
+                    // 3. Compute foundPluginCompletedRefunds, number of refund entries for that amount that made it to the plugin
+                    //
                     int foundPluginCompletedRefunds = 0;
                     RefundModelDao refundInfo = null;
+                    BigDecimal totalAmountRefunded = BigDecimal.ZERO;
                     List<RefundModelDao> existingRefunds = paymentDao.getRefundsForPayment(paymentId);
                     for (RefundModelDao cur : existingRefunds) {
 
@@ -114,7 +117,15 @@ public class RefundProcessor extends ProcessorBase {
                                 foundPluginCompletedRefunds++;
                             }
                         }
+                        if (cur.getRefundStatus() != RefundStatus.CREATED) {
+                            totalAmountRefunded = totalAmountRefunded.add(existingPositiveAmount);
+                        }
                     }
+
+                    if (payment.getAmount().subtract(totalAmountRefunded).compareTo(refundAmount) < 0) {
+                        throw new PaymentApiException(ErrorCode.PAYMENT_REFUND_AMOUNT_TOO_LARGE);
+                    }
+
                     if (refundInfo == null) {
                         refundInfo = new RefundModelDao(account.getId(), paymentId, refundAmount, account.getCurrency(), isAdjusted);
                         paymentDao.insertRefund(refundInfo, context);
