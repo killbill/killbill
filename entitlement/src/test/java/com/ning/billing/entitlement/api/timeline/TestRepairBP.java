@@ -669,7 +669,7 @@ public class TestRepairBP extends TestApiBaseRepair {
         }, ErrorCode.ENT_REPAIR_VIEW_CHANGED);
     }
 
-    @Test(groups = "slow", enabled=false)
+    @Test(groups = "slow")
     public void testENT_REPAIR_VIEW_CHANGED_ctd() throws Exception {
         final TestWithException test = new TestWithException();
         final DateTime startDate = clock.getUTCNow();

@@ -248,6 +248,7 @@ public enum ErrorCode {
     PAYMENT_NO_SUCH_REFUND(7023, "Refund %s does not exist"),
     PAYMENT_NO_SUCH_SUCCESS_PAYMENT(7024, "Payment %s did not succeed"),
     PAYMENT_REFUND_AMOUNT_TOO_LARGE(7025, "Refund amount if larger than payment"),
+    PAYMENT_BAD_ACCOUNT(7026, "Account %s has payments left in an unknwon state"),
 
     PAYMENT_PLUGIN_TIMEOUT(7100, "Plugin timeout for account %s and invoice %s"),
     PAYMENT_PLUGIN_ACCOUNT_INIT(7101, "Account initialization for account %s and plugin % s failed: %s"),

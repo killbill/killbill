@@ -30,6 +30,8 @@ import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.inject.name.Named;
@@ -57,6 +59,7 @@ import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
 import com.ning.billing.payment.retry.AutoPayRetryService.AutoPayRetryServiceScheduler;
 import com.ning.billing.payment.retry.FailedPaymentRetryService.FailedPaymentRetryServiceScheduler;
 import com.ning.billing.payment.retry.PluginFailureRetryService.PluginFailureRetryServiceScheduler;
+import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.BusEvent;
@@ -160,9 +163,9 @@ public class PaymentProcessor extends ProcessorBase {
                         @Override
                         public boolean apply(final PaymentModelDao in) {
                             // Payments left in AUTO_PAY_OFF or for which we did not retry enough
-                             return (in.getPaymentStatus() == PaymentStatus.AUTO_PAY_OFF ||
-                                     in.getPaymentStatus() == PaymentStatus.PAYMENT_FAILURE ||
-                                     in.getPaymentStatus() == PaymentStatus.PLUGIN_FAILURE);
+                            return (in.getPaymentStatus() == PaymentStatus.AUTO_PAY_OFF ||
+                                    in.getPaymentStatus() == PaymentStatus.PAYMENT_FAILURE ||
+                                    in.getPaymentStatus() == PaymentStatus.PLUGIN_FAILURE);
                         }
                     });
                     // Insert one retry event for each payment left in AUTO_PAY_OFF
@@ -202,6 +205,8 @@ public class PaymentProcessor extends ProcessorBase {
         }
     }
 
+
+
     public Payment createPayment(final Account account, final UUID invoiceId, final BigDecimal inputAmount, final CallContext context, final boolean isInstantPayment)
     throws PaymentApiException {
         final PaymentPluginApi plugin = getPaymentProviderPlugin(account);
@@ -220,6 +225,11 @@ public class PaymentProcessor extends ProcessorBase {
                     if (invoice.isMigrationInvoice()) {
                         log.error("Received invoice for payment that is a migration invoice - don't know how to handle those yet: {}", invoice);
                         return null;
+                    }
+
+                    final boolean isBadAccount = setUnsaneAccount_AUTO_PAY_OFFWithAccountLock(account.getId(), context, isInstantPayment);
+                    if (isBadAccount && isInstantPayment) {
+                        throw new PaymentApiException(ErrorCode.PAYMENT_BAD_ACCOUNT, account.getId());
                     }
 
                     final BigDecimal requestedAmount = getAndValidatePaymentAmount(invoice, inputAmount, isInstantPayment);
@@ -243,6 +253,47 @@ public class PaymentProcessor extends ProcessorBase {
             }
         }
     }
+
+
+    private boolean setUnsaneAccount_AUTO_PAY_OFFWithAccountLock(final UUID accountId, final CallContext context, final boolean isInstantPayment)
+    throws PaymentApiException  {
+        List<PaymentModelDao> payments =  paymentDao.getPaymentsForAccount(accountId);
+
+
+        Collection<PaymentModelDao> badPayments = Collections2.filter(payments, new Predicate<PaymentModelDao>() {
+
+            @Override
+            public boolean apply(PaymentModelDao input) {
+                return (input.getPaymentStatus() != PaymentStatus.SUCCESS &&
+                        input.getPaymentStatus() != PaymentStatus.PAYMENT_FAILURE &&
+                        input.getPaymentStatus() != PaymentStatus.AUTO_PAY_OFF);
+            }
+        });
+        if (badPayments.size() > 0) {
+
+            if (!isInstantPayment) {
+                Joiner joiner = Joiner.on(", ");
+                joiner.join(Collections2.transform(badPayments, new Function<PaymentModelDao, String>() {
+
+                    @Override
+                    public String apply(PaymentModelDao input) {
+                        return String.format("%s [%s]", input.getId(), input.getPaymentStatus());
+                    }
+                }));
+                log.warn(String.format("Setting account %s into AUTO_PAY_OFF because of bad payments : %s"), accountId, joiner.toString());
+                try {
+                    tagUserApi.addTag(accountId, ObjectType.ACCOUNT, ControlTagType.AUTO_PAY_OFF.toTagDefinition(), context);
+                } catch (TagApiException e) {
+                    log.error("Failed to add AUTO_PAY_OFF on account " + accountId, e);
+                    throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, "Failed to add AUTO_PAY_OFF on account " + accountId);
+                }
+            }
+            return true;
+        } else {
+            return false;
+        }
+    }
+
 
 
     private BigDecimal getAndValidatePaymentAmount(final Invoice invoice, final BigDecimal inputAmount, final boolean isInstantPayment)
@@ -351,18 +402,18 @@ public class PaymentProcessor extends ProcessorBase {
     private Payment processNewPaymentForAutoPayOffWithAccountLocked(final Account account, final Invoice invoice, final BigDecimal requestedAmount, final CallContext context)
     throws PaymentApiException {
 
-    final PaymentStatus paymentStatus =  PaymentStatus.AUTO_PAY_OFF;
+        final PaymentStatus paymentStatus =  PaymentStatus.AUTO_PAY_OFF;
 
-    final PaymentModelDao paymentInfo = new PaymentModelDao(account.getId(), invoice.getId(), account.getPaymentMethodId(), requestedAmount, invoice.getCurrency(), invoice.getTargetDate(), paymentStatus);
-    final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(account.getId(), invoice.getId(), paymentInfo.getId(), paymentStatus, clock.getUTCNow(), requestedAmount);
+        final PaymentModelDao paymentInfo = new PaymentModelDao(account.getId(), invoice.getId(), account.getPaymentMethodId(), requestedAmount, invoice.getCurrency(), invoice.getTargetDate(), paymentStatus);
+        final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(account.getId(), invoice.getId(), paymentInfo.getId(), paymentStatus, clock.getUTCNow(), requestedAmount);
 
-    paymentDao.insertPaymentWithAttempt(paymentInfo, attempt, context);
-    return new DefaultPayment(paymentInfo, Collections.singletonList(attempt));
-}
+        paymentDao.insertPaymentWithAttempt(paymentInfo, attempt, context);
+        return new DefaultPayment(paymentInfo, Collections.singletonList(attempt));
+    }
 
 
     private Payment processNewPaymentWithAccountLocked(final PaymentPluginApi plugin, final Account account, final Invoice invoice,
-                                                       final BigDecimal requestedAmount, final boolean isInstantPayment, final CallContext context) throws PaymentApiException {
+            final BigDecimal requestedAmount, final boolean isInstantPayment, final CallContext context) throws PaymentApiException {
 
 
         final PaymentModelDao payment = new PaymentModelDao(account.getId(), invoice.getId(), account.getPaymentMethodId(), requestedAmount.setScale(2, RoundingMode.HALF_EVEN), invoice.getCurrency(), invoice.getTargetDate());
@@ -401,11 +452,11 @@ public class PaymentProcessor extends ProcessorBase {
 
                 payment = paymentDao.getPayment(paymentInput.getId());
                 invoicePaymentApi.notifyOfPayment(invoice.getId(),
-                                                  payment.getAmount(),
-                                                  paymentStatus == PaymentStatus.SUCCESS ? payment.getCurrency() : null,
-                                                  payment.getId(),
-                                                  payment.getEffectiveDate(),
-                                                  context);
+                        payment.getAmount(),
+                        paymentStatus == PaymentStatus.SUCCESS ? payment.getCurrency() : null,
+                                payment.getId(),
+                                payment.getEffectiveDate(),
+                                context);
 
                 // Create Bus event
                 event = new DefaultPaymentInfoEvent(account.getId(),
