@@ -66,6 +66,15 @@ public abstract class ProcessorBase {
         this.executor = executor;
     }
 
+    protected PaymentPluginApi getPaymentProviderPlugin(final UUID paymentMethodId) throws PaymentApiException {
+        final PaymentMethodModelDao methodDao = paymentDao.getPaymentMethod(paymentMethodId);
+        if (methodDao == null) {
+            log.error("PaymentMethod dpes not exist", paymentMethodId);
+            throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, paymentMethodId);
+        }
+        return pluginRegistry.getPlugin(methodDao.getPluginName());
+    }
+
 
     protected PaymentPluginApi getPaymentProviderPlugin(final String accountKey)
             throws AccountApiException, PaymentApiException {
@@ -79,20 +88,11 @@ public abstract class ProcessorBase {
     }
 
     protected PaymentPluginApi getPaymentProviderPlugin(final Account account) throws PaymentApiException {
-        String paymentProviderName = null;
-        if (account != null) {
-            final UUID paymentMethodId = account.getPaymentMethodId();
-            if (paymentMethodId == null) {
-                throw new PaymentApiException(ErrorCode.PAYMENT_NO_DEFAULT_PAYMENT_METHOD, account.getId());
-            }
-            final PaymentMethodModelDao methodDao = paymentDao.getPaymentMethod(paymentMethodId);
-            if (methodDao == null) {
-                log.error("Account {} has a non existent default payment method {}!!!", account.getId(), paymentMethodId);
-                throw new PaymentApiException(ErrorCode.PAYMENT_NO_DEFAULT_PAYMENT_METHOD, account.getId());
-            }
-            paymentProviderName = methodDao.getPluginName();
+        final UUID paymentMethodId = account.getPaymentMethodId();
+        if (paymentMethodId == null) {
+            throw new PaymentApiException(ErrorCode.PAYMENT_NO_DEFAULT_PAYMENT_METHOD, account.getId());
         }
-        return pluginRegistry.getPlugin(paymentProviderName);
+        return getPaymentProviderPlugin(paymentMethodId);
     }
 
     protected void postPaymentEvent(final BusEvent ev, final UUID accountId) {

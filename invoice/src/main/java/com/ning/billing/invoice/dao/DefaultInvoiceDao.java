@@ -305,13 +305,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
                     throw new InvoiceApiException(ErrorCode.INVOICE_PAYMENT_BY_ATTEMPT_NOT_FOUND, paymentId);
                 }
                 final BigDecimal maxRefundAmount = payment.getAmount() == null ? BigDecimal.ZERO : payment.getAmount();
-                final BigDecimal requestedAmount = amount == null ? maxRefundAmount : amount;
-                if (requestedAmount.compareTo(BigDecimal.ZERO) >= 0) {
-                    throw new InvoiceApiException(ErrorCode.REFUND_AMOUNT_IS_POSITIVE);
-                }
-
-                // Now that we checked signs, let's work with positive numbers, this makes things simpler
-                final BigDecimal requestedPositiveAmount = requestedAmount.negate();
+                final BigDecimal requestedPositiveAmount = amount == null ? maxRefundAmount : amount;
                 if (requestedPositiveAmount.compareTo(maxRefundAmount) > 0) {
                     throw new InvoiceApiException(ErrorCode.REFUND_AMOUNT_TOO_HIGH, requestedPositiveAmount, maxRefundAmount);
                 }

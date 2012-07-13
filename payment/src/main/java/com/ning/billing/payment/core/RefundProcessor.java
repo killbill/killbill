@@ -44,6 +44,7 @@ import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.payment.api.Refund;
 import com.ning.billing.payment.dao.PaymentAttemptModelDao;
 import com.ning.billing.payment.dao.PaymentDao;
+import com.ning.billing.payment.dao.PaymentModelDao;
 import com.ning.billing.payment.dao.RefundModelDao;
 import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
 import com.ning.billing.payment.plugin.api.PaymentPluginApi;
@@ -89,11 +90,11 @@ public class RefundProcessor extends ProcessorBase {
             public Refund doOperation() throws PaymentApiException {
                 try {
 
-                    final PaymentAttemptModelDao successfulAttempt = getPaymentAttempt(paymentId);
-                    if (successfulAttempt == null) {
+                    final PaymentModelDao payment = paymentDao.getPayment(paymentId);
+                    if (payment == null) {
                         throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_SUCCESS_PAYMENT, paymentId);
                     }
-                    if (successfulAttempt.getRequestedAmount().compareTo(refundAmount) < 0) {
+                    if (payment.getAmount().compareTo(refundAmount) < 0) {
                         throw new PaymentApiException(ErrorCode.PAYMENT_REFUND_AMOUNT_TOO_LARGE);
                     }
 
@@ -102,7 +103,9 @@ public class RefundProcessor extends ProcessorBase {
                     RefundModelDao refundInfo = null;
                     List<RefundModelDao> existingRefunds = paymentDao.getRefundsForPayment(paymentId);
                     for (RefundModelDao cur : existingRefunds) {
-                        if (cur.getAmount().compareTo(refundAmount) == 0) {
+
+                        final BigDecimal existingPositiveAmount = cur.getAmount().negate();
+                        if (existingPositiveAmount.compareTo(refundAmount) == 0) {
                             if (cur.getRefundStatus() == RefundStatus.CREATED) {
                                 if (refundInfo == null) {
                                     refundInfo = cur;
@@ -117,12 +120,14 @@ public class RefundProcessor extends ProcessorBase {
                         paymentDao.insertRefund(refundInfo, context);
                     }
 
-                    final PaymentPluginApi plugin = getPaymentProviderPlugin(account);
+                    final PaymentPluginApi plugin = getPaymentProviderPlugin(payment.getPaymentMethodId());
                     int nbExistingRefunds = plugin.getNbRefundForPaymentAmount(account, paymentId, refundAmount);
+                    log.info(String.format("STEPH debug : found %d pluginRefunds for paymentId %s and amount %s", nbExistingRefunds, paymentId, refundAmount));
+
                     if (nbExistingRefunds > foundPluginCompletedRefunds) {
                         log.info("Found existing plugin refund for paymentId {}, skip plugin", paymentId);
                     } else {
-                        // If there is no such existng refund we create it
+                        // If there is no such existing refund we create it
                         plugin.processRefund(account, paymentId, refundAmount);
                     }
                     paymentDao.updateRefundStatus(refundInfo.getId(), RefundStatus.PLUGIN_COMPLETED, context);
