@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.api;
 
 import java.util.Iterator;
@@ -23,14 +24,14 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Joiner;
-import com.google.common.eventbus.Subscribe;
 import com.ning.billing.entitlement.api.timeline.RepairEntitlementEvent;
 import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.invoice.api.InvoiceCreationEvent;
-import com.ning.billing.invoice.api.InvoiceEvent;
 import com.ning.billing.payment.api.PaymentErrorEvent;
 import com.ning.billing.payment.api.PaymentInfoEvent;
+
+import com.google.common.base.Joiner;
+import com.google.common.eventbus.Subscribe;
 
 public class TestApiListener {
 
@@ -76,14 +77,14 @@ public class TestApiListener {
 
     @Subscribe
     public void handleEntitlementEvents(final RepairEntitlementEvent event) {
-        log.info(String.format("TestApiListener Got RepairEntitlementEvent event %s", event.toString()));
+        log.info(String.format("Got RepairEntitlementEvent event %s", event.toString()));
         assertEqualsNicely(NextEvent.REPAIR_BUNDLE);
         notifyIfStackEmpty();
     }
 
     @Subscribe
     public void handleEntitlementEvents(final EffectiveSubscriptionEvent eventEffective) {
-        log.info(String.format("TestApiListener Got subscription event %s", eventEffective.toString()));
+        log.info(String.format("Got subscription event %s", eventEffective.toString()));
         switch (eventEffective.getTransitionType()) {
             case MIGRATE_ENTITLEMENT:
                 assertEqualsNicely(NextEvent.MIGRATE_ENTITLEMENT);
@@ -124,21 +125,21 @@ public class TestApiListener {
 
     @Subscribe
     public void handleInvoiceEvents(final InvoiceCreationEvent event) {
-        log.info(String.format("TestApiListener Got Invoice event %s", event.toString()));
+        log.info(String.format("Got Invoice event %s", event.toString()));
         assertEqualsNicely(NextEvent.INVOICE);
         notifyIfStackEmpty();
     }
 
     @Subscribe
     public void handlePaymentEvents(final PaymentInfoEvent event) {
-        log.info(String.format("TestApiListener Got PaymentInfo event %s", event.toString()));
+        log.info(String.format("Got PaymentInfo event %s", event.toString()));
         assertEqualsNicely(NextEvent.PAYMENT);
         notifyIfStackEmpty();
     }
 
     @Subscribe
     public void handlePaymentErrorEvents(final PaymentErrorEvent event) {
-        log.info(String.format("TestApiListener Got PaymentError event %s", event.toString()));
+        log.info(String.format("Got PaymentError event %s", event.toString()));
         assertEqualsNicely(NextEvent.PAYMENT_ERROR);
         notifyIfStackEmpty();
     }
@@ -161,7 +162,7 @@ public class TestApiListener {
         synchronized (this) {
             final Joiner joiner = Joiner.on(" ");
             nextExpectedEvent.add(next);
-            log.info("TestListener stacking expected event {}, got [{}]", next, joiner.join(nextExpectedEvent));
+            log.info("Stacking expected event {}, got [{}]", next, joiner.join(nextExpectedEvent));
             completed = false;
         }
     }
@@ -217,18 +218,18 @@ public class TestApiListener {
                     it.remove();
                     foundIt = true;
                     if (!nonExpectedMode) {
-                        log.info("TestApiListener found event {}. Yeah!", received);
+                        log.info("Found expected event {}. Yeah!", received);
                     } else {
-                        log.error("TestApiListener found non expected event {}. Boohh! ", received);
+                        log.error("Found non expected event {}. Boohh! ", received);
                     }
                     break;
                 }
             }
             if (!foundIt && !nonExpectedMode) {
                 final Joiner joiner = Joiner.on(" ");
-                log.error("TestApiListener Received event " + received + "; expecting " + joiner.join(nextExpectedEvent));
+                log.error("Received unexpected event " + received + "; remaining expected events [" + joiner.join(nextExpectedEvent) + "]");
                 if (testStatus != null) {
-                    testStatus.failed("TestApiListener [ApiListenerStatus]: Received event " + received + "; expecting " + joiner.join(nextExpectedEvent));
+                    testStatus.failed("TestApiListener [ApiListenerStatus]: Received unexpected event " + received + "; remaining expected events [" + joiner.join(nextExpectedEvent) + "]");
                 }
             }
         }
