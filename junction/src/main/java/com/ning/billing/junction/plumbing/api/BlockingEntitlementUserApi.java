@@ -20,9 +20,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
 
 import com.google.inject.Inject;
+
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
@@ -97,8 +100,7 @@ public class BlockingEntitlementUserApi implements EntitlementUserApi {
     }
 
     @Override
-    public List<SubscriptionStatusDryRun> getDryRunChangePlanStatus(
-            final UUID subscriptionId, final String productName, final DateTime requestedDate)
+    public List<SubscriptionStatusDryRun> getDryRunChangePlanStatus(final UUID subscriptionId, @Nullable final String productName, final DateTime requestedDate)
             throws EntitlementUserApiException {
         return entitlementUserApi.getDryRunChangePlanStatus(subscriptionId, productName, requestedDate);
     }
