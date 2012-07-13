@@ -133,7 +133,7 @@ public class RefundProcessor extends ProcessorBase {
 
                     final PaymentPluginApi plugin = getPaymentProviderPlugin(payment.getPaymentMethodId());
                     int nbExistingRefunds = plugin.getNbRefundForPaymentAmount(account, paymentId, refundAmount);
-                    log.info(String.format("STEPH debug : found %d pluginRefunds for paymentId %s and amount %s", nbExistingRefunds, paymentId, refundAmount));
+                    log.debug(String.format("found %d pluginRefunds for paymentId %s and amount %s", nbExistingRefunds, paymentId, refundAmount));
 
                     if (nbExistingRefunds > foundPluginCompletedRefunds) {
                         log.info("Found existing plugin refund for paymentId {}, skip plugin", paymentId);
