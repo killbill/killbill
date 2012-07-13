@@ -29,7 +29,6 @@ CREATE TABLE accounts (
 ) ENGINE=innodb;
 CREATE UNIQUE INDEX accounts_id ON accounts(id);
 CREATE UNIQUE INDEX accounts_external_key ON accounts(external_key);
-CREATE UNIQUE INDEX accounts_email ON accounts(email);
 
 DROP TABLE IF EXISTS account_history;
 CREATE TABLE account_history (
