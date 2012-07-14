@@ -21,7 +21,6 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Date;
@@ -29,6 +28,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.Bind;
@@ -50,12 +50,14 @@ import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextBinder;
 import com.ning.billing.util.dao.AuditSqlDao;
+import com.ning.billing.util.dao.MapperBase;
 import com.ning.billing.util.dao.UuidMapper;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 
 @ExternalizedSqlViaStringTemplate3()
 @RegisterMapper(InvoiceSqlDao.InvoiceMapper.class)
 public interface InvoiceSqlDao extends EntitySqlDao<Invoice>, AuditSqlDao, Transactional<InvoiceSqlDao>, Transmogrifier, CloseMe {
+
     @Override
     @SqlUpdate
     void create(@InvoiceBinder Invoice invoice, @CallContextBinder final CallContext context);
@@ -77,12 +79,13 @@ public interface InvoiceSqlDao extends EntitySqlDao<Invoice>, AuditSqlDao, Trans
     @RegisterMapper(UuidMapper.class)
     UUID getInvoiceIdByPaymentId(@Bind("paymentId") final String paymentId);
 
-
     @BindingAnnotation(InvoiceBinder.InvoiceBinderFactory.class)
     @Retention(RetentionPolicy.RUNTIME)
     @Target({ElementType.PARAMETER})
     public @interface InvoiceBinder {
+
         public static class InvoiceBinderFactory implements BinderFactory {
+
             @Override
             public Binder<InvoiceBinder, Invoice> build(final Annotation annotation) {
                 return new Binder<InvoiceBinder, Invoice>() {
@@ -100,14 +103,15 @@ public interface InvoiceSqlDao extends EntitySqlDao<Invoice>, AuditSqlDao, Trans
         }
     }
 
-    public static class InvoiceMapper implements ResultSetMapper<Invoice> {
+    public static class InvoiceMapper extends MapperBase implements ResultSetMapper<Invoice> {
+
         @Override
         public Invoice map(final int index, final ResultSet result, final StatementContext context) throws SQLException {
             final UUID id = UUID.fromString(result.getString("id"));
             final UUID accountId = UUID.fromString(result.getString("account_id"));
             final int invoiceNumber = result.getInt("invoice_number");
-            final DateTime invoiceDate = new DateTime(result.getTimestamp("invoice_date"));
-            final DateTime targetDate = new DateTime(result.getTimestamp("target_date"));
+            final LocalDate invoiceDate = getDate(result, "invoice_date");
+            final LocalDate targetDate = getDate(result, "target_date");
             final Currency currency = Currency.valueOf(result.getString("currency"));
             final boolean isMigrationInvoice = result.getBoolean("migrated");
 

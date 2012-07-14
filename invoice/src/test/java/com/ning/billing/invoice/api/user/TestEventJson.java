@@ -19,7 +19,7 @@ package com.ning.billing.invoice.api.user;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -30,29 +30,24 @@ import com.ning.billing.invoice.api.NullInvoiceEvent;
 import com.ning.billing.util.jackson.ObjectMapper;
 
 public class TestEventJson extends InvoiceTestSuite {
-    private final ObjectMapper mapper = new ObjectMapper();
+
+    private static final ObjectMapper mapper = new ObjectMapper();
 
     @Test(groups = "fast")
     public void testInvoiceCreationEvent() throws Exception {
-
-        final InvoiceCreationEvent e = new DefaultInvoiceCreationEvent(UUID.randomUUID(), UUID.randomUUID(), new BigDecimal(12.0), Currency.USD, new DateTime(), UUID.randomUUID());
-
+        final InvoiceCreationEvent e = new DefaultInvoiceCreationEvent(UUID.randomUUID(), UUID.randomUUID(), new BigDecimal(12.0), Currency.USD, UUID.randomUUID());
         final String json = mapper.writeValueAsString(e);
 
-        final Class<?> claz = Class.forName(DefaultInvoiceCreationEvent.class.getName());
-        final Object obj = mapper.readValue(json, claz);
-        Assert.assertTrue(obj.equals(e));
+        final Object obj = mapper.readValue(json, DefaultInvoiceCreationEvent.class);
+        Assert.assertEquals(obj, e);
     }
 
     @Test(groups = "fast")
     public void testEmptyInvoiceEvent() throws Exception {
-
-        final NullInvoiceEvent e = new DefaultNullInvoiceEvent(UUID.randomUUID(), new DateTime(), UUID.randomUUID());
-
+        final NullInvoiceEvent e = new DefaultNullInvoiceEvent(UUID.randomUUID(), new LocalDate(), UUID.randomUUID());
         final String json = mapper.writeValueAsString(e);
 
-        final Class<?> claz = Class.forName(DefaultNullInvoiceEvent.class.getName());
-        final Object obj = mapper.readValue(json, claz);
-        Assert.assertTrue(obj.equals(e));
+        final Object obj = mapper.readValue(json, DefaultNullInvoiceEvent.class);
+        Assert.assertEquals(obj, e);
     }
 }

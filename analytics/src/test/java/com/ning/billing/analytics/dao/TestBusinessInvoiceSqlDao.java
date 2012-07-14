@@ -20,7 +20,7 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
 import org.skife.jdbi.v2.IDBI;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
@@ -29,8 +29,13 @@ import org.testng.annotations.Test;
 import com.ning.billing.analytics.AnalyticsTestSuiteWithEmbeddedDB;
 import com.ning.billing.analytics.model.BusinessInvoice;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.clock.DefaultClock;
 
 public class TestBusinessInvoiceSqlDao extends AnalyticsTestSuiteWithEmbeddedDB {
+
+    private final Clock clock = new DefaultClock();
+
     private BusinessInvoiceSqlDao invoiceSqlDao;
 
     @BeforeMethod(groups = "slow")
@@ -104,11 +109,11 @@ public class TestBusinessInvoiceSqlDao extends AnalyticsTestSuiteWithEmbeddedDB 
         final BigDecimal amountCredited = BigDecimal.ONE;
         final BigDecimal amountPaid = BigDecimal.TEN;
         final BigDecimal balance = BigDecimal.valueOf(123L);
-        final DateTime createdDate = new DateTime(DateTimeZone.UTC);
+        final DateTime createdDate = clock.getUTCNow();
         final Currency currency = Currency.MXN;
-        final DateTime invoiceDate = new DateTime(DateTimeZone.UTC);
-        final DateTime targetDate = new DateTime(DateTimeZone.UTC);
-        final DateTime updatedDate = new DateTime(DateTimeZone.UTC);
+        final LocalDate invoiceDate = clock.getUTCToday();
+        final LocalDate targetDate = clock.getUTCToday();
+        final DateTime updatedDate = clock.getUTCNow();
 
         return new BusinessInvoice(accountId, accountKey, amountCharged, amountCredited, amountPaid, balance,
                                    createdDate, currency, invoiceDate, invoiceId, 12, targetDate, updatedDate);

@@ -2,11 +2,12 @@ package com.ning.billing.jaxrs.json;
 
 import java.math.BigDecimal;
 
-import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
+
+import com.ning.billing.invoice.api.Invoice;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.ning.billing.invoice.api.Invoice;
 
 /*
  * Copyright 2010-2011 Ning, Inc.
@@ -25,6 +26,7 @@ import com.ning.billing.invoice.api.Invoice;
  */
 
 public class InvoiceJsonWithBundleKeys extends InvoiceJsonSimple {
+
     private final String bundleKeys;
 
     public InvoiceJsonWithBundleKeys() {
@@ -34,16 +36,16 @@ public class InvoiceJsonWithBundleKeys extends InvoiceJsonSimple {
 
     @JsonCreator
     public InvoiceJsonWithBundleKeys(@JsonProperty("amount") final BigDecimal amount,
-            @JsonProperty("cba") final BigDecimal cba,
-            @JsonProperty("creditAdj") final BigDecimal creditAdj,
-            @JsonProperty("refundAdj") final BigDecimal refundAdj,
-            @JsonProperty("invoiceId") final String invoiceId,
-            @JsonProperty("invoiceDate") final DateTime invoiceDate,
-            @JsonProperty("targetDate") final DateTime targetDate,
-            @JsonProperty("invoiceNumber") final String invoiceNumber,
-            @JsonProperty("balance") final BigDecimal balance,
-            @JsonProperty("accountId") final String accountId,
-            @JsonProperty("externalBundleKeys") final String bundleKeys) {
+                                     @JsonProperty("cba") final BigDecimal cba,
+                                     @JsonProperty("creditAdj") final BigDecimal creditAdj,
+                                     @JsonProperty("refundAdj") final BigDecimal refundAdj,
+                                     @JsonProperty("invoiceId") final String invoiceId,
+                                     @JsonProperty("invoiceDate") final LocalDate invoiceDate,
+                                     @JsonProperty("targetDate") final LocalDate targetDate,
+                                     @JsonProperty("invoiceNumber") final String invoiceNumber,
+                                     @JsonProperty("balance") final BigDecimal balance,
+                                     @JsonProperty("accountId") final String accountId,
+                                     @JsonProperty("externalBundleKeys") final String bundleKeys) {
         super(amount, cba, creditAdj, refundAdj, invoiceId, invoiceDate, targetDate, invoiceNumber, balance, accountId);
         this.bundleKeys = bundleKeys;
     }

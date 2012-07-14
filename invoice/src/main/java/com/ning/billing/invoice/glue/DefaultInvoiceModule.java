@@ -18,7 +18,6 @@ package com.ning.billing.invoice.glue;
 
 import org.skife.config.ConfigurationObjectFactory;
 
-import com.google.inject.AbstractModule;
 import com.ning.billing.config.InvoiceConfig;
 import com.ning.billing.glue.InvoiceModule;
 import com.ning.billing.invoice.InvoiceListener;
@@ -44,7 +43,10 @@ import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.invoice.notification.NullInvoiceNotifier;
 import com.ning.billing.util.template.translation.TranslatorConfig;
 
+import com.google.inject.AbstractModule;
+
 public class DefaultInvoiceModule extends AbstractModule implements InvoiceModule {
+
     InvoiceConfig config;
 
     protected void installInvoiceDao() {

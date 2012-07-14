@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.Locale;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
 import org.mockito.Mockito;
 import org.skife.config.ConfigurationObjectFactory;
 import org.testng.Assert;
@@ -88,8 +90,8 @@ public class TestHtmlInvoiceGenerator extends InvoiceTestSuite {
     }
 
     private Invoice createInvoice() {
-        final DateTime startDate = new DateTime().minusMonths(1);
-        final DateTime endDate = new DateTime();
+        final LocalDate startDate = new LocalDate(new DateTime().minusMonths(1), DateTimeZone.UTC);
+        final LocalDate endDate = new LocalDate(DateTimeZone.UTC);
 
         final BigDecimal price1 = new BigDecimal("29.95");
         final BigDecimal price2 = new BigDecimal("59.95");
@@ -109,7 +111,8 @@ public class TestHtmlInvoiceGenerator extends InvoiceTestSuite {
         return dummyInvoice;
     }
 
-    private InvoiceItem createInvoiceItem(final BigDecimal amount, final String networkName, final DateTime startDate, final DateTime endDate, final String planName) {
+    private InvoiceItem createInvoiceItem(final BigDecimal amount, final String networkName, final LocalDate startDate,
+                                          final LocalDate endDate, final String planName) {
         final InvoiceItem item = Mockito.mock(InvoiceItem.class);
         Mockito.when(item.getAmount()).thenReturn(amount);
         Mockito.when(item.getStartDate()).thenReturn(startDate);

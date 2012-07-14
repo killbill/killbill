@@ -22,8 +22,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
 import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -205,7 +208,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     }
 
     protected void verifyTestResult(final UUID accountId, final UUID subscriptionId,
-                                    final DateTime startDate, final DateTime endDate,
+                                    final DateTime startDate, @Nullable final DateTime endDate,
                                     final BigDecimal amount, final DateTime chargeThroughDate,
                                     final int totalInvoiceItemCount) throws EntitlementUserApiException {
         final SubscriptionData subscription = subscriptionDataFromSubscription(entitlementUserApi.getSubscriptionFromId(subscriptionId));
@@ -219,12 +222,10 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
         boolean wasFound = false;
 
-        // Make sure to round the dates in the comparisons as the invoice items dates are rounded
-        final DateTime roundedStartDate = InvoiceDateUtils.roundDateTimeToDate(startDate, testTimeZone);
-        final DateTime roundedEndDate = InvoiceDateUtils.roundDateTimeToDate(endDate, testTimeZone);
+        // We implicitly assume here that the account timezone is the same as the one for startDate/endDate
         for (final InvoiceItem item : invoiceItems) {
-            if (item.getStartDate().compareTo(roundedStartDate) == 0) {
-                if (item.getEndDate().compareTo(roundedEndDate) == 0) {
+            if (item.getStartDate().compareTo(new LocalDate(startDate)) == 0) {
+                if ((item.getEndDate() == null && endDate == null) || (item.getEndDate() != null && new LocalDate(endDate).compareTo(item.getEndDate()) == 0)) {
                     if (item.getAmount().compareTo(amount) == 0) {
                         wasFound = true;
                         break;
@@ -240,9 +241,10 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         final DateTime ctd = subscription.getChargedThroughDate();
         assertNotNull(ctd);
         log.info("Checking CTD: " + ctd.toString() + "; clock is " + clock.getUTCNow().toString());
-        assertTrue(clock.getUTCNow().isBefore(ctd));
+        // Either the ctd is today (start of the trial) or the clock is strictly before the CTD
+        assertTrue(clock.getUTCToday().compareTo(new LocalDate(ctd)) == 0 || clock.getUTCNow().isBefore(ctd));
         // The CTD is rounded too
-        assertTrue(ctd.compareTo(InvoiceDateUtils.roundDateTimeToDate(chargeThroughDate, testTimeZone)) == 0);
+        assertTrue(ctd.compareTo(new DateTime(chargeThroughDate.getYear(), chargeThroughDate.getMonthOfYear(), chargeThroughDate.getDayOfMonth(), 0, 0, testTimeZone)) == 0);
     }
 
     protected SubscriptionData subscriptionDataFromSubscription(final Subscription sub) {

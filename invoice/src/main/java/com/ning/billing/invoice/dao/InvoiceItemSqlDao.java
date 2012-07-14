@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.invoice.dao;
 
 import java.lang.annotation.Annotation;
@@ -26,7 +27,7 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.Bind;
@@ -54,11 +55,9 @@ import com.ning.billing.util.callcontext.CallContextBinder;
 import com.ning.billing.util.dao.MapperBase;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 
-
 @ExternalizedSqlViaStringTemplate3()
 @RegisterMapper(InvoiceItemSqlDao.InvoiceItemSqlDaoMapper.class)
 public interface InvoiceItemSqlDao extends EntitySqlDao<InvoiceItem> {
-
 
     @SqlQuery
     List<Long> getRecordIds(@Bind("invoiceId") final String invoiceId);
@@ -83,7 +82,9 @@ public interface InvoiceItemSqlDao extends EntitySqlDao<InvoiceItem> {
     @Retention(RetentionPolicy.RUNTIME)
     @Target({ElementType.PARAMETER})
     public @interface InvoiceItemBinder {
+
         public static class InvoiceItemBinderFactory implements BinderFactory {
+
             @Override
             public Binder build(final Annotation annotation) {
                 return new Binder<InvoiceItemBinder, InvoiceItem>() {
@@ -110,6 +111,7 @@ public interface InvoiceItemSqlDao extends EntitySqlDao<InvoiceItem> {
     }
 
     public static class InvoiceItemSqlDaoMapper extends MapperBase implements ResultSetMapper<InvoiceItem> {
+
         @Override
         public InvoiceItem map(final int index, final ResultSet result, final StatementContext context) throws SQLException {
             final UUID id = getUUID(result, "id");
@@ -120,35 +122,35 @@ public interface InvoiceItemSqlDao extends EntitySqlDao<InvoiceItem> {
             final UUID bundleId = getUUID(result, "bundle_id");
             final String planName = result.getString("plan_name");
             final String phaseName = result.getString("phase_name");
-            final DateTime startDate = getDate(result, "start_date");
-            final DateTime endDate = getDate(result, "end_date");
+            final LocalDate startDate = getDate(result, "start_date");
+            final LocalDate endDate = getDate(result, "end_date");
             final BigDecimal amount = result.getBigDecimal("amount");
             final BigDecimal rate = result.getBigDecimal("rate");
             final Currency currency = Currency.valueOf(result.getString("currency"));
             final UUID linkedItemId = getUUID(result, "linked_item_id");
 
             InvoiceItem item = null;
-            switch(type) {
-            case FIXED:
-                item = new FixedPriceInvoiceItem(id, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency);
-                break;
-            case RECURRING:
-                item = new RecurringInvoiceItem(id, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, rate, currency);
-                break;
-            case CBA_ADJ:
-                item = new CreditBalanceAdjInvoiceItem(id, invoiceId, accountId, startDate, amount, currency);
-                break;
-            case CREDIT_ADJ:
-                item = new CreditAdjInvoiceItem(id, invoiceId, accountId, startDate, amount, currency);
-                break;
-            case REFUND_ADJ:
-                item = new RefundAdjInvoiceItem(id, invoiceId, accountId, startDate, amount, currency);
-                break;
-            case REPAIR_ADJ:
-                item = new RepairAdjInvoiceItem(id, invoiceId, accountId, startDate, endDate, amount, currency, linkedItemId);
-                break;
-            default:
-                throw new RuntimeException("Unexpected type of event item " + item);
+            switch (type) {
+                case FIXED:
+                    item = new FixedPriceInvoiceItem(id, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, amount, currency);
+                    break;
+                case RECURRING:
+                    item = new RecurringInvoiceItem(id, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, rate, currency);
+                    break;
+                case CBA_ADJ:
+                    item = new CreditBalanceAdjInvoiceItem(id, invoiceId, accountId, startDate, amount, currency);
+                    break;
+                case CREDIT_ADJ:
+                    item = new CreditAdjInvoiceItem(id, invoiceId, accountId, startDate, amount, currency);
+                    break;
+                case REFUND_ADJ:
+                    item = new RefundAdjInvoiceItem(id, invoiceId, accountId, startDate, amount, currency);
+                    break;
+                case REPAIR_ADJ:
+                    item = new RepairAdjInvoiceItem(id, invoiceId, accountId, startDate, endDate, amount, currency, linkedItemId);
+                    break;
+                default:
+                    throw new RuntimeException("Unexpected type of event item " + item);
             }
             return item;
         }

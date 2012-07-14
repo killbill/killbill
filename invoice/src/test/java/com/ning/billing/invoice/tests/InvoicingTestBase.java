@@ -21,6 +21,7 @@ import java.math.BigDecimal;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -81,8 +82,8 @@ public abstract class InvoicingTestBase extends InvoiceTestSuiteWithEmbeddedDB {
     protected static final BigDecimal THREE_HUNDRED_AND_SIXTY_FIVE = new BigDecimal("365.0").setScale(NUMBER_OF_DECIMALS);
     protected static final BigDecimal THREE_HUNDRED_AND_SIXTY_SIX = new BigDecimal("366.0").setScale(NUMBER_OF_DECIMALS);
 
-    protected DateTime buildDateTime(final int year, final int month, final int day) {
-        return new DateTime(year, month, day, 0, 0, 0, 0);
+    protected LocalDate buildDate(final int year, final int month, final int day) {
+        return new LocalDate(year, month, day);
     }
 
     protected BillingEvent createMockBillingEvent(@Nullable final Account account, final Subscription subscription,

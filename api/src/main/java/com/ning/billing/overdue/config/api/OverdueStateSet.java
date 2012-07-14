@@ -16,7 +16,7 @@
 
 package com.ning.billing.overdue.config.api;
 
-import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.overdue.OverdueApiException;
@@ -28,7 +28,15 @@ public interface OverdueStateSet<T extends Blockable> {
 
     public abstract OverdueState<T> findState(String stateName) throws OverdueApiException;
 
-    public abstract OverdueState<T> calculateOverdueState(BillingState<T> billingState, DateTime now) throws OverdueApiException;
+    /**
+     * Compute an overdue state, given a billing state, at a given day.
+     *
+     * @param billingState the billing state
+     * @param now          the day to use to calculate the overdue state, in the account timezone
+     * @return the overdue state
+     * @throws OverdueApiException
+     */
+    public abstract OverdueState<T> calculateOverdueState(BillingState<T> billingState, LocalDate now) throws OverdueApiException;
 
     public abstract int size();
 }

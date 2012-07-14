@@ -24,10 +24,11 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
@@ -41,8 +42,8 @@ import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceCreationEvent;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceNotifier;
-import com.ning.billing.invoice.api.user.DefaultNullInvoiceEvent;
 import com.ning.billing.invoice.api.user.DefaultInvoiceCreationEvent;
+import com.ning.billing.invoice.api.user.DefaultNullInvoiceEvent;
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.generator.InvoiceDateUtils;
 import com.ning.billing.invoice.generator.InvoiceGenerator;
@@ -60,7 +61,10 @@ import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.globallocker.GlobalLocker.LockerType;
 import com.ning.billing.util.globallocker.LockFailedException;
 
+import com.google.inject.Inject;
+
 public class InvoiceDispatcher {
+
     private static final Logger log = LoggerFactory.getLogger(InvoiceDispatcher.class);
     private static final int NB_LOCK_TRY = 5;
 
@@ -138,8 +142,7 @@ public class InvoiceDispatcher {
         return null;
     }
 
-
-    private Invoice processAccountWithLock(final UUID accountId, final DateTime targetDate,
+    private Invoice processAccountWithLock(final UUID accountId, final DateTime targetDateTime,
                                            final boolean dryRun, final CallContext context) throws InvoiceApiException {
         try {
             final Account account = accountUserApi.getAccountById(accountId);
@@ -152,14 +155,16 @@ public class InvoiceDispatcher {
 
             final Currency targetCurrency = account.getCurrency();
 
+            // All the computations in invoice are performed on days, in the account timezone
+            final LocalDate targetDate = new LocalDate(targetDateTime, account.getTimeZone());
 
-            final Invoice invoice = generator.generateInvoice(accountId, billingEvents, invoices, targetDate, targetCurrency);
+            final Invoice invoice = generator.generateInvoice(accountId, billingEvents, invoices, targetDate, account.getTimeZone(), targetCurrency);
 
             if (invoice == null) {
                 log.info("Generated null invoice.");
                 outputDebugData(billingEvents, invoices);
                 if (!dryRun) {
-                    final BusEvent event = new DefaultNullInvoiceEvent(accountId, clock.getUTCNow(), context.getUserToken());
+                    final BusEvent event = new DefaultNullInvoiceEvent(accountId, clock.getUTCToday(), context.getUserToken());
                     postEvent(event, accountId);
                 }
             } else {
@@ -180,7 +185,7 @@ public class InvoiceDispatcher {
 
                     final InvoiceCreationEvent event = new DefaultInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
                                                                                        invoice.getBalance(), invoice.getCurrency(),
-                                                                                       invoice.getInvoiceDate(), context.getUserToken());
+                                                                                       context.getUserToken());
 
                     postEvent(event, accountId);
                 }
@@ -201,6 +206,7 @@ public class InvoiceDispatcher {
                                         final Collection<InvoiceItem> fixedPriceItems,
                                         final Collection<InvoiceItem> recurringItems,
                                         final CallContext context) {
+        // TODO - this should be handled by entitlement
         final Map<UUID, DateTime> chargeThroughDates = new HashMap<UUID, DateTime>();
         addInvoiceItemsToChargeThroughDates(billCycleDay, chargeThroughDates, fixedPriceItems);
         addInvoiceItemsToChargeThroughDates(billCycleDay, chargeThroughDates, recurringItems);
@@ -227,7 +233,13 @@ public class InvoiceDispatcher {
                                                      final Collection<InvoiceItem> items) {
         for (final InvoiceItem item : items) {
             final UUID subscriptionId = item.getSubscriptionId();
-            final DateTime endDate = item.getEndDate();
+            final DateTime endDate;
+            if (item.getEndDate() != null) {
+                endDate = new DateTime(item.getEndDate().toDateTimeAtStartOfDay(), DateTimeZone.UTC);
+            } else {
+                // item end date is null for fixed price items for instance
+                endDate = new DateTime(item.getStartDate().toDateTimeAtStartOfDay(), DateTimeZone.UTC);
+            }
 
             if (chargeThroughDates.containsKey(subscriptionId)) {
                 if (chargeThroughDates.get(subscriptionId).isBefore(endDate)) {
@@ -240,7 +252,6 @@ public class InvoiceDispatcher {
             }
         }
     }
-
 
     private void outputDebugData(final Collection<BillingEvent> events, final Collection<Invoice> invoices) {
         if (VERBOSE_OUTPUT) {

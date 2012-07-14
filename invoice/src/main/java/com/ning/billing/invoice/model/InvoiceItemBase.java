@@ -16,11 +16,13 @@
 
 package com.ning.billing.invoice.model;
 
-import javax.annotation.Nullable;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
@@ -28,12 +30,11 @@ import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.util.entity.EntityBase;
 
 public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem {
-
     /* Common to all items */
     protected final UUID invoiceId;
     protected final UUID accountId;
-    protected final DateTime startDate;
-    protected final DateTime endDate;
+    protected final LocalDate startDate;
+    protected final LocalDate endDate;
     protected final BigDecimal amount;
     protected final Currency currency;
 
@@ -47,17 +48,16 @@ public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem 
     protected final BigDecimal rate;
 
     /* RepairAdjInvoiceItem */
-   protected final UUID linkedItemId;
-
+    protected final UUID linkedItemId;
 
     @Override
     public String toString() {
         return getInvoiceItemType() + ": [startDate=" + startDate + ", endDate="
-                + endDate + ", amount=" + amount + ", currency=" + currency
-                + ", invoiceId=" + invoiceId
-                + ", subscriptionId=" + subscriptionId + ", planName="
-                + planName + ", phaseName=" + phaseName + ", rate=" + rate
-                + ", linkedItemId=" + linkedItemId + "]";
+               + endDate + ", amount=" + amount + ", currency=" + currency
+               + ", invoiceId=" + invoiceId
+               + ", subscriptionId=" + subscriptionId + ", planName="
+               + planName + ", phaseName=" + phaseName + ", rate=" + rate
+               + ", linkedItemId=" + linkedItemId + "]";
     }
 
     /*
@@ -65,56 +65,53 @@ public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem 
      */
     // No rate and no reversing item
     public InvoiceItemBase(final UUID invoiceId, final UUID accountId, final UUID bundleId, final UUID subscriptionId, final String planName, final String phaseName,
-            final DateTime startDate, final DateTime endDate, final BigDecimal amount, final Currency currency) {
-       this(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, null, currency);
+                           final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final Currency currency) {
+        this(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, null, currency);
 
     }
 
     // With rate but no reversing item
     public InvoiceItemBase(final UUID invoiceId, final UUID accountId, final UUID bundleId, final UUID subscriptionId, final String planName, final String phaseName,
-            final DateTime startDate, final DateTime endDate, final BigDecimal amount, final BigDecimal rate, final Currency currency) {
+                           final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final BigDecimal rate, final Currency currency) {
         this(UUID.randomUUID(), invoiceId, accountId, bundleId, subscriptionId, planName, phaseName,
-                startDate, endDate, amount, rate, currency, null);
+             startDate, endDate, amount, rate, currency, null);
     }
 
     // With  reversing item, no rate
     public InvoiceItemBase(final UUID invoiceId, final UUID accountId, final UUID bundleId, final UUID subscriptionId, final String planName, final String phaseName,
-            final DateTime startDate, final DateTime endDate, final BigDecimal amount, final Currency currency, final UUID reversedItemId) {
+                           final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final Currency currency, final UUID reversedItemId) {
         this(UUID.randomUUID(), invoiceId, accountId, bundleId, subscriptionId, planName, phaseName,
-                startDate, endDate, amount, null, currency, reversedItemId);
+             startDate, endDate, amount, null, currency, reversedItemId);
     }
 
-
-
     /*
-     * CTORs with ID; called from DAO when rehydrating
-     */
+    * CTORs with ID; called from DAO when rehydrating
+    */
     // No rate and no reversing item
     public InvoiceItemBase(final UUID id, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
-            @Nullable final UUID subscriptionId, @Nullable final String planName, @Nullable final String phaseName,
-            final DateTime startDate, final DateTime endDate, final BigDecimal amount, final Currency currency) {
+                           @Nullable final UUID subscriptionId, @Nullable final String planName, @Nullable final String phaseName,
+                           final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final Currency currency) {
         this(id, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, null, currency, null);
     }
 
     // With rate but no reversing item
     public InvoiceItemBase(final UUID id, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
-            @Nullable final UUID subscriptionId, @Nullable final String planName, @Nullable final String phaseName,
-            final DateTime startDate, final DateTime endDate, final BigDecimal amount, final BigDecimal rate, final Currency currency) {
+                           @Nullable final UUID subscriptionId, @Nullable final String planName, @Nullable final String phaseName,
+                           final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final BigDecimal rate, final Currency currency) {
         this(id, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, rate, currency, null);
     }
 
     // With  reversing item, no rate
     public InvoiceItemBase(final UUID id, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
-            @Nullable final UUID subscriptionId, @Nullable final String planName, @Nullable final String phaseName,
-            final DateTime startDate, final DateTime endDate, final BigDecimal amount, final Currency currency, final UUID reversedItemId) {
+                           @Nullable final UUID subscriptionId, @Nullable final String planName, @Nullable final String phaseName,
+                           final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final Currency currency, final UUID reversedItemId) {
         this(id, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, null, currency, reversedItemId);
     }
 
-
     private InvoiceItemBase(final UUID id, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
-            @Nullable final UUID subscriptionId, @Nullable final String planName, @Nullable final String phaseName,
-            final DateTime startDate, final DateTime endDate, final BigDecimal amount, final BigDecimal rate, final Currency currency,
-            UUID reversedItemId) {
+                            @Nullable final UUID subscriptionId, @Nullable final String planName, @Nullable final String phaseName,
+                            final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final BigDecimal rate, final Currency currency,
+                            final UUID reversedItemId) {
         super(id);
         this.invoiceId = invoiceId;
         this.accountId = accountId;
@@ -166,12 +163,12 @@ public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem 
     }
 
     @Override
-    public DateTime getStartDate() {
+    public LocalDate getStartDate() {
         return startDate;
     }
 
     @Override
-    public DateTime getEndDate() {
+    public LocalDate getEndDate() {
         return endDate;
     }
 

@@ -20,6 +20,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.joda.time.Period;
 
 import com.ning.billing.ErrorCode;
@@ -61,11 +62,8 @@ public abstract class DefaultOverdueStateSet<T extends Blockable> extends Valida
         return clearState;
     }
 
-    /* (non-Javadoc)
-     * @see com.ning.billing.catalog.overdue.OverdueBillingState#calculateOverdueState(com.ning.billing.catalog.api.overdue.BillingState, org.joda.time.DateTime)
-     */
     @Override
-    public DefaultOverdueState<T> calculateOverdueState(final BillingState<T> billingState, final DateTime now) throws OverdueApiException {
+    public DefaultOverdueState<T> calculateOverdueState(final BillingState<T> billingState, final LocalDate now) throws OverdueApiException {
         for (final DefaultOverdueState<T> overdueState : getStates()) {
             if (overdueState.getCondition().evaluate(billingState, now)) {
                 return overdueState;

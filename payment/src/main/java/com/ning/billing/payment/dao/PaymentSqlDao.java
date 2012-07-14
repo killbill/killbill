@@ -102,7 +102,7 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, UpdatableEn
             final UUID paymentMethodId = getUUID(rs, "payment_method_id");
             final Integer paymentNumber = rs.getInt("payment_number");
             final BigDecimal amount = rs.getBigDecimal("amount");
-            final DateTime effectiveDate = getDate(rs, "effective_date");
+            final DateTime effectiveDate = getDateTime(rs, "effective_date");
             final Currency currency = Currency.valueOf(rs.getString("currency"));
             final PaymentStatus paymentStatus = PaymentStatus.valueOf(rs.getString("payment_status"));
             final String extPaymentRefId = rs.getString("external_payment_ref_id");

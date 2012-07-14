@@ -19,11 +19,11 @@ package com.ning.billing.invoice.api.migration;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
@@ -38,6 +38,8 @@ import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
+
+import com.google.inject.Inject;
 
 public class DefaultInvoiceMigrationApi implements InvoiceMigrationApi {
     private static final Logger log = LoggerFactory.getLogger(DefaultInvoiceMigrationApi.class);
@@ -54,7 +56,7 @@ public class DefaultInvoiceMigrationApi implements InvoiceMigrationApi {
     }
 
     @Override
-    public UUID createMigrationInvoice(final UUID accountId, final DateTime targetDate, final BigDecimal balance, final Currency currency) {
+    public UUID createMigrationInvoice(final UUID accountId, final LocalDate targetDate, final BigDecimal balance, final Currency currency) {
         final Account account;
         try {
             account = accountUserApi.getAccountById(accountId);
@@ -64,7 +66,7 @@ public class DefaultInvoiceMigrationApi implements InvoiceMigrationApi {
         }
 
         final CallContext context = new DefaultCallContextFactory(clock).createMigrationCallContext("Migration", CallOrigin.INTERNAL, UserType.MIGRATION, clock.getUTCNow(), clock.getUTCNow());
-        final Invoice migrationInvoice = new MigrationInvoice(accountId, clock.getUTCNow(), targetDate, currency);
+        final Invoice migrationInvoice = new MigrationInvoice(accountId, clock.getUTCToday(), targetDate, currency);
         final InvoiceItem migrationInvoiceItem = new MigrationInvoiceItem(migrationInvoice.getId(), accountId, targetDate, balance, currency);
         migrationInvoice.addInvoiceItem(migrationInvoiceItem);
 

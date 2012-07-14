@@ -18,7 +18,7 @@ package com.ning.billing.invoice.tests.inAdvance.annual;
 
 import java.math.BigDecimal;
 
-import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -33,8 +33,8 @@ public class TestProRation extends ProRationInAdvanceTestBase {
 
     @Test(groups = "fast")
     public void testSinglePlan_PrecedingProRation() throws InvalidDateSequenceException {
-        final DateTime startDate = buildDateTime(2011, 1, 31);
-        final DateTime targetDate = buildDateTime(2011, 2, 24);
+        final LocalDate startDate = buildDate(2011, 1, 31);
+        final LocalDate targetDate = buildDate(2011, 2, 24);
 
         final BigDecimal expectedValue = ONE.add(FIFTEEN.divide(THREE_HUNDRED_AND_SIXTY_FIVE, NUMBER_OF_DECIMALS, ROUNDING_METHOD));
         testCalculateNumberOfBillingCycles(startDate, targetDate, 15, expectedValue);
@@ -42,8 +42,8 @@ public class TestProRation extends ProRationInAdvanceTestBase {
 
     @Test(groups = "fast")
     public void testSinglePlan_PrecedingProRation_CrossingYearBoundary() throws InvalidDateSequenceException {
-        final DateTime startDate = buildDateTime(2010, 12, 15);
-        final DateTime targetDate = buildDateTime(2011, 1, 13);
+        final LocalDate startDate = buildDate(2010, 12, 15);
+        final LocalDate targetDate = buildDate(2011, 1, 13);
 
         final BigDecimal expectedValue = ONE.add(TWENTY.divide(THREE_HUNDRED_AND_SIXTY_FIVE, NUMBER_OF_DECIMALS, ROUNDING_METHOD));
         testCalculateNumberOfBillingCycles(startDate, targetDate, 4, expectedValue);
@@ -52,9 +52,9 @@ public class TestProRation extends ProRationInAdvanceTestBase {
     // TODO Test fails, needs to be investigated
     @Test(groups = "fast", enabled=false)
     public void testSinglePlanDoubleProRation() throws InvalidDateSequenceException {
-        final DateTime startDate = buildDateTime(2011, 1, 10);
-        final DateTime endDate = buildDateTime(2012, 3, 4);
-        final DateTime targetDate = buildDateTime(2012, 4, 5);
+        final LocalDate startDate = buildDate(2011, 1, 10);
+        final LocalDate endDate = buildDate(2012, 3, 4);
+        final LocalDate targetDate = buildDate(2012, 4, 5);
 
         final BigDecimal expectedValue = BigDecimal.ZERO;
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 17, expectedValue);

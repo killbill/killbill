@@ -16,13 +16,15 @@
 
 package com.ning.billing.invoice.model;
 
-import javax.annotation.Nullable;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
@@ -35,19 +37,19 @@ public class DefaultInvoice extends EntityBase implements Invoice {
     private final List<InvoicePayment> payments = new ArrayList<InvoicePayment>();
     private final UUID accountId;
     private final Integer invoiceNumber;
-    private final DateTime invoiceDate;
-    private final DateTime targetDate;
+    private final LocalDate invoiceDate;
+    private final LocalDate targetDate;
     private final Currency currency;
     private final boolean migrationInvoice;
 
-    // used to create a new invoice
-    public DefaultInvoice(final UUID accountId, final DateTime invoiceDate, final DateTime targetDate, final Currency currency) {
+    // Used to create a new invoice
+    public DefaultInvoice(final UUID accountId, final LocalDate invoiceDate, final LocalDate targetDate, final Currency currency) {
         this(UUID.randomUUID(), accountId, null, invoiceDate, targetDate, currency, false);
     }
 
-    // used to hydrate invoice from persistence layer
-    public DefaultInvoice(final UUID invoiceId, final UUID accountId, @Nullable final Integer invoiceNumber, final DateTime invoiceDate,
-                          final DateTime targetDate, final Currency currency, final boolean isMigrationInvoice) {
+    // Used to hydrate invoice from persistence layer
+    public DefaultInvoice(final UUID invoiceId, final UUID accountId, @Nullable final Integer invoiceNumber, final LocalDate invoiceDate,
+                          final LocalDate targetDate, final Currency currency, final boolean isMigrationInvoice) {
         super(invoiceId);
         this.accountId = accountId;
         this.invoiceNumber = invoiceNumber;
@@ -124,12 +126,12 @@ public class DefaultInvoice extends EntityBase implements Invoice {
     }
 
     @Override
-    public DateTime getInvoiceDate() {
+    public LocalDate getInvoiceDate() {
         return invoiceDate;
     }
 
     @Override
-    public DateTime getTargetDate() {
+    public LocalDate getTargetDate() {
         return targetDate;
     }
 
@@ -141,24 +143,6 @@ public class DefaultInvoice extends EntityBase implements Invoice {
     @Override
     public boolean isMigrationInvoice() {
         return migrationInvoice;
-    }
-
-    @Override
-    public DateTime getLastPaymentDate() {
-        DateTime lastPaymentDate = null;
-
-        for (final InvoicePayment paymentAttempt : payments) {
-            final DateTime paymentDate = paymentAttempt.getPaymentDate();
-            if (lastPaymentDate == null) {
-                lastPaymentDate = paymentDate;
-            }
-
-            if (lastPaymentDate.isBefore(paymentDate)) {
-                lastPaymentDate = paymentDate;
-            }
-        }
-
-        return lastPaymentDate;
     }
 
     @Override
@@ -196,26 +180,15 @@ public class DefaultInvoice extends EntityBase implements Invoice {
     public BigDecimal getRefundAdjAmount() {
         return invoiceItems.getRefundAdjAmount();
     }
+
     @Override
     public BigDecimal getBalance() {
-        final BigDecimal balance = getChargedAmount().add(getTotalAdjAmount()).add(getCBAAmount()).subtract(getPaidAmount());;
-        return balance;
-    }
-
-    @Override
-    public boolean isDueForPayment(final DateTime targetDate, final int numberOfDays) {
-        if (getBalance().compareTo(BigDecimal.ZERO) == 0) {
-            return false;
-        }
-
-        final DateTime lastPayment = getLastPaymentDate();
-        return (lastPayment == null) || lastPayment.plusDays(numberOfDays).isAfter(targetDate);
+        return getChargedAmount().add(getTotalAdjAmount()).add(getCBAAmount()).subtract(getPaidAmount());
     }
 
     @Override
     public String toString() {
-        return "DefaultInvoice [items=" + invoiceItems + ", payments=" + payments + ", id=" + id + ", accountId=" + accountId + ", invoiceDate=" + invoiceDate + ", targetDate=" + targetDate + ", currency=" + currency + ", amountPaid=" + getPaidAmount() + ", lastPaymentDate=" + getLastPaymentDate() + "]";
+        return "DefaultInvoice [items=" + invoiceItems + ", payments=" + payments + ", id=" + id + ", accountId=" + accountId + ", invoiceDate=" + invoiceDate + ", targetDate=" + targetDate + ", currency=" + currency + ", amountPaid=" + getPaidAmount() + "]";
     }
-
 }
 

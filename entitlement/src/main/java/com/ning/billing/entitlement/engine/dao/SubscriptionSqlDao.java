@@ -96,10 +96,10 @@ public interface SubscriptionSqlDao extends Transactional<SubscriptionSqlDao>, A
             final UUID id = UUID.fromString(r.getString("id"));
             final UUID bundleId = UUID.fromString(r.getString("bundle_id"));
             final ProductCategory category = ProductCategory.valueOf(r.getString("category"));
-            final DateTime bundleStartDate = getDate(r, "bundle_start_date");
-            final DateTime startDate = getDate(r, "start_date");
-            final DateTime ctd = getDate(r, "charged_through_date");
-            final DateTime ptd = getDate(r, "paid_through_date");
+            final DateTime bundleStartDate = getDateTime(r, "bundle_start_date");
+            final DateTime startDate = getDateTime(r, "start_date");
+            final DateTime ctd = getDateTime(r, "charged_through_date");
+            final DateTime ptd = getDateTime(r, "paid_through_date");
             final long activeVersion = r.getLong("active_version");
 
             return new SubscriptionData(new SubscriptionBuilder()

@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -88,15 +89,15 @@ public class TestDefaultInvoiceGeneratorUnit extends InvoicingTestBase {
 
     @Test(groups = "fast")
     public void testRemoveCancellingInvoiceItemsFixedPrice() {
-        final DateTime startDate = clock.getUTCNow();
-        final DateTime endDate = startDate.plusDays(30);
-        final DateTime nextEndDate = startDate.plusMonths(1);
+        final LocalDate startDate = clock.getUTCToday();
+        final LocalDate endDate = startDate.plusDays(30);
+        final LocalDate nextEndDate = startDate.plusMonths(1);
 
         final BigDecimal amount = new BigDecimal("12.00");
         final BigDecimal rate2 = new BigDecimal("14.85");
         final BigDecimal amount2 = rate2;
         final List<InvoiceItem> items = new LinkedList<InvoiceItem>();
-        final InvoiceItem item1 = new FixedPriceInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, currency);
+        final InvoiceItem item1 = new FixedPriceInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, amount, currency);
         items.add(item1);
         items.add(new RepairAdjInvoiceItem(invoiceId, accountId, startDate, endDate, amount.negate(), currency, item1.getId()));
         items.add(new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, endDate, nextEndDate, amount2, rate2, currency));
@@ -109,9 +110,9 @@ public class TestDefaultInvoiceGeneratorUnit extends InvoicingTestBase {
 
     @Test(groups = "fast")
     public void testRemoveCancellingInvoiceItemsRecurringPrice() {
-        final DateTime startDate = clock.getUTCNow();
-        final DateTime endDate = startDate.plusDays(30);
-        final DateTime nextEndDate = startDate.plusMonths(1);
+        final LocalDate startDate = clock.getUTCToday();
+        final LocalDate endDate = startDate.plusDays(30);
+        final LocalDate nextEndDate = startDate.plusMonths(1);
 
         final BigDecimal rate1 = new BigDecimal("12.00");
         final BigDecimal amount1 = rate1;
@@ -131,9 +132,9 @@ public class TestDefaultInvoiceGeneratorUnit extends InvoicingTestBase {
 
     @Test(groups = "fast")
     public void testRemoveDuplicatedInvoiceItemsFixedPrice() {
-        final DateTime startDate = clock.getUTCNow();
-        final DateTime endDate = startDate.plusDays(30);
-        final DateTime nextEndDate = startDate.plusMonths(1);
+        final LocalDate startDate = clock.getUTCToday();
+        final LocalDate endDate = startDate.plusDays(30);
+        final LocalDate nextEndDate = startDate.plusMonths(1);
 
         final BigDecimal amount1 = new BigDecimal("12.00");
 
@@ -143,7 +144,7 @@ public class TestDefaultInvoiceGeneratorUnit extends InvoicingTestBase {
         final BigDecimal amount3 = rate3;
 
         final List<InvoiceItem> existing = new LinkedList<InvoiceItem>();
-        final InvoiceItem item1 = new FixedPriceInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount1, currency);
+        final InvoiceItem item1 = new FixedPriceInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, amount1, currency);
         existing.add(item1);
 
         final List<InvoiceItem> proposed = new LinkedList<InvoiceItem>();
@@ -161,9 +162,9 @@ public class TestDefaultInvoiceGeneratorUnit extends InvoicingTestBase {
 
     @Test(groups = "fast")
     public void testRemoveDuplicatedInvoiceItemsRecurringPrice() {
-        final DateTime startDate = clock.getUTCNow();
-        final DateTime endDate = startDate.plusDays(30);
-        final DateTime nextEndDate = startDate.plusMonths(1);
+        final LocalDate startDate = clock.getUTCToday();
+        final LocalDate endDate = startDate.plusDays(30);
+        final LocalDate nextEndDate = startDate.plusMonths(1);
 
         final BigDecimal rate1 = new BigDecimal("12.00");
         final BigDecimal amount1 = rate1;
@@ -191,9 +192,9 @@ public class TestDefaultInvoiceGeneratorUnit extends InvoicingTestBase {
     // STEPH same as testRemoveCancellingInvoiceItemsFixedPrice: should we have one for FixedPrice?
     @Test(groups = "fast")
     public void testAddRepairedItemsItemsRecurringPrice() {
-        final DateTime startDate = clock.getUTCNow();
-        final DateTime endDate = startDate.plusDays(30);
-        final DateTime nextEndDate = startDate.plusMonths(1);
+        final LocalDate startDate = clock.getUTCToday();
+        final LocalDate endDate = startDate.plusDays(30);
+        final LocalDate nextEndDate = startDate.plusMonths(1);
 
         final BigDecimal rate1 = new BigDecimal("12.00");
         final BigDecimal amount1 = rate1;
@@ -228,10 +229,9 @@ public class TestDefaultInvoiceGeneratorUnit extends InvoicingTestBase {
 
     @Test(groups = "fast")
     public void testGenerateCreditsForPastRepairedInvoices() {
-
-        final DateTime startDate = clock.getUTCNow();
-        final DateTime endDate = startDate.plusDays(30);
-        final DateTime nextEndDate = startDate.plusMonths(1);
+        final LocalDate startDate = clock.getUTCToday();
+        final LocalDate endDate = startDate.plusDays(30);
+        final LocalDate nextEndDate = startDate.plusMonths(1);
 
         final BigDecimal rate1 = new BigDecimal("10.00");
         final BigDecimal amount1 = rate1;
@@ -287,9 +287,9 @@ public class TestDefaultInvoiceGeneratorUnit extends InvoicingTestBase {
     }
 
     private void testConsumeCreditInternal(final BigDecimal newRate, final BigDecimal expectedNewCba) {
-        final DateTime startDate = clock.getUTCNow();
-        final DateTime endDate = startDate.plusDays(30);
-        final DateTime nextEndDate = startDate.plusMonths(1);
+        final LocalDate startDate = clock.getUTCToday();
+        final LocalDate endDate = startDate.plusDays(30);
+        final LocalDate nextEndDate = startDate.plusMonths(1);
 
         final BigDecimal rate1 = new BigDecimal("20.00");
         final BigDecimal amount1 = rate1;

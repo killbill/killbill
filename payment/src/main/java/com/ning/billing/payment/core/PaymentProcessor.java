@@ -404,7 +404,7 @@ public class PaymentProcessor extends ProcessorBase {
 
         final PaymentStatus paymentStatus =  PaymentStatus.AUTO_PAY_OFF;
 
-        final PaymentModelDao paymentInfo = new PaymentModelDao(account.getId(), invoice.getId(), account.getPaymentMethodId(), requestedAmount, invoice.getCurrency(), invoice.getTargetDate(), paymentStatus);
+        final PaymentModelDao paymentInfo = new PaymentModelDao(account.getId(), invoice.getId(), account.getPaymentMethodId(), requestedAmount, invoice.getCurrency(), clock.getUTCNow(), paymentStatus);
         final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(account.getId(), invoice.getId(), paymentInfo.getId(), paymentStatus, clock.getUTCNow(), requestedAmount);
 
         paymentDao.insertPaymentWithAttempt(paymentInfo, attempt, context);
@@ -416,7 +416,7 @@ public class PaymentProcessor extends ProcessorBase {
             final BigDecimal requestedAmount, final boolean isInstantPayment, final CallContext context) throws PaymentApiException {
 
 
-        final PaymentModelDao payment = new PaymentModelDao(account.getId(), invoice.getId(), account.getPaymentMethodId(), requestedAmount.setScale(2, RoundingMode.HALF_EVEN), invoice.getCurrency(), invoice.getTargetDate());
+        final PaymentModelDao payment = new PaymentModelDao(account.getId(), invoice.getId(), account.getPaymentMethodId(), requestedAmount.setScale(2, RoundingMode.HALF_EVEN), invoice.getCurrency(), clock.getUTCNow());
         final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(account.getId(), invoice.getId(), payment.getId(), clock.getUTCNow(), requestedAmount);
 
         final PaymentModelDao savedPayment = paymentDao.insertPaymentWithAttempt(payment, attempt, context);

@@ -38,13 +38,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
-import com.google.common.base.Objects;
-import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
@@ -52,10 +49,15 @@ import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.formatters.InvoiceFormatter;
 import com.ning.billing.util.template.translation.TranslatorConfig;
 
+import com.google.common.base.Objects;
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
+
 /**
  * Format invoice fields. Note that the Mustache engine won't accept null values.
  */
 public class DefaultInvoiceFormatter implements InvoiceFormatter {
+
     private final TranslatorConfig config;
     private final Invoice invoice;
     private final DateTimeFormatter dateFormatter;
@@ -143,22 +145,17 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
     }
 
     @Override
-    public boolean isDueForPayment(final DateTime targetDate, final int numberOfDays) {
-        return invoice.isDueForPayment(targetDate, numberOfDays);
-    }
-
-    @Override
     public boolean isMigrationInvoice() {
         return invoice.isMigrationInvoice();
     }
 
     @Override
-    public DateTime getInvoiceDate() {
+    public LocalDate getInvoiceDate() {
         return invoice.getInvoiceDate();
     }
 
     @Override
-    public DateTime getTargetDate() {
+    public LocalDate getTargetDate() {
         return invoice.getTargetDate();
     }
 
@@ -168,18 +165,13 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
     }
 
     @Override
-    public DateTime getLastPaymentDate() {
-        return invoice.getLastPaymentDate();
-    }
-
-    @Override
     public BigDecimal getPaidAmount() {
         return Objects.firstNonNull(invoice.getPaidAmount(), BigDecimal.ZERO);
     }
 
     @Override
     public String getFormattedInvoiceDate() {
-        final DateTime invoiceDate = invoice.getInvoiceDate();
+        final LocalDate invoiceDate = invoice.getInvoiceDate();
         if (invoiceDate == null) {
             return "";
         } else {

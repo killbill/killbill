@@ -58,6 +58,7 @@ import com.ning.billing.util.entity.dao.EntitySqlDao;
 @ExternalizedSqlViaStringTemplate3
 @RegisterMapper(InvoicePaymentSqlDao.InvoicePaymentMapper.class)
 public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePayment>, Transactional<InvoicePaymentSqlDao>, AuditSqlDao, Transmogrifier {
+
     @SqlQuery
     List<Long> getRecordIds(@Bind("invoiceId") final String invoiceId);
 
@@ -101,13 +102,14 @@ public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePayment>, Tran
     List<InvoicePayment> getChargebacksByPaymentId(@Bind("paymentId") final String paymentId);
 
     public static class InvoicePaymentMapper extends MapperBase implements ResultSetMapper<InvoicePayment> {
+
         @Override
         public InvoicePayment map(final int index, final ResultSet result, final StatementContext context) throws SQLException {
             final UUID id = getUUID(result, "id");
             final InvoicePaymentType type = InvoicePaymentType.valueOf(result.getString("type"));
             final UUID paymentId = getUUID(result, "payment_id");
             final UUID invoiceId = getUUID(result, "invoice_id");
-            final DateTime paymentDate = getDate(result, "payment_date");
+            final DateTime paymentDate = getDateTime(result, "payment_date");
             final BigDecimal amount = result.getBigDecimal("amount");
             final String currencyString = result.getString("currency");
             final Currency currency = (currencyString == null) ? null : Currency.valueOf(currencyString);
@@ -123,7 +125,9 @@ public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePayment>, Tran
     @Retention(RetentionPolicy.RUNTIME)
     @Target({ElementType.PARAMETER})
     public @interface InvoicePaymentBinder {
+
         public static class InvoicePaymentBinderFactory extends BinderBase implements BinderFactory {
+
             @Override
             public Binder build(final Annotation annotation) {
                 return new Binder<InvoicePaymentBinder, InvoicePayment>() {

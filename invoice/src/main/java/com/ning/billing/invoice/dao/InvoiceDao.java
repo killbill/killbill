@@ -20,7 +20,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
@@ -31,6 +31,7 @@ import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.callcontext.CallContext;
 
 public interface InvoiceDao {
+
     void create(final Invoice invoice, final int billCycleDay, final CallContext context);
 
     Invoice getById(final UUID id);
@@ -41,7 +42,7 @@ public interface InvoiceDao {
 
     List<Invoice> getInvoicesByAccount(final UUID accountId);
 
-    List<Invoice> getInvoicesByAccount(final UUID accountId, final DateTime fromDate);
+    List<Invoice> getInvoicesByAccount(final UUID accountId, final LocalDate fromDate);
 
     List<Invoice> getInvoicesBySubscription(final UUID subscriptionId);
 
@@ -55,7 +56,7 @@ public interface InvoiceDao {
 
     public BigDecimal getAccountCBA(final UUID accountId);
 
-    List<Invoice> getUnpaidInvoicesByAccountId(final UUID accountId, final DateTime upToDate);
+    List<Invoice> getUnpaidInvoicesByAccountId(final UUID accountId, final LocalDate upToDate);
 
     void test();
 
@@ -82,6 +83,6 @@ public interface InvoiceDao {
     InvoiceItem getCreditById(final UUID creditId) throws InvoiceApiException;
 
     InvoiceItem insertCredit(final UUID accountId, final UUID invoiceId, final BigDecimal amount,
-                             final DateTime effectiveDate, final Currency currency, final CallContext context);
+                             final LocalDate effectiveDate, final Currency currency, final CallContext context);
 
 }

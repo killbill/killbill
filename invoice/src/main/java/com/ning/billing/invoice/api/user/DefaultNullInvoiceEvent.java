@@ -18,22 +18,24 @@ package com.ning.billing.invoice.api.user;
 
 import java.util.UUID;
 
-import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
+
+import com.ning.billing.invoice.api.NullInvoiceEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.ning.billing.invoice.api.NullInvoiceEvent;
 
 public class DefaultNullInvoiceEvent implements NullInvoiceEvent {
+
     private final UUID accountId;
-    private final DateTime processingDate;
+    private final LocalDate processingDate;
     private final UUID userToken;
 
     @JsonCreator
     public DefaultNullInvoiceEvent(@JsonProperty("accountId") final UUID accountId,
-                                    @JsonProperty("processingDate") final DateTime processingDate,
-                                    @JsonProperty("userToken") final UUID userToken) {
+                                   @JsonProperty("processingDate") final LocalDate processingDate,
+                                   @JsonProperty("userToken") final UUID userToken) {
         super();
         this.accountId = accountId;
         this.processingDate = processingDate;
@@ -56,7 +58,7 @@ public class DefaultNullInvoiceEvent implements NullInvoiceEvent {
         return accountId;
     }
 
-    public DateTime getProcessingDate() {
+    public LocalDate getProcessingDate() {
         return processingDate;
     }
 
@@ -76,11 +78,11 @@ public class DefaultNullInvoiceEvent implements NullInvoiceEvent {
         final int prime = 31;
         int result = 1;
         result = prime * result
-                + ((accountId == null) ? 0 : accountId.hashCode());
+                 + ((accountId == null) ? 0 : accountId.hashCode());
         result = prime * result
-                + ((processingDate == null) ? 0 : processingDate.hashCode());
+                 + ((processingDate == null) ? 0 : processingDate.hashCode());
         result = prime * result
-                + ((userToken == null) ? 0 : userToken.hashCode());
+                 + ((userToken == null) ? 0 : userToken.hashCode());
         return result;
     }
 

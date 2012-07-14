@@ -19,6 +19,7 @@ package com.ning.billing.util.clock;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Days;
+import org.joda.time.LocalDate;
 import org.joda.time.Months;
 import org.joda.time.MutablePeriod;
 import org.joda.time.Period;
@@ -43,6 +44,16 @@ public class ClockMock implements Clock {
     @Override
     public synchronized DateTime getUTCNow() {
         return truncate(adjust(now()));
+    }
+
+    @Override
+    public LocalDate getUTCToday() {
+        return getToday(DateTimeZone.UTC);
+    }
+
+    @Override
+    public LocalDate getToday(final DateTimeZone timeZone) {
+        return new LocalDate(getUTCNow(), timeZone);
     }
 
     private DateTime adjust(final DateTime now) {

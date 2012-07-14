@@ -19,23 +19,28 @@ package com.ning.billing.jaxrs.json;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
 import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.jaxrs.JaxrsTestSuite;
+import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.clock.DefaultClock;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.common.collect.ImmutableList;
-import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.invoice.api.InvoiceItem;
-import com.ning.billing.jaxrs.JaxrsTestSuite;
 
 public class TestInvoiceJsonWithItems extends JaxrsTestSuite {
+
     private static final ObjectMapper mapper = new ObjectMapper();
+
+    private final Clock clock = new DefaultClock();
 
     static {
         mapper.registerModule(new JodaModule());
@@ -49,8 +54,8 @@ public class TestInvoiceJsonWithItems extends JaxrsTestSuite {
         final BigDecimal creditAdj = BigDecimal.ONE;
         final BigDecimal refundAdj = BigDecimal.ONE;
         final String invoiceId = UUID.randomUUID().toString();
-        final DateTime invoiceDate = new DateTime(DateTimeZone.UTC);
-        final DateTime targetDate = new DateTime(DateTimeZone.UTC);
+        final LocalDate invoiceDate = clock.getUTCToday();
+        final LocalDate targetDate = clock.getUTCToday();
         final String invoiceNumber = UUID.randomUUID().toString();
         final BigDecimal balance = BigDecimal.ZERO;
         final String accountId = UUID.randomUUID().toString();
@@ -73,26 +78,26 @@ public class TestInvoiceJsonWithItems extends JaxrsTestSuite {
 
         final String asJson = mapper.writeValueAsString(invoiceJsonWithItems);
         Assert.assertEquals(asJson, "{\"amount\":" + invoiceJsonWithItems.getAmount().toString() + "," +
-                "\"cba\":" + invoiceJsonWithItems.getCBA().toString() + "," +
-                "\"creditAdj\":" + invoiceJsonWithItems.getCreditAdj().toString() + "," +
-                "\"refundAdj\":" + invoiceJsonWithItems.getRefundAdj().toString() + "," +
-                "\"invoiceId\":\"" + invoiceJsonWithItems.getInvoiceId() + "\"," +
-                "\"invoiceDate\":\"" + invoiceJsonWithItems.getInvoiceDate().toDateTimeISO().toString() + "\"," +
-                "\"targetDate\":\"" + invoiceJsonWithItems.getTargetDate().toDateTimeISO().toString() + "\"," +
-                "\"invoiceNumber\":\"" + invoiceJsonWithItems.getInvoiceNumber() + "\"," +
-                "\"balance\":" + invoiceJsonWithItems.getBalance().toString() + "," +
-                "\"accountId\":\"" + invoiceJsonWithItems.getAccountId() + "\"," +
-                "\"items\":[{\"invoiceId\":\"" + invoiceItemJsonSimple.getInvoiceId().toString() + "\"," +
-                "\"accountId\":\"" + invoiceItemJsonSimple.getAccountId().toString() + "\"," +
-                "\"bundleId\":\"" + invoiceItemJsonSimple.getBundleId().toString() + "\"," +
-                "\"subscriptionId\":\"" + invoiceItemJsonSimple.getSubscriptionId().toString() + "\"," +
-                "\"planName\":\"" + invoiceItemJsonSimple.getPlanName() + "\"," +
-                "\"phaseName\":\"" + invoiceItemJsonSimple.getPhaseName() + "\"," +
-                "\"description\":\"" + invoiceItemJsonSimple.getDescription() + "\"," +
-                "\"startDate\":\"" + invoiceItemJsonSimple.getStartDate().toDateTimeISO().toString() + "\"," +
-                "\"endDate\":\"" + invoiceItemJsonSimple.getEndDate().toDateTimeISO().toString() + "\"," +
-                "\"amount\":" + invoiceItemJsonSimple.getAmount().toString() + "," +
-                "\"currency\":\"" + invoiceItemJsonSimple.getCurrency().toString() + "\"}]}");
+                                    "\"cba\":" + invoiceJsonWithItems.getCBA().toString() + "," +
+                                    "\"creditAdj\":" + invoiceJsonWithItems.getCreditAdj().toString() + "," +
+                                    "\"refundAdj\":" + invoiceJsonWithItems.getRefundAdj().toString() + "," +
+                                    "\"invoiceId\":\"" + invoiceJsonWithItems.getInvoiceId() + "\"," +
+                                    "\"invoiceDate\":\"" + invoiceJsonWithItems.getInvoiceDate().toString() + "\"," +
+                                    "\"targetDate\":\"" + invoiceJsonWithItems.getTargetDate().toString() + "\"," +
+                                    "\"invoiceNumber\":\"" + invoiceJsonWithItems.getInvoiceNumber() + "\"," +
+                                    "\"balance\":" + invoiceJsonWithItems.getBalance().toString() + "," +
+                                    "\"accountId\":\"" + invoiceJsonWithItems.getAccountId() + "\"," +
+                                    "\"items\":[{\"invoiceId\":\"" + invoiceItemJsonSimple.getInvoiceId().toString() + "\"," +
+                                    "\"accountId\":\"" + invoiceItemJsonSimple.getAccountId().toString() + "\"," +
+                                    "\"bundleId\":\"" + invoiceItemJsonSimple.getBundleId().toString() + "\"," +
+                                    "\"subscriptionId\":\"" + invoiceItemJsonSimple.getSubscriptionId().toString() + "\"," +
+                                    "\"planName\":\"" + invoiceItemJsonSimple.getPlanName() + "\"," +
+                                    "\"phaseName\":\"" + invoiceItemJsonSimple.getPhaseName() + "\"," +
+                                    "\"description\":\"" + invoiceItemJsonSimple.getDescription() + "\"," +
+                                    "\"startDate\":\"" + invoiceItemJsonSimple.getStartDate().toString() + "\"," +
+                                    "\"endDate\":\"" + invoiceItemJsonSimple.getEndDate().toString() + "\"," +
+                                    "\"amount\":" + invoiceItemJsonSimple.getAmount().toString() + "," +
+                                    "\"currency\":\"" + invoiceItemJsonSimple.getCurrency().toString() + "\"}]}");
 
         final InvoiceJsonWithItems fromJson = mapper.readValue(asJson, InvoiceJsonWithItems.class);
         Assert.assertEquals(fromJson, invoiceJsonWithItems);
@@ -103,8 +108,8 @@ public class TestInvoiceJsonWithItems extends JaxrsTestSuite {
         final Invoice invoice = Mockito.mock(Invoice.class);
         Mockito.when(invoice.getChargedAmount()).thenReturn(BigDecimal.TEN);
         Mockito.when(invoice.getId()).thenReturn(UUID.randomUUID());
-        Mockito.when(invoice.getInvoiceDate()).thenReturn(new DateTime(DateTimeZone.UTC));
-        Mockito.when(invoice.getTargetDate()).thenReturn(new DateTime(DateTimeZone.UTC));
+        Mockito.when(invoice.getInvoiceDate()).thenReturn(clock.getUTCToday());
+        Mockito.when(invoice.getTargetDate()).thenReturn(clock.getUTCToday());
         Mockito.when(invoice.getInvoiceNumber()).thenReturn(Integer.MAX_VALUE);
         Mockito.when(invoice.getBalance()).thenReturn(BigDecimal.ZERO);
         Mockito.when(invoice.getAccountId()).thenReturn(UUID.randomUUID());
@@ -142,8 +147,8 @@ public class TestInvoiceJsonWithItems extends JaxrsTestSuite {
         final String planName = UUID.randomUUID().toString();
         final String phaseName = UUID.randomUUID().toString();
         final String description = UUID.randomUUID().toString();
-        final DateTime startDate = new DateTime(DateTimeZone.UTC);
-        final DateTime endDate = new DateTime(DateTimeZone.UTC);
+        final LocalDate startDate = clock.getUTCToday();
+        final LocalDate endDate = clock.getUTCToday();
         final BigDecimal amount = BigDecimal.TEN;
         final Currency currency = Currency.MXN;
         return new InvoiceItemJsonSimple(invoiceId, accountId, bundleId, subscriptionId,
@@ -160,8 +165,8 @@ public class TestInvoiceJsonWithItems extends JaxrsTestSuite {
         Mockito.when(invoiceItem.getPlanName()).thenReturn(UUID.randomUUID().toString());
         Mockito.when(invoiceItem.getPhaseName()).thenReturn(UUID.randomUUID().toString());
         Mockito.when(invoiceItem.getDescription()).thenReturn(UUID.randomUUID().toString());
-        Mockito.when(invoiceItem.getStartDate()).thenReturn(new DateTime(DateTimeZone.UTC));
-        Mockito.when(invoiceItem.getEndDate()).thenReturn(new DateTime(DateTimeZone.UTC));
+        Mockito.when(invoiceItem.getStartDate()).thenReturn(clock.getUTCToday());
+        Mockito.when(invoiceItem.getEndDate()).thenReturn(clock.getUTCToday());
         Mockito.when(invoiceItem.getAmount()).thenReturn(BigDecimal.TEN);
         Mockito.when(invoiceItem.getCurrency()).thenReturn(Currency.EUR);
 

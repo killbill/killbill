@@ -16,21 +16,23 @@
 
 package com.ning.billing.jaxrs.json;
 
-import javax.annotation.Nullable;
 import java.math.BigDecimal;
 
-import org.joda.time.DateTime;
+import javax.annotation.Nullable;
+
+import org.joda.time.LocalDate;
+
+import com.ning.billing.invoice.api.Invoice;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.ning.billing.invoice.api.Invoice;
 
 public class InvoiceJsonSimple {
 
     private final BigDecimal amount;
     private final String invoiceId;
-    private final DateTime invoiceDate;
-    private final DateTime targetDate;
+    private final LocalDate invoiceDate;
+    private final LocalDate targetDate;
     private final String invoiceNumber;
     private final BigDecimal balance;
     private final BigDecimal creditAdj;
@@ -39,20 +41,20 @@ public class InvoiceJsonSimple {
     private final String accountId;
 
     public InvoiceJsonSimple() {
-        this(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO , BigDecimal.ZERO, null, null, null, null, BigDecimal.ZERO, null);
+        this(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, null, null, null, null, BigDecimal.ZERO, null);
     }
 
     @JsonCreator
     public InvoiceJsonSimple(@JsonProperty("amount") final BigDecimal amount,
-            @JsonProperty("cba") final BigDecimal cba,
-            @JsonProperty("creditAdj") final BigDecimal creditAdj,
-            @JsonProperty("refundAdj") final BigDecimal refundAdj,
-            @JsonProperty("invoiceId") @Nullable final String invoiceId,
-            @JsonProperty("invoiceDate") @Nullable final DateTime invoiceDate,
-            @JsonProperty("targetDate") @Nullable final DateTime targetDate,
-            @JsonProperty("invoiceNumber") @Nullable final String invoiceNumber,
-            @JsonProperty("balance") final BigDecimal balance,
-            @JsonProperty("accountId") @Nullable final String accountId) {
+                             @JsonProperty("cba") final BigDecimal cba,
+                             @JsonProperty("creditAdj") final BigDecimal creditAdj,
+                             @JsonProperty("refundAdj") final BigDecimal refundAdj,
+                             @JsonProperty("invoiceId") @Nullable final String invoiceId,
+                             @JsonProperty("invoiceDate") @Nullable final LocalDate invoiceDate,
+                             @JsonProperty("targetDate") @Nullable final LocalDate targetDate,
+                             @JsonProperty("invoiceNumber") @Nullable final String invoiceNumber,
+                             @JsonProperty("balance") final BigDecimal balance,
+                             @JsonProperty("accountId") @Nullable final String accountId) {
         this.amount = amount;
         this.cba = cba;
         this.creditAdj = creditAdj;
@@ -67,7 +69,7 @@ public class InvoiceJsonSimple {
 
     public InvoiceJsonSimple(final Invoice input) {
         this(input.getChargedAmount(), input.getCBAAmount(), input.getCreditAdjAmount(), input.getRefundAdjAmount(), input.getId().toString(), input.getInvoiceDate(),
-                input.getTargetDate(), String.valueOf(input.getInvoiceNumber()), input.getBalance(), input.getAccountId().toString());
+             input.getTargetDate(), String.valueOf(input.getInvoiceNumber()), input.getBalance(), input.getAccountId().toString());
     }
 
     public BigDecimal getAmount() {
@@ -90,11 +92,11 @@ public class InvoiceJsonSimple {
         return invoiceId;
     }
 
-    public DateTime getInvoiceDate() {
+    public LocalDate getInvoiceDate() {
         return invoiceDate;
     }
 
-    public DateTime getTargetDate() {
+    public LocalDate getTargetDate() {
         return targetDate;
     }
 
@@ -125,27 +127,27 @@ public class InvoiceJsonSimple {
             return false;
         }
         if (!((amount == null && that.amount == null) ||
-                (amount != null && that.amount != null && amount.compareTo(that.amount) == 0))) {
+              (amount != null && that.amount != null && amount.compareTo(that.amount) == 0))) {
             return false;
         }
         if (!((balance == null && that.balance == null) ||
-                (balance != null && that.balance != null && balance.compareTo(that.balance) == 0))) {
+              (balance != null && that.balance != null && balance.compareTo(that.balance) == 0))) {
             return false;
         }
         if (!((cba == null && that.cba == null) ||
-                (cba != null && that.cba != null && cba.compareTo(that.cba) == 0))) {
+              (cba != null && that.cba != null && cba.compareTo(that.cba) == 0))) {
             return false;
         }
         if (!((creditAdj == null && that.creditAdj == null) ||
-                (creditAdj != null && that.creditAdj != null && creditAdj.compareTo(that.creditAdj) == 0))) {
+              (creditAdj != null && that.creditAdj != null && creditAdj.compareTo(that.creditAdj) == 0))) {
             return false;
         }
         if (!((refundAdj == null && that.refundAdj == null) ||
-                (refundAdj != null && that.refundAdj != null && refundAdj.compareTo(that.refundAdj) == 0))) {
+              (refundAdj != null && that.refundAdj != null && refundAdj.compareTo(that.refundAdj) == 0))) {
             return false;
         }
         if (!((invoiceDate == null && that.invoiceDate == null) ||
-                (invoiceDate != null && that.invoiceDate != null && invoiceDate.compareTo(that.invoiceDate) == 0))) {
+              (invoiceDate != null && that.invoiceDate != null && invoiceDate.compareTo(that.invoiceDate) == 0))) {
             return false;
         }
         if (invoiceId != null ? !invoiceId.equals(that.invoiceId) : that.invoiceId != null) {
@@ -155,7 +157,7 @@ public class InvoiceJsonSimple {
             return false;
         }
         if (!((targetDate == null && that.targetDate == null) ||
-                (targetDate != null && that.targetDate != null && targetDate.compareTo(that.targetDate) == 0))) {
+              (targetDate != null && that.targetDate != null && targetDate.compareTo(that.targetDate) == 0))) {
             return false;
         }
 

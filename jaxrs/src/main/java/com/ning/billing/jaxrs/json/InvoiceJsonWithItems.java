@@ -21,28 +21,30 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class InvoiceJsonWithItems extends InvoiceJsonSimple {
+
     private final List<InvoiceItemJsonSimple> items;
 
     @JsonCreator
     public InvoiceJsonWithItems(@JsonProperty("amount") final BigDecimal amount,
-            @JsonProperty("cba") final BigDecimal cba,
-            @JsonProperty("creditAdj") final BigDecimal creditAdj,
-            @JsonProperty("refundAdj") final BigDecimal refundAdj,
-            @JsonProperty("invoiceId") final String invoiceId,
-            @JsonProperty("invoiceDate") final DateTime invoiceDate,
-            @JsonProperty("targetDate") final DateTime targetDate,
-            @JsonProperty("invoiceNumber") final String invoiceNumber,
-            @JsonProperty("balance") final BigDecimal balance,
-            @JsonProperty("accountId") final String accountId,
-            @JsonProperty("items") final List<InvoiceItemJsonSimple> items) {
+                                @JsonProperty("cba") final BigDecimal cba,
+                                @JsonProperty("creditAdj") final BigDecimal creditAdj,
+                                @JsonProperty("refundAdj") final BigDecimal refundAdj,
+                                @JsonProperty("invoiceId") final String invoiceId,
+                                @JsonProperty("invoiceDate") final LocalDate invoiceDate,
+                                @JsonProperty("targetDate") final LocalDate targetDate,
+                                @JsonProperty("invoiceNumber") final String invoiceNumber,
+                                @JsonProperty("balance") final BigDecimal balance,
+                                @JsonProperty("accountId") final String accountId,
+                                @JsonProperty("items") final List<InvoiceItemJsonSimple> items) {
         super(amount, cba, creditAdj, refundAdj, invoiceId, invoiceDate, targetDate, invoiceNumber, balance, accountId);
         this.items = new ArrayList<InvoiceItemJsonSimple>(items);
     }

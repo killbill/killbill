@@ -23,7 +23,7 @@ import com.ning.billing.util.notificationq.DefaultUUIDNotificationKey;
 
 public class NextBillingDateNotificationKey extends DefaultUUIDNotificationKey {
     @JsonCreator
-    public NextBillingDateNotificationKey(@JsonProperty("uuidKey") UUID uuidKey) {
+    public NextBillingDateNotificationKey(@JsonProperty("uuidKey") final UUID uuidKey) {
         super(uuidKey);
     }
 }

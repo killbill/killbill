@@ -20,14 +20,19 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.analytics.AnalyticsTestSuite;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.clock.DefaultClock;
 
 public class TestBusinessInvoice extends AnalyticsTestSuite {
+
+    private final Clock clock = new DefaultClock();
+
     @Test(groups = "fast")
     public void testEquals() throws Exception {
         final UUID accountId = UUID.randomUUID();
@@ -36,13 +41,13 @@ public class TestBusinessInvoice extends AnalyticsTestSuite {
         final BigDecimal amountCredited = BigDecimal.ONE;
         final BigDecimal amountPaid = BigDecimal.TEN;
         final BigDecimal balance = BigDecimal.valueOf(123L);
-        final DateTime createdDate = new DateTime(DateTimeZone.UTC);
+        final DateTime createdDate = clock.getUTCNow();
         final Currency currency = Currency.MXN;
-        final DateTime invoiceDate = new DateTime(DateTimeZone.UTC);
+        final LocalDate invoiceDate = clock.getUTCToday();
         final UUID invoiceId = UUID.randomUUID();
         final Integer invoiceNumber = 15;
-        final DateTime targetDate = new DateTime(DateTimeZone.UTC);
-        final DateTime updatedDate = new DateTime(DateTimeZone.UTC);
+        final LocalDate targetDate = clock.getUTCToday();
+        final DateTime updatedDate = clock.getUTCNow();
         final BusinessInvoice invoice = new BusinessInvoice(accountId, accountKey, amountCharged, amountCredited, amountPaid, balance,
                                                             createdDate, currency, invoiceDate, invoiceId, invoiceNumber, targetDate, updatedDate);
         Assert.assertSame(invoice, invoice);

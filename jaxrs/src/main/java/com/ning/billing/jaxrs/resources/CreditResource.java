@@ -26,6 +26,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 import java.util.UUID;
 
+import org.joda.time.LocalDate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,12 +71,15 @@ public class CreditResource implements JaxrsResource {
             if (credit == null) {
                 return Response.status(Response.Status.NOT_FOUND).build();
             } else {
-                final CreditJson creditJson = new CreditJson(credit);
+                final Account account = accountUserApi.getAccountById(credit.getAccountId());
+                final CreditJson creditJson = new CreditJson(credit, account.getTimeZone());
                 return Response.status(Response.Status.OK).entity(creditJson).build();
             }
         } catch (InvoiceApiException e) {
-            final String error = String.format("Failed to locate credit for id %s", creditId);
-            log.info(error, e);
+            log.warn(String.format("Failed to locate credit for id %s", creditId), e);
+            return Response.status(Response.Status.NO_CONTENT).build();
+        } catch (AccountApiException e) {
+            log.warn(String.format("Failed to locate account for credit id %s", creditId), e);
             return Response.status(Response.Status.NO_CONTENT).build();
         }
     }
@@ -94,8 +98,9 @@ public class CreditResource implements JaxrsResource {
 
         try {
             final Account account = accountUserApi.getAccountById(accountId);
+            final LocalDate effectiveDate = json.getEffectiveDate().toDateTime(account.getTimeZone()).toLocalDate();
 
-            final InvoiceItem credit = invoiceUserApi.insertCredit(account.getId(), json.getCreditAmount(), json.getEffectiveDate(),
+            final InvoiceItem credit = invoiceUserApi.insertCredit(account.getId(), json.getCreditAmount(), effectiveDate,
                                                                    account.getCurrency(), context.createContext(createdBy, reason, comment));
 
             return uriBuilder.buildResponse(CreditResource.class, "getCredit", credit.getId());

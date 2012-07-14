@@ -25,6 +25,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeoutException;
 
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Guice;
@@ -151,13 +152,13 @@ public class TestRetryService extends PaymentTestSuite {
     private void testSchedulesRetryInternal(final int maxTries, final FailureType failureType) throws Exception {
 
         final Account account = testHelper.createTestAccount("yiyi.gmail.com");
-        final Invoice invoice = testHelper.createTestInvoice(account, clock.getUTCNow(), Currency.USD);
+        final Invoice invoice = testHelper.createTestInvoice(account, clock.getUTCToday(), Currency.USD);
         final BigDecimal amount = new BigDecimal("10.00");
         final UUID subscriptionId = UUID.randomUUID();
         final UUID bundleId = UUID.randomUUID();
 
-        final DateTime startDate = clock.getUTCNow();
-        final DateTime endDate = startDate.plusMonths(1);
+        final LocalDate startDate = clock.getUTCToday();
+        final LocalDate endDate = startDate.plusMonths(1);
         invoice.addInvoiceItem(new MockRecurringInvoiceItem(invoice.getId(),
                                                             account.getId(),
                                                             subscriptionId,

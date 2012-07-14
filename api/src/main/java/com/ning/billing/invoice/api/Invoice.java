@@ -20,12 +20,13 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.entity.Entity;
 
 public interface Invoice extends Entity {
+
     boolean addInvoiceItem(InvoiceItem item);
 
     boolean addInvoiceItems(List<InvoiceItem> items);
@@ -48,13 +49,19 @@ public interface Invoice extends Entity {
 
     Integer getInvoiceNumber();
 
-    DateTime getInvoiceDate();
+    /**
+     * @return the day the invoice was generated, in the account timezone
+     */
+    LocalDate getInvoiceDate();
 
-    DateTime getTargetDate();
+    /**
+     * The target day is the latest day to consider for billing events.
+     *
+     * @return the target day in the account timezone
+     */
+    LocalDate getTargetDate();
 
     Currency getCurrency();
-
-    DateTime getLastPaymentDate();
 
     BigDecimal getPaidAmount();
 
@@ -69,8 +76,6 @@ public interface Invoice extends Entity {
     BigDecimal getRefundAdjAmount();
 
     BigDecimal getBalance();
-
-    boolean isDueForPayment(DateTime targetDate, int numberOfDays);
 
     boolean isMigrationInvoice();
 }

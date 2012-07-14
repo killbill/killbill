@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -104,7 +105,7 @@ public class BusinessAccountRecorder {
         bac.setKey(account.getExternalKey());
 
         try {
-            DateTime lastInvoiceDate = bac.getLastInvoiceDate();
+            LocalDate lastInvoiceDate = bac.getLastInvoiceDate();
             BigDecimal totalInvoiceBalance = bac.getTotalInvoiceBalance();
             String lastPaymentStatus = bac.getLastPaymentStatus();
             String paymentMethod = bac.getPaymentMethod();

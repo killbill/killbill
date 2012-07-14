@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
 import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
@@ -31,6 +33,8 @@ import org.testng.annotations.Guice;
 
 import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.MockPlan;
 import com.ning.billing.catalog.MockPriceList;
 import com.ning.billing.catalog.glue.CatalogModule;
@@ -126,6 +130,9 @@ public abstract class OverdueTestBase extends OverdueTestSuiteWithEmbeddedDB {
     protected SubscriptionBundle bundle;
 
     @Inject
+    AccountUserApi accountUserApi;
+
+    @Inject
     EntitlementUserApi entitlementApi;
 
     @Inject
@@ -169,11 +176,18 @@ public abstract class OverdueTestBase extends OverdueTestSuiteWithEmbeddedDB {
         Assert.assertEquals(result.isBlockBilling(), state.disableEntitlementAndChangesBlocked());
     }
 
-    protected SubscriptionBundle createBundle(final DateTime dateOfLastUnPaidInvoice) throws EntitlementUserApiException {
+    protected SubscriptionBundle createBundle(final LocalDate dateOfLastUnPaidInvoice) throws EntitlementUserApiException, AccountApiException {
         final SubscriptionBundle bundle = Mockito.mock(SubscriptionBundle.class);
         final UUID bundleId = UUID.randomUUID();
         Mockito.when(bundle.getId()).thenReturn(bundleId);
-        Mockito.when(bundle.getAccountId()).thenReturn(UUID.randomUUID());
+
+        final UUID accountId = UUID.randomUUID();
+        account = Mockito.mock(Account.class);
+        Mockito.when(account.getId()).thenReturn(accountId);
+        Mockito.when(account.getTimeZone()).thenReturn(DateTimeZone.UTC);
+        Mockito.when(accountUserApi.getAccountById(account.getId())).thenReturn(account);
+
+        Mockito.when(bundle.getAccountId()).thenReturn(accountId);
 
         final Invoice invoice = Mockito.mock(Invoice.class);
         Mockito.when(invoice.getInvoiceDate()).thenReturn(dateOfLastUnPaidInvoice);
@@ -189,7 +203,7 @@ public abstract class OverdueTestBase extends OverdueTestSuiteWithEmbeddedDB {
 
         final List<Invoice> invoices = new ArrayList<Invoice>();
         invoices.add(invoice);
-        Mockito.when(invoiceApi.getUnpaidInvoicesByAccountId(Mockito.<UUID>any(), Mockito.<DateTime>any())).thenReturn(invoices);
+        Mockito.when(invoiceApi.getUnpaidInvoicesByAccountId(Mockito.<UUID>any(), Mockito.<LocalDate>any())).thenReturn(invoices);
 
         final Subscription base = Mockito.mock(Subscription.class);
         Mockito.when(base.getCurrentPlan()).thenReturn(MockPlan.createBicycleNoTrialEvergreen1USD());

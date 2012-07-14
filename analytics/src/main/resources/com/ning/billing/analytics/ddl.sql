@@ -46,7 +46,7 @@ create table bac (
 , created_date bigint not null
 , updated_date bigint not null
 , balance numeric(10, 4) default 0
-, last_invoice_date bigint default null
+, last_invoice_date date default null
 , total_invoice_balance numeric(10, 4) default 0
 , last_payment_status varchar(255) default null
 , payment_method varchar(50) default null
@@ -66,8 +66,8 @@ create table bin (
 , updated_date bigint not null
 , account_id char(36) not null
 , account_key varchar(50) not null
-, invoice_date bigint not null
-, target_date bigint not null
+, invoice_date date not null
+, target_date date not null
 , currency char(50) not null
 , balance numeric(10, 4) default 0 comment 'amount_charged - amount_paid - amount_credited'
 , amount_paid numeric(10, 4) default 0 comment 'Sums of the successful payments made for this invoice minus the refunds associated with this invoice'
@@ -92,8 +92,8 @@ create table bii (
 , slug varchar(50) default null comment 'foo'
 , phase varchar(50) default null
 , billing_period varchar(50) default null
-, start_date bigint default null
-, end_date bigint default null
+, start_date date default null
+, end_date date default null
 , amount numeric(10, 4) default 0
 , currency char(50) default null
 , primary key(record_id)

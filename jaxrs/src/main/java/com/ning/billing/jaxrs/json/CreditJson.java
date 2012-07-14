@@ -20,12 +20,15 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+
+import com.ning.billing.invoice.api.InvoiceItem;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.ning.billing.invoice.api.InvoiceItem;
 
 public class CreditJson {
+
     private final BigDecimal creditAmount;
     private final UUID invoiceId;
     private final String invoiceNumber;
@@ -51,12 +54,12 @@ public class CreditJson {
         this.accountId = accountId;
     }
 
-    public CreditJson(final InvoiceItem credit) {
+    public CreditJson(final InvoiceItem credit, final DateTimeZone accountTimeZone) {
         this.creditAmount = credit.getAmount();
         this.invoiceId = credit.getInvoiceId();
         this.invoiceNumber = null;
         this.requestedDate = null;
-        this.effectiveDate = credit.getStartDate();
+        this.effectiveDate = credit.getStartDate().toDateTimeAtStartOfDay(accountTimeZone);
         this.reason = null;
         this.accountId = credit.getAccountId();
     }
@@ -101,11 +104,11 @@ public class CreditJson {
         final CreditJson that = (CreditJson) o;
 
         if (!((creditAmount == null && that.creditAmount == null) ||
-                (creditAmount != null && that.creditAmount != null && creditAmount.compareTo(that.creditAmount) == 0))) {
+              (creditAmount != null && that.creditAmount != null && creditAmount.compareTo(that.creditAmount) == 0))) {
             return false;
         }
         if (!((effectiveDate == null && that.effectiveDate == null) ||
-                (effectiveDate != null && that.effectiveDate != null && effectiveDate.compareTo(that.effectiveDate) == 0))) {
+              (effectiveDate != null && that.effectiveDate != null && effectiveDate.compareTo(that.effectiveDate) == 0))) {
             return false;
         }
         if (invoiceId != null ? !invoiceId.equals(that.invoiceId) : that.invoiceId != null) {
@@ -118,7 +121,7 @@ public class CreditJson {
             return false;
         }
         if (!((requestedDate == null && that.requestedDate == null) ||
-                (requestedDate != null && that.requestedDate != null && requestedDate.compareTo(that.requestedDate) == 0))) {
+              (requestedDate != null && that.requestedDate != null && requestedDate.compareTo(that.requestedDate) == 0))) {
             return false;
         }
 

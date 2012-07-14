@@ -19,23 +19,21 @@ package com.ning.billing.invoice.model;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItemType;
 
 public class CreditBalanceAdjInvoiceItem extends AdjInvoiceItem {
-
-    public CreditBalanceAdjInvoiceItem(UUID invoiceId, UUID accountId,
-            DateTime date, BigDecimal amount, Currency currency) {
+    public CreditBalanceAdjInvoiceItem(final UUID invoiceId, final UUID accountId,
+                                       final LocalDate date, final BigDecimal amount, final Currency currency) {
         super(invoiceId, accountId, date, date, amount, currency);
     }
 
-    public CreditBalanceAdjInvoiceItem(UUID id, UUID invoiceId, UUID accountId,
-            DateTime date, BigDecimal amount, Currency currency) {
+    public CreditBalanceAdjInvoiceItem(final UUID id, final UUID invoiceId, final UUID accountId,
+                                       final LocalDate date, final BigDecimal amount, final Currency currency) {
         super(id, invoiceId, accountId, date, date, amount, currency);
     }
-
 
     @Override
     public InvoiceItemType getInvoiceItemType() {

@@ -19,19 +19,24 @@ package com.ning.billing.analytics.model;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.ning.billing.analytics.AnalyticsTestSuite;
+import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.clock.DefaultClock;
 
 public class TestBusinessAccount extends AnalyticsTestSuite {
+
+    private final Clock clock = new DefaultClock();
+
     private BusinessAccount account;
 
     @BeforeMethod(groups = "fast")
     public void setUp() throws Exception {
-        account = new BusinessAccount(UUID.randomUUID(), "pierre", UUID.randomUUID().toString(), BigDecimal.ONE, new DateTime(),
+        account = new BusinessAccount(UUID.randomUUID(), "pierre", UUID.randomUUID().toString(), BigDecimal.ONE, clock.getUTCToday(),
                                       BigDecimal.TEN, "ERROR_NOT_ENOUGH_FUNDS", "CreditCard", "Visa", "");
     }
 
@@ -41,7 +46,7 @@ public class TestBusinessAccount extends AnalyticsTestSuite {
         Assert.assertEquals(account, account);
         Assert.assertTrue(account.equals(account));
 
-        final BusinessAccount otherAccount = new BusinessAccount(UUID.randomUUID(), "pierre cardin", UUID.randomUUID().toString(), BigDecimal.ONE, new DateTime(),
+        final BusinessAccount otherAccount = new BusinessAccount(UUID.randomUUID(), "pierre cardin", UUID.randomUUID().toString(), BigDecimal.ONE, clock.getUTCToday(),
                                                                  BigDecimal.TEN, "ERROR_NOT_ENOUGH_FUNDS", "CreditCard", "Visa", "");
         Assert.assertFalse(account.equals(otherAccount));
     }

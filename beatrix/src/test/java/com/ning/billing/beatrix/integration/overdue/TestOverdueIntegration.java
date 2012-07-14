@@ -237,7 +237,7 @@ public class TestOverdueIntegration extends TestIntegrationBase {
         checkODState("OD3");
 
         paymentPlugin.makeAllInvoicesFailWithError(false);
-        final Collection<Invoice> invoices = invoiceApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCNow());
+        final Collection<Invoice> invoices = invoiceApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday());
         final List<String> invoiceIds = new ArrayList<String>();
         for (final Invoice invoice : invoices) {
             invoiceIds.add(invoice.getId().toString());

@@ -66,15 +66,15 @@ public @interface BusinessInvoiceBinder {
                     q.bind("account_key", invoice.getAccountKey());
 
                     if (invoice.getInvoiceDate() != null) {
-                        q.bind("invoice_date", invoice.getInvoiceDate().getMillis());
+                        q.bind("invoice_date", invoice.getInvoiceDate().toDate());
                     } else {
-                        q.bindNull("invoice_date", Types.BIGINT);
+                        q.bindNull("invoice_date", Types.DATE);
                     }
 
                     if (invoice.getTargetDate() != null) {
-                        q.bind("target_date", invoice.getTargetDate().getMillis());
+                        q.bind("target_date", invoice.getTargetDate().toDate());
                     } else {
-                        q.bindNull("target_date", Types.BIGINT);
+                        q.bindNull("target_date", Types.DATE);
                     }
 
                     q.bind("currency", invoice.getCurrency().toString());
