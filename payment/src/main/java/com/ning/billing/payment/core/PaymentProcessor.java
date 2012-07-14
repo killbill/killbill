@@ -51,6 +51,7 @@ import com.ning.billing.payment.dao.PaymentAttemptModelDao;
 import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.dao.PaymentModelDao;
 import com.ning.billing.payment.dao.PaymentSqlDao;
+import com.ning.billing.payment.dao.RefundModelDao;
 import com.ning.billing.payment.dispatcher.PluginDispatcher;
 import com.ning.billing.payment.plugin.api.PaymentInfoPlugin;
 import com.ning.billing.payment.plugin.api.PaymentPluginApi;
@@ -143,7 +144,8 @@ public class PaymentProcessor extends ProcessorBase {
         final List<Payment> result = new LinkedList<Payment>();
         for (final PaymentModelDao cur : payments) {
             final List<PaymentAttemptModelDao> attempts = paymentDao.getAttemptsForPayment(cur.getId());
-            final Payment entry = new DefaultPayment(cur, attempts);
+            final List<RefundModelDao> refunds = paymentDao.getRefundsForPayment(cur.getId());
+            final Payment entry = new DefaultPayment(cur, attempts, refunds);
             result.add(entry);
         }
         return result;
@@ -408,7 +410,7 @@ public class PaymentProcessor extends ProcessorBase {
         final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(account.getId(), invoice.getId(), paymentInfo.getId(), paymentStatus, clock.getUTCNow(), requestedAmount);
 
         paymentDao.insertPaymentWithAttempt(paymentInfo, attempt, context);
-        return new DefaultPayment(paymentInfo, Collections.singletonList(attempt));
+        return new DefaultPayment(paymentInfo, Collections.singletonList(attempt), Collections.<RefundModelDao>emptyList());
     }
 
 
@@ -503,7 +505,7 @@ public class PaymentProcessor extends ProcessorBase {
                 postPaymentEvent(event, account.getId());
             }
         }
-        return new DefaultPayment(payment, allAttempts);
+        return new DefaultPayment(payment, allAttempts, Collections.<RefundModelDao>emptyList());
     }
 
     private PaymentStatus scheduleRetryOnPluginFailure(final UUID paymentId) {

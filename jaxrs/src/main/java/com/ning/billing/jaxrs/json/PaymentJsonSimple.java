@@ -86,7 +86,7 @@ public class PaymentJsonSimple {
 
     public PaymentJsonSimple(final Payment src) {
         this.amount = src.getAmount();
-        this.paidAmount =  src.getPaymentStatus() == PaymentStatus.SUCCESS ?  src.getAmount() : BigDecimal.ZERO;
+        this.paidAmount =  src.getPaidAmount();
         this.invoiceId = src.getInvoiceId().toString();
         this.accountId = src.getAccountId().toString();
         this.paymentId = src.getId().toString();
