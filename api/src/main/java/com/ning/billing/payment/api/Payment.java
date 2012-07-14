@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -36,6 +36,8 @@ public interface Payment {
     public Integer getPaymentNumber();
 
     public BigDecimal getAmount();
+
+    public BigDecimal getPaidAmount();
 
     public DateTime getEffectiveDate();
 

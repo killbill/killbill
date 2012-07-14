@@ -3,7 +3,7 @@ CREATE TABLE accounts (
     record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
     id char(36) NOT NULL,
     external_key varchar(128) NULL,
-    email varchar(50) NOT NULL,
+    email varchar(128) NOT NULL,
     name varchar(100) NOT NULL,
     first_name_length int NOT NULL,
     currency char(3) DEFAULT NULL,
@@ -17,7 +17,7 @@ CREATE TABLE accounts (
     city varchar(50) DEFAULT NULL,
     state_or_province varchar(50) DEFAULT NULL,
     country varchar(50) DEFAULT NULL,
-    postal_code varchar(11) DEFAULT NULL,
+    postal_code varchar(16) DEFAULT NULL,
     phone varchar(25) DEFAULT NULL,
     migrated bool DEFAULT false,
     is_notified_for_invoices boolean NOT NULL,
@@ -29,7 +29,6 @@ CREATE TABLE accounts (
 ) ENGINE=innodb;
 CREATE UNIQUE INDEX accounts_id ON accounts(id);
 CREATE UNIQUE INDEX accounts_external_key ON accounts(external_key);
-CREATE UNIQUE INDEX accounts_email ON accounts(email);
 
 DROP TABLE IF EXISTS account_history;
 CREATE TABLE account_history (
@@ -37,7 +36,7 @@ CREATE TABLE account_history (
     record_id int(11) unsigned NOT NULL,
     id char(36) NOT NULL,
     external_key varchar(128) NULL,
-    email varchar(50) NOT NULL,
+    email varchar(128) NOT NULL,
     name varchar(100) NOT NULL,
     first_name_length int NOT NULL,
     currency char(3) DEFAULT NULL,
@@ -51,7 +50,7 @@ CREATE TABLE account_history (
     city varchar(50) DEFAULT NULL,
     state_or_province varchar(50) DEFAULT NULL,
     country varchar(50) DEFAULT NULL,
-    postal_code varchar(11) DEFAULT NULL,
+    postal_code varchar(16) DEFAULT NULL,
     phone varchar(25) DEFAULT NULL,
     migrated bool DEFAULT false,
     is_notified_for_invoices boolean NOT NULL,
@@ -67,7 +66,7 @@ CREATE TABLE account_emails (
     record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
     id char(36) NOT NULL,
     account_id char(36) NOT NULL,
-    email varchar(50) NOT NULL,
+    email varchar(128) NOT NULL,
     created_by varchar(50) NOT NULL,
     created_date datetime NOT NULL,
     updated_by varchar(50) NOT NULL,
@@ -83,7 +82,7 @@ CREATE TABLE account_email_history (
     record_id int(11) unsigned NOT NULL,
     id char(36) NOT NULL,
     account_id char(36) NOT NULL,
-    email varchar(50) NOT NULL,
+    email varchar(128) NOT NULL,
     change_type char(6) NOT NULL,
     updated_by varchar(50) NOT NULL,
     date datetime NOT NULL,

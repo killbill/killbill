@@ -109,8 +109,7 @@ public class AccountTimelineJson {
         for (final Payment cur : payments) {
 
             final String status = cur.getPaymentStatus().toString();
-            final BigDecimal paidAmount = cur.getPaymentStatus() == PaymentStatus.SUCCESS ? cur.getAmount() : BigDecimal.ZERO;
-            this.payments.add(new PaymentJsonWithBundleKeys(cur.getAmount(), paidAmount, account.getId().toString(),
+            this.payments.add(new PaymentJsonWithBundleKeys(cur.getAmount(), cur.getPaidAmount(), account.getId().toString(),
                                                             cur.getInvoiceId().toString(), cur.getId().toString(),
                                                             cur.getEffectiveDate(), cur.getEffectiveDate(),
                                                             cur.getAttempts().size(), cur.getCurrency().toString(), status,

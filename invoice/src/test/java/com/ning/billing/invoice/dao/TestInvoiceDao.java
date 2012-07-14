@@ -530,7 +530,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         final LocalDate endDate = startDate.plusMonths(1);
 
         final BigDecimal rate1 = new BigDecimal("20.0");
-        final BigDecimal refund1 = new BigDecimal("-7.00");
+        final BigDecimal refund1 = new BigDecimal("7.00");
         final BigDecimal rate2 = new BigDecimal("10.0");
 
         // Recurring item
@@ -559,28 +559,28 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
 
     @Test(groups = "slow")
     public void testAccountBalanceWithSmallRefundAndCBANoAdj() throws InvoiceApiException {
-        BigDecimal refundAmount = new BigDecimal("-7.00");
+        BigDecimal refundAmount = new BigDecimal("7.00");
         BigDecimal expectedBalance = new BigDecimal("-3.00");
         testAccountBalanceWithRefundAndCBAInternal(false, refundAmount, expectedBalance);
     }
 
     @Test(groups = "slow")
     public void testAccountBalanceWithSmallRefundAndCBAWithAdj() throws InvoiceApiException {
-        BigDecimal refundAmount = new BigDecimal("-7.00");
+        BigDecimal refundAmount = new BigDecimal("7.00");
         BigDecimal expectedBalance = new BigDecimal("-3.00");
         testAccountBalanceWithRefundAndCBAInternal(true, refundAmount, expectedBalance);
     }
 
     @Test(groups = "slow")
     public void testAccountBalanceWithLargeRefundAndCBANoAdj() throws InvoiceApiException {
-        BigDecimal refundAmount = new BigDecimal("-20.00");
+        BigDecimal refundAmount = new BigDecimal("20.00");
         BigDecimal expectedBalance = new BigDecimal("10.00");
         testAccountBalanceWithRefundAndCBAInternal(false, refundAmount, expectedBalance);
     }
 
     @Test(groups = "slow")
     public void testAccountBalanceWithLargeRefundAndCBAWithAdj() throws InvoiceApiException {
-        BigDecimal refundAmount = new BigDecimal("-20.00");
+        BigDecimal refundAmount = new BigDecimal("20.00");
         BigDecimal expectedBalance = BigDecimal.ZERO;
         testAccountBalanceWithRefundAndCBAInternal(true, refundAmount, expectedBalance);
     }

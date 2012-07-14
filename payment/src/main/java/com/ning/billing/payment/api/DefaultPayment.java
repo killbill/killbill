@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -28,6 +28,8 @@ import com.google.common.collect.Collections2;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.payment.dao.PaymentAttemptModelDao;
 import com.ning.billing.payment.dao.PaymentModelDao;
+import com.ning.billing.payment.dao.RefundModelDao;
+import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
 import com.ning.billing.util.entity.EntityBase;
 
 public class DefaultPayment extends EntityBase implements Payment {
@@ -37,6 +39,7 @@ public class DefaultPayment extends EntityBase implements Payment {
     private final UUID invoiceId;
     private final UUID paymentMethodId;
     private final BigDecimal amount;
+    private final BigDecimal paidAmount;
     private final Currency currency;
     private final DateTime effectiveDate;
     private final Integer paymentNumber;
@@ -45,7 +48,7 @@ public class DefaultPayment extends EntityBase implements Payment {
 
 
     private DefaultPayment(final UUID id, final UUID accountId, final UUID invoiceId,
-                           final UUID paymentMethodId, final BigDecimal amount, final Currency currency,
+                           final UUID paymentMethodId, final BigDecimal amount, BigDecimal paidAmount, final Currency currency,
                            final DateTime effectiveDate, final Integer paymentNumber,
                            final PaymentStatus paymentStatus, final String paymentError, final List<PaymentAttempt> attempts) {
         super(id);
@@ -53,6 +56,7 @@ public class DefaultPayment extends EntityBase implements Payment {
         this.invoiceId = invoiceId;
         this.paymentMethodId = paymentMethodId;
         this.amount = amount;
+        this.paidAmount = paidAmount;
         this.currency = currency;
         this.effectiveDate = effectiveDate;
         this.paymentNumber = paymentNumber;
@@ -60,12 +64,13 @@ public class DefaultPayment extends EntityBase implements Payment {
         this.attempts = attempts;
     }
 
-    public DefaultPayment(final PaymentModelDao src, final List<PaymentAttemptModelDao> attempts) {
+    public DefaultPayment(final PaymentModelDao src, final List<PaymentAttemptModelDao> attempts, final List<RefundModelDao> refunds) {
         this(src.getId(),
              src.getAccountId(),
              src.getInvoiceId(),
              src.getPaymentMethodId(),
              src.getAmount(),
+             toPaidAmount(src.getPaymentStatus(), src.getAmount(), refunds),
              src.getCurrency(),
              src.getEffectiveDate(),
              src.getPaymentNumber(),
@@ -101,6 +106,11 @@ public class DefaultPayment extends EntityBase implements Payment {
     }
 
     @Override
+    public BigDecimal getPaidAmount() {
+        return paidAmount;
+    }
+
+    @Override
     public DateTime getEffectiveDate() {
         return effectiveDate;
     }
@@ -119,6 +129,21 @@ public class DefaultPayment extends EntityBase implements Payment {
     @Override
     public List<PaymentAttempt> getAttempts() {
         return attempts;
+    }
+
+    private final static BigDecimal toPaidAmount(final PaymentStatus paymentStatus, final BigDecimal amount, final List<RefundModelDao> refunds) {
+
+        if (paymentStatus != PaymentStatus.SUCCESS) {
+            return BigDecimal.ZERO;
+        }
+
+        BigDecimal result = amount;
+        for (RefundModelDao cur : refunds) {
+            if (cur.getRefundStatus() != RefundStatus.CREATED) {
+                result = result.subtract(cur.getAmount());
+            }
+        }
+        return result;
     }
 
     private static List<PaymentAttempt> toPaymentAttempts(final List<PaymentAttemptModelDao> attempts) {

@@ -88,6 +88,9 @@ public class DefaultPaymentApi implements PaymentApi {
     public Refund createRefund(Account account, UUID paymentId,
             BigDecimal refundAmount, boolean isAdjusted, CallContext context)
             throws PaymentApiException {
+        if (refundAmount == null || refundAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new PaymentApiException(ErrorCode.PAYMENT_REFUND_AMOUNT_NEGATIVE_OR_NULL);
+        }
         return refundProcessor.createRefund(account, paymentId, refundAmount, isAdjusted, context);
 
     }

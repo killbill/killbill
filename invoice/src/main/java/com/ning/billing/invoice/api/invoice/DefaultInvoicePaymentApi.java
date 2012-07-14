@@ -23,6 +23,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
@@ -36,6 +37,7 @@ import com.ning.billing.util.callcontext.CallContext;
 import com.google.inject.Inject;
 
 public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
+
     private final InvoiceDao dao;
 
     @Inject
@@ -113,6 +115,9 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
     @Override
     public InvoicePayment createRefund(final UUID paymentId, final BigDecimal amount, final boolean isInvoiceAdjusted,
                                        final UUID paymentCookieId, final CallContext context) throws InvoiceApiException {
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new InvoiceApiException(ErrorCode.PAYMENT_REFUND_AMOUNT_NEGATIVE_OR_NULL);
+        }
         return dao.createRefund(paymentId, amount, isInvoiceAdjusted, paymentCookieId, context);
     }
 }
