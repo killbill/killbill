@@ -10,6 +10,8 @@ CREATE TABLE custom_fields (
     created_date datetime NOT NULL,
     updated_by varchar(50) DEFAULT NULL,
     updated_date datetime DEFAULT NULL,
+    account_record_id int(11) unsigned default null,
+    tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(record_id)
 ) ENGINE=innodb;
 CREATE UNIQUE INDEX custom_fields_id ON custom_fields(id);
@@ -28,12 +30,13 @@ CREATE TABLE custom_field_history (
     updated_by varchar(50) NOT NULL,
     date datetime NOT NULL,
     change_type char(6) NOT NULL,
+    account_record_id int(11) unsigned default null,
+    tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(history_record_id)
 ) ENGINE=innodb;
 CREATE INDEX custom_field_history_record_id ON custom_field_history(record_id);
 CREATE INDEX custom_field_history_object_id_object_type ON custom_fields(object_id, object_type);
 
-DROP TABLE IF EXISTS tag_descriptions;
 DROP TABLE IF EXISTS tag_definitions;
 CREATE TABLE tag_definitions (
     record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
@@ -44,6 +47,7 @@ CREATE TABLE tag_definitions (
     created_date datetime NOT NULL,
     updated_by varchar(50) NOT NULL,
     updated_date datetime NOT NULL,
+    tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(record_id)
 ) ENGINE=innodb;
 CREATE UNIQUE INDEX tag_definitions_id ON tag_definitions(id);
@@ -60,6 +64,7 @@ CREATE TABLE tag_definition_history (
     change_type char(6) NOT NULL,
     updated_by varchar(50) NOT NULL,
     date datetime NOT NULL,
+    tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(history_record_id)
 ) ENGINE=innodb;
 CREATE INDEX tag_definition_history_id ON tag_definition_history(id);
@@ -75,6 +80,8 @@ CREATE TABLE tags (
     object_type varchar(30) NOT NULL,
     created_by varchar(50) NOT NULL,
     created_date datetime NOT NULL,
+    account_record_id int(11) unsigned default null,
+    tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(record_id)
 ) ENGINE = innodb;
 CREATE UNIQUE INDEX tags_id ON tags(id);
@@ -92,6 +99,8 @@ CREATE TABLE tag_history (
     updated_by varchar(50) NOT NULL,
     date datetime NOT NULL,
     change_type char(6) NOT NULL,
+    account_record_id int(11) unsigned default null,
+    tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(history_record_id)
 ) ENGINE = innodb;
 CREATE INDEX tag_history_record_id ON tag_history(record_id);
@@ -104,13 +113,15 @@ CREATE TABLE notifications (
     created_date datetime NOT NULL,
     class_name varchar(256) NOT NULL,
     account_id  char(36),
-	notification_key varchar(2048) NOT NULL,
-	creating_owner char(50) NOT NULL,
+    notification_key varchar(2048) NOT NULL,
+    creating_owner char(50) NOT NULL,
     effective_date datetime NOT NULL,
     queue_name char(64) NOT NULL,
     processing_owner char(50) DEFAULT NULL,
     processing_available_date datetime DEFAULT NULL,
     processing_state varchar(14) DEFAULT 'AVAILABLE',
+    account_record_id int(11) unsigned default null,
+    tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(record_id)
 ) ENGINE=innodb;
 CREATE UNIQUE INDEX notifications_id ON notifications(id);
@@ -124,6 +135,8 @@ CREATE TABLE claimed_notifications (
     owner_id varchar(64) NOT NULL,
     claimed_date datetime NOT NULL,
     notification_id char(36) NOT NULL,
+    account_record_id int(11) unsigned default null,
+    tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(record_id)
 ) ENGINE=innodb;
 
@@ -138,6 +151,8 @@ CREATE TABLE audit_log (
     reason_code varchar(20) DEFAULT NULL,
     comments varchar(255) DEFAULT NULL,
     user_token char(36),
+    account_record_id int(11) unsigned default null,
+    tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(id)
 ) ENGINE=innodb;
 CREATE INDEX audit_log_fetch_record ON audit_log(table_name, record_id);
@@ -153,6 +168,8 @@ CREATE TABLE bus_events (
     processing_owner char(50) DEFAULT NULL,
     processing_available_date datetime DEFAULT NULL,
     processing_state varchar(14) DEFAULT 'AVAILABLE',
+    account_record_id int(11) unsigned default null,
+    tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(record_id)
 ) ENGINE=innodb;
 CREATE INDEX  `idx_bus_where` ON bus_events (`processing_state`,`processing_owner`,`creating_owner`,`processing_available_date`);
@@ -163,5 +180,7 @@ CREATE TABLE claimed_bus_events (
     owner_id varchar(64) NOT NULL,
     claimed_date datetime NOT NULL,
     bus_event_id char(36) NOT NULL,
+    account_record_id int(11) unsigned default null,
+    tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(record_id)
 ) ENGINE=innodb;

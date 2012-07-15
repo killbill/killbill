@@ -18,6 +18,8 @@ CREATE TABLE invoice_items (
     linked_item_id char(36),
     created_by varchar(50) NOT NULL,
     created_date datetime NOT NULL,
+    account_record_id int(11) unsigned default null,
+    tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(record_id)
 ) ENGINE=innodb;
 
@@ -37,6 +39,8 @@ CREATE TABLE invoices (
     migrated bool NOT NULL,
     created_by varchar(50) NOT NULL,
     created_date datetime NOT NULL,
+    account_record_id int(11) unsigned default null,
+    tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(record_id)
 ) ENGINE=innodb;
 CREATE UNIQUE INDEX invoices_id ON invoices(id);
@@ -56,6 +60,8 @@ CREATE TABLE invoice_payments (
     linked_invoice_payment_id char(36) DEFAULT NULL,
     created_by varchar(50) NOT NULL,
     created_date datetime NOT NULL,
+    account_record_id int(11) unsigned default null,
+    tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(record_id)
 ) ENGINE=innodb;
 CREATE UNIQUE INDEX invoice_payments_id ON invoice_payments(id);
