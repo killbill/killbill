@@ -64,6 +64,20 @@ public class RepairEntitlementDao implements EntitlementDao, RepairEntitlementLi
             return orderingId;
         }
 
+        @Override
+        public String toString() {
+            StringBuilder tmp  = new StringBuilder();
+            tmp.append("[");
+            tmp.append(event.getType());
+            tmp.append(": effDate=");
+            tmp.append(event.getEffectiveDate());
+            tmp.append(", subId=");
+            tmp.append(event.getSubscriptionId());
+            tmp.append(", ordering=");
+            tmp.append(event.getTotalOrdering());
+            tmp.append("]");
+            return tmp.toString();
+        }
     }
 
     private static final class SubscriptionRepairEvent {
@@ -82,7 +96,7 @@ public class RepairEntitlementDao implements EntitlementDao, RepairEntitlementLi
                         } else if (o1.getOrderingId() > o2.getOrderingId()) {
                             return 1;
                         } else {
-                            throw new RuntimeException("Repair entitlement events should not have the same orderingId");
+                            throw new RuntimeException(String.format(" Repair entitlement events should not have the same orderingId %s, %s ", o1, o2));
                         }
                     }
                     return result;
