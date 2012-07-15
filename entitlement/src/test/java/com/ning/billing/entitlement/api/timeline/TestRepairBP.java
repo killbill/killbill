@@ -692,6 +692,10 @@ public class TestRepairBP extends TestApiBaseRepair {
                 final BundleTimeline bRepair = createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
 
                 final DateTime newChargedThroughDate = baseSubscription.getStartDate().plusDays(30).plusMonths(1);
+
+                // Move clock at least a sec to make sure the last_sys_update from bundle is different-- and therefore generates a different viewId
+                clock.setDeltaFromReality(1000);
+
                 billingApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate, context);
                 entitlementApi.getSubscriptionFromId(baseSubscription.getId());
 
