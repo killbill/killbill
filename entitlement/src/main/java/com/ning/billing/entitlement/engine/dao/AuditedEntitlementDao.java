@@ -170,7 +170,7 @@ public class AuditedEntitlementDao implements EntitlementDao {
 
     @Override
     public List<Subscription> getSubscriptions(final SubscriptionFactory factory, final UUID bundleId) {
-        return buildBundleSubscriptions(factory, subscriptionsDao.getSubscriptionsFromBundleId(bundleId.toString()));
+        return buildBundleSubscriptions(bundleId, factory, subscriptionsDao.getSubscriptionsFromBundleId(bundleId.toString()));
     }
 
     @Override
@@ -493,7 +493,7 @@ public class AuditedEntitlementDao implements EntitlementDao {
             bundleInput.add(input);
         }
 
-        final List<Subscription> reloadedSubscriptions = buildBundleSubscriptions(factory, bundleInput);
+        final List<Subscription> reloadedSubscriptions = buildBundleSubscriptions(input.getBundleId(), factory, bundleInput);
         for (final Subscription cur : reloadedSubscriptions) {
             if (cur.getId().equals(input.getId())) {
                 return cur;
@@ -503,7 +503,7 @@ public class AuditedEntitlementDao implements EntitlementDao {
         throw new EntitlementError("Unexpected code path in buildSubscription");
     }
 
-    private List<Subscription> buildBundleSubscriptions(final SubscriptionFactory factory, final List<Subscription> input) {
+    private List<Subscription> buildBundleSubscriptions(final UUID bundleId, final SubscriptionFactory factory, final List<Subscription> input) {
         if (input == null || input.size() == 0) {
             return Collections.emptyList();
         }
@@ -512,6 +512,18 @@ public class AuditedEntitlementDao implements EntitlementDao {
         Collections.sort(input, new Comparator<Subscription>() {
             @Override
             public int compare(final Subscription o1, final Subscription o2) {
+
+                //
+                // STEPH production NPE needs debugging:
+                //
+                if (o1 == null) {
+                    log.error("o1 :Unexpected null subscription in compareMethod for bundle {}, input.size() = {}", bundleId, input.size());
+                }
+                if (o2 == null) {
+                    log.error("o2 :Unexpected null subscription in compareMethod for bundle {}, input.size() = {}", bundleId, input.size());
+                }
+
+
                 if (o1.getCategory() == ProductCategory.BASE) {
                     return -1;
                 } else if (o2.getCategory() == ProductCategory.BASE) {
