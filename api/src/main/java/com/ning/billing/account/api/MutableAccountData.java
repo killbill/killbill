@@ -33,7 +33,7 @@ public interface MutableAccountData extends AccountData {
 
     public void setCurrency(Currency currency);
 
-    public void setBillCycleDay(int billCycleDay);
+    public void setBillCycleDay(BillCycleDay billCycleDay);
 
     public void setPaymentMethodId(UUID paymentMethodId);
 

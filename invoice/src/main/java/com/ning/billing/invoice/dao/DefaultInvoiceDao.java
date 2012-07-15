@@ -32,6 +32,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
+import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
@@ -151,7 +152,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public void create(final Invoice invoice, final int billCycleDay, final CallContext context) {
+    public void create(final Invoice invoice, final int billCycleDayUTC, final CallContext context) {
         invoiceSqlDao.inTransaction(new Transaction<Void, InvoiceSqlDao>() {
             @Override
             public Void inTransaction(final InvoiceSqlDao transactional, final TransactionStatus status) throws Exception {
@@ -172,7 +173,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
                     audits.addAll(createAudits(TableName.INVOICE_ITEMS, recordIdList));
 
                     final List<InvoiceItem> recurringInvoiceItems = invoice.getInvoiceItems(RecurringInvoiceItem.class);
-                    notifyOfFutureBillingEvents(transactional, invoice.getAccountId(), billCycleDay, recurringInvoiceItems);
+                    notifyOfFutureBillingEvents(transactional, invoice.getAccountId(), billCycleDayUTC, recurringInvoiceItems);
 
                     final List<InvoicePayment> invoicePayments = invoice.getPayments();
                     final InvoicePaymentSqlDao invoicePaymentSqlDao = transactional.become(InvoicePaymentSqlDao.class);
@@ -530,7 +531,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
         invoice.addPayments(invoicePayments);
     }
 
-    private void notifyOfFutureBillingEvents(final InvoiceSqlDao dao, final UUID accountId, final int billCycleDay, final List<InvoiceItem> invoiceItems) {
+    private void notifyOfFutureBillingEvents(final InvoiceSqlDao dao, final UUID accountId, final int billCycleDayUTC, final List<InvoiceItem> invoiceItems) {
         UUID subscriptionForNextNotification = null;
         boolean shouldBeNotified = false;
         for (final InvoiceItem item : invoiceItems) {
@@ -551,7 +552,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
         if (shouldBeNotified) {
             // We could be notified at any time during the day at the billCycleDay - use the current time to
             // spread the load.
-            final DateTime nextNotificationDateTime = InvoiceDateUtils.calculateBillingCycleDateAfter(clock.getUTCNow(), billCycleDay);
+            final DateTime nextNotificationDateTime = InvoiceDateUtils.calculateBillingCycleDateAfter(clock.getUTCNow(), billCycleDayUTC);
             // NextBillingDatePoster will ignore duplicates
             nextBillingDatePoster.insertNextBillingNotification(dao, accountId, subscriptionForNextNotification, nextNotificationDateTime);
         }

@@ -42,6 +42,7 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.AccountService;
 import com.ning.billing.account.api.AccountUserApi;
+import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.analytics.AnalyticsListener;
 import com.ning.billing.analytics.api.user.DefaultAnalyticsUserApi;
 import com.ning.billing.api.TestApiListener;
@@ -63,6 +64,8 @@ import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.invoice.generator.InvoiceDateUtils;
 import com.ning.billing.invoice.model.InvoicingConfiguration;
 import com.ning.billing.junction.plumbing.api.BlockingSubscription;
+import com.ning.billing.mock.MockAccountBuilder;
+import com.ning.billing.mock.api.MockBillCycleDay;
 import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
@@ -282,102 +285,17 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     }
 
     protected AccountData getAccountData(final int billingDay) {
-        final String someRandomKey = UUID.randomUUID().toString();
-        return new AccountData() {
-            @Override
-            public String getName() {
-                return "firstName lastName";
-            }
-
-            @Override
-            public Integer getFirstNameLength() {
-                return "firstName".length();
-            }
-
-            @Override
-            public String getEmail() {
-                return someRandomKey + "@laposte.fr";
-            }
-
-            @Override
-            public String getPhone() {
-                return "4152876341";
-            }
-
-            @Override
-            public Boolean isMigrated() {
-                return false;
-            }
-
-            @Override
-            public Boolean isNotifiedForInvoices() {
-                return false;
-            }
-
-            @Override
-            public String getExternalKey() {
-                return someRandomKey;
-            }
-
-            @Override
-            public Integer getBillCycleDay() {
-                return billingDay;
-            }
-
-            @Override
-            public Currency getCurrency() {
-                return Currency.USD;
-            }
-
-            @Override
-            public UUID getPaymentMethodId() {
-                return null;
-            }
-
-            @Override
-            public DateTimeZone getTimeZone() {
-                return DateTimeZone.UTC;
-            }
-
-            @Override
-            public String getLocale() {
-                return null;
-            }
-
-            @Override
-            public String getAddress1() {
-                return null;
-            }
-
-            @Override
-            public String getAddress2() {
-                return null;
-            }
-
-            @Override
-            public String getCompanyName() {
-                return null;
-            }
-
-            @Override
-            public String getCity() {
-                return null;
-            }
-
-            @Override
-            public String getStateOrProvince() {
-                return null;
-            }
-
-            @Override
-            public String getPostalCode() {
-                return null;
-            }
-
-            @Override
-            public String getCountry() {
-                return null;
-            }
-        };
+        return new MockAccountBuilder().name(UUID.randomUUID().toString().substring(1, 8))
+                                       .firstNameLength(6)
+                                       .email(UUID.randomUUID().toString().substring(1, 8))
+                                       .phone(UUID.randomUUID().toString().substring(1, 8))
+                                       .migrated(false)
+                                       .isNotifiedForInvoices(false)
+                                       .externalKey(UUID.randomUUID().toString().substring(1, 8))
+                                       .billingCycleDay(new MockBillCycleDay(billingDay))
+                                       .currency(Currency.USD)
+                                       .paymentMethodId(UUID.randomUUID())
+                                       .timeZone(DateTimeZone.UTC)
+                                       .build();
     }
 }

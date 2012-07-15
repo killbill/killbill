@@ -32,7 +32,10 @@ import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.account.api.DefaultAccountEmail;
+import com.ning.billing.account.api.DefaultBillCycleDay;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.mock.MockAccountBuilder;
+import com.ning.billing.mock.api.MockBillCycleDay;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.customfield.StringCustomField;
@@ -69,7 +72,7 @@ public class TestAccountDao extends AccountDaoTestBase {
         final int firstNameLength = firstName.length();
 
         return new DefaultAccount(UUID.randomUUID(), thisKey, thisEmail, name, firstNameLength, Currency.USD,
-                                  billCycleDay, UUID.randomUUID(), timeZone, locale,
+                                  new DefaultBillCycleDay(billCycleDay, billCycleDay), UUID.randomUUID(), timeZone, locale,
                                   null, null, null, null, null, null, null, // add null address fields
                                   phone, false, false);
     }
@@ -186,102 +189,11 @@ public class TestAccountDao extends AccountDaoTestBase {
         final Account account = createTestAccount(1);
         accountDao.create(account, context);
 
-        final AccountData accountData = new AccountData() {
-            @Override
-            public String getExternalKey() {
-                return account.getExternalKey();
-            }
-
-            @Override
-            public String getName() {
-                return "Jane Doe";
-            }
-
-            @Override
-            public Integer getFirstNameLength() {
-                return 4;
-            }
-
-            @Override
-            public String getEmail() {
-                return account.getEmail();
-            }
-
-            @Override
-            public String getPhone() {
-                return account.getPhone();
-            }
-
-            @Override
-            public Boolean isMigrated() {
-                return false;
-            }
-
-            @Override
-            public Boolean isNotifiedForInvoices() {
-                return false;
-            }
-
-            @Override
-            public Integer getBillCycleDay() {
-                return account.getBillCycleDay();
-            }
-
-            @Override
-            public Currency getCurrency() {
-                return account.getCurrency();
-            }
-
-            @Override
-            public UUID getPaymentMethodId() {
-                return account.getPaymentMethodId();
-            }
-
-            @Override
-            public DateTimeZone getTimeZone() {
-                return DateTimeZone.forID("Australia/Darwin");
-            }
-
-            @Override
-            public String getLocale() {
-                return "FR-CA";
-            }
-
-            @Override
-            public String getAddress1() {
-                return null;
-            }
-
-            @Override
-            public String getAddress2() {
-                return null;
-            }
-
-            @Override
-            public String getCompanyName() {
-                return null;
-            }
-
-            @Override
-            public String getCity() {
-                return null;
-            }
-
-            @Override
-            public String getStateOrProvince() {
-                return null;
-            }
-
-            @Override
-            public String getPostalCode() {
-                return null;
-            }
-
-            @Override
-            public String getCountry() {
-                return null;
-            }
-        };
+        final AccountData accountData = new MockAccountBuilder(account).migrated(false)
+                                                                       .isNotifiedForInvoices(false)
+                                                                       .timeZone(DateTimeZone.forID("Australia/Darwin"))
+                                                                       .locale("FR-CA")
+                                                                       .build();
 
         final Account updatedAccount = new DefaultAccount(account.getId(), accountData);
         accountDao.update(updatedAccount, context);
@@ -309,7 +221,7 @@ public class TestAccountDao extends AccountDaoTestBase {
     public void testAddingContactInformation() throws Exception {
         final UUID accountId = UUID.randomUUID();
         final DefaultAccount account = new DefaultAccount(accountId, "extKey123456", "myemail123456@glam.com",
-                                                          "John Smith", 4, Currency.USD, 15, null,
+                                                          "John Smith", 4, Currency.USD, new DefaultBillCycleDay(15), null,
                                                           DateTimeZone.forID("America/Cambridge_Bay"), "EN-CA",
                                                           null, null, null, null, null, null, null, null, false, false);
         accountDao.create(account, context);
@@ -324,7 +236,7 @@ public class TestAccountDao extends AccountDaoTestBase {
         final String phone = "18001112222";
 
         final DefaultAccount updatedAccount = new DefaultAccount(accountId, "extKey123456", "myemail123456@glam.com",
-                                                                 "John Smith", 4, Currency.USD, 15, null,
+                                                                 "John Smith", 4, Currency.USD, new DefaultBillCycleDay(15), null,
                                                                  DateTimeZone.forID("America/Cambridge_Bay"), "EN-CA",
                                                                  address1, address2, companyName, city, stateOrProvince, country,
                                                                  postalCode, phone, false, false);
@@ -351,14 +263,14 @@ public class TestAccountDao extends AccountDaoTestBase {
         final String originalExternalKey = "extKey1337";
 
         final DefaultAccount account = new DefaultAccount(accountId, originalExternalKey, "myemail1337@glam.com",
-                                                          "John Smith", 4, Currency.USD, 15, null,
+                                                          "John Smith", 4, Currency.USD, new DefaultBillCycleDay(15), null,
                                                           null, null, null, null, null, null, null, null, null, null,
                                                           false, false);
         accountDao.create(account, context);
 
         final String buggyKey = "extKey1338";
         final DefaultAccount updatedAccountData = new DefaultAccount(accountId, buggyKey, "myemail1337@glam.com",
-                                                                     "John Smith", 4, Currency.USD, 15, null,
+                                                                     "John Smith", 4, Currency.USD, new DefaultBillCycleDay(15), null,
                                                                      null, null, null, null, null, null, null, null, null, null,
                                                                      false, false);
         accountDao.update(updatedAccountData, context);

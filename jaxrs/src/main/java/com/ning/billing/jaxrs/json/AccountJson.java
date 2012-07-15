@@ -20,11 +20,13 @@ import java.util.UUID;
 
 import org.joda.time.DateTimeZone;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountData;
+import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.catalog.api.Currency;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class AccountJson extends AccountJsonSimple {
     // STEPH Missing city, locale, postalCode from https://home.ninginc.com:8443/display/REVINFRA/Killbill+1.0+APIs
@@ -35,7 +37,7 @@ public class AccountJson extends AccountJsonSimple {
 
     private final String email;
 
-    private final Integer billCycleDay;
+    private final BillCycleDayJson billCycleDayJson;
 
     private final String currency;
 
@@ -55,13 +57,12 @@ public class AccountJson extends AccountJsonSimple {
 
     private final String phone;
 
-
     public AccountJson(final Account account) {
         super(account.getId().toString(), account.getExternalKey());
         this.name = account.getName();
         this.length = account.getFirstNameLength();
         this.email = account.getEmail();
-        this.billCycleDay = account.getBillCycleDay();
+        this.billCycleDayJson = new BillCycleDayJson(account.getBillCycleDay());
         this.currency = account.getCurrency() != null ? account.getCurrency().toString() : null;
         this.paymentMethodId = account.getPaymentMethodId() != null ? account.getPaymentMethodId().toString() : null;
         this.timeZone = account.getTimeZone().toString();
@@ -157,8 +158,22 @@ public class AccountJson extends AccountJsonSimple {
             }
 
             @Override
-            public Integer getBillCycleDay() {
-                return billCycleDay;
+            public BillCycleDay getBillCycleDay() {
+                if (billCycleDayJson == null) {
+                    return null;
+                }
+
+                return new BillCycleDay() {
+                    @Override
+                    public int getDayOfMonthUTC() {
+                        return billCycleDayJson.getDayOfMonthUTC();
+                    }
+
+                    @Override
+                    public int getDayOfMonthLocal() {
+                        return billCycleDayJson.getDayOfMonthLocal();
+                    }
+                };
             }
 
             @Override
@@ -180,7 +195,7 @@ public class AccountJson extends AccountJsonSimple {
         this.name = null;
         this.length = null;
         this.email = null;
-        this.billCycleDay = null;
+        this.billCycleDayJson = null;
         this.currency = null;
         this.paymentMethodId = null;
         this.timeZone = null;
@@ -198,7 +213,7 @@ public class AccountJson extends AccountJsonSimple {
                        @JsonProperty("firstNameLength") final Integer length,
                        @JsonProperty("externalKey") final String externalKey,
                        @JsonProperty("email") final String email,
-                       @JsonProperty("billingDay") final Integer billCycleDay,
+                       @JsonProperty("billCycleDay") final BillCycleDayJson billCycleDay,
                        @JsonProperty("currency") final String currency,
                        @JsonProperty("paymentMethodId") final String paymentMethodId,
                        @JsonProperty("timezone") final String timeZone,
@@ -212,7 +227,7 @@ public class AccountJson extends AccountJsonSimple {
         this.name = name;
         this.length = length;
         this.email = email;
-        this.billCycleDay = billCycleDay;
+        this.billCycleDayJson = billCycleDay;
         this.currency = currency;
         this.paymentMethodId = paymentMethodId;
         this.timeZone = timeZone;
@@ -236,8 +251,8 @@ public class AccountJson extends AccountJsonSimple {
         return email;
     }
 
-    public Integer getBillCycleDay() {
-        return billCycleDay;
+    public BillCycleDayJson getBillCycleDay() {
+        return billCycleDayJson;
     }
 
     public String getCurrency() {
@@ -281,28 +296,28 @@ public class AccountJson extends AccountJsonSimple {
         final int prime = 31;
         int result = 1;
         result = prime * result
-                + ((accountId == null) ? 0 : accountId.hashCode());
+                 + ((accountId == null) ? 0 : accountId.hashCode());
         result = prime * result
-                + ((address1 == null) ? 0 : address1.hashCode());
+                 + ((address1 == null) ? 0 : address1.hashCode());
         result = prime * result
-                + ((address2 == null) ? 0 : address2.hashCode());
+                 + ((address2 == null) ? 0 : address2.hashCode());
         result = prime * result
-                + ((billCycleDay == null) ? 0 : billCycleDay.hashCode());
+                 + ((billCycleDayJson == null) ? 0 : billCycleDayJson.hashCode());
         result = prime * result + ((company == null) ? 0 : company.hashCode());
         result = prime * result + ((country == null) ? 0 : country.hashCode());
         result = prime * result
-                + ((currency == null) ? 0 : currency.hashCode());
+                 + ((currency == null) ? 0 : currency.hashCode());
         result = prime * result + ((email == null) ? 0 : email.hashCode());
         result = prime * result
-                + ((externalKey == null) ? 0 : externalKey.hashCode());
+                 + ((externalKey == null) ? 0 : externalKey.hashCode());
         result = prime * result + ((length == null) ? 0 : length.hashCode());
         result = prime * result + ((name == null) ? 0 : name.hashCode());
         result = prime * result
-                + ((paymentMethodId == null) ? 0 : paymentMethodId.hashCode());
+                 + ((paymentMethodId == null) ? 0 : paymentMethodId.hashCode());
         result = prime * result + ((phone == null) ? 0 : phone.hashCode());
         result = prime * result + ((state == null) ? 0 : state.hashCode());
         result = prime * result
-                + ((timeZone == null) ? 0 : timeZone.hashCode());
+                 + ((timeZone == null) ? 0 : timeZone.hashCode());
         return result;
     }
 
@@ -332,11 +347,11 @@ public class AccountJson extends AccountJsonSimple {
         } else if (!address2.equals(other.address2)) {
             return false;
         }
-        if (billCycleDay == null) {
-            if (other.billCycleDay != null) {
+        if (billCycleDayJson == null) {
+            if (other.billCycleDayJson != null) {
                 return false;
             }
-        } else if (!billCycleDay.equals(other.billCycleDay)) {
+        } else if (!billCycleDayJson.equals(other.billCycleDayJson)) {
             return false;
         }
         if (company == null) {

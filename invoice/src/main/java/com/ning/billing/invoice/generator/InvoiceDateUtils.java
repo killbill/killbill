@@ -136,42 +136,29 @@ public class InvoiceDateUtils {
     }
 
     public static LocalDate calculateBillingCycleDateOnOrAfter(final LocalDate date, final DateTimeZone accountTimeZone,
-                                                               final int billingCycleDay) {
-        // We go back to DateTime here. Since the BCD was computed in UTC, use UTC here as well
-        final DateTime tmp = new DateTime(date.toDateTimeAtStartOfDay(), DateTimeZone.UTC);
-        final DateTime proposedDateTime = calculateBillingCycleDateOnOrAfter(tmp, billingCycleDay);
+                                                               final int billingCycleDayLocal) {
+        final DateTime tmp = new DateTime(date.toDateTimeAtStartOfDay(), accountTimeZone);
+        final DateTime proposedDateTime = calculateBillingCycleDateOnOrAfter(tmp, billingCycleDayLocal);
 
-        final LocalDate proposedLocalDate = new LocalDate(proposedDateTime, accountTimeZone);
-        if (proposedLocalDate.isBefore(date)) {
-            return proposedLocalDate.plusMonths(1);
-        } else {
-            return proposedLocalDate;
-        }
+        return new LocalDate(proposedDateTime, accountTimeZone);
     }
 
     public static LocalDate calculateBillingCycleDateAfter(final LocalDate date, final DateTimeZone accountTimeZone,
-                                                           final int billingCycleDay) {
-        // We go back to DateTime here. Since the BCD was computed in UTC, use UTC here as well
-        final DateTime tmp = new DateTime(date.toDateTimeAtStartOfDay(), DateTimeZone.UTC);
-        final DateTime proposedDateTime = calculateBillingCycleDateAfter(tmp, billingCycleDay);
+                                                           final int billingCycleDayLocal) {
+        final DateTime tmp = new DateTime(date.toDateTimeAtStartOfDay(), accountTimeZone);
+        final DateTime proposedDateTime = calculateBillingCycleDateAfter(tmp, billingCycleDayLocal);
 
-        final LocalDate proposedLocalDate = new LocalDate(proposedDateTime, accountTimeZone);
-        if (proposedLocalDate.isBefore(date)) {
-            return proposedLocalDate.plusMonths(1);
-        } else {
-            return proposedLocalDate;
-        }
+        return new LocalDate(proposedDateTime, accountTimeZone);
     }
 
-    // Note: date has to be in UTC
-    public static DateTime calculateBillingCycleDateOnOrAfter(final DateTime date, final int billingCycleDay) {
+    public static DateTime calculateBillingCycleDateOnOrAfter(final DateTime date, final int billingCycleDayLocal) {
         final int lastDayOfMonth = date.dayOfMonth().getMaximumValue();
 
         final MutableDateTime tmp = date.toMutableDateTime();
-        if (billingCycleDay > lastDayOfMonth) {
+        if (billingCycleDayLocal > lastDayOfMonth) {
             tmp.setDayOfMonth(lastDayOfMonth);
         } else {
-            tmp.setDayOfMonth(billingCycleDay);
+            tmp.setDayOfMonth(billingCycleDayLocal);
         }
         DateTime proposedDate = tmp.toDateTime();
 
@@ -181,9 +168,8 @@ public class InvoiceDateUtils {
         return proposedDate;
     }
 
-    // Note: date has to be in UTC
-    public static DateTime calculateBillingCycleDateAfter(final DateTime date, final int billingCycleDay) {
-        DateTime proposedDate = calculateBillingCycleDateOnOrAfter(date, billingCycleDay);
+    public static DateTime calculateBillingCycleDateAfter(final DateTime date, final int billingCycleDayLocal) {
+        DateTime proposedDate = calculateBillingCycleDateOnOrAfter(date, billingCycleDayLocal);
         if (date.compareTo(proposedDate) == 0) {
             proposedDate = proposedDate.plusMonths(1);
         }

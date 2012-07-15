@@ -27,6 +27,8 @@ import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 
 import com.google.inject.Inject;
+
+import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;

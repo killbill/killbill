@@ -58,6 +58,7 @@ import com.ning.billing.invoice.notification.NullInvoiceNotifier;
 import com.ning.billing.invoice.tests.InvoicingTestBase;
 import com.ning.billing.junction.api.BillingApi;
 import com.ning.billing.junction.api.BillingEventSet;
+import com.ning.billing.mock.api.MockBillCycleDay;
 import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.bus.DefaultBusService;
 import com.ning.billing.util.callcontext.CallContext;
@@ -130,7 +131,7 @@ public class TestDefaultInvoiceMigrationApi extends InvoicingTestBase {
         Mockito.when(account.getCurrency()).thenReturn(Currency.USD);
         Mockito.when(account.getId()).thenReturn(accountId);
         Mockito.when(account.isNotifiedForInvoices()).thenReturn(true);
-        Mockito.when(account.getBillCycleDay()).thenReturn(31);
+        Mockito.when(account.getBillCycleDay()).thenReturn(new MockBillCycleDay(31));
 
         migrationInvoiceId = createAndCheckMigrationInvoice();
         regularInvoiceId = generateRegularInvoice();

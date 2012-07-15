@@ -22,6 +22,7 @@ import java.util.UUID;
 
 import org.joda.time.LocalDate;
 
+import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
@@ -32,7 +33,7 @@ import com.ning.billing.util.callcontext.CallContext;
 
 public interface InvoiceDao {
 
-    void create(final Invoice invoice, final int billCycleDay, final CallContext context);
+    void create(final Invoice invoice, final int billCycleDayUTC, final CallContext context);
 
     Invoice getById(final UUID id);
 

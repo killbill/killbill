@@ -47,6 +47,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.inject.Module;
 import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
+import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.account.glue.AccountModule;
 import com.ning.billing.analytics.setup.AnalyticsModule;
 import com.ning.billing.api.TestApiListener;
@@ -63,6 +64,7 @@ import com.ning.billing.invoice.api.InvoiceNotifier;
 import com.ning.billing.invoice.glue.DefaultInvoiceModule;
 import com.ning.billing.invoice.notification.NullInvoiceNotifier;
 import com.ning.billing.jaxrs.json.AccountJson;
+import com.ning.billing.jaxrs.json.BillCycleDayJson;
 import com.ning.billing.jaxrs.json.BundleJsonNoSubscriptions;
 import com.ning.billing.jaxrs.json.PaymentMethodJson;
 import com.ning.billing.jaxrs.json.PaymentMethodJson.PaymentMethodPluginDetailJson;
@@ -512,7 +514,7 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
         final String accountId = UUID.randomUUID().toString();
         final int length = 4;
         // Let junction figure it out
-        final int billCycleDay = 0;
+        final BillCycleDayJson billCycleDay = null;
         final String currency = "USD";
         final String timeZone = "UTC";
         final String address1 = "12 rue des ecoles";

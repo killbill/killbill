@@ -33,6 +33,7 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
+import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.entitlement.api.billing.BillingEvent;
 import com.ning.billing.entitlement.api.billing.EntitlementBillingApiException;
@@ -177,7 +178,7 @@ public class InvoiceDispatcher {
                 }
                 outputDebugData(billingEvents, invoices);
                 if (!dryRun) {
-                    invoiceDao.create(invoice, account.getBillCycleDay(), context);
+                    invoiceDao.create(invoice, account.getBillCycleDay().getDayOfMonthUTC(), context);
 
                     final List<InvoiceItem> fixedPriceInvoiceItems = invoice.getInvoiceItems(FixedPriceInvoiceItem.class);
                     final List<InvoiceItem> recurringInvoiceItems = invoice.getInvoiceItems(RecurringInvoiceItem.class);
@@ -202,7 +203,7 @@ public class InvoiceDispatcher {
         }
     }
 
-    private void setChargedThroughDates(final int billCycleDay,
+    private void setChargedThroughDates(final BillCycleDay billCycleDay,
                                         final Collection<InvoiceItem> fixedPriceItems,
                                         final Collection<InvoiceItem> recurringItems,
                                         final CallContext context) {
@@ -228,7 +229,7 @@ public class InvoiceDispatcher {
         }
     }
 
-    private void addInvoiceItemsToChargeThroughDates(final int billCycleDay,
+    private void addInvoiceItemsToChargeThroughDates(final BillCycleDay billCycleDay,
                                                      final Map<UUID, DateTime> chargeThroughDates,
                                                      final Collection<InvoiceItem> items) {
         for (final InvoiceItem item : items) {
@@ -243,9 +244,8 @@ public class InvoiceDispatcher {
 
             if (chargeThroughDates.containsKey(subscriptionId)) {
                 if (chargeThroughDates.get(subscriptionId).isBefore(endDate)) {
-                    // The CTD should always align with the BCD - note that the BCD is computed from UTC, hence we
-                    // can't use endDate as a CTD here
-                    chargeThroughDates.put(subscriptionId, InvoiceDateUtils.calculateBillingCycleDateOnOrAfter(endDate, billCycleDay));
+                    // The CTD should always align with the BCD
+                    chargeThroughDates.put(subscriptionId, InvoiceDateUtils.calculateBillingCycleDateOnOrAfter(endDate, billCycleDay.getDayOfMonthLocal()));
                 }
             } else {
                 chargeThroughDates.put(subscriptionId, endDate);

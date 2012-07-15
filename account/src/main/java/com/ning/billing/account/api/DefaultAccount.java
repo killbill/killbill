@@ -32,7 +32,7 @@ public class DefaultAccount extends EntityBase implements Account {
     // some fields
     public static final String DEFAULT_STRING_VALUE = "";
     public static final Integer DEFAULT_INTEGER_VALUE = 0;
-    public static final Integer DEFAULT_BCD_VALUE = DEFAULT_INTEGER_VALUE;
+    public static final BillCycleDay DEFAULT_BCD_VALUE = new DefaultBillCycleDay(DEFAULT_INTEGER_VALUE);
     public static final Currency DEFAULT_CURRENCY_VALUE = Currency.USD;
     public static final DateTimeZone DEFAULT_TIMEZONE_VALUE = DateTimeZone.UTC;
     private static final Boolean DEFAULT_MIGRATED_VALUE = true;
@@ -43,7 +43,7 @@ public class DefaultAccount extends EntityBase implements Account {
     private final String name;
     private final Integer firstNameLength;
     private final Currency currency;
-    private final Integer billCycleDay;
+    private final BillCycleDay billCycleDay;
     private final UUID paymentMethodId;
     private final DateTimeZone timeZone;
     private final String locale;
@@ -82,7 +82,7 @@ public class DefaultAccount extends EntityBase implements Account {
     */
     public DefaultAccount(final UUID id, final String externalKey, final String email,
                           final String name, final Integer firstNameLength,
-                          final Currency currency, final Integer billCycleDay, final UUID paymentMethodId,
+                          final Currency currency, final BillCycleDay billCycleDay, final UUID paymentMethodId,
                           final DateTimeZone timeZone, final String locale,
                           final String address1, final String address2, final String companyName,
                           final String city, final String stateOrProvince, final String country,
@@ -136,7 +136,7 @@ public class DefaultAccount extends EntityBase implements Account {
     }
 
     @Override
-    public Integer getBillCycleDay() {
+    public BillCycleDay getBillCycleDay() {
         return Objects.firstNonNull(billCycleDay, DEFAULT_BCD_VALUE);
     }
 

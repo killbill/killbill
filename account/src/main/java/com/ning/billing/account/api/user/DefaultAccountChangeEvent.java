@@ -20,14 +20,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountChangeEvent;
 import com.ning.billing.account.api.ChangedField;
 import com.ning.billing.account.api.DefaultChangedField;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 public class DefaultAccountChangeEvent implements AccountChangeEvent {
 
@@ -35,17 +36,13 @@ public class DefaultAccountChangeEvent implements AccountChangeEvent {
     private final List<ChangedField> changedFields;
     private final UUID accountId;
 
-
     @JsonCreator
     public DefaultAccountChangeEvent(@JsonProperty("userToken") final UUID userToken,
                                      @JsonProperty("changeFields") final List<ChangedField> changedFields,
                                      @JsonProperty("accountId") final UUID accountId) {
-        super();
         this.userToken = userToken;
         this.accountId = accountId;
         this.changedFields = changedFields;
-        //new ArrayList<ChangedField>();
-        //this.changedFields.addAll(changedFields);
     }
 
     public DefaultAccountChangeEvent(final UUID id, final UUID userToken, final Account oldData, final Account newData) {
@@ -87,11 +84,11 @@ public class DefaultAccountChangeEvent implements AccountChangeEvent {
         final int prime = 31;
         int result = 1;
         result = prime * result
-                + ((accountId == null) ? 0 : accountId.hashCode());
+                 + ((accountId == null) ? 0 : accountId.hashCode());
         result = prime * result
-                + ((changedFields == null) ? 0 : changedFields.hashCode());
+                 + ((changedFields == null) ? 0 : changedFields.hashCode());
         result = prime * result
-                + ((userToken == null) ? 0 : userToken.hashCode());
+                 + ((userToken == null) ? 0 : userToken.hashCode());
         return result;
     }
 
@@ -150,7 +147,7 @@ public class DefaultAccountChangeEvent implements AccountChangeEvent {
 
         addIfValueChanged(tmpChangedFields,
                           "billCycleDay",
-                          Integer.toString(oldData.getBillCycleDay()), Integer.toString(newData.getBillCycleDay()));
+                          oldData.getBillCycleDay().toString(), newData.getBillCycleDay().toString());
 
         addIfValueChanged(tmpChangedFields, "paymentMethodId",
                           (oldData.getPaymentMethodId() != null) ? oldData.getPaymentMethodId().toString() : null,

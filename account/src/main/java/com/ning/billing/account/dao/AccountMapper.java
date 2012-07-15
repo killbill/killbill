@@ -26,6 +26,7 @@ import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.DefaultAccount;
+import com.ning.billing.account.api.DefaultBillCycleDay;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.dao.MapperBase;
 
@@ -37,7 +38,8 @@ public class AccountMapper extends MapperBase implements ResultSetMapper<Account
         final String email = result.getString("email");
         final String name = result.getString("name");
         final int firstNameLength = result.getInt("first_name_length");
-        final int billingCycleDay = result.getInt("billing_cycle_day");
+        final int billingCycleDayLocal = result.getInt("billing_cycle_day_local");
+        final int billingCycleDayUTC = result.getInt("billing_cycle_day_utc");
 
         final String currencyString = result.getString("currency");
         final Currency currency = (currencyString == null) ? null : Currency.valueOf(currencyString);
@@ -62,7 +64,7 @@ public class AccountMapper extends MapperBase implements ResultSetMapper<Account
         final Boolean isNotifiedForInvoices = result.getBoolean("is_notified_for_invoices");
 
         return new DefaultAccount(id, externalKey, email, name, firstNameLength, currency,
-                                  billingCycleDay, paymentMethodId, timeZone, locale,
+                                  new DefaultBillCycleDay(billingCycleDayLocal, billingCycleDayUTC), paymentMethodId, timeZone, locale,
                                   address1, address2, companyName, city, stateOrProvince, country, postalCode, phone,
                                   isMigrated, isNotifiedForInvoices);
     }
