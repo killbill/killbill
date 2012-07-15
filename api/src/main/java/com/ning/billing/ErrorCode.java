@@ -185,6 +185,7 @@ public enum ErrorCode {
     INVOICE_TARGET_DATE_TOO_FAR_IN_THE_FUTURE(4005, "The target date was too far in the future. Target Date: %s"),
     INVOICE_NOT_FOUND(4006, "No invoice could be found for id %s."),
     INVOICE_NOTHING_TO_DO(4007, "No invoice to generate for account %s and date %s"),
+    INVOICE_NO_SUCH_CREDIT(4008, "Credit Item for id %s does not exist"),
 
     /*
      *
@@ -198,7 +199,7 @@ public enum ErrorCode {
     CHARGE_BACK_DOES_NOT_EXIST(4004, "Could not find chargeback for id %s."),
     INVOICE_PAYMENT_BY_ATTEMPT_NOT_FOUND(4905, "No invoice payment could be found for paymentAttempt id %s."),
     REFUND_AMOUNT_TOO_HIGH(4906, "Tried to refund %s of a %s payment."),
-    REFUND_AMOUNT_IS_POSITIVE(4907, "Refund for positve amounts are not permitted"),
+    CREDIT_AMOUNT_INVALID(4907, "Credit amount %s should be striclty positive"),
 
     /*
      *

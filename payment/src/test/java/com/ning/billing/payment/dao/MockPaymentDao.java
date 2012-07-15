@@ -16,6 +16,7 @@
 package com.ning.billing.payment.dao;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -160,32 +161,26 @@ public class MockPaymentDao implements PaymentDao {
     @Override
     public RefundModelDao insertRefund(RefundModelDao refundInfo,
             CallContext context) {
-        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public void updateRefundStatus(UUID refundId, RefundStatus status,
             CallContext context) {
-        // TODO Auto-generated method stub
-
     }
 
     @Override
     public RefundModelDao getRefund(UUID refundId) {
-        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public List<RefundModelDao> getRefundsForPayment(UUID paymentId) {
-        // TODO Auto-generated method stub
-        return null;
+        return Collections.emptyList();
     }
 
     @Override
     public List<RefundModelDao> getRefundsForAccount(UUID accountId) {
-        // TODO Auto-generated method stub
-        return null;
+        return Collections.emptyList();
     }
 }
