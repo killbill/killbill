@@ -50,6 +50,14 @@ public class KillbillTestSuiteWithEmbeddedDB extends KillbillTestSuite {
 
     @AfterSuite(groups = "slow")
     public void shutdownMysqlAfterTestSuite() throws IOException, ClassNotFoundException, SQLException, URISyntaxException {
+        if (hasFailed()) {
+            log.error("*************************************************************************************************");
+            log.error("*** TESTS HAVE FAILED - LEAVING MySQL RUNNING FOR DEBUGGING - MAKE SURE TO KILL IT ONCE DONE ****");
+            log.error(helper.getConnectionString());
+            log.error("*************************************************************************************************");
+            return;
+        }
+
         try {
             helper.stopMysql();
         } catch (Exception ignored) {

@@ -108,8 +108,12 @@ public class MysqlTestingHelper {
             throw new IllegalStateException("MySQL did not start.");
         } else {
             log.info("MySQL running on port " + mysqldResource.getPort());
-            log.info(String.format("To connect to it: mysql -u%s -p%s -P%s -S%s/mysql.sock %s", USERNAME, PASSWORD, port, dataDir, DB_NAME));
+            log.info("To connect to it: " + getConnectionString());
         }
+    }
+
+    public String getConnectionString() {
+        return String.format("mysql -u%s -p%s -P%s -S%s/mysql.sock %s", USERNAME, PASSWORD, port, dataDir, DB_NAME);
     }
 
     public void cleanupTable(final String table) {

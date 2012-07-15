@@ -25,8 +25,11 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 
 public class KillbillTestSuite {
+
     // Use the simple name here to save screen real estate
-    private static final Logger log = LoggerFactory.getLogger(KillbillTestSuite.class.getSimpleName());
+    protected static final Logger log = LoggerFactory.getLogger(KillbillTestSuite.class.getSimpleName());
+
+    private boolean hasFailed = false;
 
     @BeforeMethod(alwaysRun = true)
     public void startTestSuite(final Method method) throws Exception {
@@ -39,7 +42,15 @@ public class KillbillTestSuite {
     public void endTestSuite(final Method method, final ITestResult result) throws Exception {
         log.info("***************************************************************************************************");
         log.info("***   Ending test {}:{} {} ({} s.)", new Object[]{method.getDeclaringClass().getName(), method.getName(),
-                result.isSuccess() ? "SUCCESS" : "!!! FAILURE !!!", (result.getEndMillis() - result.getStartMillis()) / 1000});
+                                                                    result.isSuccess() ? "SUCCESS" : "!!! FAILURE !!!",
+                                                                    (result.getEndMillis() - result.getStartMillis()) / 1000});
         log.info("***************************************************************************************************");
+        if (!hasFailed && !result.isSuccess()) {
+            hasFailed = true;
+        }
+    }
+
+    public boolean hasFailed() {
+        return hasFailed;
     }
 }
