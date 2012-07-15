@@ -27,6 +27,7 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.mockito.Mockito;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.DefaultPrice;
@@ -47,6 +48,7 @@ import com.ning.billing.invoice.MockBillingEventSet;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.InvoicePayment.InvoicePaymentType;
 import com.ning.billing.invoice.model.CreditAdjInvoiceItem;
@@ -737,6 +739,111 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         cba = invoiceDao.getAccountCBA(accountId);
         assertEquals(cba.compareTo(new BigDecimal("0.00")), 0);
 
+    }
+
+
+    @Test(groups = "slow")
+    public void testAccountCredit() {
+
+        final UUID accountId = UUID.randomUUID();
+
+        final LocalDate effectiveDate = new LocalDate(2011, 3, 1);
+
+        final BigDecimal creditAmount = new BigDecimal("5.0");
+
+        invoiceDao.insertCredit(accountId, null, creditAmount, effectiveDate, Currency.USD, context);
+
+        final List<Invoice> invoices = invoiceDao.getAllInvoicesByAccount(accountId);
+        assertEquals(invoices.size(), 1);
+
+        Invoice invoice = invoices.get(0);
+        assertTrue(invoice.getBalance().compareTo(BigDecimal.ZERO) == 0);
+        List<InvoiceItem> invoiceItems = invoice.getInvoiceItems();
+        assertEquals(invoiceItems.size(), 2);
+        boolean foundCredit = false;
+        boolean foundCBA = false;
+        for (InvoiceItem cur : invoiceItems) {
+            if (cur.getInvoiceItemType() == InvoiceItemType.CREDIT_ADJ) {
+                foundCredit = true;
+                assertTrue(cur.getAmount().compareTo(creditAmount.negate()) == 0);
+            } else if (cur.getInvoiceItemType() == InvoiceItemType.CBA_ADJ) {
+                foundCBA = true;
+                assertTrue(cur.getAmount().compareTo(creditAmount) == 0);
+            }
+        }
+        assertTrue(foundCredit);
+        assertTrue(foundCBA);
+    }
+
+
+    @Test(groups = "slow")
+    public void testInvoiceCreditWithBalancePositive() {
+        final BigDecimal creditAmount = new BigDecimal("2.0");
+        final BigDecimal expectedBalance = new BigDecimal("3.0");
+        final boolean expectCBA = false;
+        testInvoiceCreditInternal(creditAmount, expectedBalance, expectCBA);
+    }
+
+    @Test(groups = "slow")
+    public void testInvoiceCreditWithBalanceNegative() {
+        final BigDecimal creditAmount = new BigDecimal("7.0");
+        final BigDecimal expectedBalance = new BigDecimal("0.0");
+        final boolean expectCBA = true;
+        testInvoiceCreditInternal(creditAmount, expectedBalance, expectCBA);
+    }
+
+    @Test(groups = "slow")
+    public void testInvoiceCreditWithBalanceZero() {
+        final BigDecimal creditAmount = new BigDecimal("5.0");
+        final BigDecimal expectedBalance = new BigDecimal("0.0");
+        final boolean expectCBA = false;
+        testInvoiceCreditInternal(creditAmount, expectedBalance, expectCBA);
+    }
+
+    private void testInvoiceCreditInternal(BigDecimal creditAmount, BigDecimal expectedBalance, boolean expectCBA) {
+
+        final UUID accountId = UUID.randomUUID();
+        final UUID bundleId = UUID.randomUUID();
+
+
+        // Crete one invoice with a fixed invoice item
+        final LocalDate targetDate = new LocalDate(2011, 2, 15);
+        final Invoice invoice1 = new DefaultInvoice(accountId, clock.getUTCToday(), targetDate, Currency.USD);
+        invoiceDao.create(invoice1, invoice1.getTargetDate().getDayOfMonth(), context);
+
+        final LocalDate startDate = new LocalDate(2011, 3, 1);
+
+        final BigDecimal amount1 = new BigDecimal("5.0");
+
+        // Fixed Item
+        final FixedPriceInvoiceItem item1 = new FixedPriceInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test plan", "test phase A", startDate,
+                                                                      amount1, Currency.USD);
+        invoiceItemSqlDao.create(item1, context);
+
+        // Create the credit item
+        final LocalDate effectiveDate = new LocalDate(2011, 3, 1);
+
+        invoiceDao.insertCredit(accountId, invoice1.getId(), creditAmount, effectiveDate, Currency.USD, context);
+
+        final List<Invoice> invoices = invoiceDao.getAllInvoicesByAccount(accountId);
+        assertEquals(invoices.size(), 1);
+
+        Invoice invoice = invoices.get(0);
+        assertTrue(invoice.getBalance().compareTo(expectedBalance) == 0);
+        List<InvoiceItem> invoiceItems = invoice.getInvoiceItems();
+        assertEquals(invoiceItems.size(), expectCBA ? 3 : 2);
+        boolean foundCredit = false;
+        boolean foundCBA = false;
+        for (InvoiceItem cur : invoiceItems) {
+            if (cur.getInvoiceItemType() == InvoiceItemType.CREDIT_ADJ) {
+                foundCredit = true;
+                assertTrue(cur.getAmount().compareTo(creditAmount.negate()) == 0);
+            } else if (cur.getInvoiceItemType() == InvoiceItemType.CBA_ADJ) {
+                foundCBA = true;
+            }
+        }
+        assertEquals(foundCBA, expectCBA);
+        assertTrue(foundCredit);
     }
 
     @Test(groups = "slow")

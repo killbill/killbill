@@ -36,6 +36,7 @@ import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.invoice.dao.InvoiceDao;
+import com.ning.billing.invoice.model.CreditAdjInvoiceItem;
 import com.ning.billing.invoice.template.HtmlInvoiceGenerator;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.callcontext.CallContext;
@@ -124,18 +125,25 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
 
     @Override
     public InvoiceItem getCreditById(final UUID creditId) throws InvoiceApiException {
-        return dao.getCreditById(creditId);
+        final InvoiceItem creditItem = dao.getCreditById(creditId);
+        if (creditItem == null) {
+            throw new InvoiceApiException(ErrorCode.INVOICE_NO_SUCH_CREDIT, creditId);
+        }
+        return new CreditAdjInvoiceItem(creditItem.getId(), creditItem.getInvoiceId(), creditItem.getAccountId(), creditItem.getStartDate(), creditItem.getAmount().negate(), creditItem.getCurrency());
     }
 
     @Override
     public InvoiceItem insertCredit(final UUID accountId, final BigDecimal amount, final LocalDate effectiveDate,
                                     final Currency currency, final CallContext context) throws InvoiceApiException {
-        return dao.insertCredit(accountId, null, amount, effectiveDate, currency, context);
+        return insertCreditForInvoice(accountId, null, amount, effectiveDate, currency, context);
     }
 
     @Override
     public InvoiceItem insertCreditForInvoice(final UUID accountId, final UUID invoiceId, final BigDecimal amount,
                                               final LocalDate effectiveDate, final Currency currency, final CallContext context) throws InvoiceApiException {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new InvoiceApiException(ErrorCode.CREDIT_AMOUNT_INVALID, amount);
+        }
         return dao.insertCredit(accountId, invoiceId, amount, effectiveDate, currency, context);
     }
 
