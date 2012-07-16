@@ -29,7 +29,21 @@ import com.ning.billing.catalog.api.BillingPeriod;
 public class TestInAdvanceBillingMode {
 
     @Test(groups = "fast")
-    public void testCalculateSimpleInvoiceItem() throws Exception {
+    public void testCalculateSimpleInvoiceItemWithBCDBeforeStartDay() throws Exception {
+        final InAdvanceBillingMode billingMode = new InAdvanceBillingMode();
+        final LocalDate startDate = new LocalDate(2012, 7, 16);
+        final LocalDate endDate = new LocalDate(2012, 8, 16);
+        final LocalDate targetDate = new LocalDate(2012, 7, 16);
+        final DateTimeZone dateTimeZone = DateTimeZone.forID("Pacific/Pitcairn");
+        final int billingCycleDayLocal = 15;
+        final BillingPeriod billingPeriod = BillingPeriod.MONTHLY;
+        final LocalDate servicePeriodEndDate = new LocalDate(2012, 8, 15);
+
+        verifyInvoiceItems(billingMode, startDate, endDate, targetDate, dateTimeZone, billingCycleDayLocal, billingPeriod, servicePeriodEndDate);
+    }
+
+    @Test(groups = "fast")
+    public void testCalculateSimpleInvoiceItemWithBCDEqualsStartDay() throws Exception {
         final InAdvanceBillingMode billingMode = new InAdvanceBillingMode();
         final LocalDate startDate = new LocalDate(2012, 7, 16);
         final LocalDate endDate = new LocalDate(2012, 8, 16);
@@ -37,11 +51,31 @@ public class TestInAdvanceBillingMode {
         final DateTimeZone dateTimeZone = DateTimeZone.forID("Pacific/Pitcairn");
         final int billingCycleDayLocal = 16;
         final BillingPeriod billingPeriod = BillingPeriod.MONTHLY;
+        final LocalDate servicePeriodEndDate = new LocalDate(2012, 8, 16);
 
+        verifyInvoiceItems(billingMode, startDate, endDate, targetDate, dateTimeZone, billingCycleDayLocal, billingPeriod, servicePeriodEndDate);
+    }
+
+    @Test(groups = "fast")
+    public void testCalculateSimpleInvoiceItemWithBCDAfterStartDay() throws Exception {
+        final InAdvanceBillingMode billingMode = new InAdvanceBillingMode();
+        final LocalDate startDate = new LocalDate(2012, 7, 16);
+        final LocalDate endDate = new LocalDate(2012, 8, 16);
+        final LocalDate targetDate = new LocalDate(2012, 7, 16);
+        final DateTimeZone dateTimeZone = DateTimeZone.forID("Pacific/Pitcairn");
+        final int billingCycleDayLocal = 17;
+        final BillingPeriod billingPeriod = BillingPeriod.MONTHLY;
+        final LocalDate servicePeriodEndDate = new LocalDate(2012, 7, 17);
+
+        verifyInvoiceItems(billingMode, startDate, endDate, targetDate, dateTimeZone, billingCycleDayLocal, billingPeriod, servicePeriodEndDate);
+    }
+
+    private void verifyInvoiceItems(final InAdvanceBillingMode billingMode, final LocalDate startDate, final LocalDate endDate, final LocalDate targetDate,
+                                    final DateTimeZone dateTimeZone, final int billingCycleDayLocal, final BillingPeriod billingPeriod, final LocalDate servicePeriodEndDate) throws InvalidDateSequenceException {
         final List<RecurringInvoiceItemData> invoiceItems = billingMode.calculateInvoiceItemData(startDate, endDate, targetDate, dateTimeZone, billingCycleDayLocal, billingPeriod);
         Assert.assertEquals(invoiceItems.size(), 1);
         Assert.assertEquals(invoiceItems.get(0).getStartDate(), startDate);
-        Assert.assertEquals(invoiceItems.get(0).getEndDate(), endDate);
-        Assert.assertEquals(invoiceItems.get(0).getNumberOfCycles(), BigDecimal.ONE);
+        Assert.assertEquals(invoiceItems.get(0).getEndDate(), servicePeriodEndDate);
+        Assert.assertTrue(invoiceItems.get(0).getNumberOfCycles().compareTo(BigDecimal.ONE) <= 0);
     }
 }

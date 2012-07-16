@@ -69,7 +69,13 @@ public class InAdvanceBillingMode implements BillingMode {
         final int numberOfMonthsPerBillingPeriod = billingPeriod.getNumberOfMonths();
 
         for (int i = 0; i < numberOfWholeBillingPeriods; i++) {
-            results.add(new RecurringInvoiceItemData(firstBillingCycleDate.plusMonths(i * numberOfMonthsPerBillingPeriod),
+            final LocalDate servicePeriodStartDate;
+            if (i == 0) {
+                servicePeriodStartDate = startDate;
+            } else {
+                servicePeriodStartDate = firstBillingCycleDate.plusMonths(i * numberOfMonthsPerBillingPeriod);
+            }
+            results.add(new RecurringInvoiceItemData(servicePeriodStartDate,
                                                      firstBillingCycleDate.plusMonths((i + 1) * numberOfMonthsPerBillingPeriod), BigDecimal.ONE));
         }
 
