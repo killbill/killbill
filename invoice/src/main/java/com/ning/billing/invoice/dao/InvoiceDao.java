@@ -20,6 +20,8 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.LocalDate;
 
 import com.ning.billing.account.api.BillCycleDay;
@@ -57,7 +59,7 @@ public interface InvoiceDao {
 
     public BigDecimal getAccountCBA(final UUID accountId);
 
-    List<Invoice> getUnpaidInvoicesByAccountId(final UUID accountId, final LocalDate upToDate);
+    List<Invoice> getUnpaidInvoicesByAccountId(final UUID accountId, @Nullable final LocalDate upToDate);
 
     void test();
 
