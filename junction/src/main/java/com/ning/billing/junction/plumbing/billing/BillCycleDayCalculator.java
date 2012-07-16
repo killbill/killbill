@@ -40,6 +40,7 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
 public class BillCycleDayCalculator {
@@ -84,7 +85,7 @@ public class BillCycleDayCalculator {
         switch (alignment) {
             case ACCOUNT:
                 result = account.getBillCycleDay();
-                if (result.getDayOfMonthUTC() == 0) {
+                if (result == null || result.getDayOfMonthUTC() == 0) {
                     result = calculateBcdFromSubscription(subscription, plan, account);
                 }
                 break;
@@ -110,7 +111,8 @@ public class BillCycleDayCalculator {
         return result;
     }
 
-    private BillCycleDay calculateBcdFromSubscription(final Subscription subscription, final Plan plan, final Account account) throws AccountApiException {
+    @VisibleForTesting
+    BillCycleDay calculateBcdFromSubscription(final Subscription subscription, final Plan plan, final Account account) throws AccountApiException {
         final DateTime date = plan.dateOfFirstRecurringNonZeroCharge(subscription.getStartDate());
         // There are really two kinds of billCycleDay:
         // - a System billingCycleDay which should be computed from UTC time (in order to get the correct notification time at
