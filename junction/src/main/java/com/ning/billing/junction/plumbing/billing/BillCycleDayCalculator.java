@@ -118,7 +118,10 @@ public class BillCycleDayCalculator {
         // - a System billingCycleDay which should be computed from UTC time (in order to get the correct notification time at
         //   the end of each service period)
         // - a User billingCycleDay which should align with the account timezone
-        return new CalculatedBillCycleDay(account.getTimeZone(), date);
+        final CalculatedBillCycleDay calculatedBillCycleDay = new CalculatedBillCycleDay(account.getTimeZone(), date);
+        log.info("Calculated BCD: subscription start {}, timezone {}, bcd UTC {}, bcd local {}", new Object[]{date.toDateTimeISO(), account.getTimeZone(),
+                                                                                                              calculatedBillCycleDay.getDayOfMonthUTC(), calculatedBillCycleDay.getDayOfMonthLocal()});
+        return calculatedBillCycleDay;
     }
 
     private static final class CalculatedBillCycleDay implements BillCycleDay {
