@@ -123,22 +123,22 @@ public class BillCycleDayCalculator {
 
     private static final class CalculatedBillCycleDay implements BillCycleDay {
 
-        private final DateTime bcdTimeUTC;
+        private final DateTime bcdTime;
         private final DateTimeZone accountTimeZone;
 
-        private CalculatedBillCycleDay(final DateTimeZone accountTimeZone, final DateTime bcdTimeUTC) {
+        private CalculatedBillCycleDay(final DateTimeZone accountTimeZone, final DateTime bcdTime) {
             this.accountTimeZone = accountTimeZone;
-            this.bcdTimeUTC = bcdTimeUTC;
+            this.bcdTime = bcdTime;
         }
 
         @Override
         public int getDayOfMonthUTC() {
-            return bcdTimeUTC.getDayOfMonth();
+            return bcdTime.toDateTime(DateTimeZone.UTC).getDayOfMonth();
         }
 
         @Override
         public int getDayOfMonthLocal() {
-            return bcdTimeUTC.toDateTime(accountTimeZone).getDayOfMonth();
+            return bcdTime.toDateTime(accountTimeZone).getDayOfMonth();
         }
     }
 }

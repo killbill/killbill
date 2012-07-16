@@ -82,6 +82,17 @@ public class TestBillCycleDayCalculator {
         verifyBCDCalculation(accountTimeZone, startDateUTC, bcdUTC, bcdLocal);
     }
 
+    @Test(groups = "fast")
+    public void testCalculateBCDWithSubscriptionDateNotInUTC() throws Exception {
+        // Test to verify the computations don't rely implicitly on UTC
+        final DateTimeZone accountTimeZone = DateTimeZone.forID("Asia/Tokyo");
+        final DateTime startDate = new DateTime("2012-07-16T21:17:03.000Z", DateTimeZone.forID("HST"));
+        final int bcdUTC = 16;
+        final int bcdLocal = 17;
+
+        verifyBCDCalculation(accountTimeZone, startDate, bcdUTC, bcdLocal);
+    }
+
     private void verifyBCDCalculation(final DateTimeZone accountTimeZone, final DateTime startDateUTC, final int bcdUTC, final int bcdLocal) throws AccountApiException {
         final BillCycleDayCalculator billCycleDayCalculator = new BillCycleDayCalculator(Mockito.mock(CatalogService.class), Mockito.mock(EntitlementUserApi.class));
 
