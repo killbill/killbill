@@ -7,7 +7,8 @@ CREATE TABLE accounts (
     name varchar(100) NOT NULL,
     first_name_length int NOT NULL,
     currency char(3) DEFAULT NULL,
-    billing_cycle_day int DEFAULT NULL,
+    billing_cycle_day_local int DEFAULT NULL,
+    billing_cycle_day_utc int DEFAULT NULL,
     payment_method_id char(36) DEFAULT NULL,
     time_zone varchar(50) DEFAULT NULL,
     locale varchar(5) DEFAULT NULL,
@@ -25,6 +26,7 @@ CREATE TABLE accounts (
     created_by varchar(50) NOT NULL,
     updated_date datetime DEFAULT NULL,
     updated_by varchar(50) DEFAULT NULL,
+    tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(record_id)
 ) ENGINE=innodb;
 CREATE UNIQUE INDEX accounts_id ON accounts(id);
@@ -40,7 +42,8 @@ CREATE TABLE account_history (
     name varchar(100) NOT NULL,
     first_name_length int NOT NULL,
     currency char(3) DEFAULT NULL,
-    billing_cycle_day int DEFAULT NULL,
+    billing_cycle_day_local int DEFAULT NULL,
+    billing_cycle_day_utc int DEFAULT NULL,
     payment_method_id char(36) DEFAULT NULL,
     time_zone varchar(50) DEFAULT NULL,
     locale varchar(5) DEFAULT NULL,
@@ -57,6 +60,7 @@ CREATE TABLE account_history (
     change_type char(6) NOT NULL,
     updated_by varchar(50) NOT NULL,
     date datetime NOT NULL,
+    tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(history_record_id)
 ) ENGINE=innodb;
 CREATE INDEX account_history_record_id ON account_history(record_id);
@@ -71,6 +75,8 @@ CREATE TABLE account_emails (
     created_date datetime NOT NULL,
     updated_by varchar(50) NOT NULL,
     updated_date datetime NOT NULL,
+    account_record_id int(11) unsigned default null,
+    tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(record_id)
 ) ENGINE=innodb;
 CREATE UNIQUE INDEX account_email_id ON account_emails(id);
@@ -86,6 +92,8 @@ CREATE TABLE account_email_history (
     change_type char(6) NOT NULL,
     updated_by varchar(50) NOT NULL,
     date datetime NOT NULL,
+    account_record_id int(11) unsigned default null,
+    tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(history_record_id)
 ) ENGINE=innodb;
 CREATE INDEX account_email_record_id ON account_email_history(record_id);

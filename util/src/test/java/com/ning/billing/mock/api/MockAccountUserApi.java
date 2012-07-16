@@ -28,6 +28,7 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.account.api.AccountUserApi;
+import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.account.api.MigrationAccountData;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.mock.MockAccountBuilder;
@@ -42,7 +43,7 @@ public class MockAccountUserApi implements AccountUserApi {
                                  final String name,
                                  final int firstNameLength,
                                  final Currency currency,
-                                 final int billCycleDay,
+                                 final BillCycleDay billCycleDay,
                                  final UUID paymentMethodId,
                                  final DateTimeZone timeZone,
                                  final String locale,

@@ -13,34 +13,33 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.invoice.model;
 
 import java.math.BigDecimal;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
 
 public abstract class AdjInvoiceItem extends InvoiceItemBase {
-
-
-
-    public AdjInvoiceItem(final UUID invoiceId, final UUID accountId, final DateTime startDate, final DateTime endDate, final BigDecimal amount, final Currency currency) {
+    public AdjInvoiceItem(final UUID invoiceId, final UUID accountId, final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final Currency currency) {
         this(UUID.randomUUID(), invoiceId, accountId, startDate, endDate, amount, currency);
     }
 
-    public AdjInvoiceItem(final UUID invoiceId, final UUID accountId, final DateTime startDate, final DateTime endDate, final BigDecimal amount, final Currency currency, final UUID reversingId) {
+    public AdjInvoiceItem(final UUID invoiceId, final UUID accountId, final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final Currency currency, final UUID reversingId) {
         this(UUID.randomUUID(), invoiceId, accountId, startDate, endDate, amount, currency, reversingId);
     }
 
-    public AdjInvoiceItem(final UUID id, final UUID invoiceId, final UUID accountId, final DateTime startDate, final DateTime endDate, final BigDecimal amount, final Currency currency) {
+    public AdjInvoiceItem(final UUID id, final UUID invoiceId, final UUID accountId, final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final Currency currency) {
         super(id, invoiceId, accountId, null, null, null, null, startDate, endDate, amount, currency);
     }
 
-    public AdjInvoiceItem(final UUID id, final UUID invoiceId, final UUID accountId, final DateTime startDate, final DateTime endDate, final BigDecimal amount, final Currency currency, final UUID reversingId) {
+    public AdjInvoiceItem(final UUID id, final UUID invoiceId, final UUID accountId, final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final Currency currency, final UUID reversingId) {
         super(id, invoiceId, accountId, null, null, null, null, startDate, endDate, amount, currency, reversingId);
     }
 
@@ -90,7 +89,7 @@ public abstract class AdjInvoiceItem extends InvoiceItemBase {
             return startDate.compareTo(that.startDate);
         }
         if (currency != that.currency) {
-            return currency.ordinal() > that.currency.ordinal() ? 1: -1;
+            return currency.ordinal() > that.currency.ordinal() ? 1 : -1;
         }
         return id.compareTo(that.getId());
     }

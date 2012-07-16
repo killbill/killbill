@@ -23,17 +23,16 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.mockito.Mockito;
 import org.skife.jdbi.v2.IDBI;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import com.ning.billing.analytics.AnalyticsTestSuiteWithEmbeddedDB;
 import com.ning.billing.analytics.MockDuration;
 import com.ning.billing.analytics.MockPhase;
 import com.ning.billing.analytics.MockProduct;
-import com.ning.billing.analytics.AnalyticsTestSuiteWithEmbeddedDB;
 import com.ning.billing.analytics.model.BusinessAccount;
 import com.ning.billing.analytics.model.BusinessSubscription;
 import com.ning.billing.analytics.model.BusinessSubscriptionEvent;
@@ -50,14 +49,18 @@ import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.mock.MockPlan;
+import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.clock.DefaultClock;
 
 public class TestAnalyticsDao extends AnalyticsTestSuiteWithEmbeddedDB {
+
     private static final Long TOTAL_ORDERING = 1L;
     private static final UUID BUNDLE_ID = UUID.randomUUID();
     private static final String EXTERNAL_KEY = "23456";
     private static final UUID ACCOUNT_ID = UUID.randomUUID();
     private static final String ACCOUNT_KEY = "pierre-143343-vcc";
 
+    private final Clock clock = new DefaultClock();
     private final Product product = new MockProduct("platinium", "subscription", ProductCategory.BASE);
     private final Plan plan = new MockPlan("platinum-monthly", product);
     private final PlanPhase phase = new MockPhase(PhaseType.EVERGREEN, plan, MockDuration.UNLIMITED(), 25.95);
@@ -82,9 +85,9 @@ public class TestAnalyticsDao extends AnalyticsTestSuiteWithEmbeddedDB {
     }
 
     private void setupBusinessSubscriptionTransition() {
-        final DateTime requestedTimestamp = new DateTime(DateTimeZone.UTC);
-        final BusinessSubscription prevSubscription = new BusinessSubscription(null, plan.getName(), phase.getName(), Currency.USD, new DateTime(DateTimeZone.UTC), Subscription.SubscriptionState.ACTIVE, catalog);
-        final BusinessSubscription nextSubscription = new BusinessSubscription(null, plan.getName(), phase.getName(), Currency.USD, new DateTime(DateTimeZone.UTC), Subscription.SubscriptionState.CANCELLED, catalog);
+        final DateTime requestedTimestamp = clock.getUTCNow();
+        final BusinessSubscription prevSubscription = new BusinessSubscription(null, plan.getName(), phase.getName(), Currency.USD, clock.getUTCNow(), Subscription.SubscriptionState.ACTIVE, catalog);
+        final BusinessSubscription nextSubscription = new BusinessSubscription(null, plan.getName(), phase.getName(), Currency.USD, clock.getUTCNow(), Subscription.SubscriptionState.CANCELLED, catalog);
         final BusinessSubscriptionEvent event = BusinessSubscriptionEvent.subscriptionCancelled(plan.getName(), catalog, requestedTimestamp, requestedTimestamp);
 
         transition = new BusinessSubscriptionTransition(TOTAL_ORDERING, BUNDLE_ID, EXTERNAL_KEY, ACCOUNT_ID, ACCOUNT_KEY,
@@ -102,7 +105,7 @@ public class TestAnalyticsDao extends AnalyticsTestSuiteWithEmbeddedDB {
     }
 
     private void setupBusinessAccount() {
-        account = new BusinessAccount(UUID.randomUUID(), ACCOUNT_KEY, UUID.randomUUID().toString(), BigDecimal.ONE, new DateTime(DateTimeZone.UTC), BigDecimal.TEN, "ERROR_NOT_ENOUGH_FUNDS", "CreditCard", "Visa", "FRANCE");
+        account = new BusinessAccount(UUID.randomUUID(), ACCOUNT_KEY, UUID.randomUUID().toString(), BigDecimal.ONE, clock.getUTCToday(), BigDecimal.TEN, "ERROR_NOT_ENOUGH_FUNDS", "CreditCard", "Visa", "FRANCE");
 
         final IDBI dbi = helper.getDBI();
         businessAccountSqlDao = dbi.onDemand(BusinessAccountSqlDao.class);

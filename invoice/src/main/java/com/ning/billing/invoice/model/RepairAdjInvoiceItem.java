@@ -13,25 +13,25 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.invoice.model;
 
 import java.math.BigDecimal;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItemType;
 
 public class RepairAdjInvoiceItem extends AdjInvoiceItem {
-
-    public RepairAdjInvoiceItem(UUID invoiceId, UUID accountId, DateTime startDate, DateTime endDate,
-            BigDecimal amount, Currency currency, final UUID reversingId) {
+    public RepairAdjInvoiceItem(final UUID invoiceId, final UUID accountId, final LocalDate startDate, final LocalDate endDate,
+                                final BigDecimal amount, final Currency currency, final UUID reversingId) {
         super(invoiceId, accountId, startDate, endDate, amount, currency, reversingId);
     }
 
-    public RepairAdjInvoiceItem(UUID id, UUID invoiceId, UUID accountId, DateTime startDate, DateTime endDate,
-            BigDecimal amount, Currency currency, final UUID reversingId) {
+    public RepairAdjInvoiceItem(final UUID id, final UUID invoiceId, final UUID accountId, final LocalDate startDate, final LocalDate endDate,
+                                final BigDecimal amount, final Currency currency, final UUID reversingId) {
         super(id, invoiceId, accountId, startDate, endDate, amount, currency, reversingId);
     }
 

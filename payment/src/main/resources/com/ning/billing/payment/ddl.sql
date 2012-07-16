@@ -16,6 +16,8 @@ CREATE TABLE payments (
     created_date datetime NOT NULL,
     updated_by varchar(50) NOT NULL,
     updated_date datetime NOT NULL,
+    account_record_id int(11) unsigned default null,
+    tenant_record_id int(11) unsigned default null,
     PRIMARY KEY (record_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 CREATE UNIQUE INDEX payments_id ON payments(id);
@@ -39,6 +41,8 @@ CREATE TABLE payment_history (
     created_date datetime NOT NULL,
     updated_by varchar(50) NOT NULL,
     updated_date datetime NOT NULL,
+    account_record_id int(11) unsigned default null,
+    tenant_record_id int(11) unsigned default null,
     PRIMARY KEY (history_record_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 CREATE INDEX payment_history_record_id ON payment_history(record_id);
@@ -56,6 +60,8 @@ CREATE TABLE payment_attempts (
     created_date datetime NOT NULL,
     updated_by varchar(50) NOT NULL,
     updated_date datetime NOT NULL,
+    account_record_id int(11) unsigned default null,
+    tenant_record_id int(11) unsigned default null,
     PRIMARY KEY (record_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 CREATE UNIQUE INDEX payment_attempts_id ON payment_attempts(id);
@@ -75,6 +81,8 @@ CREATE TABLE payment_attempt_history (
     created_date datetime NOT NULL,
     updated_by varchar(50) NOT NULL,
     updated_date datetime NOT NULL,
+    account_record_id int(11) unsigned default null,
+    tenant_record_id int(11) unsigned default null,
     PRIMARY KEY (history_record_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 CREATE INDEX payment_attempt_history_record_id ON payment_attempt_history(record_id);
@@ -92,6 +100,8 @@ CREATE TABLE payment_methods (
     created_date datetime NOT NULL,
     updated_by varchar(50) NOT NULL,
     updated_date datetime NOT NULL,
+    account_record_id int(11) unsigned default null,
+    tenant_record_id int(11) unsigned default null,
     PRIMARY KEY (record_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 CREATE UNIQUE INDEX payment_methods_id ON payment_methods(id);
@@ -111,6 +121,8 @@ CREATE TABLE payment_method_history (
     created_date datetime NOT NULL,
     updated_by varchar(50) NOT NULL,
     updated_date datetime NOT NULL,
+    account_record_id int(11) unsigned default null,
+    tenant_record_id int(11) unsigned default null,
     PRIMARY KEY (history_record_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 CREATE UNIQUE INDEX payment_method_history_record_id ON payment_method_history(record_id);
@@ -129,6 +141,8 @@ CREATE TABLE refunds (
     created_date datetime NOT NULL,
     updated_by varchar(50) NOT NULL,
     updated_date datetime NOT NULL,
+    account_record_id int(11) unsigned default null,
+    tenant_record_id int(11) unsigned default null,
     PRIMARY KEY (record_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 CREATE UNIQUE INDEX refunds_id ON refunds(id);
@@ -150,6 +164,8 @@ CREATE TABLE refund_history (
     created_date datetime NOT NULL,
     updated_by varchar(50) NOT NULL,
     updated_date datetime NOT NULL,
+    account_record_id int(11) unsigned default null,
+    tenant_record_id int(11) unsigned default null,
     PRIMARY KEY (history_record_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 CREATE INDEX refund_history_record_id ON refund_history(record_id);

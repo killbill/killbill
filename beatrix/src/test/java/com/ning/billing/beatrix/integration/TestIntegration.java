@@ -23,6 +23,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
+import org.joda.time.LocalDate;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
@@ -44,6 +45,7 @@ import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 @Guice(modules = {BeatrixModule.class})
@@ -51,12 +53,12 @@ public class TestIntegration extends TestIntegrationBase {
     @Test(groups = "slow")
     public void testCancelBPWithAOTheSameDay() throws Exception {
         // We take april as it has 30 days (easier to play with BCD)
-        final DateTime today = new DateTime(2012, 4, 1, 0, 0, 0, 0, testTimeZone);
-        final DateTime trialEndDate = new DateTime(2012, 5, 1, 0, 0, 0, 0, testTimeZone);
+        final LocalDate today = new LocalDate(2012, 4, 1);
+        final LocalDate trialEndDate = new LocalDate(2012, 5, 1);
         final Account account = createAccountWithPaymentMethod(getAccountData(1));
 
-        // Set clock to the initial start date
-        clock.setDeltaFromReality(today.getMillis() - clock.getUTCNow().getMillis());
+        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
+        clock.setDeltaFromReality(today.toDateTimeAtCurrentTime().getMillis() - clock.getUTCNow().getMillis());
         final SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever", context);
 
         final String productName = "Shotgun";
@@ -81,7 +83,7 @@ public class TestIntegration extends TestIntegrationBase {
         //
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.INVOICE, NextEvent.PAYMENT);
         final PlanPhaseSpecifier addonPlanPhaseSpecifier = new PlanPhaseSpecifier("Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-        final SubscriptionData aoSubscription = subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(), addonPlanPhaseSpecifier, null, context));
+        entitlementUserApi.createSubscription(bundle.getId(), addonPlanPhaseSpecifier, null, context);
         assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
 
@@ -98,7 +100,8 @@ public class TestIntegration extends TestIntegrationBase {
         // The first invoice is for the trial BP
         assertEquals(invoices.get(0).getNumberOfItems(), 1);
         assertEquals(invoices.get(0).getInvoiceItems().get(0).getStartDate().compareTo(today), 0);
-        assertEquals(invoices.get(0).getInvoiceItems().get(0).getEndDate().compareTo(trialEndDate), 0);
+        // No end date for the trial item (fixed price of zero)
+        assertNull(invoices.get(0).getInvoiceItems().get(0).getEndDate());
         // The second invoice should be adjusted for the AO (we paid for the full period)
         assertEquals(invoices.get(1).getNumberOfItems(), 3);
         for (final InvoiceItem item : invoices.get(1).getInvoiceItems()) {
@@ -355,10 +358,9 @@ public class TestIntegration extends TestIntegrationBase {
         // VERIFY CTD HAS BEEN SET
         //
         final DateTime startDate = subscription.getCurrentPhaseStart();
-        DateTime endDate = startDate.plusDays(30);
         final BigDecimal rate = subscription.getCurrentPhase().getFixedPrice().getPrice(Currency.USD);
         final int invoiceItemCount = 1;
-        verifyTestResult(accountId, subscription.getId(), startDate, endDate, rate, endDate, invoiceItemCount);
+        verifyTestResult(accountId, subscription.getId(), startDate, null, rate, clock.getUTCNow(), invoiceItemCount);
 
         //
         // MOVE TIME TO AFTER TRIAL AND EXPECT BOTH EVENTS :  NextEvent.PHASE NextEvent.INVOICE
@@ -374,7 +376,7 @@ public class TestIntegration extends TestIntegrationBase {
 
         // MOVE AFTER CANCEL DATE AND EXPECT EVENT : NextEvent.CANCEL
         busHandler.pushExpectedEvent(NextEvent.CANCEL);
-        endDate = subscription.getChargedThroughDate();
+        DateTime endDate = subscription.getChargedThroughDate();
         final Interval it = new Interval(clock.getUTCNow(), endDate);
         clock.addDeltaFromReality(it.toDurationMillis());
         assertTrue(busHandler.isCompleted(DELAY));
@@ -420,10 +422,10 @@ public class TestIntegration extends TestIntegrationBase {
         // VERIFY CTD HAS BEEN SET
         //
         DateTime startDate = subscription.getCurrentPhaseStart();
-        DateTime endDate = startDate.plusDays(30);
         BigDecimal rate = subscription.getCurrentPhase().getFixedPrice().getPrice(Currency.USD);
         int invoiceItemCount = 1;
-        verifyTestResult(accountId, subscription.getId(), startDate, endDate, rate, endDate, invoiceItemCount);
+        // No end date for the trial item (fixed price of zero), and CTD should be today (i.e. when the trial started)
+        verifyTestResult(accountId, subscription.getId(), startDate, null, rate, clock.getUTCNow(), invoiceItemCount);
 
         //
         // CHANGE PLAN IMMEDIATELY AND EXPECT BOTH EVENTS: NextEvent.CHANGE NextEvent.INVOICE
@@ -442,9 +444,9 @@ public class TestIntegration extends TestIntegrationBase {
         // VERIFY AGAIN CTD HAS BEEN SET
         //
         startDate = subscription.getCurrentPhaseStart();
-        endDate = startDate.plusDays(30);
         invoiceItemCount = 2;
-        verifyTestResult(accountId, subscription.getId(), startDate, endDate, rate, endDate, invoiceItemCount);
+        // No end date for the trial item (fixed price of zero), and CTD should be today (i.e. when the second trial started)
+        verifyTestResult(accountId, subscription.getId(), startDate, null, rate, clock.getUTCNow(), invoiceItemCount);
 
         //
         // MOVE TIME
@@ -520,7 +522,7 @@ public class TestIntegration extends TestIntegrationBase {
         assertTrue(busHandler.isCompleted(DELAY));
 
         startDate = chargeThroughDate;
-        endDate = chargeThroughDate.plusMonths(1);
+        DateTime endDate = chargeThroughDate.plusMonths(1);
         price = subscription.getCurrentPhase().getRecurringPrice().getPrice(Currency.USD);
         invoiceItemCount += 1;
         verifyTestResult(accountId, subscription.getId(), startDate, endDate, price, endDate, invoiceItemCount);

@@ -25,12 +25,13 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
 import com.ning.billing.invoice.api.DefaultInvoiceService;
 import com.ning.billing.util.notificationq.Notification;
 import com.ning.billing.util.notificationq.NotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotificationQueue;
+
+import com.google.inject.Inject;
 
 public class DefaultNextBillingDatePoster implements NextBillingDatePoster {
 
@@ -39,27 +40,23 @@ public class DefaultNextBillingDatePoster implements NextBillingDatePoster {
     private final NotificationQueueService notificationQueueService;
 
     @Inject
-    public DefaultNextBillingDatePoster(
-            final NotificationQueueService notificationQueueService) {
-        super();
+    public DefaultNextBillingDatePoster(final NotificationQueueService notificationQueueService) {
         this.notificationQueueService = notificationQueueService;
     }
 
     @Override
-    public void insertNextBillingNotification(final Transmogrifier transactionalDao, final UUID accountId, final UUID subscriptionId, final DateTime futureNotificationTime) {
+    public void insertNextBillingNotification(final Transmogrifier transactionalDao, final UUID accountId,
+                                              final UUID subscriptionId, final DateTime futureNotificationTime) {
         final NotificationQueue nextBillingQueue;
         try {
-
-
             nextBillingQueue = notificationQueueService.getNotificationQueue(DefaultInvoiceService.INVOICE_SERVICE_NAME,
                                                                              DefaultNextBillingDateNotifier.NEXT_BILLING_DATE_NOTIFIER_QUEUE);
             log.info("Queuing next billing date notification. id: {}, timestamp: {}", subscriptionId.toString(), futureNotificationTime.toString());
 
-
-            List<Notification> existingNotifications =  nextBillingQueue.getNotificationForAccountAndDate(accountId, futureNotificationTime);
+            final List<Notification> existingNotifications = nextBillingQueue.getNotificationForAccountAndDate(accountId, futureNotificationTime);
             if (existingNotifications.size() > 0) {
                 log.info(String.format("%s : notification for account %s and date %s already exist, skip...",
-                        DefaultNextBillingDateNotifier.NEXT_BILLING_DATE_NOTIFIER_QUEUE, accountId, futureNotificationTime));
+                                       DefaultNextBillingDateNotifier.NEXT_BILLING_DATE_NOTIFIER_QUEUE, accountId, futureNotificationTime));
                 return;
             }
 

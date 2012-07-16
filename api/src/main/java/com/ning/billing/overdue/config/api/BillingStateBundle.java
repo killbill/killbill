@@ -19,7 +19,8 @@ package com.ning.billing.overdue.config.api;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
 
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PhaseType;
@@ -29,6 +30,7 @@ import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.util.tag.Tag;
 
 public class BillingStateBundle extends BillingState<SubscriptionBundle> {
+
     private final Product basePlanProduct;
     private final BillingPeriod basePlanBillingPeriod;
     private final PriceList basePlanPriceList;
@@ -37,7 +39,8 @@ public class BillingStateBundle extends BillingState<SubscriptionBundle> {
     public BillingStateBundle(final UUID id,
                               final int numberOfUnpaidInvoices,
                               final BigDecimal unpaidInvoiceBalance,
-                              final DateTime dateOfEarliestUnpaidInvoice,
+                              final LocalDate dateOfEarliestUnpaidInvoice,
+                              final DateTimeZone accountTimeZone,
                               final UUID idOfEarliestUnpaidInvoice,
                               final PaymentResponse responseForLastFailedPayment,
                               final Tag[] tags,
@@ -45,7 +48,7 @@ public class BillingStateBundle extends BillingState<SubscriptionBundle> {
                               final BillingPeriod basePlanBillingPeriod,
                               final PriceList basePlanPriceList, final PhaseType basePlanPhaseType) {
         super(id, numberOfUnpaidInvoices, unpaidInvoiceBalance,
-              dateOfEarliestUnpaidInvoice, idOfEarliestUnpaidInvoice,
+              dateOfEarliestUnpaidInvoice, accountTimeZone, idOfEarliestUnpaidInvoice,
               responseForLastFailedPayment, tags);
 
         this.basePlanProduct = basePlanProduct;

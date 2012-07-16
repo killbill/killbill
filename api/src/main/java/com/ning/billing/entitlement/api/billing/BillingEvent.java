@@ -58,7 +58,6 @@ public interface BillingEvent extends Comparable<BillingEvent> {
      */
     public PlanPhase getPlanPhase();
 
-
     /**
      * @return the plan
      */

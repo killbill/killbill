@@ -54,9 +54,9 @@ public @interface BusinessAccountBinder {
                     q.bind("balance", account.getRoundedBalance());
                     q.bind("name", account.getName());
                     if (account.getLastInvoiceDate() != null) {
-                        q.bind("last_invoice_date", account.getLastInvoiceDate().getMillis());
+                        q.bind("last_invoice_date", account.getLastInvoiceDate().toDate());
                     } else {
-                        q.bindNull("last_invoice_date", Types.BIGINT);
+                        q.bindNull("last_invoice_date", Types.DATE);
                     }
                     q.bind("total_invoice_balance", account.getRoundedTotalInvoiceBalance());
                     q.bind("last_payment_status", account.getLastPaymentStatus());

@@ -33,6 +33,8 @@ create table bst (
 , next_currency varchar(50) default null
 , next_start_date bigint default null
 , next_state varchar(50) default null
+, account_record_id int(11) unsigned default null
+, tenant_record_id int(11) unsigned default null
 , primary key(record_id)
 ) engine=innodb comment 'Business Subscription Transitions, track bundles lifecycle';
 create index bst_key_index on bst (external_key, requested_timestamp asc);
@@ -46,13 +48,15 @@ create table bac (
 , created_date bigint not null
 , updated_date bigint not null
 , balance numeric(10, 4) default 0
-, last_invoice_date bigint default null
+, last_invoice_date date default null
 , total_invoice_balance numeric(10, 4) default 0
 , last_payment_status varchar(255) default null
 , payment_method varchar(50) default null
 , credit_card_type varchar(50) default null
 , billing_address_country varchar(50) default null
 , currency char(50) default null
+, account_record_id int(11) unsigned default null
+, tenant_record_id int(11) unsigned default null
 , primary key(record_id)
 ) engine=innodb comment 'Business ACcounts, keep a record of all accounts';
 create unique index bac_key_index on bac (account_key);
@@ -66,13 +70,15 @@ create table bin (
 , updated_date bigint not null
 , account_id char(36) not null
 , account_key varchar(50) not null
-, invoice_date bigint not null
-, target_date bigint not null
+, invoice_date date not null
+, target_date date not null
 , currency char(50) not null
 , balance numeric(10, 4) default 0 comment 'amount_charged - amount_paid - amount_credited'
 , amount_paid numeric(10, 4) default 0 comment 'Sums of the successful payments made for this invoice minus the refunds associated with this invoice'
 , amount_charged numeric(10, 4) default 0 comment 'Sums of the invoice items amount'
 , amount_credited numeric(10, 4) default 0 comment 'Sums of the credit items'
+, account_record_id int(11) unsigned default null
+, tenant_record_id int(11) unsigned default null
 , primary key(record_id)
 ) engine=innodb comment 'Business INvoices, keep a record of generated invoices';
 create unique index bin_key_index on bin (invoice_id);
@@ -92,10 +98,12 @@ create table bii (
 , slug varchar(50) default null comment 'foo'
 , phase varchar(50) default null
 , billing_period varchar(50) default null
-, start_date bigint default null
-, end_date bigint default null
+, start_date date default null
+, end_date date default null
 , amount numeric(10, 4) default 0
 , currency char(50) default null
+, account_record_id int(11) unsigned default null
+, tenant_record_id int(11) unsigned default null
 , primary key(record_id)
 ) engine=innodb comment 'Business Invoice Items, keep a record of all invoice items';
 create unique index bii_key_index on bii (item_id);
@@ -122,6 +130,8 @@ create table bip (
 , card_country varchar(50) default null
 , invoice_payment_type varchar(50) default null
 , linked_invoice_payment_id char(36) default null
+, account_record_id int(11) unsigned default null
+, tenant_record_id int(11) unsigned default null
 , primary key(record_id)
 ) engine=innodb comment 'Business Invoice Payments, track all payments';
 create unique index bip_key_index on bip (payment_id);
@@ -135,6 +145,8 @@ create table bos (
 , status varchar(50) not null
 , start_date bigint default null
 , end_date bigint default null
+, account_record_id int(11) unsigned default null
+, tenant_record_id int(11) unsigned default null
 , primary key(record_id)
 ) engine=innodb comment 'Business Overdue Status, historical bundles overdue status';
 create unique index bos_key_index on bos (external_key, status);
@@ -145,6 +157,8 @@ create table bac_tags (
 , account_id char(36) not null
 , account_key varchar(50) not null comment 'Account external key'
 , name varchar(50) not null
+, account_record_id int(11) unsigned default null
+, tenant_record_id int(11) unsigned default null
 , primary key(record_id)
 ) engine=innodb comment 'Tags associated to accounts';
 
@@ -155,6 +169,8 @@ create table bac_fields (
 , account_key varchar(50) not null comment 'Account external key'
 , name varchar(50) not null
 , value varchar(255) default null
+, account_record_id int(11) unsigned default null
+, tenant_record_id int(11) unsigned default null
 , primary key(record_id)
 ) engine=innodb comment 'Custom fields associated to accounts';
 
@@ -165,6 +181,8 @@ create table bst_tags (
 , external_key varchar(50) not null comment 'Bundle external key'
 , account_key varchar(50) not null comment 'Account external key'
 , name varchar(50) not null
+, account_record_id int(11) unsigned default null
+, tenant_record_id int(11) unsigned default null
 , primary key(record_id)
 ) engine=innodb comment 'Tags associated to bundles';
 
@@ -176,6 +194,8 @@ create table bst_fields (
 , account_key varchar(50) not null comment 'Account external key'
 , name varchar(50) not null
 , value varchar(255) default null
+, account_record_id int(11) unsigned default null
+, tenant_record_id int(11) unsigned default null
 , primary key(record_id)
 ) engine=innodb comment 'Custom fields associated to bundles';
 
@@ -184,6 +204,8 @@ create table bin_tags (
   record_id int(11) unsigned not null auto_increment
 , invoice_id char(36) not null
 , name varchar(50) not null
+, account_record_id int(11) unsigned default null
+, tenant_record_id int(11) unsigned default null
 , primary key(record_id)
 ) engine=innodb comment 'Tags associated to invoices';
 
@@ -193,6 +215,8 @@ create table bin_fields (
 , invoice_id char(36) not null
 , name varchar(50) not null
 , value varchar(255) default null
+, account_record_id int(11) unsigned default null
+, tenant_record_id int(11) unsigned default null
 , primary key(record_id)
 ) engine=innodb comment 'Custom fields associated to invoices';
 
@@ -201,6 +225,8 @@ create table bip_tags (
   record_id int(11) unsigned not null auto_increment
 , payment_id char(36) not null
 , name varchar(50) not null
+, account_record_id int(11) unsigned default null
+, tenant_record_id int(11) unsigned default null
 , primary key(record_id)
 ) engine=innodb comment 'Tags associated to payments';
 
@@ -210,5 +236,7 @@ create table bip_fields (
 , payment_id char(36) not null
 , name varchar(50) not null
 , value varchar(255) default null
+, account_record_id int(11) unsigned default null
+, tenant_record_id int(11) unsigned default null
 , primary key(record_id)
 ) engine=innodb comment 'Custom fields associated to payments';

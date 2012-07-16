@@ -41,19 +41,19 @@ public class TestOverdueWrapper extends OverdueTestBase {
         OverdueState<SubscriptionBundle> state;
 
         state = config.getBundleStateSet().findState("OD1");
-        bundle = createBundle(clock.getUTCNow().minusDays(31));
+        bundle = createBundle(clock.getUTCToday().minusDays(31));
         wrapper = overdueWrapperFactory.createOverdueWrapperFor(bundle);
         wrapper.refresh();
         checkStateApplied(state);
 
         state = config.getBundleStateSet().findState("OD2");
-        bundle = createBundle(clock.getUTCNow().minusDays(41));
+        bundle = createBundle(clock.getUTCToday().minusDays(41));
         wrapper = overdueWrapperFactory.createOverdueWrapperFor(bundle);
         wrapper.refresh();
         checkStateApplied(state);
 
         state = config.getBundleStateSet().findState("OD3");
-        bundle = createBundle(clock.getUTCNow().minusDays(51));
+        bundle = createBundle(clock.getUTCToday().minusDays(51));
         wrapper = overdueWrapperFactory.createOverdueWrapperFor(bundle);
         wrapper.refresh();
         checkStateApplied(state);
@@ -70,7 +70,7 @@ public class TestOverdueWrapper extends OverdueTestBase {
         final InputStream is = new ByteArrayInputStream(configXml.getBytes());
         config = XMLLoader.getObjectFromStreamNoValidation(is, OverdueConfig.class);
         state = config.getBundleStateSet().findState(BlockingApi.CLEAR_STATE_NAME);
-        bundle = createBundle(clock.getUTCNow().minusDays(31));
+        bundle = createBundle(clock.getUTCToday().minusDays(31));
         wrapper = overdueWrapperFactory.createOverdueWrapperFor(bundle);
         final OverdueState<SubscriptionBundle> result = wrapper.refresh();
 

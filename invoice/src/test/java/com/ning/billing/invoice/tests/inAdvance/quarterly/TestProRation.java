@@ -18,7 +18,7 @@ package com.ning.billing.invoice.tests.inAdvance.quarterly;
 
 import java.math.BigDecimal;
 
-import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -33,9 +33,9 @@ public class TestProRation extends ProRationInAdvanceTestBase {
 
     @Test(groups = "fast")
     public void testSinglePlan_WithPhaseChange() throws InvalidDateSequenceException {
-        final DateTime startDate = buildDateTime(2011, 2, 10);
-        final DateTime phaseChangeDate = buildDateTime(2011, 2, 24);
-        final DateTime targetDate = buildDateTime(2011, 3, 6);
+        final LocalDate startDate = buildDate(2011, 2, 10);
+        final LocalDate phaseChangeDate = buildDate(2011, 2, 24);
+        final LocalDate targetDate = buildDate(2011, 3, 6);
 
         BigDecimal expectedValue;
         expectedValue = FOURTEEN.divide(EIGHTY_NINE, NUMBER_OF_DECIMALS, ROUNDING_METHOD);
@@ -47,9 +47,9 @@ public class TestProRation extends ProRationInAdvanceTestBase {
 
     @Test(groups = "fast")
     public void testSinglePlan_WithPhaseChange_BeforeBillCycleDay() throws InvalidDateSequenceException {
-        final DateTime startDate = buildDateTime(2011, 2, 3);
-        final DateTime phaseChangeDate = buildDateTime(2011, 2, 17);
-        final DateTime targetDate = buildDateTime(2011, 3, 1);
+        final LocalDate startDate = buildDate(2011, 2, 3);
+        final LocalDate phaseChangeDate = buildDate(2011, 2, 17);
+        final LocalDate targetDate = buildDate(2011, 3, 1);
 
         BigDecimal expectedValue;
         expectedValue = FOURTEEN.divide(EIGHTY_NINE, NUMBER_OF_DECIMALS, ROUNDING_METHOD);
@@ -61,9 +61,9 @@ public class TestProRation extends ProRationInAdvanceTestBase {
 
     @Test(groups = "fast")
     public void testSinglePlan_WithPhaseChange_OnBillCycleDay() throws InvalidDateSequenceException {
-        final DateTime startDate = buildDateTime(2011, 2, 3);
-        final DateTime phaseChangeDate = buildDateTime(2011, 2, 17);
-        final DateTime targetDate = buildDateTime(2011, 3, 3);
+        final LocalDate startDate = buildDate(2011, 2, 3);
+        final LocalDate phaseChangeDate = buildDate(2011, 2, 17);
+        final LocalDate targetDate = buildDate(2011, 3, 3);
 
         BigDecimal expectedValue;
         expectedValue = FOURTEEN.divide(EIGHTY_NINE, NUMBER_OF_DECIMALS, ROUNDING_METHOD);
@@ -75,9 +75,9 @@ public class TestProRation extends ProRationInAdvanceTestBase {
 
     @Test(groups = "fast")
     public void testSinglePlan_WithPhaseChange_AfterBillCycleDay() throws InvalidDateSequenceException {
-        final DateTime startDate = buildDateTime(2011, 2, 3);
-        final DateTime phaseChangeDate = buildDateTime(2011, 2, 17);
-        final DateTime targetDate = buildDateTime(2011, 3, 4);
+        final LocalDate startDate = buildDate(2011, 2, 3);
+        final LocalDate phaseChangeDate = buildDate(2011, 2, 17);
+        final LocalDate targetDate = buildDate(2011, 3, 4);
 
         BigDecimal expectedValue;
         expectedValue = FOURTEEN.divide(EIGHTY_NINE, NUMBER_OF_DECIMALS, ROUNDING_METHOD);
@@ -89,9 +89,9 @@ public class TestProRation extends ProRationInAdvanceTestBase {
 
     @Test(groups = "fast")
     public void testPlanChange_WithChangeOfBillCycleDayToLaterDay() throws InvalidDateSequenceException {
-        final DateTime startDate = buildDateTime(2011, 2, 1);
-        final DateTime planChangeDate = buildDateTime(2011, 2, 15);
-        final DateTime targetDate = buildDateTime(2011, 3, 1);
+        final LocalDate startDate = buildDate(2011, 2, 1);
+        final LocalDate planChangeDate = buildDate(2011, 2, 15);
+        final LocalDate targetDate = buildDate(2011, 3, 1);
 
         final BigDecimal expectedValue = FOURTEEN.divide(EIGHTY_NINE, NUMBER_OF_DECIMALS, ROUNDING_METHOD);
         testCalculateNumberOfBillingCycles(startDate, planChangeDate, targetDate, 1, expectedValue);
@@ -100,9 +100,9 @@ public class TestProRation extends ProRationInAdvanceTestBase {
 
     @Test(groups = "fast")
     public void testPlanChange_WithChangeOfBillCycleDayToEarlierDay() throws InvalidDateSequenceException {
-        final DateTime startDate = buildDateTime(2011, 2, 20);
-        final DateTime planChangeDate = buildDateTime(2011, 3, 6);
-        final DateTime targetDate = buildDateTime(2011, 3, 9);
+        final LocalDate startDate = buildDate(2011, 2, 20);
+        final LocalDate planChangeDate = buildDate(2011, 3, 6);
+        final LocalDate targetDate = buildDate(2011, 3, 9);
 
         final BigDecimal expectedValue = FOURTEEN.divide(EIGHTY_NINE, NUMBER_OF_DECIMALS, ROUNDING_METHOD);
         testCalculateNumberOfBillingCycles(startDate, planChangeDate, targetDate, 20, expectedValue);
@@ -111,41 +111,41 @@ public class TestProRation extends ProRationInAdvanceTestBase {
 
     @Test(groups = "fast")
     public void testSinglePlan_CrossingYearBoundary() throws InvalidDateSequenceException {
-        final DateTime startDate = buildDateTime(2010, 12, 15);
-        final DateTime targetDate = buildDateTime(2011, 1, 16);
+        final LocalDate startDate = buildDate(2010, 12, 15);
+        final LocalDate targetDate = buildDate(2011, 1, 16);
 
         testCalculateNumberOfBillingCycles(startDate, targetDate, 15, ONE);
     }
 
     @Test(groups = "fast")
     public void testSinglePlan_LeapYear_StartingMidFebruary() throws InvalidDateSequenceException {
-        final DateTime startDate = buildDateTime(2012, 2, 15);
-        final DateTime targetDate = buildDateTime(2012, 3, 15);
+        final LocalDate startDate = buildDate(2012, 2, 15);
+        final LocalDate targetDate = buildDate(2012, 3, 15);
 
         testCalculateNumberOfBillingCycles(startDate, targetDate, 15, ONE);
     }
 
     @Test(groups = "fast")
     public void testSinglePlan_LeapYear_StartingBeforeFebruary() throws InvalidDateSequenceException {
-        final DateTime startDate = buildDateTime(2012, 1, 15);
-        final DateTime targetDate = buildDateTime(2012, 2, 3);
+        final LocalDate startDate = buildDate(2012, 1, 15);
+        final LocalDate targetDate = buildDate(2012, 2, 3);
 
         testCalculateNumberOfBillingCycles(startDate, targetDate, 15, ONE);
     }
 
     @Test(groups = "fast")
     public void testSinglePlan_LeapYear_IncludingAllOfFebruary() throws InvalidDateSequenceException {
-        final DateTime startDate = buildDateTime(2012, 1, 30);
-        final DateTime targetDate = buildDateTime(2012, 3, 1);
+        final LocalDate startDate = buildDate(2012, 1, 30);
+        final LocalDate targetDate = buildDate(2012, 3, 1);
 
         testCalculateNumberOfBillingCycles(startDate, targetDate, 30, ONE);
     }
 
     @Test(groups = "fast")
     public void testSinglePlan_ChangeBCDTo31() throws InvalidDateSequenceException {
-        final DateTime startDate = buildDateTime(2011, 2, 1);
-        final DateTime planChangeDate = buildDateTime(2011, 2, 14);
-        final DateTime targetDate = buildDateTime(2011, 3, 1);
+        final LocalDate startDate = buildDate(2011, 2, 1);
+        final LocalDate planChangeDate = buildDate(2011, 2, 14);
+        final LocalDate targetDate = buildDate(2011, 3, 1);
 
         BigDecimal expectedValue;
 
@@ -158,9 +158,9 @@ public class TestProRation extends ProRationInAdvanceTestBase {
 
     @Test(groups = "fast")
     public void testSinglePlan_ChangeBCD() throws InvalidDateSequenceException {
-        final DateTime startDate = buildDateTime(2011, 2, 1);
-        final DateTime planChangeDate = buildDateTime(2011, 2, 14);
-        final DateTime targetDate = buildDateTime(2011, 5, 1);
+        final LocalDate startDate = buildDate(2011, 2, 1);
+        final LocalDate planChangeDate = buildDate(2011, 2, 14);
+        final LocalDate targetDate = buildDate(2011, 5, 1);
 
         BigDecimal expectedValue;
 
@@ -173,9 +173,9 @@ public class TestProRation extends ProRationInAdvanceTestBase {
 
     @Test(groups = "fast")
     public void testSinglePlan_LeapYearFebruaryProRation() throws InvalidDateSequenceException {
-        final DateTime startDate = buildDateTime(2012, 2, 1);
-        final DateTime endDate = buildDateTime(2012, 2, 15);
-        final DateTime targetDate = buildDateTime(2012, 2, 19);
+        final LocalDate startDate = buildDate(2012, 2, 1);
+        final LocalDate endDate = buildDate(2012, 2, 15);
+        final LocalDate targetDate = buildDate(2012, 2, 19);
 
         final BigDecimal expectedValue;
         expectedValue = FOURTEEN.divide(NINETY, NUMBER_OF_DECIMALS, ROUNDING_METHOD);
@@ -185,9 +185,9 @@ public class TestProRation extends ProRationInAdvanceTestBase {
 
     @Test(groups = "fast")
     public void testPlanChange_BeforeBillingDay() throws InvalidDateSequenceException {
-        final DateTime startDate = buildDateTime(2011, 2, 7);
-        final DateTime changeDate = buildDateTime(2011, 2, 15);
-        final DateTime targetDate = buildDateTime(2011, 9, 21);
+        final LocalDate startDate = buildDate(2011, 2, 7);
+        final LocalDate changeDate = buildDate(2011, 2, 15);
+        final LocalDate targetDate = buildDate(2011, 9, 21);
 
         final BigDecimal expectedValue;
 
@@ -199,9 +199,9 @@ public class TestProRation extends ProRationInAdvanceTestBase {
 
     @Test(groups = "fast")
     public void testPlanChange_OnBillingDay() throws InvalidDateSequenceException {
-        final DateTime startDate = buildDateTime(2011, 2, 7);
-        final DateTime changeDate = buildDateTime(2011, 5, 7);
-        final DateTime targetDate = buildDateTime(2011, 7, 21);
+        final LocalDate startDate = buildDate(2011, 2, 7);
+        final LocalDate changeDate = buildDate(2011, 5, 7);
+        final LocalDate targetDate = buildDate(2011, 7, 21);
 
         testCalculateNumberOfBillingCycles(startDate, changeDate, targetDate, 7, ONE);
 
@@ -212,9 +212,9 @@ public class TestProRation extends ProRationInAdvanceTestBase {
 
     @Test(groups = "fast")
     public void testPlanChange_AfterBillingDay() throws InvalidDateSequenceException {
-        final DateTime startDate = buildDateTime(2011, 2, 7);
-        final DateTime changeDate = buildDateTime(2011, 5, 10);
-        final DateTime targetDate = buildDateTime(2011, 9, 21);
+        final LocalDate startDate = buildDate(2011, 2, 7);
+        final LocalDate changeDate = buildDate(2011, 5, 10);
+        final LocalDate targetDate = buildDate(2011, 9, 21);
 
         BigDecimal expectedValue;
 
@@ -227,9 +227,9 @@ public class TestProRation extends ProRationInAdvanceTestBase {
 
     @Test(groups = "fast")
     public void testPlanChange_DoubleProRation() throws InvalidDateSequenceException {
-        final DateTime startDate = buildDateTime(2011, 1, 31);
-        final DateTime planChangeDate = buildDateTime(2011, 5, 10);
-        final DateTime targetDate = buildDateTime(2011, 5, 21);
+        final LocalDate startDate = buildDate(2011, 1, 31);
+        final LocalDate planChangeDate = buildDate(2011, 5, 10);
+        final LocalDate targetDate = buildDate(2011, 5, 21);
 
         BigDecimal expectedValue;
         expectedValue = SEVEN.divide(NINETY_TWO, NUMBER_OF_DECIMALS, ROUNDING_METHOD);
@@ -243,9 +243,9 @@ public class TestProRation extends ProRationInAdvanceTestBase {
 
     @Test(groups = "fast")
     public void testStartTargetEnd() throws InvalidDateSequenceException {
-        final DateTime startDate = buildDateTime(2010, 12, 15);
-        final DateTime targetDate = buildDateTime(2011, 6, 15);
-        final DateTime endDate = buildDateTime(2011, 6, 17);
+        final LocalDate startDate = buildDate(2010, 12, 15);
+        final LocalDate targetDate = buildDate(2011, 6, 15);
+        final LocalDate endDate = buildDate(2011, 6, 17);
 
         final BigDecimal expectedValue = TWO.add(TWO.divide(NINETY_TWO, NUMBER_OF_DECIMALS, ROUNDING_METHOD));
         testCalculateNumberOfBillingCycles(startDate, endDate, targetDate, 15, expectedValue);

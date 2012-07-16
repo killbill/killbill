@@ -21,6 +21,7 @@ import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceNotifier;
 
 public class NullInvoiceNotifier implements InvoiceNotifier {
+
     @Override
     public void notify(final Account account, final Invoice invoice) {
         // deliberate no-op

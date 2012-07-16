@@ -20,15 +20,11 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
 import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.joda.JodaModule;
-import com.google.common.collect.ImmutableList;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
@@ -36,10 +32,19 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline;
 import com.ning.billing.jaxrs.JaxrsTestSuite;
+import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.joda.JodaModule;
+import com.google.common.collect.ImmutableList;
+
 public class TestBundleTimelineJson extends JaxrsTestSuite {
+
     private static final ObjectMapper mapper = new ObjectMapper();
+
+    private final Clock clock = new DefaultClock();
 
     static {
         mapper.registerModule(new JodaModule());
@@ -70,41 +75,41 @@ public class TestBundleTimelineJson extends JaxrsTestSuite {
         final InvoiceJsonSimple invoice = bundleTimelineJson.getInvoices().get(0);
 
         Assert.assertEquals(asJson, "{\"viewId\":\"" + bundleTimelineJson.getViewId() + "\"," +
-                "\"bundle\":{\"bundleId\":\"" + bundleTimelineJson.getBundle().getBundleId() + "\"," +
-                "\"externalKey\":\"" + bundleTimelineJson.getBundle().getExternalKey() + "\"," +
-                "\"subscriptions\":" +
-                "[{\"events\":[{\"eventId\":\"" + event.getEventId() + "\"," +
-                "\"billingPeriod\":\"" + event.getBillingPeriod() + "\"," +
-                "\"product\":\"" + event.getProduct() + "\"," +
-                "\"priceList\":\"" + event.getPriceList() + "\"," +
-                "\"eventType\":\"" + event.getEventType() + "\"," +
-                "\"phase\":\"" + event.getPhase() + "\"," +
-                "\"requestedDate\":null," +
-                "\"effectiveDate\":\"" + event.getEffectiveDate().toDateTimeISO().toString() + "\"}]," +
-                "\"subscriptionId\":\"" + subscription.getSubscriptionId() + "\"," +
-                "\"deletedEvents\":null," +
-                "\"newEvents\":null}]}," +
-                "\"payments\":[{\"amount\":" + payment.getAmount() + "," +
-                "\"paidAmount\":" + payment.getPaidAmount() + "," +
-                "\"accountId\":\"" + payment.getAccountId() + "\"," +
-                "\"invoiceId\":\"" + payment.getInvoiceId() + "\"," +
-                "\"paymentId\":\"" + payment.getPaymentId() + "\"," +
-                "\"requestedDate\":\"" + payment.getRequestedDate().toDateTimeISO().toString() + "\"," +
-                "\"effectiveDate\":\"" + payment.getEffectiveDate().toDateTimeISO().toString() + "\"," +
-                "\"retryCount\":" + payment.getRetryCount() + "," +
-                "\"currency\":\"" + payment.getCurrency() + "\"," +
-                "\"status\":\"" + payment.getStatus() + "\"}]," +
-                "\"invoices\":[{\"amount\":" + invoice.getAmount() + "," +
-                "\"cba\":" + invoice.getCBA() + "," +
-                "\"creditAdj\":" + invoice.getCreditAdj() + "," +
-                "\"refundAdj\":" + invoice.getRefundAdj() + "," +
-                "\"invoiceId\":\"" + invoice.getInvoiceId() + "\"," +
-                "\"invoiceDate\":\"" + invoice.getInvoiceDate().toDateTimeISO().toString() + "\"," +
-                "\"targetDate\":\"" + invoice.getTargetDate() + "\"," +
-                "\"invoiceNumber\":\"" + invoice.getInvoiceNumber() + "\"," +
-                "\"balance\":" + invoice.getBalance() + "," +
-                "\"accountId\":\"" + invoice.getAccountId() + "\"}]," +
-                "\"reasonForChange\":\"" + reason + "\"}");
+                                    "\"bundle\":{\"bundleId\":\"" + bundleTimelineJson.getBundle().getBundleId() + "\"," +
+                                    "\"externalKey\":\"" + bundleTimelineJson.getBundle().getExternalKey() + "\"," +
+                                    "\"subscriptions\":" +
+                                    "[{\"events\":[{\"eventId\":\"" + event.getEventId() + "\"," +
+                                    "\"billingPeriod\":\"" + event.getBillingPeriod() + "\"," +
+                                    "\"product\":\"" + event.getProduct() + "\"," +
+                                    "\"priceList\":\"" + event.getPriceList() + "\"," +
+                                    "\"eventType\":\"" + event.getEventType() + "\"," +
+                                    "\"phase\":\"" + event.getPhase() + "\"," +
+                                    "\"requestedDate\":null," +
+                                    "\"effectiveDate\":\"" + event.getEffectiveDate().toDateTimeISO().toString() + "\"}]," +
+                                    "\"subscriptionId\":\"" + subscription.getSubscriptionId() + "\"," +
+                                    "\"deletedEvents\":null," +
+                                    "\"newEvents\":null}]}," +
+                                    "\"payments\":[{\"amount\":" + payment.getAmount() + "," +
+                                    "\"paidAmount\":" + payment.getPaidAmount() + "," +
+                                    "\"accountId\":\"" + payment.getAccountId() + "\"," +
+                                    "\"invoiceId\":\"" + payment.getInvoiceId() + "\"," +
+                                    "\"paymentId\":\"" + payment.getPaymentId() + "\"," +
+                                    "\"requestedDate\":\"" + payment.getRequestedDate().toDateTimeISO().toString() + "\"," +
+                                    "\"effectiveDate\":\"" + payment.getEffectiveDate().toDateTimeISO().toString() + "\"," +
+                                    "\"retryCount\":" + payment.getRetryCount() + "," +
+                                    "\"currency\":\"" + payment.getCurrency() + "\"," +
+                                    "\"status\":\"" + payment.getStatus() + "\"}]," +
+                                    "\"invoices\":[{\"amount\":" + invoice.getAmount() + "," +
+                                    "\"cba\":" + invoice.getCBA() + "," +
+                                    "\"creditAdj\":" + invoice.getCreditAdj() + "," +
+                                    "\"refundAdj\":" + invoice.getRefundAdj() + "," +
+                                    "\"invoiceId\":\"" + invoice.getInvoiceId() + "\"," +
+                                    "\"invoiceDate\":\"" + invoice.getInvoiceDate().toString() + "\"," +
+                                    "\"targetDate\":\"" + invoice.getTargetDate() + "\"," +
+                                    "\"invoiceNumber\":\"" + invoice.getInvoiceNumber() + "\"," +
+                                    "\"balance\":" + invoice.getBalance() + "," +
+                                    "\"accountId\":\"" + invoice.getAccountId() + "\"}]," +
+                                    "\"reasonForChange\":\"" + reason + "\"}");
 
         final BundleTimelineJson fromJson = mapper.readValue(asJson, BundleTimelineJson.class);
         Assert.assertEquals(fromJson, bundleTimelineJson);
@@ -112,7 +117,7 @@ public class TestBundleTimelineJson extends JaxrsTestSuite {
 
     private BundleJsonWithSubscriptions createBundleWithSubscriptions() {
         final SubscriptionTimeline.ExistingEvent event = Mockito.mock(SubscriptionTimeline.ExistingEvent.class);
-        final DateTime effectiveDate = DefaultClock.toUTCDateTime(new DateTime(DateTimeZone.UTC));
+        final DateTime effectiveDate = clock.getUTCNow();
         final UUID eventId = UUID.randomUUID();
         final PlanPhaseSpecifier planPhaseSpecifier = new PlanPhaseSpecifier(UUID.randomUUID().toString(), ProductCategory.BASE,
                                                                              BillingPeriod.NO_BILLING_PERIOD, UUID.randomUUID().toString(),
@@ -140,8 +145,8 @@ public class TestBundleTimelineJson extends JaxrsTestSuite {
         final BigDecimal cba = BigDecimal.ONE;
         final BigDecimal creditAdj = BigDecimal.ONE;
         final BigDecimal refundAdj = BigDecimal.ONE;
-        final DateTime invoiceDate = DefaultClock.toUTCDateTime(new DateTime(DateTimeZone.UTC));
-        final DateTime targetDate = DefaultClock.toUTCDateTime(new DateTime(DateTimeZone.UTC));
+        final LocalDate invoiceDate = clock.getUTCToday();
+        final LocalDate targetDate = clock.getUTCToday();
         final String invoiceNumber = UUID.randomUUID().toString();
         final BigDecimal balance = BigDecimal.ZERO;
 
@@ -153,8 +158,8 @@ public class TestBundleTimelineJson extends JaxrsTestSuite {
         final UUID paymentId = UUID.randomUUID();
         final BigDecimal paidAmount = BigDecimal.TEN;
         final BigDecimal amount = BigDecimal.ZERO;
-        final DateTime paymentRequestedDate = DefaultClock.toUTCDateTime(new DateTime(DateTimeZone.UTC));
-        final DateTime paymentEffectiveDate = DefaultClock.toUTCDateTime(new DateTime(DateTimeZone.UTC));
+        final DateTime paymentRequestedDate = clock.getUTCNow();
+        final DateTime paymentEffectiveDate = clock.getUTCNow();
         final Integer retryCount = Integer.MAX_VALUE;
         final String currency = "USD";
         final String status = UUID.randomUUID().toString();

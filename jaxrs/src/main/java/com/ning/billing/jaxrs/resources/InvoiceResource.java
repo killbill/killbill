@@ -35,8 +35,11 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -68,6 +71,8 @@ import static javax.ws.rs.core.MediaType.TEXT_HTML;
 
 @Path(JaxrsResource.INVOICES_PATH)
 public class InvoiceResource extends JaxRsResourceBase {
+
+    private static final Logger log = LoggerFactory.getLogger(InvoiceResource.class);
     private static final String ID_PARAM_NAME = "invoiceId";
     private static final String CUSTOM_FIELD_URI = JaxrsResource.CUSTOM_FIELDS + "/{" + ID_PARAM_NAME + ":" + UUID_PATTERN + "}";
     private static final String TAG_URI = JaxrsResource.TAGS + "/{" + ID_PARAM_NAME + ":" + UUID_PATTERN + "}";
@@ -151,18 +156,20 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response createFutureInvoice(@QueryParam(QUERY_ACCOUNT_ID) final String accountId,
-                                        @QueryParam(QUERY_TARGET_DATE) final String targetDate,
+                                        @QueryParam(QUERY_TARGET_DATE) final String targetDateTime,
                                         @QueryParam(QUERY_DRY_RUN) @DefaultValue("false") final Boolean dryRun,
                                         @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                         @HeaderParam(HDR_REASON) final String reason,
                                         @HeaderParam(HDR_COMMENT) final String comment) {
         try {
             Preconditions.checkNotNull(accountId, "% needs to be specified", QUERY_ACCOUNT_ID);
-            Preconditions.checkNotNull(targetDate, "% needs to be specified", QUERY_TARGET_DATE);
+            Preconditions.checkNotNull(targetDateTime, "% needs to be specified", QUERY_TARGET_DATE);
 
-            final DateTime inputDate = (targetDate != null) ? DATE_TIME_FORMATTER.parseDateTime(targetDate) : null;
+            final DateTime inputDateTime = (targetDateTime != null) ? DATE_TIME_FORMATTER.parseDateTime(targetDateTime) : null;
 
-            accountApi.getAccountById(UUID.fromString(accountId));
+            final Account account = accountApi.getAccountById(UUID.fromString(accountId));
+            final LocalDate inputDate = inputDateTime.toDateTime(account.getTimeZone()).toLocalDate();
+
             final Invoice generatedInvoice = invoiceApi.triggerInvoiceGeneration(UUID.fromString(accountId), inputDate, dryRun,
                                                                                  context.createContext(createdBy, reason, comment));
             if (dryRun) {
@@ -170,8 +177,6 @@ public class InvoiceResource extends JaxRsResourceBase {
             } else {
                 return uriBuilder.buildResponse(InvoiceResource.class, "getInvoice", generatedInvoice.getId());
             }
-        } catch (AccountApiException e) {
-            return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
         } catch (InvoiceApiException e) {
             if (e.getCode() == ErrorCode.INVOICE_NOTHING_TO_DO.getCode()) {
                 return Response.status(Status.NO_CONTENT).build();
@@ -179,6 +184,9 @@ public class InvoiceResource extends JaxRsResourceBase {
                 return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
             }
         } catch (NullPointerException e) {
+            return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+        } catch (AccountApiException e) {
+            log.warn(String.format("Failed to locate account for id %s", accountId), e);
             return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
         }
     }

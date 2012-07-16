@@ -19,6 +19,7 @@ package com.ning.billing.payment;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.mockito.Mockito;
 
 import com.google.inject.Inject;
@@ -29,6 +30,7 @@ import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceCreationEvent;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
+import com.ning.billing.mock.api.MockBillCycleDay;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.payment.glue.PaymentTestModuleWithMocks;
@@ -39,6 +41,7 @@ import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.clock.Clock;
 
 public class TestHelper {
     protected final AccountUserApi accountUserApi;
@@ -46,21 +49,24 @@ public class TestHelper {
     protected PaymentApi paymentApi;
     private final CallContext context;
     private final Bus eventBus;
+    private final Clock clock;
 
     @Inject
-    public TestHelper(final CallContextFactory factory, final AccountUserApi accountUserApi, final InvoicePaymentApi invoicePaymentApi, final PaymentApi paymentApi, final Bus eventBus) {
+    public TestHelper(final CallContextFactory factory, final AccountUserApi accountUserApi, final InvoicePaymentApi invoicePaymentApi,
+                      final PaymentApi paymentApi, final Bus eventBus, final Clock clock) {
         this.eventBus = eventBus;
         this.accountUserApi = accountUserApi;
         this.invoicePaymentApi = invoicePaymentApi;
         this.paymentApi = paymentApi;
+        this.clock = clock;
         context = factory.createCallContext("Princess Buttercup", CallOrigin.TEST, UserType.TEST);
     }
 
     public Invoice createTestInvoice(final Account account,
-                                     final DateTime targetDate,
+                                     final LocalDate targetDate,
                                      final Currency currency,
                                      final InvoiceItem... items) throws EventBusException {
-        final Invoice invoice = new MockInvoice(account.getId(), new DateTime(), targetDate, currency);
+        final Invoice invoice = new MockInvoice(account.getId(), clock.getUTCToday(), targetDate, currency);
 
         for (final InvoiceItem item : items) {
             if (item instanceof MockRecurringInvoiceItem) {
@@ -101,7 +107,7 @@ public class TestHelper {
         Mockito.when(account.getPhone()).thenReturn("123-456-7890");
         Mockito.when(account.getEmail()).thenReturn(email);
         Mockito.when(account.getCurrency()).thenReturn(Currency.USD);
-        Mockito.when(account.getBillCycleDay()).thenReturn(1);
+        Mockito.when(account.getBillCycleDay()).thenReturn(new MockBillCycleDay(1));
         Mockito.when(account.isMigrated()).thenReturn(false);
         Mockito.when(account.isNotifiedForInvoices()).thenReturn(false);
 

@@ -25,6 +25,7 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Period;
+import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -36,6 +37,7 @@ import org.testng.annotations.BeforeMethod;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.ning.billing.account.api.AccountData;
+import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.api.TestApiListener;
 import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.api.TestListenerStatus;
@@ -67,6 +69,7 @@ import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
 import com.ning.billing.entitlement.events.user.ApiEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
+import com.ning.billing.mock.MockAccountBuilder;
 import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.bus.DefaultBusService;
 import com.ning.billing.util.callcontext.CallContext;
@@ -169,7 +172,21 @@ public abstract class TestApiBase extends EntitlementTestSuiteWithEmbeddedDB imp
     private void init() throws Exception {
         ((DefaultCatalogService) catalogService).loadCatalog();
 
-        accountData = getAccountData();
+        final BillCycleDay billCycleDay = Mockito.mock(BillCycleDay.class);
+        Mockito.when(billCycleDay.getDayOfMonthUTC()).thenReturn(1);
+        accountData = new MockAccountBuilder().name(UUID.randomUUID().toString())
+                                              .firstNameLength(6)
+                                              .email(UUID.randomUUID().toString())
+                                              .phone(UUID.randomUUID().toString())
+                                              .migrated(false)
+                                              .isNotifiedForInvoices(false)
+                                              .externalKey(UUID.randomUUID().toString())
+                                              .billingCycleDay(billCycleDay)
+                                              .currency(Currency.USD)
+                                              .paymentMethodId(UUID.randomUUID())
+                                              .timeZone(DateTimeZone.forID("Europe/Paris"))
+                                              .build();
+
         assertNotNull(accountData);
         catalog = catalogService.getFullCatalog();
         assertNotNull(catalog);
@@ -360,106 +377,6 @@ public abstract class TestApiBase extends EntitlementTestSuiteWithEmbeddedDB imp
             }
         };
         return result;
-    }
-
-    protected AccountData getAccountData() {
-        final AccountData accountData = new AccountData() {
-            @Override
-            public String getName() {
-                return "firstName lastName";
-            }
-
-            @Override
-            public Integer getFirstNameLength() {
-                return "firstName".length();
-            }
-
-            @Override
-            public String getEmail() {
-                return "accountName@yahoo.com";
-            }
-
-            @Override
-            public String getPhone() {
-                return "4152876341";
-            }
-
-            @Override
-            public Boolean isMigrated() {
-                return false;
-            }
-
-            @Override
-            public Boolean isNotifiedForInvoices() {
-                return false;
-            }
-
-            @Override
-            public String getExternalKey() {
-                return "k123456";
-            }
-
-            @Override
-            public Integer getBillCycleDay() {
-                return 1;
-            }
-
-            @Override
-            public Currency getCurrency() {
-                return Currency.USD;
-            }
-
-            @Override
-            public UUID getPaymentMethodId() {
-                return UUID.randomUUID();
-            }
-
-            @Override
-            public DateTimeZone getTimeZone() {
-                return DateTimeZone.forID("Europe/Paris");
-            }
-
-            @Override
-            public String getLocale() {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public String getAddress1() {
-                return null;
-            }
-
-            @Override
-            public String getAddress2() {
-                return null;
-            }
-
-            @Override
-            public String getCompanyName() {
-                return null;
-            }
-
-            @Override
-            public String getCity() {
-                return null;
-            }
-
-            @Override
-            public String getStateOrProvince() {
-                return null;
-            }
-
-            @Override
-            public String getPostalCode() {
-                return null;
-            }
-
-            @Override
-            public String getCountry() {
-                return null;
-            }
-        };
-        return accountData;
     }
 
     protected PlanPhaseSpecifier getProductSpecifier(final String productName, final String priceList,

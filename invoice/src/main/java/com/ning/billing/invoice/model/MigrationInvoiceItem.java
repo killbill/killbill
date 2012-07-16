@@ -19,15 +19,15 @@ package com.ning.billing.invoice.model;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.MigrationPlan;
 
 public class MigrationInvoiceItem extends FixedPriceInvoiceItem {
-
-    public MigrationInvoiceItem(final UUID invoiceId, final UUID accountId, final DateTime startDate, final BigDecimal amount, final Currency currency) {
+    public MigrationInvoiceItem(final UUID invoiceId, final UUID accountId, final LocalDate startDate,
+                                final BigDecimal amount, final Currency currency) {
         super(invoiceId, accountId, null, null, MigrationPlan.MIGRATION_PLAN_NAME, MigrationPlan.MIGRATION_PLAN_PHASE_NAME,
-              startDate, startDate, amount, currency);
+              startDate, amount, currency);
     }
 }

@@ -20,21 +20,26 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.analytics.AnalyticsTestSuite;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.clock.DefaultClock;
 
 public class TestBusinessInvoiceItem extends AnalyticsTestSuite {
+
+    private final Clock clock = new DefaultClock();
+
     @Test(groups = "fast")
     public void testEquals() throws Exception {
         final BigDecimal amount = BigDecimal.TEN;
         final String billingPeriod = UUID.randomUUID().toString();
-        final DateTime createdDate = new DateTime(DateTimeZone.UTC);
+        final DateTime createdDate = clock.getUTCNow();
         final Currency currency = Currency.AUD;
-        final DateTime endDate = new DateTime(DateTimeZone.UTC);
+        final LocalDate endDate = clock.getUTCToday();
         final String externalKey = UUID.randomUUID().toString();
         final UUID invoiceId = UUID.randomUUID();
         final UUID itemId = UUID.randomUUID();
@@ -44,8 +49,8 @@ public class TestBusinessInvoiceItem extends AnalyticsTestSuite {
         final String productName = UUID.randomUUID().toString();
         final String productType = UUID.randomUUID().toString();
         final String slug = UUID.randomUUID().toString();
-        final DateTime startDate = new DateTime(DateTimeZone.UTC);
-        final DateTime updatedDate = new DateTime(DateTimeZone.UTC);
+        final LocalDate startDate = clock.getUTCToday();
+        final DateTime updatedDate = clock.getUTCNow();
         final BusinessInvoiceItem invoiceItem = new BusinessInvoiceItem(amount, billingPeriod, createdDate, currency,
                                                                         endDate, externalKey, invoiceId, itemId, itemType,
                                                                         phase, productCategory, productName, productType,

@@ -19,15 +19,14 @@ package com.ning.billing.overdue.calculator;
 import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
 
-import com.google.inject.Inject;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.junction.api.Blockable;
@@ -35,16 +34,19 @@ import com.ning.billing.overdue.config.api.BillingState;
 import com.ning.billing.overdue.config.api.OverdueError;
 import com.ning.billing.util.clock.Clock;
 
+import com.google.inject.Inject;
+
 public abstract class BillingStateCalculator<T extends Blockable> {
 
     private final InvoiceUserApi invoiceApi;
     private final Clock clock;
 
     protected class InvoiceDateComparator implements Comparator<Invoice> {
+
         @Override
         public int compare(final Invoice i1, final Invoice i2) {
-            final DateTime d1 = i1.getInvoiceDate();
-            final DateTime d2 = i2.getInvoiceDate();
+            final LocalDate d1 = i1.getInvoiceDate();
+            final LocalDate d2 = i2.getInvoiceDate();
             if (d1.compareTo(d2) == 0) {
                 return i1.hashCode() - i2.hashCode(); // consistent (arbitrary) resolution for tied dates
             }
@@ -70,15 +72,14 @@ public abstract class BillingStateCalculator<T extends Blockable> {
 
     protected BigDecimal sumBalance(final SortedSet<Invoice> unpaidInvoices) {
         BigDecimal sum = BigDecimal.ZERO;
-        final Iterator<Invoice> it = unpaidInvoices.iterator();
-        while (it.hasNext()) {
-            sum = sum.add(it.next().getBalance());
+        for (final Invoice unpaidInvoice : unpaidInvoices) {
+            sum = sum.add(unpaidInvoice.getBalance());
         }
         return sum;
     }
 
-    protected SortedSet<Invoice> unpaidInvoicesForAccount(final UUID accountId) {
-        final Collection<Invoice> invoices = invoiceApi.getUnpaidInvoicesByAccountId(accountId, clock.getUTCNow());
+    protected SortedSet<Invoice> unpaidInvoicesForAccount(final UUID accountId, final DateTimeZone accountTimeZone) {
+        final Collection<Invoice> invoices = invoiceApi.getUnpaidInvoicesByAccountId(accountId, clock.getToday(accountTimeZone));
         final SortedSet<Invoice> sortedInvoices = new TreeSet<Invoice>(new InvoiceDateComparator());
         sortedInvoices.addAll(invoices);
         return sortedInvoices;

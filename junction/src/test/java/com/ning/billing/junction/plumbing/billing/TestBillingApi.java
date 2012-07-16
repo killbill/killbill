@@ -70,6 +70,7 @@ import com.ning.billing.junction.api.DefaultBlockingState;
 import com.ning.billing.lifecycle.KillbillService.ServiceException;
 import com.ning.billing.mock.MockEffectiveSubscriptionEvent;
 import com.ning.billing.mock.MockSubscription;
+import com.ning.billing.mock.api.MockBillCycleDay;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.DefaultCallContextFactory;
@@ -217,7 +218,7 @@ public class TestBillingApi extends JunctionTestSuite {
 
         final AccountUserApi accountApi = Mockito.mock(AccountUserApi.class);
         final Account account = Mockito.mock(Account.class);
-        Mockito.when(account.getBillCycleDay()).thenReturn(32);
+        Mockito.when(account.getBillCycleDay()).thenReturn(new MockBillCycleDay(32));
         Mockito.when(account.getCurrency()).thenReturn(Currency.USD);
         Mockito.when(account.getId()).thenReturn(UUID.randomUUID());
         Mockito.when(account.getTimeZone()).thenReturn(DateTimeZone.UTC);
@@ -247,7 +248,7 @@ public class TestBillingApi extends JunctionTestSuite {
         effectiveSubscriptionTransitions.add(t);
 
         final Account account = Mockito.mock(Account.class);
-        Mockito.when(account.getBillCycleDay()).thenReturn(1);
+        Mockito.when(account.getBillCycleDay()).thenReturn(new MockBillCycleDay(1));
         Mockito.when(account.getTimeZone()).thenReturn(DateTimeZone.UTC);
         Mockito.when(account.getCurrency()).thenReturn(Currency.USD);
 
@@ -283,7 +284,7 @@ public class TestBillingApi extends JunctionTestSuite {
 
         final AccountUserApi accountApi = Mockito.mock(AccountUserApi.class);
         final Account account = Mockito.mock(Account.class);
-        Mockito.when(account.getBillCycleDay()).thenReturn(32);
+        Mockito.when(account.getBillCycleDay()).thenReturn(new MockBillCycleDay(32));
         Mockito.when(account.getCurrency()).thenReturn(Currency.USD);
         Mockito.when(account.getId()).thenReturn(UUID.randomUUID());
         Mockito.when(account.getTimeZone()).thenReturn(DateTimeZone.UTC);
@@ -317,7 +318,7 @@ public class TestBillingApi extends JunctionTestSuite {
         effectiveSubscriptionTransitions.add(t);
 
         final Account account = Mockito.mock(Account.class);
-        Mockito.when(account.getBillCycleDay()).thenReturn(1);
+        Mockito.when(account.getBillCycleDay()).thenReturn(new MockBillCycleDay(1));
         Mockito.when(account.getTimeZone()).thenReturn(DateTimeZone.UTC);
         Mockito.when(account.getCurrency()).thenReturn(Currency.USD);
         Mockito.when(account.getId()).thenReturn(UUID.randomUUID());
@@ -357,7 +358,7 @@ public class TestBillingApi extends JunctionTestSuite {
 
         final AccountUserApi accountApi = Mockito.mock(AccountUserApi.class);
         final Account account = Mockito.mock(Account.class);
-        Mockito.when(account.getBillCycleDay()).thenReturn(32);
+        Mockito.when(account.getBillCycleDay()).thenReturn(new MockBillCycleDay(32));
         Mockito.when(account.getCurrency()).thenReturn(Currency.USD);
         Mockito.when(account.getTimeZone()).thenReturn(DateTimeZone.UTC);
         Mockito.when(accountApi.getAccountById(Mockito.<UUID>any())).thenReturn(account);
@@ -429,7 +430,7 @@ public class TestBillingApi extends JunctionTestSuite {
 
         final AccountUserApi accountApi = Mockito.mock(AccountUserApi.class);
         final Account account = Mockito.mock(Account.class);
-        Mockito.when(account.getBillCycleDay()).thenReturn(32);
+        Mockito.when(account.getBillCycleDay()).thenReturn(new MockBillCycleDay(32));
         Mockito.when(account.getCurrency()).thenReturn(Currency.USD);
         Mockito.when(account.getId()).thenReturn(UUID.randomUUID());
         Mockito.when(accountApi.getAccountById(Mockito.<UUID>any())).thenReturn(account);
@@ -471,7 +472,7 @@ public class TestBillingApi extends JunctionTestSuite {
 
         final AccountUserApi accountApi = Mockito.mock(AccountUserApi.class);
         final Account account = Mockito.mock(Account.class);
-        Mockito.when(account.getBillCycleDay()).thenReturn(32);
+        Mockito.when(account.getBillCycleDay()).thenReturn(new MockBillCycleDay(32));
         Mockito.when(account.getCurrency()).thenReturn(Currency.USD);
         Mockito.when(account.getId()).thenReturn(UUID.randomUUID());
         Mockito.when(accountApi.getAccountById(Mockito.<UUID>any())).thenReturn(account);

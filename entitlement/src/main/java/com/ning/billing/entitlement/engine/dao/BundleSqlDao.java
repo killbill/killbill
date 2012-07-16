@@ -81,7 +81,7 @@ public interface BundleSqlDao extends Transactional<BundleSqlDao>, EntitySqlDao<
             final UUID id = UUID.fromString(r.getString("id"));
             final String key = r.getString("external_key");
             final UUID accountId = UUID.fromString(r.getString("account_id"));
-            final DateTime lastSysUpdateDate = getDate(r, "last_sys_update_date");
+            final DateTime lastSysUpdateDate = getDateTime(r, "last_sys_update_date");
             return new SubscriptionBundleData(id, key, accountId, lastSysUpdateDate);
         }
     }

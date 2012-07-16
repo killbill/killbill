@@ -24,6 +24,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -449,9 +450,8 @@ public class TestAnalytics extends TestIntegrationBase {
         // No billing period for the trial item
         Assert.assertEquals(invoiceItem.getBillingPeriod(), subscription.getCurrentPhase().getBillingPeriod().toString());
         Assert.assertEquals(invoiceItem.getCurrency(), account.getCurrency());
-        final DateTime subscriptionEndDate = subscription.getStartDate().plus(subscription.getCurrentPhase().getDuration().toJodaPeriod());
-        final DateTime roundedSubscriptionEndDate = InvoiceDateUtils.roundDateTimeToDate(subscriptionEndDate, DateTimeZone.UTC);
-        Assert.assertEquals(invoiceItem.getEndDate(), roundedSubscriptionEndDate);
+        // No end date for the trial item (fixed price of zero)
+        Assert.assertNull(invoiceItem.getEndDate());
         Assert.assertEquals(invoiceItem.getExternalKey(), bundle.getKey());
         Assert.assertEquals(invoiceItem.getInvoiceId(), invoice.getInvoiceId());
         Assert.assertEquals(invoiceItem.getItemType(), "FIXED");
@@ -461,8 +461,7 @@ public class TestAnalytics extends TestIntegrationBase {
         Assert.assertEquals(invoiceItem.getProductType(), subscription.getCurrentPlan().getProduct().getCatalogName());
         Assert.assertEquals(invoiceItem.getSlug(), subscription.getCurrentPhase().getName());
         final DateTime subscriptionStartDate = subscription.getStartDate();
-        final DateTime roundedSubscriptionStartDate = InvoiceDateUtils.roundDateTimeToDate(subscriptionStartDate, DateTimeZone.UTC);
-        Assert.assertEquals(invoiceItem.getStartDate(), roundedSubscriptionStartDate);
+        Assert.assertEquals(invoiceItem.getStartDate(), new LocalDate(subscriptionStartDate.getYear(), subscriptionStartDate.getMonthOfYear(), subscriptionStartDate.getDayOfMonth()));
 
         return subscription;
     }

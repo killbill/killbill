@@ -20,17 +20,22 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import com.ning.billing.jaxrs.JaxrsTestSuite;
+import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.clock.DefaultClock;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
-import com.ning.billing.jaxrs.JaxrsTestSuite;
 
 public class TestCreditJson extends JaxrsTestSuite {
+
     private static final ObjectMapper mapper = new ObjectMapper();
+
+    private final Clock clock = new DefaultClock();
 
     static {
         mapper.registerModule(new JodaModule());
@@ -42,8 +47,8 @@ public class TestCreditJson extends JaxrsTestSuite {
         final BigDecimal creditAmount = BigDecimal.TEN;
         final UUID invoiceId = UUID.randomUUID();
         final String invoiceNumber = UUID.randomUUID().toString();
-        final DateTime requestedDate = new DateTime(DateTimeZone.UTC);
-        final DateTime effectiveDate = new DateTime(DateTimeZone.UTC);
+        final DateTime requestedDate = clock.getUTCNow();
+        final DateTime effectiveDate = clock.getUTCNow();
         final String reason = UUID.randomUUID().toString();
         final UUID accountId = UUID.randomUUID();
 
@@ -58,12 +63,12 @@ public class TestCreditJson extends JaxrsTestSuite {
 
         final String asJson = mapper.writeValueAsString(creditJson);
         Assert.assertEquals(asJson, "{\"creditAmount\":" + creditJson.getCreditAmount() + "," +
-                "\"invoiceId\":\"" + creditJson.getInvoiceId().toString() + "\"," +
-                "\"invoiceNumber\":\"" + creditJson.getInvoiceNumber() + "\"," +
-                "\"requestedDate\":\"" + creditJson.getRequestedDate() + "\"," +
-                "\"effectiveDate\":\"" + creditJson.getEffectiveDate() + "\"," +
-                "\"reason\":\"" + creditJson.getReason() + "\"," +
-                "\"accountId\":\"" + creditJson.getAccountId().toString() + "\"}");
+                                    "\"invoiceId\":\"" + creditJson.getInvoiceId().toString() + "\"," +
+                                    "\"invoiceNumber\":\"" + creditJson.getInvoiceNumber() + "\"," +
+                                    "\"requestedDate\":\"" + creditJson.getRequestedDate().toDateTimeISO().toString() + "\"," +
+                                    "\"effectiveDate\":\"" + creditJson.getEffectiveDate().toDateTimeISO().toString() + "\"," +
+                                    "\"reason\":\"" + creditJson.getReason() + "\"," +
+                                    "\"accountId\":\"" + creditJson.getAccountId().toString() + "\"}");
 
         final CreditJson fromJson = mapper.readValue(asJson, CreditJson.class);
         Assert.assertEquals(fromJson, creditJson);

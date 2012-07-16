@@ -19,7 +19,7 @@ package com.ning.billing.payment;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -33,7 +33,7 @@ public class MockInvoiceCreationEvent implements InvoiceCreationEvent {
     private final UUID accountId;
     private final BigDecimal amountOwed;
     private final Currency currency;
-    private final DateTime invoiceCreationDate;
+    private final LocalDate invoiceCreationDate;
     private final UUID userToken;
 
     @JsonCreator
@@ -41,7 +41,7 @@ public class MockInvoiceCreationEvent implements InvoiceCreationEvent {
                                     @JsonProperty("accountId") final UUID accountId,
                                     @JsonProperty("amountOwed") final BigDecimal amountOwed,
                                     @JsonProperty("currency") final Currency currency,
-                                    @JsonProperty("invoiceCreationDate") final DateTime invoiceCreationDate,
+                                    @JsonProperty("invoiceCreationDate") final LocalDate invoiceCreationDate,
                                     @JsonProperty("userToken") final UUID userToken) {
         this.invoiceId = invoiceId;
         this.accountId = accountId;
@@ -80,11 +80,6 @@ public class MockInvoiceCreationEvent implements InvoiceCreationEvent {
     @Override
     public Currency getCurrency() {
         return currency;
-    }
-
-    @Override
-    public DateTime getInvoiceCreationDate() {
-        return invoiceCreationDate;
     }
 
     @Override

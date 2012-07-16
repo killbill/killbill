@@ -27,8 +27,9 @@ import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import com.ning.billing.analytics.model.BusinessAccount;
+import com.ning.billing.util.dao.MapperBase;
 
-public class BusinessAccountMapper implements ResultSetMapper<BusinessAccount> {
+public class BusinessAccountMapper extends MapperBase implements ResultSetMapper<BusinessAccount> {
     @Override
     public BusinessAccount map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
         final BusinessAccount account = new BusinessAccount(
@@ -36,7 +37,7 @@ public class BusinessAccountMapper implements ResultSetMapper<BusinessAccount> {
                 r.getString(2),
                 r.getString(6),
                 BigDecimal.valueOf(r.getDouble(5)),
-                r.getLong(7) == 0 ? null : new DateTime(r.getLong(7), DateTimeZone.UTC),
+                getDate(r, "last_invoice_date"),
                 BigDecimal.valueOf(r.getDouble(8)),
                 r.getString(9),
                 r.getString(10),

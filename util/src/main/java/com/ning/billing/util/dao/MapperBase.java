@@ -19,13 +19,20 @@ package com.ning.billing.util.dao;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.Date;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
 
 public abstract class MapperBase {
-    protected DateTime getDate(final ResultSet rs, final String fieldName) throws SQLException {
+    protected LocalDate getDate(final ResultSet rs, final String fieldName) throws SQLException {
+        final Date resultStamp = rs.getDate(fieldName);
+        return rs.wasNull() ? null : new LocalDate(resultStamp, DateTimeZone.UTC);
+    }
+
+    protected DateTime getDateTime(final ResultSet rs, final String fieldName) throws SQLException {
         final Timestamp resultStamp = rs.getTimestamp(fieldName);
         return rs.wasNull() ? null : new DateTime(resultStamp).toDateTime(DateTimeZone.UTC);
     }

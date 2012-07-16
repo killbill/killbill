@@ -30,7 +30,6 @@ import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
-import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
@@ -54,6 +53,7 @@ import com.ning.billing.invoice.notification.NullInvoiceNotifier;
 import com.ning.billing.invoice.tests.InvoicingTestBase;
 import com.ning.billing.junction.api.BillingApi;
 import com.ning.billing.junction.api.BillingEventSet;
+import com.ning.billing.mock.api.MockBillCycleDay;
 import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.bus.DefaultBusService;
 import com.ning.billing.util.callcontext.CallContext;
@@ -63,8 +63,11 @@ import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.globallocker.GlobalLocker;
 
+import com.google.inject.Inject;
+
 @Guice(modules = {MockModule.class})
 public class TestInvoiceDispatcher extends InvoicingTestBase {
+
     private final Logger log = LoggerFactory.getLogger(TestInvoiceDispatcher.class);
 
     @Inject
@@ -93,7 +96,7 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
 
     private CallContext context;
 
-    @BeforeSuite(groups = {"slow"})
+    @BeforeSuite(groups = "slow")
     public void setup() throws Exception {
         notifier.initialize();
         notifier.start();
@@ -103,7 +106,7 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
         busService.getBus().start();
     }
 
-    @AfterClass(groups = {"slow"})
+    @AfterClass(groups = "slow")
     public void tearDown() {
         try {
             ((DefaultBusService) busService).stopBus();
@@ -113,7 +116,7 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
         }
     }
 
-    @Test(groups = {"slow"}, enabled = true)
+    @Test(groups = "slow")
     public void testDryRunInvoice() throws InvoiceApiException, AccountApiException {
         final UUID accountId = UUID.randomUUID();
         final UUID subscriptionId = UUID.randomUUID();
@@ -125,7 +128,7 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
         Mockito.when(account.getCurrency()).thenReturn(Currency.USD);
         Mockito.when(account.getId()).thenReturn(accountId);
         Mockito.when(account.isNotifiedForInvoices()).thenReturn(true);
-        Mockito.when(account.getBillCycleDay()).thenReturn(30);
+        Mockito.when(account.getBillCycleDay()).thenReturn(new MockBillCycleDay(30));
 
         final Subscription subscription = Mockito.mock(Subscription.class);
         Mockito.when(subscription.getId()).thenReturn(subscriptionId);

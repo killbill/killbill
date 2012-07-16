@@ -19,13 +19,12 @@ package com.ning.billing.invoice.api.user;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.invoice.api.InvoiceCreationEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.invoice.api.InvoiceCreationEvent;
 
 public class DefaultInvoiceCreationEvent implements InvoiceCreationEvent {
 
@@ -33,7 +32,6 @@ public class DefaultInvoiceCreationEvent implements InvoiceCreationEvent {
     private final UUID accountId;
     private final BigDecimal amountOwed;
     private final Currency currency;
-    private final DateTime invoiceCreationDate;
     private final UUID userToken;
 
     @JsonCreator
@@ -41,13 +39,11 @@ public class DefaultInvoiceCreationEvent implements InvoiceCreationEvent {
                                        @JsonProperty("accountId") final UUID accountId,
                                        @JsonProperty("amountOwed") final BigDecimal amountOwed,
                                        @JsonProperty("currency") final Currency currency,
-                                       @JsonProperty("invoiceCreationDate") final DateTime invoiceCreationDate,
                                        @JsonProperty("userToken") final UUID userToken) {
         this.invoiceId = invoiceId;
         this.accountId = accountId;
         this.amountOwed = amountOwed;
         this.currency = currency;
-        this.invoiceCreationDate = invoiceCreationDate;
         this.userToken = userToken;
     }
 
@@ -83,88 +79,33 @@ public class DefaultInvoiceCreationEvent implements InvoiceCreationEvent {
     }
 
     @Override
-    public DateTime getInvoiceCreationDate() {
-        return invoiceCreationDate;
+    public String toString() {
+        return "DefaultInvoiceCreationNotification [invoiceId=" + invoiceId + ", accountId=" + accountId + ", amountOwed=" + amountOwed + ", currency=" + currency + "]";
     }
 
     @Override
-    public String toString() {
-        return "DefaultInvoiceCreationNotification [invoiceId=" + invoiceId + ", accountId=" + accountId + ", amountOwed=" + amountOwed + ", currency=" + currency + ", invoiceCreationDate=" + invoiceCreationDate + "]";
+    public boolean equals(final Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        final DefaultInvoiceCreationEvent that = (DefaultInvoiceCreationEvent) o;
+
+        if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) return false;
+        if (amountOwed != null ? !amountOwed.equals(that.amountOwed) : that.amountOwed != null) return false;
+        if (currency != that.currency) return false;
+        if (invoiceId != null ? !invoiceId.equals(that.invoiceId) : that.invoiceId != null) return false;
+        if (userToken != null ? !userToken.equals(that.userToken) : that.userToken != null) return false;
+
+        return true;
     }
 
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result
-                + ((accountId == null) ? 0 : accountId.hashCode());
-        result = prime * result
-                + ((amountOwed == null) ? 0 : amountOwed.hashCode());
-        result = prime * result
-                + ((currency == null) ? 0 : currency.hashCode());
-        result = prime
-                * result
-                + ((invoiceCreationDate == null) ? 0 : invoiceCreationDate
-                .hashCode());
-        result = prime * result
-                + ((invoiceId == null) ? 0 : invoiceId.hashCode());
-        result = prime * result
-                + ((userToken == null) ? 0 : userToken.hashCode());
+        int result = invoiceId != null ? invoiceId.hashCode() : 0;
+        result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
+        result = 31 * result + (amountOwed != null ? amountOwed.hashCode() : 0);
+        result = 31 * result + (currency != null ? currency.hashCode() : 0);
+        result = 31 * result + (userToken != null ? userToken.hashCode() : 0);
         return result;
     }
-
-    @Override
-    public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final DefaultInvoiceCreationEvent other = (DefaultInvoiceCreationEvent) obj;
-        if (accountId == null) {
-            if (other.accountId != null) {
-                return false;
-            }
-        } else if (!accountId.equals(other.accountId)) {
-            return false;
-        }
-        if (amountOwed == null) {
-            if (other.amountOwed != null) {
-                return false;
-            }
-        } else if (!amountOwed.equals(other.amountOwed)) {
-            return false;
-        }
-        if (currency != other.currency) {
-            return false;
-        }
-        if (invoiceCreationDate == null) {
-            if (other.invoiceCreationDate != null) {
-                return false;
-            }
-        } else if (invoiceCreationDate.compareTo(other.invoiceCreationDate) != 0) {
-            return false;
-        }
-        if (invoiceId == null) {
-            if (other.invoiceId != null) {
-                return false;
-            }
-        } else if (!invoiceId.equals(other.invoiceId)) {
-            return false;
-        }
-        if (userToken == null) {
-            if (other.userToken != null) {
-                return false;
-            }
-        } else if (!userToken.equals(other.userToken)) {
-            return false;
-        }
-        return true;
-    }
-
-
 }

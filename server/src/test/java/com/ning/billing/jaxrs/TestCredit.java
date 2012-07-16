@@ -21,6 +21,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -44,8 +45,8 @@ public class TestCredit extends TestJaxrsBase {
 
     @Test(groups = "slow")
     public void testAddCreditToInvoice() throws Exception {
-        final DateTime requestedDate = DefaultClock.truncateMs(new DateTime(DateTimeZone.UTC));
-        final DateTime effectiveDate = DefaultClock.truncateMs(new DateTime(DateTimeZone.UTC));
+        final DateTime requestedDate = clock.getUTCNow();
+        final DateTime effectiveDate = clock.getUTCNow();
         final CreditJson input = new CreditJson(BigDecimal.TEN, UUID.randomUUID(), UUID.randomUUID().toString(),
                                                 requestedDate, effectiveDate,
                                                 UUID.randomUUID().toString(), UUID.fromString(accountJson.getAccountId()));
@@ -66,13 +67,15 @@ public class TestCredit extends TestJaxrsBase {
         final CreditJson objFromJson = mapper.readValue(response.getResponseBody(), CreditJson.class);
         assertEquals(objFromJson.getAccountId(), input.getAccountId());
         assertEquals(objFromJson.getCreditAmount().compareTo(input.getCreditAmount()), 0);
-        assertEquals(objFromJson.getEffectiveDate().compareTo(input.getEffectiveDate()), 0);
+        assertEquals(objFromJson.getEffectiveDate().toLocalDate().compareTo(input.getEffectiveDate().toLocalDate()), 0);
     }
 
     @Test(groups = "slow")
     public void testAccountDoesNotExist() throws Exception {
+        final DateTime requestedDate = clock.getUTCNow();
+        final DateTime effectiveDate = clock.getUTCNow();
         final CreditJson input = new CreditJson(BigDecimal.TEN, UUID.randomUUID(), UUID.randomUUID().toString(),
-                                                new DateTime(DateTimeZone.UTC), new DateTime(DateTimeZone.UTC),
+                                                requestedDate, effectiveDate,
                                                 UUID.randomUUID().toString(), UUID.randomUUID());
         final String jsonInput = mapper.writeValueAsString(input);
 

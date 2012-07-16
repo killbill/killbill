@@ -23,6 +23,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
 import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,6 +76,8 @@ public class TestPaymentApi extends PaymentTestSuite {
     protected TestHelper testHelper;
     @Inject
     protected InvoicePaymentApi invoicePaymentApi;
+    @Inject
+    protected Clock clock;
 
     protected CallContext context;
 
@@ -137,7 +140,7 @@ public class TestPaymentApi extends PaymentTestSuite {
     }
 
     private void testSimplePayment(final BigDecimal invoiceAmount, final BigDecimal requestedAmount, final BigDecimal expectedAmount) throws Exception {
-        final DateTime now = new DateTime(DateTimeZone.UTC);
+        final LocalDate now = clock.getUTCToday();
         final Invoice invoice = testHelper.createTestInvoice(account, now, Currency.USD);
 
         final UUID subscriptionId = UUID.randomUUID();

@@ -218,8 +218,8 @@ public class TestChargeBacks extends InvoiceTestSuiteWithEmbeddedDB {
 
         Mockito.when(invoice.getId()).thenReturn(invoiceId);
         Mockito.when(invoice.getAccountId()).thenReturn(accountId);
-        Mockito.when(invoice.getInvoiceDate()).thenReturn(clock.getUTCNow());
-        Mockito.when(invoice.getTargetDate()).thenReturn(clock.getUTCNow());
+        Mockito.when(invoice.getInvoiceDate()).thenReturn(clock.getUTCToday());
+        Mockito.when(invoice.getTargetDate()).thenReturn(clock.getUTCToday());
         Mockito.when(invoice.getCurrency()).thenReturn(CURRENCY);
         Mockito.when(invoice.isMigrationInvoice()).thenReturn(false);
 
@@ -234,7 +234,7 @@ public class TestChargeBacks extends InvoiceTestSuiteWithEmbeddedDB {
 
     private InvoiceItem createInvoiceItem(final UUID invoiceId, final UUID accountId, final BigDecimal amount) {
         return new FixedPriceInvoiceItem(invoiceId, accountId, UUID.randomUUID(), UUID.randomUUID(),
-                                         "charge back test", "charge back phase", clock.getUTCNow(), clock.getUTCNow(), amount, CURRENCY);
+                                         "charge back test", "charge back phase", clock.getUTCToday(), amount, CURRENCY);
     }
 
     private InvoicePayment createAndPersistPayment(final UUID invoiceId, final BigDecimal amount) {

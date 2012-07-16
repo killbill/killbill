@@ -29,6 +29,7 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
+import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.account.api.MutableAccountData;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
@@ -137,15 +138,15 @@ public class DefaultBillingApi implements BillingApi {
         for (final Subscription subscription : subscriptions) {
             for (final EffectiveSubscriptionEvent transition : subscription.getBillingTransitions()) {
                 try {
-                    final int bcd = bcdCalculator.calculateBcd(bundle, subscription, transition, account);
+                    final BillCycleDay bcd = bcdCalculator.calculateBcd(bundle, subscription, transition, account);
 
-                    if (account.getBillCycleDay() == 0) {
+                    if (account.getBillCycleDay().getDayOfMonthUTC() == 0) {
                         final MutableAccountData modifiedData = account.toMutableAccountData();
                         modifiedData.setBillCycleDay(bcd);
                         accountApi.updateAccount(account.getExternalKey(), modifiedData, context);
                     }
 
-                    final BillingEvent event = new DefaultBillingEvent(account, transition, subscription, bcd, account.getCurrency(), catalogService.getFullCatalog());
+                    final BillingEvent event = new DefaultBillingEvent(account, transition, subscription, bcd.getDayOfMonthUTC(), account.getCurrency(), catalogService.getFullCatalog());
                     result.add(event);
                 } catch (CatalogApiException e) {
                     log.error("Failing to identify catalog components while creating BillingEvent from transition: " +

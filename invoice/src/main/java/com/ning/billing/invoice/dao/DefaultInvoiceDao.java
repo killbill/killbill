@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
@@ -31,6 +32,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
+import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
@@ -100,11 +102,11 @@ public class DefaultInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public List<Invoice> getInvoicesByAccount(final UUID accountId, final DateTime fromDate) {
+    public List<Invoice> getInvoicesByAccount(final UUID accountId, final LocalDate fromDate) {
         return invoiceSqlDao.inTransaction(new Transaction<List<Invoice>, InvoiceSqlDao>() {
             @Override
             public List<Invoice> inTransaction(final InvoiceSqlDao invoiceDao, final TransactionStatus status) throws Exception {
-                final List<Invoice> invoices = invoiceDao.getInvoicesByAccountAfterDate(accountId.toString(), fromDate.toDate());
+                final List<Invoice> invoices = invoiceDao.getInvoicesByAccountAfterDate(accountId.toString(), fromDate.toDateTimeAtStartOfDay().toDate());
 
                 populateChildren(invoices, invoiceDao);
 
@@ -150,7 +152,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public void create(final Invoice invoice, final int billCycleDay, final CallContext context) {
+    public void create(final Invoice invoice, final int billCycleDayUTC, final CallContext context) {
         invoiceSqlDao.inTransaction(new Transaction<Void, InvoiceSqlDao>() {
             @Override
             public Void inTransaction(final InvoiceSqlDao transactional, final TransactionStatus status) throws Exception {
@@ -171,7 +173,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
                     audits.addAll(createAudits(TableName.INVOICE_ITEMS, recordIdList));
 
                     final List<InvoiceItem> recurringInvoiceItems = invoice.getInvoiceItems(RecurringInvoiceItem.class);
-                    notifyOfFutureBillingEvents(transactional, invoice.getAccountId(), billCycleDay, recurringInvoiceItems);
+                    notifyOfFutureBillingEvents(transactional, invoice.getAccountId(), billCycleDayUTC, recurringInvoiceItems);
 
                     final List<InvoicePayment> invoicePayments = invoice.getPayments();
                     final InvoicePaymentSqlDao invoicePaymentSqlDao = transactional.become(InvoicePaymentSqlDao.class);
@@ -256,7 +258,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public List<Invoice> getUnpaidInvoicesByAccountId(final UUID accountId, final DateTime upToDate) {
+    public List<Invoice> getUnpaidInvoicesByAccountId(final UUID accountId, final LocalDate upToDate) {
         return invoiceSqlDao.inTransaction(new Transaction<List<Invoice>, InvoiceSqlDao>() {
             @Override
             public List<Invoice> inTransaction(final InvoiceSqlDao invoiceDao, final TransactionStatus status) throws Exception {
@@ -343,7 +345,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
                 BigDecimal cbaAdjAmount = BigDecimal.ZERO;
                 if (accountCbaAvailable.compareTo(BigDecimal.ZERO) > 0) {
                     cbaAdjAmount = (requestedPositiveAmount.compareTo(accountCbaAvailable) > 0) ? accountCbaAvailable.negate() : requestedPositiveAmount.negate();
-                    final InvoiceItem cbaAdjItem = new CreditBalanceAdjInvoiceItem(invoice.getId(), invoice.getAccountId(), context.getCreatedDate(), cbaAdjAmount, invoice.getCurrency());
+                    final InvoiceItem cbaAdjItem = new CreditBalanceAdjInvoiceItem(invoice.getId(), invoice.getAccountId(), context.getCreatedDate().toLocalDate(), cbaAdjAmount, invoice.getCurrency());
                     transInvoiceItemDao.create(cbaAdjItem, context);
                 }
                 final BigDecimal requestedPositiveAmountAfterCbaAdj = requestedPositiveAmount.add(cbaAdjAmount);
@@ -352,7 +354,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
                     final BigDecimal maxBalanceToAdjust = (invoiceBalanceAfterRefund.compareTo(BigDecimal.ZERO) <= 0) ? BigDecimal.ZERO : invoiceBalanceAfterRefund;
                     final BigDecimal requestedPositiveAmountToAdjust = requestedPositiveAmountAfterCbaAdj.compareTo(maxBalanceToAdjust) > 0 ? maxBalanceToAdjust : requestedPositiveAmountAfterCbaAdj;
                     if (requestedPositiveAmountToAdjust.compareTo(BigDecimal.ZERO) > 0) {
-                        final InvoiceItem adjItem = new RefundAdjInvoiceItem(invoice.getId(), invoice.getAccountId(), context.getCreatedDate(), requestedPositiveAmountToAdjust.negate(), invoice.getCurrency());
+                        final InvoiceItem adjItem = new RefundAdjInvoiceItem(invoice.getId(), invoice.getAccountId(), context.getCreatedDate().toLocalDate(), requestedPositiveAmountToAdjust.negate(), invoice.getCurrency());
                         transInvoiceItemDao.create(adjItem, context);
                     }
                 }
@@ -431,9 +433,8 @@ public class DefaultInvoiceDao implements InvoiceDao {
 
     @Override
     public InvoiceItem insertCredit(final UUID accountId, final UUID invoiceId, final BigDecimal positiveCreditAmount,
-                                    final DateTime effectiveDate, final Currency currency,
+                                    final LocalDate effectiveDate, final Currency currency,
                                     final CallContext context) {
-
         return invoiceSqlDao.inTransaction(new Transaction<InvoiceItem, InvoiceSqlDao>() {
             @Override
             public InvoiceItem inTransaction(final InvoiceSqlDao transactional, final TransactionStatus status) throws Exception {
@@ -457,7 +458,8 @@ public class DefaultInvoiceDao implements InvoiceDao {
                 }
                 // If invoice balance becomes negative we add some CBA item
                 if (invoice.getBalance().compareTo(BigDecimal.ZERO) < 0) {
-                    final InvoiceItem cbaAdjItem = new CreditBalanceAdjInvoiceItem(invoice.getId(), invoice.getAccountId(), context.getCreatedDate(), invoice.getBalance().negate(), invoice.getCurrency());
+                    final InvoiceItem cbaAdjItem = new CreditBalanceAdjInvoiceItem(invoice.getId(), invoice.getAccountId(), context.getCreatedDate().toLocalDate(),
+                                                                                   invoice.getBalance().negate(), invoice.getCurrency());
                     transInvoiceItemDao.create(cbaAdjItem, context);
 
                 }
@@ -529,7 +531,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
         invoice.addPayments(invoicePayments);
     }
 
-    private void notifyOfFutureBillingEvents(final InvoiceSqlDao dao, final UUID accountId, final int billCycleDay, final List<InvoiceItem> invoiceItems) {
+    private void notifyOfFutureBillingEvents(final InvoiceSqlDao dao, final UUID accountId, final int billCycleDayUTC, final List<InvoiceItem> invoiceItems) {
         UUID subscriptionForNextNotification = null;
         boolean shouldBeNotified = false;
         for (final InvoiceItem item : invoiceItems) {
@@ -549,8 +551,8 @@ public class DefaultInvoiceDao implements InvoiceDao {
         // we'll be notified by entitlement.
         if (shouldBeNotified) {
             // We could be notified at any time during the day at the billCycleDay - use the current time to
-            // spread the load
-            final DateTime nextNotificationDateTime = InvoiceDateUtils.calculateBillingCycleDateAfter(clock.getUTCNow(), billCycleDay);
+            // spread the load.
+            final DateTime nextNotificationDateTime = InvoiceDateUtils.calculateBillingCycleDateAfter(clock.getUTCNow(), billCycleDayUTC);
             // NextBillingDatePoster will ignore duplicates
             nextBillingDatePoster.insertNextBillingNotification(dao, accountId, subscriptionForNextNotification, nextNotificationDateTime);
         }

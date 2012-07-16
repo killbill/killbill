@@ -51,10 +51,10 @@ public class DefaultBillingEvent implements BillingEvent {
     private final Long totalOrdering;
     private final DateTimeZone timeZone;
 
-    public DefaultBillingEvent(final Account account, final EffectiveSubscriptionEvent transition, final Subscription subscription, final int billCycleDay, final Currency currency, final Catalog catalog) throws CatalogApiException {
+    public DefaultBillingEvent(final Account account, final EffectiveSubscriptionEvent transition, final Subscription subscription, final int billCycleDayUTC, final Currency currency, final Catalog catalog) throws CatalogApiException {
 
         this.account = account;
-        this.billCycleDay = billCycleDay;
+        this.billCycleDay = billCycleDayUTC;
         this.subscription = subscription;
         effectiveDate = transition.getEffectiveTransitionTime();
         final String planPhaseName = (transition.getTransitionType() != SubscriptionTransitionType.CANCEL) ?

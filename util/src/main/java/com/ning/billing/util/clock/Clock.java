@@ -18,12 +18,17 @@ package com.ning.billing.util.clock;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
 
 public interface Clock {
 
     public DateTime getNow(DateTimeZone tz);
 
     public DateTime getUTCNow();
+
+    public LocalDate getUTCToday();
+
+    public LocalDate getToday(DateTimeZone timeZone);
 
     //public DateTime addDuration(DateTime input, IDuration duration);
 }

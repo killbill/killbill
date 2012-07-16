@@ -21,6 +21,7 @@ import java.util.Locale;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormatter;
 
 import com.google.common.base.Objects;
@@ -72,12 +73,12 @@ public class DefaultInvoiceItemFormatter implements InvoiceItemFormatter {
     }
 
     @Override
-    public DateTime getStartDate() {
+    public LocalDate getStartDate() {
         return item.getStartDate();
     }
 
     @Override
-    public DateTime getEndDate() {
+    public LocalDate getEndDate() {
         return item.getEndDate();
     }
 

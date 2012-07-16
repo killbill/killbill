@@ -10,6 +10,8 @@ CREATE TABLE blocking_states (
     block_entitlement bool NOT NULL,
     block_billing bool NOT NULL,
     created_date datetime NOT NULL,
+    account_record_id int(11) unsigned default null,
+    tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(record_id)
 ) ENGINE=innodb;
 CREATE INDEX blocking_states_id ON blocking_states(id);

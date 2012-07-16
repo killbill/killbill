@@ -27,6 +27,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.UUID;
 
+import org.joda.time.LocalDate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,7 +70,8 @@ public class CreditResource implements JaxrsResource {
     public Response getCredit(@PathParam("creditId") final String creditId) {
         try {
             final InvoiceItem credit = invoiceUserApi.getCreditById(UUID.fromString(creditId));
-            final CreditJson creditJson = new CreditJson(credit);
+            final Account account = accountUserApi.getAccountById(credit.getAccountId());
+            final CreditJson creditJson = new CreditJson(credit, account.getTimeZone());
             return Response.status(Response.Status.OK).entity(creditJson).build();
         } catch (InvoiceApiException e) {
             if (e.getCode() == ErrorCode.INVOICE_NO_SUCH_CREDIT.getCode()) {
@@ -77,6 +79,9 @@ public class CreditResource implements JaxrsResource {
             } else {
                 return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).type(MediaType.TEXT_PLAIN_TYPE).build();
             }
+        } catch (AccountApiException e) {
+            log.warn(String.format("Failed to locate account for credit id %s", creditId), e);
+            return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).type(MediaType.TEXT_PLAIN_TYPE).build();
         }
     }
 
@@ -94,8 +99,9 @@ public class CreditResource implements JaxrsResource {
 
         try {
             final Account account = accountUserApi.getAccountById(accountId);
+            final LocalDate effectiveDate = json.getEffectiveDate().toDateTime(account.getTimeZone()).toLocalDate();
 
-            final InvoiceItem credit = invoiceUserApi.insertCredit(account.getId(), json.getCreditAmount(), json.getEffectiveDate(),
+            final InvoiceItem credit = invoiceUserApi.insertCredit(account.getId(), json.getCreditAmount(), effectiveDate,
                                                                    account.getCurrency(), context.createContext(createdBy, reason, comment));
 
             return uriBuilder.buildResponse(CreditResource.class, "getCredit", credit.getId());

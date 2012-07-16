@@ -20,6 +20,7 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ning.billing.catalog.api.Currency;
@@ -33,8 +34,8 @@ public class InvoiceItemJsonSimple {
     private final String planName;
     private final String phaseName;
     private final String description;
-    private final DateTime startDate;
-    private final DateTime endDate;
+    private final LocalDate startDate;
+    private final LocalDate endDate;
     private final BigDecimal amount;
     private final Currency currency;
 
@@ -45,8 +46,8 @@ public class InvoiceItemJsonSimple {
                                  @JsonProperty("planName") final String planName,
                                  @JsonProperty("phaseName") final String phaseName,
                                  @JsonProperty("description") final String description,
-                                 @JsonProperty("startDate") final DateTime startDate,
-                                 @JsonProperty("endDate") final DateTime endDate,
+                                 @JsonProperty("startDate") final LocalDate startDate,
+                                 @JsonProperty("endDate") final LocalDate endDate,
                                  @JsonProperty("amount") final BigDecimal amount,
                                  @JsonProperty("currency") final Currency currency) {
         this.invoiceId = invoiceId;
@@ -96,11 +97,11 @@ public class InvoiceItemJsonSimple {
         return description;
     }
 
-    public DateTime getStartDate() {
+    public LocalDate getStartDate() {
         return startDate;
     }
 
-    public DateTime getEndDate() {
+    public LocalDate getEndDate() {
         return endDate;
     }
 

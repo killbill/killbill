@@ -16,7 +16,6 @@
 
 package com.ning.billing.invoice.api;
 
-import com.google.inject.Inject;
 import com.ning.billing.invoice.InvoiceListener;
 import com.ning.billing.invoice.TagHandler;
 import com.ning.billing.invoice.notification.NextBillingDateNotifier;
@@ -25,6 +24,8 @@ import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
+
+import com.google.inject.Inject;
 
 public class DefaultInvoiceService implements InvoiceService {
 
@@ -41,7 +42,6 @@ public class DefaultInvoiceService implements InvoiceService {
         this.eventBus = eventBus;
         this.dateNotifier = dateNotifier;
     }
-
 
     @Override
     public String getName() {

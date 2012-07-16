@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,6 +58,7 @@ import com.ning.billing.invoice.notification.NullInvoiceNotifier;
 import com.ning.billing.invoice.tests.InvoicingTestBase;
 import com.ning.billing.junction.api.BillingApi;
 import com.ning.billing.junction.api.BillingEventSet;
+import com.ning.billing.mock.api.MockBillCycleDay;
 import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.bus.DefaultBusService;
 import com.ning.billing.util.callcontext.CallContext;
@@ -101,7 +103,7 @@ public class TestDefaultInvoiceMigrationApi extends InvoicingTestBase {
     private Account account;
     private UUID accountId;
     private UUID subscriptionId;
-    private DateTime date_migrated;
+    private LocalDate date_migrated;
     private DateTime date_regular;
 
     private UUID migrationInvoiceId;
@@ -121,7 +123,7 @@ public class TestDefaultInvoiceMigrationApi extends InvoicingTestBase {
     public void setupMethod() throws Exception {
         accountId = UUID.randomUUID();
         subscriptionId = UUID.randomUUID();
-        date_migrated = clock.getUTCNow().minusYears(1);
+        date_migrated = clock.getUTCToday().minusYears(1);
         date_regular = clock.getUTCNow();
 
         account = Mockito.mock(Account.class);
@@ -129,7 +131,7 @@ public class TestDefaultInvoiceMigrationApi extends InvoicingTestBase {
         Mockito.when(account.getCurrency()).thenReturn(Currency.USD);
         Mockito.when(account.getId()).thenReturn(accountId);
         Mockito.when(account.isNotifiedForInvoices()).thenReturn(true);
-        Mockito.when(account.getBillCycleDay()).thenReturn(31);
+        Mockito.when(account.getBillCycleDay()).thenReturn(new MockBillCycleDay(31));
 
         migrationInvoiceId = createAndCheckMigrationInvoice();
         regularInvoiceId = generateRegularInvoice();
@@ -210,7 +212,7 @@ public class TestDefaultInvoiceMigrationApi extends InvoicingTestBase {
         Assert.assertEquals(byAccountAndDate.size(), 1);
         Assert.assertEquals(byAccountAndDate.get(0).getId(), regularInvoiceId);
 
-        final Collection<Invoice> unpaid = invoiceUserApi.getUnpaidInvoicesByAccountId(accountId, date_regular.plusDays(1));
+        final Collection<Invoice> unpaid = invoiceUserApi.getUnpaidInvoicesByAccountId(accountId, new LocalDate(date_regular.plusDays(1)));
         Assert.assertEquals(unpaid.size(), 2);
     }
 

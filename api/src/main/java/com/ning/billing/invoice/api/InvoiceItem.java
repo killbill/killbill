@@ -19,7 +19,7 @@ package com.ning.billing.invoice.api;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.entity.Entity;
@@ -32,9 +32,17 @@ public interface InvoiceItem extends Entity, Comparable<InvoiceItem> {
 
     UUID getAccountId();
 
-    DateTime getStartDate();
+    /**
+     * @return the service period start date for that item, in the account timezone
+     */
+    LocalDate getStartDate();
 
-    DateTime getEndDate();
+    /**
+     * The end date of an item can be null (e.g. for fixed price items).
+     *
+     * @return the service period end date for that item (if available), in the account timezone
+     */
+    LocalDate getEndDate();
 
     BigDecimal getAmount();
 

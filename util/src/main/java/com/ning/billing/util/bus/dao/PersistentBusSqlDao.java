@@ -86,7 +86,7 @@ public interface PersistentBusSqlDao extends Transactional<PersistentBusSqlDao>,
             final String className = r.getString("class_name");
             final String createdOwner = r.getString("creating_owner");
             final String eventJson = r.getString("event_json");
-            final DateTime nextAvailableDate = getDate(r, "processing_available_date");
+            final DateTime nextAvailableDate = getDateTime(r, "processing_available_date");
             final String processingOwner = r.getString("processing_owner");
             final PersistentQueueEntryLifecycleState processingState = PersistentQueueEntryLifecycleState.valueOf(r.getString("processing_state"));
 

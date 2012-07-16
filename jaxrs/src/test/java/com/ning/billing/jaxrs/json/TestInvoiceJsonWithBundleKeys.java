@@ -19,20 +19,25 @@ package com.ning.billing.jaxrs.json;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
 import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.jaxrs.JaxrsTestSuite;
+import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.clock.DefaultClock;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
-import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.jaxrs.JaxrsTestSuite;
 
 public class TestInvoiceJsonWithBundleKeys extends JaxrsTestSuite {
+
     private static final ObjectMapper mapper = new ObjectMapper();
+
+    private final Clock clock = new DefaultClock();
 
     static {
         mapper.registerModule(new JodaModule());
@@ -46,8 +51,8 @@ public class TestInvoiceJsonWithBundleKeys extends JaxrsTestSuite {
         final BigDecimal creditAdj = BigDecimal.ONE;
         final BigDecimal refundAdj = BigDecimal.ONE;
         final String invoiceId = UUID.randomUUID().toString();
-        final DateTime invoiceDate = new DateTime(DateTimeZone.UTC);
-        final DateTime targetDate = new DateTime(DateTimeZone.UTC);
+        final LocalDate invoiceDate = clock.getUTCToday();
+        final LocalDate targetDate = clock.getUTCToday();
         final String invoiceNumber = UUID.randomUUID().toString();
         final BigDecimal balance = BigDecimal.ZERO;
         final String accountId = UUID.randomUUID().toString();
@@ -68,16 +73,16 @@ public class TestInvoiceJsonWithBundleKeys extends JaxrsTestSuite {
 
         final String asJson = mapper.writeValueAsString(invoiceJsonSimple);
         Assert.assertEquals(asJson, "{\"amount\":" + invoiceJsonSimple.getAmount().toString() + "," +
-                "\"cba\":" + invoiceJsonSimple.getCBA().toString() + "," +
-                "\"creditAdj\":" + invoiceJsonSimple.getCreditAdj().toString() + "," +
-                "\"refundAdj\":" + invoiceJsonSimple.getRefundAdj().toString() + "," +
-                "\"invoiceId\":\"" + invoiceJsonSimple.getInvoiceId() + "\"," +
-                "\"invoiceDate\":\"" + invoiceJsonSimple.getInvoiceDate().toDateTimeISO().toString() + "\"," +
-                "\"targetDate\":\"" + invoiceJsonSimple.getTargetDate().toDateTimeISO().toString() + "\"," +
-                "\"invoiceNumber\":\"" + invoiceJsonSimple.getInvoiceNumber() + "\"," +
-                "\"balance\":" + invoiceJsonSimple.getBalance().toString() + "," +
-                "\"accountId\":\"" + invoiceJsonSimple.getAccountId() + "\"," +
-                "\"bundleKeys\":\"" + invoiceJsonSimple.getBundleKeys() + "\"}");
+                                    "\"cba\":" + invoiceJsonSimple.getCBA().toString() + "," +
+                                    "\"creditAdj\":" + invoiceJsonSimple.getCreditAdj().toString() + "," +
+                                    "\"refundAdj\":" + invoiceJsonSimple.getRefundAdj().toString() + "," +
+                                    "\"invoiceId\":\"" + invoiceJsonSimple.getInvoiceId() + "\"," +
+                                    "\"invoiceDate\":\"" + invoiceJsonSimple.getInvoiceDate().toString() + "\"," +
+                                    "\"targetDate\":\"" + invoiceJsonSimple.getTargetDate().toString() + "\"," +
+                                    "\"invoiceNumber\":\"" + invoiceJsonSimple.getInvoiceNumber() + "\"," +
+                                    "\"balance\":" + invoiceJsonSimple.getBalance().toString() + "," +
+                                    "\"accountId\":\"" + invoiceJsonSimple.getAccountId() + "\"," +
+                                    "\"bundleKeys\":\"" + invoiceJsonSimple.getBundleKeys() + "\"}");
 
         final InvoiceJsonWithBundleKeys fromJson = mapper.readValue(asJson, InvoiceJsonWithBundleKeys.class);
         Assert.assertEquals(fromJson, invoiceJsonSimple);
@@ -91,8 +96,8 @@ public class TestInvoiceJsonWithBundleKeys extends JaxrsTestSuite {
         Mockito.when(invoice.getCreditAdjAmount()).thenReturn(BigDecimal.ONE);
         Mockito.when(invoice.getRefundAdjAmount()).thenReturn(BigDecimal.ONE);
         Mockito.when(invoice.getId()).thenReturn(UUID.randomUUID());
-        Mockito.when(invoice.getInvoiceDate()).thenReturn(new DateTime(DateTimeZone.UTC));
-        Mockito.when(invoice.getTargetDate()).thenReturn(new DateTime(DateTimeZone.UTC));
+        Mockito.when(invoice.getInvoiceDate()).thenReturn(clock.getUTCToday());
+        Mockito.when(invoice.getTargetDate()).thenReturn(clock.getUTCToday());
         Mockito.when(invoice.getInvoiceNumber()).thenReturn(Integer.MAX_VALUE);
         Mockito.when(invoice.getBalance()).thenReturn(BigDecimal.ZERO);
         Mockito.when(invoice.getAccountId()).thenReturn(UUID.randomUUID());

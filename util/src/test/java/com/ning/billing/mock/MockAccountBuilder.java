@@ -22,6 +22,7 @@ import org.joda.time.DateTimeZone;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountData;
+import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.account.api.MutableAccountData;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.junction.api.BlockingState;
@@ -33,7 +34,7 @@ public class MockAccountBuilder {
     private String name = "";
     private int firstNameLength;
     private Currency currency = Currency.USD;
-    private int billingCycleDay;
+    private BillCycleDay billingCycleDay;
     private UUID paymentMethodId;
     private DateTimeZone timeZone = DateTimeZone.UTC;
     private String locale = "";
@@ -99,7 +100,7 @@ public class MockAccountBuilder {
         return this;
     }
 
-    public MockAccountBuilder billingCycleDay(final int billingCycleDay) {
+    public MockAccountBuilder billingCycleDay(final BillCycleDay billingCycleDay) {
         this.billingCycleDay = billingCycleDay;
         return this;
     }
@@ -200,7 +201,7 @@ public class MockAccountBuilder {
             }
 
             @Override
-            public Integer getBillCycleDay() {
+            public BillCycleDay getBillCycleDay() {
 
                 return billingCycleDay;
             }

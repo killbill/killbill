@@ -17,13 +17,14 @@
 package com.ning.billing.junction.plumbing.billing;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.catalog.api.BillingAlignment;
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogApiException;
@@ -39,7 +40,10 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 
+import com.google.inject.Inject;
+
 public class BillCycleDayCalculator {
+
     private static final Logger log = LoggerFactory.getLogger(BillCycleDayCalculator.class);
 
     private final CatalogService catalogService;
@@ -52,7 +56,7 @@ public class BillCycleDayCalculator {
         this.entitlementApi = entitlementApi;
     }
 
-    protected int calculateBcd(final SubscriptionBundle bundle, final Subscription subscription, final EffectiveSubscriptionEvent transition, final Account account)
+    protected BillCycleDay calculateBcd(final SubscriptionBundle bundle, final Subscription subscription, final EffectiveSubscriptionEvent transition, final Account account)
             throws CatalogApiException, AccountApiException, EntitlementUserApiException {
 
         final Catalog catalog = catalogService.getFullCatalog();
@@ -76,11 +80,11 @@ public class BillCycleDayCalculator {
                                        phase.getPhaseType()),
                 transition.getRequestedTransitionTime());
 
-        int result = -1;
+        BillCycleDay result = null;
         switch (alignment) {
             case ACCOUNT:
                 result = account.getBillCycleDay();
-                if (result == 0) {
+                if (result.getDayOfMonthUTC() == 0) {
                     result = calculateBcdFromSubscription(subscription, plan, account);
                 }
                 break;
@@ -99,22 +103,40 @@ public class BillCycleDayCalculator {
                 break;
         }
 
-        if (result == -1) {
+        if (result == null) {
             throw new CatalogApiException(ErrorCode.CAT_INVALID_BILLING_ALIGNMENT, alignment.toString());
         }
 
         return result;
     }
 
-    private int calculateBcdFromSubscription(final Subscription subscription, final Plan plan, final Account account) throws AccountApiException {
+    private BillCycleDay calculateBcdFromSubscription(final Subscription subscription, final Plan plan, final Account account) throws AccountApiException {
         final DateTime date = plan.dateOfFirstRecurringNonZeroCharge(subscription.getStartDate());
-        // There are really two kind of billCycleDay:
+        // There are really two kinds of billCycleDay:
         // - a System billingCycleDay which should be computed from UTC time (in order to get the correct notification time at
         //   the end of each service period)
         // - a User billingCycleDay which should align with the account timezone
-        //
-        // TODO At this point we only compute the system one; should we need two fields in the account table
-        //return date.toDateTime(account.getTimeZone()).getDayOfMonth();
-        return date.getDayOfMonth();
+        return new CalculatedBillCycleDay(account.getTimeZone(), date);
+    }
+
+    private static final class CalculatedBillCycleDay implements BillCycleDay {
+
+        private final DateTime bcdTimeUTC;
+        private final DateTimeZone accountTimeZone;
+
+        private CalculatedBillCycleDay(final DateTimeZone accountTimeZone, final DateTime bcdTimeUTC) {
+            this.accountTimeZone = accountTimeZone;
+            this.bcdTimeUTC = bcdTimeUTC;
+        }
+
+        @Override
+        public int getDayOfMonthUTC() {
+            return bcdTimeUTC.getDayOfMonth();
+        }
+
+        @Override
+        public int getDayOfMonthLocal() {
+            return bcdTimeUTC.toDateTime(accountTimeZone).getDayOfMonth();
+        }
     }
 }

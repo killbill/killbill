@@ -21,6 +21,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
 
 import com.ning.billing.analytics.utils.Rounder;
 import com.ning.billing.catalog.api.Currency;
@@ -33,8 +34,8 @@ public class BusinessInvoice {
     private final DateTime updatedDate;
     private final UUID accountId;
     private final String accountKey;
-    private final DateTime invoiceDate;
-    private final DateTime targetDate;
+    private final LocalDate invoiceDate;
+    private final LocalDate targetDate;
     private final Currency currency;
     private final BigDecimal balance;
     private final BigDecimal amountPaid;
@@ -43,8 +44,8 @@ public class BusinessInvoice {
 
     public BusinessInvoice(final UUID accountId, final String accountKey, final BigDecimal amountCharged, final BigDecimal amountCredited,
                            final BigDecimal amountPaid, final BigDecimal balance, final DateTime createdDate,
-                           final Currency currency, final DateTime invoiceDate, final UUID invoiceId, final Integer invoiceNumber,
-                           final DateTime targetDate, final DateTime updatedDate) {
+                           final Currency currency, final LocalDate invoiceDate, final UUID invoiceId, final Integer invoiceNumber,
+                           final LocalDate targetDate, final DateTime updatedDate) {
         this.accountId = accountId;
         this.accountKey = accountKey;
         this.amountCharged = amountCharged;
@@ -98,7 +99,7 @@ public class BusinessInvoice {
         return currency;
     }
 
-    public DateTime getInvoiceDate() {
+    public LocalDate getInvoiceDate() {
         return invoiceDate;
     }
 
@@ -110,7 +111,7 @@ public class BusinessInvoice {
         return invoiceNumber;
     }
 
-    public DateTime getTargetDate() {
+    public LocalDate getTargetDate() {
         return targetDate;
     }
 

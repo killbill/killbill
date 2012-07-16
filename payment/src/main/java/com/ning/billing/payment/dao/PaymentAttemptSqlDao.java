@@ -90,7 +90,7 @@ public interface PaymentAttemptSqlDao extends Transactional<PaymentAttemptSqlDao
             final UUID accountId = getUUID(rs, "account_id");
             final UUID invoiceId = getUUID(rs, "invoice_id");
             final UUID paymentId = getUUID(rs, "payment_id");
-            final DateTime effectiveDate = getDate(rs, "effective_date");
+            final DateTime effectiveDate = getDateTime(rs, "effective_date");
             final PaymentStatus processingStatus = PaymentStatus.valueOf(rs.getString("processing_status"));
             final String paymentError = rs.getString("payment_error");
             final BigDecimal requestedAmount = rs.getBigDecimal("requested_amount");

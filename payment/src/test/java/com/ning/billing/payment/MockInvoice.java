@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
@@ -36,19 +36,19 @@ public class MockInvoice extends EntityBase implements Invoice {
     private final List<InvoicePayment> payments = new ArrayList<InvoicePayment>();
     private final UUID accountId;
     private final Integer invoiceNumber;
-    private final DateTime invoiceDate;
-    private final DateTime targetDate;
+    private final LocalDate invoiceDate;
+    private final LocalDate targetDate;
     private final Currency currency;
     private final boolean migrationInvoice;
 
     // used to create a new invoice
-    public MockInvoice(final UUID accountId, final DateTime invoiceDate, final DateTime targetDate, final Currency currency) {
+    public MockInvoice(final UUID accountId, final LocalDate invoiceDate, final LocalDate targetDate, final Currency currency) {
         this(UUID.randomUUID(), accountId, null, invoiceDate, targetDate, currency, false);
     }
 
     // used to hydrate invoice from persistence layer
-    public MockInvoice(final UUID invoiceId, final UUID accountId, @Nullable final Integer invoiceNumber, final DateTime invoiceDate,
-                       final DateTime targetDate, final Currency currency, final boolean isMigrationInvoice) {
+    public MockInvoice(final UUID invoiceId, final UUID accountId, @Nullable final Integer invoiceNumber, final LocalDate invoiceDate,
+                       final LocalDate targetDate, final Currency currency, final boolean isMigrationInvoice) {
         super(invoiceId);
         this.accountId = accountId;
         this.invoiceNumber = invoiceNumber;
@@ -130,12 +130,12 @@ public class MockInvoice extends EntityBase implements Invoice {
     }
 
     @Override
-    public DateTime getInvoiceDate() {
+    public LocalDate getInvoiceDate() {
         return invoiceDate;
     }
 
     @Override
-    public DateTime getTargetDate() {
+    public LocalDate getTargetDate() {
         return targetDate;
     }
 
@@ -147,24 +147,6 @@ public class MockInvoice extends EntityBase implements Invoice {
     @Override
     public boolean isMigrationInvoice() {
         return migrationInvoice;
-    }
-
-    @Override
-    public DateTime getLastPaymentDate() {
-        DateTime lastPayment = null;
-
-        for (final InvoicePayment payment : payments) {
-            final DateTime paymentDate = payment.getPaymentDate();
-            if (lastPayment == null) {
-                lastPayment = paymentDate;
-            }
-
-            if (lastPayment.isBefore(paymentDate)) {
-                lastPayment = paymentDate;
-            }
-        }
-
-        return lastPayment;
     }
 
     @Override
@@ -208,22 +190,8 @@ public class MockInvoice extends EntityBase implements Invoice {
     }
 
     @Override
-    public boolean isDueForPayment(final DateTime targetDate, final int numberOfDays) {
-        if (getBalance().compareTo(BigDecimal.ZERO) == 0) {
-            return false;
-        }
-
-        final DateTime lastPaymentAttempt = getLastPaymentDate();
-        if (lastPaymentAttempt == null) {
-            return true;
-        }
-
-        return !lastPaymentAttempt.plusDays(numberOfDays).isAfter(targetDate);
-    }
-
-    @Override
     public String toString() {
-        return "DefaultInvoice [items=" + invoiceItems + ", payments=" + payments + ", id=" + id + ", accountId=" + accountId + ", invoiceDate=" + invoiceDate + ", targetDate=" + targetDate + ", currency=" + currency + ", amountPaid=" + getPaidAmount() + ", lastPaymentDate=" + getLastPaymentDate() + "]";
+        return "DefaultInvoice [items=" + invoiceItems + ", payments=" + payments + ", id=" + id + ", accountId=" + accountId + ", invoiceDate=" + invoiceDate + ", targetDate=" + targetDate + ", currency=" + currency + ", amountPaid=" + getPaidAmount() + "]";
     }
 
     @Override

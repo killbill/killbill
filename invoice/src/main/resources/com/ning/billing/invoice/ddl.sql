@@ -10,14 +10,16 @@ CREATE TABLE invoice_items (
     subscription_id char(36),
     plan_name varchar(50),
     phase_name varchar(50),
-    start_date datetime NOT NULL,
-    end_date datetime,
+    start_date date NOT NULL,
+    end_date date,
     amount numeric(10,4) NOT NULL,
     rate numeric(10,4) NULL,
     currency char(3) NOT NULL,
     linked_item_id char(36),
     created_by varchar(50) NOT NULL,
     created_date datetime NOT NULL,
+    account_record_id int(11) unsigned default null,
+    tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(record_id)
 ) ENGINE=innodb;
 
@@ -31,12 +33,14 @@ CREATE TABLE invoices (
     record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
     id char(36) NOT NULL,
     account_id char(36) NOT NULL,
-    invoice_date datetime NOT NULL,
-    target_date datetime NOT NULL,
+    invoice_date date NOT NULL,
+    target_date date NOT NULL,
     currency char(3) NOT NULL,
     migrated bool NOT NULL,
     created_by varchar(50) NOT NULL,
     created_date datetime NOT NULL,
+    account_record_id int(11) unsigned default null,
+    tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(record_id)
 ) ENGINE=innodb;
 CREATE UNIQUE INDEX invoices_id ON invoices(id);
@@ -56,6 +60,8 @@ CREATE TABLE invoice_payments (
     linked_invoice_payment_id char(36) DEFAULT NULL,
     created_by varchar(50) NOT NULL,
     created_date datetime NOT NULL,
+    account_record_id int(11) unsigned default null,
+    tenant_record_id int(11) unsigned default null,
     PRIMARY KEY(record_id)
 ) ENGINE=innodb;
 CREATE UNIQUE INDEX invoice_payments_id ON invoice_payments(id);

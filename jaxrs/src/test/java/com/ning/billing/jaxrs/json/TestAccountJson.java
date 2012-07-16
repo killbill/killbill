@@ -22,13 +22,16 @@ import org.joda.time.DateTimeZone;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.jaxrs.JaxrsTestSuite;
 import com.ning.billing.mock.MockAccountBuilder;
+import com.ning.billing.mock.api.MockBillCycleDay;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class TestAccountJson extends JaxrsTestSuite {
+
     private static final ObjectMapper mapper = new ObjectMapper();
 
     @Test(groups = "fast")
@@ -38,7 +41,7 @@ public class TestAccountJson extends JaxrsTestSuite {
         final Integer length = 12;
         final String externalKey = UUID.randomUUID().toString();
         final String email = UUID.randomUUID().toString();
-        final Integer billCycleDay = 6;
+        final BillCycleDayJson billCycleDay = new BillCycleDayJson(6, 6);
         final String currency = UUID.randomUUID().toString();
         final String paymentMethodId = UUID.randomUUID().toString();
         final String timeZone = UUID.randomUUID().toString();
@@ -71,13 +74,13 @@ public class TestAccountJson extends JaxrsTestSuite {
 
         final String asJson = mapper.writeValueAsString(accountJson);
         Assert.assertEquals(asJson, "{\"accountId\":\"" + accountJson.getAccountId() + "\",\"name\":\"" + accountJson.getName() + "\"," +
-                "\"externalKey\":\"" + accountJson.getExternalKey() + "\",\"email\":\"" + accountJson.getEmail() + "\"," +
-                "\"currency\":\"" + accountJson.getCurrency() + "\",\"paymentMethodId\":\"" + accountJson.getPaymentMethodId() + "\"," +
-                "\"address1\":\"" + accountJson.getAddress1() + "\",\"address2\":\"" + accountJson.getAddress2() + "\"," +
-                "\"company\":\"" + accountJson.getCompany() + "\",\"state\":\"" + accountJson.getState() + "\"," +
-                "\"country\":\"" + accountJson.getCountry() + "\",\"phone\":\"" + accountJson.getPhone() + "\"," +
-                "\"length\":" + accountJson.getLength() + ",\"billCycleDay\":" + accountJson.getBillCycleDay() + "," +
-                "\"timeZone\":\"" + accountJson.getTimeZone() + "\"}");
+                                    "\"externalKey\":\"" + accountJson.getExternalKey() + "\",\"email\":\"" + accountJson.getEmail() + "\"," +
+                                    "\"billCycleDay\":" + accountJson.getBillCycleDay() + "," +
+                                    "\"currency\":\"" + accountJson.getCurrency() + "\",\"paymentMethodId\":\"" + accountJson.getPaymentMethodId() + "\"," +
+                                    "\"address1\":\"" + accountJson.getAddress1() + "\",\"address2\":\"" + accountJson.getAddress2() + "\"," +
+                                    "\"company\":\"" + accountJson.getCompany() + "\",\"state\":\"" + accountJson.getState() + "\"," +
+                                    "\"country\":\"" + accountJson.getCountry() + "\",\"phone\":\"" + accountJson.getPhone() + "\"," +
+                                    "\"length\":" + accountJson.getLength() + ",\"timeZone\":\"" + accountJson.getTimeZone() + "\"}");
 
         final AccountJson fromJson = mapper.readValue(asJson, AccountJson.class);
         Assert.assertEquals(fromJson, accountJson);
@@ -88,7 +91,8 @@ public class TestAccountJson extends JaxrsTestSuite {
         final MockAccountBuilder accountBuilder = new MockAccountBuilder();
         accountBuilder.address1(UUID.randomUUID().toString());
         accountBuilder.address2(UUID.randomUUID().toString());
-        accountBuilder.billingCycleDay(4);
+        final int bcd = 4;
+        accountBuilder.billingCycleDay(new MockBillCycleDay(bcd));
         accountBuilder.city(UUID.randomUUID().toString());
         accountBuilder.companyName(UUID.randomUUID().toString());
         accountBuilder.country(UUID.randomUUID().toString());
@@ -110,7 +114,7 @@ public class TestAccountJson extends JaxrsTestSuite {
         final AccountJson accountJson = new AccountJson(account);
         Assert.assertEquals(accountJson.getAddress1(), account.getAddress1());
         Assert.assertEquals(accountJson.getAddress2(), account.getAddress2());
-        Assert.assertEquals((int) accountJson.getBillCycleDay(), (int) account.getBillCycleDay());
+        Assert.assertEquals(accountJson.getBillCycleDay().toString(), "{\"dayOfMonthLocal\":" + bcd + ",\"dayOfMonthUTC\":" + bcd + "}");
         Assert.assertEquals(accountJson.getCountry(), account.getCountry());
         Assert.assertEquals(accountJson.getCompany(), account.getCompanyName());
         Assert.assertEquals(accountJson.getCurrency(), account.getCurrency().toString());

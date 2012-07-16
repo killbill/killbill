@@ -22,8 +22,8 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 
-import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
@@ -41,7 +41,10 @@ import com.ning.billing.invoice.template.HtmlInvoiceGenerator;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.callcontext.CallContext;
 
+import com.google.inject.Inject;
+
 public class DefaultInvoiceUserApi implements InvoiceUserApi {
+
     private final InvoiceDao dao;
     private final InvoiceDispatcher dispatcher;
     private final AccountUserApi accountUserApi;
@@ -61,7 +64,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
 
     @Override
-    public List<Invoice> getInvoicesByAccount(final UUID accountId, final DateTime fromDate) {
+    public List<Invoice> getInvoicesByAccount(final UUID accountId, final LocalDate fromDate) {
         return dao.getInvoicesByAccount(accountId, fromDate);
     }
 
@@ -87,15 +90,22 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
 
     @Override
-    public List<Invoice> getUnpaidInvoicesByAccountId(final UUID accountId, final DateTime upToDate) {
+    public List<Invoice> getUnpaidInvoicesByAccountId(final UUID accountId, final LocalDate upToDate) {
         return dao.getUnpaidInvoicesByAccountId(accountId, upToDate);
     }
 
     @Override
-    public Invoice triggerInvoiceGeneration(final UUID accountId,
-                                            final DateTime targetDate, final boolean dryRun,
+    public Invoice triggerInvoiceGeneration(final UUID accountId, final LocalDate targetDate, final boolean dryRun,
                                             final CallContext context) throws InvoiceApiException {
-        final Invoice result = dispatcher.processAccount(accountId, targetDate, dryRun, context);
+        final Account account;
+        try {
+            account = accountUserApi.getAccountById(accountId);
+        } catch (AccountApiException e) {
+            throw new InvoiceApiException(e, ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID, e.toString());
+        }
+
+        final DateTime processingDateTime = targetDate.toDateTimeAtCurrentTime(account.getTimeZone());
+        final Invoice result = dispatcher.processAccount(accountId, processingDateTime, dryRun, context);
         if (result == null) {
             throw new InvoiceApiException(ErrorCode.INVOICE_NOTHING_TO_DO, accountId, targetDate);
         } else {
@@ -115,7 +125,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
 
     @Override
     public InvoiceItem getCreditById(final UUID creditId) throws InvoiceApiException {
-        InvoiceItem creditItem = dao.getCreditById(creditId);
+        final InvoiceItem creditItem = dao.getCreditById(creditId);
         if (creditItem == null) {
             throw new InvoiceApiException(ErrorCode.INVOICE_NO_SUCH_CREDIT, creditId);
         }
@@ -123,21 +133,19 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
 
     @Override
-    public InvoiceItem insertCredit(final UUID accountId, final BigDecimal amount, final DateTime effectiveDate,
+    public InvoiceItem insertCredit(final UUID accountId, final BigDecimal amount, final LocalDate effectiveDate,
                                     final Currency currency, final CallContext context) throws InvoiceApiException {
         return insertCreditForInvoice(accountId, null, amount, effectiveDate, currency, context);
     }
 
     @Override
-    public InvoiceItem insertCreditForInvoice(UUID accountId, UUID invoiceId,
-            BigDecimal amount, DateTime effectiveDate, Currency currency,
-            CallContext context) throws InvoiceApiException {
+    public InvoiceItem insertCreditForInvoice(final UUID accountId, final UUID invoiceId, final BigDecimal amount,
+                                              final LocalDate effectiveDate, final Currency currency, final CallContext context) throws InvoiceApiException {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new InvoiceApiException(ErrorCode.CREDIT_AMOUNT_INVALID, amount);
         }
         return dao.insertCredit(accountId, invoiceId, amount, effectiveDate, currency, context);
     }
-
 
     @Override
     public String getInvoiceAsHTML(final UUID invoiceId) throws AccountApiException, IOException, InvoiceApiException {
@@ -149,4 +157,5 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         final Account account = accountUserApi.getAccountById(invoice.getAccountId());
         return generator.generateInvoice(account, invoice);
     }
+
 }

@@ -40,6 +40,7 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.AccountTimelineJson;
+import com.ning.billing.jaxrs.json.BillCycleDayJson;
 import com.ning.billing.jaxrs.json.BundleJsonNoSubscriptions;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
 import com.ning.billing.jaxrs.json.PaymentJsonSimple;
@@ -48,6 +49,7 @@ import com.ning.billing.jaxrs.json.RefundJson;
 import com.ning.billing.jaxrs.json.SubscriptionJsonNoEvents;
 import com.ning.billing.jaxrs.json.TagDefinitionJson;
 import com.ning.billing.jaxrs.resources.JaxrsResource;
+import com.ning.billing.mock.api.MockBillCycleDay;
 import com.ning.http.client.Response;
 
 
@@ -71,7 +73,8 @@ public class TestAccount extends TestJaxrsBase {
 
         // Update Account
         final AccountJson newInput = new AccountJson(objFromJson.getAccountId(),
-                                               "zozo", 4, objFromJson.getExternalKey(), "rr@google.com", 18, "EUR", null, "UTC", "bl1", "bh2", "", "ca", "usa", "415-255-2991");
+                                               "zozo", 4, objFromJson.getExternalKey(), "rr@google.com", new BillCycleDayJson(18, 18),
+                                               "EUR", null, "UTC", "bl1", "bh2", "", "ca", "usa", "415-255-2991");
         baseJson = mapper.writeValueAsString(newInput);
         final String uri = JaxrsResource.ACCOUNTS_PATH + "/" + objFromJson.getAccountId();
         response = doPut(uri, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);

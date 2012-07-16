@@ -20,6 +20,8 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
 
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.util.tag.Tag;
@@ -28,7 +30,8 @@ public class BillingState<T extends Blockable> {
     private final UUID objectId;
     private final int numberOfUnpaidInvoices;
     private final BigDecimal balanceOfUnpaidInvoices;
-    private final DateTime dateOfEarliestUnpaidInvoice;
+    private final LocalDate dateOfEarliestUnpaidInvoice;
+    private final DateTimeZone accountTimeZone;
     private final UUID idOfEarliestUnpaidInvoice;
     private final PaymentResponse responseForLastFailedPayment;
     private final Tag[] tags;
@@ -36,15 +39,16 @@ public class BillingState<T extends Blockable> {
     public BillingState(final UUID id,
                         final int numberOfUnpaidInvoices,
                         final BigDecimal balanceOfUnpaidInvoices,
-                        final DateTime dateOfEarliestUnpaidInvoice,
+                        final LocalDate dateOfEarliestUnpaidInvoice,
+                        final DateTimeZone accountTimeZone,
                         final UUID idOfEarliestUnpaidInvoice,
                         final PaymentResponse responseForLastFailedPayment,
                         final Tag[] tags) {
-        super();
         this.objectId = id;
         this.numberOfUnpaidInvoices = numberOfUnpaidInvoices;
         this.balanceOfUnpaidInvoices = balanceOfUnpaidInvoices;
         this.dateOfEarliestUnpaidInvoice = dateOfEarliestUnpaidInvoice;
+        this.accountTimeZone = accountTimeZone;
         this.idOfEarliestUnpaidInvoice = idOfEarliestUnpaidInvoice;
         this.responseForLastFailedPayment = responseForLastFailedPayment;
         this.tags = tags;
@@ -62,7 +66,7 @@ public class BillingState<T extends Blockable> {
         return balanceOfUnpaidInvoices;
     }
 
-    public DateTime getDateOfEarliestUnpaidInvoice() {
+    public LocalDate getDateOfEarliestUnpaidInvoice() {
         return dateOfEarliestUnpaidInvoice;
     }
 
@@ -78,4 +82,7 @@ public class BillingState<T extends Blockable> {
         return tags;
     }
 
+    public DateTimeZone getAccountTimeZone() {
+        return accountTimeZone;
+    }
 }

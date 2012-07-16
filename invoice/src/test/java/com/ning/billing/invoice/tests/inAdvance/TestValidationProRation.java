@@ -18,7 +18,7 @@ package com.ning.billing.invoice.tests.inAdvance;
 
 import java.math.BigDecimal;
 
-import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -30,6 +30,7 @@ import com.ning.billing.invoice.tests.ProRationTestBase;
 import static org.testng.Assert.assertEquals;
 
 public class TestValidationProRation extends ProRationTestBase {
+
     @Override
     protected BillingPeriod getBillingPeriod() {
         return BillingPeriod.MONTHLY;
@@ -42,44 +43,44 @@ public class TestValidationProRation extends ProRationTestBase {
 
     @Test(groups = "fast", expectedExceptions = InvalidDateSequenceException.class)
     public void testTargetStartEnd() throws InvalidDateSequenceException {
-        final DateTime startDate = buildDateTime(2011, 1, 30);
-        final DateTime endDate = buildDateTime(2011, 3, 15);
-        final DateTime targetDate = buildDateTime(2011, 1, 15);
+        final LocalDate startDate = buildDate(2011, 1, 30);
+        final LocalDate endDate = buildDate(2011, 3, 15);
+        final LocalDate targetDate = buildDate(2011, 1, 15);
 
         calculateNumberOfBillingCycles(startDate, endDate, targetDate, 15);
     }
 
     @Test(groups = "fast", expectedExceptions = InvalidDateSequenceException.class)
     public void testTargetEndStart() throws InvalidDateSequenceException {
-        final DateTime startDate = buildDateTime(2011, 4, 30);
-        final DateTime endDate = buildDateTime(2011, 3, 15);
-        final DateTime targetDate = buildDateTime(2011, 2, 15);
+        final LocalDate startDate = buildDate(2011, 4, 30);
+        final LocalDate endDate = buildDate(2011, 3, 15);
+        final LocalDate targetDate = buildDate(2011, 2, 15);
 
         calculateNumberOfBillingCycles(startDate, endDate, targetDate, 15);
     }
 
     @Test(groups = "fast", expectedExceptions = InvalidDateSequenceException.class)
     public void testEndTargetStart() throws InvalidDateSequenceException {
-        final DateTime startDate = buildDateTime(2011, 3, 30);
-        final DateTime endDate = buildDateTime(2011, 1, 15);
-        final DateTime targetDate = buildDateTime(2011, 2, 15);
+        final LocalDate startDate = buildDate(2011, 3, 30);
+        final LocalDate endDate = buildDate(2011, 1, 15);
+        final LocalDate targetDate = buildDate(2011, 2, 15);
 
         calculateNumberOfBillingCycles(startDate, endDate, targetDate, 15);
     }
 
     @Test(groups = "fast", expectedExceptions = InvalidDateSequenceException.class)
     public void testEndStartTarget() throws InvalidDateSequenceException {
-        final DateTime startDate = buildDateTime(2011, 1, 30);
-        final DateTime endDate = buildDateTime(2011, 1, 15);
-        final DateTime targetDate = buildDateTime(2011, 2, 15);
+        final LocalDate startDate = buildDate(2011, 1, 30);
+        final LocalDate endDate = buildDate(2011, 1, 15);
+        final LocalDate targetDate = buildDate(2011, 2, 15);
 
         calculateNumberOfBillingCycles(startDate, endDate, targetDate, 15);
     }
 
     @Test(groups = "fast", expectedExceptions = InvalidDateSequenceException.class)
     public void testTargetStart() throws InvalidDateSequenceException {
-        final DateTime startDate = buildDateTime(2011, 4, 30);
-        final DateTime targetDate = buildDateTime(2011, 2, 15);
+        final LocalDate startDate = buildDate(2011, 4, 30);
+        final LocalDate targetDate = buildDate(2011, 2, 15);
 
         calculateNumberOfBillingCycles(startDate, targetDate, 15);
     }

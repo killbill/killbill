@@ -21,6 +21,7 @@ import java.util.List;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,6 +58,11 @@ public class OldClockMock extends DefaultClock {
     @Override
     public synchronized DateTime getUTCNow() {
         return getNow(DateTimeZone.UTC);
+    }
+
+    @Override
+    public LocalDate getUTCToday() {
+        return new LocalDate(getUTCNow(), DateTimeZone.UTC);
     }
 
     private void logClockAdjustment(final DateTime prev, final DateTime next) {

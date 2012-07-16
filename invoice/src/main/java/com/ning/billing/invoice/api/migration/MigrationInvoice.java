@@ -18,13 +18,13 @@ package com.ning.billing.invoice.api.migration;
 
 import java.util.UUID;
 
-import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.model.DefaultInvoice;
 
 public class MigrationInvoice extends DefaultInvoice {
-    public MigrationInvoice(final UUID accountId, final DateTime invoiceDate, final DateTime targetDate, final Currency currency) {
+    public MigrationInvoice(final UUID accountId, final LocalDate invoiceDate, final LocalDate targetDate, final Currency currency) {
         super(UUID.randomUUID(), accountId, null, invoiceDate, targetDate, currency, true);
     }
 }

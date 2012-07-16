@@ -24,8 +24,11 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 
 import com.google.inject.Inject;
+
+import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
@@ -53,7 +56,7 @@ public class MockInvoiceDao implements InvoiceDao {
         try {
             eventBus.post(new DefaultInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
                                                           invoice.getBalance(), invoice.getCurrency(),
-                                                          invoice.getInvoiceDate(), null));
+                                                          null));
         } catch (Bus.EventBusException ex) {
             throw new RuntimeException(ex);
         }
@@ -101,7 +104,7 @@ public class MockInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public List<Invoice> getInvoicesByAccount(final UUID accountId, final DateTime fromDate) {
+    public List<Invoice> getInvoicesByAccount(final UUID accountId, final LocalDate fromDate) {
         final List<Invoice> invoicesForAccount = new ArrayList<Invoice>();
 
         synchronized (monitor) {
@@ -189,7 +192,7 @@ public class MockInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public List<Invoice> getUnpaidInvoicesByAccountId(final UUID accountId, final DateTime upToDate) {
+    public List<Invoice> getUnpaidInvoicesByAccountId(final UUID accountId, final LocalDate upToDate) {
         final List<Invoice> unpaidInvoices = new ArrayList<Invoice>();
 
         for (final Invoice invoice : get()) {
@@ -261,13 +264,12 @@ public class MockInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public InvoiceItem insertCredit(final UUID accountId, final UUID invoiceId, final BigDecimal amount, final DateTime effectiveDate, final Currency currency, final CallContext context) {
+    public InvoiceItem insertCredit(final UUID accountId, final UUID invoiceId, final BigDecimal amount, final LocalDate effectiveDate, final Currency currency, final CallContext context) {
         throw new UnsupportedOperationException();
     }
 
     @Override
     public BigDecimal getAccountCBA(UUID accountId) {
-        // TODO Auto-generated method stub
         return null;
     }
 
@@ -275,7 +277,6 @@ public class MockInvoiceDao implements InvoiceDao {
     public InvoicePayment createRefund(UUID paymentId,
             BigDecimal amount, boolean isInvoiceAdjusted, UUID paymentCookieId, CallContext context)
             throws InvoiceApiException {
-        // TODO Auto-generated method stub
         return null;
     }
 

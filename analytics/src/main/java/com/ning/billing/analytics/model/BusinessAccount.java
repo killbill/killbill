@@ -20,6 +20,7 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 
 import com.ning.billing.analytics.utils.Rounder;
 
@@ -32,7 +33,7 @@ public class BusinessAccount {
     private String key;
     private String name;
     private BigDecimal balance;
-    private DateTime lastInvoiceDate;
+    private LocalDate lastInvoiceDate;
     private BigDecimal totalInvoiceBalance;
     private String lastPaymentStatus;
     private String paymentMethod;
@@ -44,7 +45,7 @@ public class BusinessAccount {
     }
 
     public BusinessAccount(final UUID accountId, final String key, final String name, final BigDecimal balance,
-                           final DateTime lastInvoiceDate, final BigDecimal totalInvoiceBalance, final String lastPaymentStatus,
+                           final LocalDate lastInvoiceDate, final BigDecimal totalInvoiceBalance, final String lastPaymentStatus,
                            final String paymentMethod, final String creditCardType, final String billingAddressCountry) {
         this.accountId = accountId;
         this.key = key;
@@ -106,11 +107,11 @@ public class BusinessAccount {
         this.creditCardType = creditCardType;
     }
 
-    public DateTime getLastInvoiceDate() {
+    public LocalDate getLastInvoiceDate() {
         return lastInvoiceDate;
     }
 
-    public void setLastInvoiceDate(final DateTime lastInvoiceDate) {
+    public void setLastInvoiceDate(final LocalDate lastInvoiceDate) {
         this.lastInvoiceDate = lastInvoiceDate;
     }
 

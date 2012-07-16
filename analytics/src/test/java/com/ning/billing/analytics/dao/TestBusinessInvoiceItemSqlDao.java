@@ -20,7 +20,7 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
 import org.skife.jdbi.v2.IDBI;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
@@ -29,8 +29,13 @@ import org.testng.annotations.Test;
 import com.ning.billing.analytics.AnalyticsTestSuiteWithEmbeddedDB;
 import com.ning.billing.analytics.model.BusinessInvoiceItem;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.clock.DefaultClock;
 
 public class TestBusinessInvoiceItemSqlDao extends AnalyticsTestSuiteWithEmbeddedDB {
+
+    private final Clock clock = new DefaultClock();
+
     private BusinessInvoiceItemSqlDao invoiceItemSqlDao;
 
     @BeforeMethod(groups = "slow")
@@ -106,9 +111,9 @@ public class TestBusinessInvoiceItemSqlDao extends AnalyticsTestSuiteWithEmbedde
     private BusinessInvoiceItem createInvoiceItem(final UUID invoiceId, final String externalKey) {
         final BigDecimal amount = BigDecimal.TEN;
         final String billingPeriod = UUID.randomUUID().toString().substring(0, 20);
-        final DateTime createdDate = new DateTime(DateTimeZone.UTC);
+        final DateTime createdDate = clock.getUTCNow();
         final Currency currency = Currency.AUD;
-        final DateTime endDate = new DateTime(DateTimeZone.UTC);
+        final LocalDate endDate = clock.getUTCToday();
         final UUID itemId = UUID.randomUUID();
         final String itemType = UUID.randomUUID().toString().substring(0, 20);
         final String phase = UUID.randomUUID().toString().substring(0, 20);
@@ -116,8 +121,8 @@ public class TestBusinessInvoiceItemSqlDao extends AnalyticsTestSuiteWithEmbedde
         final String productName = UUID.randomUUID().toString().substring(0, 20);
         final String productType = UUID.randomUUID().toString().substring(0, 20);
         final String slug = UUID.randomUUID().toString();
-        final DateTime startDate = new DateTime(DateTimeZone.UTC);
-        final DateTime updatedDate = new DateTime(DateTimeZone.UTC);
+        final LocalDate startDate = clock.getUTCToday();
+        final DateTime updatedDate = clock.getUTCNow();
 
         return new BusinessInvoiceItem(amount, billingPeriod, createdDate, currency, endDate, externalKey, invoiceId,
                                        itemId, itemType, phase, productCategory, productName, productType, slug, startDate, updatedDate);

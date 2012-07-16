@@ -22,8 +22,6 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.eventbus.Subscribe;
-import com.google.inject.Inject;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.timeline.RepairEntitlementEvent;
 import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
@@ -33,7 +31,11 @@ import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.UserType;
 
+import com.google.common.eventbus.Subscribe;
+import com.google.inject.Inject;
+
 public class InvoiceListener {
+
     private static final Logger log = LoggerFactory.getLogger(InvoiceListener.class);
     private final InvoiceDispatcher dispatcher;
     private final CallContextFactory factory;
@@ -60,8 +62,8 @@ public class InvoiceListener {
             //  Skip future uncancel event
             //  Skip events which are marked as not being the last one
             if (transition.getTransitionType() == SubscriptionTransitionType.UNCANCEL ||
-                    transition.getTransitionType() == SubscriptionTransitionType.MIGRATE_ENTITLEMENT
-                    || transition.getRemainingEventsForUserOperation() > 0) {
+                transition.getTransitionType() == SubscriptionTransitionType.MIGRATE_ENTITLEMENT
+                || transition.getRemainingEventsForUserOperation() > 0) {
                 return;
             }
 

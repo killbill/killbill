@@ -31,7 +31,7 @@ public interface AccountData {
 
     public String getEmail();
 
-    public Integer getBillCycleDay();
+    public BillCycleDay getBillCycleDay();
 
     public Currency getCurrency();
 

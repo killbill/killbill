@@ -26,6 +26,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountCreationEvent;
 import com.ning.billing.account.api.AccountData;
+import com.ning.billing.account.api.BillCycleDay;
+import com.ning.billing.account.api.DefaultBillCycleDay;
 import com.ning.billing.catalog.api.Currency;
 
 public class DefaultAccountCreationEvent implements AccountCreationEvent {
@@ -124,7 +126,7 @@ public class DefaultAccountCreationEvent implements AccountCreationEvent {
         private final String name;
         private final Integer firstNameLength;
         private final String email;
-        private final Integer billCycleDay;
+        private final DefaultBillCycleDay billCycleDay;
         private final String currency;
         private final UUID paymentMethodId;
         private final String timeZone;
@@ -145,7 +147,7 @@ public class DefaultAccountCreationEvent implements AccountCreationEvent {
                  d.getName(),
                  d.getFirstNameLength(),
                  d.getEmail(),
-                 d.getBillCycleDay(),
+                 new DefaultBillCycleDay(d.getBillCycleDay()),
                  d.getCurrency() != null ? d.getCurrency().name() : null,
                  d.getPaymentMethodId(),
                  d.getTimeZone() != null ? d.getTimeZone().getID() : null,
@@ -167,7 +169,7 @@ public class DefaultAccountCreationEvent implements AccountCreationEvent {
                                   @JsonProperty("name") final String name,
                                   @JsonProperty("firstNameLength") final Integer firstNameLength,
                                   @JsonProperty("email") final String email,
-                                  @JsonProperty("billCycleDay") final Integer billCycleDay,
+                                  @JsonProperty("billCycleDay") final DefaultBillCycleDay billCycleDay,
                                   @JsonProperty("currency") final String currency,
                                   @JsonProperty("paymentMethodId") final UUID paymentMethodId,
                                   @JsonProperty("timeZone") final String timeZone,
@@ -225,7 +227,7 @@ public class DefaultAccountCreationEvent implements AccountCreationEvent {
         }
 
         @Override
-        public Integer getBillCycleDay() {
+        public BillCycleDay getBillCycleDay() {
             return billCycleDay;
         }
 
