@@ -75,7 +75,7 @@ public abstract class ProRationTestBase extends InvoicingTestBase {
     }
 
     protected BigDecimal calculateNumberOfBillingCycles(final LocalDate startDate, final LocalDate targetDate, final int billingCycleDay) throws InvalidDateSequenceException {
-        final List<RecurringInvoiceItemData> items = getBillingMode().calculateInvoiceItemData(startDate, targetDate, DateTimeZone.UTC, billingCycleDay, getBillingPeriod());
+        final List<RecurringInvoiceItemData> items = getBillingMode().calculateInvoiceItemData(startDate, null, targetDate, DateTimeZone.UTC, billingCycleDay, getBillingPeriod());
 
         BigDecimal numberOfBillingCycles = ZERO;
         for (final RecurringInvoiceItemData item : items) {
