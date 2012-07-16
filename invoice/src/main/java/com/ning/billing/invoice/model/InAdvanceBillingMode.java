@@ -37,9 +37,9 @@ public class InAdvanceBillingMode implements BillingMode {
     @Override
     public List<RecurringInvoiceItemData> calculateInvoiceItemData(final LocalDate startDate, final LocalDate endDate,
                                                                    final LocalDate targetDate, final DateTimeZone accountTimeZone,
-                                                                   final int billingCycleDay, final BillingPeriod billingPeriod) throws InvalidDateSequenceException {
+                                                                   final int billingCycleDayLocal, final BillingPeriod billingPeriod) throws InvalidDateSequenceException {
         if (endDate == null) {
-            return calculateInvoiceItemData(startDate, targetDate, accountTimeZone, billingCycleDay, billingPeriod);
+            return calculateInvoiceItemData(startDate, targetDate, accountTimeZone, billingCycleDayLocal, billingPeriod);
         }
 
         if (endDate.isBefore(startDate)) {
@@ -52,7 +52,7 @@ public class InAdvanceBillingMode implements BillingMode {
         final List<RecurringInvoiceItemData> results = new ArrayList<RecurringInvoiceItemData>();
 
         // beginning from the start date, find the first billing date
-        final LocalDate firstBillingCycleDate = calculateBillingCycleDateOnOrAfter(startDate, accountTimeZone, billingCycleDay);
+        final LocalDate firstBillingCycleDate = calculateBillingCycleDateOnOrAfter(startDate, accountTimeZone, billingCycleDayLocal);
 
         // add pro-ration item if needed
         if (firstBillingCycleDate.isAfter(startDate)) {
@@ -64,7 +64,7 @@ public class InAdvanceBillingMode implements BillingMode {
 
         // add one item per billing period
         final LocalDate effectiveEndDate = calculateEffectiveEndDate(firstBillingCycleDate, targetDate, endDate, billingPeriod);
-        final LocalDate lastBillingCycleDate = calculateLastBillingCycleDateBefore(effectiveEndDate, firstBillingCycleDate, billingCycleDay, billingPeriod);
+        final LocalDate lastBillingCycleDate = calculateLastBillingCycleDateBefore(effectiveEndDate, firstBillingCycleDate, billingCycleDayLocal, billingPeriod);
         final int numberOfWholeBillingPeriods = calculateNumberOfWholeBillingPeriods(firstBillingCycleDate, lastBillingCycleDate, billingPeriod);
         final int numberOfMonthsPerBillingPeriod = billingPeriod.getNumberOfMonths();
 
@@ -87,7 +87,7 @@ public class InAdvanceBillingMode implements BillingMode {
     public List<RecurringInvoiceItemData> calculateInvoiceItemData(final LocalDate startDate,
                                                                    final LocalDate targetDate,
                                                                    final DateTimeZone accountTimeZone,
-                                                                   final int billingCycleDay,
+                                                                   final int billingCycleDayLocal,
                                                                    final BillingPeriod billingPeriod) throws InvalidDateSequenceException {
         final List<RecurringInvoiceItemData> results = new ArrayList<RecurringInvoiceItemData>();
 
@@ -97,7 +97,7 @@ public class InAdvanceBillingMode implements BillingMode {
         }
 
         // beginning from the start date, find the first billing date
-        final LocalDate firstBillingCycleDate = calculateBillingCycleDateOnOrAfter(startDate, accountTimeZone, billingCycleDay);
+        final LocalDate firstBillingCycleDate = calculateBillingCycleDateOnOrAfter(startDate, accountTimeZone, billingCycleDayLocal);
 
         // add pro-ration item if needed
         if (firstBillingCycleDate.isAfter(startDate)) {
@@ -109,7 +109,7 @@ public class InAdvanceBillingMode implements BillingMode {
 
         // add one item per billing period
         final LocalDate effectiveEndDate = calculateEffectiveEndDate(firstBillingCycleDate, targetDate, billingPeriod);
-        final LocalDate lastBillingCycleDate = calculateLastBillingCycleDateBefore(effectiveEndDate, firstBillingCycleDate, billingCycleDay, billingPeriod);
+        final LocalDate lastBillingCycleDate = calculateLastBillingCycleDateBefore(effectiveEndDate, firstBillingCycleDate, billingCycleDayLocal, billingPeriod);
         final int numberOfWholeBillingPeriods = calculateNumberOfWholeBillingPeriods(firstBillingCycleDate, lastBillingCycleDate, billingPeriod);
         final int numberOfMonthsPerBillingPeriod = billingPeriod.getNumberOfMonths();
 

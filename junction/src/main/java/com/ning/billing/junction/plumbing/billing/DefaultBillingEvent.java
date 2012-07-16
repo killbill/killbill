@@ -22,6 +22,7 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogApiException;
@@ -36,7 +37,7 @@ import com.ning.billing.entitlement.api.user.Subscription;
 
 public class DefaultBillingEvent implements BillingEvent {
     private final Account account;
-    private final int billCycleDay;
+    private final BillCycleDay billCycleDay;
     private final Subscription subscription;
     private final DateTime effectiveDate;
     private final PlanPhase planPhase;
@@ -51,10 +52,10 @@ public class DefaultBillingEvent implements BillingEvent {
     private final Long totalOrdering;
     private final DateTimeZone timeZone;
 
-    public DefaultBillingEvent(final Account account, final EffectiveSubscriptionEvent transition, final Subscription subscription, final int billCycleDayUTC, final Currency currency, final Catalog catalog) throws CatalogApiException {
+    public DefaultBillingEvent(final Account account, final EffectiveSubscriptionEvent transition, final Subscription subscription, final BillCycleDay billCycleDay, final Currency currency, final Catalog catalog) throws CatalogApiException {
 
         this.account = account;
-        this.billCycleDay = billCycleDayUTC;
+        this.billCycleDay = billCycleDay;
         this.subscription = subscription;
         effectiveDate = transition.getEffectiveTransitionTime();
         final String planPhaseName = (transition.getTransitionType() != SubscriptionTransitionType.CANCEL) ?
@@ -87,7 +88,7 @@ public class DefaultBillingEvent implements BillingEvent {
 
     public DefaultBillingEvent(final Account account, final Subscription subscription, final DateTime effectiveDate, final Plan plan, final PlanPhase planPhase,
                                final BigDecimal fixedPrice, final BigDecimal recurringPrice, final Currency currency,
-                               final BillingPeriod billingPeriod, final int billCycleDay, final BillingModeType billingModeType,
+                               final BillingPeriod billingPeriod, final BillCycleDay billCycleDay, final BillingModeType billingModeType,
                                final String description, final long totalOrdering, final SubscriptionTransitionType type, final DateTimeZone timeZone) {
         this.account = account;
         this.subscription = subscription;
@@ -126,7 +127,7 @@ public class DefaultBillingEvent implements BillingEvent {
     }
 
     @Override
-    public int getBillCycleDay() {
+    public BillCycleDay getBillCycleDay() {
         return billCycleDay;
     }
 
@@ -281,7 +282,7 @@ public class DefaultBillingEvent implements BillingEvent {
 
     @Override
     public int hashCode() {
-        int result = billCycleDay;
+        int result = billCycleDay.hashCode();
         result = 31 * result + subscription.hashCode();
         result = 31 * result + effectiveDate.hashCode();
         result = 31 * result + planPhase.hashCode();

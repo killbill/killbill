@@ -323,11 +323,11 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
             if (!startDate.isAfter(targetDate)) {
                 final LocalDate endDate = (nextEvent == null) ? null : new LocalDate(nextEvent.getEffectiveDate(), nextEvent.getTimeZone());
 
-                final int billCycleDay = thisEvent.getBillCycleDay();
+                final int billCycleDayLocal = thisEvent.getBillCycleDay().getDayOfMonthLocal();
 
                 final List<RecurringInvoiceItemData> itemData;
                 try {
-                    itemData = billingMode.calculateInvoiceItemData(startDate, endDate, targetDate, accountTimeZone, billCycleDay, billingPeriod);
+                    itemData = billingMode.calculateInvoiceItemData(startDate, endDate, targetDate, accountTimeZone, billCycleDayLocal, billingPeriod);
                 } catch (InvalidDateSequenceException e) {
                     throw new InvoiceApiException(ErrorCode.INVOICE_INVALID_DATE_SEQUENCE, startDate, endDate, targetDate);
                 }

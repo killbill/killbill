@@ -35,6 +35,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.catalog.MockPlan;
 import com.ning.billing.catalog.MockPlanPhase;
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -53,6 +54,7 @@ import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.junction.api.DefaultBlockingState;
 import com.ning.billing.junction.dao.BlockingStateDao;
 import com.ning.billing.junction.plumbing.billing.BlockingCalculator.DisabledDuration;
+import com.ning.billing.mock.api.MockBillCycleDay;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 
@@ -532,7 +534,7 @@ public class TestBlockingCalculator extends JunctionTestSuite {
 
     protected BillingEvent createRealEvent(final DateTime effectiveDate, final Subscription subscription) {
         final Account account = this.account;
-        final int billCycleDay = 1;
+        final BillCycleDay billCycleDay = new MockBillCycleDay(1);
         final PlanPhase planPhase = new MockPlanPhase();
         final Plan plan = new MockPlan();
         final BigDecimal fixedPrice = BigDecimal.TEN;
@@ -615,7 +617,7 @@ public class TestBlockingCalculator extends JunctionTestSuite {
     private class MockBillingEvent extends DefaultBillingEvent {
         public MockBillingEvent() {
             super(account, subscription1, clock.getUTCNow(), null, null, BigDecimal.ZERO, BigDecimal.TEN, Currency.USD, BillingPeriod.ANNUAL,
-                  4, BillingModeType.IN_ADVANCE, "", 3L, SubscriptionTransitionType.CREATE, DateTimeZone.UTC);
+                  new MockBillCycleDay(4), BillingModeType.IN_ADVANCE, "", 3L, SubscriptionTransitionType.CREATE, DateTimeZone.UTC);
         }
     }
 

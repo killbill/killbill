@@ -24,6 +24,7 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 
 import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.Plan;
@@ -34,6 +35,7 @@ import com.ning.billing.entitlement.api.billing.BillingModeType;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.invoice.InvoiceTestSuiteWithEmbeddedDB;
 import com.ning.billing.invoice.model.InvoicingConfiguration;
+import com.ning.billing.mock.api.MockBillCycleDay;
 
 public abstract class InvoicingTestBase extends InvoiceTestSuiteWithEmbeddedDB {
     protected static final int NUMBER_OF_DECIMALS = InvoicingConfiguration.getNumberOfDecimals();
@@ -90,7 +92,21 @@ public abstract class InvoicingTestBase extends InvoiceTestSuiteWithEmbeddedDB {
                                                   final DateTime effectiveDate,
                                                   final Plan plan, final PlanPhase planPhase,
                                                   @Nullable final BigDecimal fixedPrice, @Nullable final BigDecimal recurringPrice,
-                                                  final Currency currency, final BillingPeriod billingPeriod, final int billCycleDay,
+                                                  final Currency currency, final BillingPeriod billingPeriod, final int billCycleDayUTC,
+                                                  final BillingModeType billingModeType, final String description,
+                                                  final long totalOrdering,
+                                                  final SubscriptionTransitionType type) {
+        return createMockBillingEvent(account, subscription, effectiveDate, plan, planPhase, fixedPrice, recurringPrice,
+                                      currency, billingPeriod, billCycleDayUTC, billCycleDayUTC, billingModeType, description,
+                                      totalOrdering, type);
+    }
+
+        protected BillingEvent createMockBillingEvent(@Nullable final Account account, final Subscription subscription,
+                                                  final DateTime effectiveDate,
+                                                  final Plan plan, final PlanPhase planPhase,
+                                                  @Nullable final BigDecimal fixedPrice, @Nullable final BigDecimal recurringPrice,
+                                                  final Currency currency, final BillingPeriod billingPeriod,
+                                                  final int billCycleDayUTC, final int billCycleDayLocal,
                                                   final BillingModeType billingModeType, final String description,
                                                   final long totalOrdering,
                                                   final SubscriptionTransitionType type) {
@@ -101,8 +117,18 @@ public abstract class InvoicingTestBase extends InvoiceTestSuiteWithEmbeddedDB {
             }
 
             @Override
-            public int getBillCycleDay() {
-                return billCycleDay;
+            public BillCycleDay getBillCycleDay() {
+                return new BillCycleDay() {
+                    @Override
+                    public int getDayOfMonthUTC() {
+                        return billCycleDayUTC;
+                    }
+
+                    @Override
+                    public int getDayOfMonthLocal() {
+                        return billCycleDayLocal;
+                    }
+                };
             }
 
             @Override

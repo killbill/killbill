@@ -76,4 +76,32 @@ public class TestInvoiceDateUtils {
         final LocalDate to = InvoiceDateUtils.calculateBillingCycleDateOnOrAfter(from, DateTimeZone.UTC, 3);
         Assert.assertEquals(to, new LocalDate("2012-04-03"));
     }
+
+    @Test(groups = "fast")
+    public void testEffectiveEndDate() throws Exception {
+        final LocalDate firstBCD = new LocalDate(2012, 7, 16);
+        final LocalDate targetDate = new LocalDate(2012, 8, 16);
+        final BillingPeriod billingPeriod = BillingPeriod.MONTHLY;
+        final LocalDate effectiveEndDate = InvoiceDateUtils.calculateEffectiveEndDate(firstBCD, targetDate, billingPeriod);
+        // TODO should that be 2012-09-15?
+        Assert.assertEquals(effectiveEndDate, new LocalDate(2012, 9, 16));
+    }
+
+    @Test(groups = "fast")
+    public void testLastBCD() throws Exception {
+        final LocalDate firstBCD = new LocalDate(2012, 7, 16);
+        final LocalDate effectiveEndDate = new LocalDate(2012, 9, 15);
+        final BillingPeriod billingPeriod = BillingPeriod.MONTHLY;
+        final LocalDate lastBCD = InvoiceDateUtils.calculateLastBillingCycleDateBefore(effectiveEndDate, firstBCD, 16, billingPeriod);
+        Assert.assertEquals(lastBCD, new LocalDate(2012, 8, 16));
+    }
+
+    @Test(groups = "fast")
+    public void testCalculateNbOfBillingPeriods() throws Exception {
+        final LocalDate firstBCD = new LocalDate(2012, 7, 16);
+        final LocalDate lastBCD = new LocalDate(2012, 9, 16);
+        final BillingPeriod billingPeriod = BillingPeriod.MONTHLY;
+        final int numberOfWholeBillingPeriods = InvoiceDateUtils.calculateNumberOfWholeBillingPeriods(firstBCD, lastBCD, billingPeriod);
+        Assert.assertEquals(numberOfWholeBillingPeriods, 2);
+    }
 }

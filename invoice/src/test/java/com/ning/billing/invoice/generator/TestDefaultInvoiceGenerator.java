@@ -159,6 +159,37 @@ public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
     }
 
     @Test(groups = "fast")
+    public void testSimpleWithTimeZone() throws InvoiceApiException, CatalogApiException {
+        final UUID accountId = UUID.randomUUID();
+        final Subscription sub = createZombieSubscription();
+        final Plan plan = new MockPlan();
+        final BigDecimal rate = TEN;
+        final PlanPhase phase = createMockMonthlyPlanPhase(rate);
+
+        // Start date was the 16 local, but was the 17 UTC
+        final int bcdLocal = 16;
+        final int bcdUTC = 17;
+        final LocalDate startDate = buildDate(2012, 7, bcdLocal);
+
+        final BillingEventSet events = new MockBillingEventSet();
+        final BillingEvent event = createBillingEvent(sub.getId(), startDate, plan, phase, bcdUTC, bcdLocal);
+        events.add(event);
+
+        // Target date is the next BCD, in local time
+        final LocalDate targetDate = buildDate(2012, 8, bcdLocal);
+        final DateTimeZone accountTimeZone = DateTimeZone.forID("HST");
+        final Invoice invoice = generator.generateInvoice(accountId, events, null, targetDate, accountTimeZone, Currency.USD);
+
+        assertNotNull(invoice);
+        assertEquals(invoice.getNumberOfItems(), 2);
+        assertEquals(invoice.getInvoiceItems().get(0).getStartDate(), buildDate(2012, 7, 16));
+        // TODO should this be 2012-08-15?
+        assertEquals(invoice.getInvoiceItems().get(0).getEndDate(), buildDate(2012, 8, 16));
+        assertEquals(invoice.getInvoiceItems().get(1).getStartDate(), buildDate(2012, 8, 16));
+        assertEquals(invoice.getInvoiceItems().get(1).getEndDate(), buildDate(2012, 9, 16));
+    }
+
+    @Test(groups = "fast")
     public void testWithSingleMonthlyEventWithLeadingProRation() throws InvoiceApiException, CatalogApiException {
         final BillingEventSet events = new MockBillingEventSet();
 
@@ -709,7 +740,12 @@ public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
     }
 
     private BillingEvent createBillingEvent(final UUID subscriptionId, final LocalDate startDate,
-                                            final Plan plan, final PlanPhase planPhase, final int billCycleDay) throws CatalogApiException {
+                                            final Plan plan, final PlanPhase planPhase, final int billCycleDayUTC) throws CatalogApiException {
+        return createBillingEvent(subscriptionId, startDate, plan, planPhase, billCycleDayUTC, billCycleDayUTC);
+    }
+
+    private BillingEvent createBillingEvent(final UUID subscriptionId, final LocalDate startDate,
+                                            final Plan plan, final PlanPhase planPhase, final int billCycleDayUTC, final int billCycleDayLocal) throws CatalogApiException {
         final Subscription sub = createZombieSubscription(subscriptionId);
         final Currency currency = Currency.USD;
 
@@ -717,7 +753,7 @@ public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
                                       planPhase.getFixedPrice() == null ? null : planPhase.getFixedPrice().getPrice(currency),
                                       planPhase.getRecurringPrice() == null ? null : planPhase.getRecurringPrice().getPrice(currency),
                                       currency, planPhase.getBillingPeriod(),
-                                      billCycleDay, BillingModeType.IN_ADVANCE, "Test", 1L, SubscriptionTransitionType.CREATE);
+                                      billCycleDayUTC, billCycleDayLocal, BillingModeType.IN_ADVANCE, "Test", 1L, SubscriptionTransitionType.CREATE);
     }
 
     private void testInvoiceGeneration(final UUID accountId, final BillingEventSet events, final List<Invoice> existingInvoices,

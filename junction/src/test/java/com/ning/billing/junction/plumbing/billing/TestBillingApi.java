@@ -517,7 +517,7 @@ public class TestBillingApi extends JunctionTestSuite {
             assertNull(event.getRecurringPrice());
         }
 
-        Assert.assertEquals(BCD, event.getBillCycleDay());
+        Assert.assertEquals(BCD, event.getBillCycleDay().getDayOfMonthUTC());
         Assert.assertEquals(id, event.getSubscription().getId());
         Assert.assertEquals(time.getDayOfMonth(), event.getEffectiveDate().getDayOfMonth());
         Assert.assertEquals(nextPhase, event.getPlanPhase());
