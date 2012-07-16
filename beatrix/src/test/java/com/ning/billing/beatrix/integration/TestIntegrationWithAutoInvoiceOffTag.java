@@ -64,7 +64,7 @@ public class TestIntegrationWithAutoInvoiceOffTag extends TestIntegrationBase {
     private String planSetName;
 
     @BeforeMethod(groups = {"slow"})
-    public void setupOverdue() throws Exception {
+    public void setupBeforeTest() throws Exception {
 
         account = createAccountWithPaymentMethod(getAccountData(25));
         assertNotNull(account);
@@ -105,6 +105,12 @@ public class TestIntegrationWithAutoInvoiceOffTag extends TestIntegrationBase {
         invoices = invoiceApi.getInvoicesByAccount(account.getId());
         assertEquals(invoices.size(), 0);
 
+        busHandler.pushExpectedEvents(NextEvent.INVOICE);
+        remove_AUTO_INVOICING_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
+        assertTrue(busHandler.isCompleted(DELAY));
+
+        invoices = invoiceApi.getInvoicesByAccount(account.getId());
+        assertEquals(invoices.size(), 1);
     }
 
     @Test(groups = {"slow"}, enabled = true)
@@ -172,5 +178,11 @@ public class TestIntegrationWithAutoInvoiceOffTag extends TestIntegrationBase {
         tagApi.addTag(id, type, def, context);
         final Map<String, Tag> tags = tagApi.getTags(id, type);
         assertNotNull(tags.get(ControlTagType.AUTO_INVOICING_OFF.name()));
+    }
+
+
+    private void remove_AUTO_INVOICING_OFF_Tag(final UUID id, final ObjectType type) throws TagDefinitionApiException, TagApiException {
+        final TagDefinition def = tagApi.getTagDefinition(ControlTagType.AUTO_INVOICING_OFF.name());
+        tagApi.removeTag(id, type, def, context);
     }
 }

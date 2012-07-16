@@ -18,6 +18,7 @@ package com.ning.billing.invoice.api;
 
 import com.google.inject.Inject;
 import com.ning.billing.invoice.InvoiceListener;
+import com.ning.billing.invoice.TagHandler;
 import com.ning.billing.invoice.notification.NextBillingDateNotifier;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
@@ -30,11 +31,13 @@ public class DefaultInvoiceService implements InvoiceService {
     public static final String INVOICE_SERVICE_NAME = "invoice-service";
     private final NextBillingDateNotifier dateNotifier;
     private final InvoiceListener invoiceListener;
+    private final TagHandler tagHandler;
     private final Bus eventBus;
 
     @Inject
-    public DefaultInvoiceService(final InvoiceListener invoiceListener, final Bus eventBus, final NextBillingDateNotifier dateNotifier) {
+    public DefaultInvoiceService(final InvoiceListener invoiceListener, final TagHandler tagHandler, final Bus eventBus, final NextBillingDateNotifier dateNotifier) {
         this.invoiceListener = invoiceListener;
+        this.tagHandler = tagHandler;
         this.eventBus = eventBus;
         this.dateNotifier = dateNotifier;
     }
@@ -59,6 +62,7 @@ public class DefaultInvoiceService implements InvoiceService {
     public void registerForNotifications() {
         try {
             eventBus.register(invoiceListener);
+            eventBus.register(tagHandler);
         } catch (Bus.EventBusException e) {
             throw new RuntimeException("Unable to register to the EventBus!", e);
         }
@@ -68,6 +72,7 @@ public class DefaultInvoiceService implements InvoiceService {
     public void unregisterForNotifications() {
         try {
             eventBus.unregister(invoiceListener);
+            eventBus.unregister(tagHandler);
         } catch (Bus.EventBusException e) {
             throw new RuntimeException("Unable to unregister to the EventBus!", e);
         }

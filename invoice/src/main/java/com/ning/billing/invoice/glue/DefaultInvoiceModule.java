@@ -22,6 +22,7 @@ import com.google.inject.AbstractModule;
 import com.ning.billing.config.InvoiceConfig;
 import com.ning.billing.glue.InvoiceModule;
 import com.ning.billing.invoice.InvoiceListener;
+import com.ning.billing.invoice.TagHandler;
 import com.ning.billing.invoice.api.DefaultInvoiceService;
 import com.ning.billing.invoice.api.InvoiceMigrationApi;
 import com.ning.billing.invoice.api.InvoiceNotifier;
@@ -95,6 +96,11 @@ public class DefaultInvoiceModule extends AbstractModule implements InvoiceModul
         bind(InvoiceListener.class).asEagerSingleton();
     }
 
+    protected void installTagHandler() {
+        bind(TagHandler.class).asEagerSingleton();
+    }
+
+
     protected void installInvoiceGenerator() {
         bind(InvoiceGenerator.class).to(DefaultInvoiceGenerator.class).asEagerSingleton();
     }
@@ -107,6 +113,7 @@ public class DefaultInvoiceModule extends AbstractModule implements InvoiceModul
         installInvoiceNotifier();
         installNotifiers();
         installInvoiceListener();
+        installTagHandler();
         installInvoiceGenerator();
         installInvoiceDao();
         installInvoiceUserApi();

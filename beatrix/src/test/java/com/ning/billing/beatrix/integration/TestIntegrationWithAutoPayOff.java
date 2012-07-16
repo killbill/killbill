@@ -71,8 +71,9 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
     private BillingPeriod term;
     private String planSetName;
 
+
     @BeforeMethod(groups = {"slow"})
-    public void setupOverdue() throws Exception {
+    public void setupBeforeTest() throws Exception {
 
         account = createAccountWithPaymentMethod(getAccountData(25));
         assertNotNull(account);
