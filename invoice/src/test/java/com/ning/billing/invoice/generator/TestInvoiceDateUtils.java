@@ -28,13 +28,14 @@ import com.ning.billing.catalog.api.BillingPeriod;
 public class TestInvoiceDateUtils {
 
     @Test(groups = "fast")
-    public void testLastBCDShouldBeInThePast() throws Exception {
+    public void testLastBCDShouldNotBeBeforePreviousBCD() throws Exception {
         final LocalDate from = new LocalDate("2012-07-16");
         final LocalDate previousBCD = new LocalDate("2012-08-15");
         final int bcdLocal = 15;
         final LocalDate lastBCD = InvoiceDateUtils.calculateLastBillingCycleDateBefore(from, previousBCD, bcdLocal, BillingPeriod.MONTHLY);
-        Assert.assertEquals(lastBCD, new LocalDate("2012-07-15"));
+        Assert.assertEquals(lastBCD, new LocalDate("2012-08-15"));
     }
+
     @Test(groups = "fast")
     public void testNextBCDShouldNotBeInThePast() throws Exception {
         final LocalDate from = new LocalDate("2012-07-16");

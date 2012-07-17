@@ -74,6 +74,7 @@ public class InAdvanceBillingMode implements BillingMode {
         } else {
             effectiveEndDate = calculateEffectiveEndDate(firstBillingCycleDate, targetDate, billingPeriod);
         }
+
         final LocalDate lastBillingCycleDate = calculateLastBillingCycleDateBefore(effectiveEndDate, firstBillingCycleDate, billingCycleDayLocal, billingPeriod);
         final int numberOfWholeBillingPeriods = calculateNumberOfWholeBillingPeriods(firstBillingCycleDate, lastBillingCycleDate, billingPeriod);
         final int numberOfMonthsPerBillingPeriod = billingPeriod.getNumberOfMonths();

@@ -69,10 +69,15 @@ public class InvoiceDateUtils {
         if (proposedDate.dayOfMonth().get() < billingCycleDay) {
             final int lastDayOfTheMonth = proposedDate.dayOfMonth().getMaximumValue();
             if (lastDayOfTheMonth < billingCycleDay) {
-                return new LocalDate(proposedDate.getYear(), proposedDate.getMonthOfYear(), lastDayOfTheMonth);
+                proposedDate = new LocalDate(proposedDate.getYear(), proposedDate.getMonthOfYear(), lastDayOfTheMonth);
             } else {
-                return new LocalDate(proposedDate.getYear(), proposedDate.getMonthOfYear(), billingCycleDay);
+                proposedDate = new LocalDate(proposedDate.getYear(), proposedDate.getMonthOfYear(), billingCycleDay);
             }
+        }
+
+        if (proposedDate.isBefore(previousBillCycleDate)) {
+            // Make sure not to go too far in the past
+            return previousBillCycleDate;
         } else {
             return proposedDate;
         }
