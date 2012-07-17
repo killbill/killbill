@@ -352,6 +352,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
             }
         }
 
+        log.info("Generated invoice items [{}] from event [{}]", items, thisEvent);
         return items;
     }
 

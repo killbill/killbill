@@ -183,10 +183,32 @@ public class TestDefaultInvoiceGenerator extends InvoicingTestBase {
         assertNotNull(invoice);
         assertEquals(invoice.getNumberOfItems(), 2);
         assertEquals(invoice.getInvoiceItems().get(0).getStartDate(), buildDate(2012, 7, 16));
-        // TODO should this be 2012-08-15?
         assertEquals(invoice.getInvoiceItems().get(0).getEndDate(), buildDate(2012, 8, 16));
         assertEquals(invoice.getInvoiceItems().get(1).getStartDate(), buildDate(2012, 8, 16));
         assertEquals(invoice.getInvoiceItems().get(1).getEndDate(), buildDate(2012, 9, 16));
+    }
+
+    @Test(groups = "fast")
+    public void testSimpleWithSingleDiscountEvent() throws Exception {
+        final UUID accountId = UUID.randomUUID();
+        final Subscription sub = createZombieSubscription();
+        final Plan plan = new MockPlan("Plan with a single discount phase");
+        final PlanPhase phaseEvergreen = createMockMonthlyPlanPhase(EIGHT, PhaseType.DISCOUNT);
+        final DateTimeZone accountTimeZone = DateTimeZone.UTC;
+        final int bcdUTC = 16;
+        final LocalDate startDate = buildDate(2012, 7, 16);
+
+        final BillingEventSet events = new MockBillingEventSet();
+        events.add(createBillingEvent(sub.getId(), startDate, plan, phaseEvergreen, bcdUTC));
+
+        // Set a target date of today (start date)
+        final LocalDate targetDate = startDate;
+        final Invoice invoice = generator.generateInvoice(accountId, events, null, targetDate, accountTimeZone, Currency.USD);
+
+        assertNotNull(invoice);
+        assertEquals(invoice.getNumberOfItems(), 1);
+        assertEquals(invoice.getInvoiceItems().get(0).getStartDate(), buildDate(2012, 7, 16));
+        assertEquals(invoice.getInvoiceItems().get(0).getEndDate(), buildDate(2012, 8, 16));
     }
 
     @Test(groups = "fast")
