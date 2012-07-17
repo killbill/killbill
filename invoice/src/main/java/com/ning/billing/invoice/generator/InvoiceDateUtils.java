@@ -137,7 +137,7 @@ public class InvoiceDateUtils {
 
     public static LocalDate calculateBillingCycleDateOnOrAfter(final LocalDate date, final DateTimeZone accountTimeZone,
                                                                final int billingCycleDayLocal) {
-        final DateTime tmp = new DateTime(date.toDateTimeAtStartOfDay(), accountTimeZone);
+        final DateTime tmp = date.toDateTimeAtStartOfDay(accountTimeZone);
         final DateTime proposedDateTime = calculateBillingCycleDateOnOrAfter(tmp, billingCycleDayLocal);
 
         return new LocalDate(proposedDateTime, accountTimeZone);
@@ -145,7 +145,7 @@ public class InvoiceDateUtils {
 
     public static LocalDate calculateBillingCycleDateAfter(final LocalDate date, final DateTimeZone accountTimeZone,
                                                            final int billingCycleDayLocal) {
-        final DateTime tmp = new DateTime(date.toDateTimeAtStartOfDay(), accountTimeZone);
+        final DateTime tmp = date.toDateTimeAtStartOfDay(accountTimeZone);
         final DateTime proposedDateTime = calculateBillingCycleDateAfter(tmp, billingCycleDayLocal);
 
         return new LocalDate(proposedDateTime, accountTimeZone);

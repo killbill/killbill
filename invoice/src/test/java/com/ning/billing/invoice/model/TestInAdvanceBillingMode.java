@@ -20,6 +20,7 @@ import java.math.BigDecimal;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.testng.Assert;
@@ -31,6 +32,32 @@ public class TestInAdvanceBillingMode {
 
     private static final DateTimeZone TIMEZONE = DateTimeZone.forID("Pacific/Pitcairn");
     public static final BillingPeriod BILLING_PERIOD = BillingPeriod.MONTHLY;
+
+    @Test(groups = "fast")
+    public void testItemShouldNotStartInThePast() throws Exception {
+        final LocalDate startDate = new LocalDate(2012, 7, 16);
+        final LocalDate endDate = new LocalDate(2012, 7, 16);
+        final LocalDate targetDate = new LocalDate(2012, 7, 16);
+        final int billingCycleDayLocal = 15;
+
+        final LinkedHashMap<LocalDate, LocalDate> expectedDates = new LinkedHashMap<LocalDate, LocalDate>();
+        expectedDates.put(new LocalDate(2012, 7, 16), new LocalDate(2012, 8, 15));
+
+        verifyInvoiceItems(startDate, endDate, targetDate, TIMEZONE, billingCycleDayLocal, BILLING_PERIOD, expectedDates);
+    }
+
+    @Test(groups = "fast")
+    public void testCalculateSimpleInvoiceItemWithNoEndDate() throws Exception {
+        final LocalDate startDate = new LocalDate(new DateTime("2012-07-17T02:25:33.000Z", DateTimeZone.UTC), TIMEZONE);
+        final LocalDate endDate = null;
+        final LocalDate targetDate = new LocalDate(2012, 7, 16);
+        final int billingCycleDayLocal = 15;
+
+        final LinkedHashMap<LocalDate, LocalDate> expectedDates = new LinkedHashMap<LocalDate, LocalDate>();
+        expectedDates.put(new LocalDate(2012, 7, 16), new LocalDate(2012, 8, 15));
+
+        verifyInvoiceItems(startDate, endDate, targetDate, TIMEZONE, billingCycleDayLocal, BILLING_PERIOD, expectedDates);
+    }
 
     @Test(groups = "fast")
     public void testCalculateSimpleInvoiceItemWithBCDBeforeStartDay() throws Exception {
