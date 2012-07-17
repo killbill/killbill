@@ -52,7 +52,6 @@ public class BillCycleDayCalculator {
 
     @Inject
     public BillCycleDayCalculator(final CatalogService catalogService, final EntitlementUserApi entitlementApi) {
-        super();
         this.catalogService = catalogService;
         this.entitlementApi = entitlementApi;
     }
@@ -81,6 +80,12 @@ public class BillCycleDayCalculator {
                                        phase.getPhaseType()),
                 transition.getRequestedTransitionTime());
 
+        return calculateBcdForAlignment(alignment, bundle, subscription, account, catalog, plan);
+    }
+
+    @VisibleForTesting
+    BillCycleDay calculateBcdForAlignment(final BillingAlignment alignment, final SubscriptionBundle bundle, final Subscription subscription,
+                                          final Account account, final Catalog catalog, final Plan plan) throws AccountApiException, EntitlementUserApiException, CatalogApiException {
         BillCycleDay result = null;
         switch (alignment) {
             case ACCOUNT:

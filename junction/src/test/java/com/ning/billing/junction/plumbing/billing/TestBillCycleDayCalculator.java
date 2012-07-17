@@ -16,6 +16,8 @@
 
 package com.ning.billing.junction.plumbing.billing;
 
+import java.util.UUID;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.mockito.Mockito;
@@ -25,12 +27,50 @@ import org.testng.annotations.Test;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.BillCycleDay;
+import com.ning.billing.catalog.api.BillingAlignment;
+import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 
 public class TestBillCycleDayCalculator {
+
+    @Test(groups = "fast")
+    public void testCalculateBCDForAOWithBPCancelledBundleAligned() throws Exception {
+        final DateTimeZone accountTimeZone = DateTimeZone.UTC;
+        final DateTime bpStartDateUTC = new DateTime(2012, 7, 16, 21, 0, 0, DateTimeZone.UTC);
+        final int expectedBCDUTC = 16;
+
+        // Create the calculator
+        final CatalogService catalogService = Mockito.mock(CatalogService.class);
+        final EntitlementUserApi entitlementUserApi = Mockito.mock(EntitlementUserApi.class);
+        final BillCycleDayCalculator billCycleDayCalculator = new BillCycleDayCalculator(catalogService, entitlementUserApi);
+
+        // Create a Bundle associated with a subscription
+        final SubscriptionBundle bundle = Mockito.mock(SubscriptionBundle.class);
+        final EffectiveSubscriptionEvent previousTransition = Mockito.mock(EffectiveSubscriptionEvent.class);
+        final Subscription subscription = Mockito.mock(Subscription.class);
+        Mockito.when(subscription.getStartDate()).thenReturn(bpStartDateUTC);
+        Mockito.when(subscription.getPreviousTransition()).thenReturn(previousTransition);
+        // subscription.getCurrentPlan() will return null as expected (cancelled BP)
+        Mockito.when(entitlementUserApi.getBaseSubscription(Mockito.<UUID>any())).thenReturn(subscription);
+
+        // Create a the base plan associated with that subscription
+        final Plan plan = Mockito.mock(Plan.class);
+        Mockito.when(plan.dateOfFirstRecurringNonZeroCharge(bpStartDateUTC)).thenReturn(bpStartDateUTC);
+        final Catalog catalog = Mockito.mock(Catalog.class);
+        Mockito.when(catalog.findPlan(Mockito.anyString(), Mockito.<DateTime>any(), Mockito.<DateTime>any())).thenReturn(plan);
+
+        final Account account = Mockito.mock(Account.class);
+        Mockito.when(account.getTimeZone()).thenReturn(accountTimeZone);
+        final BillCycleDay billCycleDay = billCycleDayCalculator.calculateBcdForAlignment(BillingAlignment.BUNDLE, bundle, subscription,
+                                                                                          account, catalog, null);
+
+        Assert.assertEquals(billCycleDay.getDayOfMonthUTC(), expectedBCDUTC);
+    }
 
     @Test(groups = "fast")
     public void testCalculateBCDWithTimeZoneHST() throws Exception {
