@@ -194,35 +194,23 @@ public class DefaultBillingEvent implements BillingEvent {
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
-        sb.append("BillingEvent {subscriptionId = ").append(subscription.getId().toString()).append(", ");
-        sb.append("plan = ").append(plan.getName()).append(", ");
-        sb.append("phase = ").append(planPhase.getName()).append(", ");
-        sb.append("effectiveDate = ").append(effectiveDate.toString()).append(", ");
-        sb.append("billCycleDay = ").append(billCycleDay).append(", ");
-        sb.append("recurringPrice = ");
-
-        try {
-            sb.append(recurringPrice.toString());
-        } catch (Exception e) {
-            sb.append("null");
-        }
-
-        sb.append(", ");
-        sb.append("fixedPrice = ");
-
-        try {
-            sb.append(fixedPrice.toString());
-        } catch (Exception e) {
-            sb.append("null");
-        }
-        sb.append(", ");
-
-        sb.append("currency = ").append(currency.toString()).append(", ");
-        sb.append("billingPeriod = ").append(billingPeriod.toString());
-        sb.append(", ");
-        sb.append("totalOrdering = ").append(getTotalOrdering().toString());
-        sb.append("}");
-
+        sb.append("DefaultBillingEvent");
+        sb.append("{account=").append(account);
+        sb.append(", billCycleDay=").append(billCycleDay);
+        sb.append(", subscription=").append(subscription);
+        sb.append(", effectiveDate=").append(effectiveDate);
+        sb.append(", planPhase=").append(planPhase);
+        sb.append(", plan=").append(plan);
+        sb.append(", fixedPrice=").append(fixedPrice);
+        sb.append(", recurringPrice=").append(recurringPrice);
+        sb.append(", currency=").append(currency);
+        sb.append(", description='").append(description).append('\'');
+        sb.append(", billingModeType=").append(billingModeType);
+        sb.append(", billingPeriod=").append(billingPeriod);
+        sb.append(", type=").append(type);
+        sb.append(", totalOrdering=").append(totalOrdering);
+        sb.append(", timeZone=").append(timeZone);
+        sb.append('}');
         return sb.toString();
     }
 

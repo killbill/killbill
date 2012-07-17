@@ -24,6 +24,8 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.ning.billing.catalog.api.BillingPeriod;
 
@@ -35,6 +37,8 @@ import static com.ning.billing.invoice.generator.InvoiceDateUtils.calculateProRa
 import static com.ning.billing.invoice.generator.InvoiceDateUtils.calculateProRationBeforeFirstBillingPeriod;
 
 public class InAdvanceBillingMode implements BillingMode {
+
+    private static final Logger log = LoggerFactory.getLogger(InAdvanceBillingMode.class);
 
     @Override
     public List<RecurringInvoiceItemData> calculateInvoiceItemData(final LocalDate startDate, @Nullable final LocalDate endDate,
@@ -56,7 +60,10 @@ public class InAdvanceBillingMode implements BillingMode {
         if (firstBillingCycleDate.isAfter(startDate)) {
             final BigDecimal leadingProRationPeriods = calculateProRationBeforeFirstBillingPeriod(startDate, firstBillingCycleDate, billingPeriod);
             if (leadingProRationPeriods != null && leadingProRationPeriods.compareTo(BigDecimal.ZERO) > 0) {
-                results.add(new RecurringInvoiceItemData(startDate, firstBillingCycleDate, leadingProRationPeriods));
+                // Not common - add info in the logs for debugging purposes
+                final RecurringInvoiceItemData itemData = new RecurringInvoiceItemData(startDate, firstBillingCycleDate, leadingProRationPeriods);
+                log.info("Adding pro-ration: {}", itemData);
+                results.add(itemData);
             }
         }
 
@@ -93,7 +100,10 @@ public class InAdvanceBillingMode implements BillingMode {
         if (effectiveEndDate.isAfter(lastBillingCycleDate)) {
             final BigDecimal trailingProRationPeriods = calculateProRationAfterLastBillingCycleDate(effectiveEndDate, lastBillingCycleDate, billingPeriod);
             if (trailingProRationPeriods.compareTo(BigDecimal.ZERO) > 0) {
-                results.add(new RecurringInvoiceItemData(lastBillingCycleDate, effectiveEndDate, trailingProRationPeriods));
+                // Not common - add info in the logs for debugging purposes
+                final RecurringInvoiceItemData itemData = new RecurringInvoiceItemData(lastBillingCycleDate, effectiveEndDate, trailingProRationPeriods);
+                log.info("Adding trailing pro-ration: {}", itemData);
+                results.add(itemData);
             }
         }
         return results;
