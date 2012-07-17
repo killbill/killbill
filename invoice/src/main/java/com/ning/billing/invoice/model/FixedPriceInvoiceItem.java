@@ -93,7 +93,6 @@ public class FixedPriceInvoiceItem extends InvoiceItemBase {
         sb.append("planName = ").append(planName).append(", ");
         sb.append("phaseName = ").append(phaseName).append(", ");
         sb.append("startDate = ").append(startDate.toString()).append(", ");
-        sb.append("endDate = ").append(endDate.toString()).append(", ");
 
         sb.append("amount = ");
         if (amount == null) {
