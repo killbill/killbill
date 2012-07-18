@@ -16,6 +16,10 @@
 
 package com.ning.billing.jaxrs.resources;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -25,24 +29,13 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.UriInfo;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
-import com.google.inject.Inject;
-import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.AccountUserApi;
-import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
 import com.ning.billing.jaxrs.json.RefundJson;
 import com.ning.billing.jaxrs.util.Context;
@@ -54,6 +47,10 @@ import com.ning.billing.payment.api.Refund;
 import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.dao.ObjectType;
+
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
+import com.google.inject.Inject;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
@@ -70,35 +67,30 @@ public class PaymentResource extends JaxRsResourceBase {
 
     @Inject
     public PaymentResource(final JaxrsUriBuilder uriBuilder,
-            final AccountUserApi accountApi,
-            final PaymentApi paymentApi,
-            final TagUserApi tagUserApi,
-            final CustomFieldUserApi customFieldUserApi,
-            final Context context) {
+                           final AccountUserApi accountApi,
+                           final PaymentApi paymentApi,
+                           final TagUserApi tagUserApi,
+                           final CustomFieldUserApi customFieldUserApi,
+                           final Context context) {
         super(uriBuilder, tagUserApi, customFieldUserApi);
         this.context = context;
         this.paymentApi = paymentApi;
         this.accountApi = accountApi;
     }
 
-
     @GET
     @Path("/{paymentId:" + UUID_PATTERN + "}/" + REFUNDS)
     @Produces(APPLICATION_JSON)
-    public Response getRefunds(@PathParam("paymentId") final String paymentId) {
+    public Response getRefunds(@PathParam("paymentId") final String paymentId) throws PaymentApiException {
+        final List<Refund> refunds = paymentApi.getPaymentRefunds(UUID.fromString(paymentId));
+        final List<RefundJson> result = new ArrayList<RefundJson>(Collections2.transform(refunds, new Function<Refund, RefundJson>() {
+            @Override
+            public RefundJson apply(final Refund input) {
+                return new RefundJson(input);
+            }
+        }));
 
-        try {
-            List<Refund> refunds =  paymentApi.getPaymentRefunds(UUID.fromString(paymentId));
-            List<RefundJson> result = new ArrayList<RefundJson>(Collections2.transform(refunds, new Function<Refund, RefundJson>() {
-                @Override
-                public RefundJson apply(Refund input) {
-                    return new RefundJson(input);
-                }
-            }));
-            return Response.status(Status.OK).entity(result).build();
-        } catch (PaymentApiException e) {
-            return Response.status(Status.BAD_REQUEST).build();
-        }
+        return Response.status(Status.OK).entity(result).build();
     }
 
     @POST
@@ -106,30 +98,18 @@ public class PaymentResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response createRefund(final RefundJson json,
-            @PathParam("paymentId") final String paymentId,
-            @HeaderParam(HDR_CREATED_BY) final String createdBy,
-            @HeaderParam(HDR_REASON) final String reason,
-            @HeaderParam(HDR_COMMENT) final String comment,
-            @javax.ws.rs.core.Context final UriInfo uriInfo) {
+                                 @PathParam("paymentId") final String paymentId,
+                                 @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                 @HeaderParam(HDR_REASON) final String reason,
+                                 @HeaderParam(HDR_COMMENT) final String comment,
+                                 @javax.ws.rs.core.Context final UriInfo uriInfo) throws PaymentApiException, AccountApiException {
+        final UUID paymentUuid = UUID.fromString(paymentId);
+        final Payment payment = paymentApi.getPayment(paymentUuid);
+        final Account account = accountApi.getAccountById(payment.getAccountId());
 
-        try {
+        final Refund result = paymentApi.createRefund(account, paymentUuid, json.getRefundAmount(), json.isAdjusted(), context.createContext(createdBy, reason, comment));
 
-            final UUID paymentUuid = UUID.fromString(paymentId);
-            final Payment payment = paymentApi.getPayment(paymentUuid);
-            final Account account = accountApi.getAccountById(payment.getAccountId());
-
-
-            Refund result = paymentApi.createRefund(account, paymentUuid, json.getRefundAmount(), json.isAdjusted(), context.createContext(createdBy, reason, comment));
-            return uriBuilder.buildResponse(RefundResource.class, "getRefund", result.getId(), uriInfo.getBaseUri().toString());
-        } catch (AccountApiException e) {
-            if (e.getCode() == ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID.getCode()) {
-                return Response.status(Status.NO_CONTENT).build();
-            } else {
-                return Response.status(Status.BAD_REQUEST).build();
-            }
-        } catch (PaymentApiException e) {
-            return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).type(MediaType.TEXT_PLAIN).build();
-        }
+        return uriBuilder.buildResponse(RefundResource.class, "getRefund", result.getId(), uriInfo.getBaseUri().toString());
     }
 
     @GET
@@ -147,8 +127,9 @@ public class PaymentResource extends JaxRsResourceBase {
                                        final List<CustomFieldJson> customFields,
                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                        @HeaderParam(HDR_REASON) final String reason,
-                                       @HeaderParam(HDR_COMMENT) final String comment) {
-        return super.createCustomFields(UUID.fromString(id), customFields,
+                                       @HeaderParam(HDR_COMMENT) final String comment,
+                                       @javax.ws.rs.core.Context final UriInfo uriInfo) {
+        return super.createCustomFields(UUID.fromString(id), customFields, uriInfo,
                                         context.createContext(createdBy, reason, comment));
     }
 
@@ -160,8 +141,9 @@ public class PaymentResource extends JaxRsResourceBase {
                                        @QueryParam(QUERY_CUSTOM_FIELDS) final String customFieldList,
                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                        @HeaderParam(HDR_REASON) final String reason,
-                                       @HeaderParam(HDR_COMMENT) final String comment) {
-        return super.deleteCustomFields(UUID.fromString(id), customFieldList,
+                                       @HeaderParam(HDR_COMMENT) final String comment,
+                                       @javax.ws.rs.core.Context final UriInfo uriInfo) {
+        return super.deleteCustomFields(UUID.fromString(id), customFieldList, uriInfo,
                                         context.createContext(createdBy, reason, comment));
     }
 
@@ -194,9 +176,9 @@ public class PaymentResource extends JaxRsResourceBase {
                                @QueryParam(QUERY_TAGS) final String tagList,
                                @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                @HeaderParam(HDR_REASON) final String reason,
-                               @HeaderParam(HDR_COMMENT) final String comment) {
-
-        return super.deleteTags(UUID.fromString(id), tagList,
+                               @HeaderParam(HDR_COMMENT) final String comment,
+                               @javax.ws.rs.core.Context final UriInfo uriInfo) {
+        return super.deleteTags(UUID.fromString(id), tagList, uriInfo,
                                 context.createContext(createdBy, reason, comment));
     }
 
