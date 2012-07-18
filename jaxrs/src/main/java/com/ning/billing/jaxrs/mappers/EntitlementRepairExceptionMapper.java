@@ -16,17 +16,58 @@
 
 package com.ning.billing.jaxrs.mappers;
 
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
+import com.ning.billing.ErrorCode;
 import com.ning.billing.entitlement.api.timeline.EntitlementRepairException;
 
 @Provider
 public class EntitlementRepairExceptionMapper extends ExceptionMapperBase implements ExceptionMapper<EntitlementRepairException> {
 
+    private final UriInfo uriInfo;
+
+    public EntitlementRepairExceptionMapper(@Context final UriInfo uriInfo) {
+        this.uriInfo = uriInfo;
+    }
+
     @Override
     public Response toResponse(final EntitlementRepairException exception) {
-        return null;
+        if (exception.getCode() == ErrorCode.ENT_REPAIR_AO_CREATE_BEFORE_BP_START.getCode()) {
+            return buildBadRequestResponse(exception, uriInfo);
+        } else if (exception.getCode() == ErrorCode.ENT_REPAIR_BP_RECREATE_MISSING_AO.getCode()) {
+            return buildBadRequestResponse(exception, uriInfo);
+        } else if (exception.getCode() == ErrorCode.ENT_REPAIR_BP_RECREATE_MISSING_AO_CREATE.getCode()) {
+            return buildBadRequestResponse(exception, uriInfo);
+        } else if (exception.getCode() == ErrorCode.ENT_REPAIR_INVALID_DELETE_SET.getCode()) {
+            return buildBadRequestResponse(exception, uriInfo);
+        } else if (exception.getCode() == ErrorCode.ENT_REPAIR_MISSING_AO_DELETE_EVENT.getCode()) {
+            return buildBadRequestResponse(exception, uriInfo);
+        } else if (exception.getCode() == ErrorCode.ENT_REPAIR_NEW_EVENT_BEFORE_LAST_AO_REMAINING.getCode()) {
+            return buildBadRequestResponse(exception, uriInfo);
+        } else if (exception.getCode() == ErrorCode.ENT_REPAIR_NEW_EVENT_BEFORE_LAST_BP_REMAINING.getCode()) {
+            return buildBadRequestResponse(exception, uriInfo);
+        } else if (exception.getCode() == ErrorCode.ENT_REPAIR_NO_ACTIVE_SUBSCRIPTIONS.getCode()) {
+            return buildBadRequestResponse(exception, uriInfo);
+        } else if (exception.getCode() == ErrorCode.ENT_REPAIR_NON_EXISTENT_DELETE_EVENT.getCode()) {
+            return buildNotFoundResponse(exception, uriInfo);
+        } else if (exception.getCode() == ErrorCode.ENT_REPAIR_SUB_EMPTY.getCode()) {
+            return buildBadRequestResponse(exception, uriInfo);
+        } else if (exception.getCode() == ErrorCode.ENT_REPAIR_SUB_RECREATE_NOT_EMPTY.getCode()) {
+            return buildBadRequestResponse(exception, uriInfo);
+        } else if (exception.getCode() == ErrorCode.ENT_REPAIR_UNKNOWN_BUNDLE.getCode()) {
+            return buildNotFoundResponse(exception, uriInfo);
+        } else if (exception.getCode() == ErrorCode.ENT_REPAIR_UNKNOWN_SUBSCRIPTION.getCode()) {
+            return buildNotFoundResponse(exception, uriInfo);
+        } else if (exception.getCode() == ErrorCode.ENT_REPAIR_UNKNOWN_TYPE.getCode()) {
+            return buildNotFoundResponse(exception, uriInfo);
+        } else if (exception.getCode() == ErrorCode.ENT_REPAIR_VIEW_CHANGED.getCode()) {
+            return buildBadRequestResponse(exception, uriInfo);
+        } else {
+            return buildBadRequestResponse(exception, uriInfo);
+        }
     }
 }
