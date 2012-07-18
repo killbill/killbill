@@ -16,12 +16,14 @@
 
 package com.ning.billing.jaxrs.mappers;
 
+import javax.inject.Singleton;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
+@Singleton
 @Provider
 public class IllegalArgumentExceptionMapper extends ExceptionMapperBase implements ExceptionMapper<IllegalArgumentException> {
 

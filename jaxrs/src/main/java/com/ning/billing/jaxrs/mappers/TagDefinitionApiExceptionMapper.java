@@ -16,6 +16,7 @@
 
 package com.ning.billing.jaxrs.mappers;
 
+import javax.inject.Singleton;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
@@ -25,6 +26,7 @@ import javax.ws.rs.ext.Provider;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.util.api.TagDefinitionApiException;
 
+@Singleton
 @Provider
 public class TagDefinitionApiExceptionMapper extends ExceptionMapperBase implements ExceptionMapper<TagDefinitionApiException> {
 

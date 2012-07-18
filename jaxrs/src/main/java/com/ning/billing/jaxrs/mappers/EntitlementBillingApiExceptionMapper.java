@@ -16,12 +16,14 @@
 
 package com.ning.billing.jaxrs.mappers;
 
+import javax.inject.Singleton;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
 import com.ning.billing.entitlement.api.billing.EntitlementBillingApiException;
 
+@Singleton
 @Provider
 public class EntitlementBillingApiExceptionMapper extends ExceptionMapperBase implements ExceptionMapper<EntitlementBillingApiException> {
 
