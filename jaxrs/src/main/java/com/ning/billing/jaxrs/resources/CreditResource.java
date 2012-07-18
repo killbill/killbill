@@ -16,6 +16,8 @@
 
 package com.ning.billing.jaxrs.resources;
 
+import java.util.UUID;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
@@ -25,14 +27,11 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.UUID;
 
 import org.joda.time.LocalDate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
@@ -44,11 +43,15 @@ import com.ning.billing.jaxrs.json.CreditJson;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Singleton
 @Path(JaxrsResource.CREDITS_PATH)
 public class CreditResource implements JaxrsResource {
+
     private static final Logger log = LoggerFactory.getLogger(CreditResource.class);
 
     private final JaxrsUriBuilder uriBuilder;
@@ -101,8 +104,16 @@ public class CreditResource implements JaxrsResource {
             final Account account = accountUserApi.getAccountById(accountId);
             final LocalDate effectiveDate = json.getEffectiveDate().toDateTime(account.getTimeZone()).toLocalDate();
 
-            final InvoiceItem credit = invoiceUserApi.insertCredit(account.getId(), json.getCreditAmount(), effectiveDate,
-                                                                   account.getCurrency(), context.createContext(createdBy, reason, comment));
+            final InvoiceItem credit;
+            if (json.getInvoiceId() != null) {
+                // Apply an invoice level credit
+                credit = invoiceUserApi.insertCreditForInvoice(account.getId(), json.getInvoiceId(), json.getCreditAmount(),
+                                                               effectiveDate, account.getCurrency(), context.createContext(createdBy, reason, comment));
+            } else {
+                // Apply a account level credit
+                credit = invoiceUserApi.insertCredit(account.getId(), json.getCreditAmount(), effectiveDate,
+                                                     account.getCurrency(), context.createContext(createdBy, reason, comment));
+            }
 
             return uriBuilder.buildResponse(CreditResource.class, "getCredit", credit.getId());
         } catch (InvoiceApiException e) {
