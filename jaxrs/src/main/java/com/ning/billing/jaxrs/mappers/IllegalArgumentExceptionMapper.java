@@ -16,15 +16,24 @@
 
 package com.ning.billing.jaxrs.mappers;
 
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
 @Provider
 public class IllegalArgumentExceptionMapper extends ExceptionMapperBase implements ExceptionMapper<IllegalArgumentException> {
 
+    private final UriInfo uriInfo;
+
+    public IllegalArgumentExceptionMapper(@Context final UriInfo uriInfo) {
+        this.uriInfo = uriInfo;
+    }
+
     @Override
     public Response toResponse(final IllegalArgumentException exception) {
-        return null;
+        // Likely bad UUID String
+        return buildBadRequestResponse(exception, uriInfo);
     }
 }

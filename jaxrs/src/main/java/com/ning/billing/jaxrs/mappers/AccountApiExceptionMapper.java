@@ -16,17 +16,44 @@
 
 package com.ning.billing.jaxrs.mappers;
 
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
+import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.AccountApiException;
 
 @Provider
 public class AccountApiExceptionMapper extends ExceptionMapperBase implements ExceptionMapper<AccountApiException> {
 
+    private final UriInfo uriInfo;
+
+    public AccountApiExceptionMapper(@Context final UriInfo uriInfo) {
+        this.uriInfo = uriInfo;
+    }
+
     @Override
     public Response toResponse(final AccountApiException exception) {
-        return null;
+        if (exception.getCode() == ErrorCode.ACCOUNT_ALREADY_EXISTS.getCode()) {
+            return buildConflictingRequestResponse(exception, uriInfo);
+        } else if (exception.getCode() == ErrorCode.ACCOUNT_CANNOT_CHANGE_EXTERNAL_KEY.getCode()) {
+            return buildBadRequestResponse(exception, uriInfo);
+        } else if (exception.getCode() == ErrorCode.ACCOUNT_CANNOT_MAP_NULL_KEY.getCode()) {
+            return buildBadRequestResponse(exception, uriInfo);
+        } else if (exception.getCode() == ErrorCode.ACCOUNT_CREATION_FAILED.getCode()) {
+            return buildInternalErrorResponse(exception, uriInfo);
+        } else if (exception.getCode() == ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID.getCode()) {
+            return buildNotFoundResponse(exception, uriInfo);
+        } else if (exception.getCode() == ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_KEY.getCode()) {
+            return buildNotFoundResponse(exception, uriInfo);
+        } else if (exception.getCode() == ErrorCode.ACCOUNT_INVALID_NAME.getCode()) {
+            return buildBadRequestResponse(exception, uriInfo);
+        } else if (exception.getCode() == ErrorCode.ACCOUNT_UPDATE_FAILED.getCode()) {
+            return buildInternalErrorResponse(exception, uriInfo);
+        } else {
+            return buildBadRequestResponse(exception, uriInfo);
+        }
     }
 }

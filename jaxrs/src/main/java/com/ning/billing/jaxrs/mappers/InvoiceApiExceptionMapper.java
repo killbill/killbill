@@ -16,17 +16,48 @@
 
 package com.ning.billing.jaxrs.mappers;
 
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
+import com.ning.billing.ErrorCode;
 import com.ning.billing.invoice.api.InvoiceApiException;
 
 @Provider
 public class InvoiceApiExceptionMapper extends ExceptionMapperBase implements ExceptionMapper<InvoiceApiException> {
 
+    private final UriInfo uriInfo;
+
+    public InvoiceApiExceptionMapper(@Context final UriInfo uriInfo) {
+        this.uriInfo = uriInfo;
+    }
+
     @Override
     public Response toResponse(final InvoiceApiException exception) {
-        return null;
+        if (exception.getCode() == ErrorCode.INVOICE_ACCOUNT_ID_INVALID.getCode()) {
+            return buildBadRequestResponse(exception, uriInfo);
+        } else if (exception.getCode() == ErrorCode.INVOICE_INVALID_DATE_SEQUENCE.getCode()) {
+            return buildBadRequestResponse(exception, uriInfo);
+        } else if (exception.getCode() == ErrorCode.INVOICE_INVALID_TRANSITION.getCode()) {
+            return buildBadRequestResponse(exception, uriInfo);
+        } else if (exception.getCode() == ErrorCode.INVOICE_NO_ACCOUNT_ID_FOR_SUBSCRIPTION_ID.getCode()) {
+            return buildNotFoundResponse(exception, uriInfo);
+        } else if (exception.getCode() == ErrorCode.INVOICE_NO_SUCH_CREDIT.getCode()) {
+            return buildNotFoundResponse(exception, uriInfo);
+        } else if (exception.getCode() == ErrorCode.INVOICE_NOT_FOUND.getCode()) {
+            return buildNotFoundResponse(exception, uriInfo);
+        } else if (exception.getCode() == ErrorCode.INVOICE_NOTHING_TO_DO.getCode()) {
+            return buildBadRequestResponse(exception, uriInfo);
+        } else if (exception.getCode() == ErrorCode.INVOICE_PAYMENT_BY_ATTEMPT_NOT_FOUND.getCode()) {
+            return buildNotFoundResponse(exception, uriInfo);
+        } else if (exception.getCode() == ErrorCode.INVOICE_PAYMENT_NOT_FOUND.getCode()) {
+            return buildNotFoundResponse(exception, uriInfo);
+        } else if (exception.getCode() == ErrorCode.INVOICE_TARGET_DATE_TOO_FAR_IN_THE_FUTURE.getCode()) {
+            return buildBadRequestResponse(exception, uriInfo);
+        } else {
+            return buildBadRequestResponse(exception, uriInfo);
+        }
     }
 }
