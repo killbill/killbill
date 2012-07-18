@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2012 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -13,13 +13,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.jaxrs;
-
-
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -35,7 +30,6 @@ import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.jaxrs.json.AccountJson;
@@ -49,15 +43,20 @@ import com.ning.billing.jaxrs.json.RefundJson;
 import com.ning.billing.jaxrs.json.SubscriptionJsonNoEvents;
 import com.ning.billing.jaxrs.json.TagDefinitionJson;
 import com.ning.billing.jaxrs.resources.JaxrsResource;
-import com.ning.billing.mock.api.MockBillCycleDay;
 import com.ning.http.client.Response;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
 
 public class TestAccount extends TestJaxrsBase {
 
     private static final Logger log = LoggerFactory.getLogger(TestAccount.class);
 
-    @Test(groups = "slow", enabled = true)
+    @Test(groups = "slow")
     public void testAccountOk() throws Exception {
 
         final AccountJson input = createAccount("xoxo", "shdgfhwe", "xoxo@yahoo.com");
@@ -73,8 +72,8 @@ public class TestAccount extends TestJaxrsBase {
 
         // Update Account
         final AccountJson newInput = new AccountJson(objFromJson.getAccountId(),
-                                               "zozo", 4, objFromJson.getExternalKey(), "rr@google.com", new BillCycleDayJson(18, 18),
-                                               "EUR", null, "UTC", "bl1", "bh2", "", "ca", "usa", "415-255-2991");
+                                                     "zozo", 4, objFromJson.getExternalKey(), "rr@google.com", new BillCycleDayJson(18, 18),
+                                                     "EUR", null, "UTC", "bl1", "bh2", "", "ca", "usa", "415-255-2991");
         baseJson = mapper.writeValueAsString(newInput);
         final String uri = JaxrsResource.ACCOUNTS_PATH + "/" + objFromJson.getAccountId();
         response = doPut(uri, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
@@ -84,45 +83,39 @@ public class TestAccount extends TestJaxrsBase {
         Assert.assertTrue(objFromJson.equals(newInput));
     }
 
-
-    @Test(groups = "slow", enabled = true)
+    @Test(groups = "slow")
     public void testUpdateNonExistentAccount() throws Exception {
         final AccountJson input = getAccountJson("xoxo", "shghaahwe", "xoxo@yahoo.com");
         final String baseJson = mapper.writeValueAsString(input);
         final String uri = JaxrsResource.ACCOUNTS_PATH + "/" + input.getAccountId();
         final Response response = doPut(uri, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        Assert.assertEquals(response.getStatusCode(), Status.NO_CONTENT.getStatusCode());
-        final String body = response.getResponseBody();
-        Assert.assertEquals(body, "");
+        Assert.assertEquals(response.getStatusCode(), Status.NOT_FOUND.getStatusCode());
     }
 
-
-    @Test(groups = "slow", enabled = true)
+    @Test(groups = "slow")
     public void testAccountNonExistent() throws Exception {
         final String uri = JaxrsResource.ACCOUNTS_PATH + "/99999999-b103-42f3-8b6e-dd244f1d0747";
         final Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        Assert.assertEquals(response.getStatusCode(), Status.NO_CONTENT.getStatusCode());
+        Assert.assertEquals(response.getStatusCode(), Status.NOT_FOUND.getStatusCode());
     }
 
-    @Test(groups = "slow", enabled = true)
+    @Test(groups = "slow")
     public void testAccountBadAccountId() throws Exception {
         final String uri = JaxrsResource.ACCOUNTS_PATH + "/yo";
         final Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.NOT_FOUND.getStatusCode());
     }
 
-    @Test(groups = "slow", enabled = true)
+    @Test(groups = "slow")
     public void testAccountTimeline() throws Exception {
 
         clock.setTime(new DateTime(2012, 4, 25, 0, 3, 42, 0));
-
 
         final AccountJson accountJson = createAccountWithDefaultPaymentMethod("poney", "shdddqgfhwe", "poney@yahoo.com");
         assertNotNull(accountJson);
 
         final BundleJsonNoSubscriptions bundleJson = createBundle(accountJson.getAccountId(), "996599");
         assertNotNull(bundleJson);
-
 
         final SubscriptionJsonNoEvents subscriptionJson = createSubscription(bundleJson.getBundleId(), "Shotgun", ProductCategory.BASE.toString(), BillingPeriod.MONTHLY.toString(), true);
         assertNotNull(subscriptionJson);
@@ -148,8 +141,7 @@ public class TestAccount extends TestJaxrsBase {
         Assert.assertEquals(objFromJson.getBundles().get(0).getSubscriptions().get(0).getEvents().size(), 2);
     }
 
-
-    @Test(groups = "slow", enabled = true)
+    @Test(groups = "slow")
     public void testAccountPaymentMethods() throws Exception {
 
         final AccountJson accountJson = createAccount("qwerty", "ytrewq", "qwerty@yahoo.com");
@@ -202,7 +194,6 @@ public class TestAccount extends TestJaxrsBase {
         List<PaymentMethodJson> paymentMethods = mapper.readValue(baseJson, new TypeReference<List<PaymentMethodJson>>() {});
         assertEquals(paymentMethods.size(), 2);
 
-
         //
         // CHANGE DEFAULT
         //
@@ -236,7 +227,7 @@ public class TestAccount extends TestJaxrsBase {
         assertEquals(paymentMethods.size(), 1);
     }
 
-    @Test(groups = "slow", enabled = true)
+    @Test(groups = "slow")
     public void testAccountPaymentsWithRefund() throws Exception {
 
         //clock.setTime(new DateTime(2012, 4, 25, 0, 3, 42, 0));
@@ -252,7 +243,6 @@ public class TestAccount extends TestJaxrsBase {
 
         clock.addMonths(1);
         crappyWaitForLackOfProperSynchonization();
-
 
         String uri = JaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAccountId() + "/" + JaxrsResource.PAYMENTS;
 
@@ -271,7 +261,7 @@ public class TestAccount extends TestJaxrsBase {
 
     }
 
-    @Test(groups = "slow", enabled = true)
+    @Test(groups = "slow")
     public void testTags() throws Exception {
 
         // Use tag definition for AUTO_PAY_OFF
@@ -289,10 +279,8 @@ public class TestAccount extends TestJaxrsBase {
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
     }
 
-
-    @Test(groups = "slow", enabled = true)
+    @Test(groups = "slow")
     public void testCustomFields() throws Exception {
-
 
         final AccountJson accountJson = createAccount("yoyoq", "gfgrqe", "yoyoq@yahoo.com");
         assertNotNull(accountJson);

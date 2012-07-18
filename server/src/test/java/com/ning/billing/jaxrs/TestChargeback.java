@@ -21,13 +21,13 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
+import javax.ws.rs.core.Response.Status;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.google.common.collect.ImmutableMap;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.jaxrs.json.AccountJson;
@@ -40,11 +40,15 @@ import com.ning.billing.jaxrs.json.SubscriptionJsonNoEvents;
 import com.ning.billing.jaxrs.resources.JaxrsResource;
 import com.ning.http.client.Response;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.common.collect.ImmutableMap;
+
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
 public class TestChargeback extends TestJaxrsBase {
+
     @Test(groups = "slow")
     public void testAddChargeback() throws Exception {
         final PaymentJsonSimple payment = createAccountWithInvoiceAndPayment();
@@ -53,7 +57,7 @@ public class TestChargeback extends TestJaxrsBase {
 
         // Create the chargeback
         Response response = doPost(JaxrsResource.CHARGEBACKS_PATH, jsonInput, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        assertEquals(response.getStatusCode(), javax.ws.rs.core.Response.Status.CREATED.getStatusCode(), response.getResponseBody());
+        assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode(), response.getResponseBody());
 
         // Find the chargeback by location
         final String location = response.getHeader("Location");
@@ -71,14 +75,14 @@ public class TestChargeback extends TestJaxrsBase {
     }
 
     private void verifyCollectionChargebackResponse(final Response response, final ChargebackJson input) throws IOException {
-        assertEquals(response.getStatusCode(), javax.ws.rs.core.Response.Status.OK.getStatusCode());
+        assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
         final ChargebackCollectionJson objFromJson = mapper.readValue(response.getResponseBody(), ChargebackCollectionJson.class);
         assertEquals(objFromJson.getChargebacks().size(), 1);
         assertTrue(objFromJson.getChargebacks().get(0).getChargebackAmount().compareTo(input.getChargebackAmount()) == 0);
     }
 
     private void verifySingleChargebackResponse(final Response response, final ChargebackJson input) throws IOException {
-        assertEquals(response.getStatusCode(), javax.ws.rs.core.Response.Status.OK.getStatusCode());
+        assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
         final ChargebackJson objFromJson = mapper.readValue(response.getResponseBody(), ChargebackJson.class);
         assertTrue(objFromJson.getChargebackAmount().compareTo(input.getChargebackAmount()) == 0);
     }
@@ -91,7 +95,7 @@ public class TestChargeback extends TestJaxrsBase {
 
         // Try to create the chargeback
         final Response response = doPost(JaxrsResource.CHARGEBACKS_PATH, jsonInput, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        assertEquals(response.getStatusCode(), javax.ws.rs.core.Response.Status.BAD_REQUEST.getStatusCode(), response.getResponseBody());
+        assertEquals(response.getStatusCode(), Status.NOT_FOUND.getStatusCode(), response.getResponseBody());
     }
 
     @Test(groups = "slow")
@@ -101,27 +105,26 @@ public class TestChargeback extends TestJaxrsBase {
 
         // Try to create the chargeback
         final Response response = doPost(JaxrsResource.CHARGEBACKS_PATH, jsonInput, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        assertEquals(response.getStatusCode(), javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getResponseBody());
+        assertEquals(response.getStatusCode(), Status.BAD_REQUEST.getStatusCode(), response.getResponseBody());
     }
 
     @Test(groups = "slow")
     public void testNoChargebackForAccount() throws Exception {
         final String accountId = UUID.randomUUID().toString();
         final Response response = doGet(JaxrsResource.CHARGEBACKS_PATH + "/accounts/" + accountId, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        assertEquals(response.getStatusCode(), javax.ws.rs.core.Response.Status.OK.getStatusCode(), response.getResponseBody());
+        assertEquals(response.getStatusCode(), Status.OK.getStatusCode(), response.getResponseBody());
 
         final ChargebackCollectionJson chargebackCollectionJson = mapper.readValue(response.getResponseBody(), ChargebackCollectionJson.class);
         Assert.assertEquals(chargebackCollectionJson.getAccountId(), accountId);
         Assert.assertEquals(chargebackCollectionJson.getChargebacks().size(), 0);
     }
 
-
     @Test(groups = "slow")
     public void testNoChargebackForPayment() throws Exception {
         final String payment = UUID.randomUUID().toString();
         final Response response = doGet(JaxrsResource.CHARGEBACKS_PATH + "/payments/" + payment, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         // STEPH needs to fix that we get 200 instaed of 204 although stepping through code, i see we do return NO_CONTENT. mistery that needs to be solved!!!!
-        //assertEquals(response.getStatusCode(), javax.ws.rs.core.Response.Status.NO_CONTENT.getStatusCode(), response.getResponseBody());
+        //assertEquals(response.getStatusCode(),Status.NO_CONTENT.getStatusCode(), response.getResponseBody());
     }
 
     private PaymentJsonSimple createAccountWithInvoiceAndPayment() throws Exception {
@@ -147,7 +150,7 @@ public class TestChargeback extends TestJaxrsBase {
 
         // Retrieve the invoice
         final Response response = doGet(JaxrsResource.INVOICES_PATH, ImmutableMap.<String, String>of(JaxrsResource.QUERY_ACCOUNT_ID, accountJson.getAccountId()), DEFAULT_HTTP_TIMEOUT_SEC);
-        Assert.assertEquals(response.getStatusCode(), javax.ws.rs.core.Response.Status.OK.getStatusCode());
+        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
         final String baseJson = response.getResponseBody();
         final List<InvoiceJsonSimple> objFromJson = mapper.readValue(baseJson, new TypeReference<List<InvoiceJsonSimple>>() {});
         assertNotNull(objFromJson);
@@ -162,7 +165,7 @@ public class TestChargeback extends TestJaxrsBase {
         final String uri = JaxrsResource.INVOICES_PATH + "/" + invoice.getInvoiceId() + "/" + JaxrsResource.PAYMENTS;
         final Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
 
-        Assert.assertEquals(response.getStatusCode(), javax.ws.rs.core.Response.Status.OK.getStatusCode());
+        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
         final String baseJson = response.getResponseBody();
         final List<PaymentJsonSimple> objFromJson = mapper.readValue(baseJson, new TypeReference<List<PaymentJsonSimple>>() {});
         assertNotNull(objFromJson);

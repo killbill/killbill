@@ -17,6 +17,7 @@
 package com.ning.billing.jaxrs.mappers;
 
 import javax.inject.Singleton;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
@@ -35,6 +36,14 @@ public class RuntimeExceptionMapper extends ExceptionMapperBase implements Excep
 
     @Override
     public Response toResponse(final RuntimeException exception) {
-        return buildInternalErrorResponse(exception, uriInfo);
+        if (exception instanceof NullPointerException) {
+            // Assume bad payload
+            return buildBadRequestResponse(exception, uriInfo);
+        } else if (exception instanceof WebApplicationException) {
+            // e.g. com.sun.jersey.api.NotFoundException
+            return ((WebApplicationException) exception).getResponse();
+        } else {
+            return buildInternalErrorResponse(exception, uriInfo);
+        }
     }
 }

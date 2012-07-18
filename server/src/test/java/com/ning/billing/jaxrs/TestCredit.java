@@ -19,22 +19,22 @@ package com.ning.billing.jaxrs;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+import javax.ws.rs.core.Response.Status;
+
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.joda.time.LocalDate;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.CreditJson;
 import com.ning.billing.jaxrs.resources.JaxrsResource;
-import com.ning.billing.util.clock.DefaultClock;
 import com.ning.http.client.Response;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
 public class TestCredit extends TestJaxrsBase {
+
     AccountJson accountJson;
 
     @BeforeMethod(groups = "slow")
@@ -54,14 +54,14 @@ public class TestCredit extends TestJaxrsBase {
 
         // Create the credit
         Response response = doPost(JaxrsResource.CREDITS_PATH, jsonInput, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        assertEquals(response.getStatusCode(), javax.ws.rs.core.Response.Status.CREATED.getStatusCode(), response.getResponseBody());
+        assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode(), response.getResponseBody());
 
         final String location = response.getHeader("Location");
         assertNotNull(location);
 
         // Retrieves by Id based on Location returned
         response = doGetWithUrl(location, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        assertEquals(response.getStatusCode(), javax.ws.rs.core.Response.Status.OK.getStatusCode());
+        assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
 
         // We can't just compare the object via .equals() due e.g. to the invoice id
         final CreditJson objFromJson = mapper.readValue(response.getResponseBody(), CreditJson.class);
@@ -81,7 +81,7 @@ public class TestCredit extends TestJaxrsBase {
 
         // Try to create the credit
         final Response response = doPost(JaxrsResource.CREDITS_PATH, jsonInput, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        assertEquals(response.getStatusCode(), javax.ws.rs.core.Response.Status.BAD_REQUEST.getStatusCode(), response.getResponseBody());
+        assertEquals(response.getStatusCode(), Status.NOT_FOUND.getStatusCode(), response.getResponseBody());
     }
 
     @Test(groups = "slow")
@@ -91,12 +91,12 @@ public class TestCredit extends TestJaxrsBase {
 
         // Try to create the credit
         final Response response = doPost(JaxrsResource.CREDITS_PATH, jsonInput, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        assertEquals(response.getStatusCode(), javax.ws.rs.core.Response.Status.BAD_REQUEST.getStatusCode(), response.getResponseBody());
+        assertEquals(response.getStatusCode(), Status.BAD_REQUEST.getStatusCode(), response.getResponseBody());
     }
 
     @Test(groups = "slow")
     public void testCreditDoesNotExist() throws Exception {
         final Response response = doGet(JaxrsResource.CREDITS_PATH + "/" + UUID.randomUUID().toString(), DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        assertEquals(response.getStatusCode(), javax.ws.rs.core.Response.Status.NOT_FOUND.getStatusCode(), response.getResponseBody());
+        assertEquals(response.getStatusCode(), Status.NOT_FOUND.getStatusCode(), response.getResponseBody());
     }
 }

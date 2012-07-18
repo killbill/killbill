@@ -29,17 +29,25 @@ public abstract class ExceptionMapperBase {
     private static final Logger log = LoggerFactory.getLogger(ExceptionMapperBase.class);
 
     protected Response buildConflictingRequestResponse(final Exception e, final UriInfo uriInfo) {
-        log.warn("Conflicting request for {}: {}", uriInfo.getRequestUri(), e);
+        return buildConflictingRequestResponse(e.toString(), uriInfo);
+    }
+
+    protected Response buildConflictingRequestResponse(final String error, final UriInfo uriInfo) {
+        log.warn("Conflicting request for {}: {}", uriInfo.getRequestUri(), error);
         return Response.status(Status.CONFLICT)
-                       .entity(e)
+                       .entity(error)
                        .type(MediaType.TEXT_PLAIN_TYPE)
                        .build();
     }
 
     protected Response buildNotFoundResponse(final Exception e, final UriInfo uriInfo) {
-        log.warn("Not found for {}: {}", uriInfo.getRequestUri(), e);
+        return buildNotFoundResponse(e.toString(), uriInfo);
+    }
+
+    protected Response buildNotFoundResponse(final String error, final UriInfo uriInfo) {
+        log.warn("Not found for {}: {}", uriInfo.getRequestUri(), error);
         return Response.status(Status.NOT_FOUND)
-                       .entity(e)
+                       .entity(error)
                        .type(MediaType.TEXT_PLAIN_TYPE)
                        .build();
     }

@@ -118,7 +118,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                        @QueryParam(QUERY_CALL_TIMEOUT) @DefaultValue("3") final long timeoutSec,
                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                        @HeaderParam(HDR_REASON) final String reason,
-                                       @HeaderParam(HDR_COMMENT) final String comment) {
+                                       @HeaderParam(HDR_COMMENT) final String comment) throws EntitlementUserApiException {
         final SubscriptionCallCompletionCallback<Subscription> callback = new SubscriptionCallCompletionCallback<Subscription>() {
             @Override
             public Subscription doOperation(final CallContext ctx) throws EntitlementUserApiException, InterruptedException, TimeoutException {
@@ -158,7 +158,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                            @QueryParam(QUERY_CALL_TIMEOUT) @DefaultValue("3") final long timeoutSec,
                                            @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                            @HeaderParam(HDR_REASON) final String reason,
-                                           @HeaderParam(HDR_COMMENT) final String comment) {
+                                           @HeaderParam(HDR_COMMENT) final String comment) throws EntitlementUserApiException {
         final SubscriptionCallCompletionCallback<Response> callback = new SubscriptionCallCompletionCallback<Response>() {
 
             private boolean isImmediateOp = true;
@@ -216,7 +216,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                            @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                            @HeaderParam(HDR_REASON) final String reason,
                                            @HeaderParam(HDR_COMMENT) final String comment,
-                                           @javax.ws.rs.core.Context final UriInfo uriInfo) {
+                                           @javax.ws.rs.core.Context final UriInfo uriInfo) throws EntitlementUserApiException {
         final SubscriptionCallCompletionCallback<Response> callback = new SubscriptionCallCompletionCallback<Response>() {
 
             private boolean isImmediateOp = true;
@@ -304,7 +304,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                             final boolean callCompletion,
                                             final String createdBy,
                                             final String reason,
-                                            final String comment) {
+                                            final String comment) throws EntitlementUserApiException {
 
             final CallContext ctx = context.createContext(createdBy, reason, comment);
             final CompletionUserRequestSubscription waiter = callCompletion ? new CompletionUserRequestSubscription(ctx.getUserToken()) : null;
@@ -317,9 +317,6 @@ public class SubscriptionResource extends JaxRsResourceBase {
                     waiter.waitForCompletion(timeoutSec * 1000);
                 }
                 return callback.doResponseOk(operationValue);
-            } catch (EntitlementUserApiException e) {
-                log.info(String.format("Failed to complete operation"), e);
-                return Response.status(Status.BAD_REQUEST).build();
             } catch (InterruptedException e) {
                 return Response.status(Status.INTERNAL_SERVER_ERROR).build();
             } catch (TimeoutException e) {

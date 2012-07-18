@@ -13,30 +13,28 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.jaxrs;
 
-import javax.ws.rs.core.Response.Status;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import javax.ws.rs.core.Response.Status;
+
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.BundleJsonNoSubscriptions;
 import com.ning.billing.jaxrs.resources.JaxrsResource;
 import com.ning.http.client.Response;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+
 public class TestBundle extends TestJaxrsBase {
-
-    private static final Logger log = LoggerFactory.getLogger(TestBundle.class);
-
 
     @Test(groups = "slow", enabled = true)
     public void testBundleOk() throws Exception {
@@ -53,7 +51,6 @@ public class TestBundle extends TestJaxrsBase {
         final BundleJsonNoSubscriptions objFromJson = mapper.readValue(baseJson, BundleJsonNoSubscriptions.class);
         Assert.assertTrue(objFromJson.equals(bundleJson));
     }
-
 
     @Test(groups = "slow", enabled = true)
     public void testBundleFromAccount() throws Exception {
@@ -84,17 +81,15 @@ public class TestBundle extends TestJaxrsBase {
 
         String uri = JaxrsResource.BUNDLES_PATH + "/99999999-b103-42f3-8b6e-dd244f1d0747";
         Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        Assert.assertEquals(response.getStatusCode(), Status.NO_CONTENT.getStatusCode());
-
+        Assert.assertEquals(response.getStatusCode(), Status.NOT_FOUND.getStatusCode());
 
         // Retrieves by external key
         final Map<String, String> queryParams = new HashMap<String, String>();
         queryParams.put(JaxrsResource.QUERY_EXTERNAL_KEY, "56566");
         response = doGet(JaxrsResource.BUNDLES_PATH, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
-        Assert.assertEquals(response.getStatusCode(), Status.NO_CONTENT.getStatusCode());
+        Assert.assertEquals(response.getStatusCode(), Status.NOT_FOUND.getStatusCode());
 
-
-        uri = JaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAccountId().toString() + "/" + JaxrsResource.BUNDLES;
+        uri = JaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAccountId() + "/" + JaxrsResource.BUNDLES;
         response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
         final String baseJson = response.getResponseBody();
@@ -107,7 +102,7 @@ public class TestBundle extends TestJaxrsBase {
     public void testAppNonExistent() throws Exception {
         final String uri = JaxrsResource.ACCOUNTS_PATH + "/99999999-b103-42f3-8b6e-dd244f1d0747/" + JaxrsResource.BUNDLES;
         final Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        Assert.assertEquals(response.getStatusCode(), Status.NO_CONTENT.getStatusCode());
+        Assert.assertEquals(response.getStatusCode(), Status.NOT_FOUND.getStatusCode());
     }
 
 
