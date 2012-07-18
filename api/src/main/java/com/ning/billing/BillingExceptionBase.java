@@ -76,7 +76,6 @@ public class BillingExceptionBase extends Exception {
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
-        sb.append("BillingExceptionBase");
         sb.append("{cause=").append(cause);
         sb.append(", code=").append(code);
         sb.append(", formattedMsg='").append(formattedMsg).append('\'');
