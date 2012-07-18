@@ -16,6 +16,12 @@
 
 package com.ning.billing.jaxrs.resources;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.UUID;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -27,13 +33,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.core.Response.Status;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.UUID;
+import javax.ws.rs.core.UriInfo;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
@@ -42,8 +43,6 @@ import org.joda.time.format.ISODateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
@@ -65,9 +64,10 @@ import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.dao.ObjectType;
 
+import com.google.inject.Inject;
+
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.TEXT_HTML;
-
 
 @Path(JaxrsResource.INVOICES_PATH)
 public class InvoiceResource extends JaxRsResourceBase {
@@ -106,30 +106,27 @@ public class InvoiceResource extends JaxRsResourceBase {
 
     @GET
     @Produces(APPLICATION_JSON)
-    public Response getInvoices(@QueryParam(QUERY_ACCOUNT_ID) final String accountId) {
-        try {
-            Preconditions.checkNotNull(accountId, "% query parameter must be specified", QUERY_ACCOUNT_ID);
-            accountApi.getAccountById(UUID.fromString(accountId));
-            final List<Invoice> invoices = invoiceApi.getInvoicesByAccount(UUID.fromString(accountId));
-            final List<InvoiceJsonSimple> result = new LinkedList<InvoiceJsonSimple>();
-            for (final Invoice cur : invoices) {
-                result.add(new InvoiceJsonSimple(cur));
-            }
-            return Response.status(Status.OK).entity(result).build();
-        } catch (AccountApiException e) {
-            return Response.status(Status.NO_CONTENT).build();
-        } catch (NullPointerException e) {
-            return Response.status(Status.BAD_REQUEST).build();
+    public Response getInvoices(@QueryParam(QUERY_ACCOUNT_ID) final String accountId) throws AccountApiException {
+        // Verify the account exists
+        accountApi.getAccountById(UUID.fromString(accountId));
+
+        final List<Invoice> invoices = invoiceApi.getInvoicesByAccount(UUID.fromString(accountId));
+        final List<InvoiceJsonSimple> result = new LinkedList<InvoiceJsonSimple>();
+        for (final Invoice cur : invoices) {
+            result.add(new InvoiceJsonSimple(cur));
         }
+
+        return Response.status(Status.OK).entity(result).build();
     }
 
     @GET
     @Path("/{invoiceId:" + UUID_PATTERN + "}/")
     @Produces(APPLICATION_JSON)
-    public Response getInvoice(@PathParam("invoiceId") final String invoiceId, @QueryParam("withItems") @DefaultValue("false") final boolean withItems) {
+    public Response getInvoice(@PathParam("invoiceId") final String invoiceId,
+                               @QueryParam("withItems") @DefaultValue("false") final boolean withItems) throws InvoiceApiException {
         final Invoice invoice = invoiceApi.getInvoice(UUID.fromString(invoiceId));
         if (invoice == null) {
-            return Response.status(Status.NO_CONTENT).build();
+            throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND);
         } else {
             final InvoiceJsonSimple json = withItems ? new InvoiceJsonWithItems(invoice) : new InvoiceJsonSimple(invoice);
             return Response.status(Status.OK).entity(json).build();
@@ -139,16 +136,8 @@ public class InvoiceResource extends JaxRsResourceBase {
     @GET
     @Path("/{invoiceId:" + UUID_PATTERN + "}/html")
     @Produces(TEXT_HTML)
-    public Response getInvoiceAsHTML(@PathParam("invoiceId") final String invoiceId) {
-        try {
-            return Response.status(Status.OK).entity(invoiceApi.getInvoiceAsHTML(UUID.fromString(invoiceId))).build();
-        } catch (AccountApiException e) {
-            return Response.status(Status.NO_CONTENT).build();
-        } catch (IOException e) {
-            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-        } catch (InvoiceApiException e) {
-            return Response.status(Status.NO_CONTENT).build();
-        }
+    public Response getInvoiceAsHTML(@PathParam("invoiceId") final String invoiceId) throws InvoiceApiException, IOException, AccountApiException {
+        return Response.status(Status.OK).entity(invoiceApi.getInvoiceAsHTML(UUID.fromString(invoiceId))).build();
     }
 
     @POST
@@ -159,51 +148,33 @@ public class InvoiceResource extends JaxRsResourceBase {
                                         @QueryParam(QUERY_DRY_RUN) @DefaultValue("false") final Boolean dryRun,
                                         @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                         @HeaderParam(HDR_REASON) final String reason,
-                                        @HeaderParam(HDR_COMMENT) final String comment) {
-        try {
-            Preconditions.checkNotNull(accountId, "% needs to be specified", QUERY_ACCOUNT_ID);
-            Preconditions.checkNotNull(targetDateTime, "% needs to be specified", QUERY_TARGET_DATE);
+                                        @HeaderParam(HDR_COMMENT) final String comment) throws AccountApiException, InvoiceApiException {
+        final Account account = accountApi.getAccountById(UUID.fromString(accountId));
 
-            final DateTime inputDateTime = (targetDateTime != null) ? DATE_TIME_FORMATTER.parseDateTime(targetDateTime) : null;
+        final DateTime inputDateTime = DATE_TIME_FORMATTER.parseDateTime(targetDateTime);
+        final LocalDate inputDate = inputDateTime.toDateTime(account.getTimeZone()).toLocalDate();
 
-            final Account account = accountApi.getAccountById(UUID.fromString(accountId));
-            final LocalDate inputDate = inputDateTime.toDateTime(account.getTimeZone()).toLocalDate();
-
-            final Invoice generatedInvoice = invoiceApi.triggerInvoiceGeneration(UUID.fromString(accountId), inputDate, dryRun,
-                                                                                 context.createContext(createdBy, reason, comment));
-            if (dryRun) {
-                return Response.status(Status.OK).entity(new InvoiceJsonSimple(generatedInvoice)).build();
-            } else {
-                return uriBuilder.buildResponse(InvoiceResource.class, "getInvoice", generatedInvoice.getId());
-            }
-        } catch (InvoiceApiException e) {
-            if (e.getCode() == ErrorCode.INVOICE_NOTHING_TO_DO.getCode()) {
-                return Response.status(Status.NO_CONTENT).build();
-            } else {
-                return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
-            }
-        } catch (NullPointerException e) {
-            return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
-        } catch (AccountApiException e) {
-            log.warn(String.format("Failed to locate account for id %s", accountId), e);
-            return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+        final Invoice generatedInvoice = invoiceApi.triggerInvoiceGeneration(UUID.fromString(accountId), inputDate, dryRun,
+                                                                             context.createContext(createdBy, reason, comment));
+        if (dryRun) {
+            return Response.status(Status.OK).entity(new InvoiceJsonSimple(generatedInvoice)).build();
+        } else {
+            return uriBuilder.buildResponse(InvoiceResource.class, "getInvoice", generatedInvoice.getId());
         }
     }
 
     @GET
     @Path("/{invoiceId:" + UUID_PATTERN + "}/" + PAYMENTS)
     @Produces(APPLICATION_JSON)
-    public Response getPayments(@PathParam("invoiceId") final String invoiceId) {
-        try {
-            final List<Payment> payments = paymentApi.getInvoicePayments(UUID.fromString(invoiceId));
-            final List<PaymentJsonSimple> result = new ArrayList<PaymentJsonSimple>(payments.size());
-            for (final Payment cur : payments) {
-                result.add(new PaymentJsonSimple(cur));
-            }
-            return Response.status(Status.OK).entity(result).build();
-        } catch (PaymentApiException e) {
-            return Response.status(Status.NOT_FOUND).build();
+    public Response getPayments(@PathParam("invoiceId") final String invoiceId) throws PaymentApiException {
+        final List<Payment> payments = paymentApi.getInvoicePayments(UUID.fromString(invoiceId));
+
+        final List<PaymentJsonSimple> result = new ArrayList<PaymentJsonSimple>(payments.size());
+        for (final Payment cur : payments) {
+            result.add(new PaymentJsonSimple(cur));
         }
+
+        return Response.status(Status.OK).entity(result).build();
     }
 
     @POST
@@ -214,23 +185,14 @@ public class InvoiceResource extends JaxRsResourceBase {
                                          @QueryParam(QUERY_PAYMENT_EXTERNAL) @DefaultValue("false") final Boolean externalPayment,
                                          @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                          @HeaderParam(HDR_REASON) final String reason,
-                                         @HeaderParam(HDR_COMMENT) final String comment) {
+                                         @HeaderParam(HDR_COMMENT) final String comment) throws AccountApiException, PaymentApiException {
         if (externalPayment) {
             return Response.status(Status.BAD_REQUEST).entity("External payments have not been implemented yet").build();
         }
-        try {
-            final Account account = accountApi.getAccountById(UUID.fromString(payment.getAccountId()));
-            paymentApi.createPayment(account, UUID.fromString(payment.getInvoiceId()), null, context.createContext(createdBy, reason, comment));
-            return uriBuilder.buildResponse(InvoiceResource.class, "getPayments", payment.getInvoiceId());
-        } catch (PaymentApiException e) {
-            final String error = String.format("Failed to create payment %s", e.getMessage());
-            return Response.status(Status.BAD_REQUEST).entity(error).build();
-        } catch (AccountApiException e) {
-            final String error = String.format("Failed to create payment, can't find account %s", payment.getAccountId());
-            return Response.status(Status.BAD_REQUEST).entity(error).build();
-        } catch (IllegalArgumentException e) {
-            return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
-        }
+
+        final Account account = accountApi.getAccountById(UUID.fromString(payment.getAccountId()));
+        paymentApi.createPayment(account, UUID.fromString(payment.getInvoiceId()), null, context.createContext(createdBy, reason, comment));
+        return uriBuilder.buildResponse(InvoiceResource.class, "getPayments", payment.getInvoiceId());
     }
 
     @POST
@@ -240,25 +202,18 @@ public class InvoiceResource extends JaxRsResourceBase {
     public Response triggerEmailNotificationForInvoice(@PathParam("invoiceId") final String invoiceId,
                                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                        @HeaderParam(HDR_REASON) final String reason,
-                                                       @HeaderParam(HDR_COMMENT) final String comment) {
+                                                       @HeaderParam(HDR_COMMENT) final String comment) throws InvoiceApiException, AccountApiException {
         final Invoice invoice = invoiceApi.getInvoice(UUID.fromString(invoiceId));
         if (invoice == null) {
-            return Response.status(Status.NOT_FOUND).build();
+            throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND);
         }
 
-        try {
-            final Account account = accountApi.getAccountById(invoice.getAccountId());
+        final Account account = accountApi.getAccountById(invoice.getAccountId());
 
-            // Send the email (synchronous send)
-            invoiceNotifier.notify(account, invoice);
+        // Send the email (synchronous send)
+        invoiceNotifier.notify(account, invoice);
 
-            return Response.status(Status.OK).build();
-        } catch (AccountApiException e) {
-            return Response.status(Status.NOT_FOUND).build();
-        } catch (InvoiceApiException e) {
-            // Sending failed
-            return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e).build();
-        }
+        return Response.status(Status.OK).build();
     }
 
     @GET
@@ -276,8 +231,9 @@ public class InvoiceResource extends JaxRsResourceBase {
                                        final List<CustomFieldJson> customFields,
                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                        @HeaderParam(HDR_REASON) final String reason,
-                                       @HeaderParam(HDR_COMMENT) final String comment) {
-        return super.createCustomFields(UUID.fromString(id), customFields,
+                                       @HeaderParam(HDR_COMMENT) final String comment,
+                                       @javax.ws.rs.core.Context final UriInfo uriInfo) {
+        return super.createCustomFields(UUID.fromString(id), customFields, uriInfo,
                                         context.createContext(createdBy, reason, comment));
     }
 
@@ -289,8 +245,9 @@ public class InvoiceResource extends JaxRsResourceBase {
                                        @QueryParam(QUERY_CUSTOM_FIELDS) final String customFieldList,
                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                        @HeaderParam(HDR_REASON) final String reason,
-                                       @HeaderParam(HDR_COMMENT) final String comment) {
-        return super.deleteCustomFields(UUID.fromString(id), customFieldList,
+                                       @HeaderParam(HDR_COMMENT) final String comment,
+                                       @javax.ws.rs.core.Context final UriInfo uriInfo) {
+        return super.deleteCustomFields(UUID.fromString(id), customFieldList, uriInfo,
                                         context.createContext(createdBy, reason, comment));
     }
 
@@ -323,9 +280,9 @@ public class InvoiceResource extends JaxRsResourceBase {
                                @QueryParam(QUERY_TAGS) final String tagList,
                                @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                @HeaderParam(HDR_REASON) final String reason,
-                               @HeaderParam(HDR_COMMENT) final String comment) {
-
-        return super.deleteTags(UUID.fromString(id), tagList,
+                               @HeaderParam(HDR_COMMENT) final String comment,
+                               @javax.ws.rs.core.Context final UriInfo uriInfo) {
+        return super.deleteTags(UUID.fromString(id), tagList, uriInfo,
                                 context.createContext(createdBy, reason, comment));
     }
 
