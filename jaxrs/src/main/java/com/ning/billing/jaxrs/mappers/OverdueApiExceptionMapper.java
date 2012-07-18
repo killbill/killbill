@@ -17,7 +17,9 @@
 package com.ning.billing.jaxrs.mappers;
 
 import javax.inject.Singleton;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
@@ -27,8 +29,14 @@ import com.ning.billing.overdue.OverdueApiException;
 @Provider
 public class OverdueApiExceptionMapper extends ExceptionMapperBase implements ExceptionMapper<OverdueApiException> {
 
+    private final UriInfo uriInfo;
+
+    public OverdueApiExceptionMapper(@Context final UriInfo uriInfo) {
+        this.uriInfo = uriInfo;
+    }
+
     @Override
     public Response toResponse(final OverdueApiException exception) {
-        return null;
+        return buildBadRequestResponse(exception, uriInfo);
     }
 }

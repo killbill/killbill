@@ -17,7 +17,9 @@
 package com.ning.billing.jaxrs.mappers;
 
 import javax.inject.Singleton;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
@@ -27,8 +29,14 @@ import com.ning.billing.util.email.EmailApiException;
 @Provider
 public class EmailApiExceptionMapper extends ExceptionMapperBase implements ExceptionMapper<EmailApiException> {
 
+    private final UriInfo uriInfo;
+
+    public EmailApiExceptionMapper(@Context final UriInfo uriInfo) {
+        this.uriInfo = uriInfo;
+    }
+
     @Override
     public Response toResponse(final EmailApiException exception) {
-        return null;
+        return buildInternalErrorResponse(exception, uriInfo);
     }
 }

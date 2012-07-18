@@ -17,7 +17,9 @@
 package com.ning.billing.jaxrs.mappers;
 
 import javax.inject.Singleton;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
@@ -25,8 +27,14 @@ import javax.ws.rs.ext.Provider;
 @Provider
 public class RuntimeExceptionMapper extends ExceptionMapperBase implements ExceptionMapper<RuntimeException> {
 
+    private final UriInfo uriInfo;
+
+    public RuntimeExceptionMapper(@Context final UriInfo uriInfo) {
+        this.uriInfo = uriInfo;
+    }
+
     @Override
     public Response toResponse(final RuntimeException exception) {
-        return null;
+        return buildInternalErrorResponse(exception, uriInfo);
     }
 }

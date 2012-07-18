@@ -16,17 +16,27 @@
 
 package com.ning.billing.jaxrs.mappers;
 
+import javax.inject.Singleton;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
 import com.ning.billing.BillingExceptionBase;
 
+@Singleton
 @Provider
 public class BillingExceptionBaseMapper extends ExceptionMapperBase implements ExceptionMapper<BillingExceptionBase> {
 
+    private final UriInfo uriInfo;
+
+    public BillingExceptionBaseMapper(@Context final UriInfo uriInfo) {
+        this.uriInfo = uriInfo;
+    }
+
     @Override
     public Response toResponse(final BillingExceptionBase exception) {
-        return null;
+        return buildBadRequestResponse(exception, uriInfo);
     }
 }
