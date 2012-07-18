@@ -16,10 +16,6 @@
 
 package com.ning.billing.jaxrs.resources;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 import javax.ws.rs.GET;
@@ -29,13 +25,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.inject.Inject;
-import com.ning.billing.ErrorCode;
 import com.ning.billing.jaxrs.json.RefundJson;
-import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentApiException;
@@ -44,20 +34,20 @@ import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.dao.ObjectType;
 
+import com.google.inject.Inject;
+
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Path(JaxrsResource.REFUNDS_PATH)
 public class RefundResource extends JaxRsResourceBase {
-
-    private static final Logger log = LoggerFactory.getLogger(RefundResource.class);
 
     private final PaymentApi paymentApi;
 
     @Inject
     public RefundResource(final JaxrsUriBuilder uriBuilder,
-            final PaymentApi paymentApi,
-            final TagUserApi tagUserApi,
-            final CustomFieldUserApi customFieldUserApi,
-            final Context context) {
+                          final PaymentApi paymentApi,
+                          final TagUserApi tagUserApi,
+                          final CustomFieldUserApi customFieldUserApi) {
         super(uriBuilder, tagUserApi, customFieldUserApi);
         this.paymentApi = paymentApi;
     }
@@ -65,17 +55,9 @@ public class RefundResource extends JaxRsResourceBase {
     @GET
     @Path("/{refundId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
-    public Response getRefund(@PathParam("refundId") final String refundId) {
-        try {
-            Refund refund = paymentApi.getRefund(UUID.fromString(refundId));
-            return Response.status(Status.OK).entity(new RefundJson(refund)).build();
-        } catch (PaymentApiException e) {
-            if (e.getCode() == ErrorCode.PAYMENT_NO_SUCH_REFUND.getCode()) {
-                return Response.status(Status.NO_CONTENT).build();
-            } else {
-                return Response.status(Status.BAD_REQUEST).build();
-            }
-        }
+    public Response getRefund(@PathParam("refundId") final String refundId) throws PaymentApiException {
+        final Refund refund = paymentApi.getRefund(UUID.fromString(refundId));
+        return Response.status(Status.OK).entity(new RefundJson(refund)).build();
     }
 
     @Override
