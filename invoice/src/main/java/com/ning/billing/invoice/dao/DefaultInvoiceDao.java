@@ -385,7 +385,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
                 if (payment == null) {
                     throw new InvoiceApiException(ErrorCode.INVOICE_PAYMENT_NOT_FOUND, invoicePaymentId.toString());
                 } else {
-                    final InvoicePayment chargeBack = new DefaultInvoicePayment(UUID.randomUUID(), InvoicePaymentType.CHARGED_BACK, null,
+                    final InvoicePayment chargeBack = new DefaultInvoicePayment(UUID.randomUUID(), InvoicePaymentType.CHARGED_BACK, payment.getPaymentId(),
                                                                                 payment.getInvoiceId(), context.getCreatedDate(), requestedChargedBackAmout.negate(), payment.getCurrency(), null, payment.getId());
                     invoicePaymentSqlDao.create(chargeBack, context);
                     return chargeBack;

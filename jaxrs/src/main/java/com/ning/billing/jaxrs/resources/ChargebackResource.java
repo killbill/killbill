@@ -139,9 +139,7 @@ public class ChargebackResource implements JaxrsResource {
                                                                                   context.createContext(createdBy, reason, comment));
             return uriBuilder.buildResponse(ChargebackResource.class, "getChargeback", chargeBack.getId());
         } catch (InvoiceApiException e) {
-            final String error = String.format("Failed to create chargeback %s", json);
-            log.info(error, e);
-            return Response.status(Response.Status.BAD_REQUEST).entity(error).build();
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
         } catch (IllegalArgumentException e) {
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
         }
