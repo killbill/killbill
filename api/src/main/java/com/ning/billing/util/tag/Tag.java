@@ -16,8 +16,10 @@
 
 package com.ning.billing.util.tag;
 
+import java.util.UUID;
+
 import com.ning.billing.util.entity.Entity;
 
 public interface Tag extends Entity {
-    String getTagDefinitionName();
+    UUID getTagDefinitionId();
 }

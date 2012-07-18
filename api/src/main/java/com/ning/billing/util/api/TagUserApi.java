@@ -16,6 +16,7 @@
 
 package com.ning.billing.util.api;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -41,26 +42,31 @@ public interface TagUserApi {
     public TagDefinition create(String definitionName, String description, CallContext context) throws TagDefinitionApiException;
 
     /**
-     * @param definitionName Identifies the definition.
+     * @param tagDefinitionId The UUID for that tagDefinition
      * @param context        The call context, for auditing purposes
      * @throws TagDefinitionApiException
      */
-    public void deleteTagDefinition(String definitionName, CallContext context) throws TagDefinitionApiException;
+    public void deleteTagDefinition(UUID tagDefinitionId, CallContext context) throws TagDefinitionApiException;
+
+    public TagDefinition getTagDefinition(UUID tagDefinitionId) throws TagDefinitionApiException;
+
+    public TagDefinition getTagDefinitionForName(String tageDefinitionName) throws TagDefinitionApiException;
+
+    public List<TagDefinition> getTagDefinitions(final Collection<UUID> tagDefinitionIds) throws TagDefinitionApiException;
+
+    public void addTags(UUID objectId, ObjectType objectType, Collection<UUID> tagDefinitionIds, CallContext context) throws TagApiException;
+
+    public void addTag(UUID objectId, ObjectType objectType, UUID tagDefinitionId, CallContext context) throws TagApiException;
+
+    public void removeTags(UUID objectId, ObjectType objectType, Collection<UUID> tagDefinitions, CallContext context) throws TagApiException;
+
+    public void removeTag(UUID objectId, ObjectType objectType, UUID tagDefinitionId, CallContext context) throws TagApiException;
 
     /**
-     * @param name
-     * @return the tag with this definition
-     * @throws TagDefinitionApiException
+     *
+     * @param objectId UUID of the object on which to retrieve the tags
+     * @param objectType The type of object
+     * @return A map of tag, key being the tagId, and value the tag
      */
-    public TagDefinition getTagDefinition(String name) throws TagDefinitionApiException;
-
-    public void addTags(UUID objectId, ObjectType objectType, List<TagDefinition> tagDefinitions, CallContext context) throws TagApiException;
-
-    public void addTag(UUID objectId, ObjectType objectType, TagDefinition tagDefinition, CallContext context) throws TagApiException;
-
-    public void removeTags(UUID objectId, ObjectType objectType, List<TagDefinition> tagDefinitions, CallContext context) throws TagApiException;
-
-    public void removeTag(UUID objectId, ObjectType objectType, TagDefinition tagDefinition, CallContext context) throws TagApiException;
-
     public Map<String, Tag> getTags(UUID objectId, ObjectType objectType);
 }

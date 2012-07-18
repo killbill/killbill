@@ -287,12 +287,12 @@ public class DefaultInvoiceDao implements InvoiceDao {
 
     @Override
     public void setWrittenOff(final UUID invoiceId, final CallContext context) throws TagApiException {
-        tagUserApi.addTag(invoiceId, ObjectType.INVOICE, ControlTagType.WRITTEN_OFF.toTagDefinition(), context);
+        tagUserApi.addTag(invoiceId, ObjectType.INVOICE, ControlTagType.WRITTEN_OFF.getId(), context);
     }
 
     @Override
     public void removeWrittenOff(final UUID invoiceId, final CallContext context) throws TagApiException {
-        tagUserApi.removeTag(invoiceId, ObjectType.INVOICE, ControlTagType.WRITTEN_OFF.toTagDefinition(), context);
+        tagUserApi.removeTag(invoiceId, ObjectType.INVOICE, ControlTagType.WRITTEN_OFF.getId(), context);
     }
 
     @Override

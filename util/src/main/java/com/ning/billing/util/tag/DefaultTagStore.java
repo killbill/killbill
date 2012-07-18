@@ -28,7 +28,7 @@ public class DefaultTagStore extends EntityCollectionBase<Tag> implements TagSto
 
     @Override
     public String getEntityKey(final Tag entity) {
-        return entity.getTagDefinitionName();
+        return entity.getTagDefinitionId().toString();
     }
 
     @Override
@@ -71,7 +71,7 @@ public class DefaultTagStore extends EntityCollectionBase<Tag> implements TagSto
     @Override
     public boolean containsTagForDefinition(final TagDefinition tagDefinition) {
         for (final Tag tag : entities.values()) {
-            if (tag.getTagDefinitionName().equals(tagDefinition.getName())) {
+            if (tag.getTagDefinitionId().equals(tagDefinition.getId())) {
                 return true;
             }
         }
@@ -82,7 +82,7 @@ public class DefaultTagStore extends EntityCollectionBase<Tag> implements TagSto
     @Override
     public boolean containsTagForControlTagType(final ControlTagType controlTagType) {
         for (final Tag tag : entities.values()) {
-            if (tag.getTagDefinitionName().equals(controlTagType.toString())) {
+            if (tag.getTagDefinitionId().equals(controlTagType.getId())) {
                 return true;
             }
         }

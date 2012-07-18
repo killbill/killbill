@@ -1173,7 +1173,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         final TagDao tagDao = new AuditedTagDao(dbi, tagEventBuilder, bus);
         final Map<String, Tag> tags = tagDao.loadEntities(invoice.getId(), ObjectType.INVOICE);
         assertEquals(tags.size(), 1);
-        assertTrue(tags.containsKey(ControlTagType.WRITTEN_OFF.toString()));
+        assertEquals(tags.values().iterator().next().getTagDefinitionId(), ControlTagType.WRITTEN_OFF.getId());
     }
 
     @Test(groups = "slow")
@@ -1204,7 +1204,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         final TagDao tagDao = new AuditedTagDao(dbi, tagEventBuilder, bus);
         Map<String, Tag> tags = tagDao.loadEntities(invoice.getId(), ObjectType.INVOICE);
         assertEquals(tags.size(), 1);
-        assertTrue(tags.containsKey(ControlTagType.WRITTEN_OFF.toString()));
+        assertEquals(tags.values().iterator().next().getTagDefinitionId(), ControlTagType.WRITTEN_OFF.getId());
 
         invoiceDao.removeWrittenOff(invoice.getId(), context);
         tags = tagDao.loadEntities(invoice.getId(), ObjectType.INVOICE);

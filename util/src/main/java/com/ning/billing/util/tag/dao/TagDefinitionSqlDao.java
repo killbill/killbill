@@ -23,6 +23,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 
 import org.skife.jdbi.v2.SQLStatement;
@@ -52,17 +54,17 @@ public interface TagDefinitionSqlDao extends EntitySqlDao<TagDefinition>, Transa
     @SqlUpdate
     public void create(@TagDefinitionBinder final TagDefinition entity, @CallContextBinder final CallContext context);
 
-    @SqlUpdate
-    public void deleteAllTagsForDefinition(@Bind("name") final String definitionName, @CallContextBinder final CallContext context);
-
-    @SqlUpdate
-    public void deleteTagDefinition(@Bind("name") final String definitionName, @CallContextBinder final CallContext context);
-
-    @SqlQuery
-    public int tagDefinitionUsageCount(@Bind("name") final String definitionName);
-
     @SqlQuery
     public TagDefinition getByName(@Bind("name") final String definitionName);
+
+    @SqlUpdate
+    public void deleteTagDefinition(@Bind("id") final String definitionId, @CallContextBinder final CallContext context);
+
+    @SqlQuery
+    public int tagDefinitionUsageCount(@Bind("id") final String definitionId);
+
+    @SqlQuery
+    public List<TagDefinition> getByIds(@UUIDCollectionBinder final Collection<String> definitionIds);
 
     public class TagDefinitionMapper implements ResultSetMapper<TagDefinition> {
         @Override
@@ -79,8 +81,10 @@ public interface TagDefinitionSqlDao extends EntitySqlDao<TagDefinition>, Transa
     @Target({ElementType.PARAMETER})
     public @interface TagDefinitionBinder {
         public static class TagDefinitionBinderFactory implements BinderFactory {
+            @Override
             public Binder build(final Annotation annotation) {
                 return new Binder<TagDefinitionBinder, TagDefinition>() {
+                    @Override
                     public void bind(final SQLStatement q, final TagDefinitionBinder bind, final TagDefinition tagDefinition) {
                         q.bind("id", tagDefinition.getId().toString());
                         q.bind("name", tagDefinition.getName());

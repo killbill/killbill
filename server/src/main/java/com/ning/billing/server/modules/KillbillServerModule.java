@@ -37,7 +37,6 @@ import com.ning.billing.jaxrs.resources.RefundResource;
 import com.ning.billing.jaxrs.resources.SubscriptionResource;
 import com.ning.billing.jaxrs.resources.TagResource;
 import com.ning.billing.jaxrs.util.KillbillEventHandler;
-import com.ning.billing.jaxrs.util.TagHelper;
 import com.ning.billing.junction.glue.DefaultJunctionModule;
 import com.ning.billing.payment.glue.PaymentModule;
 import com.ning.billing.util.email.EmailModule;
@@ -71,7 +70,6 @@ public class KillbillServerModule extends AbstractModule {
     }
 
     protected void configureResources() {
-        bind(TagHelper.class).asEagerSingleton();
         bind(AccountResource.class).asEagerSingleton();
         bind(BundleResource.class).asEagerSingleton();
         bind(SubscriptionResource.class).asEagerSingleton();

@@ -273,23 +273,15 @@ public class TestAccount extends TestJaxrsBase {
 
     @Test(groups = "slow", enabled = true)
     public void testTags() throws Exception {
-        //Create Tag definition
-        final TagDefinitionJson input = new TagDefinitionJson("yoyo", "nothing more to say");
-        final String baseJson = mapper.writeValueAsString(input);
-        Response response = doPost(JaxrsResource.TAG_DEFINITIONS_PATH, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
+
+        // Use tag definition for AUTO_PAY_OFF
+        final TagDefinitionJson input = new TagDefinitionJson(new UUID(0, 1).toString(), "AUTO_PAY_OFF", "nothing more to say");
 
         final Map<String, String> queryParams = new HashMap<String, String>();
-        queryParams.put(JaxrsResource.QUERY_TAGS, input.getName());
+        queryParams.put(JaxrsResource.QUERY_TAGS, input.getId());
         final String uri = JaxrsResource.ACCOUNTS_PATH + "/" + UUID.randomUUID().toString() + "/" + JaxrsResource.TAGS;
-        response = doPost(uri, null, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
-
+        Response response = doPost(uri, null, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
-
-        /*
-         * STEPH Some how Location returns the ID twice (confused) :
-         * Location: http://127.0.0.1:8080/1.0/kb/accounts/tags/ebb5f830-6f0a-4521-9553-521d173169be/ebb5f830-6f0a-4521-9553-521d173169be
-         */
 
         // Retrieves by Id based on Location returned
         final String url = getUrlFromUri(uri);

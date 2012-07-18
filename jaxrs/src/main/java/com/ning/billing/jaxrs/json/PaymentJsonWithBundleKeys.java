@@ -24,6 +24,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class PaymentJsonWithBundleKeys extends PaymentJsonSimple {
+
     private final String bundleKeys;
 
     public PaymentJsonWithBundleKeys() {

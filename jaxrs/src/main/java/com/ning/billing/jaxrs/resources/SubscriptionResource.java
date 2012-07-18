@@ -28,6 +28,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.core.Response.Status;
 import java.math.BigDecimal;
 import java.util.List;
@@ -56,7 +57,6 @@ import com.ning.billing.jaxrs.json.SubscriptionJsonNoEvents;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
 import com.ning.billing.jaxrs.util.KillbillEventHandler;
-import com.ning.billing.jaxrs.util.TagHelper;
 import com.ning.billing.payment.api.PaymentErrorEvent;
 import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.util.api.CustomFieldUserApi;
@@ -84,8 +84,8 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @Inject
     public SubscriptionResource(final JaxrsUriBuilder uriBuilder, final EntitlementUserApi entitlementApi,
             final Context context, final KillbillEventHandler killbillHandler,
-            final TagUserApi tagUserApi, final TagHelper tagHelper, final CustomFieldUserApi customFieldUserApi) {
-        super(uriBuilder, tagUserApi, tagHelper, customFieldUserApi);
+            final TagUserApi tagUserApi, final CustomFieldUserApi customFieldUserApi) {
+        super(uriBuilder, tagUserApi, customFieldUserApi);
         this.uriBuilder = uriBuilder;
         this.entitlementApi = entitlementApi;
         this.context = context;
@@ -290,19 +290,19 @@ public class SubscriptionResource extends JaxRsResourceBase {
 
         @Override
         public void onSubscriptionTransition(EffectiveSubscriptionEvent curEventEffective) {
-            log.info(String.format("Got event SubscriptionTransition token = %s, type = %s, remaining = %d ", 
+            log.info(String.format("Got event SubscriptionTransition token = %s, type = %s, remaining = %d ",
                     curEventEffective.getUserToken(), curEventEffective.getTransitionType(),  curEventEffective.getRemainingEventsForUserOperation()));
         }
 
         @Override
         public void onEmptyInvoice(final NullInvoiceEvent curEvent) {
-            log.info(String.format("Got event EmptyInvoiceNotification token = %s ", curEvent.getUserToken())); 
+            log.info(String.format("Got event EmptyInvoiceNotification token = %s ", curEvent.getUserToken()));
             notifyForCompletion();
         }
 
         @Override
         public void onInvoiceCreation(InvoiceCreationEvent curEvent) {
-            log.info(String.format("Got event InvoiceCreationNotification token = %s ", curEvent.getUserToken())); 
+            log.info(String.format("Got event InvoiceCreationNotification token = %s ", curEvent.getUserToken()));
             if (curEvent.getAmountOwed().compareTo(BigDecimal.ZERO) <= 0) {
                 notifyForCompletion();
             }
@@ -310,13 +310,13 @@ public class SubscriptionResource extends JaxRsResourceBase {
 
         @Override
         public void onPaymentInfo(PaymentInfoEvent curEvent) {
-            log.info(String.format("Got event PaymentInfo token = %s ", curEvent.getUserToken()));  
+            log.info(String.format("Got event PaymentInfo token = %s ", curEvent.getUserToken()));
             notifyForCompletion();
         }
 
         @Override
         public void onPaymentError(PaymentErrorEvent curEvent) {
-            log.info(String.format("Got event PaymentError token = %s ", curEvent.getUserToken())); 
+            log.info(String.format("Got event PaymentError token = %s ", curEvent.getUserToken()));
             notifyForCompletion();
         }
     }
@@ -412,8 +412,9 @@ public class SubscriptionResource extends JaxRsResourceBase {
             @QueryParam(QUERY_TAGS) final String tagList,
             @HeaderParam(HDR_CREATED_BY) final String createdBy,
             @HeaderParam(HDR_REASON) final String reason,
-            @HeaderParam(HDR_COMMENT) final String comment) {
-        return super.createTags(UUID.fromString(id), tagList,
+            @HeaderParam(HDR_COMMENT) final String comment,
+            @javax.ws.rs.core.Context final UriInfo uriInfo) {
+        return super.createTags(UUID.fromString(id), tagList, uriInfo,
                 context.createContext(createdBy, reason, comment));
     }
 

@@ -27,6 +27,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -57,7 +58,6 @@ import com.ning.billing.jaxrs.json.InvoiceJsonWithItems;
 import com.ning.billing.jaxrs.json.PaymentJsonSimple;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
-import com.ning.billing.jaxrs.util.TagHelper;
 import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentApiException;
@@ -93,10 +93,9 @@ public class InvoiceResource extends JaxRsResourceBase {
                            final Context context,
                            final JaxrsUriBuilder uriBuilder,
                            final TagUserApi tagUserApi,
-                           final TagHelper tagHelper,
                            final CustomFieldUserApi customFieldUserApi,
                            final InvoiceNotifier invoiceNotifier) {
-        super(uriBuilder, tagUserApi, tagHelper, customFieldUserApi);
+        super(uriBuilder, tagUserApi, customFieldUserApi);
         this.accountApi = accountApi;
         this.invoiceApi = invoiceApi;
         this.paymentApi = paymentApi;
@@ -310,8 +309,9 @@ public class InvoiceResource extends JaxRsResourceBase {
                                @QueryParam(QUERY_TAGS) final String tagList,
                                @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                @HeaderParam(HDR_REASON) final String reason,
-                               @HeaderParam(HDR_COMMENT) final String comment) {
-        return super.createTags(UUID.fromString(id), tagList,
+                               @HeaderParam(HDR_COMMENT) final String comment,
+                               @javax.ws.rs.core.Context final UriInfo uriInfo) {
+        return super.createTags(UUID.fromString(id), tagList, uriInfo,
                                 context.createContext(createdBy, reason, comment));
     }
 

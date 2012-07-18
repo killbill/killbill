@@ -16,6 +16,7 @@
 
 package com.ning.billing.jaxrs.resources;
 
+import static com.ning.billing.jaxrs.resources.JaxrsResource.CUSTOM_FIELDS;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 import java.util.ArrayList;
@@ -71,7 +72,6 @@ import com.ning.billing.jaxrs.json.PaymentMethodJson;
 import com.ning.billing.jaxrs.json.RefundJson;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
-import com.ning.billing.jaxrs.util.TagHelper;
 import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentApiException;
@@ -86,8 +86,6 @@ import com.ning.billing.util.dao.ObjectType;
 public class AccountResource extends JaxRsResourceBase {
     private static final Logger log = LoggerFactory.getLogger(AccountResource.class);
     private static final String ID_PARAM_NAME = "accountId";
-    private static final String CUSTOM_FIELD_URI = JaxrsResource.CUSTOM_FIELDS;
-    private static final String TAG_URI = JaxrsResource.TAGS;
 
     private final AccountUserApi accountApi;
     private final EntitlementUserApi entitlementApi;
@@ -106,9 +104,8 @@ public class AccountResource extends JaxRsResourceBase {
                            final EntitlementTimelineApi timelineApi,
                            final CustomFieldUserApi customFieldUserApi,
                            final TagUserApi tagUserApi,
-                           final TagHelper tagHelper,
                            final Context context) {
-        super(uriBuilder, tagUserApi, tagHelper, customFieldUserApi);
+        super(uriBuilder, tagUserApi, customFieldUserApi);
         this.uriBuilder = uriBuilder;
         this.accountApi = accountApi;
         this.entitlementApi = entitlementApi;
@@ -476,14 +473,14 @@ public class AccountResource extends JaxRsResourceBase {
      */
 
     @GET
-    @Path("/{accountId:" + UUID_PATTERN + "}/" + CUSTOM_FIELD_URI)
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Produces(APPLICATION_JSON)
     public Response getCustomFields(@PathParam(ID_PARAM_NAME) final String id) {
         return super.getCustomFields(UUID.fromString(id));
     }
 
     @POST
-    @Path("/{accountId:" + UUID_PATTERN + "}/" + CUSTOM_FIELD_URI)
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response createCustomFields(@PathParam(ID_PARAM_NAME) final String id,
@@ -496,7 +493,7 @@ public class AccountResource extends JaxRsResourceBase {
     }
 
     @DELETE
-    @Path("/{accountId:" + UUID_PATTERN + "}/" + CUSTOM_FIELD_URI)
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response deleteCustomFields(@PathParam(ID_PARAM_NAME) final String id,
@@ -513,26 +510,27 @@ public class AccountResource extends JaxRsResourceBase {
      */
 
     @GET
-    @Path("/{accountId:" + UUID_PATTERN + "}/" + TAG_URI)
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + TAGS)
     @Produces(APPLICATION_JSON)
     public Response getTags(@PathParam(ID_PARAM_NAME) final String id) {
         return super.getTags(UUID.fromString(id));
     }
 
     @POST
-    @Path("/{accountId:" + UUID_PATTERN + "}/" + TAG_URI)
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + TAGS)
     @Produces(APPLICATION_JSON)
     public Response createTags(@PathParam(ID_PARAM_NAME) final String id,
                                @QueryParam(QUERY_TAGS) final String tagList,
                                @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                @HeaderParam(HDR_REASON) final String reason,
-                               @HeaderParam(HDR_COMMENT) final String comment) {
-        return super.createTags(UUID.fromString(id), tagList,
+                               @HeaderParam(HDR_COMMENT) final String comment,
+                               @javax.ws.rs.core.Context final UriInfo uriInfo) {
+        return super.createTags(UUID.fromString(id), tagList, uriInfo,
                                 context.createContext(createdBy, reason, comment));
     }
 
     @DELETE
-    @Path("/{accountId:" + UUID_PATTERN + "}/" + TAG_URI)
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + TAGS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response deleteTags(@PathParam(ID_PARAM_NAME) final String id,

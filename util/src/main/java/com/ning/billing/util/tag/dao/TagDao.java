@@ -26,7 +26,7 @@ import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;
 
 public interface TagDao extends AuditedCollectionDao<Tag> {
-    void insertTag(UUID objectId, ObjectType objectType, TagDefinition tagDefinition, CallContext context) throws TagApiException;
+    void insertTag(UUID objectId, ObjectType objectType, UUID tagDefinition, CallContext context) throws TagApiException;
 
-    void deleteTag(UUID objectId, ObjectType objectType, TagDefinition tagDefinition, CallContext context) throws TagApiException;
+    void deleteTag(UUID objectId, ObjectType objectType, UUID tagDefinition, CallContext context) throws TagApiException;
 }

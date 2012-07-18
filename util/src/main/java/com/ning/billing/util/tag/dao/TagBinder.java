@@ -34,11 +34,13 @@ import com.ning.billing.util.tag.Tag;
 @Target({ElementType.PARAMETER})
 public @interface TagBinder {
     public static class TagBinderFactory implements BinderFactory {
+        @Override
         public Binder build(final Annotation annotation) {
             return new Binder<TagBinder, Tag>() {
+                @Override
                 public void bind(final SQLStatement q, final TagBinder bind, final Tag tag) {
                     q.bind("id", tag.getId().toString());
-                    q.bind("tagDefinitionName", tag.getTagDefinitionName());
+                    q.bind("tagDefinitionId", tag.getTagDefinitionId().toString());
                 }
             };
         }

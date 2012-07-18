@@ -17,8 +17,10 @@
 package com.ning.billing.util.tag.dao;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.ning.billing.util.api.TagDefinitionApiException;
@@ -44,12 +46,22 @@ public class MockTagDefinitionDao implements TagDefinitionDao {
                                 final CallContext context) throws TagDefinitionApiException {
         final TagDefinition tag = new DefaultTagDefinition(definitionName, description, false);
 
-        tags.put(definitionName, tag);
+        tags.put(tag.getId().toString(), tag);
         return tag;
     }
 
     @Override
-    public void deleteTagDefinition(final String definitionName, final CallContext context) throws TagDefinitionApiException {
-        tags.remove(definitionName);
+    public void deleteById(final UUID definitionId, final CallContext context) throws TagDefinitionApiException {
+        tags.remove(definitionId.toString());
+    }
+
+    @Override
+    public TagDefinition getById(UUID definitionId) {
+        return null;
+    }
+
+    @Override
+    public List<TagDefinition> getByIds(Collection<UUID> definitionIds) {
+        return null;
     }
 }

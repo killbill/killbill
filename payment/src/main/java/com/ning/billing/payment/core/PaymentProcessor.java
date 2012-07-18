@@ -284,7 +284,7 @@ public class PaymentProcessor extends ProcessorBase {
                 }));
                 log.warn(String.format("Setting account %s into AUTO_PAY_OFF because of bad payments : %s", accountId, JOINER.toString()));
                 try {
-                    tagUserApi.addTag(accountId, ObjectType.ACCOUNT, ControlTagType.AUTO_PAY_OFF.toTagDefinition(), context);
+                    tagUserApi.addTag(accountId, ObjectType.ACCOUNT, ControlTagType.AUTO_PAY_OFF.getId(), context);
                 } catch (TagApiException e) {
                     log.error("Failed to add AUTO_PAY_OFF on account " + accountId, e);
                     throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, "Failed to add AUTO_PAY_OFF on account " + accountId);
@@ -330,7 +330,7 @@ public class PaymentProcessor extends ProcessorBase {
     private boolean isAccountAutoPayOff(final UUID accountId) {
         final Map<String, Tag> accountTags = tagUserApi.getTags(accountId, ObjectType.ACCOUNT);
         for (final Tag cur : accountTags.values()) {
-            if (cur.getTagDefinitionName().equals(ControlTagType.AUTO_PAY_OFF.toString())) {
+            if (ControlTagType.AUTO_PAY_OFF.getId().equals(cur.getTagDefinitionId())) {
                 return true;
             }
         }

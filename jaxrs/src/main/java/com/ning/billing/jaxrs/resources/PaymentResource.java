@@ -47,7 +47,6 @@ import com.ning.billing.jaxrs.json.CustomFieldJson;
 import com.ning.billing.jaxrs.json.RefundJson;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
-import com.ning.billing.jaxrs.util.TagHelper;
 import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentApiException;
@@ -74,10 +73,9 @@ public class PaymentResource extends JaxRsResourceBase {
             final AccountUserApi accountApi,
             final PaymentApi paymentApi,
             final TagUserApi tagUserApi,
-            final TagHelper tagHelper,
             final CustomFieldUserApi customFieldUserApi,
             final Context context) {
-        super(uriBuilder, tagUserApi, tagHelper, customFieldUserApi);
+        super(uriBuilder, tagUserApi, customFieldUserApi);
         this.context = context;
         this.paymentApi = paymentApi;
         this.accountApi = accountApi;
@@ -182,8 +180,9 @@ public class PaymentResource extends JaxRsResourceBase {
                                @QueryParam(QUERY_TAGS) final String tagList,
                                @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                @HeaderParam(HDR_REASON) final String reason,
-                               @HeaderParam(HDR_COMMENT) final String comment) {
-        return super.createTags(UUID.fromString(id), tagList,
+                               @HeaderParam(HDR_COMMENT) final String comment,
+                               @javax.ws.rs.core.Context final UriInfo uriInfo) {
+        return super.createTags(UUID.fromString(id), tagList, uriInfo,
                                 context.createContext(createdBy, reason, comment));
     }
 

@@ -157,12 +157,12 @@ public class TestAccountDao extends AccountDaoTestBase {
         tagDescriptionDao.create(definition, context);
 
         final TagDao tagDao = new AuditedTagDao(dbi, tagEventBuilder, bus);
-        tagDao.insertTag(account.getId(), ObjectType.ACCOUNT, definition, context);
+        tagDao.insertTag(account.getId(), ObjectType.ACCOUNT, definition.getId(), context);
 
         final Map<String, Tag> tagMap = tagDao.loadEntities(account.getId(), ObjectType.ACCOUNT);
         assertEquals(tagMap.size(), 1);
-        final Tag tag = tagMap.get(definition.getName());
-        assertEquals(tag.getTagDefinitionName(), definition.getName());
+
+        assertEquals(tagMap.values().iterator().next().getTagDefinitionId(), definition.getId());
     }
 
     @Test

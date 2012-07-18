@@ -28,6 +28,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.UUID;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -62,18 +63,18 @@ public class TagResource implements JaxrsResource {
         final List<TagDefinitionJson> result = new LinkedList<TagDefinitionJson>();
         final List<TagDefinition> tagDefinitions = tagUserApi.getTagDefinitions();
         for (final TagDefinition cur : tagDefinitions) {
-            result.add(new TagDefinitionJson(cur.getName(), cur.getDescription()));
+            result.add(new TagDefinitionJson(cur.getId().toString(), cur.getName(), cur.getDescription()));
         }
         return Response.status(Status.OK).entity(result).build();
     }
 
     @GET
-    @Path("/{tagDefinitionName:" + STRING_PATTERN + "}")
+    @Path("/{tagDefinitionId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
-    public Response getTagDefinition(@PathParam("tagDefinitionName") final String tagDefName) {
+    public Response getTagDefinition(@PathParam("tagDefinitionId") final String tagDefId) {
         try {
-            final TagDefinition tagDef = tagUserApi.getTagDefinition(tagDefName);
-            final TagDefinitionJson json = new TagDefinitionJson(tagDef.getName(), tagDef.getDescription());
+            final TagDefinition tagDef = tagUserApi.getTagDefinition(UUID.fromString(tagDefId));
+            final TagDefinitionJson json = new TagDefinitionJson(tagDef.getId().toString(), tagDef.getName(), tagDef.getDescription());
             return Response.status(Status.OK).entity(json).build();
         } catch (TagDefinitionApiException e) {
             return Response.status(Status.NO_CONTENT).build();
@@ -85,12 +86,12 @@ public class TagResource implements JaxrsResource {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response createTagDefinition(final TagDefinitionJson json,
-                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                        @HeaderParam(HDR_REASON) final String reason,
-                                        @HeaderParam(HDR_COMMENT) final String comment) {
+            @HeaderParam(HDR_CREATED_BY) final String createdBy,
+            @HeaderParam(HDR_REASON) final String reason,
+            @HeaderParam(HDR_COMMENT) final String comment) {
         try {
             final TagDefinition createdTagDef = tagUserApi.create(json.getName(), json.getDescription(), context.createContext(createdBy, reason, comment));
-            return uriBuilder.buildResponse(TagResource.class, "getTagDefinition", createdTagDef.getName());
+            return uriBuilder.buildResponse(TagResource.class, "getTagDefinition", createdTagDef.getId());
         } catch (TagDefinitionApiException e) {
             return Response.status(Status.NO_CONTENT).build();
         } catch (IllegalArgumentException e) {
@@ -99,15 +100,15 @@ public class TagResource implements JaxrsResource {
     }
 
     @DELETE
-    @Path("/{tagDefinitionName:" + STRING_PATTERN + "}")
+    @Path("/{tagDefinitionId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
-    public Response deleteTagDefinition(@PathParam("tagDefinitionName") final String tagDefName,
-                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                        @HeaderParam(HDR_REASON) final String reason,
-                                        @HeaderParam(HDR_COMMENT) final String comment) {
+    public Response deleteTagDefinition(@PathParam("tagDefinitionId") final String tagDefId,
+            @HeaderParam(HDR_CREATED_BY) final String createdBy,
+            @HeaderParam(HDR_REASON) final String reason,
+            @HeaderParam(HDR_COMMENT) final String comment) {
         try {
-            tagUserApi.deleteTagDefinition(tagDefName, context.createContext(createdBy, reason, comment));
-            return Response.status(Status.NO_CONTENT).build();
+            tagUserApi.deleteTagDefinition(UUID.fromString(tagDefId), context.createContext(createdBy, reason, comment));
+            return Response.status(Status.OK).build();
         } catch (TagDefinitionApiException e) {
             return Response.status(Status.NO_CONTENT).build();
         } catch (IllegalArgumentException e) {

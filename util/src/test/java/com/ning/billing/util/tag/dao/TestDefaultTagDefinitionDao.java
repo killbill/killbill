@@ -108,7 +108,7 @@ public class TestDefaultTagDefinitionDao extends UtilTestSuiteWithEmbeddedDB {
         Assert.assertEquals(tagDefinitionFirstEventReceived.getUserToken(), context.getUserToken());
 
         // Delete the tag definition
-        tagDefinitionDao.deleteTagDefinition(definitionName, context);
+        tagDefinitionDao.deleteById(foundTagDefinition.getId(), context);
 
         // Make sure the tag definition is deleted
         Assert.assertNull(tagDefinitionDao.getByName(definitionName));

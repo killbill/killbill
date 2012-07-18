@@ -32,18 +32,19 @@ import com.ning.billing.util.tag.Tag;
 public class TagMapper extends MapperBase implements ResultSetMapper<Tag> {
     @Override
     public Tag map(final int index, final ResultSet result, final StatementContext context) throws SQLException {
-        final String name = result.getString("tag_definition_name");
 
+        final UUID tagDefinitionId = getUUID(result, "tag_definition_id");
         ControlTagType thisTagType = null;
         for (final ControlTagType controlTagType : ControlTagType.values()) {
-            if (name.equals(controlTagType.toString())) {
+            if (tagDefinitionId.equals(controlTagType.getId())) {
                 thisTagType = controlTagType;
+                break;
             }
         }
 
-        final UUID id = UUID.fromString(result.getString("id"));
+        final UUID id = getUUID(result, "id");
         if (thisTagType == null) {
-            return new DescriptiveTag(id, name);
+            return new DescriptiveTag(id, tagDefinitionId);
         } else {
             return new DefaultControlTag(id, thisTagType);
         }

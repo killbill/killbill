@@ -16,6 +16,7 @@
 
 package com.ning.billing.util.tag.api;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -52,44 +53,57 @@ public class DefaultTagUserApi implements TagUserApi {
     }
 
     @Override
-    public void deleteTagDefinition(final String definitionName, final CallContext context) throws TagDefinitionApiException {
-        tagDefinitionDao.deleteTagDefinition(definitionName, context);
+    public void deleteTagDefinition(final UUID definitionId, final CallContext context) throws TagDefinitionApiException {
+        tagDefinitionDao.deleteById(definitionId, context);
     }
 
     @Override
-    public TagDefinition getTagDefinition(final String name)
+    public TagDefinition getTagDefinition(final UUID tagDefinitionId)
             throws TagDefinitionApiException {
-        return tagDefinitionDao.getByName(name);
+        return tagDefinitionDao.getById(tagDefinitionId);
+    }
+
+
+    @Override
+    public List<TagDefinition> getTagDefinitions(Collection<UUID> tagDefinitionIds)
+            throws TagDefinitionApiException {
+        return tagDefinitionDao.getByIds(tagDefinitionIds);
     }
 
     @Override
-    public void addTags(final UUID objectId, final ObjectType objectType, final List<TagDefinition> tagDefinitions, final CallContext context) throws TagApiException {
+    public void addTags(final UUID objectId, final ObjectType objectType, final Collection<UUID> tagDefinitionIds, final CallContext context) throws TagApiException {
         // TODO: consider making this batch
-        for (final TagDefinition tagDefinition : tagDefinitions) {
-            tagDao.insertTag(objectId, objectType, tagDefinition, context);
+        for (final UUID tagDefinitionId : tagDefinitionIds) {
+            tagDao.insertTag(objectId, objectType, tagDefinitionId, context);
         }
     }
 
     @Override
-    public void addTag(final UUID objectId, final ObjectType objectType, final TagDefinition tagDefinition, final CallContext context) throws TagApiException {
-        tagDao.insertTag(objectId, objectType, tagDefinition, context);
+    public void addTag(final UUID objectId, final ObjectType objectType, final UUID tagDefinitionId, final CallContext context) throws TagApiException {
+        tagDao.insertTag(objectId, objectType, tagDefinitionId, context);
     }
 
     @Override
-    public void removeTag(final UUID objectId, final ObjectType objectType, final TagDefinition tagDefinition, final CallContext context) throws TagApiException {
-        tagDao.deleteTag(objectId, objectType, tagDefinition, context);
+    public void removeTag(final UUID objectId, final ObjectType objectType, final UUID tagDefinitionId, final CallContext context) throws TagApiException {
+        tagDao.deleteTag(objectId, objectType, tagDefinitionId, context);
     }
 
     @Override
-    public void removeTags(final UUID objectId, final ObjectType objectType, final List<TagDefinition> tagDefinitions, final CallContext context) throws TagApiException {
+    public void removeTags(final UUID objectId, final ObjectType objectType, final Collection<UUID> tagDefinitionIds, final CallContext context) throws TagApiException {
         // TODO: consider making this batch
-        for (final TagDefinition tagDefinition : tagDefinitions) {
-            tagDao.deleteTag(objectId, objectType, tagDefinition, context);
+        for (final UUID tagDefinitionId : tagDefinitionIds) {
+            tagDao.deleteTag(objectId, objectType, tagDefinitionId, context);
         }
     }
 
     @Override
     public Map<String, Tag> getTags(final UUID objectId, final ObjectType objectType) {
         return tagDao.loadEntities(objectId, objectType);
+    }
+
+    @Override
+    public TagDefinition getTagDefinitionForName(String tagDefinitionName)
+            throws TagDefinitionApiException {
+        return tagDefinitionDao.getByName(tagDefinitionName);
     }
 }

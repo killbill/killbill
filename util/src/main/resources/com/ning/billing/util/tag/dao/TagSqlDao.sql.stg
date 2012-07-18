@@ -2,7 +2,7 @@ group TagDao;
 
 fields(prefix) ::= <<
     <prefix>id,
-    <prefix>tag_definition_name,
+    <prefix>tag_definition_id,
     <prefix>object_id,
     <prefix>object_type,
     <prefix>created_by,
@@ -11,41 +11,30 @@ fields(prefix) ::= <<
 
 insertFromTransaction() ::= <<
   INSERT INTO tags(<fields()>)
-  VALUES (:id, :tagDefinitionName, :objectId, :objectType, :userName, :createdDate);
+  VALUES (:id, :tagDefinitionId, :objectId, :objectType, :userName, :createdDate);
 >>
 
 deleteFromTransaction() ::= <<
     DELETE FROM tags
-    WHERE tag_definition_name = :tagDefinitionName
+    WHERE tag_definition_id = :tagDefinitionId
         AND object_id = :objectId AND object_type = :objectType;
 >>
 
 addTagFromTransaction() ::= <<
     INSERT INTO tags(<fields()>)
-    VALUES (:id, :tagDefinitionName, :objectId, :objectType, :userName, :createdDate);
+    VALUES (:id, :tagDefinitionId, :objectId, :objectType, :userName, :createdDate);
 >>
 
 removeTagFromTransaction() ::= <<
     DELETE FROM tags
-    WHERE tag_definition_name = :tagDefinitionName
+    WHERE tag_definition_id = :tagDefinitionId
     AND object_id = :objectId AND object_type = :objectType;
 >>
 
 findTag() ::= <<
-    SELECT <fields()>   FROM tags
-    WHERE tag_definition_name = :tagDefinitionName
+    SELECT <fields()> FROM tags
+    WHERE tag_definition_id = :tagDefinitionId
     AND object_id = :objectId AND object_type = :objectType;
->>
-
-load() ::= <<
-    SELECT t.id, t.object_id, t.object_type, t.created_by, t.created_date,
-           td.id AS tag_definition_id,
-           t.tag_definition_name AS tag_definition_name,
-           td.description AS tag_description,
-           td.created_by
-    FROM tags t
-    LEFT JOIN tag_definitions td ON t.tag_definition_name = td.name
-    WHERE t.object_id = :objectId AND t.object_type = :objectType;
 >>
 
 getRecordIds() ::= <<
@@ -59,7 +48,7 @@ historyFields(prefix) ::= <<
   <prefix>id,
   <prefix>object_id,
   <prefix>object_type,
-  <prefix>tag_definition_name,
+  <prefix>tag_definition_id,
   <prefix>updated_by,
   <prefix>date,
   <prefix>change_type
@@ -67,7 +56,7 @@ historyFields(prefix) ::= <<
 
 addHistoryFromTransaction() ::= <<
     INSERT INTO tag_history(<historyFields()>)
-    VALUES(:recordId, :id, :objectId, :objectType, :tagDefinitionName, :userName, :updatedDate, :changeType);
+    VALUES(:recordId, :id, :objectId, :objectType, :tagDefinitionId, :userName, :updatedDate, :changeType);
 >>
 
 getMaxHistoryRecordId() ::= <<
@@ -90,6 +79,12 @@ auditFields(prefix) ::= <<
     <prefix>reason_code,
     <prefix>comments,
     <prefix>user_token
+>>
+
+load() ::= <<
+  SELECT <fields()>
+    FROM tags
+  WHERE object_id = :objectId AND object_type = :objectType;
 >>
 
 insertAuditFromTransaction() ::= <<

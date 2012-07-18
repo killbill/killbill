@@ -26,27 +26,33 @@ load() ::= <<
   WHERE id = :id;
 >>
 
-deleteAllTagsForDefinition() ::= <<
-  DELETE FROM tags
-  WHERE tag_definition_name = :name;
->>
 
 deleteTagDefinition() ::= <<
   DELETE FROM tag_definitions
-  WHERE name = :name;
+  WHERE id = :id;
 >>
 
 tagDefinitionUsageCount() ::= <<
   SELECT COUNT(id)
   FROM tags
-  WHERE tag_definition_name = :name
+  WHERE tag_definition_id = :id
 >>
 
 getByName() ::= <<
   SELECT <fields()>
-  FROM tag_definitions
+   FROM tag_definitions
   WHERE name = :name;
 >>
+
+getById() ::= <<
+  SELECT <fields()>
+  FROM tag_definitions
+  WHERE id = :id;
+>>
+
+getByIds(tag_definition_ids) ::= <<
+  SELECT <fields()>
+  FROM tag_definitions
+  WHERE id IN (<tag_definition_ids: {id | :id_<i0>}; separator="," >)
+>>
 ;
-
-

@@ -26,6 +26,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.core.Response.Status;
 import java.util.Collection;
 import java.util.List;
@@ -47,7 +48,6 @@ import com.ning.billing.jaxrs.json.CustomFieldJson;
 import com.ning.billing.jaxrs.json.SubscriptionJsonNoEvents;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
-import com.ning.billing.jaxrs.util.TagHelper;
 import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.dao.ObjectType;
@@ -68,9 +68,9 @@ public class BundleResource extends JaxRsResourceBase {
 
     @Inject
     public BundleResource(final JaxrsUriBuilder uriBuilder, final EntitlementUserApi entitlementApi,
-                          final TagUserApi tagUserApi, final TagHelper tagHelper, final CustomFieldUserApi customFieldUserApi,
+                          final TagUserApi tagUserApi, final CustomFieldUserApi customFieldUserApi,
                           final Context context) {
-        super(uriBuilder, tagUserApi, tagHelper, customFieldUserApi);
+        super(uriBuilder, tagUserApi, customFieldUserApi);
         this.uriBuilder = uriBuilder;
         this.entitlementApi = entitlementApi;
         this.context = context;
@@ -207,8 +207,9 @@ public class BundleResource extends JaxRsResourceBase {
                                @QueryParam(QUERY_TAGS) final String tagList,
                                @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                @HeaderParam(HDR_REASON) final String reason,
-                               @HeaderParam(HDR_COMMENT) final String comment) {
-        return super.createTags(UUID.fromString(id), tagList,
+                               @HeaderParam(HDR_COMMENT) final String comment,
+                               @javax.ws.rs.core.Context final UriInfo uriInfo) {
+        return super.createTags(UUID.fromString(id), tagList, uriInfo,
                                 context.createContext(createdBy, reason, comment));
     }
 

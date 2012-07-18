@@ -75,7 +75,7 @@ DROP TABLE IF EXISTS tags;
 CREATE TABLE tags (
     record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
     id char(36) NOT NULL,
-    tag_definition_name varchar(20) NOT NULL,
+    tag_definition_id char(36) NOT NULL,
     object_id char(36) NOT NULL,
     object_type varchar(30) NOT NULL,
     created_by varchar(50) NOT NULL,
@@ -86,7 +86,7 @@ CREATE TABLE tags (
 ) ENGINE = innodb;
 CREATE UNIQUE INDEX tags_id ON tags(id);
 CREATE INDEX tags_by_object ON tags(object_id);
-CREATE UNIQUE INDEX tags_unique ON tags(tag_definition_name, object_id);
+CREATE UNIQUE INDEX tags_unique ON tags(tag_definition_id, object_id);
 
 DROP TABLE IF EXISTS tag_history;
 CREATE TABLE tag_history (
@@ -95,7 +95,7 @@ CREATE TABLE tag_history (
     id char(36) NOT NULL,
     object_id char(36) NOT NULL,
     object_type varchar(30) NOT NULL,
-    tag_definition_name varchar(20) NOT NULL,
+    tag_definition_id char(36) NOT NULL,
     updated_by varchar(50) NOT NULL,
     date datetime NOT NULL,
     change_type char(6) NOT NULL,

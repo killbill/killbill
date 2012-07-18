@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -18,6 +18,7 @@ package com.ning.billing.jaxrs;
 import javax.ws.rs.core.Response.Status;
 import java.util.List;
 
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -27,12 +28,13 @@ import com.ning.http.client.Response;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
 
 public class TestTag extends TestJaxrsBase {
     @Test(groups = "slow", enabled = true)
     public void testTagDefinitionOk() throws Exception {
 
-        final TagDefinitionJson input = new TagDefinitionJson("blue", "relaxing color");
+        final TagDefinitionJson input = new TagDefinitionJson(null, "blue", "relaxing color");
         String baseJson = mapper.writeValueAsString(input);
         Response response = doPost(JaxrsResource.TAG_DEFINITIONS_PATH, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
@@ -47,7 +49,7 @@ public class TestTag extends TestJaxrsBase {
         baseJson = response.getResponseBody();
         final TagDefinitionJson objFromJson = mapper.readValue(baseJson, TagDefinitionJson.class);
         assertNotNull(objFromJson);
-        assertEquals(objFromJson, input);
+        assertTrue(objFromJson.equalsNoId(input));
     }
 
     @Test(groups = "slow", enabled = true)
@@ -60,23 +62,23 @@ public class TestTag extends TestJaxrsBase {
         List<TagDefinitionJson> objFromJson = mapper.readValue(baseJson, new TypeReference<List<TagDefinitionJson>>() {});
         final int sizeSystemTag = (objFromJson == null || objFromJson.size() == 0) ? 0 : objFromJson.size();
 
-        TagDefinitionJson input = new TagDefinitionJson("blue", "relaxing color");
-        baseJson = mapper.writeValueAsString(input);
+        TagDefinitionJson inputBlue = new TagDefinitionJson(null, "blue", "relaxing color");
+        baseJson = mapper.writeValueAsString(inputBlue);
         response = doPost(JaxrsResource.TAG_DEFINITIONS_PATH, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
 
-        input = new TagDefinitionJson("red", "hot color");
-        baseJson = mapper.writeValueAsString(input);
+        TagDefinitionJson inputRed = new TagDefinitionJson(null, "red", "hot color");
+        baseJson = mapper.writeValueAsString(inputRed);
         response = doPost(JaxrsResource.TAG_DEFINITIONS_PATH, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
 
-        input = new TagDefinitionJson("yellow", "vibrant color");
-        baseJson = mapper.writeValueAsString(input);
+        TagDefinitionJson inputYellow = new TagDefinitionJson(null, "yellow", "vibrant color");
+        baseJson = mapper.writeValueAsString(inputYellow);
         response = doPost(JaxrsResource.TAG_DEFINITIONS_PATH, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
 
-        input = new TagDefinitionJson("green", "super relaxing color");
-        baseJson = mapper.writeValueAsString(input);
+        TagDefinitionJson inputGreen = new TagDefinitionJson(null, "green", "super relaxing color");
+        baseJson = mapper.writeValueAsString(inputGreen);
         response = doPost(JaxrsResource.TAG_DEFINITIONS_PATH, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
 
@@ -88,21 +90,20 @@ public class TestTag extends TestJaxrsBase {
         assertNotNull(objFromJson);
         assertEquals(objFromJson.size(), 4 + sizeSystemTag);
 
-        // STEPH currently broken Tag API does not work as expected...
 
-        /*
-        String uri = JaxrsResource.TAG_DEFINITIONS_PATH + "/green";
+
+        String uri = JaxrsResource.TAG_DEFINITIONS_PATH + "/" + objFromJson.get(0).getId();
         response = doDelete(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        assertEquals(response.getStatusCode(), Status.NO_CONTENT.getStatusCode());
-    
+        assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+
         response = doGet(JaxrsResource.TAG_DEFINITIONS_PATH, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
         baseJson = response.getResponseBody();
-        
+
         objFromJson = mapper.readValue(baseJson, new TypeReference<List<TagDefinitionJson>>() {});
         assertNotNull(objFromJson);
         assertEquals(objFromJson.size(), 3 + sizeSystemTag);
-        */
+
     }
 
 }

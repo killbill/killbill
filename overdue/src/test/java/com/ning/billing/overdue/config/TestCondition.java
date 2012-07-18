@@ -148,7 +148,7 @@ public class TestCondition extends OverdueTestSuite {
         final LocalDate now = new LocalDate();
 
         final BillingState<Blockable> state0 = new BillingState<Blockable>(new UUID(0L, 1L), 0, BigDecimal.ZERO, null,
-                                                                           DateTimeZone.UTC, unpaidInvoiceId, PaymentResponse.LOST_OR_STOLEN_CARD, new Tag[]{new DefaultControlTag(ControlTagType.AUTO_INVOICING_OFF), new DescriptiveTag("Tag")});
+                                                                           DateTimeZone.UTC, unpaidInvoiceId, PaymentResponse.LOST_OR_STOLEN_CARD, new Tag[]{new DefaultControlTag(ControlTagType.AUTO_INVOICING_OFF), new DescriptiveTag(UUID.randomUUID())});
         final BillingState<Blockable> state1 = new BillingState<Blockable>(new UUID(0L, 1L), 1, new BigDecimal("100.00"), now.minusDays(10),
                                                                            DateTimeZone.UTC, unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{new DefaultControlTag(ControlTagType.OVERDUE_ENFORCEMENT_OFF)});
         final BillingState<Blockable> state2 = new BillingState<Blockable>(new UUID(0L, 1L), 1, new BigDecimal("200.00"), now.minusDays(20),
@@ -156,7 +156,7 @@ public class TestCondition extends OverdueTestSuite {
                                                                            PaymentResponse.DO_NOT_HONOR,
                                                                            new Tag[]{new DefaultControlTag(ControlTagType.OVERDUE_ENFORCEMENT_OFF),
                                                                                      new DefaultControlTag(ControlTagType.AUTO_INVOICING_OFF),
-                                                                                     new DescriptiveTag("Tag")});
+                                                                                     new DescriptiveTag(UUID.randomUUID())});
 
         Assert.assertTrue(!c.evaluate(state0, now));
         Assert.assertTrue(c.evaluate(state1, now));

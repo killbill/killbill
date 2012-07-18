@@ -43,6 +43,8 @@ import com.ning.billing.util.dao.Mapper;
 import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.collection.dao.UpdatableEntityCollectionSqlDao;
+import com.ning.billing.util.tag.ControlTagType;
+import com.ning.billing.util.tag.DefaultTagDefinition;
 import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;
 import com.ning.billing.util.tag.api.TagEvent;
@@ -67,18 +69,42 @@ public class AuditedTagDao extends AuditedCollectionDaoBase<Tag, Tag> implements
         return obj;
     }
 
+    private TagDefinition getTagDefinitionFromTransaction(final TagSqlDao transTagSqlDao, final UUID tagDefinitionId)
+        throws TagApiException {
+
+        TagDefinition tagDefintion = null;
+        for (ControlTagType t : ControlTagType.values()) {
+            if (t.getId().equals(tagDefinitionId)) {
+                tagDefintion = new DefaultTagDefinition(t.getId(), t.toString(), t.getDescription(), true);
+                break;
+            }
+        }
+        if (tagDefintion == null) {
+            TagDefinitionSqlDao transTagDefintionSqlDao = tagSqlDao.become(TagDefinitionSqlDao.class);
+            tagDefintion = transTagDefintionSqlDao.getById(tagDefinitionId.toString());
+        }
+
+        if (tagDefintion == null) {
+            throw new TagApiException(ErrorCode.TAG_DEFINITION_DOES_NOT_EXIST, tagDefinitionId);
+        }
+        return tagDefintion;
+    }
+
+
     @Override
-    public void insertTag(final UUID objectId, final ObjectType objectType, final TagDefinition tagDefinition, final CallContext context) {
+    public void insertTag(final UUID objectId, final ObjectType objectType, final UUID tagDefinitionId, final CallContext context)
+     throws TagApiException {
         tagSqlDao.inTransaction(new Transaction<Void, TagSqlDao>() {
             @Override
-            public Void inTransaction(final TagSqlDao tagSqlDao, final TransactionStatus status) throws Exception {
+            public Void inTransaction(final TagSqlDao transTagSqlDao, final TransactionStatus status) throws Exception {
+
                 final String tagId = UUID.randomUUID().toString();
-                final String tagName = tagDefinition.getName();
+                final TagDefinition tagDefinition = getTagDefinitionFromTransaction(transTagSqlDao, tagDefinitionId);
 
                 // Create the tag
-                tagSqlDao.addTagFromTransaction(tagId, tagName, objectId.toString(), objectType, context);
+                tagSqlDao.addTagFromTransaction(tagId, tagDefinitionId.toString(), objectId.toString(), objectType, context);
 
-                final Tag tag = tagSqlDao.findTag(tagName, objectId.toString(), objectType);
+                final Tag tag = tagSqlDao.findTag(tagDefinitionId.toString(), objectId.toString(), objectType);
                 final List<Tag> tagList = Arrays.asList(tag);
 
                 // Gather the tag ids for this object id
@@ -108,23 +134,22 @@ public class AuditedTagDao extends AuditedCollectionDaoBase<Tag, Tag> implements
                 } catch (Bus.EventBusException e) {
                     log.warn("Failed to post tag creation event for tag " + tag.getId().toString(), e);
                 }
-
                 return null;
             }
         });
     }
 
     @Override
-    public void deleteTag(final UUID objectId, final ObjectType objectType, final TagDefinition tagDefinition, final CallContext context) throws TagApiException {
+    public void deleteTag(final UUID objectId, final ObjectType objectType, final UUID tagDefinitionId, final CallContext context) throws TagApiException {
         try {
             tagSqlDao.inTransaction(new Transaction<Void, TagSqlDao>() {
                 @Override
-                public Void inTransaction(final TagSqlDao tagSqlDao, final TransactionStatus status) throws Exception {
-                    // Make sure the tag exists
-                    final String tagName = tagDefinition.getName();
-                    final Tag tag = tagSqlDao.findTag(tagName, objectId.toString(), objectType);
+                public Void inTransaction(final TagSqlDao transTagSqlDao, final TransactionStatus status) throws Exception {
+
+                    final TagDefinition tagDefinition = getTagDefinitionFromTransaction(transTagSqlDao, tagDefinitionId);
+                    final Tag tag = tagSqlDao.findTag(tagDefinitionId.toString(), objectId.toString(), objectType);
                     if (tag == null) {
-                        throw new TagApiException(ErrorCode.TAG_DOES_NOT_EXIST, tagName);
+                        throw new TagApiException(ErrorCode.TAG_DOES_NOT_EXIST, tagDefinition.getName());
                     }
 
                     final List<Tag> tagList = Arrays.asList(tag);
@@ -189,6 +214,6 @@ public class AuditedTagDao extends AuditedCollectionDaoBase<Tag, Tag> implements
 
     @Override
     protected String getKey(final Tag entity) {
-        return entity.getTagDefinitionName();
+        return entity.getId().toString();
     }
 }

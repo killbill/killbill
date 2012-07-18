@@ -159,12 +159,12 @@ public enum ErrorCode {
     * Range 3900: Tag definitions
     *
     */
-    TAG_DEFINITION_CONFLICTS_WITH_CONTROL_TAG(3900, "The tag definition name conflicts with a reserved name (name %s)"),
-    TAG_DEFINITION_ALREADY_EXISTS(3901, "The tag definition name already exists (name: %s)"),
-    TAG_DEFINITION_DOES_NOT_EXIST(3902, "The tag definition name does not exist (name: %s)"),
-    TAG_DEFINITION_IN_USE(3903, "The tag definition name is currently in use (name: %s)"),
+    TAG_DEFINITION_CONFLICTS_WITH_CONTROL_TAG(3900, "The tag definition name conflicts with a reserved %s"),
+    TAG_DEFINITION_ALREADY_EXISTS(3901, "The tag definition name already exists %s"),
+    TAG_DEFINITION_DOES_NOT_EXIST(3902, "The tag definition name does not exist %s"),
+    TAG_DEFINITION_IN_USE(3903, "The tag definition name is currently in use %s"),
 
-    CONTROL_TAG_DOES_NOT_EXIST(3904, "The control tag does not exist (name: %s)"),
+    CONTROL_TAG_DOES_NOT_EXIST(3904, "The control tag does not exist %s"),
 
     /*
     *

@@ -83,9 +83,9 @@ public class DefaultCondition<T extends Blockable> extends ValidatingConfig<Over
         return false;
     }
 
-    private boolean isTagIn(final ControlTagType tag, final Tag[] tags) {
+    private boolean isTagIn(final ControlTagType tagType, final Tag[] tags) {
         for (final Tag t : tags) {
-            if (t.getTagDefinitionName().equals(tag.toString())) {
+            if (t.getTagDefinitionId().equals(tagType.getId())) {
                 return true;
             }
         }

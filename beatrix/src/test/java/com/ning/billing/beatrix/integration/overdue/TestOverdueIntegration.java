@@ -187,12 +187,15 @@ public class TestOverdueIntegration extends TestIntegrationBase {
         // Clear databases
     }
 
+    // We set the the property killbill.payment.retry.days=100,100,100 so that Payment retry logics does not end with an ABORTED state
+    // preventing final instant payment to succeed.
+    //
     @Test(groups = {"slow"}, enabled = true)
     public void testBasicOverdueState() throws Exception {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
         paymentPlugin.makeAllInvoicesFailWithError(true);
 
-        // set next invoice to fail and create subscription 
+        // set next invoice to fail and create subscription
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.INVOICE);
         final SubscriptionData baseSubscription = subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(),
                                                                                                                    new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, context));

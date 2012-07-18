@@ -106,7 +106,7 @@ public class TestTagStore extends UtilTestSuiteWithEmbeddedDB {
         final UUID accountId = UUID.randomUUID();
 
         final TagStore tagStore = new DefaultTagStore(accountId, ObjectType.ACCOUNT);
-        final Tag tag = new DescriptiveTag(testTag);
+        final Tag tag = new DescriptiveTag(testTag.getId());
         tagStore.add(tag);
 
         tagDao.saveEntities(accountId, ObjectType.ACCOUNT, tagStore.getEntityList(), context);
@@ -114,8 +114,8 @@ public class TestTagStore extends UtilTestSuiteWithEmbeddedDB {
         final Map<String, Tag> savedTags = tagDao.loadEntities(accountId, ObjectType.ACCOUNT);
         assertEquals(savedTags.size(), 1);
 
-        final Tag savedTag = savedTags.get(tag.getTagDefinitionName());
-        assertEquals(savedTag.getTagDefinitionName(), tag.getTagDefinitionName());
+        final Tag savedTag = savedTags.get(tag.getId().toString());
+        assertEquals(savedTag.getTagDefinitionId(), tag.getTagDefinitionId());
         assertEquals(savedTag.getId(), tag.getId());
     }
 
@@ -138,7 +138,7 @@ public class TestTagStore extends UtilTestSuiteWithEmbeddedDB {
         final Map<String, Tag> tagMap = tagDao.loadEntities(accountId, ObjectType.ACCOUNT);
         assertEquals(tagMap.size(), 1);
 
-        assertEquals(tagMap.containsKey(ControlTagType.AUTO_INVOICING_OFF.toString()), true);
+        assertEquals(tagMap.values().iterator().next().getTagDefinitionId(), ControlTagType.AUTO_INVOICING_OFF.getId());
     }
 
     @Test(groups = "slow")
@@ -154,7 +154,7 @@ public class TestTagStore extends UtilTestSuiteWithEmbeddedDB {
             fail("Tag definition creation failed.", e);
         }
 
-        final DescriptiveTag tag = new DescriptiveTag(tagDefinition);
+        final DescriptiveTag tag = new DescriptiveTag(tagDefinition.getId());
         tagStore.add(tag);
         assertEquals(tagStore.generateInvoice(), true);
 
@@ -166,7 +166,7 @@ public class TestTagStore extends UtilTestSuiteWithEmbeddedDB {
         final Map<String, Tag> tagMap = tagDao.loadEntities(accountId, ObjectType.ACCOUNT);
         assertEquals(tagMap.size(), 1);
 
-        assertEquals(tagMap.containsKey(ControlTagType.AUTO_INVOICING_OFF.toString()), false);
+        assertEquals(tagMap.values().iterator().next().getTagDefinitionId(), tagDefinition.getId());
     }
 
     @Test(groups = "slow")
@@ -182,7 +182,7 @@ public class TestTagStore extends UtilTestSuiteWithEmbeddedDB {
             fail("Tag definition creation failed.", e);
         }
 
-        final DescriptiveTag descriptiveTag = new DescriptiveTag(tagDefinition);
+        final DescriptiveTag descriptiveTag = new DescriptiveTag(tagDefinition.getId());
         tagStore.add(descriptiveTag);
         assertEquals(tagStore.generateInvoice(), true);
 
@@ -198,7 +198,15 @@ public class TestTagStore extends UtilTestSuiteWithEmbeddedDB {
         final Map<String, Tag> tagMap = tagDao.loadEntities(accountId, ObjectType.ACCOUNT);
         assertEquals(tagMap.size(), 2);
 
-        assertEquals(tagMap.containsKey(ControlTagType.AUTO_INVOICING_OFF.toString()), true);
+        boolean found_AUTO_INVOICING_OFF_tag = false;
+        for (Tag cur : tagMap.values()) {
+            if (cur.getTagDefinitionId().equals(ControlTagType.AUTO_INVOICING_OFF.getId())) {
+                found_AUTO_INVOICING_OFF_tag = true;
+                break;
+            }
+        }
+        assertEquals(found_AUTO_INVOICING_OFF_tag, true);
+
     }
 
     @Test(groups = "slow")
@@ -233,7 +241,7 @@ public class TestTagStore extends UtilTestSuiteWithEmbeddedDB {
         TagDefinition tagDefinition = tagDefinitionDao.getByName(definitionName);
         assertNotNull(tagDefinition);
 
-        tagDefinitionDao.deleteTagDefinition(definitionName, context);
+        tagDefinitionDao.deleteById(tagDefinition.getId(), context);
         tagDefinition = tagDefinitionDao.getByName(definitionName);
         assertNull(tagDefinition);
     }
@@ -248,7 +256,7 @@ public class TestTagStore extends UtilTestSuiteWithEmbeddedDB {
 
         final UUID objectId = UUID.randomUUID();
         final TagStore tagStore = new DefaultTagStore(objectId, ObjectType.ACCOUNT);
-        final Tag tag = new DescriptiveTag(tagDefinition);
+        final Tag tag = new DescriptiveTag(tagDefinition.getId());
         tagStore.add(tag);
 
         tagDao.saveEntities(objectId, ObjectType.ACCOUNT, tagStore.getEntityList(), context);
@@ -256,7 +264,7 @@ public class TestTagStore extends UtilTestSuiteWithEmbeddedDB {
         final Map<String, Tag> tagMap = tagDao.loadEntities(objectId, ObjectType.ACCOUNT);
         assertEquals(tagMap.size(), 1);
 
-        tagDefinitionDao.deleteTagDefinition(definitionName, context);
+        tagDefinitionDao.deleteById(tagDefinition.getId(), context);
     }
 
     @Test(groups = "slow")
@@ -273,7 +281,7 @@ public class TestTagStore extends UtilTestSuiteWithEmbeddedDB {
 
         final UUID objectId = UUID.randomUUID();
         final TagStore tagStore = new DefaultTagStore(objectId, ObjectType.ACCOUNT);
-        final Tag tag = new DescriptiveTag(tagDefinition);
+        final Tag tag = new DescriptiveTag(tagDefinition.getId());
         tagStore.add(tag);
 
         tagDao.saveEntities(objectId, ObjectType.ACCOUNT, tagStore.getEntityList(), context);
@@ -281,12 +289,12 @@ public class TestTagStore extends UtilTestSuiteWithEmbeddedDB {
         final Map<String, Tag> tagMap = tagDao.loadEntities(objectId, ObjectType.ACCOUNT);
         assertEquals(tagMap.size(), 1);
 
-        tagDao.deleteTag(objectId, ObjectType.ACCOUNT, tagDefinition, context);
+        tagDao.deleteTag(objectId, ObjectType.ACCOUNT, tagDefinition.getId(), context);
         final Map<String, Tag> tagMapAfterDeletion = tagDao.loadEntities(objectId, ObjectType.ACCOUNT);
         assertEquals(tagMapAfterDeletion.size(), 0);
 
         try {
-            tagDefinitionDao.deleteTagDefinition(definitionName, context);
+            tagDefinitionDao.deleteById(tagDefinition.getId(), context);
         } catch (TagDefinitionApiException e) {
             fail("Could not delete tag definition", e);
         }
@@ -303,7 +311,7 @@ public class TestTagStore extends UtilTestSuiteWithEmbeddedDB {
         final UUID accountId = UUID.randomUUID();
 
         final TagStore tagStore = new DefaultTagStore(accountId, ObjectType.ACCOUNT);
-        final Tag tag = new DescriptiveTag(testTag);
+        final Tag tag = new DescriptiveTag(testTag.getId());
         tagStore.add(tag);
 
         tagDao.saveEntities(accountId, ObjectType.ACCOUNT, tagStore.getEntityList(), context);
@@ -311,8 +319,8 @@ public class TestTagStore extends UtilTestSuiteWithEmbeddedDB {
         final Map<String, Tag> savedTags = tagDao.loadEntities(accountId, ObjectType.ACCOUNT);
         assertEquals(savedTags.size(), 1);
 
-        final Tag savedTag = savedTags.get(tag.getTagDefinitionName());
-        assertEquals(savedTag.getTagDefinitionName(), tag.getTagDefinitionName());
+        final Tag savedTag = savedTags.get(tag.getId().toString());
+        assertEquals(savedTag.getTagDefinitionId(), tag.getTagDefinitionId());
         assertEquals(savedTag.getId(), tag.getId());
 
         final Handle handle = dbi.open();
@@ -335,7 +343,7 @@ public class TestTagStore extends UtilTestSuiteWithEmbeddedDB {
         final UUID accountId = UUID.randomUUID();
 
         final TagStore tagStore = new DefaultTagStore(accountId, ObjectType.ACCOUNT);
-        final Tag tag = new DescriptiveTag(testTag);
+        final Tag tag = new DescriptiveTag(testTag.getId());
         tagStore.add(tag);
 
         tagDao.saveEntities(accountId, ObjectType.ACCOUNT, tagStore.getEntityList(), context);
@@ -361,25 +369,25 @@ public class TestTagStore extends UtilTestSuiteWithEmbeddedDB {
     }
 
     @Test
-    public void testAddTag() throws TagApiException {
+    public void testAddTag() throws TagApiException, TagDefinitionApiException {
         final UUID objectId = UUID.randomUUID();
         final ObjectType objectType = ObjectType.INVOICE;
-        final TagDefinition tagDefinition = new DefaultTagDefinition("test tag", "test", false);
-        tagDao.insertTag(objectId, objectType, tagDefinition, context);
+        final TagDefinition tagDefinition = tagDefinitionDao.create("test tag", "test", context);
+        tagDao.insertTag(objectId, objectType, tagDefinition.getId(), context);
         final Map<String, Tag> savedTags = tagDao.loadEntities(objectId, objectType);
         assertEquals(savedTags.size(), 1);
     }
 
     @Test
-    public void testRemoveTag() throws TagApiException {
+    public void testRemoveTag() throws TagApiException, TagDefinitionApiException  {
         final UUID objectId = UUID.randomUUID();
         final ObjectType objectType = ObjectType.INVOICE;
-        final TagDefinition tagDefinition = new DefaultTagDefinition("test tag", "test", false);
-        tagDao.insertTag(objectId, objectType, tagDefinition, context);
+        final TagDefinition tagDefinition = tagDefinitionDao.create("test tag", "test", context);
+        tagDao.insertTag(objectId, objectType, tagDefinition.getId(), context);
         Map<String, Tag> savedTags = tagDao.loadEntities(objectId, objectType);
         assertEquals(savedTags.size(), 1);
 
-        tagDao.deleteTag(objectId, objectType, tagDefinition, context);
+        tagDao.deleteTag(objectId, objectType, tagDefinition.getId(), context);
         savedTags = tagDao.loadEntities(objectId, objectType);
         assertEquals(savedTags.size(), 0);
     }
@@ -390,8 +398,8 @@ public class TestTagStore extends UtilTestSuiteWithEmbeddedDB {
         final ObjectType objectType = ObjectType.INVOICE;
 
         final List<Tag> tags = new ArrayList<Tag>();
-        tags.add(new DescriptiveTag("test 1"));
-        tags.add(new DescriptiveTag("test 2"));
+        tags.add(new DescriptiveTag(UUID.randomUUID()));
+        tags.add(new DescriptiveTag(UUID.randomUUID()));
         tags.add(new DefaultControlTag(ControlTagType.AUTO_INVOICING_OFF));
         tagDao.saveEntities(objectId, objectType, tags, context);
 

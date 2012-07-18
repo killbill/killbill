@@ -388,7 +388,7 @@ public class TestAnalytics extends TestIntegrationBase {
         Assert.assertEquals(analyticsUserApi.getTagsForAccount(account.getExternalKey()).size(), 0);
 
         final TagDefinition tagDefinition = tagUserApi.create(UUID.randomUUID().toString().substring(0, 10), UUID.randomUUID().toString(), context);
-        tagUserApi.addTag(account.getId(), ObjectType.ACCOUNT, tagDefinition, context);
+        tagUserApi.addTag(account.getId(), ObjectType.ACCOUNT, tagDefinition.getId(), context);
 
         waitALittle();
 

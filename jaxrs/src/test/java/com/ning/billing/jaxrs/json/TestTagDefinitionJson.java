@@ -29,14 +29,16 @@ public class TestTagDefinitionJson extends JaxrsTestSuite {
 
     @Test(groups = "fast")
     public void testJson() throws Exception {
+        final String id = UUID.randomUUID().toString();
         final String name = UUID.randomUUID().toString();
         final String description = UUID.randomUUID().toString();
-        final TagDefinitionJson tagDefinitionJson = new TagDefinitionJson(name, description);
+        final TagDefinitionJson tagDefinitionJson = new TagDefinitionJson(id, name, description);
         Assert.assertEquals(tagDefinitionJson.getName(), name);
         Assert.assertEquals(tagDefinitionJson.getDescription(), description);
 
         final String asJson = mapper.writeValueAsString(tagDefinitionJson);
-        Assert.assertEquals(asJson, "{\"name\":\"" + tagDefinitionJson.getName() + "\"," +
+        Assert.assertEquals(asJson, "{\"id\":\"" + tagDefinitionJson.getId() + "\"," +
+                "\"name\":\"" + tagDefinitionJson.getName() + "\"," +
                 "\"description\":\"" + tagDefinitionJson.getDescription() + "\"}");
 
         final TagDefinitionJson fromJson = mapper.readValue(asJson, TagDefinitionJson.class);

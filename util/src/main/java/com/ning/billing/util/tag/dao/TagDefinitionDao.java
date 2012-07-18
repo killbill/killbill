@@ -16,7 +16,9 @@
 
 package com.ning.billing.util.tag.dao;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.callcontext.CallContext;
@@ -25,9 +27,13 @@ import com.ning.billing.util.tag.TagDefinition;
 public interface TagDefinitionDao {
     public List<TagDefinition> getTagDefinitions();
 
-    public TagDefinition getByName(String definitionName);
+    public TagDefinition getById(final UUID definitionId);
 
-    public TagDefinition create(String definitionName, String description, CallContext context) throws TagDefinitionApiException;
+    public TagDefinition getByName(final String definitionName);
 
-    public void deleteTagDefinition(String definitionName, CallContext context) throws TagDefinitionApiException;
+    public List<TagDefinition> getByIds(final Collection<UUID> definitionIds);
+
+    public TagDefinition create(final String definitionName, final String description, final CallContext context) throws TagDefinitionApiException;
+
+    public void deleteById(final UUID definitionId, final CallContext context) throws TagDefinitionApiException;
 }

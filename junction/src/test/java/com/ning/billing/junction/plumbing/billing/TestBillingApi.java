@@ -437,7 +437,7 @@ public class TestBillingApi extends JunctionTestSuite {
 
         final Map<String, Tag> tags = new HashMap<String, Tag>();
         final Tag aioTag = mock(Tag.class);
-        when(aioTag.getTagDefinitionName()).thenReturn(ControlTagType.AUTO_INVOICING_OFF.name());
+        when(aioTag.getTagDefinitionId()).thenReturn(ControlTagType.AUTO_INVOICING_OFF.getId());
         tags.put(ControlTagType.AUTO_INVOICING_OFF.name(), aioTag);
         when(tagApi.getTags(account.getId(), ObjectType.ACCOUNT)).thenReturn(tags);
         assertEquals(tagApi.getTags(account.getId(), ObjectType.ACCOUNT), tags);
@@ -479,7 +479,7 @@ public class TestBillingApi extends JunctionTestSuite {
 
         final Map<String, Tag> tags = new HashMap<String, Tag>();
         final Tag aioTag = mock(Tag.class);
-        when(aioTag.getTagDefinitionName()).thenReturn(ControlTagType.AUTO_INVOICING_OFF.name());
+        when(aioTag.getTagDefinitionId()).thenReturn(ControlTagType.AUTO_INVOICING_OFF.getId());
         tags.put(ControlTagType.AUTO_INVOICING_OFF.name(), aioTag);
         when(tagApi.getTags(bunId, ObjectType.BUNDLE)).thenReturn(tags);
 

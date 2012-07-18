@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -40,7 +40,6 @@ import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.jaxrs.json.PaymentMethodJson;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
-import com.ning.billing.jaxrs.util.TagHelper;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.PaymentMethod;
@@ -62,9 +61,9 @@ public class PaymentMethodResource extends JaxRsResourceBase {
 
     @Inject
     public PaymentMethodResource(final JaxrsUriBuilder uriBuilder, final AccountUserApi accountApi,
-                                 final PaymentApi paymentApi, final TagUserApi tagUserApi, final TagHelper tagHelper,
+                                 final PaymentApi paymentApi, final TagUserApi tagUserApi,
                                  final CustomFieldUserApi customFieldUserApi, final Context context) {
-        super(uriBuilder, tagUserApi, tagHelper, customFieldUserApi);
+        super(uriBuilder, tagUserApi,customFieldUserApi);
         this.paymentApi = paymentApi;
         this.accountApi = accountApi;
         this.context = context;

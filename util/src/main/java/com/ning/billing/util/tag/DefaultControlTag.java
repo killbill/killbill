@@ -23,13 +23,13 @@ public class DefaultControlTag extends DescriptiveTag implements ControlTag {
 
     // use to create new objects
     public DefaultControlTag(final ControlTagType controlTagType) {
-        super(controlTagType.toString());
+        super(controlTagType.getId());
         this.controlTagType = controlTagType;
     }
 
     // use to hydrate objects when loaded from the persistence layer
     public DefaultControlTag(final UUID id, final ControlTagType controlTagType) {
-        super(id, controlTagType.toString());
+        super(id, controlTagType.getId());
         this.controlTagType = controlTagType;
     }
 

@@ -68,6 +68,8 @@ public class DefaultTagDefinition extends EntityBase implements TagDefinition {
         return sb.toString();
     }
 
+
+
     @Override
     public boolean equals(final Object o) {
         if (this == o) {
@@ -76,9 +78,11 @@ public class DefaultTagDefinition extends EntityBase implements TagDefinition {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-
         final DefaultTagDefinition that = (DefaultTagDefinition) o;
 
+        if (id != null ? !id.equals(that.id) : that.id != null) {
+            return false;
+        }
         if (description != null ? !description.equals(that.description) : that.description != null) {
             return false;
         }
@@ -88,13 +92,13 @@ public class DefaultTagDefinition extends EntityBase implements TagDefinition {
         if (name != null ? !name.equals(that.name) : that.name != null) {
             return false;
         }
-
         return true;
     }
 
     @Override
     public int hashCode() {
         int result = name != null ? name.hashCode() : 0;
+        result = 31 * result + (id != null ? id.hashCode() : 0);
         result = 31 * result + (description != null ? description.hashCode() : 0);
         result = 31 * result + (controlTag != null ? controlTag.hashCode() : 0);
         return result;

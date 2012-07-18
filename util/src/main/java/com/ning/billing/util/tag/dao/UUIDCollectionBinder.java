@@ -13,7 +13,6 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
 package com.ning.billing.util.tag.dao;
 
 import java.lang.annotation.Annotation;
@@ -21,29 +20,34 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.Collection;
+import java.util.List;
 
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.sqlobject.Binder;
 import org.skife.jdbi.v2.sqlobject.BinderFactory;
 import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
 
-import com.ning.billing.util.dao.EntityHistory;
-import com.ning.billing.util.tag.Tag;
 
-@BindingAnnotation(TagHistoryBinder.TagHistoryBinderFactory.class)
+@BindingAnnotation(UUIDCollectionBinder.UUIDCollectionBinderFactory.class)
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.PARAMETER})
-public @interface TagHistoryBinder {
-    public static class TagHistoryBinderFactory implements BinderFactory {
+public @interface UUIDCollectionBinder {
+    public static class UUIDCollectionBinderFactory implements BinderFactory {
         @Override
-        public Binder build(final Annotation annotation) {
-            return new Binder<TagHistoryBinder, EntityHistory<Tag>>() {
+        public Binder build(Annotation annotation) {
+            return new Binder<UUIDCollectionBinder, Collection<String>>() {
+
                 @Override
-                public void bind(final SQLStatement<?> q, final TagHistoryBinder bind, final EntityHistory<Tag> tagHistory) {
-                    q.bind("recordId", tagHistory.getValue());
-                    q.bind("changeType", tagHistory.getChangeType().toString());
-                    q.bind("id", tagHistory.getId().toString());
-                    q.bind("tagDefinitionId", tagHistory.getEntity().getTagDefinitionId().toString());
+                public void bind(SQLStatement<?> query, UUIDCollectionBinder bind, Collection<String> ids) {
+                    query.define("tag_definition_ids", ids);
+
+                    int idx = 0;
+                    for (String id : ids) {
+                        query.bind("id_" + idx, id);
+                        idx++;
+                    }
+
                 }
             };
         }

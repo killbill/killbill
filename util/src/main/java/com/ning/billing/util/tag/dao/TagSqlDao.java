@@ -69,19 +69,19 @@ public interface TagSqlDao extends UpdatableEntityCollectionSqlDao<Tag>, Transac
 
     @SqlUpdate
     public void addTagFromTransaction(@Bind("id") final String tagId,
-                                      @Bind("tagDefinitionName") final String tagName,
+                                      @Bind("tagDefinitionId") final String tagDefinitionId,
                                       @Bind("objectId") final String objectId,
                                       @ObjectTypeBinder final ObjectType objectType,
                                       @CallContextBinder final CallContext context);
 
     @SqlUpdate
-    public void removeTagFromTransaction(@Bind("tagDefinitionName") final String tagName,
+    public void removeTagFromTransaction(@Bind("tagDefinitionId") final String tagDefinitionId,
                                          @Bind("objectId") final String objectId,
                                          @ObjectTypeBinder final ObjectType objectType,
                                          @CallContextBinder final CallContext context);
 
     @SqlQuery
-    public Tag findTag(@Bind("tagDefinitionName") final String tagName,
+    public Tag findTag(@Bind("tagDefinitionId") final String tagDefinitionId,
                        @Bind("objectId") final String objectId,
                        @ObjectTypeBinder final ObjectType objectType);
 }

@@ -79,8 +79,8 @@ public class TestDefaultInvoiceDao extends InvoiceTestSuite {
 
         final Map<String, Tag> afterTags = tagUserApi.getTags(invoiceId, ObjectType.INVOICE);
         Assert.assertEquals(afterTags.keySet().size(), 1);
-        final String name = ControlTagType.WRITTEN_OFF.toTagDefinition().getName();
-        Assert.assertEquals(afterTags.get(name).getTagDefinitionName(), name);
+        final UUID tagDefinitionId = ControlTagType.WRITTEN_OFF.getId();
+        Assert.assertEquals(afterTags.values().iterator().next().getTagDefinitionId(), tagDefinitionId);
     }
 
     @Test(groups = "fast")
@@ -91,9 +91,6 @@ public class TestDefaultInvoiceDao extends InvoiceTestSuite {
 
         final Map<String, Tag> beforeTags = tagUserApi.getTags(invoiceId, ObjectType.INVOICE);
         Assert.assertEquals(beforeTags.keySet().size(), 1);
-        final String name = ControlTagType.WRITTEN_OFF.toTagDefinition().getName();
-        Assert.assertEquals(beforeTags.get(name).getTagDefinitionName(), name);
-
         dao.removeWrittenOff(invoiceId, Mockito.mock(CallContext.class));
 
         final Map<String, Tag> afterTags = tagUserApi.getTags(invoiceId, ObjectType.INVOICE);

@@ -59,7 +59,7 @@ public class MockTagDao implements TagDao {
         final Map<String, Tag> map = new HashMap<String, Tag>();
         if (tags != null) {
             for (final Tag tag : tags) {
-                map.put(tag.getTagDefinitionName(), tag);
+                map.put(tag.getTagDefinitionId().toString(), tag);
             }
         }
         return map;
@@ -67,13 +67,13 @@ public class MockTagDao implements TagDao {
 
     @Override
     public void insertTag(final UUID objectId, final ObjectType objectType,
-                          final TagDefinition tagDefinition, final CallContext context) {
+                          final UUID tagDefinitionId, final CallContext context) {
         final Tag tag = new Tag() {
             private final UUID id = UUID.randomUUID();
 
             @Override
-            public String getTagDefinitionName() {
-                return tagDefinition.getName();
+            public UUID getTagDefinitionId() {
+                return tagDefinitionId;
             }
 
             @Override
@@ -91,13 +91,13 @@ public class MockTagDao implements TagDao {
 
     @Override
     public void deleteTag(final UUID objectId, final ObjectType objectType,
-                          final TagDefinition tagDefinition, final CallContext context) {
+                          final UUID tagDefinitionId, final CallContext context) {
         final List<Tag> tags = tagStore.get(objectId);
         if (tags != null) {
             final Iterator<Tag> tagIterator = tags.iterator();
             while (tagIterator.hasNext()) {
                 final Tag tag = tagIterator.next();
-                if (tag.getTagDefinitionName().equals(tagDefinition.getName())) {
+                if (tag.getTagDefinitionId().equals(tagDefinitionId)) {
                     tagIterator.remove();
                 }
             }

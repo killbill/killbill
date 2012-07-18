@@ -37,7 +37,6 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.jaxrs.json.RefundJson;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
-import com.ning.billing.jaxrs.util.TagHelper;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.Refund;
@@ -57,10 +56,9 @@ public class RefundResource extends JaxRsResourceBase {
     public RefundResource(final JaxrsUriBuilder uriBuilder,
             final PaymentApi paymentApi,
             final TagUserApi tagUserApi,
-            final TagHelper tagHelper,
             final CustomFieldUserApi customFieldUserApi,
             final Context context) {
-        super(uriBuilder, tagUserApi, tagHelper, customFieldUserApi);
+        super(uriBuilder, tagUserApi, customFieldUserApi);
         this.paymentApi = paymentApi;
     }
 

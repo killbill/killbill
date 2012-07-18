@@ -16,6 +16,8 @@
 
 package com.ning.billing.util.tag.dao;
 
+import static org.testng.Assert.assertEquals;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +35,7 @@ import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
+import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.BusEvent;
 import com.ning.billing.util.callcontext.CallContext;
@@ -42,6 +45,7 @@ import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.io.IOUtils;
+import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.MockTagStoreModuleSql;
 import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;
@@ -85,6 +89,73 @@ public class TestAuditedTagDao extends UtilTestSuiteWithEmbeddedDB {
         bus.stop();
     }
 
+
+    @Test(groups= {"slow"})
+    public void testGetByIds() throws TagDefinitionApiException {
+
+        final List<UUID> uuids = new ArrayList<UUID>();
+
+        TagDefinition defYo = tagDefinitionDao.create("yo", "defintion yo", context);
+        uuids.add(defYo.getId());
+        TagDefinition defBah = tagDefinitionDao.create("bah", "defintion bah", context);
+        uuids.add(defBah.getId());
+        TagDefinition defZoo = tagDefinitionDao.create("zoo", "defintion zoo", context);
+        uuids.add(defZoo.getId());
+
+        List<TagDefinition> result = tagDefinitionDao.getByIds(uuids);
+        assertEquals(result.size(), 3);
+
+        // Add control tag and retry
+        uuids.add(ControlTagType.AUTO_PAY_OFF.getId());
+        result = tagDefinitionDao.getByIds(uuids);
+        assertEquals(result.size(), 4);
+
+        result = tagDefinitionDao.getTagDefinitions();
+        assertEquals(result.size(), 7);
+    }
+
+    @Test(groups= {"slow"})
+    public void testGetById() throws TagDefinitionApiException {
+
+        // User Tag
+        TagDefinition defYo = tagDefinitionDao.create("yo", "defintion yo", context);
+        TagDefinition resDefYo = tagDefinitionDao.getById(defYo.getId());
+        assertEquals(defYo, resDefYo);
+
+        // Control Tag
+        try {
+            tagDefinitionDao.create(ControlTagType.AUTO_INVOICING_OFF.name(), ControlTagType.AUTO_INVOICING_OFF.name(), context);
+            Assert.fail("Should not be able to create a control tag");
+        } catch (TagDefinitionApiException ignore) {
+        }
+        TagDefinition resdef_AUTO_INVOICING_OFF = tagDefinitionDao.getById(ControlTagType.AUTO_INVOICING_OFF.getId());
+        assertEquals(resdef_AUTO_INVOICING_OFF.getId(), ControlTagType.AUTO_INVOICING_OFF.getId());
+        assertEquals(resdef_AUTO_INVOICING_OFF.getName(), ControlTagType.AUTO_INVOICING_OFF.name());
+        assertEquals(resdef_AUTO_INVOICING_OFF.getDescription(), ControlTagType.AUTO_INVOICING_OFF.getDescription());
+    }
+
+    @Test(groups= {"slow"})
+    public void testGetByName() throws TagDefinitionApiException {
+
+        // User Tag
+        TagDefinition defYo = tagDefinitionDao.create("yo", "defintion yo", context);
+        TagDefinition resDefYo = tagDefinitionDao.getByName(defYo.getName());
+        assertEquals(defYo, resDefYo);
+
+        // Control Tag
+        try {
+            tagDefinitionDao.create(ControlTagType.AUTO_PAY_OFF.name(), ControlTagType.AUTO_INVOICING_OFF.name(), context);
+            Assert.fail("Should not be able to create a control tag");
+        } catch (TagDefinitionApiException ignore) {
+        }
+        TagDefinition resdef_AUTO_PAY_OFF = tagDefinitionDao.getByName(ControlTagType.AUTO_PAY_OFF.name());
+        assertEquals(resdef_AUTO_PAY_OFF.getId(), ControlTagType.AUTO_PAY_OFF.getId());
+        assertEquals(resdef_AUTO_PAY_OFF.getName(), ControlTagType.AUTO_PAY_OFF.name());
+        assertEquals(resdef_AUTO_PAY_OFF.getDescription(), ControlTagType.AUTO_PAY_OFF.getDescription());
+    }
+
+
+
     @Test(groups = "slow")
     public void testCatchEventsOnCreateAndDelete() throws Exception {
         final String definitionName = UUID.randomUUID().toString().substring(0, 5);
@@ -102,12 +173,12 @@ public class TestAuditedTagDao extends UtilTestSuiteWithEmbeddedDB {
         Assert.assertEquals(createdTagDefinition.getDescription(), description);
 
         // Make sure we can create a tag
-        tagDao.insertTag(objectId, objectType, createdTagDefinition, context);
+        tagDao.insertTag(objectId, objectType, createdTagDefinition.getId(), context);
 
         // Make sure we can retrieve it via the DAO
         final Map<String, Tag> foundTags = tagDao.loadEntities(objectId, objectType);
         Assert.assertEquals(foundTags.keySet().size(), 1);
-        Assert.assertEquals(foundTags.get(definitionName).getTagDefinitionName(), definitionName);
+        Assert.assertEquals(foundTags.values().iterator().next().getTagDefinitionId(), createdTagDefinition.getId());
 
         // Verify we caught an event on the bus -  we got 2 total (one for the tag definition, one for the tag)
         Assert.assertEquals(eventsListener.getEvents().size(), 2);
@@ -122,7 +193,7 @@ public class TestAuditedTagDao extends UtilTestSuiteWithEmbeddedDB {
         Assert.assertEquals(tagFirstEventReceived.getUserToken(), context.getUserToken());
 
         // Delete the tag
-        tagDao.deleteTag(objectId, objectType, createdTagDefinition, context);
+        tagDao.deleteTag(objectId, objectType, createdTagDefinition.getId(), context);
 
         // Make sure the tag is deleted
         Assert.assertEquals(tagDao.loadEntities(objectId, objectType).keySet().size(), 0);

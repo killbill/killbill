@@ -92,9 +92,11 @@ public class DefaultBillingApi implements BillingApi {
 
             // Check to see if billing is off for the account
             final Map<String, Tag> accountTags = tagApi.getTags(accountId, ObjectType.ACCOUNT);
-            if (accountTags.get(ControlTagType.AUTO_INVOICING_OFF.name()) != null) {
-                result.setAccountAutoInvoiceIsOff(true);
-                return result; // billing is off, we are done
+            for (Tag cur : accountTags.values()) {
+                if (ControlTagType.AUTO_INVOICING_OFF.getId().equals(cur.getTagDefinitionId())) {
+                    result.setAccountAutoInvoiceIsOff(true);
+                    return result; // billing is off, we are done
+                }
             }
 
             addBillingEventsForBundles(bundles, account, context, result);
@@ -124,7 +126,15 @@ public class DefaultBillingApi implements BillingApi {
 
             //Check if billing is off for the bundle
             final Map<String, Tag> bundleTags = tagApi.getTags(bundle.getId(), ObjectType.BUNDLE);
-            if (bundleTags.get(ControlTagType.AUTO_INVOICING_OFF.name()) != null) {
+
+            boolean found_AUTO_INVOICING_OFF = false;
+            for (Tag cur : bundleTags.values()) {
+                if (ControlTagType.AUTO_INVOICING_OFF.getId().equals(cur.getTagDefinitionId())) {
+                    found_AUTO_INVOICING_OFF = true;
+                    break;
+                }
+            }
+            if (found_AUTO_INVOICING_OFF) {
                 for (final Subscription subscription : subscriptions) { // billing is off so list sub ids in set to be excluded
                     result.getSubscriptionIdsWithAutoInvoiceOff().add(subscription.getId());
                 }
