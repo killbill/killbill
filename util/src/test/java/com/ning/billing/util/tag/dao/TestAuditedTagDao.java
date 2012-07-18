@@ -95,6 +95,10 @@ public class TestAuditedTagDao extends UtilTestSuiteWithEmbeddedDB {
 
         final List<UUID> uuids = new ArrayList<UUID>();
 
+        // Check with a empty Collecion first
+        List<TagDefinition> result = tagDefinitionDao.getByIds(uuids);
+        assertEquals(result.size(), 0);
+
         TagDefinition defYo = tagDefinitionDao.create("yo", "defintion yo", context);
         uuids.add(defYo.getId());
         TagDefinition defBah = tagDefinitionDao.create("bah", "defintion bah", context);
@@ -102,7 +106,7 @@ public class TestAuditedTagDao extends UtilTestSuiteWithEmbeddedDB {
         TagDefinition defZoo = tagDefinitionDao.create("zoo", "defintion zoo", context);
         uuids.add(defZoo.getId());
 
-        List<TagDefinition> result = tagDefinitionDao.getByIds(uuids);
+        result = tagDefinitionDao.getByIds(uuids);
         assertEquals(result.size(), 3);
 
         // Add control tag and retry

@@ -101,13 +101,15 @@ public class DefaultTagDefinitionDao implements TagDefinitionDao {
                 }
             }
         }
+        if (definitionIds.size() > 0) {
+            result.addAll(tagDefinitionSqlDao.getByIds(Collections2.transform(definitionIds, new Function<UUID, String>() {
+                @Override
+                public String apply(UUID input) {
+                    return input.toString();
+                }
 
-        result.addAll(tagDefinitionSqlDao.getByIds(Collections2.transform(definitionIds, new Function<UUID, String>() {
-            @Override
-            public String apply(UUID input) {
-                return input.toString();
-            }
-        })));
+            })));
+        }
         return result;
     }
 
