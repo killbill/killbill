@@ -223,7 +223,7 @@ public enum ErrorCode {
     * Range 7000 : Payment
     */
 
-    PAYMENT_NO_SUCH_PAYMENT_METHOD(7000, "Payment method for account %s, and paymentId %s does not exist"),
+    PAYMENT_NO_SUCH_PAYMENT_METHOD(7000, "Payment method %s does not exist"),
     PAYMENT_NO_PAYMENT_METHODS(7001, "Payment methods for account %s don't exist"),
     PAYMENT_UPD_GATEWAY_FAILED(7002, "Failed to update payment gateway for account %s : %s"),
     PAYMENT_GET_PAYMENT_PROVIDER(7003, "Failed to retrieve payment provider for account %s : %s"),

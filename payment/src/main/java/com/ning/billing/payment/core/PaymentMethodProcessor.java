@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -221,7 +221,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
             public Void doOperation() throws PaymentApiException {
                 final PaymentMethodModelDao paymentMethodModel = paymentDao.getPaymentMethod(paymentMethodId);
                 if (paymentMethodModel == null) {
-                    throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, account.getId(), paymentMethodId);
+                    throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, paymentMethodId);
                 }
 
                 try {
@@ -246,7 +246,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
             public Void doOperation() throws PaymentApiException {
                 final PaymentMethodModelDao paymentMethodModel = paymentDao.getPaymentMethod(paymentMethodId);
                 if (paymentMethodModel == null) {
-                    throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, account.getId(), paymentMethodId);
+                    throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, paymentMethodId);
                 }
 
                 try {
@@ -273,7 +273,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
             public Void doOperation() throws PaymentApiException {
                 final PaymentMethodModelDao paymentMethodModel = paymentDao.getPaymentMethod(paymentMethodId);
                 if (paymentMethodModel == null) {
-                    throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, account.getId(), paymentMethodId);
+                    throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, paymentMethodId);
                 }
 
                 try {
@@ -296,7 +296,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
             throws PaymentApiException {
         final PaymentMethodModelDao paymentMethod = paymentDao.getPaymentMethod(paymentMethodId);
         if (paymentMethod == null) {
-            throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, accountId, "");
+            throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, paymentMethodId);
         }
         return pluginRegistry.getPlugin(paymentMethod.getPluginName());
     }
