@@ -56,6 +56,7 @@ public class KillbillGuiceListener extends SetupServer {
                 .addHealthCheck(KillbillHealthcheck.class)
                 .addJMXExport(KillbillHealthcheck.class)
                 .addModule(getModule())
+                .addJerseyResource("com.ning.billing.jaxrs.mappers")
                 .addJerseyResource("com.ning.billing.jaxrs.resources");
 
 

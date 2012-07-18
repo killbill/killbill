@@ -13,9 +13,12 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.jaxrs.json;
 
 import javax.annotation.Nullable;
+
+import com.ning.billing.util.tag.TagDefinition;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -26,18 +29,17 @@ public class TagDefinitionJson {
     private final String name;
     private final String description;
 
-    public TagDefinitionJson() {
-        this(null, null, null);
-    }
-
     @JsonCreator
     public TagDefinitionJson(@JsonProperty("id") final String id,
-            @JsonProperty("name") final String name,
-            @JsonProperty("description") @Nullable final String description) {
-        super();
+                             @JsonProperty("name") final String name,
+                             @JsonProperty("description") @Nullable final String description) {
         this.id = id;
         this.name = name;
         this.description = description;
+    }
+
+    public TagDefinitionJson(final TagDefinition tagDefinition) {
+        this(tagDefinition.getId().toString(), tagDefinition.getName(), tagDefinition.getDescription());
     }
 
     public String getId() {
@@ -57,10 +59,10 @@ public class TagDefinitionJson {
         final int prime = 31;
         int result = 1;
         result = prime * result
-                + ((description == null) ? 0 : description.hashCode());
+                 + ((description == null) ? 0 : description.hashCode());
         result = prime * result + ((name == null) ? 0 : name.hashCode());
         result = prime * result
-                + ((id == null) ? 0 : id.hashCode());
+                 + ((id == null) ? 0 : id.hashCode());
         return result;
     }
 
@@ -84,7 +86,6 @@ public class TagDefinitionJson {
             return false;
         return true;
     }
-
 
     @Override
     public boolean equals(Object obj) {

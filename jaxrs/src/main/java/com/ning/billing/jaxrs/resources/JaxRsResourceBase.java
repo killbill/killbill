@@ -16,10 +16,6 @@
 
 package com.ning.billing.jaxrs.resources;
 
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
-
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -27,10 +23,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableList;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.ning.billing.jaxrs.json.CustomFieldJson;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
 import com.ning.billing.util.api.CustomFieldUserApi;
@@ -44,7 +42,13 @@ import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
+
 public abstract class JaxRsResourceBase implements JaxrsResource {
+
+    private static final Logger log = LoggerFactory.getLogger(JaxRsResourceBase.class);
 
     protected final JaxrsUriBuilder uriBuilder;
     protected final TagUserApi tagUserApi;
@@ -60,73 +64,47 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         this.customFieldUserApi = customFieldUserApi;
     }
 
-    protected Response getTags(final UUID id) {
+    protected Response getTags(final UUID id) throws TagDefinitionApiException {
+        final Map<String, Tag> tags = tagUserApi.getTags(id, getObjectType());
+        final Collection<UUID> tagIdList = (tags.size() == 0) ?
+                                           Collections.<UUID>emptyList() :
+                                           Collections2.transform(tags.values(), new Function<Tag, UUID>() {
+                                               @Override
+                                               public UUID apply(final Tag input) {
+                                                   return input.getTagDefinitionId();
+                                               }
+                                           });
 
-        try {
-            final Map<String, Tag> tags = tagUserApi.getTags(id, getObjectType());
-            final Collection<UUID> tagIdList = (tags.size() == 0) ?
-                    Collections.<UUID>emptyList() :
-                        Collections2.transform(tags.values(), new Function<Tag, UUID>() {
-                            @Override
-                            public UUID apply(final Tag input) {
-                                return input.getTagDefinitionId();
-                            }
-                        });
-
-                    final List<TagDefinition> tagDefinitionList = tagUserApi.getTagDefinitions(tagIdList);
-                    return Response.status(Response.Status.OK).entity(tagDefinitionList).build();
-        } catch (TagDefinitionApiException e) {
-            return Response.status(Response.Status.NO_CONTENT).entity(e.getMessage()).build();
-        }
+        final List<TagDefinition> tagDefinitionList = tagUserApi.getTagDefinitions(tagIdList);
+        return Response.status(Response.Status.OK).entity(tagDefinitionList).build();
     }
 
     protected Response createTags(final UUID id,
                                   final String tagList,
                                   final UriInfo uriInfo,
-                                  final CallContext context) {
-        try {
-            Preconditions.checkNotNull(tagList, "Query % list cannot be null", JaxrsResource.QUERY_TAGS);
-
-            final Collection<UUID> input = getTagDefinitionUUIDs(tagList);
-            tagUserApi.addTags(id, getObjectType(), input, context);
-            return uriBuilder.buildResponse(this.getClass(), "getTags", id, uriInfo.getBaseUri().toString());
-        } catch (IllegalArgumentException e) {
-            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
-        } catch (NullPointerException e) {
-            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
-        } catch (TagApiException e) {
-            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
-        }
+                                  final CallContext context) throws TagApiException {
+        final Collection<UUID> input = getTagDefinitionUUIDs(tagList);
+        tagUserApi.addTags(id, getObjectType(), input, context);
+        return uriBuilder.buildResponse(this.getClass(), "getTags", id, uriInfo.getBaseUri().toString());
     }
-
 
     private Collection<UUID> getTagDefinitionUUIDs(final String tagList) {
         final String[] tagParts = tagList.split(",\\s*");
-        final Collection<UUID> result = Collections2.transform(ImmutableList.copyOf(tagParts), new Function<String, UUID>() {
+        return Collections2.transform(ImmutableList.copyOf(tagParts), new Function<String, UUID>() {
             @Override
-            public UUID apply(String input) {
+            public UUID apply(final String input) {
                 return UUID.fromString(input);
             }
         });
-        return result;
     }
 
     protected Response deleteTags(final UUID id,
                                   final String tagList,
-                                  final CallContext context) {
+                                  final CallContext context) throws TagApiException {
+        final Collection<UUID> input = getTagDefinitionUUIDs(tagList);
+        tagUserApi.removeTags(id, getObjectType(), input, context);
 
-        try {
-            final Collection<UUID> input = getTagDefinitionUUIDs(tagList);
-            tagUserApi.removeTags(id, getObjectType(), input, context);
-
-            return Response.status(Response.Status.OK).build();
-        } catch (IllegalArgumentException e) {
-            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
-        } catch (NullPointerException e) {
-            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
-        } catch (TagApiException e) {
-            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
-        }
+        return Response.status(Response.Status.OK).build();
     }
 
     protected Response getCustomFields(final UUID id) {
@@ -136,37 +114,26 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         for (final CustomField cur : fields.values()) {
             result.add(new CustomFieldJson(cur));
         }
+
         return Response.status(Response.Status.OK).entity(result).build();
     }
 
     protected Response createCustomFields(final UUID id,
                                           final List<CustomFieldJson> customFields,
                                           final CallContext context) {
-        try {
-            final LinkedList<CustomField> input = new LinkedList<CustomField>();
-            for (final CustomFieldJson cur : customFields) {
-                input.add(new StringCustomField(cur.getName(), cur.getValue()));
-            }
-
-            customFieldUserApi.saveCustomFields(id, getObjectType(), input, context);
-            return uriBuilder.buildResponse(this.getClass(), "createCustomFields", id);
-        } catch (IllegalArgumentException e) {
-            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
-        } catch (NullPointerException e) {
-            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        final LinkedList<CustomField> input = new LinkedList<CustomField>();
+        for (final CustomFieldJson cur : customFields) {
+            input.add(new StringCustomField(cur.getName(), cur.getValue()));
         }
+
+        customFieldUserApi.saveCustomFields(id, getObjectType(), input, context);
+        return uriBuilder.buildResponse(this.getClass(), "createCustomFields", id);
     }
 
     protected Response deleteCustomFields(final UUID id,
                                           final String customFieldList,
                                           final CallContext context) {
-        try {
-            // STEPH missing API to delete custom fields
-            return Response.status(Response.Status.OK).build();
-        } catch (IllegalArgumentException e) {
-            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
-        } catch (NullPointerException e) {
-            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
-        }
+        // STEPH missing API to delete custom fields
+        return Response.status(Response.Status.OK).build();
     }
 }

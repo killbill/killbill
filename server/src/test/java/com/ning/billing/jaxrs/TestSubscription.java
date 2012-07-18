@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2012 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -13,16 +13,16 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.jaxrs;
 
-import javax.ws.rs.core.Response.Status;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.ws.rs.core.Response.Status;
+
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -41,12 +41,9 @@ import static org.testng.Assert.assertTrue;
 
 public class TestSubscription extends TestJaxrsBase {
 
-    private static final Logger log = LoggerFactory.getLogger(TestSubscription.class);
-
     private static final String CALL_COMPLETION_TIMEOUT_SEC = "5";
 
-
-    @Test(groups = "slow", enabled = true)
+    @Test(groups = "slow")
     public void testSubscriptionInTrialOk() throws Exception {
 
         final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
@@ -64,7 +61,6 @@ public class TestSubscription extends TestJaxrsBase {
 
         String uri = JaxrsResource.SUBSCRIPTIONS_PATH + "/" + subscriptionJson.getSubscriptionId().toString();
 
-
         // Retrieves with GET
         Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
@@ -76,12 +72,12 @@ public class TestSubscription extends TestJaxrsBase {
         final String newProductName = "Assault-Rifle";
 
         final SubscriptionJsonNoEvents newInput = new SubscriptionJsonNoEvents(subscriptionJson.getSubscriptionId(),
-                                                                         subscriptionJson.getBundleId(),
-                                                                         null,
-                                                                         newProductName,
-                                                                         subscriptionJson.getProductCategory(),
-                                                                         subscriptionJson.getBillingPeriod(),
-                                                                         subscriptionJson.getPriceList(), null, null);
+                                                                               subscriptionJson.getBundleId(),
+                                                                               null,
+                                                                               newProductName,
+                                                                               subscriptionJson.getProductCategory(),
+                                                                               subscriptionJson.getBillingPeriod(),
+                                                                               subscriptionJson.getPriceList(), null, null);
         baseJson = mapper.writeValueAsString(newInput);
 
         final Map<String, String> queryParams = getQueryParamsForCallCompletion(CALL_COMPLETION_TIMEOUT_SEC);
@@ -103,7 +99,6 @@ public class TestSubscription extends TestJaxrsBase {
         response = doDelete(uri, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
 
-
         // Retrieves to check EndDate
         uri = JaxrsResource.SUBSCRIPTIONS_PATH + "/" + subscriptionJson.getSubscriptionId().toString();
         response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
@@ -115,30 +110,26 @@ public class TestSubscription extends TestJaxrsBase {
         assertTrue(objFromJson.getCancelledDate().compareTo(clock.getUTCNow()) > 0);
 
         // Uncancel
-        uri = JaxrsResource.SUBSCRIPTIONS_PATH + "/" + subscriptionJson.getSubscriptionId().toString() + "/uncancel";
+        uri = JaxrsResource.SUBSCRIPTIONS_PATH + "/" + subscriptionJson.getSubscriptionId() + "/uncancel";
         response = doPut(uri, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
     }
 
-    @Test(groups = "slow", enabled = true)
+    @Test(groups = "slow")
     public void testWithNonExistentSubscription() throws Exception {
         final String uri = JaxrsResource.SUBSCRIPTIONS_PATH + "/" + UUID.randomUUID().toString();
         final SubscriptionJsonNoEvents subscriptionJson = new SubscriptionJsonNoEvents(null, UUID.randomUUID().toString(), null, "Pistol", ProductCategory.BASE.toString(), BillingPeriod.MONTHLY.toString(),
-                PriceListSet.DEFAULT_PRICELIST_NAME, null, null);
+                                                                                       PriceListSet.DEFAULT_PRICELIST_NAME, null, null);
         final String baseJson = mapper.writeValueAsString(subscriptionJson);
 
         Response response = doPut(uri, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        Assert.assertEquals(response.getStatusCode(), Status.NO_CONTENT.getStatusCode());
-        String body = response.getResponseBody();
-        Assert.assertEquals(body, "");
+        Assert.assertEquals(response.getStatusCode(), Status.NOT_FOUND.getStatusCode());
 
         response = doDelete(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        Assert.assertEquals(response.getStatusCode(), Status.NO_CONTENT.getStatusCode());
-        body = response.getResponseBody();
-        Assert.assertEquals(body, "");
+        Assert.assertEquals(response.getStatusCode(), Status.NOT_FOUND.getStatusCode());
 
         response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        Assert.assertEquals(response.getStatusCode(), Status.NO_CONTENT.getStatusCode());
+        Assert.assertEquals(response.getStatusCode(), Status.NOT_FOUND.getStatusCode());
     }
 
 }

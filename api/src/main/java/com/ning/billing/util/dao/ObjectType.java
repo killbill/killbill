@@ -23,9 +23,11 @@ public enum ObjectType {
     INVOICE("invoice"),
     PAYMENT("payment"),
     INVOICE_ITEM("invoice item"),
+    INVOICE_PAYMENT("invoice payment"),
     SUBSCRIPTION("subscription"),
     PAYMENT_METHOD("payment method"),
-    REFUND("refund");
+    REFUND("refund"),
+    TAG_DEFINITION("tag definition");
 
     private final String objectName;
 
