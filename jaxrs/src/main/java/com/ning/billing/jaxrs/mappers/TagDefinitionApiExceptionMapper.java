@@ -16,17 +16,36 @@
 
 package com.ning.billing.jaxrs.mappers;
 
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
+import com.ning.billing.ErrorCode;
 import com.ning.billing.util.api.TagDefinitionApiException;
 
 @Provider
 public class TagDefinitionApiExceptionMapper extends ExceptionMapperBase implements ExceptionMapper<TagDefinitionApiException> {
 
+    private final UriInfo uriInfo;
+
+    public TagDefinitionApiExceptionMapper(@Context final UriInfo uriInfo) {
+        this.uriInfo = uriInfo;
+    }
+
     @Override
     public Response toResponse(final TagDefinitionApiException exception) {
-        return null;
+        if (exception.getCode() == ErrorCode.TAG_DEFINITION_ALREADY_EXISTS.getCode()) {
+            return buildConflictingRequestResponse(exception, uriInfo);
+        } else if (exception.getCode() == ErrorCode.TAG_DEFINITION_CONFLICTS_WITH_CONTROL_TAG.getCode()) {
+            return buildConflictingRequestResponse(exception, uriInfo);
+        } else if (exception.getCode() == ErrorCode.TAG_DEFINITION_DOES_NOT_EXIST.getCode()) {
+            return buildNotFoundResponse(exception, uriInfo);
+        } else if (exception.getCode() == ErrorCode.TAG_DEFINITION_IN_USE.getCode()) {
+            return buildBadRequestResponse(exception, uriInfo);
+        } else {
+            return buildBadRequestResponse(exception, uriInfo);
+        }
     }
 }
