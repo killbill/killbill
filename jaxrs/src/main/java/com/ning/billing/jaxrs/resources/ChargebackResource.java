@@ -28,7 +28,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.invoice.api.InvoiceApiException;
@@ -109,8 +108,7 @@ public class ChargebackResource extends JaxRsResourceBase {
     public Response createChargeback(final ChargebackJson json,
                                      @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                      @HeaderParam(HDR_REASON) final String reason,
-                                     @HeaderParam(HDR_COMMENT) final String comment,
-                                     @javax.ws.rs.core.Context final UriInfo uriInfo) throws InvoiceApiException {
+                                     @HeaderParam(HDR_COMMENT) final String comment) throws InvoiceApiException {
         final InvoicePayment invoicePayment = invoicePaymentApi.getInvoicePayment(UUID.fromString(json.getPaymentId()));
         if (invoicePayment == null) {
             throw new InvoiceApiException(ErrorCode.INVOICE_PAYMENT_NOT_FOUND, json.getPaymentId());

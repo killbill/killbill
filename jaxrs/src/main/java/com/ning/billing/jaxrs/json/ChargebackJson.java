@@ -49,7 +49,7 @@ public class ChargebackJson {
         this.requestedDate = null;
         this.effectiveDate = chargeback.getPaymentDate();
         this.chargebackAmount = chargeback.getAmount().negate();
-        this.paymentId = chargeback.getLinkedInvoicePaymentId().toString();
+        this.paymentId = chargeback.getPaymentId().toString();
         this.reason = null;
     }
 

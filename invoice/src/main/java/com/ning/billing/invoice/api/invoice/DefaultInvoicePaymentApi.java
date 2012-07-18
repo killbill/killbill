@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.skife.jdbi.v2.exceptions.TransactionFailedException;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.Currency;
@@ -37,6 +38,8 @@ import com.ning.billing.util.callcontext.CallContext;
 import com.google.inject.Inject;
 
 public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
+
+    private static final WithInvoiceApiException<InvoicePayment> invoicePaymentWithException = new WithInvoiceApiException<InvoicePayment>();
 
     private final InvoiceDao dao;
 
@@ -77,15 +80,6 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
         dao.notifyOfPayment(invoicePayment, context);
     }
 
-    @Override
-    public InvoicePayment createChargeback(final UUID invoicePaymentId, final BigDecimal amount, final CallContext context) throws InvoiceApiException {
-        return dao.postChargeback(invoicePaymentId, amount, context);
-    }
-
-    @Override
-    public InvoicePayment createChargeback(final UUID invoicePaymentId, final CallContext context) throws InvoiceApiException {
-        return createChargeback(invoicePaymentId, null, context);
-    }
 
     @Override
     public BigDecimal getRemainingAmountPaid(final UUID invoicePaymentId) {
@@ -115,9 +109,59 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
     @Override
     public InvoicePayment createRefund(final UUID paymentId, final BigDecimal amount, final boolean isInvoiceAdjusted,
                                        final UUID paymentCookieId, final CallContext context) throws InvoiceApiException {
-        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new InvoiceApiException(ErrorCode.PAYMENT_REFUND_AMOUNT_NEGATIVE_OR_NULL);
+
+        return invoicePaymentWithException.executeAndThrow(new WithInvoiceApiExceptionCallback<InvoicePayment>() {
+
+            @Override
+            public InvoicePayment doHandle() throws InvoiceApiException {
+                if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+                    throw new InvoiceApiException(ErrorCode.PAYMENT_REFUND_AMOUNT_NEGATIVE_OR_NULL);
+                }
+                return dao.createRefund(paymentId, amount, isInvoiceAdjusted, paymentCookieId, context);
+            }
+        });
+    }
+
+    @Override
+    public InvoicePayment createChargeback(final UUID invoicePaymentId, final CallContext context) throws InvoiceApiException {
+        return createChargeback(invoicePaymentId, null, context);
+    }
+
+
+    @Override
+    public InvoicePayment createChargeback(final UUID invoicePaymentId, final BigDecimal amount, final CallContext context) throws InvoiceApiException {
+
+        return invoicePaymentWithException.executeAndThrow(new WithInvoiceApiExceptionCallback<InvoicePayment>() {
+
+            @Override
+            public InvoicePayment doHandle() throws InvoiceApiException {
+                return dao.postChargeback(invoicePaymentId, amount, context);
+            }
+
+        });
+
+    }
+
+    //
+    // Allow to safely catch TransactionFailedException exceptions and rethrow the correct InvoiceApiException exception
+    //
+    private interface WithInvoiceApiExceptionCallback<T> {
+        public T doHandle() throws InvoiceApiException;
+    }
+
+    private static final class WithInvoiceApiException<T> {
+        public T executeAndThrow(WithInvoiceApiExceptionCallback<T> callback) throws InvoiceApiException  {
+
+            try {
+                return callback.doHandle();
+            } catch (TransactionFailedException e) {
+                if (e.getCause() instanceof InvoiceApiException) {
+                    InvoiceApiException realException = (InvoiceApiException) e.getCause();
+                    throw realException;
+                } else {
+                    throw e;
+                }
+            }
         }
-        return dao.createRefund(paymentId, amount, isInvoiceAdjusted, paymentCookieId, context);
     }
 }
