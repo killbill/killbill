@@ -28,8 +28,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 
 import org.joda.time.LocalDate;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
@@ -52,8 +50,6 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 @Singleton
 @Path(JaxrsResource.CREDITS_PATH)
 public class CreditResource extends JaxRsResourceBase {
-
-    private static final Logger log = LoggerFactory.getLogger(CreditResource.class);
 
     private final InvoiceUserApi invoiceUserApi;
     private final AccountUserApi accountUserApi;
