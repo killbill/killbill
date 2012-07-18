@@ -18,6 +18,8 @@ package com.ning.billing.invoice.model;
 
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 
@@ -25,9 +27,6 @@ import com.ning.billing.catalog.api.BillingPeriod;
 
 public interface BillingMode {
 
-    List<RecurringInvoiceItemData> calculateInvoiceItemData(LocalDate startDate, LocalDate endDate, LocalDate targetDate,
-                                                            DateTimeZone accountTimeZone, int billingCycleDay, BillingPeriod billingPeriod) throws InvalidDateSequenceException;
-
-    List<RecurringInvoiceItemData> calculateInvoiceItemData(LocalDate startDate, LocalDate targetDate,
+    List<RecurringInvoiceItemData> calculateInvoiceItemData(LocalDate startDate, @Nullable LocalDate endDate, LocalDate targetDate,
                                                             DateTimeZone accountTimeZone, int billingCycleDay, BillingPeriod billingPeriod) throws InvalidDateSequenceException;
 }

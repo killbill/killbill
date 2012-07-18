@@ -69,10 +69,15 @@ public class InvoiceDateUtils {
         if (proposedDate.dayOfMonth().get() < billingCycleDay) {
             final int lastDayOfTheMonth = proposedDate.dayOfMonth().getMaximumValue();
             if (lastDayOfTheMonth < billingCycleDay) {
-                return new LocalDate(proposedDate.getYear(), proposedDate.getMonthOfYear(), lastDayOfTheMonth);
+                proposedDate = new LocalDate(proposedDate.getYear(), proposedDate.getMonthOfYear(), lastDayOfTheMonth);
             } else {
-                return new LocalDate(proposedDate.getYear(), proposedDate.getMonthOfYear(), billingCycleDay);
+                proposedDate = new LocalDate(proposedDate.getYear(), proposedDate.getMonthOfYear(), billingCycleDay);
             }
+        }
+
+        if (proposedDate.isBefore(previousBillCycleDate)) {
+            // Make sure not to go too far in the past
+            return previousBillCycleDate;
         } else {
             return proposedDate;
         }
@@ -137,7 +142,7 @@ public class InvoiceDateUtils {
 
     public static LocalDate calculateBillingCycleDateOnOrAfter(final LocalDate date, final DateTimeZone accountTimeZone,
                                                                final int billingCycleDayLocal) {
-        final DateTime tmp = new DateTime(date.toDateTimeAtStartOfDay(), accountTimeZone);
+        final DateTime tmp = date.toDateTimeAtStartOfDay(accountTimeZone);
         final DateTime proposedDateTime = calculateBillingCycleDateOnOrAfter(tmp, billingCycleDayLocal);
 
         return new LocalDate(proposedDateTime, accountTimeZone);
@@ -145,7 +150,7 @@ public class InvoiceDateUtils {
 
     public static LocalDate calculateBillingCycleDateAfter(final LocalDate date, final DateTimeZone accountTimeZone,
                                                            final int billingCycleDayLocal) {
-        final DateTime tmp = new DateTime(date.toDateTimeAtStartOfDay(), accountTimeZone);
+        final DateTime tmp = date.toDateTimeAtStartOfDay(accountTimeZone);
         final DateTime proposedDateTime = calculateBillingCycleDateAfter(tmp, billingCycleDayLocal);
 
         return new LocalDate(proposedDateTime, accountTimeZone);

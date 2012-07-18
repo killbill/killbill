@@ -16,8 +16,6 @@
 
 package com.ning.billing.jaxrs.resources;
 
-import static com.ning.billing.jaxrs.resources.JaxrsResource.CUSTOM_FIELDS;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -43,10 +41,6 @@ import javax.ws.rs.core.UriInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
@@ -60,6 +54,8 @@ import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoicePayment;
+import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.jaxrs.json.AccountEmailJson;
 import com.ning.billing.jaxrs.json.AccountJson;
@@ -81,9 +77,20 @@ import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.dao.ObjectType;
 
+import com.google.common.base.Function;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.LinkedListMultimap;
+import com.google.common.collect.Multimap;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+
 @Singleton
 @Path(JaxrsResource.ACCOUNTS_PATH)
 public class AccountResource extends JaxRsResourceBase {
+
     private static final Logger log = LoggerFactory.getLogger(AccountResource.class);
     private static final String ID_PARAM_NAME = "accountId";
 
@@ -91,6 +98,7 @@ public class AccountResource extends JaxRsResourceBase {
     private final EntitlementUserApi entitlementApi;
     private final EntitlementTimelineApi timelineApi;
     private final InvoiceUserApi invoiceApi;
+    private final InvoicePaymentApi invoicePaymentApi;
     private final PaymentApi paymentApi;
     private final Context context;
     private final JaxrsUriBuilder uriBuilder;
@@ -100,6 +108,7 @@ public class AccountResource extends JaxRsResourceBase {
                            final AccountUserApi accountApi,
                            final EntitlementUserApi entitlementApi,
                            final InvoiceUserApi invoiceApi,
+                           final InvoicePaymentApi invoicePaymentApi,
                            final PaymentApi paymentApi,
                            final EntitlementTimelineApi timelineApi,
                            final CustomFieldUserApi customFieldUserApi,
@@ -110,6 +119,7 @@ public class AccountResource extends JaxRsResourceBase {
         this.accountApi = accountApi;
         this.entitlementApi = entitlementApi;
         this.invoiceApi = invoiceApi;
+        this.invoicePaymentApi = invoicePaymentApi;
         this.paymentApi = paymentApi;
         this.timelineApi = timelineApi;
         this.context = context;
@@ -248,20 +258,41 @@ public class AccountResource extends JaxRsResourceBase {
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + TIMELINE)
     @Produces(APPLICATION_JSON)
-    public Response getAccountTimeline(@PathParam("accountId") final String accountId) {
+    public Response getAccountTimeline(@PathParam("accountId") final String accountIdString) {
         try {
+            final UUID accountId = UUID.fromString(accountIdString);
+            final Account account = accountApi.getAccountById(accountId);
 
-            final Account account = accountApi.getAccountById(UUID.fromString(accountId));
-
+            // Get the invoices
             final List<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId());
-            final List<Payment> payments = paymentApi.getAccountPayments(UUID.fromString(accountId));
 
+            // Get the payments
+            final List<Payment> payments = paymentApi.getAccountPayments(accountId);
+
+            // Get the refunds
+            final List<Refund> refunds = paymentApi.getAccountRefunds(account);
+            final Multimap<UUID, Refund> refundsByPayment = ArrayListMultimap.<UUID, Refund>create();
+            for (final Refund refund : refunds) {
+                refundsByPayment.put(refund.getPaymentId(), refund);
+            }
+
+            // Get the chargebacks
+            final List<InvoicePayment> chargebacks = invoicePaymentApi.getChargebacksByAccountId(accountId);
+            final Multimap<UUID, InvoicePayment> chargebacksByPayment = ArrayListMultimap.<UUID, InvoicePayment>create();
+            for (final InvoicePayment chargeback : chargebacks) {
+                chargebacksByPayment.put(chargeback.getPaymentId(), chargeback);
+            }
+
+            // Get the bundles
             final List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(account.getId());
             final List<BundleTimeline> bundlesTimeline = new LinkedList<BundleTimeline>();
             for (final SubscriptionBundle cur : bundles) {
                 bundlesTimeline.add(timelineApi.getBundleRepair(cur.getId()));
             }
-            final AccountTimelineJson json = new AccountTimelineJson(account, invoices, payments, bundlesTimeline);
+
+            final AccountTimelineJson json = new AccountTimelineJson(account, invoices, payments, bundlesTimeline,
+                                                                     refundsByPayment, chargebacksByPayment);
+
             return Response.status(Status.OK).entity(json).build();
         } catch (AccountApiException e) {
             if (e.getCode() == ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID.getCode()) {
@@ -436,7 +467,6 @@ public class AccountResource extends JaxRsResourceBase {
         }
     }
 
-
     /*
      * ************************** REFUNDS ********************************
      */
@@ -447,7 +477,7 @@ public class AccountResource extends JaxRsResourceBase {
 
         try {
             final Account account = accountApi.getAccountById(UUID.fromString(accountId));
-            List<Refund> refunds =  paymentApi.getAccountRefunds(account);
+            List<Refund> refunds = paymentApi.getAccountRefunds(account);
             List<RefundJson> result = new ArrayList<RefundJson>(Collections2.transform(refunds, new Function<Refund, RefundJson>() {
                 @Override
                 public RefundJson apply(Refund input) {
@@ -465,8 +495,6 @@ public class AccountResource extends JaxRsResourceBase {
             return Response.status(Status.BAD_REQUEST).build();
         }
     }
-
-
 
     /*
      * *************************      CUSTOM FIELDS     *****************************

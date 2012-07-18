@@ -22,6 +22,7 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.Plan;
@@ -41,7 +42,7 @@ public interface BillingEvent extends Comparable<BillingEvent> {
      *         <p/>
      *         Note: The billCycleDay may come from the Account, or the bundle or the subscription itself
      */
-    public int getBillCycleDay();
+    public BillCycleDay getBillCycleDay();
 
     /**
      * @return the subscription

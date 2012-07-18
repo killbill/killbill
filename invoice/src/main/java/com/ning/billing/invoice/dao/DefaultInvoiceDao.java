@@ -22,17 +22,15 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
-import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
-import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
@@ -58,7 +56,12 @@ import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.tag.ControlTagType;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
+import com.google.inject.Inject;
+
 public class DefaultInvoiceDao implements InvoiceDao {
+
     private final InvoiceSqlDao invoiceSqlDao;
     private final InvoicePaymentSqlDao invoicePaymentSqlDao;
     private final TagUserApi tagUserApi;
@@ -258,7 +261,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public List<Invoice> getUnpaidInvoicesByAccountId(final UUID accountId, final LocalDate upToDate) {
+    public List<Invoice> getUnpaidInvoicesByAccountId(final UUID accountId, @Nullable final LocalDate upToDate) {
         return invoiceSqlDao.inTransaction(new Transaction<List<Invoice>, InvoiceSqlDao>() {
             @Override
             public List<Invoice> inTransaction(final InvoiceSqlDao invoiceDao, final TransactionStatus status) throws Exception {
@@ -267,7 +270,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
                 final Collection<Invoice> unpaidInvoices = Collections2.filter(invoices, new Predicate<Invoice>() {
                     @Override
                     public boolean apply(final Invoice in) {
-                        return (in.getBalance().compareTo(BigDecimal.ZERO) >= 1) && !in.getTargetDate().isAfter(upToDate);
+                        return (in.getBalance().compareTo(BigDecimal.ZERO) >= 1) && (upToDate == null || !in.getTargetDate().isAfter(upToDate));
                     }
                 });
                 return new ArrayList<Invoice>(unpaidInvoices);
@@ -448,7 +451,6 @@ public class DefaultInvoiceDao implements InvoiceDao {
                 final InvoiceItem credit = new CreditAdjInvoiceItem(invoiceIdForRefund, accountId, effectiveDate, positiveCreditAmount.negate(), currency);
                 final InvoiceItemSqlDao transInvoiceItemDao = transactional.become(InvoiceItemSqlDao.class);
                 transInvoiceItemDao.create(credit, context);
-
 
                 final Invoice invoice = transactional.getById(invoiceIdForRefund.toString());
                 if (invoice != null) {

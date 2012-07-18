@@ -40,6 +40,7 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
 public class BillCycleDayCalculator {
@@ -51,7 +52,6 @@ public class BillCycleDayCalculator {
 
     @Inject
     public BillCycleDayCalculator(final CatalogService catalogService, final EntitlementUserApi entitlementApi) {
-        super();
         this.catalogService = catalogService;
         this.entitlementApi = entitlementApi;
     }
@@ -80,11 +80,17 @@ public class BillCycleDayCalculator {
                                        phase.getPhaseType()),
                 transition.getRequestedTransitionTime());
 
+        return calculateBcdForAlignment(alignment, bundle, subscription, account, catalog, plan);
+    }
+
+    @VisibleForTesting
+    BillCycleDay calculateBcdForAlignment(final BillingAlignment alignment, final SubscriptionBundle bundle, final Subscription subscription,
+                                          final Account account, final Catalog catalog, final Plan plan) throws AccountApiException, EntitlementUserApiException, CatalogApiException {
         BillCycleDay result = null;
         switch (alignment) {
             case ACCOUNT:
                 result = account.getBillCycleDay();
-                if (result.getDayOfMonthUTC() == 0) {
+                if (result == null || result.getDayOfMonthUTC() == 0) {
                     result = calculateBcdFromSubscription(subscription, plan, account);
                 }
                 break;
@@ -110,33 +116,38 @@ public class BillCycleDayCalculator {
         return result;
     }
 
-    private BillCycleDay calculateBcdFromSubscription(final Subscription subscription, final Plan plan, final Account account) throws AccountApiException {
+    @VisibleForTesting
+    BillCycleDay calculateBcdFromSubscription(final Subscription subscription, final Plan plan, final Account account) throws AccountApiException {
         final DateTime date = plan.dateOfFirstRecurringNonZeroCharge(subscription.getStartDate());
         // There are really two kinds of billCycleDay:
         // - a System billingCycleDay which should be computed from UTC time (in order to get the correct notification time at
         //   the end of each service period)
         // - a User billingCycleDay which should align with the account timezone
-        return new CalculatedBillCycleDay(account.getTimeZone(), date);
+        final CalculatedBillCycleDay calculatedBillCycleDay = new CalculatedBillCycleDay(account.getTimeZone(), date);
+        log.info("Calculated BCD: subscription id {}, subscription start {}, timezone {}, bcd UTC {}, bcd local {}",
+                 new Object[]{subscription.getId(), date.toDateTimeISO(), account.getTimeZone(),
+                              calculatedBillCycleDay.getDayOfMonthUTC(), calculatedBillCycleDay.getDayOfMonthLocal()});
+        return calculatedBillCycleDay;
     }
 
     private static final class CalculatedBillCycleDay implements BillCycleDay {
 
-        private final DateTime bcdTimeUTC;
+        private final DateTime bcdTime;
         private final DateTimeZone accountTimeZone;
 
-        private CalculatedBillCycleDay(final DateTimeZone accountTimeZone, final DateTime bcdTimeUTC) {
+        private CalculatedBillCycleDay(final DateTimeZone accountTimeZone, final DateTime bcdTime) {
             this.accountTimeZone = accountTimeZone;
-            this.bcdTimeUTC = bcdTimeUTC;
+            this.bcdTime = bcdTime;
         }
 
         @Override
         public int getDayOfMonthUTC() {
-            return bcdTimeUTC.getDayOfMonth();
+            return bcdTime.toDateTime(DateTimeZone.UTC).getDayOfMonth();
         }
 
         @Override
         public int getDayOfMonthLocal() {
-            return bcdTimeUTC.toDateTime(accountTimeZone).getDayOfMonth();
+            return bcdTime.toDateTime(accountTimeZone).getDayOfMonth();
         }
     }
 }

@@ -156,7 +156,7 @@ public class DefaultBillingApi implements BillingApi {
                         accountApi.updateAccount(account.getExternalKey(), modifiedData, context);
                     }
 
-                    final BillingEvent event = new DefaultBillingEvent(account, transition, subscription, bcd.getDayOfMonthUTC(), account.getCurrency(), catalogService.getFullCatalog());
+                    final BillingEvent event = new DefaultBillingEvent(account, transition, subscription, bcd, account.getCurrency(), catalogService.getFullCatalog());
                     result.add(event);
                 } catch (CatalogApiException e) {
                     log.error("Failing to identify catalog components while creating BillingEvent from transition: " +

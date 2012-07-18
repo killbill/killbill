@@ -187,7 +187,7 @@ public class TestOverdueIntegration extends TestIntegrationBase {
         // Clear databases
     }
 
-    // We set the the property killbill.payment.retry.days=100,100,100 so that Payment retry logics does not end with an ABORTED state
+    // We set the the property killbill.payment.retry.days=8,8,8,8,8,8,8,8 so that Payment retry logics does not end with an ABORTED state
     // preventing final instant payment to succeed.
     //
     @Test(groups = {"slow"}, enabled = true)

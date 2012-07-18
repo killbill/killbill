@@ -43,4 +43,38 @@ public class RecurringInvoiceItemData {
     public BigDecimal getNumberOfCycles() {
         return numberOfCycles;
     }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append("RecurringInvoiceItemData");
+        sb.append("{startDate=").append(startDate);
+        sb.append(", endDate=").append(endDate);
+        sb.append(", numberOfCycles=").append(numberOfCycles);
+        sb.append('}');
+        return sb.toString();
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        final RecurringInvoiceItemData that = (RecurringInvoiceItemData) o;
+
+        if (endDate != null ? !endDate.equals(that.endDate) : that.endDate != null) return false;
+        if (numberOfCycles != null ? !numberOfCycles.equals(that.numberOfCycles) : that.numberOfCycles != null)
+            return false;
+        if (startDate != null ? !startDate.equals(that.startDate) : that.startDate != null) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = startDate != null ? startDate.hashCode() : 0;
+        result = 31 * result + (endDate != null ? endDate.hashCode() : 0);
+        result = 31 * result + (numberOfCycles != null ? numberOfCycles.hashCode() : 0);
+        return result;
+    }
 }

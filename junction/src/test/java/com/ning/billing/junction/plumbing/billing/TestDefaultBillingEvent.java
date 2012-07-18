@@ -43,6 +43,7 @@ import com.ning.billing.entitlement.api.billing.BillingEvent;
 import com.ning.billing.entitlement.api.billing.BillingModeType;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.junction.JunctionTestSuite;
+import com.ning.billing.mock.api.MockBillCycleDay;
 
 public class TestDefaultBillingEvent extends JunctionTestSuite {
     public static final UUID ID_ZERO = new UUID(0L, 0L);
@@ -134,7 +135,7 @@ public class TestDefaultBillingEvent extends JunctionTestSuite {
 
         return new DefaultBillingEvent(null, sub, effectiveDate,
                                        shotgun, shotgunMonthly,
-                                       BigDecimal.ZERO, null, Currency.USD, BillingPeriod.NO_BILLING_PERIOD, billCycleDay,
+                                       BigDecimal.ZERO, null, Currency.USD, BillingPeriod.NO_BILLING_PERIOD, new MockBillCycleDay(billCycleDay),
                                        BillingModeType.IN_ADVANCE, "Test Event 1", totalOrdering, type, DateTimeZone.UTC);
     }
 

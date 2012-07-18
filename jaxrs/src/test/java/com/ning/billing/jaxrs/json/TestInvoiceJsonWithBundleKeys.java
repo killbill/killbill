@@ -17,8 +17,10 @@
 package com.ning.billing.jaxrs.json;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.mockito.Mockito;
 import org.testng.Assert;
@@ -32,6 +34,7 @@ import com.ning.billing.util.clock.DefaultClock;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
+import com.google.common.collect.ImmutableList;
 
 public class TestInvoiceJsonWithBundleKeys extends JaxrsTestSuite {
 
@@ -57,8 +60,11 @@ public class TestInvoiceJsonWithBundleKeys extends JaxrsTestSuite {
         final BigDecimal balance = BigDecimal.ZERO;
         final String accountId = UUID.randomUUID().toString();
         final String bundleKeys = UUID.randomUUID().toString();
+        CreditJson creditJson = createCreditJson();
+        final List<CreditJson> credits = ImmutableList.<CreditJson>of(creditJson);
         final InvoiceJsonWithBundleKeys invoiceJsonSimple = new InvoiceJsonWithBundleKeys(amount, cba, creditAdj, refundAdj, invoiceId, invoiceDate,
-                                                                                          targetDate, invoiceNumber, balance, accountId, bundleKeys);
+                                                                                          targetDate, invoiceNumber, balance, accountId, bundleKeys,
+                                                                                          credits);
         Assert.assertEquals(invoiceJsonSimple.getAmount(), amount);
         Assert.assertEquals(invoiceJsonSimple.getCBA(), cba);
         Assert.assertEquals(invoiceJsonSimple.getCreditAdj(), creditAdj);
@@ -70,6 +76,7 @@ public class TestInvoiceJsonWithBundleKeys extends JaxrsTestSuite {
         Assert.assertEquals(invoiceJsonSimple.getBalance(), balance);
         Assert.assertEquals(invoiceJsonSimple.getAccountId(), accountId);
         Assert.assertEquals(invoiceJsonSimple.getBundleKeys(), bundleKeys);
+        Assert.assertEquals(invoiceJsonSimple.getCredits(), credits);
 
         final String asJson = mapper.writeValueAsString(invoiceJsonSimple);
         Assert.assertEquals(asJson, "{\"amount\":" + invoiceJsonSimple.getAmount().toString() + "," +
@@ -82,6 +89,14 @@ public class TestInvoiceJsonWithBundleKeys extends JaxrsTestSuite {
                                     "\"invoiceNumber\":\"" + invoiceJsonSimple.getInvoiceNumber() + "\"," +
                                     "\"balance\":" + invoiceJsonSimple.getBalance().toString() + "," +
                                     "\"accountId\":\"" + invoiceJsonSimple.getAccountId() + "\"," +
+                                    "\"credits\":[" +
+                                    "{\"creditAmount\":" + creditJson.getCreditAmount() + "," +
+                                    "\"invoiceId\":\"" + creditJson.getInvoiceId().toString() + "\"," +
+                                    "\"invoiceNumber\":\"" + creditJson.getInvoiceNumber() + "\"," +
+                                    "\"requestedDate\":\"" + creditJson.getRequestedDate().toDateTimeISO().toString() + "\"," +
+                                    "\"effectiveDate\":\"" + creditJson.getEffectiveDate().toDateTimeISO().toString() + "\"," +
+                                    "\"reason\":\"" + creditJson.getReason() + "\"," +
+                                    "\"accountId\":\"" + creditJson.getAccountId().toString() + "\"}]," +
                                     "\"bundleKeys\":\"" + invoiceJsonSimple.getBundleKeys() + "\"}");
 
         final InvoiceJsonWithBundleKeys fromJson = mapper.readValue(asJson, InvoiceJsonWithBundleKeys.class);
@@ -103,8 +118,9 @@ public class TestInvoiceJsonWithBundleKeys extends JaxrsTestSuite {
         Mockito.when(invoice.getAccountId()).thenReturn(UUID.randomUUID());
 
         final String bundleKeys = UUID.randomUUID().toString();
+        final List<CreditJson> credits = ImmutableList.<CreditJson>of(createCreditJson());
 
-        final InvoiceJsonWithBundleKeys invoiceJsonWithBundleKeys = new InvoiceJsonWithBundleKeys(invoice, bundleKeys);
+        final InvoiceJsonWithBundleKeys invoiceJsonWithBundleKeys = new InvoiceJsonWithBundleKeys(invoice, bundleKeys, credits);
         Assert.assertEquals(invoiceJsonWithBundleKeys.getAmount(), invoice.getChargedAmount());
         Assert.assertEquals(invoiceJsonWithBundleKeys.getCBA(), invoice.getCBAAmount());
         Assert.assertEquals(invoiceJsonWithBundleKeys.getCreditAdj(), invoice.getCreditAdjAmount());
@@ -116,5 +132,17 @@ public class TestInvoiceJsonWithBundleKeys extends JaxrsTestSuite {
         Assert.assertEquals(invoiceJsonWithBundleKeys.getBalance(), invoice.getBalance());
         Assert.assertEquals(invoiceJsonWithBundleKeys.getAccountId(), invoice.getAccountId().toString());
         Assert.assertEquals(invoiceJsonWithBundleKeys.getBundleKeys(), bundleKeys);
+        Assert.assertEquals(invoiceJsonWithBundleKeys.getCredits(), credits);
+    }
+
+    private CreditJson createCreditJson() {
+        final BigDecimal creditAmount = BigDecimal.TEN;
+        final UUID invoiceId = UUID.randomUUID();
+        final String invoiceNumber = UUID.randomUUID().toString();
+        final DateTime requestedDate = clock.getUTCNow();
+        final DateTime effectiveDate = clock.getUTCNow();
+        final String reason = UUID.randomUUID().toString();
+        final UUID accountId = UUID.randomUUID();
+        return new CreditJson(creditAmount, invoiceId, invoiceNumber, requestedDate, effectiveDate, reason, accountId);
     }
 }

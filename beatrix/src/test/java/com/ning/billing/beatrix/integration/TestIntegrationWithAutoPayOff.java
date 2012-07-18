@@ -24,8 +24,6 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
 
-import junit.framework.Assert;
-
 import org.joda.time.DateTime;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Guice;
@@ -49,7 +47,6 @@ import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.Tag;
-import com.ning.billing.util.tag.TagDefinition;
 
 @Guice(modules = {BeatrixModule.class})
 public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
