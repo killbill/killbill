@@ -69,6 +69,8 @@ import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.PaymentMethod;
 import com.ning.billing.payment.api.Refund;
 import com.ning.billing.util.api.CustomFieldUserApi;
+import com.ning.billing.util.api.TagApiException;
+import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.dao.ObjectType;
 
@@ -375,9 +377,8 @@ public class AccountResource extends JaxRsResourceBase {
                                        final List<CustomFieldJson> customFields,
                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                        @HeaderParam(HDR_REASON) final String reason,
-                                       @HeaderParam(HDR_COMMENT) final String comment,
-                                       @javax.ws.rs.core.Context final UriInfo uriInfo) {
-        return super.createCustomFields(UUID.fromString(id), customFields, uriInfo,
+                                       @HeaderParam(HDR_COMMENT) final String comment) {
+        return super.createCustomFields(UUID.fromString(id), customFields,
                                         context.createContext(createdBy, reason, comment));
     }
 
@@ -389,9 +390,8 @@ public class AccountResource extends JaxRsResourceBase {
                                        @QueryParam(QUERY_CUSTOM_FIELDS) final String customFieldList,
                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                        @HeaderParam(HDR_REASON) final String reason,
-                                       @HeaderParam(HDR_COMMENT) final String comment,
-                                       @javax.ws.rs.core.Context final UriInfo uriInfo) {
-        return super.deleteCustomFields(UUID.fromString(id), customFieldList, uriInfo,
+                                       @HeaderParam(HDR_COMMENT) final String comment) {
+        return super.deleteCustomFields(UUID.fromString(id), customFieldList,
                                         context.createContext(createdBy, reason, comment));
     }
 
@@ -402,7 +402,7 @@ public class AccountResource extends JaxRsResourceBase {
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + TAGS)
     @Produces(APPLICATION_JSON)
-    public Response getTags(@PathParam(ID_PARAM_NAME) final String id) {
+    public Response getTags(@PathParam(ID_PARAM_NAME) final String id) throws TagDefinitionApiException {
         return super.getTags(UUID.fromString(id));
     }
 
@@ -414,7 +414,7 @@ public class AccountResource extends JaxRsResourceBase {
                                @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                @HeaderParam(HDR_REASON) final String reason,
                                @HeaderParam(HDR_COMMENT) final String comment,
-                               @javax.ws.rs.core.Context final UriInfo uriInfo) {
+                               @javax.ws.rs.core.Context final UriInfo uriInfo) throws TagApiException {
         return super.createTags(UUID.fromString(id), tagList, uriInfo,
                                 context.createContext(createdBy, reason, comment));
     }
@@ -427,9 +427,8 @@ public class AccountResource extends JaxRsResourceBase {
                                @QueryParam(QUERY_TAGS) final String tagList,
                                @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                @HeaderParam(HDR_REASON) final String reason,
-                               @HeaderParam(HDR_COMMENT) final String comment,
-                               @javax.ws.rs.core.Context final UriInfo uriInfo) {
-        return super.deleteTags(UUID.fromString(id), tagList, uriInfo,
+                               @HeaderParam(HDR_COMMENT) final String comment) throws TagApiException {
+        return super.deleteTags(UUID.fromString(id), tagList,
                                 context.createContext(createdBy, reason, comment));
     }
 
@@ -459,8 +458,7 @@ public class AccountResource extends JaxRsResourceBase {
                              @PathParam(ID_PARAM_NAME) final String id,
                              @HeaderParam(HDR_CREATED_BY) final String createdBy,
                              @HeaderParam(HDR_REASON) final String reason,
-                             @HeaderParam(HDR_COMMENT) final String comment,
-                             @javax.ws.rs.core.Context final UriInfo uriInfo) throws AccountApiException {
+                             @HeaderParam(HDR_COMMENT) final String comment) throws AccountApiException {
         final UUID accountId = UUID.fromString(id);
 
         // Make sure the account exist or we will confuse the history and auditing code

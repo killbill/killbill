@@ -16,17 +16,30 @@
 
 package com.ning.billing.jaxrs.mappers;
 
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
+import com.ning.billing.ErrorCode;
 import com.ning.billing.util.api.TagApiException;
 
 @Provider
 public class TagApiExceptionMapper extends ExceptionMapperBase implements ExceptionMapper<TagApiException> {
 
+    private final UriInfo uriInfo;
+
+    public TagApiExceptionMapper(@Context final UriInfo uriInfo) {
+        this.uriInfo = uriInfo;
+    }
+
     @Override
     public Response toResponse(final TagApiException exception) {
-        return null;
+        if (exception.getCode() == ErrorCode.TAG_DOES_NOT_EXIST.getCode()) {
+            return buildNotFoundResponse(exception, uriInfo);
+        } else {
+            return buildBadRequestResponse(exception, uriInfo);
+        }
     }
 }

@@ -43,6 +43,8 @@ import com.ning.billing.jaxrs.json.SubscriptionJsonNoEvents;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
 import com.ning.billing.util.api.CustomFieldUserApi;
+import com.ning.billing.util.api.TagApiException;
+import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.dao.ObjectType;
 
@@ -139,9 +141,8 @@ public class BundleResource extends JaxRsResourceBase {
                                        final List<CustomFieldJson> customFields,
                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                        @HeaderParam(HDR_REASON) final String reason,
-                                       @HeaderParam(HDR_COMMENT) final String comment,
-                                       @javax.ws.rs.core.Context final UriInfo uriInfo) {
-        return super.createCustomFields(UUID.fromString(id), customFields, uriInfo,
+                                       @HeaderParam(HDR_COMMENT) final String comment) {
+        return super.createCustomFields(UUID.fromString(id), customFields,
                                         context.createContext(createdBy, reason, comment));
     }
 
@@ -153,16 +154,15 @@ public class BundleResource extends JaxRsResourceBase {
                                        @QueryParam(QUERY_CUSTOM_FIELDS) final String customFieldList,
                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                        @HeaderParam(HDR_REASON) final String reason,
-                                       @HeaderParam(HDR_COMMENT) final String comment,
-                                       @javax.ws.rs.core.Context final UriInfo uriInfo) {
-        return super.deleteCustomFields(UUID.fromString(id), customFieldList, uriInfo,
+                                       @HeaderParam(HDR_COMMENT) final String comment) {
+        return super.deleteCustomFields(UUID.fromString(id), customFieldList,
                                         context.createContext(createdBy, reason, comment));
     }
 
     @GET
     @Path("/{bundleId:" + UUID_PATTERN + "}/" + TAG_URI)
     @Produces(APPLICATION_JSON)
-    public Response getTags(@PathParam(ID_PARAM_NAME) final String id) {
+    public Response getTags(@PathParam(ID_PARAM_NAME) final String id) throws TagDefinitionApiException {
         return super.getTags(UUID.fromString(id));
     }
 
@@ -175,7 +175,7 @@ public class BundleResource extends JaxRsResourceBase {
                                @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                @HeaderParam(HDR_REASON) final String reason,
                                @HeaderParam(HDR_COMMENT) final String comment,
-                               @javax.ws.rs.core.Context final UriInfo uriInfo) {
+                               @javax.ws.rs.core.Context final UriInfo uriInfo) throws TagApiException {
         return super.createTags(UUID.fromString(id), tagList, uriInfo,
                                 context.createContext(createdBy, reason, comment));
     }
@@ -188,9 +188,8 @@ public class BundleResource extends JaxRsResourceBase {
                                @QueryParam(QUERY_TAGS) final String tagList,
                                @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                @HeaderParam(HDR_REASON) final String reason,
-                               @HeaderParam(HDR_COMMENT) final String comment,
-                               @javax.ws.rs.core.Context final UriInfo uriInfo) {
-        return super.deleteTags(UUID.fromString(id), tagList, uriInfo,
+                               @HeaderParam(HDR_COMMENT) final String comment) throws TagApiException {
+        return super.deleteTags(UUID.fromString(id), tagList,
                                 context.createContext(createdBy, reason, comment));
     }
 

@@ -59,6 +59,8 @@ import com.ning.billing.jaxrs.util.KillbillEventHandler;
 import com.ning.billing.payment.api.PaymentErrorEvent;
 import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.util.api.CustomFieldUserApi;
+import com.ning.billing.util.api.TagApiException;
+import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.dao.ObjectType;
@@ -347,7 +349,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                        @HeaderParam(HDR_REASON) final String reason,
                                        @HeaderParam(HDR_COMMENT) final String comment,
                                        @javax.ws.rs.core.Context final UriInfo uriInfo) {
-        return super.createCustomFields(UUID.fromString(id), customFields, uriInfo,
+        return super.createCustomFields(UUID.fromString(id), customFields,
                                         context.createContext(createdBy, reason, comment));
     }
 
@@ -361,14 +363,14 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                        @HeaderParam(HDR_REASON) final String reason,
                                        @HeaderParam(HDR_COMMENT) final String comment,
                                        @javax.ws.rs.core.Context final UriInfo uriInfo) {
-        return super.deleteCustomFields(UUID.fromString(id), customFieldList, uriInfo,
+        return super.deleteCustomFields(UUID.fromString(id), customFieldList,
                                         context.createContext(createdBy, reason, comment));
     }
 
     @GET
     @Path(TAG_URI)
     @Produces(APPLICATION_JSON)
-    public Response getTags(@PathParam(ID_PARAM_NAME) final String id) {
+    public Response getTags(@PathParam(ID_PARAM_NAME) final String id) throws TagDefinitionApiException {
         return super.getTags(UUID.fromString(id));
     }
 
@@ -381,7 +383,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                @HeaderParam(HDR_REASON) final String reason,
                                @HeaderParam(HDR_COMMENT) final String comment,
-                               @javax.ws.rs.core.Context final UriInfo uriInfo) {
+                               @javax.ws.rs.core.Context final UriInfo uriInfo) throws TagApiException {
         return super.createTags(UUID.fromString(id), tagList, uriInfo,
                                 context.createContext(createdBy, reason, comment));
     }
@@ -394,9 +396,8 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                @QueryParam(QUERY_TAGS) final String tagList,
                                @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                @HeaderParam(HDR_REASON) final String reason,
-                               @HeaderParam(HDR_COMMENT) final String comment,
-                               @javax.ws.rs.core.Context final UriInfo uriInfo) {
-        return super.deleteTags(UUID.fromString(id), tagList, uriInfo,
+                               @HeaderParam(HDR_COMMENT) final String comment) throws TagApiException {
+        return super.deleteTags(UUID.fromString(id), tagList,
                                 context.createContext(createdBy, reason, comment));
     }
 
