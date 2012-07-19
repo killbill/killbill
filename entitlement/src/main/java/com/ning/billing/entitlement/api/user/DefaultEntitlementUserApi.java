@@ -130,7 +130,7 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
             final DateTime now = clock.getUTCNow();
             final DateTime requestedDate = (requestedDateWithMs != null) ? DefaultClock.truncateMs(requestedDateWithMs) : now;
             if (requestedDate.isAfter(now)) {
-                throw new EntitlementUserApiException(ErrorCode.ENT_INVALID_REQUESTED_DATE, requestedDate.toString());
+                throw new EntitlementUserApiException(ErrorCode.ENT_INVALID_REQUESTED_DATE, now.toString(), requestedDate.toString());
             }
             final DateTime effectiveDate = requestedDate;
 
@@ -168,7 +168,7 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
                         throw new EntitlementUserApiException(ErrorCode.ENT_CREATE_NO_BP, bundleId);
                     }
                     if (effectiveDate.isBefore(baseSubscription.getStartDate())) {
-                        throw new EntitlementUserApiException(ErrorCode.ENT_INVALID_REQUESTED_DATE, requestedDate.toString());
+                        throw new EntitlementUserApiException(ErrorCode.ENT_INVALID_REQUESTED_DATE, effectiveDate.toString(), baseSubscription.getStartDate().toString());
                     }
                     addonUtils.checkAddonCreationRights(baseSubscription, plan);
                     bundleStartDate = baseSubscription.getStartDate();
