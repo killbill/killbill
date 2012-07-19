@@ -29,6 +29,7 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.BundleJsonNoSubscriptions;
 import com.ning.billing.jaxrs.json.PaymentJsonSimple;
+import com.ning.billing.jaxrs.json.PaymentMethodJson;
 import com.ning.billing.jaxrs.json.RefundJson;
 import com.ning.billing.jaxrs.json.SubscriptionJsonNoEvents;
 import com.ning.billing.jaxrs.resources.JaxrsResource;
@@ -65,6 +66,14 @@ public class TestPayment extends TestJaxrsBase {
 
         final String paymentId = objFromJson.get(0).getPaymentId();
         final BigDecimal paymentAmount = objFromJson.get(0).getAmount();
+
+        final String paymentMethodId = objFromJson.get(0).getPaymentMethodId();
+        uri = JaxrsResource.PAYMENT_METHODS_PATH + "/" + paymentMethodId;
+        response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+        final PaymentMethodJson paymentMethodJson = mapper.readValue(response.getResponseBody(), PaymentMethodJson.class);
+        Assert.assertEquals(paymentMethodJson.getPaymentMethodId(), paymentMethodId);
+        Assert.assertEquals(paymentMethodJson.getAccountId(), accountJson.getAccountId());
 
         uri = JaxrsResource.PAYMENTS_PATH + "/" + paymentId + "/" + JaxrsResource.REFUNDS;
         response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);

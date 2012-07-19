@@ -134,6 +134,7 @@ public class AccountTimelineJson {
             final String status = payment.getPaymentStatus().toString();
             this.payments.add(new PaymentJsonWithBundleKeys(payment.getAmount(), payment.getPaidAmount(), account.getId().toString(),
                                                             payment.getInvoiceId().toString(), payment.getId().toString(),
+                                                            payment.getPaymentMethodId().toString(),
                                                             payment.getEffectiveDate(), payment.getEffectiveDate(),
                                                             payment.getAttempts().size(), payment.getCurrency().toString(), status,
                                                             getBundleExternalKey(payment.getInvoiceId(), invoices, bundles),
