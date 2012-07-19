@@ -47,12 +47,15 @@ public class PaymentJsonSimple {
 
     private final String status;
 
+    private final String paymentMethodId;
+
     public PaymentJsonSimple() {
         this.amount = null;
         this.paidAmount = null;
         this.invoiceId = null;
         this.accountId = null;
         this.paymentId = null;
+        this.paymentMethodId = null;
         this.requestedDate = null;
         this.effectiveDate = null;
         this.currency = null;
@@ -66,6 +69,7 @@ public class PaymentJsonSimple {
                              @JsonProperty("accountId") final String accountId,
                              @JsonProperty("invoiceId") final String invoiceId,
                              @JsonProperty("paymentId") final String paymentId,
+                             @JsonProperty("paymentMethodId") final String paymentMethodId,
                              @JsonProperty("requestedDate") final DateTime requestedDate,
                              @JsonProperty("effectiveDate") final DateTime effectiveDate,
                              @JsonProperty("retryCount") final Integer retryCount,
@@ -77,6 +81,7 @@ public class PaymentJsonSimple {
         this.invoiceId = invoiceId;
         this.accountId = accountId;
         this.paymentId = paymentId;
+        this.paymentMethodId = paymentMethodId;
         this.requestedDate = DefaultClock.toUTCDateTime(requestedDate);
         this.effectiveDate = DefaultClock.toUTCDateTime(effectiveDate);
         this.currency = currency;
@@ -90,6 +95,7 @@ public class PaymentJsonSimple {
         this.invoiceId = src.getInvoiceId().toString();
         this.accountId = src.getAccountId().toString();
         this.paymentId = src.getId().toString();
+        this.paymentMethodId =src.getPaymentMethodId().toString();
         this.requestedDate = src.getEffectiveDate();
         this.effectiveDate = src.getEffectiveDate();
         this.currency = src.getCurrency().toString();
@@ -108,6 +114,10 @@ public class PaymentJsonSimple {
 
     public String getPaymentId() {
         return paymentId;
+    }
+
+    public String getPaymentMethodId() {
+        return paymentMethodId;
     }
 
     public DateTime getRequestedDate() {
