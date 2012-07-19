@@ -126,10 +126,15 @@ public class PaymentMethodProcessor extends ProcessorBase {
             @Override
             public List<PaymentMethod> doOperation() throws PaymentApiException {
                 final List<PaymentMethod> result = new LinkedList<PaymentMethod>();
-                PaymentPluginApi pluginApi = null;
+                final PaymentPluginApi pluginApi;
                 try {
                     pluginApi = pluginRegistry.getPlugin(pluginName);
                     final List<PaymentMethodPlugin> pluginPms = pluginApi.getPaymentMethodDetails(account.getExternalKey());
+                    // The method should never return null by convention, but let's not trust the plugin...
+                    if (pluginPms == null) {
+                        return result;
+                    }
+
                     for (final PaymentMethodPlugin cur : pluginPms) {
                         final PaymentMethod input = new DefaultPaymentMethod(account.getId(), pluginName, cur);
                         final PaymentMethodModelDao pmModel = new PaymentMethodModelDao(input.getId(), input.getAccountId(), input.getPluginName(), input.isActive(), input.getPluginDetail().getExternalPaymentMethodId());
