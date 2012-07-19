@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -64,8 +64,8 @@ public class PaymentMethodJson {
                         return new PaymentMethodProperties(input.getKey(), input.getValue().toString(), input.getIsUpdatable());
                     }
                 }));
-                detail = new PaymentMethodPluginDetailJson(in.getPluginDetail().getExternalPaymentMethodId(), properties);
             }
+            detail = new PaymentMethodPluginDetailJson(in.getPluginDetail().getExternalPaymentMethodId(), properties);
         }
         return new PaymentMethodJson(in.getId().toString(), account.getId().toString(), isDefault, in.getPluginName(), detail);
     }

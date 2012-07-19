@@ -17,7 +17,9 @@
 package com.ning.billing.jaxrs;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.ws.rs.core.Response.Status;
 
@@ -37,6 +39,7 @@ import com.ning.http.client.Response;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 
+import static com.ning.billing.jaxrs.resources.JaxrsResource.QUERY_PAYMENT_METHOD_PLUGIN_INFO;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
@@ -67,13 +70,18 @@ public class TestPayment extends TestJaxrsBase {
         final String paymentId = objFromJson.get(0).getPaymentId();
         final BigDecimal paymentAmount = objFromJson.get(0).getAmount();
 
+        // Check the PaymentMethod from paymentMethodId returned in the Payment object
         final String paymentMethodId = objFromJson.get(0).getPaymentMethodId();
         uri = JaxrsResource.PAYMENT_METHODS_PATH + "/" + paymentMethodId;
-        response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+
+        final Map<String, String> queryPaymentMethods = new HashMap<String, String>();
+        queryPaymentMethods.put(QUERY_PAYMENT_METHOD_PLUGIN_INFO, "true");
+        response = doGet(uri, queryPaymentMethods, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
         final PaymentMethodJson paymentMethodJson = mapper.readValue(response.getResponseBody(), PaymentMethodJson.class);
         Assert.assertEquals(paymentMethodJson.getPaymentMethodId(), paymentMethodId);
         Assert.assertEquals(paymentMethodJson.getAccountId(), accountJson.getAccountId());
+        Assert.assertNotNull(paymentMethodJson.getPluginInfo().getExternalPaymentId());
 
         uri = JaxrsResource.PAYMENTS_PATH + "/" + paymentId + "/" + JaxrsResource.REFUNDS;
         response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
