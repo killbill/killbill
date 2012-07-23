@@ -20,9 +20,11 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -56,6 +58,8 @@ import com.ning.billing.invoice.model.RepairAdjInvoiceItem;
 import com.ning.billing.junction.api.BillingEventSet;
 import com.ning.billing.util.clock.Clock;
 
+import com.google.common.collect.Sets;
+import com.google.common.collect.Sets.SetView;
 import com.google.inject.Inject;
 
 public class DefaultInvoiceGenerator implements InvoiceGenerator {
@@ -231,19 +235,11 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
      */
     void removeDuplicatedInvoiceItems(final List<InvoiceItem> proposedItems,
                                       final List<InvoiceItem> existingInvoiceItems) {
-        final Iterator<InvoiceItem> proposedItemIterator = proposedItems.iterator();
-        while (proposedItemIterator.hasNext()) {
-            final InvoiceItem proposedItem = proposedItemIterator.next();
-
-            final Iterator<InvoiceItem> existingItemIterator = existingInvoiceItems.iterator();
-            while (existingItemIterator.hasNext()) {
-                final InvoiceItem existingItem = existingItemIterator.next();
-                if (existingItem.equals(proposedItem)) {
-                    existingItemIterator.remove();
-                    proposedItemIterator.remove();
-                }
-            }
-        }
+        final Set<InvoiceItem> proposedSet = new HashSet<InvoiceItem>(proposedItems);
+        final Set<InvoiceItem> existingSet = new HashSet<InvoiceItem>(existingInvoiceItems);
+        final SetView<InvoiceItem> intersection = Sets.intersection(proposedSet, existingSet);
+        proposedItems.removeAll(intersection);
+        existingInvoiceItems.removeAll(intersection);
     }
 
     void removeCancellingInvoiceItems(final List<InvoiceItem> items) {
