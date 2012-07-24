@@ -47,7 +47,10 @@ import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.util.clock.Clock;
 
+import com.google.common.annotations.VisibleForTesting;
+
 public class BusinessInvoiceRecorder {
+
     private static final Logger log = LoggerFactory.getLogger(BusinessInvoiceRecorder.class);
 
     private final AccountUserApi accountApi;
@@ -160,42 +163,35 @@ public class BusinessInvoiceRecorder {
         accountSqlDao.saveAccount(account);
     }
 
-    private BusinessInvoiceItem createBusinessInvoiceItem(final InvoiceItem invoiceItem) {
-        final String externalKey;
-        try {
-            final SubscriptionBundle bundle = entitlementApi.getBundleFromId(invoiceItem.getBundleId());
-            externalKey = bundle.getKey();
-        } catch (EntitlementUserApiException e) {
-            log.warn("Ignoring invoice item {} for bundle {} (bundle does not exist)",
-                     invoiceItem.getId().toString(),
-                     invoiceItem.getBundleId().toString());
-            return null;
+    @VisibleForTesting
+    BusinessInvoiceItem createBusinessInvoiceItem(final InvoiceItem invoiceItem) {
+        String externalKey = null;
+        Plan plan = null;
+        PlanPhase planPhase = null;
+
+        // Subscription and bundle could be null for e.g. credits or adjustments
+        if (invoiceItem.getBundleId() != null) {
+            try {
+                final SubscriptionBundle bundle = entitlementApi.getBundleFromId(invoiceItem.getBundleId());
+                externalKey = bundle.getKey();
+            } catch (EntitlementUserApiException e) {
+                log.warn("Ignoring subscription fields for invoice item {} for bundle {} (bundle does not exist)",
+                         invoiceItem.getId().toString(),
+                         invoiceItem.getBundleId().toString());
+            }
         }
 
-        final Subscription subscription;
-        try {
-            subscription = entitlementApi.getSubscriptionFromId(invoiceItem.getSubscriptionId());
-        } catch (EntitlementUserApiException e) {
-            log.warn("Ignoring invoice item {} for subscription {} (subscription does not exist)",
-                     invoiceItem.getId().toString(),
-                     invoiceItem.getSubscriptionId().toString());
-            return null;
-        }
-
-        final Plan plan = subscription.getCurrentPlan();
-        if (plan == null) {
-            log.warn("Ignoring invoice item {} for subscription {} (null plan)",
-                     invoiceItem.getId().toString(),
-                     invoiceItem.getSubscriptionId().toString());
-            return null;
-        }
-
-        final PlanPhase planPhase = subscription.getCurrentPhase();
-        if (planPhase == null) {
-            log.warn("Ignoring invoice item {} for subscription {} (null phase)",
-                     invoiceItem.getId().toString(),
-                     invoiceItem.getSubscriptionId().toString());
-            return null;
+        if (invoiceItem.getSubscriptionId() != null) {
+            final Subscription subscription;
+            try {
+                subscription = entitlementApi.getSubscriptionFromId(invoiceItem.getSubscriptionId());
+                plan = subscription.getCurrentPlan();
+                planPhase = subscription.getCurrentPhase();
+            } catch (EntitlementUserApiException e) {
+                log.warn("Ignoring subscription fields for invoice item {} for subscription {} (subscription does not exist)",
+                         invoiceItem.getId().toString(),
+                         invoiceItem.getSubscriptionId().toString());
+            }
         }
 
         return new BusinessInvoiceItem(externalKey, invoiceItem, plan, planPhase);
