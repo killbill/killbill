@@ -16,16 +16,17 @@
 
 package com.ning.billing.catalog;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
-import javax.xml.bind.annotation.XmlRootElement;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlRootElement;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.ActionPolicy;
@@ -43,6 +44,7 @@ import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PlanSpecifier;
 import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.Product;
+import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.catalog.api.StaticCatalog;
 import com.ning.billing.catalog.rules.PlanRules;
 import com.ning.billing.util.config.ValidatingConfig;
@@ -342,4 +344,22 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
         return availAddons;
     }
 
+    @Override
+    public List<Listing> getAvailableBasePlanListings() {
+        final List<Listing> availBasePlans = new ArrayList<Listing>();
+
+        for (Plan plan : getCurrentPlans()) {
+            if (plan.getProduct().getCategory().equals(ProductCategory.BASE)) {
+                for (PriceList priceList : getPriceLists().getAllPriceLists()) {
+                    Plan planInList = priceList.findPlan(plan.getProduct(), plan.getBillingPeriod());
+
+                    if (planInList != null) {
+                        availBasePlans.add(new DefaultListing(plan, priceList));
+                    }
+                }
+            }
+        }
+
+        return availBasePlans;
+    }
 }

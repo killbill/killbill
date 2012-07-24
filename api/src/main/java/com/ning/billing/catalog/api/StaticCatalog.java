@@ -57,7 +57,7 @@ public interface StaticCatalog {
     public abstract PriceList findCurrentPricelist(String name) throws CatalogApiException;
 
     //
-    //  
+    //
     //
     public abstract ActionPolicy planChangePolicy(PlanPhaseSpecifier from,
                                                   PlanSpecifier to) throws CatalogApiException;
@@ -77,6 +77,7 @@ public interface StaticCatalog {
 
     public abstract boolean canCreatePlan(PlanSpecifier specifier) throws CatalogApiException;
 
+    public abstract List<Listing> getAvailableBasePlanListings() throws CatalogApiException;
     public abstract List<Listing> getAvailableAddonListings(String baseProductName) throws CatalogApiException;
 
 }

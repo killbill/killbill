@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -37,9 +37,9 @@ import com.ning.billing.catalog.api.StaticCatalog;
 
 @JsonAutoDetect(fieldVisibility=JsonAutoDetect.Visibility.ANY)
 public class CatalogJsonSimple {
-    
+
     private final ProductJson [] products;
-    
+
     public CatalogJsonSimple(StaticCatalog catalog) throws CatalogApiException {
 
         Map<String, ProductJson> productMap = new HashMap<String, CatalogJsonSimple.ProductJson>();
@@ -69,27 +69,28 @@ public class CatalogJsonSimple {
                 PhaseJson jPhase = new PhaseJson(phase.getPhaseType().toString(), prices);
                 phases[i++] = jPhase;
             }
-            PlanJson jPlan = new PlanJson(plan.getName(), phases); 
+            PlanJson jPlan = new PlanJson(plan.getName(), phases);
             jProduct.addPlan(jPlan);
         }
         products = productMap.values().toArray(new ProductJson[productMap.values().size()]);
     }
-    
+
     private Collection<String> toProductNames(Product [] in) {
         return Collections2.transform(Lists.newArrayList(in), new Function<Product, String>() {
+            @Override
             public String apply(Product input) {
                 return input.getName();
             }
         });
     }
-    
+
     @JsonCreator
     public CatalogJsonSimple(@JsonProperty("products")  ProductJson[] products) {
         super();
         this.products = products;
     }
-    
-    
+
+
 
     public ProductJson[] getProducts() {
         return products;
@@ -104,7 +105,7 @@ public class CatalogJsonSimple {
         private final String [] included;
         private final String [] available;
         private final List<PlanJson> plans;
-        
+
 
         @JsonCreator
         public ProductJson(@JsonProperty("type") String type,
@@ -127,7 +128,7 @@ public class CatalogJsonSimple {
         public void addPlan(PlanJson plan) {
             plans.add(plan);
         }
-        
+
         public String getType() {
             return type;
         }
@@ -139,7 +140,7 @@ public class CatalogJsonSimple {
         public List<PlanJson> getPlans() {
             return plans;
         }
-        
+
         public String[] getIncluded() {
             return included;
         }
@@ -148,13 +149,13 @@ public class CatalogJsonSimple {
             return available;
         }
     }
-    
+
     @JsonAutoDetect(fieldVisibility=JsonAutoDetect.Visibility.ANY)
     public static class PlanJson {
 
         private final String name;
         private final PhaseJson [] phases;
-        
+
         @JsonCreator
         public PlanJson(@JsonProperty("name") String name,
                 @JsonProperty("phases") PhaseJson[] phases) {
@@ -175,7 +176,7 @@ public class CatalogJsonSimple {
 
         private final String type;
         private final Map<String, BigDecimal> prices;
-        
+
         @JsonCreator
         public PhaseJson(@JsonProperty("type") String type,
                 @JsonProperty("prices") Map<String, BigDecimal> prices) {

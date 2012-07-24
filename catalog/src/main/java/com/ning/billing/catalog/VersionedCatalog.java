@@ -15,10 +15,6 @@
  */
 package com.ning.billing.catalog;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -26,6 +22,11 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -448,4 +449,8 @@ public class VersionedCatalog extends ValidatingConfig<StandaloneCatalog> implem
         return versionForDate(clock.getUTCNow()).getAvailableAddonListings(baseProductName);
     }
 
+    @Override
+    public List<Listing> getAvailableBasePlanListings() throws CatalogApiException {
+        return versionForDate(clock.getUTCNow()).getAvailableBasePlanListings();
+    }
 }
