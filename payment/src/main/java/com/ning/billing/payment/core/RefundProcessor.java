@@ -147,7 +147,8 @@ public class RefundProcessor extends ProcessorBase {
 
                     paymentDao.updateRefundStatus(refundInfo.getId(), RefundStatus.COMPLETED, context);
 
-                    return new DefaultRefund(refundInfo.getId(), paymentId, refundInfo.getAmount(), account.getCurrency(), isAdjusted);
+                    return new DefaultRefund(refundInfo.getId(), paymentId, refundInfo.getAmount(), account.getCurrency(),
+                                             isAdjusted, refundInfo.getCreatedDate());
                 } catch (PaymentPluginApiException e) {
                     throw new PaymentApiException(ErrorCode.PAYMENT_CREATE_REFUND, account.getId(), e.getMessage());
                 } catch (InvoiceApiException e) {
@@ -172,7 +173,8 @@ public class RefundProcessor extends ProcessorBase {
         if (completePluginCompletedRefund(filteredInput)) {
             result = paymentDao.getRefund(refundId);
         }
-        return new DefaultRefund(result.getId(), result.getPaymentId(), result.getAmount(), result.getCurrency(), result.isAdjsuted());
+        return new DefaultRefund(result.getId(), result.getPaymentId(), result.getAmount(), result.getCurrency(),
+                                 result.isAdjsuted(), result.getCreatedDate());
     }
 
 
@@ -200,7 +202,8 @@ public class RefundProcessor extends ProcessorBase {
         return new ArrayList<Refund>(Collections2.transform(in, new Function<RefundModelDao, Refund>() {
             @Override
             public Refund apply(RefundModelDao cur) {
-                return new DefaultRefund(cur.getId(), cur.getPaymentId(), cur.getAmount(), cur.getCurrency(), cur.isAdjsuted());
+                return new DefaultRefund(cur.getId(), cur.getPaymentId(), cur.getAmount(), cur.getCurrency(),
+                                         cur.isAdjsuted(), cur.getCreatedDate());
             }
         }));
     }

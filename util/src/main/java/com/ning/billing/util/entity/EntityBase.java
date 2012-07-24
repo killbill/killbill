@@ -18,21 +18,42 @@ package com.ning.billing.util.entity;
 
 import java.util.UUID;
 
+import org.joda.time.DateTime;
+
 public abstract class EntityBase implements Entity {
+
     protected final UUID id;
+    protected final DateTime createdDate;
+    protected final DateTime updatedDate;
 
     // used to hydrate objects
     public EntityBase(final UUID id) {
-        this.id = id;
+        this(id, null, null);
     }
 
     // used to create new objects
     public EntityBase() {
-        this.id = UUID.randomUUID();
+        this(UUID.randomUUID(), null, null);
+    }
+
+    public EntityBase(final UUID id, final DateTime createdDate, final DateTime updatedDate) {
+        this.id = id;
+        this.createdDate = createdDate;
+        this.updatedDate = updatedDate;
     }
 
     @Override
     public UUID getId() {
         return id;
+    }
+
+    // TODO surface it in Entity
+    public DateTime getCreatedDate() {
+        return createdDate;
+    }
+
+    // TODO surface it in Entity
+    public DateTime getUpdatedDate() {
+        return updatedDate;
     }
 }

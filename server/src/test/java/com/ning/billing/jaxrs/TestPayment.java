@@ -92,7 +92,7 @@ public class TestPayment extends TestJaxrsBase {
 
         // Issue the refund
 
-        final RefundJson refundJson = new RefundJson(null, paymentId, paymentAmount, false);
+        final RefundJson refundJson = new RefundJson(null, paymentId, paymentAmount, false, null, null);
         baseJson = mapper.writeValueAsString(refundJson);
         response = doPost(uri, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
@@ -105,7 +105,13 @@ public class TestPayment extends TestJaxrsBase {
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
         baseJson = response.getResponseBody();
         final RefundJson refundJsonCheck = mapper.readValue(baseJson, RefundJson.class);
-        Assert.assertTrue(refundJsonCheck.equalsNoId(refundJson));
+        Assert.assertTrue(refundJsonCheck.equalsNoIdNoDates(refundJson));
+        Assert.assertEquals(refundJsonCheck.getEffectiveDate().getYear(), clock.getUTCNow().getYear());
+        Assert.assertEquals(refundJsonCheck.getEffectiveDate().getMonthOfYear(), clock.getUTCNow().getMonthOfYear());
+        Assert.assertEquals(refundJsonCheck.getEffectiveDate().getDayOfMonth(), clock.getUTCNow().getDayOfMonth());
+        Assert.assertEquals(refundJsonCheck.getRequestedDate().getYear(), clock.getUTCNow().getYear());
+        Assert.assertEquals(refundJsonCheck.getRequestedDate().getMonthOfYear(), clock.getUTCNow().getMonthOfYear());
+        Assert.assertEquals(refundJsonCheck.getRequestedDate().getDayOfMonth(), clock.getUTCNow().getDayOfMonth());
 
         uri = JaxrsResource.PAYMENTS_PATH + "/" + paymentId + "/" + JaxrsResource.REFUNDS;
         response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);

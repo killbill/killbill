@@ -18,10 +18,12 @@ package com.ning.billing.jaxrs.json;
 
 import java.math.BigDecimal;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import org.joda.time.DateTime;
+
 import com.ning.billing.payment.api.Refund;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class RefundJson {
 
@@ -29,24 +31,27 @@ public class RefundJson {
     private final String paymentId;
     private final BigDecimal refundAmount;
     private final Boolean isAdjusted;
+    private final DateTime requestedDate;
+    private final DateTime effectiveDate;
 
-    public RefundJson(Refund input) {
-        this(input.getId().toString(), input.getPaymentId().toString(), input.getRefundAmount(), input.isAdjusted());
+    public RefundJson(final Refund input) {
+        this(input.getId().toString(), input.getPaymentId().toString(), input.getRefundAmount(), input.isAdjusted(),
+             input.getEffectiveDate(), input.getEffectiveDate());
     }
 
     @JsonCreator
     public RefundJson(@JsonProperty("refund_id") final String refundId,
-            @JsonProperty("paymentId") String paymentId,
-            @JsonProperty("refundAmount") BigDecimal refundAmount,
-            @JsonProperty("adjusted") final Boolean isAdjusted) {
+                      @JsonProperty("paymentId") final String paymentId,
+                      @JsonProperty("refundAmount") final BigDecimal refundAmount,
+                      @JsonProperty("adjusted") final Boolean isAdjusted,
+                      @JsonProperty("requestedDate") final DateTime requestedDate,
+                      @JsonProperty("effectiveDate") final DateTime effectiveDate) {
         this.refundId = refundId;
         this.paymentId = paymentId;
         this.refundAmount = refundAmount;
         this.isAdjusted = isAdjusted;
-    }
-
-    public RefundJson() {
-        this(null, null, null, null);
+        this.requestedDate = requestedDate;
+        this.effectiveDate = effectiveDate;
     }
 
     public String getRefundId() {
@@ -65,61 +70,111 @@ public class RefundJson {
         return isAdjusted;
     }
 
+    public DateTime getRequestedDate() {
+        return requestedDate;
+    }
+
+    public DateTime getEffectiveDate() {
+        return effectiveDate;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append("RefundJson");
+        sb.append("{refundId='").append(refundId).append('\'');
+        sb.append(", paymentId='").append(paymentId).append('\'');
+        sb.append(", refundAmount=").append(refundAmount);
+        sb.append(", isAdjusted=").append(isAdjusted);
+        sb.append(", requestedDate=").append(requestedDate);
+        sb.append(", effectiveDate=").append(effectiveDate);
+        sb.append('}');
+        return sb.toString();
+    }
+
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result
-                + ((isAdjusted == null) ? 0 : isAdjusted.hashCode());
-        result = prime * result
-                + ((paymentId == null) ? 0 : paymentId.hashCode());
-        result = prime * result
-                + ((refundAmount == null) ? 0 : refundAmount.hashCode());
-        result = prime * result
-                + ((refundId == null) ? 0 : refundId.hashCode());
+        int result = refundId != null ? refundId.hashCode() : 0;
+        result = 31 * result + (paymentId != null ? paymentId.hashCode() : 0);
+        result = 31 * result + (refundAmount != null ? refundAmount.hashCode() : 0);
+        result = 31 * result + (isAdjusted != null ? isAdjusted.hashCode() : 0);
+        result = 31 * result + (requestedDate != null ? requestedDate.hashCode() : 0);
+        result = 31 * result + (effectiveDate != null ? effectiveDate.hashCode() : 0);
         return result;
     }
 
     @Override
     public boolean equals(final Object obj) {
-        if (! this.equalsNoId(obj)) {
+        if (!this.equalsNoIdNoDates(obj)) {
             return false;
         } else {
-            RefundJson other = (RefundJson) obj;
-            if (getRefundId() == null) {
-                return other.getRefundId() == null;
-            } else {
-                return getRefundId().equals(other.getRefundId());
+            final RefundJson other = (RefundJson) obj;
+            if (refundId == null) {
+                if (other.getRefundId() != null) {
+                    return false;
+                }
+            } else if (!refundId.equals(other.getRefundId())) {
+                return false;
             }
+
+            if (requestedDate == null) {
+                if (other.getRequestedDate() != null) {
+                    return false;
+                }
+            } else if (requestedDate.compareTo(other.getRequestedDate()) != 0) {
+                return false;
+            }
+
+            if (effectiveDate == null) {
+                if (other.getEffectiveDate() != null) {
+                    return false;
+                }
+            } else if (effectiveDate.compareTo(other.getEffectiveDate()) != 0) {
+                return false;
+            }
+
+            return true;
         }
     }
 
-    public boolean equalsNoId(final Object obj) {
-        if (this == obj)
+    public boolean equalsNoIdNoDates(final Object obj) {
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+
+        if (getClass() != obj.getClass()) {
             return false;
-        RefundJson other = (RefundJson) obj;
+        }
+
+        final RefundJson other = (RefundJson) obj;
         if (isAdjusted == null) {
-            if (other.isAdjusted != null)
+            if (other.isAdjusted != null) {
                 return false;
-        } else if (!isAdjusted.equals(other.isAdjusted))
+            }
+        } else if (!isAdjusted.equals(other.isAdjusted)) {
             return false;
+        }
+
         if (paymentId == null) {
-            if (other.paymentId != null)
+            if (other.paymentId != null) {
                 return false;
-        } else if (!paymentId.equals(other.paymentId))
+            }
+        } else if (!paymentId.equals(other.paymentId)) {
             return false;
+        }
+
         if (refundAmount == null) {
-            if (other.refundAmount != null)
+            if (other.refundAmount != null) {
                 return false;
+            }
         } else if (!refundAmount.equals(other.refundAmount)) {
             return false;
         }
+
         return true;
     }
-
-
 }

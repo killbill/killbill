@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.payment.dao;
 
 import java.math.BigDecimal;
@@ -21,6 +22,7 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.Bind;
@@ -43,15 +45,13 @@ import com.ning.billing.util.dao.EntityHistory;
 import com.ning.billing.util.dao.MapperBase;
 import com.ning.billing.util.entity.dao.UpdatableEntitySqlDao;
 
-
 @ExternalizedSqlViaStringTemplate3()
 @RegisterMapper(RefundSqlDao.RefundModelDaoMapper.class)
 public interface RefundSqlDao extends Transactional<RefundSqlDao>, UpdatableEntitySqlDao<RefundModelDao>, Transmogrifier, CloseMe {
 
-
     @SqlUpdate
     void insertRefund(@Bind(binder = RefundModelDaoBinder.class) final RefundModelDao refundInfo,
-                       @CallContextBinder final CallContext context);
+                      @CallContextBinder final CallContext context);
 
     @SqlUpdate
     void updateStatus(@Bind("id") final String refundId, @Bind("refundStatus") final String status);
@@ -70,10 +70,10 @@ public interface RefundSqlDao extends Transactional<RefundSqlDao>, UpdatableEnti
     public void insertHistoryFromTransaction(@RefundHistoryBinder final EntityHistory<RefundModelDao> payment,
                                              @CallContextBinder final CallContext context);
 
-
     public static final class RefundModelDaoBinder extends BinderBase implements Binder<Bind, RefundModelDao> {
+
         @Override
-        public void bind(@SuppressWarnings("rawtypes") final SQLStatement stmt, final Bind bind, final RefundModelDao refund) {
+        public void bind(final SQLStatement stmt, final Bind bind, final RefundModelDao refund) {
             stmt.bind("id", refund.getId().toString());
             stmt.bind("accountId", refund.getAccountId().toString());
             stmt.bind("paymentId", refund.getPaymentId().toString());
@@ -81,6 +81,7 @@ public interface RefundSqlDao extends Transactional<RefundSqlDao>, UpdatableEnti
             stmt.bind("currency", refund.getCurrency().toString());
             stmt.bind("isAdjusted", refund.isAdjsuted());
             stmt.bind("refundStatus", refund.getRefundStatus().toString());
+            // createdDate and updatedDate are populated by the @CallContextBinder
         }
     }
 
@@ -96,7 +97,9 @@ public interface RefundSqlDao extends Transactional<RefundSqlDao>, UpdatableEnti
             final boolean isAdjusted = rs.getBoolean("is_adjusted");
             final Currency currency = Currency.valueOf(rs.getString("currency"));
             final RefundStatus refundStatus = RefundStatus.valueOf(rs.getString("refund_status"));
-            return new RefundModelDao(id, accountId, paymentId, amount, currency, isAdjusted, refundStatus);
+            final DateTime createdDate = getDateTime(rs, "created_date");
+            final DateTime updatedDate = getDateTime(rs, "updated_date");
+            return new RefundModelDao(id, accountId, paymentId, amount, currency, isAdjusted, refundStatus, createdDate, updatedDate);
         }
     }
 }

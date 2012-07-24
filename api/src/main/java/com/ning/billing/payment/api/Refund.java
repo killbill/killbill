@@ -13,17 +13,27 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.payment.api;
 
 import java.math.BigDecimal;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
+
 import com.ning.billing.catalog.api.Currency;
 
 public interface Refund {
+
     public UUID getId();
+
     public UUID getPaymentId();
+
     public boolean isAdjusted();
+
     public BigDecimal getRefundAmount();
+
     public Currency getCurrency();
+
+    public DateTime getEffectiveDate();
 }
