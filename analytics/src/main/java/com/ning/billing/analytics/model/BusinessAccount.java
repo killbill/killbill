@@ -24,6 +24,8 @@ import org.joda.time.LocalDate;
 
 import com.ning.billing.analytics.utils.Rounder;
 
+import com.google.common.base.Objects;
+
 public class BusinessAccount {
     // Populated by the database
     private DateTime createdDt = null;
@@ -72,7 +74,7 @@ public class BusinessAccount {
     }
 
     public BigDecimal getBalance() {
-        return balance;
+        return Objects.firstNonNull(balance, BigDecimal.ZERO);
     }
 
     public Double getRoundedBalance() {
@@ -140,7 +142,7 @@ public class BusinessAccount {
     }
 
     public BigDecimal getTotalInvoiceBalance() {
-        return totalInvoiceBalance;
+        return Objects.firstNonNull(totalInvoiceBalance, BigDecimal.ZERO);
     }
 
     public Double getRoundedTotalInvoiceBalance() {

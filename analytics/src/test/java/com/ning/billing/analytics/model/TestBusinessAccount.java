@@ -50,4 +50,16 @@ public class TestBusinessAccount extends AnalyticsTestSuite {
                                                                  BigDecimal.TEN, "ERROR_NOT_ENOUGH_FUNDS", "CreditCard", "Visa", "");
         Assert.assertFalse(account.equals(otherAccount));
     }
+
+    @Test(groups = "fast")
+    public void testDefaultBigDecimalValues() throws Exception {
+        final BusinessAccount bac = new BusinessAccount(UUID.randomUUID());
+        Assert.assertEquals(bac.getBalance(), BigDecimal.ZERO);
+        Assert.assertEquals(bac.getTotalInvoiceBalance(), BigDecimal.ZERO);
+
+        bac.setBalance(BigDecimal.ONE);
+        bac.setTotalInvoiceBalance(BigDecimal.TEN);
+        Assert.assertEquals(bac.getBalance(), BigDecimal.ONE);
+        Assert.assertEquals(bac.getTotalInvoiceBalance(), BigDecimal.TEN);
+    }
 }

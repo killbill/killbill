@@ -131,6 +131,29 @@ public class TestDefaultInvoiceGeneratorUnit extends InvoicingTestBase {
     }
 
     @Test(groups = "fast")
+    public void testRemoveDuplicatedInvoiceItemsShouldNotThrowIllegalStateException() {
+        final LocalDate startDate = clock.getUTCToday();
+        final BigDecimal amount = new BigDecimal("12.00");
+
+        // Create a state with multiple duplicates
+
+        final List<InvoiceItem> existing = new LinkedList<InvoiceItem>();
+        final InvoiceItem item1 = new FixedPriceInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, amount, currency);
+        existing.add(item1);
+        existing.add(item1);
+
+        final List<InvoiceItem> proposed = new LinkedList<InvoiceItem>();
+        final InvoiceItem other1 = new FixedPriceInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, amount, currency);
+        proposed.add(item1);
+        proposed.add(other1);
+        proposed.add(other1);
+
+        gen.removeDuplicatedInvoiceItems(proposed, existing);
+        assertEquals(existing.size(), 0);
+        assertEquals(proposed.size(), 0);
+    }
+
+    @Test(groups = "fast")
     public void testRemoveDuplicatedInvoiceItemsFixedPrice() {
         final LocalDate startDate = clock.getUTCToday();
         final LocalDate endDate = startDate.plusDays(30);
