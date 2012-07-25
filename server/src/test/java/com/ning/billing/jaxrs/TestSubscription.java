@@ -59,7 +59,7 @@ public class TestSubscription extends TestJaxrsBase {
         Assert.assertNotNull(subscriptionJson.getChargedThroughDate());
         Assert.assertEquals(subscriptionJson.getChargedThroughDate().toString(), "2012-04-25T00:00:00.000Z");
 
-        String uri = JaxrsResource.SUBSCRIPTIONS_PATH + "/" + subscriptionJson.getSubscriptionId().toString();
+        String uri = JaxrsResource.SUBSCRIPTIONS_PATH + "/" + subscriptionJson.getSubscriptionId();
 
         // Retrieves with GET
         Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
@@ -93,14 +93,13 @@ public class TestSubscription extends TestJaxrsBase {
 
         crappyWaitForLackOfProperSynchonization();
 
-        //
         // Cancel EOT
-        uri = JaxrsResource.SUBSCRIPTIONS_PATH + "/" + subscriptionJson.getSubscriptionId().toString();
+        uri = JaxrsResource.SUBSCRIPTIONS_PATH + "/" + subscriptionJson.getSubscriptionId();
         response = doDelete(uri, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
 
         // Retrieves to check EndDate
-        uri = JaxrsResource.SUBSCRIPTIONS_PATH + "/" + subscriptionJson.getSubscriptionId().toString();
+        uri = JaxrsResource.SUBSCRIPTIONS_PATH + "/" + subscriptionJson.getSubscriptionId();
         response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
 
         assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
@@ -132,4 +131,48 @@ public class TestSubscription extends TestJaxrsBase {
         Assert.assertEquals(response.getStatusCode(), Status.NOT_FOUND.getStatusCode());
     }
 
+    @Test(groups = "slow")
+    public void testOverridePolicy() throws Exception {
+        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        final AccountJson accountJson = createAccountWithDefaultPaymentMethod("xil", "shdxilhkkl", "xil@yahoo.com");
+        final BundleJsonNoSubscriptions bundleJson = createBundle(accountJson.getAccountId(), "99999");
+
+        final String productName = "Shotgun";
+        final BillingPeriod term = BillingPeriod.ANNUAL;
+
+        final SubscriptionJsonNoEvents subscriptionJson = createSubscription(bundleJson.getBundleId(), productName, ProductCategory.BASE.toString(), term.toString(), true);
+        Assert.assertNotNull(subscriptionJson.getChargedThroughDate());
+        Assert.assertEquals(subscriptionJson.getChargedThroughDate().toString(), "2012-04-25T00:00:00.000Z");
+
+        final String uri = JaxrsResource.SUBSCRIPTIONS_PATH + "/" + subscriptionJson.getSubscriptionId();
+
+        // Retrieves with GET
+        Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+        String baseJson = response.getResponseBody();
+        SubscriptionJsonNoEvents objFromJson = mapper.readValue(baseJson, SubscriptionJsonNoEvents.class);
+        Assert.assertTrue(objFromJson.equals(subscriptionJson));
+        assertEquals(objFromJson.getBillingPeriod(), BillingPeriod.ANNUAL.toString());
+
+        // Change billing period immediately
+        final SubscriptionJsonNoEvents newInput = new SubscriptionJsonNoEvents(subscriptionJson.getSubscriptionId(),
+                                                                               subscriptionJson.getBundleId(),
+                                                                               subscriptionJson.getStartDate(),
+                                                                               subscriptionJson.getProductName(),
+                                                                               subscriptionJson.getProductCategory(),
+                                                                               BillingPeriod.MONTHLY.toString(),
+                                                                               subscriptionJson.getPriceList(),
+                                                                               subscriptionJson.getChargedThroughDate(),
+                                                                               subscriptionJson.getCancelledDate());
+        baseJson = mapper.writeValueAsString(newInput);
+        final Map<String, String> queryParams = getQueryParamsForCallCompletion(CALL_COMPLETION_TIMEOUT_SEC);
+        queryParams.put(JaxrsResource.QUERY_POLICY, "immediate");
+        response = doPut(uri, baseJson, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
+        assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+        baseJson = response.getResponseBody();
+        objFromJson = mapper.readValue(baseJson, SubscriptionJsonNoEvents.class);
+        assertEquals(objFromJson.getBillingPeriod(), BillingPeriod.MONTHLY.toString());
+    }
 }

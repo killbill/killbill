@@ -42,6 +42,7 @@ import org.joda.time.format.ISODateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ning.billing.catalog.api.ActionPolicy;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
@@ -156,6 +157,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                            @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
                                            @QueryParam(QUERY_CALL_COMPLETION) @DefaultValue("false") final Boolean callCompletion,
                                            @QueryParam(QUERY_CALL_TIMEOUT) @DefaultValue("3") final long timeoutSec,
+                                           @QueryParam(QUERY_POLICY) final String policyString,
                                            @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                            @HeaderParam(HDR_REASON) final String reason,
                                            @HeaderParam(HDR_COMMENT) final String comment) throws EntitlementUserApiException {
@@ -169,7 +171,16 @@ public class SubscriptionResource extends JaxRsResourceBase {
                 final UUID uuid = UUID.fromString(subscriptionId);
                 final Subscription current = entitlementApi.getSubscriptionFromId(uuid);
                 final DateTime inputDate = (requestedDate != null) ? DATE_TIME_FORMATTER.parseDateTime(requestedDate) : null;
-                isImmediateOp = current.changePlan(subscription.getProductName(), BillingPeriod.valueOf(subscription.getBillingPeriod()), subscription.getPriceList(), inputDate, ctx);
+
+                if (policyString == null) {
+                    isImmediateOp = current.changePlan(subscription.getProductName(), BillingPeriod.valueOf(subscription.getBillingPeriod()),
+                                                       subscription.getPriceList(), inputDate, ctx);
+                } else {
+                    final ActionPolicy policy = ActionPolicy.valueOf(policyString.toUpperCase());
+                    isImmediateOp = current.changePlanWithPolicy(subscription.getProductName(), BillingPeriod.valueOf(subscription.getBillingPeriod()),
+                                                                 subscription.getPriceList(), inputDate, policy, ctx);
+                }
+
                 return Response.status(Status.OK).build();
             }
 
