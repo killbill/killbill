@@ -19,6 +19,7 @@ package com.ning.billing.invoice.notification;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
@@ -29,19 +30,26 @@ import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceNotifier;
 import com.ning.billing.invoice.template.HtmlInvoiceGenerator;
+import com.ning.billing.util.api.TagUserApi;
+import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.email.DefaultEmailSender;
 import com.ning.billing.util.email.EmailApiException;
 import com.ning.billing.util.email.EmailConfig;
 import com.ning.billing.util.email.EmailSender;
+import com.ning.billing.util.tag.ControlTagType;
+import com.ning.billing.util.tag.Tag;
 
 public class EmailInvoiceNotifier implements InvoiceNotifier {
     private final AccountUserApi accountUserApi;
+    private final TagUserApi tagUserApi;
     private final HtmlInvoiceGenerator generator;
     private final EmailConfig config;
 
     @Inject
-    public EmailInvoiceNotifier(final AccountUserApi accountUserApi, final HtmlInvoiceGenerator generator, final EmailConfig config) {
+    public EmailInvoiceNotifier(final AccountUserApi accountUserApi, final TagUserApi tagUserApi,
+                                final HtmlInvoiceGenerator generator, final EmailConfig config) {
         this.accountUserApi = accountUserApi;
+        this.tagUserApi = tagUserApi;
         this.generator = generator;
         this.config = config;
     }
@@ -57,9 +65,19 @@ public class EmailInvoiceNotifier implements InvoiceNotifier {
             cc.add(email.getEmail());
         }
 
+        // Check if this account has the MANUAL_PAY system tag
+        boolean manualPay = false;
+        final Map<String, Tag> accountTags = tagUserApi.getTags(account.getId(), ObjectType.ACCOUNT);
+        for (final Tag tag : accountTags.values()) {
+            if (ControlTagType.MANUAL_PAY.getId().equals(tag.getTagDefinitionId())) {
+                manualPay = true;
+                break;
+            }
+        }
+
         final String htmlBody;
         try {
-            htmlBody = generator.generateInvoice(account, invoice);
+            htmlBody = generator.generateInvoice(account, invoice, manualPay);
         } catch (IOException e) {
             throw new InvoiceApiException(e, ErrorCode.EMAIL_SENDING_FAILED);
         }

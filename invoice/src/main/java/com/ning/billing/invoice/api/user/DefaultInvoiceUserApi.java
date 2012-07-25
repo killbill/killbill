@@ -19,6 +19,7 @@ package com.ning.billing.invoice.api.user;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -39,7 +40,11 @@ import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.model.CreditAdjInvoiceItem;
 import com.ning.billing.invoice.template.HtmlInvoiceGenerator;
 import com.ning.billing.util.api.TagApiException;
+import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.util.tag.ControlTagType;
+import com.ning.billing.util.tag.Tag;
 
 import com.google.inject.Inject;
 
@@ -48,13 +53,16 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     private final InvoiceDao dao;
     private final InvoiceDispatcher dispatcher;
     private final AccountUserApi accountUserApi;
+    private final TagUserApi tagUserApi;
     private final HtmlInvoiceGenerator generator;
 
     @Inject
-    public DefaultInvoiceUserApi(final InvoiceDao dao, final InvoiceDispatcher dispatcher, final AccountUserApi accountUserApi, final HtmlInvoiceGenerator generator) {
+    public DefaultInvoiceUserApi(final InvoiceDao dao, final InvoiceDispatcher dispatcher, final AccountUserApi accountUserApi,
+                                 final TagUserApi tagUserApi, final HtmlInvoiceGenerator generator) {
         this.dao = dao;
         this.dispatcher = dispatcher;
         this.accountUserApi = accountUserApi;
+        this.tagUserApi = tagUserApi;
         this.generator = generator;
     }
 
@@ -155,7 +163,18 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         }
 
         final Account account = accountUserApi.getAccountById(invoice.getAccountId());
-        return generator.generateInvoice(account, invoice);
+
+        // Check if this account has the MANUAL_PAY system tag
+        boolean manualPay = false;
+        final Map<String, Tag> accountTags = tagUserApi.getTags(account.getId(), ObjectType.ACCOUNT);
+        for (final Tag tag : accountTags.values()) {
+            if (ControlTagType.MANUAL_PAY.getId().equals(tag.getTagDefinitionId())) {
+                manualPay = true;
+                break;
+            }
+        }
+
+        return generator.generateInvoice(account, invoice, manualPay);
     }
 
 }

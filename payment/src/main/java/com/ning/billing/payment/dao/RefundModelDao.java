@@ -13,14 +13,18 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.payment.dao;
 
 import java.math.BigDecimal;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
+import org.joda.time.DateTime;
+
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.entity.EntityBase;
-
 
 public class RefundModelDao extends EntityBase {
 
@@ -31,14 +35,15 @@ public class RefundModelDao extends EntityBase {
     private final boolean isAdjusted;
     private final RefundStatus refundStatus;
 
-    public RefundModelDao(final UUID accountId, final UUID paymentId,
-            final BigDecimal amount, final Currency currency, final boolean isAdjusted) {
-        this(UUID.randomUUID(), accountId, paymentId, amount, currency, isAdjusted, RefundStatus.CREATED);
+    public RefundModelDao(final UUID accountId, final UUID paymentId, final BigDecimal amount,
+                          final Currency currency, final boolean isAdjusted) {
+        this(UUID.randomUUID(), accountId, paymentId, amount, currency, isAdjusted, RefundStatus.CREATED, null, null);
     }
 
-    public RefundModelDao(final UUID id, final UUID accountId, final UUID paymentId,
-            final BigDecimal amount, final Currency currency, final boolean isAdjusted, final RefundStatus refundStatus) {
-        super(id);
+    public RefundModelDao(final UUID id, final UUID accountId, final UUID paymentId, final BigDecimal amount,
+                          final Currency currency, final boolean isAdjusted, final RefundStatus refundStatus,
+                          @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate) {
+        super(id, createdDate, updatedDate);
         this.accountId = accountId;
         this.paymentId = paymentId;
         this.amount = amount;
@@ -75,5 +80,73 @@ public class RefundModelDao extends EntityBase {
         CREATED,
         PLUGIN_COMPLETED,
         COMPLETED,
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append("RefundModelDao");
+        sb.append("{accountId=").append(accountId);
+        sb.append(", paymentId=").append(paymentId);
+        sb.append(", amount=").append(amount);
+        sb.append(", currency=").append(currency);
+        sb.append(", isAdjusted=").append(isAdjusted);
+        sb.append(", refundStatus=").append(refundStatus);
+        sb.append(", createdDate=").append(createdDate);
+        sb.append(", updatedDate=").append(updatedDate);
+        sb.append('}');
+        return sb.toString();
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        final RefundModelDao that = (RefundModelDao) o;
+
+        if (isAdjusted != that.isAdjusted) {
+            return false;
+        }
+        if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
+            return false;
+        }
+        if (amount != null ? !amount.equals(that.amount) : that.amount != null) {
+            return false;
+        }
+        if (createdDate != null ? !createdDate.equals(that.createdDate) : that.createdDate != null) {
+            return false;
+        }
+        if (currency != that.currency) {
+            return false;
+        }
+        if (paymentId != null ? !paymentId.equals(that.paymentId) : that.paymentId != null) {
+            return false;
+        }
+        if (refundStatus != that.refundStatus) {
+            return false;
+        }
+        if (updatedDate != null ? !updatedDate.equals(that.updatedDate) : that.updatedDate != null) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = accountId != null ? accountId.hashCode() : 0;
+        result = 31 * result + (paymentId != null ? paymentId.hashCode() : 0);
+        result = 31 * result + (amount != null ? amount.hashCode() : 0);
+        result = 31 * result + (currency != null ? currency.hashCode() : 0);
+        result = 31 * result + (isAdjusted ? 1 : 0);
+        result = 31 * result + (refundStatus != null ? refundStatus.hashCode() : 0);
+        result = 31 * result + (createdDate != null ? createdDate.hashCode() : 0);
+        result = 31 * result + (updatedDate != null ? updatedDate.hashCode() : 0);
+        return result;
     }
 }

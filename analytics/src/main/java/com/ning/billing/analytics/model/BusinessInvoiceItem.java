@@ -19,6 +19,8 @@ package com.ning.billing.analytics.model;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
@@ -30,6 +32,7 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.invoice.api.InvoiceItem;
 
 public class BusinessInvoiceItem {
+
     private final UUID itemId;
     private final DateTime createdDate;
     private final DateTime updatedDate;
@@ -47,11 +50,11 @@ public class BusinessInvoiceItem {
     private final BigDecimal amount;
     private final Currency currency;
 
-    public BusinessInvoiceItem(final BigDecimal amount, final String billingPeriod, final DateTime createdDate,
+    public BusinessInvoiceItem(final BigDecimal amount, @Nullable final String billingPeriod, final DateTime createdDate,
                                final Currency currency, final LocalDate endDate, final String externalKey,
-                               final UUID invoiceId, final UUID itemId, final String itemType, final String phase,
-                               final String productCategory, final String productName, final String productType,
-                               final String slug, final LocalDate startDate, final DateTime updatedDate) {
+                               final UUID invoiceId, final UUID itemId, final String itemType, @Nullable final String phase,
+                               @Nullable final String productCategory, @Nullable final String productName, @Nullable final String productType,
+                               @Nullable final String slug, final LocalDate startDate, final DateTime updatedDate) {
         this.amount = amount;
         this.billingPeriod = billingPeriod;
         this.createdDate = createdDate;
@@ -70,11 +73,12 @@ public class BusinessInvoiceItem {
         this.updatedDate = updatedDate;
     }
 
-    public BusinessInvoiceItem(final String externalKey, final InvoiceItem invoiceItem, final Plan plan, final PlanPhase planPhase) {
-        this(invoiceItem.getAmount(), planPhase.getBillingPeriod().toString(), new DateTime(DateTimeZone.UTC), invoiceItem.getCurrency(), invoiceItem.getEndDate(),
-             externalKey, invoiceItem.getInvoiceId(), invoiceItem.getId(), invoiceItem.getInvoiceItemType().toString(),
-             planPhase.getPhaseType().toString(), plan.getProduct().getCategory().toString(), plan.getProduct().getName(), plan.getProduct().getCatalogName(),
-             planPhase.getName(), invoiceItem.getStartDate(), new DateTime(DateTimeZone.UTC));
+    public BusinessInvoiceItem(@Nullable final String externalKey, final InvoiceItem invoiceItem, @Nullable final Plan plan, @Nullable final PlanPhase planPhase) {
+        this(invoiceItem.getAmount(), planPhase != null ? planPhase.getBillingPeriod().toString() : null, new DateTime(DateTimeZone.UTC), invoiceItem.getCurrency(),
+             invoiceItem.getEndDate(), externalKey, invoiceItem.getInvoiceId(), invoiceItem.getId(), invoiceItem.getInvoiceItemType().toString(),
+             planPhase != null ? planPhase.getPhaseType().toString() : null, plan != null ? plan.getProduct().getCategory().toString() : null,
+             plan != null ? plan.getProduct().getName() : null, plan != null ? plan.getProduct().getCatalogName() : null,
+             planPhase != null ? planPhase.getName() : null, invoiceItem.getStartDate(), new DateTime(DateTimeZone.UTC));
     }
 
     public DateTime getCreatedDate() {

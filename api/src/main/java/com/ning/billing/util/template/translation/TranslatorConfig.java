@@ -18,6 +18,7 @@ package com.ning.billing.util.template.translation;
 
 import org.skife.config.Config;
 import org.skife.config.Default;
+import org.skife.config.Description;
 
 import com.ning.billing.invoice.api.formatters.InvoiceFormatterFactory;
 
@@ -43,6 +44,11 @@ public interface TranslatorConfig {
     @Config("killbill.template.name")
     @Default("com/ning/billing/util/email/templates/HtmlInvoiceTemplate.mustache")
     String getTemplateName();
+
+    @Config("killbill.manualPayTemplate.name")
+    @Default("com/ning/billing/util/email/templates/HtmlInvoiceTemplate.mustache")
+    @Description("Invoice template for accounts with MANUAL_PAY tag")
+    String getManualPayTemplateName();
 
     @Config("killbill.template.invoiceFormatterFactoryClass")
     @Default("com.ning.billing.invoice.template.formatters.DefaultInvoiceFormatterFactory")

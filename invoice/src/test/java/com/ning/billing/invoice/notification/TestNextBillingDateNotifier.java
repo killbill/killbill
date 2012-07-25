@@ -61,6 +61,7 @@ import com.ning.billing.util.email.templates.TemplateModule;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.BusModule.BusType;
 import com.ning.billing.util.glue.NotificationQueueModule;
+import com.ning.billing.util.glue.TagStoreModule;
 import com.ning.billing.util.notificationq.DummySqlTest;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 
@@ -113,6 +114,7 @@ public class TestNextBillingDateNotifier extends InvoiceTestSuiteWithEmbeddedDB 
                 install(new MockCatalogModule());
                 install(new NotificationQueueModule());
                 install(new TemplateModule());
+                install(new TagStoreModule());
 
                 final MysqlTestingHelper helper = KillbillTestSuiteWithEmbeddedDB.getMysqlTestingHelper();
                 bind(MysqlTestingHelper.class).toInstance(helper);

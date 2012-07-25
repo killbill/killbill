@@ -43,7 +43,7 @@ public class HtmlInvoiceGenerator {
         this.config = config;
     }
 
-    public String generateInvoice(final Account account, @Nullable final Invoice invoice) throws IOException {
+    public String generateInvoice(final Account account, @Nullable final Invoice invoice, final boolean manualPay) throws IOException {
         // Don't do anything if the invoice is null
         if (invoice == null) {
             return null;
@@ -59,6 +59,10 @@ public class HtmlInvoiceGenerator {
         final InvoiceFormatter formattedInvoice = factory.createInvoiceFormatter(config, invoice, locale);
         data.put("invoice", formattedInvoice);
 
-        return templateEngine.executeTemplate(config.getTemplateName(), data);
+        if (manualPay) {
+            return templateEngine.executeTemplate(config.getManualPayTemplateName(), data);
+        } else {
+            return templateEngine.executeTemplate(config.getTemplateName(), data);
+        }
     }
 }

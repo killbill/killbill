@@ -91,11 +91,11 @@ create table bii (
 , updated_date bigint not null
 , invoice_id char(36) not null
 , item_type char(50) not null comment 'e.g. FIXED or RECURRING'
-, external_key varchar(50) not null comment 'Bundle external key'
+, external_key varchar(50) default null comment 'Bundle external key (could be null for certain items)'
 , product_name varchar(50) default null
 , product_type varchar(50) default null
 , product_category varchar(50) default null
-, slug varchar(50) default null comment 'foo'
+, slug varchar(50) default null
 , phase varchar(50) default null
 , billing_period varchar(50) default null
 , start_date date default null
