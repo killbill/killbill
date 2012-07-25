@@ -61,7 +61,7 @@ public class PaymentMethodJson {
                 properties = new ArrayList<PaymentMethodJson.PaymentMethodProperties>(Collections2.transform(in.getPluginDetail().getProperties(), new Function<PaymentMethodKVInfo, PaymentMethodProperties>() {
                     @Override
                     public PaymentMethodProperties apply(final PaymentMethodKVInfo input) {
-                        return new PaymentMethodProperties(input.getKey(), input.getValue().toString(), input.getIsUpdatable());
+                        return new PaymentMethodProperties(input.getKey(), input.getValue() == null ? null : input.getValue().toString(), input.getIsUpdatable());
                     }
                 }));
             }

@@ -16,8 +16,6 @@
 
 package com.ning.billing.util.tag.dao;
 
-import static org.testng.Assert.assertEquals;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,8 +29,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
-import com.google.common.eventbus.Subscribe;
-import com.google.inject.Inject;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.api.TagDefinitionApiException;
@@ -44,13 +40,16 @@ import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.dao.ObjectType;
-import com.ning.billing.util.io.IOUtils;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.MockTagStoreModuleSql;
 import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;
-import com.ning.billing.util.tag.TestTagStore;
 import com.ning.billing.util.tag.api.TagEvent;
+
+import com.google.common.eventbus.Subscribe;
+import com.google.inject.Inject;
+
+import static org.testng.Assert.assertEquals;
 
 @Guice(modules = MockTagStoreModuleSql.class)
 public class TestAuditedTagDao extends UtilTestSuiteWithEmbeddedDB {
@@ -89,21 +88,19 @@ public class TestAuditedTagDao extends UtilTestSuiteWithEmbeddedDB {
         bus.stop();
     }
 
-
-    @Test(groups= {"slow"})
+    @Test(groups= "slow")
     public void testGetByIds() throws TagDefinitionApiException {
-
         final List<UUID> uuids = new ArrayList<UUID>();
 
-        // Check with a empty Collecion first
+        // Check with a empty Collection first
         List<TagDefinition> result = tagDefinitionDao.getByIds(uuids);
         assertEquals(result.size(), 0);
 
-        TagDefinition defYo = tagDefinitionDao.create("yo", "defintion yo", context);
+        final TagDefinition defYo = tagDefinitionDao.create("yo", "defintion yo", context);
         uuids.add(defYo.getId());
-        TagDefinition defBah = tagDefinitionDao.create("bah", "defintion bah", context);
+        final TagDefinition defBah = tagDefinitionDao.create("bah", "defintion bah", context);
         uuids.add(defBah.getId());
-        TagDefinition defZoo = tagDefinitionDao.create("zoo", "defintion zoo", context);
+        final TagDefinition defZoo = tagDefinitionDao.create("zoo", "defintion zoo", context);
         uuids.add(defZoo.getId());
 
         result = tagDefinitionDao.getByIds(uuids);
@@ -115,10 +112,10 @@ public class TestAuditedTagDao extends UtilTestSuiteWithEmbeddedDB {
         assertEquals(result.size(), 4);
 
         result = tagDefinitionDao.getTagDefinitions();
-        assertEquals(result.size(), 7);
+        assertEquals(result.size(), 3 + ControlTagType.values().length);
     }
 
-    @Test(groups= {"slow"})
+    @Test(groups= "slow")
     public void testGetById() throws TagDefinitionApiException {
 
         // User Tag
@@ -138,7 +135,7 @@ public class TestAuditedTagDao extends UtilTestSuiteWithEmbeddedDB {
         assertEquals(resdef_AUTO_INVOICING_OFF.getDescription(), ControlTagType.AUTO_INVOICING_OFF.getDescription());
     }
 
-    @Test(groups= {"slow"})
+    @Test(groups= "slow")
     public void testGetByName() throws TagDefinitionApiException {
 
         // User Tag

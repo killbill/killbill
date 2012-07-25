@@ -53,6 +53,8 @@ import com.google.common.base.Objects;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 
+import static com.ning.billing.invoice.template.formatters.DefaultAmountFormatter.round;
+
 /**
  * Format invoice fields. Note that the Mustache engine won't accept null values.
  */
@@ -131,17 +133,17 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
 
     @Override
     public BigDecimal getChargedAmount() {
-        return Objects.firstNonNull(invoice.getChargedAmount(), BigDecimal.ZERO);
+        return round(Objects.firstNonNull(invoice.getChargedAmount(), BigDecimal.ZERO));
     }
 
     @Override
     public BigDecimal getCBAAmount() {
-        return Objects.firstNonNull(invoice.getCBAAmount(), BigDecimal.ZERO);
+        return round(Objects.firstNonNull(invoice.getCBAAmount(), BigDecimal.ZERO));
     }
 
     @Override
     public BigDecimal getBalance() {
-        return Objects.firstNonNull(invoice.getBalance(), BigDecimal.ZERO);
+        return round(Objects.firstNonNull(invoice.getBalance(), BigDecimal.ZERO));
     }
 
     @Override
@@ -166,7 +168,7 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
 
     @Override
     public BigDecimal getPaidAmount() {
-        return Objects.firstNonNull(invoice.getPaidAmount(), BigDecimal.ZERO);
+        return round(Objects.firstNonNull(invoice.getPaidAmount(), BigDecimal.ZERO));
     }
 
     @Override
@@ -204,16 +206,16 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
 
     @Override
     public BigDecimal getTotalAdjAmount() {
-        return Objects.firstNonNull(invoice.getTotalAdjAmount(), BigDecimal.ZERO);
+        return round(Objects.firstNonNull(invoice.getTotalAdjAmount(), BigDecimal.ZERO));
     }
 
     @Override
     public BigDecimal getCreditAdjAmount() {
-        return Objects.firstNonNull(invoice.getCreditAdjAmount(), BigDecimal.ZERO);
+        return round(Objects.firstNonNull(invoice.getCreditAdjAmount(), BigDecimal.ZERO));
     }
 
     @Override
     public BigDecimal getRefundAdjAmount() {
-        return Objects.firstNonNull(invoice.getRefundAdjAmount(), BigDecimal.ZERO);
+        return round(Objects.firstNonNull(invoice.getRefundAdjAmount(), BigDecimal.ZERO));
     }
 }

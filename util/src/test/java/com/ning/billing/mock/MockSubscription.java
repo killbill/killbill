@@ -24,6 +24,8 @@ import org.joda.time.DateTimeZone;
 import org.mockito.Mockito;
 
 import com.google.common.collect.ImmutableList;
+
+import com.ning.billing.catalog.api.ActionPolicy;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
@@ -78,9 +80,15 @@ public class MockSubscription implements Subscription {
     }
 
     @Override
-    public boolean changePlan(final String productName, final BillingPeriod term, final String planSet, final DateTime requestedDate,
+    public boolean changePlan(final String productName, final BillingPeriod term, final String priceList, final DateTime requestedDate,
                               final CallContext context) throws EntitlementUserApiException {
-        return sub.changePlan(productName, term, planSet, requestedDate, context);
+        return sub.changePlan(productName, term, priceList, requestedDate, context);
+    }
+
+    @Override
+    public boolean changePlanWithPolicy(final String productName, final BillingPeriod term, final String priceList,
+                                        final DateTime requestedDate, final ActionPolicy policy, final CallContext context) throws EntitlementUserApiException {
+        return sub.changePlan(productName, term, priceList, requestedDate, context);
     }
 
     @Override

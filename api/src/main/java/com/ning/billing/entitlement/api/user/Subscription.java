@@ -21,6 +21,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.catalog.api.ActionPolicy;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
@@ -40,6 +41,10 @@ public interface Subscription extends Entity, Blockable {
             throws EntitlementUserApiException;
 
     public boolean changePlan(String productName, BillingPeriod term, String priceList, DateTime requestedDate, CallContext context)
+            throws EntitlementUserApiException;
+
+    public boolean changePlanWithPolicy(String productName, BillingPeriod term, String priceList, DateTime requestedDate,
+                                        ActionPolicy policy, CallContext context)
             throws EntitlementUserApiException;
 
     public boolean recreate(PlanPhaseSpecifier spec, DateTime requestedDate, CallContext context)

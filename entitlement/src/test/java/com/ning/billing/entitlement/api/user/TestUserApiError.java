@@ -29,11 +29,13 @@ import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.api.TestApiListener.NextEvent;
+import com.ning.billing.catalog.api.ActionPolicy;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Duration;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.entitlement.api.TestApiBase;
+import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.entitlement.glue.MockEngineModuleMemory;
 import com.ning.billing.util.clock.DefaultClock;
 
@@ -59,7 +61,6 @@ public class TestUserApiError extends TestApiBase {
         tCreateSubscriptionInternal(bundle.getId(), "Shotgun", null, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.CAT_PLAN_NOT_FOUND);
         // WRONG PLAN SET
         tCreateSubscriptionInternal(bundle.getId(), "Shotgun", BillingPeriod.ANNUAL, "Whatever", ErrorCode.CAT_PRICE_LIST_NOT_FOUND);
-
     }
 
     @Test(groups = "fast")
@@ -159,6 +160,22 @@ public class TestUserApiError extends TestApiBase {
         } catch (Exception e) {
             Assert.fail(e.toString());
         }
+    }
+
+    @Test(groups = "fast")
+    public void testChangeSubscriptionWithPolicy() throws Exception {
+        final Subscription subscription = createSubscription("Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME);
+
+        try {
+            subscription.changePlanWithPolicy("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow(), ActionPolicy.ILLEGAL, context);
+            Assert.fail();
+        } catch (EntitlementError error) {
+            assertTrue(true);
+            assertEquals(entitlementApi.getSubscriptionFromId(subscription.getId()).getCurrentPlan().getBillingPeriod(), BillingPeriod.ANNUAL);
+        }
+
+        assertTrue(subscription.changePlanWithPolicy("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow(), ActionPolicy.IMMEDIATE, context));
+        assertEquals(entitlementApi.getSubscriptionFromId(subscription.getId()).getCurrentPlan().getBillingPeriod(), BillingPeriod.MONTHLY);
     }
 
     @Test(groups = "fast")

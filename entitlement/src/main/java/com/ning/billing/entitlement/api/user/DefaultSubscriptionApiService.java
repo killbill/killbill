@@ -21,7 +21,6 @@ import java.util.List;
 
 import org.joda.time.DateTime;
 
-import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.ActionPolicy;
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -57,7 +56,10 @@ import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;
 
+import com.google.inject.Inject;
+
 public class DefaultSubscriptionApiService implements SubscriptionApiService {
+
     private final Clock clock;
     private final EntitlementDao dao;
     private final CatalogService catalogService;
@@ -71,6 +73,7 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
         this.dao = dao;
     }
 
+    @Override
     public SubscriptionData createPlan(final SubscriptionBuilder builder, final Plan plan, final PhaseType initialPhase,
                                        final String realPriceList, final DateTime requestedDate, final DateTime effectiveDate, final DateTime processedDate,
                                        final CallContext context) throws EntitlementUserApiException {
@@ -80,6 +83,7 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
         return subscription;
     }
 
+    @Override
     public boolean recreatePlan(final SubscriptionData subscription, final PlanPhaseSpecifier spec, final DateTime requestedDateWithMs, final CallContext context)
             throws EntitlementUserApiException {
         final SubscriptionState currentState = subscription.getState();
@@ -131,8 +135,8 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
 
             final TimedPhase nextTimedPhase = curAndNextPhases[1];
             final PhaseEvent nextPhaseEvent = (nextTimedPhase != null) ?
-                    PhaseEventData.createNextPhaseEvent(nextTimedPhase.getPhase().getName(), subscription, processedDate, nextTimedPhase.getStartPhase()) :
-                    null;
+                                              PhaseEventData.createNextPhaseEvent(nextTimedPhase.getPhase().getName(), subscription, processedDate, nextTimedPhase.getStartPhase()) :
+                                              null;
             final List<EntitlementEvent> events = new ArrayList<EntitlementEvent>();
             events.add(creationEvent);
             if (nextPhaseEvent != null) {
@@ -149,6 +153,7 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
         }
     }
 
+    @Override
     public boolean cancel(final SubscriptionData subscription, final DateTime requestedDateWithMs, final boolean eot, final CallContext context) throws EntitlementUserApiException {
         try {
             final SubscriptionState currentState = subscription.getState();
@@ -187,6 +192,7 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
         }
     }
 
+    @Override
     public boolean uncancel(final SubscriptionData subscription, final CallContext context) throws EntitlementUserApiException {
         if (!subscription.isSubscriptionFutureCancelled()) {
             throw new EntitlementUserApiException(ErrorCode.ENT_UNCANCEL_BAD_STATE, subscription.getId().toString());
@@ -207,8 +213,8 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
 
         final TimedPhase nextTimedPhase = planAligner.getNextTimedPhase(subscription, now, now);
         final PhaseEvent nextPhaseEvent = (nextTimedPhase != null) ?
-                PhaseEventData.createNextPhaseEvent(nextTimedPhase.getPhase().getName(), subscription, now, nextTimedPhase.getStartPhase()) :
-                null;
+                                          PhaseEventData.createNextPhaseEvent(nextTimedPhase.getPhase().getName(), subscription, now, nextTimedPhase.getStartPhase()) :
+                                          null;
         if (nextPhaseEvent != null) {
             uncancelEvents.add(nextPhaseEvent);
         }
@@ -219,78 +225,108 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
         return true;
     }
 
+    @Override
     public boolean changePlan(final SubscriptionData subscription, final String productName, final BillingPeriod term,
-                              final String priceList, final DateTime requestedDateWithMs, final CallContext context) throws EntitlementUserApiException {
+                              final String priceList, final DateTime requestedDateWithMs, final CallContext context)
+            throws EntitlementUserApiException {
+        final DateTime now = clock.getUTCNow();
+        final DateTime requestedDate = (requestedDateWithMs != null) ? DefaultClock.truncateMs(requestedDateWithMs) : now;
+
+        validateRequestedDate(subscription, now, requestedDate);
+        validateSubscriptionState(subscription);
+
+        final PlanChangeResult planChangeResult = getPlanChangeResult(subscription, productName, term, priceList, requestedDate);
+        final ActionPolicy policy = planChangeResult.getPolicy();
+
         try {
-            final DateTime now = clock.getUTCNow();
-            final DateTime requestedDate = (requestedDateWithMs != null) ? DefaultClock.truncateMs(requestedDateWithMs) : now;
-            validateRequestedDate(subscription, now, requestedDate);
-
-            final PriceList currentPriceList = subscription.getCurrentPriceList();
-
-            final SubscriptionState currentState = subscription.getState();
-            if (currentState != SubscriptionState.ACTIVE) {
-                throw new EntitlementUserApiException(ErrorCode.ENT_CHANGE_NON_ACTIVE, subscription.getId(), currentState);
-            }
-
-            if (subscription.isSubscriptionFutureCancelled()) {
-                throw new EntitlementUserApiException(ErrorCode.ENT_CHANGE_FUTURE_CANCELLED, subscription.getId());
-            }
-            PlanChangeResult planChangeResult = null;
-            try {
-
-                final Product destProduct = catalogService.getFullCatalog().findProduct(productName, requestedDate);
-                final Plan currentPlan = subscription.getCurrentPlan();
-                final PlanPhaseSpecifier fromPlanPhase = new PlanPhaseSpecifier(currentPlan.getProduct().getName(),
-                                                                                currentPlan.getProduct().getCategory(),
-                                                                                currentPlan.getBillingPeriod(),
-                                                                                currentPriceList.getName(), subscription.getCurrentPhase().getPhaseType());
-                final PlanSpecifier toPlanPhase = new PlanSpecifier(productName,
-                                                                    destProduct.getCategory(),
-                                                                    term,
-                                                                    priceList);
-
-                planChangeResult = catalogService.getFullCatalog().planChange(fromPlanPhase, toPlanPhase, requestedDate);
-            } catch (CatalogApiException e) {
-                throw new EntitlementUserApiException(e);
-            }
-
-            final ActionPolicy policy = planChangeResult.getPolicy();
-            final PriceList newPriceList = planChangeResult.getNewPriceList();
-
-            final Plan newPlan = catalogService.getFullCatalog().findPlan(productName, term, newPriceList.getName(), requestedDate, subscription.getStartDate());
-            final DateTime effectiveDate = subscription.getPlanChangeEffectiveDate(policy, requestedDate);
-
-            final TimedPhase currentTimedPhase = planAligner.getCurrentTimedPhaseOnChange(subscription, newPlan, newPriceList.getName(), requestedDate, effectiveDate);
-
-            final EntitlementEvent changeEvent = new ApiEventChange(new ApiEventBuilder()
-                                                                            .setSubscriptionId(subscription.getId())
-                                                                            .setEventPlan(newPlan.getName())
-                                                                            .setEventPlanPhase(currentTimedPhase.getPhase().getName())
-                                                                            .setEventPriceList(newPriceList.getName())
-                                                                            .setActiveVersion(subscription.getActiveVersion())
-                                                                            .setProcessedDate(now)
-                                                                            .setEffectiveDate(effectiveDate)
-                                                                            .setRequestedDate(requestedDate)
-                                                                            .setUserToken(context.getUserToken())
-                                                                            .setFromDisk(true));
-
-            final TimedPhase nextTimedPhase = planAligner.getNextTimedPhaseOnChange(subscription, newPlan, newPriceList.getName(), requestedDate, effectiveDate);
-            final PhaseEvent nextPhaseEvent = (nextTimedPhase != null) ?
-                    PhaseEventData.createNextPhaseEvent(nextTimedPhase.getPhase().getName(), subscription, now, nextTimedPhase.getStartPhase()) :
-                    null;
-            final List<EntitlementEvent> changeEvents = new ArrayList<EntitlementEvent>();
-            // Only add the PHASE if it does not coincide with the CHANGE, if not this is 'just' a CHANGE.
-            if (nextPhaseEvent != null && !nextPhaseEvent.getEffectiveDate().equals(changeEvent.getEffectiveDate())) {
-                changeEvents.add(nextPhaseEvent);
-            }
-            changeEvents.add(changeEvent);
-            dao.changePlan(subscription, changeEvents, context);
-            subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId()), catalogService.getFullCatalog());
-            return (policy == ActionPolicy.IMMEDIATE);
+            return doChangePlan(subscription, planChangeResult, now, requestedDate, productName, term, policy, context);
         } catch (CatalogApiException e) {
             throw new EntitlementUserApiException(e);
         }
+    }
+
+    @Override
+    public boolean changePlanWithPolicy(final SubscriptionData subscription, final String productName, final BillingPeriod term,
+                                        final String priceList, final DateTime requestedDateWithMs, final ActionPolicy policy, final CallContext context)
+            throws EntitlementUserApiException {
+        final DateTime now = clock.getUTCNow();
+        final DateTime requestedDate = (requestedDateWithMs != null) ? DefaultClock.truncateMs(requestedDateWithMs) : now;
+
+        validateRequestedDate(subscription, now, requestedDate);
+        validateSubscriptionState(subscription);
+
+        final PlanChangeResult planChangeResult = getPlanChangeResult(subscription, productName, term, priceList, requestedDate);
+
+        try {
+            return doChangePlan(subscription, planChangeResult, now, requestedDate, productName, term, policy, context);
+        } catch (CatalogApiException e) {
+            throw new EntitlementUserApiException(e);
+        }
+    }
+
+    private PlanChangeResult getPlanChangeResult(final SubscriptionData subscription, final String productName,
+                                                 final BillingPeriod term, final String priceList, final DateTime requestedDate) throws EntitlementUserApiException {
+        final PlanChangeResult planChangeResult;
+        try {
+            final Product destProduct = catalogService.getFullCatalog().findProduct(productName, requestedDate);
+            final Plan currentPlan = subscription.getCurrentPlan();
+            final PriceList currentPriceList = subscription.getCurrentPriceList();
+            final PlanPhaseSpecifier fromPlanPhase = new PlanPhaseSpecifier(currentPlan.getProduct().getName(),
+                                                                            currentPlan.getProduct().getCategory(),
+                                                                            currentPlan.getBillingPeriod(),
+                                                                            currentPriceList.getName(),
+                                                                            subscription.getCurrentPhase().getPhaseType());
+            final PlanSpecifier toPlanPhase = new PlanSpecifier(productName,
+                                                                destProduct.getCategory(),
+                                                                term,
+                                                                priceList);
+
+            planChangeResult = catalogService.getFullCatalog().planChange(fromPlanPhase, toPlanPhase, requestedDate);
+        } catch (CatalogApiException e) {
+            throw new EntitlementUserApiException(e);
+        }
+
+        return planChangeResult;
+    }
+
+    private boolean doChangePlan(final SubscriptionData subscription, final PlanChangeResult planChangeResult,
+                                 final DateTime now, final DateTime requestedDate, final String productName,
+                                 final BillingPeriod term, final ActionPolicy policy, final CallContext context) throws EntitlementUserApiException, CatalogApiException {
+        final PriceList newPriceList = planChangeResult.getNewPriceList();
+
+        final Plan newPlan = catalogService.getFullCatalog().findPlan(productName, term, newPriceList.getName(), requestedDate, subscription.getStartDate());
+        final DateTime effectiveDate = subscription.getPlanChangeEffectiveDate(policy, requestedDate);
+
+        final TimedPhase currentTimedPhase = planAligner.getCurrentTimedPhaseOnChange(subscription, newPlan, newPriceList.getName(), requestedDate, effectiveDate);
+
+        final EntitlementEvent changeEvent = new ApiEventChange(new ApiEventBuilder()
+                                                                        .setSubscriptionId(subscription.getId())
+                                                                        .setEventPlan(newPlan.getName())
+                                                                        .setEventPlanPhase(currentTimedPhase.getPhase().getName())
+                                                                        .setEventPriceList(newPriceList.getName())
+                                                                        .setActiveVersion(subscription.getActiveVersion())
+                                                                        .setProcessedDate(now)
+                                                                        .setEffectiveDate(effectiveDate)
+                                                                        .setRequestedDate(requestedDate)
+                                                                        .setUserToken(context.getUserToken())
+                                                                        .setFromDisk(true));
+
+        final TimedPhase nextTimedPhase = planAligner.getNextTimedPhaseOnChange(subscription, newPlan, newPriceList.getName(), requestedDate, effectiveDate);
+        final PhaseEvent nextPhaseEvent = (nextTimedPhase != null) ?
+                                          PhaseEventData.createNextPhaseEvent(nextTimedPhase.getPhase().getName(), subscription, now, nextTimedPhase.getStartPhase()) :
+                                          null;
+
+        final List<EntitlementEvent> changeEvents = new ArrayList<EntitlementEvent>();
+        // Only add the PHASE if it does not coincide with the CHANGE, if not this is 'just' a CHANGE.
+        if (nextPhaseEvent != null && !nextPhaseEvent.getEffectiveDate().equals(changeEvent.getEffectiveDate())) {
+            changeEvents.add(nextPhaseEvent);
+        }
+        changeEvents.add(changeEvent);
+
+        dao.changePlan(subscription, changeEvents, context);
+        subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId()), catalogService.getFullCatalog());
+
+        return (policy == ActionPolicy.IMMEDIATE);
     }
 
     private void validateRequestedDate(final SubscriptionData subscription, final DateTime now, final DateTime requestedDate)
@@ -304,6 +340,16 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
         if (previousTransition != null && previousTransition.getEffectiveTransitionTime().isAfter(requestedDate)) {
             throw new EntitlementUserApiException(ErrorCode.ENT_INVALID_REQUESTED_DATE,
                                                   requestedDate.toString(), previousTransition.getEffectiveTransitionTime());
+        }
+    }
+
+    private void validateSubscriptionState(final SubscriptionData subscription) throws EntitlementUserApiException {
+        final SubscriptionState currentState = subscription.getState();
+        if (currentState != SubscriptionState.ACTIVE) {
+            throw new EntitlementUserApiException(ErrorCode.ENT_CHANGE_NON_ACTIVE, subscription.getId(), currentState);
+        }
+        if (subscription.isSubscriptionFutureCancelled()) {
+            throw new EntitlementUserApiException(ErrorCode.ENT_CHANGE_FUTURE_CANCELLED, subscription.getId());
         }
     }
 }

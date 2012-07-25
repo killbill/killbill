@@ -21,6 +21,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.catalog.api.ActionPolicy;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
@@ -65,14 +66,25 @@ public class BlockingSubscription implements Subscription {
     }
 
     @Override
-    public boolean changePlan(final String productName, final BillingPeriod term, final String planSet, final DateTime requestedDate,
+    public boolean changePlan(final String productName, final BillingPeriod term, final String priceList, final DateTime requestedDate,
                               final CallContext context) throws EntitlementUserApiException {
         try {
             checker.checkBlockedChange(this);
         } catch (BlockingApiException e) {
             throw new EntitlementUserApiException(e, e.getCode(), e.getMessage());
         }
-        return subscription.changePlan(productName, term, planSet, requestedDate, context);
+        return subscription.changePlan(productName, term, priceList, requestedDate, context);
+    }
+
+    @Override
+    public boolean changePlanWithPolicy(final String productName, final BillingPeriod term, final String priceList,
+                                        final DateTime requestedDate, final ActionPolicy policy, final CallContext context) throws EntitlementUserApiException {
+        try {
+            checker.checkBlockedChange(this);
+        } catch (BlockingApiException e) {
+            throw new EntitlementUserApiException(e, e.getCode(), e.getMessage());
+        }
+        return subscription.changePlanWithPolicy(productName, term, priceList, requestedDate, policy, context);
     }
 
     @Override

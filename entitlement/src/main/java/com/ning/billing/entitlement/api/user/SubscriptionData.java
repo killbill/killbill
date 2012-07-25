@@ -176,11 +176,15 @@ public class SubscriptionData extends EntityBase implements Subscription {
     }
 
     @Override
-    public boolean changePlan(final String productName, final BillingPeriod term,
-                              final String priceList, final DateTime requestedDate, final CallContext context)
-            throws EntitlementUserApiException {
-        return apiService.changePlan(this, productName, term, priceList,
-                                     requestedDate, context);
+    public boolean changePlan(final String productName, final BillingPeriod term, final String priceList,
+                              final DateTime requestedDate, final CallContext context) throws EntitlementUserApiException {
+        return apiService.changePlan(this, productName, term, priceList, requestedDate, context);
+    }
+
+    @Override
+    public boolean changePlanWithPolicy(final String productName, final BillingPeriod term, final String priceList,
+                                        final DateTime requestedDate, final ActionPolicy policy, final CallContext context) throws EntitlementUserApiException {
+        return apiService.changePlanWithPolicy(this, productName, term, priceList, requestedDate, policy, context);
     }
 
     @Override

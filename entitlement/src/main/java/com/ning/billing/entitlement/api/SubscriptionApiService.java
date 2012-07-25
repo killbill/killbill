@@ -13,10 +13,12 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.entitlement.api;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.catalog.api.ActionPolicy;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
@@ -44,5 +46,9 @@ public interface SubscriptionApiService {
 
     public boolean changePlan(SubscriptionData subscription, String productName, BillingPeriod term,
                               String priceList, DateTime requestedDate, CallContext context)
+            throws EntitlementUserApiException;
+
+    public boolean changePlanWithPolicy(SubscriptionData subscription, String productName, BillingPeriod term,
+                                        String priceList, DateTime requestedDate, ActionPolicy policy, CallContext context)
             throws EntitlementUserApiException;
 }
