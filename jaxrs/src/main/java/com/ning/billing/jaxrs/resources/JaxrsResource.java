@@ -42,23 +42,23 @@ public interface JaxrsResource {
      * Query parameters
      */
     public static final String QUERY_EXTERNAL_KEY = "external_key";
-    public static final String QUERY_REQUESTED_DT = "requested_date";
-    public static final String QUERY_CALL_COMPLETION = "call_completion";
-    public static final String QUERY_CALL_TIMEOUT = "call_timeout_sec";
-    public static final String QUERY_DRY_RUN = "dry_run";
-    public static final String QUERY_TARGET_DATE = "target_date";
+    public static final String QUERY_REQUESTED_DT = "requestedDate";
+    public static final String QUERY_CALL_COMPLETION = "callCompletion";
+    public static final String QUERY_CALL_TIMEOUT = "callTimeoutSec";
+    public static final String QUERY_DRY_RUN = "dryRun";
+    public static final String QUERY_TARGET_DATE = "targetDate";
 
-    public static final String QUERY_ACCOUNT_ID = "account_id";
+    public static final String QUERY_ACCOUNT_ID = "accountId";
 
-    public static final String QUERY_PAYMENT_EXTERNAL = "external_payment";
-    public static final String QUERY_PAYMENT_LAST4_CC = "last4_cc";
-    public static final String QUERY_PAYMENT_NAME_ON_CC = "name_on_cc";
+    public static final String QUERY_PAYMENT_EXTERNAL = "externalPayment";
+    public static final String QUERY_PAYMENT_LAST4_CC = "last4CC";
+    public static final String QUERY_PAYMENT_NAME_ON_CC = "nameOnCC";
 
-    public static final String QUERY_TAGS = "tag_list";
-    public static final String QUERY_CUSTOM_FIELDS = "custom_field_list";
+    public static final String QUERY_TAGS = "tagList";
+    public static final String QUERY_CUSTOM_FIELDS = "customFieldList";
 
-    public static final String QUERY_PAYMENT_METHOD_PLUGIN_INFO = "plugin_info";
-    public static final String QUERY_PAYMENT_METHOD_IS_DEFAULT = "is_default";
+    public static final String QUERY_PAYMENT_METHOD_PLUGIN_INFO = "withPluginInfo";
+    public static final String QUERY_PAYMENT_METHOD_IS_DEFAULT = "isDefault";
 
 
     public static final String ACCOUNTS = "accounts";
