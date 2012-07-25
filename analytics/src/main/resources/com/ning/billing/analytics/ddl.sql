@@ -95,7 +95,7 @@ create table bii (
 , product_name varchar(50) default null
 , product_type varchar(50) default null
 , product_category varchar(50) default null
-, slug varchar(50) default null comment 'foo'
+, slug varchar(50) default null
 , phase varchar(50) default null
 , billing_period varchar(50) default null
 , start_date date default null
