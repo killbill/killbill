@@ -95,7 +95,7 @@ public class TestOverdueIntegration extends TestIntegrationBase {
     private BillingPeriod term;
     private String planSetName;
 
-    @BeforeMethod(groups = {"slow"})
+    @BeforeMethod(groups = "slow")
     public void setupOverdue() throws Exception {
         final String configXml = "<overdueConfig>" +
                 "   <bundleOverdueStates>" +
@@ -190,7 +190,7 @@ public class TestOverdueIntegration extends TestIntegrationBase {
     // We set the the property killbill.payment.retry.days=8,8,8,8,8,8,8,8 so that Payment retry logics does not end with an ABORTED state
     // preventing final instant payment to succeed.
     //
-    @Test(groups = {"slow"}, enabled = true)
+    @Test(groups = "slow")
     public void testBasicOverdueState() throws Exception {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
         paymentPlugin.makeAllInvoicesFailWithError(true);
@@ -266,7 +266,7 @@ public class TestOverdueIntegration extends TestIntegrationBase {
                 }
             });
         } catch (Exception e) {
-            Assert.assertEquals(blockingApi.getBlockingStateFor(bundle).getStateName(), expected);
+            Assert.assertEquals(blockingApi.getBlockingStateFor(bundle).getStateName(), expected, "Got exception: " + e.toString());
         }
     }
 }
