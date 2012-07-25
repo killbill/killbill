@@ -73,7 +73,13 @@ public class DefaultNoOpPaymentInfoPlugin implements PaymentInfoPlugin {
 
 
     @Override
-    public String getExternalReferenceId() {
+    public String getExtFirstReferenceId() {
+        return null;
+    }
+
+
+    @Override
+    public String getExtSecondReferenceId() {
         return null;
     }
 }

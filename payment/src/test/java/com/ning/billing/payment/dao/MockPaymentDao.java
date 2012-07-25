@@ -52,10 +52,12 @@ public class MockPaymentDao implements PaymentDao {
         return attempt;
     }
 
+
     @Override
-    public void updateStatusForPaymentWithAttempt(final UUID paymentId,
-                                                  final PaymentStatus paymentStatus, final String paymentError,  final String extpaymentRefId, final UUID attemptId,
-                                                  final CallContext context) {
+    public void updateStatusForPaymentWithAttempt(UUID paymentId,
+            PaymentStatus paymentStatus, String gatewayErrorCode, String gatewayErrorMsg,
+            String extFirstPaymentRefId, String extSecondPaymentRefId,
+            UUID attemptId, CallContext context) {
         synchronized (this) {
             final PaymentModelDao entry = payments.remove(paymentId);
             if (entry != null) {
@@ -63,7 +65,7 @@ public class MockPaymentDao implements PaymentDao {
             }
             final PaymentAttemptModelDao tmp = attempts.remove(attemptId);
             if (tmp != null) {
-                attempts.put(attemptId, new PaymentAttemptModelDao(tmp, paymentStatus, paymentError));
+                attempts.put(attemptId, new PaymentAttemptModelDao(tmp, paymentStatus, gatewayErrorCode, gatewayErrorMsg));
             }
         }
     }

@@ -39,5 +39,7 @@ public interface PaymentInfoEvent extends Entity, BusEvent {
 
     public PaymentStatus getStatus();
 
-    public String getExtPaymentRefId();
+    public String getExtFirstPaymentRefId();
+
+    public String getExtSecondPaymentRefId();
 }

@@ -28,7 +28,8 @@ import com.ning.billing.catalog.api.Currency;
 public class BusinessInvoicePayment {
     private final UUID paymentId;
     private final DateTime createdDate;
-    private final String extPaymentRefId;
+    private final String extFirstPaymentRefId;
+    private final String extSecondPaymentRefId;
     private final DateTime updatedDate;
     private final String accountKey;
     private final UUID invoiceId;
@@ -46,7 +47,7 @@ public class BusinessInvoicePayment {
     private final String invoicePaymentType;
     private final UUID linkedInvoicePaymentId;
 
-    public BusinessInvoicePayment(final String accountKey, final BigDecimal amount, final String extPaymentRefId,
+    public BusinessInvoicePayment(final String accountKey, final BigDecimal amount, final String extFirstPaymentRefId, final String extSecondPaymentRefId,
                                   final String cardCountry, final String cardType, final DateTime createdDate,
                                   final Currency currency, final DateTime effectiveDate, final UUID invoiceId,
                                   final String paymentError, final UUID paymentId, final String paymentMethod,
@@ -55,7 +56,8 @@ public class BusinessInvoicePayment {
                                   @Nullable final UUID linkedInvoicePaymentId) {
         this.accountKey = accountKey;
         this.amount = amount;
-        this.extPaymentRefId = extPaymentRefId;
+        this.extFirstPaymentRefId = extFirstPaymentRefId;
+        this.extSecondPaymentRefId = extSecondPaymentRefId;
         this.cardCountry = cardCountry;
         this.cardType = cardType;
         this.createdDate = createdDate;
@@ -74,8 +76,12 @@ public class BusinessInvoicePayment {
         this.linkedInvoicePaymentId = linkedInvoicePaymentId;
     }
 
-    public String getExtPaymentRefId() {
-        return extPaymentRefId;
+    public String getExtFirstPaymentRefId() {
+        return extFirstPaymentRefId;
+    }
+
+    public String getExtSecondPaymentRefId() {
+        return extSecondPaymentRefId;
     }
 
     public DateTime getCreatedDate() {
@@ -157,7 +163,7 @@ public class BusinessInvoicePayment {
         sb.append("{accountKey='").append(accountKey).append('\'');
         sb.append(", paymentId=").append(paymentId);
         sb.append(", createdDate=").append(createdDate);
-        sb.append(", extPaymentRefId=").append(extPaymentRefId);
+        sb.append(", extFirstPaymentRefId=").append(extFirstPaymentRefId);
         sb.append(", updatedDate=").append(updatedDate);
         sb.append(", invoiceId=").append(invoiceId);
         sb.append(", effectiveDate=").append(effectiveDate);
@@ -194,7 +200,7 @@ public class BusinessInvoicePayment {
         if (amount != null ? Rounder.round(amount) != Rounder.round(that.amount) : that.amount != null) {
             return false;
         }
-        if (extPaymentRefId != null ? !extPaymentRefId.equals(that.extPaymentRefId) : that.extPaymentRefId != null) {
+        if (extFirstPaymentRefId != null ? !extFirstPaymentRefId.equals(that.extFirstPaymentRefId) : that.extFirstPaymentRefId != null) {
             return false;
         }
         if (cardCountry != null ? !cardCountry.equals(that.cardCountry) : that.cardCountry != null) {
@@ -253,7 +259,7 @@ public class BusinessInvoicePayment {
     public int hashCode() {
         int result = paymentId != null ? paymentId.hashCode() : 0;
         result = 31 * result + (createdDate != null ? createdDate.hashCode() : 0);
-        result = 31 * result + (extPaymentRefId != null ? extPaymentRefId.hashCode() : 0);
+        result = 31 * result + (extFirstPaymentRefId != null ? extFirstPaymentRefId.hashCode() : 0);
         result = 31 * result + (updatedDate != null ? updatedDate.hashCode() : 0);
         result = 31 * result + (accountKey != null ? accountKey.hashCode() : 0);
         result = 31 * result + (invoiceId != null ? invoiceId.hashCode() : 0);

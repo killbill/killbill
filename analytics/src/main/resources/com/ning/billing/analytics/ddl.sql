@@ -114,7 +114,8 @@ create table bip (
 , payment_id char(36) not null
 , created_date bigint not null
 , updated_date bigint not null
-, ext_payment_ref_id varchar(255) default null
+, ext_first_payment_ref_id varchar(255) default null
+, ext_second_payment_ref_id varchar(255) default null
 , account_key varchar(50) not null comment 'Account external key'
 , invoice_id char(36) not null
 , effective_date bigint default null

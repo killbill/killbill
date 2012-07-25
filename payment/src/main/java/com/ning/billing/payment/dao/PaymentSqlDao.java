@@ -54,7 +54,8 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, UpdatableEn
 
     @SqlUpdate
     void updatePaymentStatusAndExtRef(@Bind("id") final String paymentId, @Bind("paymentStatus") final String paymentStatus,
-            @Bind("externalPaymentRefId") final String externalPaymentRefId, @CallContextBinder final CallContext context);
+            @Bind("extFirstPaymentRefId") final String extFirstPaymentRefId,  @Bind("extSecondPaymentRefId") final String extSecondPaymentRefId,
+            @CallContextBinder final CallContext context);
 
     @SqlUpdate
     void updatePaymentAmount(@Bind("id") final String paymentId, @Bind("amount") final BigDecimal amount,
@@ -87,7 +88,8 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, UpdatableEn
             stmt.bind("currency", payment.getCurrency().toString());
             stmt.bind("effectiveDate", getDate(payment.getEffectiveDate()));
             stmt.bind("paymentStatus", payment.getPaymentStatus().toString());
-            stmt.bind("externalPaymentRefId", payment.getExtPaymentRefId());
+            stmt.bind("extFirstPaymentRefId", payment.getExtFirstPaymentRefId());
+            stmt.bind("extSecondPaymentRefId", payment.getExtSecondPaymentRefId());
         }
     }
 
@@ -105,9 +107,9 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, UpdatableEn
             final DateTime effectiveDate = getDateTime(rs, "effective_date");
             final Currency currency = Currency.valueOf(rs.getString("currency"));
             final PaymentStatus paymentStatus = PaymentStatus.valueOf(rs.getString("payment_status"));
-            final String extPaymentRefId = rs.getString("external_payment_ref_id");
-
-            return new PaymentModelDao(id, accountId, invoiceId, paymentMethodId, paymentNumber, amount, currency, paymentStatus, effectiveDate, extPaymentRefId);
+            final String extFirstPaymentRefId = rs.getString("ext_first_payment_ref_id");
+            final String extSecondPaymentRefId = rs.getString("ext_second_payment_ref_id");
+            return new PaymentModelDao(id, accountId, invoiceId, paymentMethodId, paymentNumber, amount, currency, paymentStatus, effectiveDate, extFirstPaymentRefId, extSecondPaymentRefId);
         }
     }
 }

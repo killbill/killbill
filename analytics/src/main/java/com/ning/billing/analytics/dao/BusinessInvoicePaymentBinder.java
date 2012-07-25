@@ -39,8 +39,10 @@ import com.ning.billing.analytics.utils.Rounder;
 @Target({ElementType.PARAMETER})
 public @interface BusinessInvoicePaymentBinder {
     public static class BipBinderFactory implements BinderFactory {
+        @Override
         public Binder build(final Annotation annotation) {
             return new Binder<BusinessInvoicePaymentBinder, BusinessInvoicePayment>() {
+                @Override
                 public void bind(final SQLStatement q, final BusinessInvoicePaymentBinder bind, final BusinessInvoicePayment invoicePayment) {
                     q.bind("payment_id", invoicePayment.getPaymentId().toString());
 
@@ -57,7 +59,8 @@ public @interface BusinessInvoicePaymentBinder {
                         q.bind("updated_date", dateTimeNow.getMillis());
                     }
 
-                    q.bind("ext_payment_ref_id", invoicePayment.getExtPaymentRefId());
+                    q.bind("ext_first_payment_ref_id", invoicePayment.getExtFirstPaymentRefId());
+                    q.bind("ext_second_payment_ref_id", invoicePayment.getExtSecondPaymentRefId());
                     q.bind("account_key", invoicePayment.getAccountKey());
                     q.bind("invoice_id", invoicePayment.getInvoiceId().toString());
 

@@ -39,5 +39,7 @@ public interface PaymentInfoPlugin {
 
     public String getGatewayErrorCode();
 
-    public String getExternalReferenceId();
+    public String getExtFirstReferenceId();
+
+    public String getExtSecondReferenceId();
 }

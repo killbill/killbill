@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -56,7 +56,8 @@ public interface PaymentAttemptSqlDao extends Transactional<PaymentAttemptSqlDao
     @SqlUpdate
     void updatePaymentAttemptStatus(@Bind("id") final String attemptId,
                                     @Bind("processingStatus") final String processingStatus,
-                                    @Bind("paymentError") final String paymentError);
+                                    @Bind("gatewayErrorCode") final String gatewayErrorCode,
+                                    @Bind("gatewayErrorMsg") final String gatewayErrorMsg);
 
     @SqlQuery
     PaymentAttemptModelDao getPaymentAttempt(@Bind("id") final String attemptId);
@@ -76,7 +77,8 @@ public interface PaymentAttemptSqlDao extends Transactional<PaymentAttemptSqlDao
             stmt.bind("id", attempt.getId().toString());
             stmt.bind("paymentId", attempt.getPaymentId().toString());
             stmt.bind("processingStatus", attempt.getPaymentStatus().toString());
-            stmt.bind("paymentError", attempt.getPaymentError());
+            stmt.bind("gatewayErrorCode", attempt.getGatewayErrorCode());
+            stmt.bind("gatewayErrorMsg", attempt.getGatewayErrorMsg());
             stmt.bind("requestedAmount", attempt.getRequestedAmount());
         }
     }
@@ -92,9 +94,10 @@ public interface PaymentAttemptSqlDao extends Transactional<PaymentAttemptSqlDao
             final UUID paymentId = getUUID(rs, "payment_id");
             final DateTime effectiveDate = getDateTime(rs, "effective_date");
             final PaymentStatus processingStatus = PaymentStatus.valueOf(rs.getString("processing_status"));
-            final String paymentError = rs.getString("payment_error");
+            final String gatewayErrorCode = rs.getString("gateway_error_code");
+            final String gatewayErrorMsg = rs.getString("gateway_error_msg");
             final BigDecimal requestedAmount = rs.getBigDecimal("requested_amount");
-            return new PaymentAttemptModelDao(id, accountId, invoiceId, paymentId, processingStatus, effectiveDate, requestedAmount, paymentError);
+            return new PaymentAttemptModelDao(id, accountId, invoiceId, paymentId, processingStatus, effectiveDate, requestedAmount, gatewayErrorCode, gatewayErrorMsg);
         }
     }
 }

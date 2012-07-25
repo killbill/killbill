@@ -36,11 +36,12 @@ public class PaymentModelDao extends EntityBase {
     private final DateTime effectiveDate;
     private final Integer paymentNumber;
     private final PaymentStatus paymentStatus;
-    private final String extPaymentRefId;
+    private final String extFirstPaymentRefId;
+    private final String extSecondPaymentRefId;
 
     public PaymentModelDao(final UUID id, final UUID accountId, final UUID invoiceId, final UUID paymentMethodId,
                            final Integer paymentNumber, final BigDecimal amount, final Currency currency,
-                           final PaymentStatus paymentStatus, final DateTime effectiveDate, final String extPaymentRefId) {
+                           final PaymentStatus paymentStatus, final DateTime effectiveDate, final String extFirstPaymentRefId, final String extSecondPaymentRefId) {
         super(id);
         this.accountId = accountId;
         this.invoiceId = invoiceId;
@@ -50,21 +51,22 @@ public class PaymentModelDao extends EntityBase {
         this.currency = currency;
         this.paymentStatus = paymentStatus;
         this.effectiveDate = effectiveDate;
-        this.extPaymentRefId = extPaymentRefId;
+        this.extFirstPaymentRefId = extFirstPaymentRefId;
+        this.extSecondPaymentRefId = extSecondPaymentRefId;
     }
 
     public PaymentModelDao(final UUID accountId, final UUID invoiceId, final UUID paymentMethodId,
             final BigDecimal amount, final Currency currency, final DateTime effectiveDate, final PaymentStatus paymentStatus) {
-        this(UUID.randomUUID(), accountId, invoiceId, paymentMethodId, INVALID_PAYMENT_NUMBER, amount, currency, paymentStatus, effectiveDate, null);
+        this(UUID.randomUUID(), accountId, invoiceId, paymentMethodId, INVALID_PAYMENT_NUMBER, amount, currency, paymentStatus, effectiveDate, null, null);
     }
 
     public PaymentModelDao(final UUID accountId, final UUID invoiceId, final UUID paymentMethodId,
             final BigDecimal amount, final Currency currency, final DateTime effectiveDate) {
-        this(UUID.randomUUID(), accountId, invoiceId, paymentMethodId, INVALID_PAYMENT_NUMBER, amount, currency, PaymentStatus.UNKNOWN, effectiveDate, null);
+        this(UUID.randomUUID(), accountId, invoiceId, paymentMethodId, INVALID_PAYMENT_NUMBER, amount, currency, PaymentStatus.UNKNOWN, effectiveDate, null, null);
     }
 
     public PaymentModelDao(final PaymentModelDao src, final PaymentStatus newPaymentStatus) {
-        this(src.getId(), src.getAccountId(), src.getInvoiceId(), src.getPaymentMethodId(), src.getPaymentNumber(), src.getAmount(), src.getCurrency(), newPaymentStatus, src.getEffectiveDate(), null);
+        this(src.getId(), src.getAccountId(), src.getInvoiceId(), src.getPaymentMethodId(), src.getPaymentNumber(), src.getAmount(), src.getCurrency(), newPaymentStatus, src.getEffectiveDate(), null, null);
     }
 
     public UUID getAccountId() {
@@ -99,7 +101,11 @@ public class PaymentModelDao extends EntityBase {
         return effectiveDate;
     }
 
-    public String getExtPaymentRefId() {
-        return extPaymentRefId;
+    public String getExtFirstPaymentRefId() {
+        return extFirstPaymentRefId;
+    }
+
+    public String getExtSecondPaymentRefId() {
+        return extSecondPaymentRefId;
     }
 }

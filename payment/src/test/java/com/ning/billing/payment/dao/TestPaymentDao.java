@@ -137,9 +137,9 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         PaymentModelDao savedPayment = paymentDao.insertPaymentWithAttempt(payment, attempt, context);
 
         final PaymentStatus paymentStatus = PaymentStatus.SUCCESS;
-        final String paymentError = "No error";
+        final String gatewayErrorCode = "OK";
 
-        paymentDao.updateStatusForPaymentWithAttempt(payment.getId(), paymentStatus, paymentError, null, attempt.getId(), context);
+        paymentDao.updateStatusForPaymentWithAttempt(payment.getId(), paymentStatus, gatewayErrorCode, null, null, null, attempt.getId(), context);
 
         final List<PaymentModelDao> payments = paymentDao.getPaymentsForInvoice(invoiceId);
         assertEquals(payments.size(), 1);
@@ -161,7 +161,7 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(savedAttempt.getAccountId(), accountId);
         assertEquals(savedAttempt.getInvoiceId(), invoiceId);
         assertEquals(savedAttempt.getPaymentStatus(), PaymentStatus.SUCCESS);
-        assertEquals(savedAttempt.getPaymentError(), paymentError);
+        assertEquals(savedAttempt.getGatewayErrorCode(), gatewayErrorCode);
         assertEquals(savedAttempt.getRequestedAmount().compareTo(amount), 0);
     }
 
@@ -253,7 +253,8 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(savedAttempt1.getAccountId(), accountId);
         assertEquals(savedAttempt1.getInvoiceId(), invoiceId);
         assertEquals(savedAttempt1.getPaymentStatus(), PaymentStatus.UNKNOWN);
-        assertEquals(savedAttempt1.getPaymentError(), null);
+        assertEquals(savedAttempt1.getGatewayErrorCode(), null);
+        assertEquals(savedAttempt1.getGatewayErrorMsg(), null);
         assertEquals(savedAttempt1.getRequestedAmount().compareTo(amount), 0);
 
         final PaymentAttemptModelDao savedAttempt2 = attempts.get(1);
@@ -261,7 +262,8 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(savedAttempt2.getAccountId(), accountId);
         assertEquals(savedAttempt2.getInvoiceId(), invoiceId);
         assertEquals(savedAttempt2.getPaymentStatus(), PaymentStatus.UNKNOWN);
-        assertEquals(savedAttempt2.getPaymentError(), null);
+        assertEquals(savedAttempt2.getGatewayErrorCode(), null);
+        assertEquals(savedAttempt2.getGatewayErrorMsg(), null);
         assertEquals(savedAttempt2.getRequestedAmount().compareTo(newAmount), 0);
     }
 

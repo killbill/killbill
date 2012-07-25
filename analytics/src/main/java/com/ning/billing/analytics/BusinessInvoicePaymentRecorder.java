@@ -65,7 +65,7 @@ public class BusinessInvoicePaymentRecorder {
         this.accountRecorder = accountRecorder;
     }
 
-    public void invoicePaymentPosted(final UUID accountId, final UUID paymentId, @Nullable final String extPaymentRefId, final String message) {
+    public void invoicePaymentPosted(final UUID accountId, final UUID paymentId, @Nullable final String extFirstPaymentRefId, @Nullable final String extSecondPaymentRefId, final String message) {
         final Account account;
         try {
             account = accountApi.getAccountById(accountId);
@@ -92,11 +92,11 @@ public class BusinessInvoicePaymentRecorder {
             return;
         }
 
-        createPayment(account, invoicePayment, payment, paymentMethod, extPaymentRefId, message);
+        createPayment(account, invoicePayment, payment, paymentMethod, extFirstPaymentRefId, extSecondPaymentRefId, message);
     }
 
     private void createPayment(final Account account, @Nullable final InvoicePayment invoicePayment, final Payment payment,
-                               final PaymentMethod paymentMethod, final String extPaymentRefId, final String message) {
+                               final PaymentMethod paymentMethod, final String extFirstPaymentRefId, final String extSecondPaymentRefId, final String message) {
         final PaymentMethodPlugin pluginDetail = paymentMethod.getPluginDetail();
         // TODO - make it generic
         final String cardCountry = pluginDetail != null ? pluginDetail.getValueString("country") : null;
@@ -125,7 +125,8 @@ public class BusinessInvoicePaymentRecorder {
                 final BusinessInvoicePayment businessInvoicePayment = new BusinessInvoicePayment(
                         account.getExternalKey(),
                         payment.getAmount(),
-                        extPaymentRefId,
+                        extFirstPaymentRefId,
+                        extSecondPaymentRefId,
                         cardCountry,
                         cardType,
                         clock.getUTCNow(),

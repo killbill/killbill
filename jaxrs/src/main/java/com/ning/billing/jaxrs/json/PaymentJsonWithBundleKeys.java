@@ -50,10 +50,15 @@ public class PaymentJsonWithBundleKeys extends PaymentJsonSimple {
                                      @JsonProperty("retryCount") final Integer retryCount,
                                      @JsonProperty("currency") final String currency,
                                      @JsonProperty("status") final String status,
+                                     @JsonProperty("gatewayErrorCode") final String gatewayErrorCode,
+                                     @JsonProperty("gatewayErrorMsg") final String gatewayErrorMsg,
+                                     @JsonProperty("extFirstPaymentIdRef") final String extFirstPaymentIdRef,
+                                     @JsonProperty("extSecondPaymentIdRef") final String extSecondPaymentIdRef,
                                      @JsonProperty("externalBundleKeys") final String bundleKeys,
                                      @JsonProperty("refunds") final List<RefundJson> refunds,
                                      @JsonProperty("chargebacks") final List<ChargebackJson> chargebacks) {
-        super(amount, paidAmount, accountId, invoiceId, paymentId, paymentMethodId, requestedDate, effectiveDate, retryCount, currency, status);
+        super(amount, paidAmount, accountId, invoiceId, paymentId, paymentMethodId, requestedDate, effectiveDate, retryCount, currency, status, gatewayErrorCode, gatewayErrorMsg,
+                extFirstPaymentIdRef, extSecondPaymentIdRef);
         this.bundleKeys = bundleKeys;
         this.refunds = refunds;
         this.chargebacks = chargebacks;
