@@ -34,6 +34,8 @@ import com.ning.billing.util.template.translation.DefaultCatalogTranslator;
 import com.ning.billing.util.template.translation.Translator;
 import com.ning.billing.util.template.translation.TranslatorConfig;
 
+import static com.ning.billing.invoice.template.formatters.DefaultAmountFormatter.round;
+
 /**
  * Format invoice item fields. Note that the Mustache engine won't accept null values.
  */
@@ -54,7 +56,7 @@ public class DefaultInvoiceItemFormatter implements InvoiceItemFormatter {
 
     @Override
     public BigDecimal getAmount() {
-        return Objects.firstNonNull(item.getAmount(), BigDecimal.ZERO);
+        return round(Objects.firstNonNull(item.getAmount(), BigDecimal.ZERO));
     }
 
     @Override
@@ -134,7 +136,7 @@ public class DefaultInvoiceItemFormatter implements InvoiceItemFormatter {
 
     @Override
     public BigDecimal getRate() {
-        return BigDecimal.ZERO;
+        return round(BigDecimal.ZERO);
     }
 
     @Override
