@@ -23,7 +23,8 @@ public enum ControlTagType {
     AUTO_PAY_OFF(new UUID(0, 1), "Suspends payments until removed.", true, false),
     AUTO_INVOICING_OFF(new UUID(0, 2), "Suspends invoicing until removed.", false, true),
     OVERDUE_ENFORCEMENT_OFF(new UUID(0, 3), "Suspends overdue enforcement behaviour until removed.", false, false),
-    WRITTEN_OFF(new UUID(0, 4), "Indicated that an invoice is written off. No billing or payment effect.", false, false);
+    WRITTEN_OFF(new UUID(0, 4), "Indicates that an invoice is written off. No billing or payment effect.", false, false),
+    MANUAL_PAY(new UUID(0, 5), "Indicates that Killbill doesn't process payments for that account (external payments only)", true, false);
 
     private final UUID id;
     private final String description;
