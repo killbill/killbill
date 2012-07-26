@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.ning.billing.payment.api.PaymentMethod;
 import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
 import com.ning.billing.util.callcontext.CallContext;
@@ -128,20 +129,8 @@ public class MockPaymentDao implements PaymentDao {
     }
 
     @Override
-    public void refreshPaymentMethods(final UUID accountId, final List<PaymentMethodModelDao> newPaymentMethods, final CallContext context) {
-        synchronized (this) {
-            final Iterator<PaymentMethodModelDao> it = paymentMethods.iterator();
-            while (it.hasNext()) {
-                final PaymentMethodModelDao cur = it.next();
-                if (cur.getAccountId().equals(accountId)) {
-                    it.remove();
-                }
-            }
-
-            for (final PaymentMethodModelDao paymentMethodModelDao : paymentMethods) {
-                insertPaymentMethod(paymentMethodModelDao, context);
-            }
-        }
+    public List<PaymentMethodModelDao> refreshPaymentMethods(final UUID accountId, final List<PaymentMethodModelDao> newPaymentMethods, final CallContext context) {
+        throw new UnsupportedOperationException();
     }
 
     @Override

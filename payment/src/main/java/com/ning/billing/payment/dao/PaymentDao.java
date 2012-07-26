@@ -18,6 +18,7 @@ package com.ning.billing.payment.dao;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.payment.api.PaymentMethod;
 import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
 import com.ning.billing.util.callcontext.CallContext;
@@ -53,7 +54,7 @@ public interface PaymentDao {
 
     public PaymentMethodModelDao insertPaymentMethod(final PaymentMethodModelDao paymentMethod, final CallContext context);
 
-    public void refreshPaymentMethods(final UUID accountId, final List<PaymentMethodModelDao> paymentMethods, final CallContext context);
+    public List<PaymentMethodModelDao> refreshPaymentMethods(final UUID accountId, final List<PaymentMethodModelDao> paymentMethods, final CallContext context);
 
     public PaymentMethodModelDao getPaymentMethod(final UUID paymentMethodId);
 

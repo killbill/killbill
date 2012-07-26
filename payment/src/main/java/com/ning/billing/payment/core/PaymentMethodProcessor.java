@@ -24,6 +24,11 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 
+import javax.annotation.Nullable;
+
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.ning.billing.ErrorCode;
@@ -118,7 +123,6 @@ public class PaymentMethodProcessor extends ProcessorBase {
         });
     }
 
-
     public List<PaymentMethod> refreshPaymentMethods(final String pluginName, final Account account, final CallContext context)
             throws PaymentApiException {
 
@@ -126,31 +130,33 @@ public class PaymentMethodProcessor extends ProcessorBase {
 
             @Override
             public List<PaymentMethod> doOperation() throws PaymentApiException {
-                final List<PaymentMethod> result = new LinkedList<PaymentMethod>();
                 final PaymentPluginApi pluginApi;
                 try {
                     pluginApi = pluginRegistry.getPlugin(pluginName);
                     final List<PaymentMethodPlugin> pluginPms = pluginApi.getPaymentMethodDetails(account.getExternalKey());
                     // The method should never return null by convention, but let's not trust the plugin...
                     if (pluginPms == null) {
-                        return result;
+                        return ImmutableList.<PaymentMethod>of();
                     }
 
                     final List<PaymentMethodModelDao> finalPaymentMethods = new ArrayList<PaymentMethodModelDao>();
                     for (final PaymentMethodPlugin cur : pluginPms) {
                         final PaymentMethod input = new DefaultPaymentMethod(account.getId(), pluginName, cur);
-                        result.add(input);
-
                         final PaymentMethodModelDao pmModel = new PaymentMethodModelDao(input.getId(), input.getAccountId(), input.getPluginName(), input.isActive(), input.getPluginDetail().getExternalPaymentMethodId());
                         finalPaymentMethods.add(pmModel);
                     }
 
-                    paymentDao.refreshPaymentMethods(account.getId(), finalPaymentMethods, context);
+                    final List<PaymentMethodModelDao> refreshedPaymentMethods = paymentDao.refreshPaymentMethods(account.getId(), finalPaymentMethods, context);
+                    return ImmutableList.<PaymentMethod>copyOf(Collections2.transform(refreshedPaymentMethods, new Function<PaymentMethodModelDao, PaymentMethod>() {
+                        @Override
+                        public PaymentMethod apply(final PaymentMethodModelDao input) {
+                            return new DefaultPaymentMethod(input);
+                        }
+                    }));
                 } catch (PaymentPluginApiException e) {
                     // STEPH all errors should also take a pluginName
                     throw new PaymentApiException(ErrorCode.PAYMENT_REFRESH_PAYMENT_METHOD, account.getId(), e.getErrorMessage());
                 }
-                return result;
             }
         });
     }

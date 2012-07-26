@@ -25,6 +25,8 @@ import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
 
 import com.google.inject.Inject;
+
+import com.ning.billing.payment.api.PaymentMethod;
 import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
 import com.ning.billing.payment.retry.PluginFailureRetryService.PluginFailureRetryServiceScheduler;
@@ -199,11 +201,11 @@ public class AuditedPaymentDao implements PaymentDao {
     }
 
     @Override
-    public void refreshPaymentMethods(final UUID accountId, final List<PaymentMethodModelDao> paymentMethods, final CallContext context) {
-        paymentMethodSqlDao.inTransaction(new Transaction<Void, PaymentMethodSqlDao>() {
+    public List<PaymentMethodModelDao> refreshPaymentMethods(final UUID accountId, final List<PaymentMethodModelDao> paymentMethods, final CallContext context) {
+        return paymentMethodSqlDao.inTransaction(new Transaction<List<PaymentMethodModelDao>, PaymentMethodSqlDao>() {
 
             @Override
-            public Void inTransaction(final PaymentMethodSqlDao transactional, final TransactionStatus status) throws Exception {
+            public List<PaymentMethodModelDao> inTransaction(final PaymentMethodSqlDao transactional, final TransactionStatus status) throws Exception {
                 final List<PaymentMethodModelDao> existingPaymentMethods = getPaymentMethodsInTransaction(transactional, accountId);
 
                 for (final PaymentMethodModelDao finalPaymentMethod : paymentMethods) {
@@ -232,7 +234,7 @@ public class AuditedPaymentDao implements PaymentDao {
                     }
                 }
 
-                return null;
+                return getPaymentMethodsInTransaction(transactional, accountId);
             }
         });
     }
