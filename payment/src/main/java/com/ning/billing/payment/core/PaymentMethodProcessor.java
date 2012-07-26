@@ -150,7 +150,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                     return ImmutableList.<PaymentMethod>copyOf(Collections2.transform(refreshedPaymentMethods, new Function<PaymentMethodModelDao, PaymentMethod>() {
                         @Override
                         public PaymentMethod apply(final PaymentMethodModelDao input) {
-                            return new DefaultPaymentMethod(input);
+                            return new DefaultPaymentMethod(input, getPaymentMethodDetail(pluginPms, input.getExternalId()));
                         }
                     }));
                 } catch (PaymentPluginApiException e) {
