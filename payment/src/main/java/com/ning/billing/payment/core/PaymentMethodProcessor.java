@@ -17,6 +17,7 @@ package com.ning.billing.payment.core;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -135,13 +136,16 @@ public class PaymentMethodProcessor extends ProcessorBase {
                         return result;
                     }
 
+                    final List<PaymentMethodModelDao> finalPaymentMethods = new ArrayList<PaymentMethodModelDao>();
                     for (final PaymentMethodPlugin cur : pluginPms) {
                         final PaymentMethod input = new DefaultPaymentMethod(account.getId(), pluginName, cur);
-                        final PaymentMethodModelDao pmModel = new PaymentMethodModelDao(input.getId(), input.getAccountId(), input.getPluginName(), input.isActive(), input.getPluginDetail().getExternalPaymentMethodId());
-                        // STEPH we should insert within one batch
-                        paymentDao.insertPaymentMethod(pmModel, context);
                         result.add(input);
+
+                        final PaymentMethodModelDao pmModel = new PaymentMethodModelDao(input.getId(), input.getAccountId(), input.getPluginName(), input.isActive(), input.getPluginDetail().getExternalPaymentMethodId());
+                        finalPaymentMethods.add(pmModel);
                     }
+
+                    paymentDao.refreshPaymentMethods(account.getId(), finalPaymentMethods, context);
                 } catch (PaymentPluginApiException e) {
                     // STEPH all errors should also take a pluginName
                     throw new PaymentApiException(ErrorCode.PAYMENT_REFRESH_PAYMENT_METHOD, account.getId(), e.getErrorMessage());

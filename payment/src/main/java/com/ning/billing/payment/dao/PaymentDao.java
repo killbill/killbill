@@ -53,9 +53,13 @@ public interface PaymentDao {
 
     public PaymentMethodModelDao insertPaymentMethod(final PaymentMethodModelDao paymentMethod, final CallContext context);
 
+    public void refreshPaymentMethods(final UUID accountId, final List<PaymentMethodModelDao> paymentMethods, final CallContext context);
+
     public PaymentMethodModelDao getPaymentMethod(final UUID paymentMethodId);
 
     public List<PaymentMethodModelDao> getPaymentMethods(final UUID accountId);
 
     public void deletedPaymentMethod(final UUID paymentMethodId);
+
+    public void undeletedPaymentMethod(final UUID paymentMethodId);
 }

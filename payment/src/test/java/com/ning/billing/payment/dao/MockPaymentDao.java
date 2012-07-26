@@ -128,6 +128,23 @@ public class MockPaymentDao implements PaymentDao {
     }
 
     @Override
+    public void refreshPaymentMethods(final UUID accountId, final List<PaymentMethodModelDao> newPaymentMethods, final CallContext context) {
+        synchronized (this) {
+            final Iterator<PaymentMethodModelDao> it = paymentMethods.iterator();
+            while (it.hasNext()) {
+                final PaymentMethodModelDao cur = it.next();
+                if (cur.getAccountId().equals(accountId)) {
+                    it.remove();
+                }
+            }
+
+            for (final PaymentMethodModelDao paymentMethodModelDao : paymentMethods) {
+                insertPaymentMethod(paymentMethodModelDao, context);
+            }
+        }
+    }
+
+    @Override
     public PaymentMethodModelDao getPaymentMethod(final UUID paymentMethodId) {
         for (final PaymentMethodModelDao cur : paymentMethods) {
             if (cur.getId().equals(paymentMethodId)) {
@@ -158,6 +175,11 @@ public class MockPaymentDao implements PaymentDao {
                 break;
             }
         }
+    }
+
+    @Override
+    public void undeletedPaymentMethod(final UUID paymentMethodId) {
+        throw new UnsupportedOperationException();
     }
 
     @Override

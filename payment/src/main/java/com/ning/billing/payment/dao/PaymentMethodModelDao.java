@@ -50,4 +50,61 @@ public class PaymentMethodModelDao extends EntityBase {
     public String getExternalId() {
         return externalId;
     }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append("PaymentMethodModelDao");
+        sb.append("{accountId=").append(accountId);
+        sb.append(", pluginName='").append(pluginName).append('\'');
+        sb.append(", isActive=").append(isActive);
+        sb.append(", externalId='").append(externalId).append('\'');
+        sb.append('}');
+        return sb.toString();
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        final PaymentMethodModelDao that = (PaymentMethodModelDao) o;
+
+        if (!equalsButActive(that)) {
+            return false;
+        }
+
+        if (isActive != null ? !isActive.equals(that.isActive) : that.isActive != null) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public boolean equalsButActive(final PaymentMethodModelDao that) {
+        if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
+            return false;
+        }
+        if (externalId != null ? !externalId.equals(that.externalId) : that.externalId != null) {
+            return false;
+        }
+        if (pluginName != null ? !pluginName.equals(that.pluginName) : that.pluginName != null) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = accountId != null ? accountId.hashCode() : 0;
+        result = 31 * result + (pluginName != null ? pluginName.hashCode() : 0);
+        result = 31 * result + (isActive != null ? isActive.hashCode() : 0);
+        result = 31 * result + (externalId != null ? externalId.hashCode() : 0);
+        return result;
+    }
 }

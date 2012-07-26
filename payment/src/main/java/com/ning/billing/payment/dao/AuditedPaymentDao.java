@@ -16,6 +16,7 @@
 package com.ning.billing.payment.dao;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -177,19 +178,61 @@ public class AuditedPaymentDao implements PaymentDao {
     @Override
     public PaymentMethodModelDao insertPaymentMethod(final PaymentMethodModelDao paymentMethod, final CallContext context) {
         return paymentMethodSqlDao.inTransaction(new Transaction<PaymentMethodModelDao, PaymentMethodSqlDao>() {
-
             @Override
             public PaymentMethodModelDao inTransaction(final PaymentMethodSqlDao transactional, final TransactionStatus status)
                     throws Exception {
-                transactional.insertPaymentMethod(paymentMethod, context);
-                final PaymentMethodModelDao savedPaymentMethod = transactional.getPaymentMethod(paymentMethod.getId().toString());
-                final Long recordId = transactional.getRecordId(savedPaymentMethod.getId().toString());
-                final EntityHistory<PaymentMethodModelDao> history = new EntityHistory<PaymentMethodModelDao>(savedPaymentMethod.getId(), recordId, savedPaymentMethod, ChangeType.INSERT);
-                transactional.insertHistoryFromTransaction(history, context);
-                final Long historyRecordId = transactional.getHistoryRecordId(recordId);
-                final EntityAudit audit = new EntityAudit(TableName.PAYMENT_METHODS, historyRecordId, ChangeType.INSERT);
-                transactional.insertAuditFromTransaction(audit, context);
-                return savedPaymentMethod;
+                return insertPaymentMethodInTransaction(transactional, paymentMethod, context);
+            }
+        });
+    }
+
+    private PaymentMethodModelDao insertPaymentMethodInTransaction(final PaymentMethodSqlDao transactional, final PaymentMethodModelDao paymentMethod, final CallContext context) {
+        transactional.insertPaymentMethod(paymentMethod, context);
+        final PaymentMethodModelDao savedPaymentMethod = transactional.getPaymentMethod(paymentMethod.getId().toString());
+        final Long recordId = transactional.getRecordId(savedPaymentMethod.getId().toString());
+        final EntityHistory<PaymentMethodModelDao> history = new EntityHistory<PaymentMethodModelDao>(savedPaymentMethod.getId(), recordId, savedPaymentMethod, ChangeType.INSERT);
+        transactional.insertHistoryFromTransaction(history, context);
+        final Long historyRecordId = transactional.getHistoryRecordId(recordId);
+        final EntityAudit audit = new EntityAudit(TableName.PAYMENT_METHODS, historyRecordId, ChangeType.INSERT);
+        transactional.insertAuditFromTransaction(audit, context);
+        return savedPaymentMethod;
+    }
+
+    @Override
+    public void refreshPaymentMethods(final UUID accountId, final List<PaymentMethodModelDao> paymentMethods, final CallContext context) {
+        paymentMethodSqlDao.inTransaction(new Transaction<Void, PaymentMethodSqlDao>() {
+
+            @Override
+            public Void inTransaction(final PaymentMethodSqlDao transactional, final TransactionStatus status) throws Exception {
+                final List<PaymentMethodModelDao> existingPaymentMethods = getPaymentMethodsInTransaction(transactional, accountId);
+
+                for (final PaymentMethodModelDao finalPaymentMethod : paymentMethods) {
+                    boolean isExistingPaymentMethod = false;
+
+                    for (final PaymentMethodModelDao existingPaymentMethod : existingPaymentMethods) {
+                        if (existingPaymentMethod.equals(finalPaymentMethod)) {
+                            // We already have it - nothing to do
+                            isExistingPaymentMethod = true;
+                            break;
+                        } else if (existingPaymentMethod.equalsButActive(finalPaymentMethod)) {
+                            // We already have it but its status has changed - update it accordingly
+                            if (finalPaymentMethod.isActive()) {
+                                undeletedPaymentMethodInTransaction(transactional, existingPaymentMethod.getId());
+                            } else {
+                                deletedPaymentMethodInTransaction(transactional, existingPaymentMethod.getId());
+                            }
+                            isExistingPaymentMethod = true;
+                            break;
+                        }
+                        // Otherwise, we don't have it
+                    }
+
+                    if (!isExistingPaymentMethod) {
+                        insertPaymentMethodInTransaction(transactional, finalPaymentMethod, context);
+                    }
+                }
+
+                return null;
             }
         });
     }
@@ -276,36 +319,41 @@ public class AuditedPaymentDao implements PaymentDao {
         });
     }
 
-
-
     @Override
     public PaymentMethodModelDao getPaymentMethod(final UUID paymentMethodId) {
-        return paymentMethodSqlDao.inTransaction(new Transaction<PaymentMethodModelDao, PaymentMethodSqlDao>() {
-            @Override
-            public PaymentMethodModelDao inTransaction(final PaymentMethodSqlDao transactional, final TransactionStatus status)
-                    throws Exception {
-                return transactional.getPaymentMethod(paymentMethodId.toString());
-            }
-        });
+        return getPaymentMethodInTransaction(paymentMethodSqlDao, paymentMethodId);
+    }
+
+    private PaymentMethodModelDao getPaymentMethodInTransaction(final PaymentMethodSqlDao transactional, final UUID paymentMethodId) {
+        return transactional.getPaymentMethod(paymentMethodId.toString());
     }
 
     @Override
     public List<PaymentMethodModelDao> getPaymentMethods(final UUID accountId) {
-        return paymentMethodSqlDao.inTransaction(new Transaction<List<PaymentMethodModelDao>, PaymentMethodSqlDao>() {
-            @Override
-            public List<PaymentMethodModelDao> inTransaction(final PaymentMethodSqlDao transactional, final TransactionStatus status)
-                    throws Exception {
-                return transactional.getPaymentMethods(accountId.toString());
-            }
-        });
+        return getPaymentMethodsInTransaction(paymentMethodSqlDao, accountId);
+    }
 
+    private List<PaymentMethodModelDao> getPaymentMethodsInTransaction(final PaymentMethodSqlDao transactional, final UUID accountId) {
+        return transactional.getPaymentMethods(accountId.toString());
     }
 
     @Override
     public void deletedPaymentMethod(final UUID paymentMethodId) {
-        paymentMethodSqlDao.markPaymentMethodAsDeleted(paymentMethodId.toString());
+        deletedPaymentMethodInTransaction(paymentMethodSqlDao, paymentMethodId);
     }
 
+    private void deletedPaymentMethodInTransaction(final PaymentMethodSqlDao transactional, final UUID paymentMethodId) {
+        transactional.markPaymentMethodAsDeleted(paymentMethodId.toString());
+    }
+
+    @Override
+    public void undeletedPaymentMethod(final UUID paymentMethodId) {
+        undeletedPaymentMethodInTransaction(paymentMethodSqlDao, paymentMethodId);
+    }
+
+    private void undeletedPaymentMethodInTransaction(final PaymentMethodSqlDao transactional, final UUID paymentMethodId) {
+        transactional.unmarkPaymentMethodAsDeleted(paymentMethodId.toString());
+    }
 
     @Override
     public List<PaymentModelDao> getPaymentsForInvoice(final UUID invoiceId) {

@@ -52,6 +52,9 @@ public interface PaymentMethodSqlDao extends Transactional<PaymentMethodSqlDao>,
     @SqlUpdate
     void markPaymentMethodAsDeleted(@Bind("id") final String paymentMethodId);
 
+    @SqlUpdate
+    void unmarkPaymentMethodAsDeleted(@Bind("id") final String paymentMethodId);
+
     @SqlQuery
     PaymentMethodModelDao getPaymentMethod(@Bind("id") final String paymentMethodId);
 

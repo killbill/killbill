@@ -23,6 +23,12 @@ markPaymentMethodAsDeleted() ::= <<
     WHERE  id = :id;
 >>
 
+unmarkPaymentMethodAsDeleted() ::= <<
+    UPDATE payment_methods
+    SET is_active = 1
+    WHERE  id = :id;
+>>
+
 getPaymentMethod() ::= <<
     SELECT <paymentMethodFields()>
       FROM payment_methods
