@@ -109,7 +109,8 @@ public class AnalyticsListener {
     public void handlePaymentInfo(final PaymentInfoEvent paymentInfo) {
         bipRecorder.invoicePaymentPosted(paymentInfo.getAccountId(),
                                          paymentInfo.getPaymentId(),
-                                         paymentInfo.getExtPaymentRefId(),
+                                         paymentInfo.getExtFirstPaymentRefId(),
+                                         paymentInfo.getExtSecondPaymentRefId(),
                                          paymentInfo.getStatus().toString());
     }
 
@@ -117,6 +118,7 @@ public class AnalyticsListener {
     public void handlePaymentError(final PaymentErrorEvent paymentError) {
         bipRecorder.invoicePaymentPosted(paymentError.getAccountId(),
                                          paymentError.getPaymentId(),
+                                         null,
                                          null,
                                          paymentError.getMessage());
     }

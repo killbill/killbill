@@ -41,9 +41,10 @@ public class TestBusinessInvoicePaymentSqlDao extends AnalyticsTestSuiteWithEmbe
 
     @Test(groups = "slow")
     public void testCRUD() throws Exception {
-        final String extPaymentRefId = UUID.randomUUID().toString();
+        final String extFirstPaymentRefId = UUID.randomUUID().toString();
+        final String extSecondPaymentRefId = UUID.randomUUID().toString();
         final String accountKey = UUID.randomUUID().toString();
-        final BusinessInvoicePayment invoicePayment = createInvoicePayment(extPaymentRefId, accountKey);
+        final BusinessInvoicePayment invoicePayment = createInvoicePayment(extFirstPaymentRefId, extSecondPaymentRefId, accountKey);
 
         // Verify initial state
         Assert.assertNull(invoicePaymentSqlDao.getInvoicePayment(invoicePayment.getPaymentId().toString()));
@@ -65,12 +66,14 @@ public class TestBusinessInvoicePaymentSqlDao extends AnalyticsTestSuiteWithEmbe
 
     @Test(groups = "slow")
     public void testSegmentation() throws Exception {
-        final String extPaymentRefId1 = UUID.randomUUID().toString();
+        final String extFirstPaymentRefId1 = UUID.randomUUID().toString();
+        final String extSecondPaymentRefId1 = UUID.randomUUID().toString();
         final String accountKey1 = UUID.randomUUID().toString();
-        final BusinessInvoicePayment invoicePayment1 = createInvoicePayment(extPaymentRefId1, accountKey1);
-        final String extPaymentRefId2 = UUID.randomUUID().toString();
+        final BusinessInvoicePayment invoicePayment1 = createInvoicePayment(extFirstPaymentRefId1, extSecondPaymentRefId1, accountKey1);
+        final String extFirstPaymentRefId2 = UUID.randomUUID().toString();
+        final String extSecondPaymentRefId2 = UUID.randomUUID().toString();
         final String accountKey2 = UUID.randomUUID().toString();
-        final BusinessInvoicePayment invoicePayment2 = createInvoicePayment(extPaymentRefId2, accountKey2);
+        final BusinessInvoicePayment invoicePayment2 = createInvoicePayment(extFirstPaymentRefId2, extSecondPaymentRefId2,  accountKey2);
 
         // Create both invoice payments
         Assert.assertEquals(invoicePaymentSqlDao.createInvoicePayment(invoicePayment1), 1);
@@ -100,7 +103,7 @@ public class TestBusinessInvoicePaymentSqlDao extends AnalyticsTestSuiteWithEmbe
         }
     }
 
-    private BusinessInvoicePayment createInvoicePayment(final String extPaymentRefId, final String accountKey) {
+    private BusinessInvoicePayment createInvoicePayment(final String extFirstPaymentRefId, final String extSecondPaymentRefId, final String accountKey) {
         final BigDecimal amount = BigDecimal.ONE;
         final String cardCountry = UUID.randomUUID().toString().substring(0, 20);
         final String cardType = UUID.randomUUID().toString().substring(0, 20);
@@ -119,7 +122,7 @@ public class TestBusinessInvoicePaymentSqlDao extends AnalyticsTestSuiteWithEmbe
         final String invoicePaymentType = UUID.randomUUID().toString().substring(0, 10);
         final UUID linkedInvoicePaymentId = UUID.randomUUID();
 
-        return new BusinessInvoicePayment(accountKey, amount, extPaymentRefId,
+        return new BusinessInvoicePayment(accountKey, amount, extFirstPaymentRefId, extSecondPaymentRefId,
                                           cardCountry, cardType, createdDate,
                                           currency, effectiveDate, invoiceId,
                                           paymentError, paymentId, paymentMethod,

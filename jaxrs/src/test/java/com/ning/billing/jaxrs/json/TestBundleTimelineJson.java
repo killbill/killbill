@@ -99,7 +99,11 @@ public class TestBundleTimelineJson extends JaxrsTestSuite {
             "\"effectiveDate\":\"" + payment.getEffectiveDate().toDateTimeISO().toString() + "\"," +
             "\"retryCount\":" + payment.getRetryCount() + "," +
             "\"currency\":\"" + payment.getCurrency() + "\"," +
-            "\"status\":\"" + payment.getStatus() + "\"}]," +
+            "\"status\":\"" + payment.getStatus() + "\"," +
+            "\"gatewayErrorCode\":\"" + payment.getGatewayErrorCode() + "\"," +
+            "\"gatewayErrorMsg\":\"" + payment.getGatewayErrorMsg() + "\"," +
+            "\"extFirstPaymentIdRef\":\"" + payment.getExtFirstPaymentIdRef() + "\"," +
+            "\"extSecondPaymentIdRef\":\"" + payment.getExtSecondPaymentIdRef() + "\"}]," +
             "\"invoices\":[{\"amount\":" + invoice.getAmount() + "," +
             "\"cba\":" + invoice.getCBA() + "," +
             "\"creditAdj\":" + invoice.getCreditAdj() + "," +
@@ -165,8 +169,12 @@ public class TestBundleTimelineJson extends JaxrsTestSuite {
         final Integer retryCount = Integer.MAX_VALUE;
         final String currency = "USD";
         final String status = UUID.randomUUID().toString();
+        final String gatewayErrorCode = "OK";
+        final String gatewayErrorMsg = "Excellent...";
+        final String extFirstPaymentIdRef = UUID.randomUUID().toString();
+        final String extSecondPaymentIdRef = UUID.randomUUID().toString();
 
         return new PaymentJsonSimple(amount, paidAmount, accountId.toString(), invoiceId.toString(), paymentId.toString(),
-                paymentMethodId.toString(), paymentRequestedDate, paymentEffectiveDate, retryCount, currency, status);
+                paymentMethodId.toString(), paymentRequestedDate, paymentEffectiveDate, retryCount, currency, status, gatewayErrorCode, gatewayErrorMsg, extFirstPaymentIdRef, extSecondPaymentIdRef);
     }
 }

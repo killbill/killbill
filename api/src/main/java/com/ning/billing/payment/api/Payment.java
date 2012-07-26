@@ -47,13 +47,19 @@ public interface Payment {
 
     public List<PaymentAttempt> getAttempts();
 
+    public String getExtFirstPaymentIdRef();
+
+    public String getExtSecondPaymentIdRef();
+
     public interface PaymentAttempt {
 
         public UUID getId();
 
         public DateTime getEffectiveDate();
 
-        public String getErrorMsg();
+        public String getGatewayErrorCode();
+
+        public String getGatewayErrorMsg();
 
         public PaymentStatus getPaymentStatus();
     }

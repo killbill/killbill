@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -47,7 +47,8 @@ public @interface PaymentAttemptHistoryBinder {
                     q.bind("id", attempt.getId().toString());
                     q.bind("paymentId", attempt.getPaymentId().toString());
                     q.bind("processingStatus", attempt.getPaymentStatus().toString());
-                    q.bind("paymentError", attempt.getPaymentError());
+                    q.bind("gatewayErrorCode", attempt.getGatewayErrorCode() );
+                    q.bind("gatewayErrorMsg", attempt.getGatewayErrorMsg() );
                     q.bind("requestedAmount", attempt.getRequestedAmount());
                 }
             };

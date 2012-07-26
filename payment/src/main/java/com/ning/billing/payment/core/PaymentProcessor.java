@@ -447,7 +447,7 @@ public class PaymentProcessor extends ProcessorBase {
             case PROCESSED:
                 // Update Payment/PaymentAttempt status
                 paymentStatus = PaymentStatus.SUCCESS;
-                paymentDao.updateStatusForPaymentWithAttempt(paymentInput.getId(), paymentStatus, null, paymentPluginInfo.getExternalReferenceId(), attemptInput.getId(), context);
+                paymentDao.updateStatusForPaymentWithAttempt(paymentInput.getId(), paymentStatus, paymentPluginInfo.getGatewayErrorCode(), null, paymentPluginInfo.getExtFirstReferenceId(), paymentPluginInfo.getExtSecondReferenceId(), attemptInput.getId(), context);
 
                 // Fetch latest objects
                 allAttempts = paymentDao.getAttemptsForPayment(paymentInput.getId());
@@ -463,7 +463,7 @@ public class PaymentProcessor extends ProcessorBase {
                 // Create Bus event
                 event = new DefaultPaymentInfoEvent(account.getId(),
                         invoice.getId(), payment.getId(), payment.getAmount(), payment.getPaymentNumber(), paymentStatus,
-                        paymentPluginInfo.getExternalReferenceId(), context.getUserToken(), payment.getEffectiveDate());
+                        paymentPluginInfo.getExtFirstReferenceId(), paymentPluginInfo.getExtSecondReferenceId(), context.getUserToken(), payment.getEffectiveDate());
                 break;
 
             case ERROR:
@@ -475,7 +475,7 @@ public class PaymentProcessor extends ProcessorBase {
                     paymentStatus = PaymentStatus.PAYMENT_FAILURE_ABORTED;
                 }
 
-                paymentDao.updateStatusForPaymentWithAttempt(paymentInput.getId(), paymentStatus, paymentPluginInfo.getGatewayError(), null, attemptInput.getId(), context);
+                paymentDao.updateStatusForPaymentWithAttempt(paymentInput.getId(), paymentStatus, paymentPluginInfo.getGatewayErrorCode(),  paymentPluginInfo.getGatewayError(),null, null, attemptInput.getId(), context);
 
                 log.info(String.format("Could not process payment for account %s, invoice %s, error = %s",
                         account.getId(), invoice.getId(), paymentPluginInfo.getGatewayError()));
@@ -496,7 +496,7 @@ public class PaymentProcessor extends ProcessorBase {
             paymentStatus = isInstantPayment ? PaymentStatus.PAYMENT_FAILURE_ABORTED : scheduleRetryOnPluginFailure(paymentInput.getId());
             // STEPH message might need truncation to fit??
 
-            paymentDao.updateStatusForPaymentWithAttempt(paymentInput.getId(), paymentStatus,  e.getMessage(), null, attemptInput.getId(), context);
+            paymentDao.updateStatusForPaymentWithAttempt(paymentInput.getId(), paymentStatus, null, e.getMessage(), null, null, attemptInput.getId(), context);
 
             throw new PaymentApiException(ErrorCode.PAYMENT_CREATE_PAYMENT, account.getId(), e.toString());
 

@@ -3,7 +3,8 @@ group PaymentAttemptSqlDao;
 paymentAttemptFields(prefix) ::= <<
     <prefix>id,
     <prefix>payment_id,    
-    <prefix>payment_error,
+    <prefix>gateway_error_code,
+    <prefix>gateway_error_msg,    
     <prefix>processing_status,
     <prefix>requested_amount,
     <prefix>created_by,
@@ -14,7 +15,7 @@ paymentAttemptFields(prefix) ::= <<
 
 insertPaymentAttempt() ::= <<
     INSERT INTO payment_attempts (<paymentAttemptFields()>)
-    VALUES (:id, :paymentId, :paymentError, :processingStatus, :requestedAmount, :userName, :createdDate, :userName, :createdDate);
+    VALUES (:id, :paymentId, :gatewayErrorCode, :gatewayErrorMsg, :processingStatus, :requestedAmount, :userName, :createdDate, :userName, :createdDate);
 >>
 
 getPaymentAttempt() ::= <<
@@ -41,7 +42,8 @@ getPaymentAttempts() ::= <<
 updatePaymentAttemptStatus() ::= <<
     UPDATE payment_attempts
     SET processing_status = :processingStatus,
-        payment_error = :paymentError
+        gateway_error_code = :gatewayErrorCode,
+        gateway_error_msg = :gatewayErrorMsg        
     WHERE  id = :id;
 >>
 
@@ -62,7 +64,8 @@ historyFields(prefix) ::= <<
     <prefix>record_id,
     <prefix>id,
     <prefix>payment_id,
-    <prefix>payment_error,
+    <prefix>gateway_error_code,
+    <prefix>gateway_error_msg,    
     <prefix>processing_status,
     <prefix>requested_amount,    
     <prefix>created_by,
@@ -73,7 +76,7 @@ historyFields(prefix) ::= <<
 
 insertHistoryFromTransaction() ::= <<
     INSERT INTO payment_attempt_history (<historyFields()>)
-    VALUES (:recordId, :id, :paymentId, :paymentError, :processingStatus, :requestedAmount, :userName, :createdDate, :userName, :updatedDate);
+    VALUES (:recordId, :id, :paymentId, :gatewayErrorCode, :gatewayErrorMsg, :processingStatus, :requestedAmount, :userName, :createdDate, :userName, :updatedDate);
 >>
 
 getHistoryRecordId() ::= <<

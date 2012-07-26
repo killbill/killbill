@@ -29,7 +29,7 @@ public interface PaymentDao {
 
     public PaymentAttemptModelDao insertNewAttemptForPayment(final UUID paymentId, final PaymentAttemptModelDao attempt, final CallContext context);
 
-    public void updateStatusForPaymentWithAttempt(final UUID paymentId, final PaymentStatus paymentStatus, final String paymentError, final String extPaymentRefId, final UUID attemptId, final CallContext context);
+    public void updateStatusForPaymentWithAttempt(final UUID paymentId, final PaymentStatus paymentStatus, final String gatewayErrorCode, final String gatewayErrorMsg, final String extFirstPaymentRefId, final String extSecondPaymentRefId, final UUID attemptId, final CallContext context);
 
     public PaymentAttemptModelDao getPaymentAttempt(final UUID attemptId);
 

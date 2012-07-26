@@ -35,22 +35,23 @@ public class BusinessInvoicePaymentMapper implements ResultSetMapper<BusinessInv
         final UUID paymentId = UUID.fromString(r.getString(1));
         final DateTime createdDate = new DateTime(r.getLong(2), DateTimeZone.UTC);
         final DateTime updatedDate = new DateTime(r.getLong(3), DateTimeZone.UTC);
-        final String extPaymentRefId = r.getString(4);
-        final String accountKey = r.getString(5);
-        final UUID invoiceId = UUID.fromString(r.getString(6));
-        final DateTime effectiveDate = new DateTime(r.getLong(7), DateTimeZone.UTC);
-        final BigDecimal amount = BigDecimal.valueOf(r.getDouble(8));
-        final Currency currency = Currency.valueOf(r.getString(9));
-        final String paymentError = r.getString(10);
-        final String processingStatus = r.getString(11);
-        final BigDecimal requestedAmount = BigDecimal.valueOf(r.getDouble(12));
-        final String pluginName = r.getString(13);
-        final String paymentType = r.getString(14);
-        final String paymentMethod = r.getString(15);
-        final String cardType = r.getString(16);
-        final String cardCountry = r.getString(17);
-        final String invoicePaymentType = r.getString(18);
-        final String linkedInvoicePaymentIdString = r.getString(19);
+        final String extFirstPaymentRefId = r.getString(4);
+        final String extSecondPaymentRefId = r.getString(5);
+        final String accountKey = r.getString(6);
+        final UUID invoiceId = UUID.fromString(r.getString(7));
+        final DateTime effectiveDate = new DateTime(r.getLong(8), DateTimeZone.UTC);
+        final BigDecimal amount = BigDecimal.valueOf(r.getDouble(9));
+        final Currency currency = Currency.valueOf(r.getString(10));
+        final String paymentError = r.getString(11);
+        final String processingStatus = r.getString(12);
+        final BigDecimal requestedAmount = BigDecimal.valueOf(r.getDouble(13));
+        final String pluginName = r.getString(14);
+        final String paymentType = r.getString(15);
+        final String paymentMethod = r.getString(16);
+        final String cardType = r.getString(17);
+        final String cardCountry = r.getString(18);
+        final String invoicePaymentType = r.getString(19);
+        final String linkedInvoicePaymentIdString = r.getString(20);
 
         final UUID linkedInvoicePaymentId;
         if (linkedInvoicePaymentIdString != null) {
@@ -59,7 +60,7 @@ public class BusinessInvoicePaymentMapper implements ResultSetMapper<BusinessInv
             linkedInvoicePaymentId = null;
         }
 
-        return new BusinessInvoicePayment(accountKey, amount, extPaymentRefId, cardCountry, cardType, createdDate, currency,
+        return new BusinessInvoicePayment(accountKey, amount, extFirstPaymentRefId, extSecondPaymentRefId, cardCountry, cardType, createdDate, currency,
                                           effectiveDate, invoiceId, paymentError, paymentId, paymentMethod, paymentType,
                                           pluginName, processingStatus, requestedAmount, updatedDate, invoicePaymentType,
                                           linkedInvoicePaymentId);

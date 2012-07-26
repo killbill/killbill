@@ -205,7 +205,7 @@ public class TestInvoice extends TestJaxrsBase {
             }
 
             // CREATE INSTA PAYMENT
-            final PaymentJsonSimple payment = new PaymentJsonSimple(cur.getAmount(), BigDecimal.ZERO, accountJson.getAccountId(), cur.getInvoiceId(), null, null, null, null, 0, null, null);
+            final PaymentJsonSimple payment = new PaymentJsonSimple(cur.getAmount(), BigDecimal.ZERO, accountJson.getAccountId(), cur.getInvoiceId(), null, null, null, null, 0, null, null, null, null, null, null);
             final String postJson = mapper.writeValueAsString(payment);
 
             uri = JaxrsResource.INVOICES_PATH + "/" + cur.getInvoiceId() + "/" + JaxrsResource.PAYMENTS;

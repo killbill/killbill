@@ -9,7 +9,8 @@ paymentFields(prefix) ::= <<
     <prefix>effective_date,
     <prefix>currency,
     <prefix>payment_status,
-    <prefix>external_payment_ref_id,
+    <prefix>ext_first_payment_ref_id,
+    <prefix>ext_second_payment_ref_id,    
     <prefix>created_by,
     <prefix>created_date,
     <prefix>updated_by,
@@ -18,7 +19,7 @@ paymentFields(prefix) ::= <<
 
 insertPayment() ::= <<
     INSERT INTO payments (<paymentFields()>)
-    VALUES (:id, :accountId, :invoiceId, :paymentMethodId, :amount, :effectiveDate, :currency, :paymentStatus, :externalPaymentRefId, :userName, :createdDate, :userName, :createdDate);
+    VALUES (:id, :accountId, :invoiceId, :paymentMethodId, :amount, :effectiveDate, :currency, :paymentStatus, :extFirstPaymentRefId, :extSecondPaymentRefId, :userName, :createdDate, :userName, :createdDate);
 >>
 
 getPayment() ::= <<
@@ -45,7 +46,9 @@ getPaymentsForAccount() ::= <<
 
 updatePaymentStatusAndExtRef() ::= <<
     UPDATE payments
-    SET payment_status = :paymentStatus, external_payment_ref_id = :externalPaymentRefId
+    SET payment_status = :paymentStatus,
+        ext_first_payment_ref_id = :extFirstPaymentRefId,
+        ext_second_payment_ref_id = :extSecondPaymentRefId
     WHERE id = :id;
 >>
 
@@ -72,7 +75,8 @@ historyFields(prefix) ::= <<
     <prefix>effective_date,
     <prefix>currency,
     <prefix>payment_status,
-    <prefix>external_payment_ref_id,
+    <prefix>ext_first_payment_ref_id,
+    <prefix>ext_second_payment_ref_id,    
     <prefix>created_by,
     <prefix>created_date,
     <prefix>updated_by,
@@ -81,7 +85,7 @@ historyFields(prefix) ::= <<
 
 insertHistoryFromTransaction() ::= <<
     INSERT INTO payment_history (<historyFields()>)
-    VALUES (:recordId, :id, :accountId, :invoiceId, :paymentMethodId, :amount, :effectiveDate, :currency, :paymentStatus, :externalPaymentRefId, :userName, :createdDate, :userName, :updatedDate);
+    VALUES (:recordId, :id, :accountId, :invoiceId, :paymentMethodId, :amount, :effectiveDate, :currency, :paymentStatus, :extFirstPaymentRefId, :extSecondPaymentRefId, :userName, :createdDate, :userName, :updatedDate);
 >>
 
 

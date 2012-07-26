@@ -49,7 +49,8 @@ public @interface PaymentHistoryBinder {
                     q.bind("amount", payment.getAmount());
                     q.bind("currency", payment.getCurrency().toString());
                     q.bind("paymentStatus", payment.getPaymentStatus().toString());
-                    q.bind("externalPaymentRefId", payment.getExtPaymentRefId());
+                    q.bind("extFirstPaymentRefId", payment.getExtFirstPaymentRefId());
+                    q.bind("extSecondPaymentRefId", payment.getExtSecondPaymentRefId());
                     q.bind("effectiveDate", getDate(payment.getEffectiveDate()));
                 }
             };

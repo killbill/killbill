@@ -44,13 +44,16 @@ public class DefaultPayment extends EntityBase implements Payment {
     private final DateTime effectiveDate;
     private final Integer paymentNumber;
     private final PaymentStatus paymentStatus;
+    private final String extFirstPaymentIdRef;
+    private final String extSecondPaymentIdRef;
     private final List<PaymentAttempt> attempts;
 
 
     private DefaultPayment(final UUID id, final UUID accountId, final UUID invoiceId,
                            final UUID paymentMethodId, final BigDecimal amount, BigDecimal paidAmount, final Currency currency,
                            final DateTime effectiveDate, final Integer paymentNumber,
-                           final PaymentStatus paymentStatus, final String paymentError, final List<PaymentAttempt> attempts) {
+                           final PaymentStatus paymentStatus, final String paymentError, final String extFirstPaymentIdRef,
+                           final String extSecondPaymentIdRef, final List<PaymentAttempt> attempts) {
         super(id);
         this.accountId = accountId;
         this.invoiceId = invoiceId;
@@ -61,6 +64,8 @@ public class DefaultPayment extends EntityBase implements Payment {
         this.effectiveDate = effectiveDate;
         this.paymentNumber = paymentNumber;
         this.paymentStatus = paymentStatus;
+        this.extFirstPaymentIdRef = extFirstPaymentIdRef;
+        this.extSecondPaymentIdRef = extSecondPaymentIdRef;
         this.attempts = attempts;
     }
 
@@ -76,9 +81,10 @@ public class DefaultPayment extends EntityBase implements Payment {
              src.getPaymentNumber(),
              src.getPaymentStatus(),
              null,
+             src.getExtFirstPaymentRefId(),
+             src.getExtSecondPaymentRefId(),
              toPaymentAttempts(attempts));
     }
-
 
     @Override
     public Integer getPaymentNumber() {
@@ -125,6 +131,16 @@ public class DefaultPayment extends EntityBase implements Payment {
         return paymentStatus;
     }
 
+    @Override
+    public String getExtFirstPaymentIdRef() {
+        return extFirstPaymentIdRef;
+    }
+
+    @Override
+    public String getExtSecondPaymentIdRef() {
+        return extSecondPaymentIdRef;
+    }
+
 
     @Override
     public List<PaymentAttempt> getAttempts() {
@@ -160,11 +176,6 @@ public class DefaultPayment extends EntityBase implements Payment {
                     }
 
                     @Override
-                    public String getErrorMsg() {
-                        return input.getPaymentError();
-                    }
-
-                    @Override
                     public DateTime getEffectiveDate() {
                         return input.getEffectiveDate();
                     }
@@ -172,6 +183,16 @@ public class DefaultPayment extends EntityBase implements Payment {
                     @Override
                     public UUID getId() {
                         return input.getId();
+                    }
+
+                    @Override
+                    public String getGatewayErrorCode() {
+                        return input.getGatewayErrorCode();
+                    }
+
+                    @Override
+                    public String getGatewayErrorMsg() {
+                        return input.getGatewayErrorMsg();
                     }
                 };
             }

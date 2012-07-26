@@ -236,7 +236,7 @@ public class TestAnalyticsService extends AnalyticsTestSuiteWithEmbeddedDB {
         invoiceCreationNotification = new DefaultInvoiceCreationEvent(invoice.getId(), account.getId(),
                                                                       INVOICE_AMOUNT, ACCOUNT_CURRENCY, null);
 
-        paymentInfoNotification = new DefaultPaymentInfoEvent(account.getId(), invoices.get(0).getId(), null, invoices.get(0).getBalance(), -1, PaymentStatus.UNKNOWN, null, null, clock.getUTCNow());
+        paymentInfoNotification = new DefaultPaymentInfoEvent(account.getId(), invoices.get(0).getId(), null, invoices.get(0).getBalance(), -1, PaymentStatus.UNKNOWN, null, null, null, clock.getUTCNow());
 
         //STEPH talk to Pierre
         /*

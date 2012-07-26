@@ -17,13 +17,14 @@
 package com.ning.billing.jaxrs.json;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import org.joda.time.DateTime;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ning.billing.payment.api.Payment;
-import com.ning.billing.payment.api.PaymentStatus;
+import com.ning.billing.payment.api.Payment.PaymentAttempt;
 import com.ning.billing.util.clock.DefaultClock;
 
 public class PaymentJsonSimple {
@@ -47,7 +48,15 @@ public class PaymentJsonSimple {
 
     private final String status;
 
+    private final String gatewayErrorCode;
+
+    private final String gatewayErrorMsg;
+
     private final String paymentMethodId;
+
+    private final String extFirstPaymentIdRef;
+
+    private final String extSecondPaymentIdRef;
 
     public PaymentJsonSimple() {
         this.amount = null;
@@ -61,6 +70,11 @@ public class PaymentJsonSimple {
         this.currency = null;
         this.retryCount = null;
         this.status = null;
+        this.gatewayErrorCode = null;
+        this.gatewayErrorMsg = null;
+        this.extFirstPaymentIdRef = null;
+        this.extSecondPaymentIdRef = null;
+
     }
 
     @JsonCreator
@@ -74,7 +88,11 @@ public class PaymentJsonSimple {
                              @JsonProperty("effectiveDate") final DateTime effectiveDate,
                              @JsonProperty("retryCount") final Integer retryCount,
                              @JsonProperty("currency") final String currency,
-                             @JsonProperty("status") final String status) {
+                             @JsonProperty("status") final String status,
+                             @JsonProperty("gatewayErrorCode") final String gatewayErrorCode,
+                             @JsonProperty("gatewayErrorMsg") final String gatewayErrorMsg,
+                             @JsonProperty("extFirstPaymentIdRef") final String extFirstPaymentIdRef,
+                             @JsonProperty("extSecondPaymentIdRef") final String extSecondPaymentIdRef) {
         super();
         this.amount = amount;
         this.paidAmount = paidAmount;
@@ -87,6 +105,10 @@ public class PaymentJsonSimple {
         this.currency = currency;
         this.retryCount = retryCount;
         this.status = status;
+        this.gatewayErrorCode = gatewayErrorCode;
+        this.gatewayErrorMsg = gatewayErrorMsg;
+        this.extFirstPaymentIdRef = extFirstPaymentIdRef;
+        this.extSecondPaymentIdRef = extSecondPaymentIdRef;
     }
 
     public PaymentJsonSimple(final Payment src) {
@@ -100,7 +122,11 @@ public class PaymentJsonSimple {
         this.effectiveDate = src.getEffectiveDate();
         this.currency = src.getCurrency().toString();
         this.retryCount = src.getAttempts().size();
+        this.gatewayErrorCode = src.getAttempts().get(retryCount - 1).getGatewayErrorCode();
+        this.gatewayErrorMsg = src.getAttempts().get(retryCount - 1).getGatewayErrorMsg();;
         this.status = src.getPaymentStatus().toString();
+        this.extFirstPaymentIdRef = src.getExtFirstPaymentIdRef();
+        this.extSecondPaymentIdRef = src.getExtSecondPaymentIdRef();
     }
 
     public BigDecimal getPaidAmount() {
@@ -146,6 +172,22 @@ public class PaymentJsonSimple {
 
     public String getAccountId() {
         return accountId;
+    }
+
+    public String getGatewayErrorCode() {
+        return gatewayErrorCode;
+    }
+
+    public String getGatewayErrorMsg() {
+        return gatewayErrorMsg;
+    }
+
+    public String getExtFirstPaymentIdRef() {
+        return extFirstPaymentIdRef;
+    }
+
+    public String getExtSecondPaymentIdRef() {
+        return extSecondPaymentIdRef;
     }
 
     @Override

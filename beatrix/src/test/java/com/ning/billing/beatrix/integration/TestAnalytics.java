@@ -227,7 +227,8 @@ public class TestAnalytics extends TestIntegrationBase {
         Assert.assertEquals(analyticsUserApi.getInvoicePaymentsForAccount(account.getExternalKey()).get(0).getAccountKey(), account.getExternalKey());
         Assert.assertTrue(analyticsUserApi.getInvoicePaymentsForAccount(account.getExternalKey()).get(0).getAmount().compareTo(BigDecimal.ZERO) > 0);
         Assert.assertTrue(analyticsUserApi.getInvoicePaymentsForAccount(account.getExternalKey()).get(0).getRequestedAmount().compareTo(BigDecimal.ZERO) > 0);
-        Assert.assertNull(analyticsUserApi.getInvoicePaymentsForAccount(account.getExternalKey()).get(0).getExtPaymentRefId());
+        Assert.assertNull(analyticsUserApi.getInvoicePaymentsForAccount(account.getExternalKey()).get(0).getExtFirstPaymentRefId());
+        Assert.assertNull(analyticsUserApi.getInvoicePaymentsForAccount(account.getExternalKey()).get(0).getExtSecondPaymentRefId());
         Assert.assertEquals(analyticsUserApi.getInvoicePaymentsForAccount(account.getExternalKey()).get(0).getProcessingStatus(), PaymentStatus.PAYMENT_FAILURE.toString());
         Assert.assertEquals(analyticsUserApi.getInvoicePaymentsForAccount(account.getExternalKey()).get(0).getPluginName(), BeatrixModule.PLUGIN_NAME);
 

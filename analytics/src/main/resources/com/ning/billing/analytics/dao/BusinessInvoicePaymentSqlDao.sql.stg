@@ -5,7 +5,8 @@ select
   payment_id
 , created_date
 , updated_date
-, ext_payment_ref_id
+, ext_first_payment_ref_id
+, ext_second_payment_ref_id
 , account_key
 , invoice_id
 , effective_date
@@ -32,7 +33,8 @@ select
   payment_id
 , created_date
 , updated_date
-, ext_payment_ref_id
+, ext_first_payment_ref_id
+, ext_second_payment_ref_id
 , account_key
 , invoice_id
 , effective_date
@@ -59,7 +61,8 @@ insert into bip (
   payment_id
 , created_date
 , updated_date
-, ext_payment_ref_id
+, ext_first_payment_ref_id
+, ext_second_payment_ref_id
 , account_key
 , invoice_id
 , effective_date
@@ -79,7 +82,8 @@ insert into bip (
   :payment_id
 , :created_date
 , :updated_date
-, :ext_payment_ref_id
+, :ext_first_payment_ref_id
+, :ext_second_payment_ref_id
 , :account_key
 , :invoice_id
 , :effective_date

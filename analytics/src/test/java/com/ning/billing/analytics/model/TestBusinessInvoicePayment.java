@@ -32,7 +32,8 @@ public class TestBusinessInvoicePayment extends AnalyticsTestSuite {
     public void testEquals() throws Exception {
         final String accountKey = UUID.randomUUID().toString();
         final BigDecimal amount = BigDecimal.ONE;
-        final String extPaymentRefId = UUID.randomUUID().toString();
+        final String extFirstPaymentRefId = UUID.randomUUID().toString();
+        final String extSecondPaymentRefId = UUID.randomUUID().toString();
         final String cardCountry = UUID.randomUUID().toString();
         final String cardType = UUID.randomUUID().toString();
         final DateTime createdDate = new DateTime(DateTimeZone.UTC);
@@ -49,7 +50,7 @@ public class TestBusinessInvoicePayment extends AnalyticsTestSuite {
         final DateTime updatedDate = new DateTime(DateTimeZone.UTC);
         final String invoicePaymentType = UUID.randomUUID().toString();
         final UUID linkedInvoicePaymentId = UUID.randomUUID();
-        final BusinessInvoicePayment invoicePayment = new BusinessInvoicePayment(accountKey, amount, extPaymentRefId,
+        final BusinessInvoicePayment invoicePayment = new BusinessInvoicePayment(accountKey, amount, extFirstPaymentRefId, extSecondPaymentRefId,
                                                                                  cardCountry, cardType, createdDate,
                                                                                  currency, effectiveDate, invoiceId,
                                                                                  paymentError, paymentId, paymentMethod,
@@ -61,7 +62,8 @@ public class TestBusinessInvoicePayment extends AnalyticsTestSuite {
         Assert.assertTrue(invoicePayment.equals(invoicePayment));
         Assert.assertEquals(invoicePayment.getAccountKey(), accountKey);
         Assert.assertEquals(invoicePayment.getAmount(), amount);
-        Assert.assertEquals(invoicePayment.getExtPaymentRefId(), extPaymentRefId);
+        Assert.assertEquals(invoicePayment.getExtFirstPaymentRefId(), extFirstPaymentRefId);
+        Assert.assertEquals(invoicePayment.getExtSecondPaymentRefId(), extSecondPaymentRefId);
         Assert.assertEquals(invoicePayment.getCardCountry(), cardCountry);
         Assert.assertEquals(invoicePayment.getCardType(), cardType);
         Assert.assertEquals(invoicePayment.getCreatedDate(), createdDate);
@@ -79,7 +81,7 @@ public class TestBusinessInvoicePayment extends AnalyticsTestSuite {
         Assert.assertEquals(invoicePayment.getInvoicePaymentType(), invoicePaymentType);
         Assert.assertEquals(invoicePayment.getLinkedInvoicePaymentId(), linkedInvoicePaymentId);
 
-        final BusinessInvoicePayment otherInvoicePayment = new BusinessInvoicePayment(null, null, extPaymentRefId, null, null, createdDate,
+        final BusinessInvoicePayment otherInvoicePayment = new BusinessInvoicePayment(null, null, extFirstPaymentRefId, extSecondPaymentRefId, null, null, createdDate,
                                                                                       null, null, null, null, paymentId, null,
                                                                                       null, null, null, null, null, null, null);
         Assert.assertFalse(invoicePayment.equals(otherInvoicePayment));

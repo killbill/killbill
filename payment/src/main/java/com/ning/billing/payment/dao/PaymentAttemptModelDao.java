@@ -30,12 +30,13 @@ public class PaymentAttemptModelDao extends EntityBase {
     private final UUID paymentId;
     private final PaymentStatus processingStatus;
     private final DateTime effectiveDate;
-    private final String paymentError;
+    private final String gatewayErrorCode;
+    private final String gatewayErrorMsg;
     private final BigDecimal requestedAmount;
 
     public PaymentAttemptModelDao(final UUID id, final UUID accountId, final UUID invoiceId,
                                   final UUID paymentId, final PaymentStatus processingStatus, final DateTime effectiveDate,
-                                  final BigDecimal requestedAmount, final String paymentError) {
+                                  final BigDecimal requestedAmount, final String gatewayErrorCode, final String gatewayErrorMsg) {
         super(id);
         this.accountId = accountId;
         this.invoiceId = invoiceId;
@@ -43,20 +44,21 @@ public class PaymentAttemptModelDao extends EntityBase {
         this.processingStatus = processingStatus;
         this.effectiveDate = effectiveDate;
         this.requestedAmount = requestedAmount;
-        this.paymentError = paymentError;
+        this.gatewayErrorCode = gatewayErrorCode;
+        this.gatewayErrorMsg = gatewayErrorMsg;
     }
 
     public PaymentAttemptModelDao(final UUID accountId, final UUID invoiceId, final UUID paymentId, final PaymentStatus paymentStatus, final DateTime effectiveDate, final BigDecimal requestedAmount) {
-        this(UUID.randomUUID(), accountId, invoiceId, paymentId, paymentStatus, effectiveDate, requestedAmount, null);
+        this(UUID.randomUUID(), accountId, invoiceId, paymentId, paymentStatus, effectiveDate, requestedAmount, null, null);
     }
 
     public PaymentAttemptModelDao(final UUID accountId, final UUID invoiceId, final UUID paymentId, final DateTime effectiveDate, final BigDecimal requestedAmount) {
-        this(UUID.randomUUID(), accountId, invoiceId, paymentId, PaymentStatus.UNKNOWN, effectiveDate, requestedAmount, null);
+        this(UUID.randomUUID(), accountId, invoiceId, paymentId, PaymentStatus.UNKNOWN, effectiveDate, requestedAmount, null, null);
     }
 
-    public PaymentAttemptModelDao(final PaymentAttemptModelDao src, final PaymentStatus newProcessingStatus, final String paymentError) {
+    public PaymentAttemptModelDao(final PaymentAttemptModelDao src, final PaymentStatus newProcessingStatus, final String gatewayErrorCode, final String gatewayErrorMsg) {
         this(src.getId(), src.getAccountId(), src.getInvoiceId(), src.getPaymentId(), newProcessingStatus,
-             src.getEffectiveDate(), src.getRequestedAmount(), paymentError);
+             src.getEffectiveDate(), src.getRequestedAmount(), gatewayErrorCode, gatewayErrorMsg);
     }
 
     public UUID getAccountId() {
@@ -79,8 +81,12 @@ public class PaymentAttemptModelDao extends EntityBase {
         return effectiveDate;
     }
 
-    public String getPaymentError() {
-        return paymentError;
+    public String getGatewayErrorCode() {
+        return gatewayErrorCode;
+    }
+
+    public String getGatewayErrorMsg() {
+        return gatewayErrorMsg;
     }
 
     public BigDecimal getRequestedAmount() {

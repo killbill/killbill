@@ -131,12 +131,16 @@ public class AccountTimelineJson {
                 chargebacks.add(new ChargebackJson(chargeback));
             }
 
+            final int paymentAttemptSize = payment.getAttempts().size();
             final String status = payment.getPaymentStatus().toString();
             this.payments.add(new PaymentJsonWithBundleKeys(payment.getAmount(), payment.getPaidAmount(), account.getId().toString(),
                                                             payment.getInvoiceId().toString(), payment.getId().toString(),
                                                             payment.getPaymentMethodId().toString(),
                                                             payment.getEffectiveDate(), payment.getEffectiveDate(),
-                                                            payment.getAttempts().size(), payment.getCurrency().toString(), status,
+                                                            paymentAttemptSize, payment.getCurrency().toString(), status,
+                                                            payment.getAttempts().get(paymentAttemptSize - 1).getGatewayErrorCode(),
+                                                            payment.getAttempts().get(paymentAttemptSize - 1).getGatewayErrorMsg(),
+                                                            payment.getExtFirstPaymentIdRef(), payment.getExtSecondPaymentIdRef(),
                                                             getBundleExternalKey(payment.getInvoiceId(), invoices, bundles),
                                                             refunds, chargebacks));
         }
