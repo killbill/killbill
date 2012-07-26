@@ -17,7 +17,9 @@ package com.ning.billing.payment.dao;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import org.skife.jdbi.v2.IDBI;
@@ -208,6 +210,7 @@ public class AuditedPaymentDao implements PaymentDao {
             public List<PaymentMethodModelDao> inTransaction(final PaymentMethodSqlDao transactional, final TransactionStatus status) throws Exception {
                 final List<PaymentMethodModelDao> existingPaymentMethods = getPaymentMethodsInTransaction(transactional, accountId);
 
+                final Set<String> externalPaymentIdProcessed = new HashSet<String>();
                 for (final PaymentMethodModelDao finalPaymentMethod : paymentMethods) {
                     boolean isExistingPaymentMethod = false;
 
@@ -218,11 +221,8 @@ public class AuditedPaymentDao implements PaymentDao {
                             break;
                         } else if (existingPaymentMethod.equalsButActive(finalPaymentMethod)) {
                             // We already have it but its status has changed - update it accordingly
-                            if (finalPaymentMethod.isActive()) {
-                                undeletedPaymentMethodInTransaction(transactional, existingPaymentMethod.getId());
-                            } else {
-                                deletedPaymentMethodInTransaction(transactional, existingPaymentMethod.getId());
-                            }
+                            // Note - in the remote system, the payment method will always be active
+                            undeletedPaymentMethodInTransaction(transactional, existingPaymentMethod.getId());
                             isExistingPaymentMethod = true;
                             break;
                         }
@@ -231,6 +231,15 @@ public class AuditedPaymentDao implements PaymentDao {
 
                     if (!isExistingPaymentMethod) {
                         insertPaymentMethodInTransaction(transactional, finalPaymentMethod, context);
+                    }
+
+                    externalPaymentIdProcessed.add(finalPaymentMethod.getExternalId());
+                }
+
+                // Finally, mark as deleted the ones that don't exist in the specified list (remote system)
+                for (final PaymentMethodModelDao existingPaymentMethod : existingPaymentMethods) {
+                    if (!externalPaymentIdProcessed.contains(existingPaymentMethod.getExternalId())) {
+                        deletedPaymentMethodInTransaction(transactional, existingPaymentMethod.getId());
                     }
                 }
 
