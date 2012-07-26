@@ -235,11 +235,21 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
      */
     void removeDuplicatedInvoiceItems(final List<InvoiceItem> proposedItems,
                                       final List<InvoiceItem> existingInvoiceItems) {
-        final Set<InvoiceItem> proposedSet = new HashSet<InvoiceItem>(proposedItems);
-        final Set<InvoiceItem> existingSet = new HashSet<InvoiceItem>(existingInvoiceItems);
-        final SetView<InvoiceItem> intersection = Sets.intersection(proposedSet, existingSet);
-        proposedItems.removeAll(intersection);
-        existingInvoiceItems.removeAll(intersection);
+        // We can't just use sets here as order matters (we want to keep duplicated in existingInvoiceItems)
+        final Iterator<InvoiceItem> proposedItemIterator = proposedItems.iterator();
+        while (proposedItemIterator.hasNext()) {
+            final InvoiceItem proposedItem = proposedItemIterator.next();
+
+            final Iterator<InvoiceItem> existingItemIterator = existingInvoiceItems.iterator();
+            while (existingItemIterator.hasNext()) {
+                final InvoiceItem existingItem = existingItemIterator.next();
+                if (existingItem.equals(proposedItem)) {
+                    existingItemIterator.remove();
+                    proposedItemIterator.remove();
+                    break;
+                }
+            }
+        }
     }
 
     void removeCancellingInvoiceItems(final List<InvoiceItem> items) {

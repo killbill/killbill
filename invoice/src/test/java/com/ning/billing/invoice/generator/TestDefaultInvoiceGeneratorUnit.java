@@ -131,26 +131,74 @@ public class TestDefaultInvoiceGeneratorUnit extends InvoicingTestBase {
     }
 
     @Test(groups = "fast")
-    public void testRemoveDuplicatedInvoiceItemsShouldNotThrowIllegalStateException() {
+    public void testRemoveDuplicatedInvoiceItemsShouldNotThrowIllegalStateExceptionOne() {
         final LocalDate startDate = clock.getUTCToday();
+        final LocalDate endDate = startDate.plusMonths(1);
         final BigDecimal amount = new BigDecimal("12.00");
 
-        // Create a state with multiple duplicates
-
+        // More items in existing than proposed
         final List<InvoiceItem> existing = new LinkedList<InvoiceItem>();
         final InvoiceItem item1 = new FixedPriceInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, amount, currency);
+        final InvoiceItem item2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, amount, currency);
         existing.add(item1);
+        existing.add(item2);
+
+        final List<InvoiceItem> proposed = new LinkedList<InvoiceItem>();
+        final InvoiceItem other1 = new FixedPriceInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, amount, currency);
+        proposed.add(other1);
+
+        gen.removeDuplicatedInvoiceItems(proposed, existing);
+        assertEquals(existing.size(), 1);
+        assertEquals(proposed.size(), 0);
+    }
+
+    @Test(groups = "fast")
+    public void testRemoveDuplicatedInvoiceItemsShouldNotThrowIllegalStateExceptionTwo() {
+        final LocalDate startDate = clock.getUTCToday();
+        final LocalDate endDate = startDate.plusMonths(1);
+        final BigDecimal amount = new BigDecimal("12.00");
+
+        // More items in proposed than existing
+        final List<InvoiceItem> existing = new LinkedList<InvoiceItem>();
+        final InvoiceItem item1 = new FixedPriceInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, amount, currency);
         existing.add(item1);
 
         final List<InvoiceItem> proposed = new LinkedList<InvoiceItem>();
         final InvoiceItem other1 = new FixedPriceInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, amount, currency);
-        proposed.add(item1);
+        final InvoiceItem other2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, amount, currency);
         proposed.add(other1);
-        proposed.add(other1);
+        proposed.add(other2);
 
         gen.removeDuplicatedInvoiceItems(proposed, existing);
         assertEquals(existing.size(), 0);
-        assertEquals(proposed.size(), 0);
+        assertEquals(proposed.size(), 1);
+    }
+
+    @Test(groups = "fast")
+    public void testRemoveDuplicatedInvoiceItemsShouldNotThrowIllegalStateExceptionThree() {
+        final LocalDate startDate = clock.getUTCToday();
+        final LocalDate endDate = startDate.plusMonths(1);
+        final BigDecimal amount = new BigDecimal("12.00");
+
+        // Bunch of duplicated items
+        final List<InvoiceItem> existing = new LinkedList<InvoiceItem>();
+        final InvoiceItem item1 = new FixedPriceInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, amount, currency);
+        final InvoiceItem item2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, amount, currency);
+        existing.add(item1);
+        existing.add(item2);
+        existing.add(item1);
+
+        final List<InvoiceItem> proposed = new LinkedList<InvoiceItem>();
+        final InvoiceItem other1 = new FixedPriceInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, amount, currency);
+        final InvoiceItem other2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, amount, currency);
+        proposed.add(item1);
+        proposed.add(other1);
+        proposed.add(other1);
+        proposed.add(other2);
+
+        gen.removeDuplicatedInvoiceItems(proposed, existing);
+        assertEquals(existing.size(), 0);
+        assertEquals(proposed.size(), 1);
     }
 
     @Test(groups = "fast")
