@@ -24,7 +24,6 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.payment.plugin.api.NoOpPaymentPluginApi;
@@ -34,15 +33,24 @@ import com.ning.billing.payment.plugin.api.PaymentPluginApiException;
 import com.ning.billing.payment.plugin.api.PaymentProviderAccount;
 import com.ning.billing.util.clock.Clock;
 
+import com.google.common.collect.LinkedListMultimap;
+import com.google.common.collect.Multimap;
+import com.google.inject.Inject;
+
 public class DefaultNoOpPaymentProviderPlugin implements NoOpPaymentPluginApi {
+
+    private static final String PLUGIN_NAME = "__NO_OP__";
+
     private final AtomicBoolean makeNextInvoiceFailWithError = new AtomicBoolean(false);
     private final AtomicBoolean makeNextInvoiceFailWithException = new AtomicBoolean(false);
     private final AtomicBoolean makeAllInvoicesFailWithError = new AtomicBoolean(false);
+
     private final Map<UUID, PaymentInfoPlugin> payments = new ConcurrentHashMap<UUID, PaymentInfoPlugin>();
-
+    // Note: we can't use HashMultiMap as we care about storing duplicate key/value pairs
+    private final Multimap<UUID, BigDecimal> refunds = LinkedListMultimap.<UUID, BigDecimal>create();
     private final Map<String, List<PaymentMethodPlugin>> paymentMethods = new ConcurrentHashMap<String, List<PaymentMethodPlugin>>();
-
     private final Map<String, PaymentProviderAccount> accounts = new ConcurrentHashMap<String, PaymentProviderAccount>();
+
     private final Clock clock;
 
     @Inject
@@ -73,12 +81,10 @@ public class DefaultNoOpPaymentProviderPlugin implements NoOpPaymentPluginApi {
         makeAllInvoicesFailWithError.set(failure);
     }
 
-
     @Override
     public String getName() {
-        return null;
+        return PLUGIN_NAME;
     }
-
 
     @Override
     public PaymentInfoPlugin processPayment(final String externalKey, final UUID paymentId, final BigDecimal amount) throws PaymentPluginApiException {
@@ -91,7 +97,6 @@ public class DefaultNoOpPaymentProviderPlugin implements NoOpPaymentPluginApi {
         payments.put(paymentId, result);
         return result;
     }
-
 
     @Override
     public PaymentInfoPlugin getPaymentInfo(final UUID paymentId) throws PaymentPluginApiException {
@@ -128,10 +133,8 @@ public class DefaultNoOpPaymentProviderPlugin implements NoOpPaymentPluginApi {
         }
         pms.add(realWithID);
 
-
         return realWithID.getExternalPaymentMethodId();
     }
-
 
     @Override
     public void updatePaymentMethod(final String accountKey, final PaymentMethodPlugin paymentMethodProps)
@@ -144,11 +147,9 @@ public class DefaultNoOpPaymentProviderPlugin implements NoOpPaymentPluginApi {
 
     @Override
     public void deletePaymentMethod(final String accountKey, final String paymentMethodId) throws PaymentPluginApiException {
-
         PaymentMethodPlugin toBeDeleted = null;
         final List<PaymentMethodPlugin> pms = paymentMethods.get(accountKey);
         if (pms != null) {
-
             for (final PaymentMethodPlugin cur : pms) {
                 if (cur.getExternalPaymentMethodId().equals(paymentMethodId)) {
                     toBeDeleted = cur;
@@ -156,6 +157,7 @@ public class DefaultNoOpPaymentProviderPlugin implements NoOpPaymentPluginApi {
                 }
             }
         }
+
         if (toBeDeleted != null) {
             pms.remove(toBeDeleted);
         }
@@ -170,7 +172,42 @@ public class DefaultNoOpPaymentProviderPlugin implements NoOpPaymentPluginApi {
     @Override
     public PaymentMethodPlugin getPaymentMethodDetail(final String accountKey, final String externalPaymentId)
             throws PaymentPluginApiException {
-        return getPaymentMethodDetail(accountKey, externalPaymentId);
+        return getPaymentMethod(accountKey, externalPaymentId);
+    }
+
+    @Override
+    public void setDefaultPaymentMethod(final String accountKey, final String externalPaymentId) throws PaymentPluginApiException {
+    }
+
+    @Override
+    public void processRefund(final Account account, final UUID paymentId, final BigDecimal refundAmount) throws PaymentPluginApiException {
+        final PaymentInfoPlugin paymentInfoPlugin = getPaymentInfo(paymentId);
+        if (paymentInfoPlugin == null) {
+            throw new PaymentPluginApiException("", String.format("No payment found for paymentId %s (plugin %s)", paymentId, getName()));
+        }
+
+        BigDecimal maxAmountRefundable = paymentInfoPlugin.getAmount();
+        for (final BigDecimal refund : refunds.get(paymentId)) {
+            maxAmountRefundable = maxAmountRefundable.add(refund.negate());
+        }
+        if (maxAmountRefundable.compareTo(refundAmount) < 0) {
+            throw new PaymentPluginApiException("", String.format("Refund amount of %s for paymentId %s is bigger than the payment amount %s (plugin %s)",
+                                                                  refundAmount, paymentId, paymentInfoPlugin.getAmount(), getName()));
+        }
+
+        refunds.put(paymentId, refundAmount);
+    }
+
+    @Override
+    public int getNbRefundForPaymentAmount(final Account account, final UUID paymentId, final BigDecimal refundAmount) throws PaymentPluginApiException {
+        int nbRefunds = 0;
+        for (final BigDecimal amount : refunds.get(paymentId)) {
+            if (amount.compareTo(refundAmount) == 0) {
+                nbRefunds++;
+            }
+        }
+
+        return nbRefunds;
     }
 
     private DefaultNoOpPaymentMethodPlugin getPaymentMethod(final String accountKey, final String externalPaymentId) {
@@ -178,28 +215,13 @@ public class DefaultNoOpPaymentProviderPlugin implements NoOpPaymentPluginApi {
         if (pms == null) {
             return null;
         }
+
         for (final PaymentMethodPlugin cur : pms) {
             if (cur.getExternalPaymentMethodId().equals(externalPaymentId)) {
                 return (DefaultNoOpPaymentMethodPlugin) cur;
             }
         }
+
         return null;
     }
-
-    @Override
-    public void setDefaultPaymentMethod(final String accountKey,
-                                        final String externalPaymentId) throws PaymentPluginApiException {
-    }
-
-    @Override
-    public void processRefund(Account account, UUID paymentId,
-            BigDecimal refundAmout) throws PaymentPluginApiException {
-    }
-
-    @Override
-    public int getNbRefundForPaymentAmount(Account account, UUID paymentId,
-            BigDecimal refundAmount) throws PaymentPluginApiException {
-        return 0;
-    }
-
 }

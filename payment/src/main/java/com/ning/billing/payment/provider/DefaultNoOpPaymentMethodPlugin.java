@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.payment.provider;
 
 import java.util.List;
@@ -22,8 +23,8 @@ import com.ning.billing.payment.api.PaymentMethodPlugin;
 
 public class DefaultNoOpPaymentMethodPlugin implements PaymentMethodPlugin {
 
-    private String externalId;
-    private boolean isDefault;
+    private final String externalId;
+    private final boolean isDefault;
     private List<PaymentMethodKVInfo> props;
 
     public DefaultNoOpPaymentMethodPlugin(final PaymentMethodPlugin src) {
@@ -34,7 +35,6 @@ public class DefaultNoOpPaymentMethodPlugin implements PaymentMethodPlugin {
 
     public DefaultNoOpPaymentMethodPlugin(final String externalId, final boolean isDefault,
                                           final List<PaymentMethodKVInfo> props) {
-        super();
         this.externalId = externalId;
         this.isDefault = isDefault;
         this.props = props;
@@ -55,14 +55,6 @@ public class DefaultNoOpPaymentMethodPlugin implements PaymentMethodPlugin {
         return props;
     }
 
-    public void setExternalId(final String externalId) {
-        this.externalId = externalId;
-    }
-
-    public void setDefault(final boolean isDefault) {
-        this.isDefault = isDefault;
-    }
-
     public void setProps(final List<PaymentMethodKVInfo> props) {
         this.props = props;
     }
@@ -72,11 +64,56 @@ public class DefaultNoOpPaymentMethodPlugin implements PaymentMethodPlugin {
         if (props == null) {
             return null;
         }
+
         for (final PaymentMethodKVInfo cur : props) {
             if (cur.getKey().equals(key)) {
                 return cur.getValue().toString();
             }
         }
+
         return null;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append("DefaultNoOpPaymentMethodPlugin");
+        sb.append("{externalId='").append(externalId).append('\'');
+        sb.append(", isDefault=").append(isDefault);
+        sb.append(", props=").append(props);
+        sb.append('}');
+        return sb.toString();
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        final DefaultNoOpPaymentMethodPlugin that = (DefaultNoOpPaymentMethodPlugin) o;
+
+        if (isDefault != that.isDefault) {
+            return false;
+        }
+        if (externalId != null ? !externalId.equals(that.externalId) : that.externalId != null) {
+            return false;
+        }
+        if (props != null ? !props.equals(that.props) : that.props != null) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = externalId != null ? externalId.hashCode() : 0;
+        result = 31 * result + (isDefault ? 1 : 0);
+        result = 31 * result + (props != null ? props.hashCode() : 0);
+        return result;
     }
 }

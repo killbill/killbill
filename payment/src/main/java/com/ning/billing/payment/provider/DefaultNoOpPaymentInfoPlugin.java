@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.payment.provider;
 
 import java.math.BigDecimal;
@@ -31,7 +32,6 @@ public class DefaultNoOpPaymentInfoPlugin implements PaymentInfoPlugin {
 
     public DefaultNoOpPaymentInfoPlugin(final BigDecimal amount, final DateTime effectiveDate,
                                         final DateTime createdDate, final PaymentPluginStatus status, final String error) {
-        super();
         this.amount = amount;
         this.effectiveDate = effectiveDate;
         this.createdDate = createdDate;
@@ -39,12 +39,10 @@ public class DefaultNoOpPaymentInfoPlugin implements PaymentInfoPlugin {
         this.error = error;
     }
 
-
     @Override
     public BigDecimal getAmount() {
         return amount;
     }
-
 
     @Override
     public DateTime getEffectiveDate() {
@@ -71,15 +69,66 @@ public class DefaultNoOpPaymentInfoPlugin implements PaymentInfoPlugin {
         return null;
     }
 
-
     @Override
     public String getExtFirstReferenceId() {
         return null;
     }
 
-
     @Override
     public String getExtSecondReferenceId() {
         return null;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append("DefaultNoOpPaymentInfoPlugin");
+        sb.append("{amount=").append(amount);
+        sb.append(", effectiveDate=").append(effectiveDate);
+        sb.append(", createdDate=").append(createdDate);
+        sb.append(", status=").append(status);
+        sb.append(", error='").append(error).append('\'');
+        sb.append('}');
+        return sb.toString();
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        final DefaultNoOpPaymentInfoPlugin that = (DefaultNoOpPaymentInfoPlugin) o;
+
+        if (amount != null ? !amount.equals(that.amount) : that.amount != null) {
+            return false;
+        }
+        if (createdDate != null ? !createdDate.equals(that.createdDate) : that.createdDate != null) {
+            return false;
+        }
+        if (effectiveDate != null ? !effectiveDate.equals(that.effectiveDate) : that.effectiveDate != null) {
+            return false;
+        }
+        if (error != null ? !error.equals(that.error) : that.error != null) {
+            return false;
+        }
+        if (status != that.status) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = amount != null ? amount.hashCode() : 0;
+        result = 31 * result + (effectiveDate != null ? effectiveDate.hashCode() : 0);
+        result = 31 * result + (createdDate != null ? createdDate.hashCode() : 0);
+        result = 31 * result + (status != null ? status.hashCode() : 0);
+        result = 31 * result + (error != null ? error.hashCode() : 0);
+        return result;
     }
 }
