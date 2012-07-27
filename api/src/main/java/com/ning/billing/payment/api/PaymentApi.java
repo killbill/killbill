@@ -25,9 +25,6 @@ import com.ning.billing.util.callcontext.CallContext;
 
 public interface PaymentApi {
 
-    public Payment createPayment(final String accountKey, final UUID invoiceId, final BigDecimal amount, final CallContext context)
-            throws PaymentApiException;
-
     public Payment createPayment(final Account account, final UUID invoiceId, final BigDecimal amount, final CallContext context)
             throws PaymentApiException;
 

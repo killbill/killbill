@@ -17,13 +17,10 @@
 package com.ning.billing.payment.api;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
@@ -46,12 +43,6 @@ public class DefaultPaymentApi implements PaymentApi {
         this.methodProcessor = methodProcessor;
         this.paymentProcessor = paymentProcessor;
         this.refundProcessor = refundProcessor;
-    }
-
-    @Override
-    public Payment createPayment(final String accountKey, final UUID invoiceId, final BigDecimal amount, final CallContext context)
-            throws PaymentApiException {
-        return paymentProcessor.createPayment(accountKey, invoiceId, amount, context, true);
     }
 
     @Override

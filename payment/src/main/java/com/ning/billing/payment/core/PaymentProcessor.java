@@ -197,19 +197,6 @@ public class PaymentProcessor extends ProcessorBase {
         }
     }
 
-
-    public Payment createPayment(final String accountKey, final UUID invoiceId, final BigDecimal inputAmount, final CallContext context, final boolean isInstantPayment)
-    throws PaymentApiException {
-        try {
-            final Account account = accountUserApi.getAccountByKey(accountKey);
-            return createPayment(account, invoiceId, inputAmount, context, isInstantPayment);
-        } catch (AccountApiException e) {
-            throw new PaymentApiException(e);
-        }
-    }
-
-
-
     public Payment createPayment(final Account account, final UUID invoiceId, final BigDecimal inputAmount, final CallContext context, final boolean isInstantPayment)
     throws PaymentApiException {
         final PaymentPluginApi plugin = getPaymentProviderPlugin(account);

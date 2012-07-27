@@ -157,7 +157,7 @@ public class TestPaymentApi extends PaymentTestSuite {
                                                             Currency.USD));
 
         try {
-            final Payment paymentInfo = paymentApi.createPayment(account.getExternalKey(), invoice.getId(), requestedAmount, context);
+            final Payment paymentInfo = paymentApi.createPayment(account, invoice.getId(), requestedAmount, context);
             if (expectedAmount == null) {
                 fail("Expected to fail because requested amount > invoice amount");
             }
