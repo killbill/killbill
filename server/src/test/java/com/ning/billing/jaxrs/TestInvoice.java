@@ -36,14 +36,18 @@ import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.BundleJsonNoSubscriptions;
 import com.ning.billing.jaxrs.json.InvoiceJsonSimple;
 import com.ning.billing.jaxrs.json.PaymentJsonSimple;
+import com.ning.billing.jaxrs.json.PaymentMethodJson;
 import com.ning.billing.jaxrs.json.SubscriptionJsonNoEvents;
 import com.ning.billing.jaxrs.resources.JaxrsResource;
+import com.ning.billing.payment.provider.ExternalPaymentProviderPlugin;
 import com.ning.http.client.Response;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.common.collect.ImmutableMap;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 public class TestInvoice extends TestJaxrsBase {
@@ -221,5 +225,72 @@ public class TestInvoice extends TestJaxrsBase {
             assertEquals(objFromJson.size(), 1);
             assertTrue(cur.getAmount().compareTo(objFromJson.get(0).getAmount()) == 0);
         }
+    }
+
+    @Test(groups = "slow")
+    public void testExternalPayment() throws Exception {
+        // Create an account with no payment method
+        final AccountJson accountJson = createAccount("eraahahildo", "sheqrgfhwe", "eraahahildo@yahoo.com");
+        assertNotNull(accountJson);
+
+        // Add a bundle, subscription and move the clock to get the first invoice
+        final BundleJsonNoSubscriptions bundleJson = createBundle(accountJson.getAccountId(), "317199");
+        assertNotNull(bundleJson);
+        final SubscriptionJsonNoEvents subscriptionJson = createSubscription(bundleJson.getBundleId(), "Shotgun", ProductCategory.BASE.toString(), BillingPeriod.MONTHLY.toString(), true);
+        assertNotNull(subscriptionJson);
+        clock.addMonths(1);
+        crappyWaitForLackOfProperSynchonization();
+
+        final String paymentsURI = JaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAccountId() + "/" + JaxrsResource.PAYMENTS;
+
+        // Verify we didn't get any payment
+        final Response noPaymentsResponse = doGet(paymentsURI, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        assertEquals(noPaymentsResponse.getStatusCode(), Status.OK.getStatusCode());
+        final String noPaymentsBaseJson = noPaymentsResponse.getResponseBody();
+        final List<PaymentJsonSimple> noPaymentsFromJson = mapper.readValue(noPaymentsBaseJson, new TypeReference<List<PaymentJsonSimple>>() {});
+        assertEquals(noPaymentsFromJson.size(), 0);
+
+        // Get the invoices
+        final Map<String, String> queryParams = new HashMap<String, String>();
+        queryParams.put(JaxrsResource.QUERY_ACCOUNT_ID, accountJson.getAccountId());
+        final String invoicesURI = JaxrsResource.INVOICES_PATH;
+        final Response invoicesResponse = doGet(invoicesURI, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
+        assertEquals(invoicesResponse.getStatusCode(), Status.OK.getStatusCode());
+        final String invoicesBaseJson = invoicesResponse.getResponseBody();
+        final List<InvoiceJsonSimple> invoices = mapper.readValue(invoicesBaseJson, new TypeReference<List<InvoiceJsonSimple>>() {});
+        assertNotNull(invoices);
+        // 2 invoices but look for the non zero dollar one
+        assertEquals(invoices.size(), 2);
+        final String invoiceId = invoices.get(1).getInvoiceId();
+
+        // Post an external payment
+        final BigDecimal paidAmount = BigDecimal.TEN;
+        final PaymentJsonSimple payment = new PaymentJsonSimple(paidAmount, BigDecimal.ZERO, accountJson.getAccountId(),
+                                                                invoiceId, null, null, null, null, 0,
+                                                                null, null, null, null, null, null);
+        final String postJson = mapper.writeValueAsString(payment);
+        final String paymentURI = JaxrsResource.INVOICES_PATH + "/" + invoiceId + "/" + JaxrsResource.PAYMENTS;
+        final Response paymentResponse = doPost(paymentURI, postJson, ImmutableMap.<String, String>of("externalPayment", "true"), DEFAULT_HTTP_TIMEOUT_SEC);
+        assertEquals(paymentResponse.getStatusCode(), Status.CREATED.getStatusCode());
+
+        // Verify we indeed got the payment
+        final Response paymentsResponse = doGet(paymentsURI, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        assertEquals(paymentsResponse.getStatusCode(), Status.OK.getStatusCode());
+        final String paymentsBaseJson = paymentsResponse.getResponseBody();
+        final List<PaymentJsonSimple> paymentsFromJson = mapper.readValue(paymentsBaseJson, new TypeReference<List<PaymentJsonSimple>>() {});
+        assertEquals(paymentsFromJson.size(), 1);
+        assertEquals(paymentsFromJson.get(0).getPaidAmount().compareTo(paidAmount), 0);
+
+        // Check the PaymentMethod from paymentMethodId returned in the Payment object
+        final String paymentMethodId = paymentsFromJson.get(0).getPaymentMethodId();
+        final String paymentMethodURI = JaxrsResource.PAYMENT_METHODS_PATH + "/" + paymentMethodId;
+
+        final Response paymentMethodResponse = doGet(paymentMethodURI, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        assertEquals(paymentMethodResponse.getStatusCode(), Status.OK.getStatusCode());
+        final PaymentMethodJson paymentMethodJson = mapper.readValue(paymentMethodResponse.getResponseBody(), PaymentMethodJson.class);
+        assertEquals(paymentMethodJson.getPaymentMethodId(), paymentMethodId);
+        assertEquals(paymentMethodJson.getAccountId(), accountJson.getAccountId());
+        assertEquals(paymentMethodJson.getPluginName(), ExternalPaymentProviderPlugin.PLUGIN_NAME);
+        assertNull(paymentMethodJson.getPluginInfo());
     }
 }

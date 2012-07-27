@@ -15,6 +15,7 @@
  */
 package com.ning.billing.payment.core;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -78,6 +79,7 @@ import static com.ning.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR_NAMED;
 
 public class PaymentProcessor extends ProcessorBase {
 
+    private final PaymentMethodProcessor paymentMethodProcessor;
     private final InvoicePaymentApi invoicePaymentApi;
     private final TagUserApi tagUserApi;
     private final FailedPaymentRetryServiceScheduler failedPaymentRetryService;
@@ -95,19 +97,21 @@ public class PaymentProcessor extends ProcessorBase {
 
     @Inject
     public PaymentProcessor(final PaymentProviderPluginRegistry pluginRegistry,
-            final AccountUserApi accountUserApi,
-            final InvoicePaymentApi invoicePaymentApi,
-            final TagUserApi tagUserApi,
-            final FailedPaymentRetryServiceScheduler failedPaymentRetryService,
-            final PluginFailureRetryServiceScheduler pluginFailureRetryService,
-            final AutoPayRetryServiceScheduler autoPayoffRetryService,
-            final PaymentDao paymentDao,
-            final Bus eventBus,
-            final Clock clock,
-            final GlobalLocker locker,
-            @Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor,
-            final CallContextFactory factory) {
+                            final PaymentMethodProcessor paymentMethodProcessor,
+                            final AccountUserApi accountUserApi,
+                            final InvoicePaymentApi invoicePaymentApi,
+                            final TagUserApi tagUserApi,
+                            final FailedPaymentRetryServiceScheduler failedPaymentRetryService,
+                            final PluginFailureRetryServiceScheduler pluginFailureRetryService,
+                            final AutoPayRetryServiceScheduler autoPayoffRetryService,
+                            final PaymentDao paymentDao,
+                            final Bus eventBus,
+                            final Clock clock,
+                            final GlobalLocker locker,
+                            @Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor,
+                            final CallContextFactory factory) {
         super(pluginRegistry, accountUserApi, eventBus, paymentDao, locker, executor);
+        this.paymentMethodProcessor = paymentMethodProcessor;
         this.invoicePaymentApi = invoicePaymentApi;
         this.tagUserApi = tagUserApi;
         this.failedPaymentRetryService = failedPaymentRetryService;
@@ -197,9 +201,19 @@ public class PaymentProcessor extends ProcessorBase {
         }
     }
 
-    public Payment createPayment(final Account account, final UUID invoiceId, final BigDecimal inputAmount, final CallContext context, final boolean isInstantPayment)
-    throws PaymentApiException {
-        final PaymentPluginApi plugin = getPaymentProviderPlugin(account);
+    public Payment createPayment(final Account account, final UUID invoiceId, @Nullable final BigDecimal inputAmount,
+                                 final CallContext context, final boolean isInstantPayment, final boolean isExternalPayment)
+            throws PaymentApiException {
+        // Use the special external payment plugin to handle external payments
+        final PaymentPluginApi plugin;
+        final UUID paymentMethodId;
+        if (isExternalPayment) {
+            plugin = paymentMethodProcessor.getExternalPaymentProviderPlugin(account, context);
+            paymentMethodId = paymentMethodProcessor.getExternalPaymentMethod(account).getId();
+        } else {
+            plugin = getPaymentProviderPlugin(account);
+            paymentMethodId = account.getPaymentMethodId();
+        }
 
         try {
             return paymentPluginDispatcher.dispatchWithAccountLock(new CallableWithAccountLock<Payment>(locker,
@@ -225,9 +239,9 @@ public class PaymentProcessor extends ProcessorBase {
 
                     final BigDecimal requestedAmount = getAndValidatePaymentAmount(invoice, inputAmount, isInstantPayment);
                     if (isAccountAutoPayOff) {
-                        return processNewPaymentForAutoPayOffWithAccountLocked(account, invoice, requestedAmount, context);
+                        return processNewPaymentForAutoPayOffWithAccountLocked(paymentMethodId, account, invoice, requestedAmount, context);
                     } else {
-                        return processNewPaymentWithAccountLocked(plugin, account, invoice, requestedAmount, isInstantPayment, context);
+                        return processNewPaymentWithAccountLocked(paymentMethodId, plugin, account, invoice, requestedAmount, isInstantPayment, context);
                     }
                 }
             }));
@@ -285,7 +299,7 @@ public class PaymentProcessor extends ProcessorBase {
 
 
 
-    private BigDecimal getAndValidatePaymentAmount(final Invoice invoice, final BigDecimal inputAmount, final boolean isInstantPayment)
+    private BigDecimal getAndValidatePaymentAmount(final Invoice invoice, @Nullable final BigDecimal inputAmount, final boolean isInstantPayment)
     throws PaymentApiException {
 
         if (invoice.getBalance().compareTo(BigDecimal.ZERO) <= 0) {
@@ -297,7 +311,7 @@ public class PaymentProcessor extends ProcessorBase {
             throw new PaymentApiException(ErrorCode.PAYMENT_AMOUNT_DENIED,
                     invoice.getId(), inputAmount.floatValue(), invoice.getBalance().floatValue());
         }
-        BigDecimal result =  inputAmount != null ? inputAmount : invoice.getBalance();
+        final BigDecimal result =  inputAmount != null ? inputAmount : invoice.getBalance();
         return result.setScale(2, RoundingMode.HALF_EVEN);
     }
 
@@ -388,24 +402,21 @@ public class PaymentProcessor extends ProcessorBase {
         }
     }
 
-    private Payment processNewPaymentForAutoPayOffWithAccountLocked(final Account account, final Invoice invoice, final BigDecimal requestedAmount, final CallContext context)
-    throws PaymentApiException {
+    private Payment processNewPaymentForAutoPayOffWithAccountLocked(final UUID paymentMethodId, final Account account, final Invoice invoice,
+                                                                    final BigDecimal requestedAmount, final CallContext context)
+            throws PaymentApiException {
+        final PaymentStatus paymentStatus = PaymentStatus.AUTO_PAY_OFF;
 
-        final PaymentStatus paymentStatus =  PaymentStatus.AUTO_PAY_OFF;
-
-        final PaymentModelDao paymentInfo = new PaymentModelDao(account.getId(), invoice.getId(), account.getPaymentMethodId(), requestedAmount, invoice.getCurrency(), clock.getUTCNow(), paymentStatus);
+        final PaymentModelDao paymentInfo = new PaymentModelDao(account.getId(), invoice.getId(), paymentMethodId, requestedAmount, invoice.getCurrency(), clock.getUTCNow(), paymentStatus);
         final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(account.getId(), invoice.getId(), paymentInfo.getId(), paymentStatus, clock.getUTCNow(), requestedAmount);
 
         paymentDao.insertPaymentWithAttempt(paymentInfo, attempt, context);
         return new DefaultPayment(paymentInfo, Collections.singletonList(attempt), Collections.<RefundModelDao>emptyList());
     }
 
-
-    private Payment processNewPaymentWithAccountLocked(final PaymentPluginApi plugin, final Account account, final Invoice invoice,
-            final BigDecimal requestedAmount, final boolean isInstantPayment, final CallContext context) throws PaymentApiException {
-
-
-        final PaymentModelDao payment = new PaymentModelDao(account.getId(), invoice.getId(), account.getPaymentMethodId(), requestedAmount.setScale(2, RoundingMode.HALF_EVEN), invoice.getCurrency(), clock.getUTCNow());
+    private Payment processNewPaymentWithAccountLocked(final UUID paymentMethodId, final PaymentPluginApi plugin, final Account account, final Invoice invoice,
+                                                       final BigDecimal requestedAmount, final boolean isInstantPayment, final CallContext context) throws PaymentApiException {
+        final PaymentModelDao payment = new PaymentModelDao(account.getId(), invoice.getId(), paymentMethodId, requestedAmount.setScale(2, RoundingMode.HALF_EVEN), invoice.getCurrency(), clock.getUTCNow());
         final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(account.getId(), invoice.getId(), payment.getId(), clock.getUTCNow(), requestedAmount);
 
         final PaymentModelDao savedPayment = paymentDao.insertPaymentWithAttempt(payment, attempt, context);

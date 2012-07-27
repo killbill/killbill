@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.payment.core.PaymentMethodProcessor;
@@ -29,8 +28,9 @@ import com.ning.billing.payment.core.PaymentProcessor;
 import com.ning.billing.payment.core.RefundProcessor;
 import com.ning.billing.util.callcontext.CallContext;
 
-public class DefaultPaymentApi implements PaymentApi {
+import com.google.inject.Inject;
 
+public class DefaultPaymentApi implements PaymentApi {
 
     private final PaymentMethodProcessor methodProcessor;
     private final PaymentProcessor paymentProcessor;
@@ -48,7 +48,12 @@ public class DefaultPaymentApi implements PaymentApi {
     @Override
     public Payment createPayment(final Account account, final UUID invoiceId,
                                  final BigDecimal amount, final CallContext context) throws PaymentApiException {
-        return paymentProcessor.createPayment(account, invoiceId, amount, context, true);
+        return paymentProcessor.createPayment(account, invoiceId, amount, context, true, false);
+    }
+
+    @Override
+    public Payment createExternalPayment(final Account account, final UUID invoiceId, final BigDecimal amount, final CallContext context) throws PaymentApiException {
+        return paymentProcessor.createPayment(account, invoiceId, amount, context, true, true);
     }
 
     @Override
@@ -71,16 +76,14 @@ public class DefaultPaymentApi implements PaymentApi {
         return paymentProcessor.getAccountPayments(accountId);
     }
 
-
-
     @Override
-    public Refund getRefund(UUID refundId) throws PaymentApiException {
+    public Refund getRefund(final UUID refundId) throws PaymentApiException {
         return refundProcessor.getRefund(refundId);
     }
 
     @Override
-    public Refund createRefund(Account account, UUID paymentId,
-            BigDecimal refundAmount, boolean isAdjusted, CallContext context)
+    public Refund createRefund(final Account account, final UUID paymentId,
+                               final BigDecimal refundAmount, final boolean isAdjusted, final CallContext context)
             throws PaymentApiException {
         if (refundAmount == null || refundAmount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new PaymentApiException(ErrorCode.PAYMENT_REFUND_AMOUNT_NEGATIVE_OR_NULL);
@@ -90,23 +93,21 @@ public class DefaultPaymentApi implements PaymentApi {
     }
 
     @Override
-    public List<Refund> getAccountRefunds(Account account)
+    public List<Refund> getAccountRefunds(final Account account)
             throws PaymentApiException {
         return refundProcessor.getAccountRefunds(account);
     }
 
     @Override
-    public List<Refund> getPaymentRefunds(UUID paymentId)
+    public List<Refund> getPaymentRefunds(final UUID paymentId)
             throws PaymentApiException {
         return refundProcessor.getPaymentRefunds(paymentId);
     }
-
 
     @Override
     public Set<String> getAvailablePlugins() {
         return methodProcessor.getAvailablePlugins();
     }
-
 
     @Override
     public String initializeAccountPlugin(final String pluginName, final Account account)
@@ -114,14 +115,12 @@ public class DefaultPaymentApi implements PaymentApi {
         return methodProcessor.initializeAccountPlugin(pluginName, account);
     }
 
-
     @Override
     public UUID addPaymentMethod(final String pluginName, final Account account,
                                  final boolean setDefault, final PaymentMethodPlugin paymentMethodInfo, final CallContext context)
             throws PaymentApiException {
         return methodProcessor.addPaymentMethod(pluginName, account, setDefault, paymentMethodInfo, context);
     }
-
 
     @Override
     public List<PaymentMethod> refreshPaymentMethods(final String pluginName,
