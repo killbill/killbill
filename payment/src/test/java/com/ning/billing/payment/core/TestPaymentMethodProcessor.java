@@ -42,7 +42,7 @@ public class TestPaymentMethodProcessor extends PaymentTestSuite {
 
     private PaymentMethodProcessor processor;
 
-    @BeforeMethod
+    @BeforeMethod(groups = "fast")
     public void setUp() throws Exception {
         final DefaultPaymentProviderPluginRegistry pluginRegistry = new DefaultPaymentProviderPluginRegistry(Mockito.mock(PaymentConfig.class));
         pluginRegistry.register(new ExternalPaymentProviderPlugin(new ClockMock()), ExternalPaymentProviderPlugin.PLUGIN_NAME);
