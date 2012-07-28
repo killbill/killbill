@@ -118,6 +118,23 @@ public class SubscriptionData extends EntityBase implements Subscription {
     }
 
     @Override
+    public SubscriptionSourceType getSourceType() {
+        if (transitions == null) {
+            return null;
+        }
+        final SubscriptionTransitionData initialTransition = transitions.get(0);
+        switch (initialTransition.getApiEventType()) {
+        case MIGRATE_BILLING:
+        case MIGRATE_ENTITLEMENT:
+            return SubscriptionSourceType.MIGRATED;
+        case TRANSFER:
+            return SubscriptionSourceType.TRANSFERED;
+        default:
+            return SubscriptionSourceType.NATIVE;
+        }
+    }
+
+    @Override
     public PlanPhase getCurrentPhase() {
         return (getPreviousTransitionData() == null) ? null
                 : getPreviousTransitionData().getNextPhase();

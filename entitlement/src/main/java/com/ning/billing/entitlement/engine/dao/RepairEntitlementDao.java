@@ -304,4 +304,10 @@ public class RepairEntitlementDao implements EntitlementDao, RepairEntitlementLi
             List<TransferCancelData> transferCancelData, CallContext context) {
         throw new EntitlementError(NOT_IMPLEMENTED);
     }
+
+    @Override
+    public List<SubscriptionBundle> getSubscriptionBundlesForKey(
+            String bundleKey) {
+        throw new EntitlementError(NOT_IMPLEMENTED);
+    }
 }

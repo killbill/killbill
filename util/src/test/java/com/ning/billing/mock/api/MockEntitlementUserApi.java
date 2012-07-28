@@ -89,6 +89,12 @@ public class MockEntitlementUserApi implements EntitlementUserApi {
     }
 
     @Override
+    public List<SubscriptionBundle> getBundlesForKey(String bundleKey)
+            throws EntitlementUserApiException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public List<Subscription> getSubscriptionsForBundle(final UUID bundleId) {
         throw new UnsupportedOperationException();
     }

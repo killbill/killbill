@@ -90,7 +90,6 @@ public class AuditedEntitlementDao implements EntitlementDao {
     private final NotificationQueueService notificationQueueService;
     private final AddonUtils addonUtils;
     private final Bus eventBus;
-    private final CatalogService catalogService;
 
     @Inject
     public AuditedEntitlementDao(final IDBI dbi, final Clock clock, final AddonUtils addonUtils,
@@ -102,7 +101,6 @@ public class AuditedEntitlementDao implements EntitlementDao {
         this.notificationQueueService = notificationQueueService;
         this.addonUtils = addonUtils;
         this.eventBus = eventBus;
-        this.catalogService = catalogService;
     }
 
     @Override
@@ -119,6 +117,12 @@ public class AuditedEntitlementDao implements EntitlementDao {
     public SubscriptionBundle getSubscriptionBundleFromId(final UUID bundleId) {
         return bundlesDao.getBundleFromId(bundleId.toString());
     }
+
+    @Override
+    public List<SubscriptionBundle> getSubscriptionBundlesForKey(final String bundleKey) {
+        return bundlesDao.getBundlesForKey(bundleKey);
+    }
+
 
     @Override
     public SubscriptionBundle createSubscriptionBundle(final SubscriptionBundleData bundle, final CallContext context) {

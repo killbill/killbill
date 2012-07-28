@@ -65,6 +65,9 @@ public interface BundleSqlDao extends Transactional<BundleSqlDao>, EntitySqlDao<
     @SqlQuery
     public List<SubscriptionBundle> getBundleFromAccount(@Bind("accountId") String accountId);
 
+    @SqlQuery
+    public List<SubscriptionBundle> getBundlesForKey(@Bind("externalKey") String externalKey);
+
     public static class SubscriptionBundleBinder extends BinderBase implements Binder<Bind, SubscriptionBundleData> {
         @Override
         public void bind(@SuppressWarnings("rawtypes") final SQLStatement stmt, final Bind bind, final SubscriptionBundleData bundle) {

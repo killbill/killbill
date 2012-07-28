@@ -179,7 +179,11 @@ public class MockSubscription implements Subscription {
 
     @Override
     public DateTime getFutureEndDate() {
-        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public SubscriptionSourceType getSourceType() {
         return null;
     }
 }

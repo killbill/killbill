@@ -80,6 +80,18 @@ public class BlockingEntitlementUserApi implements EntitlementUserApi {
     }
 
     @Override
+    public List<SubscriptionBundle> getBundlesForKey(String bundleKey)
+            throws EntitlementUserApiException {
+        final List<SubscriptionBundle> result = new ArrayList<SubscriptionBundle>();
+        final List<SubscriptionBundle> bundles = entitlementUserApi.getBundlesForKey(bundleKey);
+        for (final SubscriptionBundle bundle : bundles) {
+            result.add(new BlockingSubscriptionBundle(bundle, blockingApi));
+        }
+        return result;
+    }
+
+
+    @Override
     public List<Subscription> getSubscriptionsForBundle(final UUID bundleId) {
         final List<Subscription> result = new ArrayList<Subscription>();
         final List<Subscription> subscriptions = entitlementUserApi.getSubscriptionsForBundle(bundleId);
