@@ -18,6 +18,6 @@ public class TestDateTimeUtils {
         final int unixSeconds = DateTimeUtils.unixSeconds(utcNow);
         final DateTime dateTimeFromUnixSeconds = DateTimeUtils.dateTimeFromUnixSeconds(unixSeconds);
 
-        Assert.assertEquals(Seconds.secondsBetween(dateTimeFromUnixSeconds, utcNow), 0);
+        Assert.assertEquals(Seconds.secondsBetween(dateTimeFromUnixSeconds, utcNow).getSeconds(), 0);
     }
 }
