@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import com.ning.billing.usage.timeline.categories.CategoryIdAndMetric;
 import com.ning.billing.usage.timeline.chunks.TimelineChunk;
-import com.ning.billing.usage.timeline.chunks.TimelineChunkConsumer;
+import com.ning.billing.usage.timeline.consumer.TimelineChunkConsumer;
 import com.ning.billing.usage.timeline.shutdown.StartTimes;
 import com.ning.billing.usage.timeline.sources.SourceIdAndMetricId;
 
