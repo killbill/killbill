@@ -25,9 +25,6 @@ import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.config.SimplePropertyConfigSource;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.AbstractModule;
-import com.google.inject.name.Names;
 import com.ning.billing.config.PaymentConfig;
 import com.ning.billing.payment.api.DefaultPaymentApi;
 import com.ning.billing.payment.api.PaymentApi;
@@ -39,7 +36,6 @@ import com.ning.billing.payment.core.PaymentProcessor;
 import com.ning.billing.payment.core.RefundProcessor;
 import com.ning.billing.payment.dao.AuditedPaymentDao;
 import com.ning.billing.payment.dao.PaymentDao;
-import com.ning.billing.payment.provider.DefaultPaymentProviderPluginRegistry;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
 import com.ning.billing.payment.retry.AutoPayRetryService;
 import com.ning.billing.payment.retry.AutoPayRetryService.AutoPayRetryServiceScheduler;
@@ -47,6 +43,10 @@ import com.ning.billing.payment.retry.FailedPaymentRetryService;
 import com.ning.billing.payment.retry.FailedPaymentRetryService.FailedPaymentRetryServiceScheduler;
 import com.ning.billing.payment.retry.PluginFailureRetryService;
 import com.ning.billing.payment.retry.PluginFailureRetryService.PluginFailureRetryServiceScheduler;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.AbstractModule;
+import com.google.inject.name.Names;
 
 public class PaymentModule extends AbstractModule {
     private static final int PLUGIN_NB_THREADS = 3;
@@ -107,7 +107,8 @@ public class PaymentModule extends AbstractModule {
         final PaymentConfig paymentConfig = factory.build(PaymentConfig.class);
 
         bind(PaymentConfig.class).toInstance(paymentConfig);
-        bind(PaymentProviderPluginRegistry.class).to(DefaultPaymentProviderPluginRegistry.class).asEagerSingleton();
+        bind(PaymentProviderPluginRegistry.class).toProvider(DefaultPaymentProviderPluginRegistryProvider.class).asEagerSingleton();
+
         bind(PaymentApi.class).to(DefaultPaymentApi.class).asEagerSingleton();
         bind(InvoiceHandler.class).asEagerSingleton();
         bind(TagHandler.class).asEagerSingleton();

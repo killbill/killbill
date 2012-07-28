@@ -70,7 +70,7 @@ public class InvoiceHandler {
 
             final CallContext context = new DefaultCallContext("PaymentRequestProcessor", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken(), clock);
             account = accountUserApi.getAccountById(event.getAccountId());
-            paymentProcessor.createPayment(account, event.getInvoiceId(), null, context, false);
+            paymentProcessor.createPayment(account, event.getInvoiceId(), null, context, false, false);
         } catch (AccountApiException e) {
             log.error("Failed to process invoice payment", e);
         } catch (PaymentApiException e) {

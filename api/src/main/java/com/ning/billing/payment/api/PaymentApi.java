@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.payment.api;
 
 import java.math.BigDecimal;
@@ -25,23 +26,23 @@ import com.ning.billing.util.callcontext.CallContext;
 
 public interface PaymentApi {
 
-    public Payment createPayment(final String accountKey, final UUID invoiceId, final BigDecimal amount, final CallContext context)
-            throws PaymentApiException;
-
     public Payment createPayment(final Account account, final UUID invoiceId, final BigDecimal amount, final CallContext context)
             throws PaymentApiException;
 
+    public Payment createExternalPayment(final Account account, final UUID invoiceId, final BigDecimal amount, final CallContext context)
+            throws PaymentApiException;
+
     public Refund getRefund(final UUID refundId)
-    throws PaymentApiException;
+            throws PaymentApiException;
 
     public Refund createRefund(final Account account, final UUID paymentId, final BigDecimal refundAmount, final boolean isAdjusted, final CallContext context)
-    throws PaymentApiException;
+            throws PaymentApiException;
 
     public List<Refund> getAccountRefunds(final Account account)
-    throws PaymentApiException;
+            throws PaymentApiException;
 
     public List<Refund> getPaymentRefunds(final UUID paymentId)
-    throws PaymentApiException;
+            throws PaymentApiException;
 
     public List<Payment> getInvoicePayments(final UUID invoiceId)
             throws PaymentApiException;
@@ -53,8 +54,8 @@ public interface PaymentApi {
             throws PaymentApiException;
 
     /*
-    * Payment method Apis
-    */
+     * Payment method Apis
+     */
     public Set<String> getAvailablePlugins();
 
     public String initializeAccountPlugin(final String pluginName, final Account account)

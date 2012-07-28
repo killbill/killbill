@@ -64,6 +64,7 @@ import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.api.TagUserApi;
+import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.dao.ObjectType;
 
 import com.google.inject.Inject;
@@ -188,12 +189,16 @@ public class InvoiceResource extends JaxRsResourceBase {
                                          @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                          @HeaderParam(HDR_REASON) final String reason,
                                          @HeaderParam(HDR_COMMENT) final String comment) throws AccountApiException, PaymentApiException {
+        final Account account = accountApi.getAccountById(UUID.fromString(payment.getAccountId()));
+
+        final UUID invoiceId = UUID.fromString(payment.getInvoiceId());
+        final CallContext callContext = context.createContext(createdBy, reason, comment);
         if (externalPayment) {
-            return Response.status(Status.BAD_REQUEST).entity("External payments have not been implemented yet").build();
+            paymentApi.createExternalPayment(account, invoiceId, payment.getAmount(), callContext);
+        } else {
+            paymentApi.createPayment(account, invoiceId, payment.getAmount(), callContext);
         }
 
-        final Account account = accountApi.getAccountById(UUID.fromString(payment.getAccountId()));
-        paymentApi.createPayment(account, UUID.fromString(payment.getInvoiceId()), null, context.createContext(createdBy, reason, comment));
         return uriBuilder.buildResponse(InvoiceResource.class, "getPayments", payment.getInvoiceId());
     }
 

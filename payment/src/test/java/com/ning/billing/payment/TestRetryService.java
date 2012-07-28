@@ -172,7 +172,7 @@ public class TestRetryService extends PaymentTestSuite {
         setPaymentFailure(failureType);
         boolean failed = false;
         try {
-            paymentProcessor.createPayment(account.getExternalKey(), invoice.getId(), amount, context, false);
+            paymentProcessor.createPayment(account, invoice.getId(), amount, context, false, false);
         } catch (PaymentApiException e) {
             failed = true;
         }

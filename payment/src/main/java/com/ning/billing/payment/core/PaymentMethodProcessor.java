@@ -42,10 +42,13 @@ import com.ning.billing.payment.api.DefaultPaymentMethodPlugin;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.PaymentMethod;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
+import com.ning.billing.payment.api.PaymentMethodPlugin.PaymentMethodKVInfo;
 import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.dao.PaymentMethodModelDao;
 import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 import com.ning.billing.payment.plugin.api.PaymentPluginApiException;
+import com.ning.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;
+import com.ning.billing.payment.provider.ExternalPaymentProviderPlugin;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.callcontext.CallContext;
@@ -189,6 +192,27 @@ public class PaymentMethodProcessor extends ProcessorBase {
         return (result.size() == 0) ? null : result.get(0);
     }
 
+    public PaymentMethod getExternalPaymentMethod(final Account account) throws PaymentApiException {
+        final List<PaymentMethod> paymentMethods = getPaymentMethods(account, false);
+        for (final PaymentMethod paymentMethod : paymentMethods) {
+            if (ExternalPaymentProviderPlugin.PLUGIN_NAME.equals(paymentMethod.getPluginName())) {
+                return paymentMethod;
+            }
+        }
+
+        return null;
+    }
+
+    public ExternalPaymentProviderPlugin getExternalPaymentProviderPlugin(final Account account, final CallContext context) throws PaymentApiException {
+        // Check if this account has already used the external payment plugin
+        // If not, it's the first time - add a payment method for it
+        if (getExternalPaymentMethod(account) == null) {
+            final DefaultNoOpPaymentMethodPlugin props = new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), false, ImmutableList.<PaymentMethodKVInfo>of());
+            addPaymentMethod(ExternalPaymentProviderPlugin.PLUGIN_NAME, account, false, props, context);
+        }
+
+        return (ExternalPaymentProviderPlugin) pluginRegistry.getPlugin(ExternalPaymentProviderPlugin.PLUGIN_NAME);
+    }
 
     private List<PaymentMethod> getPaymentMethodInternal(final List<PaymentMethodModelDao> paymentMethodModels, final UUID accountId, final String accountKey, final boolean withPluginDetail)
             throws PaymentApiException {
