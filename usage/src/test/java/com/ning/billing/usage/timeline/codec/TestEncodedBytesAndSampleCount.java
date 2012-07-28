@@ -27,6 +27,6 @@ public class TestEncodedBytesAndSampleCount {
         Assert.assertEquals(sameEncodedBytesAndSampleCount, encodedBytesAndSampleCount);
 
         final EncodedBytesAndSampleCount otherEncodedBytesAndSampleCount = new EncodedBytesAndSampleCount(encodedBytes, sampleCount + 1);
-        Assert.assertEquals(otherEncodedBytesAndSampleCount, encodedBytesAndSampleCount);
+        Assert.assertNotEquals(otherEncodedBytesAndSampleCount, encodedBytesAndSampleCount);
     }
 }
