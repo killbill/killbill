@@ -117,7 +117,7 @@ public enum SampleOpcode {
         sb.append(", byteSize=").append(byteSize);
         sb.append(", repeater=").append(repeater);
         sb.append(", noArgs=").append(noArgs);
-        sb.append(", replacement=").append(replacement);
+        sb.append(", replacement=").append(replacement.name());
         sb.append('}');
         return sb.toString();
     }
