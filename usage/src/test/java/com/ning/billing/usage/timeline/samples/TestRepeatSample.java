@@ -13,7 +13,7 @@ public class TestRepeatSample {
 
         Assert.assertEquals(repeatSample.getRepeatCount(), repeatCount);
         Assert.assertEquals(repeatSample.getSampleRepeated(), scalarSample);
-        Assert.assertEquals(repeatSample.getOpcode(), scalarSample.getOpcode());
+        Assert.assertEquals(repeatSample.getOpcode().name(), SampleOpcode.REPEAT_BYTE.name());
     }
 
     @Test(groups = "fast")
