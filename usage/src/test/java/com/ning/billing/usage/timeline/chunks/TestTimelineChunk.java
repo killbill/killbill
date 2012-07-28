@@ -50,7 +50,7 @@ public class TestTimelineChunk {
         final TimelineChunk sameTimelineChunk = new TimelineChunk(chunkId, sourceId, metricId, startTime, endTime, timeBytes, sampleBytes, timeBytes.length);
         Assert.assertEquals(sameTimelineChunk, timelineChunk);
 
-        final TimelineChunk otherTimelineChunk = new TimelineChunk(sourceId, chunkId, metricId, startTime, endTime, timeBytes, sampleBytes, timeBytes.length);
+        final TimelineChunk otherTimelineChunk = new TimelineChunk(sourceId, sourceId, metricId, startTime, endTime, timeBytes, sampleBytes, timeBytes.length);
         Assert.assertNotEquals(otherTimelineChunk, timelineChunk);
     }
 }
