@@ -30,7 +30,7 @@ import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
 
 import com.ning.billing.usage.timeline.DateTimeUtils;
 import com.ning.billing.usage.timeline.chunks.TimelineChunkBinder.TimelineChunkBinderFactory;
-import com.ning.billing.usage.timeline.times.TimesAndSamplesCoder;
+import com.ning.billing.usage.timeline.codec.TimesAndSamplesCoder;
 
 /**
  * jdbi binder for TimelineChunk

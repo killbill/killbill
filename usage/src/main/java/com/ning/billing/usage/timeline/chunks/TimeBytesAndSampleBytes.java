@@ -26,7 +26,7 @@ public class TimeBytesAndSampleBytes {
     private final byte[] timeBytes;
     private final byte[] sampleBytes;
 
-    public TimeBytesAndSampleBytes(byte[] timeBytes, byte[] sampleBytes) {
+    public TimeBytesAndSampleBytes(final byte[] timeBytes, final byte[] sampleBytes) {
         this.timeBytes = timeBytes;
         this.sampleBytes = sampleBytes;
     }
@@ -57,13 +57,21 @@ public class TimeBytesAndSampleBytes {
 
     @Override
     public boolean equals(final Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         final TimeBytesAndSampleBytes that = (TimeBytesAndSampleBytes) o;
 
-        if (!Arrays.equals(sampleBytes, that.sampleBytes)) return false;
-        if (!Arrays.equals(timeBytes, that.timeBytes)) return false;
+        if (!Arrays.equals(sampleBytes, that.sampleBytes)) {
+            return false;
+        }
+        if (!Arrays.equals(timeBytes, that.timeBytes)) {
+            return false;
+        }
 
         return true;
     }
