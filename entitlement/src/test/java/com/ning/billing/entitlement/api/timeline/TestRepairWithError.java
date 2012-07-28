@@ -78,7 +78,7 @@ public class TestRepairWithError extends TestApiBaseRepair {
 
                 assertTrue(testListener.isCompleted(5000));
 
-                final BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
+                final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId());
                 sortEventsOnBundle(bundleRepair);
                 final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
                 final NewEvent ne = createNewEvent(SubscriptionTransitionType.CHANGE, baseSubscription.getStartDate().plusDays(10), spec);
@@ -112,7 +112,7 @@ public class TestRepairWithError extends TestApiBaseRepair {
                 clock.addDeltaFromReality(it.toDurationMillis());
                 assertTrue(testListener.isCompleted(5000));
 
-                final BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
+                final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId());
                 sortEventsOnBundle(bundleRepair);
                 final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
                 final NewEvent ne = createNewEvent(SubscriptionTransitionType.CHANGE, baseSubscription.getStartDate().plusDays(10), spec);
@@ -132,7 +132,7 @@ public class TestRepairWithError extends TestApiBaseRepair {
             @Override
             public void doTest() throws EntitlementRepairException {
 
-                final BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
+                final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId());
                 sortEventsOnBundle(bundleRepair);
                 final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
                 final NewEvent ne = createNewEvent(SubscriptionTransitionType.CHANGE, baseSubscription.getStartDate().plusDays(10), spec);
@@ -158,7 +158,7 @@ public class TestRepairWithError extends TestApiBaseRepair {
                 clock.addDeltaFromReality(it.toDurationMillis());
                 assertTrue(testListener.isCompleted(5000));
 
-                final BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
+                final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId());
                 sortEventsOnBundle(bundleRepair);
                 final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
                 final NewEvent ne = createNewEvent(SubscriptionTransitionType.CREATE, baseSubscription.getStartDate().plusDays(10), spec);
@@ -187,7 +187,7 @@ public class TestRepairWithError extends TestApiBaseRepair {
                 clock.addDeltaFromReality(it.toDurationMillis());
                 assertTrue(testListener.isCompleted(5000));
 
-                final BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
+                final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId());
                 sortEventsOnBundle(bundleRepair);
                 final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
                 final NewEvent ne = createNewEvent(SubscriptionTransitionType.CHANGE, baseSubscription.getStartDate().plusDays(10), spec);
@@ -217,7 +217,7 @@ public class TestRepairWithError extends TestApiBaseRepair {
                 it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(4));
                 clock.addDeltaFromReality(it.toDurationMillis());
 
-                final BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
+                final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId());
                 sortEventsOnBundle(bundleRepair);
 
                 // Quick check
@@ -260,7 +260,7 @@ public class TestRepairWithError extends TestApiBaseRepair {
                 it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(4));
                 clock.addDeltaFromReality(it.toDurationMillis());
 
-                BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
+                BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId());
                 sortEventsOnBundle(bundleRepair);
 
                 // Quick check
@@ -300,7 +300,7 @@ public class TestRepairWithError extends TestApiBaseRepair {
 
                 final SubscriptionData aoSubscription = createSubscription("Laser-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
 
-                final BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
+                final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId());
                 sortEventsOnBundle(bundleRepair);
 
                 final DateTime newCreateTime = baseSubscription.getStartDate().plusDays(3);

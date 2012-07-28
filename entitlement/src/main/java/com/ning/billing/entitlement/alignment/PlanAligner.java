@@ -154,6 +154,7 @@ public class PlanAligner {
                 case MIGRATE_ENTITLEMENT:
                 case CREATE:
                 case RE_CREATE:
+                case TRANSFER:
                     final List<TimedPhase> timedPhases = getTimedPhaseOnCreate(subscription.getStartDate(),
                                                                                subscription.getBundleStartDate(),
                                                                                lastPlanTransition.getNextPlan(),

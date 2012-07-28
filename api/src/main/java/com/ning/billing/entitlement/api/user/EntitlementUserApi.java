@@ -33,13 +33,13 @@ public interface EntitlementUserApi {
 
     public Subscription getSubscriptionFromId(UUID id) throws EntitlementUserApiException;
 
-    public SubscriptionBundle getBundleForKey(String bundleKey) throws EntitlementUserApiException;
+    public SubscriptionBundle getBundleForAccountAndKey(UUID accountId, String bundleKey) throws EntitlementUserApiException;
 
     public List<SubscriptionBundle> getBundlesForAccount(UUID accountId);
 
     public List<Subscription> getSubscriptionsForBundle(UUID bundleId);
 
-    public List<Subscription> getSubscriptionsForKey(String bundleKey);
+    public List<Subscription> getSubscriptionsForAccountAndKey(UUID accountId, String bundleKey);
 
     public Subscription getBaseSubscription(UUID bundleId) throws EntitlementUserApiException;
 

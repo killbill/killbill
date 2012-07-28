@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -33,6 +33,8 @@ public interface SubscriptionTimeline {
 
     public List<ExistingEvent> getExistingEvents();
 
+    public long getActiveVersion();
+
     public interface DeletedEvent {
         public UUID getEventId();
     }
@@ -48,5 +50,7 @@ public interface SubscriptionTimeline {
 
     public interface ExistingEvent extends DeletedEvent, NewEvent {
         public DateTime getEffectiveDate();
+
+        public String getPlanPhaseName();
     }
 }

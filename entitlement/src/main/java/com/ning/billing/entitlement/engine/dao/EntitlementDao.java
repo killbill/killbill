@@ -22,7 +22,9 @@ import java.util.UUID;
 
 import com.ning.billing.entitlement.api.SubscriptionFactory;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData;
+import com.ning.billing.entitlement.api.migration.AccountMigrationData.BundleMigrationData;
 import com.ning.billing.entitlement.api.timeline.SubscriptionDataRepair;
+import com.ning.billing.entitlement.api.transfer.TransferCancelData;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
@@ -34,7 +36,7 @@ public interface EntitlementDao {
     // Bundle apis
     public List<SubscriptionBundle> getSubscriptionBundleForAccount(final UUID accountId);
 
-    public SubscriptionBundle getSubscriptionBundleFromKey(final String bundleKey);
+    public SubscriptionBundle getSubscriptionBundleFromAccountAndKey(final UUID accountId, final String bundleKey);
 
     public SubscriptionBundle getSubscriptionBundleFromId(final UUID bundleId);
 
@@ -50,7 +52,7 @@ public interface EntitlementDao {
 
     public List<Subscription> getSubscriptions(final SubscriptionFactory factory, final UUID bundleId);
 
-    public List<Subscription> getSubscriptionsForKey(final SubscriptionFactory factory, final String bundleKey);
+    public List<Subscription> getSubscriptionsForAccountAndKey(final SubscriptionFactory factory, final UUID accountId, final String bundleKey);
 
     // Update
     public void updateChargedThroughDate(final SubscriptionData subscription, final CallContext context);
@@ -78,6 +80,8 @@ public interface EntitlementDao {
     public void changePlan(final SubscriptionData subscription, final List<EntitlementEvent> changeEvents, final CallContext context);
 
     public void migrate(final UUID accountId, final AccountMigrationData data, final CallContext context);
+
+    public void transfer(final UUID srcAccountId, final UUID destAccountId, final BundleMigrationData data, final List<TransferCancelData> transferCancelData, final CallContext context);
 
     // Repair
     public void repair(final UUID accountId, final UUID bundleId, final List<SubscriptionDataRepair> inRepair, final CallContext context);

@@ -50,6 +50,7 @@ import com.ning.billing.entitlement.events.user.ApiEventCreate;
 import com.ning.billing.entitlement.events.user.ApiEventMigrateBilling;
 import com.ning.billing.entitlement.events.user.ApiEventMigrateEntitlement;
 import com.ning.billing.entitlement.events.user.ApiEventReCreate;
+import com.ning.billing.entitlement.events.user.ApiEventTransfer;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.events.user.ApiEventUncancel;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
@@ -176,6 +177,8 @@ public interface EntitlementEventSqlDao extends Transactional<EntitlementEventSq
                     result = new ApiEventMigrateEntitlement(builder);
                 } else if (userType == ApiEventType.MIGRATE_BILLING) {
                     result = new ApiEventMigrateBilling(builder);
+                } else if (userType == ApiEventType.TRANSFER) {
+                    result = new ApiEventTransfer(builder);
                 } else if (userType == ApiEventType.CHANGE) {
                     result = new ApiEventChange(builder);
                 } else if (userType == ApiEventType.CANCEL) {

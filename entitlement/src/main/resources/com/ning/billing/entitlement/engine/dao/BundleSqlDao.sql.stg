@@ -28,11 +28,11 @@ getBundleFromId() ::= <<
     ;
 >>
 
-getBundleFromKey() ::= <<
+getBundleFromAccountAndKey() ::= <<
     select <fields()>
     from bundles
     where
-      external_key = :externalKey
+      external_key = :externalKey AND account_id = :accountId
     ;
 >>
 

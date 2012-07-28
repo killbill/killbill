@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -44,9 +44,11 @@ public class DefaultSubscriptionTimeline implements SubscriptionTimeline {
     private final List<ExistingEvent> existingEvents;
     private final List<NewEvent> newEvents;
     private final List<DeletedEvent> deletedEvents;
+    private final long activeVersion;
 
-    public DefaultSubscriptionTimeline(final UUID id) {
+    public DefaultSubscriptionTimeline(final UUID id, final long activeVersion) {
         this.id = id;
+        this.activeVersion = activeVersion;
         this.existingEvents = Collections.<SubscriptionTimeline.ExistingEvent>emptyList();
         this.deletedEvents = Collections.<SubscriptionTimeline.DeletedEvent>emptyList();
         this.newEvents = Collections.<SubscriptionTimeline.NewEvent>emptyList();
@@ -54,6 +56,7 @@ public class DefaultSubscriptionTimeline implements SubscriptionTimeline {
 
     public DefaultSubscriptionTimeline(final SubscriptionTimeline input) {
         this.id = input.getId();
+        this.activeVersion = input.getActiveVersion();
         this.existingEvents = (input.getExistingEvents() != null) ? new ArrayList<SubscriptionTimeline.ExistingEvent>(input.getExistingEvents()) :
                 Collections.<SubscriptionTimeline.ExistingEvent>emptyList();
         sortExistingEvent(this.existingEvents);
@@ -70,6 +73,7 @@ public class DefaultSubscriptionTimeline implements SubscriptionTimeline {
         this.existingEvents = toExistingEvents(catalog, input.getActiveVersion(), input.getCategory(), input.getEvents());
         this.deletedEvents = null;
         this.newEvents = null;
+        this.activeVersion = input.getActiveVersion();
     }
 
     private List<ExistingEvent> toExistingEvents(final Catalog catalog, final long activeVersion, final ProductCategory category, final List<EntitlementEvent> events)
@@ -100,11 +104,13 @@ public class DefaultSubscriptionTimeline implements SubscriptionTimeline {
             BillingPeriod billingPeriod = null;
             String priceListName = null;
             PhaseType phaseType = null;
+            String planPhaseName = null;
 
             ApiEventType apiType = null;
             switch (cur.getType()) {
                 case PHASE:
                     final PhaseEvent phaseEV = (PhaseEvent) cur;
+                    planPhaseName = phaseEV.getPhase();
                     phaseType = catalog.findPhase(phaseEV.getPhase(), cur.getEffectiveDate(), startDate).getPhaseType();
                     productName = prevProductName;
                     billingPeriod = catalog.findPhase(phaseEV.getPhase(), cur.getEffectiveDate(), startDate).getBillingPeriod();
@@ -114,6 +120,7 @@ public class DefaultSubscriptionTimeline implements SubscriptionTimeline {
                 case API_USER:
                     final ApiEvent userEV = (ApiEvent) cur;
                     apiType = userEV.getEventType();
+                    planPhaseName = userEV.getEventPlanPhase();
                     final Plan plan = (userEV.getEventPlan() != null) ? catalog.findPlan(userEV.getEventPlan(), cur.getRequestedDate(), startDate) : null;
                     phaseType = (userEV.getEventPlanPhase() != null) ? catalog.findPhase(userEV.getEventPlanPhase(), cur.getEffectiveDate(), startDate).getPhaseType() : prevPhaseType;
                     productName = (plan != null) ? plan.getProduct().getName() : prevProductName;
@@ -124,6 +131,7 @@ public class DefaultSubscriptionTimeline implements SubscriptionTimeline {
 
             final SubscriptionTransitionType transitionType = SubscriptionTransitionData.toSubscriptionTransitionType(cur.getType(), apiType);
 
+            final String planPhaseNameWithClosure = planPhaseName;
             final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, category, billingPeriod, priceListName, phaseType);
             result.add(new ExistingEvent() {
                 @Override
@@ -149,6 +157,11 @@ public class DefaultSubscriptionTimeline implements SubscriptionTimeline {
                 @Override
                 public DateTime getEffectiveDate() {
                     return cur.getEffectiveDate();
+                }
+
+                @Override
+                public String getPlanPhaseName() {
+                    return planPhaseNameWithClosure;
                 }
             });
 
@@ -264,6 +277,12 @@ public class DefaultSubscriptionTimeline implements SubscriptionTimeline {
     public List<ExistingEvent> getExistingEvents() {
         return existingEvents;
     }
+
+    @Override
+    public long getActiveVersion() {
+        return activeVersion;
+    }
+
 
     private void sortExistingEvent(final List<ExistingEvent> events) {
         if (events != null) {

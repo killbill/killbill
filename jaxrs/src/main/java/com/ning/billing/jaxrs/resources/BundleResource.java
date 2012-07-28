@@ -86,13 +86,6 @@ public class BundleResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(json).build();
     }
 
-    @GET
-    @Produces(APPLICATION_JSON)
-    public Response getBundleByKey(@QueryParam(QUERY_EXTERNAL_KEY) final String externalKey) throws EntitlementUserApiException {
-        final SubscriptionBundle bundle = entitlementApi.getBundleForKey(externalKey);
-        final BundleJsonNoSubscriptions json = new BundleJsonNoSubscriptions(bundle);
-        return Response.status(Status.OK).entity(json).build();
-    }
 
     @POST
     @Consumes(APPLICATION_JSON)

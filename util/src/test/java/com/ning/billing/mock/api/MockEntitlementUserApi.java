@@ -99,7 +99,7 @@ public class MockEntitlementUserApi implements EntitlementUserApi {
     }
 
     @Override
-    public List<Subscription> getSubscriptionsForKey(final String bundleKey) {
+    public List<Subscription> getSubscriptionsForAccountAndKey(final UUID accountId, final String bundleKey) {
         throw new UnsupportedOperationException();
     }
 
@@ -110,7 +110,7 @@ public class MockEntitlementUserApi implements EntitlementUserApi {
     }
 
     @Override
-    public SubscriptionBundle getBundleForKey(final String bundleKey) {
+    public SubscriptionBundle getBundleForAccountAndKey(final UUID accountId, final String bundleKey) {
         throw new UnsupportedOperationException();
     }
 

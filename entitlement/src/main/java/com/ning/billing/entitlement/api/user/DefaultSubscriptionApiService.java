@@ -121,17 +121,17 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
             final TimedPhase[] curAndNextPhases = planAligner.getCurrentAndNextTimedPhaseOnCreate(subscription, plan, initialPhase, realPriceList, requestedDate, effectiveDate);
 
             final ApiEventBuilder createBuilder = new ApiEventBuilder()
-                    .setSubscriptionId(subscription.getId())
-                    .setEventPlan(plan.getName())
-                    .setEventPlanPhase(curAndNextPhases[0].getPhase().getName())
-                    .setEventPriceList(realPriceList)
-                    .setActiveVersion(subscription.getActiveVersion())
-                    .setProcessedDate(processedDate)
-                    .setEffectiveDate(effectiveDate)
-                    .setRequestedDate(requestedDate)
-                    .setUserToken(context.getUserToken())
-                    .setFromDisk(true);
-            final ApiEvent creationEvent = (reCreate) ? new ApiEventReCreate(createBuilder) : new ApiEventCreate(createBuilder);
+            .setSubscriptionId(subscription.getId())
+            .setEventPlan(plan.getName())
+            .setEventPlanPhase(curAndNextPhases[0].getPhase().getName())
+            .setEventPriceList(realPriceList)
+            .setActiveVersion(subscription.getActiveVersion())
+            .setProcessedDate(processedDate)
+            .setEffectiveDate(effectiveDate)
+            .setRequestedDate(requestedDate)
+            .setUserToken(context.getUserToken())
+            .setFromDisk(true);
+    final ApiEvent creationEvent = (reCreate) ? new ApiEventReCreate(createBuilder) : new ApiEventCreate(createBuilder);
 
             final TimedPhase nextTimedPhase = curAndNextPhases[1];
             final PhaseEvent nextPhaseEvent = (nextTimedPhase != null) ?
@@ -176,13 +176,13 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
             final DateTime effectiveDate = subscription.getPlanChangeEffectiveDate(policy, requestedDate);
 
             final EntitlementEvent cancelEvent = new ApiEventCancel(new ApiEventBuilder()
-                                                                            .setSubscriptionId(subscription.getId())
-                                                                            .setActiveVersion(subscription.getActiveVersion())
-                                                                            .setProcessedDate(now)
-                                                                            .setEffectiveDate(effectiveDate)
-                                                                            .setRequestedDate(requestedDate)
-                                                                            .setUserToken(context.getUserToken())
-                                                                            .setFromDisk(true));
+            .setSubscriptionId(subscription.getId())
+            .setActiveVersion(subscription.getActiveVersion())
+            .setProcessedDate(now)
+            .setEffectiveDate(effectiveDate)
+            .setRequestedDate(requestedDate)
+            .setUserToken(context.getUserToken())
+            .setFromDisk(true));
 
             dao.cancelSubscription(subscription, cancelEvent, context, 0);
             subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId()), catalogService.getFullCatalog());
@@ -300,16 +300,16 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
         final TimedPhase currentTimedPhase = planAligner.getCurrentTimedPhaseOnChange(subscription, newPlan, newPriceList.getName(), requestedDate, effectiveDate);
 
         final EntitlementEvent changeEvent = new ApiEventChange(new ApiEventBuilder()
-                                                                        .setSubscriptionId(subscription.getId())
-                                                                        .setEventPlan(newPlan.getName())
-                                                                        .setEventPlanPhase(currentTimedPhase.getPhase().getName())
-                                                                        .setEventPriceList(newPriceList.getName())
-                                                                        .setActiveVersion(subscription.getActiveVersion())
-                                                                        .setProcessedDate(now)
-                                                                        .setEffectiveDate(effectiveDate)
-                                                                        .setRequestedDate(requestedDate)
-                                                                        .setUserToken(context.getUserToken())
-                                                                        .setFromDisk(true));
+        .setSubscriptionId(subscription.getId())
+        .setEventPlan(newPlan.getName())
+        .setEventPlanPhase(currentTimedPhase.getPhase().getName())
+        .setEventPriceList(newPriceList.getName())
+        .setActiveVersion(subscription.getActiveVersion())
+        .setProcessedDate(now)
+        .setEffectiveDate(effectiveDate)
+        .setRequestedDate(requestedDate)
+        .setUserToken(context.getUserToken())
+        .setFromDisk(true));
 
         final TimedPhase nextTimedPhase = planAligner.getNextTimedPhaseOnChange(subscription, newPlan, newPriceList.getName(), requestedDate, effectiveDate);
         final PhaseEvent nextPhaseEvent = (nextTimedPhase != null) ?

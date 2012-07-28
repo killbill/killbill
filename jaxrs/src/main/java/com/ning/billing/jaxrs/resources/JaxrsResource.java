@@ -41,7 +41,7 @@ public interface JaxrsResource {
     /*
      * Query parameters
      */
-    public static final String QUERY_EXTERNAL_KEY = "external_key";
+    public static final String QUERY_EXTERNAL_KEY = "externalKey";
     public static final String QUERY_REQUESTED_DT = "requestedDate";
     public static final String QUERY_CALL_COMPLETION = "callCompletion";
     public static final String QUERY_CALL_TIMEOUT = "callTimeoutSec";

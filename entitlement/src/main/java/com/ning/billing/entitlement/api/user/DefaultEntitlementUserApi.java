@@ -56,7 +56,6 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
     @Inject
     public DefaultEntitlementUserApi(final Clock clock, final EntitlementDao dao, final CatalogService catalogService,
                                      final DefaultSubscriptionApiService apiService, final SubscriptionFactory subscriptionFactory, final AddonUtils addonUtils) {
-        super();
         this.clock = clock;
         this.apiService = apiService;
         this.dao = dao;
@@ -84,8 +83,8 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
     }
 
     @Override
-    public SubscriptionBundle getBundleForKey(final String bundleKey) throws EntitlementUserApiException {
-        final SubscriptionBundle result = dao.getSubscriptionBundleFromKey(bundleKey);
+    public SubscriptionBundle getBundleForAccountAndKey(final UUID accountId, final String bundleKey) throws EntitlementUserApiException {
+        final SubscriptionBundle result = dao.getSubscriptionBundleFromAccountAndKey(accountId, bundleKey);
         if (result == null) {
             throw new EntitlementUserApiException(ErrorCode.ENT_GET_INVALID_BUNDLE_KEY, bundleKey);
         }
@@ -98,8 +97,8 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
     }
 
     @Override
-    public List<Subscription> getSubscriptionsForKey(final String bundleKey) {
-        return dao.getSubscriptionsForKey(subscriptionFactory, bundleKey);
+    public List<Subscription> getSubscriptionsForAccountAndKey(final UUID accountId, final String bundleKey) {
+        return dao.getSubscriptionsForAccountAndKey(subscriptionFactory, accountId, bundleKey);
     }
 
     @Override
@@ -116,6 +115,7 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
         return result;
     }
 
+    @Override
     public SubscriptionBundle createBundleForAccount(final UUID accountId, final String bundleName, final CallContext context)
             throws EntitlementUserApiException {
         final SubscriptionBundleData bundle = new SubscriptionBundleData(bundleName, accountId, clock.getUTCNow());

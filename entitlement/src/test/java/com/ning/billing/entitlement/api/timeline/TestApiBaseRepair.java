@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -79,6 +79,11 @@ public abstract class TestApiBaseRepair extends TestApiBase {
             public List<DeletedEvent> getDeletedEvents() {
                 return deletedEvents;
             }
+
+            @Override
+            public long getActiveVersion() {
+                return 1;
+            }
         };
     }
 
@@ -134,6 +139,11 @@ public abstract class TestApiBaseRepair extends TestApiBase {
             @Override
             public DateTime getEffectiveDate() {
                 return effectiveDateTime;
+            }
+
+            @Override
+            public String getPlanPhaseName() {
+                return null;
             }
         };
     }
