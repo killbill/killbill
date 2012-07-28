@@ -29,7 +29,7 @@ public class TestSamplesForMetricAndSource {
 
         final ObjectMapper mapper = new ObjectMapper();
         final String json = mapper.writeValueAsString(samples);
-        Assert.assertEquals("{\"hostName\":\"host.foo.com\",\"eventCategory\":\"JVM\",\"sampleKind\":\"GC\",\"samples\":\"1,2,2,0\"}", json);
+        Assert.assertEquals("{\"sourceName\":\"host.foo.com\",\"eventCategory\":\"JVM\",\"metric\":\"GC\",\"samples\":\"1,2,2,0\"}", json);
 
         final SamplesForMetricAndSource samplesFromJson = mapper.readValue(json, SamplesForMetricAndSource.class);
         Assert.assertEquals(samplesFromJson, samples);
