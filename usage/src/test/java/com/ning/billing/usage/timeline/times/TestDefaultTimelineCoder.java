@@ -261,7 +261,7 @@ public class TestDefaultTimelineCoder {
         // Total samples: 6
         final int sampleCount = 7;
         final byte[] times = Hex.decodeHex("FF4F91D5BCFE021E00FE021EFF790B4422".toCharArray());
-        final TimelineCursorImpl cursor = new TimelineCursorImpl(times, sampleCount);
+        final DefaultTimelineCursor cursor = new DefaultTimelineCursor(times, sampleCount);
         for (int i = 0; i < sampleCount; i++) {
             final DateTime nextTime = cursor.getNextTime();
             Assert.assertNotNull(nextTime);
@@ -287,7 +287,7 @@ public class TestDefaultTimelineCoder {
         // Total samples: 6
         final int sampleCount = 7;
         final byte[] times = Hex.decodeHex("FF4F91D5BCFE021E00FE021EFF790B4422".toCharArray());
-        final TimelineCursorImpl cursor = new TimelineCursorImpl(times, sampleCount);
+        final DefaultTimelineCursor cursor = new DefaultTimelineCursor(times, sampleCount);
         for (int i = 0; i < sampleCount; i++) {
             final DateTime nextTime = cursor.getNextTime();
             Assert.assertNotNull(nextTime);
@@ -309,7 +309,7 @@ public class TestDefaultTimelineCoder {
         //final byte[] times = Hex.decodeHex("ff4f90f67afd03ce1e1ffe1a1e1d01fe771e1d01fd01df1e1d1ffe761e1d01fe771e1d01fe571e".toCharArray());
         final byte[] times = Hex.decodeHex("00000018FF4F8FE521FD023D1E1FFEF01E1D01FE771E1D01FD03E21EFE07980F".toCharArray());
         Assert.assertEquals(times.length, 32);
-        final TimelineCursorImpl cursor = new TimelineCursorImpl(times, sampleCount);
+        final DefaultTimelineCursor cursor = new DefaultTimelineCursor(times, sampleCount);
         for (int i = 0; i < sampleCount; i++) {
             final DateTime nextTime = cursor.getNextTime();
             Assert.assertNotNull(nextTime);
@@ -380,8 +380,8 @@ public class TestDefaultTimelineCoder {
         }
         final byte[] newCombined = timelineCoder.combineTimelines(timeParts, null);
         final int newCombinedLength = timelineCoder.countTimeBytesSamples(newCombined);
-        final TimelineCursorImpl concatedCursor = new TimelineCursorImpl(concatedTimes, sampleCount);
-        final TimelineCursorImpl combinedCursor = new TimelineCursorImpl(newCombined, sampleCount);
+        final DefaultTimelineCursor concatedCursor = new DefaultTimelineCursor(concatedTimes, sampleCount);
+        final DefaultTimelineCursor combinedCursor = new DefaultTimelineCursor(newCombined, sampleCount);
         for (int i = 0; i < sampleCount; i++) {
             final DateTime concatedTime = concatedCursor.getNextTime();
             final DateTime combinedTime = combinedCursor.getNextTime();
