@@ -34,7 +34,7 @@ public class TestScalarSample {
     public void testFromObject() throws Exception {
         verifyFromObject(null, 0.0, null, SampleOpcode.NULL);
 
-        verifyFromObject((byte) 1, (double) 1, 1, SampleOpcode.BYTE);
+        verifyFromObject((byte) 1, (double) 1, (byte) 1, SampleOpcode.BYTE);
 
         verifyFromObject((short) 128, (double) 128, (short) 128, SampleOpcode.SHORT);
         verifyFromObject(32767, (double) 32767, (short) 32767, SampleOpcode.SHORT);
@@ -45,7 +45,7 @@ public class TestScalarSample {
 
         verifyFromObject(2147483648L, (double) 2147483648L, 2147483648L, SampleOpcode.LONG);
 
-        verifyFromObject((float) 1.3, 1.3, (float) 1.3, SampleOpcode.FLOAT);
+        verifyFromObject((float) 1, 1, (float) 1, SampleOpcode.FLOAT);
 
         verifyFromObject(12.24, 12.24, 12.24, SampleOpcode.DOUBLE);
     }
