@@ -53,6 +53,7 @@ public class TestTimelineChunkToJson {
     private static final DateTime END_TIME = new DateTime(DateTimeZone.UTC);
     private static final DateTime START_TIME = END_TIME.minusMinutes(SAMPLE_COUNT);
 
+    private byte[] timeBytes;
     private byte[] samples;
     private TimelineChunk chunk;
 
@@ -70,7 +71,7 @@ public class TestTimelineChunkToJson {
         samples = out.toByteArray();
 
         final DateTime endTime = dateTimes.get(dateTimes.size() - 1);
-        final byte[] timeBytes = timelineCoder.compressDateTimes(dateTimes);
+        timeBytes = timelineCoder.compressDateTimes(dateTimes);
         chunk = new TimelineChunk(CHUNK_ID, HOST_ID, SAMPLE_KIND_ID, START_TIME, endTime, timeBytes, samples, SAMPLE_COUNT);
     }
 
@@ -78,24 +79,26 @@ public class TestTimelineChunkToJson {
     public void testTimelineChunkCompactMapping() throws Exception {
         final String chunkToString = mapper.writerWithView(Compact.class).writeValueAsString(chunk);
         final Map chunkFromString = mapper.readValue(chunkToString, Map.class);
-        Assert.assertEquals(chunkFromString.keySet().size(), 11);
-        Assert.assertEquals(chunkFromString.get("hostId"), HOST_ID);
-        Assert.assertEquals(chunkFromString.get("sampleKindId"), SAMPLE_KIND_ID);
-        Assert.assertEquals(new TextNode((String) chunkFromString.get("samples")).binaryValue(), samples);
+        Assert.assertEquals(chunkFromString.keySet().size(), 10);
+        Assert.assertEquals(chunkFromString.get("sourceId"), HOST_ID);
+        Assert.assertEquals(chunkFromString.get("metricId"), SAMPLE_KIND_ID);
+        final Map<String, String> timeBytesAndSampleBytes = (Map<String, String>) chunkFromString.get("timeBytesAndSampleBytes");
+        Assert.assertEquals(new TextNode(timeBytesAndSampleBytes.get("timeBytes")).binaryValue(), timeBytes);
+        Assert.assertEquals(new TextNode(timeBytesAndSampleBytes.get("sampleBytes")).binaryValue(), samples);
         Assert.assertEquals(chunkFromString.get("sampleCount"), SAMPLE_COUNT);
-        Assert.assertEquals(chunkFromString.get("startTime"), START_TIME.getMillis());
         Assert.assertEquals(chunkFromString.get("aggregationLevel"), 0);
         Assert.assertEquals(chunkFromString.get("notValid"), false);
         Assert.assertEquals(chunkFromString.get("dontAggregate"), false);
+        Assert.assertEquals(chunkFromString.get("chunkId"), (int) CHUNK_ID);
     }
 
     @Test(groups = "fast")
     public void testTimelineChunkLooseMapping() throws Exception {
         final String chunkToString = mapper.writerWithView(Loose.class).writeValueAsString(chunk);
         final Map chunkFromString = mapper.readValue(chunkToString, Map.class);
-        Assert.assertEquals(chunkFromString.keySet().size(), 4);
-        Assert.assertEquals(chunkFromString.get("hostId"), HOST_ID);
-        Assert.assertEquals(chunkFromString.get("sampleKindId"), SAMPLE_KIND_ID);
-        Assert.assertNotNull(chunkFromString.get("samplesAsCSV"));
+        Assert.assertEquals(chunkFromString.keySet().size(), 3);
+        Assert.assertEquals(chunkFromString.get("sourceId"), HOST_ID);
+        Assert.assertEquals(chunkFromString.get("metricId"), SAMPLE_KIND_ID);
+        Assert.assertEquals(chunkFromString.get("chunkId"), (int) CHUNK_ID);
     }
 }

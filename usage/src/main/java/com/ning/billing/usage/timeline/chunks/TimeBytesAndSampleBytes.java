@@ -18,12 +18,19 @@ package com.ning.billing.usage.timeline.chunks;
 
 import java.util.Arrays;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonView;
+
 /**
  * POJO containing a series of bytes and associated time points
  */
 public class TimeBytesAndSampleBytes {
 
+    @JsonProperty
+    @JsonView(TimelineChunksViews.Compact.class)
     private final byte[] timeBytes;
+    @JsonProperty
+    @JsonView(TimelineChunksViews.Compact.class)
     private final byte[] sampleBytes;
 
     public TimeBytesAndSampleBytes(final byte[] timeBytes, final byte[] sampleBytes) {
