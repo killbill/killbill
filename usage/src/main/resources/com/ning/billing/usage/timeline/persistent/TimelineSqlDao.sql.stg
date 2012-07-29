@@ -1,0 +1,181 @@
+group TimelineSqlDao;
+
+getSource() ::= <<
+  select
+    source_name
+  from sources
+  where source_id = :sourceId
+  ;
+>>
+
+getSources() ::= <<
+  select
+    source_id
+  , source_name
+  from sources
+  ;
+>>
+
+addSource() ::= <<
+  insert ignore into sources (source_name, created_dt)
+  values (:sourceName, unix_timestamp());
+>>
+
+getEventCategories() ::= <<
+  select event_category_id, event_category
+  from event_categories
+  order by event_category_id asc
+  ;
+>>
+
+getEventCategoryId() ::= <<
+  select
+    event_category_id
+  from event_categories
+  where event_category = :eventCategory
+  ;
+>>
+
+getEventCategory() ::= <<
+  select
+    event_category
+  from event_categories
+  where event_category_id = :eventCategoryId
+  ;
+>>
+
+addEventCategory() ::= <<
+  insert ignore into event_categories (event_category)
+  values (:eventCategory);
+>>
+
+getMetricId() ::= <<
+  select
+    metric_id
+  from metrics
+  where metric = :metric
+    and event_category_id = :eventCategoryId
+  ;
+>>
+
+getEventCategoryIdAndMetric() ::= <<
+  select
+    event_category_id
+  , metric
+  from metrics
+  where metric_id = :metricId
+  ;
+>>
+
+getMetric() ::= <<
+  select
+    metric
+  from metrics
+  where metric_id = :metricId
+  ;
+>>
+
+addMetric() ::= <<
+  insert ignore into metrics (event_category_id, metric)
+  values (:eventCategoryId, :metric);
+>>
+
+getMetricIdsBySourceId() ::= <<
+  select distinct metric_id
+  from timeline_chunks c
+  where source_id = :sourceId
+  ;
+>>
+
+getMetricIdsForAllSources() ::= <<
+  select distinct metric_id, source_id
+  from timeline_chunks c
+  ;
+>>
+
+getMetrics() ::= <<
+  select
+    metric_id
+  , event_category_id
+  , metric
+  from metrics
+  ;
+>>
+
+getLastInsertedId() ::= <<
+  select last_insert_id();
+>>
+
+insertTimelineChunk() ::= <<
+  insert into timeline_chunks (record_id, source_id, metric_id, sample_count, start_time, end_time, in_row_samples, blob_samples, aggregation_level, not_valid, dont_aggregate)
+  values (:chunkId, :sourceId, :metricId, :sampleCount, :startTime, :endTime, :inRowSamples, :blobSamples, :aggregationLevel, :notValid, :dontAggregate);
+>>
+
+getSamplesBySourceIdsAndMetricIds(sourceIds, metricIds) ::= <<
+  select
+    source_id
+  , metric_id
+  , record_id
+  , sample_count
+  , in_row_samples
+  , blob_samples
+  , start_time
+  , end_time
+  , aggregation_level
+  , not_valid
+  , dont_aggregate
+  from timeline_chunks
+  where end_time >= :startTime
+  and start_time \<= :endTime
+  and source_id in (<sourceIds>)
+  <if(metricIds)>
+    and metric_id in (<metricIds>)
+  <endif>
+  and not_valid = 0
+  order by source_id, metric_id, start_time asc
+  ;
+>>
+
+insertLastStartTimes() ::= <<
+  insert into last_start_times (time_inserted, start_times)
+                        values (:timeInserted, :startTimes)
+>>
+
+getLastStartTimes() ::= <<
+  select time_inserted, start_times
+  from last_start_times
+  order by time_inserted desc
+  limit 1
+>>
+
+deleteLastStartTimes() ::= <<
+  delete from last_start_times
+>>
+
+bulkInsertSources() ::= <<
+  insert into sources (source_name, created_dt)
+  values (:sourceName, unix_timestamp());
+>>
+
+bulkInsertEventCategories() ::= <<
+  insert into event_categories (event_category)
+  values (:eventCategory);
+>>
+
+bulkInsertMetrics() ::= <<
+  insert into metrics (event_category_id, metric)
+  values (:eventCategoryId, :metric);
+>>
+
+bulkInsertTimelineChunks() ::= <<
+  insert into timeline_chunks (record_id, source_id, metric_id, sample_count, start_time, end_time, not_valid, dont_aggregate, aggregation_level, in_row_samples, blob_samples)
+  values (:chunkId, :sourceId, :metricId, :sampleCount, :startTime, :endTime, :dontAggregate, :notValid, :aggregationLevel, :inRowSamples, :blobSamples);
+>>
+
+getHighestTimelineChunkId() ::= <<
+  select record_id from timeline_chunks order by record_id desc limit 1;
+>>
+
+test() ::= <<
+  select 1;
+>>
