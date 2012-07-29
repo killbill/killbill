@@ -22,7 +22,34 @@ import org.joda.time.DateTime;
 
 public interface UsageUserApi {
 
+    /**
+     * Shortcut API to record a usage value of "1" for a given metric.
+     *
+     * @param bundleId   bundle id source
+     * @param metricName metric name for this usage
+     */
     public void incrementUsage(final UUID bundleId, final String metricName);
 
+    /**
+     * Fine grained usage API if the external system doesn't roll its usage data. This is used to record e.g. "X has used
+     * 2 credits from his plan at 2012/02/04 4:12pm".
+     *
+     * @param bundleId   bundle id source
+     * @param metricName metric name for this usage
+     * @param timestamp  timestamp of this usage
+     * @param value      value to record
+     */
     public void recordUsage(final UUID bundleId, final String metricName, final DateTime timestamp, final long value);
+
+    /**
+     * Bulk usage API if the external system rolls-up usage data. This is used to record e.g. "X has used 12 minutes
+     * of his data plan between 2012/02/04 and 2012/02/06".
+     *
+     * @param bundleId   bundle id source
+     * @param metricName metric name for this usage
+     * @param startDate  start date of the usage period
+     * @param endDate    end date of the usage period
+     * @param value      value to record
+     */
+    public void recordRolledUpUsage(final UUID bundleId, final String metricName, final DateTime startDate, final DateTime endDate, final long value);
 }

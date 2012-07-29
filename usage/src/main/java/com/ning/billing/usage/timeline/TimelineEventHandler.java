@@ -199,18 +199,21 @@ public class TimelineEventHandler {
     /**
      * Main entry point to the timeline subsystem. Record a series of sample for a given source, at a given timestamp.
      *
-     * @param sourceId       id of the source
+     * @param sourceName     name of the source
      * @param eventType      event category
      * @param eventTimestamp event timestamp
      * @param samples        samples to record
      */
-    public void record(final Integer sourceId, final String eventType, final DateTime eventTimestamp, final Map<String, Object> samples) {
+    public void record(final String sourceName, final String eventType, final DateTime eventTimestamp, final Map<String, Object> samples) {
         if (shuttingDown.get()) {
             eventsReceivedAfterShuttingDown.incrementAndGet();
             return;
         }
         try {
             handledEventCount.incrementAndGet();
+
+            // Find the sourceId
+            final int sourceId = timelineDAO.getOrAddSource(sourceName);
 
             // Extract and parse samples
             final Map<Integer, ScalarSample> scalarSamples = new LinkedHashMap<Integer, ScalarSample>();

@@ -30,7 +30,7 @@ create table metrics (
 ) engine = innodb default charset = latin1;
 
 create table timeline_chunks (
-  chunk_id bigint not null auto_increment
+  record_id bigint not null auto_increment
 , source_id integer not null
 , metric_id integer not null
 , sample_count integer not null
@@ -53,3 +53,15 @@ create table last_start_times (
 
 insert ignore into timeline_chunks(chunk_id, source_id, metric_id, sample_count, start_time, end_time, in_row_samples, blob_samples)
                            values (0, 0, 0, 0, 0, 0, null, null);
+
+create table timeline_rolled_up_chunk (
+  record_id bigint not null auto_increment
+, source_id integer not null
+, metric_id integer not null
+, start_time date not null
+, end_time date not null
+, value bigint not null
+, account_record_id int(11) unsigned default null
+, tenant_record_id int(11) unsigned default null
+, primary key(record_id)
+) engine = innodb default charset = latin1;

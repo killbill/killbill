@@ -23,8 +23,8 @@ import javax.inject.Inject;
 import org.joda.time.DateTime;
 
 import com.ning.billing.usage.api.UsageUserApi;
+import com.ning.billing.usage.dao.RolledUpUsageDao;
 import com.ning.billing.usage.timeline.TimelineEventHandler;
-import com.ning.billing.usage.timeline.persistent.TimelineDao;
 import com.ning.billing.util.clock.Clock;
 
 import com.google.common.collect.ImmutableMap;
@@ -33,13 +33,13 @@ public class DefaultUsageUserApi implements UsageUserApi {
 
     private static final String DEFAULT_EVENT_TYPE = "__DefaultUsageUserApi__";
 
-    private final TimelineDao timelineDao;
+    private final RolledUpUsageDao rolledUpUsageDao;
     private final TimelineEventHandler timelineEventHandler;
     private final Clock clock;
 
     @Inject
-    public DefaultUsageUserApi(final TimelineDao timelineDao, final TimelineEventHandler timelineEventHandler, final Clock clock) {
-        this.timelineDao = timelineDao;
+    public DefaultUsageUserApi(final RolledUpUsageDao rolledUpUsageDao, final TimelineEventHandler timelineEventHandler, final Clock clock) {
+        this.rolledUpUsageDao = rolledUpUsageDao;
         this.timelineEventHandler = timelineEventHandler;
         this.clock = clock;
     }
@@ -51,7 +51,18 @@ public class DefaultUsageUserApi implements UsageUserApi {
 
     @Override
     public void recordUsage(final UUID bundleId, final String metricName, final DateTime timestamp, final long value) {
-        final int sourceId = timelineDao.getOrAddSource(bundleId.toString());
-        timelineEventHandler.record(sourceId, DEFAULT_EVENT_TYPE, timestamp, ImmutableMap.<String, Object>of(metricName, value));
+        final String sourceName = getSourceNameFromBundleId(bundleId);
+        timelineEventHandler.record(sourceName, DEFAULT_EVENT_TYPE, timestamp, ImmutableMap.<String, Object>of(metricName, value));
+    }
+
+    @Override
+    public void recordRolledUpUsage(final UUID bundleId, final String metricName, final DateTime startDate, final DateTime endDate, final long value) {
+        final String sourceName = getSourceNameFromBundleId(bundleId);
+        rolledUpUsageDao.record(sourceName, DEFAULT_EVENT_TYPE, metricName, startDate, endDate, value);
+    }
+
+    private String getSourceNameFromBundleId(final UUID bundleId) {
+        // TODO we should do better
+        return bundleId.toString();
     }
 }

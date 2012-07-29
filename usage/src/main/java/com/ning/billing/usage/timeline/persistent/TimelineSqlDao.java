@@ -29,6 +29,7 @@ import org.skife.jdbi.v2.sqlobject.customizers.BatchChunkSize;
 import org.skife.jdbi.v2.sqlobject.customizers.Mapper;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
+import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 
 import com.ning.billing.usage.timeline.categories.CategoryIdAndMetric;
@@ -44,7 +45,7 @@ import com.ning.billing.usage.timeline.sources.SourceIdAndMetricIdMapper;
 
 @ExternalizedSqlViaStringTemplate3()
 @RegisterMapper({CategoryIdAndMetricMapper.class, StartTimesMapper.class, SourceIdAndMetricIdMapper.class})
-public interface TimelineSqlDao extends Transactional<TimelineSqlDao> {
+public interface TimelineSqlDao extends Transactional<TimelineSqlDao>, Transmogrifier {
 
     @SqlQuery
     Integer getSourceId(@Bind("sourceName") final String source);
