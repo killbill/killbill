@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.usage.timeline;
+package com.ning.billing.usage.timeline.util;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;

@@ -30,8 +30,8 @@ import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ning.billing.usage.timeline.DateTimeUtils;
 import com.ning.billing.usage.timeline.shutdown.StartTimesBinder.StartTimesBinderFactory;
+import com.ning.billing.usage.timeline.util.DateTimeUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 

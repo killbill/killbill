@@ -30,8 +30,6 @@ import org.joda.time.format.ISODateTimeFormat;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.usage.timeline.DateTimeUtils;
-import com.ning.billing.usage.timeline.Hex;
 import com.ning.billing.usage.timeline.samples.RepeatSample;
 import com.ning.billing.usage.timeline.samples.SampleOpcode;
 import com.ning.billing.usage.timeline.samples.ScalarSample;
@@ -39,6 +37,8 @@ import com.ning.billing.usage.timeline.times.DefaultTimelineCoder;
 import com.ning.billing.usage.timeline.times.DefaultTimelineCursor;
 import com.ning.billing.usage.timeline.times.TimelineCoder;
 import com.ning.billing.usage.timeline.times.TimelineCursor;
+import com.ning.billing.usage.timeline.util.DateTimeUtils;
+import com.ning.billing.usage.timeline.util.Hex;
 
 import com.google.common.collect.ImmutableList;
 

@@ -21,6 +21,7 @@ import org.joda.time.Seconds;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.ning.billing.usage.timeline.util.DateTimeUtils;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 

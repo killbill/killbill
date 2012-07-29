@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.usage.timeline;
+package com.ning.billing.usage.timeline.util;
 
 /**
  * Hex utilities from commons-codec

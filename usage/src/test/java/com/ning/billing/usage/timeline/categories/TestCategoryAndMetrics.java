@@ -19,8 +19,6 @@ package com.ning.billing.usage.timeline.categories;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.usage.timeline.categories.CategoryAndMetrics;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class TestCategoryAndMetrics {

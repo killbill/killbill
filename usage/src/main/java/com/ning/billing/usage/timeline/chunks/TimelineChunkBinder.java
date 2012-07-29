@@ -28,9 +28,9 @@ import org.skife.jdbi.v2.sqlobject.Binder;
 import org.skife.jdbi.v2.sqlobject.BinderFactory;
 import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
 
-import com.ning.billing.usage.timeline.DateTimeUtils;
 import com.ning.billing.usage.timeline.chunks.TimelineChunkBinder.TimelineChunkBinderFactory;
 import com.ning.billing.usage.timeline.codec.TimesAndSamplesCoder;
+import com.ning.billing.usage.timeline.util.DateTimeUtils;
 
 /**
  * jdbi binder for TimelineChunk

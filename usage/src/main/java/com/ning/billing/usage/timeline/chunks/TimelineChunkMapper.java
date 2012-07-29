@@ -24,8 +24,8 @@ import org.joda.time.DateTime;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import com.ning.billing.usage.timeline.DateTimeUtils;
 import com.ning.billing.usage.timeline.codec.TimesAndSamplesCoder;
+import com.ning.billing.usage.timeline.util.DateTimeUtils;
 
 /**
  * jdbi mapper for TimelineChunk

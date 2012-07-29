@@ -22,8 +22,6 @@ import java.sql.SQLException;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import com.ning.billing.usage.timeline.sources.SourceIdAndMetricId;
-
 public class SourceIdAndMetricIdMapper implements ResultSetMapper<SourceIdAndMetricId> {
 
     @Override

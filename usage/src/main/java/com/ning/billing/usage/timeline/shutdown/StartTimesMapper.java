@@ -25,7 +25,7 @@ import org.joda.time.DateTime;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import com.ning.billing.usage.timeline.DateTimeUtils;
+import com.ning.billing.usage.timeline.util.DateTimeUtils;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;

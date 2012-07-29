@@ -23,9 +23,9 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 
-import com.ning.billing.usage.timeline.Hex;
 import com.ning.billing.usage.timeline.chunks.TimeBytesAndSampleBytes;
 import com.ning.billing.usage.timeline.chunks.TimelineChunk;
+import com.ning.billing.usage.timeline.util.Hex;
 
 public class TimesAndSamplesCoder {
 

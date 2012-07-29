@@ -26,8 +26,8 @@ import org.joda.time.DateTime;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.usage.timeline.DateTimeUtils;
-import com.ning.billing.usage.timeline.Hex;
+import com.ning.billing.usage.timeline.util.DateTimeUtils;
+import com.ning.billing.usage.timeline.util.Hex;
 
 public class TestDefaultTimelineCoder {
 

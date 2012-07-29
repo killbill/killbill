@@ -33,13 +33,13 @@ import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ning.billing.usage.timeline.DateTimeUtils;
 import com.ning.billing.usage.timeline.categories.CategoryIdAndMetric;
 import com.ning.billing.usage.timeline.chunks.TimelineChunk;
-import com.ning.billing.usage.timeline.consumer.TimelineChunkConsumer;
 import com.ning.billing.usage.timeline.chunks.TimelineChunkMapper;
+import com.ning.billing.usage.timeline.consumer.TimelineChunkConsumer;
 import com.ning.billing.usage.timeline.shutdown.StartTimes;
 import com.ning.billing.usage.timeline.sources.SourceIdAndMetricId;
+import com.ning.billing.usage.timeline.util.DateTimeUtils;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.BiMap;
