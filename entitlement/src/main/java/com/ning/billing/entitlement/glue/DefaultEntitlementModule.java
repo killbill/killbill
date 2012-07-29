@@ -35,6 +35,8 @@ import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
 import com.ning.billing.entitlement.api.timeline.RepairEntitlementLifecycleDao;
 import com.ning.billing.entitlement.api.timeline.RepairSubscriptionApiService;
 import com.ning.billing.entitlement.api.timeline.RepairSubscriptionFactory;
+import com.ning.billing.entitlement.api.transfer.DefaultEntitlementTransferApi;
+import com.ning.billing.entitlement.api.transfer.EntitlementTransferApi;
 import com.ning.billing.entitlement.api.user.DefaultEntitlementUserApi;
 import com.ning.billing.entitlement.api.user.DefaultSubscriptionApiService;
 import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory;
@@ -81,6 +83,7 @@ public class DefaultEntitlementModule extends AbstractModule implements Entitlem
         installEntitlementMigrationApi();
         installChargeThruApi();
         installEntitlementUserApi();
+        installEntitlementTransferApi();
     }
 
     @Override
@@ -105,6 +108,8 @@ public class DefaultEntitlementModule extends AbstractModule implements Entitlem
         bind(EntitlementMigrationApi.class).to(DefaultEntitlementMigrationApi.class).asEagerSingleton();
     }
 
+
+
     @Override
     public void installChargeThruApi() {
         bind(ChargeThruApi.class).to(DefaultChargeThruApi.class).asEagerSingleton();
@@ -113,5 +118,10 @@ public class DefaultEntitlementModule extends AbstractModule implements Entitlem
     @Override
     public void installEntitlementUserApi() {
         bind(EntitlementUserApi.class).annotatedWith(RealImplementation.class).to(DefaultEntitlementUserApi.class).asEagerSingleton();
+    }
+
+    @Override
+    public void installEntitlementTransferApi() {
+        bind(EntitlementTransferApi.class).to(DefaultEntitlementTransferApi.class).asEagerSingleton();
     }
 }

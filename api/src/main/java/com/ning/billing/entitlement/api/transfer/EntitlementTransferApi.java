@@ -13,21 +13,17 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+package com.ning.billing.entitlement.api.transfer;
 
-package com.ning.billing.glue;
+import java.util.UUID;
 
-public interface EntitlementModule {
+import org.joda.time.DateTime;
 
-    public abstract void installEntitlementService();
+import com.ning.billing.util.callcontext.CallContext;
 
-    public abstract void installEntitlementUserApi();
+public interface EntitlementTransferApi {
 
-    public abstract void installEntitlementTransferApi();
-
-    public abstract void installEntitlementMigrationApi();
-
-    public abstract void installChargeThruApi();
-
-    public abstract void installEntitlementTimelineApi();
+    public void transferBundle(final UUID sourceAccountId, final UUID destAccountId, final String bundleKey, final DateTime requestedDate, final boolean transferAddOn, final CallContext context)
+        throws EntitlementTransferApiException;
 
 }

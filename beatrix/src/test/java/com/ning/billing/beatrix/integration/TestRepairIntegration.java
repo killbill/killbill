@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -105,7 +105,7 @@ public class TestRepairIntegration extends TestIntegrationBase {
         assertTrue(busHandler.isCompleted(DELAY));
 
 
-        // MOVE CLOCK A LITTLE BIT MORE -- EITHER STAY IN TRIAL OR GET OUT   
+        // MOVE CLOCK A LITTLE BIT MORE -- EITHER STAY IN TRIAL OR GET OUT
         final int duration = inTrial ? 3 : 35;
         it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(duration));
         if (!inTrial) {
@@ -121,7 +121,7 @@ public class TestRepairIntegration extends TestIntegrationBase {
         }
         final boolean ifRepair = false;
         if (ifRepair) {
-            BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
+            BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId());
             sortEventsOnBundle(bundleRepair);
 
             // Quick check
@@ -194,6 +194,11 @@ public class TestRepairIntegration extends TestIntegrationBase {
             public List<DeletedEvent> getDeletedEvents() {
                 return deletedEvents;
             }
+
+            @Override
+            public long getActiveVersion() {
+                return 0;
+            }
         };
     }
 
@@ -251,6 +256,11 @@ public class TestRepairIntegration extends TestIntegrationBase {
             @Override
             public DateTime getEffectiveDate() {
                 return effectiveDateTime;
+            }
+
+            @Override
+            public String getPlanPhaseName() {
+                return null;
             }
         };
         return ev;

@@ -75,7 +75,7 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(3));
         clock.addDeltaFromReality(it.toDurationMillis());
 
-        BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
+        BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId());
         sortEventsOnBundle(bundleRepair);
 
         // Quick check
@@ -226,7 +226,7 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         clock.addDeltaFromReality(it.toDurationMillis());
         assertTrue(testListener.isCompleted(7000));
 
-        BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
+        BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId());
         sortEventsOnBundle(bundleRepair);
 
         // Quick check
@@ -350,7 +350,7 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         billingApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate, context);
         baseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId());
 
-        BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
+        BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId());
         sortEventsOnBundle(bundleRepair);
 
         // Quick check
@@ -480,7 +480,7 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(3));
         clock.addDeltaFromReality(it.toDurationMillis());
 
-        final BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
+        final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId());
         sortEventsOnBundle(bundleRepair);
 
         // Quick check
@@ -570,7 +570,7 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(3));
         clock.addDeltaFromReality(it.toDurationMillis());
 
-        final BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
+        final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId());
         sortEventsOnBundle(bundleRepair);
 
         // Quick check
@@ -661,7 +661,7 @@ public class TestRepairWithAO extends TestApiBaseRepair {
         it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(3));
         clock.addDeltaFromReality(it.toDurationMillis());
 
-        final BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
+        final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId());
         sortEventsOnBundle(bundleRepair);
 
         // Quick check

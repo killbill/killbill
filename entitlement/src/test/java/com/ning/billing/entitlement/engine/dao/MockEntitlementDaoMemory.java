@@ -40,6 +40,7 @@ import com.ning.billing.entitlement.api.migration.AccountMigrationData;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData.BundleMigrationData;
 import com.ning.billing.entitlement.api.migration.AccountMigrationData.SubscriptionMigrationData;
 import com.ning.billing.entitlement.api.timeline.SubscriptionDataRepair;
+import com.ning.billing.entitlement.api.transfer.TransferCancelData;
 import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
@@ -57,6 +58,7 @@ import com.ning.billing.util.notificationq.NotificationKey;
 import com.ning.billing.util.notificationq.NotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotificationQueue;
+
 
 public class MockEntitlementDaoMemory implements EntitlementDao {
     protected static final Logger log = LoggerFactory.getLogger(EntitlementDao.class);
@@ -99,6 +101,18 @@ public class MockEntitlementDaoMemory implements EntitlementDao {
     }
 
     @Override
+    public List<SubscriptionBundle> getSubscriptionBundlesForKey(final String bundleKey) {
+        final List<SubscriptionBundle> results = new ArrayList<SubscriptionBundle>();
+        for (final SubscriptionBundle cur : bundles) {
+            if (cur.getKey().equals(bundleKey)) {
+                results.add(cur);
+            }
+        }
+        return results;
+    }
+
+
+    @Override
     public SubscriptionBundle getSubscriptionBundleFromId(final UUID bundleId) {
         for (final SubscriptionBundle cur : bundles) {
             if (cur.getId().equals(bundleId)) {
@@ -109,9 +123,9 @@ public class MockEntitlementDaoMemory implements EntitlementDao {
     }
 
     @Override
-    public SubscriptionBundle getSubscriptionBundleFromKey(final String bundleKey) {
+    public SubscriptionBundle getSubscriptionBundleFromAccountAndKey(final UUID accountId, final String bundleKey) {
         for (final SubscriptionBundle cur : bundles) {
-            if (cur.getKey().equals(bundleKey)) {
+            if (cur.getKey().equals(bundleKey) && cur.getAccountId().equals(accountId)) {
                 return cur;
             }
         }
@@ -140,10 +154,10 @@ public class MockEntitlementDaoMemory implements EntitlementDao {
     }
 
     @Override
-    public List<Subscription> getSubscriptionsForKey(final SubscriptionFactory factory, final String bundleKey) {
+    public List<Subscription> getSubscriptionsForAccountAndKey(final SubscriptionFactory factory, final UUID accountId, final String bundleKey) {
 
         for (final SubscriptionBundle cur : bundles) {
-            if (cur.getKey().equals(bundleKey)) {
+            if (cur.getKey().equals(bundleKey) && cur.getAccountId().equals(bundleKey)) {
                 return getSubscriptions(factory, cur.getId());
             }
         }
@@ -417,5 +431,11 @@ public class MockEntitlementDaoMemory implements EntitlementDao {
     @Override
     public void repair(final UUID accountId, final UUID bundleId, final List<SubscriptionDataRepair> inRepair,
                        final CallContext context) {
+    }
+
+    @Override
+    public void transfer(UUID srcAccountId, UUID destAccountId,
+            BundleMigrationData data,
+            List<TransferCancelData> transferCancelData, CallContext context) {
     }
 }

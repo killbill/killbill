@@ -57,6 +57,8 @@ import com.ning.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
 import com.ning.billing.entitlement.api.billing.ChargeThruApi;
 import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi;
 import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
+import com.ning.billing.entitlement.api.transfer.EntitlementTransferApi;
+import com.ning.billing.entitlement.api.transfer.EntitlementTransferApiException;
 import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
@@ -89,6 +91,7 @@ public abstract class TestApiBase extends EntitlementTestSuiteWithEmbeddedDB imp
     protected EntitlementService entitlementService;
     protected EntitlementUserApi entitlementApi;
     protected ChargeThruApi billingApi;
+    protected EntitlementTransferApi transferApi;
 
     protected EntitlementMigrationApi migrationApi;
     protected EntitlementTimelineApi repairApi;
@@ -160,6 +163,7 @@ public abstract class TestApiBase extends EntitlementTestSuiteWithEmbeddedDB imp
         billingApi = g.getInstance(ChargeThruApi.class);
         migrationApi = g.getInstance(EntitlementMigrationApi.class);
         repairApi = g.getInstance(EntitlementTimelineApi.class);
+        transferApi = g.getInstance(EntitlementTransferApi.class);
         catalogService = g.getInstance(CatalogService.class);
         busService = g.getInstance(BusService.class);
         config = g.getInstance(EntitlementConfig.class);

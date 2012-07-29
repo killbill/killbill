@@ -50,6 +50,7 @@ import com.ning.billing.entitlement.api.migration.AccountMigrationData.Subscript
 import com.ning.billing.entitlement.api.timeline.DefaultRepairEntitlementEvent;
 import com.ning.billing.entitlement.api.timeline.RepairEntitlementEvent;
 import com.ning.billing.entitlement.api.timeline.SubscriptionDataRepair;
+import com.ning.billing.entitlement.api.transfer.TransferCancelData;
 import com.ning.billing.entitlement.api.user.DefaultRequestedSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.Subscription;
@@ -89,7 +90,6 @@ public class AuditedEntitlementDao implements EntitlementDao {
     private final NotificationQueueService notificationQueueService;
     private final AddonUtils addonUtils;
     private final Bus eventBus;
-    private final CatalogService catalogService;
 
     @Inject
     public AuditedEntitlementDao(final IDBI dbi, final Clock clock, final AddonUtils addonUtils,
@@ -101,12 +101,11 @@ public class AuditedEntitlementDao implements EntitlementDao {
         this.notificationQueueService = notificationQueueService;
         this.addonUtils = addonUtils;
         this.eventBus = eventBus;
-        this.catalogService = catalogService;
     }
 
     @Override
-    public SubscriptionBundle getSubscriptionBundleFromKey(final String bundleKey) {
-        return bundlesDao.getBundleFromKey(bundleKey);
+    public SubscriptionBundle getSubscriptionBundleFromAccountAndKey(final UUID accountId, final String bundleKey) {
+        return bundlesDao.getBundleFromAccountAndKey(accountId.toString(), bundleKey);
     }
 
     @Override
@@ -118,6 +117,12 @@ public class AuditedEntitlementDao implements EntitlementDao {
     public SubscriptionBundle getSubscriptionBundleFromId(final UUID bundleId) {
         return bundlesDao.getBundleFromId(bundleId.toString());
     }
+
+    @Override
+    public List<SubscriptionBundle> getSubscriptionBundlesForKey(final String bundleKey) {
+        return bundlesDao.getBundlesForKey(bundleKey);
+    }
+
 
     @Override
     public SubscriptionBundle createSubscriptionBundle(final SubscriptionBundleData bundle, final CallContext context) {
@@ -174,8 +179,8 @@ public class AuditedEntitlementDao implements EntitlementDao {
     }
 
     @Override
-    public List<Subscription> getSubscriptionsForKey(final SubscriptionFactory factory, final String bundleKey) {
-        final SubscriptionBundle bundle = bundlesDao.getBundleFromKey(bundleKey);
+    public List<Subscription> getSubscriptionsForAccountAndKey(final SubscriptionFactory factory, final UUID accountId, final String bundleKey) {
+        final SubscriptionBundle bundle = bundlesDao.getBundleFromAccountAndKey(accountId.toString(), bundleKey);
         if (bundle == null) {
             return Collections.emptyList();
         }
@@ -341,24 +346,7 @@ public class AuditedEntitlementDao implements EntitlementDao {
         eventsDao.inTransaction(new Transaction<Void, EntitlementEventSqlDao>() {
             @Override
             public Void inTransaction(final EntitlementEventSqlDao transactional, final TransactionStatus status) throws Exception {
-                final UUID subscriptionId = subscription.getId();
-                cancelNextCancelEventFromTransaction(subscriptionId, transactional, context);
-                cancelNextChangeEventFromTransaction(subscriptionId, transactional, context);
-                cancelNextPhaseEventFromTransaction(subscriptionId, transactional, context);
-                transactional.insertEvent(cancelEvent, context);
-                final String cancelEventId = cancelEvent.getId().toString();
-
-                final Long recordId = transactional.getRecordId(cancelEventId);
-                final EntityAudit audit = new EntityAudit(TableName.SUBSCRIPTION_EVENTS, recordId, ChangeType.INSERT);
-                transactional.insertAuditFromTransaction(audit, context);
-
-                recordFutureNotificationFromTransaction(transactional,
-                                                        cancelEvent.getEffectiveDate(),
-                                                        new EntitlementNotificationKey(cancelEvent.getId(), seqId));
-
-                // Notify the Bus of the requested change
-                notifyBusOfRequestedChange(transactional, subscription, cancelEvent);
-
+                cancelSubscriptionFromTransaction(subscription, cancelEvent, transactional, context, seqId);
                 return null;
             }
         });
@@ -441,6 +429,28 @@ public class AuditedEntitlementDao implements EntitlementDao {
             }
         });
     }
+
+    private void cancelSubscriptionFromTransaction(final SubscriptionData subscription, final EntitlementEvent cancelEvent, final EntitlementEventSqlDao transactional, final CallContext context, final int seqId) {
+        final UUID subscriptionId = subscription.getId();
+        cancelNextCancelEventFromTransaction(subscriptionId, transactional, context);
+        cancelNextChangeEventFromTransaction(subscriptionId, transactional, context);
+        cancelNextPhaseEventFromTransaction(subscriptionId, transactional, context);
+        transactional.insertEvent(cancelEvent, context);
+        final String cancelEventId = cancelEvent.getId().toString();
+
+        final Long recordId = transactional.getRecordId(cancelEventId);
+        final EntityAudit audit = new EntityAudit(TableName.SUBSCRIPTION_EVENTS, recordId, ChangeType.INSERT);
+        transactional.insertAuditFromTransaction(audit, context);
+
+        recordFutureNotificationFromTransaction(transactional,
+                                                cancelEvent.getEffectiveDate(),
+                                                new EntitlementNotificationKey(cancelEvent.getId(), seqId));
+
+        // Notify the Bus of the requested change
+        notifyBusOfRequestedChange(transactional, subscription, cancelEvent);
+    }
+
+
 
     private void cancelNextPhaseEventFromTransaction(final UUID subscriptionId, final EntitlementEventSqlDao dao, final CallContext context) {
         cancelFutureEventFromTransaction(subscriptionId, dao, EventType.PHASE, null, context);
@@ -529,7 +539,7 @@ public class AuditedEntitlementDao implements EntitlementDao {
                 } else if (o2.getCategory() == ProductCategory.BASE) {
                     return 1;
                 } else {
-                    return o1.getStartDate().compareTo(o2.getStartDate());
+                    return ((SubscriptionData) o1).getAlignStartDate().compareTo(((SubscriptionData) o2).getAlignStartDate());
                 }
             }
         });
@@ -594,44 +604,9 @@ public class AuditedEntitlementDao implements EntitlementDao {
         eventsDao.inTransaction(new Transaction<Void, EntitlementEventSqlDao>() {
             @Override
             public Void inTransaction(final EntitlementEventSqlDao transactional, final TransactionStatus status) throws Exception {
-                final SubscriptionSqlDao transSubDao = transactional.become(SubscriptionSqlDao.class);
-                final BundleSqlDao transBundleDao = transactional.become(BundleSqlDao.class);
-
-                final List<EntityAudit> audits = new ArrayList<EntityAudit>();
-
-                Long recordId;
-
                 for (final BundleMigrationData curBundle : accountData.getData()) {
-                    final SubscriptionBundleData bundleData = curBundle.getData();
-
-                    for (final SubscriptionMigrationData curSubscription : curBundle.getSubscriptions()) {
-                        final SubscriptionData subData = curSubscription.getData();
-                        for (final EntitlementEvent curEvent : curSubscription.getInitialEvents()) {
-                            transactional.insertEvent(curEvent, context);
-                            recordId = transactional.getRecordId(curEvent.getId().toString());
-                            audits.add(new EntityAudit(TableName.SUBSCRIPTION_EVENTS, recordId, ChangeType.INSERT));
-
-                            recordFutureNotificationFromTransaction(transactional,
-                                                                    curEvent.getEffectiveDate(),
-                                                                    new EntitlementNotificationKey(curEvent.getId()));
-                        }
-                        transSubDao.insertSubscription(subData, context);
-                        recordId = transSubDao.getRecordId(subData.getId().toString());
-                        audits.add(new EntityAudit(TableName.SUBSCRIPTIONS, recordId, ChangeType.INSERT));
-
-                        // Notify the Bus of the latest requested change
-                        final EntitlementEvent finalEvent = curSubscription.getInitialEvents().get(curSubscription.getInitialEvents().size() - 1);
-                        notifyBusOfRequestedChange(transactional, subData, finalEvent);
-                    }
-
-                    transBundleDao.insertBundle(bundleData, context);
-                    recordId = transBundleDao.getRecordId(bundleData.getId().toString());
-                    audits.add(new EntityAudit(TableName.BUNDLES, recordId, ChangeType.INSERT));
+                    migrateBundleDataFromTransaction(curBundle, transactional, context);
                 }
-
-                // add audit records for bundles, subscriptions, and events
-                transSubDao.insertAuditFromTransaction(audits, context);
-
                 return null;
             }
         });
@@ -644,7 +619,7 @@ public class AuditedEntitlementDao implements EntitlementDao {
             public Void inTransaction(final SubscriptionSqlDao transactional, final TransactionStatus status) throws Exception {
                 final EntitlementEventSqlDao transEventDao = transactional.become(EntitlementEventSqlDao.class);
                 for (final SubscriptionDataRepair cur : inRepair) {
-                    transactional.updateForRepair(cur.getId().toString(), cur.getActiveVersion(), cur.getStartDate().toDate(), cur.getBundleStartDate().toDate(), context);
+                    transactional.updateForRepair(cur.getId().toString(), cur.getActiveVersion(), cur.getAlignStartDate().toDate(), cur.getBundleStartDate().toDate(), context);
                     for (final EntitlementEvent event : cur.getInitialEvents()) {
                         transEventDao.updateVersion(event.getId().toString(), event.getActiveVersion(), context);
                     }
@@ -670,6 +645,26 @@ public class AuditedEntitlementDao implements EntitlementDao {
             }
         });
     }
+
+    @Override
+    public void transfer(final UUID srcAccountId, final UUID destAccountId, final BundleMigrationData bundleTransferData,
+            final List<TransferCancelData> transferCancelData, final CallContext context) {
+
+        eventsDao.inTransaction(new Transaction<Void, EntitlementEventSqlDao>() {
+            @Override
+            public Void inTransaction(final EntitlementEventSqlDao transactional, final TransactionStatus status) throws Exception {
+
+                // Cancel the subscriptions for the old bundle
+                for (TransferCancelData cancel : transferCancelData) {
+                    cancelSubscriptionFromTransaction(cancel.getSubscription(), cancel.getCancelEvent(), transactional, context, 0);
+                }
+
+                migrateBundleDataFromTransaction(bundleTransferData, transactional, context);
+                return null;
+            }
+        });
+    }
+
 
     private Subscription getBaseSubscription(final SubscriptionFactory factory, final UUID bundleId, final boolean rebuildSubscription) {
         final List<Subscription> subscriptions = subscriptionsDao.getSubscriptionsFromBundleId(bundleId.toString());
@@ -700,5 +695,41 @@ public class AuditedEntitlementDao implements EntitlementDao {
         } catch (EventBusException e) {
             log.warn("Failed to post requested change event for subscription " + subscription.getId(), e);
         }
+    }
+
+    private void migrateBundleDataFromTransaction(final BundleMigrationData bundleTransferData, final EntitlementEventSqlDao transactional, final CallContext context) {
+
+        final SubscriptionSqlDao transSubDao = transactional.become(SubscriptionSqlDao.class);
+        final BundleSqlDao transBundleDao = transactional.become(BundleSqlDao.class);
+
+        final List<EntityAudit> audits = new ArrayList<EntityAudit>();
+        Long recordId;
+        final SubscriptionBundleData bundleData = bundleTransferData.getData();
+        for (final SubscriptionMigrationData curSubscription : bundleTransferData.getSubscriptions()) {
+            final SubscriptionData subData = curSubscription.getData();
+            for (final EntitlementEvent curEvent : curSubscription.getInitialEvents()) {
+                transactional.insertEvent(curEvent, context);
+                recordId = transactional.getRecordId(curEvent.getId().toString());
+                audits.add(new EntityAudit(TableName.SUBSCRIPTION_EVENTS, recordId, ChangeType.INSERT));
+
+                recordFutureNotificationFromTransaction(transactional,
+                        curEvent.getEffectiveDate(),
+                        new EntitlementNotificationKey(curEvent.getId()));
+            }
+            transSubDao.insertSubscription(subData, context);
+            recordId = transSubDao.getRecordId(subData.getId().toString());
+            audits.add(new EntityAudit(TableName.SUBSCRIPTIONS, recordId, ChangeType.INSERT));
+
+            // Notify the Bus of the latest requested change
+            final EntitlementEvent finalEvent = curSubscription.getInitialEvents().get(curSubscription.getInitialEvents().size() - 1);
+            notifyBusOfRequestedChange(transactional, subData, finalEvent);
+        }
+
+        transBundleDao.insertBundle(bundleData, context);
+        recordId = transBundleDao.getRecordId(bundleData.getId().toString());
+        audits.add(new EntityAudit(TableName.BUNDLES, recordId, ChangeType.INSERT));
+
+        // add audit records for bundles, subscriptions, and events
+        transSubDao.insertAuditFromTransaction(audits, context);
     }
 }

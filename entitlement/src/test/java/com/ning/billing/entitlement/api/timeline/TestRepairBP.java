@@ -74,7 +74,7 @@ public class TestRepairBP extends TestApiBaseRepair {
 
         final SubscriptionData aoSubscription = createSubscription(aoProduct, aoTerm, aoPriceList);
 
-        final BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
+        final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId());
         final List<SubscriptionTimeline> subscriptionRepair = bundleRepair.getSubscriptions();
         assertEquals(subscriptionRepair.size(), 2);
 
@@ -134,7 +134,7 @@ public class TestRepairBP extends TestApiBaseRepair {
         final Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(10));
         clock.addDeltaFromReality(it.toDurationMillis());
 
-        final BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
+        final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId());
         sortEventsOnBundle(bundleRepair);
 
         final List<DeletedEvent> des = new LinkedList<SubscriptionTimeline.DeletedEvent>();
@@ -306,7 +306,7 @@ public class TestRepairBP extends TestApiBaseRepair {
             }
         }
 
-        final BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
+        final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId());
         sortEventsOnBundle(bundleRepair);
 
         final DateTime newCreateTime = baseSubscription.getStartDate().plusDays(clockShift - 1);
@@ -476,7 +476,7 @@ public class TestRepairBP extends TestApiBaseRepair {
             assertTrue(testListener.isCompleted(5000));
         }
 
-        final BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
+        final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId());
         sortEventsOnBundle(bundleRepair);
 
         final DateTime changeTime = baseSubscription.getStartDate().plusDays(clockShift - 1);
@@ -597,7 +597,7 @@ public class TestRepairBP extends TestApiBaseRepair {
         assertEquals(currentPlan.getBillingPeriod(), BillingPeriod.MONTHLY);
 
         final DateTime repairTime = clock.getUTCNow().minusDays(1);
-        final BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
+        final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId());
         sortEventsOnBundle(bundleRepair);
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
@@ -647,7 +647,7 @@ public class TestRepairBP extends TestApiBaseRepair {
             @Override
             public void doTest() throws EntitlementRepairException, EntitlementUserApiException {
 
-                final BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
+                final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId());
                 sortEventsOnBundle(bundleRepair);
                 final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
                 final NewEvent ne = createNewEvent(SubscriptionTransitionType.CHANGE, baseSubscription.getStartDate().plusDays(10), spec);
@@ -680,7 +680,7 @@ public class TestRepairBP extends TestApiBaseRepair {
             @Override
             public void doTest() throws EntitlementRepairException, EntitlementUserApiException {
 
-                final BundleTimeline bundleRepair = repairApi.getBundleRepair(bundle.getId());
+                final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId());
                 sortEventsOnBundle(bundleRepair);
                 final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
                 final NewEvent ne = createNewEvent(SubscriptionTransitionType.CHANGE, baseSubscription.getStartDate().plusDays(10), spec);

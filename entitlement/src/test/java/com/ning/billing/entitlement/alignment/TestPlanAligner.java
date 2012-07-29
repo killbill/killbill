@@ -166,11 +166,11 @@ public class TestPlanAligner extends KillbillTestSuite {
         final DefaultSubscriptionFactory.SubscriptionBuilder builder = new DefaultSubscriptionFactory.SubscriptionBuilder();
         builder.setBundleStartDate(clock.getUTCNow().minusHours(10));
         // Make sure to set the dates apart
-        builder.setStartDate(new DateTime(builder.getBundleStartDate().plusHours(5)));
+        builder.setAlignStartDate(new DateTime(builder.getBundleStartDate().plusHours(5)));
 
         // Create the transitions
         final SubscriptionData subscriptionData = new SubscriptionData(builder, null, clock);
-        final EntitlementEvent event = createEntitlementEvent(builder.getStartDate(),
+        final EntitlementEvent event = createEntitlementEvent(builder.getAlignStartDate(),
                                                               productName,
                                                               phaseType,
                                                               ApiEventType.CREATE,
