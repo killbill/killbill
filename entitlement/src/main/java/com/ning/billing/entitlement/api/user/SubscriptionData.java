@@ -63,7 +63,7 @@ public class SubscriptionData extends EntityBase implements Subscription {
     // Final subscription fields
     //
     private final UUID bundleId;
-    private final DateTime startDate;
+    private final DateTime alignStartDate;
     private final DateTime bundleStartDate;
     private final ProductCategory category;
 
@@ -93,7 +93,7 @@ public class SubscriptionData extends EntityBase implements Subscription {
         this.apiService = apiService;
         this.clock = clock;
         this.bundleId = builder.getBundleId();
-        this.startDate = builder.getStartDate();
+        this.alignStartDate = builder.getAlignStartDate();
         this.bundleStartDate = builder.getBundleStartDate();
         this.category = builder.getCategory();
         this.activeVersion = builder.getActiveVersion();
@@ -108,7 +108,7 @@ public class SubscriptionData extends EntityBase implements Subscription {
 
     @Override
     public DateTime getStartDate() {
-        return startDate;
+        return transitions.get(0).getEffectiveTransitionTime();
     }
 
     @Override
@@ -216,7 +216,7 @@ public class SubscriptionData extends EntityBase implements Subscription {
         if (data == null) {
             return null;
         }
-        return new DefaultEffectiveSubscriptionEvent(data, startDate);
+        return new DefaultEffectiveSubscriptionEvent(data, alignStartDate);
     }
 
     @Override
@@ -240,7 +240,7 @@ public class SubscriptionData extends EntityBase implements Subscription {
         if (data == null) {
             return null;
         }
-        return new DefaultEffectiveSubscriptionEvent(data, startDate);
+        return new DefaultEffectiveSubscriptionEvent(data, alignStartDate);
     }
 
     protected SubscriptionTransitionData getPreviousTransitionData() {
@@ -314,7 +314,7 @@ public class SubscriptionData extends EntityBase implements Subscription {
                 clock, transitions, Order.ASC_FROM_PAST, Kind.BILLING,
                 Visibility.ALL, TimeLimit.ALL);
         while (it.hasNext()) {
-            result.add(new DefaultEffectiveSubscriptionEvent(it.next(), startDate));
+            result.add(new DefaultEffectiveSubscriptionEvent(it.next(), alignStartDate));
         }
         return result;
     }
@@ -326,11 +326,16 @@ public class SubscriptionData extends EntityBase implements Subscription {
         for (final SubscriptionTransitionData cur : transitions) {
             if (cur.getId().equals(event.getId())) {
                 final SubscriptionTransitionData withSeq = new SubscriptionTransitionData(cur, seqId);
-                return new DefaultEffectiveSubscriptionEvent(withSeq, startDate);
+                return new DefaultEffectiveSubscriptionEvent(withSeq, alignStartDate);
             }
         }
         return null;
     }
+
+    public DateTime getAlignStartDate() {
+        return alignStartDate;
+    }
+
 
     public long getLastEventOrderedId() {
         final SubscriptionTransitionDataIterator it = new SubscriptionTransitionDataIterator(
@@ -352,7 +357,7 @@ public class SubscriptionData extends EntityBase implements Subscription {
         final List<EffectiveSubscriptionEvent> result = new ArrayList<EffectiveSubscriptionEvent>();
         final SubscriptionTransitionDataIterator it = new SubscriptionTransitionDataIterator(clock, transitions, Order.ASC_FROM_PAST, Kind.ALL, Visibility.ALL, TimeLimit.ALL);
         while (it.hasNext()) {
-            result.add(new DefaultEffectiveSubscriptionEvent(it.next(), startDate));
+            result.add(new DefaultEffectiveSubscriptionEvent(it.next(), alignStartDate));
         }
 
         return result;
@@ -519,8 +524,8 @@ public class SubscriptionData extends EntityBase implements Subscription {
             PriceList nextPriceList = null;
 
             try {
-                nextPlan = (nextPlanName != null) ? catalog.findPlan(nextPlanName, cur.getRequestedDate(), getStartDate()) : null;
-                nextPhase = (nextPhaseName != null) ? catalog.findPhase(nextPhaseName, cur.getRequestedDate(), getStartDate()) : null;
+                nextPlan = (nextPlanName != null) ? catalog.findPlan(nextPlanName, cur.getRequestedDate(), getAlignStartDate()) : null;
+                nextPhase = (nextPhaseName != null) ? catalog.findPhase(nextPhaseName, cur.getRequestedDate(), getAlignStartDate()) : null;
                 nextPriceList = (nextPriceListName != null) ? catalog.findPriceList(nextPriceListName, cur.getRequestedDate()) : null;
             } catch (CatalogApiException e) {
                 log.error(String.format("Failed to build transition for subscription %s", id), e);

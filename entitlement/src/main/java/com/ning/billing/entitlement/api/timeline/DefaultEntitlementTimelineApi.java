@@ -176,7 +176,7 @@ public class DefaultEntitlementTimelineApi implements EntitlementTimelineApi {
                     inRepair.add(curOutputRepair);
                     if (curOutputRepair.getCategory() == ProductCategory.ADD_ON) {
                         // Check if ADD_ON RE_CREATE is before BP start
-                        if (isPlanRecreate && subscriptions.get(0).getStartDate().isAfter(curRepair.getNewEvents().get(0).getRequestedDate())) {
+                        if (isPlanRecreate && (subscriptions.get(0)).getStartDate().isAfter(curRepair.getNewEvents().get(0).getRequestedDate())) {
                             throw new EntitlementRepairException(ErrorCode.ENT_REPAIR_AO_CREATE_BEFORE_BP_START, cur.getId(), cur.getBundleId());
                         }
                         addOnSubscriptionInRepair.add(curOutputRepair);
@@ -202,7 +202,7 @@ public class DefaultEntitlementTimelineApi implements EntitlementTimelineApi {
             case ADD_ON_REPAIR:
                 // We need to set the baseSubscription as it is useful to calculate addon validity
                 final SubscriptionDataRepair baseSubscription = (SubscriptionDataRepair) subscriptions.get(0);
-                baseSubscriptionRepair = createSubscriptionDataRepair(baseSubscription, baseSubscription.getBundleStartDate(), baseSubscription.getStartDate(), baseSubscription.getEvents());
+                baseSubscriptionRepair = createSubscriptionDataRepair(baseSubscription, baseSubscription.getBundleStartDate(), baseSubscription.getAlignStartDate(), baseSubscription.getEvents());
                 break;
             case STANDALONE_REPAIR:
             default:
@@ -440,7 +440,7 @@ public class DefaultEntitlementTimelineApi implements EntitlementTimelineApi {
             builder.setBundleStartDate(newBundleStartDate);
         }
         if (newSubscriptionStartDate != null) {
-            builder.setStartDate(newSubscriptionStartDate);
+            builder.setAlignStartDate(newSubscriptionStartDate);
         }
         if (initialEvents.size() > 0) {
             for (final EntitlementEvent cur : initialEvents) {

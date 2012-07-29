@@ -539,7 +539,7 @@ public class AuditedEntitlementDao implements EntitlementDao {
                 } else if (o2.getCategory() == ProductCategory.BASE) {
                     return 1;
                 } else {
-                    return o1.getStartDate().compareTo(o2.getStartDate());
+                    return ((SubscriptionData) o1).getAlignStartDate().compareTo(((SubscriptionData) o2).getAlignStartDate());
                 }
             }
         });
@@ -619,7 +619,7 @@ public class AuditedEntitlementDao implements EntitlementDao {
             public Void inTransaction(final SubscriptionSqlDao transactional, final TransactionStatus status) throws Exception {
                 final EntitlementEventSqlDao transEventDao = transactional.become(EntitlementEventSqlDao.class);
                 for (final SubscriptionDataRepair cur : inRepair) {
-                    transactional.updateForRepair(cur.getId().toString(), cur.getActiveVersion(), cur.getStartDate().toDate(), cur.getBundleStartDate().toDate(), context);
+                    transactional.updateForRepair(cur.getId().toString(), cur.getActiveVersion(), cur.getAlignStartDate().toDate(), cur.getBundleStartDate().toDate(), context);
                     for (final EntitlementEvent event : cur.getInitialEvents()) {
                         transEventDao.updateVersion(event.getId().toString(), event.getActiveVersion(), context);
                     }

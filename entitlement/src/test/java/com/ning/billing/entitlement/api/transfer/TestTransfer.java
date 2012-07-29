@@ -94,7 +94,7 @@ public class TestTransfer extends TestApiBase {
         assertEquals(subscriptions.size(), 1);
 
         final Subscription newBaseSubscription = subscriptions.get(0);
-        assertTrue(newBaseSubscription.getStartDate().compareTo(oldBaseSubscription.getStartDate()) == 0);
+        assertTrue(((SubscriptionData) newBaseSubscription).getAlignStartDate().compareTo(((SubscriptionData) oldBaseSubscription).getAlignStartDate()) == 0);
 
         // CHECK NEXT PENDING PHASE IS ALIGNED WITH OLD SUBSCRIPTION START DATE
         assertEquals(newBaseSubscription.getAllTransitions().size(), 2);
@@ -143,7 +143,7 @@ public class TestTransfer extends TestApiBase {
         assertEquals(subscriptions.size(), 1);
 
         final Subscription newBaseSubscription = subscriptions.get(0);
-        assertTrue(newBaseSubscription.getStartDate().compareTo(oldBaseSubscription.getStartDate()) == 0);
+        assertTrue(((SubscriptionData) newBaseSubscription).getAlignStartDate().compareTo(((SubscriptionData) oldBaseSubscription).getAlignStartDate()) == 0);
 
         // CHECK NEXT PENDING PHASE IS ALIGNED WITH OLD SUBSCRIPTION START DATE
         assertEquals(newBaseSubscription.getAllTransitions().size(), 2);
@@ -193,7 +193,7 @@ public class TestTransfer extends TestApiBase {
         assertEquals(subscriptions.size(), 1);
 
         final Subscription newBaseSubscription = subscriptions.get(0);
-        assertTrue(newBaseSubscription.getStartDate().compareTo(baseSubscription.getStartDate()) == 0);
+        assertTrue(((SubscriptionData) newBaseSubscription).getAlignStartDate().compareTo(((SubscriptionData) baseSubscription).getAlignStartDate()) == 0);
 
         // CHECK ONLY ONE PHASE EXISTS
         assertEquals(newBaseSubscription.getAllTransitions().size(), 1);
@@ -242,7 +242,7 @@ public class TestTransfer extends TestApiBase {
         assertEquals(subscriptions.size(), 1);
 
         final Subscription newBaseSubscription = subscriptions.get(0);
-        assertTrue(newBaseSubscription.getStartDate().compareTo(baseSubscription.getStartDate()) == 0);
+        assertTrue(((SubscriptionData) newBaseSubscription).getAlignStartDate().compareTo(((SubscriptionData) baseSubscription).getAlignStartDate()) == 0);
 
         // CHECK ONLY ONE PHASE EXISTS
         assertEquals(newBaseSubscription.getAllTransitions().size(), 1);
@@ -337,15 +337,15 @@ public class TestTransfer extends TestApiBase {
             Product curProduct = curPlan.getProduct();
             if (curProduct.getName().equals(baseProduct)) {
                 foundBP = true;
-                assertTrue(cur.getStartDate().compareTo(baseSubscription.getStartDate()) == 0);
+                assertTrue(((SubscriptionData) cur).getAlignStartDate().compareTo(((SubscriptionData) baseSubscription).getAlignStartDate()) == 0);
                 assertNull(cur.getPendingTransition());
             } else if (curProduct.getName().equals(aoProduct1)) {
                 foundAO1 = true;
-                assertTrue(cur.getStartDate().compareTo(aoSubscription1.getStartDate()) == 0);
+                assertTrue(((SubscriptionData) cur).getAlignStartDate().compareTo((aoSubscription1).getAlignStartDate()) == 0);
                 assertNull(cur.getPendingTransition());
             } else if (curProduct.getName().equals(aoProduct2)) {
                 foundAO2 = true;
-                assertTrue(cur.getStartDate().compareTo(aoSubscription2.getStartDate()) == 0);
+                assertTrue(((SubscriptionData) cur).getAlignStartDate().compareTo((aoSubscription2).getAlignStartDate()) == 0);
                 assertNotNull(cur.getPendingTransition());
             } else {
                 Assert.fail("Unexpected product " + curProduct.getName());
@@ -363,5 +363,4 @@ public class TestTransfer extends TestApiBase {
         clock.addMonths(1);
         assertTrue(testListener.isCompleted(3000));
     }
-
 }

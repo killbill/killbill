@@ -43,6 +43,7 @@ public class DefaultSubscriptionFactory implements SubscriptionFactory {
         this.catalogService = catalogService;
     }
 
+    @Override
     public SubscriptionData createSubscription(final SubscriptionBuilder builder, final List<EntitlementEvent> events) {
         final SubscriptionData subscription = new SubscriptionData(builder, apiService, clock);
         if (events.size() > 0) {
@@ -54,7 +55,7 @@ public class DefaultSubscriptionFactory implements SubscriptionFactory {
     public static class SubscriptionBuilder {
         private UUID id;
         private UUID bundleId;
-        private DateTime startDate;
+        private DateTime alignStartDate;
         private DateTime bundleStartDate;
         private Long activeVersion;
         private ProductCategory category;
@@ -68,7 +69,7 @@ public class DefaultSubscriptionFactory implements SubscriptionFactory {
         public SubscriptionBuilder(final SubscriptionData original) {
             this.id = original.getId();
             this.bundleId = original.getBundleId();
-            this.startDate = original.getStartDate();
+            this.alignStartDate = original.getAlignStartDate();
             this.bundleStartDate = original.getBundleStartDate();
             this.category = original.getCategory();
             this.activeVersion = original.getActiveVersion();
@@ -86,8 +87,8 @@ public class DefaultSubscriptionFactory implements SubscriptionFactory {
             return this;
         }
 
-        public SubscriptionBuilder setStartDate(final DateTime startDate) {
-            this.startDate = startDate;
+        public SubscriptionBuilder setAlignStartDate(final DateTime alignStartDate) {
+            this.alignStartDate = alignStartDate;
             return this;
         }
 
@@ -124,8 +125,8 @@ public class DefaultSubscriptionFactory implements SubscriptionFactory {
             return bundleId;
         }
 
-        public DateTime getStartDate() {
-            return startDate;
+        public DateTime getAlignStartDate() {
+            return alignStartDate;
         }
 
         public DateTime getBundleStartDate() {

@@ -79,7 +79,7 @@ public class PlanAligner {
                                                             final String priceList,
                                                             final DateTime requestedDate,
                                                             final DateTime effectiveDate) throws CatalogApiException, EntitlementUserApiException {
-        final List<TimedPhase> timedPhases = getTimedPhaseOnCreate(subscription.getStartDate(),
+        final List<TimedPhase> timedPhases = getTimedPhaseOnCreate(subscription.getAlignStartDate(),
                                                                    subscription.getBundleStartDate(),
                                                                    plan,
                                                                    initialPhase,
@@ -155,7 +155,7 @@ public class PlanAligner {
                 case CREATE:
                 case RE_CREATE:
                 case TRANSFER:
-                    final List<TimedPhase> timedPhases = getTimedPhaseOnCreate(subscription.getStartDate(),
+                    final List<TimedPhase> timedPhases = getTimedPhaseOnCreate(subscription.getAlignStartDate(),
                                                                                subscription.getBundleStartDate(),
                                                                                lastPlanTransition.getNextPlan(),
                                                                                lastPlanTransition.getNextPhase().getPhaseType(),
@@ -164,7 +164,7 @@ public class PlanAligner {
                     return getTimedPhase(timedPhases, effectiveDate, WhichPhase.NEXT);
                 // If we went through Plan changes, borrow the logic for changePlan alignment
                 case CHANGE:
-                    return getTimedPhaseOnChange(subscription.getStartDate(),
+                    return getTimedPhaseOnChange(subscription.getAlignStartDate(),
                                                  subscription.getBundleStartDate(),
                                                  lastPlanTransition.getPreviousPhase(),
                                                  lastPlanTransition.getPreviousPlan(),
@@ -219,7 +219,7 @@ public class PlanAligner {
                                              final DateTime requestedDate,
                                              final DateTime effectiveDate,
                                              final WhichPhase which) throws CatalogApiException, EntitlementUserApiException {
-        return getTimedPhaseOnChange(subscription.getStartDate(),
+        return getTimedPhaseOnChange(subscription.getAlignStartDate(),
                                      subscription.getBundleStartDate(),
                                      subscription.getCurrentPhase(),
                                      subscription.getCurrentPlan(),

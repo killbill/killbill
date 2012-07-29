@@ -104,7 +104,7 @@ public class DefaultEntitlementTransferApi implements EntitlementTransferApi {
         */
 
         final PlanPhaseSpecifier spec = existingEvent.getPlanPhaseSpecifier();
-        final PlanPhase currentPhase = catalog.findPhase(existingEvent.getPlanPhaseName(), effectiveDate, subscription.getStartDate());
+        final PlanPhase currentPhase = catalog.findPhase(existingEvent.getPlanPhaseName(), effectiveDate, subscription.getAlignStartDate());
 
 
         final ApiEventBuilder apiBuilder = new ApiEventBuilder()
@@ -252,7 +252,7 @@ public class DefaultEntitlementTransferApi implements EntitlementTransferApi {
                 }
 
                 // We Align with the original subscription
-                final DateTime subscriptionStartDate = oldSubscription.getStartDate();
+                final DateTime subscriptionAlignStartDate = oldSubscription.getAlignStartDate();
                 if (bundleStartdate == null) {
                     bundleStartdate = oldSubscription.getStartDate();
                 }
@@ -263,7 +263,7 @@ public class DefaultEntitlementTransferApi implements EntitlementTransferApi {
                 .setBundleId(subscriptionBundleData.getId())
                 .setCategory(productCategory)
                 .setBundleStartDate(transferDate)
-                .setStartDate(subscriptionStartDate),
+                .setAlignStartDate(subscriptionAlignStartDate),
                 ImmutableList.<EntitlementEvent>of());
 
                 final List<EntitlementEvent> events = toEvents(existingEvents, subscriptionData, transferDate, context);

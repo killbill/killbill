@@ -196,7 +196,7 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
                                                  .setBundleId(bundleId)
                                                  .setCategory(plan.getProduct().getCategory())
                                                  .setBundleStartDate(bundleStartDate)
-                                                 .setStartDate(effectiveDate),
+                                                 .setAlignStartDate(effectiveDate),
                                          plan, spec.getPhaseType(), realPriceList, requestedDate, effectiveDate, now, context);
         } catch (CatalogApiException e) {
             throw new EntitlementUserApiException(e);

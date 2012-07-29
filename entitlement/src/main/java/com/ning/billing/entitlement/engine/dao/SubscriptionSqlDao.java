@@ -80,7 +80,7 @@ public interface SubscriptionSqlDao extends Transactional<SubscriptionSqlDao>, A
             stmt.bind("id", sub.getId().toString());
             stmt.bind("bundleId", sub.getBundleId().toString());
             stmt.bind("category", sub.getCategory().toString());
-            stmt.bind("startDate", getDate(sub.getStartDate()));
+            stmt.bind("startDate", getDate(sub.getAlignStartDate()));
             stmt.bind("bundleStartDate", getDate(sub.getBundleStartDate()));
             stmt.bind("activeVersion", sub.getActiveVersion());
             stmt.bind("chargedThroughDate", getDate(sub.getChargedThroughDate()));
@@ -107,7 +107,7 @@ public interface SubscriptionSqlDao extends Transactional<SubscriptionSqlDao>, A
                                                 .setBundleId(bundleId)
                                                 .setCategory(category)
                                                 .setBundleStartDate(bundleStartDate)
-                                                .setStartDate(startDate)
+                                                .setAlignStartDate(startDate)
                                                 .setActiveVersion(activeVersion)
                                                 .setChargedThroughDate(ctd)
                                                 .setPaidThroughDate(ptd));
