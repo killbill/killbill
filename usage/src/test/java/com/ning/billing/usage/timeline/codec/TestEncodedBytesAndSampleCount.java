@@ -19,7 +19,9 @@ package com.ning.billing.usage.timeline.codec;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-public class TestEncodedBytesAndSampleCount {
+import com.ning.billing.usage.UsageTestSuite;
+
+public class TestEncodedBytesAndSampleCount extends UsageTestSuite {
 
     @Test(groups = "fast")
     public void testGetters() throws Exception {

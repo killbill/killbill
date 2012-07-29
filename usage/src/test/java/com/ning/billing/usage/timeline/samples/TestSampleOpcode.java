@@ -19,7 +19,9 @@ package com.ning.billing.usage.timeline.samples;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-public class TestSampleOpcode {
+import com.ning.billing.usage.UsageTestSuite;
+
+public class TestSampleOpcode extends UsageTestSuite {
 
     @Test(groups = "fast")
     public void testGetKnownOpcodeFromIndex() throws Exception {

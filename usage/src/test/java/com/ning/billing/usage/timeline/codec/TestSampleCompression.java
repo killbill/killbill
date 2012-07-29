@@ -23,12 +23,13 @@ import org.joda.time.DateTime;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.ning.billing.usage.UsageTestSuite;
 import com.ning.billing.usage.timeline.samples.SampleOpcode;
 import com.ning.billing.usage.timeline.samples.ScalarSample;
 import com.ning.billing.usage.timeline.times.DefaultTimelineCoder;
 import com.ning.billing.usage.timeline.times.TimelineCoder;
 
-public class TestSampleCompression {
+public class TestSampleCompression extends UsageTestSuite {
 
     private static final TimelineCoder timelineCoder = new DefaultTimelineCoder();
     private static final SampleCoder sampleCoder = new DefaultSampleCoder();

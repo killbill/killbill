@@ -19,7 +19,9 @@ package com.ning.billing.usage.timeline.samples;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-public class TestScalarSample {
+import com.ning.billing.usage.UsageTestSuite;
+
+public class TestScalarSample extends UsageTestSuite {
 
     @Test(groups = "fast")
     public void testGetters() throws Exception {

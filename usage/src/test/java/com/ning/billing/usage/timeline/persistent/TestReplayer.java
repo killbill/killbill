@@ -24,13 +24,14 @@ import java.util.List;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.ning.billing.usage.UsageTestSuite;
 import com.ning.billing.usage.timeline.sources.SourceSamplesForTimestamp;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
-public class TestReplayer {
+public class TestReplayer extends UsageTestSuite {
 
     private static final File basePath = new File(System.getProperty("java.io.tmpdir"), "TestReplayer-" + System.currentTimeMillis());
 

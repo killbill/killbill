@@ -26,10 +26,11 @@ import org.joda.time.DateTime;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.ning.billing.usage.UsageTestSuite;
 import com.ning.billing.usage.timeline.util.DateTimeUtils;
 import com.ning.billing.usage.timeline.util.Hex;
 
-public class TestDefaultTimelineCoder {
+public class TestDefaultTimelineCoder extends UsageTestSuite {
 
     private static final TimelineCoder timelineCoder = new DefaultTimelineCoder();
 

@@ -14,19 +14,10 @@
  * under the License.
  */
 
-package com.ning.billing.usage.timeline.times;
+package com.ning.billing.usage;
 
-import org.testng.Assert;
-import org.testng.annotations.Test;
+import com.ning.billing.KillbillTestSuite;
 
-import com.ning.billing.usage.UsageTestSuite;
+public class UsageTestSuite extends KillbillTestSuite {
 
-public class TestTimelineOpcode extends UsageTestSuite {
-
-    @Test(groups = "fast")
-    public void testMaxDeltaTime() throws Exception {
-        for (final TimelineOpcode opcode : TimelineOpcode.values()) {
-            Assert.assertTrue(opcode.getOpcodeIndex() >= TimelineOpcode.MAX_DELTA_TIME);
-        }
-    }
 }

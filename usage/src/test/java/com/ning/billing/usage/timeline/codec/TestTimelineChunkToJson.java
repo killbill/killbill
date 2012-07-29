@@ -28,6 +28,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.ning.billing.usage.UsageTestSuite;
 import com.ning.billing.usage.timeline.chunks.TimelineChunk;
 import com.ning.billing.usage.timeline.chunks.TimelineChunksViews.Compact;
 import com.ning.billing.usage.timeline.chunks.TimelineChunksViews.Loose;
@@ -40,7 +41,7 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.TextNode;
 
-public class TestTimelineChunkToJson {
+public class TestTimelineChunkToJson extends UsageTestSuite {
 
     private static final ObjectMapper mapper = new ObjectMapper().configure(MapperFeature.DEFAULT_VIEW_INCLUSION, false);
     private static final TimelineCoder timelineCoder = new DefaultTimelineCoder();

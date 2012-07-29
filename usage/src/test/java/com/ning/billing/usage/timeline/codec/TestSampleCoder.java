@@ -30,6 +30,7 @@ import org.joda.time.format.ISODateTimeFormat;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.ning.billing.usage.UsageTestSuite;
 import com.ning.billing.usage.timeline.samples.RepeatSample;
 import com.ning.billing.usage.timeline.samples.SampleOpcode;
 import com.ning.billing.usage.timeline.samples.ScalarSample;
@@ -42,7 +43,7 @@ import com.ning.billing.usage.timeline.util.Hex;
 
 import com.google.common.collect.ImmutableList;
 
-public class TestSampleCoder {
+public class TestSampleCoder extends UsageTestSuite {
 
     private static final TimelineCoder timelineCoder = new DefaultTimelineCoder();
     private static final DateTimeFormatter dateFormatter = ISODateTimeFormat.dateTime().withZone(DateTimeZone.UTC);

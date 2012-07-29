@@ -23,6 +23,7 @@ import org.joda.time.DateTime;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.ning.billing.usage.UsageTestSuite;
 import com.ning.billing.usage.timeline.chunks.TimelineChunk;
 import com.ning.billing.usage.timeline.samples.SampleOpcode;
 import com.ning.billing.usage.timeline.samples.ScalarSample;
@@ -30,7 +31,7 @@ import com.ning.billing.usage.timeline.times.DefaultTimelineCoder;
 import com.ning.billing.usage.timeline.times.TimelineCoder;
 import com.ning.billing.usage.timeline.times.TimelineCursor;
 
-public class TestTimelineChunkAccumulator {
+public class TestTimelineChunkAccumulator extends UsageTestSuite {
 
     private static final TimelineCoder timelineCoder = new DefaultTimelineCoder();
     private static final SampleCoder sampleCoder = new DefaultSampleCoder();
@@ -88,7 +89,7 @@ public class TestTimelineChunkAccumulator {
             }
         });
         final TimelineChunkDecoded chunkDecoded = new TimelineChunkDecoded(chunk, sampleCoder);
-        System.out.printf("%s\n", chunkDecoded.toString());
+        //System.out.printf("%s\n", chunkDecoded.toString());
     }
 
 

@@ -24,10 +24,11 @@ import org.skife.config.TimeSpan;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.ning.billing.usage.UsageTestSuite;
 import com.ning.billing.usage.timeline.consumer.SampleConsumer;
 import com.ning.billing.usage.timeline.samples.SampleOpcode;
 
-public class TestDecimatingFilter {
+public class TestDecimatingFilter extends UsageTestSuite {
 
     @Test(groups = "fast")
     public void testBasicFilterOperations() throws Exception {

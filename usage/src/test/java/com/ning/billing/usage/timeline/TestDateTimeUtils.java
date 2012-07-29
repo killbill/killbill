@@ -21,11 +21,12 @@ import org.joda.time.Seconds;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.ning.billing.usage.UsageTestSuite;
 import com.ning.billing.usage.timeline.util.DateTimeUtils;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 
-public class TestDateTimeUtils {
+public class TestDateTimeUtils extends UsageTestSuite {
 
     private final Clock clock = new ClockMock();
 

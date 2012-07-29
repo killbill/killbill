@@ -19,9 +19,11 @@ package com.ning.billing.usage.timeline.metrics;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.ning.billing.usage.UsageTestSuite;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class TestSamplesForMetricAndSource {
+public class TestSamplesForMetricAndSource extends UsageTestSuite {
 
     @Test(groups = "fast")
     public void testMapping() throws Exception {
