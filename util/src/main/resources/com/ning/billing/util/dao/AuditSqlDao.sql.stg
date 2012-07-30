@@ -15,3 +15,17 @@ insertAuditFromTransaction() ::= <<
     INSERT INTO audit_log(<fields()>)
     VALUES(:tableName, :recordId, :changeType, :createdDate, :userName, :reasonCode, :comment, :userToken);
 >>
+
+getAuditLogsForRecordId() ::= <<
+  SELECT <fields()>
+  FROM audit_log
+  WHERE record_id = :recordId
+  AND table_name = :tableName;
+>>
+
+getRecordIdForTable(tableName) ::= <<
+  SELECT record_id
+  FROM <tableName>
+  WHERE id = :id
+  LIMIT 1
+>>
