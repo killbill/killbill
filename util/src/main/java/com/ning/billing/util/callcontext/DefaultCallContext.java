@@ -23,18 +23,19 @@ import org.joda.time.DateTime;
 import com.ning.billing.util.clock.Clock;
 
 public class DefaultCallContext extends CallContextBase {
-    private final Clock clock;
+
+    private final DateTime createdDate;
 
     public DefaultCallContext(final String userName, final CallOrigin callOrigin, final UserType userType, final UUID userToken, final Clock clock) {
         super(userName, callOrigin, userType, userToken);
-        this.clock = clock;
+        this.createdDate = clock.getUTCNow();
     }
 
     public DefaultCallContext(final String userName, final CallOrigin callOrigin, final UserType userType,
                               final String reasonCode, final String comment,
                               final UUID userToken, final Clock clock) {
         super(userName, callOrigin, userType, reasonCode, comment, userToken);
-        this.clock = clock;
+        this.createdDate = clock.getUTCNow();
     }
 
     public DefaultCallContext(final String userName, final CallOrigin callOrigin, final UserType userType, final Clock clock) {
@@ -43,11 +44,11 @@ public class DefaultCallContext extends CallContextBase {
 
     @Override
     public DateTime getCreatedDate() {
-        return clock.getUTCNow();
+        return createdDate;
     }
 
     @Override
     public DateTime getUpdatedDate() {
-        return clock.getUTCNow();
+        return createdDate;
     }
 }
