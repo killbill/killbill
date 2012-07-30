@@ -22,13 +22,17 @@ import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlBatch;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
+import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 
+import com.ning.billing.util.audit.AuditLog;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextBinder;
 
 @ExternalizedSqlViaStringTemplate3
+@RegisterMapper(AuditLogMapper.class)
 public interface AuditSqlDao {
+
     @SqlUpdate
     public void insertAuditFromTransaction(@AuditBinder final EntityAudit audit,
                                            @CallContextBinder final CallContext context);
@@ -38,7 +42,15 @@ public interface AuditSqlDao {
                                            @CallContextBinder final CallContext context);
 
     @SqlQuery
+    public List<AuditLog> getAuditLogsForRecordId(@TableNameBinder final TableName tableName,
+                                                  @Bind("recordId") final long recordId);
+
+    @SqlQuery
     public Long getRecordId(@Bind("id") final String id);
+
+    @SqlQuery
+    public Long getRecordIdForTable(@TableNameBinder final TableName tableName,
+                                    @Bind("id") final String id);
 
     @SqlQuery
     public Long getHistoryRecordId(@Bind("recordId") final Long recordId);
