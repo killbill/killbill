@@ -18,6 +18,8 @@ package com.ning.billing.jaxrs.json;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.util.audit.AuditLog;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -43,6 +45,11 @@ public class AuditLogJson {
         this.reasonCode = reasonCode;
         this.comments = comments;
         this.userToken = userToken;
+    }
+
+    public AuditLogJson(final AuditLog auditLog) {
+        this(auditLog.getChangeType().toString(), auditLog.getCreatedDate(), auditLog.getUserName(), auditLog.getReasonCode(),
+             auditLog.getComment(), auditLog.getUserToken());
     }
 
     public String getChangeType() {
