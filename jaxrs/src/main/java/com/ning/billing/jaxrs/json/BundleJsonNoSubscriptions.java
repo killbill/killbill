@@ -16,8 +16,6 @@
 
 package com.ning.billing.jaxrs.json;
 
-import javax.annotation.Nullable;
-import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -30,8 +28,7 @@ public class BundleJsonNoSubscriptions extends BundleJsonSimple {
     @JsonCreator
     public BundleJsonNoSubscriptions(@JsonProperty("bundleId") final String bundleId,
                                      @JsonProperty("accountId") final String accountId,
-                                     @JsonProperty("externalKey") final String externalKey,
-                                     @JsonProperty("subscriptions") @Nullable final List<SubscriptionJsonWithEvents> subscriptions) {
+                                     @JsonProperty("externalKey") final String externalKey) {
         super(bundleId, externalKey);
         this.accountId = accountId;
     }

@@ -199,11 +199,13 @@ public class DefaultEntitlementTransferApi implements EntitlementTransferApi {
 
 
     @Override
-    public void transferBundle(final UUID sourceAccountId, final UUID destAccountId,
+    public SubscriptionBundle transferBundle(final UUID sourceAccountId, final UUID destAccountId,
             final String bundleKey, final DateTime transferDate, final boolean transferAddOn,
             final CallContext context) throws EntitlementTransferApiException {
 
         try {
+
+            final DateTime effectiveTransferDate = transferDate == null ? clock.getUTCNow() : transferDate;
 
             final SubscriptionBundle bundle = dao.getSubscriptionBundleFromAccountAndKey(sourceAccountId, bundleKey);
             if (bundle == null) {
@@ -213,7 +215,7 @@ public class DefaultEntitlementTransferApi implements EntitlementTransferApi {
             // Get the bundle timeline for the old account
             final BundleTimeline bundleTimeline = timelineApi.getBundleTimeline(bundle);
 
-            final SubscriptionBundleData subscriptionBundleData = new SubscriptionBundleData(bundleKey, destAccountId, transferDate);
+            final SubscriptionBundleData subscriptionBundleData = new SubscriptionBundleData(bundleKey, destAccountId, effectiveTransferDate);
             final List<SubscriptionMigrationData> subscriptionMigrationDataList = new LinkedList<SubscriptionMigrationData>();
 
             final List<TransferCancelData> transferCancelDataList = new LinkedList<TransferCancelData>();
@@ -232,18 +234,16 @@ public class DefaultEntitlementTransferApi implements EntitlementTransferApi {
                     }
                 } else {
 
-
-
                     // If BP or STANDALONE subscription, create the cancel event on effectiveCancelDate
-                    final DateTime effectiveCancelDate = oldSubscription.getChargedThroughDate() != null && transferDate.isBefore(oldSubscription.getChargedThroughDate()) ?
-                            oldSubscription.getChargedThroughDate() : transferDate;
+                    final DateTime effectiveCancelDate = oldSubscription.getChargedThroughDate() != null && effectiveTransferDate.isBefore(oldSubscription.getChargedThroughDate()) ?
+                            oldSubscription.getChargedThroughDate() : effectiveTransferDate;
 
                             final EntitlementEvent cancelEvent = new ApiEventCancel(new ApiEventBuilder()
                             .setSubscriptionId(cur.getId())
                             .setActiveVersion(cur.getActiveVersion())
                             .setProcessedDate(clock.getUTCNow())
                             .setEffectiveDate(effectiveCancelDate)
-                            .setRequestedDate(transferDate)
+                            .setRequestedDate(effectiveTransferDate)
                             .setUserToken(context.getUserToken())
                             .setFromDisk(true));
 
@@ -262,11 +262,11 @@ public class DefaultEntitlementTransferApi implements EntitlementTransferApi {
                 .setId(UUID.randomUUID())
                 .setBundleId(subscriptionBundleData.getId())
                 .setCategory(productCategory)
-                .setBundleStartDate(transferDate)
+                .setBundleStartDate(effectiveTransferDate)
                 .setAlignStartDate(subscriptionAlignStartDate),
                 ImmutableList.<EntitlementEvent>of());
 
-                final List<EntitlementEvent> events = toEvents(existingEvents, subscriptionData, transferDate, context);
+                final List<EntitlementEvent> events = toEvents(existingEvents, subscriptionData, effectiveTransferDate, context);
                 final SubscriptionMigrationData curData = new SubscriptionMigrationData(subscriptionData, events);
                 subscriptionMigrationDataList.add(curData);
             }
@@ -275,6 +275,7 @@ public class DefaultEntitlementTransferApi implements EntitlementTransferApi {
             // Atomically cancel all subscription on old account and create new bundle, subscriptions, events for new account
             dao.transfer(sourceAccountId, destAccountId, bundleMigrationData, transferCancelDataList, context);
 
+            return bundle;
         } catch (EntitlementRepairException e) {
             throw new EntitlementTransferApiException(e);
         }

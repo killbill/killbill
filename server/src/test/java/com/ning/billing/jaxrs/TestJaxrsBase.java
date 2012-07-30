@@ -370,7 +370,7 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
 
 
     protected BundleJsonNoSubscriptions createBundle(final String accountId, final String key) throws Exception {
-        final BundleJsonNoSubscriptions input = new BundleJsonNoSubscriptions(null, accountId, key, null);
+        final BundleJsonNoSubscriptions input = new BundleJsonNoSubscriptions(null, accountId, key);
         String baseJson = mapper.writeValueAsString(input);
         Response response = doPost(JaxrsResource.BUNDLES_PATH, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());

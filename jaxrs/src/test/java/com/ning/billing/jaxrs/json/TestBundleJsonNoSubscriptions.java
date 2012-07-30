@@ -34,7 +34,7 @@ public class TestBundleJsonNoSubscriptions extends JaxrsTestSuite {
         final String bundleId = UUID.randomUUID().toString();
         final String accountId = UUID.randomUUID().toString();
         final String externalKey = UUID.randomUUID().toString();
-        final BundleJsonNoSubscriptions bundleJsonNoSubscriptions = new BundleJsonNoSubscriptions(bundleId, accountId, externalKey, null);
+        final BundleJsonNoSubscriptions bundleJsonNoSubscriptions = new BundleJsonNoSubscriptions(bundleId, accountId, externalKey);
         Assert.assertEquals(bundleJsonNoSubscriptions.getBundleId(), bundleId);
         Assert.assertEquals(bundleJsonNoSubscriptions.getAccountId(), accountId);
         Assert.assertEquals(bundleJsonNoSubscriptions.getExternalKey(), externalKey);

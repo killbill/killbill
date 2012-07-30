@@ -40,6 +40,7 @@ public class BusinessSubscriptionEvent {
         ADD,
         CANCEL,
         RE_ADD,
+        TRANSFER,
         CHANGE,
         SYSTEM_CANCEL,
         SYSTEM_CHANGE
@@ -94,6 +95,10 @@ public class BusinessSubscriptionEvent {
 
     public static BusinessSubscriptionEvent subscriptionRecreated(final String plan, final Catalog catalog, final DateTime eventTime, final DateTime subscriptionCreationDate) {
         return eventFromType(EventType.RE_ADD, plan, catalog, eventTime, subscriptionCreationDate);
+    }
+
+    public static BusinessSubscriptionEvent subscriptionTransfered(final String plan, final Catalog catalog, final DateTime eventTime, final DateTime subscriptionCreationDate) {
+        return eventFromType(EventType.TRANSFER, plan, catalog, eventTime, subscriptionCreationDate);
     }
 
     public static BusinessSubscriptionEvent subscriptionPhaseChanged(final String plan, final SubscriptionState state, final Catalog catalog, final DateTime eventTime, final DateTime subscriptionCreationDate) {

@@ -156,6 +156,8 @@ public class BusinessSubscriptionTransitionRecorder {
                 return subscriptionCreated(event);
             case RE_CREATE:
                 return subscriptionRecreated(event);
+            case TRANSFER:
+                return subscriptionTransfered(event);
             case CANCEL:
                 return subscriptionCancelled(event);
             case CHANGE:
@@ -179,6 +181,11 @@ public class BusinessSubscriptionTransitionRecorder {
     private BusinessSubscriptionEvent subscriptionRecreated(final SubscriptionEvent recreated) throws AccountApiException, EntitlementUserApiException {
         return BusinessSubscriptionEvent.subscriptionRecreated(recreated.getNextPlan(), catalogService.getFullCatalog(), recreated.getEffectiveTransitionTime(), recreated.getSubscriptionStartDate());
     }
+
+    private BusinessSubscriptionEvent subscriptionTransfered(final SubscriptionEvent transfered) throws AccountApiException, EntitlementUserApiException {
+        return BusinessSubscriptionEvent.subscriptionTransfered(transfered.getNextPlan(), catalogService.getFullCatalog(), transfered.getEffectiveTransitionTime(), transfered.getSubscriptionStartDate());
+    }
+
 
     private BusinessSubscriptionEvent subscriptionCancelled(final SubscriptionEvent cancelled) throws AccountApiException, EntitlementUserApiException {
         // cancelled.getNextPlan() is null here - need to look at the previous one to create the correct event name
@@ -212,7 +219,8 @@ public class BusinessSubscriptionTransitionRecorder {
                                                                     final ArrayList<BusinessSubscriptionTransition> transitions,
                                                                     final Currency currency) {
         if (BusinessSubscriptionEvent.EventType.ADD.equals(businessEvent.getEventType()) ||
-                BusinessSubscriptionEvent.EventType.RE_ADD.equals(businessEvent.getEventType())) {
+                BusinessSubscriptionEvent.EventType.RE_ADD.equals(businessEvent.getEventType()) ||
+                BusinessSubscriptionEvent.EventType.TRANSFER.equals(businessEvent.getEventType())) {
             return null;
         }
 
