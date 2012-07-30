@@ -31,7 +31,9 @@ import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.PARAMETER})
 public @interface TableNameBinder {
+
     public static class TableNameBinderFactory implements BinderFactory {
+
         public Binder build(final Annotation annotation) {
             return new Binder<TableNameBinder, TableName>() {
                 public void bind(final SQLStatement q, final TableNameBinder bind, final TableName tableName) {

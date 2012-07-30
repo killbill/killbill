@@ -17,15 +17,15 @@ insertAuditFromTransaction() ::= <<
 >>
 
 getAuditLogsForRecordId() ::= <<
-  SELECT <recordId()>
+  SELECT <fields()>
   FROM audit_log
   WHERE record_id = :recordId
-  AND tableName = :tableName;
+  AND table_name = :tableName;
 >>
 
-getRecordIdForTable ::= <<
+getRecordIdForTable(tableName) ::= <<
   SELECT record_id
-  FROM :tableName
+  FROM <tableName>
   WHERE id = :id
   LIMIT 1
 >>

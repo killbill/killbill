@@ -22,6 +22,7 @@ import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlBatch;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
+import org.skife.jdbi.v2.sqlobject.customizers.Define;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 
@@ -49,7 +50,7 @@ public interface AuditSqlDao {
     public Long getRecordId(@Bind("id") final String id);
 
     @SqlQuery
-    public Long getRecordIdForTable(@TableNameBinder final TableName tableName,
+    public Long getRecordIdForTable(@Define("tableName") final TableName tableName,
                                     @Bind("id") final String id);
 
     @SqlQuery
