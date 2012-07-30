@@ -67,7 +67,7 @@ public class BlockingSubscription implements Subscription {
 
     @Override
     public boolean changePlan(final String productName, final BillingPeriod term, final String priceList, final DateTime requestedDate,
-                              final CallContext context) throws EntitlementUserApiException {
+            final CallContext context) throws EntitlementUserApiException {
         try {
             checker.checkBlockedChange(this);
         } catch (BlockingApiException e) {
@@ -78,7 +78,7 @@ public class BlockingSubscription implements Subscription {
 
     @Override
     public boolean changePlanWithPolicy(final String productName, final BillingPeriod term, final String priceList,
-                                        final DateTime requestedDate, final ActionPolicy policy, final CallContext context) throws EntitlementUserApiException {
+            final DateTime requestedDate, final ActionPolicy policy, final CallContext context) throws EntitlementUserApiException {
         try {
             checker.checkBlockedChange(this);
         } catch (BlockingApiException e) {
@@ -89,7 +89,7 @@ public class BlockingSubscription implements Subscription {
 
     @Override
     public boolean recreate(final PlanPhaseSpecifier spec, final DateTime requestedDate, final CallContext context)
-            throws EntitlementUserApiException {
+    throws EntitlementUserApiException {
         return subscription.recreate(spec, requestedDate, context);
     }
 
@@ -101,6 +101,11 @@ public class BlockingSubscription implements Subscription {
     @Override
     public SubscriptionState getState() {
         return subscription.getState();
+    }
+
+    @Override
+    public SubscriptionSourceType getSourceType() {
+        return subscription.getSourceType();
     }
 
     @Override
@@ -179,5 +184,4 @@ public class BlockingSubscription implements Subscription {
     public Subscription getDelegateSubscription() {
         return subscription;
     }
-
 }

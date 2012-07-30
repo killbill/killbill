@@ -140,7 +140,7 @@ public class DefaultEntitlementMigrationApi implements EntitlementMigrationApi {
                                                                                      .setBundleId(bundleId)
                                                                                      .setCategory(productCategory)
                                                                                      .setBundleStartDate(migrationStartDate)
-                                                                                     .setStartDate(migrationStartDate),
+                                                                                     .setAlignStartDate(migrationStartDate),
                                                                              emptyEvents);
         return new SubscriptionMigrationData(subscriptionData, toEvents(subscriptionData, now, ctd, events, context));
     }
@@ -156,7 +156,7 @@ public class DefaultEntitlementMigrationApi implements EntitlementMigrationApi {
                                                                                      .setBundleId(bundleId)
                                                                                      .setCategory(productCategory)
                                                                                      .setBundleStartDate(bundleStartDate)
-                                                                                     .setStartDate(migrationStartDate),
+                                                                                     .setAlignStartDate(migrationStartDate),
                                                                              emptyEvents);
         return new SubscriptionMigrationData(subscriptionData, toEvents(subscriptionData, now, ctd, events, context));
     }

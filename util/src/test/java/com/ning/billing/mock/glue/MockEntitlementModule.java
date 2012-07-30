@@ -23,6 +23,7 @@ import com.ning.billing.entitlement.api.EntitlementService;
 import com.ning.billing.entitlement.api.billing.ChargeThruApi;
 import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi;
 import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
+import com.ning.billing.entitlement.api.transfer.EntitlementTransferApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.glue.EntitlementModule;
 import com.ning.billing.util.glue.RealImplementation;
@@ -60,5 +61,11 @@ public class MockEntitlementModule extends AbstractModule implements Entitlement
     @Override
     public void installEntitlementTimelineApi() {
         bind(EntitlementTimelineApi.class).toInstance(Mockito.mock(EntitlementTimelineApi.class));
+    }
+
+    @Override
+    public void installEntitlementTransferApi() {
+        bind(EntitlementTransferApi.class).toInstance(Mockito.mock(EntitlementTransferApi.class));
+
     }
 }

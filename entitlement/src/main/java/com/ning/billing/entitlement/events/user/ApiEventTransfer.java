@@ -13,21 +13,11 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+package com.ning.billing.entitlement.events.user;
 
-package com.ning.billing.glue;
-
-public interface EntitlementModule {
-
-    public abstract void installEntitlementService();
-
-    public abstract void installEntitlementUserApi();
-
-    public abstract void installEntitlementTransferApi();
-
-    public abstract void installEntitlementMigrationApi();
-
-    public abstract void installChargeThruApi();
-
-    public abstract void installEntitlementTimelineApi();
+public class ApiEventTransfer extends ApiEventBase {
+    public ApiEventTransfer(final ApiEventBuilder builder) {
+        super(builder.setEventType(ApiEventType.TRANSFER));
+    }
 
 }

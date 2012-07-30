@@ -47,6 +47,7 @@ import com.ning.billing.entitlement.api.timeline.BundleTimeline;
 import com.ning.billing.entitlement.api.timeline.EntitlementRepairException;
 import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
+import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoicePayment;
@@ -131,18 +132,26 @@ public class AccountResource extends JaxRsResourceBase {
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + BUNDLES)
     @Produces(APPLICATION_JSON)
-    public Response getAccountBundles(@PathParam("accountId") final String accountId) throws AccountApiException {
+    public Response getAccountBundles(@PathParam("accountId") final String accountId, @QueryParam(QUERY_EXTERNAL_KEY) final String externalKey)
+        throws AccountApiException, EntitlementUserApiException {
+
         final UUID uuid = UUID.fromString(accountId);
         accountApi.getAccountById(uuid);
 
-        final List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(uuid);
-        final Collection<BundleJsonNoSubscriptions> result = Collections2.transform(bundles, new Function<SubscriptionBundle, BundleJsonNoSubscriptions>() {
-            @Override
-            public BundleJsonNoSubscriptions apply(final SubscriptionBundle input) {
-                return new BundleJsonNoSubscriptions(input);
-            }
-        });
-        return Response.status(Status.OK).entity(result).build();
+        if (externalKey != null) {
+            final SubscriptionBundle bundle = entitlementApi.getBundleForAccountAndKey(uuid, externalKey);
+            final BundleJsonNoSubscriptions json = new BundleJsonNoSubscriptions(bundle);
+            return Response.status(Status.OK).entity(json).build();
+        } else {
+            final List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(uuid);
+            final Collection<BundleJsonNoSubscriptions> result = Collections2.transform(bundles, new Function<SubscriptionBundle, BundleJsonNoSubscriptions>() {
+                @Override
+                public BundleJsonNoSubscriptions apply(final SubscriptionBundle input) {
+                    return new BundleJsonNoSubscriptions(input);
+                }
+            });
+            return Response.status(Status.OK).entity(result).build();
+        }
     }
 
     @GET
@@ -229,7 +238,7 @@ public class AccountResource extends JaxRsResourceBase {
         final List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(account.getId());
         final List<BundleTimeline> bundlesTimeline = new LinkedList<BundleTimeline>();
         for (final SubscriptionBundle cur : bundles) {
-            bundlesTimeline.add(timelineApi.getBundleRepair(cur.getId()));
+            bundlesTimeline.add(timelineApi.getBundleTimeline(cur.getId()));
         }
 
         final AccountTimelineJson json = new AccountTimelineJson(account, invoices, payments, bundlesTimeline,
@@ -237,6 +246,10 @@ public class AccountResource extends JaxRsResourceBase {
 
         return Response.status(Status.OK).entity(json).build();
     }
+
+
+
+
 
     /*
      * ************************** EMAIL NOTIFICATIONS FOR INVOICES ********************************

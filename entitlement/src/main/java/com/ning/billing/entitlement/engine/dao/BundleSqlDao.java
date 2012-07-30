@@ -60,10 +60,13 @@ public interface BundleSqlDao extends Transactional<BundleSqlDao>, EntitySqlDao<
     public SubscriptionBundle getBundleFromId(@Bind("id") String id);
 
     @SqlQuery
-    public SubscriptionBundle getBundleFromKey(@Bind("externalKey") String externalKey);
+    public SubscriptionBundle getBundleFromAccountAndKey(@Bind("accountId") String accountId, @Bind("externalKey") String externalKey);
 
     @SqlQuery
     public List<SubscriptionBundle> getBundleFromAccount(@Bind("accountId") String accountId);
+
+    @SqlQuery
+    public List<SubscriptionBundle> getBundlesForKey(@Bind("externalKey") String externalKey);
 
     public static class SubscriptionBundleBinder extends BinderBase implements Binder<Bind, SubscriptionBundleData> {
         @Override

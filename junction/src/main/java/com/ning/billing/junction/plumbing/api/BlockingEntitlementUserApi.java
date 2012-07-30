@@ -64,8 +64,8 @@ public class BlockingEntitlementUserApi implements EntitlementUserApi {
     }
 
     @Override
-    public SubscriptionBundle getBundleForKey(final String bundleKey) throws EntitlementUserApiException {
-        final SubscriptionBundle bundle = entitlementUserApi.getBundleForKey(bundleKey);
+    public SubscriptionBundle getBundleForAccountAndKey(final UUID accountId, final String bundleKey) throws EntitlementUserApiException {
+        final SubscriptionBundle bundle = entitlementUserApi.getBundleForAccountAndKey(accountId, bundleKey);
         return new BlockingSubscriptionBundle(bundle, blockingApi);
     }
 
@@ -80,6 +80,18 @@ public class BlockingEntitlementUserApi implements EntitlementUserApi {
     }
 
     @Override
+    public List<SubscriptionBundle> getBundlesForKey(String bundleKey)
+            throws EntitlementUserApiException {
+        final List<SubscriptionBundle> result = new ArrayList<SubscriptionBundle>();
+        final List<SubscriptionBundle> bundles = entitlementUserApi.getBundlesForKey(bundleKey);
+        for (final SubscriptionBundle bundle : bundles) {
+            result.add(new BlockingSubscriptionBundle(bundle, blockingApi));
+        }
+        return result;
+    }
+
+
+    @Override
     public List<Subscription> getSubscriptionsForBundle(final UUID bundleId) {
         final List<Subscription> result = new ArrayList<Subscription>();
         final List<Subscription> subscriptions = entitlementUserApi.getSubscriptionsForBundle(bundleId);
@@ -90,9 +102,9 @@ public class BlockingEntitlementUserApi implements EntitlementUserApi {
     }
 
     @Override
-    public List<Subscription> getSubscriptionsForKey(final String bundleKey) {
+    public List<Subscription> getSubscriptionsForAccountAndKey(final UUID accountId, final String bundleKey) {
         final List<Subscription> result = new ArrayList<Subscription>();
-        final List<Subscription> subscriptions = entitlementUserApi.getSubscriptionsForKey(bundleKey);
+        final List<Subscription> subscriptions = entitlementUserApi.getSubscriptionsForAccountAndKey(accountId, bundleKey);
         for (final Subscription subscription : subscriptions) {
             result.add(new BlockingSubscription(subscription, blockingApi, checker));
         }

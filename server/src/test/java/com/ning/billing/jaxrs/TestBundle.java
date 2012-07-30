@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -45,7 +45,8 @@ public class TestBundle extends TestJaxrsBase {
         // Retrieves by external key
         final Map<String, String> queryParams = new HashMap<String, String>();
         queryParams.put(JaxrsResource.QUERY_EXTERNAL_KEY, "12345");
-        final Response response = doGet(JaxrsResource.BUNDLES_PATH, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
+        final String uri = JaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAccountId() + "/" + JaxrsResource.BUNDLES;
+        final Response response = doGet(uri, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
         final String baseJson = response.getResponseBody();
         final BundleJsonNoSubscriptions objFromJson = mapper.readValue(baseJson, BundleJsonNoSubscriptions.class);
@@ -86,7 +87,8 @@ public class TestBundle extends TestJaxrsBase {
         // Retrieves by external key
         final Map<String, String> queryParams = new HashMap<String, String>();
         queryParams.put(JaxrsResource.QUERY_EXTERNAL_KEY, "56566");
-        response = doGet(JaxrsResource.BUNDLES_PATH, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
+        uri = JaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAccountId() + "/" + JaxrsResource.BUNDLES;
+        response = doGet(uri, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.NOT_FOUND.getStatusCode());
 
         uri = JaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAccountId() + "/" + JaxrsResource.BUNDLES;

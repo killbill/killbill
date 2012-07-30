@@ -38,6 +38,12 @@ public enum ApiEventType {
             return SubscriptionTransitionType.MIGRATE_BILLING;
         }
     },
+    TRANSFER {
+        @Override
+        public SubscriptionTransitionType getSubscriptionTransitionType() {
+            return SubscriptionTransitionType.TRANSFER;
+        }
+    },
     CHANGE {
         @Override
         public SubscriptionTransitionType getSubscriptionTransitionType() {

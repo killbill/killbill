@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -17,11 +17,20 @@ package com.ning.billing.entitlement.api.timeline;
 
 import java.util.UUID;
 
+import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.util.callcontext.CallContext;
 
 public interface EntitlementTimelineApi {
 
-    public BundleTimeline getBundleRepair(final UUID bundleId) throws EntitlementRepairException;
+    public BundleTimeline getBundleTimeline(final SubscriptionBundle bundle)
+    throws EntitlementRepairException;
 
-    public BundleTimeline repairBundle(final BundleTimeline input, final boolean dryRun, final CallContext context) throws EntitlementRepairException;
+    public BundleTimeline getBundleTimeline(final UUID accountId, final String bundleName)
+    throws EntitlementRepairException;
+
+    public BundleTimeline getBundleTimeline(final UUID bundleId)
+    throws EntitlementRepairException;
+
+    public BundleTimeline repairBundle(final BundleTimeline input, final boolean dryRun, final CallContext context)
+    throws EntitlementRepairException;
 }

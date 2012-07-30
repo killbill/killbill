@@ -56,6 +56,7 @@ public class TestApiListener {
         MIGRATE_ENTITLEMENT,
         MIGRATE_BILLING,
         CREATE,
+        TRANSFER,
         RE_CREATE,
         CHANGE,
         CANCEL,
@@ -86,10 +87,14 @@ public class TestApiListener {
     public void handleEntitlementEvents(final EffectiveSubscriptionEvent eventEffective) {
         log.info(String.format("Got subscription event %s", eventEffective.toString()));
         switch (eventEffective.getTransitionType()) {
-            case MIGRATE_ENTITLEMENT:
-                assertEqualsNicely(NextEvent.MIGRATE_ENTITLEMENT);
-                notifyIfStackEmpty();
-                break;
+        case TRANSFER:
+            assertEqualsNicely(NextEvent.TRANSFER);
+            notifyIfStackEmpty();
+            break;
+        case MIGRATE_ENTITLEMENT:
+            assertEqualsNicely(NextEvent.MIGRATE_ENTITLEMENT);
+            notifyIfStackEmpty();
+            break;
             case MIGRATE_BILLING:
                 assertEqualsNicely(NextEvent.MIGRATE_BILLING);
                 notifyIfStackEmpty();
