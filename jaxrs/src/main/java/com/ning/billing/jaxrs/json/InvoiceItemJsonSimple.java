@@ -17,7 +17,9 @@
 package com.ning.billing.jaxrs.json;
 
 import java.math.BigDecimal;
-import java.util.UUID;
+import java.util.List;
+
+import javax.annotation.Nullable;
 
 import org.joda.time.LocalDate;
 
@@ -26,13 +28,13 @@ import com.ning.billing.invoice.api.InvoiceItem;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class InvoiceItemJsonSimple {
+public class InvoiceItemJsonSimple extends JsonBase {
 
-    private final UUID invoiceItemId;
-    private final UUID invoiceId;
-    private final UUID accountId;
-    private final UUID bundleId;
-    private final UUID subscriptionId;
+    private final String invoiceItemId;
+    private final String invoiceId;
+    private final String accountId;
+    private final String bundleId;
+    private final String subscriptionId;
     private final String planName;
     private final String phaseName;
     private final String description;
@@ -41,18 +43,20 @@ public class InvoiceItemJsonSimple {
     private final BigDecimal amount;
     private final Currency currency;
 
-    public InvoiceItemJsonSimple(@JsonProperty("invoiceItemId") final UUID invoiceItemId,
-                                 @JsonProperty("invoiceId") final UUID invoiceId,
-                                 @JsonProperty("accountId") final UUID accountId,
-                                 @JsonProperty("bundleId") final UUID bundleId,
-                                 @JsonProperty("subscriptionId") final UUID subscriptionId,
+    public InvoiceItemJsonSimple(@JsonProperty("invoiceItemId") final String invoiceItemId,
+                                 @JsonProperty("invoiceId") final String invoiceId,
+                                 @JsonProperty("accountId") final String accountId,
+                                 @JsonProperty("bundleId") final String bundleId,
+                                 @JsonProperty("subscriptionId") final String subscriptionId,
                                  @JsonProperty("planName") final String planName,
                                  @JsonProperty("phaseName") final String phaseName,
                                  @JsonProperty("description") final String description,
                                  @JsonProperty("startDate") final LocalDate startDate,
                                  @JsonProperty("endDate") final LocalDate endDate,
                                  @JsonProperty("amount") final BigDecimal amount,
-                                 @JsonProperty("currency") final Currency currency) {
+                                 @JsonProperty("currency") final Currency currency,
+                                 @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
+        super(auditLogs);
         this.invoiceItemId = invoiceItemId;
         this.invoiceId = invoiceId;
         this.accountId = accountId;
@@ -68,28 +72,29 @@ public class InvoiceItemJsonSimple {
     }
 
     public InvoiceItemJsonSimple(final InvoiceItem item) {
-        this(item.getId(), item.getInvoiceId(), item.getAccountId(), item.getBundleId(), item.getSubscriptionId(),
+        this(toString(item.getId()), toString(item.getInvoiceId()), toString(item.getAccountId()),
+             toString(item.getBundleId()), toString(item.getSubscriptionId()),
              item.getPlanName(), item.getPhaseName(), item.getDescription(), item.getStartDate(), item.getEndDate(),
-             item.getAmount(), item.getCurrency());
+             item.getAmount(), item.getCurrency(), null);
     }
 
-    public UUID getInvoiceItemId() {
+    public String getInvoiceItemId() {
         return invoiceItemId;
     }
 
-    public UUID getInvoiceId() {
+    public String getInvoiceId() {
         return invoiceId;
     }
 
-    public UUID getAccountId() {
+    public String getAccountId() {
         return accountId;
     }
 
-    public UUID getBundleId() {
+    public String getBundleId() {
         return bundleId;
     }
 
-    public UUID getSubscriptionId() {
+    public String getSubscriptionId() {
         return subscriptionId;
     }
 

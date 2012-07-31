@@ -17,6 +17,7 @@
 package com.ning.billing.jaxrs.json;
 
 import java.util.List;
+import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -53,6 +54,10 @@ public abstract class JsonBase {
         }
 
         return auditLogs.get(0).getReasonCode();
+    }
+
+    protected static String toString(@Nullable final UUID id) {
+        return id == null ? null : id.toString();
     }
 
     public List<AuditLogJson> getAuditLogs() {
