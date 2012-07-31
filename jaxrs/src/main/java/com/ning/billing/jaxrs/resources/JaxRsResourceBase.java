@@ -26,6 +26,8 @@ import java.util.UUID;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.ISODateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,6 +57,8 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
     protected final TagUserApi tagUserApi;
     protected final CustomFieldUserApi customFieldUserApi;
     protected final AuditUserApi auditUserApi;
+
+    protected final DateTimeFormatter DATE_TIME_FORMATTER = ISODateTimeFormat.dateTime();
 
     public JaxRsResourceBase(final JaxrsUriBuilder uriBuilder,
                              final TagUserApi tagUserApi,
