@@ -62,7 +62,8 @@ public class TestCredit extends TestJaxrsBase {
         final InvoiceJsonSimple invoice = createInvoice();
         final CreditJson input = new CreditJson(BigDecimal.TEN, UUID.fromString(invoice.getInvoiceId()), UUID.randomUUID().toString(),
                                                 requestedDate, effectiveDate,
-                                                UUID.randomUUID().toString(), UUID.fromString(accountJson.getAccountId()));
+                                                UUID.randomUUID().toString(), UUID.fromString(accountJson.getAccountId()),
+                                                null);
         final String jsonInput = mapper.writeValueAsString(input);
 
         // Create the credit
@@ -121,7 +122,7 @@ public class TestCredit extends TestJaxrsBase {
         final DateTime effectiveDate = clock.getUTCNow();
         final CreditJson input = new CreditJson(BigDecimal.TEN, UUID.randomUUID(), UUID.randomUUID().toString(),
                                                 requestedDate, effectiveDate,
-                                                UUID.randomUUID().toString(), UUID.randomUUID());
+                                                UUID.randomUUID().toString(), UUID.randomUUID(), null);
         final String jsonInput = mapper.writeValueAsString(input);
 
         // Try to create the credit
@@ -131,7 +132,7 @@ public class TestCredit extends TestJaxrsBase {
 
     @Test(groups = "slow")
     public void testBadRequest() throws Exception {
-        final CreditJson input = new CreditJson(null, null, null, null, null, null, null);
+        final CreditJson input = new CreditJson(null, null, null, null, null, null, null, null);
         final String jsonInput = mapper.writeValueAsString(input);
 
         // Try to create the credit

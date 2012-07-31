@@ -31,21 +31,11 @@ import com.ning.billing.jaxrs.JaxrsTestSuite;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.common.collect.ImmutableList;
 
 public class TestInvoiceJsonWithBundleKeys extends JaxrsTestSuite {
 
-    private static final ObjectMapper mapper = new ObjectMapper();
-
     private final Clock clock = new DefaultClock();
-
-    static {
-        mapper.registerModule(new JodaModule());
-        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-    }
 
     @Test(groups = "fast")
     public void testJson() throws Exception {
@@ -60,11 +50,12 @@ public class TestInvoiceJsonWithBundleKeys extends JaxrsTestSuite {
         final BigDecimal balance = BigDecimal.ZERO;
         final String accountId = UUID.randomUUID().toString();
         final String bundleKeys = UUID.randomUUID().toString();
-        CreditJson creditJson = createCreditJson();
+        final CreditJson creditJson = createCreditJson();
         final List<CreditJson> credits = ImmutableList.<CreditJson>of(creditJson);
+        final List<AuditLogJson> auditLogs = createAuditLogsJson();
         final InvoiceJsonWithBundleKeys invoiceJsonSimple = new InvoiceJsonWithBundleKeys(amount, cba, creditAdj, refundAdj, invoiceId, invoiceDate,
                                                                                           targetDate, invoiceNumber, balance, accountId, bundleKeys,
-                                                                                          credits);
+                                                                                          credits, auditLogs);
         Assert.assertEquals(invoiceJsonSimple.getAmount(), amount);
         Assert.assertEquals(invoiceJsonSimple.getCBA(), cba);
         Assert.assertEquals(invoiceJsonSimple.getCreditAdj(), creditAdj);
@@ -77,28 +68,9 @@ public class TestInvoiceJsonWithBundleKeys extends JaxrsTestSuite {
         Assert.assertEquals(invoiceJsonSimple.getAccountId(), accountId);
         Assert.assertEquals(invoiceJsonSimple.getBundleKeys(), bundleKeys);
         Assert.assertEquals(invoiceJsonSimple.getCredits(), credits);
+        Assert.assertEquals(invoiceJsonSimple.getAuditLogs(), auditLogs);
 
         final String asJson = mapper.writeValueAsString(invoiceJsonSimple);
-        Assert.assertEquals(asJson, "{\"amount\":" + invoiceJsonSimple.getAmount().toString() + "," +
-                                    "\"cba\":" + invoiceJsonSimple.getCBA().toString() + "," +
-                                    "\"creditAdj\":" + invoiceJsonSimple.getCreditAdj().toString() + "," +
-                                    "\"refundAdj\":" + invoiceJsonSimple.getRefundAdj().toString() + "," +
-                                    "\"invoiceId\":\"" + invoiceJsonSimple.getInvoiceId() + "\"," +
-                                    "\"invoiceDate\":\"" + invoiceJsonSimple.getInvoiceDate().toString() + "\"," +
-                                    "\"targetDate\":\"" + invoiceJsonSimple.getTargetDate().toString() + "\"," +
-                                    "\"invoiceNumber\":\"" + invoiceJsonSimple.getInvoiceNumber() + "\"," +
-                                    "\"balance\":" + invoiceJsonSimple.getBalance().toString() + "," +
-                                    "\"accountId\":\"" + invoiceJsonSimple.getAccountId() + "\"," +
-                                    "\"credits\":[" +
-                                    "{\"creditAmount\":" + creditJson.getCreditAmount() + "," +
-                                    "\"invoiceId\":\"" + creditJson.getInvoiceId().toString() + "\"," +
-                                    "\"invoiceNumber\":\"" + creditJson.getInvoiceNumber() + "\"," +
-                                    "\"requestedDate\":\"" + creditJson.getRequestedDate().toDateTimeISO().toString() + "\"," +
-                                    "\"effectiveDate\":\"" + creditJson.getEffectiveDate().toDateTimeISO().toString() + "\"," +
-                                    "\"reason\":\"" + creditJson.getReason() + "\"," +
-                                    "\"accountId\":\"" + creditJson.getAccountId().toString() + "\"}]," +
-                                    "\"bundleKeys\":\"" + invoiceJsonSimple.getBundleKeys() + "\"}");
-
         final InvoiceJsonWithBundleKeys fromJson = mapper.readValue(asJson, InvoiceJsonWithBundleKeys.class);
         Assert.assertEquals(fromJson, invoiceJsonSimple);
     }
@@ -120,7 +92,7 @@ public class TestInvoiceJsonWithBundleKeys extends JaxrsTestSuite {
         final String bundleKeys = UUID.randomUUID().toString();
         final List<CreditJson> credits = ImmutableList.<CreditJson>of(createCreditJson());
 
-        final InvoiceJsonWithBundleKeys invoiceJsonWithBundleKeys = new InvoiceJsonWithBundleKeys(invoice, bundleKeys, credits);
+        final InvoiceJsonWithBundleKeys invoiceJsonWithBundleKeys = new InvoiceJsonWithBundleKeys(invoice, bundleKeys, credits, null);
         Assert.assertEquals(invoiceJsonWithBundleKeys.getAmount(), invoice.getChargedAmount());
         Assert.assertEquals(invoiceJsonWithBundleKeys.getCBA(), invoice.getCBAAmount());
         Assert.assertEquals(invoiceJsonWithBundleKeys.getCreditAdj(), invoice.getCreditAdjAmount());
@@ -133,6 +105,7 @@ public class TestInvoiceJsonWithBundleKeys extends JaxrsTestSuite {
         Assert.assertEquals(invoiceJsonWithBundleKeys.getAccountId(), invoice.getAccountId().toString());
         Assert.assertEquals(invoiceJsonWithBundleKeys.getBundleKeys(), bundleKeys);
         Assert.assertEquals(invoiceJsonWithBundleKeys.getCredits(), credits);
+        Assert.assertNull(invoiceJsonWithBundleKeys.getAuditLogs());
     }
 
     private CreditJson createCreditJson() {
@@ -143,6 +116,6 @@ public class TestInvoiceJsonWithBundleKeys extends JaxrsTestSuite {
         final DateTime effectiveDate = clock.getUTCNow();
         final String reason = UUID.randomUUID().toString();
         final UUID accountId = UUID.randomUUID();
-        return new CreditJson(creditAmount, invoiceId, invoiceNumber, requestedDate, effectiveDate, reason, accountId);
+        return new CreditJson(creditAmount, invoiceId, invoiceNumber, requestedDate, effectiveDate, reason, accountId, null);
     }
 }

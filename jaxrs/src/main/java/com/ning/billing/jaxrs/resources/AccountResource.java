@@ -18,8 +18,10 @@ package com.ning.billing.jaxrs.resources;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.ws.rs.Consumes;
@@ -50,6 +52,7 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.api.InvoiceUserApi;
@@ -69,10 +72,12 @@ import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.PaymentMethod;
 import com.ning.billing.payment.api.Refund;
+import com.ning.billing.util.api.AuditUserApi;
 import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.api.TagUserApi;
+import com.ning.billing.util.audit.AuditLog;
 import com.ning.billing.util.dao.ObjectType;
 
 import com.google.common.base.Function;
@@ -107,9 +112,10 @@ public class AccountResource extends JaxRsResourceBase {
                            final PaymentApi paymentApi,
                            final EntitlementTimelineApi timelineApi,
                            final TagUserApi tagUserApi,
+                           final AuditUserApi auditUserApi,
                            final CustomFieldUserApi customFieldUserApi,
                            final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi);
         this.accountApi = accountApi;
         this.entitlementApi = entitlementApi;
         this.invoiceApi = invoiceApi;
@@ -133,7 +139,7 @@ public class AccountResource extends JaxRsResourceBase {
     @Path("/{accountId:" + UUID_PATTERN + "}/" + BUNDLES)
     @Produces(APPLICATION_JSON)
     public Response getAccountBundles(@PathParam("accountId") final String accountId, @QueryParam(QUERY_EXTERNAL_KEY) final String externalKey)
-        throws AccountApiException, EntitlementUserApiException {
+            throws AccountApiException, EntitlementUserApiException {
 
         final UUID uuid = UUID.fromString(accountId);
         accountApi.getAccountById(uuid);
@@ -210,50 +216,75 @@ public class AccountResource extends JaxRsResourceBase {
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + TIMELINE)
     @Produces(APPLICATION_JSON)
-    public Response getAccountTimeline(@PathParam("accountId") final String accountIdString) throws AccountApiException, PaymentApiException, EntitlementRepairException {
+    public Response getAccountTimeline(@PathParam("accountId") final String accountIdString,
+                                       @QueryParam("audit") @DefaultValue("false") final Boolean withAudit) throws AccountApiException, PaymentApiException, EntitlementRepairException {
         final UUID accountId = UUID.fromString(accountIdString);
         final Account account = accountApi.getAccountById(accountId);
 
         // Get the invoices
         final List<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId());
+        final Map<UUID, List<AuditLog>> invoiceAuditLogs = new HashMap<UUID, List<AuditLog>>();
+        final Map<UUID, List<AuditLog>> invoiceItemsAuditLogs = new HashMap<UUID, List<AuditLog>>();
+        if (withAudit) {
+            for (final Invoice invoice : invoices) {
+                invoiceAuditLogs.put(invoice.getId(), auditUserApi.getAuditLogs(invoice.getId(), ObjectType.INVOICE));
+                for (final InvoiceItem invoiceItem : invoice.getInvoiceItems()) {
+                    invoiceItemsAuditLogs.put(invoiceItem.getId(), auditUserApi.getAuditLogs(invoiceItem.getId(), ObjectType.INVOICE_ITEM));
+                }
+            }
+        }
 
         // Get the payments
         final List<Payment> payments = paymentApi.getAccountPayments(accountId);
+        final Map<UUID, List<AuditLog>> paymentsAuditLogs = new HashMap<UUID, List<AuditLog>>();
+        if (withAudit) {
+            for (final Payment payment : payments) {
+                paymentsAuditLogs.put(payment.getId(), auditUserApi.getAuditLogs(payment.getId(), ObjectType.PAYMENT));
+            }
+        }
 
         // Get the refunds
         final List<Refund> refunds = paymentApi.getAccountRefunds(account);
+        final Map<UUID, List<AuditLog>> refundsAuditLogs = new HashMap<UUID, List<AuditLog>>();
         final Multimap<UUID, Refund> refundsByPayment = ArrayListMultimap.<UUID, Refund>create();
         for (final Refund refund : refunds) {
+            if (withAudit) {
+                refundsAuditLogs.put(refund.getId(), auditUserApi.getAuditLogs(refund.getId(), ObjectType.REFUND));
+            }
             refundsByPayment.put(refund.getPaymentId(), refund);
         }
 
         // Get the chargebacks
         final List<InvoicePayment> chargebacks = invoicePaymentApi.getChargebacksByAccountId(accountId);
+        final Map<UUID, List<AuditLog>> chargebacksAuditLogs = new HashMap<UUID, List<AuditLog>>();
         final Multimap<UUID, InvoicePayment> chargebacksByPayment = ArrayListMultimap.<UUID, InvoicePayment>create();
         for (final InvoicePayment chargeback : chargebacks) {
+            chargebacksAuditLogs.put(chargeback.getId(), auditUserApi.getAuditLogs(chargeback.getId(), ObjectType.INVOICE_PAYMENT));
             chargebacksByPayment.put(chargeback.getPaymentId(), chargeback);
         }
 
         // Get the bundles
         final List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(account.getId());
+        final Map<UUID, List<AuditLog>> bundlesAuditLogs = new HashMap<UUID, List<AuditLog>>();
         final List<BundleTimeline> bundlesTimeline = new LinkedList<BundleTimeline>();
-        for (final SubscriptionBundle cur : bundles) {
-            bundlesTimeline.add(timelineApi.getBundleTimeline(cur.getId()));
+        for (final SubscriptionBundle bundle : bundles) {
+            if (withAudit) {
+                bundlesAuditLogs.put(bundle.getId(), auditUserApi.getAuditLogs(bundle.getId(), ObjectType.BUNDLE));
+            }
+            bundlesTimeline.add(timelineApi.getBundleTimeline(bundle.getId()));
         }
 
         final AccountTimelineJson json = new AccountTimelineJson(account, invoices, payments, bundlesTimeline,
-                                                                 refundsByPayment, chargebacksByPayment);
+                                                                 refundsByPayment, chargebacksByPayment, invoiceAuditLogs,
+                                                                 invoiceItemsAuditLogs, paymentsAuditLogs, refundsAuditLogs,
+                                                                 chargebacksAuditLogs, bundlesAuditLogs);
 
         return Response.status(Status.OK).entity(json).build();
     }
 
-
-
-
-
     /*
-     * ************************** EMAIL NOTIFICATIONS FOR INVOICES ********************************
-     */
+    * ************************** EMAIL NOTIFICATIONS FOR INVOICES ********************************
+    */
 
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + EMAIL_NOTIFICATIONS)
@@ -296,8 +327,8 @@ public class AccountResource extends JaxRsResourceBase {
                                 @QueryParam(QUERY_PAYMENT_NAME_ON_CC) final String nameOnCC) throws PaymentApiException {
         final List<Payment> payments = paymentApi.getAccountPayments(UUID.fromString(accountId));
         final List<PaymentJsonSimple> result = new ArrayList<PaymentJsonSimple>(payments.size());
-        for (final Payment cur : payments) {
-            result.add(new PaymentJsonSimple(cur));
+        for (final Payment payment : payments) {
+            result.add(new PaymentJsonSimple(payment));
         }
         return Response.status(Status.OK).entity(result).build();
     }

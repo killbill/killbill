@@ -209,7 +209,8 @@ public class TestInvoice extends TestJaxrsBase {
             }
 
             // CREATE INSTA PAYMENT
-            final PaymentJsonSimple payment = new PaymentJsonSimple(cur.getAmount(), BigDecimal.ZERO, accountJson.getAccountId(), cur.getInvoiceId(), null, null, null, null, 0, null, null, null, null, null, null);
+            final PaymentJsonSimple payment = new PaymentJsonSimple(cur.getAmount(), BigDecimal.ZERO, accountJson.getAccountId(),
+                                                                    cur.getInvoiceId(), null, null, null, null, 0, null, null, null, null, null, null, null);
             final String postJson = mapper.writeValueAsString(payment);
 
             uri = JaxrsResource.INVOICES_PATH + "/" + cur.getInvoiceId() + "/" + JaxrsResource.PAYMENTS;
@@ -267,7 +268,7 @@ public class TestInvoice extends TestJaxrsBase {
         final BigDecimal paidAmount = BigDecimal.TEN;
         final PaymentJsonSimple payment = new PaymentJsonSimple(paidAmount, BigDecimal.ZERO, accountJson.getAccountId(),
                                                                 invoiceId, null, null, null, null, 0,
-                                                                null, null, null, null, null, null);
+                                                                null, null, null, null, null, null, null);
         final String postJson = mapper.writeValueAsString(payment);
         final String paymentURI = JaxrsResource.INVOICES_PATH + "/" + invoiceId + "/" + JaxrsResource.PAYMENTS;
         final Response paymentResponse = doPost(paymentURI, postJson, ImmutableMap.<String, String>of("externalPayment", "true"), DEFAULT_HTTP_TIMEOUT_SEC);

@@ -17,17 +17,19 @@
 package com.ning.billing.jaxrs.json;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import javax.annotation.Nullable;
 
 import org.joda.time.LocalDate;
 
 import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.util.audit.AuditLog;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class InvoiceJsonSimple {
+public class InvoiceJsonSimple extends JsonBase {
 
     private final BigDecimal amount;
     private final String invoiceId;
@@ -40,10 +42,6 @@ public class InvoiceJsonSimple {
     private final BigDecimal cba;
     private final String accountId;
 
-    public InvoiceJsonSimple() {
-        this(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, null, null, null, null, BigDecimal.ZERO, null);
-    }
-
     @JsonCreator
     public InvoiceJsonSimple(@JsonProperty("amount") final BigDecimal amount,
                              @JsonProperty("cba") final BigDecimal cba,
@@ -54,7 +52,9 @@ public class InvoiceJsonSimple {
                              @JsonProperty("targetDate") @Nullable final LocalDate targetDate,
                              @JsonProperty("invoiceNumber") @Nullable final String invoiceNumber,
                              @JsonProperty("balance") final BigDecimal balance,
-                             @JsonProperty("accountId") @Nullable final String accountId) {
+                             @JsonProperty("accountId") @Nullable final String accountId,
+                             @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
+        super(auditLogs);
         this.amount = amount;
         this.cba = cba;
         this.creditAdj = creditAdj;
@@ -67,9 +67,14 @@ public class InvoiceJsonSimple {
         this.accountId = accountId;
     }
 
+    public InvoiceJsonSimple(final Invoice input, final List<AuditLog> auditLogs) {
+        this(input.getChargedAmount(), input.getCBAAmount(), input.getCreditAdjAmount(), input.getRefundAdjAmount(),
+             input.getId().toString(), input.getInvoiceDate(), input.getTargetDate(), String.valueOf(input.getInvoiceNumber()),
+             input.getBalance(), input.getAccountId().toString(), toAuditLogJson(auditLogs));
+    }
+
     public InvoiceJsonSimple(final Invoice input) {
-        this(input.getChargedAmount(), input.getCBAAmount(), input.getCreditAdjAmount(), input.getRefundAdjAmount(), input.getId().toString(), input.getInvoiceDate(),
-             input.getTargetDate(), String.valueOf(input.getInvoiceNumber()), input.getBalance(), input.getAccountId().toString());
+        this(input, null);
     }
 
     public BigDecimal getAmount() {

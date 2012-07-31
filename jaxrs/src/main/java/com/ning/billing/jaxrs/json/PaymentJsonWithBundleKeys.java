@@ -18,25 +18,23 @@ package com.ning.billing.jaxrs.json;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
+
+import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.payment.api.Payment;
+import com.ning.billing.util.audit.AuditLog;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.ImmutableList;
 
 public class PaymentJsonWithBundleKeys extends PaymentJsonSimple {
 
     private final String bundleKeys;
     private final List<RefundJson> refunds;
     private final List<ChargebackJson> chargebacks;
-
-    public PaymentJsonWithBundleKeys() {
-        super();
-        this.bundleKeys = null;
-        this.refunds = ImmutableList.<RefundJson>of();
-        this.chargebacks = ImmutableList.<ChargebackJson>of();
-    }
 
     @JsonCreator
     public PaymentJsonWithBundleKeys(@JsonProperty("amount") final BigDecimal amount,
@@ -56,12 +54,28 @@ public class PaymentJsonWithBundleKeys extends PaymentJsonSimple {
                                      @JsonProperty("extSecondPaymentIdRef") final String extSecondPaymentIdRef,
                                      @JsonProperty("externalBundleKeys") final String bundleKeys,
                                      @JsonProperty("refunds") final List<RefundJson> refunds,
-                                     @JsonProperty("chargebacks") final List<ChargebackJson> chargebacks) {
-        super(amount, paidAmount, accountId, invoiceId, paymentId, paymentMethodId, requestedDate, effectiveDate, retryCount, currency, status, gatewayErrorCode, gatewayErrorMsg,
-                extFirstPaymentIdRef, extSecondPaymentIdRef);
+                                     @JsonProperty("chargebacks") final List<ChargebackJson> chargebacks,
+                                     @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
+        super(amount, paidAmount, accountId, invoiceId, paymentId, paymentMethodId, requestedDate, effectiveDate,
+              retryCount, currency, status, gatewayErrorCode, gatewayErrorMsg, extFirstPaymentIdRef,
+              extSecondPaymentIdRef, auditLogs);
         this.bundleKeys = bundleKeys;
         this.refunds = refunds;
         this.chargebacks = chargebacks;
+    }
+
+    public PaymentJsonWithBundleKeys(final Payment payment, final String status, final int nbOfPaymentAttempts, final String bundleExternalKey,
+                                     final UUID accountId, final List<RefundJson> refunds, final List<ChargebackJson> chargebacks,
+                                     final List<AuditLog> auditLogs) {
+        this(payment.getAmount(), payment.getPaidAmount(), accountId.toString(),
+             payment.getInvoiceId().toString(), payment.getId().toString(),
+             payment.getPaymentMethodId().toString(),
+             payment.getEffectiveDate(), payment.getEffectiveDate(),
+             nbOfPaymentAttempts, payment.getCurrency().toString(), status,
+             payment.getAttempts().get(nbOfPaymentAttempts - 1).getGatewayErrorCode(),
+             payment.getAttempts().get(nbOfPaymentAttempts - 1).getGatewayErrorMsg(),
+             payment.getExtFirstPaymentIdRef(), payment.getExtSecondPaymentIdRef(),
+             bundleExternalKey, refunds, chargebacks, toAuditLogJson(auditLogs));
     }
 
     public String getBundleKeys() {
@@ -89,15 +103,27 @@ public class PaymentJsonWithBundleKeys extends PaymentJsonSimple {
 
     @Override
     public boolean equals(final Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        if (!super.equals(o)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
 
         final PaymentJsonWithBundleKeys that = (PaymentJsonWithBundleKeys) o;
 
-        if (bundleKeys != null ? !bundleKeys.equals(that.bundleKeys) : that.bundleKeys != null) return false;
-        if (chargebacks != null ? !chargebacks.equals(that.chargebacks) : that.chargebacks != null) return false;
-        if (refunds != null ? !refunds.equals(that.refunds) : that.refunds != null) return false;
+        if (bundleKeys != null ? !bundleKeys.equals(that.bundleKeys) : that.bundleKeys != null) {
+            return false;
+        }
+        if (chargebacks != null ? !chargebacks.equals(that.chargebacks) : that.chargebacks != null) {
+            return false;
+        }
+        if (refunds != null ? !refunds.equals(that.refunds) : that.refunds != null) {
+            return false;
+        }
 
         return true;
     }

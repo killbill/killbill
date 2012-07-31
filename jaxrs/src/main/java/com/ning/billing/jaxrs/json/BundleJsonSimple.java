@@ -13,14 +13,20 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.jaxrs.json;
 
+import java.util.List;
+import java.util.UUID;
+
 import javax.annotation.Nullable;
+
+import com.ning.billing.util.audit.AuditLog;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class BundleJsonSimple {
+public class BundleJsonSimple extends JsonBase {
 
     protected final String bundleId;
 
@@ -28,13 +34,15 @@ public class BundleJsonSimple {
 
     @JsonCreator
     public BundleJsonSimple(@JsonProperty("bundleId") @Nullable final String bundleId,
-                            @JsonProperty("externalKey") @Nullable final String externalKey) {
+                            @JsonProperty("externalKey") @Nullable final String externalKey,
+                            @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
+        super(auditLogs);
         this.bundleId = bundleId;
         this.externalKey = externalKey;
     }
 
-    public BundleJsonSimple() {
-        this(null, null);
+    public BundleJsonSimple(final UUID bundleId, final String externalKey, final List<AuditLog> auditLogs) {
+        this(bundleId.toString(), externalKey, toAuditLogJson(auditLogs));
     }
 
     @JsonProperty("bundleId")
