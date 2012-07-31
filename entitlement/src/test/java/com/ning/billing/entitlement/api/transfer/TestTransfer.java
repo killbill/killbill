@@ -77,7 +77,7 @@ public class TestTransfer extends TestApiBase {
 
         testListener.pushExpectedEvent(NextEvent.TRANSFER);
         testListener.pushExpectedEvent(NextEvent.CANCEL);
-        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getKey(), transferRequestedDate, false, context);
+        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getKey(), transferRequestedDate, false, false, context);
         assertTrue(testListener.isCompleted(3000));
         final DateTime afterTransferDate = clock.getUTCNow();
 
@@ -128,7 +128,7 @@ public class TestTransfer extends TestApiBase {
 
         testListener.pushExpectedEvent(NextEvent.TRANSFER);
         final DateTime transferRequestedDate = clock.getUTCNow();
-        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getKey(), transferRequestedDate, false, context);
+        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getKey(), transferRequestedDate, false, false, context);
         assertTrue(testListener.isCompleted(3000));
 
         // CHECK OLD BASE IS CANCEL AT THE TRANSFER DATE
@@ -176,7 +176,7 @@ public class TestTransfer extends TestApiBase {
         final DateTime transferRequestedDate = clock.getUTCNow();
         testListener.pushExpectedEvent(NextEvent.TRANSFER);
         testListener.pushExpectedEvent(NextEvent.CANCEL);
-        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getKey(), transferRequestedDate, false, context);
+        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getKey(), transferRequestedDate, false, false, context);
         assertTrue(testListener.isCompleted(3000));
         final DateTime afterTransferDate = clock.getUTCNow();
 
@@ -227,7 +227,7 @@ public class TestTransfer extends TestApiBase {
 
         final DateTime transferRequestedDate = clock.getUTCNow();
         testListener.pushExpectedEvent(NextEvent.TRANSFER);
-        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getKey(), transferRequestedDate, false, context);
+        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getKey(), transferRequestedDate, false, false, context);
         assertTrue(testListener.isCompleted(3000));
 
         // CHECK OLD BASE IS CANCEL AT THE TRANSFER DATE
@@ -322,7 +322,7 @@ public class TestTransfer extends TestApiBase {
 
         final DateTime transferRequestedDate = clock.getUTCNow();
         testListener.pushExpectedEvent(NextEvent.TRANSFER);
-        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getKey(), transferRequestedDate, true, context);
+        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getKey(), transferRequestedDate, true, false, context);
         assertTrue(testListener.isCompleted(3000));
 
         // RETRIEVE NEW BUNDLE AND CHECK SUBSCRIPTIONS

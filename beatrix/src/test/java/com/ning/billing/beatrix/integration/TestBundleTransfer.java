@@ -89,7 +89,7 @@ public class TestBundleTransfer extends TestIntegrationBase {
         busHandler.pushExpectedEvent(NextEvent.TRANSFER);
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
         busHandler.pushExpectedEvent(NextEvent.PAYMENT);
-        transferApi.transferBundle(account.getId(), newAccount.getId(), "mycutebundle", clock.getUTCNow(), false, context);
+        transferApi.transferBundle(account.getId(), newAccount.getId(), "mycutebundle", clock.getUTCNow(), false, false, context);
         assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
 
@@ -149,7 +149,7 @@ public class TestBundleTransfer extends TestIntegrationBase {
         busHandler.pushExpectedEvent(NextEvent.TRANSFER);
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
         busHandler.pushExpectedEvent(NextEvent.PAYMENT);
-        transferApi.transferBundle(account.getId(), newAccount.getId(), "mycutebundle", clock.getUTCNow(), false, context);
+        transferApi.transferBundle(account.getId(), newAccount.getId(), "mycutebundle", clock.getUTCNow(), false, false, context);
         assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
 

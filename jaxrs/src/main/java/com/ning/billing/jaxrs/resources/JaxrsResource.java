@@ -62,6 +62,7 @@ public interface JaxrsResource {
     public static final String QUERY_PAYMENT_METHOD_IS_DEFAULT = "isDefault";
 
     public static final String QUERY_BUNDLE_TRANSFER_ADDON = "transferAddOn";
+    public static final String QUERY_BUNDLE_TRANSFER_CANCEL_IMM = "cancelImmediately";
 
     public static final String ACCOUNTS = "accounts";
     public static final String ACCOUNTS_PATH = PREFIX + "/" + ACCOUNTS;
