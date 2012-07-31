@@ -60,7 +60,7 @@ public class TestBillCycleDayCalculator {
 
         // Create a the base plan associated with that subscription
         final Plan plan = Mockito.mock(Plan.class);
-        Mockito.when(plan.dateOfFirstRecurringNonZeroCharge(bpStartDateUTC)).thenReturn(bpStartDateUTC);
+        Mockito.when(plan.dateOfFirstRecurringNonZeroCharge(bpStartDateUTC, null)).thenReturn(bpStartDateUTC);
         final Catalog catalog = Mockito.mock(Catalog.class);
         Mockito.when(catalog.findPlan(Mockito.anyString(), Mockito.<DateTime>any(), Mockito.<DateTime>any())).thenReturn(plan);
 
@@ -140,7 +140,7 @@ public class TestBillCycleDayCalculator {
         Mockito.when(subscription.getStartDate()).thenReturn(startDateUTC);
 
         final Plan plan = Mockito.mock(Plan.class);
-        Mockito.when(plan.dateOfFirstRecurringNonZeroCharge(startDateUTC)).thenReturn(startDateUTC);
+        Mockito.when(plan.dateOfFirstRecurringNonZeroCharge(startDateUTC, null)).thenReturn(startDateUTC);
 
         final Account account = Mockito.mock(Account.class);
         Mockito.when(account.getTimeZone()).thenReturn(accountTimeZone);
