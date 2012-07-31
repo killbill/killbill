@@ -124,20 +124,22 @@ public class AccountTimelineJson {
         for (final Payment payment : payments) {
             final List<RefundJson> refunds = new ArrayList<RefundJson>();
             for (final Refund refund : refundsByPayment.get(payment.getId())) {
-                refunds.add(new RefundJson(refund));
+                final List<AuditLog> auditLogs = refundsAuditLogs.get(refund.getId());
+                refunds.add(new RefundJson(refund, auditLogs));
             }
 
             final List<ChargebackJson> chargebacks = new ArrayList<ChargebackJson>();
             for (final InvoicePayment chargeback : chargebacksByPayment.get(payment.getId())) {
-                chargebacks.add(new ChargebackJson(chargeback));
+                final List<AuditLog> auditLogs = chargebacksAuditLogs.get(chargeback.getId());
+                chargebacks.add(new ChargebackJson(chargeback, auditLogs));
             }
 
-            final int nbOfPaymentAttemps = payment.getAttempts().size();
+            final int nbOfPaymentAttempts = payment.getAttempts().size();
             final String status = payment.getPaymentStatus().toString();
             final List<AuditLog> auditLogs = paymentsAuditLogs.get(payment.getId());
             this.payments.add(new PaymentJsonWithBundleKeys(payment,
                                                             status,
-                                                            nbOfPaymentAttemps,
+                                                            nbOfPaymentAttempts,
                                                             getBundleExternalKey(payment.getInvoiceId(), invoices, bundles),
                                                             account.getId(),
                                                             refunds,

@@ -29,6 +29,8 @@ public abstract class ExceptionMapperBase {
     private static final Logger log = LoggerFactory.getLogger(ExceptionMapperBase.class);
 
     protected Response buildConflictingRequestResponse(final Exception e, final UriInfo uriInfo) {
+        // Log the full stacktrace
+        log.warn("Conflicting request", e);
         return buildConflictingRequestResponse(e.toString(), uriInfo);
     }
 
@@ -41,6 +43,8 @@ public abstract class ExceptionMapperBase {
     }
 
     protected Response buildNotFoundResponse(final Exception e, final UriInfo uriInfo) {
+        // Log the full stacktrace
+        log.warn("Not found", e);
         return buildNotFoundResponse(e.toString(), uriInfo);
     }
 
@@ -53,6 +57,8 @@ public abstract class ExceptionMapperBase {
     }
 
     protected Response buildBadRequestResponse(final Exception e, final UriInfo uriInfo) {
+        // Log the full stacktrace
+        log.warn("Bad request", e);
         return buildBadRequestResponse(e.toString(), uriInfo);
     }
 
@@ -65,6 +71,8 @@ public abstract class ExceptionMapperBase {
     }
 
     protected Response buildInternalErrorResponse(final Exception e, final UriInfo uriInfo) {
+        // Log the full stacktrace
+        log.warn("Internal error", e);
         return buildInternalErrorResponse(e.toString(), uriInfo);
     }
 
