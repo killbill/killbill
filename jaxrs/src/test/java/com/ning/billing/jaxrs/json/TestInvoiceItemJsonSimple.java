@@ -30,23 +30,13 @@ import com.ning.billing.jaxrs.JaxrsTestSuite;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.joda.JodaModule;
-
 public class TestInvoiceItemJsonSimple extends JaxrsTestSuite {
-
-    private static final ObjectMapper mapper = new ObjectMapper();
 
     private final Clock clock = new DefaultClock();
 
-    static {
-        mapper.registerModule(new JodaModule());
-        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-    }
-
     @Test(groups = "fast")
     public void testJson() throws Exception {
+        final UUID invoiceItemId = UUID.randomUUID();
         final UUID invoiceId = UUID.randomUUID();
         final UUID accountId = UUID.randomUUID();
         final UUID bundleId = UUID.randomUUID();
@@ -58,9 +48,10 @@ public class TestInvoiceItemJsonSimple extends JaxrsTestSuite {
         final LocalDate endDate = clock.getUTCToday();
         final BigDecimal amount = BigDecimal.TEN;
         final Currency currency = Currency.MXN;
-        final InvoiceItemJsonSimple invoiceItemJsonSimple = new InvoiceItemJsonSimple(invoiceId, accountId, bundleId, subscriptionId,
+        final InvoiceItemJsonSimple invoiceItemJsonSimple = new InvoiceItemJsonSimple(invoiceItemId, invoiceId, accountId, bundleId, subscriptionId,
                                                                                       planName, phaseName, description, startDate, endDate,
                                                                                       amount, currency);
+        Assert.assertEquals(invoiceItemJsonSimple.getInvoiceItemId(), invoiceItemId);
         Assert.assertEquals(invoiceItemJsonSimple.getInvoiceId(), invoiceId);
         Assert.assertEquals(invoiceItemJsonSimple.getAccountId(), accountId);
         Assert.assertEquals(invoiceItemJsonSimple.getBundleId(), bundleId);
@@ -74,18 +65,6 @@ public class TestInvoiceItemJsonSimple extends JaxrsTestSuite {
         Assert.assertEquals(invoiceItemJsonSimple.getCurrency(), currency);
 
         final String asJson = mapper.writeValueAsString(invoiceItemJsonSimple);
-        Assert.assertEquals(asJson, "{\"invoiceId\":\"" + invoiceItemJsonSimple.getInvoiceId().toString() + "\"," +
-                                    "\"accountId\":\"" + invoiceItemJsonSimple.getAccountId().toString() + "\"," +
-                                    "\"bundleId\":\"" + invoiceItemJsonSimple.getBundleId().toString() + "\"," +
-                                    "\"subscriptionId\":\"" + invoiceItemJsonSimple.getSubscriptionId().toString() + "\"," +
-                                    "\"planName\":\"" + invoiceItemJsonSimple.getPlanName() + "\"," +
-                                    "\"phaseName\":\"" + invoiceItemJsonSimple.getPhaseName() + "\"," +
-                                    "\"description\":\"" + invoiceItemJsonSimple.getDescription() + "\"," +
-                                    "\"startDate\":\"" + invoiceItemJsonSimple.getStartDate().toString() + "\"," +
-                                    "\"endDate\":\"" + invoiceItemJsonSimple.getEndDate().toString() + "\"," +
-                                    "\"amount\":" + invoiceItemJsonSimple.getAmount().toString() + "," +
-                                    "\"currency\":\"" + invoiceItemJsonSimple.getCurrency().toString() + "\"}");
-
         final InvoiceItemJsonSimple fromJson = mapper.readValue(asJson, InvoiceItemJsonSimple.class);
         Assert.assertEquals(fromJson, invoiceItemJsonSimple);
     }
@@ -93,6 +72,7 @@ public class TestInvoiceItemJsonSimple extends JaxrsTestSuite {
     @Test(groups = "fast")
     public void testFromInvoiceItem() throws Exception {
         final InvoiceItem invoiceItem = Mockito.mock(InvoiceItem.class);
+        Mockito.when(invoiceItem.getId()).thenReturn(UUID.randomUUID());
         Mockito.when(invoiceItem.getInvoiceId()).thenReturn(UUID.randomUUID());
         Mockito.when(invoiceItem.getAccountId()).thenReturn(UUID.randomUUID());
         Mockito.when(invoiceItem.getBundleId()).thenReturn(UUID.randomUUID());
@@ -106,6 +86,7 @@ public class TestInvoiceItemJsonSimple extends JaxrsTestSuite {
         Mockito.when(invoiceItem.getCurrency()).thenReturn(Currency.EUR);
 
         final InvoiceItemJsonSimple invoiceItemJsonSimple = new InvoiceItemJsonSimple(invoiceItem);
+        Assert.assertEquals(invoiceItemJsonSimple.getInvoiceItemId(), invoiceItem.getId());
         Assert.assertEquals(invoiceItemJsonSimple.getInvoiceId(), invoiceItem.getInvoiceId());
         Assert.assertEquals(invoiceItemJsonSimple.getAccountId(), invoiceItem.getAccountId());
         Assert.assertEquals(invoiceItemJsonSimple.getBundleId(), invoiceItem.getBundleId());

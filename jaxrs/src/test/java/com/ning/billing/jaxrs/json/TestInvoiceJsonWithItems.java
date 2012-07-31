@@ -113,6 +113,7 @@ public class TestInvoiceJsonWithItems extends JaxrsTestSuite {
     }
 
     private InvoiceItemJsonSimple createInvoiceItemJson() {
+        final UUID invoiceItemId = UUID.randomUUID();
         final UUID invoiceId = UUID.randomUUID();
         final UUID accountId = UUID.randomUUID();
         final UUID bundleId = UUID.randomUUID();
@@ -124,7 +125,7 @@ public class TestInvoiceJsonWithItems extends JaxrsTestSuite {
         final LocalDate endDate = clock.getUTCToday();
         final BigDecimal amount = BigDecimal.TEN;
         final Currency currency = Currency.MXN;
-        return new InvoiceItemJsonSimple(invoiceId, accountId, bundleId, subscriptionId,
+        return new InvoiceItemJsonSimple(invoiceItemId, invoiceId, accountId, bundleId, subscriptionId,
                                          planName, phaseName, description, startDate, endDate,
                                          amount, currency);
     }

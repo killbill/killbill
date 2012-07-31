@@ -19,14 +19,16 @@ package com.ning.billing.jaxrs.json;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class InvoiceItemJsonSimple {
+
+    private final UUID invoiceItemId;
     private final UUID invoiceId;
     private final UUID accountId;
     private final UUID bundleId;
@@ -39,7 +41,8 @@ public class InvoiceItemJsonSimple {
     private final BigDecimal amount;
     private final Currency currency;
 
-    public InvoiceItemJsonSimple(@JsonProperty("invoiceId") final UUID invoiceId,
+    public InvoiceItemJsonSimple(@JsonProperty("invoiceItemId") final UUID invoiceItemId,
+                                 @JsonProperty("invoiceId") final UUID invoiceId,
                                  @JsonProperty("accountId") final UUID accountId,
                                  @JsonProperty("bundleId") final UUID bundleId,
                                  @JsonProperty("subscriptionId") final UUID subscriptionId,
@@ -50,6 +53,7 @@ public class InvoiceItemJsonSimple {
                                  @JsonProperty("endDate") final LocalDate endDate,
                                  @JsonProperty("amount") final BigDecimal amount,
                                  @JsonProperty("currency") final Currency currency) {
+        this.invoiceItemId = invoiceItemId;
         this.invoiceId = invoiceId;
         this.accountId = accountId;
         this.bundleId = bundleId;
@@ -64,9 +68,13 @@ public class InvoiceItemJsonSimple {
     }
 
     public InvoiceItemJsonSimple(final InvoiceItem item) {
-        this(item.getInvoiceId(), item.getAccountId(), item.getBundleId(), item.getSubscriptionId(),
+        this(item.getId(), item.getInvoiceId(), item.getAccountId(), item.getBundleId(), item.getSubscriptionId(),
              item.getPlanName(), item.getPhaseName(), item.getDescription(), item.getStartDate(), item.getEndDate(),
              item.getAmount(), item.getCurrency());
+    }
+
+    public UUID getInvoiceItemId() {
+        return invoiceItemId;
     }
 
     public UUID getInvoiceId() {
@@ -128,7 +136,7 @@ public class InvoiceItemJsonSimple {
             return false;
         }
         if (!((amount == null && that.amount == null) ||
-                (amount != null && that.amount != null && amount.compareTo(that.amount) == 0))) {
+              (amount != null && that.amount != null && amount.compareTo(that.amount) == 0))) {
             return false;
         }
         if (bundleId != null ? !bundleId.equals(that.bundleId) : that.bundleId != null) {
@@ -141,7 +149,10 @@ public class InvoiceItemJsonSimple {
             return false;
         }
         if (!((endDate == null && that.endDate == null) ||
-                (endDate != null && that.endDate != null && endDate.compareTo(that.endDate) == 0))) {
+              (endDate != null && that.endDate != null && endDate.compareTo(that.endDate) == 0))) {
+            return false;
+        }
+        if (invoiceItemId != null ? !invoiceItemId.equals(that.invoiceItemId) : that.invoiceItemId != null) {
             return false;
         }
         if (invoiceId != null ? !invoiceId.equals(that.invoiceId) : that.invoiceId != null) {
@@ -154,7 +165,7 @@ public class InvoiceItemJsonSimple {
             return false;
         }
         if (!((startDate == null && that.startDate == null) ||
-                (startDate != null && that.startDate != null && startDate.compareTo(that.startDate) == 0))) {
+              (startDate != null && that.startDate != null && startDate.compareTo(that.startDate) == 0))) {
             return false;
         }
         if (subscriptionId != null ? !subscriptionId.equals(that.subscriptionId) : that.subscriptionId != null) {
@@ -167,6 +178,7 @@ public class InvoiceItemJsonSimple {
     @Override
     public int hashCode() {
         int result = invoiceId != null ? invoiceId.hashCode() : 0;
+        result = 31 * result + (invoiceItemId != null ? invoiceItemId.hashCode() : 0);
         result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
         result = 31 * result + (bundleId != null ? bundleId.hashCode() : 0);
         result = 31 * result + (subscriptionId != null ? subscriptionId.hashCode() : 0);
