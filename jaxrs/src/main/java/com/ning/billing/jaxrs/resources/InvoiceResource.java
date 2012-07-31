@@ -16,6 +16,9 @@
 
 package com.ning.billing.jaxrs.resources;
 
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.TEXT_HTML;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -43,6 +46,7 @@ import org.joda.time.format.ISODateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
@@ -66,11 +70,6 @@ import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.dao.ObjectType;
-
-import com.google.inject.Inject;
-
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.TEXT_HTML;
 
 @Path(JaxrsResource.INVOICES_PATH)
 public class InvoiceResource extends JaxRsResourceBase {
@@ -212,7 +211,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                                                        @HeaderParam(HDR_COMMENT) final String comment) throws InvoiceApiException, AccountApiException {
         final Invoice invoice = invoiceApi.getInvoice(UUID.fromString(invoiceId));
         if (invoice == null) {
-            throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND);
+            throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND, invoiceId);
         }
 
         final Account account = accountApi.getAccountById(invoice.getAccountId());
