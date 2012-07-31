@@ -17,6 +17,7 @@
 package com.ning.billing.jaxrs.json;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -44,20 +45,17 @@ public class TestChargebackJson extends JaxrsTestSuite {
         final BigDecimal chargebackAmount = BigDecimal.TEN;
         final String paymentId = UUID.randomUUID().toString();
         final String reason = UUID.randomUUID().toString();
-        final ChargebackJson chargebackJson = new ChargebackJson(requestedDate, effectiveDate, chargebackAmount, paymentId, reason);
+        final List<AuditLogJson> auditLogs = createAuditLogsJson();
+        final ChargebackJson chargebackJson = new ChargebackJson(requestedDate, effectiveDate, chargebackAmount, paymentId,
+                                                                 reason, auditLogs);
         Assert.assertEquals(chargebackJson.getRequestedDate(), requestedDate);
         Assert.assertEquals(chargebackJson.getEffectiveDate(), effectiveDate);
         Assert.assertEquals(chargebackJson.getChargebackAmount(), chargebackAmount);
         Assert.assertEquals(chargebackJson.getPaymentId(), paymentId);
         Assert.assertEquals(chargebackJson.getReason(), reason);
+        Assert.assertEquals(chargebackJson.getAuditLogs(), auditLogs);
 
         final String asJson = mapper.writeValueAsString(chargebackJson);
-        Assert.assertEquals(asJson, "{\"requestedDate\":\"" + chargebackJson.getRequestedDate() + "\"," +
-                "\"effectiveDate\":\"" + chargebackJson.getEffectiveDate() + "\"," +
-                "\"chargebackAmount\":" + chargebackJson.getChargebackAmount() + "," +
-                "\"paymentId\":\"" + chargebackJson.getPaymentId() + "\"," +
-                "\"reason\":\"" + chargebackJson.getReason() + "\"}");
-
         final ChargebackJson fromJson = mapper.readValue(asJson, ChargebackJson.class);
         Assert.assertEquals(fromJson, chargebackJson);
     }

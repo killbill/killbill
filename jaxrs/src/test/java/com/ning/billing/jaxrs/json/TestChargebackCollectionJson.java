@@ -17,6 +17,7 @@
 package com.ning.billing.jaxrs.json;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -24,13 +25,15 @@ import org.joda.time.DateTimeZone;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.ning.billing.jaxrs.JaxrsTestSuite;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.common.collect.ImmutableList;
-import com.ning.billing.jaxrs.JaxrsTestSuite;
 
 public class TestChargebackCollectionJson extends JaxrsTestSuite {
+
     private static final ObjectMapper mapper = new ObjectMapper();
 
     static {
@@ -45,22 +48,18 @@ public class TestChargebackCollectionJson extends JaxrsTestSuite {
         final BigDecimal chargebackAmount = BigDecimal.TEN;
         final String paymentId = UUID.randomUUID().toString();
         final String reason = UUID.randomUUID().toString();
-        final ChargebackJson chargebackJson = new ChargebackJson(requestedDate, effectiveDate, chargebackAmount, paymentId, reason);
+        final List<AuditLogJson> auditLogs = createAuditLogsJson();
+        final ChargebackJson chargebackJson = new ChargebackJson(requestedDate, effectiveDate, chargebackAmount, paymentId,
+                                                                 reason, auditLogs);
 
         final String accountId = UUID.randomUUID().toString();
         final ChargebackCollectionJson chargebackCollectionJson = new ChargebackCollectionJson(accountId, ImmutableList.<ChargebackJson>of(chargebackJson));
         Assert.assertEquals(chargebackCollectionJson.getAccountId(), accountId);
         Assert.assertEquals(chargebackCollectionJson.getChargebacks().size(), 1);
         Assert.assertEquals(chargebackCollectionJson.getChargebacks().get(0), chargebackJson);
+        Assert.assertEquals(chargebackCollectionJson.getChargebacks().get(0).getAuditLogs(), auditLogs);
 
         final String asJson = mapper.writeValueAsString(chargebackCollectionJson);
-        Assert.assertEquals(asJson, "{\"accountId\":\"" + accountId + "\",\"chargebacks\":[" +
-                "{\"requestedDate\":\"" + chargebackJson.getRequestedDate() + "\"," +
-                "\"effectiveDate\":\"" + chargebackJson.getEffectiveDate() + "\"," +
-                "\"chargebackAmount\":" + chargebackJson.getChargebackAmount() + "," +
-                "\"paymentId\":\"" + chargebackJson.getPaymentId() + "\"," +
-                "\"reason\":\"" + chargebackJson.getReason() + "\"}]}");
-
         final ChargebackCollectionJson fromJson = mapper.readValue(asJson, ChargebackCollectionJson.class);
         Assert.assertEquals(fromJson, chargebackCollectionJson);
     }

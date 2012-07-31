@@ -259,7 +259,9 @@ public class AccountResource extends JaxRsResourceBase {
         final Map<UUID, List<AuditLog>> chargebacksAuditLogs = new HashMap<UUID, List<AuditLog>>();
         final Multimap<UUID, InvoicePayment> chargebacksByPayment = ArrayListMultimap.<UUID, InvoicePayment>create();
         for (final InvoicePayment chargeback : chargebacks) {
-            chargebacksAuditLogs.put(chargeback.getId(), auditUserApi.getAuditLogs(chargeback.getId(), ObjectType.INVOICE_PAYMENT));
+            if (withAudit) {
+                chargebacksAuditLogs.put(chargeback.getId(), auditUserApi.getAuditLogs(chargeback.getId(), ObjectType.INVOICE_PAYMENT));
+            }
             chargebacksByPayment.put(chargeback.getPaymentId(), chargeback);
         }
 

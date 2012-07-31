@@ -47,6 +47,14 @@ public abstract class JsonBase {
         }));
     }
 
+    protected static String reasonCodeFromAuditLogs(@Nullable final List<AuditLog> auditLogs) {
+        if (auditLogs == null || auditLogs.size() == 0) {
+            return null;
+        }
+
+        return auditLogs.get(0).getReasonCode();
+    }
+
     public List<AuditLogJson> getAuditLogs() {
         return auditLogs;
     }
