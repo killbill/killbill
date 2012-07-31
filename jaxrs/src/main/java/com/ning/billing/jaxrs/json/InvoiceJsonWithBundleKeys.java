@@ -19,24 +19,20 @@ package com.ning.billing.jaxrs.json;
 import java.math.BigDecimal;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.LocalDate;
 
 import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.util.audit.AuditLog;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.ImmutableList;
 
 public class InvoiceJsonWithBundleKeys extends InvoiceJsonSimple {
 
     private final String bundleKeys;
     private final List<CreditJson> credits;
-
-    public InvoiceJsonWithBundleKeys() {
-        super();
-        this.bundleKeys = null;
-        this.credits = ImmutableList.<CreditJson>of();
-    }
 
     @JsonCreator
     public InvoiceJsonWithBundleKeys(@JsonProperty("amount") final BigDecimal amount,
@@ -50,14 +46,15 @@ public class InvoiceJsonWithBundleKeys extends InvoiceJsonSimple {
                                      @JsonProperty("balance") final BigDecimal balance,
                                      @JsonProperty("accountId") final String accountId,
                                      @JsonProperty("externalBundleKeys") final String bundleKeys,
-                                     @JsonProperty("credits") final List<CreditJson> credits) {
-        super(amount, cba, creditAdj, refundAdj, invoiceId, invoiceDate, targetDate, invoiceNumber, balance, accountId);
+                                     @JsonProperty("credits") final List<CreditJson> credits,
+                                     @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
+        super(amount, cba, creditAdj, refundAdj, invoiceId, invoiceDate, targetDate, invoiceNumber, balance, accountId, auditLogs);
         this.bundleKeys = bundleKeys;
         this.credits = credits;
     }
 
-    public InvoiceJsonWithBundleKeys(final Invoice input, final String bundleKeys, final List<CreditJson> credits) {
-        super(input);
+    public InvoiceJsonWithBundleKeys(final Invoice input, final String bundleKeys, final List<CreditJson> credits, final List<AuditLog> auditLogs) {
+        super(input, auditLogs);
         this.bundleKeys = bundleKeys;
         this.credits = credits;
     }
@@ -82,14 +79,24 @@ public class InvoiceJsonWithBundleKeys extends InvoiceJsonSimple {
 
     @Override
     public boolean equals(final Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        if (!super.equals(o)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
 
         final InvoiceJsonWithBundleKeys that = (InvoiceJsonWithBundleKeys) o;
 
-        if (bundleKeys != null ? !bundleKeys.equals(that.bundleKeys) : that.bundleKeys != null) return false;
-        if (credits != null ? !credits.equals(that.credits) : that.credits != null) return false;
+        if (bundleKeys != null ? !bundleKeys.equals(that.bundleKeys) : that.bundleKeys != null) {
+            return false;
+        }
+        if (credits != null ? !credits.equals(that.credits) : that.credits != null) {
+            return false;
+        }
 
         return true;
     }

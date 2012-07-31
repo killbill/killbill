@@ -16,6 +16,8 @@
 
 package com.ning.billing.util.glue;
 
+import com.ning.billing.util.api.AuditUserApi;
+import com.ning.billing.util.audit.api.DefaultAuditUserApi;
 import com.ning.billing.util.audit.dao.AuditDao;
 import com.ning.billing.util.audit.dao.DefaultAuditDao;
 
@@ -27,8 +29,13 @@ public class AuditModule extends AbstractModule {
         bind(AuditDao.class).to(DefaultAuditDao.class).asEagerSingleton();
     }
 
+    protected void installUserApi() {
+        bind(AuditUserApi.class).to(DefaultAuditUserApi.class).asEagerSingleton();
+    }
+
     @Override
     protected void configure() {
         installDaos();
+        installUserApi();
     }
 }

@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.LocalDate;
 
 import com.ning.billing.invoice.api.Invoice;
@@ -44,8 +46,9 @@ public class InvoiceJsonWithItems extends InvoiceJsonSimple {
                                 @JsonProperty("invoiceNumber") final String invoiceNumber,
                                 @JsonProperty("balance") final BigDecimal balance,
                                 @JsonProperty("accountId") final String accountId,
-                                @JsonProperty("items") final List<InvoiceItemJsonSimple> items) {
-        super(amount, cba, creditAdj, refundAdj, invoiceId, invoiceDate, targetDate, invoiceNumber, balance, accountId);
+                                @JsonProperty("items") final List<InvoiceItemJsonSimple> items,
+                                @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
+        super(amount, cba, creditAdj, refundAdj, invoiceId, invoiceDate, targetDate, invoiceNumber, balance, accountId, auditLogs);
         this.items = new ArrayList<InvoiceItemJsonSimple>(items);
     }
 

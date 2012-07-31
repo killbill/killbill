@@ -17,6 +17,7 @@
 package com.ning.billing.jaxrs.json;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
@@ -29,20 +30,9 @@ import com.ning.billing.jaxrs.JaxrsTestSuite;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.joda.JodaModule;
-
 public class TestInvoiceJsonSimple extends JaxrsTestSuite {
 
-    private static final ObjectMapper mapper = new ObjectMapper();
-
     private final Clock clock = new DefaultClock();
-
-    static {
-        mapper.registerModule(new JodaModule());
-        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-    }
 
     @Test(groups = "fast")
     public void testJson() throws Exception {
@@ -56,8 +46,9 @@ public class TestInvoiceJsonSimple extends JaxrsTestSuite {
         final String invoiceNumber = UUID.randomUUID().toString();
         final BigDecimal balance = BigDecimal.ZERO;
         final String accountId = UUID.randomUUID().toString();
+        final List<AuditLogJson> auditLogs = createAuditLogsJson();
         final InvoiceJsonSimple invoiceJsonSimple = new InvoiceJsonSimple(amount, cba, creditAdj, refundAdj, invoiceId, invoiceDate,
-                                                                          targetDate, invoiceNumber, balance, accountId);
+                                                                          targetDate, invoiceNumber, balance, accountId, auditLogs);
         Assert.assertEquals(invoiceJsonSimple.getAmount(), amount);
         Assert.assertEquals(invoiceJsonSimple.getCBA(), cba);
         Assert.assertEquals(invoiceJsonSimple.getCreditAdj(), creditAdj);
@@ -68,19 +59,9 @@ public class TestInvoiceJsonSimple extends JaxrsTestSuite {
         Assert.assertEquals(invoiceJsonSimple.getInvoiceNumber(), invoiceNumber);
         Assert.assertEquals(invoiceJsonSimple.getBalance(), balance);
         Assert.assertEquals(invoiceJsonSimple.getAccountId(), accountId);
+        Assert.assertEquals(invoiceJsonSimple.getAuditLogs(), auditLogs);
 
         final String asJson = mapper.writeValueAsString(invoiceJsonSimple);
-        Assert.assertEquals(asJson, "{\"amount\":" + invoiceJsonSimple.getAmount().toString() + "," +
-                                    "\"cba\":" + invoiceJsonSimple.getCBA().toString() + "," +
-                                    "\"creditAdj\":" + invoiceJsonSimple.getCreditAdj().toString() + "," +
-                                    "\"refundAdj\":" + invoiceJsonSimple.getRefundAdj().toString() + "," +
-                                    "\"invoiceId\":\"" + invoiceJsonSimple.getInvoiceId() + "\"," +
-                                    "\"invoiceDate\":\"" + invoiceJsonSimple.getInvoiceDate().toString() + "\"," +
-                                    "\"targetDate\":\"" + invoiceJsonSimple.getTargetDate().toString() + "\"," +
-                                    "\"invoiceNumber\":\"" + invoiceJsonSimple.getInvoiceNumber() + "\"," +
-                                    "\"balance\":" + invoiceJsonSimple.getBalance().toString() + "," +
-                                    "\"accountId\":\"" + invoiceJsonSimple.getAccountId() + "\"}");
-
         final InvoiceJsonSimple fromJson = mapper.readValue(asJson, InvoiceJsonSimple.class);
         Assert.assertEquals(fromJson, invoiceJsonSimple);
     }
@@ -110,5 +91,6 @@ public class TestInvoiceJsonSimple extends JaxrsTestSuite {
         Assert.assertEquals(invoiceJsonSimple.getInvoiceNumber(), String.valueOf(invoice.getInvoiceNumber()));
         Assert.assertEquals(invoiceJsonSimple.getBalance(), invoice.getBalance());
         Assert.assertEquals(invoiceJsonSimple.getAccountId(), invoice.getAccountId().toString());
+        Assert.assertNull(invoiceJsonSimple.getAuditLogs());
     }
 }

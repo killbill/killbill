@@ -129,7 +129,7 @@ public class TestBundle extends TestJaxrsBase {
 
         final AccountJson newAccount = createAccountWithDefaultPaymentMethod("dst", "dst", "dst@yahoo.com");
 
-        final BundleJsonNoSubscriptions newBundleInput = new BundleJsonNoSubscriptions(null, newAccount.getAccountId(), null);
+        final BundleJsonNoSubscriptions newBundleInput = new BundleJsonNoSubscriptions(null, newAccount.getAccountId(), null, null, null);
         final String newBundleInputJson = mapper.writeValueAsString(newBundleInput);
         final String uri = JaxrsResource.BUNDLES_PATH + "/" + bundleJson.getBundleId();
         Response response = doPut(uri, newBundleInputJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
@@ -141,6 +141,4 @@ public class TestBundle extends TestJaxrsBase {
         response = doGetWithUrl(locationCC, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
     }
-
-
 }

@@ -40,7 +40,7 @@ public class DefaultAuditDao implements AuditDao {
 
     @Override
     public List<AuditLog> getAuditLogsForRecordId(final TableName tableName, final UUID objectId) {
-        final Long recordId = auditSqlDao.getRecordIdForTable(tableName, objectId.toString());
+        final Long recordId = auditSqlDao.getRecordIdForTable(tableName.getTableName().toLowerCase(), objectId.toString());
         if (recordId == null) {
             return ImmutableList.<AuditLog>of();
         } else {

@@ -81,6 +81,7 @@ import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.email.EmailModule;
 import com.ning.billing.util.email.templates.TemplateModule;
+import com.ning.billing.util.glue.AuditModule;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.CallContextModule;
 import com.ning.billing.util.glue.CustomFieldModule;
@@ -209,6 +210,7 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
             install(new GlobalLockerModule());
             install(new CustomFieldModule());
             install(new TagStoreModule());
+            install(new AuditModule());
             install(new CatalogModule());
             install(new BusModule());
             install(new NotificationQueueModule());
@@ -370,7 +372,7 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
 
 
     protected BundleJsonNoSubscriptions createBundle(final String accountId, final String key) throws Exception {
-        final BundleJsonNoSubscriptions input = new BundleJsonNoSubscriptions(null, accountId, key);
+        final BundleJsonNoSubscriptions input = new BundleJsonNoSubscriptions(null, accountId, key, null, null);
         String baseJson = mapper.writeValueAsString(input);
         Response response = doPost(JaxrsResource.BUNDLES_PATH, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());

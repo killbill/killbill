@@ -13,18 +13,21 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.jaxrs.json;
 
-import javax.annotation.Nullable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import javax.annotation.Nullable;
+
 import com.ning.billing.entitlement.api.timeline.BundleTimeline;
 import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.util.audit.AuditLog;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class BundleJsonWithSubscriptions extends BundleJsonSimple {
 
@@ -33,8 +36,9 @@ public class BundleJsonWithSubscriptions extends BundleJsonSimple {
     @JsonCreator
     public BundleJsonWithSubscriptions(@JsonProperty("bundleId") @Nullable final String bundleId,
                                        @JsonProperty("externalKey") @Nullable final String externalKey,
-                                       @JsonProperty("subscriptions") @Nullable final List<SubscriptionJsonWithEvents> subscriptions) {
-        super(bundleId, externalKey);
+                                       @JsonProperty("subscriptions") @Nullable final List<SubscriptionJsonWithEvents> subscriptions,
+                                       @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
+        super(bundleId, externalKey, auditLogs);
         this.subscriptions = subscriptions;
     }
 
@@ -43,21 +47,12 @@ public class BundleJsonWithSubscriptions extends BundleJsonSimple {
         return subscriptions;
     }
 
-    public BundleJsonWithSubscriptions(@Nullable final UUID accountId, final BundleTimeline bundle) {
-        super(bundle.getBundleId().toString(), bundle.getExternalKey());
+    public BundleJsonWithSubscriptions(@Nullable final UUID accountId, final BundleTimeline bundle, final List<AuditLog> auditLogs) {
+        super(bundle.getBundleId(), bundle.getExternalKey(), auditLogs);
         this.subscriptions = new LinkedList<SubscriptionJsonWithEvents>();
         for (final SubscriptionTimeline cur : bundle.getSubscriptions()) {
             this.subscriptions.add(new SubscriptionJsonWithEvents(bundle.getBundleId(), cur));
         }
-    }
-
-    public BundleJsonWithSubscriptions(final SubscriptionBundle bundle) {
-        super(bundle.getId().toString(), bundle.getKey());
-        this.subscriptions = null;
-    }
-
-    public BundleJsonWithSubscriptions() {
-        this(null, null, null);
     }
 
     @Override

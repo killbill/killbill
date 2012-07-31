@@ -16,10 +16,14 @@
 
 package com.ning.billing.jaxrs.json;
 
+import java.util.List;
+
+import javax.annotation.Nullable;
+
+import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 
 public class BundleJsonNoSubscriptions extends BundleJsonSimple {
 
@@ -28,8 +32,10 @@ public class BundleJsonNoSubscriptions extends BundleJsonSimple {
     @JsonCreator
     public BundleJsonNoSubscriptions(@JsonProperty("bundleId") final String bundleId,
                                      @JsonProperty("accountId") final String accountId,
-                                     @JsonProperty("externalKey") final String externalKey) {
-        super(bundleId, externalKey);
+                                     @JsonProperty("externalKey") final String externalKey,
+                                     @JsonProperty("subscriptions") @Nullable final List<SubscriptionJsonWithEvents> subscriptions,
+                                     @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
+        super(bundleId, externalKey, auditLogs);
         this.accountId = accountId;
     }
 
@@ -38,13 +44,8 @@ public class BundleJsonNoSubscriptions extends BundleJsonSimple {
     }
 
     public BundleJsonNoSubscriptions(final SubscriptionBundle bundle) {
-        super(bundle.getId().toString(), bundle.getKey());
+        super(bundle.getId().toString(), bundle.getKey(), null);
         this.accountId = bundle.getAccountId().toString();
-    }
-
-    public BundleJsonNoSubscriptions() {
-        super(null, null);
-        this.accountId = null;
     }
 
     @Override
@@ -52,11 +53,11 @@ public class BundleJsonNoSubscriptions extends BundleJsonSimple {
         final int prime = 31;
         int result = 1;
         result = prime * result
-                + ((accountId == null) ? 0 : accountId.hashCode());
+                 + ((accountId == null) ? 0 : accountId.hashCode());
         result = prime * result
-                + ((bundleId == null) ? 0 : bundleId.hashCode());
+                 + ((bundleId == null) ? 0 : bundleId.hashCode());
         result = prime * result
-                + ((externalKey == null) ? 0 : externalKey.hashCode());
+                 + ((externalKey == null) ? 0 : externalKey.hashCode());
         return result;
     }
 

@@ -50,7 +50,7 @@ public interface AuditSqlDao {
     public Long getRecordId(@Bind("id") final String id);
 
     @SqlQuery
-    public Long getRecordIdForTable(@Define("tableName") final TableName tableName,
+    public Long getRecordIdForTable(@Define("tableName") final String tableName,
                                     @Bind("id") final String id);
 
     @SqlQuery
