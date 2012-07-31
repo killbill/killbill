@@ -114,8 +114,8 @@ public class InvoiceResource extends JaxRsResourceBase {
 
         final List<Invoice> invoices = invoiceApi.getInvoicesByAccount(UUID.fromString(accountId));
         final List<InvoiceJsonSimple> result = new LinkedList<InvoiceJsonSimple>();
-        for (final Invoice cur : invoices) {
-            result.add(new InvoiceJsonSimple(cur));
+        for (final Invoice invoice : invoices) {
+            result.add(new InvoiceJsonSimple(invoice));
         }
 
         return Response.status(Status.OK).entity(result).build();

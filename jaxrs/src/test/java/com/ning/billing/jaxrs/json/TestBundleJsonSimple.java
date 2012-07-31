@@ -16,29 +16,27 @@
 
 package com.ning.billing.jaxrs.json;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ning.billing.jaxrs.JaxrsTestSuite;
 
 public class TestBundleJsonSimple extends JaxrsTestSuite {
-    private static final ObjectMapper mapper = new ObjectMapper();
 
     @Test(groups = "fast")
     public void testJson() throws Exception {
         final String bundleId = UUID.randomUUID().toString();
         final String externalKey = UUID.randomUUID().toString();
-        final BundleJsonSimple bundleJsonSimple = new BundleJsonSimple(bundleId, externalKey);
+        final List<AuditLogJson> auditLogs = createAuditLogsJson();
+        final BundleJsonSimple bundleJsonSimple = new BundleJsonSimple(bundleId, externalKey, auditLogs);
         Assert.assertEquals(bundleJsonSimple.getBundleId(), bundleId);
         Assert.assertEquals(bundleJsonSimple.getExternalKey(), externalKey);
+        Assert.assertEquals(bundleJsonSimple.getAuditLogs(), auditLogs);
 
         final String asJson = mapper.writeValueAsString(bundleJsonSimple);
-        Assert.assertEquals(asJson, "{\"bundleId\":\"" + bundleJsonSimple.getBundleId() + "\"," +
-                "\"externalKey\":\"" + bundleJsonSimple.getExternalKey() + "\"}");
-
         final BundleJsonSimple fromJson = mapper.readValue(asJson, BundleJsonSimple.class);
         Assert.assertEquals(fromJson, bundleJsonSimple);
     }

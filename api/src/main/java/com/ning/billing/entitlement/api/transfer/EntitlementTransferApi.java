@@ -19,11 +19,12 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.util.callcontext.CallContext;
 
 public interface EntitlementTransferApi {
 
-    public void transferBundle(final UUID sourceAccountId, final UUID destAccountId, final String bundleKey, final DateTime requestedDate, final boolean transferAddOn, final CallContext context)
+    public SubscriptionBundle transferBundle(final UUID sourceAccountId, final UUID destAccountId, final String bundleKey, final DateTime requestedDate, final boolean transferAddOn, final CallContext context)
         throws EntitlementTransferApiException;
 
 }

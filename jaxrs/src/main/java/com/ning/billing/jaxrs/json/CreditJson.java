@@ -17,17 +17,21 @@
 package com.ning.billing.jaxrs.json;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
+
+import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.util.audit.AuditLog;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class CreditJson {
+public class CreditJson extends JsonBase {
 
     private final BigDecimal creditAmount;
     private final UUID invoiceId;
@@ -44,7 +48,9 @@ public class CreditJson {
                       @JsonProperty("requestedDate") final DateTime requestedDate,
                       @JsonProperty("effectiveDate") final DateTime effectiveDate,
                       @JsonProperty("reason") final String reason,
-                      @JsonProperty("accountId") final UUID accountId) {
+                      @JsonProperty("accountId") final UUID accountId,
+                      @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
+        super(auditLogs);
         this.creditAmount = creditAmount;
         this.invoiceId = invoiceId;
         this.invoiceNumber = invoiceNumber;
@@ -54,7 +60,8 @@ public class CreditJson {
         this.accountId = accountId;
     }
 
-    public CreditJson(final InvoiceItem credit, final DateTimeZone accountTimeZone) {
+    public CreditJson(final InvoiceItem credit, final DateTimeZone accountTimeZone, final List<AuditLog> auditLogs) {
+        super(toAuditLogJson(auditLogs));
         this.creditAmount = credit.getAmount();
         this.invoiceId = credit.getInvoiceId();
         this.invoiceNumber = null;
@@ -62,6 +69,10 @@ public class CreditJson {
         this.effectiveDate = credit.getStartDate().toDateTimeAtStartOfDay(accountTimeZone);
         this.reason = null;
         this.accountId = credit.getAccountId();
+    }
+
+    public CreditJson(final InvoiceItem credit, final DateTimeZone timeZone) {
+        this(credit, timeZone, null);
     }
 
     public BigDecimal getCreditAmount() {
@@ -90,6 +101,21 @@ public class CreditJson {
 
     public UUID getAccountId() {
         return accountId;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append("CreditJson");
+        sb.append("{creditAmount=").append(creditAmount);
+        sb.append(", invoiceId=").append(invoiceId);
+        sb.append(", invoiceNumber='").append(invoiceNumber).append('\'');
+        sb.append(", requestedDate=").append(requestedDate);
+        sb.append(", effectiveDate=").append(effectiveDate);
+        sb.append(", reason='").append(reason).append('\'');
+        sb.append(", accountId=").append(accountId);
+        sb.append('}');
+        return sb.toString();
     }
 
     @Override

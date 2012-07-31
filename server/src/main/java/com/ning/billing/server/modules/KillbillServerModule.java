@@ -41,6 +41,7 @@ import com.ning.billing.junction.glue.DefaultJunctionModule;
 import com.ning.billing.payment.glue.PaymentModule;
 import com.ning.billing.util.email.EmailModule;
 import com.ning.billing.util.email.templates.TemplateModule;
+import com.ning.billing.util.glue.AuditModule;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.CallContextModule;
 import com.ning.billing.util.glue.ClockModule;
@@ -91,6 +92,7 @@ public class KillbillServerModule extends AbstractModule {
         install(new GlobalLockerModule());
         install(new CustomFieldModule());
         install(new TagStoreModule());
+        install(new AuditModule());
         install(new CatalogModule());
         install(new BusModule());
         install(new NotificationQueueModule());

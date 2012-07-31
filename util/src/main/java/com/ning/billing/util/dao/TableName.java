@@ -16,31 +16,40 @@
 
 package com.ning.billing.util.dao;
 
+import javax.annotation.Nullable;
+
 public enum TableName {
-    ACCOUNT("accounts"),
-    ACCOUNT_HISTORY("account_history"),
-    ACCOUNT_EMAIL_HISTORY("account_email_history"),
-    BUNDLES("bundles"),
-    CUSTOM_FIELD_HISTORY("custom_field_history"),
-    INVOICE_ITEMS("invoice_items"),
-    INVOICE_PAYMENTS("invoice_payments"),
-    INVOICES("invoices"),
-    PAYMENT_ATTEMPTS("payment_attempts"),
-    PAYMENT_HISTORY("payment_history"),
-    PAYMENTS("payments"),
-    PAYMENT_METHODS("payment_methods"),
-    SUBSCRIPTIONS("subscriptions"),
-    SUBSCRIPTION_EVENTS("subscription_events"),
-    REFUNDS("refunds"),
-    TAG_HISTORY("tag_history");
+    ACCOUNT("accounts", ObjectType.ACCOUNT),
+    ACCOUNT_HISTORY("account_history", null),
+    ACCOUNT_EMAIL_HISTORY("account_email_history", ObjectType.ACCOUNT_EMAIL),
+    BUNDLES("bundles", ObjectType.BUNDLE),
+    CUSTOM_FIELD_HISTORY("custom_field_history", null),
+    INVOICE_ITEMS("invoice_items", ObjectType.INVOICE_ITEM),
+    INVOICE_PAYMENTS("invoice_payments", ObjectType.INVOICE_PAYMENT),
+    INVOICES("invoices", ObjectType.INVOICE),
+    PAYMENT_ATTEMPTS("payment_attempts", null),
+    PAYMENT_HISTORY("payment_history", null),
+    PAYMENTS("payments", ObjectType.PAYMENT),
+    PAYMENT_METHODS("payment_methods", ObjectType.PAYMENT_METHOD),
+    SUBSCRIPTIONS("subscriptions", ObjectType.SUBSCRIPTION),
+    SUBSCRIPTION_EVENTS("subscription_events", null),
+    REFUNDS("refunds", ObjectType.REFUND),
+    TAG_DEFINITIONS("tag_definitions", ObjectType.TAG_DEFINITION),
+    TAG_HISTORY("tag_history", null);
 
     private final String tableName;
+    private final ObjectType objectType;
 
-    TableName(final String tableName) {
+    TableName(final String tableName, @Nullable final ObjectType objectType) {
         this.tableName = tableName;
+        this.objectType = objectType;
     }
 
     public String getTableName() {
         return tableName;
+    }
+
+    public ObjectType getObjectType() {
+        return objectType;
     }
 }

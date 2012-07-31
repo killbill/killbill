@@ -35,21 +35,11 @@ import com.ning.billing.jaxrs.JaxrsTestSuite;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.common.collect.ImmutableList;
 
 public class TestBundleTimelineJson extends JaxrsTestSuite {
 
-    private static final ObjectMapper mapper = new ObjectMapper();
-
     private final Clock clock = new DefaultClock();
-
-    static {
-        mapper.registerModule(new JodaModule());
-        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-    }
 
     @Test(groups = "fast")
     public void testJson() throws Exception {
@@ -59,63 +49,15 @@ public class TestBundleTimelineJson extends JaxrsTestSuite {
         final BundleJsonWithSubscriptions bundleJsonWithSubscriptions = createBundleWithSubscriptions();
         final InvoiceJsonSimple invoiceJsonSimple = createInvoice();
         final PaymentJsonSimple paymentJsonSimple = createPayment(UUID.fromString(invoiceJsonSimple.getAccountId()),
-                UUID.fromString(invoiceJsonSimple.getInvoiceId()));
+                                                                  UUID.fromString(invoiceJsonSimple.getInvoiceId()));
 
         final BundleTimelineJson bundleTimelineJson = new BundleTimelineJson(viewId,
-                bundleJsonWithSubscriptions,
-                ImmutableList.<PaymentJsonSimple>of(paymentJsonSimple),
-                ImmutableList.<InvoiceJsonSimple>of(invoiceJsonSimple),
-                reason);
+                                                                             bundleJsonWithSubscriptions,
+                                                                             ImmutableList.<PaymentJsonSimple>of(paymentJsonSimple),
+                                                                             ImmutableList.<InvoiceJsonSimple>of(invoiceJsonSimple),
+                                                                             reason);
 
         final String asJson = mapper.writeValueAsString(bundleTimelineJson);
-
-        final SubscriptionJsonWithEvents subscription = bundleTimelineJson.getBundle().getSubscriptions().get(0);
-        final SubscriptionJsonWithEvents.SubscriptionReadEventJson event = subscription.getEvents().get(0);
-        final PaymentJsonSimple payment = bundleTimelineJson.getPayments().get(0);
-        final InvoiceJsonSimple invoice = bundleTimelineJson.getInvoices().get(0);
-
-        Assert.assertEquals(asJson, "{\"viewId\":\"" + bundleTimelineJson.getViewId() + "\"," +
-            "\"bundle\":{\"bundleId\":\"" + bundleTimelineJson.getBundle().getBundleId() + "\"," +
-            "\"externalKey\":\"" + bundleTimelineJson.getBundle().getExternalKey() + "\"," +
-            "\"subscriptions\":" +
-            "[{\"events\":[{\"eventId\":\"" + event.getEventId() + "\"," +
-            "\"billingPeriod\":\"" + event.getBillingPeriod() + "\"," +
-            "\"product\":\"" + event.getProduct() + "\"," +
-            "\"priceList\":\"" + event.getPriceList() + "\"," +
-            "\"eventType\":\"" + event.getEventType() + "\"," +
-            "\"phase\":\"" + event.getPhase() + "\"," +
-            "\"requestedDate\":null," +
-            "\"effectiveDate\":\"" + event.getEffectiveDate().toDateTimeISO().toString() + "\"}]," +
-            "\"subscriptionId\":\"" + subscription.getSubscriptionId() + "\"," +
-            "\"deletedEvents\":null," +
-            "\"newEvents\":null}]}," +
-            "\"payments\":[{\"amount\":" + payment.getAmount() + "," +
-            "\"paidAmount\":" + payment.getPaidAmount() + "," +
-            "\"accountId\":\"" + payment.getAccountId() + "\"," +
-            "\"invoiceId\":\"" + payment.getInvoiceId() + "\"," +
-            "\"paymentId\":\"" + payment.getPaymentId() + "\"," +
-            "\"paymentMethodId\":\"" + payment.getPaymentMethodId() + "\"," +
-            "\"requestedDate\":\"" + payment.getRequestedDate().toDateTimeISO().toString() + "\"," +
-            "\"effectiveDate\":\"" + payment.getEffectiveDate().toDateTimeISO().toString() + "\"," +
-            "\"retryCount\":" + payment.getRetryCount() + "," +
-            "\"currency\":\"" + payment.getCurrency() + "\"," +
-            "\"status\":\"" + payment.getStatus() + "\"," +
-            "\"gatewayErrorCode\":\"" + payment.getGatewayErrorCode() + "\"," +
-            "\"gatewayErrorMsg\":\"" + payment.getGatewayErrorMsg() + "\"," +
-            "\"extFirstPaymentIdRef\":\"" + payment.getExtFirstPaymentIdRef() + "\"," +
-            "\"extSecondPaymentIdRef\":\"" + payment.getExtSecondPaymentIdRef() + "\"}]," +
-            "\"invoices\":[{\"amount\":" + invoice.getAmount() + "," +
-            "\"cba\":" + invoice.getCBA() + "," +
-            "\"creditAdj\":" + invoice.getCreditAdj() + "," +
-            "\"refundAdj\":" + invoice.getRefundAdj() + "," +
-            "\"invoiceId\":\"" + invoice.getInvoiceId() + "\"," +
-            "\"invoiceDate\":\"" + invoice.getInvoiceDate().toString() + "\"," +
-            "\"targetDate\":\"" + invoice.getTargetDate() + "\"," +
-            "\"invoiceNumber\":\"" + invoice.getInvoiceNumber() + "\"," +
-            "\"balance\":" + invoice.getBalance() + "," +
-            "\"accountId\":\"" + invoice.getAccountId() + "\"}]," +
-            "\"reasonForChange\":\"" + reason + "\"}");
-
         final BundleTimelineJson fromJson = mapper.readValue(asJson, BundleTimelineJson.class);
         Assert.assertEquals(fromJson, bundleTimelineJson);
     }
@@ -125,8 +67,8 @@ public class TestBundleTimelineJson extends JaxrsTestSuite {
         final DateTime effectiveDate = clock.getUTCNow();
         final UUID eventId = UUID.randomUUID();
         final PlanPhaseSpecifier planPhaseSpecifier = new PlanPhaseSpecifier(UUID.randomUUID().toString(), ProductCategory.BASE,
-                BillingPeriod.NO_BILLING_PERIOD, UUID.randomUUID().toString(),
-                PhaseType.EVERGREEN);
+                                                                             BillingPeriod.NO_BILLING_PERIOD, UUID.randomUUID().toString(),
+                                                                             PhaseType.EVERGREEN);
         Mockito.when(event.getEffectiveDate()).thenReturn(effectiveDate);
         Mockito.when(event.getEventId()).thenReturn(eventId);
         Mockito.when(event.getSubscriptionTransitionType()).thenReturn(SubscriptionTransitionType.CREATE);
@@ -140,7 +82,7 @@ public class TestBundleTimelineJson extends JaxrsTestSuite {
         final String externalKey = UUID.randomUUID().toString();
         final SubscriptionJsonWithEvents subscription = new SubscriptionJsonWithEvents(bundleId, subscriptionTimeline);
 
-        return new BundleJsonWithSubscriptions(bundleId.toString(), externalKey, ImmutableList.<SubscriptionJsonWithEvents>of(subscription));
+        return new BundleJsonWithSubscriptions(bundleId.toString(), externalKey, ImmutableList.<SubscriptionJsonWithEvents>of(subscription), null);
     }
 
     private InvoiceJsonSimple createInvoice() {
@@ -156,7 +98,7 @@ public class TestBundleTimelineJson extends JaxrsTestSuite {
         final BigDecimal balance = BigDecimal.ZERO;
 
         return new InvoiceJsonSimple(invoiceAmount, cba, creditAdj, refundAdj, invoiceId.toString(), invoiceDate,
-                targetDate, invoiceNumber, balance, accountId.toString());
+                                     targetDate, invoiceNumber, balance, accountId.toString(), null);
     }
 
     private PaymentJsonSimple createPayment(final UUID accountId, final UUID invoiceId) {
@@ -175,6 +117,7 @@ public class TestBundleTimelineJson extends JaxrsTestSuite {
         final String extSecondPaymentIdRef = UUID.randomUUID().toString();
 
         return new PaymentJsonSimple(amount, paidAmount, accountId.toString(), invoiceId.toString(), paymentId.toString(),
-                paymentMethodId.toString(), paymentRequestedDate, paymentEffectiveDate, retryCount, currency, status, gatewayErrorCode, gatewayErrorMsg, extFirstPaymentIdRef, extSecondPaymentIdRef);
+                                     paymentMethodId.toString(), paymentRequestedDate, paymentEffectiveDate, retryCount, currency, status,
+                                     gatewayErrorCode, gatewayErrorMsg, extFirstPaymentIdRef, extSecondPaymentIdRef, null);
     }
 }

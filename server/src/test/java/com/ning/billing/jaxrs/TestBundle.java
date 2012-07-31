@@ -24,11 +24,15 @@ import java.util.Map;
 
 import javax.ws.rs.core.Response.Status;
 
+import org.joda.time.DateTime;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.BundleJsonNoSubscriptions;
+import com.ning.billing.jaxrs.json.SubscriptionJsonNoEvents;
 import com.ning.billing.jaxrs.resources.JaxrsResource;
 import com.ning.http.client.Response;
 
@@ -107,5 +111,34 @@ public class TestBundle extends TestJaxrsBase {
         Assert.assertEquals(response.getStatusCode(), Status.NOT_FOUND.getStatusCode());
     }
 
+    @Test(groups = "slow", enabled = true)
+    public void testBundleTransfer() throws Exception {
 
+        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        final AccountJson accountJson = createAccountWithDefaultPaymentMethod("src", "src", "src@yahoo.com");
+        final BundleJsonNoSubscriptions bundleJson = createBundle(accountJson.getAccountId(), "93199");
+
+        final String productName = "Shotgun";
+        final BillingPeriod term = BillingPeriod.MONTHLY;
+
+        final SubscriptionJsonNoEvents subscriptionJson = createSubscription(bundleJson.getBundleId(), productName, ProductCategory.BASE.toString(), term.toString(), true);
+        Assert.assertNotNull(subscriptionJson.getChargedThroughDate());
+        Assert.assertEquals(subscriptionJson.getChargedThroughDate().toString(), "2012-04-25T00:00:00.000Z");
+
+        final AccountJson newAccount = createAccountWithDefaultPaymentMethod("dst", "dst", "dst@yahoo.com");
+
+        final BundleJsonNoSubscriptions newBundleInput = new BundleJsonNoSubscriptions(null, newAccount.getAccountId(), null, null, null);
+        final String newBundleInputJson = mapper.writeValueAsString(newBundleInput);
+        final String uri = JaxrsResource.BUNDLES_PATH + "/" + bundleJson.getBundleId();
+        Response response = doPut(uri, newBundleInputJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
+
+        final String locationCC = response.getHeader("Location");
+        Assert.assertNotNull(locationCC);
+
+        response = doGetWithUrl(locationCC, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+    }
 }

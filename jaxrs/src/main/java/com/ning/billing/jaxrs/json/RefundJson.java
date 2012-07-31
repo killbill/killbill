@@ -17,15 +17,19 @@
 package com.ning.billing.jaxrs.json;
 
 import java.math.BigDecimal;
+import java.util.List;
+
+import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 
 import com.ning.billing.payment.api.Refund;
+import com.ning.billing.util.audit.AuditLog;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class RefundJson {
+public class RefundJson extends JsonBase {
 
     private final String refundId;
     private final String paymentId;
@@ -34,24 +38,30 @@ public class RefundJson {
     private final DateTime requestedDate;
     private final DateTime effectiveDate;
 
-    public RefundJson(final Refund input) {
-        this(input.getId().toString(), input.getPaymentId().toString(), input.getRefundAmount(), input.isAdjusted(),
-             input.getEffectiveDate(), input.getEffectiveDate());
-    }
-
     @JsonCreator
     public RefundJson(@JsonProperty("refund_id") final String refundId,
                       @JsonProperty("paymentId") final String paymentId,
                       @JsonProperty("refundAmount") final BigDecimal refundAmount,
                       @JsonProperty("adjusted") final Boolean isAdjusted,
                       @JsonProperty("requestedDate") final DateTime requestedDate,
-                      @JsonProperty("effectiveDate") final DateTime effectiveDate) {
+                      @JsonProperty("effectiveDate") final DateTime effectiveDate,
+                      @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
+        super(auditLogs);
         this.refundId = refundId;
         this.paymentId = paymentId;
         this.refundAmount = refundAmount;
         this.isAdjusted = isAdjusted;
         this.requestedDate = requestedDate;
         this.effectiveDate = effectiveDate;
+    }
+
+    public RefundJson(final Refund refund) {
+        this(refund, null);
+    }
+
+    public RefundJson(final Refund refund, final List<AuditLog> auditLogs) {
+        this(refund.getId().toString(), refund.getPaymentId().toString(), refund.getRefundAmount(), refund.isAdjusted(),
+             refund.getEffectiveDate(), refund.getEffectiveDate(), toAuditLogJson(auditLogs));
     }
 
     public String getRefundId() {

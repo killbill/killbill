@@ -16,7 +16,37 @@
 
 package com.ning.billing.jaxrs;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
 import com.ning.billing.KillbillTestSuite;
+import com.ning.billing.jaxrs.json.AuditLogJson;
+import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.clock.ClockMock;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.joda.JodaModule;
 
 public abstract class JaxrsTestSuite extends KillbillTestSuite {
+
+    private final Clock clock = new ClockMock();
+
+    protected static final ObjectMapper mapper = new ObjectMapper();
+
+    static {
+        mapper.registerModule(new JodaModule());
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+    }
+
+    protected List<AuditLogJson> createAuditLogsJson() {
+        final List<AuditLogJson> auditLogs = new ArrayList<AuditLogJson>();
+        for (int i = 0; i < 20; i++) {
+            auditLogs.add(new AuditLogJson(UUID.randomUUID().toString(), clock.getUTCNow(), UUID.randomUUID().toString(),
+                                           UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString()));
+        }
+
+        return auditLogs;
+    }
 }

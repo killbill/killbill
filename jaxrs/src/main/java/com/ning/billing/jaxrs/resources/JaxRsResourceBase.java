@@ -26,11 +26,14 @@ import java.util.UUID;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.ISODateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ning.billing.jaxrs.json.CustomFieldJson;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
+import com.ning.billing.util.api.AuditUserApi;
 import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagDefinitionApiException;
@@ -53,15 +56,26 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
     protected final JaxrsUriBuilder uriBuilder;
     protected final TagUserApi tagUserApi;
     protected final CustomFieldUserApi customFieldUserApi;
+    protected final AuditUserApi auditUserApi;
+
+    protected final DateTimeFormatter DATE_TIME_FORMATTER = ISODateTimeFormat.dateTime();
+
+    public JaxRsResourceBase(final JaxrsUriBuilder uriBuilder,
+                             final TagUserApi tagUserApi,
+                             final CustomFieldUserApi customFieldUserApi,
+                             final AuditUserApi auditUserApi) {
+        this.uriBuilder = uriBuilder;
+        this.tagUserApi = tagUserApi;
+        this.customFieldUserApi = customFieldUserApi;
+        this.auditUserApi = auditUserApi;
+    }
 
     protected abstract ObjectType getObjectType();
 
     public JaxRsResourceBase(final JaxrsUriBuilder uriBuilder,
                              final TagUserApi tagUserApi,
                              final CustomFieldUserApi customFieldUserApi) {
-        this.uriBuilder = uriBuilder;
-        this.tagUserApi = tagUserApi;
-        this.customFieldUserApi = customFieldUserApi;
+        this(uriBuilder, tagUserApi, customFieldUserApi, null);
     }
 
     protected Response getTags(final UUID id) throws TagDefinitionApiException {

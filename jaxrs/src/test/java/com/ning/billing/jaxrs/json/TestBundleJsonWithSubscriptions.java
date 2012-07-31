@@ -16,6 +16,7 @@
 
 package com.ning.billing.jaxrs.json;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -24,10 +25,6 @@ import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.joda.JodaModule;
-import com.google.common.collect.ImmutableList;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
@@ -35,17 +32,12 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.timeline.BundleTimeline;
 import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline;
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.jaxrs.JaxrsTestSuite;
 import com.ning.billing.util.clock.DefaultClock;
 
-public class TestBundleJsonWithSubscriptions extends JaxrsTestSuite {
-    private static final ObjectMapper mapper = new ObjectMapper();
+import com.google.common.collect.ImmutableList;
 
-    static {
-        mapper.registerModule(new JodaModule());
-        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-    }
+public class TestBundleJsonWithSubscriptions extends JaxrsTestSuite {
 
     @Test(groups = "fast")
     public void testJson() throws Exception {
@@ -67,24 +59,14 @@ public class TestBundleJsonWithSubscriptions extends JaxrsTestSuite {
         final UUID bundleId = UUID.randomUUID();
         final String externalKey = UUID.randomUUID().toString();
         final SubscriptionJsonWithEvents subscription = new SubscriptionJsonWithEvents(bundleId, subscriptionTimeline);
-        final BundleJsonWithSubscriptions bundleJsonWithSubscriptions = new BundleJsonWithSubscriptions(bundleId.toString(), externalKey, ImmutableList.<SubscriptionJsonWithEvents>of(subscription));
+        final List<AuditLogJson> auditLogs = createAuditLogsJson();
+        final BundleJsonWithSubscriptions bundleJsonWithSubscriptions = new BundleJsonWithSubscriptions(bundleId.toString(), externalKey, ImmutableList.<SubscriptionJsonWithEvents>of(subscription), auditLogs);
         Assert.assertEquals(bundleJsonWithSubscriptions.getBundleId(), bundleId.toString());
         Assert.assertEquals(bundleJsonWithSubscriptions.getExternalKey(), externalKey);
         Assert.assertEquals(bundleJsonWithSubscriptions.getSubscriptions().size(), 1);
+        Assert.assertEquals(bundleJsonWithSubscriptions.getAuditLogs(), auditLogs);
 
         final String asJson = mapper.writeValueAsString(bundleJsonWithSubscriptions);
-        Assert.assertEquals(asJson, "{\"bundleId\":\"" + bundleJsonWithSubscriptions.getBundleId() + "\"," +
-                "\"externalKey\":\"" + bundleJsonWithSubscriptions.getExternalKey() + "\"," +
-                "\"subscriptions\":[{\"events\":[{\"eventId\":\"" + event.getEventId().toString() + "\"," +
-                "\"billingPeriod\":\"" + event.getPlanPhaseSpecifier().getBillingPeriod().toString() + "\"," +
-                "\"product\":\"" + event.getPlanPhaseSpecifier().getProductName() + "\"," +
-                "\"priceList\":\"" + event.getPlanPhaseSpecifier().getPriceListName() + "\"," +
-                "\"eventType\":\"" + event.getSubscriptionTransitionType().toString() + "\"," +
-                "\"phase\":\"" + event.getPlanPhaseSpecifier().getPhaseType() + "\"," +
-                "\"requestedDate\":null," +
-                "\"effectiveDate\":\"" + event.getEffectiveDate().toDateTimeISO().toString() + "\"}]," +
-                "\"subscriptionId\":\"" + subscriptionTimeline.getId().toString() + "\",\"deletedEvents\":null,\"newEvents\":null}]}");
-
         final BundleJsonWithSubscriptions fromJson = mapper.readValue(asJson, BundleJsonWithSubscriptions.class);
         Assert.assertEquals(fromJson, bundleJsonWithSubscriptions);
     }
@@ -113,7 +95,7 @@ public class TestBundleJsonWithSubscriptions extends JaxrsTestSuite {
         Mockito.when(bundleTimeline.getExternalKey()).thenReturn(externalKey);
         Mockito.when(bundleTimeline.getSubscriptions()).thenReturn(ImmutableList.<SubscriptionTimeline>of(subscriptionTimeline));
 
-        final BundleJsonWithSubscriptions bundleJsonWithSubscriptions = new BundleJsonWithSubscriptions(null, bundleTimeline);
+        final BundleJsonWithSubscriptions bundleJsonWithSubscriptions = new BundleJsonWithSubscriptions(null, bundleTimeline, null);
         Assert.assertEquals(bundleJsonWithSubscriptions.getBundleId(), bundleId.toString());
         Assert.assertEquals(bundleJsonWithSubscriptions.getExternalKey(), externalKey);
         Assert.assertEquals(bundleJsonWithSubscriptions.getSubscriptions().size(), 1);
@@ -124,19 +106,21 @@ public class TestBundleJsonWithSubscriptions extends JaxrsTestSuite {
         // Note - ms are truncated
         Assert.assertEquals(events.getEvents().get(0).getEffectiveDate(), DefaultClock.toUTCDateTime(effectiveDate));
         Assert.assertEquals(events.getEvents().get(0).getEventId(), eventId.toString());
+        Assert.assertNull(bundleJsonWithSubscriptions.getAuditLogs());
     }
 
     @Test(groups = "fast")
     public void testFromSubscriptionBundle() throws Exception {
-        final SubscriptionBundle bundle = Mockito.mock(SubscriptionBundle.class);
+        final BundleTimeline bundle = Mockito.mock(BundleTimeline.class);
         final UUID bundleId = UUID.randomUUID();
         final String externalKey = UUID.randomUUID().toString();
-        Mockito.when(bundle.getId()).thenReturn(bundleId);
-        Mockito.when(bundle.getKey()).thenReturn(externalKey);
+        Mockito.when(bundle.getBundleId()).thenReturn(bundleId);
+        Mockito.when(bundle.getExternalKey()).thenReturn(externalKey);
 
-        final BundleJsonWithSubscriptions bundleJsonWithSubscriptions = new BundleJsonWithSubscriptions(bundle);
+        final BundleJsonWithSubscriptions bundleJsonWithSubscriptions = new BundleJsonWithSubscriptions(null, bundle, null);
         Assert.assertEquals(bundleJsonWithSubscriptions.getBundleId(), bundleId.toString());
         Assert.assertEquals(bundleJsonWithSubscriptions.getExternalKey(), externalKey);
-        Assert.assertNull(bundleJsonWithSubscriptions.getSubscriptions());
+        Assert.assertEquals(bundleJsonWithSubscriptions.getSubscriptions().size(), 0);
+        Assert.assertNull(bundleJsonWithSubscriptions.getAuditLogs());
     }
 }

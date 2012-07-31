@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -31,6 +32,7 @@ import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.api.Refund;
+import com.ning.billing.util.audit.AuditLog;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -86,11 +88,16 @@ public class AccountTimelineJson {
     }
 
     public AccountTimelineJson(final Account account, final List<Invoice> invoices, final List<Payment> payments, final List<BundleTimeline> bundles,
-                               final Multimap<UUID, Refund> refundsByPayment, final Multimap<UUID, InvoicePayment> chargebacksByPayment) {
+                               final Multimap<UUID, Refund> refundsByPayment, final Multimap<UUID, InvoicePayment> chargebacksByPayment,
+                               final Map<UUID, List<AuditLog>> invoiceAuditLogs, final Map<UUID, List<AuditLog>> invoiceItemsAuditLogs,
+                               final Map<UUID, List<AuditLog>> paymentsAuditLogs, final Map<UUID, List<AuditLog>> refundsAuditLogs,
+                               final Map<UUID, List<AuditLog>> chargebacksAuditLogs, final Map<UUID, List<AuditLog>> bundlesAuditLogs) {
         this.account = new AccountJsonSimple(account.getId().toString(), account.getExternalKey());
         this.bundles = new LinkedList<BundleJsonWithSubscriptions>();
-        for (final BundleTimeline cur : bundles) {
-            this.bundles.add(new BundleJsonWithSubscriptions(account.getId(), cur));
+        for (final BundleTimeline bundle : bundles) {
+            final List<AuditLog> auditLogs = bundlesAuditLogs.get(bundle.getBundleId());
+            final BundleJsonWithSubscriptions jsonWithSubscriptions = new BundleJsonWithSubscriptions(account.getId(), bundle, auditLogs);
+            this.bundles.add(jsonWithSubscriptions);
         }
 
         this.invoices = new LinkedList<InvoiceJsonWithBundleKeys>();
@@ -99,50 +106,45 @@ public class AccountTimelineJson {
         for (final Invoice invoice : invoices) {
             for (final InvoiceItem invoiceItem : invoice.getInvoiceItems()) {
                 if (InvoiceItemType.CREDIT_ADJ.equals(invoiceItem.getInvoiceItemType())) {
-                    credits.add(new CreditJson(invoiceItem, account.getTimeZone()));
+                    final List<AuditLog> auditLogs = invoiceItemsAuditLogs.get(invoiceItem.getId());
+                    credits.add(new CreditJson(invoiceItem, account.getTimeZone(), auditLogs));
                 }
             }
         }
         // Create now the invoice json objects
         for (final Invoice invoice : invoices) {
-            this.invoices.add(new InvoiceJsonWithBundleKeys(invoice.getPaidAmount(),
-                                                            invoice.getCBAAmount(),
-                                                            invoice.getCreditAdjAmount(),
-                                                            invoice.getRefundAdjAmount(),
-                                                            invoice.getId().toString(),
-                                                            invoice.getInvoiceDate(),
-                                                            invoice.getTargetDate(),
-                                                            Integer.toString(invoice.getInvoiceNumber()),
-                                                            invoice.getBalance(),
-                                                            invoice.getAccountId().toString(),
+            final List<AuditLog> auditLogs = invoiceAuditLogs.get(invoice.getId());
+            this.invoices.add(new InvoiceJsonWithBundleKeys(invoice,
                                                             getBundleExternalKey(invoice, bundles),
-                                                            credits));
+                                                            credits,
+                                                            auditLogs));
         }
 
         this.payments = new LinkedList<PaymentJsonWithBundleKeys>();
         for (final Payment payment : payments) {
             final List<RefundJson> refunds = new ArrayList<RefundJson>();
             for (final Refund refund : refundsByPayment.get(payment.getId())) {
-                refunds.add(new RefundJson(refund));
+                final List<AuditLog> auditLogs = refundsAuditLogs.get(refund.getId());
+                refunds.add(new RefundJson(refund, auditLogs));
             }
 
             final List<ChargebackJson> chargebacks = new ArrayList<ChargebackJson>();
             for (final InvoicePayment chargeback : chargebacksByPayment.get(payment.getId())) {
-                chargebacks.add(new ChargebackJson(chargeback));
+                final List<AuditLog> auditLogs = chargebacksAuditLogs.get(chargeback.getId());
+                chargebacks.add(new ChargebackJson(chargeback, auditLogs));
             }
 
-            final int paymentAttemptSize = payment.getAttempts().size();
+            final int nbOfPaymentAttempts = payment.getAttempts().size();
             final String status = payment.getPaymentStatus().toString();
-            this.payments.add(new PaymentJsonWithBundleKeys(payment.getAmount(), payment.getPaidAmount(), account.getId().toString(),
-                                                            payment.getInvoiceId().toString(), payment.getId().toString(),
-                                                            payment.getPaymentMethodId().toString(),
-                                                            payment.getEffectiveDate(), payment.getEffectiveDate(),
-                                                            paymentAttemptSize, payment.getCurrency().toString(), status,
-                                                            payment.getAttempts().get(paymentAttemptSize - 1).getGatewayErrorCode(),
-                                                            payment.getAttempts().get(paymentAttemptSize - 1).getGatewayErrorMsg(),
-                                                            payment.getExtFirstPaymentIdRef(), payment.getExtSecondPaymentIdRef(),
+            final List<AuditLog> auditLogs = paymentsAuditLogs.get(payment.getId());
+            this.payments.add(new PaymentJsonWithBundleKeys(payment,
+                                                            status,
+                                                            nbOfPaymentAttempts,
                                                             getBundleExternalKey(payment.getInvoiceId(), invoices, bundles),
-                                                            refunds, chargebacks));
+                                                            account.getId(),
+                                                            refunds,
+                                                            chargebacks,
+                                                            auditLogs));
         }
     }
 
@@ -176,15 +178,27 @@ public class AccountTimelineJson {
 
     @Override
     public boolean equals(final Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         final AccountTimelineJson that = (AccountTimelineJson) o;
 
-        if (account != null ? !account.equals(that.account) : that.account != null) return false;
-        if (bundles != null ? !bundles.equals(that.bundles) : that.bundles != null) return false;
-        if (invoices != null ? !invoices.equals(that.invoices) : that.invoices != null) return false;
-        if (payments != null ? !payments.equals(that.payments) : that.payments != null) return false;
+        if (account != null ? !account.equals(that.account) : that.account != null) {
+            return false;
+        }
+        if (bundles != null ? !bundles.equals(that.bundles) : that.bundles != null) {
+            return false;
+        }
+        if (invoices != null ? !invoices.equals(that.invoices) : that.invoices != null) {
+            return false;
+        }
+        if (payments != null ? !payments.equals(that.payments) : that.payments != null) {
+            return false;
+        }
 
         return true;
     }

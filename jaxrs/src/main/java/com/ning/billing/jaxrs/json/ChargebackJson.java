@@ -17,15 +17,20 @@
 package com.ning.billing.jaxrs.json;
 
 import java.math.BigDecimal;
+import java.util.List;
+
+import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.invoice.api.InvoicePayment;
+import com.ning.billing.util.audit.AuditLog;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.ning.billing.invoice.api.InvoicePayment;
 
-// TODO: populate reason code, requested date from audit log
-public class ChargebackJson {
+public class ChargebackJson extends JsonBase {
+
     private final DateTime requestedDate;
     private final DateTime effectiveDate;
     private final BigDecimal chargebackAmount;
@@ -37,7 +42,9 @@ public class ChargebackJson {
                           @JsonProperty("effectiveDate") final DateTime effectiveDate,
                           @JsonProperty("chargebackAmount") final BigDecimal chargebackAmount,
                           @JsonProperty("paymentId") final String paymentId,
-                          @JsonProperty("reason") final String reason) {
+                          @JsonProperty("reason") final String reason,
+                          @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
+        super(auditLogs);
         this.requestedDate = requestedDate;
         this.effectiveDate = effectiveDate;
         this.chargebackAmount = chargebackAmount;
@@ -46,11 +53,12 @@ public class ChargebackJson {
     }
 
     public ChargebackJson(final InvoicePayment chargeback) {
-        this.requestedDate = null;
-        this.effectiveDate = chargeback.getPaymentDate();
-        this.chargebackAmount = chargeback.getAmount().negate();
-        this.paymentId = chargeback.getPaymentId().toString();
-        this.reason = null;
+        this(chargeback, null);
+    }
+
+    public ChargebackJson(final InvoicePayment chargeback, @Nullable final List<AuditLog> auditLogs) {
+        this(chargeback.getPaymentDate(), chargeback.getPaymentDate(), chargeback.getAmount().negate(),
+             chargeback.getPaymentId().toString(), reasonCodeFromAuditLogs(auditLogs), toAuditLogJson(auditLogs));
     }
 
     public DateTime getRequestedDate() {
@@ -85,11 +93,11 @@ public class ChargebackJson {
         final ChargebackJson that = (ChargebackJson) o;
 
         if (!((chargebackAmount == null && that.chargebackAmount == null) ||
-                (chargebackAmount != null && that.chargebackAmount != null && chargebackAmount.compareTo(that.chargebackAmount) == 0))) {
+              (chargebackAmount != null && that.chargebackAmount != null && chargebackAmount.compareTo(that.chargebackAmount) == 0))) {
             return false;
         }
         if (!((effectiveDate == null && that.effectiveDate == null) ||
-                (effectiveDate != null && that.effectiveDate != null && effectiveDate.compareTo(that.effectiveDate) == 0))) {
+              (effectiveDate != null && that.effectiveDate != null && effectiveDate.compareTo(that.effectiveDate) == 0))) {
             return false;
         }
         if (paymentId != null ? !paymentId.equals(that.paymentId) : that.paymentId != null) {
@@ -99,7 +107,7 @@ public class ChargebackJson {
             return false;
         }
         if (!((requestedDate == null && that.requestedDate == null) ||
-                (requestedDate != null && that.requestedDate != null && requestedDate.compareTo(that.requestedDate) == 0))) {
+              (requestedDate != null && that.requestedDate != null && requestedDate.compareTo(that.requestedDate) == 0))) {
             return false;
         }
 

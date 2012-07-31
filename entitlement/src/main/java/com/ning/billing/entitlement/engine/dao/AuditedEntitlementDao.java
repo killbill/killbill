@@ -567,7 +567,7 @@ public class AuditedEntitlementDao implements EntitlementDao {
                     final String baseProductName = (futureBaseEvent instanceof ApiEventChange) ?
                             ((ApiEventChange) futureBaseEvent).getEventPlan() : null;
 
-                    final boolean createCancelEvent = (futureBaseEvent != null) &&
+                    final boolean createCancelEvent = (futureBaseEvent != null && targetAddOnPlan != null) &&
                             ((futureBaseEvent instanceof ApiEventCancel) ||
                                     ((!addonUtils.isAddonAvailableFromPlanName(baseProductName, futureBaseEvent.getEffectiveDate(), targetAddOnPlan)) ||
                                             (addonUtils.isAddonIncludedFromPlanName(baseProductName, futureBaseEvent.getEffectiveDate(), targetAddOnPlan))));

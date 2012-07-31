@@ -19,15 +19,19 @@ package com.ning.billing.jaxrs.json;
 import java.math.BigDecimal;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
+
+import com.ning.billing.payment.api.Payment;
+import com.ning.billing.util.audit.AuditLog;
+import com.ning.billing.util.clock.DefaultClock;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.ning.billing.payment.api.Payment;
-import com.ning.billing.payment.api.Payment.PaymentAttempt;
-import com.ning.billing.util.clock.DefaultClock;
 
-public class PaymentJsonSimple {
+public class PaymentJsonSimple extends JsonBase {
+
     private final BigDecimal paidAmount;
 
     private final BigDecimal amount;
@@ -58,25 +62,6 @@ public class PaymentJsonSimple {
 
     private final String extSecondPaymentIdRef;
 
-    public PaymentJsonSimple() {
-        this.amount = null;
-        this.paidAmount = null;
-        this.invoiceId = null;
-        this.accountId = null;
-        this.paymentId = null;
-        this.paymentMethodId = null;
-        this.requestedDate = null;
-        this.effectiveDate = null;
-        this.currency = null;
-        this.retryCount = null;
-        this.status = null;
-        this.gatewayErrorCode = null;
-        this.gatewayErrorMsg = null;
-        this.extFirstPaymentIdRef = null;
-        this.extSecondPaymentIdRef = null;
-
-    }
-
     @JsonCreator
     public PaymentJsonSimple(@JsonProperty("amount") final BigDecimal amount,
                              @JsonProperty("paidAmount") final BigDecimal paidAmount,
@@ -92,8 +77,9 @@ public class PaymentJsonSimple {
                              @JsonProperty("gatewayErrorCode") final String gatewayErrorCode,
                              @JsonProperty("gatewayErrorMsg") final String gatewayErrorMsg,
                              @JsonProperty("extFirstPaymentIdRef") final String extFirstPaymentIdRef,
-                             @JsonProperty("extSecondPaymentIdRef") final String extSecondPaymentIdRef) {
-        super();
+                             @JsonProperty("extSecondPaymentIdRef") final String extSecondPaymentIdRef,
+                             @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
+        super(auditLogs);
         this.amount = amount;
         this.paidAmount = paidAmount;
         this.invoiceId = invoiceId;
@@ -111,22 +97,16 @@ public class PaymentJsonSimple {
         this.extSecondPaymentIdRef = extSecondPaymentIdRef;
     }
 
-    public PaymentJsonSimple(final Payment src) {
-        this.amount = src.getAmount();
-        this.paidAmount =  src.getPaidAmount();
-        this.invoiceId = src.getInvoiceId().toString();
-        this.accountId = src.getAccountId().toString();
-        this.paymentId = src.getId().toString();
-        this.paymentMethodId =src.getPaymentMethodId().toString();
-        this.requestedDate = src.getEffectiveDate();
-        this.effectiveDate = src.getEffectiveDate();
-        this.currency = src.getCurrency().toString();
-        this.retryCount = src.getAttempts().size();
-        this.gatewayErrorCode = src.getAttempts().get(retryCount - 1).getGatewayErrorCode();
-        this.gatewayErrorMsg = src.getAttempts().get(retryCount - 1).getGatewayErrorMsg();;
-        this.status = src.getPaymentStatus().toString();
-        this.extFirstPaymentIdRef = src.getExtFirstPaymentIdRef();
-        this.extSecondPaymentIdRef = src.getExtSecondPaymentIdRef();
+    public PaymentJsonSimple(final Payment src, final List<AuditLog> auditLogs) {
+        this(src.getAmount(), src.getPaidAmount(), src.getAccountId().toString(), src.getInvoiceId().toString(),
+             src.getId().toString(), src.getPaymentMethodId().toString(), src.getEffectiveDate(), src.getEffectiveDate(),
+             src.getAttempts().size(), src.getCurrency().toString(), src.getPaymentStatus().toString(),
+             src.getAttempts().get(src.getAttempts().size() - 1).getGatewayErrorCode(), src.getAttempts().get(src.getAttempts().size() - 1).getGatewayErrorMsg(),
+             src.getExtFirstPaymentIdRef(), src.getExtSecondPaymentIdRef(), toAuditLogJson(auditLogs));
+    }
+
+    public PaymentJsonSimple(final Payment payment) {
+        this(payment, null);
     }
 
     public BigDecimal getPaidAmount() {
@@ -136,7 +116,6 @@ public class PaymentJsonSimple {
     public String getInvoiceId() {
         return invoiceId;
     }
-
 
     public String getPaymentId() {
         return paymentId;
@@ -205,28 +184,28 @@ public class PaymentJsonSimple {
             return false;
         }
         if (!((amount == null && that.amount == null) ||
-                (amount != null && that.amount != null && amount.compareTo(that.amount) == 0))) {
+              (amount != null && that.amount != null && amount.compareTo(that.amount) == 0))) {
             return false;
         }
         if (currency != null ? !currency.equals(that.currency) : that.currency != null) {
             return false;
         }
         if (!((effectiveDate == null && that.effectiveDate == null) ||
-                (effectiveDate != null && that.effectiveDate != null && effectiveDate.compareTo(that.effectiveDate) == 0))) {
+              (effectiveDate != null && that.effectiveDate != null && effectiveDate.compareTo(that.effectiveDate) == 0))) {
             return false;
         }
         if (invoiceId != null ? !invoiceId.equals(that.invoiceId) : that.invoiceId != null) {
             return false;
         }
         if (!((paidAmount == null && that.paidAmount == null) ||
-                (paidAmount != null && that.paidAmount != null && paidAmount.compareTo(that.paidAmount) == 0))) {
+              (paidAmount != null && that.paidAmount != null && paidAmount.compareTo(that.paidAmount) == 0))) {
             return false;
         }
         if (paymentId != null ? !paymentId.equals(that.paymentId) : that.paymentId != null) {
             return false;
         }
         if (!((requestedDate == null && that.requestedDate == null) ||
-                (requestedDate != null && that.requestedDate != null && requestedDate.compareTo(that.requestedDate) == 0))) {
+              (requestedDate != null && that.requestedDate != null && requestedDate.compareTo(that.requestedDate) == 0))) {
             return false;
         }
         if (retryCount != null ? !retryCount.equals(that.retryCount) : that.retryCount != null) {

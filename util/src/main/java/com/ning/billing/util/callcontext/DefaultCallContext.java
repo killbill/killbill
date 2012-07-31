@@ -23,31 +23,102 @@ import org.joda.time.DateTime;
 import com.ning.billing.util.clock.Clock;
 
 public class DefaultCallContext extends CallContextBase {
-    private final Clock clock;
+
+    private final DateTime createdDate;
 
     public DefaultCallContext(final String userName, final CallOrigin callOrigin, final UserType userType, final UUID userToken, final Clock clock) {
         super(userName, callOrigin, userType, userToken);
-        this.clock = clock;
+        this.createdDate = clock.getUTCNow();
     }
 
     public DefaultCallContext(final String userName, final CallOrigin callOrigin, final UserType userType,
                               final String reasonCode, final String comment,
                               final UUID userToken, final Clock clock) {
         super(userName, callOrigin, userType, reasonCode, comment, userToken);
-        this.clock = clock;
+        this.createdDate = clock.getUTCNow();
     }
 
     public DefaultCallContext(final String userName, final CallOrigin callOrigin, final UserType userType, final Clock clock) {
         this(userName, callOrigin, userType, null, clock);
     }
 
+    public DefaultCallContext(final String userName, final DateTime createdDate, final String reasonCode,
+                              final String comment, final UUID userToken) {
+        super(userName, null, null, reasonCode, comment, userToken);
+        this.createdDate = createdDate;
+    }
+
     @Override
     public DateTime getCreatedDate() {
-        return clock.getUTCNow();
+        return createdDate;
     }
 
     @Override
     public DateTime getUpdatedDate() {
-        return clock.getUTCNow();
+        return createdDate;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append("CallContextBase");
+        sb.append("{userToken=").append(userToken);
+        sb.append(", userName='").append(userName).append('\'');
+        sb.append(", callOrigin=").append(callOrigin);
+        sb.append(", userType=").append(userType);
+        sb.append(", reasonCode='").append(reasonCode).append('\'');
+        sb.append(", comment='").append(comment).append('\'');
+        sb.append(", createdDate='").append(createdDate).append('\'');
+        sb.append(", updatedDate='").append(createdDate).append('\'');
+        sb.append('}');
+        return sb.toString();
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        final DefaultCallContext that = (DefaultCallContext) o;
+
+        if (callOrigin != that.callOrigin) {
+            return false;
+        }
+        if (comment != null ? !comment.equals(that.comment) : that.comment != null) {
+            return false;
+        }
+        if (reasonCode != null ? !reasonCode.equals(that.reasonCode) : that.reasonCode != null) {
+            return false;
+        }
+        if (userName != null ? !userName.equals(that.userName) : that.userName != null) {
+            return false;
+        }
+        if (userToken != null ? !userToken.equals(that.userToken) : that.userToken != null) {
+            return false;
+        }
+        if (createdDate != null ? createdDate.compareTo(that.createdDate) != 0 : that.createdDate != null) {
+            return false;
+        }
+        if (userType != that.userType) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = userToken != null ? userToken.hashCode() : 0;
+        result = 31 * result + (userName != null ? userName.hashCode() : 0);
+        result = 31 * result + (callOrigin != null ? callOrigin.hashCode() : 0);
+        result = 31 * result + (userType != null ? userType.hashCode() : 0);
+        result = 31 * result + (reasonCode != null ? reasonCode.hashCode() : 0);
+        result = 31 * result + (comment != null ? comment.hashCode() : 0);
+        result = 31 * result + (createdDate != null ? createdDate.hashCode() : 0);
+        return result;
     }
 }

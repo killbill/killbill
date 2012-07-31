@@ -24,11 +24,16 @@ import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Singleton
 @Provider
 public class RuntimeExceptionMapper extends ExceptionMapperBase implements ExceptionMapper<RuntimeException> {
 
     private final UriInfo uriInfo;
+
+    private static final Logger log = LoggerFactory.getLogger(RuntimeExceptionMapper.class);
 
     public RuntimeExceptionMapper(@Context final UriInfo uriInfo) {
         this.uriInfo = uriInfo;
@@ -38,6 +43,8 @@ public class RuntimeExceptionMapper extends ExceptionMapperBase implements Excep
     public Response toResponse(final RuntimeException exception) {
         if (exception instanceof NullPointerException) {
             // Assume bad payload
+            exception.printStackTrace();
+            log.warn("Exception : " + exception.getMessage());
             return buildBadRequestResponse(exception, uriInfo);
         } else if (exception instanceof WebApplicationException) {
             // e.g. com.sun.jersey.api.NotFoundException
