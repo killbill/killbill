@@ -29,6 +29,7 @@ import com.ning.billing.catalog.api.BillingAlignment;
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
+import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
@@ -119,7 +120,8 @@ public class BillCycleDayCalculator {
     @VisibleForTesting
     BillCycleDay calculateBcdFromSubscription(final Subscription subscription, final Plan plan, final Account account) throws AccountApiException {
 
-        final DateTime date = plan.dateOfFirstRecurringNonZeroCharge(subscription.getStartDate(), subscription.getCurrentPhase().getPhaseType());
+        final PhaseType currentPhaseType = subscription.getCurrentPhase() != null ?  subscription.getCurrentPhase().getPhaseType() : null;
+        final DateTime date = plan.dateOfFirstRecurringNonZeroCharge(subscription.getStartDate(), currentPhaseType);
         // There are really two kinds of billCycleDay:
         // - a System billingCycleDay which should be computed from UTC time (in order to get the correct notification time at
         //   the end of each service period)
