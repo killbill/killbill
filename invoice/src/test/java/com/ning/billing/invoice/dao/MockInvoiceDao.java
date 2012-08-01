@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 
@@ -265,6 +267,12 @@ public class MockInvoiceDao implements InvoiceDao {
 
     @Override
     public InvoiceItem insertCredit(final UUID accountId, final UUID invoiceId, final BigDecimal amount, final LocalDate effectiveDate, final Currency currency, final CallContext context) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public InvoiceItem insertInvoiceItemAdjustment(final UUID accountId, final UUID invoiceId, final UUID invoiceItemId,
+                                                   final LocalDate effectiveDate, @Nullable final BigDecimal amount, @Nullable final Currency currency, final CallContext context) {
         throw new UnsupportedOperationException();
     }
 

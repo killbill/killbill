@@ -22,6 +22,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.LocalDate;
 
 import com.ning.billing.account.api.AccountApiException;
@@ -143,7 +145,7 @@ public interface InvoiceUserApi {
                                     Currency currency, CallContext context) throws InvoiceApiException;
 
     /**
-     * Add a credit to an invoice.
+     * Add a credit to an invoice. This can be used to adjust invoices.
      *
      * @param accountId     account id
      * @param invoiceId     invoice id
@@ -156,6 +158,22 @@ public interface InvoiceUserApi {
      */
     public InvoiceItem insertCreditForInvoice(UUID accountId, UUID invoiceId, BigDecimal amount, LocalDate effectiveDate,
                                               Currency currency, CallContext context) throws InvoiceApiException;
+
+    /**
+     * Adjust a given invoice item.
+     *
+     * @param accountId     account id
+     * @param invoiceId     invoice id
+     * @param invoiceItemId invoice item id
+     * @param effectiveDate the effective date for this adjustment invoice item
+     * @param amount        the adjustment amount. Pass null to adjust for the full amount of the original item
+     * @param currency      adjustment currency. Pass null to use the original currency
+     * @param context       the call context
+     * @return the adjustment invoice item
+     * @throws InvoiceApiException
+     */
+    public InvoiceItem insertInvoiceItemAdjustment(UUID accountId, UUID invoiceId, UUID invoiceItemId, LocalDate effectiveDate,
+                                                   @Nullable BigDecimal amount, @Nullable Currency currency, CallContext context) throws InvoiceApiException;
 
     /**
      * Retrieve the invoice formatted in HTML.

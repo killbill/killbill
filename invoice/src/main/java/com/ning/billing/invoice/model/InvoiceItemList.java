@@ -41,7 +41,7 @@ public class InvoiceItemList extends ArrayList<InvoiceItem> {
     }
 
     public BigDecimal getTotalAdjAmount() {
-        return getAmoutForItems(InvoiceItemType.CREDIT_ADJ, InvoiceItemType.REFUND_ADJ);
+        return getAmoutForItems(InvoiceItemType.CREDIT_ADJ, InvoiceItemType.REFUND_ADJ, InvoiceItemType.ITEM_ADJ);
     }
 
     public BigDecimal getCreditAdjAmount() {

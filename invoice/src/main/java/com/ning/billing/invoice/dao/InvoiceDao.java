@@ -24,7 +24,6 @@ import javax.annotation.Nullable;
 
 import org.joda.time.LocalDate;
 
-import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
@@ -88,4 +87,18 @@ public interface InvoiceDao {
     InvoiceItem insertCredit(final UUID accountId, final UUID invoiceId, final BigDecimal amount,
                              final LocalDate effectiveDate, final Currency currency, final CallContext context);
 
+    /**
+     * Adjust an invoice item.
+     *
+     * @param accountId     the account id
+     * @param invoiceId     the invoice id
+     * @param invoiceItemId the invoice item id to adjust
+     * @param effectiveDate adjustment effective date, in the account timezone
+     * @param amount        the amount to adjust. Pass null to adjust the full amount of the original item
+     * @param currency      the currency of the amount. Pass null to default to the original currency used
+     * @param context       the call context
+     * @return the newly created adjustment item
+     */
+    InvoiceItem insertInvoiceItemAdjustment(final UUID accountId, final UUID invoiceId, final UUID invoiceItemId, final LocalDate effectiveDate,
+                                            @Nullable final BigDecimal amount, @Nullable final Currency currency, final CallContext context);
 }

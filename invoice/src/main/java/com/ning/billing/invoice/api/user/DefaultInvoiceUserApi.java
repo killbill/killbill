@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 
@@ -153,6 +155,16 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
             throw new InvoiceApiException(ErrorCode.CREDIT_AMOUNT_INVALID, amount);
         }
         return dao.insertCredit(accountId, invoiceId, amount, effectiveDate, currency, context);
+    }
+
+    @Override
+    public InvoiceItem insertInvoiceItemAdjustment(final UUID accountId, final UUID invoiceId, final UUID invoiceItemId,
+                                                   final LocalDate effectiveDate, @Nullable final BigDecimal amount,
+                                                   @Nullable final Currency currency, final CallContext context) throws InvoiceApiException {
+        if (amount != null && amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new InvoiceApiException(ErrorCode.INVOICE_ITEM_ADJUSTMENT_AMOUNT_INVALID, amount);
+        }
+        return dao.insertInvoiceItemAdjustment(accountId, invoiceId, invoiceItemId, effectiveDate, amount, currency, context);
     }
 
     @Override
