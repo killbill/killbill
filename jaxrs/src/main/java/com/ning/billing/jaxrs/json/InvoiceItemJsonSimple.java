@@ -17,20 +17,24 @@
 package com.ning.billing.jaxrs.json;
 
 import java.math.BigDecimal;
-import java.util.UUID;
+import java.util.List;
 
-import org.joda.time.DateTime;
+import javax.annotation.Nullable;
+
 import org.joda.time.LocalDate;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
 
-public class InvoiceItemJsonSimple {
-    private final UUID invoiceId;
-    private final UUID accountId;
-    private final UUID bundleId;
-    private final UUID subscriptionId;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+public class InvoiceItemJsonSimple extends JsonBase {
+
+    private final String invoiceItemId;
+    private final String invoiceId;
+    private final String accountId;
+    private final String bundleId;
+    private final String subscriptionId;
     private final String planName;
     private final String phaseName;
     private final String description;
@@ -39,17 +43,21 @@ public class InvoiceItemJsonSimple {
     private final BigDecimal amount;
     private final Currency currency;
 
-    public InvoiceItemJsonSimple(@JsonProperty("invoiceId") final UUID invoiceId,
-                                 @JsonProperty("accountId") final UUID accountId,
-                                 @JsonProperty("bundleId") final UUID bundleId,
-                                 @JsonProperty("subscriptionId") final UUID subscriptionId,
+    public InvoiceItemJsonSimple(@JsonProperty("invoiceItemId") final String invoiceItemId,
+                                 @JsonProperty("invoiceId") final String invoiceId,
+                                 @JsonProperty("accountId") final String accountId,
+                                 @JsonProperty("bundleId") final String bundleId,
+                                 @JsonProperty("subscriptionId") final String subscriptionId,
                                  @JsonProperty("planName") final String planName,
                                  @JsonProperty("phaseName") final String phaseName,
                                  @JsonProperty("description") final String description,
                                  @JsonProperty("startDate") final LocalDate startDate,
                                  @JsonProperty("endDate") final LocalDate endDate,
                                  @JsonProperty("amount") final BigDecimal amount,
-                                 @JsonProperty("currency") final Currency currency) {
+                                 @JsonProperty("currency") final Currency currency,
+                                 @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
+        super(auditLogs);
+        this.invoiceItemId = invoiceItemId;
         this.invoiceId = invoiceId;
         this.accountId = accountId;
         this.bundleId = bundleId;
@@ -64,24 +72,29 @@ public class InvoiceItemJsonSimple {
     }
 
     public InvoiceItemJsonSimple(final InvoiceItem item) {
-        this(item.getInvoiceId(), item.getAccountId(), item.getBundleId(), item.getSubscriptionId(),
+        this(toString(item.getId()), toString(item.getInvoiceId()), toString(item.getAccountId()),
+             toString(item.getBundleId()), toString(item.getSubscriptionId()),
              item.getPlanName(), item.getPhaseName(), item.getDescription(), item.getStartDate(), item.getEndDate(),
-             item.getAmount(), item.getCurrency());
+             item.getAmount(), item.getCurrency(), null);
     }
 
-    public UUID getInvoiceId() {
+    public String getInvoiceItemId() {
+        return invoiceItemId;
+    }
+
+    public String getInvoiceId() {
         return invoiceId;
     }
 
-    public UUID getAccountId() {
+    public String getAccountId() {
         return accountId;
     }
 
-    public UUID getBundleId() {
+    public String getBundleId() {
         return bundleId;
     }
 
-    public UUID getSubscriptionId() {
+    public String getSubscriptionId() {
         return subscriptionId;
     }
 
@@ -128,7 +141,7 @@ public class InvoiceItemJsonSimple {
             return false;
         }
         if (!((amount == null && that.amount == null) ||
-                (amount != null && that.amount != null && amount.compareTo(that.amount) == 0))) {
+              (amount != null && that.amount != null && amount.compareTo(that.amount) == 0))) {
             return false;
         }
         if (bundleId != null ? !bundleId.equals(that.bundleId) : that.bundleId != null) {
@@ -141,7 +154,10 @@ public class InvoiceItemJsonSimple {
             return false;
         }
         if (!((endDate == null && that.endDate == null) ||
-                (endDate != null && that.endDate != null && endDate.compareTo(that.endDate) == 0))) {
+              (endDate != null && that.endDate != null && endDate.compareTo(that.endDate) == 0))) {
+            return false;
+        }
+        if (invoiceItemId != null ? !invoiceItemId.equals(that.invoiceItemId) : that.invoiceItemId != null) {
             return false;
         }
         if (invoiceId != null ? !invoiceId.equals(that.invoiceId) : that.invoiceId != null) {
@@ -154,7 +170,7 @@ public class InvoiceItemJsonSimple {
             return false;
         }
         if (!((startDate == null && that.startDate == null) ||
-                (startDate != null && that.startDate != null && startDate.compareTo(that.startDate) == 0))) {
+              (startDate != null && that.startDate != null && startDate.compareTo(that.startDate) == 0))) {
             return false;
         }
         if (subscriptionId != null ? !subscriptionId.equals(that.subscriptionId) : that.subscriptionId != null) {
@@ -167,6 +183,7 @@ public class InvoiceItemJsonSimple {
     @Override
     public int hashCode() {
         int result = invoiceId != null ? invoiceId.hashCode() : 0;
+        result = 31 * result + (invoiceItemId != null ? invoiceItemId.hashCode() : 0);
         result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
         result = 31 * result + (bundleId != null ? bundleId.hashCode() : 0);
         result = 31 * result + (subscriptionId != null ? subscriptionId.hashCode() : 0);

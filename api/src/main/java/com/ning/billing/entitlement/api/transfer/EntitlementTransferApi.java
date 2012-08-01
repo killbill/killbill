@@ -24,7 +24,8 @@ import com.ning.billing.util.callcontext.CallContext;
 
 public interface EntitlementTransferApi {
 
-    public SubscriptionBundle transferBundle(final UUID sourceAccountId, final UUID destAccountId, final String bundleKey, final DateTime requestedDate, final boolean transferAddOn, final CallContext context)
+    public SubscriptionBundle transferBundle(final UUID sourceAccountId, final UUID destAccountId, final String bundleKey, final DateTime requestedDate,
+            final boolean transferAddOn, final boolean cancelImmediately, final CallContext context)
         throws EntitlementTransferApiException;
 
 }

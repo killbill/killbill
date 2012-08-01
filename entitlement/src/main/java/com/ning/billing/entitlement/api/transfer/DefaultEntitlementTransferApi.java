@@ -201,8 +201,7 @@ public class DefaultEntitlementTransferApi implements EntitlementTransferApi {
     @Override
     public SubscriptionBundle transferBundle(final UUID sourceAccountId, final UUID destAccountId,
             final String bundleKey, final DateTime transferDate, final boolean transferAddOn,
-            final CallContext context) throws EntitlementTransferApiException {
-
+            final boolean cancelImmediately, final CallContext context) throws EntitlementTransferApiException {
         try {
 
             final DateTime effectiveTransferDate = transferDate == null ? clock.getUTCNow() : transferDate;
@@ -235,7 +234,8 @@ public class DefaultEntitlementTransferApi implements EntitlementTransferApi {
                 } else {
 
                     // If BP or STANDALONE subscription, create the cancel event on effectiveCancelDate
-                    final DateTime effectiveCancelDate = oldSubscription.getChargedThroughDate() != null && effectiveTransferDate.isBefore(oldSubscription.getChargedThroughDate()) ?
+                    final DateTime effectiveCancelDate = !cancelImmediately && oldSubscription.getChargedThroughDate() != null &&
+                        effectiveTransferDate.isBefore(oldSubscription.getChargedThroughDate()) ?
                             oldSubscription.getChargedThroughDate() : effectiveTransferDate;
 
                             final EntitlementEvent cancelEvent = new ApiEventCancel(new ApiEventBuilder()

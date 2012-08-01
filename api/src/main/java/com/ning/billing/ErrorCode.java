@@ -186,6 +186,10 @@ public enum ErrorCode {
     INVOICE_NOT_FOUND(4006, "No invoice could be found for id %s."),
     INVOICE_NOTHING_TO_DO(4007, "No invoice to generate for account %s and date %s"),
     INVOICE_NO_SUCH_CREDIT(4008, "Credit Item for id %s does not exist"),
+    CREDIT_AMOUNT_INVALID(4009, "Credit amount %s should be strictly positive"),
+    INVOICE_ITEM_ADJUSTMENT_AMOUNT_INVALID(4010, "Invoice adjustment amount %s should be strictly positive"),
+    INVOICE_ITEM_NOT_FOUND(4011, "No invoice item could be found for id %s."),
+    INVOICE_INVALID_FOR_INVOICE_ITEM_ADJUSTMENT(4012, "Invoice item %s doesn't belong to invoice %s."),
 
     /*
      *
@@ -199,7 +203,6 @@ public enum ErrorCode {
     CHARGE_BACK_DOES_NOT_EXIST(4004, "Could not find chargeback for id %s."),
     INVOICE_PAYMENT_BY_ATTEMPT_NOT_FOUND(4905, "No invoice payment could be found for paymentAttempt id %s."),
     REFUND_AMOUNT_TOO_HIGH(4906, "Tried to refund %s of a %s payment."),
-    CREDIT_AMOUNT_INVALID(4907, "Credit amount %s should be striclty positive"),
 
     /*
      *

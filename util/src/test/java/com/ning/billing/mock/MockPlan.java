@@ -24,6 +24,7 @@ import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.CatalogApiException;
+import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.Product;
@@ -97,7 +98,7 @@ public class MockPlan implements Plan {
     }
 
     @Override
-    public DateTime dateOfFirstRecurringNonZeroCharge(final DateTime subscriptionStartDate) {
+    public DateTime dateOfFirstRecurringNonZeroCharge(final DateTime subscriptionStartDate, PhaseType initialPhaseType) {
         throw new UnsupportedOperationException();
     }
 }

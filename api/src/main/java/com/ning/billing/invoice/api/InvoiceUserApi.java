@@ -22,6 +22,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.LocalDate;
 
 import com.ning.billing.account.api.AccountApiException;
@@ -31,6 +33,12 @@ import com.ning.billing.util.callcontext.CallContext;
 
 public interface InvoiceUserApi {
 
+    /**
+     * Get all invoices for a given account.
+     *
+     * @param accountId account id
+     * @return all invoices
+     */
     public List<Invoice> getInvoicesByAccount(UUID accountId);
 
     /**
@@ -42,12 +50,36 @@ public interface InvoiceUserApi {
      */
     public List<Invoice> getInvoicesByAccount(UUID accountId, LocalDate fromDate);
 
+    /**
+     * Retrieve the account balance.
+     *
+     * @param accountId account id
+     * @return the account balance
+     */
     public BigDecimal getAccountBalance(UUID accountId);
 
+    /**
+     * Retrieve an invoice by id.
+     *
+     * @param invoiceId invoice id
+     * @return the invoice
+     */
     public Invoice getInvoice(UUID invoiceId);
 
+    /**
+     * Retrieve an invoice by invoice number.
+     *
+     * @param number invoice number
+     * @return the invoice
+     */
     public Invoice getInvoiceByNumber(Integer number);
 
+    /**
+     * Record a payment for an invoice.
+     *
+     * @param invoicePayment invoice payment
+     * @param context        call context
+     */
     public void notifyOfPayment(InvoicePayment invoicePayment, CallContext context);
 
     /**
@@ -71,10 +103,31 @@ public interface InvoiceUserApi {
      */
     public Invoice triggerInvoiceGeneration(UUID accountId, LocalDate targetDate, boolean dryRun, CallContext context) throws InvoiceApiException;
 
+    /**
+     * Mark an invoice as written off.
+     *
+     * @param invoiceId invoice id
+     * @param context   call context
+     * @throws TagApiException
+     */
     public void tagInvoiceAsWrittenOff(UUID invoiceId, CallContext context) throws TagApiException;
 
+    /**
+     * Unmark an invoice as written off.
+     *
+     * @param invoiceId invoice id
+     * @param context   call context
+     * @throws TagApiException
+     */
     public void tagInvoiceAsNotWrittenOff(UUID invoiceId, CallContext context) throws TagApiException;
 
+    /**
+     * Retrieve a credit by id.
+     *
+     * @param creditId credit id
+     * @return the credit
+     * @throws InvoiceApiException
+     */
     public InvoiceItem getCreditById(UUID creditId) throws InvoiceApiException;
 
     /**
@@ -92,7 +145,7 @@ public interface InvoiceUserApi {
                                     Currency currency, CallContext context) throws InvoiceApiException;
 
     /**
-     * Add a credit to an invoice.
+     * Add a credit to an invoice. This can be used to adjust invoices.
      *
      * @param accountId     account id
      * @param invoiceId     invoice id
@@ -106,5 +159,30 @@ public interface InvoiceUserApi {
     public InvoiceItem insertCreditForInvoice(UUID accountId, UUID invoiceId, BigDecimal amount, LocalDate effectiveDate,
                                               Currency currency, CallContext context) throws InvoiceApiException;
 
+    /**
+     * Adjust a given invoice item.
+     *
+     * @param accountId     account id
+     * @param invoiceId     invoice id
+     * @param invoiceItemId invoice item id
+     * @param effectiveDate the effective date for this adjustment invoice item
+     * @param amount        the adjustment amount. Pass null to adjust for the full amount of the original item
+     * @param currency      adjustment currency. Pass null to use the original currency
+     * @param context       the call context
+     * @return the adjustment invoice item
+     * @throws InvoiceApiException
+     */
+    public InvoiceItem insertInvoiceItemAdjustment(UUID accountId, UUID invoiceId, UUID invoiceItemId, LocalDate effectiveDate,
+                                                   @Nullable BigDecimal amount, @Nullable Currency currency, CallContext context) throws InvoiceApiException;
+
+    /**
+     * Retrieve the invoice formatted in HTML.
+     *
+     * @param invoiceId invoice id
+     * @return the invoice in HTML format
+     * @throws AccountApiException
+     * @throws IOException
+     * @throws InvoiceApiException
+     */
     public String getInvoiceAsHTML(UUID invoiceId) throws AccountApiException, IOException, InvoiceApiException;
 }
