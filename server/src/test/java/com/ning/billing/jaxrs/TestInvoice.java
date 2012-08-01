@@ -17,13 +17,16 @@
 package com.ning.billing.jaxrs;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 
 import org.joda.time.DateTime;
 import org.testng.annotations.Test;
 
 import com.ning.billing.jaxrs.json.AccountJson;
+import com.ning.billing.jaxrs.json.InvoiceItemJsonSimple;
 import com.ning.billing.jaxrs.json.InvoiceJsonSimple;
+import com.ning.billing.jaxrs.json.InvoiceJsonWithItems;
 import com.ning.billing.jaxrs.json.PaymentJsonSimple;
 import com.ning.billing.jaxrs.json.PaymentMethodJson;
 import com.ning.billing.payment.provider.ExternalPaymentProviderPlugin;
@@ -134,5 +137,53 @@ public class TestInvoice extends TestJaxrsBase {
         assertEquals(paymentMethodJson.getAccountId(), accountJson.getAccountId());
         assertEquals(paymentMethodJson.getPluginName(), ExternalPaymentProviderPlugin.PLUGIN_NAME);
         assertNull(paymentMethodJson.getPluginInfo());
+    }
+
+    @Test(groups = "slow")
+    public void testFullInvoiceItemAdjustment() throws Exception {
+        final AccountJson accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
+
+        // Get the invoices
+        final List<InvoiceJsonWithItems> invoices = getInvoicesWithItemsForAccount(accountJson.getAccountId());
+        // 2 invoices but look for the non zero dollar one
+        assertEquals(invoices.size(), 2);
+        final InvoiceJsonWithItems invoice = invoices.get(1);
+        // Verify the invoice we picked is non zero
+        assertEquals(invoice.getAmount().compareTo(BigDecimal.ZERO), 1);
+        final InvoiceItemJsonSimple invoiceItem = invoice.getItems().get(0);
+        // Verify the item we picked is non zero
+        assertEquals(invoiceItem.getAmount().compareTo(BigDecimal.ZERO), 1);
+
+        // Adjust the full amount
+        adjustInvoiceItem(accountJson.getAccountId(), invoice.getInvoiceId(), invoiceItem.getInvoiceItemId(), null, null, null);
+
+        // Verify the new invoice balance is zero
+        final InvoiceJsonSimple adjustedInvoice = getInvoice(invoice.getInvoiceId());
+        assertEquals(adjustedInvoice.getAmount().compareTo(BigDecimal.ZERO), 1);
+    }
+
+    @Test(groups = "slow")
+    public void testPartialInvoiceItemAdjustment() throws Exception {
+        final AccountJson accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
+
+        // Get the invoices
+        final List<InvoiceJsonWithItems> invoices = getInvoicesWithItemsForAccount(accountJson.getAccountId());
+        // 2 invoices but look for the non zero dollar one
+        assertEquals(invoices.size(), 2);
+        final InvoiceJsonWithItems invoice = invoices.get(1);
+        // Verify the invoice we picked is non zero
+        assertEquals(invoice.getAmount().compareTo(BigDecimal.ZERO), 1);
+        final InvoiceItemJsonSimple invoiceItem = invoice.getItems().get(0);
+        // Verify the item we picked is non zero
+        assertEquals(invoiceItem.getAmount().compareTo(BigDecimal.ZERO), 1);
+
+        // Adjust partially the item
+        final BigDecimal adjustedAmount = invoiceItem.getAmount().divide(BigDecimal.TEN);
+        adjustInvoiceItem(accountJson.getAccountId(), invoice.getInvoiceId(), invoiceItem.getInvoiceItemId(), null, adjustedAmount, null);
+
+        // Verify the new invoice balance
+        final InvoiceJsonSimple adjustedInvoice = getInvoice(invoice.getInvoiceId());
+        final BigDecimal adjustedInvoiceBalance = invoice.getBalance().add(adjustedAmount.negate().setScale(2, RoundingMode.HALF_UP));
+        assertEquals(adjustedInvoice.getBalance().compareTo(adjustedInvoiceBalance), 0);
     }
 }

@@ -44,6 +44,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
 
+import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -58,6 +59,7 @@ import com.ning.billing.api.TestApiListener;
 import com.ning.billing.beatrix.glue.BeatrixModule;
 import com.ning.billing.beatrix.integration.TestIntegration;
 import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.catalog.glue.CatalogModule;
@@ -72,7 +74,9 @@ import com.ning.billing.invoice.notification.NullInvoiceNotifier;
 import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.BillCycleDayJson;
 import com.ning.billing.jaxrs.json.BundleJsonNoSubscriptions;
+import com.ning.billing.jaxrs.json.InvoiceItemJsonSimple;
 import com.ning.billing.jaxrs.json.InvoiceJsonSimple;
+import com.ning.billing.jaxrs.json.InvoiceJsonWithItems;
 import com.ning.billing.jaxrs.json.PaymentJsonSimple;
 import com.ning.billing.jaxrs.json.PaymentMethodJson;
 import com.ning.billing.jaxrs.json.PaymentMethodJson.PaymentMethodPluginDetailJson;
@@ -477,14 +481,33 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
     }
 
     protected List<InvoiceJsonSimple> getInvoicesForAccount(final String accountId) throws IOException {
+        final String invoicesURI = JaxrsResource.INVOICES_PATH;
+
         final Map<String, String> queryParams = new HashMap<String, String>();
         queryParams.put(JaxrsResource.QUERY_ACCOUNT_ID, accountId);
-        final String invoicesURI = JaxrsResource.INVOICES_PATH;
+
         final Response invoicesResponse = doGet(invoicesURI, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(invoicesResponse.getStatusCode(), Status.OK.getStatusCode());
-        final String invoicesBaseJson = invoicesResponse.getResponseBody();
 
+        final String invoicesBaseJson = invoicesResponse.getResponseBody();
         final List<InvoiceJsonSimple> invoices = mapper.readValue(invoicesBaseJson, new TypeReference<List<InvoiceJsonSimple>>() {});
+        assertNotNull(invoices);
+
+        return invoices;
+    }
+
+    protected List<InvoiceJsonWithItems> getInvoicesWithItemsForAccount(final String accountId) throws IOException {
+        final String invoicesURI = JaxrsResource.INVOICES_PATH;
+
+        final Map<String, String> queryParams = new HashMap<String, String>();
+        queryParams.put(JaxrsResource.QUERY_ACCOUNT_ID, accountId);
+        queryParams.put(JaxrsResource.QUERY_INVOICE_WITH_ITEMS, "true");
+
+        final Response invoicesResponse = doGet(invoicesURI, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
+        assertEquals(invoicesResponse.getStatusCode(), Status.OK.getStatusCode());
+
+        final String invoicesBaseJson = invoicesResponse.getResponseBody();
+        final List<InvoiceJsonWithItems> invoices = mapper.readValue(invoicesBaseJson, new TypeReference<List<InvoiceJsonWithItems>>() {});
         assertNotNull(invoices);
 
         return invoices;
@@ -520,6 +543,22 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
 
         final String location = response.getHeader("Location");
         Assert.assertNotNull(location);
+    }
+
+    protected void adjustInvoiceItem(final String accountId, final String invoiceId, final String invoiceItemId,
+                                     @Nullable final DateTime requestedDate, @Nullable final BigDecimal amount, @Nullable final Currency currency) throws IOException {
+        final String uri = JaxrsResource.INVOICES_PATH + "/" + invoiceId;
+
+        final Map<String, String> queryParams = new HashMap<String, String>();
+        if (requestedDate != null) {
+            queryParams.put(JaxrsResource.QUERY_REQUESTED_DT, requestedDate.toDateTimeISO().toString());
+        }
+
+        final InvoiceItemJsonSimple adjustment = new InvoiceItemJsonSimple(invoiceItemId, null, accountId, null, null, null, null,
+                                                                           null, null, null, amount, currency, null);
+        final String adjustmentJson = mapper.writeValueAsString(adjustment);
+        final Response response = doPost(uri, adjustmentJson, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
     }
 
     //

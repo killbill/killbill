@@ -49,9 +49,11 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
+import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceNotifier;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
+import com.ning.billing.jaxrs.json.InvoiceItemJsonSimple;
 import com.ning.billing.jaxrs.json.InvoiceJsonSimple;
 import com.ning.billing.jaxrs.json.InvoiceJsonWithItems;
 import com.ning.billing.jaxrs.json.PaymentJsonSimple;
@@ -65,6 +67,7 @@ import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.dao.ObjectType;
 
 import com.google.inject.Inject;
@@ -88,6 +91,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     private final Context context;
     private final JaxrsUriBuilder uriBuilder;
     private final InvoiceNotifier invoiceNotifier;
+    private final Clock clock;
 
     @Inject
     public InvoiceResource(final AccountUserApi accountApi,
@@ -97,7 +101,8 @@ public class InvoiceResource extends JaxRsResourceBase {
                            final JaxrsUriBuilder uriBuilder,
                            final TagUserApi tagUserApi,
                            final CustomFieldUserApi customFieldUserApi,
-                           final InvoiceNotifier invoiceNotifier) {
+                           final InvoiceNotifier invoiceNotifier,
+                           final Clock clock) {
         super(uriBuilder, tagUserApi, customFieldUserApi);
         this.accountApi = accountApi;
         this.invoiceApi = invoiceApi;
@@ -105,28 +110,39 @@ public class InvoiceResource extends JaxRsResourceBase {
         this.context = context;
         this.uriBuilder = uriBuilder;
         this.invoiceNotifier = invoiceNotifier;
+        this.clock = clock;
     }
 
     @GET
     @Produces(APPLICATION_JSON)
-    public Response getInvoices(@QueryParam(QUERY_ACCOUNT_ID) final String accountId) throws AccountApiException {
+    public Response getInvoices(@QueryParam(QUERY_ACCOUNT_ID) final String accountId,
+                                @QueryParam(QUERY_INVOICE_WITH_ITEMS) @DefaultValue("false") final boolean withItems) throws AccountApiException {
         // Verify the account exists
         accountApi.getAccountById(UUID.fromString(accountId));
 
         final List<Invoice> invoices = invoiceApi.getInvoicesByAccount(UUID.fromString(accountId));
-        final List<InvoiceJsonSimple> result = new LinkedList<InvoiceJsonSimple>();
-        for (final Invoice invoice : invoices) {
-            result.add(new InvoiceJsonSimple(invoice));
-        }
+        if (withItems) {
+            final List<InvoiceJsonWithItems> result = new LinkedList<InvoiceJsonWithItems>();
+            for (final Invoice invoice : invoices) {
+                result.add(new InvoiceJsonWithItems(invoice));
+            }
 
-        return Response.status(Status.OK).entity(result).build();
+            return Response.status(Status.OK).entity(result).build();
+        } else {
+            final List<InvoiceJsonSimple> result = new LinkedList<InvoiceJsonSimple>();
+            for (final Invoice invoice : invoices) {
+                result.add(new InvoiceJsonSimple(invoice));
+            }
+
+            return Response.status(Status.OK).entity(result).build();
+        }
     }
 
     @GET
     @Path("/{invoiceId:" + UUID_PATTERN + "}/")
     @Produces(APPLICATION_JSON)
     public Response getInvoice(@PathParam("invoiceId") final String invoiceId,
-                               @QueryParam("withItems") @DefaultValue("false") final boolean withItems) throws InvoiceApiException {
+                               @QueryParam(QUERY_INVOICE_WITH_ITEMS) @DefaultValue("false") final boolean withItems) throws InvoiceApiException {
         final Invoice invoice = invoiceApi.getInvoice(UUID.fromString(invoiceId));
         if (invoice == null) {
             throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND);
@@ -164,6 +180,47 @@ public class InvoiceResource extends JaxRsResourceBase {
         } else {
             return uriBuilder.buildResponse(InvoiceResource.class, "getInvoice", generatedInvoice.getId());
         }
+    }
+
+    @POST
+    @Path("/{invoiceId:" + UUID_PATTERN + "}")
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    public Response adjustInvoiceItem(final InvoiceItemJsonSimple json,
+                                      @PathParam("invoiceId") final String invoiceId,
+                                      @QueryParam(QUERY_REQUESTED_DT) final String requestedDateTimeString,
+                                      @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                      @HeaderParam(HDR_REASON) final String reason,
+                                      @HeaderParam(HDR_COMMENT) final String comment) throws AccountApiException, InvoiceApiException {
+        final Account account = accountApi.getAccountById(UUID.fromString(json.getAccountId()));
+
+        // Get the effective date of the adjustment, in the account timezone
+        final LocalDate requestedDate;
+        if (requestedDateTimeString == null) {
+            requestedDate = clock.getUTCToday();
+        } else {
+            final DateTime requestedDateTime = DATE_TIME_FORMATTER.parseDateTime(requestedDateTimeString);
+            requestedDate = requestedDateTime.toDateTime(account.getTimeZone()).toLocalDate();
+        }
+
+        final InvoiceItem adjustmentItem;
+        if (json.getAmount() == null) {
+            adjustmentItem = invoiceApi.insertInvoiceItemAdjustment(account.getId(),
+                                                                    UUID.fromString(invoiceId),
+                                                                    UUID.fromString(json.getInvoiceItemId()),
+                                                                    requestedDate,
+                                                                    context.createContext(createdBy, reason, comment));
+        } else {
+            adjustmentItem = invoiceApi.insertInvoiceItemAdjustment(account.getId(),
+                                                                    UUID.fromString(invoiceId),
+                                                                    UUID.fromString(json.getInvoiceItemId()),
+                                                                    requestedDate,
+                                                                    json.getAmount(),
+                                                                    json.getCurrency(),
+                                                                    context.createContext(createdBy, reason, comment));
+        }
+
+        return uriBuilder.buildResponse(InvoiceResource.class, "getInvoice", adjustmentItem.getInvoiceId());
     }
 
     @GET
