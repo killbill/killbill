@@ -88,7 +88,8 @@ public class PaymentResource extends JaxRsResourceBase {
         final List<RefundJson> result = new ArrayList<RefundJson>(Collections2.transform(refunds, new Function<Refund, RefundJson>() {
             @Override
             public RefundJson apply(final Refund input) {
-                return new RefundJson(input);
+                // TODO Return adjusted items and audits
+                return new RefundJson(input, null, null);
             }
         }));
 

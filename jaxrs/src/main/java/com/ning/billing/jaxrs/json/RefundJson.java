@@ -23,11 +23,15 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.payment.api.Refund;
 import com.ning.billing.util.audit.AuditLog;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
 
 public class RefundJson extends JsonBase {
 
@@ -37,6 +41,7 @@ public class RefundJson extends JsonBase {
     private final Boolean isAdjusted;
     private final DateTime requestedDate;
     private final DateTime effectiveDate;
+    private final List<InvoiceItemJsonSimple> adjustments;
 
     @JsonCreator
     public RefundJson(@JsonProperty("refund_id") final String refundId,
@@ -45,6 +50,7 @@ public class RefundJson extends JsonBase {
                       @JsonProperty("adjusted") final Boolean isAdjusted,
                       @JsonProperty("requestedDate") final DateTime requestedDate,
                       @JsonProperty("effectiveDate") final DateTime effectiveDate,
+                      @JsonProperty("adjustments") @Nullable final List<InvoiceItemJsonSimple> adjustments,
                       @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(auditLogs);
         this.refundId = refundId;
@@ -53,15 +59,19 @@ public class RefundJson extends JsonBase {
         this.isAdjusted = isAdjusted;
         this.requestedDate = requestedDate;
         this.effectiveDate = effectiveDate;
+        this.adjustments = adjustments;
     }
 
-    public RefundJson(final Refund refund) {
-        this(refund, null);
-    }
-
-    public RefundJson(final Refund refund, final List<AuditLog> auditLogs) {
+    public RefundJson(final Refund refund, @Nullable final List<InvoiceItem> adjustments, @Nullable final List<AuditLog> auditLogs) {
         this(refund.getId().toString(), refund.getPaymentId().toString(), refund.getRefundAmount(), refund.isAdjusted(),
-             refund.getEffectiveDate(), refund.getEffectiveDate(), toAuditLogJson(auditLogs));
+             refund.getEffectiveDate(), refund.getEffectiveDate(),
+             adjustments == null ? null : ImmutableList.<InvoiceItemJsonSimple>copyOf(Collections2.transform(adjustments, new Function<InvoiceItem, InvoiceItemJsonSimple>() {
+                 @Override
+                 public InvoiceItemJsonSimple apply(@Nullable final InvoiceItem input) {
+                     return new InvoiceItemJsonSimple(input);
+                 }
+             })),
+             toAuditLogJson(auditLogs));
     }
 
     public String getRefundId() {
@@ -88,6 +98,10 @@ public class RefundJson extends JsonBase {
         return effectiveDate;
     }
 
+    public List<InvoiceItemJsonSimple> getAdjustments() {
+        return adjustments;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
@@ -98,6 +112,7 @@ public class RefundJson extends JsonBase {
         sb.append(", isAdjusted=").append(isAdjusted);
         sb.append(", requestedDate=").append(requestedDate);
         sb.append(", effectiveDate=").append(effectiveDate);
+        sb.append(", adjustments=").append(adjustments);
         sb.append('}');
         return sb.toString();
     }
@@ -110,6 +125,7 @@ public class RefundJson extends JsonBase {
         result = 31 * result + (isAdjusted != null ? isAdjusted.hashCode() : 0);
         result = 31 * result + (requestedDate != null ? requestedDate.hashCode() : 0);
         result = 31 * result + (effectiveDate != null ? effectiveDate.hashCode() : 0);
+        result = 31 * result + (adjustments != null ? adjustments.hashCode() : 0);
         return result;
     }
 
@@ -182,6 +198,14 @@ public class RefundJson extends JsonBase {
                 return false;
             }
         } else if (!refundAmount.equals(other.refundAmount)) {
+            return false;
+        }
+
+        if (adjustments == null) {
+            if (other.adjustments != null) {
+                return false;
+            }
+        } else if (!adjustments.equals(other.adjustments)) {
             return false;
         }
 

@@ -92,7 +92,7 @@ public class TestPayment extends TestJaxrsBase {
 
         // Issue the refund
 
-        final RefundJson refundJson = new RefundJson(null, paymentId, paymentAmount, false, null, null, null);
+        final RefundJson refundJson = new RefundJson(null, paymentId, paymentAmount, false, null, null, null, null);
         baseJson = mapper.writeValueAsString(refundJson);
         response = doPost(uri, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
