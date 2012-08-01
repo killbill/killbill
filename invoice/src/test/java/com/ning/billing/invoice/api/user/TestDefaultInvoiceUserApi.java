@@ -136,7 +136,7 @@ public class TestDefaultInvoiceUserApi extends InvoiceApiTestBase {
 
         // Adjust the invoice for the full amount
         final InvoiceItem adjInvoiceItem = invoiceUserApi.insertInvoiceItemAdjustment(accountId, invoiceId, invoiceItem.getId(),
-                                                                                      clock.getUTCToday(), null, null, context);
+                                                                                      clock.getUTCToday(), context);
         Assert.assertEquals(adjInvoiceItem.getInvoiceId(), invoiceId);
         Assert.assertEquals(adjInvoiceItem.getInvoiceItemType(), InvoiceItemType.ITEM_ADJ);
         Assert.assertEquals(adjInvoiceItem.getAccountId(), accountId);
