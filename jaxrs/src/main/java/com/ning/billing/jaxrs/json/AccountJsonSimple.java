@@ -24,11 +24,6 @@ public class AccountJsonSimple {
 
     protected final String externalKey;
 
-    public AccountJsonSimple() {
-        this.accountId = null;
-        this.externalKey = null;
-    }
-
     @JsonCreator
     public AccountJsonSimple(@JsonProperty("accountId") final String accountId,
                              @JsonProperty("externalKey") final String externalKey) {
