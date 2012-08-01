@@ -163,7 +163,7 @@ public interface InvoiceUserApi {
      * @param accountId     account id
      * @param invoiceId     invoice id
      * @param invoiceItemId invoice item id
-     * @param effectiveDate the effective date for this adjustment invoice item
+     * @param effectiveDate the effective date for this adjustment invoice item (in the account timezone)
      * @param context       the call context
      * @return the adjustment invoice item
      * @throws InvoiceApiException
@@ -176,7 +176,7 @@ public interface InvoiceUserApi {
      * @param accountId     account id
      * @param invoiceId     invoice id
      * @param invoiceItemId invoice item id
-     * @param effectiveDate the effective date for this adjustment invoice item
+     * @param effectiveDate the effective date for this adjustment invoice item (in the account timezone)
      * @param amount        the adjustment amount
      * @param currency      adjustment currency
      * @param context       the call context
