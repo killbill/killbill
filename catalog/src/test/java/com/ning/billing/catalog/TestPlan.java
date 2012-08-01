@@ -50,8 +50,8 @@ public class TestPlan extends CatalogTestSuite {
         final DefaultPlan p2 = MockPlan.createBicycleNoTrialEvergreen1USD();
 
         final DateTime requestedDate = new DateTime();
-        Assert.assertEquals(p0.dateOfFirstRecurringNonZeroCharge(requestedDate).compareTo(requestedDate.plusDays(30)), 0);
-        Assert.assertEquals(p1.dateOfFirstRecurringNonZeroCharge(requestedDate).compareTo(requestedDate.plusDays(100)), 0);
-        Assert.assertEquals(p2.dateOfFirstRecurringNonZeroCharge(requestedDate).compareTo(requestedDate.plusDays(0)), 0);
+        Assert.assertEquals(p0.dateOfFirstRecurringNonZeroCharge(requestedDate, null).compareTo(requestedDate.plusDays(30)), 0);
+        Assert.assertEquals(p1.dateOfFirstRecurringNonZeroCharge(requestedDate, null).compareTo(requestedDate.plusDays(100)), 0);
+        Assert.assertEquals(p2.dateOfFirstRecurringNonZeroCharge(requestedDate, null).compareTo(requestedDate.plusDays(0)), 0);
     }
 }

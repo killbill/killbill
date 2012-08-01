@@ -53,6 +53,7 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.api.EntitlementService;
 import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
+import com.ning.billing.entitlement.api.transfer.EntitlementTransferApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
@@ -125,8 +126,12 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
     @Inject
     protected MysqlTestingHelper helper;
+
     @Inject
     protected EntitlementUserApi entitlementUserApi;
+
+    @Inject
+    protected EntitlementTransferApi transferApi;
 
     @Inject
     protected EntitlementTimelineApi repairApi;

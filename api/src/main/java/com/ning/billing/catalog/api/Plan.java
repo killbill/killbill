@@ -45,6 +45,6 @@ public interface Plan {
 
     public abstract PlanPhase findPhase(String name) throws CatalogApiException;
 
-    public abstract DateTime dateOfFirstRecurringNonZeroCharge(DateTime subscriptionStartDate);
+    public abstract DateTime dateOfFirstRecurringNonZeroCharge(DateTime subscriptionStartDate, PhaseType intialPhaseType);
 
 }

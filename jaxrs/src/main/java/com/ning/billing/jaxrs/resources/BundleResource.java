@@ -175,6 +175,7 @@ public class BundleResource extends JaxRsResourceBase {
     public Response transferBundle(@PathParam(ID_PARAM_NAME) final String id,
             @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
             @QueryParam(QUERY_BUNDLE_TRANSFER_ADDON) @DefaultValue("true") final Boolean transferAddOn,
+            @QueryParam(QUERY_BUNDLE_TRANSFER_CANCEL_IMM) @DefaultValue("false") final Boolean cancelImmediatley,
             final BundleJsonNoSubscriptions json,
             @HeaderParam(HDR_CREATED_BY) final String createdBy,
             @HeaderParam(HDR_REASON) final String reason,
@@ -184,7 +185,7 @@ public class BundleResource extends JaxRsResourceBase {
         final SubscriptionBundle bundle = entitlementApi.getBundleFromId(UUID.fromString(id));
         final DateTime inputDate = (requestedDate != null) ? DATE_TIME_FORMATTER.parseDateTime(requestedDate) : null;
         final SubscriptionBundle newBundle = transferApi.transferBundle(bundle.getAccountId(), UUID.fromString(json.getAccountId()), bundle.getKey(), inputDate, transferAddOn,
-                context.createContext(createdBy, reason, comment));
+                cancelImmediatley, context.createContext(createdBy, reason, comment));
 
         return uriBuilder.buildResponse(BundleResource.class, "getBundle", newBundle.getId(), uriInfo.getBaseUri().toString());
     }
