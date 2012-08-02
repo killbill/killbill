@@ -18,6 +18,7 @@ package com.ning.billing.payment.api;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -35,7 +36,58 @@ public interface PaymentApi {
     public Refund getRefund(final UUID refundId)
             throws PaymentApiException;
 
-    public Refund createRefund(final Account account, final UUID paymentId, final BigDecimal refundAmount, final boolean isAdjusted, final CallContext context)
+    /**
+     * Create a refund for a given payment. The associated invoice is not adjusted.
+     *
+     * @param account      account to refund
+     * @param paymentId    payment associated with that refund
+     * @param refundAmount amount to refund
+     * @param context      the call context
+     * @return the created Refund
+     * @throws PaymentApiException
+     */
+    public Refund createRefund(final Account account, final UUID paymentId, final BigDecimal refundAmount, final CallContext context)
+            throws PaymentApiException;
+
+    /**
+     * Create a refund for a given payment. The associated invoice is adjusted.
+     *
+     * @param account      account to refund
+     * @param paymentId    payment associated with that refund
+     * @param refundAmount amount to refund
+     * @param context      the call context
+     * @return the created Refund
+     * @throws PaymentApiException
+     */
+    public Refund createRefundWithAdjustment(final Account account, final UUID paymentId, final BigDecimal refundAmount, final CallContext context)
+            throws PaymentApiException;
+
+    /**
+     * Create a refund for a given payment. The specified invoice items are fully adjusted.
+     * The refund amount will be the sum of all invoice items amounts.
+     *
+     * @param account        account to refund
+     * @param paymentId      payment associated with that refund
+     * @param invoiceItemIds invoice item ids to adjust
+     * @param context        the call context
+     * @return the created Refund
+     * @throws PaymentApiException
+     */
+    public Refund createRefundWithItemsAdjustments(final Account account, final UUID paymentId, final Set<UUID> invoiceItemIds, final CallContext context)
+            throws PaymentApiException;
+
+    /**
+     * Create a refund for a given payment. The specified invoice items are partially adjusted.
+     * The refund amount will be the sum of all adjustments.
+     *
+     * @param account                   account to refund
+     * @param paymentId                 payment associated with that refund
+     * @param invoiceItemIdsWithAmounts invoice item ids and associated amounts to adjust
+     * @param context                   the call context
+     * @return the created Refund
+     * @throws PaymentApiException
+     */
+    public Refund createRefundWithItemsAdjustments(final Account account, final UUID paymentId, final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts, final CallContext context)
             throws PaymentApiException;
 
     public List<Refund> getAccountRefunds(final Account account)

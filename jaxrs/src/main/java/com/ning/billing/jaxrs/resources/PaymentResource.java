@@ -110,7 +110,12 @@ public class PaymentResource extends JaxRsResourceBase {
         final Payment payment = paymentApi.getPayment(paymentUuid);
         final Account account = accountApi.getAccountById(payment.getAccountId());
 
-        final Refund result = paymentApi.createRefund(account, paymentUuid, json.getRefundAmount(), json.isAdjusted(), context.createContext(createdBy, reason, comment));
+        final Refund result;
+        if (json.isAdjusted()) {
+            result = paymentApi.createRefundWithAdjustment(account, paymentUuid, json.getRefundAmount(), context.createContext(createdBy, reason, comment));
+        } else {
+            result = paymentApi.createRefund(account, paymentUuid, json.getRefundAmount(), context.createContext(createdBy, reason, comment));
+        }
 
         return uriBuilder.buildResponse(RefundResource.class, "getRefund", result.getId(), uriInfo.getBaseUri().toString());
     }

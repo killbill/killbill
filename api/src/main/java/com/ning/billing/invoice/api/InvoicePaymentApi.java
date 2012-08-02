@@ -18,6 +18,7 @@ package com.ning.billing.invoice.api;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -26,6 +27,7 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.callcontext.CallContext;
 
 public interface InvoicePaymentApi {
+
     /**
      * @param accountId id of the account
      * @return All invoices, including migrated invoices
@@ -42,7 +44,21 @@ public interface InvoicePaymentApi {
 
     public void notifyOfPayment(UUID invoiceId, BigDecimal amountOutstanding, Currency currency, UUID paymentId, DateTime paymentDate, CallContext context);
 
-    public InvoicePayment createRefund(UUID paymentId, BigDecimal amount, boolean isInvoiceAdjusted, UUID paymentCookieId, CallContext context) throws InvoiceApiException;
+    /**
+     * Create a refund.
+     *
+     *
+     * @param paymentId                 payment associated with that refund
+     * @param amount                    amount to refund
+     * @param isInvoiceAdjusted         whether the refund should trigger an invoice or invoice item adjustment
+     * @param invoiceItemIdsWithAmounts invoice item ids and associated amounts to adjust
+     * @param paymentCookieId           payment cookie id
+     * @param context                   the call context
+     * @return the created invoice payment object associated with this refund
+     * @throws InvoiceApiException
+     */
+    public InvoicePayment createRefund(UUID paymentId, BigDecimal amount, boolean isInvoiceAdjusted, final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts,
+                                       UUID paymentCookieId, CallContext context) throws InvoiceApiException;
 
     public InvoicePayment createChargeback(UUID invoicePaymentId, BigDecimal amount, CallContext context) throws InvoiceApiException;
 
