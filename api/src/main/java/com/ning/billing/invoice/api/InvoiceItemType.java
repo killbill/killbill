@@ -28,8 +28,8 @@ public enum InvoiceItemType {
     // Credit adjustment, either at the account level (on its own invoice) or against an existing invoice
     // (invoice level adjustment)
     CREDIT_ADJ,
-    // Invoice item adjustment
+    // Invoice item adjustment (by itself or triggered by a refund)
     ITEM_ADJ,
-    // Refund adjustment (against a posted payment)
+    // Refund adjustment (against a posted payment), used when adjusting invoices
     REFUND_ADJ
 }

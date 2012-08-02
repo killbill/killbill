@@ -58,9 +58,11 @@ import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.tag.ControlTagType;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableMap.Builder;
 import com.google.inject.Inject;
 
 public class DefaultInvoiceDao implements InvoiceDao {
@@ -307,25 +309,28 @@ public class DefaultInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public InvoicePayment createRefund(final UUID paymentId, final BigDecimal amount, final boolean isInvoiceAdjusted,
-                                       final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts, final UUID paymentCookieId,
+    public InvoicePayment createRefund(final UUID paymentId, final BigDecimal requestedRefundAmount, final boolean isInvoiceAdjusted,
+                                       final Map<UUID, BigDecimal> invoiceItemIdsWithNullAmounts, final UUID paymentCookieId,
                                        final CallContext context)
             throws InvoiceApiException {
         return invoicePaymentSqlDao.inTransaction(new Transaction<InvoicePayment, InvoicePaymentSqlDao>() {
             @Override
             public InvoicePayment inTransaction(final InvoicePaymentSqlDao transactional, final TransactionStatus status) throws Exception {
 
+                final InvoiceSqlDao transInvoiceDao = transactional.become(InvoiceSqlDao.class);
+
                 final InvoicePayment payment = transactional.getByPaymentId(paymentId.toString());
                 if (payment == null) {
                     throw new InvoiceApiException(ErrorCode.INVOICE_PAYMENT_BY_ATTEMPT_NOT_FOUND, paymentId);
                 }
-                final BigDecimal maxRefundAmount = payment.getAmount() == null ? BigDecimal.ZERO : payment.getAmount();
-                final BigDecimal requestedPositiveAmount = amount == null ? maxRefundAmount : amount;
-                // This check is good but not enough, we need to also take into account previous refunds
-                // (But that should have been checked in the payment call already)
-                if (requestedPositiveAmount.compareTo(maxRefundAmount) > 0) {
-                    throw new InvoiceApiException(ErrorCode.REFUND_AMOUNT_TOO_HIGH, requestedPositiveAmount, maxRefundAmount);
-                }
+
+                // Retrieve the amounts to adjust, if needed
+                final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts = computeItemAdjustments(payment.getInvoiceId().toString(),
+                                                                                               transInvoiceDao,
+                                                                                               invoiceItemIdsWithNullAmounts);
+
+                // Compute the actual amount to refund
+                final BigDecimal requestedPositiveAmount = computePositiveRefundAmount(payment, requestedRefundAmount, invoiceItemIdsWithAmounts);
 
                 // Before we go further, check if that refund already got inserted -- the payment system keeps a state machine
                 // and so this call may be called several time for the same  paymentCookieId (which is really the refundId)
@@ -340,7 +345,6 @@ public class DefaultInvoiceDao implements InvoiceDao {
                 transactional.create(refund, context);
 
                 // Retrieve invoice after the Refund
-                final InvoiceSqlDao transInvoiceDao = transactional.become(InvoiceSqlDao.class);
                 final Invoice invoice = transInvoiceDao.getById(payment.getInvoiceId().toString());
                 if (invoice != null) {
                     populateChildren(invoice, transInvoiceDao);
@@ -351,8 +355,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
                 final BigDecimal invoiceBalanceAfterRefund = invoice.getBalance();
                 final InvoiceItemSqlDao transInvoiceItemDao = transInvoiceDao.become(InvoiceItemSqlDao.class);
 
-                // If we have an existing CBA > 0, we need to adjust it
-                //final BigDecimal cbaAmountAfterRefund = invoice.getCBAAmount();
+                // If we have an existing CBA > 0 at the account level, we need to use it
                 final BigDecimal accountCbaAvailable = getAccountCBAFromTransaction(invoice.getAccountId(), transInvoiceDao);
                 BigDecimal cbaAdjAmount = BigDecimal.ZERO;
                 if (accountCbaAvailable.compareTo(BigDecimal.ZERO) > 0) {
@@ -362,17 +365,100 @@ public class DefaultInvoiceDao implements InvoiceDao {
                 }
                 final BigDecimal requestedPositiveAmountAfterCbaAdj = requestedPositiveAmount.add(cbaAdjAmount);
 
-                if (isInvoiceAdjusted) {
+                // At this point, we created the refund which made the invoice balance positive and applied any existing
+                // available CBA to that invoice.
+                // We now need to adjust the invoice and/or invoice items if needed and specified.
+                if (isInvoiceAdjusted && invoiceItemIdsWithAmounts.size() == 0) {
+                    // Invoice adjustment
                     final BigDecimal maxBalanceToAdjust = (invoiceBalanceAfterRefund.compareTo(BigDecimal.ZERO) <= 0) ? BigDecimal.ZERO : invoiceBalanceAfterRefund;
                     final BigDecimal requestedPositiveAmountToAdjust = requestedPositiveAmountAfterCbaAdj.compareTo(maxBalanceToAdjust) > 0 ? maxBalanceToAdjust : requestedPositiveAmountAfterCbaAdj;
                     if (requestedPositiveAmountToAdjust.compareTo(BigDecimal.ZERO) > 0) {
                         final InvoiceItem adjItem = new RefundAdjInvoiceItem(invoice.getId(), invoice.getAccountId(), context.getCreatedDate().toLocalDate(), requestedPositiveAmountToAdjust.negate(), invoice.getCurrency());
                         transInvoiceItemDao.create(adjItem, context);
                     }
+                } else if (isInvoiceAdjusted) {
+                    // Invoice item adjustment
+                    for (final UUID invoiceItemId : invoiceItemIdsWithAmounts.keySet()) {
+                        final BigDecimal adjAmount = invoiceItemIdsWithAmounts.get(invoiceItemId);
+                        final InvoiceItem item = createAdjustmentItem(transInvoiceDao, invoice.getId(), invoiceItemId, adjAmount,
+                                                                      invoice.getCurrency(), context.getCreatedDate().toLocalDate());
+                        transInvoiceItemDao.create(item, context);
+                    }
                 }
+
                 return refund;
             }
         });
+    }
+
+    /**
+     * Find amounts to adjust for individual items, if not specified.
+     * The user gives us a list of items to adjust associated with a given amount (how much to refund per invoice item).
+     * In case of full adjustments, the amount can be null: in this case, we retrieve the original amount for the invoice
+     * item.
+     *
+     * @param invoiceId                     original invoice id
+     * @param transInvoiceDao               the transactional InvoiceSqlDao
+     * @param invoiceItemIdsWithNullAmounts the original mapping between invoice item ids and amount to refund (contains null)
+     * @return the final mapping between invoice item ids and amount to refund
+     * @throws InvoiceApiException
+     */
+    private Map<UUID, BigDecimal> computeItemAdjustments(final String invoiceId, final InvoiceSqlDao transInvoiceDao,
+                                                         final Map<UUID, BigDecimal> invoiceItemIdsWithNullAmounts) throws InvoiceApiException {
+        // Populate the missing amounts for individual items, if needed
+        final Builder<UUID, BigDecimal> invoiceItemIdsWithAmountsBuilder = new Builder<UUID, BigDecimal>();
+        if (invoiceItemIdsWithNullAmounts.size() == 0) {
+            return invoiceItemIdsWithAmountsBuilder.build();
+        }
+
+        // Retrieve invoice before the Refund
+        final Invoice invoice = transInvoiceDao.getById(invoiceId);
+        if (invoice != null) {
+            populateChildren(invoice, transInvoiceDao);
+        } else {
+            throw new IllegalStateException("Invoice shouldn't be null for id " + invoiceId);
+        }
+
+        for (final UUID invoiceItemId : invoiceItemIdsWithNullAmounts.keySet()) {
+            final BigDecimal adjAmount = Objects.firstNonNull(invoiceItemIdsWithNullAmounts.get(invoiceItemId),
+                                                              getInvoiceItemAmountForId(invoice, invoiceItemId));
+            invoiceItemIdsWithAmountsBuilder.put(invoiceItemId, adjAmount);
+        }
+
+        return invoiceItemIdsWithAmountsBuilder.build();
+    }
+
+    private BigDecimal getInvoiceItemAmountForId(final Invoice invoice, final UUID invoiceItemId) throws InvoiceApiException {
+        for (final InvoiceItem invoiceItem : invoice.getInvoiceItems()) {
+            if (invoiceItem.getId().equals(invoiceItemId)) {
+                return invoiceItem.getAmount();
+            }
+        }
+
+        throw new InvoiceApiException(ErrorCode.INVOICE_ITEM_NOT_FOUND, invoiceItemId);
+    }
+
+    @VisibleForTesting
+    BigDecimal computePositiveRefundAmount(final InvoicePayment payment, final BigDecimal requestedAmount, final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts) throws InvoiceApiException {
+        final BigDecimal maxRefundAmount = payment.getAmount() == null ? BigDecimal.ZERO : payment.getAmount();
+        final BigDecimal requestedPositiveAmount = requestedAmount == null ? maxRefundAmount : requestedAmount;
+        // This check is good but not enough, we need to also take into account previous refunds
+        // (But that should have been checked in the payment call already)
+        if (requestedPositiveAmount.compareTo(maxRefundAmount) > 0) {
+            throw new InvoiceApiException(ErrorCode.REFUND_AMOUNT_TOO_HIGH, requestedPositiveAmount, maxRefundAmount);
+        }
+
+        // Verify if the requested amount matches the invoice items to adjust, if specified
+        BigDecimal amountFromItems = BigDecimal.ZERO;
+        for (final BigDecimal itemAmount : invoiceItemIdsWithAmounts.values()) {
+            amountFromItems = amountFromItems.add(itemAmount);
+        }
+
+        // Sanity check: if some items were specified, then the sum should be equal to specified refund amount, if specified
+        if (amountFromItems.compareTo(BigDecimal.ZERO) != 0 && requestedPositiveAmount.compareTo(amountFromItems) != 0) {
+            throw new InvoiceApiException(ErrorCode.REFUND_AMOUNT_DONT_MATCH_ITEMS_TO_ADJUST, requestedPositiveAmount, amountFromItems);
+        }
+        return requestedPositiveAmount;
     }
 
     @Override
