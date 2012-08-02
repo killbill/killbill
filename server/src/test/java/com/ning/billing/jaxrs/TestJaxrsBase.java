@@ -45,6 +45,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
 
 import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -81,6 +82,7 @@ import com.ning.billing.jaxrs.json.PaymentJsonSimple;
 import com.ning.billing.jaxrs.json.PaymentMethodJson;
 import com.ning.billing.jaxrs.json.PaymentMethodJson.PaymentMethodPluginDetailJson;
 import com.ning.billing.jaxrs.json.PaymentMethodJson.PaymentMethodProperties;
+import com.ning.billing.jaxrs.json.RefundJson;
 import com.ning.billing.jaxrs.json.SubscriptionJsonNoEvents;
 import com.ning.billing.jaxrs.resources.JaxrsResource;
 import com.ning.billing.junction.glue.DefaultJunctionModule;
@@ -110,6 +112,7 @@ import com.ning.http.client.Response;
 import com.ning.jetty.core.CoreConfig;
 import com.ning.jetty.core.server.HttpServer;
 
+import static com.ning.billing.jaxrs.resources.JaxrsResource.QUERY_PAYMENT_METHOD_PLUGIN_INFO;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
@@ -576,6 +579,20 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
         return paymentMethodJson;
     }
 
+    protected PaymentMethodJson getPaymentMethodWithPluginInfo(final String paymentMethodId) throws IOException {
+        final String paymentMethodURI = JaxrsResource.PAYMENT_METHODS_PATH + "/" + paymentMethodId;
+
+        final Map<String, String> queryPaymentMethods = new HashMap<String, String>();
+        queryPaymentMethods.put(QUERY_PAYMENT_METHOD_PLUGIN_INFO, "true");
+        final Response paymentMethodResponse = doGet(paymentMethodURI, queryPaymentMethods, DEFAULT_HTTP_TIMEOUT_SEC);
+        assertEquals(paymentMethodResponse.getStatusCode(), Status.OK.getStatusCode());
+
+        final PaymentMethodJson paymentMethodJson = mapper.readValue(paymentMethodResponse.getResponseBody(), PaymentMethodJson.class);
+        assertNotNull(paymentMethodJson);
+
+        return paymentMethodJson;
+    }
+
     protected List<PaymentJsonSimple> getPaymentsForAccount(final String accountId) throws IOException {
         final String paymentsURI = JaxrsResource.ACCOUNTS_PATH + "/" + accountId + "/" + JaxrsResource.PAYMENTS;
         final Response paymentsResponse = doGet(paymentsURI, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
@@ -622,6 +639,43 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
         assertEquals(paymentResponse.getStatusCode(), Status.CREATED.getStatusCode());
 
         return getPaymentsForInvoice(invoiceId);
+    }
+
+    //
+    // REFUNDS
+    //
+
+    protected List<RefundJson> getRefundsForPayment(final String paymentId) throws IOException {
+        final String uri = JaxrsResource.PAYMENTS_PATH + "/" + paymentId + "/" + JaxrsResource.REFUNDS;
+        final Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+
+        assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+        final String baseJson = response.getResponseBody();
+        final List<RefundJson> refunds = mapper.readValue(baseJson, new TypeReference<List<RefundJson>>() {});
+        assertNotNull(refunds);
+
+        return refunds;
+    }
+
+    protected RefundJson createRefund(final String paymentId, final BigDecimal amount) throws IOException {
+        final String uri = JaxrsResource.PAYMENTS_PATH + "/" + paymentId + "/" + JaxrsResource.REFUNDS;
+
+        final RefundJson refundJson = new RefundJson(null, paymentId, amount, false, null, null, null, null);
+        final String baseJson = mapper.writeValueAsString(refundJson);
+        final Response response = doPost(uri, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
+
+        final String locationCC = response.getHeader("Location");
+        Assert.assertNotNull(locationCC);
+
+        // Retrieves by Id based on Location returned
+        final Response retrievedResponse = doGetWithUrl(locationCC, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(retrievedResponse.getStatusCode(), Status.OK.getStatusCode());
+        final String retrievedBaseJson = retrievedResponse.getResponseBody();
+        final RefundJson retrievedRefundJson = mapper.readValue(retrievedBaseJson, RefundJson.class);
+        assertNotNull(retrievedRefundJson);
+
+        return retrievedRefundJson;
     }
 
     protected Map<String, String> getQueryParamsForCallCompletion(final String timeoutSec) {
