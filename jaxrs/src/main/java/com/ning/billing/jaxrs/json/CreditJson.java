@@ -18,7 +18,6 @@ package com.ning.billing.jaxrs.json;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -34,21 +33,21 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class CreditJson extends JsonBase {
 
     private final BigDecimal creditAmount;
-    private final UUID invoiceId;
+    private final String invoiceId;
     private final String invoiceNumber;
     private final DateTime requestedDate;
     private final DateTime effectiveDate;
     private final String reason;
-    private final UUID accountId;
+    private final String accountId;
 
     @JsonCreator
     public CreditJson(@JsonProperty("creditAmount") final BigDecimal creditAmount,
-                      @JsonProperty("invoiceId") final UUID invoiceId,
+                      @JsonProperty("invoiceId") final String invoiceId,
                       @JsonProperty("invoiceNumber") final String invoiceNumber,
                       @JsonProperty("requestedDate") final DateTime requestedDate,
                       @JsonProperty("effectiveDate") final DateTime effectiveDate,
                       @JsonProperty("reason") final String reason,
-                      @JsonProperty("accountId") final UUID accountId,
+                      @JsonProperty("accountId") final String accountId,
                       @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(auditLogs);
         this.creditAmount = creditAmount;
@@ -63,12 +62,12 @@ public class CreditJson extends JsonBase {
     public CreditJson(final InvoiceItem credit, final DateTimeZone accountTimeZone, final List<AuditLog> auditLogs) {
         super(toAuditLogJson(auditLogs));
         this.creditAmount = credit.getAmount();
-        this.invoiceId = credit.getInvoiceId();
+        this.invoiceId = toString(credit.getInvoiceId());
         this.invoiceNumber = null;
         this.requestedDate = null;
         this.effectiveDate = credit.getStartDate().toDateTimeAtStartOfDay(accountTimeZone);
         this.reason = null;
-        this.accountId = credit.getAccountId();
+        this.accountId = toString(credit.getAccountId());
     }
 
     public CreditJson(final InvoiceItem credit, final DateTimeZone timeZone) {
@@ -79,7 +78,7 @@ public class CreditJson extends JsonBase {
         return creditAmount;
     }
 
-    public UUID getInvoiceId() {
+    public String getInvoiceId() {
         return invoiceId;
     }
 
@@ -99,7 +98,7 @@ public class CreditJson extends JsonBase {
         return reason;
     }
 
-    public UUID getAccountId() {
+    public String getAccountId() {
         return accountId;
     }
 

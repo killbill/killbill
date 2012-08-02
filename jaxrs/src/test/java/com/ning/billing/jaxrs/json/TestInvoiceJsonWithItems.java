@@ -99,10 +99,10 @@ public class TestInvoiceJsonWithItems extends JaxrsTestSuite {
         Assert.assertNull(invoiceJsonWithItems.getAuditLogs());
 
         final InvoiceItemJsonSimple invoiceItemJsonSimple = invoiceJsonWithItems.getItems().get(0);
-        Assert.assertEquals(invoiceItemJsonSimple.getInvoiceId(), invoiceItem.getInvoiceId());
-        Assert.assertEquals(invoiceItemJsonSimple.getAccountId(), invoiceItem.getAccountId());
-        Assert.assertEquals(invoiceItemJsonSimple.getBundleId(), invoiceItem.getBundleId());
-        Assert.assertEquals(invoiceItemJsonSimple.getSubscriptionId(), invoiceItem.getSubscriptionId());
+        Assert.assertEquals(invoiceItemJsonSimple.getInvoiceId(), invoiceItem.getInvoiceId().toString());
+        Assert.assertEquals(invoiceItemJsonSimple.getAccountId(), invoiceItem.getAccountId().toString());
+        Assert.assertEquals(invoiceItemJsonSimple.getBundleId(), invoiceItem.getBundleId().toString());
+        Assert.assertEquals(invoiceItemJsonSimple.getSubscriptionId(), invoiceItem.getSubscriptionId().toString());
         Assert.assertEquals(invoiceItemJsonSimple.getPlanName(), invoiceItem.getPlanName());
         Assert.assertEquals(invoiceItemJsonSimple.getPhaseName(), invoiceItem.getPhaseName());
         Assert.assertEquals(invoiceItemJsonSimple.getDescription(), invoiceItem.getDescription());
@@ -113,10 +113,11 @@ public class TestInvoiceJsonWithItems extends JaxrsTestSuite {
     }
 
     private InvoiceItemJsonSimple createInvoiceItemJson() {
-        final UUID invoiceId = UUID.randomUUID();
-        final UUID accountId = UUID.randomUUID();
-        final UUID bundleId = UUID.randomUUID();
-        final UUID subscriptionId = UUID.randomUUID();
+        final String invoiceItemId = UUID.randomUUID().toString();
+        final String invoiceId = UUID.randomUUID().toString();
+        final String accountId = UUID.randomUUID().toString();
+        final String bundleId = UUID.randomUUID().toString();
+        final String subscriptionId = UUID.randomUUID().toString();
         final String planName = UUID.randomUUID().toString();
         final String phaseName = UUID.randomUUID().toString();
         final String description = UUID.randomUUID().toString();
@@ -124,9 +125,9 @@ public class TestInvoiceJsonWithItems extends JaxrsTestSuite {
         final LocalDate endDate = clock.getUTCToday();
         final BigDecimal amount = BigDecimal.TEN;
         final Currency currency = Currency.MXN;
-        return new InvoiceItemJsonSimple(invoiceId, accountId, bundleId, subscriptionId,
+        return new InvoiceItemJsonSimple(invoiceItemId, invoiceId, accountId, bundleId, subscriptionId,
                                          planName, phaseName, description, startDate, endDate,
-                                         amount, currency);
+                                         amount, currency, null);
     }
 
     private InvoiceItem createInvoiceItem() {

@@ -36,10 +36,10 @@ public class TestCreditCollectionJson extends JaxrsTestSuite {
 
     @Test(groups = "fast")
     public void testJson() throws Exception {
-        final UUID accountId = UUID.randomUUID();
+        final String accountId = UUID.randomUUID().toString();
 
         final BigDecimal creditAmount = BigDecimal.TEN;
-        final UUID invoiceId = UUID.randomUUID();
+        final String invoiceId = UUID.randomUUID().toString();
         final String invoiceNumber = UUID.randomUUID().toString();
         final DateTime requestedDate = clock.getUTCNow();
         final DateTime effectiveDate = clock.getUTCNow();

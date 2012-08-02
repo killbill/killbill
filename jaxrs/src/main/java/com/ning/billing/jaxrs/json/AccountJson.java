@@ -188,25 +188,6 @@ public class AccountJson extends AccountJsonSimple {
         };
     }
 
-    // Seems like Jackson (JacksonJsonProvider.readFrom(Class<Object>, Type, Annotation[], MediaType, MultivaluedMap<String,String>, InputStream) line: 443)
-    // needs us to define a default CTOR to instantiate the class first.
-    public AccountJson() {
-        super();
-        this.name = null;
-        this.length = null;
-        this.email = null;
-        this.billCycleDayJson = null;
-        this.currency = null;
-        this.paymentMethodId = null;
-        this.timeZone = null;
-        this.address1 = null;
-        this.address2 = null;
-        this.company = null;
-        this.state = null;
-        this.country = null;
-        this.phone = null;
-    }
-
     @JsonCreator
     public AccountJson(@JsonProperty("accountId") final String accountId,
                        @JsonProperty("name") final String name,

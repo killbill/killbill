@@ -47,6 +47,7 @@ import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.invoice.model.CreditAdjInvoiceItem;
 import com.ning.billing.invoice.model.CreditBalanceAdjInvoiceItem;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
+import com.ning.billing.invoice.model.ItemAdjInvoiceItem;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.invoice.model.RefundAdjInvoiceItem;
 import com.ning.billing.invoice.model.RepairAdjInvoiceItem;
@@ -149,8 +150,11 @@ public interface InvoiceItemSqlDao extends EntitySqlDao<InvoiceItem> {
                 case REPAIR_ADJ:
                     item = new RepairAdjInvoiceItem(id, invoiceId, accountId, startDate, endDate, amount, currency, linkedItemId);
                     break;
+                case ITEM_ADJ:
+                    item = new ItemAdjInvoiceItem(id, invoiceId, accountId, startDate, amount, currency, linkedItemId);
+                    break;
                 default:
-                    throw new RuntimeException("Unexpected type of event item " + item);
+                    throw new RuntimeException("Unexpected type of event item " + type);
             }
             return item;
         }

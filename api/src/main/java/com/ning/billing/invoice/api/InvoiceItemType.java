@@ -17,10 +17,19 @@
 package com.ning.billing.invoice.api;
 
 public enum InvoiceItemType {
+    // Fixed (one-time) charge
     FIXED,
+    // Recurring charge
     RECURRING,
+    // Internal adjustment, used for repair
     REPAIR_ADJ,
+    // Internal adjustment, used as rollover credits
     CBA_ADJ,
+    // Credit adjustment, either at the account level (on its own invoice) or against an existing invoice
+    // (invoice level adjustment)
     CREDIT_ADJ,
+    // Invoice item adjustment
+    ITEM_ADJ,
+    // Refund adjustment (against a posted payment)
     REFUND_ADJ
 }

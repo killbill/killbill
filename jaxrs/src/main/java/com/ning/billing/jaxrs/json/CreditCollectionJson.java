@@ -23,17 +23,17 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class CreditCollectionJson {
-    private final UUID accountId;
+    private final String accountId;
     private final List<CreditJson> credits;
 
     @JsonCreator
-    public CreditCollectionJson(@JsonProperty("accountId") final UUID accountId,
+    public CreditCollectionJson(@JsonProperty("accountId") final String accountId,
                                 @JsonProperty("credits") final List<CreditJson> credits) {
         this.accountId = accountId;
         this.credits = credits;
     }
 
-    public UUID getAccountId() {
+    public String getAccountId() {
         return accountId;
     }
 

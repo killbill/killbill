@@ -60,9 +60,9 @@ public class TestCredit extends TestJaxrsBase {
         final DateTime requestedDate = clock.getUTCNow();
         final DateTime effectiveDate = clock.getUTCNow();
         final InvoiceJsonSimple invoice = createInvoice();
-        final CreditJson input = new CreditJson(BigDecimal.TEN, UUID.fromString(invoice.getInvoiceId()), UUID.randomUUID().toString(),
+        final CreditJson input = new CreditJson(BigDecimal.TEN, invoice.getInvoiceId(), UUID.randomUUID().toString(),
                                                 requestedDate, effectiveDate,
-                                                UUID.randomUUID().toString(), UUID.fromString(accountJson.getAccountId()),
+                                                UUID.randomUUID().toString(), accountJson.getAccountId(),
                                                 null);
         final String jsonInput = mapper.writeValueAsString(input);
 
@@ -120,9 +120,9 @@ public class TestCredit extends TestJaxrsBase {
     public void testAccountDoesNotExist() throws Exception {
         final DateTime requestedDate = clock.getUTCNow();
         final DateTime effectiveDate = clock.getUTCNow();
-        final CreditJson input = new CreditJson(BigDecimal.TEN, UUID.randomUUID(), UUID.randomUUID().toString(),
+        final CreditJson input = new CreditJson(BigDecimal.TEN, UUID.randomUUID().toString(), UUID.randomUUID().toString(),
                                                 requestedDate, effectiveDate,
-                                                UUID.randomUUID().toString(), UUID.randomUUID(), null);
+                                                UUID.randomUUID().toString(), UUID.randomUUID().toString(), null);
         final String jsonInput = mapper.writeValueAsString(input);
 
         // Try to create the credit

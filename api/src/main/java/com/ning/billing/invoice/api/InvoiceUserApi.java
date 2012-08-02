@@ -143,7 +143,7 @@ public interface InvoiceUserApi {
                                     Currency currency, CallContext context) throws InvoiceApiException;
 
     /**
-     * Add a credit to an invoice.
+     * Add a credit to an invoice. This can be used to adjust invoices.
      *
      * @param accountId     account id
      * @param invoiceId     invoice id
@@ -156,6 +156,35 @@ public interface InvoiceUserApi {
      */
     public InvoiceItem insertCreditForInvoice(UUID accountId, UUID invoiceId, BigDecimal amount, LocalDate effectiveDate,
                                               Currency currency, CallContext context) throws InvoiceApiException;
+
+    /**
+     * Adjust fully a given invoice item.
+     *
+     * @param accountId     account id
+     * @param invoiceId     invoice id
+     * @param invoiceItemId invoice item id
+     * @param effectiveDate the effective date for this adjustment invoice item (in the account timezone)
+     * @param context       the call context
+     * @return the adjustment invoice item
+     * @throws InvoiceApiException
+     */
+    public InvoiceItem insertInvoiceItemAdjustment(UUID accountId, UUID invoiceId, UUID invoiceItemId, LocalDate effectiveDate, CallContext context) throws InvoiceApiException;
+
+    /**
+     * Adjust partially a given invoice item.
+     *
+     * @param accountId     account id
+     * @param invoiceId     invoice id
+     * @param invoiceItemId invoice item id
+     * @param effectiveDate the effective date for this adjustment invoice item (in the account timezone)
+     * @param amount        the adjustment amount
+     * @param currency      adjustment currency
+     * @param context       the call context
+     * @return the adjustment invoice item
+     * @throws InvoiceApiException
+     */
+    public InvoiceItem insertInvoiceItemAdjustment(UUID accountId, UUID invoiceId, UUID invoiceItemId, LocalDate effectiveDate,
+                                                   BigDecimal amount, Currency currency, CallContext context) throws InvoiceApiException;
 
     /**
      * Retrieve the invoice formatted in HTML.

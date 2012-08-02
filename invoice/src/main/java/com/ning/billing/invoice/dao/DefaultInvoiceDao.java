@@ -43,6 +43,7 @@ import com.ning.billing.invoice.model.CreditAdjInvoiceItem;
 import com.ning.billing.invoice.model.CreditBalanceAdjInvoiceItem;
 import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.invoice.model.DefaultInvoicePayment;
+import com.ning.billing.invoice.model.ItemAdjInvoiceItem;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.invoice.model.RefundAdjInvoiceItem;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
@@ -56,6 +57,7 @@ import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.tag.ControlTagType;
 
+import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
@@ -446,31 +448,33 @@ public class DefaultInvoiceDao implements InvoiceDao {
         return invoiceSqlDao.inTransaction(new Transaction<InvoiceItem, InvoiceSqlDao>() {
             @Override
             public InvoiceItem inTransaction(final InvoiceSqlDao transactional, final TransactionStatus status) throws Exception {
-                UUID invoiceIdForRefund = invoiceId;
-                if (invoiceIdForRefund == null) {
-                    final Invoice invoiceForRefund = new DefaultInvoice(accountId, effectiveDate, effectiveDate, currency);
-                    transactional.create(invoiceForRefund, context);
-                    invoiceIdForRefund = invoiceForRefund.getId();
+                UUID invoiceIdForCredit = invoiceId;
+                // Create an invoice for that credit if it doesn't exist
+                if (invoiceIdForCredit == null) {
+                    final Invoice invoiceForCredit = new DefaultInvoice(accountId, effectiveDate, effectiveDate, currency);
+                    transactional.create(invoiceForCredit, context);
+                    invoiceIdForCredit = invoiceForCredit.getId();
                 }
 
-                final InvoiceItem credit = new CreditAdjInvoiceItem(invoiceIdForRefund, accountId, effectiveDate, positiveCreditAmount.negate(), currency);
-                final InvoiceItemSqlDao transInvoiceItemDao = transactional.become(InvoiceItemSqlDao.class);
-                transInvoiceItemDao.create(credit, context);
-
-                final Invoice invoice = transactional.getById(invoiceIdForRefund.toString());
-                if (invoice != null) {
-                    populateChildren(invoice, transactional);
-                } else {
-                    throw new IllegalStateException("Invoice shouldn't be null for credit at this stage " + invoiceIdForRefund);
-                }
-                // If invoice balance becomes negative we add some CBA item
-                if (invoice.getBalance().compareTo(BigDecimal.ZERO) < 0) {
-                    final InvoiceItem cbaAdjItem = new CreditBalanceAdjInvoiceItem(invoice.getId(), invoice.getAccountId(), context.getCreatedDate().toLocalDate(),
-                                                                                   invoice.getBalance().negate(), invoice.getCurrency());
-                    transInvoiceItemDao.create(cbaAdjItem, context);
-
-                }
+                // Note! The amount is negated here!
+                final InvoiceItem credit = new CreditAdjInvoiceItem(invoiceIdForCredit, accountId, effectiveDate, positiveCreditAmount.negate(), currency);
+                insertItemAndAddCBAIfNeeded(transactional, credit, context);
                 return credit;
+            }
+        });
+    }
+
+    @Override
+    public InvoiceItem insertInvoiceItemAdjustment(final UUID accountId, final UUID invoiceId, final UUID invoiceItemId,
+                                                   final LocalDate effectiveDate, @Nullable final BigDecimal positiveAdjAmount,
+                                                   @Nullable final Currency currency, final CallContext context) {
+        return invoiceSqlDao.inTransaction(new Transaction<InvoiceItem, InvoiceSqlDao>() {
+            @Override
+            public InvoiceItem inTransaction(final InvoiceSqlDao transactional, final TransactionStatus status) throws Exception {
+                final InvoiceItem invoiceItemAdjustment = createAdjustmentItem(transactional, invoiceId, invoiceItemId, positiveAdjAmount,
+                                                                               currency, effectiveDate);
+                insertItemAndAddCBAIfNeeded(transactional, invoiceItemAdjustment, context);
+                return invoiceItemAdjustment;
             }
         });
     }
@@ -478,6 +482,78 @@ public class DefaultInvoiceDao implements InvoiceDao {
     @Override
     public void test() {
         invoiceSqlDao.test();
+    }
+
+    /**
+     * Create an adjustment for a given invoice item. This just creates the object in memory, it doesn't write it to disk.
+     *
+     * @param invoiceId         the invoice id
+     * @param invoiceItemId     the invoice item id to adjust
+     * @param effectiveDate     adjustment effective date, in the account timezone
+     * @param positiveAdjAmount the amount to adjust. Pass null to adjust the full amount of the original item
+     * @param currency          the currency of the amount. Pass null to default to the original currency used
+     * @return the adjustment item
+     */
+    private InvoiceItem createAdjustmentItem(final InvoiceSqlDao transactional, final UUID invoiceId, final UUID invoiceItemId,
+                                             final BigDecimal positiveAdjAmount, final Currency currency, final LocalDate effectiveDate) throws InvoiceApiException {// First, retrieve the invoice item in question
+        final InvoiceItemSqlDao invoiceItemSqlDao = transactional.become(InvoiceItemSqlDao.class);
+        final InvoiceItem invoiceItemToBeAdjusted = invoiceItemSqlDao.getById(invoiceItemId.toString());
+        if (invoiceItemToBeAdjusted == null) {
+            throw new InvoiceApiException(ErrorCode.INVOICE_ITEM_NOT_FOUND, invoiceItemId);
+        }
+
+        // Validate the invoice it belongs to
+        if (!invoiceItemToBeAdjusted.getInvoiceId().equals(invoiceId)) {
+            throw new InvoiceApiException(ErrorCode.INVOICE_INVALID_FOR_INVOICE_ITEM_ADJUSTMENT, invoiceItemId, invoiceId);
+        }
+
+        // Retrieve the amount and currency if needed
+        final BigDecimal amountToRefund = Objects.firstNonNull(positiveAdjAmount, invoiceItemToBeAdjusted.getAmount());
+        // TODO - should we enforce the currency (and respect the original one) here if the amount passed was null?
+        final Currency currencyForAdjustment = Objects.firstNonNull(currency, invoiceItemToBeAdjusted.getCurrency());
+
+        // Finally, create the adjustment
+        // Note! The amount is negated here!
+        return new ItemAdjInvoiceItem(invoiceItemToBeAdjusted, effectiveDate, amountToRefund.negate(), currencyForAdjustment);
+    }
+
+    /**
+     * Create an invoice item and adjust the invoice with a CBA item if the new invoice balance is negative.
+     *
+     * @param transactional the InvoiceSqlDao
+     * @param item          the invoice item to create
+     * @param context       the call context
+     */
+    private void insertItemAndAddCBAIfNeeded(final InvoiceSqlDao transactional, final InvoiceItem item, final CallContext context) {
+        final InvoiceItemSqlDao transInvoiceItemDao = transactional.become(InvoiceItemSqlDao.class);
+        transInvoiceItemDao.create(item, context);
+
+        addCBAIfNeeded(transactional, item.getInvoiceId(), context);
+    }
+
+    /**
+     * Adjust the invoice with a CBA item if the new invoice balance is negative.
+     *
+     * @param transactional the InvoiceSqlDao
+     * @param invoiceId     the invoice id to adjust
+     * @param context       the call context
+     */
+    private void addCBAIfNeeded(final InvoiceSqlDao transactional, final UUID invoiceId, final CallContext context) {
+        final Invoice invoice = transactional.getById(invoiceId.toString());
+        if (invoice != null) {
+            populateChildren(invoice, transactional);
+        } else {
+            throw new IllegalStateException("Invoice shouldn't be null for this item at this stage " + invoiceId);
+        }
+
+        // If invoice balance becomes negative we add some CBA item
+        if (invoice.getBalance().compareTo(BigDecimal.ZERO) < 0) {
+            final InvoiceItemSqlDao transInvoiceItemDao = transactional.become(InvoiceItemSqlDao.class);
+            final InvoiceItem cbaAdjItem = new CreditBalanceAdjInvoiceItem(invoice.getId(), invoice.getAccountId(), context.getCreatedDate().toLocalDate(),
+                                                                           invoice.getBalance().negate(), invoice.getCurrency());
+            transInvoiceItemDao.create(cbaAdjItem, context);
+
+        }
     }
 
     private BigDecimal getAccountCBAFromTransaction(final UUID accountId, final InvoiceSqlDao transactional) {
