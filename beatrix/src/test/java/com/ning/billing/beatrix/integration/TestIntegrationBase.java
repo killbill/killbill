@@ -49,6 +49,7 @@ import com.ning.billing.api.TestApiListener;
 import com.ning.billing.api.TestListenerStatus;
 import com.ning.billing.beatrix.BeatrixTestSuiteWithEmbeddedDB;
 import com.ning.billing.beatrix.lifecycle.Lifecycle;
+import com.ning.billing.beatrix.util.InvoiceChecker;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.api.EntitlementService;
@@ -97,7 +98,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     protected static final BigDecimal THIRTY_ONE = new BigDecimal("31.0000").setScale(NUMBER_OF_DECIMALS);
 
     protected static final Logger log = LoggerFactory.getLogger(TestIntegration.class);
-    protected static long AT_LEAST_ONE_MONTH_MS = 31L * 24L * 3600L * 1000L + 2000L;
+    protected static long AT_LEAST_ONE_MONTH_MS = 32L * 24L * 3600L * 1000L;
 
     protected static final long DELAY = 5000;
 
@@ -160,6 +161,9 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
     @Inject
     protected AnalyticsListener analyticsListener;
+
+    @Inject
+    protected InvoiceChecker invoiceChecker;
 
     protected TestApiListener busHandler;
 
@@ -251,8 +255,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         log.info("Checking CTD: " + ctd.toString() + "; clock is " + clock.getUTCNow().toString());
         // Either the ctd is today (start of the trial) or the clock is strictly before the CTD
         assertTrue(clock.getUTCToday().compareTo(new LocalDate(ctd)) == 0 || clock.getUTCNow().isBefore(ctd));
-        // The CTD is rounded too
-        assertTrue(ctd.compareTo(new DateTime(chargeThroughDate.getYear(), chargeThroughDate.getMonthOfYear(), chargeThroughDate.getDayOfMonth(), 0, 0, testTimeZone)) == 0);
+        assertTrue(ctd.toDateTime(testTimeZone).toLocalDate().compareTo(new LocalDate(chargeThroughDate.getYear(), chargeThroughDate.getMonthOfYear(), chargeThroughDate.getDayOfMonth())) == 0);
     }
 
     protected SubscriptionData subscriptionDataFromSubscription(final Subscription sub) {

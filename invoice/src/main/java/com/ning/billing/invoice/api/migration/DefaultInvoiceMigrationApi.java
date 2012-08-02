@@ -70,7 +70,7 @@ public class DefaultInvoiceMigrationApi implements InvoiceMigrationApi {
         final InvoiceItem migrationInvoiceItem = new MigrationInvoiceItem(migrationInvoice.getId(), accountId, targetDate, balance, currency);
         migrationInvoice.addInvoiceItem(migrationInvoiceItem);
 
-        dao.create(migrationInvoice, account.getBillCycleDay().getDayOfMonthUTC(), context);
+        dao.create(migrationInvoice, account.getBillCycleDay().getDayOfMonthUTC(), true, context);
         return migrationInvoice.getId();
     }
 }

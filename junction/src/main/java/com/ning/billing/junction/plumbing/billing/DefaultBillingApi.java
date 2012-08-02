@@ -113,9 +113,9 @@ public class DefaultBillingApi implements BillingApi {
 
 
     private void debugLog(final SortedSet<BillingEvent> result, final String title) {
-        log.debug(title);
+        log.info(title);
         for (final BillingEvent aResult : result) {
-            log.debug(aResult.toString());
+            log.info(aResult.toString());
         }
     }
 

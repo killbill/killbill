@@ -35,7 +35,7 @@ import com.ning.billing.util.callcontext.CallContext;
 
 public interface InvoiceDao {
 
-    void create(final Invoice invoice, final int billCycleDayUTC, final CallContext context);
+    void create(final Invoice invoice, final int billCycleDayUTC, final boolean isRealInvoice, final CallContext context);
 
     Invoice getById(final UUID id);
 

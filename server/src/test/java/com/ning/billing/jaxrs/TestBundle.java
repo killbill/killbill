@@ -125,7 +125,7 @@ public class TestBundle extends TestJaxrsBase {
 
         final SubscriptionJsonNoEvents subscriptionJson = createSubscription(bundleJson.getBundleId(), productName, ProductCategory.BASE.toString(), term.toString(), true);
         Assert.assertNotNull(subscriptionJson.getChargedThroughDate());
-        Assert.assertEquals(subscriptionJson.getChargedThroughDate().toString(), "2012-04-25T00:00:00.000Z");
+        Assert.assertEquals(subscriptionJson.getChargedThroughDate().toString(), "2012-04-25T00:03:43.000Z");
 
         final AccountJson newAccount = createAccountWithDefaultPaymentMethod("dst", "dst", "dst@yahoo.com");
 

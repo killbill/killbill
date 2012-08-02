@@ -21,6 +21,7 @@ import static org.testng.Assert.assertTrue;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 
 import junit.framework.Assert;
 
@@ -29,8 +30,10 @@ import org.joda.time.LocalDate;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
+import com.google.common.collect.ImmutableList;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.api.TestApiListener.NextEvent;
+import com.ning.billing.beatrix.util.InvoiceChecker.ExpectedItemCheck;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
@@ -39,6 +42,7 @@ import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.invoice.api.InvoiceItemType;
 
 @Guice(modules = {BeatrixModule.class})
 public class TestBundleTransfer extends TestIntegrationBase {
@@ -99,8 +103,8 @@ public class TestBundleTransfer extends TestIntegrationBase {
         final List<InvoiceItem> invoiceItems = invoices.get(0).getInvoiceItems();
         assertEquals(invoiceItems.size(), 1);
         InvoiceItem theItem = invoiceItems.get(0);
-        Assert.assertTrue(theItem.getStartDate().compareTo(new LocalDate(2012,05,11)) == 0);
-        Assert.assertTrue(theItem.getEndDate().compareTo(new LocalDate(2013,05,11)) == 0);
+        Assert.assertTrue(theItem.getStartDate().compareTo(new LocalDate(2012,5,11)) == 0);
+        Assert.assertTrue(theItem.getEndDate().compareTo(new LocalDate(2013,5,11)) == 0);
         Assert.assertTrue(theItem.getAmount().compareTo(new BigDecimal("2399.9500")) == 0);
     }
 
@@ -159,8 +163,84 @@ public class TestBundleTransfer extends TestIntegrationBase {
         final List<InvoiceItem> invoiceItems = invoices.get(0).getInvoiceItems();
         assertEquals(invoiceItems.size(), 1);
         InvoiceItem theItem = invoiceItems.get(0);
-        Assert.assertTrue(theItem.getStartDate().compareTo(new LocalDate(2012,05,03)) == 0);
-        Assert.assertTrue(theItem.getEndDate().compareTo(new LocalDate(2012,05,15)) == 0);
+        Assert.assertTrue(theItem.getStartDate().compareTo(new LocalDate(2012,5,3)) == 0);
+        Assert.assertTrue(theItem.getEndDate().compareTo(new LocalDate(2012,5,15)) == 0);
         Assert.assertTrue(theItem.getAmount().compareTo(new BigDecimal("99.98")) == 0);
+    }
+
+    @Test(groups = "slow")
+    public void testBundleTransferWithBPMonthlyOnlyWIthCancellationImm() throws Exception {
+
+        final Account account = createAccountWithPaymentMethod(getAccountData(9));
+
+        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
+
+        final DateTime initialDate = new DateTime(2012, 4, 1, 0, 15, 42, 0, testTimeZone);
+
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+        final SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(account.getId(), "mycutebundle", context);
+
+        final String productName = "Shotgun";
+        final BillingPeriod term = BillingPeriod.MONTHLY;
+        final String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
+        //
+        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
+        //
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.INVOICE);
+        final PlanPhaseSpecifier bpPlanPhaseSpecifier = new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null);
+        final SubscriptionData bpSubscription = subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(),
+                                                                                                                       bpPlanPhaseSpecifier,
+                                                                                                                       null,
+                                                                                                                       context));
+        assertNotNull(bpSubscription);
+        assertTrue(busHandler.isCompleted(DELAY));
+        assertListenerStatus();
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId()).size(), 1);
+
+        assertEquals(entitlementUserApi.getSubscriptionFromId(bpSubscription.getId()).getCurrentPlan().getBillingPeriod(), BillingPeriod.MONTHLY);
+
+        // Move out of trials for interesting invoices adjustments
+        busHandler.pushExpectedEvent(NextEvent.PHASE);
+        busHandler.pushExpectedEvent(NextEvent.INVOICE);
+        busHandler.pushExpectedEvent(NextEvent.PAYMENT);
+        clock.addDays(32);
+        assertTrue(busHandler.isCompleted(DELAY));
+        assertListenerStatus();
+
+        // BUNDLE TRANSFER
+        final Account newAccount = createAccountWithPaymentMethod(getAccountData(15));
+
+        busHandler.pushExpectedEvent(NextEvent.CANCEL);
+        busHandler.pushExpectedEvent(NextEvent.TRANSFER);
+        busHandler.pushExpectedEvent(NextEvent.INVOICE);
+        busHandler.pushExpectedEvent(NextEvent.INVOICE);
+        busHandler.pushExpectedEvent(NextEvent.PAYMENT);
+        transferApi.transferBundle(account.getId(), newAccount.getId(), "mycutebundle", clock.getUTCNow(), false, true, context);
+        assertTrue(busHandler.isCompleted(DELAY));
+        assertListenerStatus();
+
+        List<Invoice> invoices =invoiceUserApi.getInvoicesByAccount(account.getId());
+        assertEquals(invoices.size(), 3);
+
+
+        // CHECK OLD ACCOUNTS ITEMS
+        ImmutableList<ExpectedItemCheck> toBeChecked = ImmutableList.<ExpectedItemCheck>of(
+                new ExpectedItemCheck(new LocalDate(2012,5,1), new LocalDate(2012,5,9), InvoiceItemType.RECURRING, new BigDecimal("66.66")),
+                new ExpectedItemCheck(new LocalDate(2012,5,1), new LocalDate(2012,5,9), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-66.66")),
+                new ExpectedItemCheck(new LocalDate(2012,5,3), new LocalDate(2012,5,3), InvoiceItemType.CBA_ADJ, new BigDecimal("66.66")));
+        invoiceChecker.checkInvoice(invoices.get(1).getId(), toBeChecked);
+
+        toBeChecked = ImmutableList.<ExpectedItemCheck>of(
+                new ExpectedItemCheck(new LocalDate(2012,5,1), new LocalDate(2012,5,3), InvoiceItemType.RECURRING, new BigDecimal("16.67")),
+                new ExpectedItemCheck(new LocalDate(2012,5,3), new LocalDate(2012,5,3), InvoiceItemType.CBA_ADJ, new BigDecimal("-16.67")));
+        invoiceChecker.checkInvoice(invoices.get(2).getId(), toBeChecked);
+
+        // CHECK NEW ACCOUNT ITEMS
+        invoices =invoiceUserApi.getInvoicesByAccount(newAccount.getId());
+        assertEquals(invoices.size(), 1);
+
+        toBeChecked = ImmutableList.<ExpectedItemCheck>of(
+                new ExpectedItemCheck(new LocalDate(2012,5,3), new LocalDate(2012,5,15), InvoiceItemType.RECURRING, new BigDecimal("99.98")));
+        invoiceChecker.checkInvoice(invoices.get(0).getId(), toBeChecked);
     }
 }

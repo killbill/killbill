@@ -62,6 +62,8 @@ import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.globallocker.GlobalLocker.LockerType;
 import com.ning.billing.util.globallocker.LockFailedException;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
 
 public class InvoiceDispatcher {
@@ -178,7 +180,16 @@ public class InvoiceDispatcher {
                 }
                 outputDebugData(billingEvents, invoices);
                 if (!dryRun) {
-                    invoiceDao.create(invoice, account.getBillCycleDay().getDayOfMonthUTC(), context);
+
+                    // We need to check whether this is just a 'shell' invoice or a real invoice with items on it
+                    final boolean isRealInvoiceWithItems = Collections2.filter(invoice.getInvoiceItems(), new Predicate<InvoiceItem>() {
+                        @Override
+                        public boolean apply(InvoiceItem input) {
+                            return input.getInvoiceId().equals(invoice.getId());
+                        }
+                    }).size() > 0;
+
+                    invoiceDao.create(invoice, account.getBillCycleDay().getDayOfMonthUTC(), isRealInvoiceWithItems, context);
 
                     final List<InvoiceItem> fixedPriceInvoiceItems = invoice.getInvoiceItems(FixedPriceInvoiceItem.class);
                     final List<InvoiceItem> recurringInvoiceItems = invoice.getInvoiceItems(RecurringInvoiceItem.class);
@@ -236,16 +247,17 @@ public class InvoiceDispatcher {
             final UUID subscriptionId = item.getSubscriptionId();
             final DateTime endDate;
             if (item.getEndDate() != null) {
-                endDate = new DateTime(item.getEndDate().toDateTimeAtStartOfDay(), DateTimeZone.UTC);
+                endDate = new DateTime(item.getEndDate().toDateTime(clock.getUTCNow()) , DateTimeZone.UTC);
             } else {
                 // item end date is null for fixed price items for instance
-                endDate = new DateTime(item.getStartDate().toDateTimeAtStartOfDay(), DateTimeZone.UTC);
+                endDate = new DateTime(item.getStartDate().toDateTime(clock.getUTCNow()), DateTimeZone.UTC);
             }
 
             if (chargeThroughDates.containsKey(subscriptionId)) {
                 if (chargeThroughDates.get(subscriptionId).isBefore(endDate)) {
                     // The CTD should always align with the BCD
-                    chargeThroughDates.put(subscriptionId, InvoiceDateUtils.calculateBillingCycleDateOnOrAfter(endDate, billCycleDay.getDayOfMonthLocal()));
+                    final DateTime ctd = InvoiceDateUtils.calculateBillingCycleDateOnOrAfter(endDate, billCycleDay.getDayOfMonthLocal());
+                    chargeThroughDates.put(subscriptionId, ctd);
                 }
             } else {
                 chargeThroughDates.put(subscriptionId, endDate);

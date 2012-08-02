@@ -90,8 +90,6 @@ getFutureActiveEventForSubscription() ::= <<
       and effective_date > :now
     order by
       effective_date asc
-      , created_date asc
-      , requested_date asc
       , record_id asc
     ;
 >> 
@@ -103,8 +101,6 @@ getEventsForSubscription() ::= <<
       subscription_id = :subscriptionId
     order by
       effective_date asc
-      , created_date asc
-      , requested_date asc
       , record_id asc
     ;      
 >>

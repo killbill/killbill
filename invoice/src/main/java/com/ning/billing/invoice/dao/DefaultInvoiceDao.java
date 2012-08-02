@@ -155,7 +155,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public void create(final Invoice invoice, final int billCycleDayUTC, final CallContext context) {
+    public void create(final Invoice invoice, final int billCycleDayUTC, final boolean isRealInvoice, final CallContext context) {
         invoiceSqlDao.inTransaction(new Transaction<Void, InvoiceSqlDao>() {
             @Override
             public Void inTransaction(final InvoiceSqlDao transactional, final TransactionStatus status) throws Exception {
@@ -163,9 +163,14 @@ public class DefaultInvoiceDao implements InvoiceDao {
                 if (currentInvoice == null) {
                     final List<EntityAudit> audits = new ArrayList<EntityAudit>();
 
-                    transactional.create(invoice, context);
-                    final Long recordId = transactional.getRecordId(invoice.getId().toString());
-                    audits.add(new EntityAudit(TableName.INVOICES, recordId, ChangeType.INSERT));
+                    // We only want to insert that invoice if there are real invoiceItems associated to it-- if not, this is just
+                    // a shell invoice and we only need to insert the invoiceItems-- for the already existing invoices
+
+                    if (isRealInvoice) {
+                        transactional.create(invoice, context);
+                        final Long recordId = transactional.getRecordId(invoice.getId().toString());
+                        audits.add(new EntityAudit(TableName.INVOICES, recordId, ChangeType.INSERT));
+                    }
 
                     List<Long> recordIdList;
 
