@@ -19,6 +19,7 @@ package com.ning.billing.invoice.api.invoice;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -108,7 +109,8 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
 
     @Override
     public InvoicePayment createRefund(final UUID paymentId, final BigDecimal amount, final boolean isInvoiceAdjusted,
-                                       final UUID paymentCookieId, final CallContext context) throws InvoiceApiException {
+                                       final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts, final UUID paymentCookieId,
+                                       final CallContext context) throws InvoiceApiException {
 
         return invoicePaymentWithException.executeAndThrow(new WithInvoiceApiExceptionCallback<InvoicePayment>() {
 
@@ -117,7 +119,7 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
                 if (amount.compareTo(BigDecimal.ZERO) <= 0) {
                     throw new InvoiceApiException(ErrorCode.PAYMENT_REFUND_AMOUNT_NEGATIVE_OR_NULL);
                 }
-                return dao.createRefund(paymentId, amount, isInvoiceAdjusted, paymentCookieId, context);
+                return dao.createRefund(paymentId, amount, isInvoiceAdjusted, invoiceItemIdsWithAmounts, paymentCookieId, context);
             }
         });
     }

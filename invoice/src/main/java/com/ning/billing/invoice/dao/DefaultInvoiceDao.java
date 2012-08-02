@@ -20,6 +20,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -306,7 +307,9 @@ public class DefaultInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public InvoicePayment createRefund(final UUID paymentId, final BigDecimal amount, final boolean isInvoiceAdjusted, final UUID paymentCookieId, final CallContext context)
+    public InvoicePayment createRefund(final UUID paymentId, final BigDecimal amount, final boolean isInvoiceAdjusted,
+                                       final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts, final UUID paymentCookieId,
+                                       final CallContext context)
             throws InvoiceApiException {
         return invoicePaymentSqlDao.inTransaction(new Transaction<InvoicePayment, InvoicePaymentSqlDao>() {
             @Override
@@ -324,9 +327,8 @@ public class DefaultInvoiceDao implements InvoiceDao {
                     throw new InvoiceApiException(ErrorCode.REFUND_AMOUNT_TOO_HIGH, requestedPositiveAmount, maxRefundAmount);
                 }
 
-                // Before we go further, check if that refund already got inserted -- the payment system keps a state machine
+                // Before we go further, check if that refund already got inserted -- the payment system keeps a state machine
                 // and so this call may be called several time for the same  paymentCookieId (which is really the refundId)
-                //
                 final InvoicePayment existingRefund = transactional.getPaymentsForCookieId(paymentCookieId.toString());
                 if (existingRefund != null) {
                     return existingRefund;
@@ -443,8 +445,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
 
     @Override
     public InvoiceItem insertCredit(final UUID accountId, final UUID invoiceId, final BigDecimal positiveCreditAmount,
-                                    final LocalDate effectiveDate, final Currency currency,
-                                    final CallContext context) {
+                                    final LocalDate effectiveDate, final Currency currency, final CallContext context) {
         return invoiceSqlDao.inTransaction(new Transaction<InvoiceItem, InvoiceSqlDao>() {
             @Override
             public InvoiceItem inTransaction(final InvoiceSqlDao transactional, final TransactionStatus status) throws Exception {
@@ -495,7 +496,8 @@ public class DefaultInvoiceDao implements InvoiceDao {
      * @return the adjustment item
      */
     private InvoiceItem createAdjustmentItem(final InvoiceSqlDao transactional, final UUID invoiceId, final UUID invoiceItemId,
-                                             final BigDecimal positiveAdjAmount, final Currency currency, final LocalDate effectiveDate) throws InvoiceApiException {// First, retrieve the invoice item in question
+                                             final BigDecimal positiveAdjAmount, final Currency currency, final LocalDate effectiveDate) throws InvoiceApiException {
+        // First, retrieve the invoice item in question
         final InvoiceItemSqlDao invoiceItemSqlDao = transactional.become(InvoiceItemSqlDao.class);
         final InvoiceItem invoiceItemToBeAdjusted = invoiceItemSqlDao.getById(invoiceItemId.toString());
         if (invoiceItemToBeAdjusted == null) {
@@ -508,13 +510,13 @@ public class DefaultInvoiceDao implements InvoiceDao {
         }
 
         // Retrieve the amount and currency if needed
-        final BigDecimal amountToRefund = Objects.firstNonNull(positiveAdjAmount, invoiceItemToBeAdjusted.getAmount());
+        final BigDecimal amountToAdjust = Objects.firstNonNull(positiveAdjAmount, invoiceItemToBeAdjusted.getAmount());
         // TODO - should we enforce the currency (and respect the original one) here if the amount passed was null?
         final Currency currencyForAdjustment = Objects.firstNonNull(currency, invoiceItemToBeAdjusted.getCurrency());
 
         // Finally, create the adjustment
         // Note! The amount is negated here!
-        return new ItemAdjInvoiceItem(invoiceItemToBeAdjusted, effectiveDate, amountToRefund.negate(), currencyForAdjustment);
+        return new ItemAdjInvoiceItem(invoiceItemToBeAdjusted, effectiveDate, amountToAdjust.negate(), currencyForAdjustment);
     }
 
     /**

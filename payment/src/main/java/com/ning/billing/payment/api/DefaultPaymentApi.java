@@ -17,7 +17,9 @@
 package com.ning.billing.payment.api;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -28,6 +30,7 @@ import com.ning.billing.payment.core.PaymentProcessor;
 import com.ning.billing.payment.core.RefundProcessor;
 import com.ning.billing.util.callcontext.CallContext;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 public class DefaultPaymentApi implements PaymentApi {
@@ -82,14 +85,34 @@ public class DefaultPaymentApi implements PaymentApi {
     }
 
     @Override
-    public Refund createRefund(final Account account, final UUID paymentId,
-                               final BigDecimal refundAmount, final boolean isAdjusted, final CallContext context)
-            throws PaymentApiException {
+    public Refund createRefund(final Account account, final UUID paymentId, final BigDecimal refundAmount, final CallContext context) throws PaymentApiException {
         if (refundAmount == null || refundAmount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new PaymentApiException(ErrorCode.PAYMENT_REFUND_AMOUNT_NEGATIVE_OR_NULL);
         }
-        return refundProcessor.createRefund(account, paymentId, refundAmount, isAdjusted, context);
+        return refundProcessor.createRefund(account, paymentId, refundAmount, false, ImmutableMap.<UUID, BigDecimal>of(), context);
+    }
 
+    @Override
+    public Refund createRefundWithAdjustment(final Account account, final UUID paymentId, final BigDecimal refundAmount, final CallContext context) throws PaymentApiException {
+        if (refundAmount == null || refundAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new PaymentApiException(ErrorCode.PAYMENT_REFUND_AMOUNT_NEGATIVE_OR_NULL);
+        }
+        return refundProcessor.createRefund(account, paymentId, refundAmount, true, ImmutableMap.<UUID, BigDecimal>of(), context);
+    }
+
+    @Override
+    public Refund createRefundWithItemsAdjustments(final Account account, final UUID paymentId, final Set<UUID> invoiceItemIds, final CallContext context) throws PaymentApiException {
+        final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts = new HashMap<UUID, BigDecimal>();
+        for (final UUID invoiceItemId : invoiceItemIds) {
+            invoiceItemIdsWithAmounts.put(invoiceItemId, null);
+        }
+
+        return refundProcessor.createRefund(account, paymentId, null, true, invoiceItemIdsWithAmounts, context);
+    }
+
+    @Override
+    public Refund createRefundWithItemsAdjustments(final Account account, final UUID paymentId, final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts, final CallContext context) throws PaymentApiException {
+        return refundProcessor.createRefund(account, paymentId, null, true, invoiceItemIdsWithAmounts, context);
     }
 
     @Override

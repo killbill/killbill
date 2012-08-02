@@ -21,9 +21,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import org.slf4j.Logger;
@@ -53,8 +55,10 @@ import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.globallocker.GlobalLocker;
 
 import com.google.common.base.Function;
+import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.name.Named;
 
 import static com.ning.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR_NAMED;
@@ -80,13 +84,29 @@ public class RefundProcessor extends ProcessorBase {
         this.factory = factory;
     }
 
-    public Refund createRefund(final Account account, final UUID paymentId, final BigDecimal refundAmount, final boolean isAdjusted, final CallContext context)
+    /**
+     * Create a refund and adjust the invoice or invoice items as necessary.
+     *
+     * @param account      account to refund
+     * @param paymentId    payment associated with that refund
+     * @param specifiedRefundAmount amount to refund. If null, the amount will be the sum of adjusted invoice items
+     * @param isAdjusted whether the refund should trigger an invoice or invoice item adjustment
+     * @param invoiceItemIdsWithAmounts invoice item ids and associated amounts to adjust
+     * @param context the call context
+     * @return the created context
+     * @throws PaymentApiException
+     */
+    public Refund createRefund(final Account account, final UUID paymentId, @Nullable final BigDecimal specifiedRefundAmount,
+                               final boolean isAdjusted, final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts, final CallContext context)
             throws PaymentApiException {
 
         return new WithAccountLock<Refund>().processAccountWithLock(locker, account.getExternalKey(), new WithAccountLockCallback<Refund>() {
 
             @Override
             public Refund doOperation() throws PaymentApiException {
+                // First, compute the refund amount, if necessary
+                final BigDecimal refundAmount = computeRefundAmount(specifiedRefundAmount, invoiceItemIdsWithAmounts);
+
                 try {
 
                     final PaymentModelDao payment = paymentDao.getPayment(paymentId);
@@ -142,7 +162,7 @@ public class RefundProcessor extends ProcessorBase {
                     }
                     paymentDao.updateRefundStatus(refundInfo.getId(), RefundStatus.PLUGIN_COMPLETED, context);
 
-                    invoicePaymentApi.createRefund(paymentId, refundAmount, isAdjusted, refundInfo.getId(), context);
+                    invoicePaymentApi.createRefund(paymentId, refundAmount, isAdjusted, invoiceItemIdsWithAmounts, refundInfo.getId(), context);
 
                     paymentDao.updateRefundStatus(refundInfo.getId(), RefundStatus.COMPLETED, context);
 
@@ -155,6 +175,27 @@ public class RefundProcessor extends ProcessorBase {
                 }
             }
         });
+    }
+
+    /**
+     * Compute the refund amount (computed from the invoice or invoice items as necessary).
+     *
+     * @param specifiedRefundAmount     amount to refund. If null, the amount will be the sum of adjusted invoice items
+     * @param invoiceItemIdsWithAmounts invoice item ids and associated amounts to adjust
+     * @return the refund amount
+     */
+    private BigDecimal computeRefundAmount(@Nullable final BigDecimal specifiedRefundAmount, final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts) {
+        BigDecimal amountFromItems = BigDecimal.ZERO;
+        for (final BigDecimal itemAmount : invoiceItemIdsWithAmounts.values()) {
+            amountFromItems = amountFromItems.add(itemAmount);
+        }
+
+        // Sanity check: if some items were specified, then the sum should be equal to specified refund amount, if specified
+        if (amountFromItems.compareTo(BigDecimal.ZERO) != 0 && specifiedRefundAmount != null && specifiedRefundAmount.compareTo(amountFromItems) != 0) {
+            throw new IllegalArgumentException("You can't specify a refund amount that doesn't match the invoice items amounts");
+        }
+
+        return Objects.firstNonNull(specifiedRefundAmount, amountFromItems);
     }
 
     public Refund getRefund(final UUID refundId)
@@ -235,7 +276,8 @@ public class RefundProcessor extends ProcessorBase {
                     try {
                         final CallContext context = factory.createCallContext("RefundProcessor", CallOrigin.INTERNAL, UserType.SYSTEM);
                         for (final RefundModelDao cur : refundsToBeFixed) {
-                            invoicePaymentApi.createRefund(cur.getPaymentId(), cur.getAmount(), cur.isAdjsuted(), cur.getId(), context);
+                            // TODO - we currently don't save the items to be adjusted. If we crash, they won't be adjusted...
+                            invoicePaymentApi.createRefund(cur.getPaymentId(), cur.getAmount(), cur.isAdjsuted(), ImmutableMap.<UUID, BigDecimal>of(), cur.getId(), context);
                             paymentDao.updateRefundStatus(cur.getId(), RefundStatus.COMPLETED, context);
                         }
                     } catch (InvoiceApiException e) {

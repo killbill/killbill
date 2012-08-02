@@ -25,12 +25,10 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 
 import com.google.inject.Inject;
 
-import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
@@ -282,10 +280,10 @@ public class MockInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public InvoicePayment createRefund(UUID paymentId,
-            BigDecimal amount, boolean isInvoiceAdjusted, UUID paymentCookieId, CallContext context)
+    public InvoicePayment createRefund(final UUID paymentId, final BigDecimal amount, final boolean isInvoiceAdjusted,
+                                       final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts, final UUID paymentCookieId,
+                                       final CallContext context)
             throws InvoiceApiException {
         return null;
     }
-
 }
