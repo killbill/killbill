@@ -41,8 +41,6 @@ public class TestInAdvanceBillingMode {
         final int billingCycleDayLocal = 15;
 
         final LinkedHashMap<LocalDate, LocalDate> expectedDates = new LinkedHashMap<LocalDate, LocalDate>();
-        expectedDates.put(new LocalDate(2012, 7, 16), new LocalDate(2012, 8, 15));
-
         verifyInvoiceItems(startDate, endDate, targetDate, TIMEZONE, billingCycleDayLocal, BILLING_PERIOD, expectedDates);
     }
 

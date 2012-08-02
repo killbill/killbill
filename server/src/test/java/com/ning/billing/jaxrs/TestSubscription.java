@@ -57,7 +57,7 @@ public class TestSubscription extends TestJaxrsBase {
 
         final SubscriptionJsonNoEvents subscriptionJson = createSubscription(bundleJson.getBundleId(), productName, ProductCategory.BASE.toString(), term.toString(), true);
         Assert.assertNotNull(subscriptionJson.getChargedThroughDate());
-        Assert.assertEquals(subscriptionJson.getChargedThroughDate().toString(), "2012-04-25T00:00:00.000Z");
+        Assert.assertEquals(subscriptionJson.getChargedThroughDate().toString(), "2012-04-25T00:03:43.000Z");
 
         String uri = JaxrsResource.SUBSCRIPTIONS_PATH + "/" + subscriptionJson.getSubscriptionId();
 
@@ -144,7 +144,7 @@ public class TestSubscription extends TestJaxrsBase {
 
         final SubscriptionJsonNoEvents subscriptionJson = createSubscription(bundleJson.getBundleId(), productName, ProductCategory.BASE.toString(), term.toString(), true);
         Assert.assertNotNull(subscriptionJson.getChargedThroughDate());
-        Assert.assertEquals(subscriptionJson.getChargedThroughDate().toString(), "2012-04-25T00:00:00.000Z");
+        Assert.assertEquals(subscriptionJson.getChargedThroughDate().toString(), "2012-04-25T00:03:43.000Z");
 
         final String uri = JaxrsResource.SUBSCRIPTIONS_PATH + "/" + subscriptionJson.getSubscriptionId();
 

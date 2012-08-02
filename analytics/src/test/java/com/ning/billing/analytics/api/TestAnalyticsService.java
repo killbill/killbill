@@ -227,7 +227,7 @@ public class TestAnalyticsService extends AnalyticsTestSuiteWithEmbeddedDB {
                 INVOICE_AMOUNT, ACCOUNT_CURRENCY);
         invoice.addInvoiceItem(invoiceItem);
 
-        invoiceDao.create(invoice, invoice.getTargetDate().getDayOfMonth(), context);
+        invoiceDao.create(invoice, invoice.getTargetDate().getDayOfMonth(), true, context);
         final List<Invoice> invoices = invoiceDao.getInvoicesByAccount(account.getId());
         Assert.assertEquals(invoices.size(), 1);
         Assert.assertEquals(invoices.get(0).getInvoiceItems().size(), 1);

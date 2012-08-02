@@ -53,10 +53,28 @@ public class InAdvanceBillingMode implements BillingMode {
 
         final List<RecurringInvoiceItemData> results = new ArrayList<RecurringInvoiceItemData>();
 
-        // beginning from the start date, find the first billing date
         final LocalDate firstBillingCycleDate = calculateBillingCycleDateOnOrAfter(startDate, accountTimeZone, billingCycleDayLocal);
 
-        // add pro-ration item if needed
+        // We are not billing for less than a day (we could...)
+        if (endDate != null && endDate.equals(startDate)) {
+            return results;
+        }
+        //
+        // If there is an endDate and that endDate is before our first coming firstBillingCycleDate, all we have to do
+        // is to charge for that period
+        //
+        if (endDate != null && !endDate.isAfter(firstBillingCycleDate)) {
+            final BigDecimal leadingProRationPeriods = calculateProRationBeforeFirstBillingPeriod(startDate, endDate, billingPeriod);
+            final RecurringInvoiceItemData itemData = new RecurringInvoiceItemData(startDate, endDate, leadingProRationPeriods);
+            results.add(itemData);
+            return results;
+        }
+
+        //
+        // Leading proration if
+        // i) The first firstBillingCycleDate is strictly after our start date AND
+        // ii) The endDate is is not null and is strictly after our firstBillingCycleDate (previous check)
+        //
         if (firstBillingCycleDate.isAfter(startDate)) {
             final BigDecimal leadingProRationPeriods = calculateProRationBeforeFirstBillingPeriod(startDate, firstBillingCycleDate, billingPeriod);
             if (leadingProRationPeriods != null && leadingProRationPeriods.compareTo(BigDecimal.ZERO) > 0) {
@@ -67,7 +85,11 @@ public class InAdvanceBillingMode implements BillingMode {
             }
         }
 
-        // add one item per billing period
+        //
+        // Calculate the effectiveEndDate from the firstBillingCycleDate:
+        // - If endDate != null and targetDate is after endDate => this is the endDate and will lead to a trailing pro-ration
+        // - If not, this is the last billingCycleDate calculation right after the targetDate
+        //
         final LocalDate effectiveEndDate;
         if (endDate != null) {
             effectiveEndDate = calculateEffectiveEndDate(firstBillingCycleDate, targetDate, endDate, billingPeriod);
@@ -75,6 +97,9 @@ public class InAdvanceBillingMode implements BillingMode {
             effectiveEndDate = calculateEffectiveEndDate(firstBillingCycleDate, targetDate, billingPeriod);
         }
 
+        //
+        // Based on what we calculated previously, code recompute one more time the numberOfWholeBillingPeriods
+        //
         final LocalDate lastBillingCycleDate = calculateLastBillingCycleDateBefore(effectiveEndDate, firstBillingCycleDate, billingCycleDayLocal, billingPeriod);
         final int numberOfWholeBillingPeriods = calculateNumberOfWholeBillingPeriods(firstBillingCycleDate, lastBillingCycleDate, billingPeriod);
         final int numberOfMonthsPerBillingPeriod = billingPeriod.getNumberOfMonths();
@@ -97,7 +122,9 @@ public class InAdvanceBillingMode implements BillingMode {
             results.add(new RecurringInvoiceItemData(servicePeriodStartDate, servicePeriodEndDate, BigDecimal.ONE));
         }
 
-        // check to see if a trailing pro-ration amount is needed
+        //
+        // Now we check if indeed we need a trailing proration and add that incomplete item
+        //
         if (effectiveEndDate.isAfter(lastBillingCycleDate)) {
             final BigDecimal trailingProRationPeriods = calculateProRationAfterLastBillingCycleDate(effectiveEndDate, lastBillingCycleDate, billingPeriod);
             if (trailingProRationPeriods.compareTo(BigDecimal.ZERO) > 0) {
