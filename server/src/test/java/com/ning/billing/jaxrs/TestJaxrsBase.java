@@ -13,10 +13,9 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.jaxrs;
 
-import javax.annotation.Nullable;
-import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
@@ -31,6 +30,9 @@ import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import javax.annotation.Nullable;
+import javax.ws.rs.core.Response.Status;
+
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.joda.time.DateTime;
 import org.skife.config.ConfigurationObjectFactory;
@@ -38,27 +40,16 @@ import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
 
-import com.fasterxml.jackson.core.JsonGenerationException;
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.joda.JodaModule;
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Module;
 import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
-import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.account.glue.AccountModule;
 import com.ning.billing.analytics.setup.AnalyticsModule;
 import com.ning.billing.api.TestApiListener;
 import com.ning.billing.beatrix.glue.BeatrixModule;
-import com.ning.billing.beatrix.integration.TestIntegration;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PriceListSet;
@@ -102,7 +93,6 @@ import com.ning.billing.util.glue.CustomFieldModule;
 import com.ning.billing.util.glue.GlobalLockerModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.TagStoreModule;
-import com.ning.billing.util.io.IOUtils;
 import com.ning.http.client.AsyncCompletionHandler;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
@@ -112,11 +102,19 @@ import com.ning.http.client.Response;
 import com.ning.jetty.core.CoreConfig;
 import com.ning.jetty.core.server.HttpServer;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.joda.JodaModule;
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Module;
+
 import static com.ning.billing.jaxrs.resources.JaxrsResource.QUERY_PAYMENT_METHOD_PLUGIN_INFO;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
 public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
+
     protected static final String PLUGIN_NAME = "noop";
 
     // STEPH
@@ -156,6 +154,7 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
     }
 
     public static class TestKillbillGuiceListener extends KillbillGuiceListener {
+
         private final MysqlTestingHelper helper;
         private final Clock clock;
 
@@ -185,6 +184,7 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
     }
 
     public static class InvoiceModuleWithMockSender extends DefaultInvoiceModule {
+
         @Override
         protected void installInvoiceNotifier() {
             bind(InvoiceNotifier.class).to(NullInvoiceNotifier.class).asEagerSingleton();
@@ -192,6 +192,7 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
     }
 
     public static class TestKillbillServerModule extends KillbillServerModule {
+
         private final MysqlTestingHelper helper;
         private final Clock clock;
 
@@ -207,6 +208,7 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
         }
 
         private static final class PaymentMockModule extends PaymentModule {
+
             @Override
             protected void installPaymentProviderPlugins(final PaymentConfig config) {
                 install(new MockPaymentProviderPluginModule(PLUGIN_NAME));
@@ -327,7 +329,6 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
         return properties;
     }
 
-
     protected List<PaymentMethodProperties> getPaymentMethodPaypalProperties() {
         final List<PaymentMethodProperties> properties = new ArrayList<PaymentMethodJson.PaymentMethodProperties>();
         properties.add(new PaymentMethodProperties("type", "CreditCard", false));
@@ -335,7 +336,6 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
         properties.add(new PaymentMethodProperties("baid", "23-8787d-R", false));
         return properties;
     }
-
 
     protected PaymentMethodJson getPaymentMethodJson(final String accountId, final List<PaymentMethodProperties> properties) {
         final PaymentMethodPluginDetailJson info = new PaymentMethodPluginDetailJson(null, properties);
@@ -358,7 +358,6 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
 
         Response response = doPost(uri, baseJson, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
-
 
         queryParams = new HashMap<String, String>();
         queryParams.put(JaxrsResource.QUERY_EXTERNAL_KEY, input.getExternalKey());
@@ -390,7 +389,6 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
         return objFromJson;
     }
 
-
     protected BundleJsonNoSubscriptions createBundle(final String accountId, final String key) throws Exception {
         final BundleJsonNoSubscriptions input = new BundleJsonNoSubscriptions(null, accountId, key, null, null);
         String baseJson = mapper.writeValueAsString(input);
@@ -414,7 +412,6 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
 
         final SubscriptionJsonNoEvents input = new SubscriptionJsonNoEvents(null, bundleId, null, productName, productCategory, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, null, null);
         String baseJson = mapper.writeValueAsString(input);
-
 
         final Map<String, String> queryParams = waitCompletion ? getQueryParamsForCallCompletion("5") : DEFAULT_EMPTY_QUERY;
         Response response = doPost(JaxrsResource.SUBSCRIPTIONS_PATH, baseJson, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
@@ -472,45 +469,49 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
     }
 
     protected InvoiceJsonSimple getInvoice(final String invoiceId) throws IOException {
+        return doGetInvoice(invoiceId, Boolean.FALSE, InvoiceJsonSimple.class);
+    }
+
+    protected InvoiceJsonWithItems getInvoiceWithItems(final String invoiceId) throws IOException {
+        return doGetInvoice(invoiceId, Boolean.TRUE, InvoiceJsonWithItems.class);
+    }
+
+    private <T> T doGetInvoice(final String invoiceId, final Boolean withItems, final Class<T> clazz) throws IOException {
         final String uri = JaxrsResource.INVOICES_PATH + "/" + invoiceId;
-        final Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+
+        final Map<String, String> queryParams = new HashMap<String, String>();
+        queryParams.put(JaxrsResource.QUERY_INVOICE_WITH_ITEMS, withItems.toString());
+
+        final Response response = doGet(uri, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
         final String baseJson = response.getResponseBody();
 
-        final InvoiceJsonSimple firstInvoiceJson = mapper.readValue(baseJson, InvoiceJsonSimple.class);
+        final T firstInvoiceJson = mapper.readValue(baseJson, clazz);
         assertNotNull(firstInvoiceJson);
 
         return firstInvoiceJson;
     }
 
     protected List<InvoiceJsonSimple> getInvoicesForAccount(final String accountId) throws IOException {
-        final String invoicesURI = JaxrsResource.INVOICES_PATH;
-
-        final Map<String, String> queryParams = new HashMap<String, String>();
-        queryParams.put(JaxrsResource.QUERY_ACCOUNT_ID, accountId);
-
-        final Response invoicesResponse = doGet(invoicesURI, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
-        assertEquals(invoicesResponse.getStatusCode(), Status.OK.getStatusCode());
-
-        final String invoicesBaseJson = invoicesResponse.getResponseBody();
-        final List<InvoiceJsonSimple> invoices = mapper.readValue(invoicesBaseJson, new TypeReference<List<InvoiceJsonSimple>>() {});
-        assertNotNull(invoices);
-
-        return invoices;
+        return doGetInvoicesForAccount(accountId, Boolean.FALSE, InvoiceJsonSimple.class);
     }
 
     protected List<InvoiceJsonWithItems> getInvoicesWithItemsForAccount(final String accountId) throws IOException {
+        return doGetInvoicesForAccount(accountId, Boolean.TRUE, InvoiceJsonWithItems.class);
+    }
+
+    private <T> List<T> doGetInvoicesForAccount(final String accountId, final Boolean withItems, final Class<T> clazz) throws IOException {
         final String invoicesURI = JaxrsResource.INVOICES_PATH;
 
         final Map<String, String> queryParams = new HashMap<String, String>();
         queryParams.put(JaxrsResource.QUERY_ACCOUNT_ID, accountId);
-        queryParams.put(JaxrsResource.QUERY_INVOICE_WITH_ITEMS, "true");
+        queryParams.put(JaxrsResource.QUERY_INVOICE_WITH_ITEMS, withItems.toString());
 
         final Response invoicesResponse = doGet(invoicesURI, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(invoicesResponse.getStatusCode(), Status.OK.getStatusCode());
 
         final String invoicesBaseJson = invoicesResponse.getResponseBody();
-        final List<InvoiceJsonWithItems> invoices = mapper.readValue(invoicesBaseJson, new TypeReference<List<InvoiceJsonWithItems>>() {});
+        final List<T> invoices = mapper.readValue(invoicesBaseJson, new TypeReference<List<T>>() {});
         assertNotNull(invoices);
 
         return invoices;
@@ -658,9 +659,28 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
     }
 
     protected RefundJson createRefund(final String paymentId, final BigDecimal amount) throws IOException {
+        return doCreateRefund(paymentId, amount, false, ImmutableMap.<String, BigDecimal>of());
+    }
+
+    protected RefundJson createRefundWithInvoiceAdjustment(final String paymentId, final BigDecimal amount) throws IOException {
+        return doCreateRefund(paymentId, amount, true, ImmutableMap.<String, BigDecimal>of());
+    }
+
+    protected RefundJson createRefundWithInvoiceItemAdjustment(final String paymentId, final String invoiceItemId, final BigDecimal amount) throws IOException {
+        final Map<String, BigDecimal> adjustments = new HashMap<String, BigDecimal>();
+        adjustments.put(invoiceItemId, amount);
+        return doCreateRefund(paymentId, amount, true, adjustments);
+    }
+
+    private RefundJson doCreateRefund(final String paymentId, final BigDecimal amount, final boolean adjusted, final Map<String, BigDecimal> itemAdjustments) throws IOException {
         final String uri = JaxrsResource.PAYMENTS_PATH + "/" + paymentId + "/" + JaxrsResource.REFUNDS;
 
-        final RefundJson refundJson = new RefundJson(null, paymentId, amount, false, null, null, null, null);
+        final List<InvoiceItemJsonSimple> adjustments = new ArrayList<InvoiceItemJsonSimple>();
+        for (final String itemId : itemAdjustments.keySet()) {
+            adjustments.add(new InvoiceItemJsonSimple(itemId, null, null, null, null, null, null, null, null, null,
+                                                      itemAdjustments.get(itemId), null, null));
+        }
+        final RefundJson refundJson = new RefundJson(null, paymentId, amount, adjusted, null, null, adjustments, null);
         final String baseJson = mapper.writeValueAsString(refundJson);
         final Response response = doPost(uri, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());

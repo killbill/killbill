@@ -36,6 +36,7 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.invoice.api.InvoiceApiException;
+import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.payment.api.DefaultRefund;
 import com.ning.billing.payment.api.PaymentApiException;
@@ -87,12 +88,12 @@ public class RefundProcessor extends ProcessorBase {
     /**
      * Create a refund and adjust the invoice or invoice items as necessary.
      *
-     * @param account      account to refund
-     * @param paymentId    payment associated with that refund
-     * @param specifiedRefundAmount amount to refund. If null, the amount will be the sum of adjusted invoice items
-     * @param isAdjusted whether the refund should trigger an invoice or invoice item adjustment
+     * @param account                   account to refund
+     * @param paymentId                 payment associated with that refund
+     * @param specifiedRefundAmount     amount to refund. If null, the amount will be the sum of adjusted invoice items
+     * @param isAdjusted                whether the refund should trigger an invoice or invoice item adjustment
      * @param invoiceItemIdsWithAmounts invoice item ids and associated amounts to adjust
-     * @param context the call context
+     * @param context                   the call context
      * @return the created context
      * @throws PaymentApiException
      */
@@ -105,7 +106,7 @@ public class RefundProcessor extends ProcessorBase {
             @Override
             public Refund doOperation() throws PaymentApiException {
                 // First, compute the refund amount, if necessary
-                final BigDecimal refundAmount = computeRefundAmount(specifiedRefundAmount, invoiceItemIdsWithAmounts);
+                final BigDecimal refundAmount = computeRefundAmount(paymentId, specifiedRefundAmount, invoiceItemIdsWithAmounts);
 
                 try {
 
@@ -180,14 +181,18 @@ public class RefundProcessor extends ProcessorBase {
     /**
      * Compute the refund amount (computed from the invoice or invoice items as necessary).
      *
+     * @param paymentId                 payment id associated with this refund
      * @param specifiedRefundAmount     amount to refund. If null, the amount will be the sum of adjusted invoice items
      * @param invoiceItemIdsWithAmounts invoice item ids and associated amounts to adjust
      * @return the refund amount
      */
-    private BigDecimal computeRefundAmount(@Nullable final BigDecimal specifiedRefundAmount, final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts) {
+    private BigDecimal computeRefundAmount(final UUID paymentId, @Nullable final BigDecimal specifiedRefundAmount, final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts) {
+        final List<InvoiceItem> items = invoicePaymentApi.getInvoiceForPaymentId(paymentId).getInvoiceItems();
+
         BigDecimal amountFromItems = BigDecimal.ZERO;
-        for (final BigDecimal itemAmount : invoiceItemIdsWithAmounts.values()) {
-            amountFromItems = amountFromItems.add(itemAmount);
+        for (final UUID itemId : invoiceItemIdsWithAmounts.keySet()) {
+            amountFromItems = amountFromItems.add(Objects.firstNonNull(invoiceItemIdsWithAmounts.get(itemId),
+                                                                       getAmountFromItem(items, itemId)));
         }
 
         // Sanity check: if some items were specified, then the sum should be equal to specified refund amount, if specified
@@ -196,6 +201,16 @@ public class RefundProcessor extends ProcessorBase {
         }
 
         return Objects.firstNonNull(specifiedRefundAmount, amountFromItems);
+    }
+
+    private BigDecimal getAmountFromItem(final List<InvoiceItem> items, final UUID itemId) {
+        for (final InvoiceItem item : items) {
+            if (item.getId().equals(itemId)) {
+                return item.getAmount();
+            }
+        }
+
+        throw new IllegalArgumentException("Unable to find invoice item for id " + itemId);
     }
 
     public Refund getRefund(final UUID refundId)
