@@ -25,20 +25,24 @@ import org.joda.time.LocalDate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.analytics.dao.BusinessAccountSqlDao;
 import com.ning.billing.analytics.model.BusinessAccount;
+import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentApiException;
+import com.ning.billing.payment.api.PaymentMethod;
+
+import com.google.inject.Inject;
 
 public class BusinessAccountRecorder {
+
     private static final Logger log = LoggerFactory.getLogger(BusinessAccountRecorder.class);
 
     private final BusinessAccountSqlDao sqlDao;
@@ -59,11 +63,7 @@ public class BusinessAccountRecorder {
         final Account account;
         try {
             account = accountApi.getAccountByKey(data.getExternalKey());
-            final BusinessAccount bac = new BusinessAccount(account.getId());
-            updateBusinessAccountFromAccount(account, bac);
-
-            log.info("ACCOUNT CREATION " + bac);
-            sqlDao.createAccount(bac);
+            accountUpdated(account.getId());
         } catch (AccountApiException e) {
             log.warn("Error encountered creating BusinessAccount", e);
         }
@@ -103,12 +103,14 @@ public class BusinessAccountRecorder {
     private void updateBusinessAccountFromAccount(final Account account, final BusinessAccount bac) {
         bac.setName(account.getName());
         bac.setKey(account.getExternalKey());
+        final Currency currency = account.getCurrency();
+        bac.setCurrency(currency != null ? currency.toString() : bac.getCurrency());
 
         try {
             LocalDate lastInvoiceDate = bac.getLastInvoiceDate();
             BigDecimal totalInvoiceBalance = bac.getTotalInvoiceBalance();
             String lastPaymentStatus = bac.getLastPaymentStatus();
-            String paymentMethod = bac.getPaymentMethod();
+            String paymentMethodType = bac.getPaymentMethod();
             String creditCardType = bac.getCreditCardType();
             String billingAddressCountry = bac.getBillingAddressCountry();
 
@@ -134,17 +136,23 @@ public class BusinessAccountRecorder {
                         if (lastPaymentDate == null || cur.getEffectiveDate().isAfter(lastPaymentDate)) {
                             lastPaymentDate = cur.getEffectiveDate();
                             lastPaymentStatus = cur.getPaymentStatus().toString();
-                            // TODO STEPH talk to Pierre
-                            paymentMethod = null;
-                            creditCardType = null;
-                            billingAddressCountry = null;
                         }
                     }
                 }
             }
 
+            // Retrieve payment methods
+            for (final PaymentMethod paymentMethod : paymentApi.getPaymentMethods(account, true)) {
+                if (paymentMethod.getId().equals(account.getPaymentMethodId()) && paymentMethod.getPluginDetail() != null) {
+                    paymentMethodType = PaymentMethodUtils.getPaymentMethodType(paymentMethod.getPluginDetail());
+                    creditCardType = PaymentMethodUtils.getCardType(paymentMethod.getPluginDetail());
+                    billingAddressCountry = PaymentMethodUtils.getCardCountry(paymentMethod.getPluginDetail());
+                    break;
+                }
+            }
+
             bac.setLastPaymentStatus(lastPaymentStatus);
-            bac.setPaymentMethod(paymentMethod);
+            bac.setPaymentMethod(paymentMethodType);
             bac.setCreditCardType(creditCardType);
             bac.setBillingAddressCountry(billingAddressCountry);
             bac.setLastInvoiceDate(lastInvoiceDate);

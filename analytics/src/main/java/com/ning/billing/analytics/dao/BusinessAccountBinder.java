@@ -63,6 +63,7 @@ public @interface BusinessAccountBinder {
                     q.bind("payment_method", account.getPaymentMethod());
                     q.bind("credit_card_type", account.getCreditCardType());
                     q.bind("billing_address_country", account.getBillingAddressCountry());
+                    q.bind("currency", account.getCurrency());
                 }
             };
         }

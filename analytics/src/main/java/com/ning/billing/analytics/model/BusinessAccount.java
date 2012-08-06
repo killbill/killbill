@@ -27,6 +27,7 @@ import com.ning.billing.analytics.utils.Rounder;
 import com.google.common.base.Objects;
 
 public class BusinessAccount {
+
     // Populated by the database
     private DateTime createdDt = null;
     private DateTime updatedDt = null;
@@ -41,6 +42,7 @@ public class BusinessAccount {
     private String paymentMethod;
     private String creditCardType;
     private String billingAddressCountry;
+    private String currency;
 
     public BusinessAccount(final UUID accountId) {
         this.accountId = accountId;
@@ -48,7 +50,8 @@ public class BusinessAccount {
 
     public BusinessAccount(final UUID accountId, final String key, final String name, final BigDecimal balance,
                            final LocalDate lastInvoiceDate, final BigDecimal totalInvoiceBalance, final String lastPaymentStatus,
-                           final String paymentMethod, final String creditCardType, final String billingAddressCountry) {
+                           final String paymentMethod, final String creditCardType, final String billingAddressCountry,
+                           final String currency) {
         this.accountId = accountId;
         this.key = key;
         this.balance = balance;
@@ -59,6 +62,7 @@ public class BusinessAccount {
         this.name = name;
         this.paymentMethod = paymentMethod;
         this.totalInvoiceBalance = totalInvoiceBalance;
+        this.currency = currency;
     }
 
     public UUID getAccountId() {
@@ -107,6 +111,14 @@ public class BusinessAccount {
 
     public void setCreditCardType(final String creditCardType) {
         this.creditCardType = creditCardType;
+    }
+
+    public String getCurrency() {
+        return currency;
+    }
+
+    public void setCurrency(final String currency) {
+        this.currency = currency;
     }
 
     public LocalDate getLastInvoiceDate() {
@@ -177,6 +189,7 @@ public class BusinessAccount {
         sb.append(", paymentMethod='").append(paymentMethod).append('\'');
         sb.append(", creditCardType='").append(creditCardType).append('\'');
         sb.append(", billingAddressCountry='").append(billingAddressCountry).append('\'');
+        sb.append(", currency='").append(currency).append('\'');
         sb.append('}');
         return sb.toString();
     }
@@ -202,6 +215,9 @@ public class BusinessAccount {
             return false;
         }
         if (creditCardType != null ? !creditCardType.equals(that.creditCardType) : that.creditCardType != null) {
+            return false;
+        }
+        if (currency != null ? !currency.equals(that.currency) : that.currency != null) {
             return false;
         }
         if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
@@ -246,6 +262,7 @@ public class BusinessAccount {
         result = 31 * result + (paymentMethod != null ? paymentMethod.hashCode() : 0);
         result = 31 * result + (creditCardType != null ? creditCardType.hashCode() : 0);
         result = 31 * result + (billingAddressCountry != null ? billingAddressCountry.hashCode() : 0);
+        result = 31 * result + (currency != null ? currency.hashCode() : 0);
         return result;
     }
 }

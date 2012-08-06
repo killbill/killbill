@@ -14,6 +14,7 @@ getAccount(account_id) ::= <<
   , payment_method
   , credit_card_type
   , billing_address_country
+  , currency
   from bac
   where account_id=:account_id
   limit 1
@@ -34,6 +35,7 @@ getAccountByKey(account_key) ::= <<
   , payment_method
   , credit_card_type
   , billing_address_country
+  , currency
   from bac
   where account_key=:account_key
   limit 1
@@ -54,6 +56,7 @@ createAccount() ::= <<
   , payment_method
   , credit_card_type
   , billing_address_country
+  , currency
   ) values (
     :account_id
   , :account_key
@@ -67,6 +70,7 @@ createAccount() ::= <<
   , :payment_method
   , :credit_card_type
   , :billing_address_country
+  , :currency
   );
 >>
 
@@ -81,6 +85,7 @@ saveAccount() ::= <<
   , payment_method=:payment_method
   , credit_card_type=:credit_card_type
   , billing_address_country=:billing_address_country
+  , currency=:currency
   where account_id=:account_id
   ;
 >>

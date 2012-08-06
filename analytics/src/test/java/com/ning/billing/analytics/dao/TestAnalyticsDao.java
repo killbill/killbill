@@ -59,6 +59,7 @@ public class TestAnalyticsDao extends AnalyticsTestSuiteWithEmbeddedDB {
     private static final String EXTERNAL_KEY = "23456";
     private static final UUID ACCOUNT_ID = UUID.randomUUID();
     private static final String ACCOUNT_KEY = "pierre-143343-vcc";
+    private static final String CURRENCY = UUID.randomUUID().toString();
 
     private final Clock clock = new DefaultClock();
     private final Product product = new MockProduct("platinium", "subscription", ProductCategory.BASE);
@@ -105,7 +106,8 @@ public class TestAnalyticsDao extends AnalyticsTestSuiteWithEmbeddedDB {
     }
 
     private void setupBusinessAccount() {
-        account = new BusinessAccount(UUID.randomUUID(), ACCOUNT_KEY, UUID.randomUUID().toString(), BigDecimal.ONE, clock.getUTCToday(), BigDecimal.TEN, "ERROR_NOT_ENOUGH_FUNDS", "CreditCard", "Visa", "FRANCE");
+        account = new BusinessAccount(UUID.randomUUID(), ACCOUNT_KEY, UUID.randomUUID().toString(), BigDecimal.ONE, clock.getUTCToday(),
+                                      BigDecimal.TEN, "ERROR_NOT_ENOUGH_FUNDS", "CreditCard", "Visa", "FRANCE", CURRENCY);
 
         final IDBI dbi = helper.getDBI();
         businessAccountSqlDao = dbi.onDemand(BusinessAccountSqlDao.class);
@@ -287,11 +289,13 @@ public class TestAnalyticsDao extends AnalyticsTestSuiteWithEmbeddedDB {
         final DateTime previousUpdatedDt = account.getUpdatedDt();
         account.setBalance(BigDecimal.TEN);
         account.setPaymentMethod("PayPal");
+        account.setCurrency("CAD");
         businessAccountSqlDao.saveAccount(account);
         // Verify the save worked as expected
         account = businessAccountSqlDao.getAccountByKey(ACCOUNT_KEY);
         Assert.assertEquals(Rounder.round(BigDecimal.TEN), account.getRoundedBalance());
         Assert.assertEquals("PayPal", account.getPaymentMethod());
+        Assert.assertEquals("CAD", account.getCurrency());
         Assert.assertTrue(account.getUpdatedDt().compareTo(previousUpdatedDt) > 0);
 
         // ACCOUNT not found
