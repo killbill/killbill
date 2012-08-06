@@ -148,8 +148,9 @@ public class InvoiceDispatcher {
     private Invoice processAccountWithLock(final UUID accountId, final DateTime targetDateTime,
                                            final boolean dryRun, final CallContext context) throws InvoiceApiException {
         try {
-            final Account account = accountUserApi.getAccountById(accountId);
+            // Make sure to first set the BCD if needed then get the account object (to have the BCD set)
             final BillingEventSet billingEvents = billingApi.getBillingEventsForAccountAndUpdateAccountBCD(accountId);
+            final Account account = accountUserApi.getAccountById(accountId);
 
             List<Invoice> invoices = new ArrayList<Invoice>();
             if (!billingEvents.isAccountAutoInvoiceOff()) {
