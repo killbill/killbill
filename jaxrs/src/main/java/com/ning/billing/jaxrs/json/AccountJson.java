@@ -139,7 +139,7 @@ public class AccountJson extends AccountJsonSimple {
 
             @Override
             public Currency getCurrency() {
-                return (currency != null) ? Currency.valueOf(currency) : Currency.USD;
+                return Currency.valueOf(currency);
             }
 
             @Override
