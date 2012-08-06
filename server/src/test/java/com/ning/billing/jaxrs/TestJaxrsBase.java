@@ -493,14 +493,14 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
     }
 
     protected List<InvoiceJsonSimple> getInvoicesForAccount(final String accountId) throws IOException {
-        return doGetInvoicesForAccount(accountId, Boolean.FALSE, InvoiceJsonSimple.class);
+        return doGetInvoicesForAccount(accountId, Boolean.FALSE, new TypeReference<List<InvoiceJsonSimple>>() {});
     }
 
     protected List<InvoiceJsonWithItems> getInvoicesWithItemsForAccount(final String accountId) throws IOException {
-        return doGetInvoicesForAccount(accountId, Boolean.TRUE, InvoiceJsonWithItems.class);
+        return doGetInvoicesForAccount(accountId, Boolean.TRUE, new TypeReference<List<InvoiceJsonWithItems>>() {});
     }
 
-    private <T> List<T> doGetInvoicesForAccount(final String accountId, final Boolean withItems, final Class<T> clazz) throws IOException {
+    private <T> List<T> doGetInvoicesForAccount(final String accountId, final Boolean withItems, final TypeReference<List<T>> clazz) throws IOException {
         final String invoicesURI = JaxrsResource.INVOICES_PATH;
 
         final Map<String, String> queryParams = new HashMap<String, String>();
@@ -511,7 +511,7 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
         assertEquals(invoicesResponse.getStatusCode(), Status.OK.getStatusCode());
 
         final String invoicesBaseJson = invoicesResponse.getResponseBody();
-        final List<T> invoices = mapper.readValue(invoicesBaseJson, new TypeReference<List<T>>() {});
+        final List<T> invoices = mapper.readValue(invoicesBaseJson, clazz);
         assertNotNull(invoices);
 
         return invoices;
