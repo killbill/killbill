@@ -16,9 +16,10 @@
 
 package com.ning.billing.analytics;
 
+import java.util.UUID;
+
 import javax.annotation.Nullable;
 import javax.inject.Inject;
-import java.util.UUID;
 
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
@@ -42,6 +43,7 @@ import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.util.clock.Clock;
 
 public class BusinessInvoicePaymentRecorder {
+
     private static final Logger log = LoggerFactory.getLogger(BusinessInvoicePaymentRecorder.class);
 
     private final BusinessInvoicePaymentSqlDao invoicePaymentSqlDao;
@@ -98,11 +100,9 @@ public class BusinessInvoicePaymentRecorder {
     private void createPayment(final Account account, @Nullable final InvoicePayment invoicePayment, final Payment payment,
                                final PaymentMethod paymentMethod, final String extFirstPaymentRefId, final String extSecondPaymentRefId, final String message) {
         final PaymentMethodPlugin pluginDetail = paymentMethod.getPluginDetail();
-        // TODO - make it generic
-        final String cardCountry = pluginDetail != null ? pluginDetail.getValueString("country") : null;
-        final String cardType = pluginDetail != null ? pluginDetail.getValueString("cardType") : null;
-        // TODO support CreditCard, DebitCard, WireTransfer, BankTransfer, Check, ACH, Cash, Paypal
-        final String paymentMethodString = cardType != null ? "CreditCard" : "Other";
+        final String cardCountry = PaymentMethodUtils.getCardCountry(pluginDetail);
+        final String cardType = PaymentMethodUtils.getCardType(pluginDetail);
+        final String paymentMethodString = PaymentMethodUtils.getPaymentMethodType(pluginDetail);
 
         invoicePaymentSqlDao.inTransaction(new Transaction<Void, BusinessInvoicePaymentSqlDao>() {
             @Override

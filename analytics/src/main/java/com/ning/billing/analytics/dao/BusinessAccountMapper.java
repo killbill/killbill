@@ -42,7 +42,8 @@ public class BusinessAccountMapper extends MapperBase implements ResultSetMapper
                 r.getString(9),
                 r.getString(10),
                 r.getString(11),
-                r.getString(12)
+                r.getString(12),
+                r.getString(13)
         );
         account.setCreatedDt(new DateTime(r.getLong(3), DateTimeZone.UTC));
         account.setUpdatedDt(new DateTime(r.getLong(4), DateTimeZone.UTC));
