@@ -228,8 +228,10 @@ public class DefaultAccount extends EntityBase implements Account {
         }
 
         // We can't just use .equals here as the BillCycleDay class might not have implemented it
-        if (billCycleDay != null ? !(billCycleDay.getDayOfMonthUTC() == delegate.getBillCycleDay().getDayOfMonthUTC() &&
-                                     billCycleDay.getDayOfMonthLocal() == delegate.getBillCycleDay().getDayOfMonthLocal()) : delegate.getBillCycleDay() != null) {
+        if (!(billCycleDay == null && (delegate.getBillCycleDay() == null ||
+                                       delegate.getBillCycleDay().getDayOfMonthUTC() == 0 && delegate.getBillCycleDay().getDayOfMonthLocal() == 0)) &&
+            !(billCycleDay != null && (billCycleDay.getDayOfMonthUTC() == delegate.getBillCycleDay().getDayOfMonthUTC() &&
+                                       billCycleDay.getDayOfMonthLocal() == delegate.getBillCycleDay().getDayOfMonthLocal()))) {
             throw new IllegalArgumentException(String.format("Killbill doesn't support updating the account BCD yet: this=%s, delegate=%s",
                                                              billCycleDay, delegate.getBillCycleDay()));
         }

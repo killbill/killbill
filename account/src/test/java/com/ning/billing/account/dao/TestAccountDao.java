@@ -352,6 +352,23 @@ public class TestAccountDao extends AccountDaoTestBase {
     }
 
     @Test(groups = "slow")
+    public void testShouldBeAbleToHandleBCDOfZeroZero() throws Exception {
+        final Account account = createTestAccount(0);
+        accountDao.create(account, context);
+        final Account fetchedAccount = accountDao.getById(account.getId());
+
+        final MutableAccountData otherAccount = account.toMutableAccountData();
+        // Set BCD to null
+        otherAccount.setBillCycleDay(null);
+
+        final DefaultAccount newAccount = new DefaultAccount(account.getId(), otherAccount);
+        accountDao.update(newAccount, context);
+
+        // Same BCD (zero/zero)
+        Assert.assertEquals(accountDao.getById(account.getId()), fetchedAccount);
+    }
+
+    @Test(groups = "slow")
     public void testAccountEmail() {
         List<AccountEmail> emails = new ArrayList<AccountEmail>();
 
