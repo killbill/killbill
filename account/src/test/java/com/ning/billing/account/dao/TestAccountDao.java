@@ -30,12 +30,13 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.AccountEmail;
+import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.account.api.DefaultAccountEmail;
 import com.ning.billing.account.api.DefaultBillCycleDay;
+import com.ning.billing.account.api.MutableAccountData;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.mock.MockAccountBuilder;
-import com.ning.billing.mock.api.MockBillCycleDay;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.customfield.StringCustomField;
@@ -55,8 +56,12 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
-@Test(groups = {"slow", "account-dao"})
 public class TestAccountDao extends AccountDaoTestBase {
+
+    private Account createTestAccount() {
+        return createTestAccount(5, UUID.randomUUID().toString().substring(0, 5));
+    }
+
     private Account createTestAccount(final int billCycleDay) {
         return createTestAccount(billCycleDay, "123-456-7890");
     }
@@ -77,7 +82,7 @@ public class TestAccountDao extends AccountDaoTestBase {
                                   phone, false, false);
     }
 
-    @Test
+    @Test(groups = "slow")
     public void testBasic() throws EntityPersistenceException {
         final Account a = createTestAccount(5);
         accountDao.create(a, context);
@@ -97,7 +102,7 @@ public class TestAccountDao extends AccountDaoTestBase {
     }
 
     // simple test to ensure long phone numbers can be stored
-    @Test
+    @Test(groups = "slow")
     public void testLongPhoneNumber() throws EntityPersistenceException {
         final Account account = createTestAccount(1, "123456789012345678901234");
         accountDao.create(account, context);
@@ -107,13 +112,13 @@ public class TestAccountDao extends AccountDaoTestBase {
     }
 
     // simple test to ensure excessively long phone numbers cannot be stored
-    @Test(expectedExceptions = {EntityPersistenceException.class})
+    @Test(groups = "slow", expectedExceptions = EntityPersistenceException.class)
     public void testOverlyLongPhoneNumber() throws EntityPersistenceException {
         final Account account = createTestAccount(1, "12345678901234567890123456");
         accountDao.create(account, context);
     }
 
-    @Test
+    @Test(groups = "slow")
     public void testGetById() throws EntityPersistenceException {
         Account account = createTestAccount(1);
         final UUID id = account.getId();
@@ -131,7 +136,7 @@ public class TestAccountDao extends AccountDaoTestBase {
         assertEquals(account.getFirstNameLength(), firstNameLength);
     }
 
-    @Test
+    @Test(groups = "slow")
     public void testCustomFields() throws EntityPersistenceException {
         final String fieldName = "testField1";
         final String fieldValue = "testField1_value";
@@ -149,7 +154,7 @@ public class TestAccountDao extends AccountDaoTestBase {
         assertEquals(customField.getValue(), fieldValue);
     }
 
-    @Test
+    @Test(groups = "slow")
     public void testTags() throws EntityPersistenceException, TagApiException {
         final Account account = createTestAccount(1);
         final TagDefinition definition = new DefaultTagDefinition("Test Tag", "For testing only", false);
@@ -165,7 +170,7 @@ public class TestAccountDao extends AccountDaoTestBase {
         assertEquals(tagMap.values().iterator().next().getTagDefinitionId(), definition.getId());
     }
 
-    @Test
+    @Test(groups = "slow")
     public void testGetIdFromKey() throws EntityPersistenceException {
         final Account account = createTestAccount(1);
         accountDao.create(account, context);
@@ -178,13 +183,13 @@ public class TestAccountDao extends AccountDaoTestBase {
         }
     }
 
-    @Test(expectedExceptions = AccountApiException.class)
+    @Test(groups = "slow", expectedExceptions = AccountApiException.class)
     public void testGetIdFromKeyForNullKey() throws AccountApiException {
         final String key = null;
         accountDao.getIdFromKey(key);
     }
 
-    @Test
+    @Test(groups = "slow")
     public void testUpdate() throws Exception {
         final Account account = createTestAccount(1);
         accountDao.create(account, context);
@@ -217,7 +222,7 @@ public class TestAccountDao extends AccountDaoTestBase {
         assertEquals(savedAccount.getPhone(), updatedAccount.getPhone());
     }
 
-    @Test
+    @Test(groups = "slow")
     public void testAddingContactInformation() throws Exception {
         final UUID accountId = UUID.randomUUID();
         final DefaultAccount account = new DefaultAccount(accountId, "extKey123456", "myemail123456@glam.com",
@@ -257,27 +262,65 @@ public class TestAccountDao extends AccountDaoTestBase {
         assertEquals(savedAccount.getPhone(), phone);
     }
 
-    @Test
-    public void testExternalKeyCannotBeUpdated() throws Exception {
-        final UUID accountId = UUID.randomUUID();
-        final String originalExternalKey = "extKey1337";
-
-        final DefaultAccount account = new DefaultAccount(accountId, originalExternalKey, "myemail1337@glam.com",
-                                                          "John Smith", 4, Currency.USD, new DefaultBillCycleDay(15), null,
-                                                          null, null, null, null, null, null, null, null, null, null,
-                                                          false, false);
+    @Test(groups = "slow", expectedExceptions = IllegalArgumentException.class)
+    public void testShouldntBeAbleToUpdateExternalKey() throws Exception {
+        final Account account = createTestAccount();
         accountDao.create(account, context);
 
-        final String buggyKey = "extKey1338";
-        final DefaultAccount updatedAccountData = new DefaultAccount(accountId, buggyKey, "myemail1337@glam.com",
-                                                                     "John Smith", 4, Currency.USD, new DefaultBillCycleDay(15), null,
-                                                                     null, null, null, null, null, null, null, null, null, null,
-                                                                     false, false);
-        accountDao.update(updatedAccountData, context);
-        Assert.assertNull(accountDao.getAccountByKey(buggyKey));
+        final MutableAccountData otherAccount = account.toMutableAccountData();
+        otherAccount.setExternalKey(UUID.randomUUID().toString());
+
+        accountDao.update(new DefaultAccount(account.getId(), otherAccount), context);
     }
 
-    @Test
+    @Test(groups = "slow", expectedExceptions = IllegalArgumentException.class)
+    public void testShouldntBeAbleToUpdateCurrency() throws Exception {
+        final Account account = createTestAccount();
+        accountDao.create(account, context);
+
+        final MutableAccountData otherAccount = account.toMutableAccountData();
+        otherAccount.setCurrency(Currency.GBP);
+
+        accountDao.update(new DefaultAccount(account.getId(), otherAccount), context);
+    }
+
+    @Test(groups = "slow", expectedExceptions = IllegalArgumentException.class)
+    public void testShouldntBeAbleToUpdateBillCycleDay() throws Exception {
+        final Account account = createTestAccount();
+        accountDao.create(account, context);
+
+        final MutableAccountData otherAccount = account.toMutableAccountData();
+        otherAccount.setBillCycleDay(new BillCycleDay() {
+            @Override
+            public int getDayOfMonthUTC() {
+                return account.getBillCycleDay().getDayOfMonthUTC() + 2;
+            }
+
+            @Override
+            public int getDayOfMonthLocal() {
+                return account.getBillCycleDay().getDayOfMonthLocal() + 2;
+            }
+        });
+
+        accountDao.update(new DefaultAccount(account.getId(), otherAccount), context);
+    }
+
+    @Test(groups = "slow")
+    public void testShouldBeAbleToUpdateSomeFields() throws Exception {
+        final Account account = createTestAccount();
+        accountDao.create(account, context);
+
+        final MutableAccountData otherAccount = account.toMutableAccountData();
+        otherAccount.setAddress1(UUID.randomUUID().toString());
+        otherAccount.setEmail(UUID.randomUUID().toString());
+
+        final DefaultAccount newAccount = new DefaultAccount(account.getId(), otherAccount);
+        accountDao.update(newAccount, context);
+
+        Assert.assertEquals(accountDao.getById(account.getId()), newAccount);
+    }
+
+    @Test(groups = "slow")
     public void testAccountEmail() {
         List<AccountEmail> emails = new ArrayList<AccountEmail>();
 
@@ -315,7 +358,7 @@ public class TestAccountDao extends AccountDaoTestBase {
         verifyAccountEmailAuditAndHistoryCount(accountId, 4);
     }
 
-    @Test
+    @Test(groups = "slow")
     public void testAddAndRemoveAccountEmail() {
         final UUID accountId = UUID.randomUUID();
         final String email1 = UUID.randomUUID().toString();

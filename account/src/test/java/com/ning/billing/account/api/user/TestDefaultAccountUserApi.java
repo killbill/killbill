@@ -41,6 +41,7 @@ import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextFactory;
 
 public class TestDefaultAccountUserApi extends AccountTestSuite {
+
     private final CallContextFactory factory = Mockito.mock(CallContextFactory.class);
     private final CallContext callContext = Mockito.mock(CallContext.class);
 
