@@ -93,7 +93,6 @@ public class PaymentProcessor extends ProcessorBase {
     private final PluginDispatcher<Void> voidPluginDispatcher;
 
     private static final Logger log = LoggerFactory.getLogger(PaymentProcessor.class);
-    private static final Joiner JOINER = Joiner.on(", ");
 
     @Inject
     public PaymentProcessor(final PaymentProviderPluginRegistry pluginRegistry,
@@ -232,13 +231,10 @@ public class PaymentProcessor extends ProcessorBase {
                     }
 
                     final boolean isAccountAutoPayOff = isAccountAutoPayOff(account.getId());
-                    final boolean isBadAccount = setUnsaneAccount_AUTO_PAY_OFFWithAccountLock(account.getId(), isAccountAutoPayOff, context, isInstantPayment);
-                    if (isBadAccount && isInstantPayment) {
-                        throw new PaymentApiException(ErrorCode.PAYMENT_BAD_ACCOUNT, account.getId());
-                    }
+                    setUnsaneAccount_AUTO_PAY_OFFWithAccountLock(account.getId(), paymentMethodId, isAccountAutoPayOff, context, isInstantPayment);
 
                     final BigDecimal requestedAmount = getAndValidatePaymentAmount(invoice, inputAmount, isInstantPayment);
-                    if (isAccountAutoPayOff) {
+                    if (!isInstantPayment && isAccountAutoPayOff) {
                         return processNewPaymentForAutoPayOffWithAccountLocked(paymentMethodId, account, invoice, requestedAmount, context);
                     } else {
                         return processNewPaymentWithAccountLocked(paymentMethodId, plugin, account, invoice, requestedAmount, isInstantPayment, context);
@@ -260,40 +256,28 @@ public class PaymentProcessor extends ProcessorBase {
     }
 
 
-    private boolean setUnsaneAccount_AUTO_PAY_OFFWithAccountLock(final UUID accountId, final boolean isAccountAutoPayOff, final CallContext context, final boolean isInstantPayment)
+
+
+
+    private void setUnsaneAccount_AUTO_PAY_OFFWithAccountLock(final UUID accountId, final UUID paymentMethodId, final boolean isAccountAutoPayOff, final CallContext context, final boolean isInstantPayment)
     throws PaymentApiException  {
-        final List<PaymentModelDao> payments =  paymentDao.getPaymentsForAccount(accountId);
 
-        final Collection<PaymentModelDao> badPayments = Collections2.filter(payments, new Predicate<PaymentModelDao>() {
+        final PaymentModelDao lastPaymentForPaymentMethod = paymentDao.getLastPaymentForPaymentMethod(accountId, paymentMethodId);
+        final boolean isLastPaymentForPaymentMethodBad = lastPaymentForPaymentMethod != null &&
+        (lastPaymentForPaymentMethod.getPaymentStatus() == PaymentStatus.PLUGIN_FAILURE_ABORTED ||
+                lastPaymentForPaymentMethod.getPaymentStatus() == PaymentStatus.UNKNOWN);
 
-            @Override
-            public boolean apply(PaymentModelDao input) {
-                return (input.getPaymentStatus() != PaymentStatus.SUCCESS &&
-                        input.getPaymentStatus() != PaymentStatus.PAYMENT_FAILURE &&
-                        input.getPaymentStatus() != PaymentStatus.AUTO_PAY_OFF);
+
+        if (isLastPaymentForPaymentMethodBad &&
+                !isInstantPayment &&
+                !isAccountAutoPayOff) {
+            log.warn(String.format("Setting account %s into AUTO_PAY_OFF because of bad payment %s", accountId, lastPaymentForPaymentMethod.getId()));
+            try {
+                tagUserApi.addTag(accountId, ObjectType.ACCOUNT, ControlTagType.AUTO_PAY_OFF.getId(), context);
+            } catch (TagApiException e) {
+                log.error("Failed to add AUTO_PAY_OFF on account " + accountId, e);
+                throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, "Failed to add AUTO_PAY_OFF on account " + accountId);
             }
-        });
-
-        if (badPayments.size() > 0) {
-            if (!isInstantPayment && !isAccountAutoPayOff) {
-                JOINER.join(Collections2.transform(badPayments, new Function<PaymentModelDao, String>() {
-
-                    @Override
-                    public String apply(PaymentModelDao input) {
-                        return String.format("%s [%s]", input.getId(), input.getPaymentStatus());
-                    }
-                }));
-                log.warn(String.format("Setting account %s into AUTO_PAY_OFF because of bad payments : %s", accountId, JOINER.toString()));
-                try {
-                    tagUserApi.addTag(accountId, ObjectType.ACCOUNT, ControlTagType.AUTO_PAY_OFF.getId(), context);
-                } catch (TagApiException e) {
-                    log.error("Failed to add AUTO_PAY_OFF on account " + accountId, e);
-                    throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, "Failed to add AUTO_PAY_OFF on account " + accountId);
-                }
-            }
-            return true;
-        } else {
-            return false;
         }
     }
 
@@ -321,7 +305,7 @@ public class PaymentProcessor extends ProcessorBase {
     }
 
     public void retryPluginFailure(final UUID paymentId) {
-        retryFailedPaymentInternal(paymentId, PaymentStatus.PLUGIN_FAILURE, PaymentStatus.TIMEDOUT);
+        retryFailedPaymentInternal(paymentId, PaymentStatus.PLUGIN_FAILURE);
     }
 
     public void retryFailedPayment(final UUID paymentId) {

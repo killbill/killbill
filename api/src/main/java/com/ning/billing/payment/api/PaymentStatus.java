@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -30,9 +30,5 @@ public enum PaymentStatus {
     /* Exception from plugin, state is unknown and needs to be retried */
     PLUGIN_FAILURE,
     /* Exception from plugin, we already retried a maximum of time */
-    PLUGIN_FAILURE_ABORTED,
-    /* PaymentAttenmpt timedout; When TimedoutPaymentRetry kicks in, it check moves the state to TIMEDOUT if this is still in UNKNWON state */
-    TIMEDOUT,
-    /* Status for Payment and PaymentAttempt all TimedoutPaymentRetry failed */
-    TIMEDOUT_ABORTED,
+    PLUGIN_FAILURE_ABORTED
 }

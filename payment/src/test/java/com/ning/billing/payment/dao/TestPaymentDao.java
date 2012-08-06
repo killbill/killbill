@@ -230,6 +230,19 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         final PaymentAttemptModelDao firstAttempt = new PaymentAttemptModelDao(accountId, invoiceId, payment.getId(), clock.getUTCNow(), amount);
         PaymentModelDao savedPayment = paymentDao.insertPaymentWithAttempt(payment, firstAttempt, context);
 
+
+        final PaymentModelDao lastPayment = paymentDao.getLastPaymentForPaymentMethod(accountId, paymentMethodId);
+        assertNotNull(lastPayment);
+        assertEquals(lastPayment.getId(), payment.getId());
+        assertEquals(lastPayment.getAccountId(), accountId);
+        assertEquals(lastPayment.getInvoiceId(), invoiceId);
+        assertEquals(lastPayment.getPaymentMethodId(), paymentMethodId);
+        assertEquals(lastPayment.getAmount().compareTo(amount), 0);
+        assertEquals(lastPayment.getCurrency(), currency);
+        assertEquals(lastPayment.getEffectiveDate().compareTo(effectiveDate), 0);
+        assertEquals(lastPayment.getPaymentStatus(), PaymentStatus.UNKNOWN);
+
+
         final BigDecimal newAmount = new BigDecimal(15.23).setScale(2, RoundingMode.HALF_EVEN);
         final PaymentAttemptModelDao secondAttempt = new PaymentAttemptModelDao(accountId, invoiceId, payment.getId(), clock.getUTCNow(), newAmount);
         paymentDao.insertNewAttemptForPayment(payment.getId(), secondAttempt, context);

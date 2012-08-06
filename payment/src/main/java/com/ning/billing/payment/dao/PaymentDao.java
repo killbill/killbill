@@ -38,6 +38,8 @@ public interface PaymentDao {
 
     public List<PaymentModelDao> getPaymentsForAccount(final UUID accountId);
 
+    public PaymentModelDao getLastPaymentForPaymentMethod(final UUID accountId, final UUID paymentMethodId);
+
     public PaymentModelDao getPayment(final UUID paymentId);
 
     public List<PaymentAttemptModelDao> getAttemptsForPayment(final UUID paymentId);
