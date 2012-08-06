@@ -196,4 +196,10 @@ public class MockPaymentDao implements PaymentDao {
     public List<RefundModelDao> getRefundsForAccount(UUID accountId) {
         return Collections.emptyList();
     }
+
+    @Override
+    public PaymentModelDao getLastPaymentForPaymentMethod(UUID accountId,
+            UUID paymentMethodId) {
+        return null;
+    }
 }

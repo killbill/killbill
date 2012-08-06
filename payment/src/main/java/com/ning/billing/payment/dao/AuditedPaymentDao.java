@@ -372,6 +372,11 @@ public class AuditedPaymentDao implements PaymentDao {
     }
 
     @Override
+    public PaymentModelDao getLastPaymentForPaymentMethod(final UUID accountId, final UUID paymentMethodId) {
+        return paymentSqlDao.getLastPaymentForAccountAndPaymentMethod(accountId.toString(), paymentMethodId.toString());
+    }
+
+    @Override
     public PaymentModelDao getPayment(final UUID paymentId) {
         return paymentSqlDao.getPayment(paymentId.toString());
     }
@@ -385,4 +390,5 @@ public class AuditedPaymentDao implements PaymentDao {
     public List<PaymentAttemptModelDao> getAttemptsForPayment(final UUID paymentId) {
         return paymentAttemptSqlDao.getPaymentAttempts(paymentId.toString());
     }
+
 }

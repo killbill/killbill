@@ -29,6 +29,14 @@ getPayment() ::= <<
     WHERE id = :id;
 >>
 
+getLastPaymentForAccountAndPaymentMethod() ::= <<
+    SELECT <paymentFields()>
+    , record_id as payment_number
+      FROM payments
+    WHERE account_id = :accountId AND payment_method_id = :paymentMethodId
+    ORDER BY effective_date desc limit 1;
+>> 
+
 getPaymentsForInvoice() ::= <<
     SELECT <paymentFields()>
     , record_id as payment_number

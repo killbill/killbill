@@ -65,6 +65,9 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, UpdatableEn
     PaymentModelDao getPayment(@Bind("id") final String paymentId);
 
     @SqlQuery
+    PaymentModelDao getLastPaymentForAccountAndPaymentMethod(@Bind("accountId") final String accountId, @Bind("paymentMethodId") final String paymentMethodId);
+
+    @SqlQuery
     List<PaymentModelDao> getPaymentsForInvoice(@Bind("invoiceId") final String invoiceId);
 
     @SqlQuery
