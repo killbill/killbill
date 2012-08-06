@@ -276,6 +276,7 @@ public class TestAnalyticsService extends AnalyticsTestSuiteWithEmbeddedDB {
         // Test subscriptions integration - this is just to exercise the code. It's hard to test the actual subscriptions
         // as we would need to mock a bunch of APIs (see integration tests in Beatrix instead)
         bus.post(transition);
+        Thread.sleep(5000);
 
         // Test invoice integration - the account creation notification has triggered a BAC update
         Assert.assertEquals(accountSqlDao.getAccountByKey(ACCOUNT_KEY).getTotalInvoiceBalance().compareTo(INVOICE_AMOUNT), 1);
