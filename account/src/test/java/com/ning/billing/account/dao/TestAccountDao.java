@@ -321,6 +321,37 @@ public class TestAccountDao extends AccountDaoTestBase {
     }
 
     @Test(groups = "slow")
+    public void testShouldBeAbleToHandleOtherBCDClass() throws Exception {
+        final Account account = createTestAccount();
+        accountDao.create(account, context);
+
+        final MutableAccountData otherAccount = account.toMutableAccountData();
+        otherAccount.setAddress1(UUID.randomUUID().toString());
+        otherAccount.setEmail(UUID.randomUUID().toString());
+        // Same BCD, but not .equals method
+        otherAccount.setBillCycleDay(new BillCycleDay() {
+            @Override
+            public int getDayOfMonthUTC() {
+                return account.getBillCycleDay().getDayOfMonthUTC();
+            }
+
+            @Override
+            public int getDayOfMonthLocal() {
+                return account.getBillCycleDay().getDayOfMonthLocal();
+            }
+        });
+
+        final DefaultAccount newAccount = new DefaultAccount(account.getId(), otherAccount);
+        accountDao.update(newAccount, context);
+
+        final Account newFetchedAccount = accountDao.getById(account.getId());
+        Assert.assertEquals(newFetchedAccount.getAddress1(), newAccount.getAddress1());
+        Assert.assertEquals(newFetchedAccount.getEmail(), newAccount.getEmail());
+        // Same BCD
+        Assert.assertEquals(newFetchedAccount.getBillCycleDay(), account.getBillCycleDay());
+    }
+
+    @Test(groups = "slow")
     public void testAccountEmail() {
         List<AccountEmail> emails = new ArrayList<AccountEmail>();
 

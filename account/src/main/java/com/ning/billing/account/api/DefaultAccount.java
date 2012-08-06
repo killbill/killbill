@@ -221,11 +221,15 @@ public class DefaultAccount extends EntityBase implements Account {
             throw new IllegalArgumentException(String.format("Killbill doesn't support updating the account external key yet: this=%s, delegate=%s",
                                                              externalKey, delegate.getExternalKey()));
         }
+
         if (currency != null ? !currency.equals(delegate.getCurrency()) : delegate.getCurrency() != null) {
             throw new IllegalArgumentException(String.format("Killbill doesn't support updating the account currency yet: this=%s, delegate=%s",
                                                              currency, delegate.getCurrency()));
         }
-        if (billCycleDay != null ? !billCycleDay.equals(delegate.getBillCycleDay()) : delegate.getBillCycleDay() != null) {
+
+        // We can't just use .equals here as the BillCycleDay class might not have implemented it
+        if (billCycleDay != null ? !(billCycleDay.getDayOfMonthUTC() == delegate.getBillCycleDay().getDayOfMonthUTC() &&
+                                     billCycleDay.getDayOfMonthLocal() == delegate.getBillCycleDay().getDayOfMonthLocal()) : delegate.getBillCycleDay() != null) {
             throw new IllegalArgumentException(String.format("Killbill doesn't support updating the account BCD yet: this=%s, delegate=%s",
                                                              billCycleDay, delegate.getBillCycleDay()));
         }
