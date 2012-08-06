@@ -92,11 +92,14 @@ public class TestIntegration extends TestIntegrationBase {
         //
         busHandler.pushExpectedEvents(NextEvent.CANCEL, NextEvent.CANCEL, NextEvent.INVOICE);
         bpSubscription.cancel(clock.getUTCNow(), false, context);
+
+        //Thread.sleep(10000000);
+
         assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
 
         final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId());
-        assertEquals(invoices.size(), 3);
+        assertEquals(invoices.size(), 2);
         // The first invoice is for the trial BP
         assertEquals(invoices.get(0).getNumberOfItems(), 1);
         assertEquals(invoices.get(0).getInvoiceItems().get(0).getStartDate().compareTo(today), 0);
@@ -120,8 +123,6 @@ public class TestIntegration extends TestIntegrationBase {
                 assertEquals(item.getAmount().compareTo(new BigDecimal("399.9500")), 0);
             }
         }
-        // Null invoice
-        assertEquals(invoices.get(2).getNumberOfItems(), 0);
     }
 
     @Test(groups = "slow")
@@ -520,9 +521,11 @@ public class TestIntegration extends TestIntegrationBase {
         //waitForDebug();
 
         assertTrue(busHandler.isCompleted(DELAY));
-
         startDate = chargeThroughDate;
-        DateTime endDate = chargeThroughDate.plusMonths(1);
+
+        // Resync latest with real CTD so test does not drift
+        DateTime realChargeThroughDate = entitlementUserApi.getSubscriptionFromId(subscription.getId()).getChargedThroughDate();
+        DateTime endDate = realChargeThroughDate;
         price = subscription.getCurrentPhase().getRecurringPrice().getPrice(Currency.USD);
         invoiceItemCount += 1;
         verifyTestResult(accountId, subscription.getId(), startDate, endDate, price, endDate, invoiceItemCount);
@@ -558,7 +561,8 @@ public class TestIntegration extends TestIntegrationBase {
 
         // MOVE AFTER CANCEL DATE AND EXPECT EVENT : NextEvent.CANCEL
         busHandler.pushExpectedEvent(NextEvent.CANCEL);
-        final Interval it = new Interval(clock.getUTCNow(), endDate);
+        realChargeThroughDate = entitlementUserApi.getSubscriptionFromId(subscription.getId()).getChargedThroughDate();
+        final Interval it = new Interval(clock.getUTCNow(), realChargeThroughDate.plusSeconds(5));
         clock.addDeltaFromReality(it.toDurationMillis());
         assertTrue(busHandler.isCompleted(DELAY));
 

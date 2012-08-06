@@ -35,12 +35,12 @@ public class TestCreditJson extends JaxrsTestSuite {
     @Test(groups = "fast")
     public void testJson() throws Exception {
         final BigDecimal creditAmount = BigDecimal.TEN;
-        final UUID invoiceId = UUID.randomUUID();
+        final String invoiceId = UUID.randomUUID().toString();
         final String invoiceNumber = UUID.randomUUID().toString();
         final DateTime requestedDate = clock.getUTCNow();
         final DateTime effectiveDate = clock.getUTCNow();
         final String reason = UUID.randomUUID().toString();
-        final UUID accountId = UUID.randomUUID();
+        final String accountId = UUID.randomUUID().toString();
         final List<AuditLogJson> auditLogs = createAuditLogsJson();
         final CreditJson creditJson = new CreditJson(creditAmount, invoiceId, invoiceNumber, requestedDate, effectiveDate,
                                                      reason, accountId, auditLogs);

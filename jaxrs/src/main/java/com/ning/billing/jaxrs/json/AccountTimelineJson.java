@@ -125,7 +125,8 @@ public class AccountTimelineJson {
             final List<RefundJson> refunds = new ArrayList<RefundJson>();
             for (final Refund refund : refundsByPayment.get(payment.getId())) {
                 final List<AuditLog> auditLogs = refundsAuditLogs.get(refund.getId());
-                refunds.add(new RefundJson(refund, auditLogs));
+                // TODO add adjusted invoice items?
+                refunds.add(new RefundJson(refund, null, auditLogs));
             }
 
             final List<ChargebackJson> chargebacks = new ArrayList<ChargebackJson>();

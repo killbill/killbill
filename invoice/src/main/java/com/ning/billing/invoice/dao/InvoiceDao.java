@@ -18,6 +18,7 @@ package com.ning.billing.invoice.dao;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -34,7 +35,7 @@ import com.ning.billing.util.callcontext.CallContext;
 
 public interface InvoiceDao {
 
-    void create(final Invoice invoice, final int billCycleDayUTC, final CallContext context);
+    void create(final Invoice invoice, final int billCycleDayUTC, final boolean isRealInvoice, final CallContext context);
 
     Invoice getById(final UUID id);
 
@@ -70,7 +71,21 @@ public interface InvoiceDao {
 
     InvoicePayment postChargeback(final UUID invoicePaymentId, final BigDecimal amount, final CallContext context) throws InvoiceApiException;
 
-    InvoicePayment createRefund(UUID paymentId, BigDecimal amount, boolean isInvoiceAdjusted, UUID paymentCookieId, CallContext context) throws InvoiceApiException;
+    /**
+     * Create a refund.
+     *
+     *
+     * @param paymentId                 payment associated with that refund
+     * @param amount                    amount to refund
+     * @param isInvoiceAdjusted         whether the refund should trigger an invoice or invoice item adjustment
+     * @param invoiceItemIdsWithAmounts invoice item ids and associated amounts to adjust
+     * @param paymentCookieId           payment cookie id
+     * @param context                   the call context
+     * @return the created invoice payment object associated with this refund
+     * @throws InvoiceApiException
+     */
+    InvoicePayment createRefund(final UUID paymentId, final BigDecimal amount, final boolean isInvoiceAdjusted, final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts,
+                                final UUID paymentCookieId, final CallContext context) throws InvoiceApiException;
 
     BigDecimal getRemainingAmountPaid(final UUID invoicePaymentId);
 

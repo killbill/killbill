@@ -203,6 +203,7 @@ public enum ErrorCode {
     CHARGE_BACK_DOES_NOT_EXIST(4004, "Could not find chargeback for id %s."),
     INVOICE_PAYMENT_BY_ATTEMPT_NOT_FOUND(4905, "No invoice payment could be found for paymentAttempt id %s."),
     REFUND_AMOUNT_TOO_HIGH(4906, "Tried to refund %s of a %s payment."),
+    REFUND_AMOUNT_DONT_MATCH_ITEMS_TO_ADJUST(4907, "You can't specify a refund amount of %s that doesn't match the invoice items amount of %s."),
 
     /*
      *

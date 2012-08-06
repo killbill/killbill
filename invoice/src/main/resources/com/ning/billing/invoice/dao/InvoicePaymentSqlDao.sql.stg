@@ -117,14 +117,13 @@ getChargeBacksByAccountId() ::= <<
     SELECT <invoicePaymentFields("ip.")>
     FROM invoice_payments ip
     INNER JOIN invoices i ON i.id = ip.invoice_id
-    WHERE i.account_id = :accountId
-    AND linked_invoice_payment_id IS NOT NULL;
+    WHERE ip.type = 'CHARGED_BACK' AND i.account_id = :accountId;
 >>
 
 getChargebacksByPaymentId() ::= <<
     SELECT <invoicePaymentFields()>
     FROM invoice_payments
-    WHERE linked_invoice_payment_id IN
+    WHERE type = 'CHARGED_BACK' AND linked_invoice_payment_id IN
         (SELECT id FROM invoice_payments WHERE payment_id = :paymentId);
 >>
 ;

@@ -110,12 +110,12 @@ public class TestInvoiceJsonWithBundleKeys extends JaxrsTestSuite {
 
     private CreditJson createCreditJson() {
         final BigDecimal creditAmount = BigDecimal.TEN;
-        final UUID invoiceId = UUID.randomUUID();
+        final String invoiceId = UUID.randomUUID().toString();
         final String invoiceNumber = UUID.randomUUID().toString();
         final DateTime requestedDate = clock.getUTCNow();
         final DateTime effectiveDate = clock.getUTCNow();
         final String reason = UUID.randomUUID().toString();
-        final UUID accountId = UUID.randomUUID();
+        final String accountId = UUID.randomUUID().toString();
         return new CreditJson(creditAmount, invoiceId, invoiceNumber, requestedDate, effectiveDate, reason, accountId, null);
     }
 }

@@ -67,6 +67,9 @@ import static org.testng.Assert.assertTrue;
 
 @Guice(modules = BeatrixModule.class)
 public class TestAnalytics extends TestIntegrationBase {
+
+    private Account account;
+
     private Plan subscriptionPlan;
 
     @BeforeMethod(groups = "slow")
@@ -119,6 +122,11 @@ public class TestAnalytics extends TestIntegrationBase {
         overdueWrapperFactory.setOverdueConfig(config);
 
         busService.getBus().register(analyticsListener);
+
+        final DateTime initialDate = new DateTime(2012, 8, 1, 0, 15, 42, 0, testTimeZone);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        account = verifyAccountCreation(initialDate.plusDays(30).getDayOfMonth());
     }
 
     @AfterMethod(groups = "slow")
@@ -130,8 +138,6 @@ public class TestAnalytics extends TestIntegrationBase {
 
     @Test(groups = "slow")
     public void testCreateAndCancelSubscription() throws Exception {
-        // Create an account
-        final Account account = verifyAccountCreation();
 
         // Create a bundle
         final SubscriptionBundle bundle = verifyFirstBundle(account);
@@ -140,10 +146,10 @@ public class TestAnalytics extends TestIntegrationBase {
         Subscription subscription = verifyFirstSubscription(account, bundle);
 
         // Move after trial
-        clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS);
         busHandler.pushExpectedEvent(TestApiListener.NextEvent.PHASE);
         busHandler.pushExpectedEvent(TestApiListener.NextEvent.INVOICE);
         busHandler.pushExpectedEvent(TestApiListener.NextEvent.PAYMENT);
+        clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS);
         Assert.assertTrue(busHandler.isCompleted(DELAY));
 
         // Check BST - nothing should have changed
@@ -169,8 +175,6 @@ public class TestAnalytics extends TestIntegrationBase {
 
     @Test(groups = "slow")
     public void testCreateAndUpdateSubscription() throws Exception {
-        // Create an account
-        final Account account = verifyAccountCreation();
 
         // Update some fields
         verifyAccountUpdate(account);
@@ -190,10 +194,8 @@ public class TestAnalytics extends TestIntegrationBase {
 
     @Test(groups = "slow")
     public void testOverdue() throws Exception {
-        paymentPlugin.makeAllInvoicesFailWithError(true);
 
-        // Create an account
-        final Account account = verifyAccountCreation();
+        paymentPlugin.makeAllInvoicesFailWithError(true);
 
         // Create a bundle
         final SubscriptionBundle bundle = verifyFirstBundle(account);
@@ -314,8 +316,9 @@ public class TestAnalytics extends TestIntegrationBase {
         Assert.assertEquals(analyticsUserApi.getOverdueStatusesForBundle(bundle.getKey()).get(2).getAccountKey(), account.getExternalKey());
     }
 
-    private Account verifyAccountCreation() throws Exception {
-        final AccountData accountData = getAccountData(1);
+    private Account verifyAccountCreation(int billCycleDay) throws Exception {
+
+        final AccountData accountData = getAccountData(billCycleDay);
 
         // Verify BAC is empty
         Assert.assertNull(analyticsUserApi.getAccountByKey(accountData.getExternalKey()));

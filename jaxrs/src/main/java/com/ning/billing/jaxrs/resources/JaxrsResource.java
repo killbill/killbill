@@ -51,6 +51,8 @@ public interface JaxrsResource {
 
     public static final String QUERY_ACCOUNT_ID = "accountId";
 
+    public static final String QUERY_INVOICE_WITH_ITEMS = "withItems";
+
     public static final String QUERY_PAYMENT_EXTERNAL = "externalPayment";
     public static final String QUERY_PAYMENT_LAST4_CC = "last4CC";
     public static final String QUERY_PAYMENT_NAME_ON_CC = "nameOnCC";

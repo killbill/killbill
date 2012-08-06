@@ -85,13 +85,13 @@ public class CreditResource extends JaxRsResourceBase {
                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                  @HeaderParam(HDR_REASON) final String reason,
                                  @HeaderParam(HDR_COMMENT) final String comment) throws AccountApiException, InvoiceApiException {
-        final Account account = accountUserApi.getAccountById(json.getAccountId());
+        final Account account = accountUserApi.getAccountById(UUID.fromString(json.getAccountId()));
         final LocalDate effectiveDate = json.getEffectiveDate().toDateTime(account.getTimeZone()).toLocalDate();
 
         final InvoiceItem credit;
         if (json.getInvoiceId() != null) {
             // Apply an invoice level credit
-            credit = invoiceUserApi.insertCreditForInvoice(account.getId(), json.getInvoiceId(), json.getCreditAmount(),
+            credit = invoiceUserApi.insertCreditForInvoice(account.getId(), UUID.fromString(json.getInvoiceId()), json.getCreditAmount(),
                                                            effectiveDate, account.getCurrency(), context.createContext(createdBy, reason, comment));
         } else {
             // Apply a account level credit

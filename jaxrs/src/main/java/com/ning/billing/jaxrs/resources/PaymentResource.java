@@ -16,8 +16,11 @@
 
 package com.ning.billing.jaxrs.resources;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.ws.rs.Consumes;
@@ -37,6 +40,7 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
+import com.ning.billing.jaxrs.json.InvoiceItemJsonSimple;
 import com.ning.billing.jaxrs.json.RefundJson;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
@@ -88,7 +92,8 @@ public class PaymentResource extends JaxRsResourceBase {
         final List<RefundJson> result = new ArrayList<RefundJson>(Collections2.transform(refunds, new Function<Refund, RefundJson>() {
             @Override
             public RefundJson apply(final Refund input) {
-                return new RefundJson(input);
+                // TODO Return adjusted items and audits
+                return new RefundJson(input, null, null);
             }
         }));
 
@@ -109,7 +114,22 @@ public class PaymentResource extends JaxRsResourceBase {
         final Payment payment = paymentApi.getPayment(paymentUuid);
         final Account account = accountApi.getAccountById(payment.getAccountId());
 
-        final Refund result = paymentApi.createRefund(account, paymentUuid, json.getRefundAmount(), json.isAdjusted(), context.createContext(createdBy, reason, comment));
+        final Refund result;
+        if (json.isAdjusted()) {
+            if (json.getAdjustments() != null && json.getAdjustments().size() > 0) {
+                final Map<UUID, BigDecimal> adjustments = new HashMap<UUID, BigDecimal>();
+                for (final InvoiceItemJsonSimple item : json.getAdjustments()) {
+                    adjustments.put(UUID.fromString(item.getInvoiceItemId()), item.getAmount());
+                }
+                result = paymentApi.createRefundWithItemsAdjustments(account, paymentUuid, adjustments, context.createContext(createdBy, reason, comment));
+            } else {
+                // Invoice adjustment
+                result = paymentApi.createRefundWithAdjustment(account, paymentUuid, json.getRefundAmount(), context.createContext(createdBy, reason, comment));
+            }
+        } else {
+            // Refund without adjustment
+            result = paymentApi.createRefund(account, paymentUuid, json.getRefundAmount(), context.createContext(createdBy, reason, comment));
+        }
 
         return uriBuilder.buildResponse(RefundResource.class, "getRefund", result.getId(), uriInfo.getBaseUri().toString());
     }

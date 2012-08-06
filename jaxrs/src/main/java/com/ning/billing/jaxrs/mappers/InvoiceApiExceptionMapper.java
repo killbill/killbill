@@ -58,6 +58,10 @@ public class InvoiceApiExceptionMapper extends ExceptionMapperBase implements Ex
             return buildNotFoundResponse(exception, uriInfo);
         } else if (exception.getCode() == ErrorCode.INVOICE_TARGET_DATE_TOO_FAR_IN_THE_FUTURE.getCode()) {
             return buildBadRequestResponse(exception, uriInfo);
+        } else if (exception.getCode() == ErrorCode.CREDIT_AMOUNT_INVALID.getCode()) {
+            return buildBadRequestResponse(exception, uriInfo);
+        } else if (exception.getCode() == ErrorCode.INVOICE_ITEM_ADJUSTMENT_AMOUNT_INVALID.getCode()) {
+            return buildBadRequestResponse(exception, uriInfo);
         } else {
             return buildBadRequestResponse(exception, uriInfo);
         }

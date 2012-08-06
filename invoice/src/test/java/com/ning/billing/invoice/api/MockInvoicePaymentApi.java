@@ -19,6 +19,7 @@ package com.ning.billing.invoice.api;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -167,8 +168,9 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi {
     }
 
     @Override
-    public InvoicePayment createRefund(UUID paymentId,
-            BigDecimal amount, boolean isInvoiceAdjusted, UUID paymentCookieId, CallContext context)
+    public InvoicePayment createRefund(final UUID paymentId, final BigDecimal amount, final boolean isInvoiceAdjusted,
+                                       final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts, final UUID paymentCookieId,
+                                       final CallContext context)
             throws InvoiceApiException {
         return null;
     }

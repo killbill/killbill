@@ -25,6 +25,7 @@ import java.util.Map;
 import javax.ws.rs.core.Response.Status;
 
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -125,7 +126,7 @@ public class TestBundle extends TestJaxrsBase {
 
         final SubscriptionJsonNoEvents subscriptionJson = createSubscription(bundleJson.getBundleId(), productName, ProductCategory.BASE.toString(), term.toString(), true);
         Assert.assertNotNull(subscriptionJson.getChargedThroughDate());
-        Assert.assertEquals(subscriptionJson.getChargedThroughDate().toString(), "2012-04-25T00:00:00.000Z");
+        Assert.assertEquals(subscriptionJson.getChargedThroughDate().toLocalDate(), new LocalDate("2012-04-25"));
 
         final AccountJson newAccount = createAccountWithDefaultPaymentMethod("dst", "dst", "dst@yahoo.com");
 

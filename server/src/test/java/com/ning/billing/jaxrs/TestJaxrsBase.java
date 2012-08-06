@@ -13,12 +13,12 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.jaxrs;
 
-import javax.annotation.Nullable;
-import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.math.BigDecimal;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.EventListener;
@@ -30,30 +30,30 @@ import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import javax.annotation.Nullable;
+import javax.ws.rs.core.Response.Status;
+
 import org.eclipse.jetty.servlet.FilterHolder;
+import org.joda.time.DateTime;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.joda.JodaModule;
-import com.google.inject.Module;
 import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
-import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.account.glue.AccountModule;
 import com.ning.billing.analytics.setup.AnalyticsModule;
 import com.ning.billing.api.TestApiListener;
 import com.ning.billing.beatrix.glue.BeatrixModule;
-import com.ning.billing.beatrix.integration.TestIntegration;
+import com.ning.billing.catalog.api.BillingPeriod;
+import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.PriceListSet;
+import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.config.PaymentConfig;
 import com.ning.billing.dbi.DBIProvider;
@@ -66,9 +66,14 @@ import com.ning.billing.invoice.notification.NullInvoiceNotifier;
 import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.BillCycleDayJson;
 import com.ning.billing.jaxrs.json.BundleJsonNoSubscriptions;
+import com.ning.billing.jaxrs.json.InvoiceItemJsonSimple;
+import com.ning.billing.jaxrs.json.InvoiceJsonSimple;
+import com.ning.billing.jaxrs.json.InvoiceJsonWithItems;
+import com.ning.billing.jaxrs.json.PaymentJsonSimple;
 import com.ning.billing.jaxrs.json.PaymentMethodJson;
 import com.ning.billing.jaxrs.json.PaymentMethodJson.PaymentMethodPluginDetailJson;
 import com.ning.billing.jaxrs.json.PaymentMethodJson.PaymentMethodProperties;
+import com.ning.billing.jaxrs.json.RefundJson;
 import com.ning.billing.jaxrs.json.SubscriptionJsonNoEvents;
 import com.ning.billing.jaxrs.resources.JaxrsResource;
 import com.ning.billing.junction.glue.DefaultJunctionModule;
@@ -88,7 +93,6 @@ import com.ning.billing.util.glue.CustomFieldModule;
 import com.ning.billing.util.glue.GlobalLockerModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.TagStoreModule;
-import com.ning.billing.util.io.IOUtils;
 import com.ning.http.client.AsyncCompletionHandler;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
@@ -98,9 +102,19 @@ import com.ning.http.client.Response;
 import com.ning.jetty.core.CoreConfig;
 import com.ning.jetty.core.server.HttpServer;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.joda.JodaModule;
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Module;
+
+import static com.ning.billing.jaxrs.resources.JaxrsResource.QUERY_PAYMENT_METHOD_PLUGIN_INFO;
+import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
 public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
+
     protected static final String PLUGIN_NAME = "noop";
 
     // STEPH
@@ -140,6 +154,7 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
     }
 
     public static class TestKillbillGuiceListener extends KillbillGuiceListener {
+
         private final MysqlTestingHelper helper;
         private final Clock clock;
 
@@ -169,6 +184,7 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
     }
 
     public static class InvoiceModuleWithMockSender extends DefaultInvoiceModule {
+
         @Override
         protected void installInvoiceNotifier() {
             bind(InvoiceNotifier.class).to(NullInvoiceNotifier.class).asEagerSingleton();
@@ -176,6 +192,7 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
     }
 
     public static class TestKillbillServerModule extends KillbillServerModule {
+
         private final MysqlTestingHelper helper;
         private final Clock clock;
 
@@ -191,6 +208,7 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
         }
 
         private static final class PaymentMockModule extends PaymentModule {
+
             @Override
             protected void installPaymentProviderPlugins(final PaymentConfig config) {
                 install(new MockPaymentProviderPluginModule(PLUGIN_NAME));
@@ -311,7 +329,6 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
         return properties;
     }
 
-
     protected List<PaymentMethodProperties> getPaymentMethodPaypalProperties() {
         final List<PaymentMethodProperties> properties = new ArrayList<PaymentMethodJson.PaymentMethodProperties>();
         properties.add(new PaymentMethodProperties("type", "CreditCard", false));
@@ -320,11 +337,14 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
         return properties;
     }
 
-
     protected PaymentMethodJson getPaymentMethodJson(final String accountId, final List<PaymentMethodProperties> properties) {
         final PaymentMethodPluginDetailJson info = new PaymentMethodPluginDetailJson(null, properties);
         return new PaymentMethodJson(null, accountId, true, PLUGIN_NAME, info);
     }
+
+    //
+    // ACCOUNT UTILITIES
+    //
 
     protected AccountJson createAccountWithDefaultPaymentMethod(final String name, final String key, final String email) throws Exception {
 
@@ -338,7 +358,6 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
 
         Response response = doPost(uri, baseJson, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
-
 
         queryParams = new HashMap<String, String>();
         queryParams.put(JaxrsResource.QUERY_EXTERNAL_KEY, input.getExternalKey());
@@ -370,7 +389,6 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
         return objFromJson;
     }
 
-
     protected BundleJsonNoSubscriptions createBundle(final String accountId, final String key) throws Exception {
         final BundleJsonNoSubscriptions input = new BundleJsonNoSubscriptions(null, accountId, key, null, null);
         String baseJson = mapper.writeValueAsString(input);
@@ -395,7 +413,6 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
         final SubscriptionJsonNoEvents input = new SubscriptionJsonNoEvents(null, bundleId, null, productName, productCategory, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, null, null);
         String baseJson = mapper.writeValueAsString(input);
 
-
         final Map<String, String> queryParams = waitCompletion ? getQueryParamsForCallCompletion("5") : DEFAULT_EMPTY_QUERY;
         Response response = doPost(JaxrsResource.SUBSCRIPTIONS_PATH, baseJson, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
@@ -412,6 +429,273 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
         final SubscriptionJsonNoEvents objFromJson = mapper.readValue(baseJson, SubscriptionJsonNoEvents.class);
         Assert.assertTrue(objFromJson.equalsNoSubscriptionIdNoStartDateNoCTD(input));
         return objFromJson;
+    }
+
+    //
+    // INVOICE UTILITIES
+    //
+
+    protected AccountJson createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice() throws Exception {
+        final AccountJson accountJson = createAccountWithDefaultPaymentMethod("nohup", "shtergyhwF", "nohup@yahoo.com");
+        assertNotNull(accountJson);
+
+        // Add a bundle, subscription and move the clock to get the first invoice
+        final BundleJsonNoSubscriptions bundleJson = createBundle(accountJson.getAccountId(), "391193");
+        assertNotNull(bundleJson);
+        final SubscriptionJsonNoEvents subscriptionJson = createSubscription(bundleJson.getBundleId(), "Shotgun", ProductCategory.BASE.toString(), BillingPeriod.MONTHLY.toString(), true);
+        assertNotNull(subscriptionJson);
+        clock.addMonths(1);
+        crappyWaitForLackOfProperSynchonization();
+
+        return accountJson;
+    }
+
+    protected AccountJson createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice() throws Exception {
+        // Create an account with no payment method
+        final AccountJson accountJson = createAccount("eraahahildo", "sheqrgfhwe", "eraahahildo@yahoo.com");
+        assertNotNull(accountJson);
+
+        // Add a bundle, subscription and move the clock to get the first invoice
+        final BundleJsonNoSubscriptions bundleJson = createBundle(accountJson.getAccountId(), "317199");
+        assertNotNull(bundleJson);
+        final SubscriptionJsonNoEvents subscriptionJson = createSubscription(bundleJson.getBundleId(), "Shotgun", ProductCategory.BASE.toString(), BillingPeriod.MONTHLY.toString(), true);
+        assertNotNull(subscriptionJson);
+        clock.addMonths(1);
+        crappyWaitForLackOfProperSynchonization();
+
+        // No payment will be triggered as the account doesn't have a payment method
+
+        return accountJson;
+    }
+
+    protected InvoiceJsonSimple getInvoice(final String invoiceId) throws IOException {
+        return doGetInvoice(invoiceId, Boolean.FALSE, InvoiceJsonSimple.class);
+    }
+
+    protected InvoiceJsonWithItems getInvoiceWithItems(final String invoiceId) throws IOException {
+        return doGetInvoice(invoiceId, Boolean.TRUE, InvoiceJsonWithItems.class);
+    }
+
+    private <T> T doGetInvoice(final String invoiceId, final Boolean withItems, final Class<T> clazz) throws IOException {
+        final String uri = JaxrsResource.INVOICES_PATH + "/" + invoiceId;
+
+        final Map<String, String> queryParams = new HashMap<String, String>();
+        queryParams.put(JaxrsResource.QUERY_INVOICE_WITH_ITEMS, withItems.toString());
+
+        final Response response = doGet(uri, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+        final String baseJson = response.getResponseBody();
+
+        final T firstInvoiceJson = mapper.readValue(baseJson, clazz);
+        assertNotNull(firstInvoiceJson);
+
+        return firstInvoiceJson;
+    }
+
+    protected List<InvoiceJsonSimple> getInvoicesForAccount(final String accountId) throws IOException {
+        return doGetInvoicesForAccount(accountId, Boolean.FALSE, InvoiceJsonSimple.class);
+    }
+
+    protected List<InvoiceJsonWithItems> getInvoicesWithItemsForAccount(final String accountId) throws IOException {
+        return doGetInvoicesForAccount(accountId, Boolean.TRUE, InvoiceJsonWithItems.class);
+    }
+
+    private <T> List<T> doGetInvoicesForAccount(final String accountId, final Boolean withItems, final Class<T> clazz) throws IOException {
+        final String invoicesURI = JaxrsResource.INVOICES_PATH;
+
+        final Map<String, String> queryParams = new HashMap<String, String>();
+        queryParams.put(JaxrsResource.QUERY_ACCOUNT_ID, accountId);
+        queryParams.put(JaxrsResource.QUERY_INVOICE_WITH_ITEMS, withItems.toString());
+
+        final Response invoicesResponse = doGet(invoicesURI, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
+        assertEquals(invoicesResponse.getStatusCode(), Status.OK.getStatusCode());
+
+        final String invoicesBaseJson = invoicesResponse.getResponseBody();
+        final List<T> invoices = mapper.readValue(invoicesBaseJson, new TypeReference<List<T>>() {});
+        assertNotNull(invoices);
+
+        return invoices;
+    }
+
+    protected InvoiceJsonSimple createDryRunInvoice(final String accountId, final DateTime futureDate) throws IOException {
+        final String uri = JaxrsResource.INVOICES_PATH;
+
+        final Map<String, String> queryParams = new HashMap<String, String>();
+        queryParams.put(JaxrsResource.QUERY_ACCOUNT_ID, accountId);
+        queryParams.put(JaxrsResource.QUERY_TARGET_DATE, futureDate.toString());
+        queryParams.put(JaxrsResource.QUERY_DRY_RUN, "true");
+
+        final Response response = doPost(uri, null, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+
+        final String baseJson = response.getResponseBody();
+        final InvoiceJsonSimple futureInvoice = mapper.readValue(baseJson, InvoiceJsonSimple.class);
+        assertNotNull(futureInvoice);
+
+        return futureInvoice;
+    }
+
+    protected void createInvoice(final String accountId, final DateTime futureDate) throws IOException {
+        final String uri = JaxrsResource.INVOICES_PATH;
+
+        final Map<String, String> queryParams = new HashMap<String, String>();
+        queryParams.put(JaxrsResource.QUERY_ACCOUNT_ID, accountId);
+        queryParams.put(JaxrsResource.QUERY_TARGET_DATE, futureDate.toString());
+
+        final Response response = doPost(uri, null, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
+
+        final String location = response.getHeader("Location");
+        Assert.assertNotNull(location);
+    }
+
+    protected void adjustInvoiceItem(final String accountId, final String invoiceId, final String invoiceItemId,
+                                     @Nullable final DateTime requestedDate, @Nullable final BigDecimal amount, @Nullable final Currency currency) throws IOException {
+        final String uri = JaxrsResource.INVOICES_PATH + "/" + invoiceId;
+
+        final Map<String, String> queryParams = new HashMap<String, String>();
+        if (requestedDate != null) {
+            queryParams.put(JaxrsResource.QUERY_REQUESTED_DT, requestedDate.toDateTimeISO().toString());
+        }
+
+        final InvoiceItemJsonSimple adjustment = new InvoiceItemJsonSimple(invoiceItemId, null, accountId, null, null, null, null,
+                                                                           null, null, null, amount, currency, null);
+        final String adjustmentJson = mapper.writeValueAsString(adjustment);
+        final Response response = doPost(uri, adjustmentJson, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
+    }
+
+    //
+    // PAYMENT UTILITIES
+    //
+
+    protected PaymentMethodJson getPaymentMethod(final String paymentMethodId) throws IOException {
+        final String paymentMethodURI = JaxrsResource.PAYMENT_METHODS_PATH + "/" + paymentMethodId;
+        final Response paymentMethodResponse = doGet(paymentMethodURI, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        assertEquals(paymentMethodResponse.getStatusCode(), Status.OK.getStatusCode());
+
+        final PaymentMethodJson paymentMethodJson = mapper.readValue(paymentMethodResponse.getResponseBody(), PaymentMethodJson.class);
+        assertNotNull(paymentMethodJson);
+
+        return paymentMethodJson;
+    }
+
+    protected PaymentMethodJson getPaymentMethodWithPluginInfo(final String paymentMethodId) throws IOException {
+        final String paymentMethodURI = JaxrsResource.PAYMENT_METHODS_PATH + "/" + paymentMethodId;
+
+        final Map<String, String> queryPaymentMethods = new HashMap<String, String>();
+        queryPaymentMethods.put(QUERY_PAYMENT_METHOD_PLUGIN_INFO, "true");
+        final Response paymentMethodResponse = doGet(paymentMethodURI, queryPaymentMethods, DEFAULT_HTTP_TIMEOUT_SEC);
+        assertEquals(paymentMethodResponse.getStatusCode(), Status.OK.getStatusCode());
+
+        final PaymentMethodJson paymentMethodJson = mapper.readValue(paymentMethodResponse.getResponseBody(), PaymentMethodJson.class);
+        assertNotNull(paymentMethodJson);
+
+        return paymentMethodJson;
+    }
+
+    protected List<PaymentJsonSimple> getPaymentsForAccount(final String accountId) throws IOException {
+        final String paymentsURI = JaxrsResource.ACCOUNTS_PATH + "/" + accountId + "/" + JaxrsResource.PAYMENTS;
+        final Response paymentsResponse = doGet(paymentsURI, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        assertEquals(paymentsResponse.getStatusCode(), Status.OK.getStatusCode());
+        final String paymentsBaseJson = paymentsResponse.getResponseBody();
+
+        final List<PaymentJsonSimple> paymentJsonSimples = mapper.readValue(paymentsBaseJson, new TypeReference<List<PaymentJsonSimple>>() {});
+        assertNotNull(paymentJsonSimples);
+
+        return paymentJsonSimples;
+    }
+
+    protected List<PaymentJsonSimple> getPaymentsForInvoice(final String invoiceId) throws IOException {
+        final String uri = JaxrsResource.INVOICES_PATH + "/" + invoiceId + "/" + JaxrsResource.PAYMENTS;
+        final Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+
+        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+        final String baseJson = response.getResponseBody();
+        final List<PaymentJsonSimple> objFromJson = mapper.readValue(baseJson, new TypeReference<List<PaymentJsonSimple>>() {});
+        assertNotNull(objFromJson);
+
+        return objFromJson;
+    }
+
+    protected List<PaymentJsonSimple> createInstaPayment(final AccountJson accountJson, final InvoiceJsonSimple invoice) throws IOException {
+        final PaymentJsonSimple payment = new PaymentJsonSimple(invoice.getAmount(), BigDecimal.ZERO, accountJson.getAccountId(),
+                                                                invoice.getInvoiceId(), null, null, null, null, 0, null, null, null, null, null, null, null);
+        final String postJson = mapper.writeValueAsString(payment);
+
+        final String uri = JaxrsResource.INVOICES_PATH + "/" + invoice.getInvoiceId() + "/" + JaxrsResource.PAYMENTS;
+        doPost(uri, postJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+
+        return getPaymentsForInvoice(invoice.getInvoiceId());
+    }
+
+    protected List<PaymentJsonSimple> createExternalPayment(final AccountJson accountJson, final String invoiceId, final BigDecimal paidAmount) throws IOException {
+        final PaymentJsonSimple payment = new PaymentJsonSimple(paidAmount, BigDecimal.ZERO, accountJson.getAccountId(),
+                                                                invoiceId, null, null, null, null, 0,
+                                                                null, null, null, null, null, null, null);
+        final String postJson = mapper.writeValueAsString(payment);
+
+        final String paymentURI = JaxrsResource.INVOICES_PATH + "/" + invoiceId + "/" + JaxrsResource.PAYMENTS;
+        final Response paymentResponse = doPost(paymentURI, postJson, ImmutableMap.<String, String>of("externalPayment", "true"), DEFAULT_HTTP_TIMEOUT_SEC);
+        assertEquals(paymentResponse.getStatusCode(), Status.CREATED.getStatusCode());
+
+        return getPaymentsForInvoice(invoiceId);
+    }
+
+    //
+    // REFUNDS
+    //
+
+    protected List<RefundJson> getRefundsForPayment(final String paymentId) throws IOException {
+        final String uri = JaxrsResource.PAYMENTS_PATH + "/" + paymentId + "/" + JaxrsResource.REFUNDS;
+        final Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+
+        assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+        final String baseJson = response.getResponseBody();
+        final List<RefundJson> refunds = mapper.readValue(baseJson, new TypeReference<List<RefundJson>>() {});
+        assertNotNull(refunds);
+
+        return refunds;
+    }
+
+    protected RefundJson createRefund(final String paymentId, final BigDecimal amount) throws IOException {
+        return doCreateRefund(paymentId, amount, false, ImmutableMap.<String, BigDecimal>of());
+    }
+
+    protected RefundJson createRefundWithInvoiceAdjustment(final String paymentId, final BigDecimal amount) throws IOException {
+        return doCreateRefund(paymentId, amount, true, ImmutableMap.<String, BigDecimal>of());
+    }
+
+    protected RefundJson createRefundWithInvoiceItemAdjustment(final String paymentId, final String invoiceItemId, final BigDecimal amount) throws IOException {
+        final Map<String, BigDecimal> adjustments = new HashMap<String, BigDecimal>();
+        adjustments.put(invoiceItemId, amount);
+        return doCreateRefund(paymentId, amount, true, adjustments);
+    }
+
+    private RefundJson doCreateRefund(final String paymentId, final BigDecimal amount, final boolean adjusted, final Map<String, BigDecimal> itemAdjustments) throws IOException {
+        final String uri = JaxrsResource.PAYMENTS_PATH + "/" + paymentId + "/" + JaxrsResource.REFUNDS;
+
+        final List<InvoiceItemJsonSimple> adjustments = new ArrayList<InvoiceItemJsonSimple>();
+        for (final String itemId : itemAdjustments.keySet()) {
+            adjustments.add(new InvoiceItemJsonSimple(itemId, null, null, null, null, null, null, null, null, null,
+                                                      itemAdjustments.get(itemId), null, null));
+        }
+        final RefundJson refundJson = new RefundJson(null, paymentId, amount, adjusted, null, null, adjustments, null);
+        final String baseJson = mapper.writeValueAsString(refundJson);
+        final Response response = doPost(uri, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
+
+        final String locationCC = response.getHeader("Location");
+        Assert.assertNotNull(locationCC);
+
+        // Retrieves by Id based on Location returned
+        final Response retrievedResponse = doGetWithUrl(locationCC, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(retrievedResponse.getStatusCode(), Status.OK.getStatusCode());
+        final String retrievedBaseJson = retrievedResponse.getResponseBody();
+        final RefundJson retrievedRefundJson = mapper.readValue(retrievedBaseJson, RefundJson.class);
+        assertNotNull(retrievedRefundJson);
+
+        return retrievedRefundJson;
     }
 
     protected Map<String, String> getQueryParamsForCallCompletion(final String timeoutSec) {

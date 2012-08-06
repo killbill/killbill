@@ -705,6 +705,13 @@ public class AuditedEntitlementDao implements EntitlementDao {
         final List<EntityAudit> audits = new ArrayList<EntityAudit>();
         Long recordId;
         final SubscriptionBundleData bundleData = bundleTransferData.getData();
+
+        final SubscriptionBundle existingBundle = transBundleDao.getBundleFromAccountAndKey(bundleData.getAccountId().toString(), bundleData.getKey());
+        if (existingBundle != null) {
+            log.error(String.format("Attempted to create a bundle for account %s and key %s that already existed, skip...", bundleData.getAccountId().toString(), bundleData.getKey()));
+            return;
+        }
+
         for (final SubscriptionMigrationData curSubscription : bundleTransferData.getSubscriptions()) {
             final SubscriptionData subData = curSubscription.getData();
             for (final EntitlementEvent curEvent : curSubscription.getInitialEvents()) {

@@ -158,6 +158,11 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
 
     @Override
+    public InvoiceItem insertInvoiceItemAdjustment(final UUID accountId, final UUID invoiceId, final UUID invoiceItemId, final LocalDate effectiveDate, final CallContext context) throws InvoiceApiException {
+        return insertInvoiceItemAdjustment(accountId, invoiceId, invoiceItemId, effectiveDate, null, null, context);
+    }
+
+    @Override
     public InvoiceItem insertInvoiceItemAdjustment(final UUID accountId, final UUID invoiceId, final UUID invoiceItemId,
                                                    final LocalDate effectiveDate, @Nullable final BigDecimal amount,
                                                    @Nullable final Currency currency, final CallContext context) throws InvoiceApiException {

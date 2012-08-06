@@ -16,6 +16,7 @@
 
 package com.ning.billing.invoice.dao;
 
+import java.math.BigDecimal;
 import java.util.Map;
 import java.util.UUID;
 
@@ -25,8 +26,11 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.ning.billing.ErrorCode;
 import com.ning.billing.invoice.InvoiceTestSuite;
 import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoiceApiException;
+import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.callcontext.CallContext;
@@ -40,7 +44,10 @@ import com.ning.billing.util.tag.dao.MockTagDefinitionDao;
 import com.ning.billing.util.tag.dao.TagDao;
 import com.ning.billing.util.tag.dao.TagDefinitionDao;
 
+import com.google.common.collect.ImmutableMap;
+
 public class TestDefaultInvoiceDao extends InvoiceTestSuite {
+
     private InvoiceSqlDao invoiceSqlDao;
     private TagUserApi tagUserApi;
     private DefaultInvoiceDao dao;
@@ -56,6 +63,43 @@ public class TestDefaultInvoiceDao extends InvoiceTestSuite {
         final TagDao tagDao = new MockTagDao();
         tagUserApi = new DefaultTagUserApi(tagDefinitionDao, tagDao);
         dao = new DefaultInvoiceDao(idbi, poster, tagUserApi, Mockito.mock(Clock.class));
+    }
+
+    @Test(groups = "fast")
+    public void testComputePositiveRefundAmount() throws Exception {
+        // Verify the cases with no adjustment first
+        final Map<UUID, BigDecimal> noItemAdjustment = ImmutableMap.<UUID, BigDecimal>of();
+        verifyComputedRefundAmount(null, null, noItemAdjustment, BigDecimal.ZERO);
+        verifyComputedRefundAmount(null, BigDecimal.ZERO, noItemAdjustment, BigDecimal.ZERO);
+        verifyComputedRefundAmount(BigDecimal.TEN, null, noItemAdjustment, BigDecimal.TEN);
+        verifyComputedRefundAmount(BigDecimal.TEN, BigDecimal.ONE, noItemAdjustment, BigDecimal.ONE);
+        try {
+            verifyComputedRefundAmount(BigDecimal.ONE, BigDecimal.TEN, noItemAdjustment, BigDecimal.TEN);
+            Assert.fail("Shouldn't have been able to compute a refund amount");
+        } catch (InvoiceApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.REFUND_AMOUNT_TOO_HIGH.getCode());
+        }
+
+        // Try with adjustments now
+        final Map<UUID, BigDecimal> itemAdjustments = ImmutableMap.<UUID, BigDecimal>of(UUID.randomUUID(), BigDecimal.ONE,
+                                                                                        UUID.randomUUID(), BigDecimal.TEN,
+                                                                                        UUID.randomUUID(), BigDecimal.ZERO);
+        verifyComputedRefundAmount(new BigDecimal("100"), new BigDecimal("11"), itemAdjustments, new BigDecimal("11"));
+        try {
+            verifyComputedRefundAmount(new BigDecimal("100"), BigDecimal.TEN, itemAdjustments, BigDecimal.TEN);
+            Assert.fail("Shouldn't have been able to compute a refund amount");
+        } catch (InvoiceApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.REFUND_AMOUNT_DONT_MATCH_ITEMS_TO_ADJUST.getCode());
+        }
+    }
+
+    private void verifyComputedRefundAmount(final BigDecimal paymentAmount, final BigDecimal requestedAmount,
+                                            final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts, final BigDecimal expectedRefundAmount) throws InvoiceApiException {
+        final InvoicePayment invoicePayment = Mockito.mock(InvoicePayment.class);
+        Mockito.when(invoicePayment.getAmount()).thenReturn(paymentAmount);
+
+        final BigDecimal actualRefundAmount = dao.computePositiveRefundAmount(invoicePayment, requestedAmount, invoiceItemIdsWithAmounts);
+        Assert.assertEquals(actualRefundAmount, expectedRefundAmount);
     }
 
     @Test(groups = "fast")
