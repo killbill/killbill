@@ -34,6 +34,7 @@ import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.account.api.DefaultAccountEmail;
 import com.ning.billing.account.api.DefaultBillCycleDay;
+import com.ning.billing.account.api.DefaultMutableAccountData;
 import com.ning.billing.account.api.MutableAccountData;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.mock.MockAccountBuilder;
@@ -318,6 +319,28 @@ public class TestAccountDao extends AccountDaoTestBase {
         accountDao.update(newAccount, context);
 
         Assert.assertEquals(accountDao.getById(account.getId()), newAccount);
+    }
+
+    @Test(groups = "slow")
+    public void testShouldBeAbleToPassNullForSomeFieldsToAvoidUpdate() throws Exception {
+        final Account account = createTestAccount();
+        accountDao.create(account, context);
+
+        // Update the address and leave other fields null
+        final MutableAccountData mutableAccountData = new DefaultMutableAccountData(null, null, null, 0, null, null, null,
+                                                                                    null, null, null, null, null, null, null,
+                                                                                    null, null, null, null, false, false);
+        final String newAddress1 = UUID.randomUUID().toString();
+        mutableAccountData.setAddress1(newAddress1);
+
+        final DefaultAccount newAccount = new DefaultAccount(account.getId(), mutableAccountData);
+        accountDao.update(newAccount, context);
+
+        Assert.assertEquals(accountDao.getById(account.getId()).getAddress1(), newAddress1);
+        Assert.assertEquals(accountDao.getById(account.getId()).getAddress2(), account.getAddress2());
+        Assert.assertEquals(accountDao.getById(account.getId()).getCurrency(), account.getCurrency());
+        Assert.assertEquals(accountDao.getById(account.getId()).getExternalKey(), account.getExternalKey());
+        Assert.assertEquals(accountDao.getById(account.getId()).getBillCycleDay(), account.getBillCycleDay());
     }
 
     @Test(groups = "slow")

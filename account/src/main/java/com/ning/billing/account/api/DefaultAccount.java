@@ -221,27 +221,38 @@ public class DefaultAccount extends EntityBase implements Account {
     public Account mergeWithDelegate(final Account currentAccount) {
         final DefaultMutableAccountData accountData = new DefaultMutableAccountData(this);
 
-        if (externalKey != null ? !externalKey.equals(currentAccount.getExternalKey()) : currentAccount.getExternalKey() != null) {
-            throw new IllegalArgumentException(String.format("Killbill doesn't support updating the account external key yet: this=%s, delegate=%s",
+        if (externalKey != null && currentAccount.getExternalKey() != null && !currentAccount.getExternalKey().equals(externalKey)) {
+            throw new IllegalArgumentException(String.format("Killbill doesn't support updating the account external key yet: new=%s, current=%s",
                                                              externalKey, currentAccount.getExternalKey()));
+        } else {
+            // Default to current value
+            accountData.setExternalKey(currentAccount.getExternalKey());
         }
 
-        if (currency != null ? !currency.equals(currentAccount.getCurrency()) : currentAccount.getCurrency() != null) {
-            throw new IllegalArgumentException(String.format("Killbill doesn't support updating the account currency yet: this=%s, delegate=%s",
+        if (currency != null && currentAccount.getCurrency() != null && !currentAccount.getCurrency().equals(currency)) {
+            throw new IllegalArgumentException(String.format("Killbill doesn't support updating the account currency yet: new=%s, current=%s",
                                                              currency, currentAccount.getCurrency()));
+        } else {
+            // Default to current value
+            accountData.setCurrency(currentAccount.getCurrency());
         }
 
-        if (currentAccount.getBillCycleDay() != null && currentAccount.getBillCycleDay().getDayOfMonthLocal() != 0 && currentAccount.getBillCycleDay().getDayOfMonthUTC() != 0) {
+        if (billCycleDay != null && currentAccount.getBillCycleDay() != null && currentAccount.getBillCycleDay().getDayOfMonthLocal() != 0 && currentAccount.getBillCycleDay().getDayOfMonthUTC() != 0) {
             // We can't just use .equals here as the BillCycleDay class might not have implemented it
             if ((billCycleDay.getDayOfMonthUTC() != currentAccount.getBillCycleDay().getDayOfMonthUTC() ||
                  billCycleDay.getDayOfMonthLocal() != currentAccount.getBillCycleDay().getDayOfMonthLocal())) {
-                throw new IllegalArgumentException(String.format("Killbill doesn't support updating the account BCD yet: this=%s, delegate=%s",
+                throw new IllegalArgumentException(String.format("Killbill doesn't support updating the account BCD yet: new=%s, current=%s",
                                                                  billCycleDay, currentAccount.getBillCycleDay()));
             }
-        } else {
+        } else if (billCycleDay != null) {
+            // Junction sets it
             accountData.setBillCycleDay(billCycleDay);
+        } else {
+            // Default to current value
+            accountData.setBillCycleDay(currentAccount.getBillCycleDay());
         }
 
+        // Set all updatable fields with the new values if non null, otherwise defaults to the current values
         accountData.setEmail(Objects.firstNonNull(email, currentAccount.getEmail()));
         accountData.setName(Objects.firstNonNull(name, currentAccount.getName()));
         accountData.setFirstNameLength(Objects.firstNonNull(firstNameLength, currentAccount.getFirstNameLength()));
