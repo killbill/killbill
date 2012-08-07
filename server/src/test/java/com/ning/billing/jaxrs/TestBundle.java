@@ -141,5 +141,6 @@ public class TestBundle extends TestJaxrsBase {
 
         response = doGetWithUrl(locationCC, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+
     }
 }

@@ -120,6 +120,7 @@ public class DefaultEntitlementTransferApi implements EntitlementTransferApi {
         .setFromDisk(true);
 
         switch(existingEvent.getSubscriptionTransitionType()) {
+        case TRANSFER:
         case MIGRATE_ENTITLEMENT:
         case RE_CREATE:
         case CREATE:
