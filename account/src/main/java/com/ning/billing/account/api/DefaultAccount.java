@@ -213,48 +213,54 @@ public class DefaultAccount extends EntityBase implements Account {
         return new DefaultMutableAccountData(this);
     }
 
+    /**
+     * @param currentAccount existing account data
+     * @return merged account data
+     */
     @Override
-    public Account mergeWithDelegate(final Account delegate) {
+    public Account mergeWithDelegate(final Account currentAccount) {
         final DefaultMutableAccountData accountData = new DefaultMutableAccountData(this);
 
-        if (externalKey != null ? !externalKey.equals(delegate.getExternalKey()) : delegate.getExternalKey() != null) {
+        if (externalKey != null ? !externalKey.equals(currentAccount.getExternalKey()) : currentAccount.getExternalKey() != null) {
             throw new IllegalArgumentException(String.format("Killbill doesn't support updating the account external key yet: this=%s, delegate=%s",
-                                                             externalKey, delegate.getExternalKey()));
+                                                             externalKey, currentAccount.getExternalKey()));
         }
 
-        if (currency != null ? !currency.equals(delegate.getCurrency()) : delegate.getCurrency() != null) {
+        if (currency != null ? !currency.equals(currentAccount.getCurrency()) : currentAccount.getCurrency() != null) {
             throw new IllegalArgumentException(String.format("Killbill doesn't support updating the account currency yet: this=%s, delegate=%s",
-                                                             currency, delegate.getCurrency()));
+                                                             currency, currentAccount.getCurrency()));
         }
 
-        // We can't just use .equals here as the BillCycleDay class might not have implemented it
-        if (!(billCycleDay == null && (delegate.getBillCycleDay() == null ||
-                                       delegate.getBillCycleDay().getDayOfMonthUTC() == 0 && delegate.getBillCycleDay().getDayOfMonthLocal() == 0)) &&
-            !(billCycleDay != null && (billCycleDay.getDayOfMonthUTC() == delegate.getBillCycleDay().getDayOfMonthUTC() &&
-                                       billCycleDay.getDayOfMonthLocal() == delegate.getBillCycleDay().getDayOfMonthLocal()))) {
-            throw new IllegalArgumentException(String.format("Killbill doesn't support updating the account BCD yet: this=%s, delegate=%s",
-                                                             billCycleDay, delegate.getBillCycleDay()));
+        if (currentAccount.getBillCycleDay() != null && currentAccount.getBillCycleDay().getDayOfMonthLocal() != 0 && currentAccount.getBillCycleDay().getDayOfMonthUTC() != 0) {
+            // We can't just use .equals here as the BillCycleDay class might not have implemented it
+            if ((billCycleDay.getDayOfMonthUTC() != currentAccount.getBillCycleDay().getDayOfMonthUTC() ||
+                 billCycleDay.getDayOfMonthLocal() != currentAccount.getBillCycleDay().getDayOfMonthLocal())) {
+                throw new IllegalArgumentException(String.format("Killbill doesn't support updating the account BCD yet: this=%s, delegate=%s",
+                                                                 billCycleDay, currentAccount.getBillCycleDay()));
+            }
+        } else {
+            accountData.setBillCycleDay(billCycleDay);
         }
 
-        accountData.setEmail(Objects.firstNonNull(email, delegate.getEmail()));
-        accountData.setName(Objects.firstNonNull(name, delegate.getName()));
-        accountData.setFirstNameLength(Objects.firstNonNull(firstNameLength, delegate.getFirstNameLength()));
+        accountData.setEmail(Objects.firstNonNull(email, currentAccount.getEmail()));
+        accountData.setName(Objects.firstNonNull(name, currentAccount.getName()));
+        accountData.setFirstNameLength(Objects.firstNonNull(firstNameLength, currentAccount.getFirstNameLength()));
         accountData.setPaymentMethodId(Optional.<UUID>fromNullable(paymentMethodId)
-                                               .or(Optional.<UUID>fromNullable(delegate.getPaymentMethodId())).orNull());
-        accountData.setTimeZone(Objects.firstNonNull(timeZone, delegate.getTimeZone()));
-        accountData.setLocale(Objects.firstNonNull(locale, delegate.getLocale()));
-        accountData.setAddress1(Objects.firstNonNull(address1, delegate.getAddress1()));
-        accountData.setAddress2(Objects.firstNonNull(address2, delegate.getAddress2()));
-        accountData.setCompanyName(Objects.firstNonNull(companyName, delegate.getCompanyName()));
-        accountData.setCity(Objects.firstNonNull(city, delegate.getCity()));
-        accountData.setStateOrProvince(Objects.firstNonNull(stateOrProvince, delegate.getStateOrProvince()));
-        accountData.setCountry(Objects.firstNonNull(country, delegate.getCountry()));
-        accountData.setPostalCode(Objects.firstNonNull(postalCode, delegate.getPostalCode()));
-        accountData.setPhone(Objects.firstNonNull(phone, delegate.getPhone()));
-        accountData.setIsMigrated(Objects.firstNonNull(isMigrated, delegate.isMigrated()));
-        accountData.setIsNotifiedForInvoices(Objects.firstNonNull(isNotifiedForInvoices, delegate.isNotifiedForInvoices()));
+                                               .or(Optional.<UUID>fromNullable(currentAccount.getPaymentMethodId())).orNull());
+        accountData.setTimeZone(Objects.firstNonNull(timeZone, currentAccount.getTimeZone()));
+        accountData.setLocale(Objects.firstNonNull(locale, currentAccount.getLocale()));
+        accountData.setAddress1(Objects.firstNonNull(address1, currentAccount.getAddress1()));
+        accountData.setAddress2(Objects.firstNonNull(address2, currentAccount.getAddress2()));
+        accountData.setCompanyName(Objects.firstNonNull(companyName, currentAccount.getCompanyName()));
+        accountData.setCity(Objects.firstNonNull(city, currentAccount.getCity()));
+        accountData.setStateOrProvince(Objects.firstNonNull(stateOrProvince, currentAccount.getStateOrProvince()));
+        accountData.setCountry(Objects.firstNonNull(country, currentAccount.getCountry()));
+        accountData.setPostalCode(Objects.firstNonNull(postalCode, currentAccount.getPostalCode()));
+        accountData.setPhone(Objects.firstNonNull(phone, currentAccount.getPhone()));
+        accountData.setIsMigrated(Objects.firstNonNull(isMigrated, currentAccount.isMigrated()));
+        accountData.setIsNotifiedForInvoices(Objects.firstNonNull(isNotifiedForInvoices, currentAccount.isNotifiedForInvoices()));
 
-        return new DefaultAccount(delegate.getId(), accountData);
+        return new DefaultAccount(currentAccount.getId(), accountData);
     }
 
     @Override
