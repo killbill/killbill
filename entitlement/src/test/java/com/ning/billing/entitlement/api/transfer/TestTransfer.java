@@ -362,5 +362,13 @@ public class TestTransfer extends TestApiBase {
         testListener.pushExpectedEvent(NextEvent.CANCEL);
         clock.addMonths(1);
         assertTrue(testListener.isCompleted(3000));
+
+        // ISSUE ANOTHER TRANSFER TO CHECK THAT WE CAN TRANSFER AGAIN-- NOTE WILL NOT WORK ON PREVIOUS ACCOUNT (LIMITATION)
+        final UUID finalNewAccountId = UUID.randomUUID();
+        final DateTime newTransferRequestedDate = clock.getUTCNow();
+        testListener.pushExpectedEvent(NextEvent.TRANSFER);
+        transferApi.transferBundle(newBundle.getAccountId(), finalNewAccountId, newBundle.getKey(), newTransferRequestedDate, true, false, context);
+        assertTrue(testListener.isCompleted(3000));
+
     }
 }
