@@ -346,6 +346,19 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
     // ACCOUNT UTILITIES
     //
 
+    protected AccountJson getAccountByExternalKey(final String externalKey) throws Exception {
+        final Map<String, String> queryParams = new HashMap<String, String>();
+        queryParams.put(JaxrsResource.QUERY_EXTERNAL_KEY, externalKey);
+        final Response response = doGet(JaxrsResource.ACCOUNTS_PATH, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+
+        final String baseJson = response.getResponseBody();
+        final AccountJson objFromJson = mapper.readValue(baseJson, AccountJson.class);
+        Assert.assertNotNull(objFromJson);
+
+        return objFromJson;
+    }
+
     protected AccountJson createAccountWithDefaultPaymentMethod(final String name, final String key, final String email) throws Exception {
 
         final AccountJson input = createAccount(name, key, email);
