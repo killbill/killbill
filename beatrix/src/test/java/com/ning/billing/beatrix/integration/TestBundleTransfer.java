@@ -21,9 +21,6 @@ import static org.testng.Assert.assertTrue;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.UUID;
-
-import junit.framework.Assert;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
@@ -32,6 +29,7 @@ import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.beatrix.util.InvoiceChecker.ExpectedItemCheck;
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -103,15 +101,15 @@ public class TestBundleTransfer extends TestIntegrationBase {
         final List<InvoiceItem> invoiceItems = invoices.get(0).getInvoiceItems();
         assertEquals(invoiceItems.size(), 1);
         InvoiceItem theItem = invoiceItems.get(0);
-        Assert.assertTrue(theItem.getStartDate().compareTo(new LocalDate(2012,5,11)) == 0);
-        Assert.assertTrue(theItem.getEndDate().compareTo(new LocalDate(2013,5,11)) == 0);
-        Assert.assertTrue(theItem.getAmount().compareTo(new BigDecimal("2399.9500")) == 0);
+        assertTrue(theItem.getStartDate().compareTo(new LocalDate(2012,5,11)) == 0);
+        assertTrue(theItem.getEndDate().compareTo(new LocalDate(2013,5,11)) == 0);
+        assertTrue(theItem.getAmount().compareTo(new BigDecimal("2399.9500")) == 0);
     }
 
     @Test(groups = "slow")
     public void testBundleTransferWithBPMonthlyOnly() throws Exception {
 
-        final Account account = createAccountWithPaymentMethod(getAccountData(9));
+        final Account account = createAccountWithPaymentMethod(getAccountData(0));
 
         // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
 
@@ -148,7 +146,7 @@ public class TestBundleTransfer extends TestIntegrationBase {
         assertListenerStatus();
 
         // BUNDLE TRANSFER
-        final Account newAccount = createAccountWithPaymentMethod(getAccountData(15));
+        final Account newAccount = createAccountWithPaymentMethod(getAccountData(0));
 
         busHandler.pushExpectedEvent(NextEvent.TRANSFER);
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
@@ -157,15 +155,22 @@ public class TestBundleTransfer extends TestIntegrationBase {
         assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
 
-        List<Invoice> invoices =invoiceUserApi.getInvoicesByAccount(newAccount.getId());
+        // Verify the BCD of the new account
+        final BillCycleDay oldBCD = accountUserApi.getAccountById(account.getId()).getBillCycleDay();
+        final BillCycleDay newBCD = accountUserApi.getAccountById(newAccount.getId()).getBillCycleDay();
+        assertEquals(oldBCD.getDayOfMonthUTC(), 1);
+        // Day of the transfer
+        assertEquals(newBCD.getDayOfMonthUTC(), 3);
+
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(newAccount.getId());
         assertEquals(invoices.size(), 1);
 
         final List<InvoiceItem> invoiceItems = invoices.get(0).getInvoiceItems();
         assertEquals(invoiceItems.size(), 1);
-        InvoiceItem theItem = invoiceItems.get(0);
-        Assert.assertTrue(theItem.getStartDate().compareTo(new LocalDate(2012,5,3)) == 0);
-        Assert.assertTrue(theItem.getEndDate().compareTo(new LocalDate(2012,5,15)) == 0);
-        Assert.assertTrue(theItem.getAmount().compareTo(new BigDecimal("99.98")) == 0);
+        final InvoiceItem theItem = invoiceItems.get(0);
+        assertTrue(theItem.getStartDate().compareTo(new LocalDate(2012, 5, 3)) == 0);
+        assertTrue(theItem.getEndDate().compareTo(new LocalDate(2012, 6, 3)) == 0);
+        assertTrue(theItem.getAmount().compareTo(new BigDecimal("249.95")) == 0);
     }
 
     @Test(groups = "slow")

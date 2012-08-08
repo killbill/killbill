@@ -16,6 +16,8 @@
 
 package com.ning.billing.junction.plumbing.billing;
 
+import java.util.List;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
@@ -92,7 +94,7 @@ public class BillCycleDayCalculator {
             case ACCOUNT:
                 result = account.getBillCycleDay();
                 if (result == null || result.getDayOfMonthUTC() == 0) {
-                    result = calculateBcdFromSubscription(subscription, plan, account);
+                    result = calculateBcdFromSubscription(subscription, plan, account, catalog);
                 }
                 break;
             case BUNDLE:
@@ -103,10 +105,10 @@ public class BillCycleDayCalculator {
                     final EffectiveSubscriptionEvent previousTransition = baseSub.getPreviousTransition();
                     basePlan = catalog.findPlan(previousTransition.getPreviousPlan(), previousTransition.getEffectiveTransitionTime(), previousTransition.getSubscriptionStartDate());
                 }
-                result = calculateBcdFromSubscription(baseSub, basePlan, account);
+                result = calculateBcdFromSubscription(baseSub, basePlan, account, catalog);
                 break;
             case SUBSCRIPTION:
-                result = calculateBcdFromSubscription(subscription, plan, account);
+                result = calculateBcdFromSubscription(subscription, plan, account, catalog);
                 break;
         }
 
@@ -118,10 +120,30 @@ public class BillCycleDayCalculator {
     }
 
     @VisibleForTesting
-    BillCycleDay calculateBcdFromSubscription(final Subscription subscription, final Plan plan, final Account account) throws AccountApiException {
+    BillCycleDay calculateBcdFromSubscription(final Subscription subscription, final Plan plan, final Account account, final Catalog catalog)
+            throws AccountApiException, CatalogApiException {
+        // Retrieve the initial phase type for that subscription
+        // TODO - this should be extracted somewhere, along with this code above
+        final PhaseType initialPhaseType;
+        final List<EffectiveSubscriptionEvent> transitions = subscription.getAllTransitions();
+        if (transitions.size() == 0) {
+            initialPhaseType = null;
+        } else {
+            final DateTime requestedDate = subscription.getStartDate();
+            final String initialPhaseString = transitions.get(0).getNextPhase();
+            if (initialPhaseString == null) {
+                initialPhaseType = null;
+            } else {
+                final PlanPhase initialPhase = catalog.findPhase(initialPhaseString, requestedDate, subscription.getStartDate());
+                if (initialPhase == null) {
+                    initialPhaseType = null;
+                } else {
+                    initialPhaseType = initialPhase.getPhaseType();
+                }
+            }
+        }
 
-        final PhaseType currentPhaseType = subscription.getCurrentPhase() != null ?  subscription.getCurrentPhase().getPhaseType() : null;
-        final DateTime date = plan.dateOfFirstRecurringNonZeroCharge(subscription.getStartDate(), currentPhaseType);
+        final DateTime date = plan.dateOfFirstRecurringNonZeroCharge(subscription.getStartDate(), initialPhaseType);
         // There are really two kinds of billCycleDay:
         // - a System billingCycleDay which should be computed from UTC time (in order to get the correct notification time at
         //   the end of each service period)
