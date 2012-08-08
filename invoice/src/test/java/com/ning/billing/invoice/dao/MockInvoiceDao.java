@@ -259,6 +259,16 @@ public class MockInvoiceDao implements InvoiceDao {
     }
 
     @Override
+    public InvoiceItem getExternalChargeById(final UUID externalChargeId) throws InvoiceApiException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public InvoiceItem insertExternalCharge(final UUID accountId, @Nullable final UUID invoiceId, @Nullable final String description, final BigDecimal amount, final LocalDate effectiveDate, final Currency currency, final CallContext context) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public InvoiceItem getCreditById(final UUID creditId) throws InvoiceApiException {
         throw new UnsupportedOperationException();
     }
