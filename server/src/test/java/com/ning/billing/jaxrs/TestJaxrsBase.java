@@ -565,6 +565,46 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
         Assert.assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
     }
 
+    protected InvoiceJsonWithItems createExternalCharge(final String accountId, final BigDecimal amount, @Nullable final Currency currency,
+                                                        @Nullable final DateTime requestedDate) throws Exception {
+        return doCreateExternalCharge(accountId, null, amount, currency, requestedDate, JaxrsResource.CHARGES_PATH);
+    }
+
+    protected InvoiceJsonWithItems createExternalChargeForInvoice(final String accountId, final String invoiceId, final BigDecimal amount,
+                                                        @Nullable final Currency currency, @Nullable final DateTime requestedDate) throws Exception {
+        final String uri = JaxrsResource.INVOICES_PATH + "/" + invoiceId + "/" + JaxrsResource.CHARGES;
+        return doCreateExternalCharge(accountId, invoiceId, amount, currency, requestedDate, uri);
+    }
+
+    private InvoiceJsonWithItems doCreateExternalCharge(final String accountId, @Nullable final String invoiceId, @Nullable final BigDecimal amount,
+                                                        @Nullable final Currency currency, final DateTime requestedDate, final String uri) throws IOException {
+        final Map<String, String> queryParams = new HashMap<String, String>();
+        if (requestedDate != null) {
+            queryParams.put(JaxrsResource.QUERY_REQUESTED_DT, requestedDate.toDateTimeISO().toString());
+        }
+
+        final InvoiceItemJsonSimple externalCharge = new InvoiceItemJsonSimple(null, invoiceId, accountId, null, null, null, null,
+                                                                               null, null, null, amount, currency, null);
+        final String externalChargeJson = mapper.writeValueAsString(externalCharge);
+        final Response response = doPost(uri, externalChargeJson, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
+
+        final String location = response.getHeader("Location");
+        Assert.assertNotNull(location);
+
+        final Map<String, String> queryParamsForInvoice = new HashMap<String, String>();
+        queryParamsForInvoice.put(JaxrsResource.QUERY_ACCOUNT_ID, accountId);
+        queryParamsForInvoice.put(JaxrsResource.QUERY_INVOICE_WITH_ITEMS, "true");
+        final Response invoiceResponse = doGetWithUrl(location, queryParamsForInvoice, DEFAULT_HTTP_TIMEOUT_SEC);
+        assertEquals(invoiceResponse.getStatusCode(), Status.OK.getStatusCode());
+
+        final String invoicesBaseJson = invoiceResponse.getResponseBody();
+        final InvoiceJsonWithItems invoice = mapper.readValue(invoicesBaseJson, new TypeReference<InvoiceJsonWithItems>(){});
+        assertNotNull(invoice);
+
+        return invoice;
+    }
+
     //
     // PAYMENT UTILITIES
     //

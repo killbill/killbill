@@ -16,9 +16,6 @@
 
 package com.ning.billing.jaxrs.resources;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.TEXT_HTML;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -46,11 +43,11 @@ import org.joda.time.format.ISODateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
+import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
@@ -73,6 +70,12 @@ import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.dao.ObjectType;
+
+import com.google.common.base.Objects;
+import com.google.inject.Inject;
+
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.TEXT_HTML;
 
 @Path(JaxrsResource.INVOICES_PATH)
 public class InvoiceResource extends JaxRsResourceBase {
@@ -220,6 +223,68 @@ public class InvoiceResource extends JaxRsResourceBase {
         }
 
         return uriBuilder.buildResponse(InvoiceResource.class, "getInvoice", adjustmentItem.getInvoiceId());
+    }
+
+    @POST
+    @Produces(APPLICATION_JSON)
+    @Consumes(APPLICATION_JSON)
+    @Path(CHARGES)
+    public Response createExternalCharge(final InvoiceItemJsonSimple externalChargeJson,
+                                         @QueryParam(QUERY_REQUESTED_DT) final String requestedDateTimeString,
+                                         @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                         @HeaderParam(HDR_REASON) final String reason,
+                                         @HeaderParam(HDR_COMMENT) final String comment,
+                                         @javax.ws.rs.core.Context final UriInfo uriInfo) throws AccountApiException, InvoiceApiException {
+        final Account account = accountApi.getAccountById(UUID.fromString(externalChargeJson.getAccountId()));
+        final CallContext callContext = context.createContext(createdBy, reason, comment);
+
+        // Get the effective date of the external charge, in the account timezone
+        final LocalDate requestedDate;
+        if (requestedDateTimeString == null) {
+            requestedDate = clock.getUTCToday();
+        } else {
+            final DateTime requestedDateTime = DATE_TIME_FORMATTER.parseDateTime(requestedDateTimeString);
+            requestedDate = requestedDateTime.toDateTime(account.getTimeZone()).toLocalDate();
+        }
+
+        final Currency currency = Objects.firstNonNull(externalChargeJson.getCurrency(), account.getCurrency());
+        final InvoiceItem externalCharge = invoiceApi.insertExternalCharge(account.getId(), externalChargeJson.getAmount(),
+                                                                           externalChargeJson.getDescription(), requestedDate,
+                                                                           currency, callContext);
+
+        return uriBuilder.buildResponse(InvoiceResource.class, "getInvoice", externalCharge.getInvoiceId(), uriInfo.getBaseUri().toString());
+    }
+
+    @POST
+    @Produces(APPLICATION_JSON)
+    @Consumes(APPLICATION_JSON)
+    @Path("/{invoiceId:" + UUID_PATTERN + "}/" + CHARGES)
+    public Response createExternalChargeForInvoice(final InvoiceItemJsonSimple externalChargeJson,
+                                                   @PathParam("invoiceId") final String invoiceIdString,
+                                                   @QueryParam(QUERY_REQUESTED_DT) final String requestedDateTimeString,
+                                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                                   @HeaderParam(HDR_REASON) final String reason,
+                                                   @HeaderParam(HDR_COMMENT) final String comment,
+                                                   @javax.ws.rs.core.Context final UriInfo uriInfo) throws AccountApiException, InvoiceApiException {
+        final Account account = accountApi.getAccountById(UUID.fromString(externalChargeJson.getAccountId()));
+        final CallContext callContext = context.createContext(createdBy, reason, comment);
+
+        // Get the effective date of the external charge, in the account timezone
+        final LocalDate requestedDate;
+        if (requestedDateTimeString == null) {
+            requestedDate = clock.getUTCToday();
+        } else {
+            final DateTime requestedDateTime = DATE_TIME_FORMATTER.parseDateTime(requestedDateTimeString);
+            requestedDate = requestedDateTime.toDateTime(account.getTimeZone()).toLocalDate();
+        }
+
+        final UUID invoiceId = UUID.fromString(invoiceIdString);
+        final Currency currency = Objects.firstNonNull(externalChargeJson.getCurrency(), account.getCurrency());
+        final InvoiceItem externalCharge = invoiceApi.insertExternalChargeForInvoice(account.getId(), invoiceId,
+                                                                                     externalChargeJson.getAmount(), externalChargeJson.getDescription(),
+                                                                                     requestedDate, currency, callContext);
+
+        return uriBuilder.buildResponse(InvoiceResource.class, "getInvoice", externalCharge.getInvoiceId(), uriInfo.getBaseUri().toString());
     }
 
     @GET

@@ -13,15 +13,16 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.jaxrs.resources;
 
 public interface JaxrsResource {
+
     public static final String API_PREFIX = "";
     public static final String API_VERSION = "/1.0";
     public static final String API_POSTFIX = "/kb";
 
     public static final String PREFIX = API_PREFIX + API_VERSION + API_POSTFIX;
-
 
     public static final String TIMELINE = "timeline";
 
@@ -80,6 +81,9 @@ public interface JaxrsResource {
 
     public static final String INVOICES = "invoices";
     public static final String INVOICES_PATH = PREFIX + "/" + INVOICES;
+
+    public static final String CHARGES = "charges";
+    public static final String CHARGES_PATH = PREFIX + "/" + INVOICES + "/" + CHARGES;
 
     public static final String PAYMENTS = "payments";
     public static final String PAYMENTS_PATH = PREFIX + "/" + PAYMENTS;
