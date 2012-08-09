@@ -858,13 +858,17 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
         final String timeZone = "UTC";
         final String address1 = "12 rue des ecoles";
         final String address2 = "Poitier";
+        final String postalCode = "44 567";
         final String company = "Renault";
+        final String city = "Quelque part";
         final String state = "Poitou";
         final String country = "France";
+        final String locale = "fr";
         final String phone = "81 53 26 56";
 
         // Note: the accountId payload is ignored on account creation
-        return new AccountJson(accountId, name, length, externalKey, email, billCycleDay, currency, null, timeZone, address1, address2, company, state, country, phone);
+        return new AccountJson(accountId, name, length, externalKey, email, billCycleDay, currency, null, timeZone,
+                               address1, address2, postalCode, company, city, state, country, locale, phone, false, false);
     }
 
     /**
