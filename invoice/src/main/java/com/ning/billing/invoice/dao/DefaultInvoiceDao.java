@@ -44,6 +44,7 @@ import com.ning.billing.invoice.model.CreditAdjInvoiceItem;
 import com.ning.billing.invoice.model.CreditBalanceAdjInvoiceItem;
 import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.invoice.model.DefaultInvoicePayment;
+import com.ning.billing.invoice.model.ExternalChargeInvoiceItem;
 import com.ning.billing.invoice.model.ItemAdjInvoiceItem;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.invoice.model.RefundAdjInvoiceItem;
@@ -525,12 +526,42 @@ public class DefaultInvoiceDao implements InvoiceDao {
     }
 
     @Override
+    public InvoiceItem getExternalChargeById(final UUID externalChargeId) throws InvoiceApiException {
+        return invoiceItemSqlDao.getById(externalChargeId.toString());
+    }
+
+    @Override
+    public InvoiceItem insertExternalCharge(final UUID accountId, @Nullable final UUID invoiceId, final String description,
+                                            final BigDecimal amount, final LocalDate effectiveDate, final Currency currency, final CallContext context) {
+        return invoiceSqlDao.inTransaction(new Transaction<InvoiceItem, InvoiceSqlDao>() {
+            @Override
+            public InvoiceItem inTransaction(final InvoiceSqlDao transactional, final TransactionStatus status) throws Exception {
+                UUID invoiceIdForExternalCharge = invoiceId;
+                // Create an invoice for that external charge if it doesn't exist
+                if (invoiceIdForExternalCharge == null) {
+                    final Invoice invoiceForExternalCharge = new DefaultInvoice(accountId, effectiveDate, effectiveDate, currency);
+                    transactional.create(invoiceForExternalCharge, context);
+                    invoiceIdForExternalCharge = invoiceForExternalCharge.getId();
+                }
+
+                final InvoiceItem externalCharge = new ExternalChargeInvoiceItem(invoiceIdForExternalCharge, accountId, description,
+                                                                                 effectiveDate, amount, currency);
+
+                final InvoiceItemSqlDao transInvoiceItemDao = transactional.become(InvoiceItemSqlDao.class);
+                transInvoiceItemDao.create(externalCharge, context);
+
+                return externalCharge;
+            }
+        });
+    }
+
+    @Override
     public InvoiceItem getCreditById(final UUID creditId) throws InvoiceApiException {
         return invoiceItemSqlDao.getById(creditId.toString());
     }
 
     @Override
-    public InvoiceItem insertCredit(final UUID accountId, final UUID invoiceId, final BigDecimal positiveCreditAmount,
+    public InvoiceItem insertCredit(final UUID accountId, @Nullable final UUID invoiceId, final BigDecimal positiveCreditAmount,
                                     final LocalDate effectiveDate, final Currency currency, final CallContext context) {
         return invoiceSqlDao.inTransaction(new Transaction<InvoiceItem, InvoiceSqlDao>() {
             @Override

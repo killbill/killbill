@@ -74,7 +74,8 @@ public class TestAccount extends TestJaxrsBase {
         // Update Account
         final AccountJson newInput = new AccountJson(objFromJson.getAccountId(),
                                                      "zozo", 4, objFromJson.getExternalKey(), "rr@google.com", new BillCycleDayJson(18, 18),
-                                                     "USD", null, "UTC", "bl1", "bh2", "", "ca", "usa", "415-255-2991");
+                                                     "USD", null, "UTC", "bl1", "bh2", "", "", "ca", "San Francisco", "usa", "en", "415-255-2991",
+                                                     false, false);
         baseJson = mapper.writeValueAsString(newInput);
         final String uri = JaxrsResource.ACCOUNTS_PATH + "/" + objFromJson.getAccountId();
         response = doPut(uri, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);

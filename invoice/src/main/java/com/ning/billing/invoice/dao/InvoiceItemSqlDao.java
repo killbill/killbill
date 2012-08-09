@@ -46,6 +46,7 @@ import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.invoice.model.CreditAdjInvoiceItem;
 import com.ning.billing.invoice.model.CreditBalanceAdjInvoiceItem;
+import com.ning.billing.invoice.model.ExternalChargeInvoiceItem;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.invoice.model.ItemAdjInvoiceItem;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
@@ -132,6 +133,9 @@ public interface InvoiceItemSqlDao extends EntitySqlDao<InvoiceItem> {
 
             InvoiceItem item = null;
             switch (type) {
+                case EXTERNAL_CHARGE:
+                    item = new ExternalChargeInvoiceItem(id, invoiceId, accountId, planName, startDate, amount, currency);
+                    break;
                 case FIXED:
                     item = new FixedPriceInvoiceItem(id, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, amount, currency);
                     break;

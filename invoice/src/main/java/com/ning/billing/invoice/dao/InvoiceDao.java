@@ -74,7 +74,6 @@ public interface InvoiceDao {
     /**
      * Create a refund.
      *
-     *
      * @param paymentId                 payment associated with that refund
      * @param amount                    amount to refund
      * @param isInvoiceAdjusted         whether the refund should trigger an invoice or invoice item adjustment
@@ -97,9 +96,51 @@ public interface InvoiceDao {
 
     InvoicePayment getChargebackById(final UUID chargebackId) throws InvoiceApiException;
 
+    /**
+     * Retrieve am external charge by id.
+     *
+     * @param externalChargeId the external charge id
+     * @return the external charge invoice item
+     * @throws InvoiceApiException
+     */
+    InvoiceItem getExternalChargeById(final UUID externalChargeId) throws InvoiceApiException;
+
+    /**
+     * Add an external charge to a given account and invoice. If invoiceId is null, a new invoice will be created.
+     *
+     * @param accountId     the account id
+     * @param invoiceId     the invoice id
+     * @param description   a description for that charge
+     * @param amount        the external charge amount
+     * @param effectiveDate the day to post the external charge, in the account timezone
+     * @param currency      the external charge currency
+     * @param context       the call context
+     * @return the newly created external charge invoice item
+     */
+    InvoiceItem insertExternalCharge(final UUID accountId, @Nullable final UUID invoiceId, @Nullable final String description,
+                                     final BigDecimal amount, final LocalDate effectiveDate, final Currency currency, final CallContext context);
+
+    /**
+     * Retrieve a credit by id.
+     *
+     * @param creditId the credit id
+     * @return the credit invoice item
+     * @throws InvoiceApiException
+     */
     InvoiceItem getCreditById(final UUID creditId) throws InvoiceApiException;
 
-    InvoiceItem insertCredit(final UUID accountId, final UUID invoiceId, final BigDecimal amount,
+    /**
+     * Add a credit to a given account and invoice. If invoiceId is null, a new invoice will be created.
+     *
+     * @param accountId     the account id
+     * @param invoiceId     the invoice id
+     * @param amount        the credit amount
+     * @param effectiveDate the day to grant the credit, in the account timezone
+     * @param currency      the credit currency
+     * @param context       the call context
+     * @return the newly created credit invoice item
+     */
+    InvoiceItem insertCredit(final UUID accountId, @Nullable final UUID invoiceId, final BigDecimal amount,
                              final LocalDate effectiveDate, final Currency currency, final CallContext context);
 
     /**

@@ -120,6 +120,46 @@ public interface InvoiceUserApi {
     public void tagInvoiceAsNotWrittenOff(UUID invoiceId, CallContext context) throws TagApiException;
 
     /**
+     * Retrieve an external charge by id.
+     *
+     * @param externalChargeId external charge id
+     * @return the external charge
+     * @throws InvoiceApiException
+     */
+    public InvoiceItem getExternalChargeById(UUID externalChargeId) throws InvoiceApiException;
+
+    /**
+     * Add an external charge to an account.
+     *
+     * @param accountId     account id
+     * @param amount        the external charge amount
+     * @param description   a description for that charge
+     * @param effectiveDate the day to post the external charge, in the account timezone
+     * @param currency      the external charge currency
+     * @param context       the call context
+     * @return the external charge invoice item
+     * @throws InvoiceApiException
+     */
+    public InvoiceItem insertExternalCharge(UUID accountId, BigDecimal amount, String description, LocalDate effectiveDate,
+                                            Currency currency, CallContext context) throws InvoiceApiException;
+
+    /**
+     * Add an external charge to an invoice.
+     *
+     * @param accountId     account id
+     * @param invoiceId     invoice id
+     * @param amount        the external charge amount
+     * @param description   a description for that charge
+     * @param effectiveDate the day to post the external charge, in the account timezone
+     * @param currency      the external charge currency
+     * @param context       the call context
+     * @return the external charge invoice item
+     * @throws InvoiceApiException
+     */
+    public InvoiceItem insertExternalChargeForInvoice(UUID accountId, UUID invoiceId, BigDecimal amount, String description,
+                                                      LocalDate effectiveDate, Currency currency, CallContext context) throws InvoiceApiException;
+
+    /**
      * Retrieve a credit by id.
      *
      * @param creditId credit id

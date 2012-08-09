@@ -29,6 +29,7 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.catalog.api.BillingAlignment;
 import com.ning.billing.catalog.api.Catalog;
+import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
@@ -133,7 +134,7 @@ public class TestBillCycleDayCalculator {
         verifyBCDCalculation(accountTimeZone, startDate, bcdUTC, bcdLocal);
     }
 
-    private void verifyBCDCalculation(final DateTimeZone accountTimeZone, final DateTime startDateUTC, final int bcdUTC, final int bcdLocal) throws AccountApiException {
+    private void verifyBCDCalculation(final DateTimeZone accountTimeZone, final DateTime startDateUTC, final int bcdUTC, final int bcdLocal) throws AccountApiException, CatalogApiException {
         final BillCycleDayCalculator billCycleDayCalculator = new BillCycleDayCalculator(Mockito.mock(CatalogService.class), Mockito.mock(EntitlementUserApi.class));
 
         final Subscription subscription = Mockito.mock(Subscription.class);
@@ -145,7 +146,7 @@ public class TestBillCycleDayCalculator {
         final Account account = Mockito.mock(Account.class);
         Mockito.when(account.getTimeZone()).thenReturn(accountTimeZone);
 
-        final BillCycleDay bcd = billCycleDayCalculator.calculateBcdFromSubscription(subscription, plan, account);
+        final BillCycleDay bcd = billCycleDayCalculator.calculateBcdFromSubscription(subscription, plan, account, Mockito.mock(Catalog.class));
         Assert.assertEquals(bcd.getDayOfMonthUTC(), bcdUTC);
         Assert.assertEquals(bcd.getDayOfMonthLocal(), bcdLocal);
     }

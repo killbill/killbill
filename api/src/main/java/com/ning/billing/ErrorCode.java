@@ -186,11 +186,13 @@ public enum ErrorCode {
     INVOICE_TARGET_DATE_TOO_FAR_IN_THE_FUTURE(4005, "The target date was too far in the future. Target Date: %s"),
     INVOICE_NOT_FOUND(4006, "No invoice could be found for id %s."),
     INVOICE_NOTHING_TO_DO(4007, "No invoice to generate for account %s and date %s"),
-    INVOICE_NO_SUCH_CREDIT(4008, "Credit Item for id %s does not exist"),
+    INVOICE_NO_SUCH_CREDIT(4008, "Credit item for id %s does not exist"),
     CREDIT_AMOUNT_INVALID(4009, "Credit amount %s should be strictly positive"),
     INVOICE_ITEM_ADJUSTMENT_AMOUNT_INVALID(4010, "Invoice adjustment amount %s should be strictly positive"),
     INVOICE_ITEM_NOT_FOUND(4011, "No invoice item could be found for id %s."),
     INVOICE_INVALID_FOR_INVOICE_ITEM_ADJUSTMENT(4012, "Invoice item %s doesn't belong to invoice %s."),
+    INVOICE_NO_SUCH_EXTERNAL_CHARGE(4014, "External charge item for id %s does not exist"),
+    EXTERNAL_CHARGE_AMOUNT_INVALID(4015, "External charge amount %s should be strictly positive"),
 
     /*
      *

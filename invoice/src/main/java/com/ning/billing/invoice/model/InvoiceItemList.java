@@ -53,7 +53,7 @@ public class InvoiceItemList extends ArrayList<InvoiceItem> {
     }
 
     public BigDecimal getChargedAmount() {
-        return getAmoutForItems(InvoiceItemType.RECURRING, InvoiceItemType.FIXED, InvoiceItemType.REPAIR_ADJ);
+        return getAmoutForItems(InvoiceItemType.EXTERNAL_CHARGE, InvoiceItemType.RECURRING, InvoiceItemType.FIXED, InvoiceItemType.REPAIR_ADJ);
     }
 
     public BigDecimal getCBAAmount() {

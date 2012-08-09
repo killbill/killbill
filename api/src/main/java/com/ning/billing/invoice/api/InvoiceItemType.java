@@ -17,6 +17,8 @@
 package com.ning.billing.invoice.api;
 
 public enum InvoiceItemType {
+    // Fixed (one-time) external charge (not part of the catalog)
+    EXTERNAL_CHARGE,
     // Fixed (one-time) charge
     FIXED,
     // Recurring charge

@@ -186,4 +186,44 @@ public class TestInvoice extends TestJaxrsBase {
         final BigDecimal adjustedInvoiceBalance = invoice.getBalance().add(adjustedAmount.negate().setScale(2, RoundingMode.HALF_UP));
         assertEquals(adjustedInvoice.getBalance().compareTo(adjustedInvoiceBalance), 0);
     }
+
+    @Test(groups = "slow")
+    public void testExternalChargeOnNewInvoice() throws Exception {
+        final AccountJson accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
+
+        // Get the invoices
+        assertEquals(getInvoicesForAccount(accountJson.getAccountId()).size(), 2);
+
+        // Post an external charge
+        final BigDecimal chargeAmount = BigDecimal.TEN;
+        final InvoiceJsonWithItems invoiceWithItems = createExternalCharge(accountJson.getAccountId(), chargeAmount, null, null);
+        assertEquals(invoiceWithItems.getBalance().compareTo(chargeAmount), 0);
+        assertEquals(invoiceWithItems.getItems().size(), 1);
+
+        // Verify the total number of invoices
+        assertEquals(getInvoicesForAccount(accountJson.getAccountId()).size(), 3);
+    }
+
+    @Test(groups = "slow")
+    public void testExternalChargeOnExistingInvoice() throws Exception {
+        final AccountJson accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
+
+        // Get the invoices
+        final List<InvoiceJsonWithItems> invoices = getInvoicesWithItemsForAccount(accountJson.getAccountId());
+        // 2 invoices but look for the non zero dollar one
+        assertEquals(invoices.size(), 2);
+        final String invoiceId = invoices.get(1).getInvoiceId();
+        final BigDecimal originalInvoiceAmount = invoices.get(1).getAmount();
+        final int originalNumberOfItemsForInvoice = invoices.get(1).getItems().size();
+
+        // Post an external charge
+        final BigDecimal chargeAmount = BigDecimal.TEN;
+        final InvoiceJsonWithItems invoiceWithItems = createExternalChargeForInvoice(accountJson.getAccountId(), invoiceId, chargeAmount, null, null);
+        assertEquals(invoiceWithItems.getItems().size(), originalNumberOfItemsForInvoice + 1);
+
+        // Verify the new invoice balance
+        final InvoiceJsonSimple adjustedInvoice = getInvoice(invoiceId);
+        final BigDecimal adjustedInvoiceBalance = originalInvoiceAmount.add(chargeAmount.setScale(2, RoundingMode.HALF_UP));
+        assertEquals(adjustedInvoice.getBalance().compareTo(adjustedInvoiceBalance), 0);
+    }
 }

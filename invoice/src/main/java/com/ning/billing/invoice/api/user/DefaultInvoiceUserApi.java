@@ -40,6 +40,7 @@ import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.model.CreditAdjInvoiceItem;
+import com.ning.billing.invoice.model.ExternalChargeInvoiceItem;
 import com.ning.billing.invoice.template.HtmlInvoiceGenerator;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagUserApi;
@@ -134,12 +135,42 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
 
     @Override
+    public InvoiceItem getExternalChargeById(final UUID externalChargeId) throws InvoiceApiException {
+        final InvoiceItem externalChargeItem = dao.getExternalChargeById(externalChargeId);
+        if (externalChargeItem == null) {
+            throw new InvoiceApiException(ErrorCode.INVOICE_NO_SUCH_EXTERNAL_CHARGE, externalChargeId);
+        }
+
+        return new ExternalChargeInvoiceItem(externalChargeItem.getId(), externalChargeItem.getInvoiceId(), externalChargeItem.getAccountId(),
+                                             externalChargeItem.getPlanName(), externalChargeItem.getStartDate(),
+                                             externalChargeItem.getAmount(), externalChargeItem.getCurrency());
+    }
+
+    @Override
+    public InvoiceItem insertExternalCharge(final UUID accountId, final BigDecimal amount, @Nullable final String description,
+                                            final LocalDate effectiveDate, final Currency currency, final CallContext context) throws InvoiceApiException {
+        return insertExternalChargeForInvoice(accountId, null, amount, description, effectiveDate, currency, context);
+    }
+
+    @Override
+    public InvoiceItem insertExternalChargeForInvoice(final UUID accountId, final UUID invoiceId, final BigDecimal amount, @Nullable final String description,
+                                                      final LocalDate effectiveDate, final Currency currency, final CallContext context) throws InvoiceApiException {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new InvoiceApiException(ErrorCode.EXTERNAL_CHARGE_AMOUNT_INVALID, amount);
+        }
+
+        return dao.insertExternalCharge(accountId, invoiceId, description, amount, effectiveDate, currency, context);
+    }
+
+    @Override
     public InvoiceItem getCreditById(final UUID creditId) throws InvoiceApiException {
         final InvoiceItem creditItem = dao.getCreditById(creditId);
         if (creditItem == null) {
             throw new InvoiceApiException(ErrorCode.INVOICE_NO_SUCH_CREDIT, creditId);
         }
-        return new CreditAdjInvoiceItem(creditItem.getId(), creditItem.getInvoiceId(), creditItem.getAccountId(), creditItem.getStartDate(), creditItem.getAmount().negate(), creditItem.getCurrency());
+
+        return new CreditAdjInvoiceItem(creditItem.getId(), creditItem.getInvoiceId(), creditItem.getAccountId(),
+                                        creditItem.getStartDate(), creditItem.getAmount().negate(), creditItem.getCurrency());
     }
 
     @Override
@@ -154,11 +185,13 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new InvoiceApiException(ErrorCode.CREDIT_AMOUNT_INVALID, amount);
         }
+
         return dao.insertCredit(accountId, invoiceId, amount, effectiveDate, currency, context);
     }
 
     @Override
-    public InvoiceItem insertInvoiceItemAdjustment(final UUID accountId, final UUID invoiceId, final UUID invoiceItemId, final LocalDate effectiveDate, final CallContext context) throws InvoiceApiException {
+    public InvoiceItem insertInvoiceItemAdjustment(final UUID accountId, final UUID invoiceId, final UUID invoiceItemId,
+                                                   final LocalDate effectiveDate, final CallContext context) throws InvoiceApiException {
         return insertInvoiceItemAdjustment(accountId, invoiceId, invoiceItemId, effectiveDate, null, null, context);
     }
 
@@ -169,6 +202,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         if (amount != null && amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new InvoiceApiException(ErrorCode.INVOICE_ITEM_ADJUSTMENT_AMOUNT_INVALID, amount);
         }
+
         return dao.insertInvoiceItemAdjustment(accountId, invoiceId, invoiceItemId, effectiveDate, amount, currency, context);
     }
 

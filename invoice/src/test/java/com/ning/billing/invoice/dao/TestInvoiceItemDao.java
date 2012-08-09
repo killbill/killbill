@@ -20,7 +20,6 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.testng.annotations.Test;
 
@@ -28,6 +27,7 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.model.CreditBalanceAdjInvoiceItem;
 import com.ning.billing.invoice.model.DefaultInvoice;
+import com.ning.billing.invoice.model.ExternalChargeInvoiceItem;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
 
@@ -157,5 +157,19 @@ public class TestInvoiceItemDao extends InvoiceDaoTestBase {
 
         final InvoiceItem savedItem = invoiceItemSqlDao.getById(fixedPriceInvoiceItem.getId().toString());
         assertEquals(savedItem, fixedPriceInvoiceItem);
+    }
+
+    @Test(groups = "slow")
+    public void testExternalChargeInvoiceSqlDao() throws Exception {
+        final UUID invoiceId = UUID.randomUUID();
+        final UUID accountId = UUID.randomUUID();
+        final String description = UUID.randomUUID().toString();
+        final LocalDate startDate = new LocalDate(2012, 4, 1);
+        final InvoiceItem externalChargeInvoiceItem = new ExternalChargeInvoiceItem(invoiceId, accountId, description,
+                                                                                    startDate, TEN, Currency.USD);
+        invoiceItemSqlDao.create(externalChargeInvoiceItem, context);
+
+        final InvoiceItem savedItem = invoiceItemSqlDao.getById(externalChargeInvoiceItem.getId().toString());
+        assertEquals(savedItem, externalChargeInvoiceItem);
     }
 }

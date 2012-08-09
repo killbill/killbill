@@ -29,33 +29,25 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class AccountJson extends AccountJsonSimple {
-    // STEPH Missing city, locale, postalCode from https://home.ninginc.com:8443/display/REVINFRA/Killbill+1.0+APIs
 
     private final String name;
-
     private final Integer length;
-
     private final String email;
-
     private final BillCycleDayJson billCycleDayJson;
-
     private final String currency;
-
     private final String paymentMethodId;
-
     private final String timeZone;
-
     private final String address1;
-
     private final String address2;
-
+    private final String postalCode;
     private final String company;
-
+    private final String city;
     private final String state;
-
     private final String country;
-
+    private final String locale;
     private final String phone;
+    private final Boolean isMigrated;
+    private final Boolean isNotifiedForInvoices;
 
     public AccountJson(final Account account) {
         super(account.getId().toString(), account.getExternalKey());
@@ -68,10 +60,15 @@ public class AccountJson extends AccountJsonSimple {
         this.timeZone = account.getTimeZone().toString();
         this.address1 = account.getAddress1();
         this.address2 = account.getAddress2();
+        this.postalCode = account.getPostalCode();
         this.company = account.getCompanyName();
+        this.city = account.getCity();
         this.state = account.getStateOrProvince();
         this.country = account.getCountry();
+        this.locale = account.getLocale();
         this.phone = account.getPhone();
+        this.isMigrated = account.isMigrated();
+        this.isNotifiedForInvoices = account.isNotifiedForInvoices();
     }
 
     public AccountData toAccountData() {
@@ -88,7 +85,7 @@ public class AccountJson extends AccountJsonSimple {
 
             @Override
             public String getPostalCode() {
-                return null;
+                return postalCode;
             }
 
             @Override
@@ -98,12 +95,12 @@ public class AccountJson extends AccountJsonSimple {
 
             @Override
             public Boolean isMigrated() {
-                return false;
+                return isMigrated;
             }
 
             @Override
             public Boolean isNotifiedForInvoices() {
-                return false;
+                return isNotifiedForInvoices;
             }
 
             @Override
@@ -118,8 +115,7 @@ public class AccountJson extends AccountJsonSimple {
 
             @Override
             public String getLocale() {
-                // TODO
-                return "en";
+                return locale;
             }
 
             @Override
@@ -154,7 +150,7 @@ public class AccountJson extends AccountJsonSimple {
 
             @Override
             public String getCity() {
-                return null;
+                return city;
             }
 
             @Override
@@ -200,10 +196,15 @@ public class AccountJson extends AccountJsonSimple {
                        @JsonProperty("timezone") final String timeZone,
                        @JsonProperty("address1") final String address1,
                        @JsonProperty("address2") final String address2,
+                       @JsonProperty("postalCode") final String postalCode,
                        @JsonProperty("company") final String company,
+                       @JsonProperty("city") final String city,
                        @JsonProperty("state") final String state,
                        @JsonProperty("country") final String country,
-                       @JsonProperty("phone") final String phone) {
+                       @JsonProperty("locale") final String locale,
+                       @JsonProperty("phone") final String phone,
+                       @JsonProperty("isMigrated") final Boolean isMigrated,
+                       @JsonProperty("isNotifiedForInvoices") final Boolean isNotifiedForInvoices) {
         super(accountId, externalKey);
         this.name = name;
         this.length = length;
@@ -214,10 +215,15 @@ public class AccountJson extends AccountJsonSimple {
         this.timeZone = timeZone;
         this.address1 = address1;
         this.address2 = address2;
+        this.postalCode = postalCode;
         this.company = company;
+        this.city = city;
         this.state = state;
         this.country = country;
+        this.locale = locale;
         this.phone = phone;
+        this.isMigrated = isMigrated;
+        this.isNotifiedForInvoices = isNotifiedForInvoices;
     }
 
     public String getName() {
@@ -256,8 +262,16 @@ public class AccountJson extends AccountJsonSimple {
         return address2;
     }
 
+    public String getPostalCode() {
+        return postalCode;
+    }
+
     public String getCompany() {
         return company;
+    }
+
+    public String getCity() {
+        return city;
     }
 
     public String getState() {
@@ -268,167 +282,152 @@ public class AccountJson extends AccountJsonSimple {
         return country;
     }
 
+    public String getLocale() {
+        return locale;
+    }
+
     public String getPhone() {
         return phone;
     }
 
+    @JsonProperty("isMigrated")
+    public Boolean isMigrated() {
+        return isMigrated;
+    }
+
+    @JsonProperty("isNotifiedForInvoices")
+    public Boolean isNotifiedForInvoices() {
+        return isNotifiedForInvoices;
+    }
+
     @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result
-                 + ((accountId == null) ? 0 : accountId.hashCode());
-        result = prime * result
-                 + ((address1 == null) ? 0 : address1.hashCode());
-        result = prime * result
-                 + ((address2 == null) ? 0 : address2.hashCode());
-        result = prime * result
-                 + ((billCycleDayJson == null) ? 0 : billCycleDayJson.hashCode());
-        result = prime * result + ((company == null) ? 0 : company.hashCode());
-        result = prime * result + ((country == null) ? 0 : country.hashCode());
-        result = prime * result
-                 + ((currency == null) ? 0 : currency.hashCode());
-        result = prime * result + ((email == null) ? 0 : email.hashCode());
-        result = prime * result
-                 + ((externalKey == null) ? 0 : externalKey.hashCode());
-        result = prime * result + ((length == null) ? 0 : length.hashCode());
-        result = prime * result + ((name == null) ? 0 : name.hashCode());
-        result = prime * result
-                 + ((paymentMethodId == null) ? 0 : paymentMethodId.hashCode());
-        result = prime * result + ((phone == null) ? 0 : phone.hashCode());
-        result = prime * result + ((state == null) ? 0 : state.hashCode());
-        result = prime * result
-                 + ((timeZone == null) ? 0 : timeZone.hashCode());
-        return result;
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append("AccountJson");
+        sb.append("{name='").append(name).append('\'');
+        sb.append(", length=").append(length);
+        sb.append(", email='").append(email).append('\'');
+        sb.append(", billCycleDayJson=").append(billCycleDayJson);
+        sb.append(", currency='").append(currency).append('\'');
+        sb.append(", paymentMethodId='").append(paymentMethodId).append('\'');
+        sb.append(", timeZone='").append(timeZone).append('\'');
+        sb.append(", address1='").append(address1).append('\'');
+        sb.append(", address2='").append(address2).append('\'');
+        sb.append(", postalCode='").append(postalCode).append('\'');
+        sb.append(", company='").append(company).append('\'');
+        sb.append(", city='").append(city).append('\'');
+        sb.append(", state='").append(state).append('\'');
+        sb.append(", country='").append(country).append('\'');
+        sb.append(", locale='").append(locale).append('\'');
+        sb.append(", phone='").append(phone).append('\'');
+        sb.append(", isMigrated=").append(isMigrated);
+        sb.append(", isNotifiedForInvoices=").append(isNotifiedForInvoices);
+        sb.append('}');
+        return sb.toString();
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        final AccountJson that = (AccountJson) o;
+
+        if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
+            return false;
+        } else {
+            return equalsNoId(that);
+        }
     }
 
     // Used to check POST versus GET
-    public boolean equalsNoId(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
+    public boolean equalsNoId(final AccountJson that) {
+        if (address1 != null ? !address1.equals(that.address1) : that.address1 != null) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
+        if (address2 != null ? !address2.equals(that.address2) : that.address2 != null) {
             return false;
         }
-        final AccountJson other = (AccountJson) obj;
-        if (address1 == null) {
-            if (other.address1 != null) {
-                return false;
-            }
-        } else if (!address1.equals(other.address1)) {
+        if (billCycleDayJson != null ? !billCycleDayJson.equals(that.billCycleDayJson) : that.billCycleDayJson != null) {
             return false;
         }
-        if (address2 == null) {
-            if (other.address2 != null) {
-                return false;
-            }
-        } else if (!address2.equals(other.address2)) {
+        if (city != null ? !city.equals(that.city) : that.city != null) {
             return false;
         }
-        if (billCycleDayJson == null) {
-            if (other.billCycleDayJson != null) {
-                return false;
-            }
-        } else if (!billCycleDayJson.equals(other.billCycleDayJson)) {
+        if (company != null ? !company.equals(that.company) : that.company != null) {
             return false;
         }
-        if (company == null) {
-            if (other.company != null) {
-                return false;
-            }
-        } else if (!company.equals(other.company)) {
+        if (country != null ? !country.equals(that.country) : that.country != null) {
             return false;
         }
-        if (country == null) {
-            if (other.country != null) {
-                return false;
-            }
-        } else if (!country.equals(other.country)) {
+        if (currency != null ? !currency.equals(that.currency) : that.currency != null) {
             return false;
         }
-        if (currency == null) {
-            if (other.currency != null) {
-                return false;
-            }
-        } else if (!currency.equals(other.currency)) {
+        if (email != null ? !email.equals(that.email) : that.email != null) {
             return false;
         }
-        if (email == null) {
-            if (other.email != null) {
-                return false;
-            }
-        } else if (!email.equals(other.email)) {
+        if (externalKey != null ? !externalKey.equals(that.externalKey) : that.externalKey != null) {
             return false;
         }
-        if (externalKey == null) {
-            if (other.externalKey != null) {
-                return false;
-            }
-        } else if (!externalKey.equals(other.externalKey)) {
+        if (isMigrated != null ? !isMigrated.equals(that.isMigrated) : that.isMigrated != null) {
             return false;
         }
-        if (length == null) {
-            if (other.length != null) {
-                return false;
-            }
-        } else if (!length.equals(other.length)) {
+        if (isNotifiedForInvoices != null ? !isNotifiedForInvoices.equals(that.isNotifiedForInvoices) : that.isNotifiedForInvoices != null) {
             return false;
         }
-        if (name == null) {
-            if (other.name != null) {
-                return false;
-            }
-        } else if (!name.equals(other.name)) {
+        if (length != null ? !length.equals(that.length) : that.length != null) {
             return false;
         }
-        if (paymentMethodId == null) {
-            if (other.paymentMethodId != null) {
-                return false;
-            }
-        } else if (!paymentMethodId.equals(other.paymentMethodId)) {
+        if (locale != null ? !locale.equals(that.locale) : that.locale != null) {
             return false;
         }
-        if (phone == null) {
-            if (other.phone != null) {
-                return false;
-            }
-        } else if (!phone.equals(other.phone)) {
+        if (name != null ? !name.equals(that.name) : that.name != null) {
             return false;
         }
-        if (state == null) {
-            if (other.state != null) {
-                return false;
-            }
-        } else if (!state.equals(other.state)) {
+        if (paymentMethodId != null ? !paymentMethodId.equals(that.paymentMethodId) : that.paymentMethodId != null) {
             return false;
         }
-        if (timeZone == null) {
-            if (other.timeZone != null) {
-                return false;
-            }
-        } else if (!timeZone.equals(other.timeZone)) {
+        if (phone != null ? !phone.equals(that.phone) : that.phone != null) {
             return false;
         }
+        if (postalCode != null ? !postalCode.equals(that.postalCode) : that.postalCode != null) {
+            return false;
+        }
+        if (state != null ? !state.equals(that.state) : that.state != null) {
+            return false;
+        }
+        if (timeZone != null ? !timeZone.equals(that.timeZone) : that.timeZone != null) {
+            return false;
+        }
+
         return true;
     }
 
     @Override
-    public boolean equals(final Object obj) {
-        if (!equalsNoId(obj)) {
-            return false;
-        } else {
-            final AccountJson other = (AccountJson) obj;
-            if (accountId == null) {
-                if (other.accountId != null) {
-                    return false;
-                }
-            } else if (!accountId.equals(other.accountId)) {
-                return false;
-            }
-        }
-        return true;
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (name != null ? name.hashCode() : 0);
+        result = 31 * result + (length != null ? length.hashCode() : 0);
+        result = 31 * result + (email != null ? email.hashCode() : 0);
+        result = 31 * result + (billCycleDayJson != null ? billCycleDayJson.hashCode() : 0);
+        result = 31 * result + (currency != null ? currency.hashCode() : 0);
+        result = 31 * result + (paymentMethodId != null ? paymentMethodId.hashCode() : 0);
+        result = 31 * result + (timeZone != null ? timeZone.hashCode() : 0);
+        result = 31 * result + (address1 != null ? address1.hashCode() : 0);
+        result = 31 * result + (address2 != null ? address2.hashCode() : 0);
+        result = 31 * result + (postalCode != null ? postalCode.hashCode() : 0);
+        result = 31 * result + (company != null ? company.hashCode() : 0);
+        result = 31 * result + (city != null ? city.hashCode() : 0);
+        result = 31 * result + (state != null ? state.hashCode() : 0);
+        result = 31 * result + (country != null ? country.hashCode() : 0);
+        result = 31 * result + (locale != null ? locale.hashCode() : 0);
+        result = 31 * result + (phone != null ? phone.hashCode() : 0);
+        result = 31 * result + (isMigrated != null ? isMigrated.hashCode() : 0);
+        result = 31 * result + (isNotifiedForInvoices != null ? isNotifiedForInvoices.hashCode() : 0);
+        return result;
     }
 }
