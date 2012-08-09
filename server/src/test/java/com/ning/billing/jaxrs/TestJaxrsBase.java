@@ -578,25 +578,25 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
         Assert.assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
     }
 
-    protected InvoiceJsonWithItems createExternalCharge(final String accountId, final BigDecimal amount, @Nullable final Currency currency,
-                                                        @Nullable final DateTime requestedDate) throws Exception {
-        return doCreateExternalCharge(accountId, null, amount, currency, requestedDate, JaxrsResource.CHARGES_PATH);
-    }
-
-    protected InvoiceJsonWithItems createExternalChargeForInvoice(final String accountId, final String invoiceId, final BigDecimal amount,
+    protected InvoiceJsonWithItems createExternalCharge(final String accountId, final BigDecimal amount, @Nullable final String bundleId,
                                                         @Nullable final Currency currency, @Nullable final DateTime requestedDate) throws Exception {
-        final String uri = JaxrsResource.INVOICES_PATH + "/" + invoiceId + "/" + JaxrsResource.CHARGES;
-        return doCreateExternalCharge(accountId, invoiceId, amount, currency, requestedDate, uri);
+        return doCreateExternalCharge(accountId, null, bundleId, amount, currency, requestedDate, JaxrsResource.CHARGES_PATH);
     }
 
-    private InvoiceJsonWithItems doCreateExternalCharge(final String accountId, @Nullable final String invoiceId, @Nullable final BigDecimal amount,
+    protected InvoiceJsonWithItems createExternalChargeForInvoice(final String accountId, final String invoiceId, @Nullable final String bundleId, final BigDecimal amount,
+                                                                  @Nullable final Currency currency, @Nullable final DateTime requestedDate) throws Exception {
+        final String uri = JaxrsResource.INVOICES_PATH + "/" + invoiceId + "/" + JaxrsResource.CHARGES;
+        return doCreateExternalCharge(accountId, invoiceId, bundleId, amount, currency, requestedDate, uri);
+    }
+
+    private InvoiceJsonWithItems doCreateExternalCharge(final String accountId, @Nullable final String invoiceId, @Nullable final String bundleId, @Nullable final BigDecimal amount,
                                                         @Nullable final Currency currency, final DateTime requestedDate, final String uri) throws IOException {
         final Map<String, String> queryParams = new HashMap<String, String>();
         if (requestedDate != null) {
             queryParams.put(JaxrsResource.QUERY_REQUESTED_DT, requestedDate.toDateTimeISO().toString());
         }
 
-        final InvoiceItemJsonSimple externalCharge = new InvoiceItemJsonSimple(null, invoiceId, accountId, null, null, null, null,
+        final InvoiceItemJsonSimple externalCharge = new InvoiceItemJsonSimple(null, invoiceId, accountId, bundleId, null, null, null,
                                                                                null, null, null, amount, currency, null);
         final String externalChargeJson = mapper.writeValueAsString(externalCharge);
         final Response response = doPost(uri, externalChargeJson, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);

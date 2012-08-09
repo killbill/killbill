@@ -110,6 +110,7 @@ public interface InvoiceDao {
      *
      * @param accountId     the account id
      * @param invoiceId     the invoice id
+     * @param bundleId      the bundle id
      * @param description   a description for that charge
      * @param amount        the external charge amount
      * @param effectiveDate the day to post the external charge, in the account timezone
@@ -117,7 +118,7 @@ public interface InvoiceDao {
      * @param context       the call context
      * @return the newly created external charge invoice item
      */
-    InvoiceItem insertExternalCharge(final UUID accountId, @Nullable final UUID invoiceId, @Nullable final String description,
+    InvoiceItem insertExternalCharge(final UUID accountId, @Nullable final UUID invoiceId, @Nullable final UUID bundleId, @Nullable final String description,
                                      final BigDecimal amount, final LocalDate effectiveDate, final Currency currency, final CallContext context);
 
     /**

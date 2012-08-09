@@ -97,7 +97,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         if (existingInvoices != null) {
             for (final Invoice invoice : existingInvoices) {
                 for (final InvoiceItem item : invoice.getInvoiceItems()) {
-                    if (item.getSubscriptionId() == null || // Always include migration invoices, credits, external charged etc.
+                    if (item.getSubscriptionId() == null || // Always include migration invoices, credits, external charges etc.
                         !events.getSubscriptionIdsWithAutoInvoiceOff()
                                .contains(item.getSubscriptionId())) { //don't add items with auto_invoice_off tag
                         existingItems.add(item);
