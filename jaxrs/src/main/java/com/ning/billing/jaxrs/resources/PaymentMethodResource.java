@@ -104,13 +104,14 @@ public class PaymentMethodResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @Path("/{paymentMethodId:" + UUID_PATTERN + "}")
     public Response deletePaymentMethod(@PathParam("paymentMethodId") final String paymentMethodId,
+                                        @QueryParam(QUERY_DELETE_DEFAULT_PM_WITH_AUTO_PAY_OFF) @DefaultValue("false") final Boolean deleteDefaultPaymentMethodWithAutoPayOff,
                                         @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                         @HeaderParam(HDR_REASON) final String reason,
                                         @HeaderParam(HDR_COMMENT) final String comment) throws PaymentApiException, AccountApiException {
         final PaymentMethod paymentMethod = paymentApi.getPaymentMethodById(UUID.fromString(paymentMethodId));
         final Account account = accountApi.getAccountById(paymentMethod.getAccountId());
 
-        paymentApi.deletedPaymentMethod(account, UUID.fromString(paymentMethodId), context.createContext(createdBy, reason, comment));
+        paymentApi.deletedPaymentMethod(account, UUID.fromString(paymentMethodId), deleteDefaultPaymentMethodWithAutoPayOff, context.createContext(createdBy, reason, comment));
 
         return Response.status(Status.OK).build();
     }

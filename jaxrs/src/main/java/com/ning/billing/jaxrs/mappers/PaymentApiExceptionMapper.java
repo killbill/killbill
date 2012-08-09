@@ -57,7 +57,7 @@ public class PaymentApiExceptionMapper extends ExceptionMapperBase implements Ex
         } else if (exception.getCode() == ErrorCode.PAYMENT_CREATE_REFUND.getCode()) {
             return buildInternalErrorResponse(exception, uriInfo);
         } else if (exception.getCode() == ErrorCode.PAYMENT_DEL_DEFAULT_PAYMENT_METHOD.getCode()) {
-            return buildInternalErrorResponse(exception, uriInfo);
+            return buildBadRequestResponse(exception, uriInfo);
         } else if (exception.getCode() == ErrorCode.PAYMENT_DEL_PAYMENT_METHOD.getCode()) {
             return buildInternalErrorResponse(exception, uriInfo);
         } else if (exception.getCode() == ErrorCode.PAYMENT_GET_PAYMENT_METHODS.getCode()) {

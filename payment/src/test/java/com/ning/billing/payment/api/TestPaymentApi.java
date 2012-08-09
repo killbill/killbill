@@ -201,14 +201,24 @@ public class TestPaymentApi extends PaymentTestSuite {
 
         boolean failed = false;
         try {
-            paymentApi.deletedPaymentMethod(account, newPaymentMethodId, context);
+            paymentApi.deletedPaymentMethod(account, newPaymentMethodId, false, context);
         } catch (PaymentApiException e) {
             failed = true;
         }
         assertTrue(failed);
 
-        paymentApi.deletedPaymentMethod(account, initDefaultMethod.getId(), context);
+        paymentApi.deletedPaymentMethod(account, initDefaultMethod.getId(), true,  context);
         methods = paymentApi.getPaymentMethods(account, false);
         assertEquals(methods.size(), 1);
+
+        // NOW retry with default payment method with special flag
+        paymentApi.deletedPaymentMethod(account, newPaymentMethodId, true, context);
+
+        methods = paymentApi.getPaymentMethods(account, false);
+        assertEquals(methods.size(), 0);
+
+
+
     }
+
 }

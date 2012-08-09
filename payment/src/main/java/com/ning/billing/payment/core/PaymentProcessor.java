@@ -81,7 +81,6 @@ public class PaymentProcessor extends ProcessorBase {
 
     private final PaymentMethodProcessor paymentMethodProcessor;
     private final InvoicePaymentApi invoicePaymentApi;
-    private final TagUserApi tagUserApi;
     private final FailedPaymentRetryServiceScheduler failedPaymentRetryService;
     private final PluginFailureRetryServiceScheduler pluginFailureRetryService;
     private final AutoPayRetryServiceScheduler autoPayoffRetryService;
@@ -109,10 +108,9 @@ public class PaymentProcessor extends ProcessorBase {
                             final GlobalLocker locker,
                             @Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor,
                             final CallContextFactory factory) {
-        super(pluginRegistry, accountUserApi, eventBus, paymentDao, locker, executor);
+        super(pluginRegistry, accountUserApi, eventBus, paymentDao, tagUserApi, locker, executor);
         this.paymentMethodProcessor = paymentMethodProcessor;
         this.invoicePaymentApi = invoicePaymentApi;
-        this.tagUserApi = tagUserApi;
         this.failedPaymentRetryService = failedPaymentRetryService;
         this.pluginFailureRetryService = pluginFailureRetryService;
         this.autoPayoffRetryService = autoPayoffRetryService;
@@ -272,12 +270,7 @@ public class PaymentProcessor extends ProcessorBase {
                 !isInstantPayment &&
                 !isAccountAutoPayOff) {
             log.warn(String.format("Setting account %s into AUTO_PAY_OFF because of bad payment %s", accountId, lastPaymentForPaymentMethod.getId()));
-            try {
-                tagUserApi.addTag(accountId, ObjectType.ACCOUNT, ControlTagType.AUTO_PAY_OFF.getId(), context);
-            } catch (TagApiException e) {
-                log.error("Failed to add AUTO_PAY_OFF on account " + accountId, e);
-                throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, "Failed to add AUTO_PAY_OFF on account " + accountId);
-            }
+            setAccountAutoPayOff(accountId, context);
         }
     }
 
@@ -310,16 +303,6 @@ public class PaymentProcessor extends ProcessorBase {
 
     public void retryFailedPayment(final UUID paymentId) {
         retryFailedPaymentInternal(paymentId, PaymentStatus.PAYMENT_FAILURE);
-    }
-
-    private boolean isAccountAutoPayOff(final UUID accountId) {
-        final Map<String, Tag> accountTags = tagUserApi.getTags(accountId, ObjectType.ACCOUNT);
-        for (final Tag cur : accountTags.values()) {
-            if (ControlTagType.AUTO_PAY_OFF.getId().equals(cur.getTagDefinitionId())) {
-                return true;
-            }
-        }
-        return false;
     }
 
 

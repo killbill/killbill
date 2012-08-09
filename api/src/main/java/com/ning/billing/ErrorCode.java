@@ -161,7 +161,7 @@ public enum ErrorCode {
     */
     TAG_DEFINITION_CONFLICTS_WITH_CONTROL_TAG(3900, "The tag definition name conflicts with a reserved %s"),
     TAG_DEFINITION_ALREADY_EXISTS(3901, "The tag definition name already exists %s"),
-    TAG_DEFINITION_DOES_NOT_EXIST(3902, "The tag definition name does not exist %s"),
+    TAG_DEFINITION_DOES_NOT_EXIST(3902, "The tag definition id does not exist %s"),
     TAG_DEFINITION_IN_USE(3903, "The tag definition name is currently in use %s"),
 
     CONTROL_TAG_DOES_NOT_EXIST(3904, "The control tag does not exist %s"),
@@ -172,6 +172,7 @@ public enum ErrorCode {
     *
     */
     TAG_DOES_NOT_EXIST(3950, "The tag does not exist (name: %s)"),
+    TAG_CANNOT_BE_REMOVED(3951, "The tag %s cannot be removed because %s"),
 
     /*
     *

@@ -22,6 +22,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
@@ -31,7 +32,9 @@ import org.joda.time.format.ISODateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ning.billing.ErrorCode;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
+import com.ning.billing.jaxrs.json.TagJson;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
 import com.ning.billing.util.api.AuditUserApi;
 import com.ning.billing.util.api.CustomFieldUserApi;
@@ -78,7 +81,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         this(uriBuilder, tagUserApi, customFieldUserApi, null);
     }
 
-    protected Response getTags(final UUID id) throws TagDefinitionApiException {
+    protected Response getTags(final UUID id, final boolean withAudit) throws TagDefinitionApiException {
         final Map<String, Tag> tags = tagUserApi.getTags(id, getObjectType());
         final Collection<UUID> tagIdList = (tags.size() == 0) ?
                                            Collections.<UUID>emptyList() :
@@ -89,8 +92,35 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
                                                }
                                            });
 
+        final AtomicReference<TagDefinitionApiException> theException = new AtomicReference<TagDefinitionApiException>();
         final List<TagDefinition> tagDefinitionList = tagUserApi.getTagDefinitions(tagIdList);
-        return Response.status(Response.Status.OK).entity(tagDefinitionList).build();
+        final List<TagJson> result = ImmutableList.<TagJson>copyOf(Collections2.transform(tagIdList, new Function<UUID, TagJson>() {
+            @Override
+            public TagJson apply(UUID input) {
+                try {
+                final TagDefinition tagDefinition = findTagDefinitionFromId(tagDefinitionList, input);
+                    return new TagJson(input.toString(), tagDefinition.getName(), null);
+                } catch (TagDefinitionApiException e) {
+                    theException.set(e);
+                    return null;
+                }
+            }
+        }));
+        // Yackk..
+        if (theException.get() != null) {
+            throw theException.get();
+        }
+
+        return Response.status(Response.Status.OK).entity(result).build();
+    }
+
+    private TagDefinition findTagDefinitionFromId(final List<TagDefinition> tagDefinitionList, final UUID tagDefinitionId) throws TagDefinitionApiException {
+        for (TagDefinition cur : tagDefinitionList) {
+            if (cur.getId().equals(tagDefinitionId)) {
+                return cur;
+            }
+        }
+        throw new TagDefinitionApiException(ErrorCode.TAG_DEFINITION_DOES_NOT_EXIST, tagDefinitionId);
     }
 
     protected Response createTags(final UUID id,
@@ -102,7 +132,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         return uriBuilder.buildResponse(this.getClass(), "getTags", id, uriInfo.getBaseUri().toString());
     }
 
-    private Collection<UUID> getTagDefinitionUUIDs(final String tagList) {
+    protected Collection<UUID> getTagDefinitionUUIDs(final String tagList) {
         final String[] tagParts = tagList.split(",\\s*");
         return Collections2.transform(ImmutableList.copyOf(tagParts), new Function<String, UUID>() {
             @Override

@@ -30,6 +30,7 @@ import com.ning.billing.account.api.user.DefaultAccountCreationEvent;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.entity.EntityPersistenceException;
 
 public class MockAccountDao implements AccountDao {
     private final Bus eventBus;
@@ -93,5 +94,12 @@ public class MockAccountDao implements AccountDao {
                 throw new RuntimeException(ex);
             }
         }
+    }
+
+    @Override
+    public void updatePaymentMethod(UUID accountId, UUID paymentMethodId,
+            CallContext context) throws EntityPersistenceException {
+        // TODO Auto-generated method stub
+
     }
 }

@@ -39,6 +39,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
+import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
@@ -79,6 +80,7 @@ import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.audit.AuditLog;
 import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.util.tag.ControlTagType;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ArrayListMultimap;
@@ -217,7 +219,7 @@ public class AccountResource extends JaxRsResourceBase {
     @Path("/{accountId:" + UUID_PATTERN + "}/" + TIMELINE)
     @Produces(APPLICATION_JSON)
     public Response getAccountTimeline(@PathParam("accountId") final String accountIdString,
-                                       @QueryParam("audit") @DefaultValue("false") final Boolean withAudit) throws AccountApiException, PaymentApiException, EntitlementRepairException {
+                                       @QueryParam(QUERY_AUDIT) @DefaultValue("false") final Boolean withAudit) throws AccountApiException, PaymentApiException, EntitlementRepairException {
         final UUID accountId = UUID.fromString(accountIdString);
         final Account account = accountApi.getAccountById(accountId);
 
@@ -449,8 +451,8 @@ public class AccountResource extends JaxRsResourceBase {
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + TAGS)
     @Produces(APPLICATION_JSON)
-    public Response getTags(@PathParam(ID_PARAM_NAME) final String id) throws TagDefinitionApiException {
-        return super.getTags(UUID.fromString(id));
+    public Response getTags(@PathParam(ID_PARAM_NAME) final String id, @QueryParam(QUERY_AUDIT) @DefaultValue("false") final Boolean withAudit) throws TagDefinitionApiException {
+        return super.getTags(UUID.fromString(id), withAudit);
     }
 
     @POST
@@ -474,7 +476,26 @@ public class AccountResource extends JaxRsResourceBase {
                                @QueryParam(QUERY_TAGS) final String tagList,
                                @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                @HeaderParam(HDR_REASON) final String reason,
-                               @HeaderParam(HDR_COMMENT) final String comment) throws TagApiException {
+                               @HeaderParam(HDR_COMMENT) final String comment) throws TagApiException, AccountApiException {
+
+        // Look if there is an AUTO_PAY_OFF for that account and check if the account has a default paymentMethod
+        // If not we can't remove the AUTO_PAY_OFF tag
+        final Collection<UUID> tagDefinitionUUIDs =  getTagDefinitionUUIDs(tagList);
+        boolean isTagAutoPayOff = false;
+        for (UUID cur : tagDefinitionUUIDs) {
+            if (cur.equals(ControlTagType.AUTO_PAY_OFF.getId())) {
+                isTagAutoPayOff = true;
+                break;
+            }
+        }
+        final UUID accountId = UUID.fromString(id);
+        if (isTagAutoPayOff) {
+            final Account account = accountApi.getAccountById(accountId);
+            if (account.getPaymentMethodId() == null) {
+                throw new TagApiException(ErrorCode.TAG_CANNOT_BE_REMOVED, ControlTagType.AUTO_PAY_OFF, " the account does not have a default payment method");
+            }
+        }
+
         return super.deleteTags(UUID.fromString(id), tagList,
                                 context.createContext(createdBy, reason, comment));
     }

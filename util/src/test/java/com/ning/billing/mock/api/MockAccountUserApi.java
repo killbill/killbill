@@ -165,4 +165,17 @@ public class MockAccountUserApi implements AccountUserApi {
             throws AccountApiException {
         throw new UnsupportedOperationException();
     }
+
+    @Override
+    public void updatePaymentMethod(UUID accountId, UUID paymentMethodId,
+            CallContext context) throws AccountApiException {
+        throw new UnsupportedOperationException();
+
+    }
+
+    @Override
+    public void removePaymentMethod(UUID accountId, CallContext context)
+            throws AccountApiException {
+        throw new UnsupportedOperationException();
+    }
 }

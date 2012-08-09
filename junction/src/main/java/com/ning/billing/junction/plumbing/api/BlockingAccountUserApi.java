@@ -105,4 +105,16 @@ public class BlockingAccountUserApi implements AccountUserApi {
     public void removeEmail(final UUID accountId, final AccountEmail email, final CallContext context) {
         userApi.removeEmail(accountId, email, context);
     }
+
+    @Override
+    public void updatePaymentMethod(UUID accountId, UUID paymentMethodId,
+            CallContext context) throws AccountApiException {
+        userApi.updatePaymentMethod(accountId, paymentMethodId, context);
+    }
+
+    @Override
+    public void removePaymentMethod(UUID accountId, CallContext context)
+            throws AccountApiException {
+        userApi.removePaymentMethod(accountId, context);
+    }
 }

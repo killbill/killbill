@@ -171,4 +171,48 @@ public class AuditedAccountDao implements AccountDao {
     public void test() {
         accountSqlDao.test();
     }
+
+    @Override
+    public void updatePaymentMethod(final UUID accountId, final UUID paymentMethodId, final CallContext context) throws EntityPersistenceException {
+        try {
+            accountSqlDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
+                @Override
+                public Void inTransaction(final AccountSqlDao transactional, final TransactionStatus status) throws EntityPersistenceException, Bus.EventBusException {
+
+                    final Account currentAccount = transactional.getById(accountId.toString());
+                    if (currentAccount == null) {
+                        throw new EntityPersistenceException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID, accountId);
+                    }
+                    final String thePaymentMethodId = paymentMethodId != null ? paymentMethodId.toString() : null;
+                    transactional.updatePaymentMethod(accountId.toString(), thePaymentMethodId, context);
+
+                    final Account account = transactional.getById(accountId.toString());
+
+                    final Long recordId = accountSqlDao.getRecordId(accountId.toString());
+                    final EntityHistory<Account> history = new EntityHistory<Account>(accountId, recordId, account, ChangeType.UPDATE);
+                    accountSqlDao.insertHistoryFromTransaction(history, context);
+
+                    final Long historyRecordId = accountSqlDao.getHistoryRecordId(recordId);
+                    final EntityAudit audit = new EntityAudit(TableName.ACCOUNT_HISTORY, historyRecordId, ChangeType.UPDATE);
+                    accountSqlDao.insertAuditFromTransaction(audit, context);
+
+                    final AccountChangeEvent changeEvent = new DefaultAccountChangeEvent(accountId, context.getUserToken(), currentAccount, account);
+                    if (changeEvent.hasChanges()) {
+                        try {
+                            eventBus.postFromTransaction(changeEvent, transactional);
+                        } catch (EventBusException e) {
+                            log.warn("Failed to post account change event for account " + accountId, e);
+                        }
+                    }
+                    return null;
+                }
+            });
+        } catch (RuntimeException re) {
+            if (re.getCause() instanceof EntityPersistenceException) {
+                throw (EntityPersistenceException) re.getCause();
+            } else {
+                throw re;
+            }
+        }
+    }
 }

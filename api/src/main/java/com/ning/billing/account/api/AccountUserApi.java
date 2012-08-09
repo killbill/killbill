@@ -39,6 +39,10 @@ public interface AccountUserApi {
 
     public void updateAccount(UUID accountId, AccountData accountData, CallContext context) throws AccountApiException;
 
+    public void removePaymentMethod(final UUID accountId, final CallContext context) throws AccountApiException;
+
+    public void updatePaymentMethod(UUID accountId, UUID paymentMethodId, CallContext context) throws AccountApiException;
+
     public Account getAccountByKey(String key) throws AccountApiException;
 
     public Account getAccountById(UUID accountId) throws AccountApiException;

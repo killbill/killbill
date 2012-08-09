@@ -40,6 +40,8 @@ public class TagApiExceptionMapper extends ExceptionMapperBase implements Except
     public Response toResponse(final TagApiException exception) {
         if (exception.getCode() == ErrorCode.TAG_DOES_NOT_EXIST.getCode()) {
             return buildNotFoundResponse(exception, uriInfo);
+        } else if (exception.getCode() == ErrorCode.TAG_CANNOT_BE_REMOVED.getCode()) {
+            return buildBadRequestResponse(exception, uriInfo);
         } else {
             return buildBadRequestResponse(exception, uriInfo);
         }
