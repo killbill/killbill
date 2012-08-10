@@ -90,11 +90,13 @@ public class TestPaymentApi extends PaymentTestSuite {
 
     @BeforeClass(groups = "fast")
     public void setupClass() throws Exception {
-        account = testHelper.createTestAccount("yoyo.yahoo.com");
+        account = testHelper.createTestAccount("yoyo.yahoo.com", false);
     }
 
     @BeforeMethod(groups = "fast")
-    public void setUp() throws EventBusException {
+    public void setUp() throws Exception {
+        final PaymentMethodPlugin paymentMethodInfo = new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), true, null);
+        testHelper.addTestPaymentMethod(account, paymentMethodInfo);
         eventBus.start();
     }
 
