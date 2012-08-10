@@ -93,7 +93,7 @@ public class TestDefaultAuditDao extends UtilTestSuiteWithEmbeddedDB {
         final String tagHistoryString = (String) handle.select("select id from tag_history limit 1").get(0).get("id");
         handle.close();
 
-        final List<AuditLog> auditLogs = auditDao.getAuditLogsForRecordId(TableName.TAG_HISTORY, UUID.fromString(tagHistoryString));
+        final List<AuditLog> auditLogs = auditDao.getAuditLogsForId(TableName.TAG_HISTORY, UUID.fromString(tagHistoryString));
         Assert.assertEquals(auditLogs.size(), 1);
         Assert.assertEquals(auditLogs.get(0).getUserToken(), context.getUserToken().toString());
         Assert.assertEquals(auditLogs.get(0).getChangeType(), ChangeType.INSERT);

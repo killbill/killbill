@@ -24,5 +24,5 @@ import com.ning.billing.util.dao.TableName;
 
 public interface AuditDao {
 
-    public List<AuditLog> getAuditLogsForRecordId(final TableName tableName, final UUID objectId);
+    public List<AuditLog> getAuditLogsForId(final TableName tableName, final UUID objectId);
 }
