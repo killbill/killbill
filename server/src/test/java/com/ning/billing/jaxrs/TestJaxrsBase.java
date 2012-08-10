@@ -64,6 +64,7 @@ import com.ning.billing.invoice.api.InvoiceNotifier;
 import com.ning.billing.invoice.glue.DefaultInvoiceModule;
 import com.ning.billing.invoice.notification.NullInvoiceNotifier;
 import com.ning.billing.jaxrs.json.AccountJson;
+import com.ning.billing.jaxrs.json.AccountTimelineJson;
 import com.ning.billing.jaxrs.json.BillCycleDayJson;
 import com.ning.billing.jaxrs.json.BundleJsonNoSubscriptions;
 import com.ning.billing.jaxrs.json.InvoiceItemJsonSimple;
@@ -359,6 +360,19 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
         return objFromJson;
     }
 
+    protected AccountTimelineJson getAccountTimeline(final String accountId) throws Exception {
+        final String uri = JaxrsResource.ACCOUNTS_PATH + "/" + accountId + "/" + JaxrsResource.TIMELINE;
+
+        final Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+
+        final String baseJson = response.getResponseBody();
+        final AccountTimelineJson objFromJson = mapper.readValue(baseJson, AccountTimelineJson.class);
+        assertNotNull(objFromJson);
+
+        return objFromJson;
+    }
+
     protected AccountJson createAccountWithDefaultPaymentMethod(final String name, final String key, final String email) throws Exception {
 
         final AccountJson input = createAccount(name, key, email);
@@ -383,6 +397,10 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
         return objFromJson;
     }
 
+    protected AccountJson createAccount() throws Exception {
+        return createAccount(UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString().substring(0, 5) + '@' + UUID.randomUUID().toString().substring(0, 5));
+    }
+
     protected AccountJson createAccount(final String name, final String key, final String email) throws Exception {
         final AccountJson input = getAccountJson(name, key, email);
         String baseJson = mapper.writeValueAsString(input);
@@ -399,6 +417,20 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
         baseJson = response.getResponseBody();
         final AccountJson objFromJson = mapper.readValue(baseJson, AccountJson.class);
         Assert.assertNotNull(objFromJson);
+        return objFromJson;
+    }
+
+    protected AccountJson updateAccount(final String accountId, final AccountJson newInput) throws Exception {
+        final String baseJson = mapper.writeValueAsString(newInput);
+
+        final String uri = JaxrsResource.ACCOUNTS_PATH + "/" + accountId;
+        final Response response = doPut(uri, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+
+        final String retrievedJson = response.getResponseBody();
+        final AccountJson objFromJson = mapper.readValue(retrievedJson, AccountJson.class);
+        assertNotNull(objFromJson);
+
         return objFromJson;
     }
 
@@ -699,6 +731,18 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
     // REFUNDS
     //
 
+    protected List<RefundJson> getRefundsForAccount(final String accountId) throws IOException {
+        final String uri = JaxrsResource.ACCOUNTS_PATH + "/" + accountId + "/" + JaxrsResource.REFUNDS;
+        final Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+
+        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+        final String baseJson = response.getResponseBody();
+        List<RefundJson> refunds = mapper.readValue(baseJson, new TypeReference<List<RefundJson>>() {});
+        assertNotNull(refunds);
+
+        return refunds;
+    }
+
     protected List<RefundJson> getRefundsForPayment(final String paymentId) throws IOException {
         final String uri = JaxrsResource.PAYMENTS_PATH + "/" + paymentId + "/" + JaxrsResource.REFUNDS;
         final Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
@@ -847,6 +891,10 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
         }
 
         return builder;
+    }
+
+    protected AccountJson getAccountJson() {
+        return getAccountJson(UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString().substring(0, 5) + '@' + UUID.randomUUID().toString().substring(0, 5));
     }
 
     public AccountJson getAccountJson(final String name, final String externalKey, final String email) {
