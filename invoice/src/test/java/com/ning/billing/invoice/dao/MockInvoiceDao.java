@@ -27,8 +27,6 @@ import javax.annotation.Nullable;
 
 import org.joda.time.LocalDate;
 
-import com.google.inject.Inject;
-
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
@@ -38,7 +36,10 @@ import com.ning.billing.invoice.api.user.DefaultInvoiceCreationEvent;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.callcontext.CallContext;
 
+import com.google.inject.Inject;
+
 public class MockInvoiceDao implements InvoiceDao {
+
     private final Bus eventBus;
     private final Object monitor = new Object();
     private final Map<UUID, Invoice> invoices = new LinkedHashMap<UUID, Invoice>();
@@ -264,7 +265,9 @@ public class MockInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public InvoiceItem insertExternalCharge(final UUID accountId, @Nullable final UUID invoiceId, @Nullable final String description, final BigDecimal amount, final LocalDate effectiveDate, final Currency currency, final CallContext context) {
+    public InvoiceItem insertExternalCharge(final UUID accountId, @Nullable final UUID invoiceId, @Nullable final UUID bundleId,
+                                            @Nullable final String description, final BigDecimal amount, final LocalDate effectiveDate,
+                                            final Currency currency, final CallContext context) {
         throw new UnsupportedOperationException();
     }
 

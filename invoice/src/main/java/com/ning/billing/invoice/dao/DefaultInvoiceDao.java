@@ -531,7 +531,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public InvoiceItem insertExternalCharge(final UUID accountId, @Nullable final UUID invoiceId, final String description,
+    public InvoiceItem insertExternalCharge(final UUID accountId, @Nullable final UUID invoiceId, @Nullable final UUID bundleId, final String description,
                                             final BigDecimal amount, final LocalDate effectiveDate, final Currency currency, final CallContext context) {
         return invoiceSqlDao.inTransaction(new Transaction<InvoiceItem, InvoiceSqlDao>() {
             @Override
@@ -544,7 +544,8 @@ public class DefaultInvoiceDao implements InvoiceDao {
                     invoiceIdForExternalCharge = invoiceForExternalCharge.getId();
                 }
 
-                final InvoiceItem externalCharge = new ExternalChargeInvoiceItem(invoiceIdForExternalCharge, accountId, description,
+                final InvoiceItem externalCharge = new ExternalChargeInvoiceItem(invoiceIdForExternalCharge, accountId,
+                                                                                 bundleId, description,
                                                                                  effectiveDate, amount, currency);
 
                 final InvoiceItemSqlDao transInvoiceItemDao = transactional.become(InvoiceItemSqlDao.class);

@@ -134,7 +134,7 @@ public interface InvoiceItemSqlDao extends EntitySqlDao<InvoiceItem> {
             InvoiceItem item = null;
             switch (type) {
                 case EXTERNAL_CHARGE:
-                    item = new ExternalChargeInvoiceItem(id, invoiceId, accountId, planName, startDate, amount, currency);
+                    item = new ExternalChargeInvoiceItem(id, invoiceId, accountId, bundleId, planName, startDate, amount, currency);
                     break;
                 case FIXED:
                     item = new FixedPriceInvoiceItem(id, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, amount, currency);

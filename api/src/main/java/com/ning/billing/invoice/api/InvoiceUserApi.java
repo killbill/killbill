@@ -144,6 +144,22 @@ public interface InvoiceUserApi {
                                             Currency currency, CallContext context) throws InvoiceApiException;
 
     /**
+     * Add an external charge to an account tied to a particular bundle.
+     *
+     * @param accountId     account id
+     * @param bundleId      bundle id
+     * @param amount        the external charge amount
+     * @param description   a description for that charge
+     * @param effectiveDate the day to post the external charge, in the account timezone
+     * @param currency      the external charge currency
+     * @param context       the call context
+     * @return the external charge invoice item
+     * @throws InvoiceApiException
+     */
+    public InvoiceItem insertExternalChargeForBundle(UUID accountId, UUID bundleId, BigDecimal amount, String description, LocalDate effectiveDate,
+                                                     Currency currency, CallContext context) throws InvoiceApiException;
+
+    /**
      * Add an external charge to an invoice.
      *
      * @param accountId     account id
@@ -158,6 +174,23 @@ public interface InvoiceUserApi {
      */
     public InvoiceItem insertExternalChargeForInvoice(UUID accountId, UUID invoiceId, BigDecimal amount, String description,
                                                       LocalDate effectiveDate, Currency currency, CallContext context) throws InvoiceApiException;
+
+    /**
+     * Add an external charge to an invoice tied to a particular bundle.
+     *
+     * @param accountId     account id
+     * @param invoiceId     invoice id
+     * @param bundleId      bundle id
+     * @param amount        the external charge amount
+     * @param description   a description for that charge
+     * @param effectiveDate the day to post the external charge, in the account timezone
+     * @param currency      the external charge currency
+     * @param context       the call context
+     * @return the external charge invoice item
+     * @throws InvoiceApiException
+     */
+    public InvoiceItem insertExternalChargeForInvoiceAndBundle(UUID accountId, UUID invoiceId, UUID bundleId, BigDecimal amount, String description,
+                                                               LocalDate effectiveDate, Currency currency, CallContext context) throws InvoiceApiException;
 
     /**
      * Retrieve a credit by id.

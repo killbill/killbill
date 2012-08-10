@@ -149,17 +149,30 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     @Override
     public InvoiceItem insertExternalCharge(final UUID accountId, final BigDecimal amount, @Nullable final String description,
                                             final LocalDate effectiveDate, final Currency currency, final CallContext context) throws InvoiceApiException {
-        return insertExternalChargeForInvoice(accountId, null, amount, description, effectiveDate, currency, context);
+        return insertExternalChargeForInvoiceAndBundle(accountId, null, null, amount, description, effectiveDate, currency, context);
+    }
+
+    @Override
+    public InvoiceItem insertExternalChargeForBundle(final UUID accountId, final UUID bundleId, final BigDecimal amount, @Nullable final String description,
+                                                     final LocalDate effectiveDate, final Currency currency, final CallContext context) throws InvoiceApiException {
+        return insertExternalChargeForInvoiceAndBundle(accountId, null, bundleId, amount, description, effectiveDate, currency, context);
     }
 
     @Override
     public InvoiceItem insertExternalChargeForInvoice(final UUID accountId, final UUID invoiceId, final BigDecimal amount, @Nullable final String description,
                                                       final LocalDate effectiveDate, final Currency currency, final CallContext context) throws InvoiceApiException {
+        return insertExternalChargeForInvoiceAndBundle(accountId, invoiceId, null, amount, description, effectiveDate, currency, context);
+    }
+
+    @Override
+    public InvoiceItem insertExternalChargeForInvoiceAndBundle(final UUID accountId, @Nullable final UUID invoiceId, @Nullable final UUID bundleId,
+                                                               final BigDecimal amount, @Nullable final String description, final LocalDate effectiveDate,
+                                                               final Currency currency, final CallContext context) throws InvoiceApiException {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new InvoiceApiException(ErrorCode.EXTERNAL_CHARGE_AMOUNT_INVALID, amount);
         }
 
-        return dao.insertExternalCharge(accountId, invoiceId, description, amount, effectiveDate, currency, context);
+        return dao.insertExternalCharge(accountId, invoiceId, bundleId, description, amount, effectiveDate, currency, context);
     }
 
     @Override

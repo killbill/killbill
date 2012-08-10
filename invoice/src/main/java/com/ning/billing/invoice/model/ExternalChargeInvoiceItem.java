@@ -19,6 +19,8 @@ package com.ning.billing.invoice.model;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.LocalDate;
 
 import com.ning.billing.catalog.api.Currency;
@@ -27,14 +29,14 @@ import com.ning.billing.invoice.api.InvoiceItemType;
 
 public class ExternalChargeInvoiceItem extends InvoiceItemBase {
 
-    public ExternalChargeInvoiceItem(final UUID invoiceId, final UUID accountId, final String description, final LocalDate date,
-                                     final BigDecimal amount, final Currency currency) {
-        super(invoiceId, accountId, null, null, description, null, date, null, amount, currency);
+    public ExternalChargeInvoiceItem(final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId, @Nullable final String description,
+                                     final LocalDate date, final BigDecimal amount, final Currency currency) {
+        super(invoiceId, accountId, bundleId, null, description, null, date, null, amount, currency);
     }
 
-    public ExternalChargeInvoiceItem(final UUID id, final UUID invoiceId, final UUID accountId, final String description,
-                                     final LocalDate date, final BigDecimal amount, final Currency currency) {
-        super(id, invoiceId, accountId, null, (UUID) null, description, null, date, null, amount, currency);
+    public ExternalChargeInvoiceItem(final UUID id, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
+                                     @Nullable final String description, final LocalDate date, final BigDecimal amount, final Currency currency) {
+        super(id, invoiceId, accountId, bundleId, (UUID) null, description, null, date, null, amount, currency);
     }
 
     @Override
@@ -77,16 +79,10 @@ public class ExternalChargeInvoiceItem extends InvoiceItemBase {
         sb.append("InvoiceItem = {").append("id = ").append(id.toString()).append(", ");
         sb.append("invoiceId = ").append(invoiceId.toString()).append(", ");
         sb.append("accountId = ").append(accountId.toString()).append(", ");
+        sb.append("bundleId = ").append(bundleId == null ? "null" : bundleId.toString()).append(", ");
         sb.append("description = ").append(planName).append(", ");
         sb.append("startDate = ").append(startDate.toString()).append(", ");
-
-        sb.append("amount = ");
-        if (amount == null) {
-            sb.append("null");
-        } else {
-            sb.append(amount.toString());
-        }
-
+        sb.append("amount = ").append(amount == null ? "null" : amount.toString()).append(", ");
         sb.append("}");
         return sb.toString();
     }

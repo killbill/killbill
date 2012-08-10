@@ -19,6 +19,8 @@ package com.ning.billing.invoice.api.user;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -58,8 +60,28 @@ public class TestDefaultInvoiceUserApi extends InvoiceApiTestBase {
         final BigDecimal externalChargeAmount = BigDecimal.TEN;
         final InvoiceItem externalChargeInvoiceItem = invoiceUserApi.insertExternalCharge(accountId, externalChargeAmount, UUID.randomUUID().toString(),
                                                                                           clock.getUTCToday(), accountCurrency, context);
+        verifyExternalChargeOnNewInvoice(accountBalance, null, externalChargeAmount, externalChargeInvoiceItem);
+    }
+
+    @Test(groups = "slow")
+    public void testPostExternalChargeForBundleOnNewInvoice() throws Exception {
+        // Initial account balance
+        final BigDecimal accountBalance = invoiceUserApi.getAccountBalance(accountId);
+
+        // Post an external charge
+        final BigDecimal externalChargeAmount = BigDecimal.TEN;
+        final UUID bundleId = UUID.randomUUID();
+        final InvoiceItem externalChargeInvoiceItem = invoiceUserApi.insertExternalChargeForBundle(accountId, bundleId, externalChargeAmount,
+                                                                                                   UUID.randomUUID().toString(), clock.getUTCToday(),
+                                                                                                   accountCurrency, context);
+        verifyExternalChargeOnNewInvoice(accountBalance, bundleId, externalChargeAmount, externalChargeInvoiceItem);
+    }
+
+    private void verifyExternalChargeOnNewInvoice(final BigDecimal initialAccountBalance, @Nullable final UUID bundleId,
+                                                  final BigDecimal externalChargeAmount, final InvoiceItem externalChargeInvoiceItem) {
         Assert.assertNotNull(externalChargeInvoiceItem.getInvoiceId());
         Assert.assertNotEquals(externalChargeInvoiceItem.getInvoiceId(), invoiceId);
+        Assert.assertEquals(externalChargeInvoiceItem.getBundleId(), bundleId);
         Assert.assertEquals(externalChargeInvoiceItem.getInvoiceItemType(), InvoiceItemType.EXTERNAL_CHARGE);
         Assert.assertEquals(externalChargeInvoiceItem.getAccountId(), accountId);
         Assert.assertEquals(externalChargeInvoiceItem.getAmount(), externalChargeAmount);
@@ -72,7 +94,7 @@ public class TestDefaultInvoiceUserApi extends InvoiceApiTestBase {
 
         // Verify the adjusted account balance
         final BigDecimal adjustedAccountBalance = invoiceUserApi.getAccountBalance(accountId);
-        Assert.assertEquals(adjustedAccountBalance, accountBalance.add(externalChargeAmount));
+        Assert.assertEquals(adjustedAccountBalance, initialAccountBalance.add(externalChargeAmount));
     }
 
     @Test(groups = "slow")
@@ -90,7 +112,32 @@ public class TestDefaultInvoiceUserApi extends InvoiceApiTestBase {
         final InvoiceItem externalChargeInvoiceItem = invoiceUserApi.insertExternalChargeForInvoice(accountId, invoiceId,
                                                                                                     externalChargeAmount, UUID.randomUUID().toString(),
                                                                                                     clock.getUTCToday(), accountCurrency, context);
+        verifyExternalChargeOnExistingInvoice(invoiceBalance, null, externalChargeAmount, externalChargeInvoiceItem);
+    }
+
+    @Test(groups = "slow")
+    public void testPostExternalChargeForBundleOnExistingInvoice() throws Exception {
+        // Verify the initial invoice balance
+        final BigDecimal invoiceBalance = invoiceUserApi.getInvoice(invoiceId).getBalance();
+        Assert.assertEquals(invoiceBalance.compareTo(BigDecimal.ZERO), 1);
+
+        // Verify the initial account balance
+        final BigDecimal accountBalance = invoiceUserApi.getAccountBalance(accountId);
+        Assert.assertEquals(accountBalance, invoiceBalance);
+
+        // Post an external charge
+        final BigDecimal externalChargeAmount = BigDecimal.TEN;
+        final UUID bundleId = UUID.randomUUID();
+        final InvoiceItem externalChargeInvoiceItem = invoiceUserApi.insertExternalChargeForInvoiceAndBundle(accountId, invoiceId, bundleId,
+                                                                                                             externalChargeAmount, UUID.randomUUID().toString(),
+                                                                                                             clock.getUTCToday(), accountCurrency, context);
+        verifyExternalChargeOnExistingInvoice(invoiceBalance, bundleId, externalChargeAmount, externalChargeInvoiceItem);
+    }
+
+    private void verifyExternalChargeOnExistingInvoice(final BigDecimal initialInvoiceBalance, @Nullable final UUID bundleId,
+                                                       final BigDecimal externalChargeAmount, final InvoiceItem externalChargeInvoiceItem) {
         Assert.assertEquals(externalChargeInvoiceItem.getInvoiceId(), invoiceId);
+        Assert.assertEquals(externalChargeInvoiceItem.getBundleId(), bundleId);
         Assert.assertEquals(externalChargeInvoiceItem.getInvoiceItemType(), InvoiceItemType.EXTERNAL_CHARGE);
         Assert.assertEquals(externalChargeInvoiceItem.getAccountId(), accountId);
         Assert.assertEquals(externalChargeInvoiceItem.getAmount(), externalChargeAmount);
@@ -99,7 +146,7 @@ public class TestDefaultInvoiceUserApi extends InvoiceApiTestBase {
 
         // Verify the adjusted invoice balance
         final BigDecimal adjustedInvoiceBalance = invoiceUserApi.getInvoice(invoiceId).getBalance();
-        Assert.assertEquals(adjustedInvoiceBalance.compareTo(invoiceBalance.add(externalChargeAmount)), 0);
+        Assert.assertEquals(adjustedInvoiceBalance.compareTo(initialInvoiceBalance.add(externalChargeAmount)), 0);
 
         // Verify the adjusted account balance
         final BigDecimal adjustedAccountBalance = invoiceUserApi.getAccountBalance(accountId);

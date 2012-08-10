@@ -248,9 +248,16 @@ public class InvoiceResource extends JaxRsResourceBase {
         }
 
         final Currency currency = Objects.firstNonNull(externalChargeJson.getCurrency(), account.getCurrency());
-        final InvoiceItem externalCharge = invoiceApi.insertExternalCharge(account.getId(), externalChargeJson.getAmount(),
-                                                                           externalChargeJson.getDescription(), requestedDate,
-                                                                           currency, callContext);
+        final InvoiceItem externalCharge;
+        if (externalChargeJson.getBundleId() != null) {
+            externalCharge = invoiceApi.insertExternalChargeForBundle(account.getId(), UUID.fromString(externalChargeJson.getBundleId()),
+                                                                      externalChargeJson.getAmount(), externalChargeJson.getDescription(),
+                                                                      requestedDate, currency, callContext);
+        } else {
+            externalCharge = invoiceApi.insertExternalCharge(account.getId(), externalChargeJson.getAmount(),
+                                                             externalChargeJson.getDescription(), requestedDate,
+                                                             currency, callContext);
+        }
 
         return uriBuilder.buildResponse(InvoiceResource.class, "getInvoice", externalCharge.getInvoiceId(), uriInfo.getBaseUri().toString());
     }
@@ -280,9 +287,16 @@ public class InvoiceResource extends JaxRsResourceBase {
 
         final UUID invoiceId = UUID.fromString(invoiceIdString);
         final Currency currency = Objects.firstNonNull(externalChargeJson.getCurrency(), account.getCurrency());
-        final InvoiceItem externalCharge = invoiceApi.insertExternalChargeForInvoice(account.getId(), invoiceId,
-                                                                                     externalChargeJson.getAmount(), externalChargeJson.getDescription(),
-                                                                                     requestedDate, currency, callContext);
+        final InvoiceItem externalCharge;
+        if (externalChargeJson.getBundleId() != null) {
+            externalCharge = invoiceApi.insertExternalChargeForInvoiceAndBundle(account.getId(), invoiceId, UUID.fromString(externalChargeJson.getBundleId()),
+                                                                                externalChargeJson.getAmount(), externalChargeJson.getDescription(),
+                                                                                requestedDate, currency, callContext);
+        } else {
+            externalCharge = invoiceApi.insertExternalChargeForInvoice(account.getId(), invoiceId,
+                                                                       externalChargeJson.getAmount(), externalChargeJson.getDescription(),
+                                                                       requestedDate, currency, callContext);
+        }
 
         return uriBuilder.buildResponse(InvoiceResource.class, "getInvoice", externalCharge.getInvoiceId(), uriInfo.getBaseUri().toString());
     }

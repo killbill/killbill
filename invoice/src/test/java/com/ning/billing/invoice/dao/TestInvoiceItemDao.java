@@ -163,9 +163,10 @@ public class TestInvoiceItemDao extends InvoiceDaoTestBase {
     public void testExternalChargeInvoiceSqlDao() throws Exception {
         final UUID invoiceId = UUID.randomUUID();
         final UUID accountId = UUID.randomUUID();
+        final UUID bundleId = UUID.randomUUID();
         final String description = UUID.randomUUID().toString();
         final LocalDate startDate = new LocalDate(2012, 4, 1);
-        final InvoiceItem externalChargeInvoiceItem = new ExternalChargeInvoiceItem(invoiceId, accountId, description,
+        final InvoiceItem externalChargeInvoiceItem = new ExternalChargeInvoiceItem(invoiceId, accountId, bundleId, description,
                                                                                     startDate, TEN, Currency.USD);
         invoiceItemSqlDao.create(externalChargeInvoiceItem, context);
 
