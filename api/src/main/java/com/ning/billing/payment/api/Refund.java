@@ -22,8 +22,9 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.util.entity.Entity;
 
-public interface Refund {
+public interface Refund extends Entity {
 
     public UUID getId();
 
