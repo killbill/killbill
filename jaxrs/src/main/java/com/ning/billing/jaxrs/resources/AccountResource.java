@@ -18,10 +18,8 @@ package com.ning.billing.jaxrs.resources;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import javax.ws.rs.Consumes;
@@ -53,7 +51,6 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.api.InvoiceUserApi;
@@ -78,7 +75,11 @@ import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.api.TagUserApi;
-import com.ning.billing.util.audit.AuditLog;
+import com.ning.billing.util.audit.AuditLogsForBundles;
+import com.ning.billing.util.audit.AuditLogsForInvoicePayments;
+import com.ning.billing.util.audit.AuditLogsForInvoices;
+import com.ning.billing.util.audit.AuditLogsForPayments;
+import com.ning.billing.util.audit.AuditLogsForRefunds;
 import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.tag.ControlTagType;
 
@@ -225,64 +226,55 @@ public class AccountResource extends JaxRsResourceBase {
 
         // Get the invoices
         final List<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId());
-        final Map<UUID, List<AuditLog>> invoiceAuditLogs = new HashMap<UUID, List<AuditLog>>();
-        final Map<UUID, List<AuditLog>> invoiceItemsAuditLogs = new HashMap<UUID, List<AuditLog>>();
+        AuditLogsForInvoices invoicesAuditLogs = null;
         if (withAudit) {
-            for (final Invoice invoice : invoices) {
-                invoiceAuditLogs.put(invoice.getId(), auditUserApi.getAuditLogs(invoice.getId(), ObjectType.INVOICE));
-                for (final InvoiceItem invoiceItem : invoice.getInvoiceItems()) {
-                    invoiceItemsAuditLogs.put(invoiceItem.getId(), auditUserApi.getAuditLogs(invoiceItem.getId(), ObjectType.INVOICE_ITEM));
-                }
-            }
+            invoicesAuditLogs = auditUserApi.getAuditLogsForInvoices(invoices);
         }
 
         // Get the payments
         final List<Payment> payments = paymentApi.getAccountPayments(accountId);
-        final Map<UUID, List<AuditLog>> paymentsAuditLogs = new HashMap<UUID, List<AuditLog>>();
+        AuditLogsForPayments paymentsAuditLogs = null;
         if (withAudit) {
-            for (final Payment payment : payments) {
-                paymentsAuditLogs.put(payment.getId(), auditUserApi.getAuditLogs(payment.getId(), ObjectType.PAYMENT));
-            }
+            paymentsAuditLogs = auditUserApi.getAuditLogsForPayments(payments);
         }
 
         // Get the refunds
         final List<Refund> refunds = paymentApi.getAccountRefunds(account);
-        final Map<UUID, List<AuditLog>> refundsAuditLogs = new HashMap<UUID, List<AuditLog>>();
+        AuditLogsForRefunds refundsAuditLogs = null;
+        if (withAudit) {
+            refundsAuditLogs = auditUserApi.getAuditLogsForRefunds(refunds);
+        }
         final Multimap<UUID, Refund> refundsByPayment = ArrayListMultimap.<UUID, Refund>create();
         for (final Refund refund : refunds) {
-            if (withAudit) {
-                refundsAuditLogs.put(refund.getId(), auditUserApi.getAuditLogs(refund.getId(), ObjectType.REFUND));
-            }
             refundsByPayment.put(refund.getPaymentId(), refund);
         }
 
         // Get the chargebacks
         final List<InvoicePayment> chargebacks = invoicePaymentApi.getChargebacksByAccountId(accountId);
-        final Map<UUID, List<AuditLog>> chargebacksAuditLogs = new HashMap<UUID, List<AuditLog>>();
+        AuditLogsForInvoicePayments chargebacksAuditLogs = null;
+        if (withAudit) {
+            chargebacksAuditLogs = auditUserApi.getAuditLogsForInvoicePayments(chargebacks);
+        }
         final Multimap<UUID, InvoicePayment> chargebacksByPayment = ArrayListMultimap.<UUID, InvoicePayment>create();
         for (final InvoicePayment chargeback : chargebacks) {
-            if (withAudit) {
-                chargebacksAuditLogs.put(chargeback.getId(), auditUserApi.getAuditLogs(chargeback.getId(), ObjectType.INVOICE_PAYMENT));
-            }
             chargebacksByPayment.put(chargeback.getPaymentId(), chargeback);
         }
 
         // Get the bundles
         final List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(account.getId());
-        final Map<UUID, List<AuditLog>> bundlesAuditLogs = new HashMap<UUID, List<AuditLog>>();
+        AuditLogsForBundles bundlesAuditLogs = null;
+        if (withAudit) {
+            bundlesAuditLogs = auditUserApi.getAuditLogsForBundles(bundles);
+        }
         final List<BundleTimeline> bundlesTimeline = new LinkedList<BundleTimeline>();
         for (final SubscriptionBundle bundle : bundles) {
-            if (withAudit) {
-                bundlesAuditLogs.put(bundle.getId(), auditUserApi.getAuditLogs(bundle.getId(), ObjectType.BUNDLE));
-            }
             bundlesTimeline.add(timelineApi.getBundleTimeline(bundle.getId()));
         }
 
         final AccountTimelineJson json = new AccountTimelineJson(account, invoices, payments, bundlesTimeline,
-                                                                 refundsByPayment, chargebacksByPayment, invoiceAuditLogs,
-                                                                 invoiceItemsAuditLogs, paymentsAuditLogs, refundsAuditLogs,
+                                                                 refundsByPayment, chargebacksByPayment,
+                                                                 invoicesAuditLogs, paymentsAuditLogs, refundsAuditLogs,
                                                                  chargebacksAuditLogs, bundlesAuditLogs);
-
         return Response.status(Status.OK).entity(json).build();
     }
 
@@ -480,7 +472,7 @@ public class AccountResource extends JaxRsResourceBase {
 
         // Look if there is an AUTO_PAY_OFF for that account and check if the account has a default paymentMethod
         // If not we can't remove the AUTO_PAY_OFF tag
-        final Collection<UUID> tagDefinitionUUIDs =  getTagDefinitionUUIDs(tagList);
+        final Collection<UUID> tagDefinitionUUIDs = getTagDefinitionUUIDs(tagList);
         boolean isTagAutoPayOff = false;
         for (UUID cur : tagDefinitionUUIDs) {
             if (cur.equals(ControlTagType.AUTO_PAY_OFF.getId())) {

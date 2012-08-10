@@ -24,6 +24,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import com.ning.billing.account.api.Account;
 import com.ning.billing.entitlement.api.timeline.BundleTimeline;
 import com.ning.billing.invoice.api.Invoice;
@@ -33,9 +35,15 @@ import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.api.Refund;
 import com.ning.billing.util.audit.AuditLog;
+import com.ning.billing.util.audit.AuditLogsForBundles;
+import com.ning.billing.util.audit.AuditLogsForInvoicePayments;
+import com.ning.billing.util.audit.AuditLogsForInvoices;
+import com.ning.billing.util.audit.AuditLogsForPayments;
+import com.ning.billing.util.audit.AuditLogsForRefunds;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
 
 public class AccountTimelineJson {
@@ -85,6 +93,20 @@ public class AccountTimelineJson {
             }
         }
         return tmp.toString();
+    }
+
+    public AccountTimelineJson(final Account account, final List<Invoice> invoices, final List<Payment> payments,
+                               final List<BundleTimeline> bundlesTimeline, final Multimap<UUID, Refund> refundsByPayment,
+                               final Multimap<UUID, InvoicePayment> chargebacksByPayment, @Nullable final AuditLogsForInvoices invoicesAuditLogs,
+                               @Nullable final AuditLogsForPayments paymentsAuditLogs, @Nullable final AuditLogsForRefunds refundsAuditLogs,
+                               @Nullable final AuditLogsForInvoicePayments chargebacksAuditLogs, @Nullable final AuditLogsForBundles bundlesAuditLogs) {
+        this(account, invoices, payments, bundlesTimeline, refundsByPayment, chargebacksByPayment,
+             invoicesAuditLogs == null ? ImmutableMap.<UUID, List<AuditLog>>of() : invoicesAuditLogs.getInvoiceAuditLogs(),
+             invoicesAuditLogs == null ? ImmutableMap.<UUID, List<AuditLog>>of() : invoicesAuditLogs.getInvoiceItemsAuditLogs(),
+             paymentsAuditLogs == null ? ImmutableMap.<UUID, List<AuditLog>>of() : paymentsAuditLogs.getPaymentsAuditLogs(),
+             refundsAuditLogs == null ? ImmutableMap.<UUID, List<AuditLog>>of() : refundsAuditLogs.getRefundsAuditLogs(),
+             chargebacksAuditLogs == null ? ImmutableMap.<UUID, List<AuditLog>>of() : chargebacksAuditLogs.getInvoicePaymentsAuditLogs(),
+             bundlesAuditLogs == null ? ImmutableMap.<UUID, List<AuditLog>>of() : bundlesAuditLogs.getBundlesAuditLogs());
     }
 
     public AccountTimelineJson(final Account account, final List<Invoice> invoices, final List<Payment> payments, final List<BundleTimeline> bundles,
