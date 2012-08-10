@@ -50,6 +50,9 @@ public interface AccountSqlDao extends UpdatableEntitySqlDao<Account>, Transacti
     @SqlUpdate
     public void update(@AccountBinder Account account, @CallContextBinder final CallContext context);
 
+    @SqlUpdate
+    public void updatePaymentMethod(@Bind("id") String accountId, @Bind("paymentMethodId") String paymentMethodId, @CallContextBinder final CallContext context);
+
     @Override
     @SqlUpdate
     public void insertHistoryFromTransaction(@AccountHistoryBinder final EntityHistory<Account> account,

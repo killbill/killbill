@@ -54,6 +54,7 @@ import com.ning.billing.util.tag.dao.TagDefinitionSqlDao;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
@@ -221,6 +222,25 @@ public class TestAccountDao extends AccountDaoTestBase {
         assertEquals(savedAccount.getCountry(), updatedAccount.getCountry());
         assertEquals(savedAccount.getPostalCode(), updatedAccount.getPostalCode());
         assertEquals(savedAccount.getPhone(), updatedAccount.getPhone());
+    }
+
+    @Test(groups = "slow")
+    public void testUpdatePaymentMethod() throws Exception {
+        final Account account = createTestAccount(1);
+        accountDao.create(account, context);
+
+        final UUID newPaymentMethodId = UUID.randomUUID();
+        accountDao.updatePaymentMethod(account.getId(), newPaymentMethodId, context);
+
+        final Account newAccount = accountDao.getById(account.getId());
+        assertEquals(newAccount.getPaymentMethodId(), newPaymentMethodId);
+
+        // And then set it to null
+        accountDao.updatePaymentMethod(account.getId(), null, context);
+
+        final Account newAccountWithPMNull = accountDao.getById(account.getId());
+        assertNull(newAccountWithPMNull.getPaymentMethodId());
+
     }
 
     @Test(groups = "slow")

@@ -131,7 +131,7 @@ public interface PaymentApi {
     public void updatePaymentMethod(final Account account, final UUID paymentMethodId, final PaymentMethodPlugin paymentMetghodInfo)
             throws PaymentApiException;
 
-    public void deletedPaymentMethod(final Account account, final UUID paymentMethodId, final CallContext context)
+    public void deletedPaymentMethod(final Account account, final UUID paymentMethodId, final boolean deleteDefaultPaymentMethodWithAutoPayOff, final CallContext context)
             throws PaymentApiException;
 
     public void setDefaultPaymentMethod(final Account account, final UUID paymentMethodId, final CallContext context)

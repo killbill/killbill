@@ -177,9 +177,9 @@ public class DefaultPaymentApi implements PaymentApi {
     }
 
     @Override
-    public void deletedPaymentMethod(final Account account, final UUID paymentMethodId, final CallContext context)
+    public void deletedPaymentMethod(final Account account, final UUID paymentMethodId, final boolean deleteDefaultPaymentMethodWithAutoPayOff, final CallContext context)
             throws PaymentApiException {
-        methodProcessor.deletedPaymentMethod(account, paymentMethodId);
+        methodProcessor.deletedPaymentMethod(account, paymentMethodId, deleteDefaultPaymentMethodWithAutoPayOff);
     }
 
     @Override

@@ -25,6 +25,7 @@ import java.util.UUID;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
@@ -170,8 +171,8 @@ public class PaymentResource extends JaxRsResourceBase {
     @GET
     @Path(TAG_URI)
     @Produces(APPLICATION_JSON)
-    public Response getTags(@PathParam(ID_PARAM_NAME) final String id) throws TagDefinitionApiException {
-        return super.getTags(UUID.fromString(id));
+    public Response getTags(@PathParam(ID_PARAM_NAME) final String id, @QueryParam(QUERY_AUDIT) @DefaultValue("false") final Boolean withAudit) throws TagDefinitionApiException {
+        return super.getTags(UUID.fromString(id), withAudit);
     }
 
     @POST

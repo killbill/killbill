@@ -42,6 +42,7 @@ import com.ning.billing.jaxrs.json.PaymentMethodJson;
 import com.ning.billing.jaxrs.json.RefundJson;
 import com.ning.billing.jaxrs.json.SubscriptionJsonNoEvents;
 import com.ning.billing.jaxrs.json.TagDefinitionJson;
+import com.ning.billing.jaxrs.json.TagJson;
 import com.ning.billing.jaxrs.resources.JaxrsResource;
 import com.ning.http.client.Response;
 
@@ -226,6 +227,55 @@ public class TestAccount extends TestJaxrsBase {
         baseJson = response.getResponseBody();
         paymentMethods = mapper.readValue(baseJson, new TypeReference<List<PaymentMethodJson>>() {});
         assertEquals(paymentMethods.size(), 1);
+
+
+        //
+        // DELETE DEFAULT PAYMENT METHOD (without special flag first)
+        //
+        uri = JaxrsResource.PAYMENT_METHODS_PATH + "/" + paymentMethodPP.getPaymentMethodId() ;
+        response = doDelete(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.BAD_REQUEST.getStatusCode());
+
+        //
+        // RETRY TO DELETE DEFAULT PAYMENT METHOD (with special flag this time)
+        //
+        uri = JaxrsResource.PAYMENT_METHODS_PATH + "/" + paymentMethodPP.getPaymentMethodId() ;
+        queryParams = new HashMap<String, String>();
+        queryParams.put(JaxrsResource.QUERY_DELETE_DEFAULT_PM_WITH_AUTO_PAY_OFF, "true");
+
+        response = doDelete(uri, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+
+        // CHECK ACCOUNT IS NOW AUTO_PAY_OFF
+
+        uri = JaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAccountId() + "/" + JaxrsResource.TAGS;
+        response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+
+        baseJson = response.getResponseBody();
+        List<TagJson> tagsJson = mapper.readValue(baseJson, new TypeReference<List<TagJson>>() {});
+        Assert.assertEquals(tagsJson.size(), 1);
+        TagJson tagJson = tagsJson.get(0);
+        Assert.assertEquals(tagJson.getTagDefinitionName(), "AUTO_PAY_OFF");
+        Assert.assertEquals(tagJson.getTagDefinitionId(), new UUID(0, 1).toString());
+
+        // FETCH ACCOUNT AGAIN AND CHECK THERE IS NO DEFAULT PAYMENT METHOD SET
+        uri = JaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAccountId();
+        response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+
+        AccountJson updatedAccountJson = mapper.readValue(response.getResponseBody(), AccountJson.class);
+        Assert.assertEquals(updatedAccountJson.getAccountId(), accountJson.getAccountId());
+        Assert.assertNull(updatedAccountJson.getPaymentMethodId());
+
+        //
+        // FINALLY TRY TO REMOVE AUTO_PAY_OFF WITH NO DEFAULT PAYMENT METHOD ON ACCOUNT
+        //
+        uri = JaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAccountId() + "/" + JaxrsResource.TAGS;
+        queryParams = new HashMap<String, String>();
+        queryParams.put(JaxrsResource.QUERY_TAGS, new UUID(0, 1).toString());
+        response = doDelete(uri, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.BAD_REQUEST.getStatusCode());
+
     }
 
     @Test(groups = "slow")

@@ -48,6 +48,7 @@ import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
 import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 import com.ning.billing.payment.plugin.api.PaymentPluginApiException;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
+import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextFactory;
@@ -77,10 +78,11 @@ public class RefundProcessor extends ProcessorBase {
                            final InvoicePaymentApi invoicePaymentApi,
                            final Bus eventBus,
                            final CallContextFactory factory,
+                           final TagUserApi tagUserApi,
                            final PaymentDao paymentDao,
                            final GlobalLocker locker,
                            @Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor) {
-        super(pluginRegistry, accountUserApi, eventBus, paymentDao, locker, executor);
+        super(pluginRegistry, accountUserApi, eventBus, paymentDao, tagUserApi, locker, executor);
         this.invoicePaymentApi = invoicePaymentApi;
         this.factory = factory;
     }

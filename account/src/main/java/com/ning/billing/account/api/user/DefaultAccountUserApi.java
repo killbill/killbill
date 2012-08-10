@@ -19,6 +19,8 @@ package com.ning.billing.account.api.user;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
 
 import com.google.inject.Inject;
@@ -154,5 +156,20 @@ public class DefaultAccountUserApi implements AccountUserApi {
     @Override
     public void removeEmail(final UUID accountId, final AccountEmail email, final CallContext context) {
         accountEmailDao.removeEmail(accountId, email, context);
+    }
+
+    @Override
+    public void removePaymentMethod(final UUID accountId, final CallContext context) throws AccountApiException {
+        updatePaymentMethod(accountId, null, context);
+    }
+
+
+    @Override
+    public void updatePaymentMethod(final UUID accountId, @Nullable final UUID paymentMethodId, final CallContext context) throws AccountApiException {
+        try {
+            accountDao.updatePaymentMethod(accountId, paymentMethodId, context);
+        }  catch (EntityPersistenceException e) {
+            throw new AccountApiException(e, e.getCode(), e.getMessage());
+        }
     }
 }

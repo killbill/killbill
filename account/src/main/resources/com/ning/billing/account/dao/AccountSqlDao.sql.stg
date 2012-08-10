@@ -49,6 +49,16 @@ update() ::= <<
     WHERE id = :id;
 >>
 
+
+updatePaymentMethod() ::= <<
+    UPDATE accounts
+    SET payment_method_id = :paymentMethodId
+    , updated_date = :updatedDate
+    , updated_by = :userName
+    WHERE id = :id;
+>>
+
+
 historyFields() ::= <<
     record_id,
     id,

@@ -90,11 +90,13 @@ public class TestPaymentApi extends PaymentTestSuite {
 
     @BeforeClass(groups = "fast")
     public void setupClass() throws Exception {
-        account = testHelper.createTestAccount("yoyo.yahoo.com");
+        account = testHelper.createTestAccount("yoyo.yahoo.com", false);
     }
 
     @BeforeMethod(groups = "fast")
-    public void setUp() throws EventBusException {
+    public void setUp() throws Exception {
+        final PaymentMethodPlugin paymentMethodInfo = new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), true, null);
+        testHelper.addTestPaymentMethod(account, paymentMethodInfo);
         eventBus.start();
     }
 
@@ -201,14 +203,24 @@ public class TestPaymentApi extends PaymentTestSuite {
 
         boolean failed = false;
         try {
-            paymentApi.deletedPaymentMethod(account, newPaymentMethodId, context);
+            paymentApi.deletedPaymentMethod(account, newPaymentMethodId, false, context);
         } catch (PaymentApiException e) {
             failed = true;
         }
         assertTrue(failed);
 
-        paymentApi.deletedPaymentMethod(account, initDefaultMethod.getId(), context);
+        paymentApi.deletedPaymentMethod(account, initDefaultMethod.getId(), true,  context);
         methods = paymentApi.getPaymentMethods(account, false);
         assertEquals(methods.size(), 1);
+
+        // NOW retry with default payment method with special flag
+        paymentApi.deletedPaymentMethod(account, newPaymentMethodId, true, context);
+
+        methods = paymentApi.getPaymentMethods(account, false);
+        assertEquals(methods.size(), 0);
+
+
+
     }
+
 }

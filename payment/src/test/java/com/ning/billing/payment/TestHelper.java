@@ -95,7 +95,7 @@ public class TestHelper {
         return invoice;
     }
 
-    public Account createTestAccount(final String email) throws Exception {
+    public Account createTestAccount(final String email, final boolean addPaymentMethod) throws Exception {
         final String name = "First" + UUID.randomUUID().toString() + " " + "Last" + UUID.randomUUID().toString();
         final String externalKey = UUID.randomUUID().toString();
 
@@ -114,12 +114,14 @@ public class TestHelper {
         Mockito.when(accountUserApi.getAccountById(Mockito.<UUID>any())).thenReturn(account);
         Mockito.when(accountUserApi.getAccountByKey(Mockito.anyString())).thenReturn(account);
 
-        final PaymentMethodPlugin pm = new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), true, null);
-        addTestPaymentMethod(account, pm);
+        if (addPaymentMethod) {
+            final PaymentMethodPlugin pm = new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), true, null);
+            addTestPaymentMethod(account, pm);
+        }
         return account;
     }
 
-    private void addTestPaymentMethod(final Account account, final PaymentMethodPlugin paymentMethodInfo) throws Exception {
+    public void addTestPaymentMethod(final Account account, final PaymentMethodPlugin paymentMethodInfo) throws Exception {
         final UUID paymentMethodId = paymentApi.addPaymentMethod(PaymentTestModuleWithMocks.PLUGIN_TEST_NAME, account, true, paymentMethodInfo, context);
         Mockito.when(account.getPaymentMethodId()).thenReturn(paymentMethodId);
     }

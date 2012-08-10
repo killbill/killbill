@@ -33,9 +33,12 @@ import com.ning.billing.payment.api.PaymentMethod;
 import com.ning.billing.payment.dao.MockPaymentDao;
 import com.ning.billing.payment.provider.DefaultPaymentProviderPluginRegistry;
 import com.ning.billing.payment.provider.ExternalPaymentProviderPlugin;
+import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.clock.DefaultClock;
 import com.ning.billing.util.globallocker.GlobalLocker;
 
 public class TestPaymentMethodProcessor extends PaymentTestSuite {
@@ -47,12 +50,14 @@ public class TestPaymentMethodProcessor extends PaymentTestSuite {
         final DefaultPaymentProviderPluginRegistry pluginRegistry = new DefaultPaymentProviderPluginRegistry(Mockito.mock(PaymentConfig.class));
         pluginRegistry.register(new ExternalPaymentProviderPlugin(new ClockMock()), ExternalPaymentProviderPlugin.PLUGIN_NAME);
 
+        final Clock clock = new DefaultClock();
         final AccountUserApi accountUserApi = Mockito.mock(AccountUserApi.class);
         final Bus bus = Mockito.mock(Bus.class);
         final MockPaymentDao paymentDao = new MockPaymentDao();
         final GlobalLocker globalLocker = Mockito.mock(GlobalLocker.class);
         final ExecutorService executorService = Mockito.mock(ExecutorService.class);
-        processor = new PaymentMethodProcessor(pluginRegistry, accountUserApi, bus, paymentDao, globalLocker, executorService);
+        final TagUserApi tagUserApi =  Mockito.mock(TagUserApi.class);
+        processor = new PaymentMethodProcessor(pluginRegistry, accountUserApi, bus, paymentDao, tagUserApi, clock, globalLocker, executorService);
     }
 
     @Test(groups = "fast")

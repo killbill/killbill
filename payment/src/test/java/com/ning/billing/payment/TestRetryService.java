@@ -151,7 +151,7 @@ public class TestRetryService extends PaymentTestSuite {
 
     private void testSchedulesRetryInternal(final int maxTries, final FailureType failureType) throws Exception {
 
-        final Account account = testHelper.createTestAccount("yiyi.gmail.com");
+        final Account account = testHelper.createTestAccount("yiyi.gmail.com", true);
         final Invoice invoice = testHelper.createTestInvoice(account, clock.getUTCToday(), Currency.USD);
         final BigDecimal amount = new BigDecimal("10.00");
         final UUID subscriptionId = UUID.randomUUID();

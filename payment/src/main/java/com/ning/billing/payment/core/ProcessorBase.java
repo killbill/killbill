@@ -15,6 +15,7 @@
  */
 package com.ning.billing.payment.core;
 
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -31,13 +32,19 @@ import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.dao.PaymentMethodModelDao;
 import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
+import com.ning.billing.util.api.TagApiException;
+import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
 import com.ning.billing.util.bus.BusEvent;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.globallocker.GlobalLock;
 import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.globallocker.GlobalLocker.LockerType;
 import com.ning.billing.util.globallocker.LockFailedException;
+import com.ning.billing.util.tag.ControlTagType;
+import com.ning.billing.util.tag.Tag;
 
 public abstract class ProcessorBase {
 
@@ -49,6 +56,7 @@ public abstract class ProcessorBase {
     protected final GlobalLocker locker;
     protected final ExecutorService executor;
     protected final PaymentDao paymentDao;
+    protected final TagUserApi tagUserApi;
 
     private static final Logger log = LoggerFactory.getLogger(ProcessorBase.class);
 
@@ -56,6 +64,7 @@ public abstract class ProcessorBase {
                          final AccountUserApi accountUserApi,
                          final Bus eventBus,
                          final PaymentDao paymentDao,
+                         final TagUserApi tagUserApi,
                          final GlobalLocker locker,
                          final ExecutorService executor) {
         this.pluginRegistry = pluginRegistry;
@@ -64,6 +73,27 @@ public abstract class ProcessorBase {
         this.paymentDao = paymentDao;
         this.locker = locker;
         this.executor = executor;
+        this.tagUserApi = tagUserApi;
+    }
+
+    protected boolean isAccountAutoPayOff(final UUID accountId) {
+        final Map<String, Tag> accountTags = tagUserApi.getTags(accountId, ObjectType.ACCOUNT);
+        for (final Tag cur : accountTags.values()) {
+            if (ControlTagType.AUTO_PAY_OFF.getId().equals(cur.getTagDefinitionId())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    protected void setAccountAutoPayOff(UUID accountId, CallContext context) throws PaymentApiException {
+        try {
+            tagUserApi.addTag(accountId, ObjectType.ACCOUNT, ControlTagType.AUTO_PAY_OFF.getId(), context);
+        } catch (TagApiException e) {
+            log.error("Failed to add AUTO_PAY_OFF on account " + accountId, e);
+            throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, "Failed to add AUTO_PAY_OFF on account " + accountId);
+        }
     }
 
     protected PaymentPluginApi getPaymentProviderPlugin(final UUID paymentMethodId) throws PaymentApiException {
