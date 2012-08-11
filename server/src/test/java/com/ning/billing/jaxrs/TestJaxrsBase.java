@@ -67,6 +67,8 @@ import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.AccountTimelineJson;
 import com.ning.billing.jaxrs.json.BillCycleDayJson;
 import com.ning.billing.jaxrs.json.BundleJsonNoSubscriptions;
+import com.ning.billing.jaxrs.json.ChargebackJson;
+import com.ning.billing.jaxrs.json.CreditJson;
 import com.ning.billing.jaxrs.json.InvoiceItemJsonSimple;
 import com.ning.billing.jaxrs.json.InvoiceJsonSimple;
 import com.ning.billing.jaxrs.json.InvoiceJsonWithItems;
@@ -76,6 +78,7 @@ import com.ning.billing.jaxrs.json.PaymentMethodJson.PaymentMethodPluginDetailJs
 import com.ning.billing.jaxrs.json.PaymentMethodJson.PaymentMethodProperties;
 import com.ning.billing.jaxrs.json.RefundJson;
 import com.ning.billing.jaxrs.json.SubscriptionJsonNoEvents;
+import com.ning.billing.jaxrs.resources.AccountResource;
 import com.ning.billing.jaxrs.resources.JaxrsResource;
 import com.ning.billing.junction.glue.DefaultJunctionModule;
 import com.ning.billing.payment.glue.PaymentModule;
@@ -140,9 +143,9 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
     protected TestApiListener busHandler;
 
     // Context information to be passed around
-    private static final String createdBy = "Toto";
-    private static final String reason = "i am god";
-    private static final String comment = "no comment";
+    protected static final String createdBy = "Toto";
+    protected static final String reason = "i am god";
+    protected static final String comment = "no comment";
 
     public static void loadSystemPropertiesFromClasspath(final String resource) {
         final URL url = TestJaxrsBase.class.getResource(resource);
@@ -361,9 +364,17 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
     }
 
     protected AccountTimelineJson getAccountTimeline(final String accountId) throws Exception {
+        return doGetAccountTimeline(accountId, false);
+    }
+
+    protected AccountTimelineJson getAccountTimelineWithAudits(final String accountId) throws Exception {
+        return doGetAccountTimeline(accountId, true);
+    }
+
+    private AccountTimelineJson doGetAccountTimeline(final String accountId, final Boolean withAudits) throws Exception {
         final String uri = JaxrsResource.ACCOUNTS_PATH + "/" + accountId + "/" + JaxrsResource.TIMELINE;
 
-        final Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        final Response response = doGet(uri, ImmutableMap.<String, String>of(JaxrsResource.QUERY_AUDIT, withAudits.toString()), DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
 
         final String baseJson = response.getResponseBody();
@@ -728,6 +739,27 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
     }
 
     //
+    // CHARGEBACKS
+    //
+
+    protected ChargebackJson createChargeBack(final String paymentId, final BigDecimal chargebackAmount) throws IOException {
+        final ChargebackJson input = new ChargebackJson(null, null, chargebackAmount, paymentId, null, null);
+        final String jsonInput = mapper.writeValueAsString(input);
+
+        // Create the chargeback
+        final Response response = doPost(JaxrsResource.CHARGEBACKS_PATH, jsonInput, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode(), response.getResponseBody());
+
+        // Find the chargeback by location
+        final String location = response.getHeader("Location");
+        assertNotNull(location);
+        final Response responseByLocation = doGetWithUrl(location, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        assertEquals(responseByLocation.getStatusCode(), Status.OK.getStatusCode());
+
+        return mapper.readValue(responseByLocation.getResponseBody(), ChargebackJson.class);
+    }
+
+    //
     // REFUNDS
     //
 
@@ -737,7 +769,7 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
 
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
         final String baseJson = response.getResponseBody();
-        List<RefundJson> refunds = mapper.readValue(baseJson, new TypeReference<List<RefundJson>>() {});
+        final List<RefundJson> refunds = mapper.readValue(baseJson, new TypeReference<List<RefundJson>>() {});
         assertNotNull(refunds);
 
         return refunds;
@@ -800,6 +832,37 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
         queryParams.put(JaxrsResource.QUERY_CALL_COMPLETION, "true");
         queryParams.put(JaxrsResource.QUERY_CALL_TIMEOUT, timeoutSec);
         return queryParams;
+    }
+
+    //
+    // CREDITS
+    //
+
+    protected CreditJson createCreditForAccount(final String accountId, final BigDecimal creditAmount,
+                                                final DateTime requestedDate, final DateTime effectiveDate) throws IOException {
+        return createCreditForInvoice(accountId, null, creditAmount, requestedDate, effectiveDate);
+    }
+
+    protected CreditJson createCreditForInvoice(final String accountId, final String invoiceId, final BigDecimal creditAmount,
+                                                final DateTime requestedDate, final DateTime effectiveDate) throws IOException {
+        final CreditJson input = new CreditJson(creditAmount, invoiceId, UUID.randomUUID().toString(),
+                                                requestedDate, effectiveDate,
+                                                UUID.randomUUID().toString(), accountId,
+                                                null);
+        final String jsonInput = mapper.writeValueAsString(input);
+
+        // Create the credit
+        Response response = doPost(JaxrsResource.CREDITS_PATH, jsonInput, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode(), response.getResponseBody());
+
+        final String location = response.getHeader("Location");
+        assertNotNull(location);
+
+        // Retrieves by Id based on Location returned
+        response = doGetWithUrl(location, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+
+        return mapper.readValue(response.getResponseBody(), CreditJson.class);
     }
 
     //
