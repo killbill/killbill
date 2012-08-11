@@ -54,8 +54,6 @@ import com.google.inject.Inject;
 @Guice(modules = {MockTagStoreModuleSql.class, AuditModule.class})
 public class TestDefaultAuditDao extends UtilTestSuiteWithEmbeddedDB {
 
-    private final UUID objectTagged = UUID.randomUUID();
-
     @Inject
     private TagDefinitionDao tagDefinitionDao;
 
@@ -75,6 +73,7 @@ public class TestDefaultAuditDao extends UtilTestSuiteWithEmbeddedDB {
     private IDBI dbi;
 
     private CallContext context;
+    private UUID tagId;
 
     @BeforeClass(groups = "slow")
     public void setup() throws IOException {
@@ -104,7 +103,7 @@ public class TestDefaultAuditDao extends UtilTestSuiteWithEmbeddedDB {
     public void testRetrieveAuditsViaHistory() throws Exception {
         addTag();
 
-        final List<AuditLog> auditLogs = auditDao.getAuditLogsForId(TableName.TAG, objectTagged);
+        final List<AuditLog> auditLogs = auditDao.getAuditLogsForId(TableName.TAG, tagId);
         verifyAuditLogsForTag(auditLogs);
     }
 
@@ -116,10 +115,13 @@ public class TestDefaultAuditDao extends UtilTestSuiteWithEmbeddedDB {
         Assert.assertEquals(tagDefinitionDao.getById(tagDefinition.getId()), tagDefinition);
 
         // Create a tag
-        tagDao.insertTag(objectTagged, ObjectType.ACCOUNT, tagDefinition.getId(), context);
-        final Map<String, Tag> tags = tagDao.loadEntities(objectTagged, ObjectType.ACCOUNT);
+        final UUID objectId = UUID.randomUUID();
+        tagDao.insertTag(objectId, ObjectType.ACCOUNT, tagDefinition.getId(), context);
+        final Map<String, Tag> tags = tagDao.loadEntities(objectId, ObjectType.ACCOUNT);
         Assert.assertEquals(tags.size(), 1);
-        Assert.assertEquals(tags.values().iterator().next().getTagDefinitionId(), tagDefinition.getId());
+        final Tag tag = tags.values().iterator().next();
+        Assert.assertEquals(tag.getTagDefinitionId(), tagDefinition.getId());
+        tagId = tag.getId();
     }
 
     private void verifyAuditLogsForTag(final List<AuditLog> auditLogs) {

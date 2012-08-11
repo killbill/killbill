@@ -33,5 +33,5 @@ getRecordIdForTable(tableName) ::= <<
 getHistoryRecordIdsForTable(tableName) ::= <<
   SELECT history_record_id record_id
   FROM <tableName>
-  WHERE object_id = :id
+  WHERE id = :id
 >>
