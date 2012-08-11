@@ -16,6 +16,7 @@
 
 package com.ning.billing.util.audit.dao;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -40,11 +41,37 @@ public class DefaultAuditDao implements AuditDao {
 
     @Override
     public List<AuditLog> getAuditLogsForId(final TableName tableName, final UUID objectId) {
+        if (tableName.hasHistoryTable()) {
+            return doGetAuditLogsViaHistoryForId(tableName, objectId);
+        } else {
+            return doGetAuditLogsForId(tableName, objectId);
+        }
+    }
+
+    private List<AuditLog> doGetAuditLogsForId(final TableName tableName, final UUID objectId) {
+        // Look at the table and gather all record_id for that objectId
         final Long recordId = auditSqlDao.getRecordIdForTable(tableName.getTableName().toLowerCase(), objectId.toString());
         if (recordId == null) {
             return ImmutableList.<AuditLog>of();
         } else {
             return auditSqlDao.getAuditLogsForRecordId(tableName, recordId);
+        }
+    }
+
+    private List<AuditLog> doGetAuditLogsViaHistoryForId(final TableName tableName, final UUID objectId) {
+        final List<AuditLog> auditLogs = new ArrayList<AuditLog>();
+
+        // Look at the history table and gather all the history_record_id for that objectId
+        final List<Long> recordIds = auditSqlDao.getHistoryRecordIdsForTable(tableName.getHistoryTableName().getTableName().toLowerCase(),
+                                                                             objectId.toString());
+        if (recordIds == null) {
+            return auditLogs;
+        } else {
+            for (final Long recordId : recordIds) {
+                auditLogs.addAll(auditSqlDao.getAuditLogsForRecordId(tableName.getHistoryTableName(), recordId));
+            }
+
+            return auditLogs;
         }
     }
 }

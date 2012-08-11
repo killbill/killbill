@@ -18,6 +18,7 @@ package com.ning.billing.util.audit.dao;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.skife.jdbi.v2.Handle;
@@ -30,6 +31,8 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.util.ChangeType;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
+import com.ning.billing.util.api.TagApiException;
+import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.audit.AuditLog;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.callcontext.CallContext;
@@ -41,6 +44,7 @@ import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.glue.AuditModule;
 import com.ning.billing.util.tag.MockTagStoreModuleSql;
+import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;
 import com.ning.billing.util.tag.dao.AuditedTagDao;
 import com.ning.billing.util.tag.dao.TagDefinitionDao;
@@ -49,6 +53,8 @@ import com.google.inject.Inject;
 
 @Guice(modules = {MockTagStoreModuleSql.class, AuditModule.class})
 public class TestDefaultAuditDao extends UtilTestSuiteWithEmbeddedDB {
+
+    private final UUID objectTagged = UUID.randomUUID();
 
     @Inject
     private TagDefinitionDao tagDefinitionDao;
@@ -82,11 +88,8 @@ public class TestDefaultAuditDao extends UtilTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
-    public void testRetrieveAudits() throws Exception {
-        final TagDefinition defYo = tagDefinitionDao.create("yo", "defintion yo", context);
-
-        // Create a tag
-        tagDao.insertTag(UUID.randomUUID(), ObjectType.ACCOUNT, defYo.getId(), context);
+    public void testRetrieveAuditsDirectly() throws Exception {
+        addTag();
 
         // Verify we get an audit entry for the tag_history table
         final Handle handle = dbi.open();
@@ -94,6 +97,32 @@ public class TestDefaultAuditDao extends UtilTestSuiteWithEmbeddedDB {
         handle.close();
 
         final List<AuditLog> auditLogs = auditDao.getAuditLogsForId(TableName.TAG_HISTORY, UUID.fromString(tagHistoryString));
+        verifyAuditLogsForTag(auditLogs);
+    }
+
+    @Test(groups = "slow")
+    public void testRetrieveAuditsViaHistory() throws Exception {
+        addTag();
+
+        final List<AuditLog> auditLogs = auditDao.getAuditLogsForId(TableName.TAG, objectTagged);
+        verifyAuditLogsForTag(auditLogs);
+    }
+
+    private void addTag() throws TagDefinitionApiException, TagApiException {
+        // Create a tag definition
+        final TagDefinition tagDefinition = tagDefinitionDao.create(UUID.randomUUID().toString().substring(0, 5),
+                                                                    UUID.randomUUID().toString().substring(0, 5),
+                                                                    context);
+        Assert.assertEquals(tagDefinitionDao.getById(tagDefinition.getId()), tagDefinition);
+
+        // Create a tag
+        tagDao.insertTag(objectTagged, ObjectType.ACCOUNT, tagDefinition.getId(), context);
+        final Map<String, Tag> tags = tagDao.loadEntities(objectTagged, ObjectType.ACCOUNT);
+        Assert.assertEquals(tags.size(), 1);
+        Assert.assertEquals(tags.values().iterator().next().getTagDefinitionId(), tagDefinition.getId());
+    }
+
+    private void verifyAuditLogsForTag(final List<AuditLog> auditLogs) {
         Assert.assertEquals(auditLogs.size(), 1);
         Assert.assertEquals(auditLogs.get(0).getUserToken(), context.getUserToken().toString());
         Assert.assertEquals(auditLogs.get(0).getChangeType(), ChangeType.INSERT);

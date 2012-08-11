@@ -54,6 +54,10 @@ public interface AuditSqlDao {
                                     @Bind("id") final String id);
 
     @SqlQuery
+    public List<Long> getHistoryRecordIdsForTable(@Define("tableName") final String tableName,
+                                                  @Bind("id") final String id);
+
+    @SqlQuery
     public Long getHistoryRecordId(@Bind("recordId") final Long recordId);
 
 }
