@@ -19,30 +19,50 @@ package com.ning.billing.util.dao;
 import javax.annotation.Nullable;
 
 public enum TableName {
-    ACCOUNT("accounts", ObjectType.ACCOUNT),
-    ACCOUNT_HISTORY("account_history", null),
-    ACCOUNT_EMAIL_HISTORY("account_email_history", ObjectType.ACCOUNT_EMAIL),
+    ACCOUNT_HISTORY("account_history"),
+    ACCOUNT("accounts", ObjectType.ACCOUNT, ACCOUNT_HISTORY),
+    ACCOUNT_EMAIL_HISTORY("account_email_history"),
+    ACCOUNT_EMAIL("account_emails", ObjectType.ACCOUNT_EMAIL, ACCOUNT_EMAIL_HISTORY),
     BUNDLES("bundles", ObjectType.BUNDLE),
-    CUSTOM_FIELD_HISTORY("custom_field_history", null),
+    CUSTOM_FIELD_HISTORY("custom_field_history"),
+    CUSTOM_FIELD("custom_fields", CUSTOM_FIELD_HISTORY),
     INVOICE_ITEMS("invoice_items", ObjectType.INVOICE_ITEM),
     INVOICE_PAYMENTS("invoice_payments", ObjectType.INVOICE_PAYMENT),
     INVOICES("invoices", ObjectType.INVOICE),
-    PAYMENT_ATTEMPTS("payment_attempts", null),
-    PAYMENT_HISTORY("payment_history", null),
-    PAYMENTS("payments", ObjectType.PAYMENT),
-    PAYMENT_METHODS("payment_methods", ObjectType.PAYMENT_METHOD),
+    PAYMENT_ATTEMPT_HISTORY("payment_attempt_history"),
+    PAYMENT_ATTEMPTS("payment_attempts", PAYMENT_ATTEMPT_HISTORY),
+    PAYMENT_HISTORY("payment_history"),
+    PAYMENTS("payments", ObjectType.PAYMENT, PAYMENT_HISTORY),
+    PAYMENT_METHOD_HISTORY("payment_method_history"),
+    PAYMENT_METHODS("payment_methods", ObjectType.PAYMENT_METHOD, PAYMENT_METHOD_HISTORY),
     SUBSCRIPTIONS("subscriptions", ObjectType.SUBSCRIPTION),
-    SUBSCRIPTION_EVENTS("subscription_events", null),
-    REFUNDS("refunds", ObjectType.REFUND),
+    SUBSCRIPTION_EVENTS("subscription_events"),
+    REFUND_HISTORY("refund_history"),
+    REFUNDS("refunds", ObjectType.REFUND, REFUND_HISTORY),
     TAG_DEFINITIONS("tag_definitions", ObjectType.TAG_DEFINITION),
-    TAG_HISTORY("tag_history", null);
+    TAG_HISTORY("tag_history"),
+    TAG("tags", TAG_HISTORY);
 
     private final String tableName;
     private final ObjectType objectType;
+    private final TableName historyTableName;
 
-    TableName(final String tableName, @Nullable final ObjectType objectType) {
+    TableName(final String tableName, @Nullable final ObjectType objectType, @Nullable final TableName historyTableName) {
         this.tableName = tableName;
         this.objectType = objectType;
+        this.historyTableName = historyTableName;
+    }
+
+    TableName(final String tableName, @Nullable final ObjectType objectType) {
+        this(tableName, objectType, null);
+    }
+
+    TableName(final String tableName, @Nullable final TableName historyTableName) {
+        this(tableName, null, historyTableName);
+    }
+
+    TableName(final String tableName) {
+        this(tableName, null, null);
     }
 
     public String getTableName() {
@@ -51,5 +71,13 @@ public enum TableName {
 
     public ObjectType getObjectType() {
         return objectType;
+    }
+
+    public TableName getHistoryTableName() {
+        return historyTableName;
+    }
+
+    public boolean hasHistoryTable() {
+        return historyTableName != null;
     }
 }

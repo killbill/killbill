@@ -96,7 +96,7 @@ public class AuditedPaymentDao implements PaymentDao {
         transactional.insertHistoryFromTransaction(history, context);
 
         final Long historyRecordId = transactional.getHistoryRecordId(recordId);
-        final EntityAudit audit = new EntityAudit(TableName.PAYMENTS, historyRecordId, ChangeType.INSERT);
+        final EntityAudit audit = new EntityAudit(TableName.PAYMENT_HISTORY, historyRecordId, ChangeType.INSERT);
         transactional.insertAuditFromTransaction(audit, context);
         return savedPayment;
     }
@@ -108,7 +108,7 @@ public class AuditedPaymentDao implements PaymentDao {
         final EntityHistory<PaymentAttemptModelDao> history = new EntityHistory<PaymentAttemptModelDao>(savedAttempt.getId(), recordId, savedAttempt, ChangeType.INSERT);
         transactional.insertHistoryFromTransaction(history, context);
         final Long historyRecordId = transactional.getHistoryRecordId(recordId);
-        final EntityAudit audit = new EntityAudit(TableName.PAYMENT_ATTEMPTS, historyRecordId, ChangeType.INSERT);
+        final EntityAudit audit = new EntityAudit(TableName.PAYMENT_ATTEMPT_HISTORY, historyRecordId, ChangeType.INSERT);
         transactional.insertAuditFromTransaction(audit, context);
         return savedAttempt;
     }
@@ -153,7 +153,7 @@ public class AuditedPaymentDao implements PaymentDao {
         final EntityHistory<PaymentModelDao> history = new EntityHistory<PaymentModelDao>(savedPayment.getId(), recordId, savedPayment, ChangeType.UPDATE);
         transactional.insertHistoryFromTransaction(history, context);
         final Long historyRecordId = transactional.getHistoryRecordId(recordId);
-        final EntityAudit audit = new EntityAudit(TableName.PAYMENTS, historyRecordId, ChangeType.UPDATE);
+        final EntityAudit audit = new EntityAudit(TableName.PAYMENT_HISTORY, historyRecordId, ChangeType.UPDATE);
         transactional.insertAuditFromTransaction(audit, context);
     }
 
@@ -164,7 +164,7 @@ public class AuditedPaymentDao implements PaymentDao {
         final EntityHistory<PaymentModelDao> history = new EntityHistory<PaymentModelDao>(savedPayment.getId(), recordId, savedPayment, ChangeType.UPDATE);
         transactional.insertHistoryFromTransaction(history, context);
         final Long historyRecordId = transactional.getHistoryRecordId(recordId);
-        final EntityAudit audit = new EntityAudit(TableName.PAYMENTS, historyRecordId, ChangeType.UPDATE);
+        final EntityAudit audit = new EntityAudit(TableName.PAYMENT_HISTORY, historyRecordId, ChangeType.UPDATE);
         transactional.insertAuditFromTransaction(audit, context);
     }
 
@@ -175,7 +175,7 @@ public class AuditedPaymentDao implements PaymentDao {
         final EntityHistory<PaymentAttemptModelDao> history = new EntityHistory<PaymentAttemptModelDao>(savedAttempt.getId(), recordId, savedAttempt, ChangeType.UPDATE);
         transactional.insertHistoryFromTransaction(history, context);
         final Long historyRecordId = transactional.getHistoryRecordId(recordId);
-        final EntityAudit audit = new EntityAudit(TableName.PAYMENT_ATTEMPTS, historyRecordId, ChangeType.UPDATE);
+        final EntityAudit audit = new EntityAudit(TableName.PAYMENT_ATTEMPT_HISTORY, historyRecordId, ChangeType.UPDATE);
         transactional.insertAuditFromTransaction(audit, context);
     }
 
@@ -197,7 +197,7 @@ public class AuditedPaymentDao implements PaymentDao {
         final EntityHistory<PaymentMethodModelDao> history = new EntityHistory<PaymentMethodModelDao>(savedPaymentMethod.getId(), recordId, savedPaymentMethod, ChangeType.INSERT);
         transactional.insertHistoryFromTransaction(history, context);
         final Long historyRecordId = transactional.getHistoryRecordId(recordId);
-        final EntityAudit audit = new EntityAudit(TableName.PAYMENT_METHODS, historyRecordId, ChangeType.INSERT);
+        final EntityAudit audit = new EntityAudit(TableName.PAYMENT_METHOD_HISTORY, historyRecordId, ChangeType.INSERT);
         transactional.insertAuditFromTransaction(audit, context);
         return savedPaymentMethod;
     }
@@ -262,7 +262,7 @@ public class AuditedPaymentDao implements PaymentDao {
                 final EntityHistory<RefundModelDao> history = new EntityHistory<RefundModelDao>(savedRefund.getId(), recordId, savedRefund, ChangeType.INSERT);
                 transactional.insertHistoryFromTransaction(history, context);
                 final Long historyRecordId = transactional.getHistoryRecordId(recordId);
-                final EntityAudit audit = new EntityAudit(TableName.REFUNDS, historyRecordId, ChangeType.INSERT);
+                final EntityAudit audit = new EntityAudit(TableName.REFUND_HISTORY, historyRecordId, ChangeType.INSERT);
                 transactional.insertAuditFromTransaction(audit, context);
                 return savedRefund;
             }
@@ -285,7 +285,7 @@ public class AuditedPaymentDao implements PaymentDao {
                 final EntityHistory<RefundModelDao> history = new EntityHistory<RefundModelDao>(savedRefund.getId(), recordId, savedRefund, ChangeType.UPDATE);
                 transactional.insertHistoryFromTransaction(history, context);
                 final Long historyRecordId = transactional.getHistoryRecordId(recordId);
-                final EntityAudit audit = new EntityAudit(TableName.REFUNDS, historyRecordId, ChangeType.UPDATE);
+                final EntityAudit audit = new EntityAudit(TableName.REFUND_HISTORY, historyRecordId, ChangeType.UPDATE);
                 transactional.insertAuditFromTransaction(audit, context);
                 return null;
             }
