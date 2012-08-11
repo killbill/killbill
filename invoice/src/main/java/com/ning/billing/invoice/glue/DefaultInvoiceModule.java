@@ -32,7 +32,7 @@ import com.ning.billing.invoice.api.formatters.InvoiceFormatterFactory;
 import com.ning.billing.invoice.api.invoice.DefaultInvoicePaymentApi;
 import com.ning.billing.invoice.api.migration.DefaultInvoiceMigrationApi;
 import com.ning.billing.invoice.api.user.DefaultInvoiceUserApi;
-import com.ning.billing.invoice.dao.DefaultInvoiceDao;
+import com.ning.billing.invoice.dao.AuditedInvoiceDao;
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.generator.DefaultInvoiceGenerator;
 import com.ning.billing.invoice.generator.InvoiceGenerator;
@@ -51,7 +51,7 @@ public class DefaultInvoiceModule extends AbstractModule implements InvoiceModul
     InvoiceConfig config;
 
     protected void installInvoiceDao() {
-        bind(InvoiceDao.class).to(DefaultInvoiceDao.class).asEagerSingleton();
+        bind(InvoiceDao.class).to(AuditedInvoiceDao.class).asEagerSingleton();
     }
 
     @Override

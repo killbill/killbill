@@ -50,7 +50,7 @@ public class TestDefaultInvoiceDao extends InvoiceTestSuite {
 
     private InvoiceSqlDao invoiceSqlDao;
     private TagUserApi tagUserApi;
-    private DefaultInvoiceDao dao;
+    private AuditedInvoiceDao dao;
 
     @BeforeMethod(groups = "fast")
     public void setUp() throws Exception {
@@ -62,7 +62,7 @@ public class TestDefaultInvoiceDao extends InvoiceTestSuite {
         final TagDefinitionDao tagDefinitionDao = new MockTagDefinitionDao();
         final TagDao tagDao = new MockTagDao();
         tagUserApi = new DefaultTagUserApi(tagDefinitionDao, tagDao);
-        dao = new DefaultInvoiceDao(idbi, poster, tagUserApi, Mockito.mock(Clock.class));
+        dao = new AuditedInvoiceDao(idbi, poster, tagUserApi, Mockito.mock(Clock.class));
     }
 
     @Test(groups = "fast")

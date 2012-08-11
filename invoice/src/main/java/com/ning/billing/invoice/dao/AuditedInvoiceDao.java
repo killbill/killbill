@@ -66,7 +66,7 @@ import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableMap.Builder;
 import com.google.inject.Inject;
 
-public class DefaultInvoiceDao implements InvoiceDao {
+public class AuditedInvoiceDao implements InvoiceDao {
 
     private final InvoiceSqlDao invoiceSqlDao;
     private final InvoicePaymentSqlDao invoicePaymentSqlDao;
@@ -76,7 +76,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
     private final Clock clock;
 
     @Inject
-    public DefaultInvoiceDao(final IDBI dbi,
+    public AuditedInvoiceDao(final IDBI dbi,
                              final NextBillingDatePoster nextBillingDatePoster,
                              final TagUserApi tagUserApi,
                              final Clock clock) {
@@ -484,6 +484,12 @@ public class DefaultInvoiceDao implements InvoiceDao {
                     final InvoicePayment chargeBack = new DefaultInvoicePayment(UUID.randomUUID(), InvoicePaymentType.CHARGED_BACK, payment.getPaymentId(),
                                                                                 payment.getInvoiceId(), context.getCreatedDate(), requestedChargedBackAmout.negate(), payment.getCurrency(), null, payment.getId());
                     invoicePaymentSqlDao.create(chargeBack, context);
+
+                    // Add audit
+                    final Long recordId = invoicePaymentSqlDao.getRecordId(chargeBack.getId().toString());
+                    final EntityAudit audit = new EntityAudit(TableName.INVOICE_PAYMENTS, recordId, ChangeType.INSERT);
+                    invoicePaymentSqlDao.insertAuditFromTransaction(audit, context);
+
                     return chargeBack;
                 }
             }
