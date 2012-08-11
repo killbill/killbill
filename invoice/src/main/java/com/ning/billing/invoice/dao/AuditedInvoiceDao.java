@@ -583,7 +583,12 @@ public class AuditedInvoiceDao implements InvoiceDao {
 
                 // Note! The amount is negated here!
                 final InvoiceItem credit = new CreditAdjInvoiceItem(invoiceIdForCredit, accountId, effectiveDate, positiveCreditAmount.negate(), currency);
-                insertItemAndAddCBAIfNeeded(transactional, credit, context);
+                final Long recordId = insertItemAndAddCBAIfNeeded(transactional, credit, context);
+
+                // Add audit
+                final EntityAudit audit = new EntityAudit(TableName.INVOICE_ITEMS, recordId, ChangeType.INSERT);
+                transactional.insertAuditFromTransaction(audit, context);
+
                 return credit;
             }
         });
@@ -650,11 +655,13 @@ public class AuditedInvoiceDao implements InvoiceDao {
      * @param item          the invoice item to create
      * @param context       the call context
      */
-    private void insertItemAndAddCBAIfNeeded(final InvoiceSqlDao transactional, final InvoiceItem item, final CallContext context) {
+    private Long insertItemAndAddCBAIfNeeded(final InvoiceSqlDao transactional, final InvoiceItem item, final CallContext context) {
         final InvoiceItemSqlDao transInvoiceItemDao = transactional.become(InvoiceItemSqlDao.class);
         transInvoiceItemDao.create(item, context);
 
         addCBAIfNeeded(transactional, item.getInvoiceId(), context);
+
+        return transInvoiceItemDao.getRecordId(item.getId().toString());
     }
 
     /**

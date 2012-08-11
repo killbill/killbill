@@ -25,6 +25,18 @@ getById() ::= <<
   WHERE id = :id;
 >>
 
+getByRecordId() ::= <<
+  SELECT <fields()>
+  FROM invoice_items
+  WHERE record_id = :recordId;
+>>
+
+getRecordId() ::= <<
+  SELECT record_id
+  FROM invoice_items
+  WHERE id = :id;
+>>
+
 getInvoiceItemsByInvoice() ::= <<
   SELECT <fields()>
   FROM invoice_items
