@@ -384,10 +384,17 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
         return objFromJson;
     }
 
+    protected AccountJson createAccountWithDefaultPaymentMethod() throws Exception {
+        final AccountJson input = createAccount();
+        return doCreateAccountWithDefaultPaymentMethod(input);
+    }
+
     protected AccountJson createAccountWithDefaultPaymentMethod(final String name, final String key, final String email) throws Exception {
-
         final AccountJson input = createAccount(name, key, email);
+        return doCreateAccountWithDefaultPaymentMethod(input);
+    }
 
+    protected AccountJson doCreateAccountWithDefaultPaymentMethod(final AccountJson input) throws Exception {
         final String uri = JaxrsResource.ACCOUNTS_PATH + "/" + input.getAccountId() + "/" + JaxrsResource.PAYMENT_METHODS;
         final PaymentMethodJson paymentMethodJson = getPaymentMethodJson(input.getAccountId(), null);
         String baseJson = mapper.writeValueAsString(paymentMethodJson);
@@ -492,11 +499,11 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
     //
 
     protected AccountJson createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice() throws Exception {
-        final AccountJson accountJson = createAccountWithDefaultPaymentMethod("nohup", "shtergyhwF", "nohup@yahoo.com");
+        final AccountJson accountJson = createAccountWithDefaultPaymentMethod();
         assertNotNull(accountJson);
 
         // Add a bundle, subscription and move the clock to get the first invoice
-        final BundleJsonNoSubscriptions bundleJson = createBundle(accountJson.getAccountId(), "391193");
+        final BundleJsonNoSubscriptions bundleJson = createBundle(accountJson.getAccountId(), UUID.randomUUID().toString());
         assertNotNull(bundleJson);
         final SubscriptionJsonNoEvents subscriptionJson = createSubscription(bundleJson.getBundleId(), "Shotgun", ProductCategory.BASE.toString(), BillingPeriod.MONTHLY.toString(), true);
         assertNotNull(subscriptionJson);
@@ -508,11 +515,11 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
 
     protected AccountJson createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice() throws Exception {
         // Create an account with no payment method
-        final AccountJson accountJson = createAccount("eraahahildo", "sheqrgfhwe", "eraahahildo@yahoo.com");
+        final AccountJson accountJson = createAccount();
         assertNotNull(accountJson);
 
         // Add a bundle, subscription and move the clock to get the first invoice
-        final BundleJsonNoSubscriptions bundleJson = createBundle(accountJson.getAccountId(), "317199");
+        final BundleJsonNoSubscriptions bundleJson = createBundle(accountJson.getAccountId(), UUID.randomUUID().toString());
         assertNotNull(bundleJson);
         final SubscriptionJsonNoEvents subscriptionJson = createSubscription(bundleJson.getBundleId(), "Shotgun", ProductCategory.BASE.toString(), BillingPeriod.MONTHLY.toString(), true);
         assertNotNull(subscriptionJson);
