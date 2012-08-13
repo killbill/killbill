@@ -86,6 +86,7 @@ import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;
 import com.ning.billing.server.ServerTestSuiteWithEmbeddedDB;
 import com.ning.billing.server.listeners.KillbillGuiceListener;
 import com.ning.billing.server.modules.KillbillServerModule;
+import com.ning.billing.util.api.AuditLevel;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.email.EmailModule;
@@ -364,17 +365,17 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
     }
 
     protected AccountTimelineJson getAccountTimeline(final String accountId) throws Exception {
-        return doGetAccountTimeline(accountId, false);
+        return doGetAccountTimeline(accountId, AuditLevel.NONE);
     }
 
-    protected AccountTimelineJson getAccountTimelineWithAudits(final String accountId) throws Exception {
-        return doGetAccountTimeline(accountId, true);
+    protected AccountTimelineJson getAccountTimelineWithAudits(final String accountId, final AuditLevel auditLevel) throws Exception {
+        return doGetAccountTimeline(accountId, auditLevel);
     }
 
-    private AccountTimelineJson doGetAccountTimeline(final String accountId, final Boolean withAudits) throws Exception {
+    private AccountTimelineJson doGetAccountTimeline(final String accountId, final AuditLevel auditLevel) throws Exception {
         final String uri = JaxrsResource.ACCOUNTS_PATH + "/" + accountId + "/" + JaxrsResource.TIMELINE;
 
-        final Response response = doGet(uri, ImmutableMap.<String, String>of(JaxrsResource.QUERY_AUDIT, withAudits.toString()), DEFAULT_HTTP_TIMEOUT_SEC);
+        final Response response = doGet(uri, ImmutableMap.<String, String>of(JaxrsResource.QUERY_AUDIT, auditLevel.toString()), DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
 
         final String baseJson = response.getResponseBody();

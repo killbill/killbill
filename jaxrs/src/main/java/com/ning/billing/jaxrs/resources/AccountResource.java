@@ -220,30 +220,24 @@ public class AccountResource extends JaxRsResourceBase {
     @Path("/{accountId:" + UUID_PATTERN + "}/" + TIMELINE)
     @Produces(APPLICATION_JSON)
     public Response getAccountTimeline(@PathParam("accountId") final String accountIdString,
-                                       @QueryParam(QUERY_AUDIT) @DefaultValue("false") final Boolean withAudit) throws AccountApiException, PaymentApiException, EntitlementRepairException {
+                                       @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode) throws AccountApiException, PaymentApiException, EntitlementRepairException {
         final UUID accountId = UUID.fromString(accountIdString);
         final Account account = accountApi.getAccountById(accountId);
 
         // Get the invoices
         final List<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId());
         AuditLogsForInvoices invoicesAuditLogs = null;
-        if (withAudit) {
-            invoicesAuditLogs = auditUserApi.getAuditLogsForInvoices(invoices);
-        }
+        invoicesAuditLogs = auditUserApi.getAuditLogsForInvoices(invoices, auditMode.getLevel());
 
         // Get the payments
         final List<Payment> payments = paymentApi.getAccountPayments(accountId);
         AuditLogsForPayments paymentsAuditLogs = null;
-        if (withAudit) {
-            paymentsAuditLogs = auditUserApi.getAuditLogsForPayments(payments);
-        }
+        paymentsAuditLogs = auditUserApi.getAuditLogsForPayments(payments, auditMode.getLevel());
 
         // Get the refunds
         final List<Refund> refunds = paymentApi.getAccountRefunds(account);
         AuditLogsForRefunds refundsAuditLogs = null;
-        if (withAudit) {
-            refundsAuditLogs = auditUserApi.getAuditLogsForRefunds(refunds);
-        }
+        refundsAuditLogs = auditUserApi.getAuditLogsForRefunds(refunds, auditMode.getLevel());
         final Multimap<UUID, Refund> refundsByPayment = ArrayListMultimap.<UUID, Refund>create();
         for (final Refund refund : refunds) {
             refundsByPayment.put(refund.getPaymentId(), refund);
@@ -252,9 +246,7 @@ public class AccountResource extends JaxRsResourceBase {
         // Get the chargebacks
         final List<InvoicePayment> chargebacks = invoicePaymentApi.getChargebacksByAccountId(accountId);
         AuditLogsForInvoicePayments chargebacksAuditLogs = null;
-        if (withAudit) {
-            chargebacksAuditLogs = auditUserApi.getAuditLogsForInvoicePayments(chargebacks);
-        }
+        chargebacksAuditLogs = auditUserApi.getAuditLogsForInvoicePayments(chargebacks, auditMode.getLevel());
         final Multimap<UUID, InvoicePayment> chargebacksByPayment = ArrayListMultimap.<UUID, InvoicePayment>create();
         for (final InvoicePayment chargeback : chargebacks) {
             chargebacksByPayment.put(chargeback.getPaymentId(), chargeback);
@@ -263,9 +255,7 @@ public class AccountResource extends JaxRsResourceBase {
         // Get the bundles
         final List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(account.getId());
         AuditLogsForBundles bundlesAuditLogs = null;
-        if (withAudit) {
-            bundlesAuditLogs = auditUserApi.getAuditLogsForBundles(bundles);
-        }
+        bundlesAuditLogs = auditUserApi.getAuditLogsForBundles(bundles, auditMode.getLevel());
         final List<BundleTimeline> bundlesTimeline = new LinkedList<BundleTimeline>();
         for (final SubscriptionBundle bundle : bundles) {
             bundlesTimeline.add(timelineApi.getBundleTimeline(bundle.getId()));

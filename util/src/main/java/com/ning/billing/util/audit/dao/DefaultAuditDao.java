@@ -24,6 +24,7 @@ import javax.inject.Inject;
 
 import org.skife.jdbi.v2.IDBI;
 
+import com.ning.billing.util.ChangeType;
 import com.ning.billing.util.api.AuditLevel;
 import com.ning.billing.util.audit.AuditLog;
 import com.ning.billing.util.dao.AuditSqlDao;
@@ -81,7 +82,13 @@ public class DefaultAuditDao implements AuditDao {
         if (AuditLevel.FULL.equals(auditLevel)) {
             return allAuditLogs;
         } else if (AuditLevel.MINIMAL.equals(auditLevel) && allAuditLogs.size() > 0) {
-            return ImmutableList.<AuditLog>of(allAuditLogs.get(0));
+            if (ChangeType.INSERT.equals(allAuditLogs.get(0).getChangeType())) {
+                return ImmutableList.<AuditLog>of(allAuditLogs.get(0));
+            } else {
+                // We may be coming here via the history code path - only a single mapped history record id
+                // will be for the initial INSERT
+                return ImmutableList.<AuditLog>of();
+            }
         } else if (AuditLevel.NONE.equals(auditLevel)) {
             return ImmutableList.<AuditLog>of();
         } else {
