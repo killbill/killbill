@@ -19,7 +19,7 @@ package com.ning.billing.util.api;
 import java.util.List;
 import java.util.UUID;
 
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.entitlement.api.timeline.BundleTimeline;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.payment.api.Payment;
@@ -41,7 +41,7 @@ public interface AuditUserApi {
      * @param auditLevel audit level (verbosity)
      * @return all audit logs for these refunds
      */
-    public AuditLogsForBundles getAuditLogsForBundles(final List<SubscriptionBundle> bundles, final AuditLevel auditLevel);
+    public AuditLogsForBundles getAuditLogsForBundles(final List<BundleTimeline> bundles, final AuditLevel auditLevel);
 
     /**
      * Fetch all audit logs for invoice payments.

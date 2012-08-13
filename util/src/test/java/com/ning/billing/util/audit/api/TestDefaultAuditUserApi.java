@@ -26,7 +26,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.entitlement.api.timeline.BundleTimeline;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
@@ -71,9 +71,12 @@ public class TestDefaultAuditUserApi extends AuditLogsTestBase {
 
     @Test(groups = "fast")
     public void testForBundles() throws Exception {
-        final List<SubscriptionBundle> bundles = createMocks(SubscriptionBundle.class);
-
-        // TODO check SubscriptionEventsAuditLogs
+        final List<BundleTimeline> bundles = new ArrayList<BundleTimeline>();
+        for (final UUID objectId : objectIds) {
+            final BundleTimeline entity = Mockito.mock(BundleTimeline.class);
+            Mockito.when(entity.getBundleId()).thenReturn(objectId);
+            bundles.add(entity);
+        }
 
         for (final AuditLevel level : AuditLevel.values()) {
             final AuditLogsForBundles auditLogsForBundles = auditUserApi.getAuditLogsForBundles(bundles, level);

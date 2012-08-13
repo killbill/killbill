@@ -25,6 +25,7 @@ public enum ObjectType {
     INVOICE_ITEM("invoice item"),
     INVOICE_PAYMENT("invoice payment"),
     SUBSCRIPTION("subscription"),
+    SUBSCRIPTION_EVENT("subscription event"),
     PAYMENT_METHOD("payment method"),
     REFUND("refund"),
     TAG_DEFINITION("tag definition");

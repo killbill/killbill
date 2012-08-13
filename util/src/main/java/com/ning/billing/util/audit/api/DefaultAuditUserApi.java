@@ -23,7 +23,9 @@ import java.util.UUID;
 
 import javax.inject.Inject;
 
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.entitlement.api.timeline.BundleTimeline;
+import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline;
+import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline.ExistingEvent;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
@@ -58,13 +60,21 @@ public class DefaultAuditUserApi implements AuditUserApi {
     }
 
     @Override
-    public AuditLogsForBundles getAuditLogsForBundles(final List<SubscriptionBundle> bundles, final AuditLevel auditLevel) {
+    public AuditLogsForBundles getAuditLogsForBundles(final List<BundleTimeline> bundles, final AuditLevel auditLevel) {
         final Map<UUID, List<AuditLog>> bundlesAuditLogs = new HashMap<UUID, List<AuditLog>>();
-        for (final SubscriptionBundle bundle : bundles) {
-            bundlesAuditLogs.put(bundle.getId(), getAuditLogs(bundle.getId(), ObjectType.BUNDLE, auditLevel));
+        final Map<UUID, List<AuditLog>> subscriptionsAuditLogs = new HashMap<UUID, List<AuditLog>>();
+        final Map<UUID, List<AuditLog>> subscriptionEventsAuditLogs = new HashMap<UUID, List<AuditLog>>();
+        for (final BundleTimeline bundle : bundles) {
+            bundlesAuditLogs.put(bundle.getBundleId(), getAuditLogs(bundle.getBundleId(), ObjectType.BUNDLE, auditLevel));
+            for (final SubscriptionTimeline subscriptionTimeline : bundle.getSubscriptions()) {
+                subscriptionsAuditLogs.put(subscriptionTimeline.getId(), getAuditLogs(subscriptionTimeline.getId(), ObjectType.SUBSCRIPTION, auditLevel));
+                for (final ExistingEvent event : subscriptionTimeline.getExistingEvents()) {
+                    subscriptionEventsAuditLogs.put(event.getEventId(), getAuditLogs(event.getEventId(), ObjectType.SUBSCRIPTION_EVENT, auditLevel));
+                }
+            }
         }
 
-        return new DefaultAuditLogsForBundles(bundlesAuditLogs);
+        return new DefaultAuditLogsForBundles(bundlesAuditLogs, subscriptionsAuditLogs, subscriptionEventsAuditLogs);
     }
 
     @Override

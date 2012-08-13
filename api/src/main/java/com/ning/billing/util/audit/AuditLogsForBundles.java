@@ -28,6 +28,11 @@ public interface AuditLogsForBundles {
     public Map<UUID, List<AuditLog>> getBundlesAuditLogs();
 
     /**
+     * @return mapping between subscription id and associated audit logs
+     */
+    public Map<UUID, List<AuditLog>> getSubscriptionsAuditLogs();
+
+    /**
      * @return mapping between subscription event id and associated audit logs
      */
     public Map<UUID, List<AuditLog>> getSubscriptionEventsAuditLogs();

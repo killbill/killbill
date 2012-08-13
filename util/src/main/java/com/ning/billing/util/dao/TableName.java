@@ -36,7 +36,7 @@ public enum TableName {
     PAYMENT_METHOD_HISTORY("payment_method_history"),
     PAYMENT_METHODS("payment_methods", ObjectType.PAYMENT_METHOD, PAYMENT_METHOD_HISTORY),
     SUBSCRIPTIONS("subscriptions", ObjectType.SUBSCRIPTION),
-    SUBSCRIPTION_EVENTS("subscription_events"),
+    SUBSCRIPTION_EVENTS("subscription_events", ObjectType.SUBSCRIPTION_EVENT),
     REFUND_HISTORY("refund_history"),
     REFUNDS("refunds", ObjectType.REFUND, REFUND_HISTORY),
     TAG_DEFINITIONS("tag_definitions", ObjectType.TAG_DEFINITION),
