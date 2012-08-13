@@ -31,6 +31,7 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.util.ChangeType;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
+import com.ning.billing.util.api.AuditLevel;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.audit.AuditLog;
@@ -95,16 +96,20 @@ public class TestDefaultAuditDao extends UtilTestSuiteWithEmbeddedDB {
         final String tagHistoryString = (String) handle.select("select id from tag_history limit 1").get(0).get("id");
         handle.close();
 
-        final List<AuditLog> auditLogs = auditDao.getAuditLogsForId(TableName.TAG_HISTORY, UUID.fromString(tagHistoryString));
-        verifyAuditLogsForTag(auditLogs);
+        for (final AuditLevel level : AuditLevel.values()) {
+            final List<AuditLog> auditLogs = auditDao.getAuditLogsForId(TableName.TAG_HISTORY, UUID.fromString(tagHistoryString), level);
+            verifyAuditLogsForTag(auditLogs, level);
+        }
     }
 
     @Test(groups = "slow")
     public void testRetrieveAuditsViaHistory() throws Exception {
         addTag();
 
-        final List<AuditLog> auditLogs = auditDao.getAuditLogsForId(TableName.TAG, tagId);
-        verifyAuditLogsForTag(auditLogs);
+        for (final AuditLevel level : AuditLevel.values()) {
+            final List<AuditLog> auditLogs = auditDao.getAuditLogsForId(TableName.TAG, tagId, level);
+            verifyAuditLogsForTag(auditLogs, level);
+        }
     }
 
     private void addTag() throws TagDefinitionApiException, TagApiException {
@@ -124,7 +129,12 @@ public class TestDefaultAuditDao extends UtilTestSuiteWithEmbeddedDB {
         tagId = tag.getId();
     }
 
-    private void verifyAuditLogsForTag(final List<AuditLog> auditLogs) {
+    private void verifyAuditLogsForTag(final List<AuditLog> auditLogs, final AuditLevel level) {
+        if (AuditLevel.NONE.equals(level)) {
+            Assert.assertEquals(auditLogs.size(), 0);
+            return;
+        }
+
         Assert.assertEquals(auditLogs.size(), 1);
         Assert.assertEquals(auditLogs.get(0).getUserToken(), context.getUserToken().toString());
         Assert.assertEquals(auditLogs.get(0).getChangeType(), ChangeType.INSERT);

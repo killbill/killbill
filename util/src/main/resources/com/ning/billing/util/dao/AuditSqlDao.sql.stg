@@ -20,7 +20,8 @@ getAuditLogsForRecordId() ::= <<
   SELECT <fields()>
   FROM audit_log
   WHERE record_id = :recordId
-  AND table_name = :tableName;
+  AND table_name = :tableName
+  ORDER BY change_date ASC
 >>
 
 getRecordIdForTable(tableName) ::= <<

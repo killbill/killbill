@@ -29,6 +29,7 @@ import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.api.Refund;
+import com.ning.billing.util.api.AuditLevel;
 import com.ning.billing.util.api.AuditUserApi;
 import com.ning.billing.util.audit.AuditLog;
 import com.ning.billing.util.audit.AuditLogsForBundles;
@@ -57,53 +58,53 @@ public class DefaultAuditUserApi implements AuditUserApi {
     }
 
     @Override
-    public AuditLogsForBundles getAuditLogsForBundles(final List<SubscriptionBundle> bundles) {
+    public AuditLogsForBundles getAuditLogsForBundles(final List<SubscriptionBundle> bundles, final AuditLevel auditLevel) {
         final Map<UUID, List<AuditLog>> bundlesAuditLogs = new HashMap<UUID, List<AuditLog>>();
         for (final SubscriptionBundle bundle : bundles) {
-            bundlesAuditLogs.put(bundle.getId(), getAuditLogs(bundle.getId(), ObjectType.BUNDLE));
+            bundlesAuditLogs.put(bundle.getId(), getAuditLogs(bundle.getId(), ObjectType.BUNDLE, auditLevel));
         }
 
         return new DefaultAuditLogsForBundles(bundlesAuditLogs);
     }
 
     @Override
-    public AuditLogsForInvoicePayments getAuditLogsForInvoicePayments(final List<InvoicePayment> invoicePayments) {
+    public AuditLogsForInvoicePayments getAuditLogsForInvoicePayments(final List<InvoicePayment> invoicePayments, final AuditLevel auditLevel) {
         final Map<UUID, List<AuditLog>> invoicePaymentsAuditLogs = new HashMap<UUID, List<AuditLog>>();
         for (final InvoicePayment invoicePayment : invoicePayments) {
-            invoicePaymentsAuditLogs.put(invoicePayment.getId(), getAuditLogs(invoicePayment.getId(), ObjectType.INVOICE_PAYMENT));
+            invoicePaymentsAuditLogs.put(invoicePayment.getId(), getAuditLogs(invoicePayment.getId(), ObjectType.INVOICE_PAYMENT, auditLevel));
         }
 
         return new DefaultAuditLogsForInvoicePayments(invoicePaymentsAuditLogs);
     }
 
     @Override
-    public AuditLogsForRefunds getAuditLogsForRefunds(final List<Refund> refunds) {
+    public AuditLogsForRefunds getAuditLogsForRefunds(final List<Refund> refunds, final AuditLevel auditLevel) {
         final Map<UUID, List<AuditLog>> refundsAuditLogs = new HashMap<UUID, List<AuditLog>>();
         for (final Refund refund : refunds) {
-            refundsAuditLogs.put(refund.getId(), getAuditLogs(refund.getId(), ObjectType.REFUND));
+            refundsAuditLogs.put(refund.getId(), getAuditLogs(refund.getId(), ObjectType.REFUND, auditLevel));
         }
 
         return new DefaultAuditLogsForRefunds(refundsAuditLogs);
     }
 
     @Override
-    public AuditLogsForPayments getAuditLogsForPayments(final List<Payment> payments) {
+    public AuditLogsForPayments getAuditLogsForPayments(final List<Payment> payments, final AuditLevel auditLevel) {
         final Map<UUID, List<AuditLog>> paymentsAuditLogs = new HashMap<UUID, List<AuditLog>>();
         for (final Payment payment : payments) {
-            paymentsAuditLogs.put(payment.getId(), getAuditLogs(payment.getId(), ObjectType.PAYMENT));
+            paymentsAuditLogs.put(payment.getId(), getAuditLogs(payment.getId(), ObjectType.PAYMENT, auditLevel));
         }
 
         return new DefaultAuditLogsForPayments(paymentsAuditLogs);
     }
 
     @Override
-    public AuditLogsForInvoices getAuditLogsForInvoices(final List<Invoice> invoices) {
+    public AuditLogsForInvoices getAuditLogsForInvoices(final List<Invoice> invoices, final AuditLevel auditLevel) {
         final Map<UUID, List<AuditLog>> invoiceAuditLogs = new HashMap<UUID, List<AuditLog>>();
         final Map<UUID, List<AuditLog>> invoiceItemsAuditLogs = new HashMap<UUID, List<AuditLog>>();
         for (final Invoice invoice : invoices) {
-            invoiceAuditLogs.put(invoice.getId(), getAuditLogs(invoice.getId(), ObjectType.INVOICE));
+            invoiceAuditLogs.put(invoice.getId(), getAuditLogs(invoice.getId(), ObjectType.INVOICE, auditLevel));
             for (final InvoiceItem invoiceItem : invoice.getInvoiceItems()) {
-                invoiceItemsAuditLogs.put(invoiceItem.getId(), getAuditLogs(invoiceItem.getId(), ObjectType.INVOICE_ITEM));
+                invoiceItemsAuditLogs.put(invoiceItem.getId(), getAuditLogs(invoiceItem.getId(), ObjectType.INVOICE_ITEM, auditLevel));
             }
         }
 
@@ -111,13 +112,18 @@ public class DefaultAuditUserApi implements AuditUserApi {
     }
 
     @Override
-    public List<AuditLog> getAuditLogs(final UUID objectId, final ObjectType objectType) {
+    public List<AuditLog> getAuditLogs(final UUID objectId, final ObjectType objectType, final AuditLevel auditLevel) {
+        // Optimization - bail early
+        if (AuditLevel.NONE.equals(auditLevel)) {
+            return ImmutableList.<AuditLog>of();
+        }
+
         final TableName tableName = getTableNameFromObjectType(objectType);
         if (tableName == null) {
             return ImmutableList.<AuditLog>of();
         }
 
-        return auditDao.getAuditLogsForId(tableName, objectId);
+        return auditDao.getAuditLogsForId(tableName, objectId, auditLevel);
     }
 
     private TableName getTableNameFromObjectType(final ObjectType objectType) {

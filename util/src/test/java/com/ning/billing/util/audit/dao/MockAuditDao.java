@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.ning.billing.util.api.AuditLevel;
 import com.ning.billing.util.audit.AuditLog;
 import com.ning.billing.util.dao.TableName;
 
@@ -49,13 +50,22 @@ public class MockAuditDao implements AuditDao {
     }
 
     @Override
-    public List<AuditLog> getAuditLogsForId(final TableName tableName, final UUID objectId) {
+    public List<AuditLog> getAuditLogsForId(final TableName tableName, final UUID objectId, final AuditLevel auditLevel) {
         final Map<UUID, List<AuditLog>> auditLogsForTableName = auditLogsForTables.get(tableName);
         if (auditLogsForTableName == null) {
             return ImmutableList.<AuditLog>of();
         }
 
         final List<AuditLog> auditLogsForObjectId = auditLogsForTableName.get(objectId);
-        return Objects.firstNonNull(auditLogsForObjectId, ImmutableList.<AuditLog>of());
+        final List<AuditLog> allAuditLogs = Objects.firstNonNull(auditLogsForObjectId, ImmutableList.<AuditLog>of());
+        if (AuditLevel.FULL.equals(auditLevel)) {
+            return allAuditLogs;
+        } else if (AuditLevel.MINIMAL.equals(auditLevel) && allAuditLogs.size() > 0) {
+            return ImmutableList.<AuditLog>of(allAuditLogs.get(0));
+        } else if (AuditLevel.NONE.equals(auditLevel)) {
+            return ImmutableList.<AuditLog>of();
+        } else {
+            return allAuditLogs;
+        }
     }
 }
