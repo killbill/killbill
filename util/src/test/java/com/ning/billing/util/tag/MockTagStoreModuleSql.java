@@ -16,10 +16,7 @@
 
 package com.ning.billing.util.tag;
 
-
-import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
-import org.skife.jdbi.v2.tweak.HandleCallback;
 
 import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.dbi.MysqlTestingHelper;
@@ -29,25 +26,14 @@ import com.ning.billing.util.bus.InMemoryBus;
 import com.ning.billing.util.glue.TagStoreModule;
 
 public class MockTagStoreModuleSql extends TagStoreModule {
-    private MysqlTestingHelper helper;
 
     @Override
     protected void configure() {
-        helper = KillbillTestSuiteWithEmbeddedDB.getMysqlTestingHelper();
+        final MysqlTestingHelper helper = KillbillTestSuiteWithEmbeddedDB.getMysqlTestingHelper();
         bind(IDBI.class).toInstance(helper.getDBI());
         bind(MysqlTestingHelper.class).toInstance(helper);
         install(new MockClockModule());
         bind(Bus.class).toInstance(new InMemoryBus());
         super.configure();
-    }
-
-    public void execute(final String ddl) {
-        helper.getDBI().withHandle(new HandleCallback<Void>() {
-            @Override
-            public Void withHandle(final Handle handle) throws Exception {
-                handle.execute(ddl);
-                return null;
-            }
-        });
     }
 }

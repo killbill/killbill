@@ -19,13 +19,63 @@ package com.ning.billing.util.api;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoicePayment;
+import com.ning.billing.payment.api.Payment;
+import com.ning.billing.payment.api.Refund;
 import com.ning.billing.util.audit.AuditLog;
+import com.ning.billing.util.audit.AuditLogsForBundles;
+import com.ning.billing.util.audit.AuditLogsForInvoicePayments;
+import com.ning.billing.util.audit.AuditLogsForInvoices;
+import com.ning.billing.util.audit.AuditLogsForPayments;
+import com.ning.billing.util.audit.AuditLogsForRefunds;
 import com.ning.billing.util.dao.ObjectType;
 
 public interface AuditUserApi {
 
     /**
-     * Get all the audit entries for a given object
+     * Fetch all audit logs for bundles.
+     *
+     * @param bundles the bundles to lookup
+     * @return all audit logs for these refunds
+     */
+    public AuditLogsForBundles getAuditLogsForBundles(final List<SubscriptionBundle> bundles);
+
+    /**
+     * Fetch all audit logs for invoice payments.
+     *
+     * @param invoicePayments the invoice payments to lookup
+     * @return all audit logs for these invoice payments
+     */
+    public AuditLogsForInvoicePayments getAuditLogsForInvoicePayments(final List<InvoicePayment> invoicePayments);
+
+    /**
+     * Fetch all audit logs for refunds.
+     *
+     * @param refunds the refunds to lookup
+     * @return all audit logs for these refunds
+     */
+    public AuditLogsForRefunds getAuditLogsForRefunds(final List<Refund> refunds);
+
+    /**
+     * Fetch all audit logs for payments.
+     *
+     * @param payments the payments to lookup
+     * @return all audit logs for these payments
+     */
+    public AuditLogsForPayments getAuditLogsForPayments(final List<Payment> payments);
+
+    /**
+     * Fetch all audit logs for invoices and associated invoice items.
+     *
+     * @param invoices the invoices to lookup
+     * @return all audit logs for these invoices
+     */
+    public AuditLogsForInvoices getAuditLogsForInvoices(final List<Invoice> invoices);
+
+    /**
+     * Get all the audit entries for a given object.
      *
      * @param objectId   the object id
      * @param objectType the type of object

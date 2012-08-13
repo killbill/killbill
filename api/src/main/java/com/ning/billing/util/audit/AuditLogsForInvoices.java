@@ -14,15 +14,21 @@
  * under the License.
  */
 
-package com.ning.billing.util.audit.dao;
+package com.ning.billing.util.audit;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
-import com.ning.billing.util.audit.AuditLog;
-import com.ning.billing.util.dao.TableName;
+public interface AuditLogsForInvoices {
 
-public interface AuditDao {
+    /**
+     * @return mapping between invoice id and associated audit logs
+     */
+    public Map<UUID, List<AuditLog>> getInvoiceAuditLogs();
 
-    public List<AuditLog> getAuditLogsForId(final TableName tableName, final UUID objectId);
+    /**
+     * @return mapping between invoice item id and associated audit logs
+     */
+    public Map<UUID, List<AuditLog>> getInvoiceItemsAuditLogs();
 }

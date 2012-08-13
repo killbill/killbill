@@ -14,15 +14,21 @@
  * under the License.
  */
 
-package com.ning.billing.util.audit.dao;
+package com.ning.billing.util.audit;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
-import com.ning.billing.util.audit.AuditLog;
-import com.ning.billing.util.dao.TableName;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
-public interface AuditDao {
+public class TestDefaultAuditLogsForPayments extends AuditLogsTestBase {
 
-    public List<AuditLog> getAuditLogsForId(final TableName tableName, final UUID objectId);
+    @Test(groups = "fast")
+    public void testEquals() throws Exception {
+        final Map<UUID, List<AuditLog>> paymentsAuditLogs = createAuditLogsAssociation();
+        Assert.assertEquals(new DefaultAuditLogsForPayments(paymentsAuditLogs).getPaymentsAuditLogs(), paymentsAuditLogs);
+        Assert.assertNotEquals(new DefaultAuditLogsForPayments(createAuditLogsAssociation()).getPaymentsAuditLogs(), paymentsAuditLogs);
+    }
 }

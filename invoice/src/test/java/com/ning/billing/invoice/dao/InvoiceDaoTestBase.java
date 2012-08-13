@@ -110,7 +110,7 @@ public class InvoiceDaoTestBase extends InvoicingTestBase {
         final TagDefinitionDao tagDefinitionDao = new MockTagDefinitionDao();
         final TagDao tagDao = new AuditedTagDao(dbi, tagEventBuilder, bus);
         final TagUserApi tagUserApi = new DefaultTagUserApi(tagDefinitionDao, tagDao);
-        invoiceDao = new DefaultInvoiceDao(dbi, nextBillingDatePoster, tagUserApi, clock);
+        invoiceDao = new AuditedInvoiceDao(dbi, nextBillingDatePoster, tagUserApi, clock);
         invoiceDao.test();
 
         invoiceItemSqlDao = dbi.onDemand(InvoiceItemSqlDao.class);

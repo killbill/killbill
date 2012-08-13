@@ -16,34 +16,36 @@
 
 package com.ning.billing.jaxrs;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
 import javax.ws.rs.core.Response.Status;
 
 import org.joda.time.DateTime;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.billing.catalog.api.BillingPeriod;
-import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.AccountTimelineJson;
+import com.ning.billing.jaxrs.json.AuditLogJson;
 import com.ning.billing.jaxrs.json.BillCycleDayJson;
-import com.ning.billing.jaxrs.json.BundleJsonNoSubscriptions;
+import com.ning.billing.jaxrs.json.ChargebackJson;
+import com.ning.billing.jaxrs.json.CreditJson;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
+import com.ning.billing.jaxrs.json.InvoiceJsonSimple;
 import com.ning.billing.jaxrs.json.PaymentJsonSimple;
+import com.ning.billing.jaxrs.json.PaymentJsonWithBundleKeys;
 import com.ning.billing.jaxrs.json.PaymentMethodJson;
 import com.ning.billing.jaxrs.json.RefundJson;
-import com.ning.billing.jaxrs.json.SubscriptionJsonNoEvents;
 import com.ning.billing.jaxrs.json.TagDefinitionJson;
 import com.ning.billing.jaxrs.json.TagJson;
 import com.ning.billing.jaxrs.resources.JaxrsResource;
+import com.ning.billing.util.ChangeType;
 import com.ning.http.client.Response;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -55,39 +57,27 @@ import static org.testng.Assert.assertTrue;
 
 public class TestAccount extends TestJaxrsBase {
 
-    private static final Logger log = LoggerFactory.getLogger(TestAccount.class);
-
     @Test(groups = "slow")
     public void testAccountOk() throws Exception {
-
-        final AccountJson input = createAccount("xoxo", "shdgfhwe", "xoxo@yahoo.com");
+        final AccountJson input = createAccount();
 
         // Retrieves by external key
-        final Map<String, String> queryParams = new HashMap<String, String>();
-        queryParams.put(JaxrsResource.QUERY_EXTERNAL_KEY, "shdgfhwe");
-        Response response = doGet(JaxrsResource.ACCOUNTS_PATH, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
-        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
-        String baseJson = response.getResponseBody();
-        AccountJson objFromJson = mapper.readValue(baseJson, AccountJson.class);
-        Assert.assertTrue(objFromJson.equals(input));
+        final AccountJson retrievedAccount = getAccountByExternalKey(input.getExternalKey());
+        Assert.assertTrue(retrievedAccount.equals(input));
 
         // Update Account
-        final AccountJson newInput = new AccountJson(objFromJson.getAccountId(),
-                                                     "zozo", 4, objFromJson.getExternalKey(), "rr@google.com", new BillCycleDayJson(18, 18),
+        final AccountJson newInput = new AccountJson(input.getAccountId(),
+                                                     "zozo", 4, input.getExternalKey(), "rr@google.com", new BillCycleDayJson(18, 18),
                                                      "USD", null, "UTC", "bl1", "bh2", "", "", "ca", "San Francisco", "usa", "en", "415-255-2991",
                                                      false, false);
-        baseJson = mapper.writeValueAsString(newInput);
-        final String uri = JaxrsResource.ACCOUNTS_PATH + "/" + objFromJson.getAccountId();
-        response = doPut(uri, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
-        baseJson = response.getResponseBody();
-        objFromJson = mapper.readValue(baseJson, AccountJson.class);
-        Assert.assertTrue(objFromJson.equals(newInput));
+        final AccountJson updatedAccount = updateAccount(input.getAccountId(), newInput);
+        Assert.assertTrue(updatedAccount.equals(newInput));
     }
 
     @Test(groups = "slow")
     public void testUpdateNonExistentAccount() throws Exception {
-        final AccountJson input = getAccountJson("xoxo", "shghaahwe", "xoxo@yahoo.com");
+        final AccountJson input = getAccountJson();
+
         final String baseJson = mapper.writeValueAsString(input);
         final String uri = JaxrsResource.ACCOUNTS_PATH + "/" + input.getAccountId();
         final Response response = doPut(uri, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
@@ -110,37 +100,110 @@ public class TestAccount extends TestJaxrsBase {
 
     @Test(groups = "slow")
     public void testAccountTimeline() throws Exception {
-
         clock.setTime(new DateTime(2012, 4, 25, 0, 3, 42, 0));
 
-        final AccountJson accountJson = createAccountWithDefaultPaymentMethod("poney", "shdddqgfhwe", "poney@yahoo.com");
-        assertNotNull(accountJson);
+        final AccountJson accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
-        final BundleJsonNoSubscriptions bundleJson = createBundle(accountJson.getAccountId(), "996599");
-        assertNotNull(bundleJson);
+        final AccountTimelineJson timeline = getAccountTimeline(accountJson.getAccountId());
+        Assert.assertEquals(timeline.getPayments().size(), 1);
+        Assert.assertEquals(timeline.getInvoices().size(), 2);
+        Assert.assertEquals(timeline.getBundles().size(), 1);
+        Assert.assertEquals(timeline.getBundles().get(0).getSubscriptions().size(), 1);
+        Assert.assertEquals(timeline.getBundles().get(0).getSubscriptions().get(0).getEvents().size(), 2);
+    }
 
-        final SubscriptionJsonNoEvents subscriptionJson = createSubscription(bundleJson.getBundleId(), "Shotgun", ProductCategory.BASE.toString(), BillingPeriod.MONTHLY.toString(), true);
-        assertNotNull(subscriptionJson);
+    @Test
+    public void testAccountTimelineWithAudits() throws Exception {
+        final DateTime startTime = clock.getUTCNow();
+        final AccountJson accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
+        final DateTime endTime = clock.getUTCNow();
 
-        // MOVE AFTER TRIAL
-        clock.addDays(31);
+        // Add credit
+        final InvoiceJsonSimple invoice = getInvoicesForAccount(accountJson.getAccountId()).get(1);
+        final DateTime creditEffectiveDate = clock.getUTCNow();
+        final BigDecimal creditAmount = BigDecimal.ONE;
+        createCreditForInvoice(accountJson.getAccountId(), invoice.getInvoiceId(),
+                               creditAmount, clock.getUTCNow(), creditEffectiveDate);
 
-        crappyWaitForLackOfProperSynchonization();
+        // Add refund
+        final PaymentJsonSimple postedPayment = getPaymentsForAccount(accountJson.getAccountId()).get(0);
+        final BigDecimal refundAmount = BigDecimal.ONE;
+        createRefund(postedPayment.getPaymentId(), refundAmount);
 
-        final String uri = JaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAccountId() + "/" + JaxrsResource.TIMELINE;
+        // Add chargeback
+        final BigDecimal chargebackAmount = BigDecimal.ONE;
+        createChargeBack(postedPayment.getPaymentId(), chargebackAmount);
 
-        final Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
-        final String baseJson = response.getResponseBody();
-        final AccountTimelineJson objFromJson = mapper.readValue(baseJson, AccountTimelineJson.class);
-        assertNotNull(objFromJson);
-        log.info(baseJson);
+        final AccountTimelineJson timeline = getAccountTimelineWithAudits(accountJson.getAccountId());
 
-        Assert.assertEquals(objFromJson.getPayments().size(), 1);
-        Assert.assertEquals(objFromJson.getInvoices().size(), 2);
-        Assert.assertEquals(objFromJson.getBundles().size(), 1);
-        Assert.assertEquals(objFromJson.getBundles().get(0).getSubscriptions().size(), 1);
-        Assert.assertEquals(objFromJson.getBundles().get(0).getSubscriptions().get(0).getEvents().size(), 2);
+        // Verify payments
+        Assert.assertEquals(timeline.getPayments().size(), 1);
+        final PaymentJsonWithBundleKeys paymentJson = timeline.getPayments().get(0);
+        final List<AuditLogJson> paymentAuditLogs = paymentJson.getAuditLogs();
+        Assert.assertEquals(paymentAuditLogs.size(), 2);
+        verifyAuditLog(paymentAuditLogs.get(0), ChangeType.INSERT, null, null, "PaymentRequestProcessor", startTime, endTime);
+        verifyAuditLog(paymentAuditLogs.get(1), ChangeType.UPDATE, null, null, "PaymentRequestProcessor", startTime, endTime);
+
+        // Verify refunds
+        Assert.assertEquals(paymentJson.getRefunds().size(), 1);
+        final RefundJson refundJson = paymentJson.getRefunds().get(0);
+        Assert.assertEquals(refundJson.getPaymentId(), paymentJson.getPaymentId());
+        Assert.assertEquals(refundJson.getRefundAmount().compareTo(refundAmount), 0);
+        final List<AuditLogJson> refundAuditLogs = refundJson.getAuditLogs();
+        Assert.assertEquals(refundAuditLogs.size(), 3);
+        verifyAuditLog(refundAuditLogs.get(0), ChangeType.INSERT, reason, comment, createdBy, startTime, endTime);
+        verifyAuditLog(refundAuditLogs.get(1), ChangeType.UPDATE, reason, comment, createdBy, startTime, endTime);
+        verifyAuditLog(refundAuditLogs.get(2), ChangeType.UPDATE, reason, comment, createdBy, startTime, endTime);
+
+        // Verify chargebacks
+        Assert.assertEquals(paymentJson.getChargebacks().size(), 1);
+        final ChargebackJson chargebackJson = paymentJson.getChargebacks().get(0);
+        Assert.assertEquals(chargebackJson.getPaymentId(), paymentJson.getPaymentId());
+        Assert.assertEquals(chargebackJson.getChargebackAmount().compareTo(chargebackAmount), 0);
+        final List<AuditLogJson> chargebackAuditLogs = chargebackJson.getAuditLogs();
+        Assert.assertEquals(chargebackAuditLogs.size(), 1);
+        verifyAuditLog(chargebackAuditLogs.get(0), ChangeType.INSERT, reason, comment, createdBy, startTime, endTime);
+
+        // Verify invoices
+        Assert.assertEquals(timeline.getInvoices().size(), 2);
+        final List<AuditLogJson> firstInvoiceAuditLogs = timeline.getInvoices().get(0).getAuditLogs();
+        Assert.assertEquals(firstInvoiceAuditLogs.size(), 1);
+        verifyAuditLog(firstInvoiceAuditLogs.get(0), ChangeType.INSERT, null, null, "Transition", startTime, endTime);
+        final List<AuditLogJson> secondInvoiceAuditLogs = timeline.getInvoices().get(1).getAuditLogs();
+        Assert.assertEquals(secondInvoiceAuditLogs.size(), 1);
+        verifyAuditLog(secondInvoiceAuditLogs.get(0), ChangeType.INSERT, null, null, "Transition", startTime, endTime);
+
+        // Verify credits
+        final List<CreditJson> credits = timeline.getInvoices().get(1).getCredits();
+        Assert.assertEquals(credits.size(), 1);
+        Assert.assertEquals(credits.get(0).getCreditAmount().compareTo(creditAmount.negate()), 0);
+        final List<AuditLogJson> creditAuditLogs = credits.get(0).getAuditLogs();
+        Assert.assertEquals(creditAuditLogs.size(), 1);
+        verifyAuditLog(creditAuditLogs.get(0), ChangeType.INSERT, reason, comment, createdBy, startTime, endTime);
+
+        // Verify bundles
+        Assert.assertEquals(timeline.getBundles().size(), 1);
+        Assert.assertEquals(timeline.getBundles().get(0).getSubscriptions().size(), 1);
+        Assert.assertEquals(timeline.getBundles().get(0).getSubscriptions().get(0).getEvents().size(), 2);
+        final List<AuditLogJson> bundleAuditLogs = timeline.getBundles().get(0).getAuditLogs();
+        Assert.assertEquals(bundleAuditLogs.size(), 3);
+        verifyAuditLog(bundleAuditLogs.get(0), ChangeType.INSERT, reason, comment, createdBy, startTime, endTime);
+        verifyAuditLog(bundleAuditLogs.get(1), ChangeType.UPDATE, null, null, "Transition", startTime, endTime);
+        verifyAuditLog(bundleAuditLogs.get(2), ChangeType.UPDATE, null, null, "Transition", startTime, endTime);
+
+        // TODO subscription events audit logs
+    }
+
+    private void verifyAuditLog(final AuditLogJson auditLogJson, final ChangeType changeType, @Nullable final String reasonCode,
+                                @Nullable final String comments, @Nullable final String changedBy,
+                                final DateTime startTime, final DateTime endTime) {
+        Assert.assertEquals(auditLogJson.getChangeType(), changeType.toString());
+        Assert.assertFalse(auditLogJson.getChangeDate().isBefore(startTime));
+        // Flaky
+        //Assert.assertFalse(auditLogJson.getChangeDate().isAfter(endTime));
+        Assert.assertEquals(auditLogJson.getReasonCode(), reasonCode);
+        Assert.assertEquals(auditLogJson.getComments(), comments);
+        Assert.assertEquals(auditLogJson.getChangedBy(), changedBy);
     }
 
     @Test(groups = "slow")
@@ -228,18 +291,17 @@ public class TestAccount extends TestJaxrsBase {
         paymentMethods = mapper.readValue(baseJson, new TypeReference<List<PaymentMethodJson>>() {});
         assertEquals(paymentMethods.size(), 1);
 
-
         //
         // DELETE DEFAULT PAYMENT METHOD (without special flag first)
         //
-        uri = JaxrsResource.PAYMENT_METHODS_PATH + "/" + paymentMethodPP.getPaymentMethodId() ;
+        uri = JaxrsResource.PAYMENT_METHODS_PATH + "/" + paymentMethodPP.getPaymentMethodId();
         response = doDelete(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.BAD_REQUEST.getStatusCode());
 
         //
         // RETRY TO DELETE DEFAULT PAYMENT METHOD (with special flag this time)
         //
-        uri = JaxrsResource.PAYMENT_METHODS_PATH + "/" + paymentMethodPP.getPaymentMethodId() ;
+        uri = JaxrsResource.PAYMENT_METHODS_PATH + "/" + paymentMethodPP.getPaymentMethodId();
         queryParams = new HashMap<String, String>();
         queryParams.put(JaxrsResource.QUERY_DELETE_DEFAULT_PM_WITH_AUTO_PAY_OFF, "true");
 
@@ -280,36 +342,15 @@ public class TestAccount extends TestJaxrsBase {
 
     @Test(groups = "slow")
     public void testAccountPaymentsWithRefund() throws Exception {
+        final AccountJson accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
-        //clock.setTime(new DateTime(2012, 4, 25, 0, 3, 42, 0));
-
-        final AccountJson accountJson = createAccountWithDefaultPaymentMethod("ermenehildo", "shtyrgfhwe", "ermenehildo@yahoo.com");
-        assertNotNull(accountJson);
-
-        final BundleJsonNoSubscriptions bundleJson = createBundle(accountJson.getAccountId(), "396199");
-        assertNotNull(bundleJson);
-
-        final SubscriptionJsonNoEvents subscriptionJson = createSubscription(bundleJson.getBundleId(), "Shotgun", ProductCategory.BASE.toString(), BillingPeriod.MONTHLY.toString(), true);
-        assertNotNull(subscriptionJson);
-
-        clock.addMonths(1);
-        crappyWaitForLackOfProperSynchonization();
-
-        String uri = JaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAccountId() + "/" + JaxrsResource.PAYMENTS;
-
-        Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
-        String baseJson = response.getResponseBody();
-        List<PaymentJsonSimple> objFromJson = mapper.readValue(baseJson, new TypeReference<List<PaymentJsonSimple>>() {});
+        // Verify payments
+        final List<PaymentJsonSimple> objFromJson = getPaymentsForAccount(accountJson.getAccountId());
         Assert.assertEquals(objFromJson.size(), 1);
 
-        uri = JaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAccountId() + "/" + JaxrsResource.REFUNDS;
-        response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
-        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
-        baseJson = response.getResponseBody();
-        List<RefundJson> objRefundFromJson = mapper.readValue(baseJson, new TypeReference<List<RefundJson>>() {});
+        // Verify refunds
+        final List<RefundJson> objRefundFromJson = getRefundsForAccount(accountJson.getAccountId());
         Assert.assertEquals(objRefundFromJson.size(), 0);
-
     }
 
     @Test(groups = "slow")

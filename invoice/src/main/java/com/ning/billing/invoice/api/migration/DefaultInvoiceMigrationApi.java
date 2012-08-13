@@ -19,7 +19,6 @@ package com.ning.billing.invoice.api.migration;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +30,7 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceMigrationApi;
-import com.ning.billing.invoice.dao.DefaultInvoiceDao;
+import com.ning.billing.invoice.dao.AuditedInvoiceDao;
 import com.ning.billing.invoice.model.MigrationInvoiceItem;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallOrigin;
@@ -45,11 +44,11 @@ public class DefaultInvoiceMigrationApi implements InvoiceMigrationApi {
     private static final Logger log = LoggerFactory.getLogger(DefaultInvoiceMigrationApi.class);
 
     private final AccountUserApi accountUserApi;
-    private final DefaultInvoiceDao dao;
+    private final AuditedInvoiceDao dao;
     private final Clock clock;
 
     @Inject
-    public DefaultInvoiceMigrationApi(final AccountUserApi accountUserApi, final DefaultInvoiceDao dao, final Clock clock) {
+    public DefaultInvoiceMigrationApi(final AccountUserApi accountUserApi, final AuditedInvoiceDao dao, final Clock clock) {
         this.accountUserApi = accountUserApi;
         this.dao = dao;
         this.clock = clock;

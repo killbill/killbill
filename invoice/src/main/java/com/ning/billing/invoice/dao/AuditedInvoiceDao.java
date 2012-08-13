@@ -66,7 +66,7 @@ import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableMap.Builder;
 import com.google.inject.Inject;
 
-public class DefaultInvoiceDao implements InvoiceDao {
+public class AuditedInvoiceDao implements InvoiceDao {
 
     private final InvoiceSqlDao invoiceSqlDao;
     private final InvoicePaymentSqlDao invoicePaymentSqlDao;
@@ -76,7 +76,7 @@ public class DefaultInvoiceDao implements InvoiceDao {
     private final Clock clock;
 
     @Inject
-    public DefaultInvoiceDao(final IDBI dbi,
+    public AuditedInvoiceDao(final IDBI dbi,
                              final NextBillingDatePoster nextBillingDatePoster,
                              final TagUserApi tagUserApi,
                              final Clock clock) {
@@ -484,6 +484,12 @@ public class DefaultInvoiceDao implements InvoiceDao {
                     final InvoicePayment chargeBack = new DefaultInvoicePayment(UUID.randomUUID(), InvoicePaymentType.CHARGED_BACK, payment.getPaymentId(),
                                                                                 payment.getInvoiceId(), context.getCreatedDate(), requestedChargedBackAmout.negate(), payment.getCurrency(), null, payment.getId());
                     invoicePaymentSqlDao.create(chargeBack, context);
+
+                    // Add audit
+                    final Long recordId = invoicePaymentSqlDao.getRecordId(chargeBack.getId().toString());
+                    final EntityAudit audit = new EntityAudit(TableName.INVOICE_PAYMENTS, recordId, ChangeType.INSERT);
+                    invoicePaymentSqlDao.insertAuditFromTransaction(audit, context);
+
                     return chargeBack;
                 }
             }
@@ -577,7 +583,12 @@ public class DefaultInvoiceDao implements InvoiceDao {
 
                 // Note! The amount is negated here!
                 final InvoiceItem credit = new CreditAdjInvoiceItem(invoiceIdForCredit, accountId, effectiveDate, positiveCreditAmount.negate(), currency);
-                insertItemAndAddCBAIfNeeded(transactional, credit, context);
+                final Long recordId = insertItemAndAddCBAIfNeeded(transactional, credit, context);
+
+                // Add audit
+                final EntityAudit audit = new EntityAudit(TableName.INVOICE_ITEMS, recordId, ChangeType.INSERT);
+                transactional.insertAuditFromTransaction(audit, context);
+
                 return credit;
             }
         });
@@ -644,11 +655,13 @@ public class DefaultInvoiceDao implements InvoiceDao {
      * @param item          the invoice item to create
      * @param context       the call context
      */
-    private void insertItemAndAddCBAIfNeeded(final InvoiceSqlDao transactional, final InvoiceItem item, final CallContext context) {
+    private Long insertItemAndAddCBAIfNeeded(final InvoiceSqlDao transactional, final InvoiceItem item, final CallContext context) {
         final InvoiceItemSqlDao transInvoiceItemDao = transactional.become(InvoiceItemSqlDao.class);
         transInvoiceItemDao.create(item, context);
 
         addCBAIfNeeded(transactional, item.getInvoiceId(), context);
+
+        return transInvoiceItemDao.getRecordId(item.getId().toString());
     }
 
     /**

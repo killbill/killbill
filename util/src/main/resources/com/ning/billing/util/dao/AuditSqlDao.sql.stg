@@ -29,3 +29,9 @@ getRecordIdForTable(tableName) ::= <<
   WHERE id = :id
   LIMIT 1
 >>
+
+getHistoryRecordIdsForTable(tableName) ::= <<
+  SELECT history_record_id record_id
+  FROM <tableName>
+  WHERE id = :id
+>>
