@@ -93,8 +93,8 @@ public class DefaultSubscriptionTimeline implements SubscriptionTimeline {
             // First active event is used to figure out which catalog version to use.
             //startDate = (startDate == null && cur.getActiveVersion() == activeVersion) ?  cur.getEffectiveDate() : startDate;
 
-            // STEPH that needs tp be reviewed if we support mutli version events
-            if (cur.getActiveVersion() != activeVersion) {
+            // STEPH that needs to be reviewed if we support multi version events
+            if (cur.getActiveVersion() != activeVersion || !cur.isActive()) {
                 continue;
             }
             startDate = (startDate == null) ? cur.getEffectiveDate() : startDate;
