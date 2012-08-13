@@ -289,7 +289,7 @@ public class PaymentProcessor extends ProcessorBase {
                     invoice.getId(), inputAmount.floatValue(), invoice.getBalance().floatValue());
         }
         final BigDecimal result =  inputAmount != null ? inputAmount : invoice.getBalance();
-        return result.setScale(2, RoundingMode.HALF_EVEN);
+        return result.setScale(2, RoundingMode.HALF_UP);
     }
 
 
@@ -383,7 +383,7 @@ public class PaymentProcessor extends ProcessorBase {
 
     private Payment processNewPaymentWithAccountLocked(final UUID paymentMethodId, final PaymentPluginApi plugin, final Account account, final Invoice invoice,
                                                        final BigDecimal requestedAmount, final boolean isInstantPayment, final CallContext context) throws PaymentApiException {
-        final PaymentModelDao payment = new PaymentModelDao(account.getId(), invoice.getId(), paymentMethodId, requestedAmount.setScale(2, RoundingMode.HALF_EVEN), invoice.getCurrency(), clock.getUTCNow());
+        final PaymentModelDao payment = new PaymentModelDao(account.getId(), invoice.getId(), paymentMethodId, requestedAmount.setScale(2, RoundingMode.HALF_UP), invoice.getCurrency(), clock.getUTCNow());
         final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(account.getId(), invoice.getId(), payment.getId(), clock.getUTCNow(), requestedAmount);
 
         final PaymentModelDao savedPayment = paymentDao.insertPaymentWithAttempt(payment, attempt, context);
