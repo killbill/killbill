@@ -195,19 +195,52 @@ public class TestAccountTimeline extends TestJaxrsBase {
 
             // Verify audits
             final List<AuditLogJson> bundleAuditLogs = timeline.getBundles().get(0).getAuditLogs();
+            final List<AuditLogJson> subscriptionAuditLogs = timeline.getBundles().get(0).getSubscriptions().get(0).getAuditLogs();
+            final List<AuditLogJson> subscriptionEvent1AuditLogs = timeline.getBundles().get(0).getSubscriptions().get(0).getEvents().get(0).getAuditLogs();
+            final List<AuditLogJson> subscriptionEvent2AuditLogs = timeline.getBundles().get(0).getSubscriptions().get(0).getEvents().get(1).getAuditLogs();
             if (AuditLevel.NONE.equals(auditLevel)) {
+                // Audits for bundles
                 Assert.assertEquals(bundleAuditLogs.size(), 0);
+
+                // Audits for subscriptions
+                Assert.assertEquals(subscriptionAuditLogs.size(), 0);
+
+                // Audit for subscription events
+                Assert.assertEquals(subscriptionEvent1AuditLogs.size(), 0);
+                Assert.assertEquals(subscriptionEvent2AuditLogs.size(), 0);
             } else if (AuditLevel.MINIMAL.equals(auditLevel)) {
+                // Audits for bundles
                 Assert.assertEquals(bundleAuditLogs.size(), 1);
                 verifyAuditLog(bundleAuditLogs.get(0), ChangeType.INSERT, reason, comment, createdBy, startTime, endTime);
+
+                // Audits for subscriptions
+                Assert.assertEquals(subscriptionAuditLogs.size(), 1);
+                verifyAuditLog(subscriptionAuditLogs.get(0), ChangeType.INSERT, reason, comment, createdBy, startTime, endTime);
+
+                // Audit for subscription events
+                Assert.assertEquals(subscriptionEvent1AuditLogs.size(), 1);
+                verifyAuditLog(subscriptionEvent1AuditLogs.get(0), ChangeType.INSERT, reason, comment, createdBy, startTime, endTime);
+                Assert.assertEquals(subscriptionEvent2AuditLogs.size(), 1);
+                verifyAuditLog(subscriptionEvent2AuditLogs.get(0), ChangeType.INSERT, reason, comment, createdBy, startTime, endTime);
             } else {
+                // Audits for bundles
                 Assert.assertEquals(bundleAuditLogs.size(), 3);
                 verifyAuditLog(bundleAuditLogs.get(0), ChangeType.INSERT, reason, comment, createdBy, startTime, endTime);
                 verifyAuditLog(bundleAuditLogs.get(1), ChangeType.UPDATE, null, null, TRANSITION, startTime, endTime);
                 verifyAuditLog(bundleAuditLogs.get(2), ChangeType.UPDATE, null, null, TRANSITION, startTime, endTime);
-            }
 
-            // TODO subscription events audit logs
+                // Audits for subscriptions
+                Assert.assertEquals(subscriptionAuditLogs.size(), 3);
+                verifyAuditLog(subscriptionAuditLogs.get(0), ChangeType.INSERT, reason, comment, createdBy, startTime, endTime);
+                verifyAuditLog(subscriptionAuditLogs.get(1), ChangeType.UPDATE, null, null, TRANSITION, startTime, endTime);
+                verifyAuditLog(subscriptionAuditLogs.get(2), ChangeType.UPDATE, null, null, TRANSITION, startTime, endTime);
+
+                // Audit for subscription events
+                Assert.assertEquals(subscriptionEvent1AuditLogs.size(), 1);
+                verifyAuditLog(subscriptionEvent1AuditLogs.get(0), ChangeType.INSERT, reason, comment, createdBy, startTime, endTime);
+                Assert.assertEquals(subscriptionEvent2AuditLogs.size(), 1);
+                verifyAuditLog(subscriptionEvent2AuditLogs.get(0), ChangeType.INSERT, reason, comment, createdBy, startTime, endTime);
+            }
         }
     }
 

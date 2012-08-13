@@ -106,19 +106,23 @@ public class AccountTimelineJson {
              paymentsAuditLogs == null ? ImmutableMap.<UUID, List<AuditLog>>of() : paymentsAuditLogs.getPaymentsAuditLogs(),
              refundsAuditLogs == null ? ImmutableMap.<UUID, List<AuditLog>>of() : refundsAuditLogs.getRefundsAuditLogs(),
              chargebacksAuditLogs == null ? ImmutableMap.<UUID, List<AuditLog>>of() : chargebacksAuditLogs.getInvoicePaymentsAuditLogs(),
-             bundlesAuditLogs == null ? ImmutableMap.<UUID, List<AuditLog>>of() : bundlesAuditLogs.getBundlesAuditLogs());
+             bundlesAuditLogs == null ? ImmutableMap.<UUID, List<AuditLog>>of() : bundlesAuditLogs.getBundlesAuditLogs(),
+             bundlesAuditLogs == null ? ImmutableMap.<UUID, List<AuditLog>>of() : bundlesAuditLogs.getSubscriptionsAuditLogs(),
+             bundlesAuditLogs == null ? ImmutableMap.<UUID, List<AuditLog>>of() : bundlesAuditLogs.getSubscriptionEventsAuditLogs());
     }
 
     public AccountTimelineJson(final Account account, final List<Invoice> invoices, final List<Payment> payments, final List<BundleTimeline> bundles,
                                final Multimap<UUID, Refund> refundsByPayment, final Multimap<UUID, InvoicePayment> chargebacksByPayment,
                                final Map<UUID, List<AuditLog>> invoiceAuditLogs, final Map<UUID, List<AuditLog>> invoiceItemsAuditLogs,
                                final Map<UUID, List<AuditLog>> paymentsAuditLogs, final Map<UUID, List<AuditLog>> refundsAuditLogs,
-                               final Map<UUID, List<AuditLog>> chargebacksAuditLogs, final Map<UUID, List<AuditLog>> bundlesAuditLogs) {
+                               final Map<UUID, List<AuditLog>> chargebacksAuditLogs, final Map<UUID, List<AuditLog>> bundlesAuditLogs,
+                               final Map<UUID, List<AuditLog>> subscriptionsAuditLogs, final Map<UUID, List<AuditLog>> subscriptionEventsAuditLogs) {
         this.account = new AccountJsonSimple(account.getId().toString(), account.getExternalKey());
         this.bundles = new LinkedList<BundleJsonWithSubscriptions>();
         for (final BundleTimeline bundle : bundles) {
-            final List<AuditLog> auditLogs = bundlesAuditLogs.get(bundle.getBundleId());
-            final BundleJsonWithSubscriptions jsonWithSubscriptions = new BundleJsonWithSubscriptions(account.getId(), bundle, auditLogs);
+            final List<AuditLog> bundleAuditLogs = bundlesAuditLogs.get(bundle.getBundleId());
+            final BundleJsonWithSubscriptions jsonWithSubscriptions = new BundleJsonWithSubscriptions(bundle, bundleAuditLogs,
+                                                                                                      subscriptionsAuditLogs, subscriptionEventsAuditLogs);
             this.bundles.add(jsonWithSubscriptions);
         }
 

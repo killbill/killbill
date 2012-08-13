@@ -18,6 +18,7 @@ package com.ning.billing.jaxrs.json;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -47,11 +48,13 @@ public class BundleJsonWithSubscriptions extends BundleJsonSimple {
         return subscriptions;
     }
 
-    public BundleJsonWithSubscriptions(@Nullable final UUID accountId, final BundleTimeline bundle, final List<AuditLog> auditLogs) {
+    public BundleJsonWithSubscriptions(final BundleTimeline bundle, final List<AuditLog> auditLogs,
+                                       final Map<UUID, List<AuditLog>> subscriptionsAuditLogs, final Map<UUID, List<AuditLog>> subscriptionEventsAuditLogs) {
         super(bundle.getBundleId(), bundle.getExternalKey(), auditLogs);
         this.subscriptions = new LinkedList<SubscriptionJsonWithEvents>();
-        for (final SubscriptionTimeline cur : bundle.getSubscriptions()) {
-            this.subscriptions.add(new SubscriptionJsonWithEvents(bundle.getBundleId(), cur));
+        for (final SubscriptionTimeline subscriptionTimeline : bundle.getSubscriptions()) {
+            this.subscriptions.add(new SubscriptionJsonWithEvents(bundle.getBundleId(), subscriptionTimeline,
+                                                                  subscriptionsAuditLogs.get(subscriptionTimeline.getId()), subscriptionEventsAuditLogs));
         }
     }
 

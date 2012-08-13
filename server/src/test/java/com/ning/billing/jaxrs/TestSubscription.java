@@ -78,7 +78,7 @@ public class TestSubscription extends TestJaxrsBase {
                                                                                newProductName,
                                                                                subscriptionJson.getProductCategory(),
                                                                                subscriptionJson.getBillingPeriod(),
-                                                                               subscriptionJson.getPriceList(), null, null);
+                                                                               subscriptionJson.getPriceList(), null, null, null);
         baseJson = mapper.writeValueAsString(newInput);
 
         final Map<String, String> queryParams = getQueryParamsForCallCompletion(CALL_COMPLETION_TIMEOUT_SEC);
@@ -119,7 +119,7 @@ public class TestSubscription extends TestJaxrsBase {
     public void testWithNonExistentSubscription() throws Exception {
         final String uri = JaxrsResource.SUBSCRIPTIONS_PATH + "/" + UUID.randomUUID().toString();
         final SubscriptionJsonNoEvents subscriptionJson = new SubscriptionJsonNoEvents(null, UUID.randomUUID().toString(), null, "Pistol", ProductCategory.BASE.toString(), BillingPeriod.MONTHLY.toString(),
-                                                                                       PriceListSet.DEFAULT_PRICELIST_NAME, null, null);
+                                                                                       PriceListSet.DEFAULT_PRICELIST_NAME, null, null, null);
         final String baseJson = mapper.writeValueAsString(subscriptionJson);
 
         Response response = doPut(uri, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
@@ -166,7 +166,8 @@ public class TestSubscription extends TestJaxrsBase {
                                                                                BillingPeriod.MONTHLY.toString(),
                                                                                subscriptionJson.getPriceList(),
                                                                                subscriptionJson.getChargedThroughDate(),
-                                                                               subscriptionJson.getCancelledDate());
+                                                                               subscriptionJson.getCancelledDate(),
+                                                                               null);
         baseJson = mapper.writeValueAsString(newInput);
         final Map<String, String> queryParams = getQueryParamsForCallCompletion(CALL_COMPLETION_TIMEOUT_SEC);
         queryParams.put(JaxrsResource.QUERY_POLICY, "immediate");

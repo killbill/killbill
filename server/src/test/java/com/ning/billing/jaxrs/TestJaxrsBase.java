@@ -474,7 +474,9 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
 
     protected SubscriptionJsonNoEvents createSubscription(final String bundleId, final String productName, final String productCategory, final String billingPeriod, final boolean waitCompletion) throws Exception {
 
-        final SubscriptionJsonNoEvents input = new SubscriptionJsonNoEvents(null, bundleId, null, productName, productCategory, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, null, null);
+        final SubscriptionJsonNoEvents input = new SubscriptionJsonNoEvents(null, bundleId, null, productName, productCategory,
+                                                                            billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME,
+                                                                            null, null, null);
         String baseJson = mapper.writeValueAsString(input);
 
         final Map<String, String> queryParams = waitCompletion ? getQueryParamsForCallCompletion("5") : DEFAULT_EMPTY_QUERY;

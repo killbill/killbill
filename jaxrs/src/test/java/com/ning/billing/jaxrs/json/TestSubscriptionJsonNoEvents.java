@@ -16,6 +16,7 @@
 
 package com.ning.billing.jaxrs.json;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -24,9 +25,6 @@ import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.InternationalPrice;
 import com.ning.billing.catalog.api.Plan;
@@ -37,7 +35,12 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.jaxrs.JaxrsTestSuite;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.joda.JodaModule;
+
 public class TestSubscriptionJsonNoEvents extends JaxrsTestSuite {
+
     private static final ObjectMapper mapper = new ObjectMapper();
 
     static {
@@ -56,10 +59,11 @@ public class TestSubscriptionJsonNoEvents extends JaxrsTestSuite {
         final String priceList = UUID.randomUUID().toString();
         final DateTime chargedThroughDate = new DateTime(DateTimeZone.UTC);
         final DateTime endDate = new DateTime(DateTimeZone.UTC);
-
+        final List<AuditLogJson> auditLogs = createAuditLogsJson();
         final SubscriptionJsonNoEvents subscriptionJsonNoEvents = new SubscriptionJsonNoEvents(subscriptionId, bundleId, startDate,
                                                                                                productName, productCategory, billingPeriod,
-                                                                                               priceList, chargedThroughDate, endDate);
+                                                                                               priceList, chargedThroughDate, endDate,
+                                                                                               auditLogs);
         Assert.assertEquals(subscriptionJsonNoEvents.getSubscriptionId(), subscriptionId);
         Assert.assertEquals(subscriptionJsonNoEvents.getBundleId(), bundleId);
         Assert.assertEquals(subscriptionJsonNoEvents.getStartDate(), startDate);
@@ -68,17 +72,9 @@ public class TestSubscriptionJsonNoEvents extends JaxrsTestSuite {
         Assert.assertEquals(subscriptionJsonNoEvents.getBillingPeriod(), billingPeriod);
         Assert.assertEquals(subscriptionJsonNoEvents.getPriceList(), priceList);
         Assert.assertEquals(subscriptionJsonNoEvents.getChargedThroughDate(), chargedThroughDate);
+        Assert.assertEquals(subscriptionJsonNoEvents.getAuditLogs(), auditLogs);
 
         final String asJson = mapper.writeValueAsString(subscriptionJsonNoEvents);
-        Assert.assertEquals(asJson, "{\"subscriptionId\":\"" + subscriptionJsonNoEvents.getSubscriptionId() + "\"," +
-                "\"bundleId\":\"" + subscriptionJsonNoEvents.getBundleId() + "\"," +
-                "\"startDate\":\"" + subscriptionJsonNoEvents.getStartDate().toDateTimeISO().toString() + "\"," +
-                "\"productName\":\"" + subscriptionJsonNoEvents.getProductName() + "\"," +
-                "\"productCategory\":\"" + subscriptionJsonNoEvents.getProductCategory() + "\"," +
-                "\"billingPeriod\":\"" + subscriptionJsonNoEvents.getBillingPeriod() + "\"," +
-                "\"priceList\":\"" + subscriptionJsonNoEvents.getPriceList() + "\"," +
-                "\"chargedThroughDate\":\"" + subscriptionJsonNoEvents.getChargedThroughDate().toDateTimeISO().toString() + "\"," +
-                "\"cancelledDate\":\"" + subscriptionJsonNoEvents.getCancelledDate().toDateTimeISO().toString() + "\"}");
 
         final SubscriptionJsonNoEvents fromJson = mapper.readValue(asJson, SubscriptionJsonNoEvents.class);
         Assert.assertEquals(fromJson, subscriptionJsonNoEvents);
@@ -110,7 +106,7 @@ public class TestSubscriptionJsonNoEvents extends JaxrsTestSuite {
         Mockito.when(subscription.getCurrentPriceList()).thenReturn(priceList);
         Mockito.when(subscription.getChargedThroughDate()).thenReturn(new DateTime(DateTimeZone.UTC));
 
-        final SubscriptionJsonNoEvents subscriptionJsonNoEvents = new SubscriptionJsonNoEvents(subscription);
+        final SubscriptionJsonNoEvents subscriptionJsonNoEvents = new SubscriptionJsonNoEvents(subscription, null);
         Assert.assertEquals(subscriptionJsonNoEvents.getSubscriptionId(), subscription.getId().toString());
         Assert.assertEquals(subscriptionJsonNoEvents.getStartDate(), subscription.getStartDate());
         Assert.assertEquals(subscriptionJsonNoEvents.getBundleId(), subscription.getBundleId().toString());
@@ -118,5 +114,6 @@ public class TestSubscriptionJsonNoEvents extends JaxrsTestSuite {
         Assert.assertEquals(subscriptionJsonNoEvents.getProductCategory(), subscription.getCurrentPlan().getProduct().getCategory().toString());
         Assert.assertEquals(subscriptionJsonNoEvents.getBillingPeriod(), subscription.getCurrentPlan().getBillingPeriod().toString());
         Assert.assertEquals(subscriptionJsonNoEvents.getChargedThroughDate(), subscription.getChargedThroughDate());
+        Assert.assertNull(subscriptionJsonNoEvents.getAuditLogs());
     }
 }
