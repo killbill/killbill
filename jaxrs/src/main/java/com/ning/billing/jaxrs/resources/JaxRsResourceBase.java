@@ -61,7 +61,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
     protected final CustomFieldUserApi customFieldUserApi;
     protected final AuditUserApi auditUserApi;
 
-    protected final DateTimeFormatter DATE_TIME_FORMATTER = ISODateTimeFormat.dateTime();
+    protected final DateTimeFormatter DATE_TIME_FORMATTER = ISODateTimeFormat.dateTimeParser();
 
     public JaxRsResourceBase(final JaxrsUriBuilder uriBuilder,
                              final TagUserApi tagUserApi,
