@@ -1,5 +1,5 @@
-/* 
- * Copyright 2010-2011 Ning, Inc.
+/*
+ * Copyright 2010-2012 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -14,18 +14,13 @@
  * under the License.
  */
 
-package com.ning.billing.entitlement.api.timeline;
+package com.ning.billing.util.api;
 
-import java.util.List;
-import java.util.UUID;
-
-public interface BundleTimeline {
-
-    String getViewId();
-
-    UUID getBundleId();
-
-    String getExternalKey();
-
-    List<SubscriptionTimeline> getSubscriptions();
+public enum AuditLevel {
+    // All audits
+    FULL,
+    // Initial inserts only
+    MINIMAL,
+    // No audit
+    NONE
 }

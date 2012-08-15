@@ -9,11 +9,11 @@ create table sources (
 , account_record_id int(11) unsigned default null
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
-, index created_dt_record_id_dx (created_dt, record_id)
+, index created_date_record_id_dx (created_date, record_id)
 ) engine = innodb default charset = latin1;
 
 create table event_categories (
-  event_category_id integer not null auto_increment
+  record_id integer not null auto_increment
 , event_category varchar(256) not null
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
@@ -51,7 +51,7 @@ create table last_start_times (
 , start_times mediumtext not null
 ) engine = innodb default charset = latin1;
 
-insert ignore into timeline_chunks(chunk_id, source_id, metric_id, sample_count, start_time, end_time, in_row_samples, blob_samples)
+insert ignore into timeline_chunks(record_id, source_id, metric_id, sample_count, start_time, end_time, in_row_samples, blob_samples)
                            values (0, 0, 0, 0, 0, 0, null, null);
 
 create table timeline_rolled_up_chunk (

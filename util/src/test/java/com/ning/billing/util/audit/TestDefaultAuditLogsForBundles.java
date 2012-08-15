@@ -28,7 +28,22 @@ public class TestDefaultAuditLogsForBundles extends AuditLogsTestBase {
     @Test(groups = "fast")
     public void testEquals() throws Exception {
         final Map<UUID, List<AuditLog>> bundlesAuditLogs = createAuditLogsAssociation();
-        Assert.assertEquals(new DefaultAuditLogsForBundles(bundlesAuditLogs).getBundlesAuditLogs(), bundlesAuditLogs);
-        Assert.assertNotEquals(new DefaultAuditLogsForBundles(createAuditLogsAssociation()).getBundlesAuditLogs(), bundlesAuditLogs);
+        final Map<UUID, List<AuditLog>> subscriptionsAuditLogs = createAuditLogsAssociation();
+        final Map<UUID, List<AuditLog>> subscriptionEventsAuditLogs = createAuditLogsAssociation();
+        Assert.assertEquals(new DefaultAuditLogsForBundles(bundlesAuditLogs, subscriptionsAuditLogs, subscriptionEventsAuditLogs).getBundlesAuditLogs(), bundlesAuditLogs);
+        Assert.assertEquals(new DefaultAuditLogsForBundles(bundlesAuditLogs, subscriptionsAuditLogs, subscriptionEventsAuditLogs).getSubscriptionsAuditLogs(), subscriptionsAuditLogs);
+        Assert.assertEquals(new DefaultAuditLogsForBundles(bundlesAuditLogs, subscriptionsAuditLogs, subscriptionEventsAuditLogs).getSubscriptionEventsAuditLogs(), subscriptionEventsAuditLogs);
+
+        Assert.assertNotEquals(new DefaultAuditLogsForBundles(createAuditLogsAssociation(), subscriptionsAuditLogs, subscriptionEventsAuditLogs).getBundlesAuditLogs(), bundlesAuditLogs);
+        Assert.assertEquals(new DefaultAuditLogsForBundles(createAuditLogsAssociation(), subscriptionsAuditLogs, subscriptionEventsAuditLogs).getSubscriptionsAuditLogs(), subscriptionsAuditLogs);
+        Assert.assertEquals(new DefaultAuditLogsForBundles(createAuditLogsAssociation(), subscriptionsAuditLogs, subscriptionEventsAuditLogs).getSubscriptionEventsAuditLogs(), subscriptionEventsAuditLogs);
+
+        Assert.assertEquals(new DefaultAuditLogsForBundles(bundlesAuditLogs, createAuditLogsAssociation(), subscriptionEventsAuditLogs).getBundlesAuditLogs(), bundlesAuditLogs);
+        Assert.assertNotEquals(new DefaultAuditLogsForBundles(bundlesAuditLogs, createAuditLogsAssociation(), subscriptionEventsAuditLogs).getSubscriptionsAuditLogs(), subscriptionsAuditLogs);
+        Assert.assertEquals(new DefaultAuditLogsForBundles(bundlesAuditLogs, createAuditLogsAssociation(), subscriptionEventsAuditLogs).getSubscriptionEventsAuditLogs(), subscriptionEventsAuditLogs);
+
+        Assert.assertEquals(new DefaultAuditLogsForBundles(bundlesAuditLogs, subscriptionsAuditLogs, createAuditLogsAssociation()).getBundlesAuditLogs(), bundlesAuditLogs);
+        Assert.assertEquals(new DefaultAuditLogsForBundles(bundlesAuditLogs, subscriptionsAuditLogs, createAuditLogsAssociation()).getSubscriptionsAuditLogs(), subscriptionsAuditLogs);
+        Assert.assertNotEquals(new DefaultAuditLogsForBundles(bundlesAuditLogs, subscriptionsAuditLogs, createAuditLogsAssociation()).getSubscriptionEventsAuditLogs(), subscriptionEventsAuditLogs);
     }
 }

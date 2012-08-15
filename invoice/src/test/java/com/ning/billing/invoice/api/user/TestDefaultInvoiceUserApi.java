@@ -206,8 +206,7 @@ public class TestDefaultInvoiceUserApi extends InvoiceApiTestBase {
         // Verify the adjusted invoice balance
         final BigDecimal adjustedInvoiceBalance = invoiceUserApi.getInvoice(invoiceId).getBalance();
         // Note! The invoice code will round (see InvoiceItemList)
-        Assert.assertEquals(adjustedInvoiceBalance, invoiceBalance.add(creditAmount.negate()).setScale(InvoicingConfiguration.getNumberOfDecimals(),
-                                                                                                       InvoicingConfiguration.getRoundingMode()));
+        verifyAdjustedInvoiceBalance(invoiceBalance, creditAmount, adjustedInvoiceBalance);
 
         // Verify the adjusted account balance
         final BigDecimal adjustedAccountBalance = invoiceUserApi.getAccountBalance(accountId);
@@ -251,8 +250,7 @@ public class TestDefaultInvoiceUserApi extends InvoiceApiTestBase {
         // Verify the adjusted invoice balance
         final BigDecimal adjustedInvoiceBalance = invoiceUserApi.getInvoice(invoiceId).getBalance();
         // Note! The invoice code will round (see InvoiceItemList)
-        Assert.assertEquals(adjustedInvoiceBalance, invoiceBalance.add(invoiceItem.getAmount().negate()).setScale(InvoicingConfiguration.getNumberOfDecimals(),
-                                                                                                                  InvoicingConfiguration.getRoundingMode()));
+        verifyAdjustedInvoiceBalance(invoiceBalance, invoiceItem.getAmount(), adjustedInvoiceBalance);
 
         // Verify the adjusted account balance
         final BigDecimal adjustedAccountBalance = invoiceUserApi.getAccountBalance(accountId);
@@ -288,8 +286,7 @@ public class TestDefaultInvoiceUserApi extends InvoiceApiTestBase {
         // Verify the adjusted invoice balance
         final BigDecimal adjustedInvoiceBalance = invoiceUserApi.getInvoice(invoiceId).getBalance();
         // Note! The invoice code will round (see InvoiceItemList)
-        Assert.assertEquals(adjustedInvoiceBalance, invoiceBalance.add(adjAmount.negate()).setScale(InvoicingConfiguration.getNumberOfDecimals(),
-                                                                                                    InvoicingConfiguration.getRoundingMode()));
+        verifyAdjustedInvoiceBalance(invoiceBalance, adjAmount, adjustedInvoiceBalance);
 
         // Verify the adjusted account balance
         final BigDecimal adjustedAccountBalance = invoiceUserApi.getAccountBalance(accountId);
@@ -307,5 +304,12 @@ public class TestDefaultInvoiceUserApi extends InvoiceApiTestBase {
         } catch (InvoiceApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.INVOICE_ITEM_ADJUSTMENT_AMOUNT_INVALID.getCode());
         }
+    }
+
+    private void verifyAdjustedInvoiceBalance(final BigDecimal invoiceBalance, final BigDecimal adjAmount, final BigDecimal adjustedInvoiceBalance) {
+        Assert.assertEquals(adjustedInvoiceBalance.compareTo(invoiceBalance.add(adjAmount.negate().setScale(InvoicingConfiguration.getNumberOfDecimals(),
+                                                                                                            InvoicingConfiguration.getRoundingMode()))
+                                                                           .setScale(InvoicingConfiguration.getNumberOfDecimals(),
+                                                                                     InvoicingConfiguration.getRoundingMode())), 0);
     }
 }

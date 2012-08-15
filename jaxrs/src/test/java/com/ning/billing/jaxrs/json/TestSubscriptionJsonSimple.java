@@ -16,25 +16,25 @@
 
 package com.ning.billing.jaxrs.json;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ning.billing.jaxrs.JaxrsTestSuite;
 
 public class TestSubscriptionJsonSimple extends JaxrsTestSuite {
-    private static final ObjectMapper mapper = new ObjectMapper();
 
     @Test(groups = "fast")
     public void testJson() throws Exception {
         final String subscriptionId = UUID.randomUUID().toString();
-        final SubscriptionJsonSimple subscriptionJsonSimple = new SubscriptionJsonSimple(subscriptionId);
+        final List<AuditLogJson> auditLogs = createAuditLogsJson();
+        final SubscriptionJsonSimple subscriptionJsonSimple = new SubscriptionJsonSimple(subscriptionId, auditLogs);
         Assert.assertEquals(subscriptionJsonSimple.getSubscriptionId(), subscriptionId);
+        Assert.assertEquals(subscriptionJsonSimple.getAuditLogs(), auditLogs);
 
         final String asJson = mapper.writeValueAsString(subscriptionJsonSimple);
-        Assert.assertEquals(asJson, "{\"subscriptionId\":\"" + subscriptionJsonSimple.getSubscriptionId() + "\"}");
 
         final SubscriptionJsonSimple fromJson = mapper.readValue(asJson, SubscriptionJsonSimple.class);
         Assert.assertEquals(fromJson, subscriptionJsonSimple);

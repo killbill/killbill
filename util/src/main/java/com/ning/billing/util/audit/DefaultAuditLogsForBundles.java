@@ -23,9 +23,15 @@ import java.util.UUID;
 public class DefaultAuditLogsForBundles implements AuditLogsForBundles {
 
     private final Map<UUID, List<AuditLog>> bundlesAuditLogs;
+    private final Map<UUID, List<AuditLog>> subscriptionsAuditLogs;
+    private final Map<UUID, List<AuditLog>> subscriptionEventsAuditLogs;
 
-    public DefaultAuditLogsForBundles(final Map<UUID, List<AuditLog>> bundlesAuditLogs) {
+    public DefaultAuditLogsForBundles(final Map<UUID, List<AuditLog>> bundlesAuditLogs,
+                                      final Map<UUID, List<AuditLog>> subscriptionsAuditLogs,
+                                      final Map<UUID, List<AuditLog>> subscriptionEventsAuditLogs) {
         this.bundlesAuditLogs = bundlesAuditLogs;
+        this.subscriptionsAuditLogs = subscriptionsAuditLogs;
+        this.subscriptionEventsAuditLogs = subscriptionEventsAuditLogs;
     }
 
     @Override
@@ -34,9 +40,13 @@ public class DefaultAuditLogsForBundles implements AuditLogsForBundles {
     }
 
     @Override
+    public Map<UUID, List<AuditLog>> getSubscriptionsAuditLogs() {
+        return subscriptionsAuditLogs;
+    }
+
+    @Override
     public Map<UUID, List<AuditLog>> getSubscriptionEventsAuditLogs() {
-        // TODO
-        return null;
+        return subscriptionEventsAuditLogs;
     }
 
     @Override
@@ -44,6 +54,8 @@ public class DefaultAuditLogsForBundles implements AuditLogsForBundles {
         final StringBuilder sb = new StringBuilder();
         sb.append("DefaultAuditLogsForBundles");
         sb.append("{bundlesAuditLogs=").append(bundlesAuditLogs);
+        sb.append(", subscriptionsAuditLogs=").append(subscriptionsAuditLogs);
+        sb.append(", subscriptionEventsAuditLogs=").append(subscriptionEventsAuditLogs);
         sb.append('}');
         return sb.toString();
     }
@@ -62,12 +74,21 @@ public class DefaultAuditLogsForBundles implements AuditLogsForBundles {
         if (bundlesAuditLogs != null ? !bundlesAuditLogs.equals(that.bundlesAuditLogs) : that.bundlesAuditLogs != null) {
             return false;
         }
+        if (subscriptionEventsAuditLogs != null ? !subscriptionEventsAuditLogs.equals(that.subscriptionEventsAuditLogs) : that.subscriptionEventsAuditLogs != null) {
+            return false;
+        }
+        if (subscriptionsAuditLogs != null ? !subscriptionsAuditLogs.equals(that.subscriptionsAuditLogs) : that.subscriptionsAuditLogs != null) {
+            return false;
+        }
 
         return true;
     }
 
     @Override
     public int hashCode() {
-        return bundlesAuditLogs != null ? bundlesAuditLogs.hashCode() : 0;
+        int result = bundlesAuditLogs != null ? bundlesAuditLogs.hashCode() : 0;
+        result = 31 * result + (subscriptionsAuditLogs != null ? subscriptionsAuditLogs.hashCode() : 0);
+        result = 31 * result + (subscriptionEventsAuditLogs != null ? subscriptionEventsAuditLogs.hashCode() : 0);
+        return result;
     }
 }

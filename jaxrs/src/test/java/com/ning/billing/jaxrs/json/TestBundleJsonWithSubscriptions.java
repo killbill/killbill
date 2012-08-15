@@ -33,9 +33,11 @@ import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.timeline.BundleTimeline;
 import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline;
 import com.ning.billing.jaxrs.JaxrsTestSuite;
+import com.ning.billing.util.audit.AuditLog;
 import com.ning.billing.util.clock.DefaultClock;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 public class TestBundleJsonWithSubscriptions extends JaxrsTestSuite {
 
@@ -58,7 +60,7 @@ public class TestBundleJsonWithSubscriptions extends JaxrsTestSuite {
 
         final UUID bundleId = UUID.randomUUID();
         final String externalKey = UUID.randomUUID().toString();
-        final SubscriptionJsonWithEvents subscription = new SubscriptionJsonWithEvents(bundleId, subscriptionTimeline);
+        final SubscriptionJsonWithEvents subscription = new SubscriptionJsonWithEvents(bundleId, subscriptionTimeline, null, ImmutableMap.<UUID, List<AuditLog>>of());
         final List<AuditLogJson> auditLogs = createAuditLogsJson();
         final BundleJsonWithSubscriptions bundleJsonWithSubscriptions = new BundleJsonWithSubscriptions(bundleId.toString(), externalKey, ImmutableList.<SubscriptionJsonWithEvents>of(subscription), auditLogs);
         Assert.assertEquals(bundleJsonWithSubscriptions.getBundleId(), bundleId.toString());
@@ -95,7 +97,9 @@ public class TestBundleJsonWithSubscriptions extends JaxrsTestSuite {
         Mockito.when(bundleTimeline.getExternalKey()).thenReturn(externalKey);
         Mockito.when(bundleTimeline.getSubscriptions()).thenReturn(ImmutableList.<SubscriptionTimeline>of(subscriptionTimeline));
 
-        final BundleJsonWithSubscriptions bundleJsonWithSubscriptions = new BundleJsonWithSubscriptions(null, bundleTimeline, null);
+        final BundleJsonWithSubscriptions bundleJsonWithSubscriptions = new BundleJsonWithSubscriptions(bundleTimeline, null,
+                                                                                                        ImmutableMap.<UUID, List<AuditLog>>of(),
+                                                                                                        ImmutableMap.<UUID, List<AuditLog>>of());
         Assert.assertEquals(bundleJsonWithSubscriptions.getBundleId(), bundleId.toString());
         Assert.assertEquals(bundleJsonWithSubscriptions.getExternalKey(), externalKey);
         Assert.assertEquals(bundleJsonWithSubscriptions.getSubscriptions().size(), 1);
@@ -117,7 +121,9 @@ public class TestBundleJsonWithSubscriptions extends JaxrsTestSuite {
         Mockito.when(bundle.getBundleId()).thenReturn(bundleId);
         Mockito.when(bundle.getExternalKey()).thenReturn(externalKey);
 
-        final BundleJsonWithSubscriptions bundleJsonWithSubscriptions = new BundleJsonWithSubscriptions(null, bundle, null);
+        final BundleJsonWithSubscriptions bundleJsonWithSubscriptions = new BundleJsonWithSubscriptions(bundle, null,
+                                                                                                        ImmutableMap.<UUID, List<AuditLog>>of(),
+                                                                                                        ImmutableMap.<UUID, List<AuditLog>>of());
         Assert.assertEquals(bundleJsonWithSubscriptions.getBundleId(), bundleId.toString());
         Assert.assertEquals(bundleJsonWithSubscriptions.getExternalKey(), externalKey);
         Assert.assertEquals(bundleJsonWithSubscriptions.getSubscriptions().size(), 0);

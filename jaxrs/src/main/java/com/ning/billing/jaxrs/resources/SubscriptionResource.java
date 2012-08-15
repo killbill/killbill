@@ -102,7 +102,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
     public Response getSubscription(@PathParam("subscriptionId") final String subscriptionId) throws EntitlementUserApiException {
         final UUID uuid = UUID.fromString(subscriptionId);
         final Subscription subscription = entitlementApi.getSubscriptionFromId(uuid);
-        final SubscriptionJsonNoEvents json = new SubscriptionJsonNoEvents(subscription);
+        final SubscriptionJsonNoEvents json = new SubscriptionJsonNoEvents(subscription, null);
         return Response.status(Status.OK).entity(json).build();
     }
 

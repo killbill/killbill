@@ -16,14 +16,12 @@
 
 package com.ning.billing.jaxrs;
 
-import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
 import javax.ws.rs.core.Response.Status;
 
 import org.joda.time.DateTime;
@@ -32,20 +30,14 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.AccountTimelineJson;
-import com.ning.billing.jaxrs.json.AuditLogJson;
 import com.ning.billing.jaxrs.json.BillCycleDayJson;
-import com.ning.billing.jaxrs.json.ChargebackJson;
-import com.ning.billing.jaxrs.json.CreditJson;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
-import com.ning.billing.jaxrs.json.InvoiceJsonSimple;
 import com.ning.billing.jaxrs.json.PaymentJsonSimple;
-import com.ning.billing.jaxrs.json.PaymentJsonWithBundleKeys;
 import com.ning.billing.jaxrs.json.PaymentMethodJson;
 import com.ning.billing.jaxrs.json.RefundJson;
 import com.ning.billing.jaxrs.json.TagDefinitionJson;
 import com.ning.billing.jaxrs.json.TagJson;
 import com.ning.billing.jaxrs.resources.JaxrsResource;
-import com.ning.billing.util.ChangeType;
 import com.ning.http.client.Response;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -110,100 +102,6 @@ public class TestAccount extends TestJaxrsBase {
         Assert.assertEquals(timeline.getBundles().size(), 1);
         Assert.assertEquals(timeline.getBundles().get(0).getSubscriptions().size(), 1);
         Assert.assertEquals(timeline.getBundles().get(0).getSubscriptions().get(0).getEvents().size(), 2);
-    }
-
-    @Test
-    public void testAccountTimelineWithAudits() throws Exception {
-        final DateTime startTime = clock.getUTCNow();
-        final AccountJson accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
-        final DateTime endTime = clock.getUTCNow();
-
-        // Add credit
-        final InvoiceJsonSimple invoice = getInvoicesForAccount(accountJson.getAccountId()).get(1);
-        final DateTime creditEffectiveDate = clock.getUTCNow();
-        final BigDecimal creditAmount = BigDecimal.ONE;
-        createCreditForInvoice(accountJson.getAccountId(), invoice.getInvoiceId(),
-                               creditAmount, clock.getUTCNow(), creditEffectiveDate);
-
-        // Add refund
-        final PaymentJsonSimple postedPayment = getPaymentsForAccount(accountJson.getAccountId()).get(0);
-        final BigDecimal refundAmount = BigDecimal.ONE;
-        createRefund(postedPayment.getPaymentId(), refundAmount);
-
-        // Add chargeback
-        final BigDecimal chargebackAmount = BigDecimal.ONE;
-        createChargeBack(postedPayment.getPaymentId(), chargebackAmount);
-
-        final AccountTimelineJson timeline = getAccountTimelineWithAudits(accountJson.getAccountId());
-
-        // Verify payments
-        Assert.assertEquals(timeline.getPayments().size(), 1);
-        final PaymentJsonWithBundleKeys paymentJson = timeline.getPayments().get(0);
-        final List<AuditLogJson> paymentAuditLogs = paymentJson.getAuditLogs();
-        Assert.assertEquals(paymentAuditLogs.size(), 2);
-        verifyAuditLog(paymentAuditLogs.get(0), ChangeType.INSERT, null, null, "PaymentRequestProcessor", startTime, endTime);
-        verifyAuditLog(paymentAuditLogs.get(1), ChangeType.UPDATE, null, null, "PaymentRequestProcessor", startTime, endTime);
-
-        // Verify refunds
-        Assert.assertEquals(paymentJson.getRefunds().size(), 1);
-        final RefundJson refundJson = paymentJson.getRefunds().get(0);
-        Assert.assertEquals(refundJson.getPaymentId(), paymentJson.getPaymentId());
-        Assert.assertEquals(refundJson.getRefundAmount().compareTo(refundAmount), 0);
-        final List<AuditLogJson> refundAuditLogs = refundJson.getAuditLogs();
-        Assert.assertEquals(refundAuditLogs.size(), 3);
-        verifyAuditLog(refundAuditLogs.get(0), ChangeType.INSERT, reason, comment, createdBy, startTime, endTime);
-        verifyAuditLog(refundAuditLogs.get(1), ChangeType.UPDATE, reason, comment, createdBy, startTime, endTime);
-        verifyAuditLog(refundAuditLogs.get(2), ChangeType.UPDATE, reason, comment, createdBy, startTime, endTime);
-
-        // Verify chargebacks
-        Assert.assertEquals(paymentJson.getChargebacks().size(), 1);
-        final ChargebackJson chargebackJson = paymentJson.getChargebacks().get(0);
-        Assert.assertEquals(chargebackJson.getPaymentId(), paymentJson.getPaymentId());
-        Assert.assertEquals(chargebackJson.getChargebackAmount().compareTo(chargebackAmount), 0);
-        final List<AuditLogJson> chargebackAuditLogs = chargebackJson.getAuditLogs();
-        Assert.assertEquals(chargebackAuditLogs.size(), 1);
-        verifyAuditLog(chargebackAuditLogs.get(0), ChangeType.INSERT, reason, comment, createdBy, startTime, endTime);
-
-        // Verify invoices
-        Assert.assertEquals(timeline.getInvoices().size(), 2);
-        final List<AuditLogJson> firstInvoiceAuditLogs = timeline.getInvoices().get(0).getAuditLogs();
-        Assert.assertEquals(firstInvoiceAuditLogs.size(), 1);
-        verifyAuditLog(firstInvoiceAuditLogs.get(0), ChangeType.INSERT, null, null, "Transition", startTime, endTime);
-        final List<AuditLogJson> secondInvoiceAuditLogs = timeline.getInvoices().get(1).getAuditLogs();
-        Assert.assertEquals(secondInvoiceAuditLogs.size(), 1);
-        verifyAuditLog(secondInvoiceAuditLogs.get(0), ChangeType.INSERT, null, null, "Transition", startTime, endTime);
-
-        // Verify credits
-        final List<CreditJson> credits = timeline.getInvoices().get(1).getCredits();
-        Assert.assertEquals(credits.size(), 1);
-        Assert.assertEquals(credits.get(0).getCreditAmount().compareTo(creditAmount.negate()), 0);
-        final List<AuditLogJson> creditAuditLogs = credits.get(0).getAuditLogs();
-        Assert.assertEquals(creditAuditLogs.size(), 1);
-        verifyAuditLog(creditAuditLogs.get(0), ChangeType.INSERT, reason, comment, createdBy, startTime, endTime);
-
-        // Verify bundles
-        Assert.assertEquals(timeline.getBundles().size(), 1);
-        Assert.assertEquals(timeline.getBundles().get(0).getSubscriptions().size(), 1);
-        Assert.assertEquals(timeline.getBundles().get(0).getSubscriptions().get(0).getEvents().size(), 2);
-        final List<AuditLogJson> bundleAuditLogs = timeline.getBundles().get(0).getAuditLogs();
-        Assert.assertEquals(bundleAuditLogs.size(), 3);
-        verifyAuditLog(bundleAuditLogs.get(0), ChangeType.INSERT, reason, comment, createdBy, startTime, endTime);
-        verifyAuditLog(bundleAuditLogs.get(1), ChangeType.UPDATE, null, null, "Transition", startTime, endTime);
-        verifyAuditLog(bundleAuditLogs.get(2), ChangeType.UPDATE, null, null, "Transition", startTime, endTime);
-
-        // TODO subscription events audit logs
-    }
-
-    private void verifyAuditLog(final AuditLogJson auditLogJson, final ChangeType changeType, @Nullable final String reasonCode,
-                                @Nullable final String comments, @Nullable final String changedBy,
-                                final DateTime startTime, final DateTime endTime) {
-        Assert.assertEquals(auditLogJson.getChangeType(), changeType.toString());
-        Assert.assertFalse(auditLogJson.getChangeDate().isBefore(startTime));
-        // Flaky
-        //Assert.assertFalse(auditLogJson.getChangeDate().isAfter(endTime));
-        Assert.assertEquals(auditLogJson.getReasonCode(), reasonCode);
-        Assert.assertEquals(auditLogJson.getComments(), comments);
-        Assert.assertEquals(auditLogJson.getChangedBy(), changedBy);
     }
 
     @Test(groups = "slow")

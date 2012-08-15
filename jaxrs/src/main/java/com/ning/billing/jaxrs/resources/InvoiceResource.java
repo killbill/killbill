@@ -38,8 +38,6 @@ import javax.ws.rs.core.UriInfo;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-import org.joda.time.format.DateTimeFormatter;
-import org.joda.time.format.ISODateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,8 +82,6 @@ public class InvoiceResource extends JaxRsResourceBase {
     private static final String ID_PARAM_NAME = "invoiceId";
     private static final String CUSTOM_FIELD_URI = JaxrsResource.CUSTOM_FIELDS + "/{" + ID_PARAM_NAME + ":" + UUID_PATTERN + "}";
     private static final String TAG_URI = JaxrsResource.TAGS + "/{" + ID_PARAM_NAME + ":" + UUID_PATTERN + "}";
-
-    private final DateTimeFormatter DATE_TIME_FORMATTER = ISODateTimeFormat.dateTime();
 
     private final AccountUserApi accountApi;
     private final InvoiceUserApi invoiceApi;

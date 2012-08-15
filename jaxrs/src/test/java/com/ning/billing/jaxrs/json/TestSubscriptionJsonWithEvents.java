@@ -16,6 +16,7 @@
 
 package com.ning.billing.jaxrs.json;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -24,10 +25,6 @@ import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.joda.JodaModule;
-import com.google.common.collect.ImmutableList;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
@@ -36,15 +33,13 @@ import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.timeline.SubscriptionTimeline;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.jaxrs.JaxrsTestSuite;
+import com.ning.billing.util.audit.AuditLog;
 import com.ning.billing.util.clock.DefaultClock;
 
-public class TestSubscriptionJsonWithEvents extends JaxrsTestSuite {
-    private static final ObjectMapper mapper = new ObjectMapper();
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
-    static {
-        mapper.registerModule(new JodaModule());
-        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-    }
+public class TestSubscriptionJsonWithEvents extends JaxrsTestSuite {
 
     @Test(groups = "fast")
     public void testJson() throws Exception {
@@ -52,6 +47,7 @@ public class TestSubscriptionJsonWithEvents extends JaxrsTestSuite {
         final DateTime requestedDate = DefaultClock.toUTCDateTime(new DateTime(DateTimeZone.UTC));
         final DateTime effectiveDate = DefaultClock.toUTCDateTime(new DateTime(DateTimeZone.UTC));
         final UUID eventId = UUID.randomUUID();
+        final List<AuditLogJson> auditLogs = createAuditLogsJson();
         final SubscriptionJsonWithEvents.SubscriptionReadEventJson newEvent = new SubscriptionJsonWithEvents.SubscriptionReadEventJson(eventId.toString(),
                                                                                                                                        BillingPeriod.NO_BILLING_PERIOD.toString(),
                                                                                                                                        requestedDate,
@@ -59,25 +55,15 @@ public class TestSubscriptionJsonWithEvents extends JaxrsTestSuite {
                                                                                                                                        UUID.randomUUID().toString(),
                                                                                                                                        UUID.randomUUID().toString(),
                                                                                                                                        SubscriptionTransitionType.CREATE.toString(),
-                                                                                                                                       PhaseType.DISCOUNT.toString());
+                                                                                                                                       PhaseType.DISCOUNT.toString(),
+                                                                                                                                       auditLogs);
         final SubscriptionJsonWithEvents subscriptionJsonWithEvents = new SubscriptionJsonWithEvents(subscriptionId,
                                                                                                      ImmutableList.<SubscriptionJsonWithEvents.SubscriptionReadEventJson>of(newEvent),
+                                                                                                     null,
                                                                                                      null,
                                                                                                      null);
 
         final String asJson = mapper.writeValueAsString(subscriptionJsonWithEvents);
-        final SubscriptionJsonWithEvents.SubscriptionReadEventJson event = subscriptionJsonWithEvents.getEvents().get(0);
-        Assert.assertEquals(asJson, "{\"events\":[{\"eventId\":\"" + event.getEventId() + "\"," +
-                "\"billingPeriod\":\"" + event.getBillingPeriod() + "\"," +
-                "\"product\":\"" + event.getProduct() + "\"," +
-                "\"priceList\":\"" + event.getPriceList() + "\"," +
-                "\"eventType\":\"" + event.getEventType() + "\"," +
-                "\"phase\":\"" + event.getPhase() + "\"," +
-                "\"requestedDate\":\"" + event.getRequestedDate() + "\"," +
-                "\"effectiveDate\":\"" + event.getEffectiveDate() + "\"}]," +
-                "\"subscriptionId\":\"" + subscriptionJsonWithEvents.getSubscriptionId() + "\"," +
-                "\"deletedEvents\":null," +
-                "\"newEvents\":null}");
 
         final SubscriptionJsonWithEvents fromJson = mapper.readValue(asJson, SubscriptionJsonWithEvents.class);
         Assert.assertEquals(fromJson, subscriptionJsonWithEvents);
@@ -88,6 +74,7 @@ public class TestSubscriptionJsonWithEvents extends JaxrsTestSuite {
         final DateTime requestedDate = DefaultClock.toUTCDateTime(new DateTime(DateTimeZone.UTC));
         final DateTime effectiveDate = DefaultClock.toUTCDateTime(new DateTime(DateTimeZone.UTC));
         final UUID eventId = UUID.randomUUID();
+        final List<AuditLogJson> auditLogs = createAuditLogsJson();
         final SubscriptionJsonWithEvents.SubscriptionReadEventJson newEvent = new SubscriptionJsonWithEvents.SubscriptionReadEventJson(eventId.toString(),
                                                                                                                                        BillingPeriod.NO_BILLING_PERIOD.toString(),
                                                                                                                                        requestedDate,
@@ -95,13 +82,15 @@ public class TestSubscriptionJsonWithEvents extends JaxrsTestSuite {
                                                                                                                                        UUID.randomUUID().toString(),
                                                                                                                                        UUID.randomUUID().toString(),
                                                                                                                                        SubscriptionTransitionType.CREATE.toString(),
-                                                                                                                                       PhaseType.DISCOUNT.toString());
+                                                                                                                                       PhaseType.DISCOUNT.toString(),
+                                                                                                                                       auditLogs);
 
         final Subscription subscription = Mockito.mock(Subscription.class);
         Mockito.when(subscription.getId()).thenReturn(UUID.randomUUID());
 
         final SubscriptionJsonWithEvents subscriptionJsonWithEvents = new SubscriptionJsonWithEvents(subscription,
                                                                                                      ImmutableList.<SubscriptionJsonWithEvents.SubscriptionReadEventJson>of(newEvent),
+                                                                                                     null,
                                                                                                      null,
                                                                                                      null);
         Assert.assertEquals(subscriptionJsonWithEvents.getSubscriptionId(), subscription.getId().toString());
@@ -110,6 +99,7 @@ public class TestSubscriptionJsonWithEvents extends JaxrsTestSuite {
         Assert.assertEquals(subscriptionJsonWithEvents.getEvents().size(), 1);
         Assert.assertEquals(subscriptionJsonWithEvents.getEvents().get(0).getEffectiveDate(), newEvent.getEffectiveDate());
         Assert.assertEquals(subscriptionJsonWithEvents.getEvents().get(0).getEventId(), newEvent.getEventId());
+        Assert.assertEquals(subscriptionJsonWithEvents.getEvents().get(0).getAuditLogs(), auditLogs);
     }
 
     @Test(groups = "fast")
@@ -131,7 +121,8 @@ public class TestSubscriptionJsonWithEvents extends JaxrsTestSuite {
 
         final UUID bundleId = UUID.randomUUID();
 
-        final SubscriptionJsonWithEvents subscriptionJsonWithEvents = new SubscriptionJsonWithEvents(bundleId, subscriptionTimeline);
+        final SubscriptionJsonWithEvents subscriptionJsonWithEvents = new SubscriptionJsonWithEvents(bundleId, subscriptionTimeline,
+                                                                                                     null, ImmutableMap.<UUID, List<AuditLog>>of());
         Assert.assertEquals(subscriptionJsonWithEvents.getSubscriptionId(), subscriptionTimeline.getId().toString());
         Assert.assertNull(subscriptionJsonWithEvents.getNewEvents());
         Assert.assertNull(subscriptionJsonWithEvents.getDeletedEvents());

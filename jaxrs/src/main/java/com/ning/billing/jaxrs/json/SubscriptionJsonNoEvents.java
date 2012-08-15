@@ -16,29 +16,27 @@
 
 package com.ning.billing.jaxrs.json;
 
+import java.util.List;
+
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.util.audit.AuditLog;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.ning.billing.entitlement.api.user.Subscription;
 
 public class SubscriptionJsonNoEvents extends SubscriptionJsonSimple {
+
     private final DateTime startDate;
-
     private final String bundleId;
-
     private final String productName;
-
     private final String productCategory;
-
     private final String billingPeriod;
-
     private final String priceList;
-
     private final DateTime chargedThroughDate;
-
     private final DateTime cancelledDate;
 
     @JsonCreator
@@ -50,8 +48,9 @@ public class SubscriptionJsonNoEvents extends SubscriptionJsonSimple {
                                     @JsonProperty("billingPeriod") @Nullable final String billingPeriod,
                                     @JsonProperty("priceList") @Nullable final String priceList,
                                     @JsonProperty("chargedThroughDate") @Nullable final DateTime chargedThroughDate,
-                                    @JsonProperty("cancelledDate") @Nullable final DateTime cancelledDate) {
-        super(subscriptionId);
+                                    @JsonProperty("cancelledDate") @Nullable final DateTime cancelledDate,
+                                    @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
+        super(subscriptionId, auditLogs);
         this.bundleId = bundleId;
         this.startDate = startDate;
         this.productName = productName;
@@ -62,20 +61,17 @@ public class SubscriptionJsonNoEvents extends SubscriptionJsonSimple {
         this.cancelledDate = cancelledDate;
     }
 
-    public SubscriptionJsonNoEvents() {
-        this(null, null, null, null, null, null, null, null, null);
-    }
-
-    public SubscriptionJsonNoEvents(final Subscription data) {
+    public SubscriptionJsonNoEvents(final Subscription data, @Nullable final List<AuditLog> auditLogs) {
         this(data.getId().toString(),
              data.getBundleId().toString(),
              data.getStartDate(),
              data.getCurrentPlan() != null ? data.getCurrentPlan().getProduct().getName() : null,
-             data.getCurrentPlan() != null ?data.getCurrentPlan().getProduct().getCategory().toString() : null,
-             data.getCurrentPlan() != null ?data.getCurrentPlan().getBillingPeriod().toString() : null,
+             data.getCurrentPlan() != null ? data.getCurrentPlan().getProduct().getCategory().toString() : null,
+             data.getCurrentPlan() != null ? data.getCurrentPlan().getBillingPeriod().toString() : null,
              data.getCurrentPriceList() != null ? data.getCurrentPriceList().getName() : null,
              data.getChargedThroughDate(),
-             data.getEndDate() != null ? data.getEndDate() : data.getFutureEndDate());
+             data.getEndDate() != null ? data.getEndDate() : data.getFutureEndDate(),
+             toAuditLogJson(auditLogs));
     }
 
     @Override
@@ -118,9 +114,9 @@ public class SubscriptionJsonNoEvents extends SubscriptionJsonSimple {
     @Override
     public String toString() {
         return "SubscriptionJson [subscriptionId=" + subscriptionId
-                + ", bundleId=" + bundleId + ", productName=" + productName
-                + ", productCategory=" + productCategory + ", billingPeriod="
-                + billingPeriod + ", priceList=" + priceList + "]";
+               + ", bundleId=" + bundleId + ", productName=" + productName
+               + ", productCategory=" + productCategory + ", billingPeriod="
+               + billingPeriod + ", priceList=" + priceList + "]";
     }
 
     @Override
@@ -128,8 +124,8 @@ public class SubscriptionJsonNoEvents extends SubscriptionJsonSimple {
         if (equalsNoSubscriptionIdNoStartDateNoCTD(o) && super.equals(o)) {
             final SubscriptionJsonNoEvents that = (SubscriptionJsonNoEvents) o;
             return ((startDate == null && that.startDate == null) || (startDate != null && that.startDate != null && startDate.compareTo(that.startDate) == 0)) &&
-                    ((chargedThroughDate == null && that.chargedThroughDate == null) || (chargedThroughDate != null && that.chargedThroughDate != null &&
-                            chargedThroughDate.compareTo(that.chargedThroughDate) == 0));
+                   ((chargedThroughDate == null && that.chargedThroughDate == null) || (chargedThroughDate != null && that.chargedThroughDate != null &&
+                                                                                        chargedThroughDate.compareTo(that.chargedThroughDate) == 0));
         } else {
             return false;
         }

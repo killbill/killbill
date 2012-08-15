@@ -1,5 +1,5 @@
-/* 
- * Copyright 2010-2011 Ning, Inc.
+/*
+ * Copyright 2010-2012 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -14,35 +14,31 @@
  * under the License.
  */
 
-package com.ning.billing.jaxrs.json;
+package com.ning.billing.jaxrs.resources;
 
-import java.util.List;
+import com.ning.billing.util.api.AuditLevel;
 
-import javax.annotation.Nullable;
+public class AuditMode {
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+    private final AuditLevel level;
 
-public class SubscriptionJsonSimple extends JsonBase {
-
-    protected final String subscriptionId;
-
-    @JsonCreator
-    public SubscriptionJsonSimple(@JsonProperty("subscriptionId") @Nullable final String subscriptionId,
-                                  @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
-        super(auditLogs);
-        this.subscriptionId = subscriptionId;
+    public AuditMode(final String auditModeString) {
+        this.level = AuditLevel.valueOf(auditModeString.toUpperCase());
     }
 
-    public String getSubscriptionId() {
-        return subscriptionId;
+    public AuditLevel getLevel() {
+        return level;
+    }
+
+    public boolean withAudit() {
+        return !AuditLevel.NONE.equals(level);
     }
 
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
-        sb.append("SubscriptionJsonSimple");
-        sb.append("{subscriptionId='").append(subscriptionId).append('\'');
+        sb.append("AuditMode");
+        sb.append("{level=").append(level);
         sb.append('}');
         return sb.toString();
     }
@@ -56,9 +52,9 @@ public class SubscriptionJsonSimple extends JsonBase {
             return false;
         }
 
-        final SubscriptionJsonSimple that = (SubscriptionJsonSimple) o;
+        final AuditMode auditMode = (AuditMode) o;
 
-        if (subscriptionId != null ? !subscriptionId.equals(that.subscriptionId) : that.subscriptionId != null) {
+        if (level != auditMode.level) {
             return false;
         }
 
@@ -67,6 +63,6 @@ public class SubscriptionJsonSimple extends JsonBase {
 
     @Override
     public int hashCode() {
-        return subscriptionId != null ? subscriptionId.hashCode() : 0;
+        return level != null ? level.hashCode() : 0;
     }
 }

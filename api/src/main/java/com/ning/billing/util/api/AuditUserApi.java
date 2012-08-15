@@ -19,7 +19,7 @@ package com.ning.billing.util.api;
 import java.util.List;
 import java.util.UUID;
 
-import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.entitlement.api.timeline.BundleTimeline;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.payment.api.Payment;
@@ -37,49 +37,55 @@ public interface AuditUserApi {
     /**
      * Fetch all audit logs for bundles.
      *
-     * @param bundles the bundles to lookup
+     * @param bundles    the bundles to lookup
+     * @param auditLevel audit level (verbosity)
      * @return all audit logs for these refunds
      */
-    public AuditLogsForBundles getAuditLogsForBundles(final List<SubscriptionBundle> bundles);
+    public AuditLogsForBundles getAuditLogsForBundles(final List<BundleTimeline> bundles, final AuditLevel auditLevel);
 
     /**
      * Fetch all audit logs for invoice payments.
      *
      * @param invoicePayments the invoice payments to lookup
+     * @param auditLevel      audit level (verbosity)
      * @return all audit logs for these invoice payments
      */
-    public AuditLogsForInvoicePayments getAuditLogsForInvoicePayments(final List<InvoicePayment> invoicePayments);
+    public AuditLogsForInvoicePayments getAuditLogsForInvoicePayments(final List<InvoicePayment> invoicePayments, final AuditLevel auditLevel);
 
     /**
      * Fetch all audit logs for refunds.
      *
-     * @param refunds the refunds to lookup
+     * @param refunds    the refunds to lookup
+     * @param auditLevel audit level (verbosity)
      * @return all audit logs for these refunds
      */
-    public AuditLogsForRefunds getAuditLogsForRefunds(final List<Refund> refunds);
+    public AuditLogsForRefunds getAuditLogsForRefunds(final List<Refund> refunds, final AuditLevel auditLevel);
 
     /**
      * Fetch all audit logs for payments.
      *
-     * @param payments the payments to lookup
+     * @param payments   the payments to lookup
+     * @param auditLevel audit level (verbosity)
      * @return all audit logs for these payments
      */
-    public AuditLogsForPayments getAuditLogsForPayments(final List<Payment> payments);
+    public AuditLogsForPayments getAuditLogsForPayments(final List<Payment> payments, final AuditLevel auditLevel);
 
     /**
      * Fetch all audit logs for invoices and associated invoice items.
      *
-     * @param invoices the invoices to lookup
+     * @param invoices   the invoices to lookup
+     * @param auditLevel audit level (verbosity)
      * @return all audit logs for these invoices
      */
-    public AuditLogsForInvoices getAuditLogsForInvoices(final List<Invoice> invoices);
+    public AuditLogsForInvoices getAuditLogsForInvoices(final List<Invoice> invoices, final AuditLevel auditLevel);
 
     /**
      * Get all the audit entries for a given object.
      *
      * @param objectId   the object id
      * @param objectType the type of object
+     * @param auditLevel audit level (verbosity)
      * @return all audit entries for that object
      */
-    public List<AuditLog> getAuditLogs(final UUID objectId, final ObjectType objectType);
+    public List<AuditLog> getAuditLogs(final UUID objectId, final ObjectType objectType, final AuditLevel auditLevel);
 }

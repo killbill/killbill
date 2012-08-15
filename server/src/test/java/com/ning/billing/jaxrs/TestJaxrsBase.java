@@ -86,6 +86,7 @@ import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;
 import com.ning.billing.server.ServerTestSuiteWithEmbeddedDB;
 import com.ning.billing.server.listeners.KillbillGuiceListener;
 import com.ning.billing.server.modules.KillbillServerModule;
+import com.ning.billing.util.api.AuditLevel;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.email.EmailModule;
@@ -364,17 +365,17 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
     }
 
     protected AccountTimelineJson getAccountTimeline(final String accountId) throws Exception {
-        return doGetAccountTimeline(accountId, false);
+        return doGetAccountTimeline(accountId, AuditLevel.NONE);
     }
 
-    protected AccountTimelineJson getAccountTimelineWithAudits(final String accountId) throws Exception {
-        return doGetAccountTimeline(accountId, true);
+    protected AccountTimelineJson getAccountTimelineWithAudits(final String accountId, final AuditLevel auditLevel) throws Exception {
+        return doGetAccountTimeline(accountId, auditLevel);
     }
 
-    private AccountTimelineJson doGetAccountTimeline(final String accountId, final Boolean withAudits) throws Exception {
+    private AccountTimelineJson doGetAccountTimeline(final String accountId, final AuditLevel auditLevel) throws Exception {
         final String uri = JaxrsResource.ACCOUNTS_PATH + "/" + accountId + "/" + JaxrsResource.TIMELINE;
 
-        final Response response = doGet(uri, ImmutableMap.<String, String>of(JaxrsResource.QUERY_AUDIT, withAudits.toString()), DEFAULT_HTTP_TIMEOUT_SEC);
+        final Response response = doGet(uri, ImmutableMap.<String, String>of(JaxrsResource.QUERY_AUDIT, auditLevel.toString()), DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
 
         final String baseJson = response.getResponseBody();
@@ -384,10 +385,17 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
         return objFromJson;
     }
 
+    protected AccountJson createAccountWithDefaultPaymentMethod() throws Exception {
+        final AccountJson input = createAccount();
+        return doCreateAccountWithDefaultPaymentMethod(input);
+    }
+
     protected AccountJson createAccountWithDefaultPaymentMethod(final String name, final String key, final String email) throws Exception {
-
         final AccountJson input = createAccount(name, key, email);
+        return doCreateAccountWithDefaultPaymentMethod(input);
+    }
 
+    protected AccountJson doCreateAccountWithDefaultPaymentMethod(final AccountJson input) throws Exception {
         final String uri = JaxrsResource.ACCOUNTS_PATH + "/" + input.getAccountId() + "/" + JaxrsResource.PAYMENT_METHODS;
         final PaymentMethodJson paymentMethodJson = getPaymentMethodJson(input.getAccountId(), null);
         String baseJson = mapper.writeValueAsString(paymentMethodJson);
@@ -466,7 +474,9 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
 
     protected SubscriptionJsonNoEvents createSubscription(final String bundleId, final String productName, final String productCategory, final String billingPeriod, final boolean waitCompletion) throws Exception {
 
-        final SubscriptionJsonNoEvents input = new SubscriptionJsonNoEvents(null, bundleId, null, productName, productCategory, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, null, null);
+        final SubscriptionJsonNoEvents input = new SubscriptionJsonNoEvents(null, bundleId, null, productName, productCategory,
+                                                                            billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME,
+                                                                            null, null, null);
         String baseJson = mapper.writeValueAsString(input);
 
         final Map<String, String> queryParams = waitCompletion ? getQueryParamsForCallCompletion("5") : DEFAULT_EMPTY_QUERY;
@@ -492,11 +502,11 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
     //
 
     protected AccountJson createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice() throws Exception {
-        final AccountJson accountJson = createAccountWithDefaultPaymentMethod("nohup", "shtergyhwF", "nohup@yahoo.com");
+        final AccountJson accountJson = createAccountWithDefaultPaymentMethod();
         assertNotNull(accountJson);
 
         // Add a bundle, subscription and move the clock to get the first invoice
-        final BundleJsonNoSubscriptions bundleJson = createBundle(accountJson.getAccountId(), "391193");
+        final BundleJsonNoSubscriptions bundleJson = createBundle(accountJson.getAccountId(), UUID.randomUUID().toString());
         assertNotNull(bundleJson);
         final SubscriptionJsonNoEvents subscriptionJson = createSubscription(bundleJson.getBundleId(), "Shotgun", ProductCategory.BASE.toString(), BillingPeriod.MONTHLY.toString(), true);
         assertNotNull(subscriptionJson);
@@ -508,11 +518,11 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
 
     protected AccountJson createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice() throws Exception {
         // Create an account with no payment method
-        final AccountJson accountJson = createAccount("eraahahildo", "sheqrgfhwe", "eraahahildo@yahoo.com");
+        final AccountJson accountJson = createAccount();
         assertNotNull(accountJson);
 
         // Add a bundle, subscription and move the clock to get the first invoice
-        final BundleJsonNoSubscriptions bundleJson = createBundle(accountJson.getAccountId(), "317199");
+        final BundleJsonNoSubscriptions bundleJson = createBundle(accountJson.getAccountId(), UUID.randomUUID().toString());
         assertNotNull(bundleJson);
         final SubscriptionJsonNoEvents subscriptionJson = createSubscription(bundleJson.getBundleId(), "Shotgun", ProductCategory.BASE.toString(), BillingPeriod.MONTHLY.toString(), true);
         assertNotNull(subscriptionJson);

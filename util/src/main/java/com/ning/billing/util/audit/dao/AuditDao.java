@@ -19,10 +19,11 @@ package com.ning.billing.util.audit.dao;
 import java.util.List;
 import java.util.UUID;
 
+import com.ning.billing.util.api.AuditLevel;
 import com.ning.billing.util.audit.AuditLog;
 import com.ning.billing.util.dao.TableName;
 
 public interface AuditDao {
 
-    public List<AuditLog> getAuditLogsForId(final TableName tableName, final UUID objectId);
+    public List<AuditLog> getAuditLogsForId(final TableName tableName, final UUID objectId, final AuditLevel auditLevel);
 }
