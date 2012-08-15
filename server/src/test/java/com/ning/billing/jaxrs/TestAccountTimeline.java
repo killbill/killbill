@@ -43,6 +43,21 @@ public class TestAccountTimeline extends TestJaxrsBase {
     private static final String TRANSITION = "Transition";
 
     @Test(groups = "slow")
+    public void testAccountTimeline() throws Exception {
+        clock.setTime(new DateTime(2012, 4, 25, 0, 3, 42, 0));
+
+        final AccountJson accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
+
+        final AccountTimelineJson timeline = getAccountTimeline(accountJson.getAccountId());
+        Assert.assertEquals(timeline.getPayments().size(), 1);
+        Assert.assertEquals(timeline.getInvoices().size(), 2);
+        Assert.assertEquals(timeline.getBundles().size(), 1);
+        Assert.assertEquals(timeline.getBundles().get(0).getSubscriptions().size(), 1);
+        Assert.assertEquals(timeline.getBundles().get(0).getSubscriptions().get(0).getEvents().size(), 2);
+    }
+
+
+    @Test(groups = "slow")
     public void testAccountTimelineWithAudits() throws Exception {
         final DateTime startTime = clock.getUTCNow();
         final AccountJson accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();

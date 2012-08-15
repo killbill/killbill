@@ -16,6 +16,7 @@
 
 package com.ning.billing.jaxrs;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -29,9 +30,11 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.jaxrs.json.AccountJson;
+import com.ning.billing.jaxrs.json.AccountJsonWithBalance;
 import com.ning.billing.jaxrs.json.AccountTimelineJson;
 import com.ning.billing.jaxrs.json.BillCycleDayJson;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
+import com.ning.billing.jaxrs.json.InvoiceJsonSimple;
 import com.ning.billing.jaxrs.json.PaymentJsonSimple;
 import com.ning.billing.jaxrs.json.PaymentMethodJson;
 import com.ning.billing.jaxrs.json.RefundJson;
@@ -41,6 +44,7 @@ import com.ning.billing.jaxrs.resources.JaxrsResource;
 import com.ning.http.client.Response;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.common.collect.ImmutableMap;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
@@ -67,6 +71,20 @@ public class TestAccount extends TestJaxrsBase {
     }
 
     @Test(groups = "slow")
+    public void testAccountWithBalance() throws Exception {
+        final AccountJson accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
+
+        final String uri = JaxrsResource.ACCOUNTS_PATH + "/" + accountJson.getAccountId();
+        final Map<String, String> queryParams = ImmutableMap.<String, String>of(JaxrsResource.QUERY_ACCOUNT_WITH_BALANCE, "true");
+        final Response response = doGet(uri, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+        final String baseJson = response.getResponseBody();
+        final AccountJsonWithBalance accountWithBalance = mapper.readValue(baseJson, AccountJsonWithBalance.class);
+        final BigDecimal accountBalance = accountWithBalance.getAccountBalance();
+        Assert.assertTrue(accountBalance.compareTo(BigDecimal.ZERO) > 0);
+    }
+
+    @Test(groups = "slow")
     public void testUpdateNonExistentAccount() throws Exception {
         final AccountJson input = getAccountJson();
 
@@ -88,20 +106,6 @@ public class TestAccount extends TestJaxrsBase {
         final String uri = JaxrsResource.ACCOUNTS_PATH + "/yo";
         final Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         Assert.assertEquals(response.getStatusCode(), Status.NOT_FOUND.getStatusCode());
-    }
-
-    @Test(groups = "slow")
-    public void testAccountTimeline() throws Exception {
-        clock.setTime(new DateTime(2012, 4, 25, 0, 3, 42, 0));
-
-        final AccountJson accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
-
-        final AccountTimelineJson timeline = getAccountTimeline(accountJson.getAccountId());
-        Assert.assertEquals(timeline.getPayments().size(), 1);
-        Assert.assertEquals(timeline.getInvoices().size(), 2);
-        Assert.assertEquals(timeline.getBundles().size(), 1);
-        Assert.assertEquals(timeline.getBundles().get(0).getSubscriptions().size(), 1);
-        Assert.assertEquals(timeline.getBundles().get(0).getSubscriptions().get(0).getEvents().size(), 2);
     }
 
     @Test(groups = "slow")

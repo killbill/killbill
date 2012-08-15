@@ -16,6 +16,7 @@
 
 package com.ning.billing.jaxrs.resources;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -37,6 +38,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
+import org.skife.config.Default;
+
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
@@ -56,6 +59,7 @@ import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.jaxrs.json.AccountEmailJson;
 import com.ning.billing.jaxrs.json.AccountJson;
+import com.ning.billing.jaxrs.json.AccountJsonWithBalance;
 import com.ning.billing.jaxrs.json.AccountTimelineJson;
 import com.ning.billing.jaxrs.json.BundleJsonNoSubscriptions;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
@@ -131,10 +135,17 @@ public class AccountResource extends JaxRsResourceBase {
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
-    public Response getAccount(@PathParam("accountId") final String accountId) throws AccountApiException {
+    public Response getAccount(@PathParam("accountId") final String accountId,
+            @QueryParam(QUERY_ACCOUNT_WITH_BALANCE) @DefaultValue("false") final Boolean accountWithBalance) throws AccountApiException {
         final Account account = accountApi.getAccountById(UUID.fromString(accountId));
 
-        final AccountJson json = new AccountJson(account);
+        AccountJson json = null;
+        if (accountWithBalance) {
+            final BigDecimal accountBalance = invoiceApi.getAccountBalance(account.getId());
+            json = new AccountJsonWithBalance(account, accountBalance);
+        } else {
+            json = new AccountJson(account);
+        }
         return Response.status(Status.OK).entity(json).build();
     }
 
@@ -196,7 +207,7 @@ public class AccountResource extends JaxRsResourceBase {
         final AccountData data = json.toAccountData();
         final UUID uuid = UUID.fromString(accountId);
         accountApi.updateAccount(uuid, data, context.createContext(createdBy, reason, comment));
-        return getAccount(accountId);
+        return getAccount(accountId, false);
     }
 
     // Not supported
