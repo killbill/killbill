@@ -176,9 +176,16 @@ public class AccountResource extends JaxRsResourceBase {
 
     @GET
     @Produces(APPLICATION_JSON)
-    public Response getAccountByKey(@QueryParam(QUERY_EXTERNAL_KEY) final String externalKey) throws AccountApiException {
+    public Response getAccountByKey(@QueryParam(QUERY_EXTERNAL_KEY) final String externalKey,
+            @QueryParam(QUERY_ACCOUNT_WITH_BALANCE) @DefaultValue("false") final Boolean accountWithBalance) throws AccountApiException {
         final Account account = accountApi.getAccountByKey(externalKey);
-        final AccountJson json = new AccountJson(account);
+        AccountJson json = null;
+        if (accountWithBalance) {
+            final BigDecimal accountBalance = invoiceApi.getAccountBalance(account.getId());
+            json = new AccountJsonWithBalance(account, accountBalance);
+        } else {
+            json = new AccountJson(account);
+        }
 
         return Response.status(Status.OK).entity(json).build();
     }
