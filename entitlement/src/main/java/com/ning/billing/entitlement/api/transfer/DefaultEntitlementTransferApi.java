@@ -88,26 +88,11 @@ public class DefaultEntitlementTransferApi implements EntitlementTransferApi {
 
         final DateTime effectiveDate = existingEvent.getEffectiveDate().isBefore(transferDate) ? transferDate : existingEvent.getEffectiveDate();
 
-        // STEPH Issue with catalog for NO_BILLING_PERIOD
-        /*
         final PlanPhaseSpecifier spec = existingEvent.getPlanPhaseSpecifier();
-        final Plan currentPlan = catalog.findPlan(spec.getProductName(), spec.getBillingPeriod(), spec.getPriceListName(), existingEvent.getEffectiveDate());
-        PlanPhase currentPhase = null;
-        for (PlanPhase curPhase : currentPlan.getAllPhases()) {
-            if (curPhase.getPhaseType() == spec.getPhaseType()) {
-                currentPhase = curPhase;
-                break;
-            }
-        }
-
-        *
-        */
-
-        final PlanPhaseSpecifier spec = existingEvent.getPlanPhaseSpecifier();
-        final PlanPhase currentPhase = catalog.findPhase(existingEvent.getPlanPhaseName(), effectiveDate, subscription.getAlignStartDate());
+        final PlanPhase currentPhase = existingEvent.getPlanPhaseName() != null ? catalog.findPhase(existingEvent.getPlanPhaseName(), effectiveDate, subscription.getAlignStartDate()) : null;
 
 
-        final ApiEventBuilder apiBuilder = new ApiEventBuilder()
+        final ApiEventBuilder apiBuilder = currentPhase != null ?new ApiEventBuilder()
         .setSubscriptionId(subscription.getId())
         .setEventPlan(currentPhase.getPlan().getName())
         .setEventPlanPhase(currentPhase.getName())
@@ -117,7 +102,7 @@ public class DefaultEntitlementTransferApi implements EntitlementTransferApi {
         .setEffectiveDate(effectiveDate)
         .setRequestedDate(effectiveDate)
         .setUserToken(context.getUserToken())
-        .setFromDisk(true);
+        .setFromDisk(true) : null;
 
         switch(existingEvent.getSubscriptionTransitionType()) {
         case TRANSFER:
