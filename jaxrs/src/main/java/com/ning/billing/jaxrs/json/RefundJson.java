@@ -45,7 +45,7 @@ public class RefundJson extends JsonBase {
     private final List<InvoiceItemJsonSimple> adjustments;
 
     @JsonCreator
-    public RefundJson(@JsonProperty("refund_id") final String refundId,
+    public RefundJson(@JsonProperty("refundId") final String refundId,
                       @JsonProperty("paymentId") final String paymentId,
                       @JsonProperty("refundAmount") final BigDecimal refundAmount,
                       @JsonProperty("currency") final String currency,
