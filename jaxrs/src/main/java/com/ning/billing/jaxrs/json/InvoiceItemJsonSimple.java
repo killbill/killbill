@@ -32,6 +32,7 @@ public class InvoiceItemJsonSimple extends JsonBase {
 
     private final String invoiceItemId;
     private final String invoiceId;
+    private final String linkedInvoiceItemId;
     private final String accountId;
     private final String bundleId;
     private final String subscriptionId;
@@ -45,6 +46,7 @@ public class InvoiceItemJsonSimple extends JsonBase {
 
     public InvoiceItemJsonSimple(@JsonProperty("invoiceItemId") final String invoiceItemId,
                                  @JsonProperty("invoiceId") final String invoiceId,
+                                 @JsonProperty("linkedInvoiceItemId") final String linkedInvoiceItemId,
                                  @JsonProperty("accountId") final String accountId,
                                  @JsonProperty("bundleId") final String bundleId,
                                  @JsonProperty("subscriptionId") final String subscriptionId,
@@ -59,6 +61,7 @@ public class InvoiceItemJsonSimple extends JsonBase {
         super(auditLogs);
         this.invoiceItemId = invoiceItemId;
         this.invoiceId = invoiceId;
+        this.linkedInvoiceItemId = linkedInvoiceItemId;
         this.accountId = accountId;
         this.bundleId = bundleId;
         this.subscriptionId = subscriptionId;
@@ -72,8 +75,8 @@ public class InvoiceItemJsonSimple extends JsonBase {
     }
 
     public InvoiceItemJsonSimple(final InvoiceItem item) {
-        this(toString(item.getId()), toString(item.getInvoiceId()), toString(item.getAccountId()),
-             toString(item.getBundleId()), toString(item.getSubscriptionId()),
+        this(toString(item.getId()), toString(item.getInvoiceId()), toString(item.getLinkedItemId()),
+             toString(item.getAccountId()), toString(item.getBundleId()), toString(item.getSubscriptionId()),
              item.getPlanName(), item.getPhaseName(), item.getDescription(), item.getStartDate(), item.getEndDate(),
              item.getAmount(), item.getCurrency(), null);
     }
@@ -84,6 +87,10 @@ public class InvoiceItemJsonSimple extends JsonBase {
 
     public String getInvoiceId() {
         return invoiceId;
+    }
+
+    public String getLinkedInvoiceItemId() {
+        return linkedInvoiceItemId;
     }
 
     public String getAccountId() {
@@ -127,6 +134,27 @@ public class InvoiceItemJsonSimple extends JsonBase {
     }
 
     @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append("InvoiceItemJsonSimple");
+        sb.append("{invoiceItemId='").append(invoiceItemId).append('\'');
+        sb.append(", invoiceId='").append(invoiceId).append('\'');
+        sb.append(", linkedInvoiceItemId='").append(linkedInvoiceItemId).append('\'');
+        sb.append(", accountId='").append(accountId).append('\'');
+        sb.append(", bundleId='").append(bundleId).append('\'');
+        sb.append(", subscriptionId='").append(subscriptionId).append('\'');
+        sb.append(", planName='").append(planName).append('\'');
+        sb.append(", phaseName='").append(phaseName).append('\'');
+        sb.append(", description='").append(description).append('\'');
+        sb.append(", startDate=").append(startDate);
+        sb.append(", endDate=").append(endDate);
+        sb.append(", amount=").append(amount);
+        sb.append(", currency=").append(currency);
+        sb.append('}');
+        return sb.toString();
+    }
+
+    @Override
     public boolean equals(final Object o) {
         if (this == o) {
             return true;
@@ -163,6 +191,9 @@ public class InvoiceItemJsonSimple extends JsonBase {
         if (invoiceId != null ? !invoiceId.equals(that.invoiceId) : that.invoiceId != null) {
             return false;
         }
+        if (linkedInvoiceItemId != null ? !linkedInvoiceItemId.equals(that.linkedInvoiceItemId) : that.linkedInvoiceItemId != null) {
+            return false;
+        }
         if (phaseName != null ? !phaseName.equals(that.phaseName) : that.phaseName != null) {
             return false;
         }
@@ -184,6 +215,7 @@ public class InvoiceItemJsonSimple extends JsonBase {
     public int hashCode() {
         int result = invoiceId != null ? invoiceId.hashCode() : 0;
         result = 31 * result + (invoiceItemId != null ? invoiceItemId.hashCode() : 0);
+        result = 31 * result + (linkedInvoiceItemId != null ? linkedInvoiceItemId.hashCode() : 0);
         result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
         result = 31 * result + (bundleId != null ? bundleId.hashCode() : 0);
         result = 31 * result + (subscriptionId != null ? subscriptionId.hashCode() : 0);

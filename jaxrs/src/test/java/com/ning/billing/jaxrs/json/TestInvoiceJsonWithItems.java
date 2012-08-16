@@ -100,6 +100,7 @@ public class TestInvoiceJsonWithItems extends JaxrsTestSuite {
 
         final InvoiceItemJsonSimple invoiceItemJsonSimple = invoiceJsonWithItems.getItems().get(0);
         Assert.assertEquals(invoiceItemJsonSimple.getInvoiceId(), invoiceItem.getInvoiceId().toString());
+        Assert.assertEquals(invoiceItemJsonSimple.getLinkedInvoiceItemId(), invoiceItem.getLinkedItemId().toString());
         Assert.assertEquals(invoiceItemJsonSimple.getAccountId(), invoiceItem.getAccountId().toString());
         Assert.assertEquals(invoiceItemJsonSimple.getBundleId(), invoiceItem.getBundleId().toString());
         Assert.assertEquals(invoiceItemJsonSimple.getSubscriptionId(), invoiceItem.getSubscriptionId().toString());
@@ -115,6 +116,7 @@ public class TestInvoiceJsonWithItems extends JaxrsTestSuite {
     private InvoiceItemJsonSimple createInvoiceItemJson() {
         final String invoiceItemId = UUID.randomUUID().toString();
         final String invoiceId = UUID.randomUUID().toString();
+        final String linkedInvoiceItemId = UUID.randomUUID().toString();
         final String accountId = UUID.randomUUID().toString();
         final String bundleId = UUID.randomUUID().toString();
         final String subscriptionId = UUID.randomUUID().toString();
@@ -125,7 +127,7 @@ public class TestInvoiceJsonWithItems extends JaxrsTestSuite {
         final LocalDate endDate = clock.getUTCToday();
         final BigDecimal amount = BigDecimal.TEN;
         final Currency currency = Currency.MXN;
-        return new InvoiceItemJsonSimple(invoiceItemId, invoiceId, accountId, bundleId, subscriptionId,
+        return new InvoiceItemJsonSimple(invoiceItemId, invoiceId, linkedInvoiceItemId, accountId, bundleId, subscriptionId,
                                          planName, phaseName, description, startDate, endDate,
                                          amount, currency, null);
     }
@@ -133,6 +135,7 @@ public class TestInvoiceJsonWithItems extends JaxrsTestSuite {
     private InvoiceItem createInvoiceItem() {
         final InvoiceItem invoiceItem = Mockito.mock(InvoiceItem.class);
         Mockito.when(invoiceItem.getInvoiceId()).thenReturn(UUID.randomUUID());
+        Mockito.when(invoiceItem.getLinkedItemId()).thenReturn(UUID.randomUUID());
         Mockito.when(invoiceItem.getAccountId()).thenReturn(UUID.randomUUID());
         Mockito.when(invoiceItem.getBundleId()).thenReturn(UUID.randomUUID());
         Mockito.when(invoiceItem.getSubscriptionId()).thenReturn(UUID.randomUUID());

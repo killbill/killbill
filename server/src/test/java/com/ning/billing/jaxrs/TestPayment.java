@@ -169,7 +169,7 @@ public class TestPayment extends TestJaxrsBase {
 
     private void verifyRefund(final PaymentJsonSimple paymentJsonSimple, final RefundJson refundJsonCheck, final BigDecimal refundAmount) throws IOException {
         Assert.assertEquals(refundJsonCheck.getPaymentId(), paymentJsonSimple.getPaymentId());
-        Assert.assertEquals(refundJsonCheck.getRefundAmount().setScale(2, RoundingMode.HALF_UP), refundAmount.setScale(2, RoundingMode.HALF_UP));
+        Assert.assertEquals(refundJsonCheck.getAmount().setScale(2, RoundingMode.HALF_UP), refundAmount.setScale(2, RoundingMode.HALF_UP));
         Assert.assertEquals(refundJsonCheck.getCurrency(), DEFAULT_CURRENCY);
         Assert.assertEquals(refundJsonCheck.getEffectiveDate().getYear(), clock.getUTCNow().getYear());
         Assert.assertEquals(refundJsonCheck.getEffectiveDate().getMonthOfYear(), clock.getUTCNow().getMonthOfYear());

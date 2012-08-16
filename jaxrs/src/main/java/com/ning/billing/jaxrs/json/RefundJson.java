@@ -37,7 +37,7 @@ public class RefundJson extends JsonBase {
 
     private final String refundId;
     private final String paymentId;
-    private final BigDecimal refundAmount;
+    private final BigDecimal amount;
     private final String currency;
     private final Boolean isAdjusted;
     private final DateTime requestedDate;
@@ -45,9 +45,9 @@ public class RefundJson extends JsonBase {
     private final List<InvoiceItemJsonSimple> adjustments;
 
     @JsonCreator
-    public RefundJson(@JsonProperty("refund_id") final String refundId,
+    public RefundJson(@JsonProperty("refundId") final String refundId,
                       @JsonProperty("paymentId") final String paymentId,
-                      @JsonProperty("refundAmount") final BigDecimal refundAmount,
+                      @JsonProperty("amount") final BigDecimal amount,
                       @JsonProperty("currency") final String currency,
                       @JsonProperty("adjusted") final Boolean isAdjusted,
                       @JsonProperty("requestedDate") final DateTime requestedDate,
@@ -57,7 +57,7 @@ public class RefundJson extends JsonBase {
         super(auditLogs);
         this.refundId = refundId;
         this.paymentId = paymentId;
-        this.refundAmount = refundAmount;
+        this.amount = amount;
         this.currency = currency;
         this.isAdjusted = isAdjusted;
         this.requestedDate = requestedDate;
@@ -85,8 +85,8 @@ public class RefundJson extends JsonBase {
         return paymentId;
     }
 
-    public BigDecimal getRefundAmount() {
-        return refundAmount;
+    public BigDecimal getAmount() {
+        return amount;
     }
 
     public String getCurrency() {
@@ -115,7 +115,7 @@ public class RefundJson extends JsonBase {
         sb.append("RefundJson");
         sb.append("{refundId='").append(refundId).append('\'');
         sb.append(", paymentId='").append(paymentId).append('\'');
-        sb.append(", refundAmount=").append(refundAmount);
+        sb.append(", amount=").append(amount);
         sb.append(", currency=").append(currency);
         sb.append(", isAdjusted=").append(isAdjusted);
         sb.append(", requestedDate=").append(requestedDate);
@@ -129,7 +129,7 @@ public class RefundJson extends JsonBase {
     public int hashCode() {
         int result = refundId != null ? refundId.hashCode() : 0;
         result = 31 * result + (paymentId != null ? paymentId.hashCode() : 0);
-        result = 31 * result + (refundAmount != null ? refundAmount.hashCode() : 0);
+        result = 31 * result + (amount != null ? amount.hashCode() : 0);
         result = 31 * result + (currency != null ? currency.hashCode() : 0);
         result = 31 * result + (isAdjusted != null ? isAdjusted.hashCode() : 0);
         result = 31 * result + (requestedDate != null ? requestedDate.hashCode() : 0);
@@ -202,11 +202,11 @@ public class RefundJson extends JsonBase {
             return false;
         }
 
-        if (refundAmount == null) {
-            if (other.refundAmount != null) {
+        if (amount == null) {
+            if (other.amount != null) {
                 return false;
             }
-        } else if (!refundAmount.equals(other.refundAmount)) {
+        } else if (!amount.equals(other.amount)) {
             return false;
         }
 

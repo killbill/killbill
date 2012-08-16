@@ -125,11 +125,11 @@ public class PaymentResource extends JaxRsResourceBase {
                 result = paymentApi.createRefundWithItemsAdjustments(account, paymentUuid, adjustments, context.createContext(createdBy, reason, comment));
             } else {
                 // Invoice adjustment
-                result = paymentApi.createRefundWithAdjustment(account, paymentUuid, json.getRefundAmount(), context.createContext(createdBy, reason, comment));
+                result = paymentApi.createRefundWithAdjustment(account, paymentUuid, json.getAmount(), context.createContext(createdBy, reason, comment));
             }
         } else {
             // Refund without adjustment
-            result = paymentApi.createRefund(account, paymentUuid, json.getRefundAmount(), context.createContext(createdBy, reason, comment));
+            result = paymentApi.createRefund(account, paymentUuid, json.getAmount(), context.createContext(createdBy, reason, comment));
         }
 
         return uriBuilder.buildResponse(RefundResource.class, "getRefund", result.getId(), uriInfo.getBaseUri().toString());
