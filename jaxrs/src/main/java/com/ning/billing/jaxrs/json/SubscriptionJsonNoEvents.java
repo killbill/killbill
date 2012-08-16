@@ -28,6 +28,7 @@ import com.ning.billing.util.audit.AuditLog;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+
 public class SubscriptionJsonNoEvents extends SubscriptionJsonSimple {
 
     private final DateTime startDate;
@@ -60,6 +61,7 @@ public class SubscriptionJsonNoEvents extends SubscriptionJsonSimple {
         this.chargedThroughDate = chargedThroughDate;
         this.cancelledDate = cancelledDate;
     }
+
 
     public SubscriptionJsonNoEvents(final Subscription data, @Nullable final List<AuditLog> auditLogs) {
         this(data.getId().toString(),

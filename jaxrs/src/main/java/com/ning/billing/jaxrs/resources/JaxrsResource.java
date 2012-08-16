@@ -50,6 +50,8 @@ public interface JaxrsResource {
     public static final String QUERY_TARGET_DATE = "targetDate";
     public static final String QUERY_POLICY = "policy";
 
+    public static final String QUERY_ACCOUNT_WITH_BALANCE = "accountWithBalance";
+
     public static final String QUERY_ACCOUNT_ID = "accountId";
 
     public static final String QUERY_INVOICE_WITH_ITEMS = "withItems";

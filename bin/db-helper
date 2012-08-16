@@ -35,6 +35,9 @@ TEST_ALSO=
 DDL_FILE=
 CLEAN_FILE=
 
+# Egrep like for skipping some modules until they are ready
+SKIP="(usage|server)"
+
 function usage() {
     echo -n "./db_helper "
     echo -n " -a <create|clean|dump>"
@@ -48,7 +51,7 @@ function usage() {
 }
 
 function get_modules() {
-    local modules=`grep module $POM  | grep -v modules | cut -d '>' -f 2 | cut -d '<' -f 1`
+    local modules=`grep module $POM  | grep -v modules | cut -d '>' -f 2 | cut -d '<' -f 1 | egrep -v "$SKIP"`
     echo $modules
 }
 

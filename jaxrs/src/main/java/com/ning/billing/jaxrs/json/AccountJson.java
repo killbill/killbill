@@ -30,24 +30,24 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class AccountJson extends AccountJsonSimple {
 
-    private final String name;
-    private final Integer length;
-    private final String email;
-    private final BillCycleDayJson billCycleDayJson;
-    private final String currency;
-    private final String paymentMethodId;
-    private final String timeZone;
-    private final String address1;
-    private final String address2;
-    private final String postalCode;
-    private final String company;
-    private final String city;
-    private final String state;
-    private final String country;
-    private final String locale;
-    private final String phone;
-    private final Boolean isMigrated;
-    private final Boolean isNotifiedForInvoices;
+    protected final String name;
+    protected final Integer length;
+    protected final String email;
+    protected final BillCycleDayJson billCycleDayJson;
+    protected final String currency;
+    protected final String paymentMethodId;
+    protected final String timeZone;
+    protected final String address1;
+    protected final String address2;
+    protected final String postalCode;
+    protected final String company;
+    protected final String city;
+    protected final String state;
+    protected final String country;
+    protected final String locale;
+    protected final String phone;
+    protected final Boolean isMigrated;
+    protected final Boolean isNotifiedForInvoices;
 
     public AccountJson(final Account account) {
         super(account.getId().toString(), account.getExternalKey());
