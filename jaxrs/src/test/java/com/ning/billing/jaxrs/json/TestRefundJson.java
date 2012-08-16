@@ -40,18 +40,18 @@ public class TestRefundJson extends JaxrsTestSuite {
     public void testJson() throws Exception {
         final String refundId = UUID.randomUUID().toString();
         final String paymentId = UUID.randomUUID().toString();
-        final BigDecimal refundAmount = BigDecimal.TEN;
+        final BigDecimal amount = BigDecimal.TEN;
         final String currency = "USD";
         final boolean isAdjusted = true;
         final DateTime requestedDate = clock.getUTCNow();
         final DateTime effectiveDate = clock.getUTCNow();
         final List<InvoiceItemJsonSimple> adjustments = ImmutableList.<InvoiceItemJsonSimple>of(createInvoiceItemJson());
         final List<AuditLogJson> auditLogs = createAuditLogsJson();
-        final RefundJson refundJson = new RefundJson(refundId, paymentId, refundAmount, currency, isAdjusted, requestedDate,
+        final RefundJson refundJson = new RefundJson(refundId, paymentId, amount, currency, isAdjusted, requestedDate,
                                                      effectiveDate, adjustments, auditLogs);
         Assert.assertEquals(refundJson.getRefundId(), refundId);
         Assert.assertEquals(refundJson.getPaymentId(), paymentId);
-        Assert.assertEquals(refundJson.getRefundAmount(), refundAmount);
+        Assert.assertEquals(refundJson.getAmount(), amount);
         Assert.assertEquals(refundJson.getCurrency(), currency);
         Assert.assertEquals(refundJson.isAdjusted(), isAdjusted);
         Assert.assertEquals(refundJson.getRequestedDate(), requestedDate);

@@ -105,7 +105,7 @@ public class TestAccountTimeline extends TestJaxrsBase {
             Assert.assertEquals(paymentJson.getRefunds().size(), 1);
             final RefundJson refundJson = paymentJson.getRefunds().get(0);
             Assert.assertEquals(refundJson.getPaymentId(), paymentJson.getPaymentId());
-            Assert.assertEquals(refundJson.getRefundAmount().compareTo(refundAmount), 0);
+            Assert.assertEquals(refundJson.getAmount().compareTo(refundAmount), 0);
 
             // Verify chargebacks
             Assert.assertEquals(paymentJson.getChargebacks().size(), 1);
