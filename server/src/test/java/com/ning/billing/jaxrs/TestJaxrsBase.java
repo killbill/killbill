@@ -516,7 +516,7 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
         assertNotNull(bundleJson);
         final SubscriptionJsonNoEvents subscriptionJson = createSubscription(bundleJson.getBundleId(), "Shotgun", ProductCategory.BASE.toString(), BillingPeriod.MONTHLY.toString(), true);
         assertNotNull(subscriptionJson);
-        clock.addMonths(1);
+        clock.addDays(32);
         crappyWaitForLackOfProperSynchonization();
 
         return accountJson;
