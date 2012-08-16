@@ -23,10 +23,12 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.EventListener;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -78,7 +80,6 @@ import com.ning.billing.jaxrs.json.PaymentMethodJson.PaymentMethodPluginDetailJs
 import com.ning.billing.jaxrs.json.PaymentMethodJson.PaymentMethodProperties;
 import com.ning.billing.jaxrs.json.RefundJson;
 import com.ning.billing.jaxrs.json.SubscriptionJsonNoEvents;
-import com.ning.billing.jaxrs.resources.AccountResource;
 import com.ning.billing.jaxrs.resources.JaxrsResource;
 import com.ning.billing.junction.glue.DefaultJunctionModule;
 import com.ning.billing.payment.glue.PaymentModule;
@@ -111,6 +112,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Module;
 
@@ -626,7 +629,7 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
             queryParams.put(JaxrsResource.QUERY_REQUESTED_DT, requestedDate.toDateTimeISO().toString());
         }
 
-        final InvoiceItemJsonSimple adjustment = new InvoiceItemJsonSimple(invoiceItemId, null, accountId, null, null, null, null,
+        final InvoiceItemJsonSimple adjustment = new InvoiceItemJsonSimple(invoiceItemId, null, null, accountId, null, null, null, null,
                                                                            null, null, null, amount, currency, null);
         final String adjustmentJson = mapper.writeValueAsString(adjustment);
         final Response response = doPost(uri, adjustmentJson, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
@@ -651,7 +654,7 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
             queryParams.put(JaxrsResource.QUERY_REQUESTED_DT, requestedDate.toDateTimeISO().toString());
         }
 
-        final InvoiceItemJsonSimple externalCharge = new InvoiceItemJsonSimple(null, invoiceId, accountId, bundleId, null, null, null,
+        final InvoiceItemJsonSimple externalCharge = new InvoiceItemJsonSimple(null, invoiceId, null, accountId, bundleId, null, null, null,
                                                                                null, null, null, amount, currency, null);
         final String externalChargeJson = mapper.writeValueAsString(externalCharge);
         final Response response = doPost(uri, externalChargeJson, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
@@ -667,7 +670,7 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
         assertEquals(invoiceResponse.getStatusCode(), Status.OK.getStatusCode());
 
         final String invoicesBaseJson = invoiceResponse.getResponseBody();
-        final InvoiceJsonWithItems invoice = mapper.readValue(invoicesBaseJson, new TypeReference<InvoiceJsonWithItems>(){});
+        final InvoiceJsonWithItems invoice = mapper.readValue(invoicesBaseJson, new TypeReference<InvoiceJsonWithItems>() {});
         assertNotNull(invoice);
 
         return invoice;
@@ -818,7 +821,7 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
 
         final List<InvoiceItemJsonSimple> adjustments = new ArrayList<InvoiceItemJsonSimple>();
         for (final String itemId : itemAdjustments.keySet()) {
-            adjustments.add(new InvoiceItemJsonSimple(itemId, null, null, null, null, null, null, null, null, null,
+            adjustments.add(new InvoiceItemJsonSimple(itemId, null, null, null, null, null, null, null, null, null, null,
                                                       itemAdjustments.get(itemId), null, null));
         }
         final RefundJson refundJson = new RefundJson(null, paymentId, amount, DEFAULT_CURRENCY, adjusted, null, null, adjustments, null);
@@ -835,6 +838,20 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
         final String retrievedBaseJson = retrievedResponse.getResponseBody();
         final RefundJson retrievedRefundJson = mapper.readValue(retrievedBaseJson, RefundJson.class);
         assertNotNull(retrievedRefundJson);
+        // Verify we have the adjusted items
+        if (retrievedRefundJson.getAdjustments() != null) {
+            final Set<String> allLinkedItemIds = new HashSet<String>(Collections2.transform(retrievedRefundJson.getAdjustments(), new Function<InvoiceItemJsonSimple, String>() {
+                @Override
+                public String apply(@Nullable final InvoiceItemJsonSimple input) {
+                    if (input != null) {
+                        return input.getLinkedInvoiceItemId();
+                    } else {
+                        return null;
+                    }
+                }
+            }));
+            assertEquals(allLinkedItemIds, itemAdjustments.keySet());
+        }
 
         return retrievedRefundJson;
     }

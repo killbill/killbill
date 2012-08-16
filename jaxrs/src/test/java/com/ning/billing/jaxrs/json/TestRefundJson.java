@@ -67,6 +67,7 @@ public class TestRefundJson extends JaxrsTestSuite {
     private InvoiceItemJsonSimple createInvoiceItemJson() {
         final String invoiceItemId = UUID.randomUUID().toString();
         final String invoiceId = UUID.randomUUID().toString();
+        final String linkedInvoiceItemId = UUID.randomUUID().toString();
         final String accountId = UUID.randomUUID().toString();
         final String bundleId = UUID.randomUUID().toString();
         final String subscriptionId = UUID.randomUUID().toString();
@@ -78,7 +79,7 @@ public class TestRefundJson extends JaxrsTestSuite {
         final BigDecimal amount = BigDecimal.TEN;
         final Currency currency = Currency.MXN;
         final List<AuditLogJson> auditLogs = createAuditLogsJson();
-        return new InvoiceItemJsonSimple(invoiceItemId, invoiceId, accountId, bundleId, subscriptionId,
+        return new InvoiceItemJsonSimple(invoiceItemId, invoiceId, linkedInvoiceItemId, accountId, bundleId, subscriptionId,
                                          planName, phaseName, description, startDate, endDate,
                                          amount, currency, auditLogs);
     }
