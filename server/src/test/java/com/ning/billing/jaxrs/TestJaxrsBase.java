@@ -132,6 +132,8 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
     public static final String HEADER_CONTENT_TYPE = "Content-type";
     public static final String CONTENT_TYPE = "application/json";
 
+    protected static final String DEFAULT_CURRENCY = "USD";
+
     private static TestKillbillGuiceListener listener;
 
     private final MysqlTestingHelper helper = KillbillTestSuiteWithEmbeddedDB.getMysqlTestingHelper();
@@ -819,7 +821,7 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
             adjustments.add(new InvoiceItemJsonSimple(itemId, null, null, null, null, null, null, null, null, null,
                                                       itemAdjustments.get(itemId), null, null));
         }
-        final RefundJson refundJson = new RefundJson(null, paymentId, amount, adjusted, null, null, adjustments, null);
+        final RefundJson refundJson = new RefundJson(null, paymentId, amount, DEFAULT_CURRENCY, adjusted, null, null, adjustments, null);
         final String baseJson = mapper.writeValueAsString(refundJson);
         final Response response = doPost(uri, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
@@ -975,7 +977,7 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
         final int length = 4;
         // Let junction figure it out
         final BillCycleDayJson billCycleDay = null;
-        final String currency = "USD";
+        final String currency = DEFAULT_CURRENCY;
         final String timeZone = "UTC";
         final String address1 = "12 rue des ecoles";
         final String address2 = "Poitier";
