@@ -40,6 +40,7 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
+import com.ning.billing.config.PaymentConfig;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.payment.api.DefaultPayment;
@@ -88,6 +89,8 @@ public class PaymentProcessor extends ProcessorBase {
     private final CallContextFactory factory;
     private final Clock clock;
 
+    private final PaymentConfig paymentConfig;
+
     private final PluginDispatcher<Payment> paymentPluginDispatcher;
     private final PluginDispatcher<Void> voidPluginDispatcher;
 
@@ -106,6 +109,7 @@ public class PaymentProcessor extends ProcessorBase {
                             final Bus eventBus,
                             final Clock clock,
                             final GlobalLocker locker,
+                            final PaymentConfig paymentConfig,
                             @Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor,
                             final CallContextFactory factory) {
         super(pluginRegistry, accountUserApi, eventBus, paymentDao, tagUserApi, locker, executor);
@@ -116,6 +120,7 @@ public class PaymentProcessor extends ProcessorBase {
         this.autoPayoffRetryService = autoPayoffRetryService;
         this.clock = clock;
         this.factory = factory;
+        this.paymentConfig = paymentConfig;
         this.paymentPluginDispatcher = new PluginDispatcher<Payment>(executor);
         this.voidPluginDispatcher = new PluginDispatcher<Void>(executor);
     }
@@ -401,9 +406,15 @@ public class PaymentProcessor extends ProcessorBase {
     private Payment processPaymentWithAccountLocked(final PaymentPluginApi plugin, final Account account, final Invoice invoice,
             final PaymentModelDao paymentInput, final PaymentAttemptModelDao attemptInput, final boolean isInstantPayment, final CallContext context) throws PaymentApiException {
 
-        BusEvent event = null;
-        List<PaymentAttemptModelDao> allAttempts = null;
         PaymentModelDao payment = null;
+        List<PaymentAttemptModelDao> allAttempts = null;
+        if (paymentConfig.isPaymentOff()) {
+            paymentDao.updateStatusForPaymentWithAttempt(paymentInput.getId(), PaymentStatus.PAYMENT_SYSTEM_OFF, null, null, null, null, attemptInput.getId(), context);
+            allAttempts = paymentDao.getAttemptsForPayment(paymentInput.getId());
+            return new DefaultPayment(payment, allAttempts, Collections.<RefundModelDao>emptyList());
+        }
+
+        BusEvent event = null;
         PaymentStatus paymentStatus;
         try {
 

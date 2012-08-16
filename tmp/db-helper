@@ -1,0 +1,157 @@
+#! /usr/bin/env bash
+
+
+###################################################################################
+#                                                                                 #
+#                   Copyright 2010-2011 Ning, Inc.                                #
+#                                                                                 #
+#      Ning licenses this file to you under the Apache License, version 2.0       #
+#      (the "License"); you may not use this file except in compliance with the   #
+#      License.  You may obtain a copy of the License at:                         #
+#                                                                                 #
+#          http://www.apache.org/licenses/LICENSE-2.0                             #
+#                                                                                 #
+#      Unless required by applicable law or agreed to in writing, software        #
+#      distributed under the License is distributed on an "AS IS" BASIS, WITHOUT  #
+#      WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the  #
+#      License for the specific language governing permissions and limitations    #
+#      under the License.                                                         #
+#                                                                                 #
+###################################################################################
+
+#set -x 
+
+HERE=`cd \`dirname $0\`; pwd`
+TOP=$HERE/..
+
+POM="$TOP/pom.xml"
+
+ACTION=
+DATABASE="killbill"
+USER="root"
+PWD="root"
+TEST_ALSO=
+
+DDL_FILE=
+CLEAN_FILE=
+
+function usage() {
+    echo -n "./db_helper "
+    echo -n " -a <create|clean>"
+    echo -n " -d database_name (default = killbill)"    
+    echo -n " -u user_name (default = root)"
+    echo -n " -p password (default = root)"
+    echo -n " -t (also include test ddl)"
+    echo -n "-h this message"
+    echo
+    exit 1
+}
+
+function get_modules() {
+    local modules=`grep module $POM  | grep -v modules | cut -d '>' -f 2 | cut -d '<' -f 1`
+    echo $modules
+}
+
+function find_test_ddl() {
+
+    local modules=`get_modules`
+    local ddl_test=
+    
+    local cur_ddl=
+    for m in $modules; do
+        cur_ddl=`find $m/src/test/resources/ -name ddl_test.sql 2>/dev/null`
+        ddl_test="$ddl_test $cur_ddl"
+    done
+    echo "$ddl_test"
+    
+}
+function find_src_ddl() {
+    
+    local modules=`get_modules`
+    local ddl_src=
+    
+    local cur_ddl=
+    for m in $modules; do
+        cur_ddl=`find $m/src/main/resources/ -name ddl.sql 2>/dev/null`
+        ddl_src="$ddl_src $cur_ddl"
+    done
+    echo "$ddl_src"
+}
+
+
+function create_clean_file() {
+    local ddl_file=$1
+    local tables=`cat $ddl_file | grep -i "create table" | awk ' { print $3 } '` 
+
+    local tmp="/tmp/clean-$DATABASE.$$" 
+    echo "use $DATABASE;" >> $tmp
+    echo "" >> $tmp
+    for t in $tables; do
+        echo "truncate $t;" >> $tmp
+    done
+    echo $tmp
+}
+
+function create_ddl_file() {
+    local ddls=`find_src_ddl`
+    local test_ddls=
+    if [ ! -z $TEST_ALSO ]; then
+        test_ddls=`find_test_ddl`
+        ddls="$ddls $test_ddls"
+    fi
+
+    local tmp="/tmp/ddl-$DATABASE.$$"
+    touch $tmp
+    echo "use $DATABASE;" >> $tmp
+    echo "" >> $tmp
+    for d in $ddls; do
+        cat $d >> $tmp
+        echo "" >> $tmp
+    done
+    echo $tmp
+}
+
+function cleanup() {
+    rm -f "/tmp/*.$$"
+}
+
+
+while getopts ":a:d:u:pt" options; do
+  case $options in
+    a ) ACTION=$OPTARG;;
+	d ) DATABASE=$OPTARG;;
+	u ) USER=$OPTARG;;
+	p ) PWD=$OPTARG;;
+	t ) TEST_ALSO=1;;
+    h ) usage;;
+    * ) usage;;
+  esac
+done
+
+
+
+if [ -z $ACTION ]; then
+    echo "Need to specify an action <CREATE|CLEAN>"
+    usage
+fi
+
+
+if [ $ACTION == "dump" ]; then
+    DDL_FILE=`create_ddl_file`
+    cat $DDL_FILE
+fi
+
+if [ $ACTION == "create" ]; then
+    DDL_FILE=`create_ddl_file`
+    echo "Applying new schema $tmp to database $DATABASE"    
+    mysql -u $USER --password=$PWD < $DDL_FILE
+fi
+
+if [ $ACTION == "clean" ]; then
+    DDL_FILE=`create_ddl_file` 
+    CLEAN_FILE=`create_clean_file $DDL_FILE`   
+    echo "Cleaning db tables on database $DATABASE"
+    mysql -u $USER --password=$PWD < $DDL_FILE
+fi
+
+cleanup

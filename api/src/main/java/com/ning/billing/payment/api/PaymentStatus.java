@@ -30,5 +30,7 @@ public enum PaymentStatus {
     /* Exception from plugin, state is unknown and needs to be retried */
     PLUGIN_FAILURE,
     /* Exception from plugin, we already retried a maximum of time */
-    PLUGIN_FAILURE_ABORTED
+    PLUGIN_FAILURE_ABORTED,
+    /* Payment Subsystem is off */
+    PAYMENT_SYSTEM_OFF
 }

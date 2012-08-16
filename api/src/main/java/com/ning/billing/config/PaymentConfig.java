@@ -53,4 +53,7 @@ public interface PaymentConfig extends NotificationConfig, KillbillConfig {
     @Default("false")
     public boolean isNotificationProcessingOff();
 
+    @Config("killbill.payment.off")
+    @Default("false")
+    public boolean isPaymentOff();
 }
