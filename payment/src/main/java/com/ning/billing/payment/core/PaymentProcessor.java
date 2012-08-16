@@ -406,14 +406,15 @@ public class PaymentProcessor extends ProcessorBase {
     private Payment processPaymentWithAccountLocked(final PaymentPluginApi plugin, final Account account, final Invoice invoice,
             final PaymentModelDao paymentInput, final PaymentAttemptModelDao attemptInput, final boolean isInstantPayment, final CallContext context) throws PaymentApiException {
 
-        PaymentModelDao payment = null;
+
         List<PaymentAttemptModelDao> allAttempts = null;
         if (paymentConfig.isPaymentOff()) {
             paymentDao.updateStatusForPaymentWithAttempt(paymentInput.getId(), PaymentStatus.PAYMENT_SYSTEM_OFF, null, null, null, null, attemptInput.getId(), context);
             allAttempts = paymentDao.getAttemptsForPayment(paymentInput.getId());
-            return new DefaultPayment(payment, allAttempts, Collections.<RefundModelDao>emptyList());
+            return new DefaultPayment(paymentInput, allAttempts, Collections.<RefundModelDao>emptyList());
         }
 
+        PaymentModelDao payment = null;
         BusEvent event = null;
         PaymentStatus paymentStatus;
         try {
