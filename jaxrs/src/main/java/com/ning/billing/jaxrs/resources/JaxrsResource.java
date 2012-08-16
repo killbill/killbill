@@ -59,6 +59,7 @@ public interface JaxrsResource {
     public static final String QUERY_PAYMENT_EXTERNAL = "externalPayment";
     public static final String QUERY_PAYMENT_LAST4_CC = "last4CC";
     public static final String QUERY_PAYMENT_NAME_ON_CC = "nameOnCC";
+    public static final String QUERY_PAYMENT_WITH_REFUNDS_AND_CHARGEBACKS = "withRefundsAndChargebacks";
 
     public static final String QUERY_TAGS = "tagList";
     public static final String QUERY_CUSTOM_FIELDS = "customFieldList";

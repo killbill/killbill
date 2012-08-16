@@ -65,8 +65,13 @@ public class PaymentJsonWithBundleKeys extends PaymentJsonSimple {
     }
 
     public PaymentJsonWithBundleKeys(final Payment payment, final String status, final int nbOfPaymentAttempts, final String bundleExternalKey,
+                                     final UUID accountId, final List<RefundJson> refunds, final List<ChargebackJson> chargebacks) {
+        this(payment, status, nbOfPaymentAttempts, bundleExternalKey, accountId, refunds, chargebacks, null);
+    }
+
+    public PaymentJsonWithBundleKeys(final Payment payment, final String status, final int nbOfPaymentAttempts, final String bundleExternalKey,
                                      final UUID accountId, final List<RefundJson> refunds, final List<ChargebackJson> chargebacks,
-                                     final List<AuditLog> auditLogs) {
+                                     @Nullable final List<AuditLog> auditLogs) {
         this(payment.getAmount(), payment.getPaidAmount(), accountId.toString(),
              payment.getInvoiceId().toString(), payment.getId().toString(),
              payment.getPaymentMethodId().toString(),

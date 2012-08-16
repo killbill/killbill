@@ -40,8 +40,13 @@ import javax.ws.rs.core.UriInfo;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
+import com.ning.billing.invoice.api.InvoicePayment;
+import com.ning.billing.invoice.api.InvoicePaymentApi;
+import com.ning.billing.jaxrs.json.ChargebackJson;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
 import com.ning.billing.jaxrs.json.InvoiceItemJsonSimple;
+import com.ning.billing.jaxrs.json.PaymentJsonSimple;
+import com.ning.billing.jaxrs.json.PaymentJsonWithBundleKeys;
 import com.ning.billing.jaxrs.json.RefundJson;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
@@ -70,19 +75,58 @@ public class PaymentResource extends JaxRsResourceBase {
 
     private final Context context;
     private final PaymentApi paymentApi;
+    private final InvoicePaymentApi invoicePaymentApi;
     private final AccountUserApi accountApi;
 
     @Inject
     public PaymentResource(final JaxrsUriBuilder uriBuilder,
                            final AccountUserApi accountApi,
                            final PaymentApi paymentApi,
+                           final InvoicePaymentApi invoicePaymentApi,
                            final TagUserApi tagUserApi,
                            final CustomFieldUserApi customFieldUserApi,
                            final Context context) {
         super(uriBuilder, tagUserApi, customFieldUserApi);
         this.context = context;
         this.paymentApi = paymentApi;
+        this.invoicePaymentApi = invoicePaymentApi;
         this.accountApi = accountApi;
+    }
+
+    @GET
+    @Path("/{paymentId:" + UUID_PATTERN + "}")
+    @Produces(APPLICATION_JSON)
+    public Response getPayment(@PathParam(ID_PARAM_NAME) final String paymentIdString,
+                               @QueryParam(QUERY_PAYMENT_WITH_REFUNDS_AND_CHARGEBACKS) @DefaultValue("false") final Boolean withRefundsAndChargebacks) throws PaymentApiException {
+        final UUID paymentId = UUID.fromString(paymentIdString);
+        final Payment payment = paymentApi.getPayment(paymentId);
+
+        final PaymentJsonSimple paymentJsonSimple;
+        if (withRefundsAndChargebacks) {
+            final List<RefundJson> refunds = new ArrayList<RefundJson>();
+            for (final Refund refund : paymentApi.getPaymentRefunds(paymentId)) {
+                refunds.add(new RefundJson(refund));
+            }
+
+            final List<ChargebackJson> chargebacks = new ArrayList<ChargebackJson>();
+            for (final InvoicePayment chargeback : invoicePaymentApi.getChargebacksByPaymentId(paymentId)) {
+                chargebacks.add(new ChargebackJson(chargeback));
+            }
+
+            final int nbOfPaymentAttempts = payment.getAttempts().size();
+            final String status = payment.getPaymentStatus().toString();
+            paymentJsonSimple = new PaymentJsonWithBundleKeys(payment,
+                                                              status,
+                                                              nbOfPaymentAttempts,
+                                                              null, // TODO - the keys are really only used for the timeline
+                                                              payment.getAccountId(),
+                                                              refunds,
+                                                              chargebacks);
+        } else {
+            paymentJsonSimple = new PaymentJsonSimple(payment);
+        }
+
+        return Response.status(Status.OK).entity(paymentJsonSimple).build();
     }
 
     @GET
