@@ -295,8 +295,8 @@ public class AuditedInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public InvoicePayment getInvoicePayment(final UUID paymentId) {
-        return invoicePaymentSqlDao.getInvoicePayment(paymentId.toString());
+    public List<InvoicePayment> getInvoicePayments(final UUID paymentId) {
+        return invoicePaymentSqlDao.getInvoicePayments(paymentId.toString());
     }
 
     @Override

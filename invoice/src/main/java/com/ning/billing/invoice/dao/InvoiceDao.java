@@ -51,7 +51,7 @@ public interface InvoiceDao {
 
     UUID getInvoiceIdByPaymentId(final UUID paymentId);
 
-    InvoicePayment getInvoicePayment(final UUID paymentId);
+    List<InvoicePayment> getInvoicePayments(final UUID paymentId);
 
     void notifyOfPayment(final InvoicePayment invoicePayment, final CallContext context);
 

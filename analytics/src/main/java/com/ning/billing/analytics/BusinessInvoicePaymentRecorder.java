@@ -84,8 +84,7 @@ public class BusinessInvoicePaymentRecorder {
             return;
         }
 
-        final InvoicePayment invoicePayment = invoicePaymentApi.getInvoicePayment(paymentId);
-
+        final InvoicePayment invoicePayment = invoicePaymentApi.getInvoicePaymentForAttempt(paymentId);
         final PaymentMethod paymentMethod;
         try {
             paymentMethod = paymentApi.getPaymentMethod(account, payment.getPaymentMethodId(), true);

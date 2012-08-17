@@ -61,7 +61,7 @@ notifyOfPayment() ::= <<
         :paymentCookieId, :linkedInvoicePaymentId, :userName, :createdDate);
 >>
 
-getInvoicePayment() ::= <<
+getInvoicePayments() ::= <<
     SELECT <invoicePaymentFields()>
     FROM invoice_payments
     WHERE payment_id = :paymentId;

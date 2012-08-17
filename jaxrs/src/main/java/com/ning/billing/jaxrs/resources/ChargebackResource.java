@@ -109,7 +109,7 @@ public class ChargebackResource extends JaxRsResourceBase {
                                      @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                      @HeaderParam(HDR_REASON) final String reason,
                                      @HeaderParam(HDR_COMMENT) final String comment) throws InvoiceApiException {
-        final InvoicePayment invoicePayment = invoicePaymentApi.getInvoicePayment(UUID.fromString(json.getPaymentId()));
+        final InvoicePayment invoicePayment = invoicePaymentApi.getInvoicePaymentForAttempt(UUID.fromString(json.getPaymentId()));
         if (invoicePayment == null) {
             throw new InvoiceApiException(ErrorCode.INVOICE_PAYMENT_NOT_FOUND, json.getPaymentId());
         }

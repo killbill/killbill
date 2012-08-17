@@ -80,7 +80,7 @@ public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePayment>, Tran
     public List<InvoicePayment> getPaymentsForInvoice(@Bind("invoiceId") final String invoiceId);
 
     @SqlQuery
-    InvoicePayment getInvoicePayment(@Bind("paymentId") final String paymentId);
+    List<InvoicePayment> getInvoicePayments(@Bind("paymentId") final String paymentId);
 
     @SqlQuery
     InvoicePayment getPaymentsForCookieId(@Bind("paymentCookieId") final String paymentCookieId);

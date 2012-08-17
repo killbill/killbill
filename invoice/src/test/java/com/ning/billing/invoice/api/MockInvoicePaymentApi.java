@@ -18,6 +18,7 @@ package com.ning.billing.invoice.api;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -82,14 +83,26 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi {
     }
 
     @Override
-    public InvoicePayment getInvoicePayment(final UUID paymentId) {
+    public List<InvoicePayment> getInvoicePayments(final UUID paymentId) {
+        List<InvoicePayment> result = new LinkedList<InvoicePayment>();
         for (final InvoicePayment invoicePayment : invoicePayments) {
             if (paymentId.equals(invoicePayment.getPaymentId())) {
+                result.add(invoicePayment);
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public InvoicePayment getInvoicePaymentForAttempt(UUID paymentId) {
+        for (final InvoicePayment invoicePayment : invoicePayments) {
+            if (paymentId.equals(invoicePayment.getPaymentId()) && invoicePayment.getType() == InvoicePaymentType.ATTEMPT) {
                 return invoicePayment;
             }
         }
         return null;
     }
+
 
     @Override
     public void notifyOfPayment(final UUID invoiceId, final BigDecimal amountOutstanding, final Currency currency, final UUID paymentId, final DateTime paymentDate, final CallContext context) {

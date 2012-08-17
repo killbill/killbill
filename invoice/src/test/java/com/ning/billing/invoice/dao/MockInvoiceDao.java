@@ -19,6 +19,7 @@ package com.ning.billing.invoice.dao;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -155,18 +156,18 @@ public class MockInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public InvoicePayment getInvoicePayment(final UUID paymentId) {
+    public List<InvoicePayment> getInvoicePayments(final UUID paymentId) {
+        List<InvoicePayment> result = new LinkedList<InvoicePayment>();
         synchronized (monitor) {
             for (final Invoice invoice : invoices.values()) {
                 for (final InvoicePayment payment : invoice.getPayments()) {
                     if (paymentId.equals(payment.getPaymentId())) {
-                        return payment;
+                        result.add(payment);
                     }
                 }
             }
         }
-
-        return null;
+        return result;
     }
 
     @Override

@@ -38,7 +38,9 @@ public interface InvoicePaymentApi {
 
     public Invoice getInvoiceForPaymentId(UUID paymentId);
 
-    public InvoicePayment getInvoicePayment(UUID paymentId);
+    public List<InvoicePayment> getInvoicePayments(UUID paymentId);
+
+    public InvoicePayment getInvoicePaymentForAttempt(UUID paymentId);
 
     public void notifyOfPayment(InvoicePayment invoicePayment, CallContext context);
 

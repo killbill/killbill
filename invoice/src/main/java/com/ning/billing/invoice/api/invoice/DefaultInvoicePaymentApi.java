@@ -18,6 +18,7 @@
 package com.ning.billing.invoice.api.invoice;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -36,6 +37,8 @@ import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.model.DefaultInvoicePayment;
 import com.ning.billing.util.callcontext.CallContext;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
 
 public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
@@ -71,9 +74,25 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
     }
 
     @Override
-    public InvoicePayment getInvoicePayment(final UUID paymentId) {
-        return dao.getInvoicePayment(paymentId);
+    public List<InvoicePayment> getInvoicePayments(final UUID paymentId) {
+        return dao.getInvoicePayments(paymentId);
     }
+
+
+    @Override
+    public InvoicePayment getInvoicePaymentForAttempt(UUID paymentId) {
+        List<InvoicePayment> invoicePayments = dao.getInvoicePayments(paymentId);
+        if (invoicePayments.size() == 0) {
+            return null;
+        }
+        return Collections2.filter(invoicePayments, new Predicate<InvoicePayment>() {
+            @Override
+            public boolean apply(InvoicePayment input) {
+                return input.getType() == InvoicePaymentType.ATTEMPT;
+            }
+        }).iterator().next();
+    }
+
 
     @Override
     public void notifyOfPayment(final UUID invoiceId, final BigDecimal amount, final Currency currency, final UUID paymentId, final DateTime paymentDate, final CallContext context) {
