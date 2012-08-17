@@ -75,6 +75,7 @@ import com.ning.billing.jaxrs.json.InvoiceItemJsonSimple;
 import com.ning.billing.jaxrs.json.InvoiceJsonSimple;
 import com.ning.billing.jaxrs.json.InvoiceJsonWithItems;
 import com.ning.billing.jaxrs.json.PaymentJsonSimple;
+import com.ning.billing.jaxrs.json.PaymentJsonWithBundleKeys;
 import com.ning.billing.jaxrs.json.PaymentMethodJson;
 import com.ning.billing.jaxrs.json.PaymentMethodJson.PaymentMethodPluginDetailJson;
 import com.ning.billing.jaxrs.json.PaymentMethodJson.PaymentMethodProperties;
@@ -515,7 +516,7 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
         assertNotNull(bundleJson);
         final SubscriptionJsonNoEvents subscriptionJson = createSubscription(bundleJson.getBundleId(), "Shotgun", ProductCategory.BASE.toString(), BillingPeriod.MONTHLY.toString(), true);
         assertNotNull(subscriptionJson);
-        clock.addMonths(1);
+        clock.addDays(32);
         crappyWaitForLackOfProperSynchonization();
 
         return accountJson;
@@ -679,6 +680,26 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
     //
     // PAYMENT UTILITIES
     //
+
+    protected PaymentJsonSimple getPayment(final String paymentId) throws IOException {
+        return doGetPayment(paymentId, DEFAULT_EMPTY_QUERY, PaymentJsonSimple.class);
+    }
+
+    protected PaymentJsonWithBundleKeys getPaymentWithRefundsAndChargebacks(final String paymentId) throws IOException {
+        return doGetPayment(paymentId, ImmutableMap.<String, String>of(JaxrsResource.QUERY_PAYMENT_WITH_REFUNDS_AND_CHARGEBACKS, "true"), PaymentJsonWithBundleKeys.class);
+    }
+
+    protected <T extends PaymentJsonSimple> T doGetPayment(final String paymentId, final Map<String, String> queryParams, final Class<T> clazz) throws IOException {
+        final String paymentURI = JaxrsResource.PAYMENTS_PATH + "/" + paymentId;
+
+        final Response paymentResponse = doGet(paymentURI, queryParams, DEFAULT_HTTP_TIMEOUT_SEC);
+        assertEquals(paymentResponse.getStatusCode(), Status.OK.getStatusCode());
+
+        final T paymentJsonSimple = mapper.readValue(paymentResponse.getResponseBody(), clazz);
+        assertNotNull(paymentJsonSimple);
+
+        return paymentJsonSimple;
+    }
 
     protected PaymentMethodJson getPaymentMethod(final String paymentMethodId) throws IOException {
         final String paymentMethodURI = JaxrsResource.PAYMENT_METHODS_PATH + "/" + paymentMethodId;

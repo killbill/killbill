@@ -33,33 +33,19 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class PaymentJsonSimple extends JsonBase {
 
     private final BigDecimal paidAmount;
-
     private final BigDecimal amount;
-
     private final String accountId;
-
     private final String invoiceId;
-
     private final String paymentId;
-
     private final DateTime requestedDate;
-
     private final DateTime effectiveDate;
-
     private final Integer retryCount;
-
     private final String currency;
-
     private final String status;
-
     private final String gatewayErrorCode;
-
     private final String gatewayErrorMsg;
-
     private final String paymentMethodId;
-
     private final String extFirstPaymentIdRef;
-
     private final String extSecondPaymentIdRef;
 
     @JsonCreator

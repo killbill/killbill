@@ -29,10 +29,19 @@ import com.ning.billing.jaxrs.json.InvoiceItemJsonSimple;
 import com.ning.billing.jaxrs.json.InvoiceJsonSimple;
 import com.ning.billing.jaxrs.json.InvoiceJsonWithItems;
 import com.ning.billing.jaxrs.json.PaymentJsonSimple;
+import com.ning.billing.jaxrs.json.PaymentJsonWithBundleKeys;
 import com.ning.billing.jaxrs.json.PaymentMethodJson;
 import com.ning.billing.jaxrs.json.RefundJson;
 
 public class TestPayment extends TestJaxrsBase {
+
+    @Test(groups = "slow")
+    public void testRetrievePayment() throws Exception {
+        final PaymentJsonSimple paymentJsonSimple = setupScenarioWithPayment();
+
+        final PaymentJsonSimple retrievedPaymentJsonSimple = getPayment(paymentJsonSimple.getPaymentId());
+        Assert.assertEquals(retrievedPaymentJsonSimple, paymentJsonSimple);
+    }
 
     @Test(groups = "slow")
     public void testFullRefundWithNoAdjustment() throws Exception {
@@ -181,6 +190,27 @@ public class TestPayment extends TestJaxrsBase {
         // Verify the refunds
         final List<RefundJson> retrievedRefunds = getRefundsForPayment(paymentJsonSimple.getPaymentId());
         Assert.assertEquals(retrievedRefunds.size(), 1);
+
+        // Verify the refund via the payment API
+        final PaymentJsonWithBundleKeys retrievedPaymentJsonWithBundleKeys = getPaymentWithRefundsAndChargebacks(paymentJsonSimple.getPaymentId());
+        Assert.assertEquals(retrievedPaymentJsonWithBundleKeys.getPaymentId(), paymentJsonSimple.getPaymentId());
+        Assert.assertEquals(retrievedPaymentJsonWithBundleKeys.getPaidAmount(), paymentJsonSimple.getPaidAmount().add(refundAmount.negate()).setScale(2, RoundingMode.HALF_UP));
+        Assert.assertEquals(retrievedPaymentJsonWithBundleKeys.getAmount(), paymentJsonSimple.getAmount());
+        Assert.assertEquals(retrievedPaymentJsonWithBundleKeys.getAccountId(), paymentJsonSimple.getAccountId());
+        Assert.assertEquals(retrievedPaymentJsonWithBundleKeys.getInvoiceId(), paymentJsonSimple.getInvoiceId());
+        Assert.assertEquals(retrievedPaymentJsonWithBundleKeys.getRequestedDate(), paymentJsonSimple.getRequestedDate());
+        Assert.assertEquals(retrievedPaymentJsonWithBundleKeys.getEffectiveDate(), paymentJsonSimple.getEffectiveDate());
+        Assert.assertEquals(retrievedPaymentJsonWithBundleKeys.getRetryCount(), paymentJsonSimple.getRetryCount());
+        Assert.assertEquals(retrievedPaymentJsonWithBundleKeys.getCurrency(), paymentJsonSimple.getCurrency());
+        Assert.assertEquals(retrievedPaymentJsonWithBundleKeys.getStatus(), paymentJsonSimple.getStatus());
+        Assert.assertEquals(retrievedPaymentJsonWithBundleKeys.getGatewayErrorCode(), paymentJsonSimple.getGatewayErrorCode());
+        Assert.assertEquals(retrievedPaymentJsonWithBundleKeys.getGatewayErrorMsg(), paymentJsonSimple.getGatewayErrorMsg());
+        Assert.assertEquals(retrievedPaymentJsonWithBundleKeys.getPaymentMethodId(), paymentJsonSimple.getPaymentMethodId());
+        Assert.assertEquals(retrievedPaymentJsonWithBundleKeys.getExtFirstPaymentIdRef(), paymentJsonSimple.getExtFirstPaymentIdRef());
+        Assert.assertEquals(retrievedPaymentJsonWithBundleKeys.getExtSecondPaymentIdRef(), paymentJsonSimple.getExtSecondPaymentIdRef());
+        Assert.assertEquals(retrievedPaymentJsonWithBundleKeys.getChargebacks().size(), 0);
+        Assert.assertEquals(retrievedPaymentJsonWithBundleKeys.getRefunds().size(), 1);
+        Assert.assertEquals(retrievedPaymentJsonWithBundleKeys.getRefunds().get(0), refundJsonCheck);
     }
 
     private void verifyInvoice(final PaymentJsonSimple paymentJsonSimple, final BigDecimal expectedInvoiceBalance) throws IOException {

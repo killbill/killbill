@@ -65,6 +65,10 @@ public class RefundJson extends JsonBase {
         this.adjustments = adjustments;
     }
 
+    public RefundJson(final Refund refund) {
+        this(refund, null, null);
+    }
+
     public RefundJson(final Refund refund, @Nullable final List<InvoiceItem> adjustments, @Nullable final List<AuditLog> auditLogs) {
         this(refund.getId().toString(), refund.getPaymentId().toString(), refund.getRefundAmount(), refund.getCurrency().toString(),
              refund.isAdjusted(), refund.getEffectiveDate(), refund.getEffectiveDate(),
