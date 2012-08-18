@@ -16,6 +16,8 @@
 
 package com.ning.billing.account.api;
 
+import java.util.List;
+
 import org.joda.time.DateTime;
 
 public interface MigrationAccountData extends AccountData {
@@ -23,4 +25,6 @@ public interface MigrationAccountData extends AccountData {
     public DateTime getCreatedDate();
 
     public DateTime getUpdatedDate();
+
+    public List<String> getAdditionalContactEmails();
 }
