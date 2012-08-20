@@ -57,10 +57,22 @@ public abstract class TestUserApiCancel extends TestApiBase {
             final DateTime future = clock.getUTCNow();
             testListener.pushExpectedEvent(NextEvent.CANCEL);
 
+            assertEquals(subscription.getLastActiveProductName(), prod);
+            assertEquals(subscription.getLastActivePriceListName(), planSet);
+            assertEquals(subscription.getLastActiveBillingPeriod(), term.toString());
+            assertEquals(subscription.getLastActiveCategoryName(), "BASE");
+
+
             // CANCEL in trial period to get IMM policy
             subscription.cancel(clock.getUTCNow(), false, context);
             currentPhase = subscription.getCurrentPhase();
             testListener.isCompleted(3000);
+
+            assertEquals(subscription.getLastActiveProductName(), prod);
+            assertEquals(subscription.getLastActivePriceListName(), planSet);
+            assertEquals(subscription.getLastActiveBillingPeriod(), term.toString());
+            assertEquals(subscription.getLastActiveCategoryName(), "BASE");
+
 
             assertNull(currentPhase);
             checkNextPhaseChange(subscription, 0, null);
@@ -101,12 +113,23 @@ public abstract class TestUserApiCancel extends TestApiBase {
             billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate, context);
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId());
 
+            assertEquals(subscription.getLastActiveProductName(), prod);
+            assertEquals(subscription.getLastActivePriceListName(), planSet);
+            assertEquals(subscription.getLastActiveBillingPeriod(), term.toString());
+            assertEquals(subscription.getLastActiveCategoryName(), "BASE");
+
             // CANCEL
             testListener.setNonExpectedMode();
             testListener.pushExpectedEvent(NextEvent.CANCEL);
             subscription.cancel(clock.getUTCNow(), false, context);
             assertFalse(testListener.isCompleted(3000));
             testListener.reset();
+
+
+            assertEquals(subscription.getLastActiveProductName(), prod);
+            assertEquals(subscription.getLastActivePriceListName(), planSet);
+            assertEquals(subscription.getLastActiveBillingPeriod(), term.toString());
+            assertEquals(subscription.getLastActiveCategoryName(), "BASE");
 
             DateTime futureEndDate = subscription.getFutureEndDate();
             Assert.assertNotNull(futureEndDate);
@@ -123,6 +146,12 @@ public abstract class TestUserApiCancel extends TestApiBase {
             final PlanPhase currentPhase = subscription.getCurrentPhase();
             assertNull(currentPhase);
             checkNextPhaseChange(subscription, 0, null);
+
+            assertEquals(subscription.getLastActiveProductName(), prod);
+            assertEquals(subscription.getLastActivePriceListName(), planSet);
+            assertEquals(subscription.getLastActiveBillingPeriod(), term.toString());
+            assertEquals(subscription.getLastActiveCategoryName(), "BASE");
+
 
             assertListenerStatus();
         } catch (EntitlementUserApiException e) {

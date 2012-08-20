@@ -247,9 +247,9 @@ public class SubscriptionData extends EntityBase implements Subscription {
     public String getLastActiveProductName() {
         if (getState() == SubscriptionState.CANCELLED) {
             final SubscriptionTransitionData data = getPreviousTransitionData();
-            return data.getPreviousPlan().getName();
+            return data.getPreviousPlan().getProduct().getName();
         } else {
-            return getCurrentPlan().getName();
+            return getCurrentPlan().getProduct().getName();
         }
     }
 
