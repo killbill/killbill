@@ -56,4 +56,9 @@ public class MockPriceList implements PriceList {
     public Plan getPlan() {
         return plan;
     }
+
+    @Override
+    public Plan[] getPlans() {
+        return new Plan[] { plan };
+    }
 }

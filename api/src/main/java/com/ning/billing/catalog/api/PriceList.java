@@ -16,7 +16,6 @@
 
 package com.ning.billing.catalog.api;
 
-
 public interface PriceList {
 
     public abstract String getName();
@@ -25,4 +24,5 @@ public interface PriceList {
 
     public abstract Plan findPlan(Product product, BillingPeriod period);
 
+    public Plan[] getPlans();
 }

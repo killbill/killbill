@@ -54,10 +54,12 @@ public class DefaultPriceList extends ValidatingConfig<StandaloneCatalog> implem
         this.name = name;
     }
 
-    protected DefaultPlan[] getPlans() {
+    @Override
+    public DefaultPlan[] getPlans() {
         return plans;
     }
 
+    @Override
     public boolean isRetired() {
         return retired;
     }

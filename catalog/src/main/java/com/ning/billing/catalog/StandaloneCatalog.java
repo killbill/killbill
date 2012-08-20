@@ -351,10 +351,11 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
         for (Plan plan : getCurrentPlans()) {
             if (plan.getProduct().getCategory().equals(ProductCategory.BASE)) {
                 for (PriceList priceList : getPriceLists().getAllPriceLists()) {
-                    Plan planInList = priceList.findPlan(plan.getProduct(), plan.getBillingPeriod());
-
-                    if (planInList != null) {
-                        availBasePlans.add(new DefaultListing(plan, priceList));
+                    for (Plan priceListPlan : priceList.getPlans()) {
+                        if (priceListPlan.getName().equals(plan.getName()) &&
+                            priceListPlan.getProduct().getName().equals(plan.getProduct().getName())) {
+                            availBasePlans.add(new DefaultListing(priceListPlan, priceList));
+                        }
                     }
                 }
             }
