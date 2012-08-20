@@ -243,6 +243,46 @@ public class SubscriptionData extends EntityBase implements Subscription {
         return new DefaultEffectiveSubscriptionEvent(data, alignStartDate);
     }
 
+    @Override
+    public String getLastActiveProductName() {
+        if (getState() == SubscriptionState.CANCELLED) {
+            final SubscriptionTransitionData data = getPreviousTransitionData();
+            return data.getPreviousPlan().getName();
+        } else {
+            return getCurrentPlan().getName();
+        }
+    }
+
+    @Override
+    public String getLastActivePriceListName() {
+        if (getState() == SubscriptionState.CANCELLED) {
+            final SubscriptionTransitionData data = getPreviousTransitionData();
+            return data.getPreviousPriceList().getName();
+        } else {
+            return getCurrentPriceList().getName();
+        }
+    }
+
+    @Override
+    public String getLastActiveCategoryName() {
+        if (getState() == SubscriptionState.CANCELLED) {
+            final SubscriptionTransitionData data = getPreviousTransitionData();
+            return data.getPreviousPlan().getProduct().getCategory().name();
+        } else {
+            return getCurrentPlan().getProduct().getCategory().name();
+        }
+    }
+
+    @Override
+    public String getLastActiveBillingPeriod() {
+        if (getState() == SubscriptionState.CANCELLED) {
+            final SubscriptionTransitionData data = getPreviousTransitionData();
+            return data.getPreviousPlan().getBillingPeriod().name();
+        } else {
+            return getCurrentPlan().getBillingPeriod().name();
+        }
+    }
+
     protected SubscriptionTransitionData getPreviousTransitionData() {
         if (transitions == null) {
             return null;

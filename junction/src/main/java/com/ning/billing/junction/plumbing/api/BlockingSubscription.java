@@ -181,6 +181,26 @@ public class BlockingSubscription implements Subscription {
         return blockingState;
     }
 
+    @Override
+    public String getLastActiveProductName() {
+        return subscription.getLastActiveProductName();
+    }
+
+    @Override
+    public String getLastActivePriceListName() {
+        return subscription.getLastActivePriceListName();
+    }
+
+    @Override
+    public String getLastActiveCategoryName() {
+        return subscription.getLastActiveCategoryName();
+    }
+
+    @Override
+    public String getLastActiveBillingPeriod() {
+        return subscription.getLastActiveBillingPeriod();
+    }
+
     public Subscription getDelegateSubscription() {
         return subscription;
     }

@@ -186,4 +186,28 @@ public class MockSubscription implements Subscription {
     public SubscriptionSourceType getSourceType() {
         return null;
     }
+
+    @Override
+    public String getLastActiveProductName() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String getLastActivePriceListName() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String getLastActiveCategoryName() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String getLastActiveBillingPeriod() {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }

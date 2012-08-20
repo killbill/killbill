@@ -117,8 +117,8 @@ public class BundleResource extends JaxRsResourceBase {
         if (bundle == null) {
             return Response.status(Status.NO_CONTENT).build();
         }
-        final List<Subscription> bundles = entitlementApi.getSubscriptionsForBundle(uuid);
-        final Collection<SubscriptionJsonNoEvents> result = Collections2.transform(bundles, new Function<Subscription, SubscriptionJsonNoEvents>() {
+        final List<Subscription> subscriptions = entitlementApi.getSubscriptionsForBundle(uuid);
+        final Collection<SubscriptionJsonNoEvents> result = Collections2.transform(subscriptions, new Function<Subscription, SubscriptionJsonNoEvents>() {
             @Override
             public SubscriptionJsonNoEvents apply(final Subscription input) {
                 return new SubscriptionJsonNoEvents(input, null);

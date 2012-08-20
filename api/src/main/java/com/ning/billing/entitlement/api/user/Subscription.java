@@ -79,6 +79,14 @@ public interface Subscription extends Entity, Blockable {
 
     public PlanPhase getCurrentPhase();
 
+    public String getLastActiveProductName();
+
+    public String getLastActivePriceListName();
+
+    public String getLastActiveCategoryName();
+
+    public String getLastActiveBillingPeriod();
+
     public DateTime getChargedThroughDate();
 
     public DateTime getPaidThroughDate();

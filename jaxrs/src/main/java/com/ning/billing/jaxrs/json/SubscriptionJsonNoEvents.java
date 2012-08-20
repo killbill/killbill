@@ -22,6 +22,7 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.util.audit.AuditLog;
 
@@ -67,10 +68,10 @@ public class SubscriptionJsonNoEvents extends SubscriptionJsonSimple {
         this(data.getId().toString(),
              data.getBundleId().toString(),
              data.getStartDate(),
-             data.getCurrentPlan() != null ? data.getCurrentPlan().getProduct().getName() : null,
-             data.getCurrentPlan() != null ? data.getCurrentPlan().getProduct().getCategory().toString() : null,
-             data.getCurrentPlan() != null ? data.getCurrentPlan().getBillingPeriod().toString() : null,
-             data.getCurrentPriceList() != null ? data.getCurrentPriceList().getName() : null,
+             data.getLastActiveProductName(),
+             data.getLastActiveCategoryName(),
+             data.getLastActiveBillingPeriod(),
+             data.getLastActivePriceListName(),
              data.getChargedThroughDate(),
              data.getEndDate() != null ? data.getEndDate() : data.getFutureEndDate(),
              toAuditLogJson(auditLogs));
