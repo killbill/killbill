@@ -131,7 +131,7 @@ public class BillingStateCalculatorBundle extends BillingStateCalculator<Subscri
 
     private boolean invoiceHasAnItemFromBundle(final Invoice invoice, final UUID bundleId) {
         for (final InvoiceItem item : invoice.getInvoiceItems()) {
-            if (item.getBundleId().equals(bundleId)) {
+            if (item.getBundleId() != null && item.getBundleId().equals(bundleId)) {
                 return true;
             }
         }

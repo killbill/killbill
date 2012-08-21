@@ -105,6 +105,12 @@ public class TestSubscriptionJsonNoEvents extends JaxrsTestSuite {
         Mockito.when(subscription.getCurrentPlan()).thenReturn(plan);
         Mockito.when(subscription.getCurrentPriceList()).thenReturn(priceList);
         Mockito.when(subscription.getChargedThroughDate()).thenReturn(new DateTime(DateTimeZone.UTC));
+        final String productName = product.getName();
+        Mockito.when(subscription.getLastActiveProductName()).thenReturn(productName);
+        final String productCategory = plan.getProduct().getCategory().toString();
+        Mockito.when(subscription.getLastActiveCategoryName()).thenReturn(productCategory);
+        final String billingPeriod = plan.getBillingPeriod().toString();
+        Mockito.when(subscription.getLastActiveBillingPeriod()).thenReturn(billingPeriod);
 
         final SubscriptionJsonNoEvents subscriptionJsonNoEvents = new SubscriptionJsonNoEvents(subscription, null);
         Assert.assertEquals(subscriptionJsonNoEvents.getSubscriptionId(), subscription.getId().toString());
