@@ -148,7 +148,7 @@ CREATE TABLE audit_log (
     change_type char(6) NOT NULL,
     change_date datetime NOT NULL,
     changed_by varchar(50) NOT NULL,
-    reason_code varchar(20) DEFAULT NULL,
+    reason_code varchar(255) DEFAULT NULL,
     comments varchar(255) DEFAULT NULL,
     user_token char(36),
     account_record_id int(11) unsigned default null,
