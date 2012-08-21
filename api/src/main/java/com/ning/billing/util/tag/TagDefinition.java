@@ -16,16 +16,23 @@
 
 package com.ning.billing.util.tag;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import java.util.List;
+
+import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.entity.Entity;
+
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 // TODO: needs to surface created date, created by
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
 public interface TagDefinition extends Entity {
+
     String getName();
 
     String getDescription();
 
     Boolean isControlTag();
+
+    List<ObjectType> getApplicableObjectTypes();
 }

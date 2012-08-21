@@ -16,26 +16,34 @@
 
 package com.ning.billing.util.tag;
 
+import java.util.List;
 import java.util.UUID;
+
+import com.ning.billing.util.dao.ObjectType;
+
+import com.google.common.collect.ImmutableList;
 
 public enum ControlTagType {
 
-    AUTO_PAY_OFF(new UUID(0, 1), "Suspends payments until removed.", true, false),
-    AUTO_INVOICING_OFF(new UUID(0, 2), "Suspends invoicing until removed.", false, true),
-    OVERDUE_ENFORCEMENT_OFF(new UUID(0, 3), "Suspends overdue enforcement behaviour until removed.", false, false),
-    WRITTEN_OFF(new UUID(0, 4), "Indicates that an invoice is written off. No billing or payment effect.", false, false),
-    MANUAL_PAY(new UUID(0, 5), "Indicates that Killbill doesn't process payments for that account (external payments only)", true, false);
+    AUTO_PAY_OFF(new UUID(0, 1), "Suspends payments until removed.", true, false, ImmutableList.<ObjectType>of(ObjectType.ACCOUNT)),
+    AUTO_INVOICING_OFF(new UUID(0, 2), "Suspends invoicing until removed.", false, true, ImmutableList.<ObjectType>of(ObjectType.ACCOUNT)),
+    OVERDUE_ENFORCEMENT_OFF(new UUID(0, 3), "Suspends overdue enforcement behaviour until removed.", false, false, ImmutableList.<ObjectType>of(ObjectType.ACCOUNT)),
+    WRITTEN_OFF(new UUID(0, 4), "Indicates that an invoice is written off. No billing or payment effect.", false, false, ImmutableList.<ObjectType>of(ObjectType.INVOICE)),
+    MANUAL_PAY(new UUID(0, 5), "Indicates that Killbill doesn't process payments for that account (external payments only)", true, false, ImmutableList.<ObjectType>of(ObjectType.ACCOUNT));
 
     private final UUID id;
     private final String description;
     private final boolean autoPaymentOff;
     private final boolean autoInvoicingOff;
+    private final List<ObjectType> applicableObjectTypes;
 
-    ControlTagType(final UUID id, final String description, final boolean autoPaymentOff, final boolean autoInvoicingOff) {
+    ControlTagType(final UUID id, final String description, final boolean autoPaymentOff, final boolean autoInvoicingOff,
+                   final List<ObjectType> applicableObjectTypes) {
         this.id = id;
         this.description = description;
         this.autoPaymentOff = autoPaymentOff;
         this.autoInvoicingOff = autoInvoicingOff;
+        this.applicableObjectTypes = applicableObjectTypes;
     }
 
     public UUID getId() {
@@ -52,5 +60,9 @@ public enum ControlTagType {
 
     public boolean getAutoInvoicingOff() {
         return this.autoInvoicingOff;
+    }
+
+    public List<ObjectType> getApplicableObjectTypes() {
+        return applicableObjectTypes;
     }
 }

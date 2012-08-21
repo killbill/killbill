@@ -24,6 +24,7 @@ import org.testng.annotations.Test;
 import com.ning.billing.jaxrs.JaxrsTestSuite;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableList;
 
 public class TestTagDefinitionJson extends JaxrsTestSuite {
 
@@ -35,11 +36,13 @@ public class TestTagDefinitionJson extends JaxrsTestSuite {
         final Boolean isControlTag = true;
         final String name = UUID.randomUUID().toString();
         final String description = UUID.randomUUID().toString();
-        final TagDefinitionJson tagDefinitionJson = new TagDefinitionJson(id, isControlTag, name, description);
+        final ImmutableList<String> applicableObjectTypes = ImmutableList.<String>of(UUID.randomUUID().toString());
+        final TagDefinitionJson tagDefinitionJson = new TagDefinitionJson(id, isControlTag, name, description, applicableObjectTypes);
         Assert.assertEquals(tagDefinitionJson.getId(), id);
         Assert.assertEquals(tagDefinitionJson.isControlTag(), isControlTag);
         Assert.assertEquals(tagDefinitionJson.getName(), name);
         Assert.assertEquals(tagDefinitionJson.getDescription(), description);
+        Assert.assertEquals(tagDefinitionJson.getApplicableObjectTypes(), applicableObjectTypes);
 
         final String asJson = mapper.writeValueAsString(tagDefinitionJson);
         final TagDefinitionJson fromJson = mapper.readValue(asJson, TagDefinitionJson.class);

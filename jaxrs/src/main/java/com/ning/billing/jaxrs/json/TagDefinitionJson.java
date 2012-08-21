@@ -16,12 +16,18 @@
 
 package com.ning.billing.jaxrs.json;
 
+import java.util.List;
+
 import javax.annotation.Nullable;
 
+import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.tag.TagDefinition;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
 
 public class TagDefinitionJson {
 
@@ -29,20 +35,33 @@ public class TagDefinitionJson {
     private final Boolean isControlTag;
     private final String name;
     private final String description;
+    private final List<String> applicableObjectTypes;
 
     @JsonCreator
     public TagDefinitionJson(@JsonProperty("id") final String id,
                              @JsonProperty("isControlTag") final Boolean isControlTag,
                              @JsonProperty("name") final String name,
-                             @JsonProperty("description") @Nullable final String description) {
+                             @JsonProperty("description") @Nullable final String description,
+                             @JsonProperty("applicableObjectTypes") @Nullable final List<String> applicableObjectTypes) {
         this.id = id;
         this.isControlTag = isControlTag;
         this.name = name;
         this.description = description;
+        this.applicableObjectTypes = applicableObjectTypes;
     }
 
     public TagDefinitionJson(final TagDefinition tagDefinition) {
-        this(tagDefinition.getId().toString(), tagDefinition.isControlTag(), tagDefinition.getName(), tagDefinition.getDescription());
+        this(tagDefinition.getId().toString(), tagDefinition.isControlTag(), tagDefinition.getName(),
+             tagDefinition.getDescription(), ImmutableList.<String>copyOf(Collections2.transform(tagDefinition.getApplicableObjectTypes(), new Function<ObjectType, String>() {
+            @Override
+            public String apply(@Nullable final ObjectType input) {
+                if (input == null) {
+                    return "";
+                } else {
+                    return input.toString();
+                }
+            }
+        })));
     }
 
     public String getId() {
@@ -62,6 +81,10 @@ public class TagDefinitionJson {
         return description;
     }
 
+    public List<String> getApplicableObjectTypes() {
+        return applicableObjectTypes;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
@@ -70,6 +93,7 @@ public class TagDefinitionJson {
         sb.append(", isControlTag=").append(isControlTag);
         sb.append(", name='").append(name).append('\'');
         sb.append(", description='").append(description).append('\'');
+        sb.append(", applicableObjectTypes='").append(applicableObjectTypes).append('\'');
         sb.append('}');
         return sb.toString();
     }
@@ -105,6 +129,9 @@ public class TagDefinitionJson {
         if (name != null ? !name.equals(that.name) : that.name != null) {
             return false;
         }
+        if (applicableObjectTypes != null ? !applicableObjectTypes.equals(that.applicableObjectTypes) : that.applicableObjectTypes != null) {
+            return false;
+        }
 
         return true;
     }
@@ -115,6 +142,7 @@ public class TagDefinitionJson {
         result = 31 * result + (isControlTag != null ? isControlTag.hashCode() : 0);
         result = 31 * result + (name != null ? name.hashCode() : 0);
         result = 31 * result + (description != null ? description.hashCode() : 0);
+        result = 31 * result + (applicableObjectTypes != null ? applicableObjectTypes.hashCode() : 0);
         return result;
     }
 }

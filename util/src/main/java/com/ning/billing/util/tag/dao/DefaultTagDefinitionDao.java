@@ -63,16 +63,16 @@ public class DefaultTagDefinitionDao implements TagDefinitionDao {
 
         // Add control tag definitions
         for (final ControlTagType controlTag : ControlTagType.values()) {
-            definitionList.add(new DefaultTagDefinition(controlTag.getId(), controlTag.toString(), controlTag.getDescription(), true));
+            definitionList.add(new DefaultTagDefinition(controlTag));
         }
         return definitionList;
     }
 
     @Override
-    public TagDefinition getByName(String definitionName) {
+    public TagDefinition getByName(final String definitionName) {
         for (final ControlTagType controlTag : ControlTagType.values()) {
             if (controlTag.name().equals(definitionName)) {
-                return new DefaultTagDefinition(controlTag.getId(), controlTag.toString(), controlTag.getDescription(), true);
+                return new DefaultTagDefinition(controlTag);
             }
          }
         return tagDefinitionSqlDao.getByName(definitionName);
@@ -83,7 +83,7 @@ public class DefaultTagDefinitionDao implements TagDefinitionDao {
     public TagDefinition getById(final UUID definitionId) {
         for (final ControlTagType controlTag : ControlTagType.values()) {
             if (controlTag.getId().equals(definitionId)) {
-                return new DefaultTagDefinition(controlTag.getId(), controlTag.toString(), controlTag.getDescription(), true);
+                return new DefaultTagDefinition(controlTag);
             }
         }
         return tagDefinitionSqlDao.getById(definitionId.toString());
@@ -91,12 +91,11 @@ public class DefaultTagDefinitionDao implements TagDefinitionDao {
 
     @Override
     public List<TagDefinition> getByIds(final Collection<UUID> definitionIds) {
-
-        List<TagDefinition> result = new LinkedList<TagDefinition>();
+        final List<TagDefinition> result = new LinkedList<TagDefinition>();
         for (final UUID cur : definitionIds) {
             for (final ControlTagType controlTag : ControlTagType.values()) {
                 if (controlTag.getId().equals(cur)) {
-                    result.add(new DefaultTagDefinition(controlTag.getId(), controlTag.toString(), controlTag.getDescription(), true));
+                    result.add(new DefaultTagDefinition(controlTag));
                     break;
                 }
             }

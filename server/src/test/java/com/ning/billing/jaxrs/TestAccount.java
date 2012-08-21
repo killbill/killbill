@@ -44,6 +44,7 @@ import com.ning.billing.jaxrs.resources.JaxrsResource;
 import com.ning.http.client.Response;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import static org.testng.Assert.assertEquals;
@@ -259,7 +260,8 @@ public class TestAccount extends TestJaxrsBase {
     public void testTags() throws Exception {
 
         // Use tag definition for AUTO_PAY_OFF
-        final TagDefinitionJson input = new TagDefinitionJson(new UUID(0, 1).toString(), "AUTO_PAY_OFF", "nothing more to say");
+        final TagDefinitionJson input = new TagDefinitionJson(new UUID(0, 1).toString(), false, "AUTO_PAY_OFF",
+                                                              "nothing more to say", ImmutableList.<String>of());
 
         final Map<String, String> queryParams = new HashMap<String, String>();
         queryParams.put(JaxrsResource.QUERY_TAGS, input.getId());
