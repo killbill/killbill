@@ -19,7 +19,7 @@ package com.ning.billing.util.tag;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.ning.billing.util.entity.Entity;
 
-// TODO: needs to surface created date, created by, isControlTag
+// TODO: needs to surface created date, created by
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
 public interface TagDefinition extends Entity {

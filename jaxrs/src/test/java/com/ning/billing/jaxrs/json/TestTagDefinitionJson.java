@@ -21,26 +21,27 @@ import java.util.UUID;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ning.billing.jaxrs.JaxrsTestSuite;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 public class TestTagDefinitionJson extends JaxrsTestSuite {
+
     private static final ObjectMapper mapper = new ObjectMapper();
 
     @Test(groups = "fast")
     public void testJson() throws Exception {
         final String id = UUID.randomUUID().toString();
+        final Boolean isControlTag = true;
         final String name = UUID.randomUUID().toString();
         final String description = UUID.randomUUID().toString();
-        final TagDefinitionJson tagDefinitionJson = new TagDefinitionJson(id, name, description);
+        final TagDefinitionJson tagDefinitionJson = new TagDefinitionJson(id, isControlTag, name, description);
+        Assert.assertEquals(tagDefinitionJson.getId(), id);
+        Assert.assertEquals(tagDefinitionJson.isControlTag(), isControlTag);
         Assert.assertEquals(tagDefinitionJson.getName(), name);
         Assert.assertEquals(tagDefinitionJson.getDescription(), description);
 
         final String asJson = mapper.writeValueAsString(tagDefinitionJson);
-        Assert.assertEquals(asJson, "{\"id\":\"" + tagDefinitionJson.getId() + "\"," +
-                "\"name\":\"" + tagDefinitionJson.getName() + "\"," +
-                "\"description\":\"" + tagDefinitionJson.getDescription() + "\"}");
-
         final TagDefinitionJson fromJson = mapper.readValue(asJson, TagDefinitionJson.class);
         Assert.assertEquals(fromJson, tagDefinitionJson);
     }

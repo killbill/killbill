@@ -26,24 +26,32 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class TagDefinitionJson {
 
     private final String id;
+    private final Boolean isControlTag;
     private final String name;
     private final String description;
 
     @JsonCreator
     public TagDefinitionJson(@JsonProperty("id") final String id,
+                             @JsonProperty("isControlTag") final Boolean isControlTag,
                              @JsonProperty("name") final String name,
                              @JsonProperty("description") @Nullable final String description) {
         this.id = id;
+        this.isControlTag = isControlTag;
         this.name = name;
         this.description = description;
     }
 
     public TagDefinitionJson(final TagDefinition tagDefinition) {
-        this(tagDefinition.getId().toString(), tagDefinition.getName(), tagDefinition.getDescription());
+        this(tagDefinition.getId().toString(), tagDefinition.isControlTag(), tagDefinition.getName(), tagDefinition.getDescription());
     }
 
     public String getId() {
         return id;
+    }
+
+    @JsonProperty("isControlTag")
+    public Boolean isControlTag() {
+        return isControlTag;
     }
 
     public String getName() {
@@ -55,49 +63,58 @@ public class TagDefinitionJson {
     }
 
     @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result
-                 + ((description == null) ? 0 : description.hashCode());
-        result = prime * result + ((name == null) ? 0 : name.hashCode());
-        result = prime * result
-                 + ((id == null) ? 0 : id.hashCode());
-        return result;
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append("TagDefinitionJson");
+        sb.append("{id='").append(id).append('\'');
+        sb.append(", isControlTag=").append(isControlTag);
+        sb.append(", name='").append(name).append('\'');
+        sb.append(", description='").append(description).append('\'');
+        sb.append('}');
+        return sb.toString();
     }
 
-    public boolean equalsNoId(Object obj) {
-        if (this == obj)
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
             return true;
-        if (obj == null)
+        }
+        if (o == null || getClass() != o.getClass()) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+
+        final TagDefinitionJson that = (TagDefinitionJson) o;
+
+        if (!equalsNoId(that)) {
             return false;
-        TagDefinitionJson other = (TagDefinitionJson) obj;
-        if (description == null) {
-            if (other.description != null)
-                return false;
-        } else if (!description.equals(other.description))
+        }
+        if (id != null ? !id.equals(that.id) : that.id != null) {
             return false;
-        if (name == null) {
-            if (other.name != null)
-                return false;
-        } else if (!name.equals(other.name))
+        }
+
+        return true;
+    }
+
+    public boolean equalsNoId(final TagDefinitionJson that) {
+        if (description != null ? !description.equals(that.description) : that.description != null) {
             return false;
+        }
+        if (isControlTag != null ? !isControlTag.equals(that.isControlTag) : that.isControlTag != null) {
+            return false;
+        }
+        if (name != null ? !name.equals(that.name) : that.name != null) {
+            return false;
+        }
+
         return true;
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (!equalsNoId(obj)) {
-            return false;
-        }
-        TagDefinitionJson other = (TagDefinitionJson) obj;
-        if (id == null) {
-            if (other.id != null)
-                return false;
-        } else if (!id.equals(other.id))
-            return false;
-        return true;
+    public int hashCode() {
+        int result = id != null ? id.hashCode() : 0;
+        result = 31 * result + (isControlTag != null ? isControlTag.hashCode() : 0);
+        result = 31 * result + (name != null ? name.hashCode() : 0);
+        result = 31 * result + (description != null ? description.hashCode() : 0);
+        return result;
     }
 }
