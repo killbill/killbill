@@ -77,6 +77,9 @@ public interface JaxrsResource {
     public static final String ACCOUNTS = "accounts";
     public static final String ACCOUNTS_PATH = PREFIX + "/" + ACCOUNTS;
 
+    public static final String ANALYTICS = "analytics";
+    public static final String ANALYTICS_PATH = PREFIX + "/" + ANALYTICS;
+
     public static final String BUNDLES = "bundles";
     public static final String BUNDLES_PATH = PREFIX + "/" + BUNDLES;
 

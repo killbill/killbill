@@ -16,14 +16,13 @@
 
 package com.ning.billing.analytics.setup;
 
-
-import com.google.inject.AbstractModule;
 import com.ning.billing.analytics.AnalyticsListener;
 import com.ning.billing.analytics.BusinessAccountRecorder;
 import com.ning.billing.analytics.BusinessSubscriptionTransitionRecorder;
 import com.ning.billing.analytics.BusinessTagRecorder;
 import com.ning.billing.analytics.api.AnalyticsService;
 import com.ning.billing.analytics.api.DefaultAnalyticsService;
+import com.ning.billing.analytics.api.user.AnalyticsUserApi;
 import com.ning.billing.analytics.api.user.DefaultAnalyticsUserApi;
 import com.ning.billing.analytics.dao.AnalyticsDao;
 import com.ning.billing.analytics.dao.BusinessAccountSqlDao;
@@ -42,7 +41,10 @@ import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionSqlDao;
 import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionTagSqlDao;
 import com.ning.billing.analytics.dao.DefaultAnalyticsDao;
 
+import com.google.inject.AbstractModule;
+
 public class AnalyticsModule extends AbstractModule {
+
     @Override
     protected void configure() {
         bind(BusinessAccountSqlDao.class).toProvider(new BusinessSqlProvider<BusinessAccountSqlDao>(BusinessAccountSqlDao.class));
@@ -68,5 +70,6 @@ public class AnalyticsModule extends AbstractModule {
         bind(AnalyticsService.class).to(DefaultAnalyticsService.class).asEagerSingleton();
 
         bind(DefaultAnalyticsUserApi.class).asEagerSingleton();
+        bind(AnalyticsUserApi.class).to(DefaultAnalyticsUserApi.class).asEagerSingleton();
     }
 }
