@@ -42,11 +42,14 @@ import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
+import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.junction.api.BlockingApi;
+import com.ning.billing.junction.api.BlockingApiException;
 import com.ning.billing.overdue.OverdueUserApi;
 import com.ning.billing.overdue.config.OverdueConfig;
 import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
@@ -61,6 +64,7 @@ import static com.jayway.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 @Test(groups = "slow")
 @Guice(modules = {BeatrixModule.class})
@@ -197,8 +201,8 @@ public class TestOverdueIntegration extends TestIntegrationBase {
 
         // set next invoice to fail and create subscription
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.INVOICE);
-        final SubscriptionData baseSubscription = subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(),
-                                                                                                                   new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, context));
+        final Subscription baseSubscription = entitlementUserApi.createSubscription(bundle.getId(), new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, context);
+
         assertNotNull(baseSubscription);
         assertTrue(busHandler.isCompleted(DELAY));
 
@@ -221,23 +225,27 @@ public class TestOverdueIntegration extends TestIntegrationBase {
 
         //Now we should be in OD1
         checkODState("OD1");
+        checkChangePlanWithOverdueState(baseSubscription, true);
 
         clock.addDays(2); //DAY 67 - 37 days after invoice
         assertTrue(busHandler.isCompleted(DELAY));
         // should still be in OD1
         checkODState("OD1");
+        checkChangePlanWithOverdueState(baseSubscription, true);
 
         //busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT_ERROR);
         clock.addDays(8); //DAY 75 - 45 days after invoice
         assertTrue(busHandler.isCompleted(DELAY));
         // should still be in OD1
         checkODState("OD2");
+        checkChangePlanWithOverdueState(baseSubscription, true);
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT_ERROR);
         clock.addDays(10); //DAY 85 - 55 days after invoice
         assertTrue(busHandler.isCompleted(DELAY));
         // should now be in OD2 state once the update is processed
         checkODState("OD3");
+        checkChangePlanWithOverdueState(baseSubscription, true);
 
         paymentPlugin.makeAllInvoicesFailWithError(false);
         final Collection<Invoice> invoices = invoiceApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday());
@@ -252,7 +260,23 @@ public class TestOverdueIntegration extends TestIntegrationBase {
         }
 
         checkODState(BlockingApi.CLEAR_STATE_NAME);
+        checkChangePlanWithOverdueState(baseSubscription, false);
 
+    }
+
+    private void checkChangePlanWithOverdueState(final Subscription subscription, final boolean shouldFail) {
+        try {
+            subscription.changePlan("Pistol", term, planSetName, clock.getUTCNow(), context);
+            if (shouldFail) {
+                fail("Expected change plan to fail because of OD1 state");
+            }
+        } catch(EntitlementUserApiException expected) {
+            if (shouldFail) {
+                assertTrue(expected.getCause() instanceof BlockingApiException);
+            } else {
+                fail("Expected change plan to succeed because of clean OD state");
+            }
+        }
     }
 
     private void checkODState(final String expected) {
