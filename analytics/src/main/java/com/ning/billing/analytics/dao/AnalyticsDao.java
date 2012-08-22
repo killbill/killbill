@@ -18,6 +18,7 @@ package com.ning.billing.analytics.dao;
 
 import java.util.List;
 
+import com.ning.billing.analytics.api.TimeSeriesData;
 import com.ning.billing.analytics.model.BusinessAccount;
 import com.ning.billing.analytics.model.BusinessAccountTag;
 import com.ning.billing.analytics.model.BusinessInvoice;
@@ -27,6 +28,9 @@ import com.ning.billing.analytics.model.BusinessOverdueStatus;
 import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
 
 public interface AnalyticsDao {
+
+    TimeSeriesData getAccountsCreatedOverTime();
+
     BusinessAccount getAccountByKey(final String accountKey);
 
     List<BusinessSubscriptionTransition> getTransitionsByKey(final String externalKey);

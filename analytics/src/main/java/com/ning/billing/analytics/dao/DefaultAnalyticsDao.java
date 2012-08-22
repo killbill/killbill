@@ -16,9 +16,12 @@
 
 package com.ning.billing.analytics.dao;
 
-import javax.inject.Inject;
 import java.util.List;
 
+import javax.inject.Inject;
+
+import com.ning.billing.analytics.api.DefaultTimeSeriesData;
+import com.ning.billing.analytics.api.TimeSeriesData;
 import com.ning.billing.analytics.model.BusinessAccount;
 import com.ning.billing.analytics.model.BusinessAccountTag;
 import com.ning.billing.analytics.model.BusinessInvoice;
@@ -28,6 +31,7 @@ import com.ning.billing.analytics.model.BusinessOverdueStatus;
 import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
 
 public class DefaultAnalyticsDao implements AnalyticsDao {
+
     private final BusinessAccountSqlDao accountSqlDao;
     private final BusinessSubscriptionTransitionSqlDao subscriptionTransitionSqlDao;
     private final BusinessInvoiceSqlDao invoiceSqlDao;
@@ -51,6 +55,11 @@ public class DefaultAnalyticsDao implements AnalyticsDao {
         this.accountTagSqlDao = accountTagSqlDao;
         this.overdueStatusSqlDao = overdueStatusSqlDao;
         this.invoicePaymentSqlDao = invoicePaymentSqlDao;
+    }
+
+    @Override
+    public TimeSeriesData getAccountsCreatedOverTime() {
+        return new DefaultTimeSeriesData(accountSqlDao.getAccountsCreatedOverTime());
     }
 
     @Override

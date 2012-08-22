@@ -1,5 +1,16 @@
 group BusinessAccount;
 
+getAccountsCreatedOverTime() ::= <<
+  select
+    date(from_unixtime(created_date / 1000)) day
+    -- TODO: use account_record_id, once populated
+  , count(record_id) count
+  from bac
+  group by 1
+  order by 1
+  ;
+>>
+
 getAccount(account_id) ::= <<
   select
     account_id

@@ -16,10 +16,12 @@
 
 package com.ning.billing.analytics.api.user;
 
-import javax.inject.Inject;
 import java.util.List;
 import java.util.UUID;
 
+import javax.inject.Inject;
+
+import com.ning.billing.analytics.api.TimeSeriesData;
 import com.ning.billing.analytics.dao.AnalyticsDao;
 import com.ning.billing.analytics.model.BusinessAccount;
 import com.ning.billing.analytics.model.BusinessAccountTag;
@@ -29,14 +31,21 @@ import com.ning.billing.analytics.model.BusinessInvoicePayment;
 import com.ning.billing.analytics.model.BusinessOverdueStatus;
 import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
 
-// Note: not exposed in api yet
-public class DefaultAnalyticsUserApi {
+public class DefaultAnalyticsUserApi implements AnalyticsUserApi {
+
     private final AnalyticsDao analyticsDao;
 
     @Inject
     public DefaultAnalyticsUserApi(final AnalyticsDao analyticsDao) {
         this.analyticsDao = analyticsDao;
     }
+
+    @Override
+    public TimeSeriesData getAccountsCreatedOverTime() {
+        return analyticsDao.getAccountsCreatedOverTime();
+    }
+
+    // Note: the following is not exposed in api yet, as the models need to be extracted first
 
     public BusinessAccount getAccountByKey(final String accountKey) {
         return analyticsDao.getAccountByKey(accountKey);
