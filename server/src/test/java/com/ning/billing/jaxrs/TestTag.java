@@ -27,6 +27,7 @@ import com.ning.billing.jaxrs.resources.JaxrsResource;
 import com.ning.http.client.Response;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -36,7 +37,7 @@ public class TestTag extends TestJaxrsBase {
 
     @Test(groups = "slow")
     public void testTagDefinitionOk() throws Exception {
-        final TagDefinitionJson input = new TagDefinitionJson(null, "blue", "relaxing color");
+        final TagDefinitionJson input = new TagDefinitionJson(null, false, "blue", "relaxing color", ImmutableList.<String>of());
         String baseJson = mapper.writeValueAsString(input);
         Response response = doPost(JaxrsResource.TAG_DEFINITIONS_PATH, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
@@ -51,7 +52,8 @@ public class TestTag extends TestJaxrsBase {
         baseJson = response.getResponseBody();
         final TagDefinitionJson objFromJson = mapper.readValue(baseJson, TagDefinitionJson.class);
         assertNotNull(objFromJson);
-        assertTrue(objFromJson.equalsNoId(input));
+        assertEquals(objFromJson.getName(), input.getName());
+        assertEquals(objFromJson.getDescription(), input.getDescription());
     }
 
     @Test(groups = "slow")
@@ -63,22 +65,22 @@ public class TestTag extends TestJaxrsBase {
         List<TagDefinitionJson> objFromJson = mapper.readValue(baseJson, new TypeReference<List<TagDefinitionJson>>() {});
         final int sizeSystemTag = (objFromJson == null || objFromJson.size() == 0) ? 0 : objFromJson.size();
 
-        final TagDefinitionJson inputBlue = new TagDefinitionJson(null, "blue", "relaxing color");
+        final TagDefinitionJson inputBlue = new TagDefinitionJson(null, false, "blue", "relaxing color", ImmutableList.<String>of());
         baseJson = mapper.writeValueAsString(inputBlue);
         response = doPost(JaxrsResource.TAG_DEFINITIONS_PATH, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
 
-        final TagDefinitionJson inputRed = new TagDefinitionJson(null, "red", "hot color");
+        final TagDefinitionJson inputRed = new TagDefinitionJson(null, false, "red", "hot color", ImmutableList.<String>of());
         baseJson = mapper.writeValueAsString(inputRed);
         response = doPost(JaxrsResource.TAG_DEFINITIONS_PATH, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
 
-        final TagDefinitionJson inputYellow = new TagDefinitionJson(null, "yellow", "vibrant color");
+        final TagDefinitionJson inputYellow = new TagDefinitionJson(null, false, "yellow", "vibrant color", ImmutableList.<String>of());
         baseJson = mapper.writeValueAsString(inputYellow);
         response = doPost(JaxrsResource.TAG_DEFINITIONS_PATH, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
 
-        final TagDefinitionJson inputGreen = new TagDefinitionJson(null, "green", "super relaxing color");
+        final TagDefinitionJson inputGreen = new TagDefinitionJson(null, false, "green", "super relaxing color", ImmutableList.<String>of());
         baseJson = mapper.writeValueAsString(inputGreen);
         response = doPost(JaxrsResource.TAG_DEFINITIONS_PATH, baseJson, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
         assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());

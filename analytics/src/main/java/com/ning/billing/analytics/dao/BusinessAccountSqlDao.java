@@ -16,6 +16,8 @@
 
 package com.ning.billing.analytics.dao;
 
+import java.util.List;
+
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
@@ -27,8 +29,12 @@ import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTempla
 import com.ning.billing.analytics.model.BusinessAccount;
 
 @ExternalizedSqlViaStringTemplate3()
-@RegisterMapper(BusinessAccountMapper.class)
+@RegisterMapper({BusinessAccountMapper.class, TimeSeriesTupleMapper.class})
 public interface BusinessAccountSqlDao extends Transactional<BusinessAccountSqlDao>, Transmogrifier {
+
+    @SqlQuery
+    List<TimeSeriesTuple> getAccountsCreatedOverTime();
+
     @SqlQuery
     BusinessAccount getAccount(@Bind("account_id") final String accountId);
 

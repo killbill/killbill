@@ -73,14 +73,14 @@ public class AuditedTagDao extends AuditedCollectionDaoBase<Tag, Tag> implements
         throws TagApiException {
 
         TagDefinition tagDefintion = null;
-        for (ControlTagType t : ControlTagType.values()) {
+        for (final ControlTagType t : ControlTagType.values()) {
             if (t.getId().equals(tagDefinitionId)) {
-                tagDefintion = new DefaultTagDefinition(t.getId(), t.toString(), t.getDescription(), true);
+                tagDefintion = new DefaultTagDefinition(t);
                 break;
             }
         }
         if (tagDefintion == null) {
-            TagDefinitionSqlDao transTagDefintionSqlDao = tagSqlDao.become(TagDefinitionSqlDao.class);
+            final TagDefinitionSqlDao transTagDefintionSqlDao = tagSqlDao.become(TagDefinitionSqlDao.class);
             tagDefintion = transTagDefintionSqlDao.getById(tagDefinitionId.toString());
         }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2012 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -14,25 +14,19 @@
  * under the License.
  */
 
-package com.ning.billing.util.tag;
+package com.ning.billing.analytics.dao;
 
-import java.util.List;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
-import com.ning.billing.util.dao.ObjectType;
-import com.ning.billing.util.entity.Entity;
+import org.joda.time.LocalDate;
+import org.skife.jdbi.v2.StatementContext;
+import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+public class TimeSeriesTupleMapper implements ResultSetMapper<TimeSeriesTuple> {
 
-// TODO: needs to surface created date, created by
-
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
-public interface TagDefinition extends Entity {
-
-    String getName();
-
-    String getDescription();
-
-    Boolean isControlTag();
-
-    List<ObjectType> getApplicableObjectTypes();
+    @Override
+    public TimeSeriesTuple map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
+        return new TimeSeriesTuple(new LocalDate(r.getDate(1)), r.getDouble(2));
+    }
 }

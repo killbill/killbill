@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2012 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -14,25 +14,21 @@
  * under the License.
  */
 
-package com.ning.billing.util.tag;
+package com.ning.billing.analytics.api;
 
 import java.util.List;
 
-import com.ning.billing.util.dao.ObjectType;
-import com.ning.billing.util.entity.Entity;
+import org.joda.time.LocalDate;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+public interface TimeSeriesData {
 
-// TODO: needs to surface created date, created by
+    /**
+     * @return sorted list of dates, in UTC
+     */
+    public List<LocalDate> getDates();
 
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
-public interface TagDefinition extends Entity {
-
-    String getName();
-
-    String getDescription();
-
-    Boolean isControlTag();
-
-    List<ObjectType> getApplicableObjectTypes();
+    /**
+     * @return sorted list of values associated with the dates
+     */
+    public List<Double> getValues();
 }
