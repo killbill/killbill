@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -133,7 +133,7 @@ public class TestRepairWithAO extends TestApiBaseRepair {
             validateExistingEventForAssertion(e, aoRepair2.getExistingEvents().get(index++));
         }
 
-        // Check expected for BP        
+        // Check expected for BP
         final List<ExistingEvent> expectedBP = new LinkedList<SubscriptionTimeline.ExistingEvent>();
         expectedBP.add(createExistingEventForAssertion(SubscriptionTransitionType.CREATE, "Shotgun", PhaseType.TRIAL,
                                                        ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.NO_BILLING_PERIOD, baseSubscription.getStartDate()));
@@ -267,7 +267,7 @@ public class TestRepairWithAO extends TestApiBaseRepair {
             validateExistingEventForAssertion(e, aoRepair.getExistingEvents().get(index++));
         }
 
-        // Check expected for BP        
+        // Check expected for BP
         final List<ExistingEvent> expectedBP = new LinkedList<SubscriptionTimeline.ExistingEvent>();
         expectedBP.add(createExistingEventForAssertion(SubscriptionTransitionType.CREATE, "Shotgun", PhaseType.TRIAL,
                                                        ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.NO_BILLING_PERIOD, baseSubscription.getStartDate()));
@@ -347,7 +347,7 @@ public class TestRepairWithAO extends TestApiBaseRepair {
 
         // SET CTD to BASE SUBSCRIPTION SP CANCEL OCCURS EOT
         final DateTime newChargedThroughDate = baseSubscription.getStartDate().plusDays(30).plusMonths(1);
-        billingApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate, context);
+        billingApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate.toLocalDate(), context);
         baseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId());
 
         BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId());
@@ -388,7 +388,7 @@ public class TestRepairWithAO extends TestApiBaseRepair {
             validateExistingEventForAssertion(e, aoRepair.getExistingEvents().get(index++));
         }
 
-        // Check expected for BP        
+        // Check expected for BP
         final List<ExistingEvent> expectedBP = new LinkedList<SubscriptionTimeline.ExistingEvent>();
         expectedBP.add(createExistingEventForAssertion(SubscriptionTransitionType.CREATE, "Shotgun", PhaseType.TRIAL,
                                                        ProductCategory.BASE, PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.NO_BILLING_PERIOD, baseSubscription.getStartDate()));

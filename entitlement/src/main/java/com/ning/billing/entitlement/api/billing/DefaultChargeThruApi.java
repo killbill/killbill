@@ -19,6 +19,8 @@ package com.ning.billing.entitlement.api.billing;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
+import org.joda.time.LocalTime;
 
 import com.google.inject.Inject;
 import com.ning.billing.entitlement.api.SubscriptionFactory;
@@ -44,11 +46,11 @@ public class DefaultChargeThruApi implements ChargeThruApi {
     }
 
     @Override
-    public void setChargedThroughDate(final UUID subscriptionId, final DateTime ctd, final CallContext context) {
+    public void setChargedThroughDate(final UUID subscriptionId, final LocalDate ctd, final CallContext context) {
         final SubscriptionData subscription = (SubscriptionData) entitlementDao.getSubscriptionFromId(subscriptionFactory, subscriptionId);
-
+        final DateTime chargedThroughDate = ctd.toDateTime(new LocalTime(subscription.getStartDate()));
         final SubscriptionBuilder builder = new SubscriptionBuilder(subscription)
-                .setChargedThroughDate(ctd)
+                .setChargedThroughDate(chargedThroughDate)
                 .setPaidThroughDate(subscription.getPaidThroughDate());
         entitlementDao.updateChargedThroughDate(new SubscriptionData(builder), context);
     }

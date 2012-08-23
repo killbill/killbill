@@ -18,7 +18,7 @@ package com.ning.billing.entitlement.api.billing;
 
 import java.util.UUID;
 
-import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 
 import com.ning.billing.util.callcontext.CallContext;
 
@@ -37,5 +37,5 @@ public interface ChargeThruApi {
      * @param ctd
      * @param context
      */
-    public void setChargedThroughDate(UUID subscriptionId, DateTime ctd, CallContext context);
+    public void setChargedThroughDate(UUID subscriptionId, LocalDate localChargedThruDate, CallContext context);
 }

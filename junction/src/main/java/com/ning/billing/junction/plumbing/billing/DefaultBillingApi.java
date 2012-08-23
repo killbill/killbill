@@ -22,6 +22,7 @@ import java.util.SortedSet;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -178,7 +179,7 @@ public class DefaultBillingApi implements BillingApi {
     }
 
     @Override
-    public void setChargedThroughDate(final UUID subscriptionId, final DateTime ctd, final CallContext context) {
+    public void setChargedThroughDate(final UUID subscriptionId, final LocalDate ctd, final CallContext context) {
         chargeThruApi.setChargedThroughDate(subscriptionId, ctd, context);
     }
 }

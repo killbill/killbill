@@ -365,48 +365,44 @@ public class TestIntegration extends TestIntegrationBase {
         clock.setDeltaFromReality(initialCreationDate.getMillis() - clock.getUTCNow().getMillis());
         final SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever", context);
 
+        int invoiceItemCount = 1;
 
         //
         // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
         //
         SubscriptionData subscription = subscriptionDataFromSubscription(createSubscriptionAndCheckForCompletion(bundle.getId(), "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE));
-        invoiceChecker.checkInvoice(account.getId(), 1, new ExpectedItemCheck(initialCreationDate.toLocalDate(), null, InvoiceItemType.FIXED, new BigDecimal("0")));
-
-        //
-        // VERIFY CTD HAS BEEN SET
-        //
-        DateTime startDate = subscription.getCurrentPhaseStart();
-        BigDecimal rate = subscription.getCurrentPhase().getFixedPrice().getPrice(Currency.USD);
-        int invoiceItemCount = 1;
+        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, new ExpectedItemCheck(initialCreationDate.toLocalDate(), null, InvoiceItemType.FIXED, new BigDecimal("0")));
         // No end date for the trial item (fixed price of zero), and CTD should be today (i.e. when the trial started)
-        verifyTestResult(accountId, subscription.getId(), startDate, null, rate, clock.getUTCNow(), invoiceItemCount);
+        invoiceChecker.checkChargedThroughDate(subscription.getId(), clock.getUTCToday());
 
         //
         // CHANGE PLAN IMMEDIATELY AND EXPECT BOTH EVENTS: NextEvent.CHANGE NextEvent.INVOICE
         //
         subscription = subscriptionDataFromSubscription(changeSubscriptionAndCheckForCompletion(subscription, "Assault-Rifle", BillingPeriod.MONTHLY, NextEvent.CHANGE, NextEvent.INVOICE));
+        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, new ExpectedItemCheck(initialCreationDate.toLocalDate(), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+        invoiceChecker.checkChargedThroughDate(subscription.getId(), clock.getUTCToday());
 
         //
         // VERIFY AGAIN CTD HAS BEEN SET
         //
-        startDate = subscription.getCurrentPhaseStart();
-        invoiceItemCount = 2;
-        // No end date for the trial item (fixed price of zero), and CTD should be today (i.e. when the second trial started)
-        verifyTestResult(accountId, subscription.getId(), startDate, null, rate, clock.getUTCNow(), invoiceItemCount);
+        DateTime startDate = subscription.getCurrentPhaseStart();
 
         //
         // MOVE TIME
         //
+        final LocalDate firstRecurringDate = initialCreationDate.toLocalDate().plusDays(30);
+        final LocalDate secondRecurringDate = firstRecurringDate.plusMonths(1);
         for (final DateTime dateTimeToSet : expectedStates.keySet()) {
-            for (final NextEvent expectedEvent : expectedStates.get(dateTimeToSet)) {
-                busHandler.pushExpectedEvent(expectedEvent);
+            setDateAndCheckForCompletion(dateTimeToSet, expectedStates.get(dateTimeToSet));
+            if (expectedStates.get(dateTimeToSet).contains(NextEvent.INVOICE)) {
+                // STEPH date with BCD
+                invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, new ExpectedItemCheck(firstRecurringDate, secondRecurringDate, InvoiceItemType.RECURRING, new BigDecimal("599.95")));
+                invoiceChecker.checkChargedThroughDate(subscription.getId(), secondRecurringDate);
             }
-            clock.setTime(dateTimeToSet);
-            assertTrue(busHandler.isCompleted(DELAY));
         }
 
         startDate = subscription.getCurrentPhaseStart();
-        rate = subscription.getCurrentPhase().getRecurringPrice().getPrice(Currency.USD);
+        BigDecimal rate = subscription.getCurrentPhase().getRecurringPrice().getPrice(Currency.USD);
         BigDecimal price;
         final DateTime chargeThroughDate;
 
@@ -415,14 +411,12 @@ public class TestIntegration extends TestIntegrationBase {
                 // this will result in a 30-day pro-ration
                 price = THIRTY.divide(THIRTY_ONE, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD).multiply(rate).setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
                 chargeThroughDate = startDate.plusMonths(1).toMutableDateTime().dayOfMonth().set(billingDay).toDateTime();
-                invoiceItemCount += 1;
                 verifyTestResult(accountId, subscription.getId(), startDate, chargeThroughDate, price, chargeThroughDate, invoiceItemCount);
                 break;
             case 2:
                 // this will result in one full-period invoice item
                 price = rate;
                 chargeThroughDate = startDate.plusMonths(1);
-                invoiceItemCount += 1;
                 verifyTestResult(accountId, subscription.getId(), startDate, chargeThroughDate, price, chargeThroughDate, invoiceItemCount);
                 break;
             case 3:
@@ -430,7 +424,8 @@ public class TestIntegration extends TestIntegrationBase {
                 price = ONE.divide(TWENTY_NINE, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD).multiply(rate).setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
                 final DateTime firstEndDate = startDate.plusDays(1);
                 chargeThroughDate = firstEndDate.plusMonths(1);
-                invoiceItemCount += 2;
+                // STEPH TO BE CHECKED LATER
+                invoiceItemCount++;
                 verifyTestResult(accountId, subscription.getId(), startDate, firstEndDate, price, chargeThroughDate, invoiceItemCount);
                 verifyTestResult(accountId, subscription.getId(), firstEndDate, chargeThroughDate, rate, chargeThroughDate, invoiceItemCount);
                 break;
@@ -453,7 +448,11 @@ public class TestIntegration extends TestIntegrationBase {
         //
         // MOVE TIME AFTER CTD AND EXPECT BOTH EVENTS : NextEvent.CHANGE NextEvent.INVOICE
         //
+        final LocalDate firstRecurringPistolDate = firstRecurringDate.plusMonths(1);
+        final LocalDate secondRecurringPistolDate = firstRecurringPistolDate.plusMonths(1);
         addDaysAndCheckForCompletion(32, NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.PAYMENT);
+        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, new ExpectedItemCheck(firstRecurringPistolDate, secondRecurringPistolDate, InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+        invoiceChecker.checkChargedThroughDate(subscription.getId(), secondRecurringPistolDate);
 
         startDate = chargeThroughDate;
 
@@ -461,30 +460,30 @@ public class TestIntegration extends TestIntegrationBase {
         DateTime realChargeThroughDate = entitlementUserApi.getSubscriptionFromId(subscription.getId()).getChargedThroughDate();
         DateTime endDate = realChargeThroughDate;
         price = subscription.getCurrentPhase().getRecurringPrice().getPrice(Currency.USD);
-        invoiceItemCount += 1;
-        verifyTestResult(accountId, subscription.getId(), startDate, endDate, price, endDate, invoiceItemCount);
 
         //
         // MOVE TIME AFTER NEXT BILL CYCLE DAY AND EXPECT EVENT : NextEvent.INVOICE
         //
+
+        LocalDate prevRecurringDate = secondRecurringPistolDate;
         int maxCycles = 3;
         do {
-            busHandler.pushExpectedEvent(NextEvent.INVOICE);
-            busHandler.pushExpectedEvent(NextEvent.PAYMENT);
-            clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS + 1000);
-            assertTrue(busHandler.isCompleted(DELAY));
 
-            startDate = endDate;
-            endDate = startDate.plusMonths(1);
+            LocalDate nextRecurringDate = prevRecurringDate.plusMonths(1);
             if (endDate.dayOfMonth().get() != billingDay) {
                 // adjust for end of month issues
                 final int maximumDay = endDate.dayOfMonth().getMaximumValue();
                 final int newDay = (maximumDay < billingDay) ? maximumDay : billingDay;
                 endDate = endDate.toMutableDateTime().dayOfMonth().set(newDay).toDateTime();
+                nextRecurringDate = endDate.toLocalDate();
             }
 
-            invoiceItemCount += 1;
-            verifyTestResult(accountId, subscription.getId(), startDate, endDate, price, endDate, invoiceItemCount);
+
+            addDaysAndCheckForCompletion(32, NextEvent.INVOICE, NextEvent.PAYMENT);
+            invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, new ExpectedItemCheck(prevRecurringDate, nextRecurringDate, InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+            invoiceChecker.checkChargedThroughDate(subscription.getId(), nextRecurringDate);
+
+            prevRecurringDate = nextRecurringDate;
         } while (maxCycles-- > 0);
 
         //
@@ -495,8 +494,7 @@ public class TestIntegration extends TestIntegrationBase {
 
         // MOVE AFTER CANCEL DATE AND EXPECT EVENT : NextEvent.CANCEL
         realChargeThroughDate = entitlementUserApi.getSubscriptionFromId(subscription.getId()).getChargedThroughDate();
-        final Interval it = new Interval(clock.getUTCNow(), realChargeThroughDate.plusSeconds(5));
-        addDaysAndCheckForCompletion((int) it.toDuration().getStandardDays(), NextEvent.CANCEL);
+        setDateAndCheckForCompletion(realChargeThroughDate.plusSeconds(5), NextEvent.CANCEL);
 
         //
         // CHECK AGAIN THERE IS NO MORE INVOICES GENERATED

@@ -119,7 +119,7 @@ public class TestTransfer extends TestApiBase {
         final Subscription baseSubscription = createSubscription(baseProduct, baseTerm, basePriceList);
         final DateTime ctd = baseSubscription.getStartDate().plusDays(30);
 
-        billingApi.setChargedThroughDate(baseSubscription.getId(), ctd, context);
+        billingApi.setChargedThroughDate(baseSubscription.getId(), ctd.toLocalDate(), context);
 
         final DateTime evergreenPhaseDate = baseSubscription.getPendingTransition().getEffectiveTransitionTime();
 
@@ -222,7 +222,7 @@ public class TestTransfer extends TestApiBase {
 
         // SET CTD
         final DateTime ctd = baseSubscription.getStartDate().plusDays(30).plusMonths(1);
-        billingApi.setChargedThroughDate(baseSubscription.getId(), ctd, context);
+        billingApi.setChargedThroughDate(baseSubscription.getId(), ctd.toLocalDate(), context);
 
 
         final DateTime transferRequestedDate = clock.getUTCNow();
@@ -267,7 +267,7 @@ public class TestTransfer extends TestApiBase {
         clock.addDays(2);
 
         DateTime newCtd = newBaseSubscription.getStartDate().plusYears(1);
-        billingApi.setChargedThroughDate(newBaseSubscription.getId(), newCtd, context);
+        billingApi.setChargedThroughDate(newBaseSubscription.getId(), newCtd.toLocalDate(), context);
         final Subscription newBaseSubscriptionWithCtd = entitlementApi.getSubscriptionFromId(newBaseSubscription.getId());
 
         final String newBaseProduct2 = "Pistol";
@@ -318,7 +318,7 @@ public class TestTransfer extends TestApiBase {
 
         // SET CTD TO TRIGGER CANCELLATION EOT
         final DateTime ctd = baseSubscription.getStartDate().plusDays(30).plusMonths(1);
-        billingApi.setChargedThroughDate(baseSubscription.getId(), ctd, context);
+        billingApi.setChargedThroughDate(baseSubscription.getId(), ctd.toLocalDate(), context);
 
         final DateTime transferRequestedDate = clock.getUTCNow();
         testListener.pushExpectedEvent(NextEvent.TRANSFER);

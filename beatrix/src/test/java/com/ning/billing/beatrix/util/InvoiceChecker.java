@@ -16,15 +16,26 @@
 
 package com.ning.billing.beatrix.util;
 
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
+
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
+import org.joda.time.LocalTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 
+import com.ning.billing.entitlement.api.user.EntitlementUserApi;
+import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
+import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
@@ -38,10 +49,12 @@ public class InvoiceChecker {
     private static final Logger log = LoggerFactory.getLogger(InvoiceChecker.class);
 
     private final InvoiceUserApi invoiceUserApi;
+    private final EntitlementUserApi entitlementApi;
 
     @Inject
-    public InvoiceChecker(final InvoiceUserApi invoiceUserApi) {
+    public InvoiceChecker(final InvoiceUserApi invoiceUserApi, final EntitlementUserApi entitlementApi) {
         this.invoiceUserApi = invoiceUserApi;
+        this.entitlementApi = entitlementApi;
     }
 
     public void checkInvoice(final UUID accountId, final int invoiceOrderingNumber, final ExpectedItemCheck... expected) {
@@ -86,6 +99,29 @@ public class InvoiceChecker {
                 Assert.fail(String.format("Failed to find invoice item type = %s and startDate = %s, amount = %s, endDate = %s for invoice id %s",
                                           cur.getType(), cur.getStartDate(), cur.getAmount(), cur.getEndDate(), invoice.getId()));
             }
+        }
+    }
+
+
+    public void checkNullChargedThroughDate(final UUID subscriptionId) {
+        checkChargedThroughDate(subscriptionId, null);
+    }
+
+    public void checkChargedThroughDate(final UUID subscriptionId, final LocalDate expectedLocalCTD) {
+        try {
+            Subscription subscription = entitlementApi.getSubscriptionFromId(subscriptionId);
+            if (expectedLocalCTD == null) {
+                assertNull(subscription.getChargedThroughDate());
+            } else {
+                final DateTime expectedCTD = expectedLocalCTD.toDateTime(new LocalTime(subscription.getStartDate().getMillis()), DateTimeZone.UTC);
+                final String msg = String.format("Checking CTD for subscription %s : expectedLocalCTD = %s => expectedCTD = %s, got %s",
+                        subscriptionId, expectedLocalCTD, expectedCTD, subscription.getChargedThroughDate());
+                log.info(msg);
+                assertNotNull(subscription.getChargedThroughDate());
+                assertTrue(subscription.getChargedThroughDate().compareTo(expectedCTD) == 0, msg);
+            }
+        } catch (EntitlementUserApiException e) {
+            fail("Failed to retrieve subscription for " + subscriptionId);
         }
     }
 

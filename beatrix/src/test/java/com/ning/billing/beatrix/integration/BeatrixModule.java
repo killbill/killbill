@@ -35,6 +35,7 @@ import com.ning.billing.beatrix.integration.overdue.IntegrationTestOverdueModule
 import com.ning.billing.beatrix.lifecycle.DefaultLifecycle;
 import com.ning.billing.beatrix.lifecycle.Lifecycle;
 import com.ning.billing.beatrix.util.InvoiceChecker;
+import com.ning.billing.beatrix.util.PaymentChecker;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.config.PaymentConfig;
@@ -108,6 +109,7 @@ public class BeatrixModule extends AbstractModule {
         install(new IntegrationTestOverdueModule());
 
         bind(InvoiceChecker.class).asEagerSingleton();
+        bind(PaymentChecker.class).asEagerSingleton();
     }
 
     private static final class PaymentPluginMockModule extends PaymentModule {
