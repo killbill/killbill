@@ -16,7 +16,6 @@
 
 package com.ning.billing.beatrix.integration;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,26 +30,27 @@ import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.AccountService;
 import com.ning.billing.account.api.AccountUserApi;
-import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.analytics.AnalyticsListener;
 import com.ning.billing.analytics.api.user.DefaultAnalyticsUserApi;
 import com.ning.billing.api.TestApiListener;
+import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.api.TestListenerStatus;
 import com.ning.billing.beatrix.BeatrixTestSuiteWithEmbeddedDB;
 import com.ning.billing.beatrix.lifecycle.Lifecycle;
 import com.ning.billing.beatrix.util.InvoiceChecker;
+import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.catalog.api.PlanPhaseSpecifier;
+import com.ning.billing.catalog.api.PriceListSet;
+import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.api.EntitlementService;
 import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
@@ -63,23 +63,27 @@ import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceService;
 import com.ning.billing.invoice.api.InvoiceUserApi;
-import com.ning.billing.invoice.generator.InvoiceDateUtils;
 import com.ning.billing.invoice.model.InvoicingConfiguration;
 import com.ning.billing.junction.plumbing.api.BlockingSubscription;
 import com.ning.billing.mock.MockAccountBuilder;
 import com.ning.billing.mock.api.MockBillCycleDay;
 import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
 import com.ning.billing.payment.api.PaymentApi;
+import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.payment.provider.MockPaymentProviderPlugin;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.DefaultCallContext;
 import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.ClockMock;
-import com.ning.billing.util.io.IOUtils;
+
+import com.google.common.base.Function;
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -87,6 +91,7 @@ import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implements TestListenerStatus {
+
     protected static final DateTimeZone testTimeZone = DateTimeZone.UTC;
 
     protected static final int NUMBER_OF_DECIMALS = InvoicingConfiguration.getNumberOfDecimals();
@@ -305,5 +310,93 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
                                        .paymentMethodId(UUID.randomUUID())
                                        .timeZone(DateTimeZone.UTC)
                                        .build();
+    }
+
+    protected void addMonthsAndCheckForCompletion(final int nbMonth, final NextEvent... events) {
+        doCallAndCheckForCompletion(new Function<Void, Void>() {
+            @Override
+            public Void apply(@Nullable final Void dontcare) {
+                clock.addMonths(nbMonth);
+                return null;
+            }
+        }, events);
+    }
+
+    protected void addDaysAndCheckForCompletion(final int nbDays, final NextEvent... events) {
+        doCallAndCheckForCompletion(new Function<Void, Void>() {
+            @Override
+            public Void apply(@Nullable final Void dontcare) {
+                clock.addDays(nbDays);
+                return null;
+            }
+        }, events);
+    }
+
+    protected void createPaymentAndCheckForCompletion(final Account account, final Invoice invoice, final NextEvent... events) {
+        doCallAndCheckForCompletion(new Function<Void, Void>() {
+            @Override
+            public Void apply(@Nullable final Void input) {
+                try {
+                    paymentApi.createPayment(account, invoice.getId(), invoice.getBalance(), new DefaultCallContext("test", null, null, clock));
+                } catch (PaymentApiException e) {
+                    fail(e.toString());
+                }
+                return null;
+            }
+        }, events);
+    }
+
+    protected Subscription createSubscriptionAndCheckForCompletion(final UUID bundleId,
+                                                                   final String productName,
+                                                                   final ProductCategory productCategory,
+                                                                   final BillingPeriod billingPeriod,
+                                                                   final NextEvent... events) {
+        return doCallAndCheckForCompletion(new Function<Void, Subscription>() {
+            @Override
+            public Subscription apply(@Nullable final Void dontcare) {
+                try {
+                    final Subscription subscription = entitlementUserApi.createSubscription(bundleId,
+                                                                                            new PlanPhaseSpecifier(productName, productCategory, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, null),
+                                                                                            null,
+                                                                                            context);
+                    assertNotNull(subscription);
+                    return subscription;
+                } catch (EntitlementUserApiException e) {
+                    fail();
+                    return null;
+                }
+            }
+        }, events);
+    }
+
+    protected Subscription changeSubscriptionAndCheckForCompletion(final Subscription subscription,
+                                                                   final String productName,
+                                                                   final BillingPeriod billingPeriod,
+                                                                   final NextEvent... events) {
+        return doCallAndCheckForCompletion(new Function<Void, Subscription>() {
+            @Override
+            public Subscription apply(@Nullable final Void dontcare) {
+                try {
+                    subscription.changePlan(productName, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow(), context);
+                    return subscription;
+                } catch (EntitlementUserApiException e) {
+                    fail();
+                    return null;
+                }
+            }
+        }, events);
+    }
+
+    private <T> T doCallAndCheckForCompletion(Function<Void, T> f, final NextEvent... events) {
+        log.info("            ************    STARTING BUS HANDLER CHECK    ********************");
+
+        busHandler.pushExpectedEvents(events);
+
+        final T result = f.apply(null);
+        assertTrue(busHandler.isCompleted(DELAY));
+        assertListenerStatus();
+
+        log.info("            ************    DONE WITH BUS HANDLER CHECK    ********************");
+        return result;
     }
 }
