@@ -80,8 +80,6 @@ public class InvoiceDispatcher {
     private final Bus eventBus;
     private final Clock clock;
 
-    private final boolean VERBOSE_OUTPUT;
-
     @Inject
     public InvoiceDispatcher(final InvoiceGenerator generator, final AccountUserApi accountUserApi,
             final BillingApi billingApi,
@@ -98,9 +96,6 @@ public class InvoiceDispatcher {
         this.locker = locker;
         this.eventBus = eventBus;
         this.clock = clock;
-
-        final String verboseOutputValue = System.getProperty("VERBOSE_OUTPUT");
-        VERBOSE_OUTPUT = (verboseOutputValue != null) && Boolean.parseBoolean(verboseOutputValue);
     }
 
     public void processSubscription(final EffectiveSubscriptionEvent transition,
@@ -166,22 +161,13 @@ public class InvoiceDispatcher {
 
             if (invoice == null) {
                 log.info("Generated null invoice.");
-                outputDebugData(billingEvents, invoices);
                 if (!dryRun) {
                     final BusEvent event = new DefaultNullInvoiceEvent(accountId, clock.getUTCToday(), context.getUserToken());
                     postEvent(event, accountId);
                 }
             } else {
                 log.info("Generated invoice {} with {} items.", invoice.getId().toString(), invoice.getNumberOfItems());
-                if (VERBOSE_OUTPUT) {
-                    log.info("New items");
-                    for (final InvoiceItem item : invoice.getInvoiceItems()) {
-                        log.info(item.toString());
-                    }
-                }
-                outputDebugData(billingEvents, invoices);
                 if (!dryRun) {
-
                     // We need to check whether this is just a 'shell' invoice or a real invoice with items on it
                     final boolean isRealInvoiceWithItems = Collections2.filter(invoice.getInvoiceItems(), new Predicate<InvoiceItem>() {
                         @Override
@@ -260,22 +246,6 @@ public class InvoiceDispatcher {
                 }
             } else {
                 chargeThroughDates.put(subscriptionId, endDate);
-            }
-        }
-    }
-
-    private void outputDebugData(final Collection<BillingEvent> events, final Collection<Invoice> invoices) {
-        if (VERBOSE_OUTPUT) {
-            log.info("Events");
-            for (final BillingEvent event : events) {
-                log.info(event.toString());
-            }
-
-            log.info("Existing items");
-            for (final Invoice invoice : invoices) {
-                for (final InvoiceItem item : invoice.getInvoiceItems()) {
-                    log.info(item.toString());
-                }
             }
         }
     }
