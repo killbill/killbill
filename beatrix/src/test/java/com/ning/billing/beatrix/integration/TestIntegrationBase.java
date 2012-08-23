@@ -225,9 +225,9 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     }
 
     protected void verifyTestResult(final UUID accountId, final UUID subscriptionId,
-                                    final DateTime startDate, @Nullable final DateTime endDate,
-                                    final BigDecimal amount, final DateTime chargeThroughDate,
-                                    final int totalInvoiceItemCount) throws EntitlementUserApiException {
+            final DateTime startDate, @Nullable final DateTime endDate,
+            final BigDecimal amount, final DateTime chargeThroughDate,
+            final int totalInvoiceItemCount) throws EntitlementUserApiException {
         final SubscriptionData subscription = subscriptionDataFromSubscription(entitlementUserApi.getSubscriptionFromId(subscriptionId));
 
         final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId);
@@ -299,17 +299,17 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
     protected AccountData getAccountData(final int billingDay) {
         return new MockAccountBuilder().name(UUID.randomUUID().toString().substring(1, 8))
-                                       .firstNameLength(6)
-                                       .email(UUID.randomUUID().toString().substring(1, 8))
-                                       .phone(UUID.randomUUID().toString().substring(1, 8))
-                                       .migrated(false)
-                                       .isNotifiedForInvoices(false)
-                                       .externalKey(UUID.randomUUID().toString().substring(1, 8))
-                                       .billingCycleDay(new MockBillCycleDay(billingDay))
-                                       .currency(Currency.USD)
-                                       .paymentMethodId(UUID.randomUUID())
-                                       .timeZone(DateTimeZone.UTC)
-                                       .build();
+        .firstNameLength(6)
+        .email(UUID.randomUUID().toString().substring(1, 8))
+        .phone(UUID.randomUUID().toString().substring(1, 8))
+        .migrated(false)
+        .isNotifiedForInvoices(false)
+        .externalKey(UUID.randomUUID().toString().substring(1, 8))
+        .billingCycleDay(new MockBillCycleDay(billingDay))
+        .currency(Currency.USD)
+        .paymentMethodId(UUID.randomUUID())
+        .timeZone(DateTimeZone.UTC)
+        .build();
     }
 
     protected void addMonthsAndCheckForCompletion(final int nbMonth, final NextEvent... events) {
@@ -347,18 +347,18 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     }
 
     protected Subscription createSubscriptionAndCheckForCompletion(final UUID bundleId,
-                                                                   final String productName,
-                                                                   final ProductCategory productCategory,
-                                                                   final BillingPeriod billingPeriod,
-                                                                   final NextEvent... events) {
+            final String productName,
+            final ProductCategory productCategory,
+            final BillingPeriod billingPeriod,
+            final NextEvent... events) {
         return doCallAndCheckForCompletion(new Function<Void, Subscription>() {
             @Override
             public Subscription apply(@Nullable final Void dontcare) {
                 try {
                     final Subscription subscription = entitlementUserApi.createSubscription(bundleId,
-                                                                                            new PlanPhaseSpecifier(productName, productCategory, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, null),
-                                                                                            null,
-                                                                                            context);
+                            new PlanPhaseSpecifier(productName, productCategory, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, null),
+                            null,
+                            context);
                     assertNotNull(subscription);
                     return subscription;
                 } catch (EntitlementUserApiException e) {
@@ -370,14 +370,31 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     }
 
     protected Subscription changeSubscriptionAndCheckForCompletion(final Subscription subscription,
-                                                                   final String productName,
-                                                                   final BillingPeriod billingPeriod,
-                                                                   final NextEvent... events) {
+            final String productName,
+            final BillingPeriod billingPeriod,
+            final NextEvent... events) {
         return doCallAndCheckForCompletion(new Function<Void, Subscription>() {
             @Override
             public Subscription apply(@Nullable final Void dontcare) {
                 try {
                     subscription.changePlan(productName, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow(), context);
+                    return subscription;
+                } catch (EntitlementUserApiException e) {
+                    fail();
+                    return null;
+                }
+            }
+        }, events);
+    }
+
+    protected Subscription cancelSubscriptionAndCheckForCompletion(final Subscription subscription,
+            final DateTime requestedDate,
+            final NextEvent... events) {
+        return doCallAndCheckForCompletion(new Function<Void, Subscription>() {
+            @Override
+            public Subscription apply(@Nullable final Void dontcare) {
+                try {
+                    subscription.cancel(requestedDate, true, context);
                     return subscription;
                 } catch (EntitlementUserApiException e) {
                     fail();
