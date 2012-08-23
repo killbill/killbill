@@ -11,6 +11,19 @@ getAccountsCreatedOverTime() ::= <<
   ;
 >>
 
+getSubscriptionsCreatedOverTime(product_type, slug) ::= <<
+  select
+    date(from_unixtime(requested_timestamp / 1000)) day
+  , count(record_id) count
+  from bst
+  where event in ('ADD_ADD_ON', 'ADD_BASE', 'ADD_STANDALONE')
+  and next_product_type = :product_type
+  and next_slug = :slug
+  group by 1
+  order by 1
+  ;
+>>
+
 getAccount(account_id) ::= <<
   select
     account_id

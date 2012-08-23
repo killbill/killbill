@@ -20,6 +20,7 @@ import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
@@ -47,6 +48,16 @@ public class AnalyticsResource {
     @Produces(APPLICATION_JSON)
     public Response getAccountsCreatedOverTime() {
         final TimeSeriesData data = analyticsUserApi.getAccountsCreatedOverTime();
+        final TimeSeriesDataJson json = new TimeSeriesDataJson(data);
+        return Response.status(Status.OK).entity(json).build();
+    }
+
+    @GET
+    @Path("/subscriptionsCreatedOverTime")
+    @Produces(APPLICATION_JSON)
+    public Response getSubscriptionsCreatedOverTime(@QueryParam("productType") final String productType,
+                                                    @QueryParam("slug") final String slug) {
+        final TimeSeriesData data = analyticsUserApi.getSubscriptionsCreatedOverTime(productType, slug);
         final TimeSeriesDataJson json = new TimeSeriesDataJson(data);
         return Response.status(Status.OK).entity(json).build();
     }

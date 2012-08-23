@@ -45,6 +45,11 @@ public class DefaultAnalyticsUserApi implements AnalyticsUserApi {
         return analyticsDao.getAccountsCreatedOverTime();
     }
 
+    @Override
+    public TimeSeriesData getSubscriptionsCreatedOverTime(final String productType, final String slug) {
+        return analyticsDao.getSubscriptionsCreatedOverTime(productType, slug);
+    }
+
     // Note: the following is not exposed in api yet, as the models need to be extracted first
 
     public BusinessAccount getAccountByKey(final String accountKey) {

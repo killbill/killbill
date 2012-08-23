@@ -41,6 +41,7 @@ import static com.ning.billing.entitlement.api.user.Subscription.SubscriptionSta
  * Describe a subscription for Analytics purposes
  */
 public class BusinessSubscription {
+
     private static final Logger log = LoggerFactory.getLogger(BusinessSubscription.class);
 
     private static final BigDecimal DAYS_IN_MONTH = BigDecimal.valueOf(30);

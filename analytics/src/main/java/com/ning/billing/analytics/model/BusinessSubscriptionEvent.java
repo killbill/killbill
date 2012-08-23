@@ -32,6 +32,7 @@ import static com.ning.billing.entitlement.api.user.Subscription.SubscriptionSta
  * Describe an event associated with a transition between two BusinessSubscription
  */
 public class BusinessSubscriptionEvent {
+
     private static final Logger log = LoggerFactory.getLogger(BusinessSubscriptionEvent.class);
 
     private static final String MISC = "MISC";

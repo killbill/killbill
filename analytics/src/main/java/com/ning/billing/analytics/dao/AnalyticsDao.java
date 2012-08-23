@@ -31,6 +31,8 @@ public interface AnalyticsDao {
 
     TimeSeriesData getAccountsCreatedOverTime();
 
+    TimeSeriesData getSubscriptionsCreatedOverTime(final String productType, final String slug);
+
     BusinessAccount getAccountByKey(final String accountKey);
 
     List<BusinessSubscriptionTransition> getTransitionsByKey(final String externalKey);

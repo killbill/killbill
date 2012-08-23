@@ -36,6 +36,10 @@ public interface BusinessAccountSqlDao extends Transactional<BusinessAccountSqlD
     List<TimeSeriesTuple> getAccountsCreatedOverTime();
 
     @SqlQuery
+    List<TimeSeriesTuple> getSubscriptionsCreatedOverTime(@Bind("product_type") final String productType,
+                                                          @Bind("slug") final String slug);
+
+    @SqlQuery
     BusinessAccount getAccount(@Bind("account_id") final String accountId);
 
     @SqlQuery

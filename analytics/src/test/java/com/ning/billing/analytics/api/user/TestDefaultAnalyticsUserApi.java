@@ -19,13 +19,18 @@ package com.ning.billing.analytics.api.user;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.mockito.Mockito;
 import org.skife.jdbi.v2.IDBI;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.ning.billing.analytics.AnalyticsTestSuiteWithEmbeddedDB;
+import com.ning.billing.analytics.MockDuration;
+import com.ning.billing.analytics.MockPhase;
+import com.ning.billing.analytics.MockProduct;
 import com.ning.billing.analytics.api.TimeSeriesData;
 import com.ning.billing.analytics.dao.AnalyticsDao;
 import com.ning.billing.analytics.dao.BusinessAccountSqlDao;
@@ -37,6 +42,18 @@ import com.ning.billing.analytics.dao.BusinessOverdueStatusSqlDao;
 import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionSqlDao;
 import com.ning.billing.analytics.dao.DefaultAnalyticsDao;
 import com.ning.billing.analytics.model.BusinessAccount;
+import com.ning.billing.analytics.model.BusinessSubscription;
+import com.ning.billing.analytics.model.BusinessSubscriptionEvent;
+import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
+import com.ning.billing.catalog.api.Catalog;
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.catalog.api.PhaseType;
+import com.ning.billing.catalog.api.Plan;
+import com.ning.billing.catalog.api.PlanPhase;
+import com.ning.billing.catalog.api.Product;
+import com.ning.billing.catalog.api.ProductCategory;
+import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.mock.MockPlan;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 
@@ -76,6 +93,40 @@ public class TestDefaultAnalyticsUserApi extends AnalyticsTestSuiteWithEmbeddedD
         accountSqlDao.createAccount(account);
 
         final TimeSeriesData data = analyticsUserApi.getAccountsCreatedOverTime();
+        Assert.assertEquals(data.getDates().size(), 1);
+        Assert.assertEquals(data.getDates().get(0), new LocalDate());
+        Assert.assertEquals(data.getValues().size(), 1);
+        Assert.assertEquals(data.getValues().get(0), (double) 1);
+    }
+
+    @Test(groups = "slow")
+    public void testSubscriptionsCreatedOverTime() throws Exception {
+        final String productType = "subscription";
+        final Product product = new MockProduct("platinum", productType, ProductCategory.BASE);
+        final Plan plan = new MockPlan("platinum-monthly", product);
+        final PlanPhase phase = new MockPhase(PhaseType.TRIAL, plan, MockDuration.UNLIMITED(), 25.95);
+        final Catalog catalog = Mockito.mock(Catalog.class);
+        Mockito.when(catalog.findPlan(Mockito.anyString(), Mockito.<DateTime>any(), Mockito.<DateTime>any())).thenReturn(plan);
+        Mockito.when(catalog.findPhase(Mockito.anyString(), Mockito.<DateTime>any(), Mockito.<DateTime>any())).thenReturn(phase);
+        final BusinessSubscriptionTransition transition = new BusinessSubscriptionTransition(
+                3L,
+                UUID.randomUUID(),
+                UUID.randomUUID().toString(),
+                UUID.randomUUID(),
+                UUID.randomUUID().toString(),
+                UUID.randomUUID(),
+                clock.getUTCNow(),
+                BusinessSubscriptionEvent.subscriptionCreated(plan.getName(), catalog, clock.getUTCNow(), clock.getUTCNow()),
+                null,
+                new BusinessSubscription("DEFAULT", plan.getName(), phase.getName(), Currency.USD, clock.getUTCNow(), Subscription.SubscriptionState.ACTIVE, catalog)
+        );
+        subscriptionTransitionSqlDao.createTransition(transition);
+
+        final TimeSeriesData notFoundData = analyticsUserApi.getSubscriptionsCreatedOverTime(productType, UUID.randomUUID().toString());
+        Assert.assertEquals(notFoundData.getDates().size(), 0);
+        Assert.assertEquals(notFoundData.getValues().size(), 0);
+
+        final TimeSeriesData data = analyticsUserApi.getSubscriptionsCreatedOverTime(productType, phase.getName());
         Assert.assertEquals(data.getDates().size(), 1);
         Assert.assertEquals(data.getDates().get(0), new LocalDate());
         Assert.assertEquals(data.getValues().size(), 1);

@@ -24,4 +24,11 @@ public interface AnalyticsUserApi {
      * @return the number of accounts created per day
      */
     public TimeSeriesData getAccountsCreatedOverTime();
+
+    /**
+     * @param productType catalog name
+     * @param slug        plan phase name, as returned by PlanPhase#getName()
+     * @return the number of new subscriptions created per day (transfers not included)
+     */
+    public TimeSeriesData getSubscriptionsCreatedOverTime(final String productType, final String slug);
 }
