@@ -377,8 +377,10 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             @Override
             public Subscription apply(@Nullable final Void dontcare) {
                 try {
-                    subscription.changePlan(productName, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow(), context);
-                    return subscription;
+                    // Need to fetch again to get latest CTD updated from the system
+                    final Subscription refreshedSubscription = entitlementUserApi.getSubscriptionFromId(subscription.getId());
+                    refreshedSubscription.changePlan(productName, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow(), context);
+                    return refreshedSubscription;
                 } catch (EntitlementUserApiException e) {
                     fail();
                     return null;
@@ -394,8 +396,10 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             @Override
             public Subscription apply(@Nullable final Void dontcare) {
                 try {
-                    subscription.cancel(requestedDate, true, context);
-                    return subscription;
+                    // Need to fetch again to get latest CTD updated from the system
+                    final Subscription refreshedSubscription = entitlementUserApi.getSubscriptionFromId(subscription.getId());
+                    refreshedSubscription.cancel(requestedDate, true, context);
+                    return refreshedSubscription;
                 } catch (EntitlementUserApiException e) {
                     fail();
                     return null;

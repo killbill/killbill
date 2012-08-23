@@ -365,19 +365,12 @@ public class TestIntegration extends TestIntegrationBase {
         clock.setDeltaFromReality(initialCreationDate.getMillis() - clock.getUTCNow().getMillis());
         final SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever", context);
 
-        final String productName = "Shotgun";
-        final BillingPeriod term = BillingPeriod.MONTHLY;
-        final String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
 
         //
         // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
         //
-        busHandler.pushExpectedEvent(NextEvent.CREATE);
-        busHandler.pushExpectedEvent(NextEvent.INVOICE);
-        SubscriptionData subscription = subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(),
-                                                                                                               new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, context));
-        assertNotNull(subscription);
-        assertTrue(busHandler.isCompleted(DELAY));
+        SubscriptionData subscription = subscriptionDataFromSubscription(createSubscriptionAndCheckForCompletion(bundle.getId(), "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE));
+        invoiceChecker.checkInvoice(account.getId(), 1, new ExpectedItemCheck(initialCreationDate.toLocalDate(), null, InvoiceItemType.FIXED, new BigDecimal("0")));
 
         //
         // VERIFY CTD HAS BEEN SET
@@ -391,15 +384,7 @@ public class TestIntegration extends TestIntegrationBase {
         //
         // CHANGE PLAN IMMEDIATELY AND EXPECT BOTH EVENTS: NextEvent.CHANGE NextEvent.INVOICE
         //
-        busHandler.pushExpectedEvent(NextEvent.CHANGE);
-        busHandler.pushExpectedEvent(NextEvent.INVOICE);
-
-        BillingPeriod newTerm = BillingPeriod.MONTHLY;
-        String newPlanSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
-        String newProductName = "Assault-Rifle";
-        subscription.changePlan(newProductName, newTerm, newPlanSetName, clock.getUTCNow(), context);
-
-        assertTrue(busHandler.isCompleted(DELAY));
+        subscription = subscriptionDataFromSubscription(changeSubscriptionAndCheckForCompletion(subscription, "Assault-Rifle", BillingPeriod.MONTHLY, NextEvent.CHANGE, NextEvent.INVOICE));
 
         //
         // VERIFY AGAIN CTD HAS BEEN SET
@@ -463,24 +448,13 @@ public class TestIntegration extends TestIntegrationBase {
         //
         // CHANGE PLAN EOT AND EXPECT NOTHING
         //
-        newTerm = BillingPeriod.MONTHLY;
-        newPlanSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
-        newProductName = "Pistol";
-        subscription = subscriptionDataFromSubscription(entitlementUserApi.getSubscriptionFromId(subscription.getId()));
-        subscription.changePlan(newProductName, newTerm, newPlanSetName, clock.getUTCNow(), context);
+        subscription = subscriptionDataFromSubscription(changeSubscriptionAndCheckForCompletion(subscription, "Pistol", BillingPeriod.MONTHLY));
 
         //
         // MOVE TIME AFTER CTD AND EXPECT BOTH EVENTS : NextEvent.CHANGE NextEvent.INVOICE
         //
-        busHandler.pushExpectedEvent(NextEvent.CHANGE);
-        busHandler.pushExpectedEvent(NextEvent.INVOICE);
-        busHandler.pushExpectedEvent(NextEvent.PAYMENT);
-        //clock.addDeltaFromReality(ctd.getMillis() - clock.getUTCNow().getMillis());
-        clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS);
+        addDaysAndCheckForCompletion(32, NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.PAYMENT);
 
-        //waitForDebug();
-
-        assertTrue(busHandler.isCompleted(DELAY));
         startDate = chargeThroughDate;
 
         // Resync latest with real CTD so test does not drift
@@ -516,22 +490,18 @@ public class TestIntegration extends TestIntegrationBase {
         //
         // FINALLY CANCEL SUBSCRIPTION EOT
         //
-        subscription = subscriptionDataFromSubscription(entitlementUserApi.getSubscriptionFromId(subscription.getId()));
-        subscription.cancel(clock.getUTCNow(), false, context);
+        subscription = subscriptionDataFromSubscription(cancelSubscriptionAndCheckForCompletion(subscription, clock.getUTCNow()));
+
 
         // MOVE AFTER CANCEL DATE AND EXPECT EVENT : NextEvent.CANCEL
-        busHandler.pushExpectedEvent(NextEvent.CANCEL);
         realChargeThroughDate = entitlementUserApi.getSubscriptionFromId(subscription.getId()).getChargedThroughDate();
         final Interval it = new Interval(clock.getUTCNow(), realChargeThroughDate.plusSeconds(5));
-        clock.addDeltaFromReality(it.toDurationMillis());
-        assertTrue(busHandler.isCompleted(DELAY));
+        addDaysAndCheckForCompletion((int) it.toDuration().getStandardDays(), NextEvent.CANCEL);
 
         //
         // CHECK AGAIN THERE IS NO MORE INVOICES GENERATED
         //
-        busHandler.reset();
-        clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS + 1000);
-        assertTrue(busHandler.isCompleted(DELAY));
+        addDaysAndCheckForCompletion(32);
 
         subscription = subscriptionDataFromSubscription(entitlementUserApi.getSubscriptionFromId(subscription.getId()));
         final DateTime lastCtd = subscription.getChargedThroughDate();
@@ -539,10 +509,6 @@ public class TestIntegration extends TestIntegrationBase {
         log.info("Checking CTD: " + lastCtd.toString() + "; clock is " + clock.getUTCNow().toString());
         assertTrue(lastCtd.isBefore(clock.getUTCNow()));
 
-        // The invoice system is still working to verify there is nothing to do
-        Thread.sleep(DELAY);
-
-        assertListenerStatus();
 
         log.info("TEST PASSED !");
     }

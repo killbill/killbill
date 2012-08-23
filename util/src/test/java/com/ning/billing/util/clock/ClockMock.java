@@ -66,6 +66,10 @@ public class ClockMock implements Clock {
         logChange(prev);
     }
 
+    public synchronized void setDay(final LocalDate date) {
+        setTime(date.toDateTimeAtStartOfDay(DateTimeZone.UTC));
+    }
+
     public synchronized void addDays(final int days) {
         adjustTo(Days.days(days));
     }

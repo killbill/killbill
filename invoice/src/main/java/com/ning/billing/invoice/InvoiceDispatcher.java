@@ -200,7 +200,9 @@ public class InvoiceDispatcher {
                                                                                        invoice.getBalance(), invoice.getCurrency(),
                                                                                        context.getUserToken());
 
-                    postEvent(event, accountId);
+                    if (isRealInvoiceWithItems) {
+                        postEvent(event, accountId);
+                    }
                 }
             }
 
