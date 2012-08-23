@@ -38,9 +38,11 @@ import com.ning.billing.catalog.api.StaticCatalog;
 @JsonAutoDetect(fieldVisibility=JsonAutoDetect.Visibility.ANY)
 public class CatalogJsonSimple {
 
+    private final String name;
     private final ProductJson [] products;
 
     public CatalogJsonSimple(StaticCatalog catalog) throws CatalogApiException {
+        name = catalog.getCatalogName();
 
         Map<String, ProductJson> productMap = new HashMap<String, CatalogJsonSimple.ProductJson>();
 
@@ -85,8 +87,9 @@ public class CatalogJsonSimple {
     }
 
     @JsonCreator
-    public CatalogJsonSimple(@JsonProperty("products")  ProductJson[] products) {
-        super();
+    public CatalogJsonSimple(@JsonProperty("name") final String name,
+                             @JsonProperty("products") ProductJson[] products) {
+        this.name = name;
         this.products = products;
     }
 
