@@ -19,6 +19,7 @@ package com.ning.billing.entitlement.api.billing;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.joda.time.LocalTime;
 
@@ -48,7 +49,7 @@ public class DefaultChargeThruApi implements ChargeThruApi {
     @Override
     public void setChargedThroughDate(final UUID subscriptionId, final LocalDate ctd, final CallContext context) {
         final SubscriptionData subscription = (SubscriptionData) entitlementDao.getSubscriptionFromId(subscriptionFactory, subscriptionId);
-        final DateTime chargedThroughDate = ctd.toDateTime(new LocalTime(subscription.getStartDate()));
+        final DateTime chargedThroughDate = ctd.toDateTime(new LocalTime(subscription.getStartDate(), DateTimeZone.UTC), DateTimeZone.UTC);
         final SubscriptionBuilder builder = new SubscriptionBuilder(subscription)
                 .setChargedThroughDate(chargedThroughDate)
                 .setPaidThroughDate(subscription.getPaidThroughDate());
