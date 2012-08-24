@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.Days;
 import org.joda.time.Interval;
 import org.joda.time.LocalDate;
 import org.testng.annotations.Guice;
@@ -87,48 +88,269 @@ public class TestIntegration extends TestIntegrationBase {
 
     @Test(groups = "slow")
     public void testBasePlanCompleteWithBillingDayInPast() throws Exception {
-        final DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0, testTimeZone);
-        final LinkedHashMap<DateTime, List<NextEvent>> expectedStates = new LinkedHashMap<DateTime, List<NextEvent>>();
-        expectedStates.put(new DateTime(2012, 2, 28, 0, 3, 45, 0, testTimeZone), ImmutableList.<NextEvent>of());
-        expectedStates.put(new DateTime(2012, 2, 29, 0, 3, 45, 0, testTimeZone), ImmutableList.<NextEvent>of());
-        expectedStates.put(new DateTime(2012, 3, 1, 0, 3, 45, 0, testTimeZone), ImmutableList.<NextEvent>of());
-        expectedStates.put(new DateTime(2012, 3, 2, 0, 3, 45, 0, testTimeZone), ImmutableList.<NextEvent>of(NextEvent.PHASE,
-                                                                                                            NextEvent.INVOICE,
-                                                                                                            NextEvent.PAYMENT));
-        expectedStates.put(new DateTime(2012, 3, 3, 0, 3, 45, 0, testTimeZone), ImmutableList.<NextEvent>of());
-        testBasePlanComplete(startDate, expectedStates, 31, false);
+
+        final int billingDay = 31;
+        final DateTime initialCreationDate = new DateTime(2012, 2, 1, 0, 3, 42, 0, testTimeZone);
+
+        log.info("Beginning test with BCD of " + billingDay);
+        final Account account = createAccountWithPaymentMethod(getAccountData(billingDay));
+
+
+        // set clock to the initial start date
+        clock.setTime(initialCreationDate);
+        final SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever", context);
+
+        int invoiceItemCount = 1;
+
+        //
+        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
+        //
+        SubscriptionData subscription = subscriptionDataFromSubscription(createSubscriptionAndCheckForCompletion(bundle.getId(), "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE));
+        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, new ExpectedItemCheck(initialCreationDate.toLocalDate(), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+        // No end date for the trial item (fixed price of zero), and CTD should be today (i.e. when the trial started)
+        invoiceChecker.checkChargedThroughDate(subscription.getId(), clock.getUTCToday());
+
+        //
+        // CHANGE PLAN IMMEDIATELY AND EXPECT BOTH EVENTS: NextEvent.CHANGE NextEvent.INVOICE
+        //
+        subscription = subscriptionDataFromSubscription(changeSubscriptionAndCheckForCompletion(subscription, "Assault-Rifle", BillingPeriod.MONTHLY, NextEvent.CHANGE, NextEvent.INVOICE));
+        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, new ExpectedItemCheck(initialCreationDate.toLocalDate(), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+        invoiceChecker.checkChargedThroughDate(subscription.getId(), clock.getUTCToday());
+
+        //
+        // MOVE 4 * TIME THE CLOCK
+        //
+        setDateAndCheckForCompletion(new DateTime(2012, 2, 28, 0, 3, 45, 0, testTimeZone));
+        setDateAndCheckForCompletion(new DateTime(2012, 2, 29, 0, 3, 45, 0, testTimeZone));
+        setDateAndCheckForCompletion(new DateTime(2012, 3, 1, 0, 3, 45, 0, testTimeZone));
+        setDateAndCheckForCompletion(new DateTime(2012, 3, 2, 0, 3, 45, 0, testTimeZone), NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
+        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, new ExpectedItemCheck(new LocalDate(2012, 3, 2),
+                new LocalDate(2012, 3,31), InvoiceItemType.RECURRING, new BigDecimal("561.25")));
+        invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 3, 31));
+
+
+        //
+        // CHANGE PLAN EOT AND EXPECT NOTHING
+        //
+        subscription = subscriptionDataFromSubscription(changeSubscriptionAndCheckForCompletion(subscription, "Pistol", BillingPeriod.MONTHLY));
+
+        //
+        // MOVE TIME AFTER CTD AND EXPECT BOTH EVENTS : NextEvent.CHANGE NextEvent.INVOICE
+        //
+        final LocalDate firstRecurringPistolDate = subscription.getChargedThroughDate().toLocalDate();
+        final LocalDate secondRecurringPistolDate = firstRecurringPistolDate.plusMonths(1);
+        addDaysAndCheckForCompletion(31, NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.PAYMENT);
+        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, new ExpectedItemCheck(new LocalDate(2012, 3, 31), new LocalDate(2012, 4, 30), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+        invoiceChecker.checkChargedThroughDate(subscription.getId(), secondRecurringPistolDate);
+
+        //
+        // MOVE 3 * TIME AFTER NEXT BILL CYCLE DAY AND EXPECT EVENT : NextEvent.INVOICE, NextEvent.PAYMENT
+        //
+        addDaysAndCheckForCompletion(31, NextEvent.INVOICE, NextEvent.PAYMENT);
+        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, new ExpectedItemCheck(new LocalDate(2012, 4, 30), new LocalDate(2012, 5,31), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+        invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 5, 31));
+
+        addDaysAndCheckForCompletion(31, NextEvent.INVOICE, NextEvent.PAYMENT);
+        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, new ExpectedItemCheck(new LocalDate(2012, 5, 31), new LocalDate(2012, 6, 30), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+        invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 6, 30));
+
+        addDaysAndCheckForCompletion(31, NextEvent.INVOICE, NextEvent.PAYMENT);
+        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, new ExpectedItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+        invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 7, 31));
+
+        //
+        // FINALLY CANCEL SUBSCRIPTION EOT
+        //
+        subscription = subscriptionDataFromSubscription(cancelSubscriptionAndCheckForCompletion(subscription, clock.getUTCNow()));
+
+
+        // MOVE AFTER CANCEL DATE AND EXPECT EVENT : NextEvent.CANCEL
+        addDaysAndCheckForCompletion(31, NextEvent.CANCEL);
+        invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 7, 31));
+
+        log.info("TEST PASSED !");
     }
 
     @Test(groups = "slow")
     public void testBasePlanCompleteWithBillingDayAlignedWithTrial() throws Exception {
-        final DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0, testTimeZone);
-        final LinkedHashMap<DateTime, List<NextEvent>> expectedStates = new LinkedHashMap<DateTime, List<NextEvent>>();
-        expectedStates.put(new DateTime(2012, 2, 28, 0, 3, 45, 0, testTimeZone), ImmutableList.<NextEvent>of());
-        expectedStates.put(new DateTime(2012, 2, 29, 0, 3, 45, 0, testTimeZone), ImmutableList.<NextEvent>of());
-        expectedStates.put(new DateTime(2012, 3, 1, 0, 3, 45, 0, testTimeZone), ImmutableList.<NextEvent>of());
-        expectedStates.put(new DateTime(2012, 3, 2, 0, 3, 45, 0, testTimeZone), ImmutableList.<NextEvent>of(NextEvent.PHASE,
-                                                                                                            NextEvent.INVOICE,
-                                                                                                            NextEvent.PAYMENT));
-        expectedStates.put(new DateTime(2012, 3, 3, 0, 3, 45, 0, testTimeZone), ImmutableList.<NextEvent>of());
-        testBasePlanComplete(startDate, expectedStates, 2, false);
+
+        final int billingDay = 2;
+        final DateTime initialCreationDate = new DateTime(2012, 2, 1, 0, 3, 42, 0, testTimeZone);
+
+        log.info("Beginning test with BCD of " + billingDay);
+        final Account account = createAccountWithPaymentMethod(getAccountData(billingDay));
+
+
+        // set clock to the initial start date
+        clock.setTime(initialCreationDate);
+        final SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever", context);
+
+        int invoiceItemCount = 1;
+
+        //
+        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
+        //
+        SubscriptionData subscription = subscriptionDataFromSubscription(createSubscriptionAndCheckForCompletion(bundle.getId(), "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE));
+        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, new ExpectedItemCheck(initialCreationDate.toLocalDate(), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+        // No end date for the trial item (fixed price of zero), and CTD should be today (i.e. when the trial started)
+        invoiceChecker.checkChargedThroughDate(subscription.getId(), clock.getUTCToday());
+
+        //
+        // CHANGE PLAN IMMEDIATELY AND EXPECT BOTH EVENTS: NextEvent.CHANGE NextEvent.INVOICE
+        //
+        subscription = subscriptionDataFromSubscription(changeSubscriptionAndCheckForCompletion(subscription, "Assault-Rifle", BillingPeriod.MONTHLY, NextEvent.CHANGE, NextEvent.INVOICE));
+        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, new ExpectedItemCheck(initialCreationDate.toLocalDate(), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+        invoiceChecker.checkChargedThroughDate(subscription.getId(), clock.getUTCToday());
+
+        //
+        // MOVE 4 * TIME THE CLOCK
+        //
+        setDateAndCheckForCompletion(new DateTime(2012, 2, 28, 0, 3, 45, 0, testTimeZone));
+        setDateAndCheckForCompletion(new DateTime(2012, 2, 29, 0, 3, 45, 0, testTimeZone));
+        setDateAndCheckForCompletion(new DateTime(2012, 3, 1, 0, 3, 45, 0, testTimeZone));
+        setDateAndCheckForCompletion(new DateTime(2012, 3, 2, 0, 3, 45, 0, testTimeZone), NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
+        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, new ExpectedItemCheck(new LocalDate(2012, 3, 2),
+                new LocalDate(2012, 4, 2), InvoiceItemType.RECURRING, new BigDecimal("599.95")));
+        invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 4, 2));
+
+
+        //
+        // CHANGE PLAN EOT AND EXPECT NOTHING
+        //
+        subscription = subscriptionDataFromSubscription(changeSubscriptionAndCheckForCompletion(subscription, "Pistol", BillingPeriod.MONTHLY));
+
+        //
+        // MOVE TIME AFTER CTD AND EXPECT BOTH EVENTS : NextEvent.CHANGE NextEvent.INVOICE
+        //
+        final LocalDate firstRecurringPistolDate = subscription.getChargedThroughDate().toLocalDate();
+        final LocalDate secondRecurringPistolDate = firstRecurringPistolDate.plusMonths(1);
+        addDaysAndCheckForCompletion(31, NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.PAYMENT);
+        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, new ExpectedItemCheck(new LocalDate(2012, 4, 2), new LocalDate(2012, 5, 2), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+        invoiceChecker.checkChargedThroughDate(subscription.getId(), secondRecurringPistolDate);
+
+        //
+        // MOVE 3 * TIME AFTER NEXT BILL CYCLE DAY AND EXPECT EVENT : NextEvent.INVOICE, NextEvent.PAYMENT
+        //
+        addDaysAndCheckForCompletion(31, NextEvent.INVOICE, NextEvent.PAYMENT);
+        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, new ExpectedItemCheck(new LocalDate(2012, 5, 2), new LocalDate(2012, 6, 2), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+        invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 6, 2));
+
+        addDaysAndCheckForCompletion(31, NextEvent.INVOICE, NextEvent.PAYMENT);
+        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, new ExpectedItemCheck(new LocalDate(2012, 6, 2), new LocalDate(2012, 7, 2), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+        invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 7, 2));
+
+        addDaysAndCheckForCompletion(31, NextEvent.INVOICE, NextEvent.PAYMENT);
+        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, new ExpectedItemCheck(new LocalDate(2012, 7, 2), new LocalDate(2012, 8, 2), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+        invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 8, 2));
+
+        //
+        // FINALLY CANCEL SUBSCRIPTION EOT
+        //
+        subscription = subscriptionDataFromSubscription(cancelSubscriptionAndCheckForCompletion(subscription, clock.getUTCNow()));
+
+
+        // MOVE AFTER CANCEL DATE AND EXPECT EVENT : NextEvent.CANCEL
+        addDaysAndCheckForCompletion(31, NextEvent.CANCEL);
+        invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 8, 2));
+
+        log.info("TEST PASSED !");
     }
 
     @Test(groups = "slow")
     public void testBasePlanCompleteWithBillingDayInFuture() throws Exception {
-        final DateTime startDate = new DateTime(2012, 2, 1, 0, 3, 42, 0, testTimeZone);
-        final LinkedHashMap<DateTime, List<NextEvent>> expectedStates = new LinkedHashMap<DateTime, List<NextEvent>>();
-        expectedStates.put(new DateTime(2012, 2, 28, 0, 3, 45, 0, testTimeZone), ImmutableList.<NextEvent>of());
-        expectedStates.put(new DateTime(2012, 2, 29, 0, 3, 45, 0, testTimeZone), ImmutableList.<NextEvent>of());
-        expectedStates.put(new DateTime(2012, 3, 1, 0, 3, 45, 0, testTimeZone), ImmutableList.<NextEvent>of());
-        expectedStates.put(new DateTime(2012, 3, 2, 0, 3, 45, 0, testTimeZone), ImmutableList.<NextEvent>of(NextEvent.PHASE,
-                                                                                                            NextEvent.INVOICE,
-                                                                                                            NextEvent.PAYMENT));
-        expectedStates.put(new DateTime(2012, 3, 3, 0, 3, 45, 0, testTimeZone), ImmutableList.<NextEvent>of(NextEvent.INVOICE,
-                                                                                                            NextEvent.PAYMENT));
-        testBasePlanComplete(startDate, expectedStates, 3, true);
+
+        final int billingDay = 3;
+        final DateTime initialCreationDate = new DateTime(2012, 2, 1, 0, 3, 42, 0, testTimeZone);
+
+        log.info("Beginning test with BCD of " + billingDay);
+        final Account account = createAccountWithPaymentMethod(getAccountData(billingDay));
+
+
+        // set clock to the initial start date
+        clock.setTime(initialCreationDate);
+        final SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever", context);
+
+        int invoiceItemCount = 1;
+
+        //
+        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
+        //
+        SubscriptionData subscription = subscriptionDataFromSubscription(createSubscriptionAndCheckForCompletion(bundle.getId(), "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE));
+        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, new ExpectedItemCheck(initialCreationDate.toLocalDate(), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+        // No end date for the trial item (fixed price of zero), and CTD should be today (i.e. when the trial started)
+        invoiceChecker.checkChargedThroughDate(subscription.getId(), clock.getUTCToday());
+
+        //
+        // CHANGE PLAN IMMEDIATELY AND EXPECT BOTH EVENTS: NextEvent.CHANGE NextEvent.INVOICE
+        //
+        subscription = subscriptionDataFromSubscription(changeSubscriptionAndCheckForCompletion(subscription, "Assault-Rifle", BillingPeriod.MONTHLY, NextEvent.CHANGE, NextEvent.INVOICE));
+        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, new ExpectedItemCheck(initialCreationDate.toLocalDate(), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+        invoiceChecker.checkChargedThroughDate(subscription.getId(), clock.getUTCToday());
+
+        //
+        // MOVE 4 * TIME THE CLOCK
+        //
+        setDateAndCheckForCompletion(new DateTime(2012, 2, 28, 0, 3, 45, 0, testTimeZone));
+        setDateAndCheckForCompletion(new DateTime(2012, 2, 29, 0, 3, 45, 0, testTimeZone));
+        setDateAndCheckForCompletion(new DateTime(2012, 3, 1, 0, 3, 45, 0, testTimeZone));
+        setDateAndCheckForCompletion(new DateTime(2012, 3, 2, 0, 3, 45, 0, testTimeZone), NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
+        // PRO_RATION
+        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, new ExpectedItemCheck(new LocalDate(2012, 3, 2),
+                new LocalDate(2012, 3, 3), InvoiceItemType.RECURRING, new BigDecimal("20.70")));
+        invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 3, 3));
+
+        setDateAndCheckForCompletion(new DateTime(2012, 3, 3, 0, 3, 45, 0, testTimeZone), NextEvent.INVOICE, NextEvent.PAYMENT);
+        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, new ExpectedItemCheck(new LocalDate(2012, 3, 3),
+                new LocalDate(2012, 4, 3), InvoiceItemType.RECURRING, new BigDecimal("599.95")));
+        invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 4, 3));
+
+
+        //
+        // CHANGE PLAN EOT AND EXPECT NOTHING
+        //
+        subscription = subscriptionDataFromSubscription(changeSubscriptionAndCheckForCompletion(subscription, "Pistol", BillingPeriod.MONTHLY));
+
+        //
+        // MOVE TIME AFTER CTD AND EXPECT BOTH EVENTS : NextEvent.CHANGE NextEvent.INVOICE
+        //
+        final LocalDate firstRecurringPistolDate = subscription.getChargedThroughDate().toLocalDate();
+        final LocalDate secondRecurringPistolDate = firstRecurringPistolDate.plusMonths(1);
+        addDaysAndCheckForCompletion(31, NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.PAYMENT);
+        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, new ExpectedItemCheck(new LocalDate(2012, 4, 3), new LocalDate(2012, 5, 3), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+        invoiceChecker.checkChargedThroughDate(subscription.getId(), secondRecurringPistolDate);
+
+        //
+        // MOVE 3 * TIME AFTER NEXT BILL CYCLE DAY AND EXPECT EVENT : NextEvent.INVOICE, NextEvent.PAYMENT
+        //
+        addDaysAndCheckForCompletion(31, NextEvent.INVOICE, NextEvent.PAYMENT);
+        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, new ExpectedItemCheck(new LocalDate(2012, 5, 3), new LocalDate(2012, 6, 3), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+        invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 6, 3));
+
+        addDaysAndCheckForCompletion(31, NextEvent.INVOICE, NextEvent.PAYMENT);
+        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, new ExpectedItemCheck(new LocalDate(2012, 6, 3), new LocalDate(2012, 7, 3), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+        invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 7, 3));
+
+        addDaysAndCheckForCompletion(31, NextEvent.INVOICE, NextEvent.PAYMENT);
+        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, new ExpectedItemCheck(new LocalDate(2012, 7, 3), new LocalDate(2012, 8, 3), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+        invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 8, 3));
+
+        //
+        // FINALLY CANCEL SUBSCRIPTION EOT
+        //
+        subscription = subscriptionDataFromSubscription(cancelSubscriptionAndCheckForCompletion(subscription, clock.getUTCNow()));
+
+
+        // MOVE AFTER CANCEL DATE AND EXPECT EVENT : NextEvent.CANCEL
+        addDaysAndCheckForCompletion(31, NextEvent.CANCEL);
+        invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 8, 3));
+
+        log.info("TEST PASSED !");
+
+
+
     }
 
-    @Test(groups = {"stress"})
+    @Test(groups = {"stress"}, enabled=false)
     public void stressTest() throws Exception {
         final int maxIterations = 100;
         for (int curIteration = 0; curIteration < maxIterations; curIteration++) {
@@ -155,7 +377,7 @@ public class TestIntegration extends TestIntegrationBase {
         }
     }
 
-    @Test(groups = {"stress"})
+    @Test(groups = {"stress"}, enabled=false)
     public void stressTestDebug() throws Exception {
         final int maxIterations = 100;
         for (int curIteration = 0; curIteration < maxIterations; curIteration++) {
@@ -355,161 +577,6 @@ public class TestIntegration extends TestIntegrationBase {
         assertListenerStatus();
     }
 
-    private void testBasePlanComplete(final DateTime initialCreationDate, final LinkedHashMap<DateTime, List<NextEvent>> expectedStates,
-                                      final int billingDay, final boolean proRationExpected) throws Exception {
-        log.info("Beginning test with BCD of " + billingDay);
-        final Account account = createAccountWithPaymentMethod(getAccountData(billingDay));
-        final UUID accountId = account.getId();
-
-        // set clock to the initial start date
-        clock.setDeltaFromReality(initialCreationDate.getMillis() - clock.getUTCNow().getMillis());
-        final SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever", context);
-
-        int invoiceItemCount = 1;
-
-        //
-        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE NextEvent.INVOICE
-        //
-        SubscriptionData subscription = subscriptionDataFromSubscription(createSubscriptionAndCheckForCompletion(bundle.getId(), "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.INVOICE));
-        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, new ExpectedItemCheck(initialCreationDate.toLocalDate(), null, InvoiceItemType.FIXED, new BigDecimal("0")));
-        // No end date for the trial item (fixed price of zero), and CTD should be today (i.e. when the trial started)
-        invoiceChecker.checkChargedThroughDate(subscription.getId(), clock.getUTCToday());
-
-        //
-        // CHANGE PLAN IMMEDIATELY AND EXPECT BOTH EVENTS: NextEvent.CHANGE NextEvent.INVOICE
-        //
-        subscription = subscriptionDataFromSubscription(changeSubscriptionAndCheckForCompletion(subscription, "Assault-Rifle", BillingPeriod.MONTHLY, NextEvent.CHANGE, NextEvent.INVOICE));
-        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, new ExpectedItemCheck(initialCreationDate.toLocalDate(), null, InvoiceItemType.FIXED, new BigDecimal("0")));
-        invoiceChecker.checkChargedThroughDate(subscription.getId(), clock.getUTCToday());
-
-        //
-        // VERIFY AGAIN CTD HAS BEEN SET
-        //
-        DateTime startDate = subscription.getCurrentPhaseStart();
-
-        //
-        // MOVE TIME
-        //
-        final LocalDate firstRecurringDate = initialCreationDate.toLocalDate().plusDays(30);
-        final LocalDate secondRecurringDate = firstRecurringDate.plusMonths(1);
-        for (final DateTime dateTimeToSet : expectedStates.keySet()) {
-            setDateAndCheckForCompletion(dateTimeToSet, expectedStates.get(dateTimeToSet));
-            if (expectedStates.get(dateTimeToSet).contains(NextEvent.INVOICE)) {
-                // STEPH date with BCD
-                invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, new ExpectedItemCheck(firstRecurringDate, secondRecurringDate, InvoiceItemType.RECURRING, new BigDecimal("599.95")));
-                invoiceChecker.checkChargedThroughDate(subscription.getId(), secondRecurringDate);
-            }
-        }
-
-        startDate = subscription.getCurrentPhaseStart();
-        BigDecimal rate = subscription.getCurrentPhase().getRecurringPrice().getPrice(Currency.USD);
-        BigDecimal price;
-        final DateTime chargeThroughDate;
-
-        switch (billingDay) {
-            case 1:
-                // this will result in a 30-day pro-ration
-                price = THIRTY.divide(THIRTY_ONE, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD).multiply(rate).setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
-                chargeThroughDate = startDate.plusMonths(1).toMutableDateTime().dayOfMonth().set(billingDay).toDateTime();
-                verifyTestResult(accountId, subscription.getId(), startDate, chargeThroughDate, price, chargeThroughDate, invoiceItemCount);
-                break;
-            case 2:
-                // this will result in one full-period invoice item
-                price = rate;
-                chargeThroughDate = startDate.plusMonths(1);
-                verifyTestResult(accountId, subscription.getId(), startDate, chargeThroughDate, price, chargeThroughDate, invoiceItemCount);
-                break;
-            case 3:
-                // this will result in a 1-day leading pro-ration and a full-period invoice item
-                price = ONE.divide(TWENTY_NINE, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD).multiply(rate).setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
-                final DateTime firstEndDate = startDate.plusDays(1);
-                chargeThroughDate = firstEndDate.plusMonths(1);
-                // STEPH TO BE CHECKED LATER
-                invoiceItemCount++;
-                verifyTestResult(accountId, subscription.getId(), startDate, firstEndDate, price, chargeThroughDate, invoiceItemCount);
-                verifyTestResult(accountId, subscription.getId(), firstEndDate, chargeThroughDate, rate, chargeThroughDate, invoiceItemCount);
-                break;
-            case 31:
-                // this will result in a 29-day pro-ration
-                chargeThroughDate = startDate.toMutableDateTime().dayOfMonth().set(31).toDateTime();
-                price = TWENTY_NINE.divide(THIRTY_ONE, 2 * NUMBER_OF_DECIMALS, ROUNDING_METHOD).multiply(rate).setScale(NUMBER_OF_DECIMALS, ROUNDING_METHOD);
-                invoiceItemCount += 1;
-                verifyTestResult(accountId, subscription.getId(), startDate, chargeThroughDate, price, chargeThroughDate, invoiceItemCount);
-                break;
-            default:
-                throw new UnsupportedOperationException();
-        }
-
-        //
-        // CHANGE PLAN EOT AND EXPECT NOTHING
-        //
-        subscription = subscriptionDataFromSubscription(changeSubscriptionAndCheckForCompletion(subscription, "Pistol", BillingPeriod.MONTHLY));
-
-        //
-        // MOVE TIME AFTER CTD AND EXPECT BOTH EVENTS : NextEvent.CHANGE NextEvent.INVOICE
-        //
-        final LocalDate firstRecurringPistolDate = firstRecurringDate.plusMonths(1);
-        final LocalDate secondRecurringPistolDate = firstRecurringPistolDate.plusMonths(1);
-        addDaysAndCheckForCompletion(32, NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.PAYMENT);
-        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, new ExpectedItemCheck(firstRecurringPistolDate, secondRecurringPistolDate, InvoiceItemType.RECURRING, new BigDecimal("29.95")));
-        invoiceChecker.checkChargedThroughDate(subscription.getId(), secondRecurringPistolDate);
-
-        startDate = chargeThroughDate;
-
-        // Resync latest with real CTD so test does not drift
-        DateTime realChargeThroughDate = entitlementUserApi.getSubscriptionFromId(subscription.getId()).getChargedThroughDate();
-        DateTime endDate = realChargeThroughDate;
-        price = subscription.getCurrentPhase().getRecurringPrice().getPrice(Currency.USD);
-
-        //
-        // MOVE TIME AFTER NEXT BILL CYCLE DAY AND EXPECT EVENT : NextEvent.INVOICE
-        //
-
-        LocalDate prevRecurringDate = secondRecurringPistolDate;
-        int maxCycles = 3;
-        do {
-
-            LocalDate nextRecurringDate = prevRecurringDate.plusMonths(1);
-            if (endDate.dayOfMonth().get() != billingDay) {
-                // adjust for end of month issues
-                final int maximumDay = endDate.dayOfMonth().getMaximumValue();
-                final int newDay = (maximumDay < billingDay) ? maximumDay : billingDay;
-                endDate = endDate.toMutableDateTime().dayOfMonth().set(newDay).toDateTime();
-                nextRecurringDate = endDate.toLocalDate();
-            }
-
-
-            addDaysAndCheckForCompletion(32, NextEvent.INVOICE, NextEvent.PAYMENT);
-            invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, new ExpectedItemCheck(prevRecurringDate, nextRecurringDate, InvoiceItemType.RECURRING, new BigDecimal("29.95")));
-            invoiceChecker.checkChargedThroughDate(subscription.getId(), nextRecurringDate);
-
-            prevRecurringDate = nextRecurringDate;
-        } while (maxCycles-- > 0);
-
-        //
-        // FINALLY CANCEL SUBSCRIPTION EOT
-        //
-        subscription = subscriptionDataFromSubscription(cancelSubscriptionAndCheckForCompletion(subscription, clock.getUTCNow()));
-
-
-        // MOVE AFTER CANCEL DATE AND EXPECT EVENT : NextEvent.CANCEL
-        realChargeThroughDate = entitlementUserApi.getSubscriptionFromId(subscription.getId()).getChargedThroughDate();
-        setDateAndCheckForCompletion(realChargeThroughDate.plusSeconds(5), NextEvent.CANCEL);
-
-        //
-        // CHECK AGAIN THERE IS NO MORE INVOICES GENERATED
-        //
-        addDaysAndCheckForCompletion(32);
-
-        subscription = subscriptionDataFromSubscription(entitlementUserApi.getSubscriptionFromId(subscription.getId()));
-        final DateTime lastCtd = subscription.getChargedThroughDate();
-        assertNotNull(lastCtd);
-        log.info("Checking CTD: " + lastCtd.toString() + "; clock is " + clock.getUTCNow().toString());
-        assertTrue(lastCtd.isBefore(clock.getUTCNow()));
-
-
-        log.info("TEST PASSED !");
-    }
 
 
     @Test(groups = "slow")
