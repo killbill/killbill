@@ -28,11 +28,17 @@ import org.testng.Assert;
 import com.google.common.collect.ImmutableList;
 import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionBinder;
 import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionSqlDao;
+import com.ning.billing.analytics.dao.TimeSeriesTuple;
 import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
 
 public class MockBusinessSubscriptionTransitionSqlDao implements BusinessSubscriptionTransitionSqlDao {
     private final Map<String, List<BusinessSubscriptionTransition>> content = new HashMap<String, List<BusinessSubscriptionTransition>>();
     private final Map<String, String> keyForBundleId = new HashMap<String, String>();
+
+    @Override
+    public List<TimeSeriesTuple> getSubscriptionsCreatedOverTime(@Bind("product_type") final String productType, @Bind("slug") final String slug) {
+        throw new UnsupportedOperationException();
+    }
 
     @Override
     public List<BusinessSubscriptionTransition> getTransitionsByKey(@Bind("event_key") final String key) {

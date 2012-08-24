@@ -64,7 +64,7 @@ public class DefaultAnalyticsDao implements AnalyticsDao {
 
     @Override
     public TimeSeriesData getSubscriptionsCreatedOverTime(final String productType, final String slug) {
-        return new DefaultTimeSeriesData(accountSqlDao.getSubscriptionsCreatedOverTime(productType, slug));
+        return new DefaultTimeSeriesData(subscriptionTransitionSqlDao.getSubscriptionsCreatedOverTime(productType, slug));
     }
 
     @Override

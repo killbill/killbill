@@ -28,8 +28,13 @@ import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTempla
 import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
 
 @ExternalizedSqlViaStringTemplate3()
-@RegisterMapper(BusinessSubscriptionTransitionMapper.class)
+@RegisterMapper({BusinessSubscriptionTransitionMapper.class, TimeSeriesTupleMapper.class})
 public interface BusinessSubscriptionTransitionSqlDao extends Transactional<BusinessSubscriptionTransitionSqlDao> {
+
+    @SqlQuery
+    List<TimeSeriesTuple> getSubscriptionsCreatedOverTime(@Bind("product_type") final String productType,
+                                                          @Bind("slug") final String slug);
+
     @SqlQuery
     List<BusinessSubscriptionTransition> getTransitionsByKey(@Bind("external_key") final String externalKey);
 
