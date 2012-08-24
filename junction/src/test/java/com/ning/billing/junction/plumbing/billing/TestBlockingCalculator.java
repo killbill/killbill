@@ -135,7 +135,7 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         billingEvents.add(C);
         billingEvents.add(D);
 
-        final SortedSet<BlockingState> blockingStates = new TreeSet<BlockingState>();
+        final List<BlockingState> blockingStates = new ArrayList<BlockingState>();
         blockingStates.add(new DefaultBlockingState(bundleId1, DISABLED_BUNDLE, Blockable.Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now));
         blockingStates.add(new DefaultBlockingState(bundleId1, CLEAR_BUNDLE, Blockable.Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now.plusDays(2)));
 
@@ -647,12 +647,12 @@ public class TestBlockingCalculator extends JunctionTestSuite {
 
     @Test
     public void testCreateDisablePairs() {
-        SortedSet<BlockingState> blockingEvents;
+        List<BlockingState> blockingEvents;
         final UUID ovdId = UUID.randomUUID();
         final DateTime now = clock.getUTCNow();
 
         //simple events open clear -> disabled
-        blockingEvents = new TreeSet<BlockingState>();
+        blockingEvents = new ArrayList<BlockingState>();
         blockingEvents.add(new DefaultBlockingState(ovdId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now));
         blockingEvents.add(new DefaultBlockingState(ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now.plusDays(1)));
 
@@ -663,7 +663,7 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         assertNull(pairs.get(0).getEnd());
 
         //simple events closed clear -> disabled
-        blockingEvents = new TreeSet<BlockingState>();
+        blockingEvents = new ArrayList<BlockingState>();
         blockingEvents.add(new DefaultBlockingState(ovdId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now));
         blockingEvents.add(new DefaultBlockingState(ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now.plusDays(1)));
         blockingEvents.add(new DefaultBlockingState(ovdId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now.plusDays(2)));
@@ -676,7 +676,7 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         assertEquals(pairs.get(0).getEnd(), now.plusDays(2));
 
         //simple BUNDLE events closed clear -> disabled
-        blockingEvents = new TreeSet<BlockingState>();
+        blockingEvents = new ArrayList<BlockingState>();
         blockingEvents.add(new DefaultBlockingState(ovdId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now));
         blockingEvents.add(new DefaultBlockingState(ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now.plusDays(1)));
         blockingEvents.add(new DefaultBlockingState(ovdId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now.plusDays(2)));
@@ -689,7 +689,7 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         assertEquals(pairs.get(0).getEnd(), now.plusDays(2));
 
         //two or more disableds in a row
-        blockingEvents = new TreeSet<BlockingState>();
+        blockingEvents = new ArrayList<BlockingState>();
         blockingEvents.add(new DefaultBlockingState(ovdId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now));
         blockingEvents.add(new DefaultBlockingState(ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now.plusDays(1)));
         blockingEvents.add(new DefaultBlockingState(ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now.plusDays(2)));
@@ -702,7 +702,7 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         assertNotNull(pairs.get(0).getEnd());
         assertEquals(pairs.get(0).getEnd(), now.plusDays(3));
 
-        blockingEvents = new TreeSet<BlockingState>();
+        blockingEvents = new ArrayList<BlockingState>();
         blockingEvents.add(new DefaultBlockingState(ovdId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now));
         blockingEvents.add(new DefaultBlockingState(ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now.plusDays(1)));
         blockingEvents.add(new DefaultBlockingState(ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now.plusDays(2)));

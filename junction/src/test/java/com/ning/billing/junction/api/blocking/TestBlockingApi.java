@@ -16,6 +16,7 @@
 
 package com.ning.billing.junction.api.blocking;
 
+import java.util.List;
 import java.util.SortedSet;
 import java.util.UUID;
 
@@ -96,15 +97,15 @@ public class TestBlockingApi extends JunctionTestSuiteWithEmbeddedDB {
         final SubscriptionBundle bundle = Mockito.mock(SubscriptionBundle.class);
         Mockito.when(bundle.getId()).thenReturn(uuid);
 
-        final SortedSet<BlockingState> history1 = api.getBlockingHistory(bundle);
-        final SortedSet<BlockingState> history2 = api.getBlockingHistory(bundle.getId());
+        final List<BlockingState> history1 = api.getBlockingHistory(bundle);
+        final List<BlockingState> history2 = api.getBlockingHistory(bundle.getId());
 
         Assert.assertEquals(history1.size(), 2);
-        Assert.assertEquals(history1.first().getStateName(), overdueStateName);
-        Assert.assertEquals(history1.last().getStateName(), overdueStateName2);
+        Assert.assertEquals(history1.get(0).getStateName(), overdueStateName);
+        Assert.assertEquals(history1.get(1).getStateName(), overdueStateName2);
 
         Assert.assertEquals(history2.size(), 2);
-        Assert.assertEquals(history2.first().getStateName(), overdueStateName);
-        Assert.assertEquals(history2.last().getStateName(), overdueStateName2);
+        Assert.assertEquals(history2.get(0).getStateName(), overdueStateName);
+        Assert.assertEquals(history2.get(1).getStateName(), overdueStateName2);
     }
 }

@@ -18,6 +18,7 @@ package com.ning.billing.junction.dao;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.SortedSet;
 import java.util.UUID;
 
@@ -68,12 +69,12 @@ public interface BlockingStateSqlDao extends BlockingStateDao, CloseMe, Transmog
     @Override
     @SqlQuery
     @Mapper(BlockingHistorySqlMapper.class)
-    public abstract SortedSet<BlockingState> getBlockingHistoryFor(@Bind(binder = BlockableBinder.class) Blockable blockable);
+    public abstract List<BlockingState> getBlockingHistoryFor(@Bind(binder = BlockableBinder.class) Blockable blockable);
 
     @Override
     @SqlQuery
     @Mapper(BlockingHistorySqlMapper.class)
-    public abstract SortedSet<BlockingState> getBlockingHistoryFor(@Bind(binder = UUIDBinder.class) UUID blockableId);
+    public abstract List<BlockingState> getBlockingHistoryFor(@Bind(binder = UUIDBinder.class) UUID blockableId);
 
 
     public class BlockingHistorySqlMapper extends MapperBase implements ResultSetMapper<BlockingState> {

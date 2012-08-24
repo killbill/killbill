@@ -16,6 +16,7 @@
 
 package com.ning.billing.junction.dao;
 
+import java.util.List;
 import java.util.SortedSet;
 import java.util.UUID;
 
@@ -30,9 +31,9 @@ public interface BlockingStateDao {
 
     public BlockingState getBlockingStateFor(UUID blockableId);
 
-    public SortedSet<BlockingState> getBlockingHistoryFor(Blockable blockable);
+    public List<BlockingState> getBlockingHistoryFor(Blockable blockable);
 
-    public SortedSet<BlockingState> getBlockingHistoryFor(UUID blockableId);
+    public List<BlockingState> getBlockingHistoryFor(UUID blockableId);
 
     //Write
     <T extends Blockable> void setBlockingState(BlockingState state, Clock clock);

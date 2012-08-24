@@ -16,6 +16,7 @@
 
 package com.ning.billing.junction.dao;
 
+import java.util.List;
 import java.util.SortedSet;
 import java.util.UUID;
 
@@ -87,15 +88,15 @@ public class TestBlockingDao extends JunctionTestSuiteWithEmbeddedDB {
         final SubscriptionBundle bundle = Mockito.mock(SubscriptionBundle.class);
         Mockito.when(bundle.getId()).thenReturn(uuid);
 
-        final SortedSet<BlockingState> history1 = dao.getBlockingHistoryFor(bundle);
-        final SortedSet<BlockingState> history2 = dao.getBlockingHistoryFor(bundle.getId());
+        final List<BlockingState> history1 = dao.getBlockingHistoryFor(bundle);
+        final List<BlockingState> history2 = dao.getBlockingHistoryFor(bundle.getId());
 
         Assert.assertEquals(history1.size(), 2);
-        Assert.assertEquals(history1.first().getStateName(), overdueStateName);
-        Assert.assertEquals(history1.last().getStateName(), overdueStateName2);
+        Assert.assertEquals(history1.get(0).getStateName(), overdueStateName);
+        Assert.assertEquals(history1.get(1).getStateName(), overdueStateName2);
 
         Assert.assertEquals(history2.size(), 2);
-        Assert.assertEquals(history2.first().getStateName(), overdueStateName);
-        Assert.assertEquals(history2.last().getStateName(), overdueStateName2);
+        Assert.assertEquals(history2.get(0).getStateName(), overdueStateName);
+        Assert.assertEquals(history2.get(1).getStateName(), overdueStateName2);
     }
 }

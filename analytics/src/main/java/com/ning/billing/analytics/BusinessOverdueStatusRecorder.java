@@ -92,7 +92,7 @@ public class BusinessOverdueStatusRecorder {
                 log.info("Started rebuilding overdue statuses for bundle id {}", bundleId);
                 transactional.deleteOverdueStatusesForBundle(bundleId.toString());
 
-                final SortedSet<BlockingState> blockingHistory = blockingApi.getBlockingHistory(bundleId);
+                final List<BlockingState> blockingHistory = blockingApi.getBlockingHistory(bundleId);
                 if (blockingHistory != null && blockingHistory.size() > 0) {
                     final List<BlockingState> overdueStates = ImmutableList.<BlockingState>copyOf(blockingHistory);
                     final List<BlockingState> overdueStatesReversed = Lists.reverse(overdueStates);

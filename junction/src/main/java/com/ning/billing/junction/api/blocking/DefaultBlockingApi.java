@@ -16,6 +16,7 @@
 
 package com.ning.billing.junction.api.blocking;
 
+import java.util.List;
 import java.util.SortedSet;
 import java.util.UUID;
 
@@ -53,12 +54,12 @@ public class DefaultBlockingApi implements BlockingApi {
     }
 
     @Override
-    public SortedSet<BlockingState> getBlockingHistory(final Blockable overdueable) {
+    public List<BlockingState> getBlockingHistory(final Blockable overdueable) {
         return dao.getBlockingHistoryFor(overdueable);
     }
 
     @Override
-    public SortedSet<BlockingState> getBlockingHistory(final UUID overdueableId) {
+    public List<BlockingState> getBlockingHistory(final UUID overdueableId) {
         return dao.getBlockingHistoryFor(overdueableId);
     }
 

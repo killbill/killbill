@@ -16,6 +16,7 @@
 
 package com.ning.billing.overdue.applicator;
 
+import java.util.List;
 import java.util.SortedSet;
 import java.util.UUID;
 
@@ -89,12 +90,12 @@ public class ApplicatorMockJunctionModule extends MockJunctionModule {
         }
 
         @Override
-        public SortedSet<BlockingState> getBlockingHistory(final Blockable overdueable) {
+        public List<BlockingState> getBlockingHistory(final Blockable overdueable) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public SortedSet<BlockingState> getBlockingHistory(final UUID overdueableId) {
+        public List<BlockingState> getBlockingHistory(final UUID overdueableId) {
             throw new UnsupportedOperationException();
         }
 

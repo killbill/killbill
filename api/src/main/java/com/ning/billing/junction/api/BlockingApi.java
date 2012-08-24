@@ -16,6 +16,7 @@
 
 package com.ning.billing.junction.api;
 
+import java.util.List;
 import java.util.SortedSet;
 import java.util.UUID;
 
@@ -27,9 +28,9 @@ public interface BlockingApi {
 
     public BlockingState getBlockingStateFor(UUID overdueableId);
 
-    public SortedSet<BlockingState> getBlockingHistory(Blockable overdueable);
+    public List<BlockingState> getBlockingHistory(Blockable overdueable);
 
-    public SortedSet<BlockingState> getBlockingHistory(UUID overdueableId);
+    public List<BlockingState> getBlockingHistory(UUID overdueableId);
 
     public <T extends Blockable> void setBlockingState(BlockingState state);
 

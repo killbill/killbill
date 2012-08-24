@@ -16,6 +16,7 @@
 
 package com.ning.billing.junction.blocking;
 
+import java.util.List;
 import java.util.SortedSet;
 import java.util.UUID;
 
@@ -71,12 +72,12 @@ public class TestBlockingChecker extends JunctionTestSuite {
         }
 
         @Override
-        public SortedSet<BlockingState> getBlockingHistoryFor(final Blockable overdueable) {
+        public List<BlockingState> getBlockingHistoryFor(final Blockable overdueable) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public SortedSet<BlockingState> getBlockingHistoryFor(final UUID overdueableId) {
+        public List<BlockingState> getBlockingHistoryFor(final UUID overdueableId) {
             throw new UnsupportedOperationException();
         }
 

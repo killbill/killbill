@@ -366,7 +366,7 @@ public class TestBillingApi extends JunctionTestSuite {
 
         ((MockCatalog) catalogService.getFullCatalog()).setBillingAlignment(BillingAlignment.ACCOUNT);
 
-        final SortedSet<BlockingState> blockingStates = new TreeSet<BlockingState>();
+        final List<BlockingState> blockingStates = new ArrayList<BlockingState>();
         blockingStates.add(new DefaultBlockingState(bunId, DISABLED_BUNDLE, Blockable.Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now.plusDays(1)));
         blockingStates.add(new DefaultBlockingState(bunId, CLEAR_BUNDLE, Blockable.Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now.plusDays(2)));
 
@@ -386,16 +386,16 @@ public class TestBillingApi extends JunctionTestSuite {
             }
 
             @Override
-            public SortedSet<BlockingState> getBlockingHistory(final UUID overdueableId) {
+            public List<BlockingState> getBlockingHistory(final UUID overdueableId) {
                 if (overdueableId == bunId) {
                     return blockingStates;
                 }
-                return new TreeSet<BlockingState>();
+                return new ArrayList<BlockingState>();
             }
 
             @Override
-            public SortedSet<BlockingState> getBlockingHistory(final Blockable overdueable) {
-                return new TreeSet<BlockingState>();
+            public List<BlockingState> getBlockingHistory(final Blockable overdueable) {
+                return new ArrayList<BlockingState>();
             }
         });
 
