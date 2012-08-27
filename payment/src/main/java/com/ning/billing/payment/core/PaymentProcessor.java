@@ -454,8 +454,8 @@ public class PaymentProcessor extends ProcessorBase {
 
                 paymentDao.updateStatusForPaymentWithAttempt(paymentInput.getId(), paymentStatus, paymentPluginInfo.getGatewayErrorCode(),  paymentPluginInfo.getGatewayError(),null, null, attemptInput.getId(), context);
 
-                log.info(String.format("Could not process payment for account %s, invoice %s, error = %s",
-                        account.getId(), invoice.getId(), paymentPluginInfo.getGatewayError()));
+                log.warn(String.format("Could not process payment for account %s, invoice %s, error = %s",
+                         account.getId(), invoice.getId(), paymentPluginInfo.getGatewayError()));
 
                 event = new DefaultPaymentErrorEvent(account.getId(), invoice.getId(), paymentInput.getId(), paymentPluginInfo.getGatewayError(), context.getUserToken());
                 throw new PaymentApiException(ErrorCode.PAYMENT_CREATE_PAYMENT, account.getId(), paymentPluginInfo.getGatewayError());
