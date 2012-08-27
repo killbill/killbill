@@ -594,7 +594,8 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         assertEquals(result.getBillingMode(), event.getBillingMode());
         assertEquals(result.getBillingPeriod(), event.getBillingPeriod());
         assertEquals(result.getTransitionType(), SubscriptionTransitionType.START_BILLING_DISABLED);
-        assertEquals(result.getTotalOrdering(), new Long(0));
+        // TODO - ugly, fragile
+        assertEquals(result.getTotalOrdering(), (Long) (BlockingCalculator.getGlobalTotalOrder().get() - 1));
     }
 
     @Test(groups = "fast")
@@ -614,7 +615,8 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         assertEquals(result.getBillingMode(), event.getBillingMode());
         assertEquals(result.getBillingPeriod(), event.getBillingPeriod());
         assertEquals(result.getTransitionType(), SubscriptionTransitionType.END_BILLING_DISABLED);
-        assertEquals(result.getTotalOrdering(), new Long(0));
+        // TODO - ugly, fragile
+        assertEquals(result.getTotalOrdering(), (Long) (BlockingCalculator.getGlobalTotalOrder().get() - 1));
     }
 
     private class MockBillingEvent extends DefaultBillingEvent {

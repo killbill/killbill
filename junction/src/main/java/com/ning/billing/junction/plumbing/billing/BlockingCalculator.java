@@ -41,9 +41,11 @@ import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.junction.api.BlockingState;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
 public class BlockingCalculator {
+
     private static final AtomicLong globaltotalOrder = new AtomicLong();
 
     private final BlockingApi blockingApi;
@@ -275,4 +277,8 @@ public class BlockingCalculator {
         return result;
     }
 
+    @VisibleForTesting
+    static AtomicLong getGlobalTotalOrder() {
+        return globaltotalOrder;
+    }
 }
