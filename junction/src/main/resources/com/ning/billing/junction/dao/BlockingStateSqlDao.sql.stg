@@ -12,7 +12,7 @@ getBlockingStateFor() ::= <<
       , created_date   
     from blocking_states
     where id = :id
-    order by created_date desc, record_id desc
+    order by created_date asc, record_id asc
     limit 1
     ;
 >>
@@ -29,7 +29,7 @@ getBlockingHistoryFor() ::= <<
       , created_date   
     from blocking_states
     where id = :id 
-    order by created_date desc, record_id desc
+    order by created_date asc, record_id asc
     ;
 >>
 
