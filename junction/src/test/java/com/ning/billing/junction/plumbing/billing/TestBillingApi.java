@@ -41,6 +41,7 @@ import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.MockCatalog;
 import com.ning.billing.catalog.MockCatalogService;
 import com.ning.billing.catalog.api.BillingAlignment;
+import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Currency;
@@ -408,7 +409,7 @@ public class TestBillingApi extends JunctionTestSuite {
         final Iterator<BillingEvent> it = events.iterator();
 
         checkEvent(it.next(), nextPlan, 32, subId, now, nextPhase, SubscriptionTransitionType.CREATE.toString(), nextPhase.getFixedPrice(), nextPhase.getRecurringPrice());
-        checkEvent(it.next(), nextPlan, 32, subId, now.plusDays(1), nextPhase, SubscriptionTransitionType.START_BILLING_DISABLED.toString(), new MockPrice("0"), new MockPrice("0"));
+        checkEvent(it.next(), nextPlan, 32, subId, now.plusDays(1), nextPhase, SubscriptionTransitionType.START_BILLING_DISABLED.toString(), null, null);
         checkEvent(it.next(), nextPlan, 32, subId, now.plusDays(2), nextPhase, SubscriptionTransitionType.END_BILLING_DISABLED.toString(), nextPhase.getFixedPrice(), nextPhase.getRecurringPrice());
     }
 
@@ -522,7 +523,9 @@ public class TestBillingApi extends JunctionTestSuite {
         Assert.assertEquals(time.getDayOfMonth(), event.getEffectiveDate().getDayOfMonth());
         Assert.assertEquals(nextPhase, event.getPlanPhase());
         Assert.assertEquals(nextPlan, event.getPlan());
-        Assert.assertEquals(nextPhase.getBillingPeriod(), event.getBillingPeriod());
+        if (!SubscriptionTransitionType.START_BILLING_DISABLED.equals(event.getTransitionType())) {
+            Assert.assertEquals(nextPhase.getBillingPeriod(), event.getBillingPeriod());
+        }
         Assert.assertEquals(BillingModeType.IN_ADVANCE, event.getBillingMode());
         Assert.assertEquals(desc, event.getTransitionType().toString());
     }

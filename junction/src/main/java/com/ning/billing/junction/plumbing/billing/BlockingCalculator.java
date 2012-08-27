@@ -197,12 +197,16 @@ public class BlockingCalculator {
         final DateTime effectiveDate = odEventTime;
         final PlanPhase planPhase = previousEvent.getPlanPhase();
         final Plan plan = previousEvent.getPlan();
-        final BigDecimal fixedPrice = BigDecimal.ZERO;
-        final BigDecimal recurringPrice = BigDecimal.ZERO;
+
+        // Make sure to set the fixed price to null and the billing period to NO_BILLING_PERIOD,
+        // which makes invoice disregard this event
+        final BigDecimal fixedPrice = null;
+        final BigDecimal recurringPrice = null;
+        final BillingPeriod billingPeriod = BillingPeriod.NO_BILLING_PERIOD;
+
         final Currency currency = previousEvent.getCurrency();
         final String description = "";
         final BillingModeType billingModeType = previousEvent.getBillingMode();
-        final BillingPeriod billingPeriod = previousEvent.getBillingPeriod();
         final SubscriptionTransitionType type = SubscriptionTransitionType.START_BILLING_DISABLED;
         final Long totalOrdering = globaltotalOrder.getAndIncrement();
         final DateTimeZone tz = previousEvent.getTimeZone();
@@ -214,6 +218,7 @@ public class BlockingCalculator {
     }
 
     protected BillingEvent createNewReenableEvent(final DateTime odEventTime, final BillingEvent previousEvent) {
+        // All fields are populated with the event state from before the blocking period, for invoice to resume invoicing
         final Account account = previousEvent.getAccount();
         final BillCycleDay billCycleDay = previousEvent.getBillCycleDay();
         final Subscription subscription = previousEvent.getSubscription();
