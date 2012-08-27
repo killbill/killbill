@@ -17,12 +17,10 @@
 package com.ning.billing.beatrix.integration;
 
 import java.math.BigDecimal;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.joda.time.Days;
 import org.joda.time.Interval;
 import org.joda.time.LocalDate;
 import org.testng.annotations.Guice;
@@ -43,14 +41,13 @@ import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItemType;
 
-import com.google.common.collect.ImmutableList;
-
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
 @Guice(modules = {BeatrixModule.class})
 public class TestIntegration extends TestIntegrationBase {
+
     @Test(groups = "slow")
     public void testCancelBPWithAOTheSameDay() throws Exception {
 
@@ -80,10 +77,10 @@ public class TestIntegration extends TestIntegrationBase {
         //
         cancelSubscriptionAndCheckForCompletion(bpSubscription, clock.getUTCNow(), NextEvent.CANCEL, NextEvent.CANCEL);
         invoiceChecker.checkInvoice(account.getId(), 2,
-                new ExpectedItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("399.95")),
-                // The second invoice should be adjusted for the AO (we paid for the full period) and since we paid we should also see a CBA
-                new ExpectedItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-399.95")),
-                new ExpectedItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 4, 1), InvoiceItemType.CBA_ADJ, new BigDecimal("399.95")));
+                                    new ExpectedItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("399.95")),
+                                    // The second invoice should be adjusted for the AO (we paid for the full period) and since we paid we should also see a CBA
+                                    new ExpectedItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-399.95")),
+                                    new ExpectedItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 4, 1), InvoiceItemType.CBA_ADJ, new BigDecimal("399.95")));
     }
 
     @Test(groups = "slow")
@@ -94,7 +91,6 @@ public class TestIntegration extends TestIntegrationBase {
 
         log.info("Beginning test with BCD of " + billingDay);
         final Account account = createAccountWithPaymentMethod(getAccountData(billingDay));
-
 
         // set clock to the initial start date
         clock.setTime(initialCreationDate);
@@ -125,9 +121,8 @@ public class TestIntegration extends TestIntegrationBase {
         setDateAndCheckForCompletion(new DateTime(2012, 3, 1, 0, 3, 45, 0, testTimeZone));
         setDateAndCheckForCompletion(new DateTime(2012, 3, 2, 0, 3, 45, 0, testTimeZone), NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
         invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, new ExpectedItemCheck(new LocalDate(2012, 3, 2),
-                new LocalDate(2012, 3,31), InvoiceItemType.RECURRING, new BigDecimal("561.25")));
+                                                                                               new LocalDate(2012, 3, 31), InvoiceItemType.RECURRING, new BigDecimal("561.25")));
         invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 3, 31));
-
 
         //
         // CHANGE PLAN EOT AND EXPECT NOTHING
@@ -147,7 +142,7 @@ public class TestIntegration extends TestIntegrationBase {
         // MOVE 3 * TIME AFTER NEXT BILL CYCLE DAY AND EXPECT EVENT : NextEvent.INVOICE, NextEvent.PAYMENT
         //
         addDaysAndCheckForCompletion(31, NextEvent.INVOICE, NextEvent.PAYMENT);
-        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, new ExpectedItemCheck(new LocalDate(2012, 4, 30), new LocalDate(2012, 5,31), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+        invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, new ExpectedItemCheck(new LocalDate(2012, 4, 30), new LocalDate(2012, 5, 31), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
         invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 5, 31));
 
         addDaysAndCheckForCompletion(31, NextEvent.INVOICE, NextEvent.PAYMENT);
@@ -162,7 +157,6 @@ public class TestIntegration extends TestIntegrationBase {
         // FINALLY CANCEL SUBSCRIPTION EOT
         //
         subscription = subscriptionDataFromSubscription(cancelSubscriptionAndCheckForCompletion(subscription, clock.getUTCNow()));
-
 
         // MOVE AFTER CANCEL DATE AND EXPECT EVENT : NextEvent.CANCEL
         addDaysAndCheckForCompletion(31, NextEvent.CANCEL);
@@ -179,7 +173,6 @@ public class TestIntegration extends TestIntegrationBase {
 
         log.info("Beginning test with BCD of " + billingDay);
         final Account account = createAccountWithPaymentMethod(getAccountData(billingDay));
-
 
         // set clock to the initial start date
         clock.setTime(initialCreationDate);
@@ -210,9 +203,8 @@ public class TestIntegration extends TestIntegrationBase {
         setDateAndCheckForCompletion(new DateTime(2012, 3, 1, 0, 3, 45, 0, testTimeZone));
         setDateAndCheckForCompletion(new DateTime(2012, 3, 2, 0, 3, 45, 0, testTimeZone), NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
         invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, new ExpectedItemCheck(new LocalDate(2012, 3, 2),
-                new LocalDate(2012, 4, 2), InvoiceItemType.RECURRING, new BigDecimal("599.95")));
+                                                                                               new LocalDate(2012, 4, 2), InvoiceItemType.RECURRING, new BigDecimal("599.95")));
         invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 4, 2));
-
 
         //
         // CHANGE PLAN EOT AND EXPECT NOTHING
@@ -248,7 +240,6 @@ public class TestIntegration extends TestIntegrationBase {
         //
         subscription = subscriptionDataFromSubscription(cancelSubscriptionAndCheckForCompletion(subscription, clock.getUTCNow()));
 
-
         // MOVE AFTER CANCEL DATE AND EXPECT EVENT : NextEvent.CANCEL
         addDaysAndCheckForCompletion(31, NextEvent.CANCEL);
         invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 8, 2));
@@ -264,7 +255,6 @@ public class TestIntegration extends TestIntegrationBase {
 
         log.info("Beginning test with BCD of " + billingDay);
         final Account account = createAccountWithPaymentMethod(getAccountData(billingDay));
-
 
         // set clock to the initial start date
         clock.setTime(initialCreationDate);
@@ -296,14 +286,13 @@ public class TestIntegration extends TestIntegrationBase {
         setDateAndCheckForCompletion(new DateTime(2012, 3, 2, 0, 3, 45, 0, testTimeZone), NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
         // PRO_RATION
         invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, new ExpectedItemCheck(new LocalDate(2012, 3, 2),
-                new LocalDate(2012, 3, 3), InvoiceItemType.RECURRING, new BigDecimal("20.70")));
+                                                                                               new LocalDate(2012, 3, 3), InvoiceItemType.RECURRING, new BigDecimal("20.70")));
         invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 3, 3));
 
         setDateAndCheckForCompletion(new DateTime(2012, 3, 3, 0, 3, 45, 0, testTimeZone), NextEvent.INVOICE, NextEvent.PAYMENT);
         invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, new ExpectedItemCheck(new LocalDate(2012, 3, 3),
-                new LocalDate(2012, 4, 3), InvoiceItemType.RECURRING, new BigDecimal("599.95")));
+                                                                                               new LocalDate(2012, 4, 3), InvoiceItemType.RECURRING, new BigDecimal("599.95")));
         invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 4, 3));
-
 
         //
         // CHANGE PLAN EOT AND EXPECT NOTHING
@@ -339,7 +328,6 @@ public class TestIntegration extends TestIntegrationBase {
         //
         subscription = subscriptionDataFromSubscription(cancelSubscriptionAndCheckForCompletion(subscription, clock.getUTCNow()));
 
-
         // MOVE AFTER CANCEL DATE AND EXPECT EVENT : NextEvent.CANCEL
         addDaysAndCheckForCompletion(31, NextEvent.CANCEL);
         invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 8, 3));
@@ -347,10 +335,9 @@ public class TestIntegration extends TestIntegrationBase {
         log.info("TEST PASSED !");
 
 
-
     }
 
-    @Test(groups = {"stress"}, enabled=false)
+    @Test(groups = {"stress"}, enabled = false)
     public void stressTest() throws Exception {
         final int maxIterations = 100;
         for (int curIteration = 0; curIteration < maxIterations; curIteration++) {
@@ -377,7 +364,7 @@ public class TestIntegration extends TestIntegrationBase {
         }
     }
 
-    @Test(groups = {"stress"}, enabled=false)
+    @Test(groups = {"stress"}, enabled = false)
     public void stressTestDebug() throws Exception {
         final int maxIterations = 100;
         for (int curIteration = 0; curIteration < maxIterations; curIteration++) {
@@ -392,7 +379,6 @@ public class TestIntegration extends TestIntegrationBase {
             }
         }
     }
-
 
     @Test(groups = "slow")
     public void testAddonsWithMultipleAlignments() throws Exception {
@@ -428,7 +414,6 @@ public class TestIntegration extends TestIntegrationBase {
                                                                                new PlanPhaseSpecifier("Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null), null, context));
         assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
-
 
         busHandler.pushExpectedEvent(NextEvent.CREATE);
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
@@ -473,7 +458,6 @@ public class TestIntegration extends TestIntegrationBase {
         assertTrue(busHandler.isCompleted(DELAY));
         assertListenerStatus();
     }
-
 
     @Test(groups = {"slow"})
     public void testRepairForInvoicing() throws Exception {
@@ -576,8 +560,6 @@ public class TestIntegration extends TestIntegrationBase {
 
         assertListenerStatus();
     }
-
-
 
     @Test(groups = "slow")
     public void testForMultipleRecurringPhases() throws Exception {
