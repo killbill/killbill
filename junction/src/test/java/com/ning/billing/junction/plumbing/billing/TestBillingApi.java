@@ -88,40 +88,6 @@ import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 public class TestBillingApi extends JunctionTestSuite {
-    class MockPrice implements InternationalPrice {
-        private final BigDecimal price;
-
-        public MockPrice(final String val) {
-            price = new BigDecimal(val);
-        }
-
-        @Override
-        public boolean isZero() {
-            return price.compareTo(BigDecimal.ZERO) == 0;
-        }
-
-        @Override
-        public Price[] getPrices() {
-            return new Price[]{
-                    new Price() {
-                        @Override
-                        public Currency getCurrency() {
-                            return Currency.USD;
-                        }
-
-                        @Override
-                        public BigDecimal getValue() throws CurrencyValueNull {
-                            return price;
-                        }
-                    }
-            };
-        }
-
-        @Override
-        public BigDecimal getPrice(final Currency currency) throws CatalogApiException {
-            return price;
-        }
-    }
 
     private static final String DISABLED_BUNDLE = "disabled-bundle";
     private static final String CLEAR_BUNDLE = "clear-bundle";
