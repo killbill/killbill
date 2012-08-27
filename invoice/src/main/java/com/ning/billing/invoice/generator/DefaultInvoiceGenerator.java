@@ -20,11 +20,9 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -58,8 +56,6 @@ import com.ning.billing.invoice.model.RepairAdjInvoiceItem;
 import com.ning.billing.junction.api.BillingEventSet;
 import com.ning.billing.util.clock.Clock;
 
-import com.google.common.collect.Sets;
-import com.google.common.collect.Sets.SetView;
 import com.google.inject.Inject;
 
 public class DefaultInvoiceGenerator implements InvoiceGenerator {
