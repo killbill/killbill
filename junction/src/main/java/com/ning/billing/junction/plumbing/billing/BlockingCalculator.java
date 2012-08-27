@@ -28,7 +28,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
-import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -41,7 +40,8 @@ import com.ning.billing.entitlement.api.billing.BillingModeType;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.junction.api.BlockingState;
-import com.ning.billing.junction.api.DefaultBlockingState;
+
+import com.google.inject.Inject;
 
 public class BlockingCalculator {
     private static final AtomicLong globaltotalOrder = new AtomicLong();
@@ -72,6 +72,11 @@ public class BlockingCalculator {
         this.blockingApi = blockingApi;
     }
 
+    /**
+     * Given a set of billing events, add corresponding blocking (overdue) billing events.
+     *
+     * @param billingEvents the original list of billing events to update (without overdue events)
+     */
     public void insertBlockingEvents(final SortedSet<BillingEvent> billingEvents) {
         if (billingEvents.size() <= 0) {
             return;
@@ -102,7 +107,6 @@ public class BlockingCalculator {
         for (final BillingEvent eventToRemove : billingEventsToRemove) {
             billingEvents.remove(eventToRemove);
         }
-
     }
 
     protected SortedSet<BillingEvent> eventsToRemove(final List<DisabledDuration> disabledDuration,
@@ -127,7 +131,9 @@ public class BlockingCalculator {
     protected SortedSet<BillingEvent> createNewEvents(final List<DisabledDuration> disabledDuration, final SortedSet<BillingEvent> billingEvents, final Account account, final Subscription subscription) {
         final SortedSet<BillingEvent> result = new TreeSet<BillingEvent>();
         for (final DisabledDuration duration : disabledDuration) {
+            // The first one before the blocked duration
             final BillingEvent precedingInitialEvent = precedingBillingEventForSubscription(duration.getStart(), billingEvents, subscription);
+            // The last one during of before the duration
             final BillingEvent precedingFinalEvent = precedingBillingEventForSubscription(duration.getEnd(), billingEvents, subscription);
 
             if (precedingInitialEvent != null) { // there is a preceding billing event
@@ -163,7 +169,7 @@ public class BlockingCalculator {
         }
 
         for (final BillingEvent event : filteredBillingEvents) {
-            if (event.getEffectiveDate().isAfter(datetime)) { // found it its the previous event
+            if (!event.getEffectiveDate().isBefore(datetime)) { // found it its the previous event
                 return result;
             } else { // still looking
                 result = event;
@@ -237,7 +243,7 @@ public class BlockingCalculator {
                 subs = new ArrayList<Subscription>();
                 result.put(bundleId, subs);
             }
-            if (!result.contains(event.getSubscription())) {
+            if (!result.get(bundleId).contains(event.getSubscription())) {
                 subs.add(event.getSubscription());
             }
         }
@@ -245,14 +251,18 @@ public class BlockingCalculator {
     }
 
 
+    // In ascending order
     protected List<DisabledDuration> createBlockingDurations(final List<BlockingState> overdueBundleEvents) {
         final List<DisabledDuration> result = new ArrayList<BlockingCalculator.DisabledDuration>();
+        // Earliest blocking event
         BlockingState first = null;
 
         for (final BlockingState e : overdueBundleEvents) {
-            if (e.isBlockBilling() && first == null) { // found a transition to disabled
+            if (e.isBlockBilling() && first == null) {
+                // First blocking event of contiguous series of blocking events
                 first = e;
-            } else if (first != null && !e.isBlockBilling()) { // found a transition from disabled
+            } else if (first != null && !e.isBlockBilling()) {
+                // End of the interval
                 result.add(new DisabledDuration(first.getTimestamp(), e.getTimestamp()));
                 first = null;
             }

@@ -722,4 +722,40 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         assertNotNull(pairs.get(0).getEnd());
         assertEquals(pairs.get(0).getEnd(), now.plusDays(4));
     }
+
+    @Test(groups = "fast")
+    public void testSimpleWithClearBlockingDuration() throws Exception {
+        final UUID ovdId = UUID.randomUUID();
+
+        final BillingEvent trial = createRealEvent(new LocalDate(2012, 5, 1).toDateTimeAtStartOfDay(DateTimeZone.UTC), subscription1, SubscriptionTransitionType.CREATE);
+        final BillingEvent phase = createRealEvent(new LocalDate(2012, 5, 31).toDateTimeAtStartOfDay(DateTimeZone.UTC), subscription1, SubscriptionTransitionType.PHASE);
+        final BillingEvent upgrade = createRealEvent(new LocalDate(2012, 7, 25).toDateTimeAtStartOfDay(DateTimeZone.UTC), subscription1, SubscriptionTransitionType.CHANGE);
+        final SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
+        billingEvents.add(trial);
+        billingEvents.add(phase);
+        billingEvents.add(upgrade);
+
+        final List<BlockingState> blockingEvents = new ArrayList<BlockingState>();
+        blockingEvents.add(new DefaultBlockingState(ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, false, false, new LocalDate(2012, 7, 5).toDateTimeAtStartOfDay(DateTimeZone.UTC)));
+        blockingEvents.add(new DefaultBlockingState(ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, new LocalDate(2012, 7, 15).toDateTimeAtStartOfDay(DateTimeZone.UTC)));
+        blockingEvents.add(new DefaultBlockingState(ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, new LocalDate(2012, 7, 25).toDateTimeAtStartOfDay(DateTimeZone.UTC)));
+        blockingEvents.add(new DefaultBlockingState(ovdId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, new LocalDate(2012, 7, 25).toDateTimeAtStartOfDay(DateTimeZone.UTC)));
+
+        Mockito.when(blockingApi.getBlockingHistory(bundleId1)).thenReturn(blockingEvents);
+
+        odc.insertBlockingEvents(billingEvents);
+
+        assertEquals(billingEvents.size(), 5);
+        final List<BillingEvent> events = new ArrayList<BillingEvent>(billingEvents);
+        assertEquals(events.get(0).getEffectiveDate(), new LocalDate(2012, 5, 1).toDateTimeAtStartOfDay(DateTimeZone.UTC));
+        assertEquals(events.get(0).getTransitionType(), SubscriptionTransitionType.CREATE);
+        assertEquals(events.get(1).getEffectiveDate(), new LocalDate(2012, 5, 31).toDateTimeAtStartOfDay(DateTimeZone.UTC));
+        assertEquals(events.get(1).getTransitionType(), SubscriptionTransitionType.PHASE);
+        assertEquals(events.get(2).getEffectiveDate(), new LocalDate(2012, 7, 15).toDateTimeAtStartOfDay(DateTimeZone.UTC));
+        assertEquals(events.get(2).getTransitionType(), SubscriptionTransitionType.START_BILLING_DISABLED);
+        assertEquals(events.get(3).getEffectiveDate(), new LocalDate(2012, 7, 25).toDateTimeAtStartOfDay(DateTimeZone.UTC));
+        assertEquals(events.get(3).getTransitionType(), SubscriptionTransitionType.END_BILLING_DISABLED);
+        assertEquals(events.get(4).getEffectiveDate(), new LocalDate(2012, 7, 25).toDateTimeAtStartOfDay(DateTimeZone.UTC));
+        assertEquals(events.get(4).getTransitionType(), SubscriptionTransitionType.CHANGE);
+    }
 }
