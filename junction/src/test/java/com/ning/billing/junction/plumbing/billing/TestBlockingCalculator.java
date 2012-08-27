@@ -122,16 +122,14 @@ public class TestBlockingCalculator extends JunctionTestSuite {
     // S2 --B--[-------]--------------------------
     // S3 ------------------D---------------------
     @Test(groups = "fast")
-    public void testInsertBlockingEvents() {
+    public void testInsertBlockingEventsForBundle() {
         final DateTime now = clock.getUTCNow();
-        final List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
-        final SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
 
-        disabledDuration.add(new DisabledDuration(now, null));
         final BillingEvent A = createRealEvent(now.minusDays(1).minusHours(1), subscription1);
         final BillingEvent B = createRealEvent(now.minusDays(1), subscription2);
         final BillingEvent C = createRealEvent(now.plusDays(1), subscription2);
         final BillingEvent D = createRealEvent(now.plusDays(3), subscription3);
+        final SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
         billingEvents.add(A);
         billingEvents.add(B);
         billingEvents.add(C);
@@ -141,7 +139,7 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         blockingStates.add(new DefaultBlockingState(bundleId1, DISABLED_BUNDLE, Blockable.Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now));
         blockingStates.add(new DefaultBlockingState(bundleId1, CLEAR_BUNDLE, Blockable.Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now.plusDays(2)));
 
-        Mockito.when(blockingApi.getBlockingHistory(Mockito.<Blockable>anyObject())).thenReturn(blockingStates);
+        Mockito.when(blockingApi.getBlockingHistory(bundleId1)).thenReturn(blockingStates);
 
         odc.insertBlockingEvents(billingEvents);
 
