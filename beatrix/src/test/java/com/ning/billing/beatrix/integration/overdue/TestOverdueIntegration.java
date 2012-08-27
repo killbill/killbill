@@ -27,7 +27,6 @@ import java.util.concurrent.Callable;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
@@ -62,6 +61,7 @@ import com.google.inject.name.Named;
 
 import static com.jayway.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
@@ -183,11 +183,6 @@ public class TestOverdueIntegration extends TestIntegrationBase {
         // configure basic OD state rules for 2 states OD1 1-2month, OD2 2-3 month
     }
 
-    @AfterMethod
-    public void cleanup() {
-        // Clear databases
-    }
-
     // We set the the property killbill.payment.retry.days=8,8,8,8,8,8,8,8 so that Payment retry logic does not end with an ABORTED state
     // preventing final instant payment to succeed.
     @Test(groups = "slow")
@@ -256,14 +251,27 @@ public class TestOverdueIntegration extends TestIntegrationBase {
                 createPaymentAndCheckForCompletion(account, invoice, NextEvent.PAYMENT);
             }
         }
-        // STEPH COMMENTED OUTE UNTIL WE SORT THAT OUT
-/*
+
         checkODState(BlockingApi.CLEAR_STATE_NAME);
         checkChangePlanWithOverdueState(baseSubscription, false);
 
-        invoiceChecker.checkInvoice(account.getId(), 4, new ExpectedItemCheck(new LocalDate(2012, 7, 25), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+        invoiceChecker.checkRepairedInvoice(account.getId(), 3,
+                                            new ExpectedItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("249.95")),
+                                            // We paid up to 07-31, hence the adjustment
+                                            new ExpectedItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-249.95")),
+                                            new ExpectedItemCheck(new LocalDate(2012, 7, 25), new LocalDate(2012, 7, 25), InvoiceItemType.CBA_ADJ, new BigDecimal("249.95")));
+        invoiceChecker.checkInvoice(account.getId(), 4,
+                                    // Note the end date here is not 07-25, but 07-15. The overdue configuration disabled invoicing between 07-15 and 07-25 (e.g. the bundle
+                                    // was inaccessible, hence we didn't want to charge the customer for that period, even though the account was overdue).
+                                    new ExpectedItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 15), InvoiceItemType.RECURRING, new BigDecimal("124.98")),
+                                    // Item for the upgraded recurring plan
+                                    new ExpectedItemCheck(new LocalDate(2012, 7, 25), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("116.09")),
+                                    // Credits consumed
+                                    new ExpectedItemCheck(new LocalDate(2012, 7, 25), new LocalDate(2012, 7, 25), InvoiceItemType.CBA_ADJ, new BigDecimal("-241.07")));
         invoiceChecker.checkChargedThroughDate(baseSubscription.getId(), new LocalDate(2012, 7, 31));
-*/
+
+        // Verify the account balance: 249.95 - 124.98 - 116.09
+        assertEquals(invoiceUserApi.getAccountBalance(account.getId()).compareTo(new BigDecimal("-8.88")), 0);
     }
 
     private void checkChangePlanWithOverdueState(final Subscription subscription, final boolean shouldFail) {
@@ -274,8 +282,8 @@ public class TestOverdueIntegration extends TestIntegrationBase {
                 assertTrue(e.getCause() instanceof BlockingApiException);
             }
         } else {
-            // Upgrade
-            changeSubscriptionAndCheckForCompletion(subscription, "Assault-Rifle", BillingPeriod.MONTHLY, NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.PAYMENT);
+            // Upgrade - we don't expect a payment here due to the scenario (the account will have some CBA)
+            changeSubscriptionAndCheckForCompletion(subscription, "Assault-Rifle", BillingPeriod.MONTHLY, NextEvent.CHANGE, NextEvent.INVOICE);
         }
     }
 

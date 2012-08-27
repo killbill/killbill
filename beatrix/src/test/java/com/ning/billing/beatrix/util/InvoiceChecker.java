@@ -16,11 +16,6 @@
 
 package com.ning.billing.beatrix.util;
 
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertNull;
-import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.fail;
-
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
@@ -44,6 +39,11 @@ import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
+
 public class InvoiceChecker {
 
     private static final Logger log = LoggerFactory.getLogger(InvoiceChecker.class);
@@ -65,6 +65,17 @@ public class InvoiceChecker {
         final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId);
         Assert.assertEquals(invoices.size(), invoiceOrderingNumber);
         final Invoice invoice = invoices.get(invoiceOrderingNumber - 1);
+        checkInvoice(invoice.getId(), expected);
+    }
+
+    public void checkRepairedInvoice(final UUID accountId, final int invoiceNb, final ExpectedItemCheck... expected) {
+        checkRepairedInvoice(accountId, invoiceNb, ImmutableList.<ExpectedItemCheck>copyOf(expected));
+    }
+
+    public void checkRepairedInvoice(final UUID accountId, final int invoiceNb, final List<ExpectedItemCheck> expected) {
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId);
+        Assert.assertTrue(invoices.size() > invoiceNb);
+        final Invoice invoice = invoices.get(invoiceNb - 1);
         checkInvoice(invoice.getId(), expected);
     }
 
@@ -102,7 +113,6 @@ public class InvoiceChecker {
         }
     }
 
-
     public void checkNullChargedThroughDate(final UUID subscriptionId) {
         checkChargedThroughDate(subscriptionId, null);
     }
@@ -115,7 +125,7 @@ public class InvoiceChecker {
             } else {
                 final DateTime expectedCTD = expectedLocalCTD.toDateTime(new LocalTime(subscription.getStartDate().getMillis()), DateTimeZone.UTC);
                 final String msg = String.format("Checking CTD for subscription %s : expectedLocalCTD = %s => expectedCTD = %s, got %s",
-                        subscriptionId, expectedLocalCTD, expectedCTD, subscription.getChargedThroughDate());
+                                                 subscriptionId, expectedLocalCTD, expectedCTD, subscription.getChargedThroughDate());
                 log.info(msg);
                 assertNotNull(subscription.getChargedThroughDate());
                 assertTrue(subscription.getChargedThroughDate().compareTo(expectedCTD) == 0, msg);
