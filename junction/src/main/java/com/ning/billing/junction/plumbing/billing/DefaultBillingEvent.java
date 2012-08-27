@@ -107,7 +107,6 @@ public class DefaultBillingEvent implements BillingEvent {
         this.timeZone = timeZone;
     }
 
-
     @Override
     public int compareTo(final BillingEvent e1) {
         if (!getSubscription().getId().equals(e1.getSubscription().getId())) { // First order by subscription
@@ -116,7 +115,40 @@ public class DefaultBillingEvent implements BillingEvent {
             if (!getEffectiveDate().equals(e1.getEffectiveDate())) { // Secondly order by date
                 return getEffectiveDate().compareTo(e1.getEffectiveDate());
             } else { // dates and subscriptions are the same
-                return getTotalOrdering().compareTo(e1.getTotalOrdering());
+                // If an entitlement event and an overdue event happen at the exact same time,
+                // we assume we want the entitlement event before the overdue event when entering
+                // the overdue period, and vice-versa when exiting the overdue period
+                if (SubscriptionTransitionType.START_BILLING_DISABLED.equals(getTransitionType())) {
+                    if (SubscriptionTransitionType.END_BILLING_DISABLED.equals(e1.getTransitionType())) {
+                        // Make sure to always have START before END
+                        return -1;
+                    } else {
+                        return 1;
+                    }
+                } else if (SubscriptionTransitionType.START_BILLING_DISABLED.equals(e1.getTransitionType())) {
+                    if (SubscriptionTransitionType.END_BILLING_DISABLED.equals(getTransitionType())) {
+                        // Make sure to always have START before END
+                        return 1;
+                    } else {
+                        return -1;
+                    }
+                } else if (SubscriptionTransitionType.END_BILLING_DISABLED.equals(getTransitionType())) {
+                    if (SubscriptionTransitionType.START_BILLING_DISABLED.equals(e1.getTransitionType())) {
+                        // Make sure to always have START before END
+                        return 1;
+                    } else {
+                        return -1;
+                    }
+                } else if (SubscriptionTransitionType.END_BILLING_DISABLED.equals(e1.getTransitionType())) {
+                    if (SubscriptionTransitionType.START_BILLING_DISABLED.equals(getTransitionType())) {
+                        // Make sure to always have START before END
+                        return -1;
+                    } else {
+                        return 1;
+                    }
+                } else {
+                    return getTotalOrdering().compareTo(e1.getTotalOrdering());
+                }
             }
         }
     }

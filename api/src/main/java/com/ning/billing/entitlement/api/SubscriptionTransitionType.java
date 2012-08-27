@@ -24,5 +24,9 @@ public enum SubscriptionTransitionType {
     RE_CREATE,
     CANCEL,
     UNCANCEL,
-    PHASE
+    PHASE,
+    // Transition to start of blocked billing overdue state
+    START_BILLING_DISABLED,
+    // Transition to end of blocked billing overdue state
+    END_BILLING_DISABLED
 }

@@ -16,12 +16,13 @@
 
 package com.ning.billing.junction.plumbing.billing;
 
-import javax.annotation.Nullable;
 import java.math.BigDecimal;
 import java.util.Iterator;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.UUID;
+
+import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -46,13 +47,57 @@ import com.ning.billing.junction.JunctionTestSuite;
 import com.ning.billing.mock.api.MockBillCycleDay;
 
 public class TestDefaultBillingEvent extends JunctionTestSuite {
-    public static final UUID ID_ZERO = new UUID(0L, 0L);
-    public static final UUID ID_ONE = new UUID(0L, 1L);
-    public static final UUID ID_TWO = new UUID(0L, 2L);
+
+    private static final UUID ID_ZERO = new UUID(0L, 0L);
+    private static final UUID ID_ONE = new UUID(0L, 1L);
+    private static final UUID ID_TWO = new UUID(0L, 2L);
+
+    @Test(groups = "fast")
+    public void testEntitlementEventsHappeningAtTheSameTimeAsOverdueEvents() throws Exception {
+        final BillingEvent event0 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-31T00:02:04.000Z"), SubscriptionTransitionType.START_BILLING_DISABLED);
+        final BillingEvent event1 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-31T00:02:04.000Z"), SubscriptionTransitionType.CREATE);
+        final BillingEvent event2 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-31T00:02:05.000Z"), SubscriptionTransitionType.CHANGE);
+        final BillingEvent event3 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-31T00:02:05.000Z"), SubscriptionTransitionType.END_BILLING_DISABLED);
+
+        final SortedSet<BillingEvent> set = new TreeSet<BillingEvent>();
+        set.add(event0);
+        set.add(event1);
+        set.add(event2);
+        set.add(event3);
+
+        final Iterator<BillingEvent> it = set.iterator();
+
+        Assert.assertEquals(event1, it.next());
+        Assert.assertEquals(event0, it.next());
+        Assert.assertEquals(event3, it.next());
+        Assert.assertEquals(event2, it.next());
+    }
+
+    @Test(groups = "fast")
+    public void testEdgeCaseAllEventsHappenAtTheSameTime() throws Exception {
+        final BillingEvent event0 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-31T00:02:04.000Z"), SubscriptionTransitionType.START_BILLING_DISABLED);
+        final BillingEvent event1 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-31T00:02:04.000Z"), SubscriptionTransitionType.CREATE, 1);
+        final BillingEvent event2 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-31T00:02:04.000Z"), SubscriptionTransitionType.CHANGE, 2);
+        // Note the time delta here. Having a blocking duration of zero and events at the same time won't work as the backing tree set does local
+        // comparisons (and not global), making the END_BILLING_DISABLED start the first one in the set
+        final BillingEvent event3 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-31T00:02:05.000Z"), SubscriptionTransitionType.END_BILLING_DISABLED);
+
+        final SortedSet<BillingEvent> set = new TreeSet<BillingEvent>();
+        set.add(event0);
+        set.add(event1);
+        set.add(event2);
+        set.add(event3);
+
+        final Iterator<BillingEvent> it = set.iterator();
+
+        Assert.assertEquals(event1, it.next());
+        Assert.assertEquals(event2, it.next());
+        Assert.assertEquals(event0, it.next());
+        Assert.assertEquals(event3, it.next());
+    }
 
     @Test(groups = "fast")
     public void testEventOrderingSubscription() {
-
         final BillingEvent event0 = createEvent(subscription(ID_ZERO), new DateTime("2012-01-31T00:02:04.000Z"), SubscriptionTransitionType.CREATE);
         final BillingEvent event1 = createEvent(subscription(ID_ONE), new DateTime("2012-01-31T00:02:04.000Z"), SubscriptionTransitionType.CREATE);
         final BillingEvent event2 = createEvent(subscription(ID_TWO), new DateTime("2012-01-31T00:02:04.000Z"), SubscriptionTransitionType.CREATE);

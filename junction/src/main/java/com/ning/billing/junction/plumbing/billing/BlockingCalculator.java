@@ -195,7 +195,7 @@ public class BlockingCalculator {
         final String description = "";
         final BillingModeType billingModeType = previousEvent.getBillingMode();
         final BillingPeriod billingPeriod = previousEvent.getBillingPeriod();
-        final SubscriptionTransitionType type = SubscriptionTransitionType.CANCEL;
+        final SubscriptionTransitionType type = SubscriptionTransitionType.START_BILLING_DISABLED;
         final Long totalOrdering = globaltotalOrder.getAndIncrement();
         final DateTimeZone tz = previousEvent.getTimeZone();
 
@@ -218,7 +218,7 @@ public class BlockingCalculator {
         final String description = "";
         final BillingModeType billingModeType = previousEvent.getBillingMode();
         final BillingPeriod billingPeriod = previousEvent.getBillingPeriod();
-        final SubscriptionTransitionType type = SubscriptionTransitionType.RE_CREATE;
+        final SubscriptionTransitionType type = SubscriptionTransitionType.END_BILLING_DISABLED;
         final Long totalOrdering = globaltotalOrder.getAndIncrement();
         final DateTimeZone tz = previousEvent.getTimeZone();
 

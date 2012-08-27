@@ -27,13 +27,11 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
 import org.mockito.Mockito;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.catalog.MockPlan;
@@ -55,14 +53,18 @@ import com.ning.billing.junction.api.DefaultBlockingState;
 import com.ning.billing.junction.dao.BlockingStateDao;
 import com.ning.billing.junction.plumbing.billing.BlockingCalculator.DisabledDuration;
 import com.ning.billing.mock.api.MockBillCycleDay;
-import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 
 public class TestBlockingCalculator extends JunctionTestSuite {
+
     private static final String DISABLED_BUNDLE = "disabled-bundle";
     private static final String CLEAR_BUNDLE = "clear-bundle";
 
@@ -74,10 +76,10 @@ public class TestBlockingCalculator extends JunctionTestSuite {
     private Subscription subscription4;
     private final UUID bundleId1 = UUID.randomUUID();
     private final UUID bundleId2 = UUID.randomUUID();
-    private Clock clock;
+    private ClockMock clock;
     private BlockingCalculator odc;
 
-    @BeforeClass
+    @BeforeClass(groups = "fast")
     public void setUpBeforeClass() throws Exception {
         clock = new ClockMock();
 
@@ -119,7 +121,7 @@ public class TestBlockingCalculator extends JunctionTestSuite {
     // S1 --A--[-------]--------------------------
     // S2 --B--[-------]--------------------------
     // S3 ------------------D---------------------
-    @Test
+    @Test(groups = "fast")
     public void testInsertBlockingEvents() {
         final DateTime now = clock.getUTCNow();
         final List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
@@ -148,14 +150,14 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         final SortedSet<BillingEvent> s1Events = odc.filter(billingEvents, subscription1);
         final Iterator<BillingEvent> it1 = s1Events.iterator();
         assertEquals(it1.next(), A);
-        assertEquals(it1.next().getTransitionType(), SubscriptionTransitionType.CANCEL);
-        assertEquals(it1.next().getTransitionType(), SubscriptionTransitionType.RE_CREATE);
+        assertEquals(it1.next().getTransitionType(), SubscriptionTransitionType.START_BILLING_DISABLED);
+        assertEquals(it1.next().getTransitionType(), SubscriptionTransitionType.END_BILLING_DISABLED);
 
         final SortedSet<BillingEvent> s2Events = odc.filter(billingEvents, subscription2);
         final Iterator<BillingEvent> it2 = s2Events.iterator();
         assertEquals(it2.next(), B);
-        assertEquals(it2.next().getTransitionType(), SubscriptionTransitionType.CANCEL);
-        assertEquals(it2.next().getTransitionType(), SubscriptionTransitionType.RE_CREATE);
+        assertEquals(it2.next().getTransitionType(), SubscriptionTransitionType.START_BILLING_DISABLED);
+        assertEquals(it2.next().getTransitionType(), SubscriptionTransitionType.END_BILLING_DISABLED);
 
         final SortedSet<BillingEvent> s3Events = odc.filter(billingEvents, subscription3);
         final Iterator<BillingEvent> it3 = s3Events.iterator();
@@ -164,7 +166,7 @@ public class TestBlockingCalculator extends JunctionTestSuite {
 
     // Open ended duration with a previous event
     // --X--[----------------------------------
-    @Test
+    @Test(groups = "fast")
     public void testEventsToRemoveOpenPrev() {
         final DateTime now = clock.getUTCNow();
         final List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
@@ -180,7 +182,7 @@ public class TestBlockingCalculator extends JunctionTestSuite {
 
     // Open with previous and following events
     // --X--[----Y-----------------------------
-    @Test
+    @Test(groups = "fast")
     public void testEventsToRemoveOpenPrevFollow() {
         final DateTime now = clock.getUTCNow();
         final List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
@@ -200,7 +202,7 @@ public class TestBlockingCalculator extends JunctionTestSuite {
 
     // Open with no previous event (only following)
     // -----[----X-----------------------------
-    @Test
+    @Test(groups = "fast")
     public void testEventsToRemoveOpenFollow() {
         final DateTime now = clock.getUTCNow();
         final List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
@@ -218,7 +220,7 @@ public class TestBlockingCalculator extends JunctionTestSuite {
 
     // Closed duration with a single previous event
     // --X--[------------]---------------------
-    @Test
+    @Test(groups = "fast")
     public void testEventsToRemoveClosedPrev() {
         final DateTime now = clock.getUTCNow();
         final List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
@@ -235,7 +237,7 @@ public class TestBlockingCalculator extends JunctionTestSuite {
 
     // Closed duration with a previous event and in-between event
     // --X--[------Y-----]---------------------
-    @Test
+    @Test(groups = "fast")
     public void testEventsToRemoveClosedPrevBetw() {
         final DateTime now = clock.getUTCNow();
         final List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
@@ -255,7 +257,7 @@ public class TestBlockingCalculator extends JunctionTestSuite {
 
     // Closed duration with a previous event and in-between event and following
     // --X--[------Y-----]-------Z-------------
-    @Test
+    @Test(groups = "fast")
     public void testEventsToRemoveClosedPrevBetwNext() {
         final DateTime now = clock.getUTCNow();
         final List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
@@ -277,7 +279,7 @@ public class TestBlockingCalculator extends JunctionTestSuite {
 
     // Closed with no previous event but in-between events
     // -----[------Y-----]---------------------
-    @Test
+    @Test(groups = "fast")
     public void testEventsToRemoveClosedBetwn() {
         final DateTime now = clock.getUTCNow();
         final List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
@@ -295,7 +297,7 @@ public class TestBlockingCalculator extends JunctionTestSuite {
 
     // Closed with no previous event but in-between events and following
     // -----[------Y-----]-------Z-------------
-    @Test
+    @Test(groups = "fast")
     public void testEventsToRemoveClosedBetweenFollow() {
         final DateTime now = clock.getUTCNow();
         final List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
@@ -316,7 +318,7 @@ public class TestBlockingCalculator extends JunctionTestSuite {
 
     // Closed duration with only following
     // -----[------------]-------Z-------------
-    @Test
+    @Test(groups = "fast")
     public void testEventsToRemoveClosedFollow() {
         final DateTime now = clock.getUTCNow();
         final List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
@@ -335,7 +337,7 @@ public class TestBlockingCalculator extends JunctionTestSuite {
 
     // Open ended duration with a previous event
     // --X--[----------------------------------
-    @Test
+    @Test(groups = "fast")
     public void testCreateNewEventsOpenPrev() {
         final DateTime now = clock.getUTCNow();
         final List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
@@ -349,12 +351,12 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         assertEquals(results.size(), 1);
         assertEquals(results.first().getEffectiveDate(), now);
         assertEquals(results.first().getRecurringPrice(), BigDecimal.ZERO);
-        assertEquals(results.first().getTransitionType(), SubscriptionTransitionType.CANCEL);
+        assertEquals(results.first().getTransitionType(), SubscriptionTransitionType.START_BILLING_DISABLED);
     }
 
     // Open with previous and following events
     // --X--[----Y-----------------------------
-    @Test
+    @Test(groups = "fast")
     public void testCreateNewEventsOpenPrevFollow() {
         final DateTime now = clock.getUTCNow();
         final List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
@@ -369,12 +371,12 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         assertEquals(results.size(), 1);
         assertEquals(results.first().getEffectiveDate(), now);
         assertEquals(results.first().getRecurringPrice(), BigDecimal.ZERO);
-        assertEquals(results.first().getTransitionType(), SubscriptionTransitionType.CANCEL);
+        assertEquals(results.first().getTransitionType(), SubscriptionTransitionType.START_BILLING_DISABLED);
     }
 
     // Open with no previous event (only following)
     // -----[----X-----------------------------
-    @Test
+    @Test(groups = "fast")
     public void testCreateNewEventsOpenFollow() {
         final DateTime now = clock.getUTCNow();
         final List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
@@ -390,7 +392,7 @@ public class TestBlockingCalculator extends JunctionTestSuite {
 
     // Closed duration with a single previous event
     // --X--[------------]---------------------
-    @Test
+    @Test(groups = "fast")
     public void testCreateNewEventsClosedPrev() {
         final DateTime now = clock.getUTCNow();
         final List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
@@ -404,15 +406,15 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         assertEquals(results.size(), 2);
         assertEquals(results.first().getEffectiveDate(), now);
         assertEquals(results.first().getRecurringPrice(), BigDecimal.ZERO);
-        assertEquals(results.first().getTransitionType(), SubscriptionTransitionType.CANCEL);
+        assertEquals(results.first().getTransitionType(), SubscriptionTransitionType.START_BILLING_DISABLED);
         assertEquals(results.last().getEffectiveDate(), now.plusDays(2));
         assertEquals(results.last().getRecurringPrice(), billingEvents.first().getRecurringPrice());
-        assertEquals(results.last().getTransitionType(), SubscriptionTransitionType.RE_CREATE);
+        assertEquals(results.last().getTransitionType(), SubscriptionTransitionType.END_BILLING_DISABLED);
     }
 
     // Closed duration with a previous event and in-between event
     // --X--[------Y-----]---------------------
-    @Test
+    @Test(groups = "fast")
     public void testCreateNewEventsClosedPrevBetw() {
         final DateTime now = clock.getUTCNow();
         final List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
@@ -427,15 +429,15 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         assertEquals(results.size(), 2);
         assertEquals(results.first().getEffectiveDate(), now);
         assertEquals(results.first().getRecurringPrice(), BigDecimal.ZERO);
-        assertEquals(results.first().getTransitionType(), SubscriptionTransitionType.CANCEL);
+        assertEquals(results.first().getTransitionType(), SubscriptionTransitionType.START_BILLING_DISABLED);
         assertEquals(results.last().getEffectiveDate(), now.plusDays(2));
         assertEquals(results.last().getRecurringPrice(), billingEvents.first().getRecurringPrice());
-        assertEquals(results.last().getTransitionType(), SubscriptionTransitionType.RE_CREATE);
+        assertEquals(results.last().getTransitionType(), SubscriptionTransitionType.END_BILLING_DISABLED);
     }
 
     // Closed duration with a previous event and in-between event and following
     // --X--[------Y-----]-------Z-------------
-    @Test
+    @Test(groups = "fast")
     public void testCreateNewEventsClosedPrevBetwNext() {
         final DateTime now = clock.getUTCNow();
         final List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
@@ -451,15 +453,15 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         assertEquals(results.size(), 2);
         assertEquals(results.first().getEffectiveDate(), now);
         assertEquals(results.first().getRecurringPrice(), BigDecimal.ZERO);
-        assertEquals(results.first().getTransitionType(), SubscriptionTransitionType.CANCEL);
+        assertEquals(results.first().getTransitionType(), SubscriptionTransitionType.START_BILLING_DISABLED);
         assertEquals(results.last().getEffectiveDate(), now.plusDays(2));
         assertEquals(results.last().getRecurringPrice(), billingEvents.first().getRecurringPrice());
-        assertEquals(results.last().getTransitionType(), SubscriptionTransitionType.RE_CREATE);
+        assertEquals(results.last().getTransitionType(), SubscriptionTransitionType.END_BILLING_DISABLED);
     }
 
     // Closed with no previous event but in-between events
     // -----[------Y-----]---------------------
-    @Test
+    @Test(groups = "fast")
     public void testCreateNewEventsClosedBetwn() {
         final DateTime now = clock.getUTCNow();
         final List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
@@ -473,12 +475,12 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         assertEquals(results.size(), 1);
         assertEquals(results.last().getEffectiveDate(), now.plusDays(2));
         assertEquals(results.last().getRecurringPrice(), billingEvents.first().getRecurringPrice());
-        assertEquals(results.last().getTransitionType(), SubscriptionTransitionType.RE_CREATE);
+        assertEquals(results.last().getTransitionType(), SubscriptionTransitionType.END_BILLING_DISABLED);
     }
 
     // Closed with no previous event but in-between events and following
     // -----[------Y-----]-------Z-------------
-    @Test
+    @Test(groups = "fast")
     public void testCreateNewEventsClosedBetweenFollow() {
         final DateTime now = clock.getUTCNow();
         final List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
@@ -492,12 +494,12 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         assertEquals(results.size(), 1);
         assertEquals(results.last().getEffectiveDate(), now.plusDays(2));
         assertEquals(results.last().getRecurringPrice(), billingEvents.first().getRecurringPrice());
-        assertEquals(results.last().getTransitionType(), SubscriptionTransitionType.RE_CREATE);
+        assertEquals(results.last().getTransitionType(), SubscriptionTransitionType.END_BILLING_DISABLED);
     }
 
     // Closed duration with only following
     // -----[------------]-------Z-------------
-    @Test
+    @Test(groups = "fast")
     public void testCreateNewEventsClosedFollow() {
         final DateTime now = clock.getUTCNow();
         final List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
@@ -511,7 +513,7 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         assertEquals(results.size(), 0);
     }
 
-    @Test
+    @Test(groups = "fast")
     public void testPrecedingBillingEventForSubscription() {
         final DateTime now = new DateTime();
 
@@ -533,6 +535,10 @@ public class TestBlockingCalculator extends JunctionTestSuite {
     }
 
     protected BillingEvent createRealEvent(final DateTime effectiveDate, final Subscription subscription) {
+        return createRealEvent(effectiveDate, subscription, SubscriptionTransitionType.CHANGE);
+    }
+
+    protected BillingEvent createRealEvent(final DateTime effectiveDate, final Subscription subscription, final SubscriptionTransitionType type) {
         final Account account = this.account;
         final BillCycleDay billCycleDay = new MockBillCycleDay(1);
         final PlanPhase planPhase = new MockPlanPhase();
@@ -543,7 +549,6 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         final String description = "";
         final BillingModeType billingModeType = BillingModeType.IN_ADVANCE;
         final BillingPeriod billingPeriod = BillingPeriod.MONTHLY;
-        final SubscriptionTransitionType type = SubscriptionTransitionType.CHANGE;
         final Long totalOrdering = 0L;
         final DateTimeZone tz = DateTimeZone.UTC;
 
@@ -553,7 +558,7 @@ public class TestBlockingCalculator extends JunctionTestSuite {
                                        description, totalOrdering, type, tz);
     }
 
-    @Test
+    @Test(groups = "fast")
     public void testFilter() {
         final SortedSet<BillingEvent> events = new TreeSet<BillingEvent>();
 
@@ -574,7 +579,7 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         assertEquals(result3.size(), 0);
     }
 
-    @Test
+    @Test(groups = "fast")
     public void testCreateNewDisableEvent() {
         final DateTime now = clock.getUTCNow();
         final BillingEvent event = new MockBillingEvent();
@@ -590,11 +595,11 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         assertEquals(result.getDescription(), "");
         assertEquals(result.getBillingMode(), event.getBillingMode());
         assertEquals(result.getBillingPeriod(), event.getBillingPeriod());
-        assertEquals(result.getTransitionType(), SubscriptionTransitionType.CANCEL);
+        assertEquals(result.getTransitionType(), SubscriptionTransitionType.START_BILLING_DISABLED);
         assertEquals(result.getTotalOrdering(), new Long(0));
     }
 
-    @Test
+    @Test(groups = "fast")
     public void testCreateNewReenableEvent() {
         final DateTime now = clock.getUTCNow();
         final BillingEvent event = new MockBillingEvent();
@@ -610,18 +615,19 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         assertEquals(result.getDescription(), "");
         assertEquals(result.getBillingMode(), event.getBillingMode());
         assertEquals(result.getBillingPeriod(), event.getBillingPeriod());
-        assertEquals(result.getTransitionType(), SubscriptionTransitionType.RE_CREATE);
+        assertEquals(result.getTransitionType(), SubscriptionTransitionType.END_BILLING_DISABLED);
         assertEquals(result.getTotalOrdering(), new Long(0));
     }
 
     private class MockBillingEvent extends DefaultBillingEvent {
+
         public MockBillingEvent() {
             super(account, subscription1, clock.getUTCNow(), null, null, BigDecimal.ZERO, BigDecimal.TEN, Currency.USD, BillingPeriod.ANNUAL,
                   new MockBillCycleDay(4), BillingModeType.IN_ADVANCE, "", 3L, SubscriptionTransitionType.CREATE, DateTimeZone.UTC);
         }
     }
 
-    @Test
+    @Test(groups = "fast")
     public void testCreateBundleSubscriptionMap() {
         final SortedSet<BillingEvent> events = new TreeSet<BillingEvent>();
         events.add(createBillingEvent(subscription1));
@@ -645,7 +651,7 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         return result;
     }
 
-    @Test
+    @Test(groups = "fast")
     public void testCreateDisablePairs() {
         List<BlockingState> blockingEvents;
         final UUID ovdId = UUID.randomUUID();
