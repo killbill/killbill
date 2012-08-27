@@ -408,8 +408,8 @@ public class TestBillingApi extends JunctionTestSuite {
         final Iterator<BillingEvent> it = events.iterator();
 
         checkEvent(it.next(), nextPlan, 32, subId, now, nextPhase, SubscriptionTransitionType.CREATE.toString(), nextPhase.getFixedPrice(), nextPhase.getRecurringPrice());
-        checkEvent(it.next(), nextPlan, 32, subId, now.plusDays(1), nextPhase, SubscriptionTransitionType.CANCEL.toString(), new MockPrice("0"), new MockPrice("0"));
-        checkEvent(it.next(), nextPlan, 32, subId, now.plusDays(2), nextPhase, SubscriptionTransitionType.RE_CREATE.toString(), nextPhase.getFixedPrice(), nextPhase.getRecurringPrice());
+        checkEvent(it.next(), nextPlan, 32, subId, now.plusDays(1), nextPhase, SubscriptionTransitionType.START_BILLING_DISABLED.toString(), new MockPrice("0"), new MockPrice("0"));
+        checkEvent(it.next(), nextPlan, 32, subId, now.plusDays(2), nextPhase, SubscriptionTransitionType.END_BILLING_DISABLED.toString(), nextPhase.getFixedPrice(), nextPhase.getRecurringPrice());
     }
 
     @Test(groups = "fast")
