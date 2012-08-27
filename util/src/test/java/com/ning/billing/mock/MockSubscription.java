@@ -42,7 +42,7 @@ public class MockSubscription implements Subscription {
     private final UUID id;
     private final UUID bundleId;
     private final SubscriptionState state;
-    private final Plan plan;
+    private Plan plan;
     private final PlanPhase phase;
     private final DateTime startDate;
     private final List<EffectiveSubscriptionEvent> transitions;
@@ -209,5 +209,9 @@ public class MockSubscription implements Subscription {
     public String getLastActiveBillingPeriod() {
         // TODO Auto-generated method stub
         return null;
+    }
+
+    public void setPlan(final Plan plan) {
+        this.plan = plan;
     }
 }
