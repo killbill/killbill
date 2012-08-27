@@ -67,14 +67,6 @@ public class BlockingCalculator {
 
     }
 
-    protected static class MergeEvent extends DefaultBlockingState {
-
-        public MergeEvent(final DateTime timestamp) {
-            super(null, null, null, null, false, false, false, timestamp);
-        }
-
-    }
-
     @Inject
     public BlockingCalculator(final BlockingApi blockingApi) {
         this.blockingApi = blockingApi;
