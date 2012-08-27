@@ -12,7 +12,8 @@ getBlockingStateFor() ::= <<
       , created_date   
     from blocking_states
     where id = :id
-    order by created_date asc, record_id asc
+    -- We want the current state, hence the order desc and limit 1
+    order by created_date desc, record_id desc
     limit 1
     ;
 >>
@@ -28,7 +29,8 @@ getBlockingHistoryFor() ::= <<
       , block_billing
       , created_date   
     from blocking_states
-    where id = :id 
+    where id = :id
+    -- We want the history in order
     order by created_date asc, record_id asc
     ;
 >>
