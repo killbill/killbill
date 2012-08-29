@@ -150,7 +150,6 @@ create table bos (
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
 ) engine=innodb comment 'Business Overdue Status, historical bundles overdue status';
-create unique index bos_key_index on bos (external_key, status);
 
 drop table if exists bac_tags;
 create table bac_tags (
