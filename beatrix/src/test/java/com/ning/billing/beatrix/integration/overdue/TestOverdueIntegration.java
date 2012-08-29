@@ -234,14 +234,14 @@ public class TestOverdueIntegration extends TestIntegrationBase {
         // DAY 75 - 45 days after invoice
         addDaysAndCheckForCompletion(8, NextEvent.PAYMENT_ERROR, NextEvent.PAYMENT_ERROR);
 
-        // Should still be in OD1
+        // Should now be in OD2
         checkODState("OD2");
         checkChangePlanWithOverdueState(baseSubscription, true);
 
         // DAY 85 - 55 days after invoice
         addDaysAndCheckForCompletion(10, NextEvent.PAYMENT_ERROR, NextEvent.PAYMENT_ERROR);
 
-        // Should now be in OD2 state once the update is processed
+        // Should now be in OD3
         checkODState("OD3");
         checkChangePlanWithOverdueState(baseSubscription, true);
 
@@ -327,14 +327,14 @@ public class TestOverdueIntegration extends TestIntegrationBase {
         // DAY 75 - 45 days after invoice
         addDaysAndCheckForCompletion(8);
 
-        // Should still be in OD1
+        // Should now be in OD2
         checkODState("OD2");
         checkChangePlanWithOverdueState(baseSubscription, true);
 
         // DAY 85 - 55 days after invoice
         addDaysAndCheckForCompletion(10);
 
-        // Should now be in OD2 state once the update is processed
+        // Should now be in OD3
         checkODState("OD3");
         checkChangePlanWithOverdueState(baseSubscription, true);
 
