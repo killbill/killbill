@@ -97,6 +97,28 @@ public class TestOverdueIntegration extends TestIntegrationBase {
     private String productName;
     private BillingPeriod term;
 
+    final PaymentMethodPlugin paymentMethodPlugin = new PaymentMethodPlugin() {
+        @Override
+        public boolean isDefaultPaymentMethod() {
+            return false;
+        }
+
+        @Override
+        public String getValueString(final String key) {
+            return null;
+        }
+
+        @Override
+        public List<PaymentMethodKVInfo> getProperties() {
+            return null;
+        }
+
+        @Override
+        public String getExternalPaymentMethodId() {
+            return UUID.randomUUID().toString();
+        }
+    };
+
     @BeforeMethod(groups = "slow")
     public void setupOverdue() throws Exception {
         final String configXml = "<overdueConfig>" +
@@ -149,28 +171,7 @@ public class TestOverdueIntegration extends TestIntegrationBase {
         account = createAccountWithPaymentMethod(getAccountData(0));
         assertNotNull(account);
 
-        final PaymentMethodPlugin info = new PaymentMethodPlugin() {
-            @Override
-            public boolean isDefaultPaymentMethod() {
-                return false;
-            }
-
-            @Override
-            public String getValueString(final String key) {
-                return null;
-            }
-
-            @Override
-            public List<PaymentMethodKVInfo> getProperties() {
-                return null;
-            }
-
-            @Override
-            public String getExternalPaymentMethodId() {
-                return UUID.randomUUID().toString();
-            }
-        };
-        paymentApi.addPaymentMethod(BeatrixModule.PLUGIN_NAME, account, true, info, context);
+        paymentApi.addPaymentMethod(BeatrixModule.PLUGIN_NAME, account, true, paymentMethodPlugin, context);
 
         bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever", context);
 
@@ -245,6 +246,102 @@ public class TestOverdueIntegration extends TestIntegrationBase {
         checkChangePlanWithOverdueState(baseSubscription, true);
 
         paymentPlugin.makeAllInvoicesFailWithError(false);
+        final Collection<Invoice> invoices = invoiceApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday());
+        for (final Invoice invoice : invoices) {
+            if (invoice.getBalance().compareTo(BigDecimal.ZERO) > 0) {
+                createPaymentAndCheckForCompletion(account, invoice, NextEvent.PAYMENT);
+            }
+        }
+
+        checkODState(BlockingApi.CLEAR_STATE_NAME);
+        checkChangePlanWithOverdueState(baseSubscription, false);
+
+        invoiceChecker.checkRepairedInvoice(account.getId(), 3,
+                                            new ExpectedItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("249.95")),
+                                            // We paid up to 07-31, hence the adjustment
+                                            new ExpectedItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-249.95")),
+                                            new ExpectedItemCheck(new LocalDate(2012, 7, 25), new LocalDate(2012, 7, 25), InvoiceItemType.CBA_ADJ, new BigDecimal("249.95")));
+        invoiceChecker.checkInvoice(account.getId(), 4,
+                                    // Note the end date here is not 07-25, but 07-15. The overdue configuration disabled invoicing between 07-15 and 07-25 (e.g. the bundle
+                                    // was inaccessible, hence we didn't want to charge the customer for that period, even though the account was overdue).
+                                    new ExpectedItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 15), InvoiceItemType.RECURRING, new BigDecimal("124.98")),
+                                    // Item for the upgraded recurring plan
+                                    new ExpectedItemCheck(new LocalDate(2012, 7, 25), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("116.09")),
+                                    // Credits consumed
+                                    new ExpectedItemCheck(new LocalDate(2012, 7, 25), new LocalDate(2012, 7, 25), InvoiceItemType.CBA_ADJ, new BigDecimal("-241.07")));
+        invoiceChecker.checkChargedThroughDate(baseSubscription.getId(), new LocalDate(2012, 7, 31));
+
+        // Verify the account balance: 249.95 - 124.98 - 116.09
+        assertEquals(invoiceUserApi.getAccountBalance(account.getId()).compareTo(new BigDecimal("-8.88")), 0);
+    }
+
+    @Test(groups = "slow")
+    public void testOverdueStateIfNoPaymentMethod() throws Exception {
+        // This test is similar to the previous one - but there is no default payment method on the account, so there
+        // won't be any payment retry
+
+        clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
+
+        // Make sure the account doesn't have any payment method
+        accountUserApi.removePaymentMethod(account.getId(), context);
+
+        // Create subscription
+        final Subscription baseSubscription = createSubscriptionAndCheckForCompletion(bundle.getId(), productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
+
+        invoiceChecker.checkInvoice(account.getId(), 1, new ExpectedItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+        invoiceChecker.checkChargedThroughDate(baseSubscription.getId(), new LocalDate(2012, 5, 1));
+
+        // DAY 30 have to get out of trial before first payment. A payment error, one for each invoice, should be on the bus (because there is no payment method)
+        addDaysAndCheckForCompletion(30, NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR, NextEvent.PAYMENT_ERROR);
+
+        invoiceChecker.checkInvoice(account.getId(), 2, new ExpectedItemCheck(new LocalDate(2012, 5, 31), new LocalDate(2012, 6, 30), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+        invoiceChecker.checkChargedThroughDate(baseSubscription.getId(), new LocalDate(2012, 6, 30));
+
+        // Should still be in clear state
+        checkODState(BlockingApi.CLEAR_STATE_NAME);
+
+        // DAY 45 - 15 days after invoice
+        addDaysAndCheckForCompletion(15);
+
+        // Should still be in clear state
+        checkODState(BlockingApi.CLEAR_STATE_NAME);
+
+        // DAY 65 - 35 days after invoice
+        // Single PAYMENT_ERROR here here triggered by the invoice
+        addDaysAndCheckForCompletion(20, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR);
+
+        invoiceChecker.checkInvoice(account.getId(), 3, new ExpectedItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+        invoiceChecker.checkChargedThroughDate(baseSubscription.getId(), new LocalDate(2012, 7, 31));
+
+        // Now we should be in OD1
+        checkODState("OD1");
+        checkChangePlanWithOverdueState(baseSubscription, true);
+
+        // DAY 67 - 37 days after invoice
+        addDaysAndCheckForCompletion(2);
+
+        // Should still be in OD1
+        checkODState("OD1");
+        checkChangePlanWithOverdueState(baseSubscription, true);
+
+        // DAY 75 - 45 days after invoice
+        addDaysAndCheckForCompletion(8);
+
+        // Should still be in OD1
+        checkODState("OD2");
+        checkChangePlanWithOverdueState(baseSubscription, true);
+
+        // DAY 85 - 55 days after invoice
+        addDaysAndCheckForCompletion(10);
+
+        // Should now be in OD2 state once the update is processed
+        checkODState("OD3");
+        checkChangePlanWithOverdueState(baseSubscription, true);
+
+        // Add a payment method and set it as default
+        paymentApi.addPaymentMethod(BeatrixModule.PLUGIN_NAME, account, true, paymentMethodPlugin, context);
+
+        // Pay all invoices
         final Collection<Invoice> invoices = invoiceApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday());
         for (final Invoice invoice : invoices) {
             if (invoice.getBalance().compareTo(BigDecimal.ZERO) > 0) {

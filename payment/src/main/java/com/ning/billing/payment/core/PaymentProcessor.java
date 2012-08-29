@@ -48,6 +48,7 @@ import com.ning.billing.payment.api.DefaultPaymentErrorEvent;
 import com.ning.billing.payment.api.DefaultPaymentInfoEvent;
 import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.api.PaymentApiException;
+import com.ning.billing.payment.api.PaymentErrorEvent;
 import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.payment.dao.PaymentAttemptModelDao;
 import com.ning.billing.payment.dao.PaymentDao;
@@ -209,12 +210,22 @@ public class PaymentProcessor extends ProcessorBase {
         // Use the special external payment plugin to handle external payments
         final PaymentPluginApi plugin;
         final UUID paymentMethodId;
-        if (isExternalPayment) {
-            plugin = paymentMethodProcessor.getExternalPaymentProviderPlugin(account, context);
-            paymentMethodId = paymentMethodProcessor.getExternalPaymentMethod(account).getId();
-        } else {
-            plugin = getPaymentProviderPlugin(account);
-            paymentMethodId = account.getPaymentMethodId();
+        try {
+            if (isExternalPayment) {
+                plugin = paymentMethodProcessor.getExternalPaymentProviderPlugin(account, context);
+                paymentMethodId = paymentMethodProcessor.getExternalPaymentMethod(account).getId();
+            } else {
+                plugin = getPaymentProviderPlugin(account);
+                paymentMethodId = account.getPaymentMethodId();
+            }
+        } catch (PaymentApiException e) {
+            // This event will be caught by overdue to refresh the overdue state, if needed.
+            // Note that at this point, we don't know the exact invoice balance (see getAndValidatePaymentAmount() below).
+            // This means that events will be posted for null and zero dollar invoices (e.g. trials).
+            final PaymentErrorEvent event = new DefaultPaymentErrorEvent(account.getId(), invoiceId, null,
+                                                                         ErrorCode.PAYMENT_NO_DEFAULT_PAYMENT_METHOD.toString(), context.getUserToken());
+            postPaymentEvent(event, account.getId());
+            throw e;
         }
 
         try {
