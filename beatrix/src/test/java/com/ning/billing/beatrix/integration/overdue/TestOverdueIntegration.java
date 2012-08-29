@@ -159,7 +159,7 @@ public class TestOverdueIntegration extends TestIntegrationBase {
                                  "           <blockChanges>true</blockChanges>" +
                                  "           <disableEntitlementAndChangesBlocked>false</disableEntitlementAndChangesBlocked>" +
                                  "           <autoReevaluationInterval>" +
-                                 "               <unit>DAYS</unit><number>100</number>" + // this number is intentionally too high
+                                 "               <unit>DAYS</unit><number>5</number>" +
                                  "           </autoReevaluationInterval>" +
                                  "       </state>" +
                                  "   </bundleOverdueStates>" +
@@ -385,12 +385,15 @@ public class TestOverdueIntegration extends TestIntegrationBase {
     }
 
     private void checkODState(final String expected) {
-
         try {
+            // This will test the overdue notification queue: when we move the clock, the overdue system
+            // should get notified to refresh its state.
+            // Calling explicitly refresh here (overdueApi.refreshOverdueStateFor(bundle)) would not fully
+            // test overdue.
+            // Since we're relying on the notification queue, we may need to wait a bit (hence await()).
             await().atMost(10, SECONDS).until(new Callable<Boolean>() {
                 @Override
                 public Boolean call() throws Exception {
-                    overdueApi.refreshOverdueStateFor(bundle);
                     return expected.equals(blockingApi.getBlockingStateFor(bundle).getStateName());
                 }
             });
