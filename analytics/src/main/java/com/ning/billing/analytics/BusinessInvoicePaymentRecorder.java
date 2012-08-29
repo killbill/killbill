@@ -67,7 +67,13 @@ public class BusinessInvoicePaymentRecorder {
         this.accountRecorder = accountRecorder;
     }
 
-    public void invoicePaymentPosted(final UUID accountId, final UUID paymentId, @Nullable final String extFirstPaymentRefId, @Nullable final String extSecondPaymentRefId, final String message) {
+    public void invoicePaymentPosted(final UUID accountId, @Nullable final UUID paymentId, @Nullable final String extFirstPaymentRefId,
+                                     @Nullable final String extSecondPaymentRefId, final String message) {
+        // Payment attempt with no default payment method. Ignore.
+        if (paymentId == null) {
+            return;
+        }
+
         final Account account;
         try {
             account = accountApi.getAccountById(accountId);
