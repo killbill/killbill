@@ -30,6 +30,7 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.ning.billing.account.api.AccountEmail;
+import com.ning.billing.account.api.DefaultAccountEmail;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.dao.AuditedCollectionDaoBase;
 import com.ning.billing.util.dao.ObjectType;
@@ -71,7 +72,10 @@ public class AuditedAccountEmailDao extends AuditedCollectionDaoBase<AccountEmai
                 for (final AccountEmail currentEmail : currentEmails) {
                     newEmails.put(currentEmail.getEmail(), currentEmail);
                 }
-                newEmails.put(email.getEmail(), email);
+                // TODO Note the hack here... saveEntitiesFromTransaction() works by comparing objects in sets, so we
+                // have to use DefaultAccountEmail instances (email is likely to be an inner class from AccountEmailJson
+                // here and will confuse AuditedCollectionDaoBase).
+                newEmails.put(email.getEmail(), new DefaultAccountEmail(email.getAccountId(), email.getEmail()));
 
                 saveEntitiesFromTransaction(getSqlDao(), accountId, ObjectType.ACCOUNT_EMAIL,
                                             ImmutableList.<AccountEmail>copyOf(newEmails.values()), context);

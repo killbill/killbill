@@ -65,6 +65,7 @@ import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
 import com.ning.billing.invoice.api.InvoiceNotifier;
 import com.ning.billing.invoice.glue.DefaultInvoiceModule;
 import com.ning.billing.invoice.notification.NullInvoiceNotifier;
+import com.ning.billing.jaxrs.json.AccountEmailJson;
 import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.AccountTimelineJson;
 import com.ning.billing.jaxrs.json.BillCycleDayJson;
@@ -457,6 +458,30 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
         assertNotNull(objFromJson);
 
         return objFromJson;
+    }
+
+    protected List<AccountEmailJson> getEmailsForAccount(final String accountId) throws Exception {
+        final String uri = JaxrsResource.ACCOUNTS_PATH + "/" + accountId + "/" + JaxrsResource.EMAILS;
+
+        final Response response = doGet(uri, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        Assert.assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
+
+        return mapper.readValue(response.getResponseBody(), new TypeReference<List<AccountEmailJson>>() {});
+    }
+
+    protected void addEmailToAccount(final String accountId, final AccountEmailJson email) throws Exception {
+        final String uri = JaxrsResource.ACCOUNTS_PATH + "/" + accountId + "/" + JaxrsResource.EMAILS;
+
+        final String emailString = mapper.writeValueAsString(email);
+        final Response response = doPost(uri, emailString, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        assertEquals(response.getStatusCode(), Status.CREATED.getStatusCode());
+    }
+
+    protected void removeEmailFromAccount(final String accountId, final String email) throws Exception {
+        final String uri = JaxrsResource.ACCOUNTS_PATH + "/" + accountId + "/" + JaxrsResource.EMAILS;
+
+        final Response fifthResponse = doDelete(uri + "/" + email, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        assertEquals(fifthResponse.getStatusCode(), javax.ws.rs.core.Response.Status.OK.getStatusCode());
     }
 
     protected BundleJsonNoSubscriptions createBundle(final String accountId, final String key) throws Exception {

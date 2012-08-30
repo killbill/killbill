@@ -412,6 +412,19 @@ public class TestAccountDao extends AccountDaoTestBase {
     }
 
     @Test(groups = "slow")
+    public void testHandleDuplicateEmails() {
+        final UUID accountId = UUID.randomUUID();
+        final AccountEmail email = new DefaultAccountEmail(accountId, "test@gmail.com");
+        Assert.assertEquals(accountEmailDao.getEmails(accountId).size(), 0);
+
+        accountEmailDao.addEmail(accountId, email, context);
+        Assert.assertEquals(accountEmailDao.getEmails(accountId).size(), 1);
+
+        accountEmailDao.addEmail(accountId, email, context);
+        Assert.assertEquals(accountEmailDao.getEmails(accountId).size(), 1);
+    }
+
+    @Test(groups = "slow")
     public void testAccountEmail() {
         List<AccountEmail> emails = new ArrayList<AccountEmail>();
 
