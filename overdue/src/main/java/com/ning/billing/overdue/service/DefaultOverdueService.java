@@ -85,9 +85,13 @@ public class DefaultOverdueService implements ExtendedOverdueService {
     public synchronized void loadConfig() throws ServiceException {
         if (!isInitialized) {
             try {
-                System.out.println("Overdue config URI" + properties.getConfigURI());
                 final URI u = new URI(properties.getConfigURI());
                 overdueConfig = XMLLoader.getObjectFromUri(u, OverdueConfig.class);
+                // File not found?
+                if (overdueConfig == null) {
+                    log.warn("Unable to load the overdue config from " + properties.getConfigURI());
+                    overdueConfig = new OverdueConfig();
+                }
 
                 isInitialized = true;
             } catch (URISyntaxException e) {

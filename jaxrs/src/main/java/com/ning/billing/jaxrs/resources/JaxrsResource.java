@@ -119,4 +119,6 @@ public interface JaxrsResource {
     public static final String CATALOG = "catalog";
     public static final String CATALOG_PATH = PREFIX + "/" + CATALOG;
 
+    public static final String OVERDUE = "overdue";
+    public static final String OVERDUE_PATH = PREFIX + "/" + OVERDUE;
 }

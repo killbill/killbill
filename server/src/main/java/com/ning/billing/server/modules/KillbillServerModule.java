@@ -38,6 +38,7 @@ import com.ning.billing.jaxrs.resources.SubscriptionResource;
 import com.ning.billing.jaxrs.resources.TagResource;
 import com.ning.billing.jaxrs.util.KillbillEventHandler;
 import com.ning.billing.junction.glue.DefaultJunctionModule;
+import com.ning.billing.overdue.glue.DefaultOverdueModule;
 import com.ning.billing.payment.glue.PaymentModule;
 import com.ning.billing.util.email.EmailModule;
 import com.ning.billing.util.email.templates.TemplateModule;
@@ -105,6 +106,7 @@ public class KillbillServerModule extends AbstractModule {
         install(new PaymentModule());
         install(new BeatrixModule());
         install(new DefaultJunctionModule());
+        install(new DefaultOverdueModule());
         installClock();
     }
 }

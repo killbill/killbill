@@ -75,6 +75,7 @@ import com.ning.billing.jaxrs.json.CreditJson;
 import com.ning.billing.jaxrs.json.InvoiceItemJsonSimple;
 import com.ning.billing.jaxrs.json.InvoiceJsonSimple;
 import com.ning.billing.jaxrs.json.InvoiceJsonWithItems;
+import com.ning.billing.jaxrs.json.OverdueStateJson;
 import com.ning.billing.jaxrs.json.PaymentJsonSimple;
 import com.ning.billing.jaxrs.json.PaymentJsonWithBundleKeys;
 import com.ning.billing.jaxrs.json.PaymentMethodJson;
@@ -84,6 +85,7 @@ import com.ning.billing.jaxrs.json.RefundJson;
 import com.ning.billing.jaxrs.json.SubscriptionJsonNoEvents;
 import com.ning.billing.jaxrs.resources.JaxrsResource;
 import com.ning.billing.junction.glue.DefaultJunctionModule;
+import com.ning.billing.overdue.glue.DefaultOverdueModule;
 import com.ning.billing.payment.glue.PaymentModule;
 import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;
 import com.ning.billing.server.ServerTestSuiteWithEmbeddedDB;
@@ -119,7 +121,10 @@ import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Module;
 
+import static com.ning.billing.jaxrs.resources.JaxrsResource.ACCOUNTS;
+import static com.ning.billing.jaxrs.resources.JaxrsResource.BUNDLES;
 import static com.ning.billing.jaxrs.resources.JaxrsResource.QUERY_PAYMENT_METHOD_PLUGIN_INFO;
+import static com.ning.billing.jaxrs.resources.JaxrsResource.SUBSCRIPTIONS;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
@@ -253,6 +258,7 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
             install(new PaymentMockModule());
             install(new BeatrixModule());
             install(new DefaultJunctionModule());
+            install(new DefaultOverdueModule());
             installClock();
         }
 
@@ -938,6 +944,33 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
         assertEquals(response.getStatusCode(), Status.OK.getStatusCode());
 
         return mapper.readValue(response.getResponseBody(), CreditJson.class);
+    }
+
+    //
+    // OVERDUE
+    //
+
+    protected OverdueStateJson getOverdueStateForAccount(final String accountId) throws Exception {
+        return doGetOverdueState(accountId, ACCOUNTS);
+    }
+
+    protected OverdueStateJson getOverdueStateForBundle(final String bundleId) throws Exception {
+        return doGetOverdueState(bundleId, BUNDLES);
+    }
+
+    protected OverdueStateJson getOverdueStateForSubscription(final String subscriptionId) throws Exception {
+        return doGetOverdueState(subscriptionId, SUBSCRIPTIONS);
+    }
+
+    protected OverdueStateJson doGetOverdueState(final String id, final String resourceType) throws Exception {
+        final String overdueURI = JaxrsResource.OVERDUE_PATH + "/" + resourceType + "/" + id;
+        final Response overdueResponse = doGet(overdueURI, DEFAULT_EMPTY_QUERY, DEFAULT_HTTP_TIMEOUT_SEC);
+        assertEquals(overdueResponse.getStatusCode(), Status.OK.getStatusCode());
+
+        final OverdueStateJson overdueStateJson = mapper.readValue(overdueResponse.getResponseBody(), OverdueStateJson.class);
+        assertNotNull(overdueStateJson);
+
+        return overdueStateJson;
     }
 
     //
