@@ -35,11 +35,11 @@ public class BusinessInvoiceItemMapper extends MapperBase implements ResultSetMa
 
     @Override
     public BusinessInvoiceItem map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
-        final UUID itemId = UUID.fromString(r.getString("item_id"));
-        final UUID linkedItemId = UUID.fromString(r.getString("linked_item_id"));
+        final UUID itemId = getUUID(r, "item_id");
+        final UUID linkedItemId = getUUID(r, "linked_item_id");
         final DateTime createdDate = new DateTime(r.getLong("created_date"), DateTimeZone.UTC);
         final DateTime updatedDate = new DateTime(r.getLong("updated_date"), DateTimeZone.UTC);
-        final UUID invoiceId = UUID.fromString(r.getString("invoice_id"));
+        final UUID invoiceId = getUUID(r, "invoice_id");
         final String itemType = r.getString("item_type");
         final String externalKey = r.getString("external_key");
         final String productName = r.getString("product_name");
