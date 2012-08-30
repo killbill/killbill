@@ -42,6 +42,7 @@ public @interface BusinessInvoiceItemBinder {
             return new Binder<BusinessInvoiceItemBinder, BusinessInvoiceItem>() {
                 public void bind(final SQLStatement q, final BusinessInvoiceItemBinder bind, final BusinessInvoiceItem invoiceItem) {
                     q.bind("item_id", invoiceItem.getItemId().toString());
+                    q.bind("linked_item_id", invoiceItem.getLinkedItemId().toString());
 
                     final DateTime dateTimeNow = new DateTime(DateTimeZone.UTC);
                     if (invoiceItem.getCreatedDate() != null) {

@@ -43,6 +43,7 @@ public class TestBusinessInvoiceItem extends AnalyticsTestSuite {
         final String externalKey = UUID.randomUUID().toString();
         final UUID invoiceId = UUID.randomUUID();
         final UUID itemId = UUID.randomUUID();
+        final UUID linkedItemId = UUID.randomUUID();
         final String itemType = UUID.randomUUID().toString();
         final String phase = UUID.randomUUID().toString();
         final String productCategory = UUID.randomUUID().toString();
@@ -52,8 +53,8 @@ public class TestBusinessInvoiceItem extends AnalyticsTestSuite {
         final LocalDate startDate = clock.getUTCToday();
         final DateTime updatedDate = clock.getUTCNow();
         final BusinessInvoiceItem invoiceItem = new BusinessInvoiceItem(amount, billingPeriod, createdDate, currency,
-                                                                        endDate, externalKey, invoiceId, itemId, itemType,
-                                                                        phase, productCategory, productName, productType,
+                                                                        endDate, externalKey, invoiceId, itemId, linkedItemId,
+                                                                        itemType, phase, productCategory, productName, productType,
                                                                         slug, startDate, updatedDate);
         Assert.assertSame(invoiceItem, invoiceItem);
         Assert.assertEquals(invoiceItem, invoiceItem);
@@ -67,6 +68,7 @@ public class TestBusinessInvoiceItem extends AnalyticsTestSuite {
         Assert.assertEquals(invoiceItem.getInvoiceId(), invoiceId);
         Assert.assertEquals(invoiceItem.getItemId(), itemId);
         Assert.assertEquals(invoiceItem.getItemType(), itemType);
+        Assert.assertEquals(invoiceItem.getLinkedItemId(), linkedItemId);
         Assert.assertEquals(invoiceItem.getPhase(), phase);
         Assert.assertEquals(invoiceItem.getProductCategory(), productCategory);
         Assert.assertEquals(invoiceItem.getProductName(), productName);
@@ -76,7 +78,7 @@ public class TestBusinessInvoiceItem extends AnalyticsTestSuite {
         Assert.assertEquals(invoiceItem.getUpdatedDate(), updatedDate);
 
         final BusinessInvoiceItem otherInvoiceItem = new BusinessInvoiceItem(null, null, createdDate, null, null, null, null, itemId,
-                                                                             null, null, null, null, null, null, null, null);
+                                                                             linkedItemId, null, null, null, null, null, null, null, null);
         Assert.assertFalse(invoiceItem.equals(otherInvoiceItem));
     }
 }

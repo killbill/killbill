@@ -35,25 +35,26 @@ public class BusinessInvoiceItemMapper extends MapperBase implements ResultSetMa
 
     @Override
     public BusinessInvoiceItem map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
-        final UUID itemId = UUID.fromString(r.getString(1));
-        final DateTime createdDate = new DateTime(r.getLong(2), DateTimeZone.UTC);
-        final DateTime updatedDate = new DateTime(r.getLong(3), DateTimeZone.UTC);
-        final UUID invoiceId = UUID.fromString(r.getString(4));
-        final String itemType = r.getString(5);
-        final String externalKey = r.getString(6);
-        final String productName = r.getString(7);
-        final String productType = r.getString(8);
-        final String productCategory = r.getString(9);
-        final String slug = r.getString(10);
-        final String phase = r.getString(11);
-        final String billingPeriod = r.getString(12);
+        final UUID itemId = UUID.fromString(r.getString("item_id"));
+        final UUID linkedItemId = UUID.fromString(r.getString("linked_item_id"));
+        final DateTime createdDate = new DateTime(r.getLong("created_date"), DateTimeZone.UTC);
+        final DateTime updatedDate = new DateTime(r.getLong("updated_date"), DateTimeZone.UTC);
+        final UUID invoiceId = UUID.fromString(r.getString("invoice_id"));
+        final String itemType = r.getString("item_type");
+        final String externalKey = r.getString("external_key");
+        final String productName = r.getString("product_name");
+        final String productType = r.getString("product_type");
+        final String productCategory = r.getString("product_category");
+        final String slug = r.getString("slug");
+        final String phase = r.getString("phase");
+        final String billingPeriod = r.getString("billing_period");
         final LocalDate startDate = getDate(r, "start_date");
         final LocalDate endDate = getDate(r, "end_date");
-        final BigDecimal amount = BigDecimal.valueOf(r.getDouble(15));
-        final Currency currency = Currency.valueOf(r.getString(16));
+        final BigDecimal amount = BigDecimal.valueOf(r.getDouble("amount"));
+        final Currency currency = Currency.valueOf(r.getString("currency"));
 
         return new BusinessInvoiceItem(amount, billingPeriod, createdDate, currency, endDate, externalKey, invoiceId,
-                                       itemId, itemType, phase, productCategory, productName, productType, slug,
+                                       itemId, linkedItemId, itemType, phase, productCategory, productName, productType, slug,
                                        startDate, updatedDate);
     }
 }

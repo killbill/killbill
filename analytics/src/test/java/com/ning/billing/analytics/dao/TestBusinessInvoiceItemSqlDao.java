@@ -115,6 +115,7 @@ public class TestBusinessInvoiceItemSqlDao extends AnalyticsTestSuiteWithEmbedde
         final Currency currency = Currency.AUD;
         final LocalDate endDate = clock.getUTCToday();
         final UUID itemId = UUID.randomUUID();
+        final UUID linkedItemId = UUID.randomUUID();
         final String itemType = UUID.randomUUID().toString().substring(0, 20);
         final String phase = UUID.randomUUID().toString().substring(0, 20);
         final String productCategory = UUID.randomUUID().toString().substring(0, 20);
@@ -124,7 +125,7 @@ public class TestBusinessInvoiceItemSqlDao extends AnalyticsTestSuiteWithEmbedde
         final LocalDate startDate = clock.getUTCToday();
         final DateTime updatedDate = clock.getUTCNow();
 
-        return new BusinessInvoiceItem(amount, billingPeriod, createdDate, currency, endDate, externalKey, invoiceId,
-                                       itemId, itemType, phase, productCategory, productName, productType, slug, startDate, updatedDate);
+        return new BusinessInvoiceItem(amount, billingPeriod, createdDate, currency, endDate, externalKey, invoiceId, itemId,
+                                       linkedItemId, itemType, phase, productCategory, productName, productType, slug, startDate, updatedDate);
     }
 }

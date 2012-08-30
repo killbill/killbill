@@ -49,12 +49,13 @@ public class BusinessInvoiceItem {
     private final LocalDate endDate;
     private final BigDecimal amount;
     private final Currency currency;
+    private final UUID linkedItemId;
 
     public BusinessInvoiceItem(final BigDecimal amount, @Nullable final String billingPeriod, final DateTime createdDate,
                                final Currency currency, final LocalDate endDate, final String externalKey,
-                               final UUID invoiceId, final UUID itemId, final String itemType, @Nullable final String phase,
-                               @Nullable final String productCategory, @Nullable final String productName, @Nullable final String productType,
-                               @Nullable final String slug, final LocalDate startDate, final DateTime updatedDate) {
+                               final UUID invoiceId, final UUID itemId, @Nullable final UUID linkedItemId, final String itemType,
+                               @Nullable final String phase, @Nullable final String productCategory, @Nullable final String productName,
+                               @Nullable final String productType, @Nullable final String slug, final LocalDate startDate, final DateTime updatedDate) {
         this.amount = amount;
         this.billingPeriod = billingPeriod;
         this.createdDate = createdDate;
@@ -63,6 +64,7 @@ public class BusinessInvoiceItem {
         this.externalKey = externalKey;
         this.invoiceId = invoiceId;
         this.itemId = itemId;
+        this.linkedItemId = linkedItemId;
         this.itemType = itemType;
         this.phase = phase;
         this.productCategory = productCategory;
@@ -75,7 +77,7 @@ public class BusinessInvoiceItem {
 
     public BusinessInvoiceItem(@Nullable final String externalKey, final InvoiceItem invoiceItem, @Nullable final Plan plan, @Nullable final PlanPhase planPhase) {
         this(invoiceItem.getAmount(), planPhase != null ? planPhase.getBillingPeriod().toString() : null, new DateTime(DateTimeZone.UTC), invoiceItem.getCurrency(),
-             invoiceItem.getEndDate(), externalKey, invoiceItem.getInvoiceId(), invoiceItem.getId(), invoiceItem.getInvoiceItemType().toString(),
+             invoiceItem.getEndDate(), externalKey, invoiceItem.getInvoiceId(), invoiceItem.getId(), invoiceItem.getLinkedItemId(), invoiceItem.getInvoiceItemType().toString(),
              planPhase != null ? planPhase.getPhaseType().toString() : null, plan != null ? plan.getProduct().getCategory().toString() : null,
              plan != null ? plan.getProduct().getName() : null, plan != null ? plan.getProduct().getCatalogName() : null,
              planPhase != null ? planPhase.getName() : null, invoiceItem.getStartDate(), new DateTime(DateTimeZone.UTC));
@@ -115,6 +117,10 @@ public class BusinessInvoiceItem {
 
     public String getItemType() {
         return itemType;
+    }
+
+    public UUID getLinkedItemId() {
+        return linkedItemId;
     }
 
     public String getPhase() {
@@ -165,6 +171,7 @@ public class BusinessInvoiceItem {
         sb.append(", startDate=").append(startDate);
         sb.append(", endDate=").append(endDate);
         sb.append(", currency=").append(currency);
+        sb.append(", linkedItemId=").append(linkedItemId);
         sb.append('}');
         return sb.toString();
     }
@@ -205,6 +212,9 @@ public class BusinessInvoiceItem {
             return false;
         }
         if (itemType != null ? !itemType.equals(that.itemType) : that.itemType != null) {
+            return false;
+        }
+        if (linkedItemId != null ? !linkedItemId.equals(that.linkedItemId) : that.linkedItemId != null) {
             return false;
         }
         if (phase != null ? !phase.equals(that.phase) : that.phase != null) {
@@ -250,6 +260,7 @@ public class BusinessInvoiceItem {
         result = 31 * result + (endDate != null ? endDate.hashCode() : 0);
         result = 31 * result + (amount != null ? amount.hashCode() : 0);
         result = 31 * result + (currency != null ? currency.hashCode() : 0);
+        result = 31 * result + (linkedItemId != null ? linkedItemId.hashCode() : 0);
         return result;
     }
 }

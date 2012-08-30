@@ -102,6 +102,7 @@ create table bii (
 , end_date date default null
 , amount numeric(10, 4) default 0
 , currency char(50) default null
+, linked_item_id char(36) default null
 , account_record_id int(11) unsigned default null
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
