@@ -37,12 +37,18 @@ import com.ning.billing.analytics.utils.Rounder;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.PARAMETER})
 public @interface BusinessInvoiceItemBinder {
+
     public static class BiiBinderFactory implements BinderFactory {
+
         public Binder build(final Annotation annotation) {
             return new Binder<BusinessInvoiceItemBinder, BusinessInvoiceItem>() {
                 public void bind(final SQLStatement q, final BusinessInvoiceItemBinder bind, final BusinessInvoiceItem invoiceItem) {
                     q.bind("item_id", invoiceItem.getItemId().toString());
-                    q.bind("linked_item_id", invoiceItem.getLinkedItemId().toString());
+                    if (invoiceItem.getLinkedItemId() != null) {
+                        q.bind("linked_item_id", invoiceItem.getLinkedItemId().toString());
+                    } else {
+                        q.bindNull("linked_item_id", Types.VARCHAR);
+                    }
 
                     final DateTime dateTimeNow = new DateTime(DateTimeZone.UTC);
                     if (invoiceItem.getCreatedDate() != null) {
