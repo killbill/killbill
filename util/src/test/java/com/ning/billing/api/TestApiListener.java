@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 
 import com.ning.billing.entitlement.api.timeline.RepairEntitlementEvent;
 import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
+import com.ning.billing.invoice.api.InvoiceAdjustmentEvent;
 import com.ning.billing.invoice.api.InvoiceCreationEvent;
 import com.ning.billing.payment.api.PaymentErrorEvent;
 import com.ning.billing.payment.api.PaymentInfoEvent;
@@ -65,6 +66,7 @@ public class TestApiListener {
         RESUME,
         PHASE,
         INVOICE,
+        INVOICE_ADJUSTMENT,
         PAYMENT,
         PAYMENT_ERROR,
         REPAIR_BUNDLE
@@ -132,6 +134,13 @@ public class TestApiListener {
     public void handleInvoiceEvents(final InvoiceCreationEvent event) {
         log.info(String.format("Got Invoice event %s", event.toString()));
         assertEqualsNicely(NextEvent.INVOICE);
+        notifyIfStackEmpty();
+    }
+
+    @Subscribe
+    public void handleInvoiceAdjustmentEvents(final InvoiceAdjustmentEvent event) {
+        log.info(String.format("Got Invoice adjustment event %s", event.toString()));
+        assertEqualsNicely(NextEvent.INVOICE_ADJUSTMENT);
         notifyIfStackEmpty();
     }
 

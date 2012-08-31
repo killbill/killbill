@@ -30,6 +30,9 @@ import org.joda.time.LocalDate;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
+import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.Currency;
@@ -39,6 +42,7 @@ import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.InvoicePayment.InvoicePaymentType;
+import com.ning.billing.invoice.api.user.DefaultInvoiceAdjustmentEvent;
 import com.ning.billing.invoice.generator.InvoiceDateUtils;
 import com.ning.billing.invoice.model.CreditAdjInvoiceItem;
 import com.ning.billing.invoice.model.CreditBalanceAdjInvoiceItem;
@@ -52,6 +56,8 @@ import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.util.ChangeType;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagUserApi;
+import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.bus.Bus.EventBusException;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.dao.EntityAudit;
@@ -68,24 +74,29 @@ import com.google.inject.Inject;
 
 public class AuditedInvoiceDao implements InvoiceDao {
 
+    private static final Logger log = LoggerFactory.getLogger(AuditedInvoiceDao.class);
+
     private final InvoiceSqlDao invoiceSqlDao;
     private final InvoicePaymentSqlDao invoicePaymentSqlDao;
     private final TagUserApi tagUserApi;
     private final NextBillingDatePoster nextBillingDatePoster;
     private final InvoiceItemSqlDao invoiceItemSqlDao;
     private final Clock clock;
+    private final Bus eventBus;
 
     @Inject
     public AuditedInvoiceDao(final IDBI dbi,
                              final NextBillingDatePoster nextBillingDatePoster,
                              final TagUserApi tagUserApi,
-                             final Clock clock) {
+                             final Clock clock,
+                             final Bus eventBus) {
         this.invoiceSqlDao = dbi.onDemand(InvoiceSqlDao.class);
         this.invoicePaymentSqlDao = dbi.onDemand(InvoicePaymentSqlDao.class);
         this.invoiceItemSqlDao = dbi.onDemand(InvoiceItemSqlDao.class);
         this.nextBillingDatePoster = nextBillingDatePoster;
         this.tagUserApi = tagUserApi;
         this.clock = clock;
+        this.eventBus = eventBus;
     }
 
     @Override
@@ -301,12 +312,32 @@ public class AuditedInvoiceDao implements InvoiceDao {
 
     @Override
     public void setWrittenOff(final UUID invoiceId, final CallContext context) throws TagApiException {
-        tagUserApi.addTag(invoiceId, ObjectType.INVOICE, ControlTagType.WRITTEN_OFF.getId(), context);
+        invoiceSqlDao.inTransaction(new Transaction<Void, InvoiceSqlDao>() {
+            @Override
+            public Void inTransaction(final InvoiceSqlDao transactional, final TransactionStatus status) throws Exception {
+                tagUserApi.addTag(invoiceId, ObjectType.INVOICE, ControlTagType.WRITTEN_OFF.getId(), context);
+
+                final Invoice invoice = transactional.getById(invoiceId.toString());
+                notifyBusOfInvoiceAdjustment(transactional, invoiceId, invoice.getAccountId(), context.getUserToken());
+
+                return null;
+            }
+        });
     }
 
     @Override
     public void removeWrittenOff(final UUID invoiceId, final CallContext context) throws TagApiException {
-        tagUserApi.removeTag(invoiceId, ObjectType.INVOICE, ControlTagType.WRITTEN_OFF.getId(), context);
+        invoiceSqlDao.inTransaction(new Transaction<Void, InvoiceSqlDao>() {
+            @Override
+            public Void inTransaction(final InvoiceSqlDao transactional, final TransactionStatus status) throws Exception {
+                tagUserApi.removeTag(invoiceId, ObjectType.INVOICE, ControlTagType.WRITTEN_OFF.getId(), context);
+
+                final Invoice invoice = transactional.getById(invoiceId.toString());
+                notifyBusOfInvoiceAdjustment(transactional, invoiceId, invoice.getAccountId(), context.getUserToken());
+
+                return null;
+            }
+        });
     }
 
     @Override
@@ -386,6 +417,9 @@ public class AuditedInvoiceDao implements InvoiceDao {
                         transInvoiceItemDao.create(item, context);
                     }
                 }
+
+                // Notify the bus since the balance of the invoice changed
+                notifyBusOfInvoiceAdjustment(transactional, invoice.getId(), invoice.getAccountId(), context.getUserToken());
 
                 return refund;
             }
@@ -483,12 +517,16 @@ public class AuditedInvoiceDao implements InvoiceDao {
                 } else {
                     final InvoicePayment chargeBack = new DefaultInvoicePayment(UUID.randomUUID(), InvoicePaymentType.CHARGED_BACK, payment.getPaymentId(),
                                                                                 payment.getInvoiceId(), context.getCreatedDate(), requestedChargedBackAmout.negate(), payment.getCurrency(), null, payment.getId());
-                    invoicePaymentSqlDao.create(chargeBack, context);
+                    transactional.create(chargeBack, context);
 
                     // Add audit
-                    final Long recordId = invoicePaymentSqlDao.getRecordId(chargeBack.getId().toString());
+                    final Long recordId = transactional.getRecordId(chargeBack.getId().toString());
                     final EntityAudit audit = new EntityAudit(TableName.INVOICE_PAYMENTS, recordId, ChangeType.INSERT);
-                    invoicePaymentSqlDao.insertAuditFromTransaction(audit, context);
+                    transactional.insertAuditFromTransaction(audit, context);
+
+                    // Notify the bus since the balance of the invoice changed
+                    final UUID accountId = transactional.getAccountIdFromInvoicePaymentId(chargeBack.getId().toString());
+                    notifyBusOfInvoiceAdjustment(transactional, payment.getInvoiceId(), accountId, context.getUserToken());
 
                     return chargeBack;
                 }
@@ -557,6 +595,9 @@ public class AuditedInvoiceDao implements InvoiceDao {
                 final InvoiceItemSqlDao transInvoiceItemDao = transactional.become(InvoiceItemSqlDao.class);
                 transInvoiceItemDao.create(externalCharge, context);
 
+                // Notify the bus since the balance of the invoice changed
+                notifyBusOfInvoiceAdjustment(transactional, invoiceId, accountId, context.getUserToken());
+
                 return externalCharge;
             }
         });
@@ -589,6 +630,9 @@ public class AuditedInvoiceDao implements InvoiceDao {
                 final EntityAudit audit = new EntityAudit(TableName.INVOICE_ITEMS, recordId, ChangeType.INSERT);
                 transactional.insertAuditFromTransaction(audit, context);
 
+                // Notify the bus since the balance of the invoice changed
+                notifyBusOfInvoiceAdjustment(transactional, invoiceId, accountId, context.getUserToken());
+
                 return credit;
             }
         });
@@ -604,6 +648,9 @@ public class AuditedInvoiceDao implements InvoiceDao {
                 final InvoiceItem invoiceItemAdjustment = createAdjustmentItem(transactional, invoiceId, invoiceItemId, positiveAdjAmount,
                                                                                currency, effectiveDate);
                 insertItemAndAddCBAIfNeeded(transactional, invoiceItemAdjustment, context);
+
+                notifyBusOfInvoiceAdjustment(transactional, invoiceId, accountId, context.getUserToken());
+
                 return invoiceItemAdjustment;
             }
         });
@@ -771,6 +818,14 @@ public class AuditedInvoiceDao implements InvoiceDao {
             final DateTime nextNotificationDateTime = InvoiceDateUtils.calculateBillingCycleDateAfter(clock.getUTCNow(), billCycleDayUTC);
             // NextBillingDatePoster will ignore duplicates
             nextBillingDatePoster.insertNextBillingNotification(dao, accountId, subscriptionForNextNotification, nextNotificationDateTime);
+        }
+    }
+
+    private void notifyBusOfInvoiceAdjustment(final Transmogrifier transactional, final UUID invoiceId, final UUID accountId, final UUID userToken) {
+        try {
+            eventBus.postFromTransaction(new DefaultInvoiceAdjustmentEvent(invoiceId, accountId, userToken), transactional);
+        } catch (EventBusException e) {
+            log.warn("Failed to post adjustment event for invoice " + invoiceId, e);
         }
     }
 }

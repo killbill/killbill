@@ -62,7 +62,10 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
+import com.ning.billing.invoice.api.InvoicePayment;
+import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.api.InvoiceService;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.invoice.model.InvoicingConfiguration;
@@ -70,6 +73,7 @@ import com.ning.billing.junction.plumbing.api.BlockingSubscription;
 import com.ning.billing.mock.MockAccountBuilder;
 import com.ning.billing.mock.api.MockBillCycleDay;
 import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
+import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
@@ -147,6 +151,9 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
     @Inject
     protected InvoiceUserApi invoiceUserApi;
+
+    @Inject
+    protected InvoicePaymentApi invoicePaymentApi;
 
     @Inject
     protected PaymentApi paymentApi;
@@ -371,6 +378,48 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         }, events);
     }
 
+    protected void createExternalPaymentAndCheckForCompletion(final Account account, final Invoice invoice, final NextEvent... events) {
+        doCallAndCheckForCompletion(new Function<Void, Void>() {
+            @Override
+            public Void apply(@Nullable final Void input) {
+                try {
+                    paymentApi.createExternalPayment(account, invoice.getId(), invoice.getBalance(), new DefaultCallContext("test", null, null, clock));
+                } catch (PaymentApiException e) {
+                    fail(e.toString());
+                }
+                return null;
+            }
+        }, events);
+    }
+
+    protected void refundPaymentAndCheckForCompletion(final Account account, final Payment payment, final NextEvent... events) {
+        doCallAndCheckForCompletion(new Function<Void, Void>() {
+            @Override
+            public Void apply(@Nullable final Void input) {
+                try {
+                    paymentApi.createRefund(account, payment.getId(), payment.getPaidAmount(), new DefaultCallContext("test", null, null, clock));
+                } catch (PaymentApiException e) {
+                    fail(e.toString());
+                }
+                return null;
+            }
+        }, events);
+    }
+
+    protected void createChargeBackAndCheckForCompletion(final InvoicePayment payment, final NextEvent... events) {
+        doCallAndCheckForCompletion(new Function<Void, Void>() {
+            @Override
+            public Void apply(@Nullable final Void input) {
+                try {
+                    invoicePaymentApi.createChargeback(payment.getId(), payment.getAmount(), new DefaultCallContext("test", null, null, clock));
+                } catch (InvoiceApiException e) {
+                    fail(e.toString());
+                }
+                return null;
+            }
+        }, events);
+    }
+
     protected Subscription createSubscriptionAndCheckForCompletion(final UUID bundleId,
             final String productName,
             final ProductCategory productCategory,
@@ -429,6 +478,36 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
                     fail();
                     return null;
                 }
+            }
+        }, events);
+    }
+
+    protected void fullyAdjustInvoiceAndCheckForCompletion(final Account account, final Invoice invoice, final NextEvent... events) {
+        doCallAndCheckForCompletion(new Function<Void, Void>() {
+            @Override
+            public Void apply(@Nullable final Void input) {
+                try {
+                    invoiceUserApi.insertCreditForInvoice(account.getId(), invoice.getId(), invoice.getBalance(), invoice.getInvoiceDate(),
+                                                          account.getCurrency(), new DefaultCallContext("test", null, null, clock));
+                } catch (InvoiceApiException e) {
+                    fail(e.toString());
+                }
+                return null;
+            }
+        }, events);
+    }
+
+    protected void fullyAdjustInvoiceItemAndCheckForCompletion(final Account account, final Invoice invoice, final int itemNb, final NextEvent... events) {
+        doCallAndCheckForCompletion(new Function<Void, Void>() {
+            @Override
+            public Void apply(@Nullable final Void input) {
+                try {
+                    invoiceUserApi.insertInvoiceItemAdjustment(account.getId(), invoice.getId(), invoice.getInvoiceItems().get(itemNb - 1).getId(),
+                                                               invoice.getInvoiceDate(), new DefaultCallContext("test", null, null, clock));
+                } catch (InvoiceApiException e) {
+                    fail(e.toString());
+                }
+                return null;
             }
         }, events);
     }

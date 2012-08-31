@@ -33,6 +33,7 @@ import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.util.api.TagUserApi;
+import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.dao.ObjectType;
@@ -45,6 +46,7 @@ import com.ning.billing.util.tag.dao.TagDao;
 import com.ning.billing.util.tag.dao.TagDefinitionDao;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.eventbus.EventBus;
 
 public class TestDefaultInvoiceDao extends InvoiceTestSuite {
 
@@ -62,7 +64,7 @@ public class TestDefaultInvoiceDao extends InvoiceTestSuite {
         final TagDefinitionDao tagDefinitionDao = new MockTagDefinitionDao();
         final TagDao tagDao = new MockTagDao();
         tagUserApi = new DefaultTagUserApi(tagDefinitionDao, tagDao);
-        dao = new AuditedInvoiceDao(idbi, poster, tagUserApi, Mockito.mock(Clock.class));
+        dao = new AuditedInvoiceDao(idbi, poster, tagUserApi, Mockito.mock(Clock.class), Mockito.mock(Bus.class));
     }
 
     @Test(groups = "fast")

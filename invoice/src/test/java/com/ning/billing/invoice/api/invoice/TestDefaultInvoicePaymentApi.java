@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import org.mockito.Mockito;
 import org.skife.jdbi.v2.IDBI;
 import org.testng.Assert;
 import org.testng.annotations.BeforeSuite;
@@ -44,6 +45,7 @@ import com.ning.billing.invoice.dao.InvoiceSqlDao;
 import com.ning.billing.invoice.notification.MockNextBillingDatePoster;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.util.api.TagUserApi;
+import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TestCallContext;
 import com.ning.billing.util.clock.Clock;
@@ -87,7 +89,7 @@ public class TestDefaultInvoicePaymentApi extends InvoiceTestSuiteWithEmbeddedDB
         final TagDefinitionDao tagDefinitionDao = new MockTagDefinitionDao();
         final TagDao tagDao = new MockTagDao();
         final TagUserApi tagUserApi = new DefaultTagUserApi(tagDefinitionDao, tagDao);
-        final InvoiceDao invoiceDao = new AuditedInvoiceDao(dbi, nextBillingDatePoster, tagUserApi, clock);
+        final InvoiceDao invoiceDao = new AuditedInvoiceDao(dbi, nextBillingDatePoster, tagUserApi, clock, Mockito.mock(Bus.class));
         invoicePaymentApi = new DefaultInvoicePaymentApi(invoiceDao);
 
         context = new TestCallContext("Invoice payment tests");

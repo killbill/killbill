@@ -26,6 +26,7 @@ public interface BusEvent {
         BUNDLE_REPAIR,
         INVOICE_EMPTY,
         INVOICE_CREATION,
+        INVOICE_ADJUSTMENT,
         PAYMENT_INFO,
         PAYMENT_ERROR,
         CONTROL_TAG_CREATION,

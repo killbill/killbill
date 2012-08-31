@@ -21,13 +21,16 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.eventbus.Subscribe;
-import com.google.inject.Inject;
+import com.ning.billing.invoice.api.InvoiceAdjustmentEvent;
 import com.ning.billing.payment.api.PaymentErrorEvent;
 import com.ning.billing.payment.api.PaymentInfoEvent;
 
+import com.google.common.eventbus.Subscribe;
+import com.google.inject.Inject;
+
 public class OverdueListener {
-    OverdueDispatcher dispatcher;
+
+    private final OverdueDispatcher dispatcher;
 
     private static final Logger log = LoggerFactory.getLogger(OverdueListener.class);
 
@@ -49,10 +52,15 @@ public class OverdueListener {
         dispatcher.processOverdueForAccount(accountId);
     }
 
+    @Subscribe
+    public void handleInvoiceAdjustmentEvent(final InvoiceAdjustmentEvent event) {
+        log.info(String.format("Received InvoiceAdjustment event %s", event.toString()));
+        final UUID accountId = event.getAccountId();
+        dispatcher.processOverdueForAccount(accountId);
+    }
+
     public void handleNextOverdueCheck(final UUID overdueableId) {
         log.info(String.format("Received OD checkup notification for %s", overdueableId));
         dispatcher.processOverdue(overdueableId);
     }
-
-
 }

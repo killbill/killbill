@@ -22,6 +22,7 @@ import java.net.URL;
 import java.util.List;
 import java.util.UUID;
 
+import org.mockito.Mockito;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.exceptions.TransactionFailedException;
 import org.testng.annotations.BeforeSuite;
@@ -44,6 +45,7 @@ import com.ning.billing.invoice.glue.InvoiceModuleWithEmbeddedDb;
 import com.ning.billing.invoice.notification.MockNextBillingDatePoster;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.util.api.TagUserApi;
+import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TestCallContext;
 import com.ning.billing.util.clock.Clock;
@@ -89,7 +91,7 @@ public class TestChargeBacks extends InvoiceTestSuiteWithEmbeddedDB {
         final TagDefinitionDao tagDefinitionDao = new MockTagDefinitionDao();
         final TagDao tagDao = new MockTagDao();
         final TagUserApi tagUserApi = new DefaultTagUserApi(tagDefinitionDao, tagDao);
-        final InvoiceDao invoiceDao = new AuditedInvoiceDao(dbi, nextBillingDatePoster, tagUserApi, clock);
+        final InvoiceDao invoiceDao = new AuditedInvoiceDao(dbi, nextBillingDatePoster, tagUserApi, clock, Mockito.mock(Bus.class));
         invoicePaymentApi = new DefaultInvoicePaymentApi(invoiceDao);
 
         context = new TestCallContext("Charge back tests");
