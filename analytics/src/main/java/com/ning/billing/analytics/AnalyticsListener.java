@@ -25,6 +25,7 @@ import com.ning.billing.entitlement.api.timeline.RepairEntitlementEvent;
 import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.RequestedSubscriptionEvent;
+import com.ning.billing.invoice.api.InvoiceAdjustmentEvent;
 import com.ning.billing.invoice.api.NullInvoiceEvent;
 import com.ning.billing.invoice.api.InvoiceCreationEvent;
 import com.ning.billing.overdue.OverdueChangeEvent;
@@ -103,6 +104,12 @@ public class AnalyticsListener {
     @Subscribe
     public void handleNullInvoice(final NullInvoiceEvent event) {
         // Ignored for now
+    }
+
+    @Subscribe
+    public void handleInvoiceAdjustment(final InvoiceAdjustmentEvent event) {
+        // The event is used as a trigger to rebuild all invoices and invoice items for this account
+        invoiceRecorder.rebuildInvoicesForAccount(event.getAccountId());
     }
 
     @Subscribe
