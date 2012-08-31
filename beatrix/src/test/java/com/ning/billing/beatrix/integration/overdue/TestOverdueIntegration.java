@@ -182,10 +182,7 @@ public class TestOverdueIntegration extends TestIntegrationBase {
         productName = "Shotgun";
         term = BillingPeriod.MONTHLY;
 
-        // create account
-        // set mock payments to fail
-        // reset clock
-        // configure basic OD state rules for 2 states OD1 1-2month, OD2 2-3 month
+        paymentPlugin.clear();
     }
 
     // We set the the property killbill.payment.retry.days=8,8,8,8,8,8,8,8 so that Payment retry logic does not end with an ABORTED state
