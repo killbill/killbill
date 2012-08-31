@@ -21,7 +21,10 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.skife.jdbi.v2.IDBI;
+import org.skife.jdbi.v2.Transaction;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -46,7 +49,6 @@ import com.ning.billing.util.tag.dao.TagDao;
 import com.ning.billing.util.tag.dao.TagDefinitionDao;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.eventbus.EventBus;
 
 public class TestDefaultInvoiceDao extends InvoiceTestSuite {
 
@@ -59,6 +61,18 @@ public class TestDefaultInvoiceDao extends InvoiceTestSuite {
         final IDBI idbi = Mockito.mock(IDBI.class);
         invoiceSqlDao = Mockito.mock(InvoiceSqlDao.class);
         Mockito.when(idbi.onDemand(InvoiceSqlDao.class)).thenReturn(invoiceSqlDao);
+        Mockito.when(invoiceSqlDao.getById(Mockito.anyString())).thenReturn(Mockito.mock(Invoice.class));
+        Mockito.when(invoiceSqlDao.inTransaction(Mockito.<Transaction<Void, InvoiceSqlDao>>any())).thenAnswer(new Answer() {
+            public Object answer(final InvocationOnMock invocation) {
+                final Object[] args = invocation.getArguments();
+                try {
+                    ((Transaction<Void, InvoiceSqlDao>) args[0]).inTransaction(invoiceSqlDao, null);
+                } catch (Exception e) {
+                    Assert.fail(e.toString());
+                }
+                return null;
+            }
+        });
 
         final NextBillingDatePoster poster = Mockito.mock(NextBillingDatePoster.class);
         final TagDefinitionDao tagDefinitionDao = new MockTagDefinitionDao();
