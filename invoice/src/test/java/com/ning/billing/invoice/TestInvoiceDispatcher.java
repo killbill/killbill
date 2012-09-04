@@ -212,7 +212,7 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
         final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountUserApi, billingApi, invoiceDao,
                                                                    invoiceNotifier, locker, busService.getBus(), clock);
 
-        final Invoice invoice = dispatcher.processAccount(account.getId(), new DateTime("2012-07-31T00:00:00.000Z"), false, context);
+        final Invoice invoice = dispatcher.processAccount(account.getId(), new DateTime("2012-07-30T00:00:00.000Z"), false, context);
         Assert.assertNotNull(invoice);
 
         final List<InvoiceItem> invoiceItems = invoice.getInvoiceItems();
