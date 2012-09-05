@@ -19,6 +19,8 @@ package com.ning.billing.entitlement.api;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
@@ -49,6 +51,7 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.Duration;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
+import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.catalog.api.TimeUnit;
 import com.ning.billing.config.EntitlementConfig;
@@ -56,9 +59,12 @@ import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
 import com.ning.billing.entitlement.api.billing.ChargeThruApi;
 import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi;
+import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi.EntitlementAccountMigration;
+import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi.EntitlementBundleMigration;
+import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi.EntitlementSubscriptionMigration;
+import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi.EntitlementSubscriptionMigrationCase;
 import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
 import com.ning.billing.entitlement.api.transfer.EntitlementTransferApi;
-import com.ning.billing.entitlement.api.transfer.EntitlementTransferApiException;
 import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
@@ -398,6 +404,186 @@ public abstract class TestApiBase extends EntitlementTestSuiteWithEmbeddedDB imp
     protected void printSubscriptionTransitions(final List<EffectiveSubscriptionEvent> transitions) {
         for (final EffectiveSubscriptionEvent cur : transitions) {
             log.debug("Transition " + cur);
+        }
+    }
+
+
+    /**************************************************************
+        Utilities for migration tests
+    ***************************************************************/
+
+    protected EntitlementAccountMigration createAccountForMigrationTest(final List<List<EntitlementSubscriptionMigrationCaseWithCTD>> cases) {
+        return new EntitlementAccountMigration() {
+            private final UUID accountId = UUID.randomUUID();
+
+            @Override
+            public EntitlementBundleMigration[] getBundles() {
+                final List<EntitlementBundleMigration> bundles = new ArrayList<EntitlementBundleMigration>();
+                final EntitlementBundleMigration bundle0 = new EntitlementBundleMigration() {
+                    @Override
+                    public EntitlementSubscriptionMigration[] getSubscriptions() {
+                        final EntitlementSubscriptionMigration[] result = new EntitlementSubscriptionMigration[cases.size()];
+
+                        for (int i = 0; i < cases.size(); i++) {
+                            final List<EntitlementSubscriptionMigrationCaseWithCTD> curCases = cases.get(i);
+                            final EntitlementSubscriptionMigration subscription = new EntitlementSubscriptionMigration() {
+                                @Override
+                                public EntitlementSubscriptionMigrationCaseWithCTD[] getSubscriptionCases() {
+                                    return curCases.toArray(new EntitlementSubscriptionMigrationCaseWithCTD[curCases.size()]);
+                                }
+
+                                @Override
+                                public ProductCategory getCategory() {
+                                    return curCases.get(0).getPlanPhaseSpecifier().getProductCategory();
+                                }
+
+                                @Override
+                                public DateTime getChargedThroughDate() {
+                                    for (final EntitlementSubscriptionMigrationCaseWithCTD cur : curCases) {
+                                        if (cur.getChargedThroughDate() != null) {
+                                            return cur.getChargedThroughDate();
+                                        }
+                                    }
+                                    return null;
+                                }
+                            };
+                            result[i] = subscription;
+                        }
+                        return result;
+                    }
+
+                    @Override
+                    public String getBundleKey() {
+                        return "12345";
+                    }
+                };
+                bundles.add(bundle0);
+                return bundles.toArray(new EntitlementBundleMigration[bundles.size()]);
+            }
+
+            @Override
+            public UUID getAccountKey() {
+                return accountId;
+            }
+        };
+    }
+
+    protected EntitlementAccountMigration createAccountForMigrationWithRegularBasePlanAndAddons(final DateTime initialBPstart, final DateTime initalAddonStart) {
+
+        final List<EntitlementSubscriptionMigrationCaseWithCTD> cases = new LinkedList<EntitlementSubscriptionMigrationCaseWithCTD>();
+        cases.add(new EntitlementSubscriptionMigrationCaseWithCTD(
+                new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN),
+                initialBPstart,
+                null,
+                initialBPstart.plusYears(1)));
+
+        final List<EntitlementSubscriptionMigrationCaseWithCTD> firstAddOnCases = new LinkedList<EntitlementSubscriptionMigrationCaseWithCTD>();
+        firstAddOnCases.add(new EntitlementSubscriptionMigrationCaseWithCTD(
+                new PlanPhaseSpecifier("Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.DISCOUNT),
+                initalAddonStart,
+                initalAddonStart.plusMonths(1),
+                initalAddonStart.plusMonths(1)));
+        firstAddOnCases.add(new EntitlementSubscriptionMigrationCaseWithCTD(
+                new PlanPhaseSpecifier("Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN),
+                initalAddonStart.plusMonths(1),
+                null,
+                null));
+
+        final List<List<EntitlementSubscriptionMigrationCaseWithCTD>> input = new ArrayList<List<EntitlementSubscriptionMigrationCaseWithCTD>>();
+        input.add(cases);
+        input.add(firstAddOnCases);
+        return createAccountForMigrationTest(input);
+    }
+
+    protected EntitlementAccountMigration createAccountForMigrationWithRegularBasePlan(final DateTime startDate) {
+        final List<EntitlementSubscriptionMigrationCaseWithCTD> cases = new LinkedList<EntitlementSubscriptionMigrationCaseWithCTD>();
+        cases.add(new EntitlementSubscriptionMigrationCaseWithCTD(
+                new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN),
+                startDate,
+                null,
+                startDate.plusYears(1)));
+        final List<List<EntitlementSubscriptionMigrationCaseWithCTD>> input = new ArrayList<List<EntitlementSubscriptionMigrationCaseWithCTD>>();
+        input.add(cases);
+        return createAccountForMigrationTest(input);
+    }
+
+    protected EntitlementAccountMigration createAccountForMigrationWithRegularBasePlanFutreCancelled(final DateTime startDate) {
+        final List<EntitlementSubscriptionMigrationCaseWithCTD> cases = new LinkedList<EntitlementSubscriptionMigrationCaseWithCTD>();
+        cases.add(new EntitlementSubscriptionMigrationCaseWithCTD(
+                new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN),
+                startDate,
+                startDate.plusYears(1),
+                startDate.plusYears(1)));
+        final List<List<EntitlementSubscriptionMigrationCaseWithCTD>> input = new ArrayList<List<EntitlementSubscriptionMigrationCaseWithCTD>>();
+        input.add(cases);
+        return createAccountForMigrationTest(input);
+    }
+
+    protected EntitlementAccountMigration createAccountForMigrationFuturePendingPhase(final DateTime trialDate) {
+        final List<EntitlementSubscriptionMigrationCaseWithCTD> cases = new LinkedList<EntitlementSubscriptionMigrationCaseWithCTD>();
+        cases.add(new EntitlementSubscriptionMigrationCaseWithCTD(
+                new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.TRIAL),
+                trialDate,
+                trialDate.plusDays(30),
+                trialDate.plusDays(30)));
+        cases.add(new EntitlementSubscriptionMigrationCaseWithCTD(
+                new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN),
+                trialDate.plusDays(30),
+                null,
+                null));
+        final List<List<EntitlementSubscriptionMigrationCaseWithCTD>> input = new ArrayList<List<EntitlementSubscriptionMigrationCaseWithCTD>>();
+        input.add(cases);
+        return createAccountForMigrationTest(input);
+    }
+
+    protected EntitlementAccountMigration createAccountForMigrationFuturePendingChange() {
+        final List<EntitlementSubscriptionMigrationCaseWithCTD> cases = new LinkedList<EntitlementSubscriptionMigrationCaseWithCTD>();
+        final DateTime effectiveDate = clock.getUTCNow().minusDays(10);
+        cases.add(new EntitlementSubscriptionMigrationCaseWithCTD(
+                new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN),
+                effectiveDate,
+                effectiveDate.plusMonths(1),
+                effectiveDate.plusMonths(1)));
+        cases.add(new EntitlementSubscriptionMigrationCaseWithCTD(
+                new PlanPhaseSpecifier("Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN),
+                effectiveDate.plusMonths(1).plusDays(1),
+                null,
+                null));
+        final List<List<EntitlementSubscriptionMigrationCaseWithCTD>> input = new ArrayList<List<EntitlementSubscriptionMigrationCaseWithCTD>>();
+        input.add(cases);
+        return createAccountForMigrationTest(input);
+    }
+
+    public static class EntitlementSubscriptionMigrationCaseWithCTD implements EntitlementSubscriptionMigrationCase {
+        private final PlanPhaseSpecifier pps;
+        private final DateTime effDt;
+        private final DateTime cancelDt;
+        private final DateTime ctd;
+
+        public EntitlementSubscriptionMigrationCaseWithCTD(final PlanPhaseSpecifier pps, final DateTime effDt, final DateTime cancelDt, final DateTime ctd) {
+            this.pps = pps;
+            this.cancelDt = cancelDt;
+            this.effDt = effDt;
+            this.ctd = ctd;
+        }
+
+        @Override
+        public PlanPhaseSpecifier getPlanPhaseSpecifier() {
+            return pps;
+        }
+
+        @Override
+        public DateTime getEffectiveDate() {
+            return effDt;
+        }
+
+        @Override
+        public DateTime getCancelledDate() {
+            return cancelDt;
+        }
+
+        public DateTime getChargedThroughDate() {
+            return ctd;
         }
     }
 }
