@@ -153,7 +153,8 @@ public abstract class TestMigration extends TestApiBase {
             assertEquals(subscription.getCurrentPlan().getName(), "assault-rifle-annual");
             assertEquals(subscription.getChargedThroughDate(), startDate.plusYears(1));
 
-            testListener.pushExpectedEvent(NextEvent.MIGRATE_BILLING);
+            // The MIGRATE_BILLING will not be there because the subscription is cancelled at the same date so no BILLING should occur
+            //testListener.pushExpectedEvent(NextEvent.MIGRATE_BILLING);
             testListener.pushExpectedEvent(NextEvent.CANCEL);
 
             final Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusYears(1));

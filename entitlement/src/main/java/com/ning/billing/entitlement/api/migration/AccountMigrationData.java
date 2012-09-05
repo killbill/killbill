@@ -18,6 +18,8 @@ package com.ning.billing.entitlement.api.migration;
 
 import java.util.List;
 
+import org.joda.time.DateTime;
+
 import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
@@ -64,14 +66,13 @@ public class AccountMigrationData {
         private final List<EntitlementEvent> initialEvents;
 
         public SubscriptionMigrationData(final SubscriptionData data,
-                                         final List<EntitlementEvent> initialEvents) {
+                                         final List<EntitlementEvent> initialEvents,
+                                         final DateTime ctd) {
             super();
             // Set CTD to subscription object from MIGRATION_BILLING event
             final SubscriptionBuilder builder = new SubscriptionBuilder(data);
-            for (final EntitlementEvent cur : initialEvents) {
-                if (cur instanceof ApiEventMigrateBilling) {
-                    builder.setChargedThroughDate(cur.getEffectiveDate());
-                }
+            if (ctd != null) {
+                builder.setChargedThroughDate(ctd);
             }
             this.data = new SubscriptionData(builder);
             this.initialEvents = initialEvents;

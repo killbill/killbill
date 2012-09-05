@@ -253,7 +253,7 @@ public class DefaultEntitlementTransferApi implements EntitlementTransferApi {
                 ImmutableList.<EntitlementEvent>of());
 
                 final List<EntitlementEvent> events = toEvents(existingEvents, subscriptionData, effectiveTransferDate, context);
-                final SubscriptionMigrationData curData = new SubscriptionMigrationData(subscriptionData, events);
+                final SubscriptionMigrationData curData = new SubscriptionMigrationData(subscriptionData, events, null);
                 subscriptionMigrationDataList.add(curData);
             }
             BundleMigrationData bundleMigrationData = new BundleMigrationData(subscriptionBundleData, subscriptionMigrationDataList);
