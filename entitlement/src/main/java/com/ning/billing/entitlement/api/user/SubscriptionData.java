@@ -181,9 +181,13 @@ public class SubscriptionData extends EntityBase implements Subscription {
 
 
     @Override
-    public boolean cancel(final DateTime requestedDate, final boolean eot,
-            final CallContext context) throws EntitlementUserApiException {
-        return apiService.cancel(this, requestedDate, eot, context);
+    public boolean cancel(final DateTime requestedDate, final CallContext context) throws EntitlementUserApiException {
+        return apiService.cancel(this, requestedDate, context);
+    }
+
+    @Override
+    public boolean cancelWithPolicy(final DateTime requestedDate, final ActionPolicy policy, final CallContext context) throws EntitlementUserApiException {
+        return apiService.cancelWithPolicy(this, requestedDate, policy, context);
     }
 
     @Override

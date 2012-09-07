@@ -146,7 +146,7 @@ public class TestUserApiError extends TestApiBase {
             final Subscription subscription = createSubscription("Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME);
 
             testListener.pushExpectedEvent(NextEvent.CANCEL);
-            subscription.cancel(clock.getUTCNow(), false, context);
+            subscription.cancel(clock.getUTCNow(), context);
             try {
                 subscription.changePlan("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow(), context);
             } catch (EntitlementUserApiException e) {
@@ -199,7 +199,7 @@ public class TestUserApiError extends TestApiBase {
 
             subscription = entitlementApi.getSubscriptionFromId(subscription.getId());
 
-            subscription.cancel(clock.getUTCNow(), false, context);
+            subscription.cancel(clock.getUTCNow(), context);
             try {
                 subscription.changePlan("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow(), context);
             } catch (EntitlementUserApiException e) {

@@ -30,7 +30,7 @@ import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.OverdueUserApi;
 import com.ning.billing.overdue.config.OverdueConfig;
 import com.ning.billing.overdue.config.api.BillingState;
-import com.ning.billing.overdue.config.api.OverdueError;
+import com.ning.billing.overdue.config.api.OverdueException;
 import com.ning.billing.overdue.config.api.OverdueStateSet;
 import com.ning.billing.overdue.wrapper.OverdueWrapper;
 import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
@@ -51,25 +51,25 @@ public class DefaultOverdueUserApi implements OverdueUserApi {
 
     @SuppressWarnings("unchecked")
     @Override
-    public <T extends Blockable> OverdueState<T> getOverdueStateFor(final T overdueable) throws OverdueError {
+    public <T extends Blockable> OverdueState<T> getOverdueStateFor(final T overdueable) throws OverdueException {
         try {
             final String stateName = accessApi.getBlockingStateFor(overdueable).getStateName();
             final OverdueStateSet<SubscriptionBundle> states = overdueConfig.getBundleStateSet();
             return (OverdueState<T>) states.findState(stateName);
         } catch (OverdueApiException e) {
-            throw new OverdueError(e, ErrorCode.OVERDUE_CAT_ERROR_ENCOUNTERED, overdueable.getId(), overdueable.getClass().getSimpleName());
+            throw new OverdueException(e, ErrorCode.OVERDUE_CAT_ERROR_ENCOUNTERED, overdueable.getId(), overdueable.getClass().getSimpleName());
         }
     }
 
     @Override
-    public <T extends Blockable> BillingState<T> getBillingStateFor(final T overdueable) throws OverdueError {
+    public <T extends Blockable> BillingState<T> getBillingStateFor(final T overdueable) throws OverdueException {
         log.info(String.format("Billing state of of %s requested", overdueable.getId()));
         final OverdueWrapper<T> wrapper = factory.createOverdueWrapperFor(overdueable);
         return wrapper.billingState();
     }
 
     @Override
-    public <T extends Blockable> OverdueState<T> refreshOverdueStateFor(final T blockable) throws OverdueError, OverdueApiException {
+    public <T extends Blockable> OverdueState<T> refreshOverdueStateFor(final T blockable) throws OverdueException, OverdueApiException {
         log.info(String.format("Refresh of %s requested", blockable.getId()));
         final OverdueWrapper<T> wrapper = factory.createOverdueWrapperFor(blockable);
         return wrapper.refresh();

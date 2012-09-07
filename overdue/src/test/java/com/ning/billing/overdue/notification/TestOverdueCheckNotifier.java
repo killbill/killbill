@@ -50,6 +50,7 @@ import com.ning.billing.mock.glue.MockJunctionModule;
 import com.ning.billing.mock.glue.MockPaymentModule;
 import com.ning.billing.ovedue.notification.DefaultOverdueCheckNotifier;
 import com.ning.billing.ovedue.notification.DefaultOverdueCheckPoster;
+import com.ning.billing.ovedue.notification.OverdueCheckNotificationKey;
 import com.ning.billing.ovedue.notification.OverdueCheckPoster;
 import com.ning.billing.overdue.OverdueProperties;
 import com.ning.billing.overdue.OverdueTestSuiteWithEmbeddedDB;
@@ -92,9 +93,9 @@ public class TestOverdueCheckNotifier extends OverdueTestSuiteWithEmbeddedDB {
         }
 
         @Override
-        public void handleNextOverdueCheck(final UUID subscriptionId) {
+        public void handleNextOverdueCheck(final OverdueCheckNotificationKey key) {
             eventCount++;
-            latestSubscriptionId = subscriptionId;
+            latestSubscriptionId = key.getUuidKey();
         }
 
         public int getEventCount() {
@@ -109,6 +110,7 @@ public class TestOverdueCheckNotifier extends OverdueTestSuiteWithEmbeddedDB {
     @BeforeClass(groups = "slow")
     public void setup() throws ServiceException, IOException, ClassNotFoundException, SQLException, EntitlementUserApiException {
         final Injector g = Guice.createInjector(Stage.PRODUCTION, new MockInvoiceModule(), new MockPaymentModule(), new BusModule(), new DefaultOverdueModule() {
+            @Override
             protected void configure() {
                 super.configure();
                 bind(Clock.class).to(ClockMock.class).asEagerSingleton();

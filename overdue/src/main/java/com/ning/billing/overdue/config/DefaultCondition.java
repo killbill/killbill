@@ -24,7 +24,9 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.joda.time.Period;
 
 import com.ning.billing.catalog.api.Duration;
 import com.ning.billing.catalog.api.TimeUnit;

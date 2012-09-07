@@ -19,7 +19,6 @@ package com.ning.billing.overdue.config;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 
-import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.joda.time.Period;
 
@@ -95,4 +94,8 @@ public abstract class DefaultOverdueStateSet<T extends Blockable> extends Valida
         return getStates().length;
     }
 
+    @Override
+    public OverdueState<T> getFirstState() {
+        return getStates()[0];
+    }
 }

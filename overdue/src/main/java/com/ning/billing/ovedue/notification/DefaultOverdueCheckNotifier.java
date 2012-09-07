@@ -16,7 +16,6 @@
 
 package com.ning.billing.ovedue.notification;
 
-import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -77,7 +76,7 @@ public class DefaultOverdueCheckNotifier implements OverdueCheckNotifier {
                     }
 
                     final OverdueCheckNotificationKey key = (OverdueCheckNotificationKey) notificationKey;
-                    processEvent(key.getUuidKey(), eventDate);
+                    processEvent(key, eventDate);
                 } catch (IllegalArgumentException e) {
                     log.error("The key returned from the NextBillingNotificationQueue is not a valid UUID", e);
                 }
@@ -112,7 +111,7 @@ public class DefaultOverdueCheckNotifier implements OverdueCheckNotifier {
         }
     }
 
-    private void processEvent(final UUID overdueableId, final DateTime eventDateTime) {
-        listener.handleNextOverdueCheck(overdueableId);
+    private void processEvent(final OverdueCheckNotificationKey key, final DateTime eventDateTime) {
+        listener.handleNextOverdueCheck(key);
     }
 }

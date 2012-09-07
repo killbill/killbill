@@ -13,31 +13,10 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
 package com.ning.billing.overdue;
 
-import org.joda.time.Period;
-
-import com.ning.billing.junction.api.Blockable;
-
-
-public interface OverdueState<T extends Blockable> {
-
-    public String getName();
-
-    public String getExternalMessage();
-
-    public int getDaysBetweenPaymentRetries();
-
-    public boolean disableEntitlementAndChangesBlocked();
-
-    public OverdueCancellationPolicicy getSubscriptionCancellationPolicy();
-
-    public boolean blockChanges();
-
-    public boolean isClearState();
-
-    public Period getReevaluationInterval() throws OverdueApiException;
-
-    public Condition<T> getCondition();
+public enum OverdueCancellationPolicicy {
+    END_OF_TERM,
+    IMMEDIATE,
+    NONE
 }

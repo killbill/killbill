@@ -28,7 +28,7 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.overdue.OverdueApiException;
-import com.ning.billing.overdue.config.api.OverdueError;
+import com.ning.billing.overdue.config.api.OverdueException;
 import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
 
 public class OverdueDispatcher {
@@ -64,17 +64,17 @@ public class OverdueDispatcher {
     public void processOverdue(final Blockable blockable) {
         try {
             factory.createOverdueWrapperFor(blockable).refresh();
-        } catch (OverdueError e) {
+        } catch (OverdueException e) {
             log.error("Error processing Overdue for Blockable with id: " + blockable.getId().toString(), e);
         } catch (OverdueApiException e) {
             log.error("Error processing Overdue for Blockable with id: " + blockable.getId().toString(), e);
         }
     }
 
-    public void processOverdue(final UUID blockableId) {
+    public void processOverdue(final Blockable.Type type, final UUID blockableId) {
         try {
-            factory.createOverdueWrapperFor(blockableId).refresh();
-        } catch (OverdueError e) {
+            factory.createOverdueWrapperFor(type, blockableId).refresh();
+        } catch (OverdueException e) {
             log.error("Error processing Overdue for Blockable with id: " + blockableId.toString(), e);
         } catch (OverdueApiException e) {
             log.error("Error processing Overdue for Blockable with id: " + blockableId.toString(), e);

@@ -19,23 +19,23 @@ package com.ning.billing.overdue.config.api;
 import com.ning.billing.BillingExceptionBase;
 import com.ning.billing.ErrorCode;
 
-public class OverdueError extends BillingExceptionBase {
+public class OverdueException extends BillingExceptionBase {
 
-    public OverdueError(final BillingExceptionBase cause) {
+    public OverdueException(final BillingExceptionBase cause) {
         super(cause);
     }
 
-    public OverdueError(final Throwable cause, final int code, final String msg) {
+    public OverdueException(final Throwable cause, final int code, final String msg) {
         super(cause, code, msg);
     }
 
     private static final long serialVersionUID = 1L;
 
-    public OverdueError(final Throwable cause, final ErrorCode code, final Object... args) {
+    public OverdueException(final Throwable cause, final ErrorCode code, final Object... args) {
         super(cause, code, args);
     }
 
-    public OverdueError(final ErrorCode code, final Object... args) {
+    public OverdueException(final ErrorCode code, final Object... args) {
         super(code, args);
     }
 

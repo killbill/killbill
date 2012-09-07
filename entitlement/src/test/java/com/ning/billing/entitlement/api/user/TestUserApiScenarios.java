@@ -71,7 +71,7 @@ public class TestUserApiScenarios extends TestApiBase {
             // CANCEL EOT
             testListener.setNonExpectedMode();
             testListener.pushExpectedEvent(NextEvent.CANCEL);
-            subscription.cancel(clock.getUTCNow(), false, context);
+            subscription.cancel(clock.getUTCNow(), context);
             assertFalse(testListener.isCompleted(5000));
             testListener.reset();
 

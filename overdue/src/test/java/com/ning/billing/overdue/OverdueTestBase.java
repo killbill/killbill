@@ -60,10 +60,11 @@ import com.ning.billing.overdue.service.DefaultOverdueService;
 import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
 import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.glue.CallContextModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
 
-@Guice(modules = {DefaultOverdueModule.class, OverdueListenerTesterModule.class, MockClockModule.class, ApplicatorMockJunctionModule.class, CatalogModule.class, MockInvoiceModule.class, MockPaymentModule.class, NotificationQueueModule.class, TestDbiModule.class})
+@Guice(modules = {DefaultOverdueModule.class, OverdueListenerTesterModule.class, MockClockModule.class, ApplicatorMockJunctionModule.class, CallContextModule.class, CatalogModule.class, MockInvoiceModule.class, MockPaymentModule.class, NotificationQueueModule.class, TestDbiModule.class})
 public abstract class OverdueTestBase extends OverdueTestSuiteWithEmbeddedDB {
     protected final String configXml =
             "<overdueConfig>" +

@@ -158,7 +158,7 @@ public class TestAnalytics extends TestIntegrationBase {
         // Cancel end of term - refetch the subscription to have the CTD set
         // (otherwise, cancellation would be immediate)
         subscription = entitlementUserApi.getSubscriptionFromId(subscription.getId());
-        subscription.cancel(clock.getUTCNow(), true, context);
+        subscription.cancel(clock.getUTCNow(), context);
 
         waitALittle();
 

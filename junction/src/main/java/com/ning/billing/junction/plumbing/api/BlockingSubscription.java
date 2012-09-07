@@ -56,9 +56,16 @@ public class BlockingSubscription implements Subscription {
     }
 
     @Override
-    public boolean cancel(final DateTime requestedDate, final boolean eot, final CallContext context) throws EntitlementUserApiException {
-        return subscription.cancel(requestedDate, eot, context);
+    public boolean cancel(final DateTime requestedDate, final CallContext context) throws EntitlementUserApiException {
+        return subscription.cancel(requestedDate, context);
     }
+
+    @Override
+    public boolean cancelWithPolicy(DateTime requestedDate, ActionPolicy policy, CallContext context)
+            throws EntitlementUserApiException {
+        return subscription.cancelWithPolicy(requestedDate, policy, context);
+    }
+
 
     @Override
     public boolean uncancel(final CallContext context) throws EntitlementUserApiException {

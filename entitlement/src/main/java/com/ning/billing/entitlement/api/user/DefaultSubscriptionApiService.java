@@ -154,16 +154,14 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
     }
 
     @Override
-    public boolean cancel(final SubscriptionData subscription, final DateTime requestedDateWithMs, final boolean eot, final CallContext context) throws EntitlementUserApiException {
+    public boolean cancel(final SubscriptionData subscription, final DateTime requestedDateWithMs, final CallContext context) throws EntitlementUserApiException {
         try {
             final SubscriptionState currentState = subscription.getState();
             if (currentState != SubscriptionState.ACTIVE) {
                 throw new EntitlementUserApiException(ErrorCode.ENT_CANCEL_BAD_STATE, subscription.getId(), currentState);
             }
-
             final DateTime now = clock.getUTCNow();
             final DateTime requestedDate = (requestedDateWithMs != null) ? DefaultClock.truncateMs(requestedDateWithMs) : now;
-            validateRequestedDate(subscription, now, requestedDate);
 
             final Plan currentPlan = subscription.getCurrentPlan();
             final PlanPhaseSpecifier planPhase = new PlanPhaseSpecifier(currentPlan.getProduct().getName(),
@@ -173,24 +171,43 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
                                                                         subscription.getCurrentPhase().getPhaseType());
 
             final ActionPolicy policy = catalogService.getFullCatalog().planCancelPolicy(planPhase, requestedDate);
-            final DateTime effectiveDate = subscription.getPlanChangeEffectiveDate(policy, requestedDate);
 
-            final EntitlementEvent cancelEvent = new ApiEventCancel(new ApiEventBuilder()
-            .setSubscriptionId(subscription.getId())
-            .setActiveVersion(subscription.getActiveVersion())
-            .setProcessedDate(now)
-            .setEffectiveDate(effectiveDate)
-            .setRequestedDate(requestedDate)
-            .setUserToken(context.getUserToken())
-            .setFromDisk(true));
-
-            dao.cancelSubscription(subscription, cancelEvent, context, 0);
-            subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId()), catalogService.getFullCatalog());
-            return (policy == ActionPolicy.IMMEDIATE);
+            return doCancelPlan(subscription, requestedDateWithMs, now, policy, context);
         } catch (CatalogApiException e) {
             throw new EntitlementUserApiException(e);
         }
     }
+
+    @Override
+    public boolean cancelWithPolicy(final SubscriptionData subscription, final DateTime requestedDateWithMs, final ActionPolicy policy, final CallContext context) throws EntitlementUserApiException {
+        final SubscriptionState currentState = subscription.getState();
+        if (currentState != SubscriptionState.ACTIVE) {
+            throw new EntitlementUserApiException(ErrorCode.ENT_CANCEL_BAD_STATE, subscription.getId(), currentState);
+        }
+        final DateTime now = clock.getUTCNow();
+        return doCancelPlan(subscription, requestedDateWithMs, now, policy, context);
+    }
+
+    private boolean doCancelPlan(final SubscriptionData subscription, final DateTime requestedDateWithMs, final DateTime now, final ActionPolicy policy, final CallContext context) throws EntitlementUserApiException {
+
+        final DateTime requestedDate = (requestedDateWithMs != null) ? DefaultClock.truncateMs(requestedDateWithMs) : now;
+        validateRequestedDate(subscription, now, requestedDate);
+        final DateTime effectiveDate = subscription.getPlanChangeEffectiveDate(policy, requestedDate);
+
+        final EntitlementEvent cancelEvent = new ApiEventCancel(new ApiEventBuilder()
+        .setSubscriptionId(subscription.getId())
+        .setActiveVersion(subscription.getActiveVersion())
+        .setProcessedDate(now)
+        .setEffectiveDate(effectiveDate)
+        .setRequestedDate(requestedDate)
+        .setUserToken(context.getUserToken())
+        .setFromDisk(true));
+
+        dao.cancelSubscription(subscription, cancelEvent, context, 0);
+        subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId()), catalogService.getFullCatalog());
+        return (policy == ActionPolicy.IMMEDIATE);
+    }
+
 
     @Override
     public boolean uncancel(final SubscriptionData subscription, final CallContext context) throws EntitlementUserApiException {

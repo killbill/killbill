@@ -23,7 +23,7 @@ import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.applicator.OverdueStateApplicator;
 import com.ning.billing.overdue.calculator.BillingStateCalculator;
 import com.ning.billing.overdue.config.api.BillingState;
-import com.ning.billing.overdue.config.api.OverdueError;
+import com.ning.billing.overdue.config.api.OverdueException;
 import com.ning.billing.overdue.config.api.OverdueStateSet;
 import com.ning.billing.util.clock.Clock;
 
@@ -48,7 +48,7 @@ public class OverdueWrapper<T extends Blockable> {
         this.overdueStateApplicator = overdueStateApplicator;
     }
 
-    public OverdueState<T> refresh() throws OverdueError, OverdueApiException {
+    public OverdueState<T> refresh() throws OverdueException, OverdueApiException {
         if (overdueStateSet.size() < 1) { // No configuration available
             return overdueStateSet.getClearState();
         }
@@ -57,14 +57,12 @@ public class OverdueWrapper<T extends Blockable> {
         final String previousOverdueStateName = api.getBlockingStateFor(overdueable).getStateName();
         final OverdueState<T> nextOverdueState = overdueStateSet.calculateOverdueState(billingState, clock.getToday(billingState.getAccountTimeZone()));
 
-        if (nextOverdueState != null && !previousOverdueStateName.equals(nextOverdueState.getName())) {
-            overdueStateApplicator.apply(overdueable, previousOverdueStateName, nextOverdueState);
-        }
+        overdueStateApplicator.apply(overdueStateSet.getFirstState(), billingState, overdueable, previousOverdueStateName, nextOverdueState);
 
         return nextOverdueState;
     }
 
-    public BillingState<T> billingState() throws OverdueError {
+    public BillingState<T> billingState() throws OverdueException {
         return billingStateCalcuator.calculateBillingState(overdueable);
     }
 }

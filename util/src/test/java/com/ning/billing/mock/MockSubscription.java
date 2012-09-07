@@ -70,8 +70,15 @@ public class MockSubscription implements Subscription {
     Subscription sub = Mockito.mock(Subscription.class);
 
     @Override
-    public boolean cancel(final DateTime requestedDate, final boolean eot, final CallContext context) throws EntitlementUserApiException {
-        return sub.cancel(requestedDate, eot, context);
+    public boolean cancel(final DateTime requestedDate, final CallContext context) throws EntitlementUserApiException {
+        return sub.cancel(requestedDate, context);
+    }
+
+    @Override
+    public boolean cancelWithPolicy(DateTime requestedDate,
+            ActionPolicy policy, CallContext context)
+            throws EntitlementUserApiException {
+        return sub.cancelWithPolicy(requestedDate, policy, context);
     }
 
     @Override

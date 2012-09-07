@@ -220,6 +220,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                            @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
                                            @QueryParam(QUERY_CALL_COMPLETION) @DefaultValue("false") final Boolean callCompletion,
                                            @QueryParam(QUERY_CALL_TIMEOUT) @DefaultValue("5") final long timeoutSec,
+                                           @QueryParam(QUERY_POLICY) final String policyString,
                                            @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                            @HeaderParam(HDR_REASON) final String reason,
                                            @HeaderParam(HDR_COMMENT) final String comment,
@@ -237,7 +238,12 @@ public class SubscriptionResource extends JaxRsResourceBase {
                 final Subscription current = entitlementApi.getSubscriptionFromId(uuid);
 
                 final DateTime inputDate = (requestedDate != null) ? DATE_TIME_FORMATTER.parseDateTime(requestedDate) : null;
-                isImmediateOp = current.cancel(inputDate, false, ctx);
+                if (policyString == null) {
+                    isImmediateOp = current.cancel(inputDate, ctx);
+                } else {
+                    final ActionPolicy policy = ActionPolicy.valueOf(policyString.toUpperCase());
+                    isImmediateOp = current.cancelWithPolicy(inputDate, policy, ctx);
+                }
                 return Response.status(Status.OK).build();
             }
 

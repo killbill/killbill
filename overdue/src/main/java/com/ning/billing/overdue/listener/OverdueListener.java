@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ning.billing.invoice.api.InvoiceAdjustmentEvent;
+import com.ning.billing.ovedue.notification.OverdueCheckNotificationKey;
 import com.ning.billing.payment.api.PaymentErrorEvent;
 import com.ning.billing.payment.api.PaymentInfoEvent;
 
@@ -59,8 +60,9 @@ public class OverdueListener {
         dispatcher.processOverdueForAccount(accountId);
     }
 
-    public void handleNextOverdueCheck(final UUID overdueableId) {
-        log.info(String.format("Received OD checkup notification for %s", overdueableId));
-        dispatcher.processOverdue(overdueableId);
+    public void handleNextOverdueCheck(final OverdueCheckNotificationKey notificationKey) {
+        log.info(String.format("Received OD checkup notification for type = %s, id = %s",
+                notificationKey.getType(), notificationKey.getUuidKey()));
+        dispatcher.processOverdue(notificationKey.getType(), notificationKey.getUuidKey());
     }
 }

@@ -16,7 +16,9 @@
 
 package com.ning.billing.overdue;
 
+
 import org.joda.time.LocalDate;
+import org.joda.time.Period;
 
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.overdue.config.api.BillingState;
@@ -31,5 +33,4 @@ public interface Condition<T extends Blockable> {
      * @return true if the condition is true, false otherwise
      */
     public boolean evaluate(BillingState<T> state, LocalDate now);
-
 }

@@ -159,7 +159,7 @@ public class TestUserApiDemos extends TestApiBase {
 
             /* STEP 8. CANCEL IMM (NO CTD) */
             testListener.pushExpectedEvent(NextEvent.CANCEL);
-            subscription.cancel(clock.getUTCNow(), false, context);
+            subscription.cancel(clock.getUTCNow(), context);
 
             displayState(subscription.getId(), "STEP 8.  CANCELLATION");
 
