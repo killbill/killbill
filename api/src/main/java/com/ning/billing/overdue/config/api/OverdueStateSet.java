@@ -39,4 +39,6 @@ public interface OverdueStateSet<T extends Blockable> {
     public abstract OverdueState<T> calculateOverdueState(BillingState<T> billingState, LocalDate now) throws OverdueApiException;
 
     public abstract int size();
+
+    public abstract OverdueState<T> getFirstState();
 }

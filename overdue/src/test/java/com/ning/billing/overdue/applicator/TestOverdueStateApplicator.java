@@ -63,17 +63,17 @@ public class TestOverdueStateApplicator extends OverdueTestBase {
         OverdueState<SubscriptionBundle> state;
 
         state = config.getBundleStateSet().findState("OD1");
-        applicator.apply(bundle, BlockingApi.CLEAR_STATE_NAME, state);
+        applicator.apply(null, null, bundle, BlockingApi.CLEAR_STATE_NAME, state);
         checkStateApplied(state);
         checkBussEvent("OD1");
 
         state = config.getBundleStateSet().findState("OD2");
-        applicator.apply(bundle, BlockingApi.CLEAR_STATE_NAME, state);
+        applicator.apply(null, null,bundle, BlockingApi.CLEAR_STATE_NAME, state);
         checkStateApplied(state);
         checkBussEvent("OD2");
 
         state = config.getBundleStateSet().findState("OD3");
-        applicator.apply(bundle, BlockingApi.CLEAR_STATE_NAME, state);
+        applicator.apply(null, null, bundle, BlockingApi.CLEAR_STATE_NAME, state);
         checkStateApplied(state);
         checkBussEvent("OD3");
         bus.stop();

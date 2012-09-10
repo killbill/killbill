@@ -18,16 +18,16 @@ package com.ning.billing.overdue;
 
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.overdue.config.api.BillingState;
-import com.ning.billing.overdue.config.api.OverdueError;
+import com.ning.billing.overdue.config.api.OverdueException;
 
 public interface OverdueUserApi {
 
-    public <T extends Blockable> OverdueState<T> refreshOverdueStateFor(T overdueable) throws OverdueError, OverdueApiException;
+    public <T extends Blockable> OverdueState<T> refreshOverdueStateFor(T overdueable) throws OverdueException, OverdueApiException;
 
-    public <T extends Blockable> void setOverrideBillingStateForAccount(T overdueable, BillingState<T> state) throws OverdueError;
+    public <T extends Blockable> void setOverrideBillingStateForAccount(T overdueable, BillingState<T> state) throws OverdueException;
 
-    public <T extends Blockable> OverdueState<T> getOverdueStateFor(T overdueable) throws OverdueError;
+    public <T extends Blockable> OverdueState<T> getOverdueStateFor(T overdueable) throws OverdueException;
 
-    public <T extends Blockable> BillingState<T> getBillingStateFor(T overdueable) throws OverdueError;
+    public <T extends Blockable> BillingState<T> getBillingStateFor(T overdueable) throws OverdueException;
 
 }

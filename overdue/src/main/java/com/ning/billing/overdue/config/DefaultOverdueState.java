@@ -28,6 +28,7 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.TimeUnit;
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.overdue.OverdueApiException;
+import com.ning.billing.overdue.OverdueCancellationPolicicy;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationError;
@@ -37,6 +38,7 @@ import com.ning.billing.util.config.ValidationErrors;
 public class DefaultOverdueState<T extends Blockable> extends ValidatingConfig<OverdueConfig> implements OverdueState<T> {
 
     private static final int MAX_NAME_LENGTH = 50;
+
 
     @XmlElement(required = false, name = "condition")
     private DefaultCondition<T> condition;
@@ -53,6 +55,9 @@ public class DefaultOverdueState<T extends Blockable> extends ValidatingConfig<O
 
     @XmlElement(required = false, name = "disableEntitlementAndChangesBlocked")
     private Boolean disableEntitlement = false;
+
+    @XmlElement(required = false, name = "subscriptionCancellationPolicy")
+    private OverdueCancellationPolicicy subscriptionCancellationPolicy = OverdueCancellationPolicicy.NONE;
 
     @XmlElement(required = false, name = "isClearState")
     private Boolean isClearState = false;
@@ -99,6 +104,11 @@ public class DefaultOverdueState<T extends Blockable> extends ValidatingConfig<O
     }
 
     @Override
+    public OverdueCancellationPolicicy getSubscriptionCancellationPolicy() {
+        return subscriptionCancellationPolicy;
+    }
+
+    @Override
     public Period getReevaluationInterval() throws OverdueApiException {
         if (autoReevaluationInterval == null || autoReevaluationInterval.getUnit() == TimeUnit.UNLIMITED || autoReevaluationInterval.getNumber() == 0) {
             throw new OverdueApiException(ErrorCode.OVERDUE_NO_REEVALUATION_INTERVAL, name);
@@ -106,6 +116,7 @@ public class DefaultOverdueState<T extends Blockable> extends ValidatingConfig<O
         return autoReevaluationInterval.toJodaPeriod();
     }
 
+    @Override
     public DefaultCondition<T> getCondition() {
         return condition;
     }
@@ -129,6 +140,12 @@ public class DefaultOverdueState<T extends Blockable> extends ValidatingConfig<O
         this.disableEntitlement = cancel;
         return this;
     }
+
+    public DefaultOverdueState<T> setSubscriptionCancellationPolicy(final OverdueCancellationPolicicy policy) {
+        this.subscriptionCancellationPolicy = policy;
+        return this;
+    }
+
 
     protected DefaultOverdueState<T> setBlockChanges(final boolean cancel) {
         this.blockChanges = cancel;
@@ -159,6 +176,4 @@ public class DefaultOverdueState<T extends Blockable> extends ValidatingConfig<O
         final Integer daysBetweenPaymentRetries = 8;
         return daysBetweenPaymentRetries;
     }
-
-
 }

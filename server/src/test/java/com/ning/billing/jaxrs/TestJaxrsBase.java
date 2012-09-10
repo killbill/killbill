@@ -37,6 +37,7 @@ import javax.ws.rs.core.Response.Status;
 
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
@@ -279,6 +280,8 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
     @BeforeMethod(groups = "slow")
     public void cleanupBeforeMethod(final Method method) {
         busHandler.reset();
+        clock.reset();
+        clock.setDay(new LocalDate(2012, 8, 25));
     }
 
     @BeforeClass(groups = "slow")

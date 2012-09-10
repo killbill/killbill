@@ -224,17 +224,17 @@ public class DefaultEntitlementTransferApi implements EntitlementTransferApi {
                         effectiveTransferDate.isBefore(oldSubscription.getChargedThroughDate()) ?
                             oldSubscription.getChargedThroughDate() : effectiveTransferDate;
 
-                            final EntitlementEvent cancelEvent = new ApiEventCancel(new ApiEventBuilder()
-                            .setSubscriptionId(cur.getId())
-                            .setActiveVersion(cur.getActiveVersion())
-                            .setProcessedDate(clock.getUTCNow())
-                            .setEffectiveDate(effectiveCancelDate)
-                            .setRequestedDate(effectiveTransferDate)
-                            .setUserToken(context.getUserToken())
-                            .setFromDisk(true));
+                    final EntitlementEvent cancelEvent = new ApiEventCancel(new ApiEventBuilder()
+                    .setSubscriptionId(cur.getId())
+                    .setActiveVersion(cur.getActiveVersion())
+                    .setProcessedDate(clock.getUTCNow())
+                    .setEffectiveDate(effectiveCancelDate)
+                    .setRequestedDate(effectiveTransferDate)
+                    .setUserToken(context.getUserToken())
+                    .setFromDisk(true));
 
-                            TransferCancelData cancelData =  new TransferCancelData(oldSubscription, cancelEvent);
-                            transferCancelDataList.add(cancelData);
+                    TransferCancelData cancelData =  new TransferCancelData(oldSubscription, cancelEvent);
+                    transferCancelDataList.add(cancelData);
                 }
 
                 // We Align with the original subscription
@@ -253,7 +253,7 @@ public class DefaultEntitlementTransferApi implements EntitlementTransferApi {
                 ImmutableList.<EntitlementEvent>of());
 
                 final List<EntitlementEvent> events = toEvents(existingEvents, subscriptionData, effectiveTransferDate, context);
-                final SubscriptionMigrationData curData = new SubscriptionMigrationData(subscriptionData, events);
+                final SubscriptionMigrationData curData = new SubscriptionMigrationData(subscriptionData, events, null);
                 subscriptionMigrationDataList.add(curData);
             }
             BundleMigrationData bundleMigrationData = new BundleMigrationData(subscriptionBundleData, subscriptionMigrationDataList);

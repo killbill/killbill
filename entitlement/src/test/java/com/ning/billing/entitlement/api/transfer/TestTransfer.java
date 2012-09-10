@@ -38,7 +38,10 @@ import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.Product;
+import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.TestApiBase;
+import com.ning.billing.entitlement.api.migration.EntitlementMigrationApiException;
+import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi.EntitlementAccountMigration;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
@@ -53,6 +56,67 @@ public class TestTransfer extends TestApiBase {
     @Override
     protected Injector getInjector() {
         return Guice.createInjector(Stage.DEVELOPMENT, new MockEngineModuleSql());
+    }
+
+
+
+    @Test(groups = "slow")
+    public void testTransferMigratedSubscriptionWithCTDInFuture() throws Exception {
+
+        final UUID newAccountId = UUID.randomUUID();
+
+        try {
+            final DateTime startDate = clock.getUTCNow().minusMonths(2);
+            final DateTime beforeMigration = clock.getUTCNow();
+            final EntitlementAccountMigration toBeMigrated = createAccountForMigrationWithRegularBasePlan(startDate);
+            final DateTime afterMigration = clock.getUTCNow();
+
+            testListener.pushExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
+            migrationApi.migrate(toBeMigrated, context);
+            assertTrue(testListener.isCompleted(5000));
+
+            final List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(toBeMigrated.getAccountKey());
+            assertEquals(bundles.size(), 1);
+            final SubscriptionBundle bundle = bundles.get(0);
+
+            final List<Subscription> subscriptions = entitlementApi.getSubscriptionsForBundle(bundle.getId());
+            assertEquals(subscriptions.size(), 1);
+            final Subscription subscription = subscriptions.get(0);
+            assertDateWithin(subscription.getStartDate(), beforeMigration, afterMigration);
+            assertEquals(subscription.getEndDate(), null);
+            assertEquals(subscription.getCurrentPriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
+            assertEquals(subscription.getCurrentPhase().getPhaseType(), PhaseType.EVERGREEN);
+            assertEquals(subscription.getState(), SubscriptionState.ACTIVE);
+            assertEquals(subscription.getCurrentPlan().getName(), "assault-rifle-annual");
+            assertEquals(subscription.getChargedThroughDate(), startDate.plusYears(1));
+            // WE should see MIGRATE_ENTITLEMENT and then MIGRATE_BILLING in the future
+            assertEquals(subscription.getBillingTransitions().size(), 1);
+            assertEquals(subscription.getBillingTransitions().get(0).getTransitionType(), SubscriptionTransitionType.MIGRATE_BILLING);
+            assertTrue(subscription.getBillingTransitions().get(0).getEffectiveTransitionTime().compareTo(clock.getUTCNow()) > 0);
+            assertListenerStatus();
+
+
+            // MOVE A LITTLE, STILL IN TRIAL
+            clock.addDays(20);
+
+            final DateTime transferRequestedDate = clock.getUTCNow();
+
+            testListener.pushExpectedEvent(NextEvent.TRANSFER);
+            testListener.pushExpectedEvent(NextEvent.CANCEL);
+            transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getKey(), transferRequestedDate, false, true, context);
+            assertTrue(testListener.isCompleted(3000));
+
+            final Subscription oldBaseSubscription = entitlementApi.getBaseSubscription(bundle.getId());
+            assertTrue(oldBaseSubscription.getState() == SubscriptionState.CANCELLED);
+            // The MIGRATE_BILLING event should have been invalidated
+            assertEquals(oldBaseSubscription.getBillingTransitions().size(), 1);
+            assertEquals(oldBaseSubscription.getBillingTransitions().get(0).getTransitionType(), SubscriptionTransitionType.CANCEL);
+
+        } catch (EntitlementMigrationApiException e) {
+            Assert.fail("", e);
+        }
+
+
     }
 
     @Test(groups = "slow")

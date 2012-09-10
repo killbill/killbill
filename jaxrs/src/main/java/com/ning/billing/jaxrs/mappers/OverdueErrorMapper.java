@@ -23,11 +23,11 @@ import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
-import com.ning.billing.overdue.config.api.OverdueError;
+import com.ning.billing.overdue.config.api.OverdueException;
 
 @Singleton
 @Provider
-public class OverdueErrorMapper extends ExceptionMapperBase implements ExceptionMapper<OverdueError> {
+public class OverdueErrorMapper extends ExceptionMapperBase implements ExceptionMapper<OverdueException> {
 
     private final UriInfo uriInfo;
 
@@ -36,7 +36,7 @@ public class OverdueErrorMapper extends ExceptionMapperBase implements Exception
     }
 
     @Override
-    public Response toResponse(final OverdueError exception) {
+    public Response toResponse(final OverdueException exception) {
         return buildBadRequestResponse(exception, uriInfo);
     }
 }

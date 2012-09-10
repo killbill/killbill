@@ -64,7 +64,7 @@ public abstract class TestUserApiCancel extends TestApiBase {
 
 
             // CANCEL in trial period to get IMM policy
-            subscription.cancel(clock.getUTCNow(), false, context);
+            subscription.cancel(clock.getUTCNow(), context);
             currentPhase = subscription.getCurrentPhase();
             testListener.isCompleted(3000);
 
@@ -121,7 +121,7 @@ public abstract class TestUserApiCancel extends TestApiBase {
             // CANCEL
             testListener.setNonExpectedMode();
             testListener.pushExpectedEvent(NextEvent.CANCEL);
-            subscription.cancel(clock.getUTCNow(), false, context);
+            subscription.cancel(clock.getUTCNow(), context);
             assertFalse(testListener.isCompleted(3000));
             testListener.reset();
 
@@ -186,7 +186,7 @@ public abstract class TestUserApiCancel extends TestApiBase {
             testListener.pushExpectedEvent(NextEvent.CANCEL);
 
             // CANCEL
-            subscription.cancel(clock.getUTCNow(), false, context);
+            subscription.cancel(clock.getUTCNow(), context);
             assertTrue(testListener.isCompleted(5000));
 
             final PlanPhase currentPhase = subscription.getCurrentPhase();
@@ -232,7 +232,7 @@ public abstract class TestUserApiCancel extends TestApiBase {
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId());
 
             // CANCEL EOT
-            subscription.cancel(clock.getUTCNow(), false, context);
+            subscription.cancel(clock.getUTCNow(), context);
 
             subscription.uncancel(context);
 

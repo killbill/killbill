@@ -20,6 +20,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.Callable;
 
 import javax.annotation.Nullable;
 
@@ -60,6 +61,7 @@ import com.ning.billing.entitlement.api.transfer.EntitlementTransferApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
@@ -69,6 +71,7 @@ import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.api.InvoiceService;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.invoice.model.InvoicingConfiguration;
+import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.junction.plumbing.api.BlockingSubscription;
 import com.ning.billing.mock.MockAccountBuilder;
 import com.ning.billing.mock.api.MockBillCycleDay;
@@ -92,6 +95,8 @@ import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import static com.jayway.awaitility.Awaitility.await;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
@@ -456,7 +461,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
                     refreshedSubscription.changePlan(productName, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow(), context);
                     return refreshedSubscription;
                 } catch (EntitlementUserApiException e) {
-                    fail();
+                    fail(e.getMessage());
                     return null;
                 }
             }
@@ -472,7 +477,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
                 try {
                     // Need to fetch again to get latest CTD updated from the system
                     final Subscription refreshedSubscription = entitlementUserApi.getSubscriptionFromId(subscription.getId());
-                    refreshedSubscription.cancel(requestedDate, true, context);
+                    refreshedSubscription.cancel(requestedDate, context);
                     return refreshedSubscription;
                 } catch (EntitlementUserApiException e) {
                     fail();

@@ -31,7 +31,7 @@ import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.overdue.config.api.BillingState;
-import com.ning.billing.overdue.config.api.OverdueError;
+import com.ning.billing.overdue.config.api.OverdueException;
 import com.ning.billing.util.clock.Clock;
 
 import com.google.inject.Inject;
@@ -60,7 +60,7 @@ public abstract class BillingStateCalculator<T extends Blockable> {
         this.clock = clock;
     }
 
-    public abstract BillingState<T> calculateBillingState(T overdueable) throws OverdueError;
+    public abstract BillingState<T> calculateBillingState(T overdueable) throws OverdueException;
 
     protected Invoice earliest(final SortedSet<Invoice> unpaidInvoices) {
         try {

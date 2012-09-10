@@ -142,7 +142,7 @@ public class DefaultEntitlementMigrationApi implements EntitlementMigrationApi {
                                                                                      .setBundleStartDate(migrationStartDate)
                                                                                      .setAlignStartDate(migrationStartDate),
                                                                              emptyEvents);
-        return new SubscriptionMigrationData(subscriptionData, toEvents(subscriptionData, now, ctd, events, context));
+        return new SubscriptionMigrationData(subscriptionData, toEvents(subscriptionData, now, ctd, events, context), ctd);
     }
 
     private SubscriptionMigrationData createSubscriptionMigrationDataWithBundleDate(final UUID bundleId, final ProductCategory productCategory,
@@ -158,12 +158,13 @@ public class DefaultEntitlementMigrationApi implements EntitlementMigrationApi {
                                                                                      .setBundleStartDate(bundleStartDate)
                                                                                      .setAlignStartDate(migrationStartDate),
                                                                              emptyEvents);
-        return new SubscriptionMigrationData(subscriptionData, toEvents(subscriptionData, now, ctd, events, context));
+        return new SubscriptionMigrationData(subscriptionData, toEvents(subscriptionData, now, ctd, events, context), ctd);
     }
 
     private List<EntitlementEvent> toEvents(final SubscriptionData subscriptionData, final DateTime now, final DateTime ctd, final TimedMigration[] migrationEvents, final CallContext context) {
         ApiEventMigrateEntitlement creationEvent = null;
         final List<EntitlementEvent> events = new ArrayList<EntitlementEvent>(migrationEvents.length);
+        DateTime subsciptionCancelledDate = null;
         for (final TimedMigration cur : migrationEvents) {
 
             if (cur.getEventType() == EventType.PHASE) {
@@ -194,6 +195,7 @@ public class DefaultEntitlementMigrationApi implements EntitlementMigrationApi {
                         events.add(new ApiEventChange(builder));
                         break;
                     case CANCEL:
+                        subsciptionCancelledDate = cur.getEventTime();
                         events.add(new ApiEventCancel(builder));
                         break;
                     default:
@@ -206,7 +208,9 @@ public class DefaultEntitlementMigrationApi implements EntitlementMigrationApi {
         if (creationEvent == null || ctd == null) {
             throw new EntitlementError(String.format("Could not create migration billing event ctd = %s", ctd));
         }
-        events.add(new ApiEventMigrateBilling(creationEvent, ctd));
+        if (subsciptionCancelledDate == null || subsciptionCancelledDate.isAfter(ctd)) {
+            events.add(new ApiEventMigrateBilling(creationEvent, ctd));
+        }
         Collections.sort(events, new Comparator<EntitlementEvent>() {
             int compForApiType(final EntitlementEvent o1, final EntitlementEvent o2, final ApiEventType type) {
                 ApiEventType apiO1 = null;

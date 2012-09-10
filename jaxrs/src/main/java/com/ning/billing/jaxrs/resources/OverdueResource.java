@@ -36,7 +36,7 @@ import com.ning.billing.jaxrs.json.OverdueStateJson;
 import com.ning.billing.overdue.OverdueApiException;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.OverdueUserApi;
-import com.ning.billing.overdue.config.api.OverdueError;
+import com.ning.billing.overdue.config.api.OverdueException;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -63,7 +63,7 @@ public class OverdueResource implements JaxrsResource {
     @GET
     @Path("/" + ACCOUNTS + "/{accountId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
-    public Response getOverdueAccount(@PathParam("accountId") final String accountId) throws AccountApiException, OverdueError, OverdueApiException {
+    public Response getOverdueAccount(@PathParam("accountId") final String accountId) throws AccountApiException, OverdueException, OverdueApiException {
         final Account account = accountApi.getAccountById(UUID.fromString(accountId));
         final OverdueState<Account> overdueState = overdueApi.getOverdueStateFor(account);
 
@@ -73,7 +73,7 @@ public class OverdueResource implements JaxrsResource {
     @GET
     @Path("/" + BUNDLES + "/{bundleId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
-    public Response getOverdueBundle(@PathParam("bundleId") final String bundleId) throws EntitlementUserApiException, OverdueError, OverdueApiException {
+    public Response getOverdueBundle(@PathParam("bundleId") final String bundleId) throws EntitlementUserApiException, OverdueException, OverdueApiException {
         final SubscriptionBundle bundle = entitlementApi.getBundleFromId(UUID.fromString(bundleId));
         final OverdueState<SubscriptionBundle> overdueState = overdueApi.getOverdueStateFor(bundle);
 
@@ -83,7 +83,7 @@ public class OverdueResource implements JaxrsResource {
     @GET
     @Path("/" + SUBSCRIPTIONS + "/{subscriptionId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
-    public Response getOverdueSubscription(@PathParam("subscriptionId") final String subscriptionId) throws EntitlementUserApiException, OverdueError, OverdueApiException {
+    public Response getOverdueSubscription(@PathParam("subscriptionId") final String subscriptionId) throws EntitlementUserApiException, OverdueException, OverdueApiException {
         final Subscription subscription = entitlementApi.getSubscriptionFromId(UUID.fromString(subscriptionId));
         final OverdueState<Subscription> overdueState = overdueApi.getOverdueStateFor(subscription);
 

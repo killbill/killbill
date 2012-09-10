@@ -42,7 +42,7 @@ import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.overdue.config.api.BillingStateBundle;
-import com.ning.billing.overdue.config.api.OverdueError;
+import com.ning.billing.overdue.config.api.OverdueException;
 import com.ning.billing.overdue.config.api.PaymentResponse;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.tag.Tag;
@@ -61,7 +61,7 @@ public class BillingStateCalculatorBundle extends BillingStateCalculator<Subscri
     }
 
     @Override
-    public BillingStateBundle calculateBillingState(final SubscriptionBundle bundle) throws OverdueError {
+    public BillingStateBundle calculateBillingState(final SubscriptionBundle bundle) throws OverdueException {
         try {
             final Account account = accountApi.getAccountById(bundle.getAccountId());
             final SortedSet<Invoice> unpaidInvoices = unpaidInvoicesForBundle(bundle.getId(), bundle.getAccountId(), account.getTimeZone());
@@ -111,9 +111,9 @@ public class BillingStateCalculatorBundle extends BillingStateCalculator<Subscri
                                           basePlanPriceList,
                                           basePlanPhaseType);
         } catch (EntitlementUserApiException e) {
-            throw new OverdueError(e);
+            throw new OverdueException(e);
         } catch (AccountApiException e) {
-            throw new OverdueError(e);
+            throw new OverdueException(e);
         }
     }
 

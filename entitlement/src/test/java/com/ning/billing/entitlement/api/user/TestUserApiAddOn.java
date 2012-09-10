@@ -71,7 +71,7 @@ public class TestUserApiAddOn extends TestApiBase {
             assertEquals(aoSubscription.getState(), SubscriptionState.ACTIVE);
 
             final DateTime now = clock.getUTCNow();
-            aoSubscription.cancel(now, false, context);
+            aoSubscription.cancel(now, context);
 
             testListener.reset();
             testListener.pushExpectedEvent(NextEvent.CANCEL);
@@ -119,7 +119,7 @@ public class TestUserApiAddOn extends TestApiBase {
             baseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId());
 
             // FUTURE CANCELLATION
-            baseSubscription.cancel(now, false, context);
+            baseSubscription.cancel(now, context);
 
             // REFETCH AO SUBSCRIPTION AND CHECK THIS IS ACTIVE
             aoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId());

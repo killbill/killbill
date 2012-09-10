@@ -92,7 +92,7 @@ public abstract class TestUserApiRecreate extends TestApiBase {
 
         // NOW CANCEL ADN THIS SHOULD WORK
         testListener.pushExpectedEvent(NextEvent.CANCEL);
-        subscription.cancel(null, false, context);
+        subscription.cancel(null, context);
 
         testListener.pushExpectedEvent(NextEvent.PHASE);
         testListener.pushExpectedEvent(NextEvent.RE_CREATE);

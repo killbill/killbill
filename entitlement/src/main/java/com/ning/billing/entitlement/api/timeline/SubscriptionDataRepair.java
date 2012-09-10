@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -99,7 +99,7 @@ public class SubscriptionDataRepair extends SubscriptionData {
                     trickleDownBPEffectForAddon(addonSubscriptions, getLastUserEventEffectiveDate(), context);
                     break;
                 case CANCEL:
-                    cancel(input.getRequestedDate(), false, context);
+                    cancel(input.getRequestedDate(), context);
                     trickleDownBPEffectForAddon(addonSubscriptions, getLastUserEventEffectiveDate(), context);
                     break;
                 case PHASE:
@@ -178,6 +178,7 @@ public class SubscriptionDataRepair extends SubscriptionData {
         }
     }
 
+    @Override
     public void rebuildTransitions(final List<EntitlementEvent> inputEvents, final Catalog catalog) {
         this.events = inputEvents;
         super.rebuildTransitions(inputEvents, catalog);

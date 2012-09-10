@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -38,8 +38,11 @@ public interface SubscriptionApiService {
     public boolean recreatePlan(SubscriptionData subscription, PlanPhaseSpecifier spec, DateTime requestedDate, CallContext context)
             throws EntitlementUserApiException;
 
-    public boolean cancel(SubscriptionData subscription, DateTime requestedDate, boolean eot, CallContext context)
-            throws EntitlementUserApiException;
+    public boolean cancel(SubscriptionData subscription, DateTime requestedDate, CallContext context)
+        throws EntitlementUserApiException;
+
+    public boolean cancelWithPolicy(SubscriptionData subscription, DateTime requestedDate, ActionPolicy policy, CallContext context)
+        throws EntitlementUserApiException;
 
     public boolean uncancel(SubscriptionData subscription, CallContext context)
             throws EntitlementUserApiException;

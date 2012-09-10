@@ -45,20 +45,23 @@ public interface Subscription extends Entity, Blockable {
         TRANSFERED
     }
 
-    public boolean cancel(DateTime requestedDate, boolean eot, CallContext context)
+    public boolean cancel(final DateTime requestedDate, final CallContext context)
+        throws EntitlementUserApiException;
+
+    public boolean cancelWithPolicy(final DateTime requestedDate, final ActionPolicy policy, final CallContext context)
+        throws EntitlementUserApiException;
+
+    public boolean uncancel(final CallContext context)
             throws EntitlementUserApiException;
 
-    public boolean uncancel(CallContext context)
+    public boolean changePlan(final String productName, final BillingPeriod term, final String priceList, final DateTime requestedDate, final CallContext context)
             throws EntitlementUserApiException;
 
-    public boolean changePlan(String productName, BillingPeriod term, String priceList, DateTime requestedDate, CallContext context)
+    public boolean changePlanWithPolicy(final String productName, final BillingPeriod term, final String priceList, final DateTime requestedDate,
+            final ActionPolicy policy, final CallContext context)
             throws EntitlementUserApiException;
 
-    public boolean changePlanWithPolicy(String productName, BillingPeriod term, String priceList, DateTime requestedDate,
-                                        ActionPolicy policy, CallContext context)
-            throws EntitlementUserApiException;
-
-    public boolean recreate(PlanPhaseSpecifier spec, DateTime requestedDate, CallContext context)
+    public boolean recreate(final PlanPhaseSpecifier spec, final DateTime requestedDate, final CallContext context)
             throws EntitlementUserApiException;
 
     public UUID getBundleId();

@@ -18,7 +18,6 @@ package com.ning.billing.junction.api;
 
 import java.util.UUID;
 
-import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
@@ -30,7 +29,7 @@ public interface Blockable {
         SUBSCRIPTION_BUNDLE,
         SUBSCRIPTION;
 
-        public static Type get(final Blockable o) throws BlockingApiException {
+        public static Type get(final Blockable o) {
             if (o instanceof Account) {
                 return ACCOUNT;
             } else if (o instanceof SubscriptionBundle) {
@@ -38,7 +37,7 @@ public interface Blockable {
             } else if (o instanceof Subscription) {
                 return SUBSCRIPTION;
             }
-            throw new BlockingApiException(ErrorCode.BLOCK_TYPE_NOT_SUPPORTED, o.getClass().getName());
+            throw new IllegalStateException("Unsupported type of blockable " + o);
         }
 
         public static Type get(final String type) throws BlockingApiException {
@@ -49,7 +48,7 @@ public interface Blockable {
             } else if (type.equalsIgnoreCase(SUBSCRIPTION.name())) {
                 return SUBSCRIPTION;
             }
-            throw new BlockingApiException(ErrorCode.BLOCK_TYPE_NOT_SUPPORTED, type);
+            throw new IllegalStateException("Unsupported type of blockable " + type);
         }
 
     }

@@ -405,8 +405,7 @@ public class AuditedEntitlementDao implements EntitlementDao {
             @Override
             public Void inTransaction(final EntitlementEventSqlDao transactional, final TransactionStatus status) throws Exception {
                 final UUID subscriptionId = subscription.getId();
-                cancelNextChangeEventFromTransaction(subscriptionId, transactional, context);
-                cancelNextPhaseEventFromTransaction(subscriptionId, transactional, context);
+                cancelFutureEventsFromTransaction(subscriptionId, transactional, context);
 
                 final List<EntityAudit> eventAudits = new ArrayList<EntityAudit>();
                 for (final EntitlementEvent cur : changeEvents) {
@@ -432,9 +431,7 @@ public class AuditedEntitlementDao implements EntitlementDao {
 
     private void cancelSubscriptionFromTransaction(final SubscriptionData subscription, final EntitlementEvent cancelEvent, final EntitlementEventSqlDao transactional, final CallContext context, final int seqId) {
         final UUID subscriptionId = subscription.getId();
-        cancelNextCancelEventFromTransaction(subscriptionId, transactional, context);
-        cancelNextChangeEventFromTransaction(subscriptionId, transactional, context);
-        cancelNextPhaseEventFromTransaction(subscriptionId, transactional, context);
+        cancelFutureEventsFromTransaction(subscriptionId, transactional, context);
         transactional.insertEvent(cancelEvent, context);
         final String cancelEventId = cancelEvent.getId().toString();
 
@@ -456,12 +453,13 @@ public class AuditedEntitlementDao implements EntitlementDao {
         cancelFutureEventFromTransaction(subscriptionId, dao, EventType.PHASE, null, context);
     }
 
-    private void cancelNextChangeEventFromTransaction(final UUID subscriptionId, final EntitlementEventSqlDao dao, final CallContext context) {
-        cancelFutureEventFromTransaction(subscriptionId, dao, EventType.API_USER, ApiEventType.CHANGE, context);
-    }
 
-    private void cancelNextCancelEventFromTransaction(final UUID subscriptionId, final EntitlementEventSqlDao dao, final CallContext context) {
-        cancelFutureEventFromTransaction(subscriptionId, dao, EventType.API_USER, ApiEventType.CANCEL, context);
+    private void cancelFutureEventsFromTransaction(final UUID subscriptionId, final EntitlementEventSqlDao dao, final CallContext context) {
+        final Date now = clock.getUTCNow().toDate();
+        final List<EntitlementEvent> events = dao.getFutureActiveEventForSubscription(subscriptionId.toString(), now);
+        for (final EntitlementEvent cur : events) {
+            unactivateEventFromTransaction(cur, dao, context);
+        }
     }
 
     private void cancelFutureEventFromTransaction(final UUID subscriptionId, final EntitlementEventSqlDao dao, final EventType type,
@@ -479,9 +477,12 @@ public class AuditedEntitlementDao implements EntitlementDao {
                 futureEvent = cur;
             }
         }
+        unactivateEventFromTransaction(futureEvent, dao, context);
+    }
 
-        if (futureEvent != null) {
-            final String eventId = futureEvent.getId().toString();
+    private void unactivateEventFromTransaction(final EntitlementEvent event, final EntitlementEventSqlDao dao, final CallContext context) {
+        if (event != null) {
+            final String eventId = event.getId().toString();
             dao.unactiveEvent(eventId, context);
             final Long recordId = dao.getRecordId(eventId);
             final EntityAudit audit = new EntityAudit(TableName.SUBSCRIPTION_EVENTS, recordId, ChangeType.UPDATE);

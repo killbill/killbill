@@ -34,7 +34,7 @@ import com.ning.billing.overdue.calculator.BillingStateCalculatorBundle;
 import com.ning.billing.overdue.config.DefaultOverdueState;
 import com.ning.billing.overdue.config.DefaultOverdueStateSet;
 import com.ning.billing.overdue.config.OverdueConfig;
-import com.ning.billing.overdue.config.api.OverdueError;
+import com.ning.billing.overdue.config.api.OverdueException;
 import com.ning.billing.overdue.config.api.OverdueStateSet;
 import com.ning.billing.util.clock.Clock;
 
@@ -61,34 +61,32 @@ public class OverdueWrapperFactory {
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends Blockable> OverdueWrapper<T> createOverdueWrapperFor(final T bloackable) throws OverdueError {
+    public <T extends Blockable> OverdueWrapper<T> createOverdueWrapperFor(final T bloackable) throws OverdueException {
 
         if (bloackable instanceof SubscriptionBundle) {
             return (OverdueWrapper<T>) new OverdueWrapper<SubscriptionBundle>((SubscriptionBundle) bloackable, api, getOverdueStateSetBundle(),
                                                                               clock, billingStateCalcuatorBundle, overdueStateApplicatorBundle);
         } else {
-            throw new OverdueError(ErrorCode.OVERDUE_TYPE_NOT_SUPPORTED, bloackable.getId(), bloackable.getClass());
+            throw new OverdueException(ErrorCode.OVERDUE_TYPE_NOT_SUPPORTED, bloackable.getId(), bloackable.getClass());
         }
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends Blockable> OverdueWrapper<T> createOverdueWrapperFor(final UUID id) throws OverdueError {
-        final BlockingState state = api.getBlockingStateFor(id);
-
+    public <T extends Blockable> OverdueWrapper<T> createOverdueWrapperFor(final Blockable.Type type, final UUID id) throws OverdueException {
         try {
-            switch (state.getType()) {
+            switch (type) {
                 case SUBSCRIPTION_BUNDLE: {
                     final SubscriptionBundle bundle = entitlementApi.getBundleFromId(id);
                     return (OverdueWrapper<T>) new OverdueWrapper<SubscriptionBundle>(bundle, api, getOverdueStateSetBundle(),
                                                                                       clock, billingStateCalcuatorBundle, overdueStateApplicatorBundle);
                 }
                 default: {
-                    throw new OverdueError(ErrorCode.OVERDUE_TYPE_NOT_SUPPORTED, id, state.getType());
+                    throw new OverdueException(ErrorCode.OVERDUE_TYPE_NOT_SUPPORTED, id, type);
                 }
 
             }
         } catch (EntitlementUserApiException e) {
-            throw new OverdueError(e);
+            throw new OverdueException(e);
         }
     }
 
