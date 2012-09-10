@@ -27,6 +27,8 @@ import org.testng.annotations.Test;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.analytics.dao.BusinessInvoiceSqlDao;
 import com.ning.billing.analytics.model.BusinessInvoiceItem;
+import com.ning.billing.catalog.MockCatalog;
+import com.ning.billing.catalog.MockCatalogService;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.invoice.api.InvoiceItem;
@@ -44,7 +46,7 @@ public class TestBusinessInvoiceRecorder {
 
     @Test(groups = "fast")
     public void testShouldBeAbleToHandleNullFieldsInInvoiceItem() throws Exception {
-        final BusinessInvoiceRecorder recorder = new BusinessInvoiceRecorder(accountApi, entitlementApi, invoiceApi, sqlDao, clock);
+        final BusinessInvoiceRecorder recorder = new BusinessInvoiceRecorder(accountApi, entitlementApi, invoiceApi, sqlDao, new MockCatalogService(new MockCatalog()), clock);
 
         final InvoiceItem invoiceItem = Mockito.mock(InvoiceItem.class);
         Mockito.when(invoiceItem.getAmount()).thenReturn(BigDecimal.TEN);

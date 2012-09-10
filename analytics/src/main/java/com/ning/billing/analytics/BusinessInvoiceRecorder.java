@@ -36,6 +36,8 @@ import com.ning.billing.analytics.dao.BusinessInvoiceSqlDao;
 import com.ning.billing.analytics.model.BusinessAccount;
 import com.ning.billing.analytics.model.BusinessInvoice;
 import com.ning.billing.analytics.model.BusinessInvoiceItem;
+import com.ning.billing.catalog.api.CatalogApiException;
+import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
@@ -57,6 +59,7 @@ public class BusinessInvoiceRecorder {
     private final EntitlementUserApi entitlementApi;
     private final InvoiceUserApi invoiceApi;
     private final BusinessInvoiceSqlDao sqlDao;
+    private final CatalogService catalogService;
     private final Clock clock;
 
     @Inject
@@ -64,11 +67,13 @@ public class BusinessInvoiceRecorder {
                                    final EntitlementUserApi entitlementApi,
                                    final InvoiceUserApi invoiceApi,
                                    final BusinessInvoiceSqlDao sqlDao,
+                                   final CatalogService catalogService,
                                    final Clock clock) {
         this.accountApi = accountApi;
         this.entitlementApi = entitlementApi;
         this.invoiceApi = invoiceApi;
         this.sqlDao = sqlDao;
+        this.catalogService = catalogService;
         this.clock = clock;
     }
 
@@ -181,16 +186,25 @@ public class BusinessInvoiceRecorder {
             }
         }
 
-        if (invoiceItem.getSubscriptionId() != null) {
+        if (invoiceItem.getPlanName() != null) {
+            try {
+                plan = catalogService.getFullCatalog().findPlan(invoiceItem.getPlanName(), invoiceItem.getStartDate().toDateTimeAtStartOfDay());
+            } catch (CatalogApiException e) {
+                log.warn("Unable to retrieve plan for invoice item {}", invoiceItem.getId());
+            }
+        }
+
+        if (invoiceItem.getSubscriptionId() != null && invoiceItem.getPhaseName() != null) {
             final Subscription subscription;
             try {
                 subscription = entitlementApi.getSubscriptionFromId(invoiceItem.getSubscriptionId());
-                plan = subscription.getCurrentPlan();
-                planPhase = subscription.getCurrentPhase();
+                planPhase = catalogService.getFullCatalog().findPhase(invoiceItem.getPhaseName(), invoiceItem.getStartDate().toDateTimeAtStartOfDay(), subscription.getStartDate());
             } catch (EntitlementUserApiException e) {
                 log.warn("Ignoring subscription fields for invoice item {} for subscription {} (subscription does not exist)",
                          invoiceItem.getId().toString(),
                          invoiceItem.getSubscriptionId().toString());
+            } catch (CatalogApiException e) {
+                log.warn("Unable to retrieve phase for invoice item {}", invoiceItem.getId());
             }
         }
 
