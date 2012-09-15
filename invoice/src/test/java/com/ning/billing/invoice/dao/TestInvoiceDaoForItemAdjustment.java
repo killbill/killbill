@@ -101,7 +101,7 @@ public class TestInvoiceDaoForItemAdjustment extends InvoiceDaoTestBase {
         Assert.assertEquals(adjustedInvoiceItem.getAmount().compareTo(BigDecimal.TEN.negate()), 0);
     }
 
-    private InvoiceItem createAndCheckAdjustment(final Invoice invoice, final InvoiceItem invoiceItem, final BigDecimal amount) {
+    private InvoiceItem createAndCheckAdjustment(final Invoice invoice, final InvoiceItem invoiceItem, final BigDecimal amount) throws InvoiceApiException {
         final LocalDate effectiveDate = new LocalDate(2010, 1, 1);
         final InvoiceItem adjustedInvoiceItem = invoiceDao.insertInvoiceItemAdjustment(invoice.getAccountId(), invoice.getId(), invoiceItem.getId(),
                                                                                        effectiveDate, amount, null, context);

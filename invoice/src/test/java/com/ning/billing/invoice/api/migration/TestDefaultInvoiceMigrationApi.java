@@ -32,11 +32,7 @@ import org.testng.annotations.Test;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.invoice.api.InvoiceMigrationApi;
-import com.ning.billing.invoice.api.InvoicePaymentApi;
-import com.ning.billing.invoice.api.InvoiceUserApi;
-
-import com.google.inject.Inject;
+import com.ning.billing.invoice.api.InvoiceApiException;
 
 public class TestDefaultInvoiceMigrationApi extends InvoiceApiTestBase {
 
@@ -63,7 +59,7 @@ public class TestDefaultInvoiceMigrationApi extends InvoiceApiTestBase {
         regularInvoiceId = generateRegularInvoice(account, date_regular);
     }
 
-    private UUID createAndCheckMigrationInvoice(final UUID accountId) {
+    private UUID createAndCheckMigrationInvoice(final UUID accountId) throws InvoiceApiException {
         final UUID migrationInvoiceId = migrationApi.createMigrationInvoice(accountId, date_migrated, MIGRATION_INVOICE_AMOUNT, MIGRATION_INVOICE_CURRENCY);
         Assert.assertNotNull(migrationInvoiceId);
         //Double check it was created and values are correct
@@ -108,7 +104,7 @@ public class TestDefaultInvoiceMigrationApi extends InvoiceApiTestBase {
 
     // ACCOUNT balance should reflect total of migration and non-migration invoices
     @Test(groups = "slow")
-    public void testBalance() {
+    public void testBalance() throws InvoiceApiException{
         final Invoice migrationInvoice = invoiceDao.getById(migrationInvoiceId);
         final Invoice regularInvoice = invoiceDao.getById(regularInvoiceId);
         final BigDecimal balanceOfAllInvoices = migrationInvoice.getBalance().add(regularInvoice.getBalance());

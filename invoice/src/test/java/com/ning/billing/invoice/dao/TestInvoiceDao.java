@@ -33,9 +33,11 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.mockito.Mockito;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableMap;
+import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.DefaultPrice;
 import com.ning.billing.catalog.MockInternationalPrice;
 import com.ning.billing.catalog.MockPlan;
@@ -95,7 +97,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
     }
 
     @Test(groups = "slow")
-    public void testInvoicePayment() {
+    public void testInvoicePayment() throws InvoiceApiException {
         final UUID accountId = UUID.randomUUID();
         final Invoice invoice = new DefaultInvoice(accountId, clock.getUTCToday(), clock.getUTCToday(), Currency.USD);
         final UUID invoiceId = invoice.getId();
@@ -129,9 +131,15 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
     }
 
     @Test(groups = "slow")
-    public void testRetrievalForNonExistentInvoiceId() {
-        final Invoice invoice = invoiceDao.getById(UUID.randomUUID());
-        assertNull(invoice);
+    public void testRetrievalForNonExistentInvoiceId()  throws InvoiceApiException {
+        try {
+            invoiceDao.getById(UUID.randomUUID());
+            Assert.fail();
+        } catch (InvoiceApiException e) {
+            if (e.getCode() != ErrorCode.INVOICE_NOT_FOUND.getCode()) {
+                Assert.fail();
+            }
+        }
     }
 
     @Test(groups = "slow")
@@ -653,6 +661,33 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         final BigDecimal expectedFinalCBA = (expectedFinalBalance.compareTo(BigDecimal.ZERO) < 0) ? expectedFinalBalance.negate() : BigDecimal.ZERO;
         assertEquals(cba.compareTo(expectedFinalCBA), 0);
 
+    }
+
+    @Test(groups = "slow")
+    public void testExternalChargeWithCBA() throws InvoiceApiException {
+
+        final UUID accountId = UUID.randomUUID();
+        final UUID bundleId = UUID.randomUUID();
+        final LocalDate targetDate1 = new LocalDate(2011, 10, 6);
+        final Invoice invoice1 = new DefaultInvoice(accountId, clock.getUTCToday(), targetDate1, Currency.USD);
+        invoiceDao.create(invoice1, invoice1.getTargetDate().getDayOfMonth(), true, context);
+
+        // CREATE INVOICE WITH A (just) CBA. Should not happen, but that does not matter for that test
+        final CreditBalanceAdjInvoiceItem cbaItem = new CreditBalanceAdjInvoiceItem(invoice1.getId(), accountId, new LocalDate(), new BigDecimal("20.0"), Currency.USD);
+        invoiceItemSqlDao.create(cbaItem, context);
+
+        final InvoiceItem charge =  invoiceDao.insertExternalCharge(accountId, null, bundleId, "bla", new BigDecimal("15.0"), clock.getUTCNow().toLocalDate(), Currency.USD, context);
+
+        final Invoice newInvoice = invoiceDao.getById(charge.getInvoiceId());
+        List<InvoiceItem> items = newInvoice.getInvoiceItems();
+        assertEquals(items.size(), 2);
+        for (InvoiceItem cur : items) {
+            if (!cur.getId().equals(charge.getId())) {
+                assertEquals(cur.getInvoiceItemType(), InvoiceItemType.CBA_ADJ);
+                assertTrue(cur.getAmount().compareTo(new BigDecimal("-15.00")) == 0);
+                break;
+            }
+        }
     }
 
     @Test(groups = "slow")

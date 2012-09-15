@@ -37,9 +37,9 @@ public interface InvoiceDao {
 
     void create(final Invoice invoice, final int billCycleDayUTC, final boolean isRealInvoice, final CallContext context);
 
-    Invoice getById(final UUID id);
+    Invoice getById(final UUID id) throws InvoiceApiException;
 
-    Invoice getByNumber(final Integer number);
+    Invoice getByNumber(final Integer number) throws InvoiceApiException;
 
     List<Invoice> get();
 
@@ -119,7 +119,7 @@ public interface InvoiceDao {
      * @return the newly created external charge invoice item
      */
     InvoiceItem insertExternalCharge(final UUID accountId, @Nullable final UUID invoiceId, @Nullable final UUID bundleId, @Nullable final String description,
-                                     final BigDecimal amount, final LocalDate effectiveDate, final Currency currency, final CallContext context);
+                                     final BigDecimal amount, final LocalDate effectiveDate, final Currency currency, final CallContext context) throws InvoiceApiException;
 
     /**
      * Retrieve a credit by id.

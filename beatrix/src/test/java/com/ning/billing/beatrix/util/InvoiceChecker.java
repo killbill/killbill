@@ -16,6 +16,11 @@
 
 package com.ning.billing.beatrix.util;
 
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
+
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
@@ -28,21 +33,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 
+import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.invoice.api.InvoiceUserApi;
-
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
-
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertNull;
-import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.fail;
 
 public class InvoiceChecker {
 
@@ -57,29 +57,29 @@ public class InvoiceChecker {
         this.entitlementApi = entitlementApi;
     }
 
-    public void checkInvoice(final UUID accountId, final int invoiceOrderingNumber, final ExpectedItemCheck... expected) {
+    public void checkInvoice(final UUID accountId, final int invoiceOrderingNumber, final ExpectedItemCheck... expected) throws InvoiceApiException {
         checkInvoice(accountId, invoiceOrderingNumber, ImmutableList.<ExpectedItemCheck>copyOf(expected));
     }
 
-    public void checkInvoice(final UUID accountId, final int invoiceOrderingNumber, final List<ExpectedItemCheck> expected) {
+    public void checkInvoice(final UUID accountId, final int invoiceOrderingNumber, final List<ExpectedItemCheck> expected) throws InvoiceApiException {
         final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId);
         Assert.assertEquals(invoices.size(), invoiceOrderingNumber);
         final Invoice invoice = invoices.get(invoiceOrderingNumber - 1);
         checkInvoice(invoice.getId(), expected);
     }
 
-    public void checkRepairedInvoice(final UUID accountId, final int invoiceNb, final ExpectedItemCheck... expected) {
+    public void checkRepairedInvoice(final UUID accountId, final int invoiceNb, final ExpectedItemCheck... expected) throws InvoiceApiException {
         checkRepairedInvoice(accountId, invoiceNb, ImmutableList.<ExpectedItemCheck>copyOf(expected));
     }
 
-    public void checkRepairedInvoice(final UUID accountId, final int invoiceNb, final List<ExpectedItemCheck> expected) {
+    public void checkRepairedInvoice(final UUID accountId, final int invoiceNb, final List<ExpectedItemCheck> expected) throws InvoiceApiException {
         final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId);
         Assert.assertTrue(invoices.size() > invoiceNb);
         final Invoice invoice = invoices.get(invoiceNb - 1);
         checkInvoice(invoice.getId(), expected);
     }
 
-    public void checkInvoice(final UUID invoiceId, final List<ExpectedItemCheck> expected) {
+    public void checkInvoice(final UUID invoiceId, final List<ExpectedItemCheck> expected) throws InvoiceApiException {
         final Invoice invoice = invoiceUserApi.getInvoice(invoiceId);
         Assert.assertNotNull(invoice);
 

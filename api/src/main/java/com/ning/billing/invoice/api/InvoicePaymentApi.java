@@ -34,9 +34,9 @@ public interface InvoicePaymentApi {
      */
     public List<Invoice> getAllInvoicesByAccount(UUID accountId);
 
-    public Invoice getInvoice(UUID invoiceId);
+    public Invoice getInvoice(UUID invoiceId) throws InvoiceApiException;
 
-    public Invoice getInvoiceForPaymentId(UUID paymentId);
+    public Invoice getInvoiceForPaymentId(UUID paymentId) throws InvoiceApiException;
 
     public List<InvoicePayment> getInvoicePayments(UUID paymentId);
 

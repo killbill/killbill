@@ -18,7 +18,6 @@ package com.ning.billing.payment;
 
 import java.util.UUID;
 
-import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.mockito.Mockito;
 
@@ -27,6 +26,7 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceCreationEvent;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
@@ -65,7 +65,7 @@ public class TestHelper {
     public Invoice createTestInvoice(final Account account,
                                      final LocalDate targetDate,
                                      final Currency currency,
-                                     final InvoiceItem... items) throws EventBusException {
+                                     final InvoiceItem... items) throws EventBusException, InvoiceApiException {
         final Invoice invoice = new MockInvoice(account.getId(), clock.getUTCToday(), targetDate, currency);
 
         for (final InvoiceItem item : items) {
