@@ -16,6 +16,8 @@
 
 package com.ning.billing.payment.core;
 
+import static com.ning.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR_NAMED;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -31,6 +33,12 @@ import javax.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Function;
+import com.google.common.base.Objects;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.name.Named;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
@@ -55,15 +63,6 @@ import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.globallocker.GlobalLocker;
-
-import com.google.common.base.Function;
-import com.google.common.base.Objects;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.name.Named;
-
-import static com.ning.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR_NAMED;
 
 public class RefundProcessor extends ProcessorBase {
 
@@ -188,21 +187,26 @@ public class RefundProcessor extends ProcessorBase {
      * @param invoiceItemIdsWithAmounts invoice item ids and associated amounts to adjust
      * @return the refund amount
      */
-    private BigDecimal computeRefundAmount(final UUID paymentId, @Nullable final BigDecimal specifiedRefundAmount, final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts) {
-        final List<InvoiceItem> items = invoicePaymentApi.getInvoiceForPaymentId(paymentId).getInvoiceItems();
+    private BigDecimal computeRefundAmount(final UUID paymentId, @Nullable final BigDecimal specifiedRefundAmount, final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts)
+            throws PaymentApiException {
+        try {
+            final List<InvoiceItem> items = invoicePaymentApi.getInvoiceForPaymentId(paymentId).getInvoiceItems();
 
-        BigDecimal amountFromItems = BigDecimal.ZERO;
-        for (final UUID itemId : invoiceItemIdsWithAmounts.keySet()) {
-            amountFromItems = amountFromItems.add(Objects.firstNonNull(invoiceItemIdsWithAmounts.get(itemId),
-                                                                       getAmountFromItem(items, itemId)));
+            BigDecimal amountFromItems = BigDecimal.ZERO;
+            for (final UUID itemId : invoiceItemIdsWithAmounts.keySet()) {
+                amountFromItems = amountFromItems.add(Objects.firstNonNull(invoiceItemIdsWithAmounts.get(itemId),
+                        getAmountFromItem(items, itemId)));
+            }
+
+            // Sanity check: if some items were specified, then the sum should be equal to specified refund amount, if specified
+            if (amountFromItems.compareTo(BigDecimal.ZERO) != 0 && specifiedRefundAmount != null && specifiedRefundAmount.compareTo(amountFromItems) != 0) {
+                throw new IllegalArgumentException("You can't specify a refund amount that doesn't match the invoice items amounts");
+            }
+
+            return Objects.firstNonNull(specifiedRefundAmount, amountFromItems);
+        } catch (InvoiceApiException e) {
+            throw new PaymentApiException(e);
         }
-
-        // Sanity check: if some items were specified, then the sum should be equal to specified refund amount, if specified
-        if (amountFromItems.compareTo(BigDecimal.ZERO) != 0 && specifiedRefundAmount != null && specifiedRefundAmount.compareTo(amountFromItems) != 0) {
-            throw new IllegalArgumentException("You can't specify a refund amount that doesn't match the invoice items amounts");
-        }
-
-        return Objects.firstNonNull(specifiedRefundAmount, amountFromItems);
     }
 
     private BigDecimal getAmountFromItem(final List<InvoiceItem> items, final UUID itemId) {

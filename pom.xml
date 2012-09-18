@@ -17,7 +17,7 @@
     <groupId>com.ning.billing</groupId>
     <artifactId>killbill</artifactId>
     <packaging>pom</packaging>
-    <version>0.1.30-SNAPSHOT</version>
+    <version>0.1.31-SNAPSHOT</version>
     <name>killbill</name>
     <description>Library for managing recurring subscriptions and the associated billing</description>
     <url>http://github.com/ning/killbill</url>
@@ -624,6 +624,18 @@
                                 </goals>
                             </execution>
                         </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>2.11</version>
+                        <configuration>
+                            <groups>fast</groups>
+                            <systemPropertyVariables>
+                                <file.encoding>UTF-8</file.encoding>
+                                <user.timezone>GMT</user.timezone>
+                            </systemPropertyVariables>
+                        </configuration>
                     </plugin>
                 </plugins>
             </build>

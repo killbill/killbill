@@ -15,24 +15,24 @@
  */
 package com.ning.billing.payment.core;
 
-import javax.annotation.Nullable;
-import javax.inject.Inject;
+import static com.ning.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR_NAMED;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeoutException;
 
+import javax.annotation.Nullable;
+import javax.inject.Inject;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
-import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.inject.name.Named;
@@ -42,6 +42,7 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.config.PaymentConfig;
 import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.payment.api.DefaultPayment;
 import com.ning.billing.payment.api.DefaultPaymentErrorEvent;
@@ -53,7 +54,6 @@ import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.payment.dao.PaymentAttemptModelDao;
 import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.dao.PaymentModelDao;
-import com.ning.billing.payment.dao.PaymentSqlDao;
 import com.ning.billing.payment.dao.RefundModelDao;
 import com.ning.billing.payment.dispatcher.PluginDispatcher;
 import com.ning.billing.payment.plugin.api.PaymentInfoPlugin;
@@ -63,7 +63,6 @@ import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
 import com.ning.billing.payment.retry.AutoPayRetryService.AutoPayRetryServiceScheduler;
 import com.ning.billing.payment.retry.FailedPaymentRetryService.FailedPaymentRetryServiceScheduler;
 import com.ning.billing.payment.retry.PluginFailureRetryService.PluginFailureRetryServiceScheduler;
-import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.BusEvent;
@@ -72,12 +71,7 @@ import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.globallocker.GlobalLocker;
-import com.ning.billing.util.tag.ControlTagType;
-import com.ning.billing.util.tag.Tag;
-
-import static com.ning.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR_NAMED;
 
 public class PaymentProcessor extends ProcessorBase {
 
@@ -237,21 +231,25 @@ public class PaymentProcessor extends ProcessorBase {
                 public Payment doOperation() throws PaymentApiException {
 
 
-                    final Invoice invoice = invoicePaymentApi.getInvoice(invoiceId);
+                    try {
+                        final Invoice invoice = invoicePaymentApi.getInvoice(invoiceId);
 
-                    if (invoice.isMigrationInvoice()) {
-                        log.error("Received invoice for payment that is a migration invoice - don't know how to handle those yet: {}", invoice);
-                        return null;
-                    }
+                        if (invoice.isMigrationInvoice()) {
+                            log.error("Received invoice for payment that is a migration invoice - don't know how to handle those yet: {}", invoice);
+                            return null;
+                        }
 
-                    final boolean isAccountAutoPayOff = isAccountAutoPayOff(account.getId());
-                    setUnsaneAccount_AUTO_PAY_OFFWithAccountLock(account.getId(), paymentMethodId, isAccountAutoPayOff, context, isInstantPayment);
+                        final boolean isAccountAutoPayOff = isAccountAutoPayOff(account.getId());
+                        setUnsaneAccount_AUTO_PAY_OFFWithAccountLock(account.getId(), paymentMethodId, isAccountAutoPayOff, context, isInstantPayment);
 
-                    final BigDecimal requestedAmount = getAndValidatePaymentAmount(invoice, inputAmount, isInstantPayment);
-                    if (!isInstantPayment && isAccountAutoPayOff) {
-                        return processNewPaymentForAutoPayOffWithAccountLocked(paymentMethodId, account, invoice, requestedAmount, context);
-                    } else {
-                        return processNewPaymentWithAccountLocked(paymentMethodId, plugin, account, invoice, requestedAmount, isInstantPayment, context);
+                        final BigDecimal requestedAmount = getAndValidatePaymentAmount(invoice, inputAmount, isInstantPayment);
+                        if (!isInstantPayment && isAccountAutoPayOff) {
+                            return processNewPaymentForAutoPayOffWithAccountLocked(paymentMethodId, account, invoice, requestedAmount, context);
+                        } else {
+                            return processNewPaymentWithAccountLocked(paymentMethodId, plugin, account, invoice, requestedAmount, isInstantPayment, context);
+                        }
+                    } catch (InvoiceApiException e) {
+                        throw new PaymentApiException(e);
                     }
                 }
             }));
@@ -268,10 +266,6 @@ public class PaymentProcessor extends ProcessorBase {
             }
         }
     }
-
-
-
-
 
     private void setUnsaneAccount_AUTO_PAY_OFFWithAccountLock(final UUID accountId, final UUID paymentMethodId, final boolean isAccountAutoPayOff, final CallContext context, final boolean isInstantPayment)
     throws PaymentApiException  {
@@ -347,32 +341,34 @@ public class PaymentProcessor extends ProcessorBase {
 
                 @Override
                 public Void doOperation() throws PaymentApiException {
-
-                    // Fetch again with account lock this time
-                    final PaymentModelDao payment = paymentDao.getPayment(paymentId);
-                    boolean foundExpectedState = false;
-                    for (final PaymentStatus cur : expectedPaymentStates) {
-                        if (payment.getPaymentStatus() == cur) {
-                            foundExpectedState = true;
-                            break;
+                    try {
+                        // Fetch again with account lock this time
+                        final PaymentModelDao payment = paymentDao.getPayment(paymentId);
+                        boolean foundExpectedState = false;
+                        for (final PaymentStatus cur : expectedPaymentStates) {
+                            if (payment.getPaymentStatus() == cur) {
+                                foundExpectedState = true;
+                                break;
+                            }
                         }
-                    }
-                    if (!foundExpectedState) {
-                        log.info("Aborted retry for payment {} because it is {} state", paymentId, payment.getPaymentStatus());
-                        return null;
-                    }
+                        if (!foundExpectedState) {
+                            log.info("Aborted retry for payment {} because it is {} state", paymentId, payment.getPaymentStatus());
+                            return null;
+                        }
 
-                    final Invoice invoice = invoicePaymentApi.getInvoice(payment.getInvoiceId());
-                    if (invoice.isMigrationInvoice()) {
+                        final Invoice invoice = invoicePaymentApi.getInvoice(payment.getInvoiceId());
+                        if (invoice.isMigrationInvoice()) {
+                            return null;
+                        }
+                        if (invoice.getBalance().compareTo(BigDecimal.ZERO) <= 0) {
+                            log.info("Aborted retry for payment {} because invoice has been paid", paymentId);
+                            return null;
+                        }
+                        processRetryPaymentWithAccountLocked(plugin, account, invoice, payment, invoice.getBalance(), context);
                         return null;
+                    } catch (InvoiceApiException e) {
+                        throw new PaymentApiException(e);
                     }
-                    if (invoice.getBalance().compareTo(BigDecimal.ZERO) <= 0) {
-                        log.info("Aborted retry for payment {} because invoice has been paid", paymentId);
-                        return null;
-                    }
-                    processRetryPaymentWithAccountLocked(plugin, account, invoice, payment, invoice.getBalance(), context);
-                    return null;
-
                 }
             }));
         } catch (AccountApiException e) {

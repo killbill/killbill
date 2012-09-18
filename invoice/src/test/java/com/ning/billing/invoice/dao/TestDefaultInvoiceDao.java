@@ -29,6 +29,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.google.common.collect.ImmutableMap;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.invoice.InvoiceTestSuite;
 import com.ning.billing.invoice.api.Invoice;
@@ -48,8 +49,6 @@ import com.ning.billing.util.tag.dao.MockTagDefinitionDao;
 import com.ning.billing.util.tag.dao.TagDao;
 import com.ning.billing.util.tag.dao.TagDefinitionDao;
 
-import com.google.common.collect.ImmutableMap;
-
 public class TestDefaultInvoiceDao extends InvoiceTestSuite {
 
     private InvoiceSqlDao invoiceSqlDao;
@@ -63,6 +62,7 @@ public class TestDefaultInvoiceDao extends InvoiceTestSuite {
         Mockito.when(idbi.onDemand(InvoiceSqlDao.class)).thenReturn(invoiceSqlDao);
         Mockito.when(invoiceSqlDao.getById(Mockito.anyString())).thenReturn(Mockito.mock(Invoice.class));
         Mockito.when(invoiceSqlDao.inTransaction(Mockito.<Transaction<Void, InvoiceSqlDao>>any())).thenAnswer(new Answer() {
+            @Override
             public Object answer(final InvocationOnMock invocation) {
                 final Object[] args = invocation.getArguments();
                 try {
@@ -125,7 +125,11 @@ public class TestDefaultInvoiceDao extends InvoiceTestSuite {
         Mockito.when(invoiceSqlDao.getByRecordId(number.longValue())).thenReturn(invoice);
 
         Assert.assertEquals(dao.getByNumber(number), invoice);
-        Assert.assertNull(dao.getByNumber(Integer.MIN_VALUE));
+        try {
+            dao.getByNumber(Integer.MIN_VALUE);
+            Assert.fail();
+        } catch (InvoiceApiException e) {
+        }
     }
 
     @Test(groups = "fast")

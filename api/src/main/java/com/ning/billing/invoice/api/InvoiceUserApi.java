@@ -62,7 +62,7 @@ public interface InvoiceUserApi {
      * @param invoiceId invoice id
      * @return the invoice
      */
-    public Invoice getInvoice(UUID invoiceId);
+    public Invoice getInvoice(UUID invoiceId) throws InvoiceApiException;
 
     /**
      * Retrieve an invoice by invoice number.
@@ -70,7 +70,7 @@ public interface InvoiceUserApi {
      * @param number invoice number
      * @return the invoice
      */
-    public Invoice getInvoiceByNumber(Integer number);
+    public Invoice getInvoiceByNumber(Integer number) throws InvoiceApiException;
 
     /**
      * Record a payment for an invoice.

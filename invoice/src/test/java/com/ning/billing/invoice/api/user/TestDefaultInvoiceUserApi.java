@@ -78,7 +78,7 @@ public class TestDefaultInvoiceUserApi extends InvoiceApiTestBase {
     }
 
     private void verifyExternalChargeOnNewInvoice(final BigDecimal initialAccountBalance, @Nullable final UUID bundleId,
-                                                  final BigDecimal externalChargeAmount, final InvoiceItem externalChargeInvoiceItem) {
+                                                  final BigDecimal externalChargeAmount, final InvoiceItem externalChargeInvoiceItem) throws InvoiceApiException {
         Assert.assertNotNull(externalChargeInvoiceItem.getInvoiceId());
         Assert.assertNotEquals(externalChargeInvoiceItem.getInvoiceId(), invoiceId);
         Assert.assertEquals(externalChargeInvoiceItem.getBundleId(), bundleId);
@@ -135,7 +135,7 @@ public class TestDefaultInvoiceUserApi extends InvoiceApiTestBase {
     }
 
     private void verifyExternalChargeOnExistingInvoice(final BigDecimal initialInvoiceBalance, @Nullable final UUID bundleId,
-                                                       final BigDecimal externalChargeAmount, final InvoiceItem externalChargeInvoiceItem) {
+                                                       final BigDecimal externalChargeAmount, final InvoiceItem externalChargeInvoiceItem) throws InvoiceApiException {
         Assert.assertEquals(externalChargeInvoiceItem.getInvoiceId(), invoiceId);
         Assert.assertEquals(externalChargeInvoiceItem.getBundleId(), bundleId);
         Assert.assertEquals(externalChargeInvoiceItem.getInvoiceItemType(), InvoiceItemType.EXTERNAL_CHARGE);

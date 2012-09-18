@@ -30,10 +30,17 @@ import org.joda.time.LocalDate;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
+import org.skife.jdbi.v2.exceptions.TransactionFailedException;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Objects;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableMap.Builder;
+import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
@@ -64,13 +71,6 @@ import com.ning.billing.util.dao.EntityAudit;
 import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.tag.ControlTagType;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Objects;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableMap.Builder;
-import com.google.inject.Inject;
 
 public class AuditedInvoiceDao implements InvoiceDao {
 
@@ -150,25 +150,36 @@ public class AuditedInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public Invoice getById(final UUID invoiceId) {
-        return invoiceSqlDao.inTransaction(new Transaction<Invoice, InvoiceSqlDao>() {
-            @Override
-            public Invoice inTransaction(final InvoiceSqlDao invoiceDao, final TransactionStatus status) throws Exception {
-                final Invoice invoice = invoiceDao.getById(invoiceId.toString());
-
-                if (invoice != null) {
+    public Invoice getById(final UUID invoiceId) throws InvoiceApiException {
+        try {
+            return invoiceSqlDao.inTransaction(new Transaction<Invoice, InvoiceSqlDao>() {
+                @Override
+                public Invoice inTransaction(final InvoiceSqlDao invoiceDao, final TransactionStatus status) throws Exception {
+                    final Invoice invoice = invoiceDao.getById(invoiceId.toString());
+                    if (invoice == null) {
+                        throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND, invoiceId);
+                    }
                     populateChildren(invoice, invoiceDao);
+                    return invoice;
                 }
-
-                return invoice;
+            });
+        } catch (TransactionFailedException e) {
+            if (e.getCause() instanceof InvoiceApiException) {
+                throw (InvoiceApiException) e.getCause();
+            } else {
+                throw e;
             }
-        });
+        }
     }
 
     @Override
-    public Invoice getByNumber(final Integer number) {
+    public Invoice getByNumber(final Integer number) throws InvoiceApiException {
         // The invoice number is just the record id
-        return invoiceSqlDao.getByRecordId(number.longValue());
+        final Invoice result = invoiceSqlDao.getByRecordId(number.longValue());
+        if (result == null) {
+            throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND, number);
+        }
+        return result;
     }
 
     @Override
@@ -576,7 +587,8 @@ public class AuditedInvoiceDao implements InvoiceDao {
 
     @Override
     public InvoiceItem insertExternalCharge(final UUID accountId, @Nullable final UUID invoiceId, @Nullable final UUID bundleId, final String description,
-                                            final BigDecimal amount, final LocalDate effectiveDate, final Currency currency, final CallContext context) {
+                                            final BigDecimal amount, final LocalDate effectiveDate, final Currency currency, final CallContext context)
+                                                    throws InvoiceApiException {
         return invoiceSqlDao.inTransaction(new Transaction<InvoiceItem, InvoiceSqlDao>() {
             @Override
             public InvoiceItem inTransaction(final InvoiceSqlDao transactional, final TransactionStatus status) throws Exception {
@@ -595,9 +607,22 @@ public class AuditedInvoiceDao implements InvoiceDao {
                 final InvoiceItemSqlDao transInvoiceItemDao = transactional.become(InvoiceItemSqlDao.class);
                 transInvoiceItemDao.create(externalCharge, context);
 
+                // At this point, reread the invoice and figure out if we need to consume some of the CBA
+                final Invoice invoice = transactional.getById(invoiceIdForExternalCharge.toString());
+                if (invoice == null) {
+                    throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND, invoiceIdForExternalCharge);
+                }
+                populateChildren(invoice, transactional);
+
+                final BigDecimal accountCbaAvailable = getAccountCBAFromTransaction(invoice.getAccountId(), transactional);
+                if (accountCbaAvailable.compareTo(BigDecimal.ZERO) > 0 && invoice.getBalance().compareTo(BigDecimal.ZERO) > 0) {
+                    final BigDecimal cbaAmountToConsume = accountCbaAvailable.compareTo(invoice.getBalance()) > 0 ? invoice.getBalance().negate() : accountCbaAvailable.negate();
+                    final InvoiceItem cbaAdjItem = new CreditBalanceAdjInvoiceItem(invoice.getId(), invoice.getAccountId(), context.getCreatedDate().toLocalDate(), cbaAmountToConsume, invoice.getCurrency());
+                    transInvoiceItemDao.create(cbaAdjItem, context);
+                }
+
                 // Notify the bus since the balance of the invoice changed
                 notifyBusOfInvoiceAdjustment(transactional, invoiceId, accountId, context.getUserToken());
-
                 return externalCharge;
             }
         });
@@ -742,7 +767,6 @@ public class AuditedInvoiceDao implements InvoiceDao {
         for (final Invoice cur : invoices) {
             cba = cba.add(cur.getCBAAmount());
         }
-
         return cba;
     }
 

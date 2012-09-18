@@ -27,6 +27,7 @@ import javax.annotation.Nullable;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 
+import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
@@ -48,8 +49,6 @@ import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.Tag;
-
-import com.google.inject.Inject;
 
 public class DefaultInvoiceUserApi implements InvoiceUserApi {
 
@@ -91,12 +90,12 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
 
     @Override
-    public Invoice getInvoice(final UUID invoiceId) {
+    public Invoice getInvoice(final UUID invoiceId) throws InvoiceApiException {
         return dao.getById(invoiceId);
     }
 
     @Override
-    public Invoice getInvoiceByNumber(final Integer number) {
+    public Invoice getInvoiceByNumber(final Integer number) throws InvoiceApiException {
         return dao.getByNumber(number);
     }
 

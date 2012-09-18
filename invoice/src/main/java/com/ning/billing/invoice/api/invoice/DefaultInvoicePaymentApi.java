@@ -18,7 +18,6 @@
 package com.ning.billing.invoice.api.invoice;
 
 import java.math.BigDecimal;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -26,6 +25,9 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.exceptions.TransactionFailedException;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
+import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
@@ -36,10 +38,6 @@ import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.model.DefaultInvoicePayment;
 import com.ning.billing.util.callcontext.CallContext;
-
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
-import com.google.inject.Inject;
 
 public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
 
@@ -63,12 +61,12 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
     }
 
     @Override
-    public Invoice getInvoice(final UUID invoiceId) {
+    public Invoice getInvoice(final UUID invoiceId) throws InvoiceApiException {
         return dao.getById(invoiceId);
     }
 
     @Override
-    public Invoice getInvoiceForPaymentId(final UUID paymentId) {
+    public Invoice getInvoiceForPaymentId(final UUID paymentId) throws InvoiceApiException {
         final UUID invoiceIdStr = dao.getInvoiceIdByPaymentId(paymentId);
         return invoiceIdStr == null ? null : dao.getById(invoiceIdStr);
     }
