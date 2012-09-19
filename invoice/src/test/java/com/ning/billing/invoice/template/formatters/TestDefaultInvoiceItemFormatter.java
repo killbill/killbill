@@ -34,6 +34,7 @@ import com.ning.billing.invoice.InvoiceTestSuite;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
+import com.ning.billing.util.LocaleUtils;
 import com.ning.billing.util.email.templates.MustacheTemplateEngine;
 import com.ning.billing.util.template.translation.TranslatorConfig;
 
@@ -46,6 +47,15 @@ public class TestDefaultInvoiceItemFormatter extends InvoiceTestSuite {
     public void setup() {
         config = new ConfigurationObjectFactory(System.getProperties()).build(TranslatorConfig.class);
         templateEngine = new MustacheTemplateEngine();
+    }
+
+    @Test(groups = "fast")
+    public void testBasicUSD() throws Exception {
+        final FixedPriceInvoiceItem fixedItemUSD = new FixedPriceInvoiceItem(UUID.randomUUID(), UUID.randomUUID(), null, null,
+                                                                             UUID.randomUUID().toString(), UUID.randomUUID().toString(),
+                                                                             new LocalDate(), new BigDecimal("-1114.751625346"), Currency.USD);
+        checkOutput(fixedItemUSD, "{{#invoiceItem}}<td class=\"amount\">{{formattedAmount}}</td>{{/invoiceItem}}",
+                    "<td class=\"amount\">($1,114.75)</td>", LocaleUtils.toLocale("en_US"));
     }
 
     @Test(groups = "fast")

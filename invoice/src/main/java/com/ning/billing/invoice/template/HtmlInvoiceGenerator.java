@@ -28,6 +28,7 @@ import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.formatters.InvoiceFormatter;
 import com.ning.billing.invoice.api.formatters.InvoiceFormatterFactory;
 import com.ning.billing.invoice.template.translator.DefaultInvoiceTranslator;
+import com.ning.billing.util.LocaleUtils;
 import com.ning.billing.util.email.templates.TemplateEngine;
 import com.ning.billing.util.template.translation.TranslatorConfig;
 
@@ -51,7 +52,7 @@ public class HtmlInvoiceGenerator {
 
         final Map<String, Object> data = new HashMap<String, Object>();
         final DefaultInvoiceTranslator invoiceTranslator = new DefaultInvoiceTranslator(config);
-        final Locale locale = new Locale(account.getLocale());
+        final Locale locale = LocaleUtils.toLocale(account.getLocale());
         invoiceTranslator.setLocale(locale);
         data.put("text", invoiceTranslator);
         data.put("account", account);
