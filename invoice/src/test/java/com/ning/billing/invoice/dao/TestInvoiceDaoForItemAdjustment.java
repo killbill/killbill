@@ -108,7 +108,7 @@ public class TestInvoiceDaoForItemAdjustment extends InvoiceDaoTestBase {
         Assert.assertEquals(adjustedInvoiceItem.getAccountId(), invoiceItem.getAccountId());
         Assert.assertNull(adjustedInvoiceItem.getBundleId());
         Assert.assertEquals(adjustedInvoiceItem.getCurrency(), invoiceItem.getCurrency());
-        Assert.assertEquals(adjustedInvoiceItem.getDescription(), "item-adj");
+        Assert.assertEquals(adjustedInvoiceItem.getDescription(), "Invoice item adjustment");
         Assert.assertEquals(adjustedInvoiceItem.getEndDate(), effectiveDate);
         Assert.assertEquals(adjustedInvoiceItem.getInvoiceId(), invoiceItem.getInvoiceId());
         Assert.assertEquals(adjustedInvoiceItem.getInvoiceItemType(), InvoiceItemType.ITEM_ADJ);
