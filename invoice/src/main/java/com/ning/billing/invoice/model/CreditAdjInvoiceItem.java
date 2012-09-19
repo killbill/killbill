@@ -43,12 +43,6 @@ public class CreditAdjInvoiceItem extends AdjInvoiceItem {
 
     @Override
     public String getDescription() {
-        final String secondDescription;
-        if (getAmount().compareTo(BigDecimal.ZERO) >= 0) {
-            secondDescription = "account credit";
-        } else {
-            secondDescription = "use of account credit";
-        }
-        return String.format("Adjustment (%s)", secondDescription);
+        return "Invoice adjustment";
     }
 }

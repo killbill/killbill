@@ -57,7 +57,6 @@ import com.ning.billing.invoice.model.RepairAdjInvoiceItem;
 import com.ning.billing.junction.api.BillingEventSet;
 import com.ning.billing.util.clock.Clock;
 
-import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.inject.Inject;

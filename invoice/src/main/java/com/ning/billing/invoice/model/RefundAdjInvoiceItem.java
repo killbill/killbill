@@ -43,6 +43,6 @@ public class RefundAdjInvoiceItem extends AdjInvoiceItem {
 
     @Override
     public String getDescription() {
-        return "Adjustment (refund)";
+        return "Invoice adjustment";
     }
 }
