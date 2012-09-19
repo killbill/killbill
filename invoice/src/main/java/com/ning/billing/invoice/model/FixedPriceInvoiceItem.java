@@ -28,6 +28,7 @@ import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
 
 public class FixedPriceInvoiceItem extends InvoiceItemBase {
+
     public FixedPriceInvoiceItem(final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId, @Nullable final UUID subscriptionId, final String planName, final String phaseName,
                                  final LocalDate date, final BigDecimal amount, final Currency currency) {
         super(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, date, null, amount, currency);
@@ -40,7 +41,15 @@ public class FixedPriceInvoiceItem extends InvoiceItemBase {
 
     @Override
     public String getDescription() {
-        return String.format("%s (fixed price) on %s", getPhaseName(), getStartDate().toString());
+        if (getPhaseName() == null) {
+            return "Fixed price charge";
+        } else {
+            if (getAmount().compareTo(BigDecimal.ZERO) == 0) {
+                return getPhaseName();
+            } else {
+                return String.format("%s (fixed price)", getPhaseName());
+            }
+        }
     }
 
     @Override

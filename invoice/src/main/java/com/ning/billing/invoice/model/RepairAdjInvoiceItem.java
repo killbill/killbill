@@ -25,6 +25,7 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItemType;
 
 public class RepairAdjInvoiceItem extends AdjInvoiceItem {
+
     public RepairAdjInvoiceItem(final UUID invoiceId, final UUID accountId, final LocalDate startDate, final LocalDate endDate,
                                 final BigDecimal amount, final Currency currency, final UUID reversingId) {
         super(invoiceId, accountId, startDate, endDate, amount, currency, reversingId);
@@ -42,6 +43,6 @@ public class RepairAdjInvoiceItem extends AdjInvoiceItem {
 
     @Override
     public String getDescription() {
-        return "repair-adj";
+        return "Adjustment (entitlement change)";
     }
 }

@@ -50,7 +50,7 @@ public class RecurringInvoiceItem extends InvoiceItemBase {
 
     @Override
     public String getDescription() {
-        return String.format("%s from %s to %s", phaseName, startDate.toString(dateTimeFormatter), endDate.toString(dateTimeFormatter));
+        return phaseName;
     }
 
     @Override

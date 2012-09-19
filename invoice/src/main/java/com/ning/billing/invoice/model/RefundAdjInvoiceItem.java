@@ -25,6 +25,7 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItemType;
 
 public class RefundAdjInvoiceItem extends AdjInvoiceItem {
+
     public RefundAdjInvoiceItem(final UUID invoiceId, final UUID accountId, final LocalDate date,
                                 final BigDecimal amount, final Currency currency) {
         super(invoiceId, accountId, date, date, amount, currency);
@@ -42,6 +43,6 @@ public class RefundAdjInvoiceItem extends AdjInvoiceItem {
 
     @Override
     public String getDescription() {
-        return "refund-adj";
+        return "Adjustment (refund)";
     }
 }

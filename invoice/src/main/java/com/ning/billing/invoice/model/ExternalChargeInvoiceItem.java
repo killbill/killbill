@@ -41,7 +41,11 @@ public class ExternalChargeInvoiceItem extends InvoiceItemBase {
 
     @Override
     public String getDescription() {
-        return String.format("%s (external charge) on %s", getPlanName(), getStartDate().toString());
+        if (getPlanName() == null) {
+            return "External charge";
+        } else {
+            return String.format("%s (external charge)", getPlanName());
+        }
     }
 
     @Override

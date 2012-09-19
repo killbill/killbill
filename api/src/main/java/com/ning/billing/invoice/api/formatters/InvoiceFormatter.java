@@ -19,5 +19,12 @@ package com.ning.billing.invoice.api.formatters;
 import com.ning.billing.invoice.api.Invoice;
 
 public interface InvoiceFormatter extends Invoice {
+
     public String getFormattedInvoiceDate();
+
+    public String getFormattedChargedAmount();
+
+    public String getFormattedPaidAmount();
+
+    public String getFormattedBalance();
 }

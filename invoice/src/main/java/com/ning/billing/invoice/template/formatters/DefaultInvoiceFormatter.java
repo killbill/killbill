@@ -33,6 +33,7 @@
 package com.ning.billing.invoice.template.formatters;
 
 import java.math.BigDecimal;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -56,7 +57,7 @@ import com.google.common.collect.ImmutableList;
 import static com.ning.billing.invoice.template.formatters.DefaultAmountFormatter.round;
 
 /**
- * Format invoice fields. Note that the Mustache engine won't accept null values.
+ * Format invoice fields
  */
 public class DefaultInvoiceFormatter implements InvoiceFormatter {
 
@@ -144,6 +145,24 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
     @Override
     public BigDecimal getBalance() {
         return round(Objects.firstNonNull(invoice.getBalance(), BigDecimal.ZERO));
+    }
+
+    @Override
+    public String getFormattedChargedAmount() {
+        final NumberFormat number = NumberFormat.getCurrencyInstance(locale);
+        return number.format(getChargedAmount().doubleValue());
+    }
+
+    @Override
+    public String getFormattedPaidAmount() {
+        final NumberFormat number = NumberFormat.getCurrencyInstance(locale);
+        return number.format(getPaidAmount().doubleValue());
+    }
+
+    @Override
+    public String getFormattedBalance() {
+        final NumberFormat number = NumberFormat.getCurrencyInstance(locale);
+        return number.format(getBalance().doubleValue());
     }
 
     @Override
