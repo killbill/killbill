@@ -17,15 +17,13 @@
 package com.ning.billing.invoice.template.formatters;
 
 import java.math.BigDecimal;
+import java.text.NumberFormat;
 import java.util.Locale;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormatter;
 
-import com.google.common.base.Objects;
-import com.google.common.base.Strings;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
@@ -34,12 +32,16 @@ import com.ning.billing.util.template.translation.DefaultCatalogTranslator;
 import com.ning.billing.util.template.translation.Translator;
 import com.ning.billing.util.template.translation.TranslatorConfig;
 
+import com.google.common.base.Objects;
+import com.google.common.base.Strings;
+
 import static com.ning.billing.invoice.template.formatters.DefaultAmountFormatter.round;
 
 /**
- * Format invoice item fields. Note that the Mustache engine won't accept null values.
+ * Format invoice item fields
  */
 public class DefaultInvoiceItemFormatter implements InvoiceItemFormatter {
+
     private final Translator translator;
 
     private final InvoiceItem item;
@@ -65,6 +67,13 @@ public class DefaultInvoiceItemFormatter implements InvoiceItemFormatter {
     }
 
     @Override
+    public String getFormattedAmount() {
+        final NumberFormat number = NumberFormat.getCurrencyInstance(locale);
+        number.setCurrency(java.util.Currency.getInstance(item.getCurrency().toString()));
+        return number.format(getAmount().doubleValue());
+    }
+
+    @Override
     public InvoiceItemType getInvoiceItemType() {
         return item.getInvoiceItemType();
     }
@@ -86,12 +95,12 @@ public class DefaultInvoiceItemFormatter implements InvoiceItemFormatter {
 
     @Override
     public String getFormattedStartDate() {
-        return Strings.nullToEmpty(item.getStartDate().toString(dateFormatter));
+        return item.getStartDate().toString(dateFormatter);
     }
 
     @Override
     public String getFormattedEndDate() {
-        return Strings.nullToEmpty(item.getEndDate() == null ? null : item.getEndDate().toString(dateFormatter));
+        return item.getEndDate() == null ? null : item.getEndDate().toString(dateFormatter);
     }
 
     @Override

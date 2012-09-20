@@ -86,6 +86,30 @@ public class TestInvoice extends TestJaxrsBase {
     }
 
     @Test(groups = "slow")
+    public void testPayAllInvoices() throws Exception {
+        clock.setTime(new DateTime(2012, 4, 25, 0, 3, 42, 0));
+
+        // No payment method
+        final AccountJson accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
+
+        // Check there was no payment made
+        assertEquals(getPaymentsForAccount(accountJson.getAccountId()).size(), 0);
+
+        // Get the invoices
+        final List<InvoiceJsonSimple> invoices = getInvoicesForAccount(accountJson.getAccountId());
+        assertEquals(invoices.size(), 2);
+        final InvoiceJsonSimple invoiceToPay = invoices.get(1);
+        assertEquals(invoiceToPay.getBalance().compareTo(BigDecimal.ZERO), 1);
+
+        // Pay all invoices
+        payAllInvoices(accountJson, true);
+        for (final InvoiceJsonSimple invoice : getInvoicesForAccount(accountJson.getAccountId())) {
+            assertEquals(invoice.getBalance().compareTo(BigDecimal.ZERO), 0);
+        }
+        assertEquals(getPaymentsForAccount(accountJson.getAccountId()).size(), 1);
+    }
+
+    @Test(groups = "slow")
     public void testInvoiceCreatePayment() throws Exception {
         clock.setTime(new DateTime(2012, 4, 25, 0, 3, 42, 0));
 

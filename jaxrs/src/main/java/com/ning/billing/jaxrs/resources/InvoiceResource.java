@@ -18,6 +18,7 @@ package com.ning.billing.jaxrs.resources;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -180,6 +181,24 @@ public class InvoiceResource extends JaxRsResourceBase {
         }
     }
 
+    @DELETE
+    @Path("/{invoiceId:" + UUID_PATTERN + "}" + "/{invoiceItemId:" + UUID_PATTERN + "}/cba")
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    public Response deleteCBA(@PathParam("invoiceId") final String invoiceId,
+                              @PathParam("invoiceItemId") final String invoiceItemId,
+                              @QueryParam(QUERY_ACCOUNT_ID) final String accountId,
+                              @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                              @HeaderParam(HDR_REASON) final String reason,
+                              @HeaderParam(HDR_COMMENT) final String comment) throws AccountApiException, InvoiceApiException {
+        final Account account = accountApi.getAccountById(UUID.fromString(accountId));
+
+        invoiceApi.deleteCBA(account.getId(), UUID.fromString(invoiceId), UUID.fromString(invoiceItemId),
+                             context.createContext(createdBy, reason, comment));
+
+        return Response.status(Status.OK).build();
+    }
+
     @POST
     @Path("/{invoiceId:" + UUID_PATTERN + "}")
     @Consumes(APPLICATION_JSON)
@@ -309,6 +328,30 @@ public class InvoiceResource extends JaxRsResourceBase {
         }
 
         return Response.status(Status.OK).entity(result).build();
+    }
+
+    @POST
+    @Produces(APPLICATION_JSON)
+    @Consumes(APPLICATION_JSON)
+    @Path("/" + PAYMENTS)
+    public Response payAllInvoices(final PaymentJsonSimple payment,
+                                   @QueryParam(QUERY_PAYMENT_EXTERNAL) @DefaultValue("false") final Boolean externalPayment,
+                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                   @HeaderParam(HDR_REASON) final String reason,
+                                   @HeaderParam(HDR_COMMENT) final String comment) throws AccountApiException, PaymentApiException {
+        final Account account = accountApi.getAccountById(UUID.fromString(payment.getAccountId()));
+
+        final CallContext callContext = context.createContext(createdBy, reason, comment);
+        final Collection<Invoice> unpaidInvoices = invoiceApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday());
+        for (final Invoice invoice : unpaidInvoices) {
+            if (externalPayment) {
+                paymentApi.createExternalPayment(account, invoice.getId(), invoice.getBalance(), callContext);
+            } else {
+                paymentApi.createPayment(account, invoice.getId(), invoice.getBalance(), callContext);
+            }
+        }
+
+        return Response.status(Status.OK).build();
     }
 
     @POST

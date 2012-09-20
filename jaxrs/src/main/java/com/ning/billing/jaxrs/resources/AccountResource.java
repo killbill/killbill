@@ -60,6 +60,7 @@ import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.jaxrs.json.AccountEmailJson;
 import com.ning.billing.jaxrs.json.AccountJson;
 import com.ning.billing.jaxrs.json.AccountJsonWithBalance;
+import com.ning.billing.jaxrs.json.AccountJsonWithBalanceAndCBA;
 import com.ning.billing.jaxrs.json.AccountTimelineJson;
 import com.ning.billing.jaxrs.json.BundleJsonNoSubscriptions;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
@@ -136,17 +137,10 @@ public class AccountResource extends JaxRsResourceBase {
     @Path("/{accountId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
     public Response getAccount(@PathParam("accountId") final String accountId,
-            @QueryParam(QUERY_ACCOUNT_WITH_BALANCE) @DefaultValue("false") final Boolean accountWithBalance) throws AccountApiException {
+                               @QueryParam(QUERY_ACCOUNT_WITH_BALANCE) @DefaultValue("false") final Boolean accountWithBalance,
+                               @QueryParam(QUERY_ACCOUNT_WITH_BALANCE_AND_CBA) @DefaultValue("false") final Boolean accountWithBalanceAndCBA) throws AccountApiException {
         final Account account = accountApi.getAccountById(UUID.fromString(accountId));
-
-        AccountJson json = null;
-        if (accountWithBalance) {
-            final BigDecimal accountBalance = invoiceApi.getAccountBalance(account.getId());
-            json = new AccountJsonWithBalance(account, accountBalance);
-        } else {
-            json = new AccountJson(account);
-        }
-        return Response.status(Status.OK).entity(json).build();
+        return getAccount(account, accountWithBalance, accountWithBalanceAndCBA);
     }
 
     @GET
@@ -177,16 +171,24 @@ public class AccountResource extends JaxRsResourceBase {
     @GET
     @Produces(APPLICATION_JSON)
     public Response getAccountByKey(@QueryParam(QUERY_EXTERNAL_KEY) final String externalKey,
-            @QueryParam(QUERY_ACCOUNT_WITH_BALANCE) @DefaultValue("false") final Boolean accountWithBalance) throws AccountApiException {
+                                    @QueryParam(QUERY_ACCOUNT_WITH_BALANCE) @DefaultValue("false") final Boolean accountWithBalance,
+                                    @QueryParam(QUERY_ACCOUNT_WITH_BALANCE_AND_CBA) @DefaultValue("false") final Boolean accountWithBalanceAndCBA) throws AccountApiException {
         final Account account = accountApi.getAccountByKey(externalKey);
-        AccountJson json = null;
-        if (accountWithBalance) {
+        return getAccount(account, accountWithBalance, accountWithBalanceAndCBA);
+    }
+
+    private Response getAccount(final Account account, final Boolean accountWithBalance, final Boolean accountWithBalanceAndCBA) {
+        final AccountJson json;
+        if (accountWithBalanceAndCBA) {
+            final BigDecimal accountBalance = invoiceApi.getAccountBalance(account.getId());
+            final BigDecimal accountCBA = invoiceApi.getAccountCBA(account.getId());
+            json = new AccountJsonWithBalanceAndCBA(account, accountBalance, accountCBA);
+        } else if (accountWithBalance) {
             final BigDecimal accountBalance = invoiceApi.getAccountBalance(account.getId());
             json = new AccountJsonWithBalance(account, accountBalance);
         } else {
             json = new AccountJson(account);
         }
-
         return Response.status(Status.OK).entity(json).build();
     }
 
@@ -214,7 +216,7 @@ public class AccountResource extends JaxRsResourceBase {
         final AccountData data = json.toAccountData();
         final UUID uuid = UUID.fromString(accountId);
         accountApi.updateAccount(uuid, data, context.createContext(createdBy, reason, comment));
-        return getAccount(accountId, false);
+        return getAccount(accountId, false, false);
     }
 
     // Not supported

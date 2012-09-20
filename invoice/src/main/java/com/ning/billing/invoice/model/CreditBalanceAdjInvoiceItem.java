@@ -25,14 +25,21 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoiceItemType;
 
 public class CreditBalanceAdjInvoiceItem extends AdjInvoiceItem {
+
     public CreditBalanceAdjInvoiceItem(final UUID invoiceId, final UUID accountId,
                                        final LocalDate date, final BigDecimal amount, final Currency currency) {
         super(invoiceId, accountId, date, date, amount, currency);
     }
 
     public CreditBalanceAdjInvoiceItem(final UUID id, final UUID invoiceId, final UUID accountId,
-                                       final LocalDate date, final BigDecimal amount, final Currency currency) {
-        super(id, invoiceId, accountId, date, date, amount, currency);
+                                       final LocalDate date, final UUID linkedInvoiceItemId,
+                                       final BigDecimal amount, final Currency currency) {
+        super(id, invoiceId, accountId, date, date, amount, currency, linkedInvoiceItemId);
+    }
+
+    public CreditBalanceAdjInvoiceItem(final UUID invoiceId, final UUID accountId, final LocalDate date, final UUID linkedInvoiceItemId,
+                                       final BigDecimal amount, final Currency currency) {
+        super(invoiceId, accountId, date, date, amount, currency, linkedInvoiceItemId);
     }
 
     @Override
@@ -42,6 +49,12 @@ public class CreditBalanceAdjInvoiceItem extends AdjInvoiceItem {
 
     @Override
     public String getDescription() {
-        return "cba-adj";
+        final String secondDescription;
+        if (getAmount().compareTo(BigDecimal.ZERO) >= 0) {
+            secondDescription = "account credit";
+        } else {
+            secondDescription = "use of account credit";
+        }
+        return String.format("Adjustment (%s)", secondDescription);
     }
 }

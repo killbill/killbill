@@ -57,7 +57,6 @@ import com.ning.billing.invoice.model.RepairAdjInvoiceItem;
 import com.ning.billing.junction.api.BillingEventSet;
 import com.ning.billing.util.clock.Clock;
 
-import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
@@ -82,9 +81,9 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
      */
     @Override
     public Invoice generateInvoice(final UUID accountId, @Nullable final BillingEventSet events,
-            @Nullable final List<Invoice> existingInvoices,
-            final LocalDate targetDate, final DateTimeZone accountTimeZone,
-            final Currency targetCurrency) throws InvoiceApiException {
+                                   @Nullable final List<Invoice> existingInvoices,
+                                   final LocalDate targetDate, final DateTimeZone accountTimeZone,
+                                   final Currency targetCurrency) throws InvoiceApiException {
         if ((events == null) || (events.size() == 0) || events.isAccountAutoInvoiceOff()) {
             return null;
         }
@@ -98,8 +97,8 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
             for (final Invoice invoice : existingInvoices) {
                 for (final InvoiceItem item : invoice.getInvoiceItems()) {
                     if (item.getSubscriptionId() == null || // Always include migration invoices, credits, external charges etc.
-                            !events.getSubscriptionIdsWithAutoInvoiceOff()
-                            .contains(item.getSubscriptionId())) { //don't add items with auto_invoice_off tag
+                        !events.getSubscriptionIdsWithAutoInvoiceOff()
+                               .contains(item.getSubscriptionId())) { //don't add items with auto_invoice_off tag
                         existingItems.add(item);
                     }
                 }
@@ -131,7 +130,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
     }
 
     void generateCBAForExistingInvoices(final UUID accountId, final List<Invoice> existingInvoices,
-            final List<InvoiceItem> proposedItems, final Currency currency) {
+                                        final List<InvoiceItem> proposedItems, final Currency currency) {
         // Determine most accurate invoice balances up to this point
         final Map<UUID, BigDecimal> amountOwedByInvoice = new HashMap<UUID, BigDecimal>();
 
@@ -163,7 +162,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
     void addRepairedItems(final List<InvoiceItem> existingItems, final List<InvoiceItem> proposedItems) {
         for (final InvoiceItem existingItem : existingItems) {
             if (existingItem.getInvoiceItemType() == InvoiceItemType.RECURRING ||
-                    existingItem.getInvoiceItemType() == InvoiceItemType.FIXED) {
+                existingItem.getInvoiceItemType() == InvoiceItemType.FIXED) {
                 final BigDecimal existingAdjustedPositiveAmount = getAdjustedPositiveAmount(existingItems, existingItem.getId());
                 final BigDecimal amountNegated = existingItem.getAmount() == null ? null : existingItem.getAmount().subtract(existingAdjustedPositiveAmount).negate();
                 if (amountNegated.compareTo(BigDecimal.ZERO) < 0) {
@@ -174,7 +173,6 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         }
 
     }
-
 
     // We check to see if there are any adjustments that point to the item we are trying to repair
     // If we did any CREDIT_ADJ or REFUND_ADJ, then we unfortunately we can't know what is the intent
@@ -188,7 +186,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
             @Override
             public boolean apply(InvoiceItem item) {
                 if (item.getInvoiceItemType() == InvoiceItemType.ITEM_ADJ &&
-                        item.getLinkedItemId() != null && item.getLinkedItemId().equals(linkedItemId)) {
+                    item.getLinkedItemId() != null && item.getLinkedItemId().equals(linkedItemId)) {
                     return true;
                 } else {
                     return false;
@@ -204,7 +202,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
     }
 
     void consumeExistingCredit(final UUID invoiceId, final UUID accountId, final List<InvoiceItem> existingItems,
-            final List<InvoiceItem> proposedItems, final Currency targetCurrency) {
+                               final List<InvoiceItem> proposedItems, final Currency targetCurrency) {
         BigDecimal totalUnusedCreditAmount = BigDecimal.ZERO;
         BigDecimal totalAmountOwed = BigDecimal.ZERO;
 
@@ -266,7 +264,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
      * Removes all matching items from both submitted collections
      */
     void removeDuplicatedInvoiceItems(final List<InvoiceItem> proposedItems,
-            final List<InvoiceItem> existingInvoiceItems) {
+                                      final List<InvoiceItem> existingInvoiceItems) {
         // We can't just use sets here as order matters (we want to keep duplicated in existingInvoiceItems)
         final Iterator<InvoiceItem> proposedItemIterator = proposedItems.iterator();
         while (proposedItemIterator.hasNext()) {
@@ -305,7 +303,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
     }
 
     private List<InvoiceItem> generateInvoiceItems(final UUID invoiceId, final UUID accountId, final BillingEventSet events,
-            final LocalDate targetDate, final DateTimeZone accountTimeZone, final Currency currency) throws InvoiceApiException {
+                                                   final LocalDate targetDate, final DateTimeZone accountTimeZone, final Currency currency) throws InvoiceApiException {
         final List<InvoiceItem> items = new ArrayList<InvoiceItem>();
 
         if (events.size() == 0) {
@@ -343,7 +341,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
 
     // Turn a set of events into a list of invoice items. Note that the dates on the invoice items will be rounded (granularity of a day)
     private List<InvoiceItem> processEvents(final UUID invoiceId, final UUID accountId, final BillingEvent thisEvent, @Nullable final BillingEvent nextEvent,
-            final LocalDate targetDate, final DateTimeZone accountTimeZone, final Currency currency) throws InvoiceApiException {
+                                            final LocalDate targetDate, final DateTimeZone accountTimeZone, final Currency currency) throws InvoiceApiException {
         final List<InvoiceItem> items = new ArrayList<InvoiceItem>();
 
         // Handle fixed price items
@@ -377,13 +375,13 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                         final BigDecimal amount = itemDatum.getNumberOfCycles().multiply(rate).setScale(NUMBER_OF_DECIMALS, ROUNDING_MODE);
 
                         final RecurringInvoiceItem recurringItem = new RecurringInvoiceItem(invoiceId,
-                                accountId,
-                                thisEvent.getSubscription().getBundleId(),
-                                thisEvent.getSubscription().getId(),
-                                thisEvent.getPlan().getName(),
-                                thisEvent.getPlanPhase().getName(),
-                                itemDatum.getStartDate(), itemDatum.getEndDate(),
-                                amount, rate, currency);
+                                                                                            accountId,
+                                                                                            thisEvent.getSubscription().getBundleId(),
+                                                                                            thisEvent.getSubscription().getId(),
+                                                                                            thisEvent.getPlan().getName(),
+                                                                                            thisEvent.getPlanPhase().getName(),
+                                                                                            itemDatum.getStartDate(), itemDatum.getEndDate(),
+                                                                                            amount, rate, currency);
                         items.add(recurringItem);
                     }
                 }
@@ -396,15 +394,15 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
 
     private BillingMode instantiateBillingMode(final BillingModeType billingMode) {
         switch (billingMode) {
-        case IN_ADVANCE:
-            return new InAdvanceBillingMode();
-        default:
-            throw new UnsupportedOperationException();
+            case IN_ADVANCE:
+                return new InAdvanceBillingMode();
+            default:
+                throw new UnsupportedOperationException();
         }
     }
 
     InvoiceItem generateFixedPriceItem(final UUID invoiceId, final UUID accountId, final BillingEvent thisEvent,
-            final LocalDate targetDate, final Currency currency) {
+                                       final LocalDate targetDate, final Currency currency) {
         final LocalDate roundedStartDate = new LocalDate(thisEvent.getEffectiveDate(), thisEvent.getTimeZone());
 
         if (roundedStartDate.isAfter(targetDate)) {
@@ -414,9 +412,9 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
 
             if (fixedPrice != null) {
                 return new FixedPriceInvoiceItem(invoiceId, accountId, thisEvent.getSubscription().getBundleId(),
-                        thisEvent.getSubscription().getId(),
-                        thisEvent.getPlan().getName(), thisEvent.getPlanPhase().getName(),
-                        roundedStartDate, fixedPrice, currency);
+                                                 thisEvent.getSubscription().getId(),
+                                                 thisEvent.getPlan().getName(), thisEvent.getPlanPhase().getName(),
+                                                 roundedStartDate, fixedPrice, currency);
             } else {
                 return null;
             }

@@ -45,6 +45,6 @@ public class ItemAdjInvoiceItem extends AdjInvoiceItem {
 
     @Override
     public String getDescription() {
-        return "item-adj";
+        return "Invoice item adjustment";
     }
 }

@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
+import com.ning.billing.util.LocaleUtils;
 import com.ning.billing.util.config.UriAccessor;
 
 public abstract class DefaultTranslatorBase implements Translator {
@@ -60,7 +61,7 @@ public abstract class DefaultTranslatorBase implements Translator {
                 return originalText;
             }
 
-            final Locale defaultLocale = new Locale(config.getDefaultLocale());
+            final Locale defaultLocale = LocaleUtils.toLocale(config.getDefaultLocale());
             try {
                 bundle = getBundle(defaultLocale, bundlePath);
 

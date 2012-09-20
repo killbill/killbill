@@ -27,7 +27,6 @@ import javax.annotation.Nullable;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 
-import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
@@ -49,6 +48,8 @@ import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.Tag;
+
+import com.google.inject.Inject;
 
 public class DefaultInvoiceUserApi implements InvoiceUserApi {
 
@@ -86,6 +87,12 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     @Override
     public BigDecimal getAccountBalance(final UUID accountId) {
         final BigDecimal result = dao.getAccountBalance(accountId);
+        return result == null ? BigDecimal.ZERO : result;
+    }
+
+    @Override
+    public BigDecimal getAccountCBA(final UUID accountId) {
+        final BigDecimal result = dao.getAccountCBA(accountId);
         return result == null ? BigDecimal.ZERO : result;
     }
 
@@ -216,6 +223,11 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         }
 
         return dao.insertInvoiceItemAdjustment(accountId, invoiceId, invoiceItemId, effectiveDate, amount, currency, context);
+    }
+
+    @Override
+    public void deleteCBA(final UUID accountId, final UUID invoiceId, final UUID invoiceItemId, final CallContext context) throws InvoiceApiException {
+        dao.deleteCBA(accountId, invoiceId, invoiceItemId, context);
     }
 
     @Override

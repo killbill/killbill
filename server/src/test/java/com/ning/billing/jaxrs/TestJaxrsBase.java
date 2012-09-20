@@ -784,6 +784,15 @@ public class TestJaxrsBase extends ServerTestSuiteWithEmbeddedDB {
         return objFromJson;
     }
 
+    protected void payAllInvoices(final AccountJson accountJson, final Boolean externalPayment) throws IOException {
+        final PaymentJsonSimple payment = new PaymentJsonSimple(null, null, accountJson.getAccountId(), null, null, null, null,
+                                                                null, 0, null, null, null, null, null, null, null);
+        final String postJson = mapper.writeValueAsString(payment);
+
+        final String uri = JaxrsResource.INVOICES_PATH + "/" + JaxrsResource.PAYMENTS;
+        doPost(uri, postJson, ImmutableMap.<String, String>of("externalPayment", externalPayment.toString()), DEFAULT_HTTP_TIMEOUT_SEC);
+    }
+
     protected List<PaymentJsonSimple> createInstaPayment(final AccountJson accountJson, final InvoiceJsonSimple invoice) throws IOException {
         final PaymentJsonSimple payment = new PaymentJsonSimple(invoice.getAmount(), BigDecimal.ZERO, accountJson.getAccountId(),
                                                                 invoice.getInvoiceId(), null, null, null, null, 0, null, null, null, null, null, null, null);

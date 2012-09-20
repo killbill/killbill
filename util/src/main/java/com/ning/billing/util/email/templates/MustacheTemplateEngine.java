@@ -23,13 +23,21 @@ import java.util.Map;
 
 import com.ning.billing.util.config.UriAccessor;
 import com.ning.billing.util.io.IOUtils;
+
+import com.google.common.annotations.VisibleForTesting;
 import com.samskivert.mustache.Mustache;
 import com.samskivert.mustache.Template;
 
 public class MustacheTemplateEngine implements TemplateEngine {
+
     @Override
     public String executeTemplate(final String templateName, final Map<String, Object> data) throws IOException {
         final String templateText = getTemplateText(templateName);
+        return executeTemplateText(templateText, data);
+    }
+
+    @VisibleForTesting
+    public String executeTemplateText(final String templateText, final Map<String, Object> data) {
         final Template template = Mustache.compiler().compile(templateText);
         return template.execute(data);
     }
