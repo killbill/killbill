@@ -91,6 +91,12 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
 
     @Override
+    public BigDecimal getAccountCBA(final UUID accountId) {
+        final BigDecimal result = dao.getAccountCBA(accountId);
+        return result == null ? BigDecimal.ZERO : result;
+    }
+
+    @Override
     public Invoice getInvoice(final UUID invoiceId) throws InvoiceApiException {
         return dao.getById(invoiceId);
     }

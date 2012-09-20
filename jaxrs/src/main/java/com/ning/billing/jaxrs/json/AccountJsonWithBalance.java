@@ -13,14 +13,15 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.jaxrs.json;
 
 import java.math.BigDecimal;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ning.billing.account.api.Account;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class AccountJsonWithBalance extends AccountJson {
 
@@ -33,29 +34,29 @@ public class AccountJsonWithBalance extends AccountJson {
 
     @JsonCreator
     public AccountJsonWithBalance(@JsonProperty("accountId") final String accountId,
-                       @JsonProperty("name") final String name,
-                       @JsonProperty("firstNameLength") final Integer length,
-                       @JsonProperty("externalKey") final String externalKey,
-                       @JsonProperty("email") final String email,
-                       @JsonProperty("billCycleDay") final BillCycleDayJson billCycleDay,
-                       @JsonProperty("currency") final String currency,
-                       @JsonProperty("paymentMethodId") final String paymentMethodId,
-                       @JsonProperty("timezone") final String timeZone,
-                       @JsonProperty("address1") final String address1,
-                       @JsonProperty("address2") final String address2,
-                       @JsonProperty("postalCode") final String postalCode,
-                       @JsonProperty("company") final String company,
-                       @JsonProperty("city") final String city,
-                       @JsonProperty("state") final String state,
-                       @JsonProperty("country") final String country,
-                       @JsonProperty("locale") final String locale,
-                       @JsonProperty("phone") final String phone,
-                       @JsonProperty("isMigrated") final Boolean isMigrated,
-                       @JsonProperty("isNotifiedForInvoices") final Boolean isNotifiedForInvoices,
-                       @JsonProperty("accountBalance") final BigDecimal accountBalance) {
-            super(accountId, name, length, externalKey, email, billCycleDay, currency, paymentMethodId, timeZone,
-                    address1, address2, postalCode, company, city, state, country, locale, phone, isMigrated, isNotifiedForInvoices);
-            this.accountBalance = accountBalance;
+                                  @JsonProperty("name") final String name,
+                                  @JsonProperty("firstNameLength") final Integer length,
+                                  @JsonProperty("externalKey") final String externalKey,
+                                  @JsonProperty("email") final String email,
+                                  @JsonProperty("billCycleDay") final BillCycleDayJson billCycleDay,
+                                  @JsonProperty("currency") final String currency,
+                                  @JsonProperty("paymentMethodId") final String paymentMethodId,
+                                  @JsonProperty("timezone") final String timeZone,
+                                  @JsonProperty("address1") final String address1,
+                                  @JsonProperty("address2") final String address2,
+                                  @JsonProperty("postalCode") final String postalCode,
+                                  @JsonProperty("company") final String company,
+                                  @JsonProperty("city") final String city,
+                                  @JsonProperty("state") final String state,
+                                  @JsonProperty("country") final String country,
+                                  @JsonProperty("locale") final String locale,
+                                  @JsonProperty("phone") final String phone,
+                                  @JsonProperty("isMigrated") final Boolean isMigrated,
+                                  @JsonProperty("isNotifiedForInvoices") final Boolean isNotifiedForInvoices,
+                                  @JsonProperty("accountBalance") final BigDecimal accountBalance) {
+        super(accountId, name, length, externalKey, email, billCycleDay, currency, paymentMethodId, timeZone,
+              address1, address2, postalCode, company, city, state, country, locale, phone, isMigrated, isNotifiedForInvoices);
+        this.accountBalance = accountBalance;
     }
 
     public BigDecimal getAccountBalance() {

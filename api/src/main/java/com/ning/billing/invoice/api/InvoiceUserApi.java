@@ -57,6 +57,14 @@ public interface InvoiceUserApi {
     public BigDecimal getAccountBalance(UUID accountId);
 
     /**
+     * Retrieve the account CBA.
+     *
+     * @param accountId account id
+     * @return the account CBA
+     */
+    public BigDecimal getAccountCBA(UUID accountId);
+
+    /**
      * Retrieve an invoice by id.
      *
      * @param invoiceId invoice id
