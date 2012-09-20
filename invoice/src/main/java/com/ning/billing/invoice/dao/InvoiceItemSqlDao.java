@@ -143,7 +143,7 @@ public interface InvoiceItemSqlDao extends EntitySqlDao<InvoiceItem> {
                     item = new RecurringInvoiceItem(id, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, rate, currency);
                     break;
                 case CBA_ADJ:
-                    item = new CreditBalanceAdjInvoiceItem(id, invoiceId, accountId, startDate, amount, currency);
+                    item = new CreditBalanceAdjInvoiceItem(id, invoiceId, accountId, startDate, linkedItemId, amount, currency);
                     break;
                 case CREDIT_ADJ:
                     item = new CreditAdjInvoiceItem(id, invoiceId, accountId, startDate, amount, currency);

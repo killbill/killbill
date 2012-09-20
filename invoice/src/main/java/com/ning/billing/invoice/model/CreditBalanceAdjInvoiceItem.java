@@ -32,8 +32,14 @@ public class CreditBalanceAdjInvoiceItem extends AdjInvoiceItem {
     }
 
     public CreditBalanceAdjInvoiceItem(final UUID id, final UUID invoiceId, final UUID accountId,
-                                       final LocalDate date, final BigDecimal amount, final Currency currency) {
-        super(id, invoiceId, accountId, date, date, amount, currency);
+                                       final LocalDate date, final UUID linkedInvoiceItemId,
+                                       final BigDecimal amount, final Currency currency) {
+        super(id, invoiceId, accountId, date, date, amount, currency, linkedInvoiceItemId);
+    }
+
+    public CreditBalanceAdjInvoiceItem(final UUID invoiceId, final UUID accountId, final LocalDate date, final UUID linkedInvoiceItemId,
+                                       final BigDecimal amount, final Currency currency) {
+        super(invoiceId, accountId, date, date, amount, currency, linkedInvoiceItemId);
     }
 
     @Override
