@@ -300,4 +300,9 @@ public class MockInvoiceDao implements InvoiceDao {
             throws InvoiceApiException {
         return null;
     }
+
+    @Override
+    public void deleteCBA(final UUID accountId, final UUID invoiceId, final UUID invoiceItemId, final CallContext context) throws InvoiceApiException {
+        throw new UnsupportedOperationException();
+    }
 }

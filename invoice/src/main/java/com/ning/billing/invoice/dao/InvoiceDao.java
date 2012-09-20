@@ -158,4 +158,13 @@ public interface InvoiceDao {
      */
     InvoiceItem insertInvoiceItemAdjustment(final UUID accountId, final UUID invoiceId, final UUID invoiceItemId, final LocalDate effectiveDate,
                                             @Nullable final BigDecimal amount, @Nullable final Currency currency, final CallContext context);
+
+    /**
+     * Delete a CBA item.
+     *
+     * @param accountId     the account id
+     * @param invoiceId     the invoice id
+     * @param invoiceItemId the invoice item id of the cba item to delete
+     */
+    void deleteCBA(final UUID accountId, final UUID invoiceId, final UUID invoiceItemId, final CallContext context) throws InvoiceApiException;
 }

@@ -181,6 +181,24 @@ public class InvoiceResource extends JaxRsResourceBase {
         }
     }
 
+    @DELETE
+    @Path("/{invoiceId:" + UUID_PATTERN + "}" + "/{invoiceItemId:" + UUID_PATTERN + "/cba")
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    public Response deleteCBA(@PathParam("invoiceId") final String invoiceId,
+                              @PathParam("invoiceItemId") final String invoiceItemId,
+                              @QueryParam(QUERY_ACCOUNT_ID) final String accountId,
+                              @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                              @HeaderParam(HDR_REASON) final String reason,
+                              @HeaderParam(HDR_COMMENT) final String comment) throws AccountApiException, InvoiceApiException {
+        final Account account = accountApi.getAccountById(UUID.fromString(accountId));
+
+        invoiceApi.deleteCBA(account.getId(), UUID.fromString(invoiceId), UUID.fromString(invoiceItemId),
+                             context.createContext(createdBy, reason, comment));
+
+        return Response.status(Status.OK).build();
+    }
+
     @POST
     @Path("/{invoiceId:" + UUID_PATTERN + "}")
     @Consumes(APPLICATION_JSON)

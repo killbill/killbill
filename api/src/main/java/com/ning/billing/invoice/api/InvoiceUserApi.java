@@ -260,6 +260,17 @@ public interface InvoiceUserApi {
                                                    BigDecimal amount, Currency currency, CallContext context) throws InvoiceApiException;
 
     /**
+     * Delete a CBA item.
+     *
+     * @param accountId     account id
+     * @param invoiceId     invoice id
+     * @param invoiceItemId invoice item id (must be of type CBA_ADJ)
+     * @param context       the call context
+     * @throws InvoiceApiException
+     */
+    public void deleteCBA(UUID accountId, UUID invoiceId, UUID invoiceItemId, CallContext context) throws InvoiceApiException;
+
+    /**
      * Retrieve the invoice formatted in HTML.
      *
      * @param invoiceId invoice id

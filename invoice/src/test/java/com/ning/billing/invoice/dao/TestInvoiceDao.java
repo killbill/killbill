@@ -1322,4 +1322,169 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         tags = tagDao.loadEntities(invoice.getId(), ObjectType.INVOICE);
         assertEquals(tags.size(), 0);
     }
+
+    @Test(groups = "slow")
+    public void testDeleteCBANotConsumed() throws Exception {
+        final UUID accountId = UUID.randomUUID();
+
+        // Create invoice 1
+        // Scenario: single item with payment
+        // * $10 item
+        // Then, a repair occur:
+        // * $-10 repair
+        // * $10 generated CBA due to the repair (assume previous payment)
+        final Invoice invoice1 = new DefaultInvoice(accountId, clock.getUTCToday(), clock.getUTCToday(), Currency.USD);
+        final InvoiceItem fixedItem1 = new FixedPriceInvoiceItem(invoice1.getId(), invoice1.getAccountId(), null, null, UUID.randomUUID().toString(),
+                                                                 UUID.randomUUID().toString(), clock.getUTCToday(), BigDecimal.TEN, Currency.USD);
+        final RepairAdjInvoiceItem repairAdjInvoiceItem = new RepairAdjInvoiceItem(fixedItem1.getInvoiceId(), fixedItem1.getAccountId(),
+                                                                                   fixedItem1.getStartDate(), fixedItem1.getEndDate(),
+                                                                                   fixedItem1.getAmount().negate(), fixedItem1.getCurrency(),
+                                                                                   fixedItem1.getId());
+        final CreditBalanceAdjInvoiceItem creditBalanceAdjInvoiceItem1 = new CreditBalanceAdjInvoiceItem(fixedItem1.getInvoiceId(), fixedItem1.getAccountId(),
+                                                                                                         fixedItem1.getStartDate(), fixedItem1.getAmount(),
+                                                                                                         fixedItem1.getCurrency());
+        invoiceDao.create(invoice1, invoice1.getTargetDate().getDayOfMonth(), true, context);
+        invoiceItemSqlDao.create(fixedItem1, context);
+        invoiceItemSqlDao.create(repairAdjInvoiceItem, context);
+        invoiceItemSqlDao.create(creditBalanceAdjInvoiceItem1, context);
+
+        // Verify scenario - no CBA should have been used
+        Assert.assertEquals(invoiceDao.getAccountCBA(accountId).doubleValue(), 10.00);
+        verifyInvoice(invoice1.getId(), 10.00, 10.00);
+
+        // Delete the CBA on invoice 1
+        invoiceDao.deleteCBA(accountId, invoice1.getId(), creditBalanceAdjInvoiceItem1.getId(), context);
+
+        // Verify the result
+        Assert.assertEquals(invoiceDao.getAccountCBA(accountId).doubleValue(), 0.00);
+        verifyInvoice(invoice1.getId(), 0.00, 0.00);
+    }
+
+    @Test(groups = "slow")
+    public void testDeleteCBAPartiallyConsumed() throws Exception {
+        final UUID accountId = UUID.randomUUID();
+
+        // Create invoice 1
+        // Scenario: single item with payment
+        // * $10 item
+        // Then, a repair occur:
+        // * $-10 repair
+        // * $10 generated CBA due to the repair (assume previous payment)
+        final Invoice invoice1 = new DefaultInvoice(accountId, clock.getUTCToday(), clock.getUTCToday(), Currency.USD);
+        final InvoiceItem fixedItem1 = new FixedPriceInvoiceItem(invoice1.getId(), invoice1.getAccountId(), null, null, UUID.randomUUID().toString(),
+                                                                 UUID.randomUUID().toString(), clock.getUTCToday(), BigDecimal.TEN, Currency.USD);
+        final RepairAdjInvoiceItem repairAdjInvoiceItem = new RepairAdjInvoiceItem(fixedItem1.getInvoiceId(), fixedItem1.getAccountId(),
+                                                                                   fixedItem1.getStartDate(), fixedItem1.getEndDate(),
+                                                                                   fixedItem1.getAmount().negate(), fixedItem1.getCurrency(),
+                                                                                   fixedItem1.getId());
+        final CreditBalanceAdjInvoiceItem creditBalanceAdjInvoiceItem1 = new CreditBalanceAdjInvoiceItem(fixedItem1.getInvoiceId(), fixedItem1.getAccountId(),
+                                                                                                         fixedItem1.getStartDate(), fixedItem1.getAmount(),
+                                                                                                         fixedItem1.getCurrency());
+        invoiceDao.create(invoice1, invoice1.getTargetDate().getDayOfMonth(), true, context);
+        invoiceItemSqlDao.create(fixedItem1, context);
+        invoiceItemSqlDao.create(repairAdjInvoiceItem, context);
+        invoiceItemSqlDao.create(creditBalanceAdjInvoiceItem1, context);
+
+        // Create invoice 2
+        // Scenario: single item
+        // * $5 item
+        // * $-5 CBA used
+        final DefaultInvoice invoice2 = new DefaultInvoice(accountId, clock.getUTCToday(), clock.getUTCToday(), Currency.USD);
+        final InvoiceItem fixedItem2 = new FixedPriceInvoiceItem(invoice2.getId(), invoice1.getAccountId(), null, null, UUID.randomUUID().toString(),
+                                                                 UUID.randomUUID().toString(), clock.getUTCToday(), new BigDecimal("5"), Currency.USD);
+        final CreditBalanceAdjInvoiceItem creditBalanceAdjInvoiceItem2 = new CreditBalanceAdjInvoiceItem(fixedItem2.getInvoiceId(), fixedItem2.getAccountId(),
+                                                                                                         fixedItem2.getStartDate(), fixedItem2.getAmount().negate(),
+                                                                                                         fixedItem2.getCurrency());
+        invoiceDao.create(invoice2, invoice2.getTargetDate().getDayOfMonth(), true, context);
+        invoiceItemSqlDao.create(fixedItem2, context);
+        invoiceItemSqlDao.create(creditBalanceAdjInvoiceItem2, context);
+
+        // Verify scenario - half of the CBA should have been used
+        Assert.assertEquals(invoiceDao.getAccountCBA(accountId).doubleValue(), 5.00);
+        verifyInvoice(invoice1.getId(), 10.00, 10.00);
+        verifyInvoice(invoice2.getId(), 0.00, -5.00);
+
+        // Delete the CBA on invoice 1
+        invoiceDao.deleteCBA(accountId, invoice1.getId(), creditBalanceAdjInvoiceItem1.getId(), context);
+
+        // Verify all three invoices were affected
+        Assert.assertEquals(invoiceDao.getAccountCBA(accountId).doubleValue(), 0.00);
+        verifyInvoice(invoice1.getId(), 0.00, 0.00);
+        verifyInvoice(invoice2.getId(), 5.00, 0.00);
+    }
+
+    @Test(groups = "slow")
+    public void testDeleteCBAFullyConsumedTwice() throws Exception {
+        final UUID accountId = UUID.randomUUID();
+
+        // Create invoice 1
+        // Scenario: single item with payment
+        // * $10 item
+        // Then, a repair occur:
+        // * $-10 repair
+        // * $10 generated CBA due to the repair (assume previous payment)
+        final Invoice invoice1 = new DefaultInvoice(accountId, clock.getUTCToday(), clock.getUTCToday(), Currency.USD);
+        final InvoiceItem fixedItem1 = new FixedPriceInvoiceItem(invoice1.getId(), invoice1.getAccountId(), null, null, UUID.randomUUID().toString(),
+                                                                 UUID.randomUUID().toString(), clock.getUTCToday(), BigDecimal.TEN, Currency.USD);
+        final RepairAdjInvoiceItem repairAdjInvoiceItem = new RepairAdjInvoiceItem(fixedItem1.getInvoiceId(), fixedItem1.getAccountId(),
+                                                                                   fixedItem1.getStartDate(), fixedItem1.getEndDate(),
+                                                                                   fixedItem1.getAmount().negate(), fixedItem1.getCurrency(),
+                                                                                   fixedItem1.getId());
+        final CreditBalanceAdjInvoiceItem creditBalanceAdjInvoiceItem1 = new CreditBalanceAdjInvoiceItem(fixedItem1.getInvoiceId(), fixedItem1.getAccountId(),
+                                                                                                         fixedItem1.getStartDate(), fixedItem1.getAmount(),
+                                                                                                         fixedItem1.getCurrency());
+        invoiceDao.create(invoice1, invoice1.getTargetDate().getDayOfMonth(), true, context);
+        invoiceItemSqlDao.create(fixedItem1, context);
+        invoiceItemSqlDao.create(repairAdjInvoiceItem, context);
+        invoiceItemSqlDao.create(creditBalanceAdjInvoiceItem1, context);
+
+        // Create invoice 2
+        // Scenario: single item
+        // * $5 item
+        // * $-5 CBA used
+        final DefaultInvoice invoice2 = new DefaultInvoice(accountId, clock.getUTCToday(), clock.getUTCToday(), Currency.USD);
+        final InvoiceItem fixedItem2 = new FixedPriceInvoiceItem(invoice2.getId(), invoice1.getAccountId(), null, null, UUID.randomUUID().toString(),
+                                                                 UUID.randomUUID().toString(), clock.getUTCToday(), new BigDecimal("5"), Currency.USD);
+        final CreditBalanceAdjInvoiceItem creditBalanceAdjInvoiceItem2 = new CreditBalanceAdjInvoiceItem(fixedItem2.getInvoiceId(), fixedItem2.getAccountId(),
+                                                                                                         fixedItem2.getStartDate(), fixedItem2.getAmount().negate(),
+                                                                                                         fixedItem2.getCurrency());
+        invoiceDao.create(invoice2, invoice2.getTargetDate().getDayOfMonth(), true, context);
+        invoiceItemSqlDao.create(fixedItem2, context);
+        invoiceItemSqlDao.create(creditBalanceAdjInvoiceItem2, context);
+
+        // Create invoice 3
+        // Scenario: single item
+        // * $5 item
+        // * $-5 CBA used
+        final DefaultInvoice invoice3 = new DefaultInvoice(accountId, clock.getUTCToday(), clock.getUTCToday(), Currency.USD);
+        final InvoiceItem fixedItem3 = new FixedPriceInvoiceItem(invoice3.getId(), invoice1.getAccountId(), null, null, UUID.randomUUID().toString(),
+                                                                 UUID.randomUUID().toString(), clock.getUTCToday(), new BigDecimal("5"), Currency.USD);
+        final CreditBalanceAdjInvoiceItem creditBalanceAdjInvoiceItem3 = new CreditBalanceAdjInvoiceItem(fixedItem3.getInvoiceId(), fixedItem3.getAccountId(),
+                                                                                                         fixedItem3.getStartDate(), fixedItem3.getAmount().negate(),
+                                                                                                         fixedItem3.getCurrency());
+        invoiceDao.create(invoice3, invoice3.getTargetDate().getDayOfMonth(), true, context);
+        invoiceItemSqlDao.create(fixedItem3, context);
+        invoiceItemSqlDao.create(creditBalanceAdjInvoiceItem3, context);
+
+        // Verify scenario - all CBA should have been used
+        Assert.assertEquals(invoiceDao.getAccountCBA(accountId).doubleValue(), 0.00);
+        verifyInvoice(invoice1.getId(), 10.00, 10.00);
+        verifyInvoice(invoice2.getId(), 0.00, -5.00);
+        verifyInvoice(invoice3.getId(), 0.00, -5.00);
+
+        // Delete the CBA on invoice 1
+        invoiceDao.deleteCBA(accountId, invoice1.getId(), creditBalanceAdjInvoiceItem1.getId(), context);
+
+        // Verify all three invoices were affected
+        Assert.assertEquals(invoiceDao.getAccountCBA(accountId).doubleValue(), 0.00);
+        verifyInvoice(invoice1.getId(), 0.00, 0.00);
+        verifyInvoice(invoice2.getId(), 5.00, 0.00);
+        verifyInvoice(invoice3.getId(), 5.00, 0.00);
+    }
+
+    private void verifyInvoice(final UUID invoiceId, final double balance, final double cbaAmount) throws InvoiceApiException {
+        final Invoice invoice = invoiceDao.getById(invoiceId);
+        Assert.assertEquals(invoice.getBalance().doubleValue(), balance);
+        Assert.assertEquals(invoice.getCBAAmount().doubleValue(), cbaAmount);
+    }
 }
