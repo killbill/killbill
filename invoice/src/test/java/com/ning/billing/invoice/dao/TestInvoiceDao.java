@@ -579,7 +579,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
     @Test(groups = "slow")
     public void testAccountBalanceWithSmallRefundAndCBAWithAdj() throws InvoiceApiException {
         BigDecimal refundAmount = new BigDecimal("7.00");
-        BigDecimal expectedBalance = new BigDecimal("-3.00");
+        BigDecimal expectedBalance = new BigDecimal("-10.00");
         testAccountBalanceWithRefundAndCBAInternal(true, refundAmount, expectedBalance);
     }
 
@@ -593,7 +593,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
     @Test(groups = "slow")
     public void testAccountBalanceWithLargeRefundAndCBAWithAdj() throws InvoiceApiException {
         BigDecimal refundAmount = new BigDecimal("20.00");
-        BigDecimal expectedBalance = BigDecimal.ZERO;
+        BigDecimal expectedBalance = new BigDecimal("-10.00");
         testAccountBalanceWithRefundAndCBAInternal(true, refundAmount, expectedBalance);
     }
 
@@ -657,10 +657,7 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         balance = invoiceDao.getAccountBalance(accountId);
         assertEquals(balance.compareTo(expectedFinalBalance), 0);
         cba = invoiceDao.getAccountCBA(accountId);
-
-        final BigDecimal expectedFinalCBA = (expectedFinalBalance.compareTo(BigDecimal.ZERO) < 0) ? expectedFinalBalance.negate() : BigDecimal.ZERO;
-        assertEquals(cba.compareTo(expectedFinalCBA), 0);
-
+        assertEquals(cba.compareTo(new BigDecimal("10.00")), 0);
     }
 
     @Test(groups = "slow")

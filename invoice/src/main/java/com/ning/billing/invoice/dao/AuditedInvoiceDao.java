@@ -398,15 +398,6 @@ public class AuditedInvoiceDao implements InvoiceDao {
                 final BigDecimal invoiceBalanceAfterRefund = invoice.getBalance();
                 final InvoiceItemSqlDao transInvoiceItemDao = transInvoiceDao.become(InvoiceItemSqlDao.class);
 
-                // If we have an existing CBA > 0 at the account level, we need to use it
-                final BigDecimal accountCbaAvailable = getAccountCBAFromTransaction(invoice.getAccountId(), transInvoiceDao);
-                BigDecimal cbaAdjAmount = BigDecimal.ZERO;
-                if (accountCbaAvailable.compareTo(BigDecimal.ZERO) > 0) {
-                    cbaAdjAmount = (requestedPositiveAmount.compareTo(accountCbaAvailable) > 0) ? accountCbaAvailable.negate() : requestedPositiveAmount.negate();
-                    final InvoiceItem cbaAdjItem = new CreditBalanceAdjInvoiceItem(invoice.getId(), invoice.getAccountId(), context.getCreatedDate().toLocalDate(), cbaAdjAmount, invoice.getCurrency());
-                    transInvoiceItemDao.create(cbaAdjItem, context);
-                }
-                final BigDecimal requestedPositiveAmountAfterCbaAdj = requestedPositiveAmount.add(cbaAdjAmount);
 
                 // At this point, we created the refund which made the invoice balance positive and applied any existing
                 // available CBA to that invoice.
@@ -414,7 +405,7 @@ public class AuditedInvoiceDao implements InvoiceDao {
                 if (isInvoiceAdjusted && invoiceItemIdsWithAmounts.size() == 0) {
                     // Invoice adjustment
                     final BigDecimal maxBalanceToAdjust = (invoiceBalanceAfterRefund.compareTo(BigDecimal.ZERO) <= 0) ? BigDecimal.ZERO : invoiceBalanceAfterRefund;
-                    final BigDecimal requestedPositiveAmountToAdjust = requestedPositiveAmountAfterCbaAdj.compareTo(maxBalanceToAdjust) > 0 ? maxBalanceToAdjust : requestedPositiveAmountAfterCbaAdj;
+                    final BigDecimal requestedPositiveAmountToAdjust = requestedPositiveAmount.compareTo(maxBalanceToAdjust) > 0 ? maxBalanceToAdjust : requestedPositiveAmount;
                     if (requestedPositiveAmountToAdjust.compareTo(BigDecimal.ZERO) > 0) {
                         final InvoiceItem adjItem = new RefundAdjInvoiceItem(invoice.getId(), invoice.getAccountId(), context.getCreatedDate().toLocalDate(), requestedPositiveAmountToAdjust.negate(), invoice.getCurrency());
                         transInvoiceItemDao.create(adjItem, context);
