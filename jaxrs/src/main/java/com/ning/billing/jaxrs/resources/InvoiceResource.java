@@ -182,7 +182,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     }
 
     @DELETE
-    @Path("/{invoiceId:" + UUID_PATTERN + "}" + "/{invoiceItemId:" + UUID_PATTERN + "/cba")
+    @Path("/{invoiceId:" + UUID_PATTERN + "}" + "/{invoiceItemId:" + UUID_PATTERN + "}/cba")
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     public Response deleteCBA(@PathParam("invoiceId") final String invoiceId,
