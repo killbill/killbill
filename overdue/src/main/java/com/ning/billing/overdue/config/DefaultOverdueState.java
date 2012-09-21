@@ -39,7 +39,6 @@ public class DefaultOverdueState<T extends Blockable> extends ValidatingConfig<O
 
     private static final int MAX_NAME_LENGTH = 50;
 
-
     @XmlElement(required = false, name = "condition")
     private DefaultCondition<T> condition;
 
@@ -65,7 +64,6 @@ public class DefaultOverdueState<T extends Blockable> extends ValidatingConfig<O
     @XmlElement(required = false, name = "autoReevaluationInterval")
     private DefaultDuration autoReevaluationInterval;
 
-
     //Other actions could include
     // - send email
     // - trigger payment retry?
@@ -74,17 +72,11 @@ public class DefaultOverdueState<T extends Blockable> extends ValidatingConfig<O
     // - set payment retry interval
     // - backup payment mechanism?
 
-    /* (non-Javadoc)
-    * @see com.ning.billing.catalog.overdue.OverdueState#getStageName()
-    */
     @Override
     public String getName() {
         return name;
     }
 
-    /* (non-Javadoc)
-    * @see com.ning.billing.catalog.overdue.OverdueState#getExternalMessage()
-    */
     @Override
     public String getExternalMessage() {
         return externalMessage;
@@ -95,9 +87,6 @@ public class DefaultOverdueState<T extends Blockable> extends ValidatingConfig<O
         return blockChanges || disableEntitlement;
     }
 
-    /* (non-Javadoc)
-    * @see com.ning.billing.catalog.overdue.OverdueState#applyCancel()
-    */
     @Override
     public boolean disableEntitlementAndChangesBlocked() {
         return disableEntitlement;
@@ -146,7 +135,6 @@ public class DefaultOverdueState<T extends Blockable> extends ValidatingConfig<O
         return this;
     }
 
-
     protected DefaultOverdueState<T> setBlockChanges(final boolean cancel) {
         this.blockChanges = cancel;
         return this;
@@ -173,7 +161,6 @@ public class DefaultOverdueState<T extends Blockable> extends ValidatingConfig<O
 
     @Override
     public int getDaysBetweenPaymentRetries() {
-        final Integer daysBetweenPaymentRetries = 8;
-        return daysBetweenPaymentRetries;
+        return 8;
     }
 }
