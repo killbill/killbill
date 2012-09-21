@@ -18,7 +18,6 @@ package com.ning.billing.overdue.glue;
 
 import org.skife.config.ConfigurationObjectFactory;
 
-import com.google.inject.AbstractModule;
 import com.ning.billing.glue.OverdueModule;
 import com.ning.billing.ovedue.notification.DefaultOverdueCheckNotifier;
 import com.ning.billing.ovedue.notification.DefaultOverdueCheckPoster;
@@ -32,6 +31,7 @@ import com.ning.billing.overdue.service.DefaultOverdueService;
 import com.ning.billing.overdue.service.ExtendedOverdueService;
 import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
 
+import com.google.inject.AbstractModule;
 
 public class DefaultOverdueModule extends AbstractModule implements OverdueModule {
 
@@ -48,7 +48,6 @@ public class DefaultOverdueModule extends AbstractModule implements OverdueModul
         bind(ExtendedOverdueService.class).to(DefaultOverdueService.class).asEagerSingleton();
         bind(OverdueCheckNotifier.class).to(DefaultOverdueCheckNotifier.class).asEagerSingleton();
         bind(OverdueCheckPoster.class).to(DefaultOverdueCheckPoster.class).asEagerSingleton();
-        
     }
 
     protected void installOverdueService() {
@@ -59,13 +58,8 @@ public class DefaultOverdueModule extends AbstractModule implements OverdueModul
         bind(OverdueWrapperFactory.class).asEagerSingleton();
     }
 
-    /* (non-Javadoc)
-     * @see com.ning.billing.overdue.glue.OverdueModule#installOverdueUserApi()
-     */
     @Override
     public void installOverdueUserApi() {
         bind(OverdueUserApi.class).to(DefaultOverdueUserApi.class).asEagerSingleton();
     }
-
-
 }
