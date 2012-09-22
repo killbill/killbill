@@ -27,6 +27,7 @@ import com.ning.billing.overdue.OverdueProperties;
 import com.ning.billing.overdue.OverdueService;
 import com.ning.billing.overdue.OverdueUserApi;
 import com.ning.billing.overdue.api.DefaultOverdueUserApi;
+import com.ning.billing.overdue.applicator.OverdueEmailGenerator;
 import com.ning.billing.overdue.service.DefaultOverdueService;
 import com.ning.billing.overdue.service.ExtendedOverdueService;
 import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
@@ -42,6 +43,7 @@ public class DefaultOverdueModule extends AbstractModule implements OverdueModul
         // internal bindings
         installOverdueService();
         installOverdueWrapperFactory();
+        installOverdueEmail();
 
         final OverdueProperties config = new ConfigurationObjectFactory(System.getProperties()).build(OverdueProperties.class);
         bind(OverdueProperties.class).toInstance(config);
@@ -56,6 +58,10 @@ public class DefaultOverdueModule extends AbstractModule implements OverdueModul
 
     protected void installOverdueWrapperFactory() {
         bind(OverdueWrapperFactory.class).asEagerSingleton();
+    }
+
+    protected void installOverdueEmail() {
+        bind(OverdueEmailGenerator.class).asEagerSingleton();
     }
 
     @Override

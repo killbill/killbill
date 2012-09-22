@@ -39,6 +39,6 @@ public class EmailSenderTest extends UtilTestSuite {
         recipients.add("killbill.ning@gmail.com");
 
         final EmailSender sender = new DefaultEmailSender(config);
-        sender.sendSecureEmail(recipients, null, "Test message", html);
+        sender.sendHTMLEmail(recipients, null, "Test message", html);
     }
 }

@@ -86,7 +86,7 @@ public class EmailInvoiceNotifier implements InvoiceNotifier {
 
         final EmailSender sender = new DefaultEmailSender(config);
         try {
-            sender.sendSecureEmail(to, cc, subject, htmlBody);
+            sender.sendHTMLEmail(to, cc, subject, htmlBody);
         } catch (EmailApiException e) {
             throw new InvoiceApiException(e, ErrorCode.EMAIL_SENDING_FAILED);
         } catch (IOException e) {

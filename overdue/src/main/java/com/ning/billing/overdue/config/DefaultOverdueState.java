@@ -27,6 +27,7 @@ import org.joda.time.Period;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.TimeUnit;
 import com.ning.billing.junction.api.Blockable;
+import com.ning.billing.overdue.EmailNotification;
 import com.ning.billing.overdue.OverdueApiException;
 import com.ning.billing.overdue.OverdueCancellationPolicicy;
 import com.ning.billing.overdue.OverdueState;
@@ -64,8 +65,10 @@ public class DefaultOverdueState<T extends Blockable> extends ValidatingConfig<O
     @XmlElement(required = false, name = "autoReevaluationInterval")
     private DefaultDuration autoReevaluationInterval;
 
+    @XmlElement(required = false, name = "enterStateEmailNotification")
+    private DefaultEmailNotification enterStateEmailNotification;
+
     //Other actions could include
-    // - send email
     // - trigger payment retry?
     // - add tagStore to bundle/account
     // - set payment failure email template
@@ -162,5 +165,10 @@ public class DefaultOverdueState<T extends Blockable> extends ValidatingConfig<O
     @Override
     public int getDaysBetweenPaymentRetries() {
         return 8;
+    }
+
+    @Override
+    public EmailNotification getEnterStateEmailNotification() {
+        return enterStateEmailNotification;
     }
 }

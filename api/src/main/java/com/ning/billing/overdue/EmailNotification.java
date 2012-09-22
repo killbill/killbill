@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2012 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -14,14 +14,13 @@
  * under the License.
  */
 
-package com.ning.billing.util.email;
+package com.ning.billing.overdue;
 
-import java.io.IOException;
-import java.util.List;
+public interface EmailNotification {
 
-public interface EmailSender {
+    public String getSubject();
 
-    public void sendHTMLEmail(List<String> to, List<String> cc, String subject, String htmlBody) throws IOException, EmailApiException;
+    public String getTemplateName();
 
-    public void sendPlainTextEmail(List<String> to, List<String> cc, String subject, String body) throws IOException, EmailApiException;
+    public Boolean isHTML();
 }
