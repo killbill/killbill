@@ -56,6 +56,39 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuite {
     }
 
     @Test(groups = "fast")
+    public void testIgnoreZeroAdjustments() throws Exception {
+        // Scenario: single item with payment
+        // * $10 item
+        // * $-10 CBA
+        // * $10 CBA
+        final FixedPriceInvoiceItem fixedItem = new FixedPriceInvoiceItem(UUID.randomUUID(), UUID.randomUUID(), null, null,
+                                                                          UUID.randomUUID().toString(), UUID.randomUUID().toString(),
+                                                                          new LocalDate(), BigDecimal.TEN, Currency.USD);
+        final CreditBalanceAdjInvoiceItem creditBalanceAdjInvoiceItem = new CreditBalanceAdjInvoiceItem(fixedItem.getInvoiceId(), fixedItem.getAccountId(),
+                                                                                                        fixedItem.getStartDate(), fixedItem.getAmount(),
+                                                                                                        fixedItem.getCurrency());
+        final CreditBalanceAdjInvoiceItem creditBalanceAdjInvoiceItem2 = new CreditBalanceAdjInvoiceItem(fixedItem.getInvoiceId(), fixedItem.getAccountId(),
+                                                                                                         fixedItem.getStartDate(), fixedItem.getAmount().negate(),
+                                                                                                         fixedItem.getCurrency());
+        final Invoice invoice = new DefaultInvoice(fixedItem.getInvoiceId(), fixedItem.getAccountId(), null,
+                                                   new LocalDate(), new LocalDate(), Currency.USD, false);
+        invoice.addInvoiceItem(fixedItem);
+        invoice.addInvoiceItem(creditBalanceAdjInvoiceItem);
+        invoice.addInvoiceItem(creditBalanceAdjInvoiceItem2);
+
+        // Check the scenario
+        Assert.assertEquals(invoice.getBalance().doubleValue(), 10.00);
+        Assert.assertEquals(invoice.getCBAAmount().doubleValue(), 0.00);
+
+        // Verify the merge
+        final InvoiceFormatter formatter = new DefaultInvoiceFormatter(config, invoice, Locale.US);
+        final List<InvoiceItem> invoiceItems = formatter.getInvoiceItems();
+        Assert.assertEquals(invoiceItems.size(), 1);
+        Assert.assertEquals(invoiceItems.get(0).getInvoiceItemType(), InvoiceItemType.FIXED);
+        Assert.assertEquals(invoiceItems.get(0).getAmount().doubleValue(), 10.00);
+    }
+
+    @Test(groups = "fast")
     public void testMergeItems() throws Exception {
         // Scenario: single item with payment
         // * $10 item
