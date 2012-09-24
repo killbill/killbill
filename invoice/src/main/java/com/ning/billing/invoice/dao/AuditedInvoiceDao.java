@@ -697,6 +697,12 @@ public class AuditedInvoiceDao implements InvoiceDao {
                                                                                cbaItem.getId(), cbaItem.getAmount().negate(), cbaItem.getCurrency());
                 invoiceItemSqlDao.create(cbaAdjItem, context);
 
+                // Verify the final invoice balance is not negative
+                populateChildren(invoice, transactional);
+                if (invoice.getBalance().compareTo(BigDecimal.ZERO) < 0) {
+                    throw new InvoiceApiException(ErrorCode.INVOICE_WOULD_BE_NEGATIVE);
+                }
+
                 // If there is more account credit than CBA we adjusted, we're done.
                 // Otherwise, we need to find further invoices on which this credit was consumed
                 final BigDecimal accountCBA = getAccountCBAFromTransaction(accountId, invoiceSqlDao);

@@ -33,6 +33,7 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.mockito.Mockito;
+import org.skife.jdbi.v2.exceptions.TransactionFailedException;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -1477,6 +1478,44 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         verifyInvoice(invoice1.getId(), 0.00, 0.00);
         verifyInvoice(invoice2.getId(), 5.00, 0.00);
         verifyInvoice(invoice3.getId(), 5.00, 0.00);
+    }
+
+    @Test(groups = "slow")
+    public void testCantDeleteCBAIfInvoiceBalanceBecomesNegative() throws Exception {
+        final UUID accountId = UUID.randomUUID();
+
+        // Create invoice 1
+        // Scenario:
+        // * $-10 repair
+        // * $10 generated CBA
+        final Invoice invoice1 = new DefaultInvoice(accountId, clock.getUTCToday(), clock.getUTCToday(), Currency.USD);
+        final RepairAdjInvoiceItem repairAdjInvoiceItem = new RepairAdjInvoiceItem(invoice1.getId(), invoice1.getAccountId(),
+                                                                                   invoice1.getInvoiceDate(), invoice1.getInvoiceDate(),
+                                                                                   BigDecimal.TEN.negate(), invoice1.getCurrency(),
+                                                                                   UUID.randomUUID());
+        final CreditBalanceAdjInvoiceItem creditBalanceAdjInvoiceItem1 = new CreditBalanceAdjInvoiceItem(invoice1.getId(), invoice1.getAccountId(),
+                                                                                                         invoice1.getInvoiceDate(), repairAdjInvoiceItem.getAmount().negate(),
+                                                                                                         invoice1.getCurrency());
+        invoiceDao.create(invoice1, invoice1.getTargetDate().getDayOfMonth(), true, context);
+        invoiceItemSqlDao.create(repairAdjInvoiceItem, context);
+        invoiceItemSqlDao.create(creditBalanceAdjInvoiceItem1, context);
+
+        // Verify scenario
+        Assert.assertEquals(invoiceDao.getAccountCBA(accountId).doubleValue(), 10.00);
+        verifyInvoice(invoice1.getId(), 0.00, 10.00);
+
+        // Delete the CBA on invoice 1
+        try {
+            invoiceDao.deleteCBA(accountId, invoice1.getId(), creditBalanceAdjInvoiceItem1.getId(), context);
+            Assert.fail();
+        } catch (TransactionFailedException e) {
+            Assert.assertTrue(e.getCause() instanceof InvoiceApiException);
+            Assert.assertEquals(((InvoiceApiException) e.getCause()).getCode(), ErrorCode.INVOICE_WOULD_BE_NEGATIVE.getCode());
+        }
+
+        // Verify the result
+        Assert.assertEquals(invoiceDao.getAccountCBA(accountId).doubleValue(), 10.00);
+        verifyInvoice(invoice1.getId(), 0.00, 10.00);
     }
 
     private void verifyInvoice(final UUID invoiceId, final double balance, final double cbaAmount) throws InvoiceApiException {
