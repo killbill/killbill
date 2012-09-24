@@ -400,7 +400,6 @@ public class AuditedInvoiceDao implements InvoiceDao {
                 final BigDecimal invoiceBalanceAfterRefund = invoice.getBalance();
                 final InvoiceItemSqlDao transInvoiceItemDao = transInvoiceDao.become(InvoiceItemSqlDao.class);
 
-
                 // At this point, we created the refund which made the invoice balance positive and applied any existing
                 // available CBA to that invoice.
                 // We now need to adjust the invoice and/or invoice items if needed and specified.
