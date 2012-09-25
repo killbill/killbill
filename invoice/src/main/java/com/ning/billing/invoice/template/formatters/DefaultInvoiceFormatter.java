@@ -101,10 +101,11 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
                 invoiceItems.add(item);
             }
         }
-        if (mergedCBAItem != null) {
+        // Don't display adjustments of zero
+        if (mergedCBAItem != null && mergedCBAItem.getAmount().compareTo(BigDecimal.ZERO) != 0) {
             invoiceItems.add(mergedCBAItem);
         }
-        if (mergedInvoiceAdjustment != null) {
+        if (mergedInvoiceAdjustment != null && mergedInvoiceAdjustment.getAmount().compareTo(BigDecimal.ZERO) != 0) {
             invoiceItems.add(mergedInvoiceAdjustment);
         }
 

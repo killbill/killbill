@@ -63,6 +63,8 @@ import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.customfield.dao.AuditedCustomFieldDao;
 import com.ning.billing.util.customfield.dao.CustomFieldDao;
+import com.ning.billing.util.email.EmailModule;
+import com.ning.billing.util.email.templates.TemplateModule;
 import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.globallocker.MySqlGlobalLocker;
 import com.ning.billing.util.glue.BusModule;
@@ -130,6 +132,8 @@ public class TestOverdueCheckNotifier extends OverdueTestSuiteWithEmbeddedDB {
                 bind(GlobalLocker.class).to(MySqlGlobalLocker.class).asEagerSingleton();
                 bind(ChargeThruApi.class).toInstance(Mockito.mock(ChargeThruApi.class));
                 install(new MockJunctionModule());
+                install(new EmailModule());
+                install(new TemplateModule());
             }
         });
 
