@@ -570,6 +570,77 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
     }
 
     @Test(groups = "slow")
+    private void testFullRefundWithRepairAndInvoiceItemAdjustment() throws InvoiceApiException {
+        final BigDecimal refundAmount = new BigDecimal("20.00");
+        testRefundWithRepairAndInvoiceItemAdjustmentInternal(refundAmount);
+    }
+
+    @Test(groups = "slow")
+    private void testPartialRefundWithRepairAndInvoiceItemAdjustment() throws InvoiceApiException {
+        final BigDecimal refundAmount = new BigDecimal("7.00");
+        testRefundWithRepairAndInvoiceItemAdjustmentInternal(refundAmount);
+    }
+
+    private void testRefundWithRepairAndInvoiceItemAdjustmentInternal(final BigDecimal refundAmount) throws InvoiceApiException {
+
+        final UUID accountId = UUID.randomUUID();
+        final UUID bundleId = UUID.randomUUID();
+        final LocalDate targetDate1 = new LocalDate(2011, 10, 6);
+
+        final Invoice invoice = new DefaultInvoice(accountId, clock.getUTCToday(), targetDate1, Currency.USD);
+        invoiceDao.create(invoice, invoice.getTargetDate().getDayOfMonth(), true, context);
+
+        final LocalDate startDate = new LocalDate(2011, 3, 1);
+        final LocalDate endDate = startDate.plusMonths(1);
+
+        final BigDecimal amount = new BigDecimal("20.0");
+        ;
+
+        // Recurring item
+        final RecurringInvoiceItem item2 = new RecurringInvoiceItem(invoice.getId(), accountId, bundleId, UUID.randomUUID(), "test plan", "test phase B", startDate,
+                endDate, amount, amount, Currency.USD);
+        invoiceItemSqlDao.create(item2, context);
+        BigDecimal balance = invoiceDao.getAccountBalance(accountId);
+        assertEquals(balance.compareTo(new BigDecimal("20.00")), 0);
+
+        // Pay the whole thing
+        final UUID paymentId = UUID.randomUUID();
+        final BigDecimal payment1 = amount;
+        final InvoicePayment payment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentId, invoice.getId(), new DateTime(), payment1, Currency.USD);
+        invoicePaymentDao.create(payment, context);
+        balance = invoiceDao.getAccountBalance(accountId);
+        assertEquals(balance.compareTo(new BigDecimal("0.00")), 0);
+
+
+        // Repair the item (And add CBA item that should be generated)
+        final InvoiceItem repairItem = new RepairAdjInvoiceItem(invoice.getId(), accountId, startDate, endDate, amount.negate(), Currency.USD, item2.getId());
+        invoiceItemSqlDao.create(repairItem, context);
+
+        final InvoiceItem cbaItem = new CreditBalanceAdjInvoiceItem(invoice.getId(), accountId, startDate, amount, Currency.USD);
+        invoiceItemSqlDao.create(cbaItem, context);
+
+        Map<UUID, BigDecimal> itemAdjustment = new HashMap<UUID, BigDecimal>();
+        itemAdjustment.put(item2.getId(), refundAmount);
+
+        invoiceDao.createRefund(paymentId, refundAmount, true, itemAdjustment, UUID.randomUUID(), context);
+        balance = invoiceDao.getAccountBalance(accountId);
+
+        final boolean partialRefund = refundAmount.compareTo(amount) < 0;
+        final BigDecimal cba = invoiceDao.getAccountCBA(accountId);
+        final Invoice savedInvoice = invoiceDao.getById(invoice.getId());
+        assertEquals(cba.compareTo(new BigDecimal("20.0")), 0);
+        if (partialRefund) {
+            // IB = 20 (rec) - 20 (repair) + 20 (cba) - (20 -7) = 7;  AB = IB - CBA = 7 - 20 = -13
+            assertEquals(balance.compareTo(new BigDecimal("-13.0")), 0);
+            assertEquals(savedInvoice.getInvoiceItems().size(), 3);
+        } else {
+            assertEquals(balance.compareTo(new BigDecimal("0.0")), 0);
+            assertEquals(savedInvoice.getInvoiceItems().size(), 3);
+        }
+    }
+
+
+    @Test(groups = "slow")
     public void testAccountBalanceWithSmallRefundAndCBANoAdj() throws InvoiceApiException {
         BigDecimal refundAmount = new BigDecimal("7.00");
         BigDecimal expectedBalance = new BigDecimal("-3.00");
