@@ -57,7 +57,7 @@ import com.google.common.base.Objects;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 
-import static com.ning.billing.invoice.template.formatters.DefaultAmountFormatter.round;
+import static com.ning.billing.util.DefaultAmountFormatter.round;
 
 /**
  * Format invoice fields

@@ -23,6 +23,7 @@ import java.util.Map;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.overdue.OverdueState;
+import com.ning.billing.overdue.applicator.formatters.OverdueEmailFormatterFactory;
 import com.ning.billing.overdue.config.api.BillingState;
 import com.ning.billing.util.email.templates.TemplateEngine;
 
@@ -31,10 +32,12 @@ import com.google.inject.Inject;
 public class OverdueEmailGenerator {
 
     private final TemplateEngine templateEngine;
+    private final OverdueEmailFormatterFactory overdueEmailFormatterFactory;
 
     @Inject
-    public OverdueEmailGenerator(final TemplateEngine templateEngine) {
+    public OverdueEmailGenerator(final TemplateEngine templateEngine, final OverdueEmailFormatterFactory overdueEmailFormatterFactory) {
         this.templateEngine = templateEngine;
+        this.overdueEmailFormatterFactory = overdueEmailFormatterFactory;
     }
 
     public <T extends Blockable> String generateEmail(final Account account, final BillingState<T> billingState,
@@ -43,7 +46,7 @@ public class OverdueEmailGenerator {
 
         // TODO raw objects for now. We eventually should respect the account locale and support translations
         data.put("account", account);
-        data.put("billingState", billingState);
+        data.put("billingState", overdueEmailFormatterFactory.createBillingStateFormatter(billingState));
         data.put("overdueable", overdueable);
         data.put("nextOverdueState", nextOverdueState);
 

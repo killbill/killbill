@@ -14,23 +14,24 @@
  * under the License.
  */
 
-package com.ning.billing.invoice.template.formatters;
+package com.ning.billing.overdue.applicator.formatters;
 
 import java.math.BigDecimal;
 
-public class DefaultAmountFormatter {
+import com.ning.billing.overdue.config.api.BillingState;
 
-    public static final int SCALE = 2;
+import com.google.common.base.Objects;
 
-    // Static only
-    private DefaultAmountFormatter() {
+import static com.ning.billing.util.DefaultAmountFormatter.round;
+
+public class DefaultBillingStateFormatter extends BillingStateFormatter {
+
+    public DefaultBillingStateFormatter(final BillingState billingState) {
+        super(billingState);
     }
 
-    public static BigDecimal round(final BigDecimal decimal) {
-        if (decimal == null) {
-            return BigDecimal.ZERO.setScale(SCALE, BigDecimal.ROUND_HALF_UP);
-        } else {
-            return decimal.setScale(SCALE, BigDecimal.ROUND_HALF_UP);
-        }
+    @Override
+    public String getFormattedBalanceOfUnpaidInvoices() {
+        return round(Objects.firstNonNull(getBalanceOfUnpaidInvoices(), BigDecimal.ZERO)).toString();
     }
 }
