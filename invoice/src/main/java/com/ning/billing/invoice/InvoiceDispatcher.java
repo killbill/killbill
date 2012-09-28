@@ -192,8 +192,9 @@ public class InvoiceDispatcher {
                 }
             }
 
-            if (account.isNotifiedForInvoices()) {
-                invoiceNotifier.notify(account, invoice);
+            if (account.isNotifiedForInvoices() && invoice != null) {
+                // Need to re-hydrate the invoice object to get the invoice number (record id)
+                invoiceNotifier.notify(account, invoiceDao.getById(invoice.getId()));
             }
 
             return invoice;
