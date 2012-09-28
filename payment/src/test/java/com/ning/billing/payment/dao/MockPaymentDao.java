@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import com.ning.billing.payment.api.PaymentMethod;
 import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
 import com.ning.billing.util.callcontext.CallContext;
@@ -201,5 +200,11 @@ public class MockPaymentDao implements PaymentDao {
     public PaymentModelDao getLastPaymentForPaymentMethod(UUID accountId,
             UUID paymentMethodId) {
         return null;
+    }
+
+    @Override
+    public PaymentMethodModelDao getPaymentMethodIncludedDeleted(
+            UUID paymentMethodId) {
+        return getPaymentMethod(paymentMethodId);
     }
 }

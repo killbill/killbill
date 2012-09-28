@@ -97,7 +97,7 @@ public abstract class ProcessorBase {
     }
 
     protected PaymentPluginApi getPaymentProviderPlugin(final UUID paymentMethodId) throws PaymentApiException {
-        final PaymentMethodModelDao methodDao = paymentDao.getPaymentMethod(paymentMethodId);
+        final PaymentMethodModelDao methodDao = paymentDao.getPaymentMethodIncludedDeleted(paymentMethodId);
         if (methodDao == null) {
             log.error("PaymentMethod dpes not exist", paymentMethodId);
             throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, paymentMethodId);

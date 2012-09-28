@@ -16,7 +16,6 @@
 package com.ning.billing.payment.dao;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -26,9 +25,6 @@ import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
 
-import com.google.inject.Inject;
-
-import com.ning.billing.payment.api.PaymentMethod;
 import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
 import com.ning.billing.payment.retry.PluginFailureRetryService.PluginFailureRetryServiceScheduler;
@@ -37,6 +33,8 @@ import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.dao.EntityAudit;
 import com.ning.billing.util.dao.EntityHistory;
 import com.ning.billing.util.dao.TableName;
+
+import com.google.inject.Inject;
 
 public class AuditedPaymentDao implements PaymentDao {
 
@@ -333,6 +331,11 @@ public class AuditedPaymentDao implements PaymentDao {
     @Override
     public PaymentMethodModelDao getPaymentMethod(final UUID paymentMethodId) {
         return getPaymentMethodInTransaction(paymentMethodSqlDao, paymentMethodId);
+    }
+
+    @Override
+    public PaymentMethodModelDao getPaymentMethodIncludedDeleted(final UUID paymentMethodId) {
+        return paymentMethodSqlDao.getPaymentMethodIncludedDelete(paymentMethodId.toString());
     }
 
     private PaymentMethodModelDao getPaymentMethodInTransaction(final PaymentMethodSqlDao transactional, final UUID paymentMethodId) {
