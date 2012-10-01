@@ -20,8 +20,6 @@ package com.ning.billing.payment.bus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.eventbus.Subscribe;
-import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
@@ -35,6 +33,9 @@ import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.DefaultCallContext;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
+
+import com.google.common.eventbus.Subscribe;
+import com.google.inject.Inject;
 
 
 public class InvoiceHandler {
@@ -74,7 +75,9 @@ public class InvoiceHandler {
         } catch (AccountApiException e) {
             log.error("Failed to process invoice payment", e);
         } catch (PaymentApiException e) {
-            if (e.getCode() != ErrorCode.PAYMENT_NULL_INVOICE.getCode()) {
+            // Log as error unless:
+            if (e.getCode() != ErrorCode.PAYMENT_NULL_INVOICE.getCode() /*  Nothing to left be paid*/ &&
+                    e.getCode() != ErrorCode.PAYMENT_CREATE_PAYMENT.getCode() /* User payment error */) {
                 log.error("Failed to process invoice payment {}", e.toString());
             }
         }
