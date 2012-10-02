@@ -20,6 +20,9 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
+import com.ning.billing.util.callcontext.CallContext;
+
 public interface UsageUserApi {
 
     /**
@@ -27,8 +30,9 @@ public interface UsageUserApi {
      *
      * @param bundleId   bundle id source
      * @param metricName metric name for this usage
+     * @param context    call context
      */
-    public void incrementUsage(final UUID bundleId, final String metricName);
+    public void incrementUsage(UUID bundleId, String metricName, CallContext context) throws EntitlementUserApiException;
 
     /**
      * Fine grained usage API if the external system doesn't roll its usage data. This is used to record e.g. "X has used
@@ -38,8 +42,9 @@ public interface UsageUserApi {
      * @param metricName metric name for this usage
      * @param timestamp  timestamp of this usage
      * @param value      value to record
+     * @param context    tenant context
      */
-    public void recordUsage(final UUID bundleId, final String metricName, final DateTime timestamp, final long value);
+    public void recordUsage(UUID bundleId, String metricName, DateTime timestamp, long value, CallContext context) throws EntitlementUserApiException;
 
     /**
      * Bulk usage API if the external system rolls-up usage data. This is used to record e.g. "X has used 12 minutes
@@ -50,6 +55,7 @@ public interface UsageUserApi {
      * @param startDate  start date of the usage period
      * @param endDate    end date of the usage period
      * @param value      value to record
+     * @param context    tenant context
      */
-    public void recordRolledUpUsage(final UUID bundleId, final String metricName, final DateTime startDate, final DateTime endDate, final long value);
+    public void recordRolledUpUsage(UUID bundleId, String metricName, DateTime startDate, DateTime endDate, long value, CallContext context) throws EntitlementUserApiException;
 }

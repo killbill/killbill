@@ -18,12 +18,13 @@ package com.ning.billing.entitlement.engine.dao;
 
 import org.skife.jdbi.v2.IDBI;
 
-import com.google.inject.Inject;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.entitlement.engine.addon.AddonUtils;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.notificationq.NotificationQueueService;
+
+import com.google.inject.Inject;
 
 public class MockEntitlementDaoSql extends AuditedEntitlementDao {
     @Inject

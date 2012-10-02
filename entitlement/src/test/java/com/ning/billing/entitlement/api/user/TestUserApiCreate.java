@@ -20,6 +20,7 @@ import java.util.List;
 
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
+import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -34,6 +35,8 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.TestApiBase;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.phase.PhaseEvent;
+import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.clock.DefaultClock;
 
 import static org.testng.Assert.assertEquals;
@@ -41,7 +44,11 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
 public abstract class TestUserApiCreate extends TestApiBase {
+
     private static final Logger log = LoggerFactory.getLogger(TestUserApiCreate.class);
+
+    private final InternalTenantContext internalTenantContext = Mockito.mock(InternalTenantContext.class);
+    private final TenantContext tenantContext = Mockito.mock(TenantContext.class);
 
     public void testCreateWithRequestedDate() {
         try {
@@ -56,7 +63,7 @@ public abstract class TestUserApiCreate extends TestApiBase {
             testListener.pushExpectedEvent(NextEvent.CREATE);
 
             final SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
-                                                                                                       getProductSpecifier(productName, planSetName, term, null), requestedDate, context);
+                                                                                                       getProductSpecifier(productName, planSetName, term, null), requestedDate, callContext);
             assertNotNull(subscription);
 
             assertEquals(subscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
@@ -85,7 +92,7 @@ public abstract class TestUserApiCreate extends TestApiBase {
             testListener.pushExpectedEvent(NextEvent.CREATE);
 
             final SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
-                                                                                                       getProductSpecifier(productName, planSetName, term, PhaseType.EVERGREEN), clock.getUTCNow(), context);
+                                                                                                       getProductSpecifier(productName, planSetName, term, PhaseType.EVERGREEN), clock.getUTCNow(), callContext);
             assertNotNull(subscription);
 
             assertEquals(subscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
@@ -123,7 +130,7 @@ public abstract class TestUserApiCreate extends TestApiBase {
 
             final SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
                                                                                                        getProductSpecifier(productName, planSetName, term, null),
-                                                                                                       clock.getUTCNow(), context);
+                                                                                                       clock.getUTCNow(), callContext);
             assertNotNull(subscription);
 
             assertEquals(subscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
@@ -143,7 +150,7 @@ public abstract class TestUserApiCreate extends TestApiBase {
             assertEquals(currentPhase.getPhaseType(), PhaseType.TRIAL);
             assertTrue(testListener.isCompleted(5000));
 
-            final List<EntitlementEvent> events = dao.getPendingEventsForSubscription(subscription.getId());
+            final List<EntitlementEvent> events = dao.getPendingEventsForSubscription(subscription.getId(), internalTenantContext);
             assertNotNull(events);
             printEvents(events);
             assertTrue(events.size() == 1);
@@ -177,7 +184,7 @@ public abstract class TestUserApiCreate extends TestApiBase {
 
             // CREATE SUBSCRIPTION
             SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
-                                                                                                 getProductSpecifier(productName, planSetName, term, null), clock.getUTCNow(), context);
+                                                                                                 getProductSpecifier(productName, planSetName, term, null), clock.getUTCNow(), callContext);
             assertNotNull(subscription);
 
             PlanPhase currentPhase = subscription.getCurrentPhase();
@@ -200,7 +207,7 @@ public abstract class TestUserApiCreate extends TestApiBase {
             clock.addDeltaFromReality(it.toDurationMillis());
             assertTrue(testListener.isCompleted(5000));
 
-            subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId());
+            subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId(), tenantContext);
             currentPhase = subscription.getCurrentPhase();
             assertNotNull(currentPhase);
             assertEquals(currentPhase.getPhaseType(), PhaseType.EVERGREEN);
@@ -220,7 +227,7 @@ public abstract class TestUserApiCreate extends TestApiBase {
             testListener.pushExpectedEvent(NextEvent.CREATE);
 
             final SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
-                                                                                                       getProductSpecifier(productName, planSetName, term, null), clock.getUTCNow(), context);
+                                                                                                       getProductSpecifier(productName, planSetName, term, null), clock.getUTCNow(), callContext);
             assertNotNull(subscription);
 
             assertListenerStatus();

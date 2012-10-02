@@ -16,9 +16,10 @@
 
 package com.ning.billing.mock.glue;
 
-import com.google.inject.AbstractModule;
 import com.ning.billing.util.notificationq.MockNotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService;
+
+import com.google.inject.AbstractModule;
 
 public class MockNotificationQueueModule extends AbstractModule {
 

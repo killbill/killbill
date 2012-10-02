@@ -27,7 +27,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
@@ -47,8 +46,9 @@ import org.skife.jdbi.v2.tweak.ResultSetMapper;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.model.DefaultInvoice;
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallContextBinder;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 import com.ning.billing.util.dao.AuditSqlDao;
 import com.ning.billing.util.dao.MapperBase;
 import com.ning.billing.util.dao.UuidMapper;
@@ -60,24 +60,30 @@ public interface InvoiceSqlDao extends EntitySqlDao<Invoice>, AuditSqlDao, Trans
 
     @Override
     @SqlUpdate
-    void create(@InvoiceBinder Invoice invoice, @CallContextBinder final CallContext context);
+    void create(@InvoiceBinder Invoice invoice,
+                @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlQuery
-    List<Invoice> getInvoicesByAccount(@Bind("accountId") final String accountId);
+    List<Invoice> getInvoicesByAccount(@Bind("accountId") final String accountId,
+                                       @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
-    List<Invoice> getAllInvoicesByAccount(@Bind("accountId") final String string);
+    List<Invoice> getAllInvoicesByAccount(@Bind("accountId") final String string,
+                                          @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
     List<Invoice> getInvoicesByAccountAfterDate(@Bind("accountId") final String accountId,
-                                                @Bind("fromDate") final Date fromDate);
+                                                @Bind("fromDate") final Date fromDate,
+                                                @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
-    List<Invoice> getInvoicesBySubscription(@Bind("subscriptionId") final String subscriptionId);
+    List<Invoice> getInvoicesBySubscription(@Bind("subscriptionId") final String subscriptionId,
+                                            @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
     @RegisterMapper(UuidMapper.class)
-    UUID getInvoiceIdByPaymentId(@Bind("paymentId") final String paymentId);
+    UUID getInvoiceIdByPaymentId(@Bind("paymentId") final String paymentId,
+                                 @InternalTenantContextBinder final InternalTenantContext context);
 
     @BindingAnnotation(InvoiceBinder.InvoiceBinderFactory.class)
     @Retention(RetentionPolicy.RUNTIME)

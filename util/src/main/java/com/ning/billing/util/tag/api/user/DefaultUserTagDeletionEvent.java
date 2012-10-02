@@ -18,12 +18,13 @@ package com.ning.billing.util.tag.api.user;
 
 import java.util.UUID;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.tag.TagDefinition;
 import com.ning.billing.util.tag.api.UserTagDeletionEvent;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class DefaultUserTagDeletionEvent implements UserTagDeletionEvent {
     private final UUID tagId;

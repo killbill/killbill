@@ -27,8 +27,6 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
@@ -46,12 +44,20 @@ import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
+import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.callcontext.TenantContext;
+
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
 public class DefaultEntitlementTimelineApi implements EntitlementTimelineApi {
+
     private final EntitlementDao dao;
     private final SubscriptionFactory factory;
     private final RepairEntitlementLifecycleDao repairDao;
     private final CatalogService catalogService;
+    private final InternalCallContextFactory internalCallContextFactory;
 
     private enum RepairType {
         BASE_REPAIR,
@@ -61,41 +67,41 @@ public class DefaultEntitlementTimelineApi implements EntitlementTimelineApi {
 
     @Inject
     public DefaultEntitlementTimelineApi(@Named(DefaultEntitlementModule.REPAIR_NAMED) final SubscriptionFactory factory, final CatalogService catalogService,
-            @Named(DefaultEntitlementModule.REPAIR_NAMED) final RepairEntitlementLifecycleDao repairDao, final EntitlementDao dao) {
+                                         @Named(DefaultEntitlementModule.REPAIR_NAMED) final RepairEntitlementLifecycleDao repairDao, final EntitlementDao dao,
+                                         final InternalCallContextFactory internalCallContextFactory) {
         this.catalogService = catalogService;
         this.dao = dao;
         this.repairDao = repairDao;
         this.factory = factory;
+        this.internalCallContextFactory = internalCallContextFactory;
     }
 
     @Override
-    public BundleTimeline getBundleTimeline(final SubscriptionBundle bundle)
-    throws EntitlementRepairException {
-        return getBundleTimelineInternal(bundle, bundle.getKey());
+    public BundleTimeline getBundleTimeline(final SubscriptionBundle bundle, final TenantContext context)
+            throws EntitlementRepairException {
+        return getBundleTimelineInternal(bundle, bundle.getKey(), context);
     }
-
 
     @Override
-    public BundleTimeline getBundleTimeline(final UUID accountId, final String bundleName)
-    throws EntitlementRepairException {
-        final SubscriptionBundle bundle = dao.getSubscriptionBundleFromAccountAndKey(accountId, bundleName);
-        return getBundleTimelineInternal(bundle, bundleName + " [accountId= " + accountId.toString() +"]");
+    public BundleTimeline getBundleTimeline(final UUID accountId, final String bundleName, final TenantContext context)
+            throws EntitlementRepairException {
+        final SubscriptionBundle bundle = dao.getSubscriptionBundleFromAccountAndKey(accountId, bundleName, internalCallContextFactory.createInternalTenantContext(accountId, context));
+        return getBundleTimelineInternal(bundle, bundleName + " [accountId= " + accountId.toString() + "]", context);
     }
-
 
     @Override
-    public BundleTimeline getBundleTimeline(final UUID bundleId) throws EntitlementRepairException {
+    public BundleTimeline getBundleTimeline(final UUID bundleId, final TenantContext context) throws EntitlementRepairException {
 
-        final SubscriptionBundle bundle = dao.getSubscriptionBundleFromId(bundleId);
-        return getBundleTimelineInternal(bundle, bundleId.toString());
+        final SubscriptionBundle bundle = dao.getSubscriptionBundleFromId(bundleId, internalCallContextFactory.createInternalTenantContext(context));
+        return getBundleTimelineInternal(bundle, bundleId.toString(), context);
     }
 
-    private BundleTimeline getBundleTimelineInternal(final SubscriptionBundle bundle, String descBundle) throws EntitlementRepairException {
+    private BundleTimeline getBundleTimelineInternal(final SubscriptionBundle bundle, final String descBundle, final TenantContext context) throws EntitlementRepairException {
         try {
             if (bundle == null) {
                 throw new EntitlementRepairException(ErrorCode.ENT_REPAIR_UNKNOWN_BUNDLE, descBundle);
             }
-            final List<Subscription> subscriptions = dao.getSubscriptions(factory, bundle.getId());
+            final List<Subscription> subscriptions = dao.getSubscriptions(factory, bundle.getId(), internalCallContextFactory.createInternalTenantContext(context));
             if (subscriptions.size() == 0) {
                 throw new EntitlementRepairException(ErrorCode.ENT_REPAIR_NO_ACTIVE_SUBSCRIPTIONS, bundle.getId());
             }
@@ -107,17 +113,17 @@ public class DefaultEntitlementTimelineApi implements EntitlementTimelineApi {
         }
     }
 
-
     @Override
     public BundleTimeline repairBundle(final BundleTimeline input, final boolean dryRun, final CallContext context) throws EntitlementRepairException {
+        final InternalTenantContext tenantContext = internalCallContextFactory.createInternalTenantContext(context);
         try {
-            final SubscriptionBundle bundle = dao.getSubscriptionBundleFromId(input.getBundleId());
+            final SubscriptionBundle bundle = dao.getSubscriptionBundleFromId(input.getBundleId(), tenantContext);
             if (bundle == null) {
                 throw new EntitlementRepairException(ErrorCode.ENT_REPAIR_UNKNOWN_BUNDLE, input.getBundleId());
             }
 
             // Subscriptions are ordered with BASE subscription first-- if exists
-            final List<Subscription> subscriptions = dao.getSubscriptions(factory, input.getBundleId());
+            final List<Subscription> subscriptions = dao.getSubscriptions(factory, input.getBundleId(), tenantContext);
             if (subscriptions.size() == 0) {
                 throw new EntitlementRepairException(ErrorCode.ENT_REPAIR_NO_ACTIVE_SUBSCRIPTIONS, input.getBundleId());
             }
@@ -143,8 +149,8 @@ public class DefaultEntitlementTimelineApi implements EntitlementTimelineApi {
                     final List<EntitlementEvent> remaining = getRemainingEventsAndValidateDeletedEvents(curInputRepair, firstDeletedBPEventTime, curRepair.getDeletedEvents());
 
                     final boolean isPlanRecreate = (curRepair.getNewEvents().size() > 0
-                            && (curRepair.getNewEvents().get(0).getSubscriptionTransitionType() == SubscriptionTransitionType.CREATE
-                                    || curRepair.getNewEvents().get(0).getSubscriptionTransitionType() == SubscriptionTransitionType.RE_CREATE));
+                                                    && (curRepair.getNewEvents().get(0).getSubscriptionTransitionType() == SubscriptionTransitionType.CREATE
+                                                        || curRepair.getNewEvents().get(0).getSubscriptionTransitionType() == SubscriptionTransitionType.RE_CREATE));
 
                     final DateTime newSubscriptionStartDate = isPlanRecreate ? curRepair.getNewEvents().get(0).getRequestedDate() : null;
 
@@ -172,7 +178,7 @@ public class DefaultEntitlementTimelineApi implements EntitlementTimelineApi {
                     }
 
                     final SubscriptionDataRepair curOutputRepair = createSubscriptionDataRepair(curInputRepair, newBundleStartDate, newSubscriptionStartDate, remaining);
-                    repairDao.initializeRepair(curInputRepair.getId(), remaining);
+                    repairDao.initializeRepair(curInputRepair.getId(), remaining, tenantContext);
                     inRepair.add(curOutputRepair);
                     if (curOutputRepair.getCategory() == ProductCategory.ADD_ON) {
                         // Check if ADD_ON RE_CREATE is before BP start
@@ -188,25 +194,25 @@ public class DefaultEntitlementTimelineApi implements EntitlementTimelineApi {
 
             final RepairType repairType = getRepairType(subscriptions.get(0), (baseSubscriptionRepair != null));
             switch (repairType) {
-            case BASE_REPAIR:
-                // We need to add any existing addon that are not in the input repair list
-                for (final Subscription cur : subscriptions) {
-                    if (cur.getCategory() == ProductCategory.ADD_ON && !inRepair.contains(cur)) {
-                        final SubscriptionDataRepair curOutputRepair = createSubscriptionDataRepair((SubscriptionDataRepair) cur, newBundleStartDate, null, ((SubscriptionDataRepair) cur).getEvents());
-                        repairDao.initializeRepair(curOutputRepair.getId(), ((SubscriptionDataRepair) cur).getEvents());
-                        inRepair.add(curOutputRepair);
-                        addOnSubscriptionInRepair.add(curOutputRepair);
+                case BASE_REPAIR:
+                    // We need to add any existing addon that are not in the input repair list
+                    for (final Subscription cur : subscriptions) {
+                        if (cur.getCategory() == ProductCategory.ADD_ON && !inRepair.contains(cur)) {
+                            final SubscriptionDataRepair curOutputRepair = createSubscriptionDataRepair((SubscriptionDataRepair) cur, newBundleStartDate, null, ((SubscriptionDataRepair) cur).getEvents());
+                            repairDao.initializeRepair(curOutputRepair.getId(), ((SubscriptionDataRepair) cur).getEvents(), tenantContext);
+                            inRepair.add(curOutputRepair);
+                            addOnSubscriptionInRepair.add(curOutputRepair);
+                        }
                     }
-                }
-                break;
-            case ADD_ON_REPAIR:
-                // We need to set the baseSubscription as it is useful to calculate addon validity
-                final SubscriptionDataRepair baseSubscription = (SubscriptionDataRepair) subscriptions.get(0);
-                baseSubscriptionRepair = createSubscriptionDataRepair(baseSubscription, baseSubscription.getBundleStartDate(), baseSubscription.getAlignStartDate(), baseSubscription.getEvents());
-                break;
-            case STANDALONE_REPAIR:
-            default:
-                break;
+                    break;
+                case ADD_ON_REPAIR:
+                    // We need to set the baseSubscription as it is useful to calculate addon validity
+                    final SubscriptionDataRepair baseSubscription = (SubscriptionDataRepair) subscriptions.get(0);
+                    baseSubscriptionRepair = createSubscriptionDataRepair(baseSubscription, baseSubscription.getBundleStartDate(), baseSubscription.getAlignStartDate(), baseSubscription.getEvents());
+                    break;
+                case STANDALONE_REPAIR:
+                default:
+                    break;
             }
 
             validateBasePlanRecreate(isBasePlanRecreate, subscriptions, input.getSubscriptions());
@@ -228,13 +234,13 @@ public class DefaultEntitlementTimelineApi implements EntitlementTimelineApi {
                 final List<SubscriptionTimeline> repairs = createGetSubscriptionRepairList(subscriptions, convertDataRepair(inRepair));
                 return createGetBundleRepair(input.getBundleId(), bundle.getKey(), input.getViewId(), repairs);
             } else {
-                dao.repair(bundle.getAccountId(), input.getBundleId(), inRepair, context);
-                return getBundleTimeline(input.getBundleId());
+                dao.repair(bundle.getAccountId(), input.getBundleId(), inRepair, internalCallContextFactory.createInternalCallContext(context));
+                return getBundleTimeline(input.getBundleId(), context);
             }
         } catch (CatalogApiException e) {
             throw new EntitlementRepairException(e);
         } finally {
-            repairDao.cleanup();
+            repairDao.cleanup(tenantContext);
         }
     }
 
@@ -247,7 +253,7 @@ public class DefaultEntitlementTimelineApi implements EntitlementTimelineApi {
     }
 
     private void validateBasePlanRecreate(final boolean isBasePlanRecreate, final List<Subscription> subscriptions, final List<SubscriptionTimeline> input)
-    throws EntitlementRepairException {
+            throws EntitlementRepairException {
         if (!isBasePlanRecreate) {
             return;
         }
@@ -256,15 +262,15 @@ public class DefaultEntitlementTimelineApi implements EntitlementTimelineApi {
         }
         for (final SubscriptionTimeline cur : input) {
             if (cur.getNewEvents().size() != 0
-                    && (cur.getNewEvents().get(0).getSubscriptionTransitionType() != SubscriptionTransitionType.CREATE
-                            && cur.getNewEvents().get(0).getSubscriptionTransitionType() != SubscriptionTransitionType.RE_CREATE)) {
+                && (cur.getNewEvents().get(0).getSubscriptionTransitionType() != SubscriptionTransitionType.CREATE
+                    && cur.getNewEvents().get(0).getSubscriptionTransitionType() != SubscriptionTransitionType.RE_CREATE)) {
                 throw new EntitlementRepairException(ErrorCode.ENT_REPAIR_BP_RECREATE_MISSING_AO_CREATE, subscriptions.get(0).getBundleId());
             }
         }
     }
 
     private void validateInputSubscriptionsKnown(final List<Subscription> subscriptions, final List<SubscriptionTimeline> input)
-    throws EntitlementRepairException {
+            throws EntitlementRepairException {
         for (final SubscriptionTimeline cur : input) {
             boolean found = false;
             for (final Subscription s : subscriptions) {
@@ -280,13 +286,13 @@ public class DefaultEntitlementTimelineApi implements EntitlementTimelineApi {
     }
 
     private void validateFirstNewEvent(final SubscriptionData data, final NewEvent firstNewEvent, final DateTime lastBPRemainingTime, final DateTime lastRemainingTime)
-    throws EntitlementRepairException {
+            throws EntitlementRepairException {
         if (lastBPRemainingTime != null &&
-                firstNewEvent.getRequestedDate().isBefore(lastBPRemainingTime)) {
+            firstNewEvent.getRequestedDate().isBefore(lastBPRemainingTime)) {
             throw new EntitlementRepairException(ErrorCode.ENT_REPAIR_NEW_EVENT_BEFORE_LAST_BP_REMAINING, firstNewEvent.getSubscriptionTransitionType(), data.getId());
         }
         if (lastRemainingTime != null &&
-                firstNewEvent.getRequestedDate().isBefore(lastRemainingTime)) {
+            firstNewEvent.getRequestedDate().isBefore(lastRemainingTime)) {
             throw new EntitlementRepairException(ErrorCode.ENT_REPAIR_NEW_EVENT_BEFORE_LAST_AO_REMAINING, firstNewEvent.getSubscriptionTransitionType(), data.getId());
         }
 
@@ -309,7 +315,7 @@ public class DefaultEntitlementTimelineApi implements EntitlementTimelineApi {
     }
 
     private List<EntitlementEvent> getRemainingEventsAndValidateDeletedEvents(final SubscriptionDataRepair data, final DateTime firstBPDeletedTime,
-            final List<SubscriptionTimeline.DeletedEvent> deletedEvents)
+                                                                              final List<SubscriptionTimeline.DeletedEvent> deletedEvents)
             throws EntitlementRepairException {
         if (deletedEvents == null || deletedEvents.size() == 0) {
             return data.getEvents();
@@ -331,8 +337,8 @@ public class DefaultEntitlementTimelineApi implements EntitlementTimelineApi {
                 throw new EntitlementRepairException(ErrorCode.ENT_REPAIR_INVALID_DELETE_SET, cur.getId(), data.getId());
             }
             if (firstBPDeletedTime != null &&
-                    !cur.getEffectiveDate().isBefore(firstBPDeletedTime) &&
-                    !foundDeletedEvent) {
+                !cur.getEffectiveDate().isBefore(firstBPDeletedTime) &&
+                !foundDeletedEvent) {
                 throw new EntitlementRepairException(ErrorCode.ENT_REPAIR_MISSING_AO_DELETE_EVENT, cur.getId(), data.getId());
             }
 

@@ -16,8 +16,6 @@
 
 package com.ning.billing.analytics;
 
-import com.google.common.eventbus.Subscribe;
-import com.google.inject.Inject;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountChangeEvent;
 import com.ning.billing.account.api.AccountCreationEvent;
@@ -26,11 +24,16 @@ import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.RequestedSubscriptionEvent;
 import com.ning.billing.invoice.api.InvoiceAdjustmentEvent;
-import com.ning.billing.invoice.api.NullInvoiceEvent;
 import com.ning.billing.invoice.api.InvoiceCreationEvent;
+import com.ning.billing.invoice.api.NullInvoiceEvent;
 import com.ning.billing.overdue.OverdueChangeEvent;
 import com.ning.billing.payment.api.PaymentErrorEvent;
 import com.ning.billing.payment.api.PaymentInfoEvent;
+import com.ning.billing.util.bus.BusEvent;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
+import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.tag.api.ControlTagCreationEvent;
 import com.ning.billing.util.tag.api.ControlTagDefinitionCreationEvent;
 import com.ning.billing.util.tag.api.ControlTagDefinitionDeletionEvent;
@@ -40,13 +43,18 @@ import com.ning.billing.util.tag.api.UserTagDefinitionCreationEvent;
 import com.ning.billing.util.tag.api.UserTagDefinitionDeletionEvent;
 import com.ning.billing.util.tag.api.UserTagDeletionEvent;
 
+import com.google.common.eventbus.Subscribe;
+import com.google.inject.Inject;
+
 public class AnalyticsListener {
+
     private final BusinessSubscriptionTransitionRecorder bstRecorder;
     private final BusinessAccountRecorder bacRecorder;
     private final BusinessInvoiceRecorder invoiceRecorder;
     private final BusinessOverdueStatusRecorder bosRecorder;
     private final BusinessInvoicePaymentRecorder bipRecorder;
     private final BusinessTagRecorder tagRecorder;
+    private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
     public AnalyticsListener(final BusinessSubscriptionTransitionRecorder bstRecorder,
@@ -54,36 +62,38 @@ public class AnalyticsListener {
                              final BusinessInvoiceRecorder invoiceRecorder,
                              final BusinessOverdueStatusRecorder bosRecorder,
                              final BusinessInvoicePaymentRecorder bipRecorder,
-                             final BusinessTagRecorder tagRecorder) {
+                             final BusinessTagRecorder tagRecorder,
+                             final InternalCallContextFactory internalCallContextFactory) {
         this.bstRecorder = bstRecorder;
         this.bacRecorder = bacRecorder;
         this.invoiceRecorder = invoiceRecorder;
         this.bosRecorder = bosRecorder;
         this.bipRecorder = bipRecorder;
         this.tagRecorder = tagRecorder;
+        this.internalCallContextFactory = internalCallContextFactory;
     }
 
     @Subscribe
     public void handleEffectiveSubscriptionTransitionChange(final EffectiveSubscriptionEvent eventEffective) throws AccountApiException, EntitlementUserApiException {
         // The event is used as a trigger to rebuild all transitions for this bundle
-        bstRecorder.rebuildTransitionsForBundle(eventEffective.getBundleId());
+        bstRecorder.rebuildTransitionsForBundle(eventEffective.getBundleId(), createCallContext(eventEffective));
     }
 
     @Subscribe
     public void handleRequestedSubscriptionTransitionChange(final RequestedSubscriptionEvent eventRequested) throws AccountApiException, EntitlementUserApiException {
         // The event is used as a trigger to rebuild all transitions for this bundle
-        bstRecorder.rebuildTransitionsForBundle(eventRequested.getBundleId());
+        bstRecorder.rebuildTransitionsForBundle(eventRequested.getBundleId(), createCallContext(eventRequested));
     }
 
     @Subscribe
     public void handleRepairEntitlement(final RepairEntitlementEvent event) {
         // In case of repair, just rebuild all transitions
-        bstRecorder.rebuildTransitionsForBundle(event.getBundleId());
+        bstRecorder.rebuildTransitionsForBundle(event.getBundleId(), createCallContext(event));
     }
 
     @Subscribe
     public void handleAccountCreation(final AccountCreationEvent event) {
-        bacRecorder.accountCreated(event.getData());
+        bacRecorder.accountCreated(event.getData(), createCallContext(event));
     }
 
     @Subscribe
@@ -92,13 +102,13 @@ public class AnalyticsListener {
             return;
         }
 
-        bacRecorder.accountUpdated(event.getAccountId());
+        bacRecorder.accountUpdated(event.getAccountId(), createCallContext(event));
     }
 
     @Subscribe
     public void handleInvoiceCreation(final InvoiceCreationEvent event) {
         // The event is used as a trigger to rebuild all invoices and invoice items for this account
-        invoiceRecorder.rebuildInvoicesForAccount(event.getAccountId());
+        invoiceRecorder.rebuildInvoicesForAccount(event.getAccountId(), createCallContext(event));
     }
 
     @Subscribe
@@ -109,7 +119,7 @@ public class AnalyticsListener {
     @Subscribe
     public void handleInvoiceAdjustment(final InvoiceAdjustmentEvent event) {
         // The event is used as a trigger to rebuild all invoices and invoice items for this account
-        invoiceRecorder.rebuildInvoicesForAccount(event.getAccountId());
+        invoiceRecorder.rebuildInvoicesForAccount(event.getAccountId(), createCallContext(event));
     }
 
     @Subscribe
@@ -118,7 +128,8 @@ public class AnalyticsListener {
                                          paymentInfo.getPaymentId(),
                                          paymentInfo.getExtFirstPaymentRefId(),
                                          paymentInfo.getExtSecondPaymentRefId(),
-                                         paymentInfo.getStatus().toString());
+                                         paymentInfo.getStatus().toString(),
+                                         createCallContext(paymentInfo));
     }
 
     @Subscribe
@@ -127,32 +138,33 @@ public class AnalyticsListener {
                                          paymentError.getPaymentId(),
                                          null,
                                          null,
-                                         paymentError.getMessage());
+                                         paymentError.getMessage(),
+                                         createCallContext(paymentError));
     }
 
     @Subscribe
     public void handleOverdueChange(final OverdueChangeEvent changeEvent) {
-        bosRecorder.overdueStatusChanged(changeEvent.getOverdueObjectType(), changeEvent.getOverdueObjectId());
+        bosRecorder.overdueStatusChanged(changeEvent.getOverdueObjectType(), changeEvent.getOverdueObjectId(), createCallContext(changeEvent));
     }
 
     @Subscribe
     public void handleControlTagCreation(final ControlTagCreationEvent event) {
-        tagRecorder.tagAdded(event.getObjectType(), event.getObjectId(), event.getTagDefinition().getName());
+        tagRecorder.tagAdded(event.getObjectType(), event.getObjectId(), event.getTagDefinition().getName(), createCallContext(event));
     }
 
     @Subscribe
     public void handleControlTagDeletion(final ControlTagDeletionEvent event) {
-        tagRecorder.tagRemoved(event.getObjectType(), event.getObjectId(), event.getTagDefinition().getName());
+        tagRecorder.tagRemoved(event.getObjectType(), event.getObjectId(), event.getTagDefinition().getName(), createCallContext(event));
     }
 
     @Subscribe
     public void handleUserTagCreation(final UserTagCreationEvent event) {
-        tagRecorder.tagAdded(event.getObjectType(), event.getObjectId(), event.getTagDefinition().getName());
+        tagRecorder.tagAdded(event.getObjectType(), event.getObjectId(), event.getTagDefinition().getName(), createCallContext(event));
     }
 
     @Subscribe
     public void handleUserTagDeletion(final UserTagDeletionEvent event) {
-        tagRecorder.tagRemoved(event.getObjectType(), event.getObjectId(), event.getTagDefinition().getName());
+        tagRecorder.tagRemoved(event.getObjectType(), event.getObjectId(), event.getTagDefinition().getName(), createCallContext(event));
     }
 
     @Subscribe
@@ -173,5 +185,9 @@ public class AnalyticsListener {
     @Subscribe
     public void handleUserTagDefinitionDeletion(final UserTagDefinitionDeletionEvent event) {
         // Ignored for now
+    }
+
+    private InternalCallContext createCallContext(final BusEvent event) {
+        return internalCallContextFactory.createInternalCallContext("AnalyticsService", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
     }
 }

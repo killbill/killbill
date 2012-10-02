@@ -49,7 +49,8 @@ public class InvoiceListener {
     @Subscribe
     public void handleRepairEntitlementEvent(final RepairEntitlementEvent repairEvent) {
         try {
-            final CallContext context = factory.createCallContext("RepairBundle", CallOrigin.INTERNAL, UserType.SYSTEM, repairEvent.getUserToken());
+            // TODO retrieve tenantId?
+            final CallContext context = factory.createCallContext(null, "RepairBundle", CallOrigin.INTERNAL, UserType.SYSTEM, repairEvent.getUserToken());
             dispatcher.processAccount(repairEvent.getAccountId(), repairEvent.getEffectiveDate(), false, context);
         } catch (InvoiceApiException e) {
             log.error(e.getMessage());
@@ -67,7 +68,8 @@ public class InvoiceListener {
                 return;
             }
 
-            final CallContext context = factory.createCallContext("Transition", CallOrigin.INTERNAL, UserType.SYSTEM, transition.getUserToken());
+            // TODO retrieve tenantId?
+            final CallContext context = factory.createCallContext(null, "Transition", CallOrigin.INTERNAL, UserType.SYSTEM, transition.getUserToken());
             dispatcher.processSubscription(transition, context);
         } catch (InvoiceApiException e) {
             log.error(e.getMessage());
@@ -76,7 +78,8 @@ public class InvoiceListener {
 
     public void handleNextBillingDateEvent(final UUID subscriptionId, final DateTime eventDateTime) {
         try {
-            final CallContext context = factory.createCallContext("Next Billing Date", CallOrigin.INTERNAL, UserType.SYSTEM);
+            // TODO retrieve tenantId?
+            final CallContext context = factory.createCallContext(null, "Next Billing Date", CallOrigin.INTERNAL, UserType.SYSTEM);
             dispatcher.processSubscription(subscriptionId, eventDateTime, context);
         } catch (InvoiceApiException e) {
             log.error(e.getMessage());

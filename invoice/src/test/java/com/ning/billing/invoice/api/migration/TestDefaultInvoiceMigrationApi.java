@@ -60,11 +60,12 @@ public class TestDefaultInvoiceMigrationApi extends InvoiceApiTestBase {
     }
 
     private UUID createAndCheckMigrationInvoice(final UUID accountId) throws InvoiceApiException {
-        final UUID migrationInvoiceId = migrationApi.createMigrationInvoice(accountId, date_migrated, MIGRATION_INVOICE_AMOUNT, MIGRATION_INVOICE_CURRENCY);
+        final UUID migrationInvoiceId = migrationApi.createMigrationInvoice(accountId, date_migrated, MIGRATION_INVOICE_AMOUNT,
+                                                                            MIGRATION_INVOICE_CURRENCY, callContext);
         Assert.assertNotNull(migrationInvoiceId);
         //Double check it was created and values are correct
 
-        final Invoice invoice = invoiceDao.getById(migrationInvoiceId);
+        final Invoice invoice = invoiceDao.getById(migrationInvoiceId, internalCallContext);
         Assert.assertNotNull(invoice);
 
         Assert.assertEquals(invoice.getAccountId(), accountId);
@@ -81,22 +82,22 @@ public class TestDefaultInvoiceMigrationApi extends InvoiceApiTestBase {
 
     @Test(groups = "slow")
     public void testUserApiAccess() {
-        final List<Invoice> byAccount = invoiceUserApi.getInvoicesByAccount(accountId);
+        final List<Invoice> byAccount = invoiceUserApi.getInvoicesByAccount(accountId, callContext);
         Assert.assertEquals(byAccount.size(), 1);
         Assert.assertEquals(byAccount.get(0).getId(), regularInvoiceId);
 
-        final List<Invoice> byAccountAndDate = invoiceUserApi.getInvoicesByAccount(accountId, date_migrated.minusDays(1));
+        final List<Invoice> byAccountAndDate = invoiceUserApi.getInvoicesByAccount(accountId, date_migrated.minusDays(1), callContext);
         Assert.assertEquals(byAccountAndDate.size(), 1);
         Assert.assertEquals(byAccountAndDate.get(0).getId(), regularInvoiceId);
 
-        final Collection<Invoice> unpaid = invoiceUserApi.getUnpaidInvoicesByAccountId(accountId, new LocalDate(date_regular.plusDays(1)));
+        final Collection<Invoice> unpaid = invoiceUserApi.getUnpaidInvoicesByAccountId(accountId, new LocalDate(date_regular.plusDays(1)), callContext);
         Assert.assertEquals(unpaid.size(), 2);
     }
 
     // Check migration invoice IS returned for payment api calls
     @Test(groups = "slow")
     public void testPaymentApi() {
-        final List<Invoice> allByAccount = invoicePaymentApi.getAllInvoicesByAccount(accountId);
+        final List<Invoice> allByAccount = invoicePaymentApi.getAllInvoicesByAccount(accountId, callContext);
         Assert.assertEquals(allByAccount.size(), 2);
         Assert.assertTrue(checkContains(allByAccount, regularInvoiceId));
         Assert.assertTrue(checkContains(allByAccount, migrationInvoiceId));
@@ -105,11 +106,11 @@ public class TestDefaultInvoiceMigrationApi extends InvoiceApiTestBase {
     // ACCOUNT balance should reflect total of migration and non-migration invoices
     @Test(groups = "slow")
     public void testBalance() throws InvoiceApiException{
-        final Invoice migrationInvoice = invoiceDao.getById(migrationInvoiceId);
-        final Invoice regularInvoice = invoiceDao.getById(regularInvoiceId);
+        final Invoice migrationInvoice = invoiceDao.getById(migrationInvoiceId, internalCallContext);
+        final Invoice regularInvoice = invoiceDao.getById(regularInvoiceId, internalCallContext);
         final BigDecimal balanceOfAllInvoices = migrationInvoice.getBalance().add(regularInvoice.getBalance());
 
-        final BigDecimal accountBalance = invoiceUserApi.getAccountBalance(accountId);
+        final BigDecimal accountBalance = invoiceUserApi.getAccountBalance(accountId, callContext);
         log.info("ACCOUNT balance: " + accountBalance + " should equal the Balance Of All Invoices: " + balanceOfAllInvoices);
         Assert.assertEquals(accountBalance.compareTo(balanceOfAllInvoices), 0);
     }

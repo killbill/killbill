@@ -30,9 +30,6 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Stage;
 import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.catalog.DefaultCatalogService;
 import com.ning.billing.catalog.api.CatalogService;
@@ -59,6 +56,8 @@ import com.ning.billing.overdue.listener.OverdueListener;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.DefaultCallContextFactory;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
+import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.customfield.dao.AuditedCustomFieldDao;
@@ -68,12 +67,14 @@ import com.ning.billing.util.email.templates.TemplateModule;
 import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.globallocker.MySqlGlobalLocker;
 import com.ning.billing.util.glue.BusModule;
-import com.ning.billing.util.io.IOUtils;
 import com.ning.billing.util.notificationq.DefaultNotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService;
-import com.ning.billing.util.notificationq.dao.NotificationSqlDao;
 import com.ning.billing.util.tag.dao.AuditedTagDao;
 import com.ning.billing.util.tag.dao.TagDao;
+
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Stage;
 
 import static com.jayway.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -91,7 +92,7 @@ public class TestOverdueCheckNotifier extends OverdueTestSuiteWithEmbeddedDB {
         UUID latestSubscriptionId = null;
 
         public OverdueListenerMock() {
-            super(null);
+            super(null, new InternalCallContextFactory(getMysqlTestingHelper().getDBI(), new ClockMock()));
         }
 
         @Override
@@ -146,7 +147,7 @@ public class TestOverdueCheckNotifier extends OverdueTestSuiteWithEmbeddedDB {
 
         final Subscription subscription = Mockito.mock(Subscription.class);
         final EntitlementUserApi entitlementUserApi = Mockito.mock(EntitlementUserApi.class);
-        Mockito.when(entitlementUserApi.getSubscriptionFromId(Mockito.<UUID>any())).thenReturn(subscription);
+        Mockito.when(entitlementUserApi.getSubscriptionFromId(Mockito.<UUID>any(), Mockito.<TenantContext>any())).thenReturn(subscription);
 
         listener = new OverdueListenerMock();
         notifier = new DefaultOverdueCheckNotifier(notificationQueueService,
@@ -166,7 +167,7 @@ public class TestOverdueCheckNotifier extends OverdueTestSuiteWithEmbeddedDB {
         final DateTime readyTime = now.plusMillis(2000);
         final OverdueCheckPoster poster = new DefaultOverdueCheckPoster(notificationQueueService);
 
-        poster.insertOverdueCheckNotification(blockable, readyTime);
+        poster.insertOverdueCheckNotification(blockable, readyTime, internalCallContext);
 
         // Move time in the future after the notification effectiveDate
         ((ClockMock) clock).setDeltaFromReality(3000);

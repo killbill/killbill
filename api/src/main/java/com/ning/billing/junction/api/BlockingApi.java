@@ -17,21 +17,23 @@
 package com.ning.billing.junction.api;
 
 import java.util.List;
-import java.util.SortedSet;
 import java.util.UUID;
 
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.TenantContext;
 
 public interface BlockingApi {
+
     public static final String CLEAR_STATE_NAME = "__KILLBILL__CLEAR__OVERDUE_STATE__";
 
-    public BlockingState getBlockingStateFor(Blockable overdueable);
+    public BlockingState getBlockingStateFor(Blockable overdueable, TenantContext context);
 
-    public BlockingState getBlockingStateFor(UUID overdueableId);
+    public BlockingState getBlockingStateFor(UUID overdueableId, TenantContext context);
 
-    public List<BlockingState> getBlockingHistory(Blockable overdueable);
+    public List<BlockingState> getBlockingHistory(Blockable overdueable, TenantContext context);
 
-    public List<BlockingState> getBlockingHistory(UUID overdueableId);
+    public List<BlockingState> getBlockingHistory(UUID overdueableId, TenantContext context);
 
-    public <T extends Blockable> void setBlockingState(BlockingState state);
+    public <T extends Blockable> void setBlockingState(BlockingState state, CallContext context);
 
 }

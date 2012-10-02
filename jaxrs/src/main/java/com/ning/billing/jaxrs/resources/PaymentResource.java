@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -54,10 +55,13 @@ import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.Refund;
+import com.ning.billing.util.api.AuditUserApi;
 import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.api.TagUserApi;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.dao.ObjectType;
 
 import com.google.common.base.Function;
@@ -73,21 +77,20 @@ public class PaymentResource extends JaxRsResourceBase {
     private static final String CUSTOM_FIELD_URI = JaxrsResource.CUSTOM_FIELDS + "/{" + ID_PARAM_NAME + ":" + UUID_PATTERN + "}";
     private static final String TAG_URI = JaxrsResource.TAGS + "/{" + ID_PARAM_NAME + ":" + UUID_PATTERN + "}";
 
-    private final Context context;
     private final PaymentApi paymentApi;
     private final InvoicePaymentApi invoicePaymentApi;
     private final AccountUserApi accountApi;
 
     @Inject
-    public PaymentResource(final JaxrsUriBuilder uriBuilder,
-                           final AccountUserApi accountApi,
+    public PaymentResource(final AccountUserApi accountApi,
                            final PaymentApi paymentApi,
                            final InvoicePaymentApi invoicePaymentApi,
+                           final JaxrsUriBuilder uriBuilder,
                            final TagUserApi tagUserApi,
                            final CustomFieldUserApi customFieldUserApi,
+                           final AuditUserApi auditUserApi,
                            final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi);
-        this.context = context;
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, context);
         this.paymentApi = paymentApi;
         this.invoicePaymentApi = invoicePaymentApi;
         this.accountApi = accountApi;
@@ -97,19 +100,22 @@ public class PaymentResource extends JaxRsResourceBase {
     @Path("/{paymentId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
     public Response getPayment(@PathParam(ID_PARAM_NAME) final String paymentIdString,
-                               @QueryParam(QUERY_PAYMENT_WITH_REFUNDS_AND_CHARGEBACKS) @DefaultValue("false") final Boolean withRefundsAndChargebacks) throws PaymentApiException {
+                               @QueryParam(QUERY_PAYMENT_WITH_REFUNDS_AND_CHARGEBACKS) @DefaultValue("false") final Boolean withRefundsAndChargebacks,
+                               @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
+        final TenantContext tenantContext = context.createContext(request);
+
         final UUID paymentId = UUID.fromString(paymentIdString);
-        final Payment payment = paymentApi.getPayment(paymentId);
+        final Payment payment = paymentApi.getPayment(paymentId, tenantContext);
 
         final PaymentJsonSimple paymentJsonSimple;
         if (withRefundsAndChargebacks) {
             final List<RefundJson> refunds = new ArrayList<RefundJson>();
-            for (final Refund refund : paymentApi.getPaymentRefunds(paymentId)) {
+            for (final Refund refund : paymentApi.getPaymentRefunds(paymentId, tenantContext)) {
                 refunds.add(new RefundJson(refund));
             }
 
             final List<ChargebackJson> chargebacks = new ArrayList<ChargebackJson>();
-            for (final InvoicePayment chargeback : invoicePaymentApi.getChargebacksByPaymentId(paymentId)) {
+            for (final InvoicePayment chargeback : invoicePaymentApi.getChargebacksByPaymentId(paymentId, tenantContext)) {
                 chargebacks.add(new ChargebackJson(chargeback));
             }
 
@@ -132,8 +138,9 @@ public class PaymentResource extends JaxRsResourceBase {
     @GET
     @Path("/{paymentId:" + UUID_PATTERN + "}/" + REFUNDS)
     @Produces(APPLICATION_JSON)
-    public Response getRefunds(@PathParam("paymentId") final String paymentId) throws PaymentApiException {
-        final List<Refund> refunds = paymentApi.getPaymentRefunds(UUID.fromString(paymentId));
+    public Response getRefunds(@PathParam("paymentId") final String paymentId,
+                               @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
+        final List<Refund> refunds = paymentApi.getPaymentRefunds(UUID.fromString(paymentId), context.createContext(request));
         final List<RefundJson> result = new ArrayList<RefundJson>(Collections2.transform(refunds, new Function<Refund, RefundJson>() {
             @Override
             public RefundJson apply(final Refund input) {
@@ -154,10 +161,13 @@ public class PaymentResource extends JaxRsResourceBase {
                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                  @HeaderParam(HDR_REASON) final String reason,
                                  @HeaderParam(HDR_COMMENT) final String comment,
-                                 @javax.ws.rs.core.Context final UriInfo uriInfo) throws PaymentApiException, AccountApiException {
+                                 @javax.ws.rs.core.Context final UriInfo uriInfo,
+                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+
         final UUID paymentUuid = UUID.fromString(paymentId);
-        final Payment payment = paymentApi.getPayment(paymentUuid);
-        final Account account = accountApi.getAccountById(payment.getAccountId());
+        final Payment payment = paymentApi.getPayment(paymentUuid, callContext);
+        final Account account = accountApi.getAccountById(payment.getAccountId(), callContext);
 
         final Refund result;
         if (json.isAdjusted()) {
@@ -166,14 +176,14 @@ public class PaymentResource extends JaxRsResourceBase {
                 for (final InvoiceItemJsonSimple item : json.getAdjustments()) {
                     adjustments.put(UUID.fromString(item.getInvoiceItemId()), item.getAmount());
                 }
-                result = paymentApi.createRefundWithItemsAdjustments(account, paymentUuid, adjustments, context.createContext(createdBy, reason, comment));
+                result = paymentApi.createRefundWithItemsAdjustments(account, paymentUuid, adjustments, callContext);
             } else {
                 // Invoice adjustment
-                result = paymentApi.createRefundWithAdjustment(account, paymentUuid, json.getAmount(), context.createContext(createdBy, reason, comment));
+                result = paymentApi.createRefundWithAdjustment(account, paymentUuid, json.getAmount(), callContext);
             }
         } else {
             // Refund without adjustment
-            result = paymentApi.createRefund(account, paymentUuid, json.getAmount(), context.createContext(createdBy, reason, comment));
+            result = paymentApi.createRefund(account, paymentUuid, json.getAmount(), callContext);
         }
 
         return uriBuilder.buildResponse(RefundResource.class, "getRefund", result.getId(), uriInfo.getBaseUri().toString());
@@ -182,8 +192,9 @@ public class PaymentResource extends JaxRsResourceBase {
     @GET
     @Path(CUSTOM_FIELD_URI)
     @Produces(APPLICATION_JSON)
-    public Response getCustomFields(@PathParam(ID_PARAM_NAME) final String id) {
-        return super.getCustomFields(UUID.fromString(id));
+    public Response getCustomFields(@PathParam(ID_PARAM_NAME) final String id,
+                                    @javax.ws.rs.core.Context final HttpServletRequest request) {
+        return super.getCustomFields(UUID.fromString(id), context.createContext(request));
     }
 
     @POST
@@ -194,9 +205,10 @@ public class PaymentResource extends JaxRsResourceBase {
                                        final List<CustomFieldJson> customFields,
                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                        @HeaderParam(HDR_REASON) final String reason,
-                                       @HeaderParam(HDR_COMMENT) final String comment) {
+                                       @HeaderParam(HDR_COMMENT) final String comment,
+                                       @javax.ws.rs.core.Context final HttpServletRequest request) {
         return super.createCustomFields(UUID.fromString(id), customFields,
-                                        context.createContext(createdBy, reason, comment));
+                                        context.createContext(createdBy, reason, comment, request));
     }
 
     @DELETE
@@ -207,16 +219,19 @@ public class PaymentResource extends JaxRsResourceBase {
                                        @QueryParam(QUERY_CUSTOM_FIELDS) final String customFieldList,
                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                        @HeaderParam(HDR_REASON) final String reason,
-                                       @HeaderParam(HDR_COMMENT) final String comment) {
+                                       @HeaderParam(HDR_COMMENT) final String comment,
+                                       @javax.ws.rs.core.Context final HttpServletRequest request) {
         return super.deleteCustomFields(UUID.fromString(id), customFieldList,
-                                        context.createContext(createdBy, reason, comment));
+                                        context.createContext(createdBy, reason, comment, request));
     }
 
     @GET
     @Path(TAG_URI)
     @Produces(APPLICATION_JSON)
-    public Response getTags(@PathParam(ID_PARAM_NAME) final String id, @QueryParam(QUERY_AUDIT) @DefaultValue("false") final Boolean withAudit) throws TagDefinitionApiException {
-        return super.getTags(UUID.fromString(id), withAudit);
+    public Response getTags(@PathParam(ID_PARAM_NAME) final String id,
+                            @QueryParam(QUERY_AUDIT) @DefaultValue("false") final Boolean withAudit,
+                            @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException {
+        return super.getTags(UUID.fromString(id), withAudit, context.createContext(request));
     }
 
     @POST
@@ -228,9 +243,10 @@ public class PaymentResource extends JaxRsResourceBase {
                                @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                @HeaderParam(HDR_REASON) final String reason,
                                @HeaderParam(HDR_COMMENT) final String comment,
-                               @javax.ws.rs.core.Context final UriInfo uriInfo) throws TagApiException {
+                               @javax.ws.rs.core.Context final UriInfo uriInfo,
+                               @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
         return super.createTags(UUID.fromString(id), tagList, uriInfo,
-                                context.createContext(createdBy, reason, comment));
+                                context.createContext(createdBy, reason, comment, request));
     }
 
     @DELETE
@@ -241,9 +257,10 @@ public class PaymentResource extends JaxRsResourceBase {
                                @QueryParam(QUERY_TAGS) final String tagList,
                                @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                @HeaderParam(HDR_REASON) final String reason,
-                               @HeaderParam(HDR_COMMENT) final String comment) throws TagApiException {
+                               @HeaderParam(HDR_COMMENT) final String comment,
+                               @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
         return super.deleteTags(UUID.fromString(id), tagList,
-                                context.createContext(createdBy, reason, comment));
+                                context.createContext(createdBy, reason, comment, request));
     }
 
     @Override

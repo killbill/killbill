@@ -1,5 +1,8 @@
 group PaymentAttemptSqlDao;
 
+CHECK_TENANT(prefix) ::= "<prefix>tenant_record_id = :tenantRecordId"
+AND_CHECK_TENANT(prefix) ::= "AND <CHECK_TENANT(prefix)>"
+
 paymentAttemptFields(prefix) ::= <<
     <prefix>id,
     <prefix>payment_id,    
@@ -10,12 +13,15 @@ paymentAttemptFields(prefix) ::= <<
     <prefix>created_by,
     <prefix>created_date,
     <prefix>updated_by,
-    <prefix>updated_date
+    <prefix>updated_date,
+    <prefix>account_record_id,
+    <prefix>tenant_record_id
 >>
 
 insertPaymentAttempt() ::= <<
     INSERT INTO payment_attempts (<paymentAttemptFields()>)
-    VALUES (:id, :paymentId, :gatewayErrorCode, :gatewayErrorMsg, :processingStatus, :requestedAmount, :userName, :createdDate, :userName, :createdDate);
+    VALUES (:id, :paymentId, :gatewayErrorCode, :gatewayErrorMsg, :processingStatus, :requestedAmount, :userName,
+            :createdDate, :userName, :createdDate, :accountRecordId, :tenantRecordId);
 >>
 
 getPaymentAttempt() ::= <<
@@ -25,7 +31,10 @@ getPaymentAttempt() ::= <<
     , p.invoice_id as invoice_id
       FROM payment_attempts pa join payments p
      WHERE pa.id = :id 
-     AND pa.payment_id = p.id;
+     AND pa.payment_id = p.id
+     <AND_CHECK_TENANT("pa.")>
+     <AND_CHECK_TENANT("p.")>
+     ;
 >>
 
 getPaymentAttempts() ::= <<
@@ -36,6 +45,8 @@ getPaymentAttempts() ::= <<
       FROM payment_attempts pa join payments p
      WHERE pa.payment_id = :paymentId
      AND p.id = :paymentId
+     <AND_CHECK_TENANT("pa.")>
+     <AND_CHECK_TENANT("p.")>
      ORDER BY effective_date ASC;
 >>
 
@@ -44,20 +55,25 @@ updatePaymentAttemptStatus() ::= <<
     SET processing_status = :processingStatus,
         gateway_error_code = :gatewayErrorCode,
         gateway_error_msg = :gatewayErrorMsg        
-    WHERE  id = :id;
+    WHERE  id = :id
+    <AND_CHECK_TENANT()>
+    ;
 >>
-
 
 getRecordId() ::= <<
     SELECT record_id
     FROM payment_attempts
-    WHERE id = :id;
+    WHERE id = :id
+    <AND_CHECK_TENANT()>
+    ;
 >>
 
 getPaymentAttemptIdFromPaymentId() ::= <<
     SELECT id
     FROM payment_attempts
-    WHERE payment_id = :paymentId;
+    WHERE payment_id = :paymentId
+    <AND_CHECK_TENANT()>
+    ;
 >>
 
 historyFields(prefix) ::= <<
@@ -71,18 +87,23 @@ historyFields(prefix) ::= <<
     <prefix>created_by,
     <prefix>created_date,
     <prefix>updated_by,
-    <prefix>updated_date
+    <prefix>updated_date,
+    <prefix>account_record_id,
+    <prefix>tenant_record_id
 >>
 
 insertHistoryFromTransaction() ::= <<
     INSERT INTO payment_attempt_history (<historyFields()>)
-    VALUES (:recordId, :id, :paymentId, :gatewayErrorCode, :gatewayErrorMsg, :processingStatus, :requestedAmount, :userName, :createdDate, :userName, :updatedDate);
+    VALUES (:recordId, :id, :paymentId, :gatewayErrorCode, :gatewayErrorMsg, :processingStatus, :requestedAmount,
+            :userName, :createdDate, :userName, :updatedDate, :accountRecordId, :tenantRecordId);
 >>
 
 getHistoryRecordId() ::= <<
     SELECT MAX(history_record_id)
     FROM payment_attempt_history
-    WHERE record_id = :recordId;
+    WHERE record_id = :recordId
+    <AND_CHECK_TENANT()>
+    ;
 >>
 
 auditFields(prefix) ::= <<
@@ -93,12 +114,14 @@ auditFields(prefix) ::= <<
     <prefix>changed_by,
     <prefix>reason_code,
     <prefix>comments,
-    <prefix>user_token
+    <prefix>user_token,
+    <prefix>account_record_id,
+    <prefix>tenant_record_id
 >>
 
 insertAuditFromTransaction() ::= <<
     INSERT INTO audit_log(<auditFields()>)
-    VALUES(:tableName, :recordId, :changeType, :createdDate, :userName, :reasonCode, :comment, :userToken);
+    VALUES(:tableName, :recordId, :changeType, :createdDate, :userName, :reasonCode, :comment, :userToken, :accountRecordId, :tenantRecordId);
 >>
 
 

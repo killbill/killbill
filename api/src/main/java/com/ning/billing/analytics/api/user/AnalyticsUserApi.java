@@ -17,18 +17,19 @@
 package com.ning.billing.analytics.api.user;
 
 import com.ning.billing.analytics.api.TimeSeriesData;
+import com.ning.billing.util.callcontext.TenantContext;
 
 public interface AnalyticsUserApi {
 
     /**
      * @return the number of accounts created per day
      */
-    public TimeSeriesData getAccountsCreatedOverTime();
+    public TimeSeriesData getAccountsCreatedOverTime(TenantContext context);
 
     /**
      * @param productType catalog name
      * @param slug        plan phase name, as returned by PlanPhase#getName()
      * @return the number of new subscriptions created per day (transfers not included)
      */
-    public TimeSeriesData getSubscriptionsCreatedOverTime(final String productType, final String slug);
+    public TimeSeriesData getSubscriptionsCreatedOverTime(String productType, String slug, TenantContext context);
 }

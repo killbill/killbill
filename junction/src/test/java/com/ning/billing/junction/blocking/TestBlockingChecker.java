@@ -17,7 +17,6 @@
 package com.ning.billing.junction.blocking;
 
 import java.util.List;
-import java.util.SortedSet;
 import java.util.UUID;
 
 import org.mockito.Mockito;
@@ -25,9 +24,6 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
@@ -41,7 +37,14 @@ import com.ning.billing.junction.api.DefaultBlockingState;
 import com.ning.billing.junction.block.BlockingChecker;
 import com.ning.billing.junction.block.DefaultBlockingChecker;
 import com.ning.billing.junction.dao.BlockingStateDao;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.clock.Clock;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 
 public class TestBlockingChecker extends JunctionTestSuite {
     private BlockingState bundleState;
@@ -50,7 +53,7 @@ public class TestBlockingChecker extends JunctionTestSuite {
 
     private final BlockingStateDao dao = new BlockingStateDao() {
         @Override
-        public BlockingState getBlockingStateFor(final Blockable blockable) {
+        public BlockingState getBlockingStateFor(final Blockable blockable, final InternalTenantContext context) {
             if (blockable.getId() == account.getId()) {
                 return accountState;
             } else if (blockable.getId() == subscription.getId()) {
@@ -61,7 +64,7 @@ public class TestBlockingChecker extends JunctionTestSuite {
         }
 
         @Override
-        public BlockingState getBlockingStateFor(final UUID blockableId) {
+        public BlockingState getBlockingStateFor(final UUID blockableId, final InternalTenantContext context) {
             if (blockableId == account.getId()) {
                 return accountState;
             } else if (blockableId == subscription.getId()) {
@@ -72,17 +75,17 @@ public class TestBlockingChecker extends JunctionTestSuite {
         }
 
         @Override
-        public List<BlockingState> getBlockingHistoryFor(final Blockable overdueable) {
+        public List<BlockingState> getBlockingHistoryFor(final Blockable overdueable, final InternalTenantContext context) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public List<BlockingState> getBlockingHistoryFor(final UUID overdueableId) {
+        public List<BlockingState> getBlockingHistoryFor(final UUID overdueableId, final InternalTenantContext context) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public <T extends Blockable> void setBlockingState(final BlockingState state, final Clock clock) {
+        public <T extends Blockable> void setBlockingState(final BlockingState state, final Clock clock, final InternalCallContext context) {
             throw new UnsupportedOperationException();
         }
 
@@ -118,7 +121,7 @@ public class TestBlockingChecker extends JunctionTestSuite {
                 final EntitlementUserApi entitlementUserApi = Mockito.mock(EntitlementUserApi.class);
                 bind(EntitlementUserApi.class).toInstance(entitlementUserApi);
                 try {
-                    Mockito.when(entitlementUserApi.getBundleFromId(Mockito.<UUID>any())).thenReturn(bundle);
+                    Mockito.when(entitlementUserApi.getBundleFromId(Mockito.<UUID>any(), Mockito.<TenantContext>any())).thenReturn(bundle);
                 } catch (EntitlementUserApiException e) {
                     Assert.fail(e.toString());
                 }
@@ -146,36 +149,36 @@ public class TestBlockingChecker extends JunctionTestSuite {
         setStateAccount(false, false, false);
         setStateBundle(false, false, false);
         setStateSubscription(false, false, false);
-        checker.checkBlockedChange(subscription);
-        checker.checkBlockedEntitlement(subscription);
-        checker.checkBlockedBilling(subscription);
+        checker.checkBlockedChange(subscription, internalCallContext);
+        checker.checkBlockedEntitlement(subscription, internalCallContext);
+        checker.checkBlockedBilling(subscription, internalCallContext);
 
         //BLOCKED SUBSCRIPTION
         setStateSubscription(true, false, false);
-        checker.checkBlockedEntitlement(subscription);
-        checker.checkBlockedBilling(subscription);
+        checker.checkBlockedEntitlement(subscription, internalCallContext);
+        checker.checkBlockedBilling(subscription, internalCallContext);
         try {
-            checker.checkBlockedChange(subscription);
+            checker.checkBlockedChange(subscription, internalCallContext);
             Assert.fail("The call should have been blocked!");
         } catch (BlockingApiException e) {
             //Expected behavior
         }
 
         setStateSubscription(false, true, false);
-        checker.checkBlockedChange(subscription);
-        checker.checkBlockedBilling(subscription);
+        checker.checkBlockedChange(subscription, internalCallContext);
+        checker.checkBlockedBilling(subscription, internalCallContext);
         try {
-            checker.checkBlockedEntitlement(subscription);
+            checker.checkBlockedEntitlement(subscription, internalCallContext);
             Assert.fail("The call should have been blocked!");
         } catch (BlockingApiException e) {
             //Expected behavior
         }
 
         setStateSubscription(false, false, true);
-        checker.checkBlockedChange(subscription);
-        checker.checkBlockedEntitlement(subscription);
+        checker.checkBlockedChange(subscription, internalCallContext);
+        checker.checkBlockedEntitlement(subscription, internalCallContext);
         try {
-            checker.checkBlockedBilling(subscription);
+            checker.checkBlockedBilling(subscription, internalCallContext);
             Assert.fail("The call should have been blocked!");
         } catch (BlockingApiException e) {
             //Expected behavior
@@ -184,30 +187,30 @@ public class TestBlockingChecker extends JunctionTestSuite {
         //BLOCKED BUNDLE
         setStateSubscription(false, false, false);
         setStateBundle(true, false, false);
-        checker.checkBlockedEntitlement(subscription);
-        checker.checkBlockedBilling(subscription);
+        checker.checkBlockedEntitlement(subscription, internalCallContext);
+        checker.checkBlockedBilling(subscription, internalCallContext);
         try {
-            checker.checkBlockedChange(subscription);
+            checker.checkBlockedChange(subscription, internalCallContext);
             Assert.fail("The call should have been blocked!");
         } catch (BlockingApiException e) {
             //Expected behavior
         }
 
         setStateBundle(false, true, false);
-        checker.checkBlockedChange(subscription);
-        checker.checkBlockedBilling(subscription);
+        checker.checkBlockedChange(subscription, internalCallContext);
+        checker.checkBlockedBilling(subscription, internalCallContext);
         try {
-            checker.checkBlockedEntitlement(subscription);
+            checker.checkBlockedEntitlement(subscription, internalCallContext);
             Assert.fail("The call should have been blocked!");
         } catch (BlockingApiException e) {
             //Expected behavior
         }
 
         setStateBundle(false, false, true);
-        checker.checkBlockedChange(subscription);
-        checker.checkBlockedEntitlement(subscription);
+        checker.checkBlockedChange(subscription, internalCallContext);
+        checker.checkBlockedEntitlement(subscription, internalCallContext);
         try {
-            checker.checkBlockedBilling(subscription);
+            checker.checkBlockedBilling(subscription, internalCallContext);
             Assert.fail("The call should have been blocked!");
         } catch (BlockingApiException e) {
             //Expected behavior
@@ -217,30 +220,30 @@ public class TestBlockingChecker extends JunctionTestSuite {
         setStateSubscription(false, false, false);
         setStateBundle(false, false, false);
         setStateAccount(true, false, false);
-        checker.checkBlockedEntitlement(subscription);
-        checker.checkBlockedBilling(subscription);
+        checker.checkBlockedEntitlement(subscription, internalCallContext);
+        checker.checkBlockedBilling(subscription, internalCallContext);
         try {
-            checker.checkBlockedChange(subscription);
+            checker.checkBlockedChange(subscription, internalCallContext);
             Assert.fail("The call should have been blocked!");
         } catch (BlockingApiException e) {
             //Expected behavior
         }
 
         setStateAccount(false, true, false);
-        checker.checkBlockedChange(subscription);
-        checker.checkBlockedBilling(subscription);
+        checker.checkBlockedChange(subscription, internalCallContext);
+        checker.checkBlockedBilling(subscription, internalCallContext);
         try {
-            checker.checkBlockedEntitlement(subscription);
+            checker.checkBlockedEntitlement(subscription, internalCallContext);
             Assert.fail("The call should have been blocked!");
         } catch (BlockingApiException e) {
             //Expected behavior
         }
 
         setStateAccount(false, false, true);
-        checker.checkBlockedChange(subscription);
-        checker.checkBlockedEntitlement(subscription);
+        checker.checkBlockedChange(subscription, internalCallContext);
+        checker.checkBlockedEntitlement(subscription, internalCallContext);
         try {
-            checker.checkBlockedBilling(subscription);
+            checker.checkBlockedBilling(subscription, internalCallContext);
             Assert.fail("The call should have been blocked!");
         } catch (BlockingApiException e) {
             //Expected behavior
@@ -252,37 +255,37 @@ public class TestBlockingChecker extends JunctionTestSuite {
         setStateAccount(false, false, false);
         setStateBundle(false, false, false);
         setStateSubscription(false, false, false);
-        checker.checkBlockedChange(bundle);
-        checker.checkBlockedEntitlement(bundle);
-        checker.checkBlockedBilling(bundle);
+        checker.checkBlockedChange(bundle, internalCallContext);
+        checker.checkBlockedEntitlement(bundle, internalCallContext);
+        checker.checkBlockedBilling(bundle, internalCallContext);
 
         //BLOCKED BUNDLE
         setStateSubscription(false, false, false);
         setStateBundle(true, false, false);
-        checker.checkBlockedEntitlement(bundle);
-        checker.checkBlockedBilling(bundle);
+        checker.checkBlockedEntitlement(bundle, internalCallContext);
+        checker.checkBlockedBilling(bundle, internalCallContext);
         try {
-            checker.checkBlockedChange(bundle);
+            checker.checkBlockedChange(bundle, internalCallContext);
             Assert.fail("The call should have been blocked!");
         } catch (BlockingApiException e) {
             //Expected behavior
         }
 
         setStateBundle(false, true, false);
-        checker.checkBlockedChange(bundle);
-        checker.checkBlockedBilling(bundle);
+        checker.checkBlockedChange(bundle, internalCallContext);
+        checker.checkBlockedBilling(bundle, internalCallContext);
         try {
-            checker.checkBlockedEntitlement(bundle);
+            checker.checkBlockedEntitlement(bundle, internalCallContext);
             Assert.fail("The call should have been blocked!");
         } catch (BlockingApiException e) {
             //Expected behavior
         }
 
         setStateBundle(false, false, true);
-        checker.checkBlockedChange(bundle);
-        checker.checkBlockedEntitlement(bundle);
+        checker.checkBlockedChange(bundle, internalCallContext);
+        checker.checkBlockedEntitlement(bundle, internalCallContext);
         try {
-            checker.checkBlockedBilling(bundle);
+            checker.checkBlockedBilling(bundle, internalCallContext);
             Assert.fail("The call should have been blocked!");
         } catch (BlockingApiException e) {
             //Expected behavior
@@ -292,30 +295,30 @@ public class TestBlockingChecker extends JunctionTestSuite {
         setStateSubscription(false, false, false);
         setStateBundle(false, false, false);
         setStateAccount(true, false, false);
-        checker.checkBlockedEntitlement(bundle);
-        checker.checkBlockedBilling(bundle);
+        checker.checkBlockedEntitlement(bundle, internalCallContext);
+        checker.checkBlockedBilling(bundle, internalCallContext);
         try {
-            checker.checkBlockedChange(bundle);
+            checker.checkBlockedChange(bundle, internalCallContext);
             Assert.fail("The call should have been blocked!");
         } catch (BlockingApiException e) {
             //Expected behavior
         }
 
         setStateAccount(false, true, false);
-        checker.checkBlockedChange(bundle);
-        checker.checkBlockedBilling(bundle);
+        checker.checkBlockedChange(bundle, internalCallContext);
+        checker.checkBlockedBilling(bundle, internalCallContext);
         try {
-            checker.checkBlockedEntitlement(bundle);
+            checker.checkBlockedEntitlement(bundle, internalCallContext);
             Assert.fail("The call should have been blocked!");
         } catch (BlockingApiException e) {
             //Expected behavior
         }
 
         setStateAccount(false, false, true);
-        checker.checkBlockedChange(bundle);
-        checker.checkBlockedEntitlement(bundle);
+        checker.checkBlockedChange(bundle, internalCallContext);
+        checker.checkBlockedEntitlement(bundle, internalCallContext);
         try {
-            checker.checkBlockedBilling(bundle);
+            checker.checkBlockedBilling(bundle, internalCallContext);
             Assert.fail("The call should have been blocked!");
         } catch (BlockingApiException e) {
             //Expected behavior
@@ -327,38 +330,38 @@ public class TestBlockingChecker extends JunctionTestSuite {
         setStateAccount(false, false, false);
         setStateBundle(false, false, false);
         setStateSubscription(false, false, false);
-        checker.checkBlockedChange(account);
-        checker.checkBlockedEntitlement(account);
-        checker.checkBlockedBilling(account);
+        checker.checkBlockedChange(account, internalCallContext);
+        checker.checkBlockedEntitlement(account, internalCallContext);
+        checker.checkBlockedBilling(account, internalCallContext);
 
         //BLOCKED ACCOUNT
         setStateSubscription(false, false, false);
         setStateBundle(false, false, false);
         setStateAccount(true, false, false);
-        checker.checkBlockedEntitlement(account);
-        checker.checkBlockedBilling(account);
+        checker.checkBlockedEntitlement(account, internalCallContext);
+        checker.checkBlockedBilling(account, internalCallContext);
         try {
-            checker.checkBlockedChange(account);
+            checker.checkBlockedChange(account, internalCallContext);
             Assert.fail("The call should have been blocked!");
         } catch (BlockingApiException e) {
             //Expected behavior
         }
 
         setStateAccount(false, true, false);
-        checker.checkBlockedChange(account);
-        checker.checkBlockedBilling(account);
+        checker.checkBlockedChange(account, internalCallContext);
+        checker.checkBlockedBilling(account, internalCallContext);
         try {
-            checker.checkBlockedEntitlement(account);
+            checker.checkBlockedEntitlement(account, internalCallContext);
             Assert.fail("The call should have been blocked!");
         } catch (BlockingApiException e) {
             //Expected behavior
         }
 
         setStateAccount(false, false, true);
-        checker.checkBlockedChange(account);
-        checker.checkBlockedEntitlement(account);
+        checker.checkBlockedChange(account, internalCallContext);
+        checker.checkBlockedEntitlement(account, internalCallContext);
         try {
-            checker.checkBlockedBilling(account);
+            checker.checkBlockedBilling(account, internalCallContext);
             Assert.fail("The call should have been blocked!");
         } catch (BlockingApiException e) {
             //Expected behavior

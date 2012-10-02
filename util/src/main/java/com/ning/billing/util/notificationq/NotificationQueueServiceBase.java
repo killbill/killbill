@@ -25,10 +25,11 @@ import java.util.TreeMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Joiner;
-import com.google.inject.Inject;
 import com.ning.billing.config.NotificationConfig;
 import com.ning.billing.util.clock.Clock;
+
+import com.google.common.base.Joiner;
+import com.google.inject.Inject;
 
 public abstract class NotificationQueueServiceBase implements NotificationQueueService {
     protected final Logger log = LoggerFactory.getLogger(DefaultNotificationQueueService.class);

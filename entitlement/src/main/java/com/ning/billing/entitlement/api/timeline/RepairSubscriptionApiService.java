@@ -13,24 +13,29 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.entitlement.api.timeline;
 
-
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.entitlement.alignment.PlanAligner;
 import com.ning.billing.entitlement.api.SubscriptionApiService;
 import com.ning.billing.entitlement.api.user.DefaultSubscriptionApiService;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.Clock;
+
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
 public class RepairSubscriptionApiService extends DefaultSubscriptionApiService implements SubscriptionApiService {
 
     @Inject
-    public RepairSubscriptionApiService(final Clock clock, @Named(DefaultEntitlementModule.REPAIR_NAMED) final EntitlementDao dao,
-                                        final CatalogService catalogService, final PlanAligner planAligner) {
-        super(clock, dao, catalogService, planAligner);
+    public RepairSubscriptionApiService(final Clock clock,
+                                        @Named(DefaultEntitlementModule.REPAIR_NAMED) final EntitlementDao dao,
+                                        final CatalogService catalogService,
+                                        final PlanAligner planAligner,
+                                        final InternalCallContextFactory internalCallContextFactory) {
+        super(clock, dao, catalogService, planAligner, internalCallContextFactory);
     }
 }

@@ -18,8 +18,11 @@ package com.ning.billing.util.callcontext;
 
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 public abstract class CallContextBase implements CallContext {
 
+    protected final UUID tenantId;
     protected final UUID userToken;
     protected final String userName;
     protected final CallOrigin callOrigin;
@@ -27,22 +30,28 @@ public abstract class CallContextBase implements CallContext {
     protected final String reasonCode;
     protected final String comment;
 
-    public CallContextBase(final String userName, final CallOrigin callOrigin, final UserType userType) {
-        this(userName, callOrigin, userType, null);
+    public CallContextBase(@Nullable final UUID tenantId, final String userName, final CallOrigin callOrigin, final UserType userType) {
+        this(tenantId, userName, callOrigin, userType, null);
     }
 
-    public CallContextBase(final String userName, final CallOrigin callOrigin, final UserType userType, final UUID userToken) {
-        this(userName, callOrigin, userType, null, null, userToken);
+    public CallContextBase(@Nullable final UUID tenantId, final String userName, final CallOrigin callOrigin, final UserType userType, final UUID userToken) {
+        this(tenantId, userName, callOrigin, userType, null, null, userToken);
     }
 
-    public CallContextBase(final String userName, final CallOrigin callOrigin, final UserType userType,
+    public CallContextBase(@Nullable final UUID tenantId, final String userName, final CallOrigin callOrigin, final UserType userType,
                            final String reasonCode, final String comment, final UUID userToken) {
+        this.tenantId = tenantId;
         this.userName = userName;
         this.callOrigin = callOrigin;
         this.userType = userType;
         this.reasonCode = reasonCode;
         this.comment = comment;
         this.userToken = userToken;
+    }
+
+    @Override
+    public UUID getTenantId() {
+        return tenantId;
     }
 
     @Override

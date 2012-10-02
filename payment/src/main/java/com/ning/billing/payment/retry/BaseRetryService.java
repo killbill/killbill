@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.payment.retry;
 
 import java.io.IOException;
@@ -23,10 +24,12 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
 import com.ning.billing.config.PaymentConfig;
 import com.ning.billing.payment.glue.DefaultPaymentService;
-import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
+import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.notificationq.NotificationKey;
 import com.ning.billing.util.notificationq.NotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService;
@@ -34,37 +37,44 @@ import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotifi
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
 
+import com.google.inject.Inject;
+
 public abstract class BaseRetryService implements RetryService {
 
     private static final Logger log = LoggerFactory.getLogger(BaseRetryService.class);
+    private static final String PAYMENT_RETRY_SERVICE = "PaymentRetryService";
 
     private final NotificationQueueService notificationQueueService;
     private final PaymentConfig config;
+    private final InternalCallContextFactory internalCallContextFactory;
 
     private NotificationQueue retryQueue;
 
     public BaseRetryService(final NotificationQueueService notificationQueueService,
-            final Clock clock, final PaymentConfig config) {
+                            final PaymentConfig config,
+                            final InternalCallContextFactory internalCallContextFactory) {
         this.notificationQueueService = notificationQueueService;
-        final Clock clock1 = clock;
         this.config = config;
+        this.internalCallContextFactory = internalCallContextFactory;
     }
-
 
     @Override
     public void initialize(final String svcName) throws NotificationQueueAlreadyExists {
-        retryQueue = notificationQueueService.createNotificationQueue(svcName, getQueueName(), new NotificationQueueHandler() {
-            @Override
-            public void handleReadyNotification(final NotificationKey notificationKey, final DateTime eventDateTime) {
-                if (! (notificationKey instanceof PaymentRetryNotificationKey)) {
-                    log.error("Payment service got an unexpected notification type {}", notificationKey.getClass().getName());
-                    return;
-                }
-                final PaymentRetryNotificationKey key = (PaymentRetryNotificationKey) notificationKey;
-                retry(key.getUuidKey());
-            }
-        },
-        config);
+        retryQueue = notificationQueueService.createNotificationQueue(svcName,
+                                                                      getQueueName(),
+                                                                      new NotificationQueueHandler() {
+                                                                          @Override
+                                                                          public void handleReadyNotification(final NotificationKey notificationKey, final DateTime eventDateTime) {
+                                                                              if (!(notificationKey instanceof PaymentRetryNotificationKey)) {
+                                                                                  log.error("Payment service got an unexpected notification type {}", notificationKey.getClass().getName());
+                                                                                  return;
+                                                                              }
+                                                                              final PaymentRetryNotificationKey key = (PaymentRetryNotificationKey) notificationKey;
+                                                                              final InternalCallContext callContext =  internalCallContextFactory.createInternalCallContext(PAYMENT_RETRY_SERVICE, CallOrigin.INTERNAL, UserType.SYSTEM, null);
+                                                                              retry(key.getUuidKey(), callContext);
+                                                                          }
+                                                                      },
+                                                                      config);
     }
 
     @Override
@@ -83,14 +93,16 @@ public abstract class BaseRetryService implements RetryService {
     @Override
     public abstract String getQueueName();
 
-
     public abstract static class RetryServiceScheduler {
 
         private final NotificationQueueService notificationQueueService;
+        private final InternalCallContextFactory internalCallContextFactory;
 
         @Inject
-        public RetryServiceScheduler(final NotificationQueueService notificationQueueService) {
+        public RetryServiceScheduler(final NotificationQueueService notificationQueueService,
+                                     final InternalCallContextFactory internalCallContextFactory) {
             this.notificationQueueService = notificationQueueService;
+            this.internalCallContextFactory = internalCallContextFactory;
         }
 
         public boolean scheduleRetryFromTransaction(final UUID paymentId, final DateTime timeOfRetry, final Transmogrifier transactionalDao) {
@@ -120,15 +132,16 @@ public abstract class BaseRetryService implements RetryService {
         }
 
         private boolean scheduleRetryInternal(final UUID paymentId, final DateTime timeOfRetry, final Transmogrifier transactionalDao) {
+            final InternalCallContext context = createCallContext();
 
             try {
                 final NotificationQueue retryQueue = notificationQueueService.getNotificationQueue(DefaultPaymentService.SERVICE_NAME, getQueueName());
                 final NotificationKey key = new PaymentRetryNotificationKey(paymentId);
                 if (retryQueue != null) {
                     if (transactionalDao == null) {
-                        retryQueue.recordFutureNotification(timeOfRetry, null, key);
+                        retryQueue.recordFutureNotification(timeOfRetry, null, key, context);
                     } else {
-                        retryQueue.recordFutureNotificationFromTransaction(transactionalDao, timeOfRetry, null, key);
+                        retryQueue.recordFutureNotificationFromTransaction(transactionalDao, timeOfRetry, null, key, context);
                     }
                 }
             } catch (NoSuchNotificationQueue e) {
@@ -139,6 +152,10 @@ public abstract class BaseRetryService implements RetryService {
                 return false;
             }
             return true;
+        }
+
+        protected InternalCallContext createCallContext() {
+            return internalCallContextFactory.createInternalCallContext(PAYMENT_RETRY_SERVICE, CallOrigin.INTERNAL, UserType.SYSTEM, null);
         }
 
         public abstract String getQueueName();

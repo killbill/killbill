@@ -16,9 +16,10 @@
 
 package com.ning.billing.util.glue;
 
-import com.google.inject.AbstractModule;
 import com.ning.billing.util.notificationq.DefaultNotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService;
+
+import com.google.inject.AbstractModule;
 
 public class NotificationQueueModule extends AbstractModule {
 

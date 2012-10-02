@@ -24,6 +24,7 @@ import java.util.UUID;
 
 import com.ning.billing.util.api.AuditLevel;
 import com.ning.billing.util.audit.AuditLog;
+import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.dao.TableName;
 
 import com.google.common.base.Objects;
@@ -50,7 +51,7 @@ public class MockAuditDao implements AuditDao {
     }
 
     @Override
-    public List<AuditLog> getAuditLogsForId(final TableName tableName, final UUID objectId, final AuditLevel auditLevel) {
+    public List<AuditLog> getAuditLogsForId(final TableName tableName, final UUID objectId, final AuditLevel auditLevel, final InternalTenantContext context) {
         final Map<UUID, List<AuditLog>> auditLogsForTableName = auditLogsForTables.get(tableName);
         if (auditLogsForTableName == null) {
             return ImmutableList.<AuditLog>of();

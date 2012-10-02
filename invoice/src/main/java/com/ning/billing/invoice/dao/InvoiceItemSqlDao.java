@@ -52,8 +52,9 @@ import com.ning.billing.invoice.model.ItemAdjInvoiceItem;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.invoice.model.RefundAdjInvoiceItem;
 import com.ning.billing.invoice.model.RepairAdjInvoiceItem;
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallContextBinder;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 import com.ning.billing.util.dao.MapperBase;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 
@@ -62,23 +63,29 @@ import com.ning.billing.util.entity.dao.EntitySqlDao;
 public interface InvoiceItemSqlDao extends EntitySqlDao<InvoiceItem> {
 
     @SqlQuery
-    List<Long> getRecordIds(@Bind("invoiceId") final String invoiceId);
+    List<Long> getRecordIds(@Bind("invoiceId") final String invoiceId,
+                            @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
-    List<InvoiceItem> getInvoiceItemsByInvoice(@Bind("invoiceId") final String invoiceId);
+    List<InvoiceItem> getInvoiceItemsByInvoice(@Bind("invoiceId") final String invoiceId,
+                                               @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
-    List<InvoiceItem> getInvoiceItemsByAccount(@Bind("accountId") final String accountId);
+    List<InvoiceItem> getInvoiceItemsByAccount(@Bind("accountId") final String accountId,
+                                               @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
-    List<InvoiceItem> getInvoiceItemsBySubscription(@Bind("subscriptionId") final String subscriptionId);
+    List<InvoiceItem> getInvoiceItemsBySubscription(@Bind("subscriptionId") final String subscriptionId,
+                                                    @InternalTenantContextBinder final InternalTenantContext context);
 
     @Override
     @SqlUpdate
-    void create(@InvoiceItemBinder final InvoiceItem invoiceItem, @CallContextBinder final CallContext context);
+    void create(@InvoiceItemBinder final InvoiceItem invoiceItem,
+                @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlBatch(transactional = false)
-    void batchCreateFromTransaction(@InvoiceItemBinder final List<InvoiceItem> items, @CallContextBinder final CallContext context);
+    void batchCreateFromTransaction(@InvoiceItemBinder final List<InvoiceItem> items,
+                                    @InternalTenantContextBinder final InternalCallContext context);
 
     @BindingAnnotation(InvoiceItemBinder.InvoiceItemBinderFactory.class)
     @Retention(RetentionPolicy.RUNTIME)
@@ -131,7 +138,7 @@ public interface InvoiceItemSqlDao extends EntitySqlDao<InvoiceItem> {
             final Currency currency = Currency.valueOf(result.getString("currency"));
             final UUID linkedItemId = getUUID(result, "linked_item_id");
 
-            InvoiceItem item = null;
+            final InvoiceItem item;
             switch (type) {
                 case EXTERNAL_CHARGE:
                     item = new ExternalChargeInvoiceItem(id, invoiceId, accountId, bundleId, planName, startDate, amount, currency);

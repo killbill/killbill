@@ -13,8 +13,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.ning.billing.payment.dao;
 
+package com.ning.billing.payment.dao;
 
 import java.math.BigDecimal;
 import java.sql.ResultSet;
@@ -37,8 +37,9 @@ import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTempla
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import com.ning.billing.payment.api.PaymentStatus;
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallContextBinder;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 import com.ning.billing.util.dao.BinderBase;
 import com.ning.billing.util.dao.EntityHistory;
 import com.ning.billing.util.dao.MapperBase;
@@ -48,30 +49,32 @@ import com.ning.billing.util.entity.dao.UpdatableEntitySqlDao;
 @RegisterMapper(PaymentAttemptSqlDao.PaymentAttemptModelDaoMapper.class)
 public interface PaymentAttemptSqlDao extends Transactional<PaymentAttemptSqlDao>, UpdatableEntitySqlDao<PaymentAttemptModelDao>, Transmogrifier, CloseMe {
 
-
     @SqlUpdate
     void insertPaymentAttempt(@Bind(binder = PaymentAttemptModelDaoBinder.class) final PaymentAttemptModelDao attempt,
-                              @CallContextBinder final CallContext context);
+                              @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
     void updatePaymentAttemptStatus(@Bind("id") final String attemptId,
                                     @Bind("processingStatus") final String processingStatus,
                                     @Bind("gatewayErrorCode") final String gatewayErrorCode,
-                                    @Bind("gatewayErrorMsg") final String gatewayErrorMsg);
+                                    @Bind("gatewayErrorMsg") final String gatewayErrorMsg,
+                                    @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlQuery
-    PaymentAttemptModelDao getPaymentAttempt(@Bind("id") final String attemptId);
+    PaymentAttemptModelDao getPaymentAttempt(@Bind("id") final String attemptId,
+                                             @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
-    List<PaymentAttemptModelDao> getPaymentAttempts(@Bind("paymentId") final String paymentId);
-
+    List<PaymentAttemptModelDao> getPaymentAttempts(@Bind("paymentId") final String paymentId,
+                                                    @InternalTenantContextBinder final InternalTenantContext context);
 
     @Override
     @SqlUpdate
     void insertHistoryFromTransaction(@PaymentAttemptHistoryBinder final EntityHistory<PaymentAttemptModelDao> payment,
-                                      @CallContextBinder final CallContext context);
+                                      @InternalTenantContextBinder final InternalCallContext context);
 
     public static final class PaymentAttemptModelDaoBinder extends BinderBase implements Binder<Bind, PaymentAttemptModelDao> {
+
         @Override
         public void bind(@SuppressWarnings("rawtypes") final SQLStatement stmt, final Bind bind, final PaymentAttemptModelDao attempt) {
             stmt.bind("id", attempt.getId().toString());

@@ -20,10 +20,13 @@ import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.account.api.AccountEmail;
-import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.entity.dao.EntityDao;
 
-public interface AccountEmailDao {
-    public List<AccountEmail> getEmails(UUID accountId);
+public interface AccountEmailDao extends EntityDao<AccountEmail> {
+
+    public List<AccountEmail> getEmails(UUID accountId, InternalTenantContext context);
 
     /**
      * Add, remove or update the list of emails in this account.
@@ -32,11 +35,9 @@ public interface AccountEmailDao {
      * @param emails    the final list of emails
      * @param context   the call context
      */
-    public void saveEmails(UUID accountId, List<AccountEmail> emails, CallContext context);
+    public void saveEmails(UUID accountId, List<AccountEmail> emails, InternalCallContext context);
 
-    public void addEmail(UUID accountId, AccountEmail email, CallContext context);
+    public void addEmail(UUID accountId, AccountEmail email, InternalCallContext context);
 
-    public void removeEmail(UUID accountId, AccountEmail email, CallContext context);
-
-    public void test();
+    public void removeEmail(UUID accountId, AccountEmail email, InternalCallContext context);
 }

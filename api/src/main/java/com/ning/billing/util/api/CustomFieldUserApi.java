@@ -21,11 +21,13 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.dao.ObjectType;
 
 public interface CustomFieldUserApi {
-    Map<String, CustomField> getCustomFields(UUID objectId, ObjectType objectType);
+
+    Map<String, CustomField> getCustomFields(UUID objectId, ObjectType objectType, TenantContext context);
 
     void saveCustomFields(UUID objectId, ObjectType objectType, List<CustomField> fields, CallContext context);
 }

@@ -68,8 +68,10 @@ import com.ning.billing.mock.MockEffectiveSubscriptionEvent;
 import com.ning.billing.mock.MockSubscription;
 import com.ning.billing.mock.api.MockBillCycleDay;
 import com.ning.billing.util.api.TagUserApi;
+import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.DefaultCallContextFactory;
+import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.dao.ObjectType;
@@ -97,7 +99,7 @@ public class TestBillingApi extends JunctionTestSuite {
 
     private final BlockingCalculator blockCalculator = new BlockingCalculator(null) {
         @Override
-        public void insertBlockingEvents(final SortedSet<BillingEvent> billingEvents) {
+        public void insertBlockingEvents(final SortedSet<BillingEvent> billingEvents, final CallContext context) {
         }
     };
 
@@ -135,11 +137,11 @@ public class TestBillingApi extends JunctionTestSuite {
         subscriptions.add(subscription);
 
         entitlementApi = Mockito.mock(EntitlementUserApi.class);
-        Mockito.when(entitlementApi.getBundlesForAccount(Mockito.<UUID>any())).thenReturn(bundles);
-        Mockito.when(entitlementApi.getSubscriptionsForBundle(Mockito.<UUID>any())).thenReturn(subscriptions);
-        Mockito.when(entitlementApi.getSubscriptionFromId(Mockito.<UUID>any())).thenReturn(subscription);
-        Mockito.when(entitlementApi.getBundleFromId(Mockito.<UUID>any())).thenReturn(bundle);
-        Mockito.when(entitlementApi.getBaseSubscription(Mockito.<UUID>any())).thenReturn(subscription);
+        Mockito.when(entitlementApi.getBundlesForAccount(Mockito.<UUID>any(), Mockito.<TenantContext>any())).thenReturn(bundles);
+        Mockito.when(entitlementApi.getSubscriptionsForBundle(Mockito.<UUID>any(), Mockito.<TenantContext>any())).thenReturn(subscriptions);
+        Mockito.when(entitlementApi.getSubscriptionFromId(Mockito.<UUID>any(), Mockito.<TenantContext>any())).thenReturn(subscription);
+        Mockito.when(entitlementApi.getBundleFromId(Mockito.<UUID>any(), Mockito.<TenantContext>any())).thenReturn(bundle);
+        Mockito.when(entitlementApi.getBaseSubscription(Mockito.<UUID>any(), Mockito.<TenantContext>any())).thenReturn(subscription);
 
         tagApi = mock(TagUserApi.class);
 
@@ -153,7 +155,7 @@ public class TestBillingApi extends JunctionTestSuite {
 
     @Test(groups = "fast")
     public void testBillingEventsEmpty() throws AccountApiException {
-        final SortedSet<BillingEvent> events = api.getBillingEventsForAccountAndUpdateAccountBCD(new UUID(0L, 0L));
+        final SortedSet<BillingEvent> events = api.getBillingEventsForAccountAndUpdateAccountBCD(new UUID(0L, 0L), callContext);
         Assert.assertEquals(events.size(), 0);
     }
 
@@ -166,7 +168,7 @@ public class TestBillingApi extends JunctionTestSuite {
 
         final Account account = createAccount(10);
 
-        final SortedSet<BillingEvent> events = api.getBillingEventsForAccountAndUpdateAccountBCD(account.getId());
+        final SortedSet<BillingEvent> events = api.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), callContext);
         checkFirstEvent(events, nextPlan, account.getBillCycleDay().getDayOfMonthUTC(), subId, now, nextPhase, SubscriptionTransitionType.CREATE.toString());
     }
 
@@ -180,7 +182,7 @@ public class TestBillingApi extends JunctionTestSuite {
 
         ((MockCatalog) catalogService.getFullCatalog()).setBillingAlignment(BillingAlignment.SUBSCRIPTION);
 
-        final SortedSet<BillingEvent> events = api.getBillingEventsForAccountAndUpdateAccountBCD(account.getId());
+        final SortedSet<BillingEvent> events = api.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), callContext);
         // The expected BCD is when the subscription started since we skip the trial phase
         checkFirstEvent(events, nextPlan, subscription.getStartDate().getDayOfMonth(), subId, now, nextPhase, SubscriptionTransitionType.CREATE.toString());
     }
@@ -193,7 +195,7 @@ public class TestBillingApi extends JunctionTestSuite {
 
         final Account account = createAccount(32);
 
-        final SortedSet<BillingEvent> events = api.getBillingEventsForAccountAndUpdateAccountBCD(account.getId());
+        final SortedSet<BillingEvent> events = api.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), callContext);
         // The expected BCD is the account BCD (account aligned by default)
         checkFirstEvent(events, nextPlan, 32, subId, now, nextPhase, SubscriptionTransitionType.CREATE.toString());
     }
@@ -209,7 +211,7 @@ public class TestBillingApi extends JunctionTestSuite {
         ((MockCatalog) catalogService.getFullCatalog()).setBillingAlignment(BillingAlignment.BUNDLE);
         ((MockSubscription) subscription).setPlan(catalogService.getFullCatalog().findPlan("PickupTrialEvergreen10USD", now));
 
-        final SortedSet<BillingEvent> events = api.getBillingEventsForAccountAndUpdateAccountBCD(account.getId());
+        final SortedSet<BillingEvent> events = api.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), callContext);
         // The expected BCD is when the subscription started
         checkFirstEvent(events, nextPlan, subscription.getStartDate().getDayOfMonth(), subId, now, nextPhase, SubscriptionTransitionType.CREATE.toString());
     }
@@ -228,21 +230,21 @@ public class TestBillingApi extends JunctionTestSuite {
 
         final BlockingCalculator blockingCal = new BlockingCalculator(new BlockingApi() {
             @Override
-            public <T extends Blockable> void setBlockingState(final BlockingState state) {
+            public <T extends Blockable> void setBlockingState(final BlockingState state, final CallContext context) {
             }
 
             @Override
-            public BlockingState getBlockingStateFor(final UUID overdueableId) {
+            public BlockingState getBlockingStateFor(final UUID overdueableId, final TenantContext context) {
                 return null;
             }
 
             @Override
-            public BlockingState getBlockingStateFor(final Blockable overdueable) {
+            public BlockingState getBlockingStateFor(final Blockable overdueable, final TenantContext context) {
                 return null;
             }
 
             @Override
-            public List<BlockingState> getBlockingHistory(final UUID overdueableId) {
+            public List<BlockingState> getBlockingHistory(final UUID overdueableId, final TenantContext context) {
                 if (overdueableId == bunId) {
                     return blockingStates;
                 }
@@ -250,13 +252,13 @@ public class TestBillingApi extends JunctionTestSuite {
             }
 
             @Override
-            public List<BlockingState> getBlockingHistory(final Blockable overdueable) {
+            public List<BlockingState> getBlockingHistory(final Blockable overdueable, final TenantContext context) {
                 return new ArrayList<BlockingState>();
             }
         });
 
         final BillingApi api = new DefaultBillingApi(null, factory, accountApi, bcdCalculator, entitlementApi, blockingCal, catalogService, tagApi);
-        final SortedSet<BillingEvent> events = api.getBillingEventsForAccountAndUpdateAccountBCD(account.getId());
+        final SortedSet<BillingEvent> events = api.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), callContext);
 
         Assert.assertEquals(events.size(), 3);
         final Iterator<BillingEvent> it = events.iterator();
@@ -278,10 +280,10 @@ public class TestBillingApi extends JunctionTestSuite {
         final Tag aioTag = mock(Tag.class);
         when(aioTag.getTagDefinitionId()).thenReturn(ControlTagType.AUTO_INVOICING_OFF.getId());
         tags.put(ControlTagType.AUTO_INVOICING_OFF.name(), aioTag);
-        when(tagApi.getTags(account.getId(), ObjectType.ACCOUNT)).thenReturn(tags);
-        assertEquals(tagApi.getTags(account.getId(), ObjectType.ACCOUNT), tags);
+        when(tagApi.getTags(account.getId(), ObjectType.ACCOUNT, callContext)).thenReturn(tags);
+        assertEquals(tagApi.getTags(account.getId(), ObjectType.ACCOUNT, callContext), tags);
 
-        final BillingEventSet events = api.getBillingEventsForAccountAndUpdateAccountBCD(account.getId());
+        final BillingEventSet events = api.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), callContext);
 
         assertEquals(events.isAccountAutoInvoiceOff(), true);
         assertEquals(events.size(), 0);
@@ -299,9 +301,9 @@ public class TestBillingApi extends JunctionTestSuite {
         final Tag aioTag = mock(Tag.class);
         when(aioTag.getTagDefinitionId()).thenReturn(ControlTagType.AUTO_INVOICING_OFF.getId());
         tags.put(ControlTagType.AUTO_INVOICING_OFF.name(), aioTag);
-        when(tagApi.getTags(bunId, ObjectType.BUNDLE)).thenReturn(tags);
+        when(tagApi.getTags(bunId, ObjectType.BUNDLE, callContext)).thenReturn(tags);
 
-        final BillingEventSet events = api.getBillingEventsForAccountAndUpdateAccountBCD(account.getId());
+        final BillingEventSet events = api.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), callContext);
 
         assertEquals(events.getSubscriptionIdsWithAutoInvoiceOff().size(), 1);
         assertEquals(events.getSubscriptionIdsWithAutoInvoiceOff().get(0), subId);
@@ -346,7 +348,7 @@ public class TestBillingApi extends JunctionTestSuite {
         Mockito.when(account.getCurrency()).thenReturn(Currency.USD);
         Mockito.when(account.getId()).thenReturn(UUID.randomUUID());
         Mockito.when(account.getTimeZone()).thenReturn(DateTimeZone.UTC);
-        Mockito.when(accountApi.getAccountById(Mockito.<UUID>any())).thenReturn(account);
+        Mockito.when(accountApi.getAccountById(Mockito.<UUID>any(), Mockito.<TenantContext>any())).thenReturn(account);
         return account;
     }
 

@@ -33,7 +33,7 @@ import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.invoice.model.DefaultInvoice;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
-import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.InternalCallContext;
 
 public class TestInvoiceDaoForItemAdjustment extends InvoiceDaoTestBase {
 
@@ -45,10 +45,10 @@ public class TestInvoiceDaoForItemAdjustment extends InvoiceDaoTestBase {
         final UUID invoiceId = UUID.randomUUID();
         final UUID invoiceItemId = UUID.randomUUID();
         final LocalDate effectiveDate = new LocalDate();
-        final CallContext context = Mockito.mock(CallContext.class);
+        final InternalCallContext context = Mockito.mock(InternalCallContext.class);
 
         try {
-            invoiceDao.insertInvoiceItemAdjustment(accountId, invoiceId, invoiceItemId, effectiveDate, null, null, context);
+            invoiceDao.insertInvoiceItemAdjustment(accountId, invoiceId, invoiceItemId, effectiveDate, null, null, internalCallContext);
             Assert.fail("Should not have been able to adjust a non existing invoice item");
         } catch (Exception e) {
             Assert.assertEquals(((InvoiceApiException) e.getCause()).getCode(), ErrorCode.INVOICE_ITEM_NOT_FOUND.getCode());
@@ -63,10 +63,10 @@ public class TestInvoiceDaoForItemAdjustment extends InvoiceDaoTestBase {
                                                                  new LocalDate(2010, 1, 1), new LocalDate(2010, 4, 1),
                                                                  INVOICE_ITEM_AMOUNT, new BigDecimal("7.00"), Currency.USD);
         invoice.addInvoiceItem(invoiceItem);
-        invoiceDao.create(invoice, 1, true, context);
+        invoiceDao.create(invoice, 1, true, internalCallContext);
 
         try {
-            invoiceDao.insertInvoiceItemAdjustment(invoice.getAccountId(), UUID.randomUUID(), invoiceItem.getId(), new LocalDate(2010, 1, 1), null, null, context);
+            invoiceDao.insertInvoiceItemAdjustment(invoice.getAccountId(), UUID.randomUUID(), invoiceItem.getId(), new LocalDate(2010, 1, 1), null, null, internalCallContext);
             Assert.fail("Should not have been able to adjust an item on a non existing invoice");
         } catch (Exception e) {
             Assert.assertEquals(((InvoiceApiException) e.getCause()).getCode(), ErrorCode.INVOICE_INVALID_FOR_INVOICE_ITEM_ADJUSTMENT.getCode());
@@ -81,7 +81,7 @@ public class TestInvoiceDaoForItemAdjustment extends InvoiceDaoTestBase {
                                                                  new LocalDate(2010, 1, 1), new LocalDate(2010, 4, 1),
                                                                  INVOICE_ITEM_AMOUNT, new BigDecimal("7.00"), Currency.USD);
         invoice.addInvoiceItem(invoiceItem);
-        invoiceDao.create(invoice, 1, true, context);
+        invoiceDao.create(invoice, 1, true, internalCallContext);
 
         final InvoiceItem adjustedInvoiceItem = createAndCheckAdjustment(invoice, invoiceItem, null);
         Assert.assertEquals(adjustedInvoiceItem.getAmount().compareTo(invoiceItem.getAmount().negate()), 0);
@@ -95,7 +95,7 @@ public class TestInvoiceDaoForItemAdjustment extends InvoiceDaoTestBase {
                                                                  new LocalDate(2010, 1, 1), new LocalDate(2010, 4, 1),
                                                                  INVOICE_ITEM_AMOUNT, new BigDecimal("7.00"), Currency.USD);
         invoice.addInvoiceItem(invoiceItem);
-        invoiceDao.create(invoice, 1, true, context);
+        invoiceDao.create(invoice, 1, true, internalCallContext);
 
         final InvoiceItem adjustedInvoiceItem = createAndCheckAdjustment(invoice, invoiceItem, BigDecimal.TEN);
         Assert.assertEquals(adjustedInvoiceItem.getAmount().compareTo(BigDecimal.TEN.negate()), 0);
@@ -104,7 +104,7 @@ public class TestInvoiceDaoForItemAdjustment extends InvoiceDaoTestBase {
     private InvoiceItem createAndCheckAdjustment(final Invoice invoice, final InvoiceItem invoiceItem, final BigDecimal amount) throws InvoiceApiException {
         final LocalDate effectiveDate = new LocalDate(2010, 1, 1);
         final InvoiceItem adjustedInvoiceItem = invoiceDao.insertInvoiceItemAdjustment(invoice.getAccountId(), invoice.getId(), invoiceItem.getId(),
-                                                                                       effectiveDate, amount, null, context);
+                                                                                       effectiveDate, amount, null, internalCallContext);
         Assert.assertEquals(adjustedInvoiceItem.getAccountId(), invoiceItem.getAccountId());
         Assert.assertNull(adjustedInvoiceItem.getBundleId());
         Assert.assertEquals(adjustedInvoiceItem.getCurrency(), invoiceItem.getCurrency());
@@ -120,11 +120,11 @@ public class TestInvoiceDaoForItemAdjustment extends InvoiceDaoTestBase {
         Assert.assertNull(adjustedInvoiceItem.getSubscriptionId());
 
         // Retrieve the item by id
-        final InvoiceItem retrievedInvoiceItem = invoiceItemSqlDao.getById(adjustedInvoiceItem.getId().toString());
+        final InvoiceItem retrievedInvoiceItem = invoiceItemSqlDao.getById(adjustedInvoiceItem.getId().toString(), internalCallContext);
         Assert.assertEquals(retrievedInvoiceItem, adjustedInvoiceItem);
 
         // Retrieve the item by invoice id
-        final Invoice retrievedInvoice = invoiceDao.getById(adjustedInvoiceItem.getInvoiceId());
+        final Invoice retrievedInvoice = invoiceDao.getById(adjustedInvoiceItem.getInvoiceId(), internalCallContext);
         final List<InvoiceItem> invoiceItems = retrievedInvoice.getInvoiceItems();
         Assert.assertEquals(invoiceItems.size(), 2);
         final InvoiceItem retrievedByInvoiceInvoiceItem;

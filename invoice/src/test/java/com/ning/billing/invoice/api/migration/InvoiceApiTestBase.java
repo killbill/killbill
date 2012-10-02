@@ -55,10 +55,7 @@ import com.ning.billing.junction.api.BillingEventSet;
 import com.ning.billing.mock.api.MockBillCycleDay;
 import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.bus.DefaultBusService;
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallOrigin;
-import com.ning.billing.util.callcontext.DefaultCallContextFactory;
-import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.globallocker.GlobalLocker;
 
@@ -99,6 +96,9 @@ public abstract class InvoiceApiTestBase extends InvoicingTestBase {
     @Inject
     protected Clock clock;
 
+    @Inject
+    protected InternalCallContextFactory internalCallContextFactory;
+
     @BeforeSuite(groups = "slow")
     public void setup() throws Exception {
         busService.getBus().start();
@@ -127,23 +127,23 @@ public abstract class InvoiceApiTestBase extends InvoicingTestBase {
                                           fixedPrice, BigDecimal.ONE, currency, BillingPeriod.MONTHLY, 1,
                                           BillingModeType.IN_ADVANCE, "", 1L, SubscriptionTransitionType.CREATE));
 
-        Mockito.when(billingApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId())).thenReturn(events);
+        Mockito.when(billingApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), callContext)).thenReturn(events);
 
         final InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
         final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountUserApi, billingApi,
-                                                                   invoiceDao, invoiceNotifier, locker, busService.getBus(), clock);
+                                                                   invoiceDao, invoiceNotifier, locker, busService.getBus(),
+                                                                   clock, internalCallContextFactory);
 
-        final CallContext context = new DefaultCallContextFactory(clock).createCallContext("Unit test", CallOrigin.TEST, UserType.TEST);
-        Invoice invoice = dispatcher.processAccount(account.getId(), targetDate, true, context);
+        Invoice invoice = dispatcher.processAccount(account.getId(), targetDate, true, callContext);
         Assert.assertNotNull(invoice);
 
-        List<Invoice> invoices = invoiceDao.getInvoicesByAccount(account.getId());
+        List<Invoice> invoices = invoiceDao.getInvoicesByAccount(account.getId(), internalCallContext);
         Assert.assertEquals(invoices.size(), 0);
 
-        invoice = dispatcher.processAccount(account.getId(), targetDate, false, context);
+        invoice = dispatcher.processAccount(account.getId(), targetDate, false, callContext);
         Assert.assertNotNull(invoice);
 
-        invoices = invoiceDao.getInvoicesByAccount(account.getId());
+        invoices = invoiceDao.getInvoicesByAccount(account.getId(), internalCallContext);
         Assert.assertEquals(invoices.size(), 1);
 
         return invoice.getId();
@@ -152,7 +152,7 @@ public abstract class InvoiceApiTestBase extends InvoicingTestBase {
     protected Account createAccount() throws AccountApiException {
         final UUID accountId = UUID.randomUUID();
         final Account account = Mockito.mock(Account.class);
-        Mockito.when(accountUserApi.getAccountById(accountId)).thenReturn(account);
+        Mockito.when(accountUserApi.getAccountById(accountId, callContext)).thenReturn(account);
         Mockito.when(account.getCurrency()).thenReturn(accountCurrency);
         Mockito.when(account.getId()).thenReturn(accountId);
         Mockito.when(account.isNotifiedForInvoices()).thenReturn(true);

@@ -16,7 +16,9 @@
 
 package com.ning.billing.catalog.api;
 
+import com.ning.billing.util.callcontext.TenantContext;
+
 public interface CatalogUserApi {
 
-    Catalog getCatalog(String catalogName);
+    Catalog getCatalog(String catalogName, TenantContext context);
 }

@@ -23,14 +23,14 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
-import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.config.PaymentConfig;
 import com.ning.billing.payment.core.PaymentProcessor;
-import com.ning.billing.payment.dao.PaymentDao;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 
+import com.google.inject.Inject;
 
 public class FailedPaymentRetryService extends BaseRetryService implements RetryService {
 
@@ -40,24 +40,19 @@ public class FailedPaymentRetryService extends BaseRetryService implements Retry
 
     private final PaymentProcessor paymentProcessor;
 
-
     @Inject
-    public FailedPaymentRetryService(final AccountUserApi accountUserApi,
-                                     final Clock clock,
-                                     final NotificationQueueService notificationQueueService,
+    public FailedPaymentRetryService(final NotificationQueueService notificationQueueService,
                                      final PaymentConfig config,
                                      final PaymentProcessor paymentProcessor,
-                                     final PaymentDao paymentDao) {
-        super(notificationQueueService, clock, config);
+                                     final InternalCallContextFactory internalCallContextFactory) {
+        super(notificationQueueService, config, internalCallContextFactory);
         this.paymentProcessor = paymentProcessor;
     }
 
-
     @Override
-    public void retry(final UUID paymentId) {
-        paymentProcessor.retryFailedPayment(paymentId);
+    public void retry(final UUID paymentId, final InternalCallContext context) {
+        paymentProcessor.retryFailedPayment(paymentId, context);
     }
-
 
     public static class FailedPaymentRetryServiceScheduler extends RetryServiceScheduler {
 
@@ -66,8 +61,10 @@ public class FailedPaymentRetryService extends BaseRetryService implements Retry
 
         @Inject
         public FailedPaymentRetryServiceScheduler(final NotificationQueueService notificationQueueService,
-                                                  final Clock clock, final PaymentConfig config) {
-            super(notificationQueueService);
+                                                  final InternalCallContextFactory internalCallContextFactory,
+                                                  final Clock clock,
+                                                  final PaymentConfig config) {
+            super(notificationQueueService, internalCallContextFactory);
             this.config = config;
             this.clock = clock;
         }
@@ -79,7 +76,6 @@ public class FailedPaymentRetryService extends BaseRetryService implements Retry
             }
             return super.scheduleRetry(paymentId, timeOfRetry);
         }
-
 
         private DateTime getNextRetryDate(final int retryAttempt) {
 
@@ -98,7 +94,6 @@ public class FailedPaymentRetryService extends BaseRetryService implements Retry
             }
             return result;
         }
-
 
         @Override
         public String getQueueName() {

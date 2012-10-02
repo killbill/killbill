@@ -28,6 +28,7 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.TenantContext;
 
 public interface InvoiceUserApi {
 
@@ -35,50 +36,56 @@ public interface InvoiceUserApi {
      * Get all invoices for a given account.
      *
      * @param accountId account id
+     * @param context   the tenant context
      * @return all invoices
      */
-    public List<Invoice> getInvoicesByAccount(UUID accountId);
+    public List<Invoice> getInvoicesByAccount(UUID accountId, TenantContext context);
 
     /**
      * Find invoices from a given day, for a given account.
      *
      * @param accountId account id
      * @param fromDate  the earliest target day to consider, in the account timezone
+     * @param context   the tenant context
      * @return a list of invoices
      */
-    public List<Invoice> getInvoicesByAccount(UUID accountId, LocalDate fromDate);
+    public List<Invoice> getInvoicesByAccount(UUID accountId, LocalDate fromDate, TenantContext context);
 
     /**
      * Retrieve the account balance.
      *
      * @param accountId account id
+     * @param context   the tenant context
      * @return the account balance
      */
-    public BigDecimal getAccountBalance(UUID accountId);
+    public BigDecimal getAccountBalance(UUID accountId, TenantContext context);
 
     /**
      * Retrieve the account CBA.
      *
      * @param accountId account id
+     * @param context   the tenant context
      * @return the account CBA
      */
-    public BigDecimal getAccountCBA(UUID accountId);
+    public BigDecimal getAccountCBA(UUID accountId, TenantContext context);
 
     /**
      * Retrieve an invoice by id.
      *
      * @param invoiceId invoice id
+     * @param context   the tenant context
      * @return the invoice
      */
-    public Invoice getInvoice(UUID invoiceId) throws InvoiceApiException;
+    public Invoice getInvoice(UUID invoiceId, TenantContext context) throws InvoiceApiException;
 
     /**
      * Retrieve an invoice by invoice number.
      *
-     * @param number invoice number
+     * @param number  invoice number
+     * @param context the tenant context
      * @return the invoice
      */
-    public Invoice getInvoiceByNumber(Integer number) throws InvoiceApiException;
+    public Invoice getInvoiceByNumber(Integer number, TenantContext context) throws InvoiceApiException;
 
     /**
      * Record a payment for an invoice.
@@ -86,16 +93,17 @@ public interface InvoiceUserApi {
      * @param invoicePayment invoice payment
      * @param context        call context
      */
-    public void notifyOfPayment(InvoicePayment invoicePayment, CallContext context);
+    public void notifyOfPayment(InvoicePayment invoicePayment, CallContext context) throws InvoiceApiException;
 
     /**
      * Find unpaid invoices for a given account, up to a given day.
      *
      * @param accountId account id
      * @param upToDate  the latest target day to consider, in the account timezone
+     * @param context   the tenant context
      * @return a collection of invoices
      */
-    public Collection<Invoice> getUnpaidInvoicesByAccountId(UUID accountId, LocalDate upToDate);
+    public Collection<Invoice> getUnpaidInvoicesByAccountId(UUID accountId, LocalDate upToDate, TenantContext context);
 
     /**
      * Trigger an invoice for a given account and a given day.
@@ -116,7 +124,7 @@ public interface InvoiceUserApi {
      * @param context   call context
      * @throws TagApiException
      */
-    public void tagInvoiceAsWrittenOff(UUID invoiceId, CallContext context) throws TagApiException;
+    public void tagInvoiceAsWrittenOff(UUID invoiceId, CallContext context) throws TagApiException, InvoiceApiException;
 
     /**
      * Unmark an invoice as written off.
@@ -125,16 +133,17 @@ public interface InvoiceUserApi {
      * @param context   call context
      * @throws TagApiException
      */
-    public void tagInvoiceAsNotWrittenOff(UUID invoiceId, CallContext context) throws TagApiException;
+    public void tagInvoiceAsNotWrittenOff(UUID invoiceId, CallContext context) throws TagApiException, InvoiceApiException;
 
     /**
      * Retrieve an external charge by id.
      *
      * @param externalChargeId external charge id
+     * @param context          the tenant context
      * @return the external charge
      * @throws InvoiceApiException
      */
-    public InvoiceItem getExternalChargeById(UUID externalChargeId) throws InvoiceApiException;
+    public InvoiceItem getExternalChargeById(UUID externalChargeId, TenantContext context) throws InvoiceApiException;
 
     /**
      * Add an external charge to an account.
@@ -204,10 +213,11 @@ public interface InvoiceUserApi {
      * Retrieve a credit by id.
      *
      * @param creditId credit id
+     * @param context  the tenant context
      * @return the credit
      * @throws InvoiceApiException
      */
-    public InvoiceItem getCreditById(UUID creditId) throws InvoiceApiException;
+    public InvoiceItem getCreditById(UUID creditId, TenantContext context) throws InvoiceApiException;
 
     /**
      * Add a credit to an account.
@@ -282,10 +292,11 @@ public interface InvoiceUserApi {
      * Retrieve the invoice formatted in HTML.
      *
      * @param invoiceId invoice id
+     * @param context   the tenant context
      * @return the invoice in HTML format
      * @throws AccountApiException
      * @throws IOException
      * @throws InvoiceApiException
      */
-    public String getInvoiceAsHTML(UUID invoiceId) throws AccountApiException, IOException, InvoiceApiException;
+    public String getInvoiceAsHTML(UUID invoiceId, TenantContext context) throws AccountApiException, IOException, InvoiceApiException;
 }

@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.payment.dao;
 
 import java.math.BigDecimal;
@@ -29,7 +30,8 @@ import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
 import com.ning.billing.payment.retry.PluginFailureRetryService.PluginFailureRetryServiceScheduler;
 import com.ning.billing.util.ChangeType;
-import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.dao.EntityAudit;
 import com.ning.billing.util.dao.EntityHistory;
 import com.ning.billing.util.dao.TableName;
@@ -37,7 +39,6 @@ import com.ning.billing.util.dao.TableName;
 import com.google.inject.Inject;
 
 public class AuditedPaymentDao implements PaymentDao {
-
 
     private final PaymentSqlDao paymentSqlDao;
     private final PaymentAttemptSqlDao paymentAttemptSqlDao;
@@ -52,10 +53,8 @@ public class AuditedPaymentDao implements PaymentDao {
         this.refundSqlDao = dbi.onDemand(RefundSqlDao.class);
     }
 
-
     @Override
-    public PaymentAttemptModelDao insertNewAttemptForPayment(final UUID paymentId,
-                                                             final PaymentAttemptModelDao attempt, final CallContext context) {
+    public PaymentAttemptModelDao insertNewAttemptForPayment(final UUID paymentId, final PaymentAttemptModelDao attempt, final InternalCallContext context) {
 
         return paymentAttemptSqlDao.inTransaction(new Transaction<PaymentAttemptModelDao, PaymentAttemptSqlDao>() {
             @Override
@@ -69,9 +68,8 @@ public class AuditedPaymentDao implements PaymentDao {
         });
     }
 
-
     @Override
-    public PaymentModelDao insertPaymentWithAttempt(final PaymentModelDao payment, final PaymentAttemptModelDao attempt, final CallContext context) {
+    public PaymentModelDao insertPaymentWithAttempt(final PaymentModelDao payment, final PaymentAttemptModelDao attempt, final InternalCallContext context) {
 
         return paymentSqlDao.inTransaction(new Transaction<PaymentModelDao, PaymentSqlDao>() {
 
@@ -86,38 +84,38 @@ public class AuditedPaymentDao implements PaymentDao {
         });
     }
 
-    private PaymentModelDao insertPaymentFromTransaction(final PaymentModelDao payment, final CallContext context, final PaymentSqlDao transactional) {
+    private PaymentModelDao insertPaymentFromTransaction(final PaymentModelDao payment, final InternalCallContext context, final PaymentSqlDao transactional) {
         transactional.insertPayment(payment, context);
-        final PaymentModelDao savedPayment = transactional.getPayment(payment.getId().toString());
-        final Long recordId = transactional.getRecordId(savedPayment.getId().toString());
+        final PaymentModelDao savedPayment = transactional.getPayment(payment.getId().toString(), context);
+        final Long recordId = transactional.getRecordId(savedPayment.getId().toString(), context);
         final EntityHistory<PaymentModelDao> history = new EntityHistory<PaymentModelDao>(savedPayment.getId(), recordId, savedPayment, ChangeType.INSERT);
         transactional.insertHistoryFromTransaction(history, context);
 
-        final Long historyRecordId = transactional.getHistoryRecordId(recordId);
+        final Long historyRecordId = transactional.getHistoryRecordId(recordId, context);
         final EntityAudit audit = new EntityAudit(TableName.PAYMENT_HISTORY, historyRecordId, ChangeType.INSERT);
         transactional.insertAuditFromTransaction(audit, context);
         return savedPayment;
     }
 
-    private PaymentAttemptModelDao insertPaymentAttemptFromTransaction(final PaymentAttemptModelDao attempt, final CallContext context, final PaymentAttemptSqlDao transactional) {
+    private PaymentAttemptModelDao insertPaymentAttemptFromTransaction(final PaymentAttemptModelDao attempt, final InternalCallContext context, final PaymentAttemptSqlDao transactional) {
         transactional.insertPaymentAttempt(attempt, context);
-        final PaymentAttemptModelDao savedAttempt = transactional.getPaymentAttempt(attempt.getId().toString());
-        final Long recordId = transactional.getRecordId(savedAttempt.getId().toString());
+        final PaymentAttemptModelDao savedAttempt = transactional.getPaymentAttempt(attempt.getId().toString(), context);
+        final Long recordId = transactional.getRecordId(savedAttempt.getId().toString(), context);
         final EntityHistory<PaymentAttemptModelDao> history = new EntityHistory<PaymentAttemptModelDao>(savedAttempt.getId(), recordId, savedAttempt, ChangeType.INSERT);
         transactional.insertHistoryFromTransaction(history, context);
-        final Long historyRecordId = transactional.getHistoryRecordId(recordId);
+        final Long historyRecordId = transactional.getHistoryRecordId(recordId, context);
         final EntityAudit audit = new EntityAudit(TableName.PAYMENT_ATTEMPT_HISTORY, historyRecordId, ChangeType.INSERT);
         transactional.insertAuditFromTransaction(audit, context);
         return savedAttempt;
     }
 
     @Override
-    public PaymentAttemptModelDao getPaymentAttempt(final UUID attemptId) {
+    public PaymentAttemptModelDao getPaymentAttempt(final UUID attemptId, final InternalTenantContext context) {
         return paymentAttemptSqlDao.inTransaction(new Transaction<PaymentAttemptModelDao, PaymentAttemptSqlDao>() {
             @Override
             public PaymentAttemptModelDao inTransaction(final PaymentAttemptSqlDao transactional, final TransactionStatus status)
                     throws Exception {
-                return transactional.getPaymentAttempt(attemptId.toString());
+                return transactional.getPaymentAttempt(attemptId.toString(), context);
             }
         });
     }
@@ -130,7 +128,7 @@ public class AuditedPaymentDao implements PaymentDao {
                                                   final String extFirstPaymentRefId,
                                                   final String extSecondPaymentRefId,
                                                   final UUID attemptId,
-                                                  final CallContext context) {
+                                                  final InternalCallContext context) {
         paymentSqlDao.inTransaction(new Transaction<Void, PaymentSqlDao>() {
 
             @Override
@@ -144,41 +142,43 @@ public class AuditedPaymentDao implements PaymentDao {
         });
     }
 
-    private void updatePaymentAmountFromTransaction(final UUID paymentId, final BigDecimal amount, final CallContext context, final PaymentSqlDao transactional) {
+    private void updatePaymentAmountFromTransaction(final UUID paymentId, final BigDecimal amount, final InternalCallContext context, final PaymentSqlDao transactional) {
         transactional.updatePaymentAmount(paymentId.toString(), amount, context);
-        final PaymentModelDao savedPayment = transactional.getPayment(paymentId.toString());
-        final Long recordId = transactional.getRecordId(savedPayment.getId().toString());
+        final PaymentModelDao savedPayment = transactional.getPayment(paymentId.toString(), context);
+        final Long recordId = transactional.getRecordId(savedPayment.getId().toString(), context);
         final EntityHistory<PaymentModelDao> history = new EntityHistory<PaymentModelDao>(savedPayment.getId(), recordId, savedPayment, ChangeType.UPDATE);
         transactional.insertHistoryFromTransaction(history, context);
-        final Long historyRecordId = transactional.getHistoryRecordId(recordId);
+        final Long historyRecordId = transactional.getHistoryRecordId(recordId, context);
         final EntityAudit audit = new EntityAudit(TableName.PAYMENT_HISTORY, historyRecordId, ChangeType.UPDATE);
         transactional.insertAuditFromTransaction(audit, context);
     }
 
-    private void updatePaymentStatusFromTransaction(final UUID paymentId, final PaymentStatus paymentStatus, final String extFirstPaymentRefId, final String extSecondPaymentRefId, final CallContext context, final PaymentSqlDao transactional) {
+    private void updatePaymentStatusFromTransaction(final UUID paymentId, final PaymentStatus paymentStatus, final String extFirstPaymentRefId,
+                                                    final String extSecondPaymentRefId, final InternalCallContext context, final PaymentSqlDao transactional) {
         transactional.updatePaymentStatusAndExtRef(paymentId.toString(), paymentStatus.toString(), extFirstPaymentRefId, extSecondPaymentRefId, context);
-        final PaymentModelDao savedPayment = transactional.getPayment(paymentId.toString());
-        final Long recordId = transactional.getRecordId(savedPayment.getId().toString());
+        final PaymentModelDao savedPayment = transactional.getPayment(paymentId.toString(), context);
+        final Long recordId = transactional.getRecordId(savedPayment.getId().toString(), context);
         final EntityHistory<PaymentModelDao> history = new EntityHistory<PaymentModelDao>(savedPayment.getId(), recordId, savedPayment, ChangeType.UPDATE);
         transactional.insertHistoryFromTransaction(history, context);
-        final Long historyRecordId = transactional.getHistoryRecordId(recordId);
+        final Long historyRecordId = transactional.getHistoryRecordId(recordId, context);
         final EntityAudit audit = new EntityAudit(TableName.PAYMENT_HISTORY, historyRecordId, ChangeType.UPDATE);
         transactional.insertAuditFromTransaction(audit, context);
     }
 
-    private void updatePaymentAttemptStatusFromTransaction(final UUID attemptId, final PaymentStatus processingStatus, final String gatewayErrorCode, final String gatewayErrorMsg, final CallContext context, final PaymentAttemptSqlDao transactional) {
-        transactional.updatePaymentAttemptStatus(attemptId.toString(), processingStatus.toString(), gatewayErrorCode, gatewayErrorMsg);
-        final PaymentAttemptModelDao savedAttempt = transactional.getPaymentAttempt(attemptId.toString());
-        final Long recordId = transactional.getRecordId(savedAttempt.getId().toString());
+    private void updatePaymentAttemptStatusFromTransaction(final UUID attemptId, final PaymentStatus processingStatus, final String gatewayErrorCode,
+                                                           final String gatewayErrorMsg, final InternalCallContext context, final PaymentAttemptSqlDao transactional) {
+        transactional.updatePaymentAttemptStatus(attemptId.toString(), processingStatus.toString(), gatewayErrorCode, gatewayErrorMsg, context);
+        final PaymentAttemptModelDao savedAttempt = transactional.getPaymentAttempt(attemptId.toString(), context);
+        final Long recordId = transactional.getRecordId(savedAttempt.getId().toString(), context);
         final EntityHistory<PaymentAttemptModelDao> history = new EntityHistory<PaymentAttemptModelDao>(savedAttempt.getId(), recordId, savedAttempt, ChangeType.UPDATE);
         transactional.insertHistoryFromTransaction(history, context);
-        final Long historyRecordId = transactional.getHistoryRecordId(recordId);
+        final Long historyRecordId = transactional.getHistoryRecordId(recordId, context);
         final EntityAudit audit = new EntityAudit(TableName.PAYMENT_ATTEMPT_HISTORY, historyRecordId, ChangeType.UPDATE);
         transactional.insertAuditFromTransaction(audit, context);
     }
 
     @Override
-    public PaymentMethodModelDao insertPaymentMethod(final PaymentMethodModelDao paymentMethod, final CallContext context) {
+    public PaymentMethodModelDao insertPaymentMethod(final PaymentMethodModelDao paymentMethod, final InternalCallContext context) {
         return paymentMethodSqlDao.inTransaction(new Transaction<PaymentMethodModelDao, PaymentMethodSqlDao>() {
             @Override
             public PaymentMethodModelDao inTransaction(final PaymentMethodSqlDao transactional, final TransactionStatus status)
@@ -188,25 +188,25 @@ public class AuditedPaymentDao implements PaymentDao {
         });
     }
 
-    private PaymentMethodModelDao insertPaymentMethodInTransaction(final PaymentMethodSqlDao transactional, final PaymentMethodModelDao paymentMethod, final CallContext context) {
+    private PaymentMethodModelDao insertPaymentMethodInTransaction(final PaymentMethodSqlDao transactional, final PaymentMethodModelDao paymentMethod, final InternalCallContext context) {
         transactional.insertPaymentMethod(paymentMethod, context);
-        final PaymentMethodModelDao savedPaymentMethod = transactional.getPaymentMethod(paymentMethod.getId().toString());
-        final Long recordId = transactional.getRecordId(savedPaymentMethod.getId().toString());
+        final PaymentMethodModelDao savedPaymentMethod = transactional.getPaymentMethod(paymentMethod.getId().toString(), context);
+        final Long recordId = transactional.getRecordId(savedPaymentMethod.getId().toString(), context);
         final EntityHistory<PaymentMethodModelDao> history = new EntityHistory<PaymentMethodModelDao>(savedPaymentMethod.getId(), recordId, savedPaymentMethod, ChangeType.INSERT);
         transactional.insertHistoryFromTransaction(history, context);
-        final Long historyRecordId = transactional.getHistoryRecordId(recordId);
+        final Long historyRecordId = transactional.getHistoryRecordId(recordId, context);
         final EntityAudit audit = new EntityAudit(TableName.PAYMENT_METHOD_HISTORY, historyRecordId, ChangeType.INSERT);
         transactional.insertAuditFromTransaction(audit, context);
         return savedPaymentMethod;
     }
 
     @Override
-    public List<PaymentMethodModelDao> refreshPaymentMethods(final UUID accountId, final List<PaymentMethodModelDao> paymentMethods, final CallContext context) {
+    public List<PaymentMethodModelDao> refreshPaymentMethods(final UUID accountId, final List<PaymentMethodModelDao> paymentMethods, final InternalCallContext context) {
         return paymentMethodSqlDao.inTransaction(new Transaction<List<PaymentMethodModelDao>, PaymentMethodSqlDao>() {
 
             @Override
             public List<PaymentMethodModelDao> inTransaction(final PaymentMethodSqlDao transactional, final TransactionStatus status) throws Exception {
-                final List<PaymentMethodModelDao> existingPaymentMethods = getPaymentMethodsInTransaction(transactional, accountId);
+                final List<PaymentMethodModelDao> existingPaymentMethods = getPaymentMethodsInTransaction(transactional, accountId, context);
 
                 final Set<String> externalPaymentIdProcessed = new HashSet<String>();
                 for (final PaymentMethodModelDao finalPaymentMethod : paymentMethods) {
@@ -220,7 +220,7 @@ public class AuditedPaymentDao implements PaymentDao {
                         } else if (existingPaymentMethod.equalsButActive(finalPaymentMethod)) {
                             // We already have it but its status has changed - update it accordingly
                             // Note - in the remote system, the payment method will always be active
-                            undeletedPaymentMethodInTransaction(transactional, existingPaymentMethod.getId());
+                            undeletedPaymentMethodInTransaction(transactional, existingPaymentMethod.getId(), context);
                             isExistingPaymentMethod = true;
                             break;
                         }
@@ -237,29 +237,29 @@ public class AuditedPaymentDao implements PaymentDao {
                 // Finally, mark as deleted the ones that don't exist in the specified list (remote system)
                 for (final PaymentMethodModelDao existingPaymentMethod : existingPaymentMethods) {
                     if (!externalPaymentIdProcessed.contains(existingPaymentMethod.getExternalId())) {
-                        deletedPaymentMethodInTransaction(transactional, existingPaymentMethod.getId());
+                        deletedPaymentMethodInTransaction(transactional, existingPaymentMethod.getId(), context);
                     }
                 }
 
-                return getPaymentMethodsInTransaction(transactional, accountId);
+                return getPaymentMethodsInTransaction(transactional, accountId, context);
             }
         });
     }
 
     @Override
-    public RefundModelDao insertRefund(final RefundModelDao refundInfo, final CallContext context) {
+    public RefundModelDao insertRefund(final RefundModelDao refundInfo, final InternalCallContext context) {
         return refundSqlDao.inTransaction(new Transaction<RefundModelDao, RefundSqlDao>() {
 
             @Override
             public RefundModelDao inTransaction(RefundSqlDao transactional,
-                    TransactionStatus status) throws Exception {
+                                                TransactionStatus status) throws Exception {
 
                 transactional.insertRefund(refundInfo, context);
-                final RefundModelDao savedRefund = transactional.getRefund(refundInfo.getId().toString());
-                final Long recordId = transactional.getRecordId(savedRefund.getId().toString());
+                final RefundModelDao savedRefund = transactional.getRefund(refundInfo.getId().toString(), context);
+                final Long recordId = transactional.getRecordId(savedRefund.getId().toString(), context);
                 final EntityHistory<RefundModelDao> history = new EntityHistory<RefundModelDao>(savedRefund.getId(), recordId, savedRefund, ChangeType.INSERT);
                 transactional.insertHistoryFromTransaction(history, context);
-                final Long historyRecordId = transactional.getHistoryRecordId(recordId);
+                final Long historyRecordId = transactional.getHistoryRecordId(recordId, context);
                 final EntityAudit audit = new EntityAudit(TableName.REFUND_HISTORY, historyRecordId, ChangeType.INSERT);
                 transactional.insertAuditFromTransaction(audit, context);
                 return savedRefund;
@@ -267,22 +267,20 @@ public class AuditedPaymentDao implements PaymentDao {
         });
     }
 
-
     @Override
-    public void updateRefundStatus(final UUID refundId,
-            final RefundStatus refundStatus, final CallContext context) {
+    public void updateRefundStatus(final UUID refundId, final RefundStatus refundStatus, final InternalCallContext context) {
         refundSqlDao.inTransaction(new Transaction<Void, RefundSqlDao>() {
 
             @Override
             public Void inTransaction(RefundSqlDao transactional,
-                    TransactionStatus status) throws Exception {
-                transactional.updateStatus(refundId.toString(), refundStatus.toString());
+                                      TransactionStatus status) throws Exception {
+                transactional.updateStatus(refundId.toString(), refundStatus.toString(), context);
 
-                final RefundModelDao savedRefund = transactional.getRefund(refundId.toString());
-                final Long recordId = transactional.getRecordId(savedRefund.getId().toString());
+                final RefundModelDao savedRefund = transactional.getRefund(refundId.toString(), context);
+                final Long recordId = transactional.getRecordId(savedRefund.getId().toString(), context);
                 final EntityHistory<RefundModelDao> history = new EntityHistory<RefundModelDao>(savedRefund.getId(), recordId, savedRefund, ChangeType.UPDATE);
                 transactional.insertHistoryFromTransaction(history, context);
-                final Long historyRecordId = transactional.getHistoryRecordId(recordId);
+                final Long historyRecordId = transactional.getHistoryRecordId(recordId, context);
                 final EntityAudit audit = new EntityAudit(TableName.REFUND_HISTORY, historyRecordId, ChangeType.UPDATE);
                 transactional.insertAuditFromTransaction(audit, context);
                 return null;
@@ -291,107 +289,104 @@ public class AuditedPaymentDao implements PaymentDao {
     }
 
     @Override
-    public RefundModelDao getRefund(final UUID refundId) {
+    public RefundModelDao getRefund(final UUID refundId, final InternalTenantContext context) {
         return refundSqlDao.inTransaction(new Transaction<RefundModelDao, RefundSqlDao>() {
 
             @Override
             public RefundModelDao inTransaction(RefundSqlDao transactional,
-                    TransactionStatus status) throws Exception {
-                return transactional.getRefund(refundId.toString());
+                                                TransactionStatus status) throws Exception {
+                return transactional.getRefund(refundId.toString(), context);
             }
         });
     }
 
-
     @Override
-    public List<RefundModelDao> getRefundsForPayment(final UUID paymentId) {
+    public List<RefundModelDao> getRefundsForPayment(final UUID paymentId, final InternalTenantContext context) {
         return refundSqlDao.inTransaction(new Transaction<List<RefundModelDao>, RefundSqlDao>() {
 
             @Override
             public List<RefundModelDao> inTransaction(RefundSqlDao transactional,
-                    TransactionStatus status) throws Exception {
-                return transactional.getRefundsForPayment(paymentId.toString());
+                                                      TransactionStatus status) throws Exception {
+                return transactional.getRefundsForPayment(paymentId.toString(), context);
             }
         });
     }
 
-
     @Override
-    public List<RefundModelDao> getRefundsForAccount(final UUID accountId) {
+    public List<RefundModelDao> getRefundsForAccount(final UUID accountId, final InternalTenantContext context) {
         return refundSqlDao.inTransaction(new Transaction<List<RefundModelDao>, RefundSqlDao>() {
 
             @Override
             public List<RefundModelDao> inTransaction(RefundSqlDao transactional,
-                    TransactionStatus status) throws Exception {
-                return transactional.getRefundsForAccount(accountId.toString());
+                                                      TransactionStatus status) throws Exception {
+                return transactional.getRefundsForAccount(accountId.toString(), context);
             }
         });
     }
 
     @Override
-    public PaymentMethodModelDao getPaymentMethod(final UUID paymentMethodId) {
-        return getPaymentMethodInTransaction(paymentMethodSqlDao, paymentMethodId);
+    public PaymentMethodModelDao getPaymentMethod(final UUID paymentMethodId, final InternalTenantContext context) {
+        return getPaymentMethodInTransaction(paymentMethodSqlDao, paymentMethodId, context);
     }
 
     @Override
-    public PaymentMethodModelDao getPaymentMethodIncludedDeleted(final UUID paymentMethodId) {
-        return paymentMethodSqlDao.getPaymentMethodIncludedDelete(paymentMethodId.toString());
+    public PaymentMethodModelDao getPaymentMethodIncludedDeleted(final UUID paymentMethodId, final InternalTenantContext context) {
+        return paymentMethodSqlDao.getPaymentMethodIncludedDelete(paymentMethodId.toString(), context);
     }
 
-    private PaymentMethodModelDao getPaymentMethodInTransaction(final PaymentMethodSqlDao transactional, final UUID paymentMethodId) {
-        return transactional.getPaymentMethod(paymentMethodId.toString());
-    }
-
-    @Override
-    public List<PaymentMethodModelDao> getPaymentMethods(final UUID accountId) {
-        return getPaymentMethodsInTransaction(paymentMethodSqlDao, accountId);
-    }
-
-    private List<PaymentMethodModelDao> getPaymentMethodsInTransaction(final PaymentMethodSqlDao transactional, final UUID accountId) {
-        return transactional.getPaymentMethods(accountId.toString());
+    private PaymentMethodModelDao getPaymentMethodInTransaction(final PaymentMethodSqlDao transactional, final UUID paymentMethodId, final InternalTenantContext context) {
+        return transactional.getPaymentMethod(paymentMethodId.toString(), context);
     }
 
     @Override
-    public void deletedPaymentMethod(final UUID paymentMethodId) {
-        deletedPaymentMethodInTransaction(paymentMethodSqlDao, paymentMethodId);
+    public List<PaymentMethodModelDao> getPaymentMethods(final UUID accountId, final InternalTenantContext context) {
+        return getPaymentMethodsInTransaction(paymentMethodSqlDao, accountId, context);
     }
 
-    private void deletedPaymentMethodInTransaction(final PaymentMethodSqlDao transactional, final UUID paymentMethodId) {
-        transactional.markPaymentMethodAsDeleted(paymentMethodId.toString());
-    }
-
-    @Override
-    public void undeletedPaymentMethod(final UUID paymentMethodId) {
-        undeletedPaymentMethodInTransaction(paymentMethodSqlDao, paymentMethodId);
-    }
-
-    private void undeletedPaymentMethodInTransaction(final PaymentMethodSqlDao transactional, final UUID paymentMethodId) {
-        transactional.unmarkPaymentMethodAsDeleted(paymentMethodId.toString());
+    private List<PaymentMethodModelDao> getPaymentMethodsInTransaction(final PaymentMethodSqlDao transactional, final UUID accountId, final InternalTenantContext context) {
+        return transactional.getPaymentMethods(accountId.toString(), context);
     }
 
     @Override
-    public List<PaymentModelDao> getPaymentsForInvoice(final UUID invoiceId) {
-        return paymentSqlDao.getPaymentsForInvoice(invoiceId.toString());
+    public void deletedPaymentMethod(final UUID paymentMethodId, final InternalCallContext context) {
+        deletedPaymentMethodInTransaction(paymentMethodSqlDao, paymentMethodId, context);
+    }
+
+    private void deletedPaymentMethodInTransaction(final PaymentMethodSqlDao transactional, final UUID paymentMethodId, final InternalCallContext context) {
+        transactional.markPaymentMethodAsDeleted(paymentMethodId.toString(), context);
     }
 
     @Override
-    public PaymentModelDao getLastPaymentForPaymentMethod(final UUID accountId, final UUID paymentMethodId) {
-        return paymentSqlDao.getLastPaymentForAccountAndPaymentMethod(accountId.toString(), paymentMethodId.toString());
+    public void undeletedPaymentMethod(final UUID paymentMethodId, final InternalCallContext context) {
+        undeletedPaymentMethodInTransaction(paymentMethodSqlDao, paymentMethodId, context);
+    }
+
+    private void undeletedPaymentMethodInTransaction(final PaymentMethodSqlDao transactional, final UUID paymentMethodId, final InternalCallContext context) {
+        transactional.unmarkPaymentMethodAsDeleted(paymentMethodId.toString(), context);
     }
 
     @Override
-    public PaymentModelDao getPayment(final UUID paymentId) {
-        return paymentSqlDao.getPayment(paymentId.toString());
+    public List<PaymentModelDao> getPaymentsForInvoice(final UUID invoiceId, final InternalTenantContext context) {
+        return paymentSqlDao.getPaymentsForInvoice(invoiceId.toString(), context);
     }
 
     @Override
-    public List<PaymentModelDao> getPaymentsForAccount(final UUID accountId) {
-        return paymentSqlDao.getPaymentsForAccount(accountId.toString());
+    public PaymentModelDao getLastPaymentForPaymentMethod(final UUID accountId, final UUID paymentMethodId, final InternalTenantContext context) {
+        return paymentSqlDao.getLastPaymentForAccountAndPaymentMethod(accountId.toString(), paymentMethodId.toString(), context);
     }
 
     @Override
-    public List<PaymentAttemptModelDao> getAttemptsForPayment(final UUID paymentId) {
-        return paymentAttemptSqlDao.getPaymentAttempts(paymentId.toString());
+    public PaymentModelDao getPayment(final UUID paymentId, final InternalTenantContext context) {
+        return paymentSqlDao.getPayment(paymentId.toString(), context);
     }
 
+    @Override
+    public List<PaymentModelDao> getPaymentsForAccount(final UUID accountId, final InternalTenantContext context) {
+        return paymentSqlDao.getPaymentsForAccount(accountId.toString(), context);
+    }
+
+    @Override
+    public List<PaymentAttemptModelDao> getAttemptsForPayment(final UUID paymentId, final InternalTenantContext context) {
+        return paymentAttemptSqlDao.getPaymentAttempts(paymentId.toString(), context);
+    }
 }

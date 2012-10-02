@@ -20,8 +20,9 @@ import java.util.List;
 
 import org.skife.jdbi.v2.IDBI;
 
-import com.google.inject.Inject;
 import com.ning.billing.util.validation.ColumnInfo;
+
+import com.google.inject.Inject;
 
 public class DatabaseSchemaDao {
     private final DatabaseSchemaSqlDao dao;

@@ -20,10 +20,11 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.entitlement.api.SubscriptionTransitionType;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 
 public abstract class DefaultSubscriptionEvent implements SubscriptionEvent {
     private final Long totalOrdering;

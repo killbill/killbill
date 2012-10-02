@@ -36,8 +36,10 @@ import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.junction.JunctionTestSuite;
+import com.ning.billing.util.callcontext.TenantContext;
 
-public class TestBillCycleDayCalculator {
+public class TestBillCycleDayCalculator extends JunctionTestSuite {
 
     @Test(groups = "fast")
     public void testCalculateBCDForAOWithBPCancelledBundleAligned() throws Exception {
@@ -57,7 +59,7 @@ public class TestBillCycleDayCalculator {
         Mockito.when(subscription.getStartDate()).thenReturn(bpStartDateUTC);
         Mockito.when(subscription.getPreviousTransition()).thenReturn(previousTransition);
         // subscription.getCurrentPlan() will return null as expected (cancelled BP)
-        Mockito.when(entitlementUserApi.getBaseSubscription(Mockito.<UUID>any())).thenReturn(subscription);
+        Mockito.when(entitlementUserApi.getBaseSubscription(Mockito.<UUID>any(), Mockito.<TenantContext>any())).thenReturn(subscription);
 
         // Create a the base plan associated with that subscription
         final Plan plan = Mockito.mock(Plan.class);
@@ -68,7 +70,7 @@ public class TestBillCycleDayCalculator {
         final Account account = Mockito.mock(Account.class);
         Mockito.when(account.getTimeZone()).thenReturn(accountTimeZone);
         final BillCycleDay billCycleDay = billCycleDayCalculator.calculateBcdForAlignment(BillingAlignment.BUNDLE, bundle, subscription,
-                                                                                          account, catalog, null);
+                                                                                          account, catalog, null, callContext);
 
         Assert.assertEquals(billCycleDay.getDayOfMonthUTC(), expectedBCDUTC);
     }

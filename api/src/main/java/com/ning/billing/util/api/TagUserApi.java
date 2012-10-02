@@ -22,15 +22,18 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;
 
 public interface TagUserApi {
+
     /**
+     * @param context The tenant context
      * @return the list of all available tag definitions
      */
-    public List<TagDefinition> getTagDefinitions();
+    public List<TagDefinition> getTagDefinitions(TenantContext context);
 
     /**
      * @param definitionName Identifies the definition.
@@ -43,16 +46,16 @@ public interface TagUserApi {
 
     /**
      * @param tagDefinitionId The UUID for that tagDefinition
-     * @param context        The call context, for auditing purposes
+     * @param context         The call context, for auditing purposes
      * @throws TagDefinitionApiException
      */
     public void deleteTagDefinition(UUID tagDefinitionId, CallContext context) throws TagDefinitionApiException;
 
-    public TagDefinition getTagDefinition(UUID tagDefinitionId) throws TagDefinitionApiException;
+    public TagDefinition getTagDefinition(UUID tagDefinitionId, TenantContext context) throws TagDefinitionApiException;
 
-    public TagDefinition getTagDefinitionForName(String tageDefinitionName) throws TagDefinitionApiException;
+    public TagDefinition getTagDefinitionForName(String tageDefinitionName, TenantContext context) throws TagDefinitionApiException;
 
-    public List<TagDefinition> getTagDefinitions(final Collection<UUID> tagDefinitionIds) throws TagDefinitionApiException;
+    public List<TagDefinition> getTagDefinitions(Collection<UUID> tagDefinitionIds, TenantContext context) throws TagDefinitionApiException;
 
     public void addTags(UUID objectId, ObjectType objectType, Collection<UUID> tagDefinitionIds, CallContext context) throws TagApiException;
 
@@ -63,10 +66,10 @@ public interface TagUserApi {
     public void removeTag(UUID objectId, ObjectType objectType, UUID tagDefinitionId, CallContext context) throws TagApiException;
 
     /**
-     *
-     * @param objectId UUID of the object on which to retrieve the tags
+     * @param objectId   UUID of the object on which to retrieve the tags
      * @param objectType The type of object
+     * @param context    The tenant context
      * @return A map of tag, key being the tagId, and value the tag
      */
-    public Map<String, Tag> getTags(UUID objectId, ObjectType objectType);
+    public Map<String, Tag> getTags(UUID objectId, ObjectType objectType, TenantContext context);
 }

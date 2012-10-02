@@ -13,25 +13,22 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.payment.retry;
 
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
 import com.ning.billing.config.PaymentConfig;
 import com.ning.billing.payment.core.PaymentProcessor;
-import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 
+import com.google.inject.Inject;
 
 public class AutoPayRetryService extends BaseRetryService implements RetryService {
-
-
-    private static final Logger log = LoggerFactory.getLogger(FailedPaymentRetryService.class);
 
     public static final String QUEUE_NAME = "autopayoff";
 
@@ -39,13 +36,12 @@ public class AutoPayRetryService extends BaseRetryService implements RetryServic
 
     @Inject
     public AutoPayRetryService(final NotificationQueueService notificationQueueService,
-            final Clock clock,
-            final PaymentConfig config,
-            final PaymentProcessor paymentProcessor) {
-        super(notificationQueueService, clock, config);
+                               final PaymentConfig config,
+                               final PaymentProcessor paymentProcessor,
+                               final InternalCallContextFactory internalCallContextFactory) {
+        super(notificationQueueService, config, internalCallContextFactory);
         this.paymentProcessor = paymentProcessor;
     }
-
 
     @Override
     public String getQueueName() {
@@ -53,16 +49,16 @@ public class AutoPayRetryService extends BaseRetryService implements RetryServic
     }
 
     @Override
-    public void retry(final UUID paymentId) {
-        paymentProcessor.retryAutoPayOff(paymentId);
+    public void retry(final UUID paymentId, final InternalCallContext context) {
+        paymentProcessor.retryAutoPayOff(paymentId, context);
     }
 
     public static class AutoPayRetryServiceScheduler extends RetryServiceScheduler {
 
-
         @Inject
-        public AutoPayRetryServiceScheduler(final NotificationQueueService notificationQueueService) {
-            super(notificationQueueService);
+        public AutoPayRetryServiceScheduler(final NotificationQueueService notificationQueueService,
+                                            final InternalCallContextFactory internalCallContextFactory) {
+            super(notificationQueueService, internalCallContextFactory);
         }
 
         @Override

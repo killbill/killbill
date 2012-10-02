@@ -21,14 +21,12 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.BlockingApi;
-import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.overdue.applicator.OverdueStateApplicator;
 import com.ning.billing.overdue.calculator.BillingStateCalculatorBundle;
 import com.ning.billing.overdue.config.DefaultOverdueState;
@@ -36,7 +34,10 @@ import com.ning.billing.overdue.config.DefaultOverdueStateSet;
 import com.ning.billing.overdue.config.OverdueConfig;
 import com.ning.billing.overdue.config.api.OverdueException;
 import com.ning.billing.overdue.config.api.OverdueStateSet;
+import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.Clock;
+
+import com.google.inject.Inject;
 
 public class OverdueWrapperFactory {
     private static final Logger log = LoggerFactory.getLogger(OverdueWrapperFactory.class);
@@ -72,11 +73,11 @@ public class OverdueWrapperFactory {
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends Blockable> OverdueWrapper<T> createOverdueWrapperFor(final Blockable.Type type, final UUID id) throws OverdueException {
+    public <T extends Blockable> OverdueWrapper<T> createOverdueWrapperFor(final Blockable.Type type, final UUID id, final InternalTenantContext context) throws OverdueException {
         try {
             switch (type) {
                 case SUBSCRIPTION_BUNDLE: {
-                    final SubscriptionBundle bundle = entitlementApi.getBundleFromId(id);
+                    final SubscriptionBundle bundle = entitlementApi.getBundleFromId(id, context.toTenantContext());
                     return (OverdueWrapper<T>) new OverdueWrapper<SubscriptionBundle>(bundle, api, getOverdueStateSetBundle(),
                                                                                       clock, billingStateCalcuatorBundle, overdueStateApplicatorBundle);
                 }

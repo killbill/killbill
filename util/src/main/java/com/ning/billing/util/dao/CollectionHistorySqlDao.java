@@ -21,17 +21,19 @@ import java.util.List;
 import org.skife.jdbi.v2.sqlobject.SqlBatch;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
-import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 import com.ning.billing.util.entity.Entity;
 
 public interface CollectionHistorySqlDao<T extends Entity> {
+
     @SqlBatch
     public void addHistoryFromTransaction(String objectId, ObjectType objectType,
                                           List<EntityHistory<T>> histories,
-                                          CallContext context);
+                                          @InternalTenantContextBinder InternalCallContext context);
 
     @SqlUpdate
     public void addHistoryFromTransaction(String objectId, ObjectType objectType,
                                           EntityHistory<T> history,
-                                          CallContext context);
+                                          @InternalTenantContextBinder InternalCallContext context);
 }

@@ -23,36 +23,42 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.joda.time.LocalTime;
 
-import com.google.inject.Inject;
 import com.ning.billing.entitlement.api.SubscriptionFactory;
 import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
+import com.ning.billing.util.callcontext.TenantContext;
+
+import com.google.inject.Inject;
 
 public class DefaultChargeThruApi implements ChargeThruApi {
+
     private final EntitlementDao entitlementDao;
     private final SubscriptionFactory subscriptionFactory;
+    private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
-    public DefaultChargeThruApi(final SubscriptionFactory subscriptionFactory, final EntitlementDao dao) {
-        super();
+    public DefaultChargeThruApi(final SubscriptionFactory subscriptionFactory, final EntitlementDao dao, final InternalCallContextFactory internalCallContextFactory) {
         this.subscriptionFactory = subscriptionFactory;
         this.entitlementDao = dao;
+        // TODO remove - internal API, should use InternalCallContext directly
+        this.internalCallContextFactory = internalCallContextFactory;
     }
 
     @Override
-    public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId) {
-        return entitlementDao.getAccountIdFromSubscriptionId(subscriptionId);
+    public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId, final TenantContext context) {
+        return entitlementDao.getAccountIdFromSubscriptionId(subscriptionId, internalCallContextFactory.createInternalTenantContext(context));
     }
 
     @Override
     public void setChargedThroughDate(final UUID subscriptionId, final LocalDate ctd, final CallContext context) {
-        final SubscriptionData subscription = (SubscriptionData) entitlementDao.getSubscriptionFromId(subscriptionFactory, subscriptionId);
+        final SubscriptionData subscription = (SubscriptionData) entitlementDao.getSubscriptionFromId(subscriptionFactory, subscriptionId, internalCallContextFactory.createInternalCallContext(context));
         final DateTime chargedThroughDate = ctd.toDateTime(new LocalTime(subscription.getStartDate(), DateTimeZone.UTC), DateTimeZone.UTC);
         final SubscriptionBuilder builder = new SubscriptionBuilder(subscription)
                 .setChargedThroughDate(chargedThroughDate)
                 .setPaidThroughDate(subscription.getPaidThroughDate());
-        entitlementDao.updateChargedThroughDate(new SubscriptionData(builder), context);
+        entitlementDao.updateChargedThroughDate(new SubscriptionData(builder), internalCallContextFactory.createInternalCallContext(context));
     }
 }

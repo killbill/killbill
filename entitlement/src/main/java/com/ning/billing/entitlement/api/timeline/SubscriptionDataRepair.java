@@ -22,8 +22,6 @@ import java.util.List;
 
 import org.joda.time.DateTime;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogApiException;
@@ -45,27 +43,34 @@ import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
 import com.ning.billing.entitlement.events.user.ApiEventBuilder;
 import com.ning.billing.entitlement.events.user.ApiEventCancel;
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.Clock;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
+
 public class SubscriptionDataRepair extends SubscriptionData {
+
     private final AddonUtils addonUtils;
     private final Clock clock;
     private final EntitlementDao repairDao;
     private final CatalogService catalogService;
-
     private final List<EntitlementEvent> initialEvents;
+    private final InternalCallContextFactory internalCallContextFactory;
 
     // Low level events are ONLY used for Repair APIs
     private List<EntitlementEvent> events;
 
     public SubscriptionDataRepair(final SubscriptionBuilder builder, final List<EntitlementEvent> initialEvents, final SubscriptionApiService apiService,
-                                  final EntitlementDao dao, final Clock clock, final AddonUtils addonUtils, final CatalogService catalogService) {
+                                  final EntitlementDao dao, final Clock clock, final AddonUtils addonUtils, final CatalogService catalogService,
+                                  final InternalCallContextFactory internalCallContextFactory) {
         super(builder, apiService, clock);
         this.repairDao = dao;
         this.addonUtils = addonUtils;
         this.clock = clock;
         this.catalogService = catalogService;
         this.initialEvents = initialEvents;
+        this.internalCallContextFactory = internalCallContextFactory;
     }
 
     DateTime getLastUserEventEffectiveDate() {
@@ -125,7 +130,7 @@ public class SubscriptionDataRepair extends SubscriptionData {
             return;
         }
         final Product baseProduct = (pendingTransition.getTransitionType() == SubscriptionTransitionType.CANCEL) ? null :
-                pendingTransition.getNextPlan().getProduct();
+                                    pendingTransition.getNextPlan().getProduct();
 
         addAddonCancellationIfRequired(addOnSubscriptionInRepair, baseProduct, pendingTransition.getEffectiveTransitionTime(), context);
     }
@@ -138,24 +143,25 @@ public class SubscriptionDataRepair extends SubscriptionData {
         }
 
         final Product baseProduct = (getState() == SubscriptionState.CANCELLED) ?
-                null : getCurrentPlan().getProduct();
+                                    null : getCurrentPlan().getProduct();
         addAddonCancellationIfRequired(addOnSubscriptionInRepair, baseProduct, effectiveDate, context);
     }
 
-    private void addAddonCancellationIfRequired(final List<SubscriptionDataRepair> addOnSubscriptionInRepair, final Product baseProduct, final DateTime effectiveDate, final CallContext context) {
+    private void addAddonCancellationIfRequired(final List<SubscriptionDataRepair> addOnSubscriptionInRepair, final Product baseProduct,
+                                                final DateTime effectiveDate, final CallContext context) {
 
         final DateTime now = clock.getUTCNow();
         final Iterator<SubscriptionDataRepair> it = addOnSubscriptionInRepair.iterator();
         while (it.hasNext()) {
             final SubscriptionDataRepair cur = it.next();
             if (cur.getState() == SubscriptionState.CANCELLED ||
-                    cur.getCategory() != ProductCategory.ADD_ON) {
+                cur.getCategory() != ProductCategory.ADD_ON) {
                 continue;
             }
             final Plan addonCurrentPlan = cur.getCurrentPlan();
             if (baseProduct == null ||
-                    addonUtils.isAddonIncluded(baseProduct, addonCurrentPlan) ||
-                    !addonUtils.isAddonAvailable(baseProduct, addonCurrentPlan)) {
+                addonUtils.isAddonIncluded(baseProduct, addonCurrentPlan) ||
+                !addonUtils.isAddonAvailable(baseProduct, addonCurrentPlan)) {
 
                 final EntitlementEvent cancelEvent = new ApiEventCancel(new ApiEventBuilder()
                                                                                 .setSubscriptionId(cur.getId())
@@ -165,8 +171,8 @@ public class SubscriptionDataRepair extends SubscriptionData {
                                                                                 .setRequestedDate(now)
                                                                                 .setUserToken(context.getUserToken())
                                                                                 .setFromDisk(true));
-                repairDao.cancelSubscription(cur, cancelEvent, context, 0);
-                cur.rebuildTransitions(repairDao.getEventsForSubscription(cur.getId()), catalogService.getFullCatalog());
+                repairDao.cancelSubscription(cur, cancelEvent, internalCallContextFactory.createInternalCallContext(context), 0);
+                cur.rebuildTransitions(repairDao.getEventsForSubscription(cur.getId(), internalCallContextFactory.createInternalTenantContext(context)), catalogService.getFullCatalog());
             }
         }
     }

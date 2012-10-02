@@ -24,14 +24,12 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeoutException;
 
-import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
-import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.config.PaymentConfig;
@@ -51,12 +49,10 @@ import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
 import com.ning.billing.payment.retry.FailedPaymentRetryService;
 import com.ning.billing.payment.retry.PluginFailureRetryService;
 import com.ning.billing.util.bus.Bus;
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallOrigin;
-import com.ning.billing.util.callcontext.DefaultCallContext;
-import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.glue.CallContextModule;
+
+import com.google.inject.Inject;
 
 import static com.jayway.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -87,7 +83,6 @@ public class TestRetryService extends PaymentTestSuite {
     private ClockMock clock;
 
     private MockPaymentProviderPlugin mockPaymentProviderPlugin;
-    private CallContext context;
 
     @BeforeMethod(groups = "fast")
     public void setUp() throws Exception {
@@ -100,8 +95,6 @@ public class TestRetryService extends PaymentTestSuite {
 
         mockPaymentProviderPlugin = (MockPaymentProviderPlugin) registry.getPlugin(null);
         mockPaymentProviderPlugin.clear();
-
-        context = new DefaultCallContext("RetryServiceTests", CallOrigin.INTERNAL, UserType.TEST, clock);
     }
 
     @AfterMethod(groups = "fast")
@@ -112,7 +105,7 @@ public class TestRetryService extends PaymentTestSuite {
     }
 
     private Payment getPaymentForInvoice(final UUID invoiceId) throws PaymentApiException {
-        final List<Payment> payments = paymentProcessor.getInvoicePayments(invoiceId);
+        final List<Payment> payments = paymentProcessor.getInvoicePayments(invoiceId, internalCallContext);
         assertEquals(payments.size(), 1);
         final Payment payment = payments.get(0);
         assertEquals(payment.getInvoiceId(), invoiceId);
@@ -152,7 +145,7 @@ public class TestRetryService extends PaymentTestSuite {
     private void testSchedulesRetryInternal(final int maxTries, final FailureType failureType) throws Exception {
 
         final Account account = testHelper.createTestAccount("yiyi.gmail.com", true);
-        final Invoice invoice = testHelper.createTestInvoice(account, clock.getUTCToday(), Currency.USD);
+        final Invoice invoice = testHelper.createTestInvoice(account, clock.getUTCToday(), Currency.USD, callContext);
         final BigDecimal amount = new BigDecimal("10.00");
         final UUID subscriptionId = UUID.randomUUID();
         final UUID bundleId = UUID.randomUUID();
@@ -172,7 +165,7 @@ public class TestRetryService extends PaymentTestSuite {
         setPaymentFailure(failureType);
         boolean failed = false;
         try {
-            paymentProcessor.createPayment(account, invoice.getId(), amount, context, false, false);
+            paymentProcessor.createPayment(account, invoice.getId(), amount, internalCallContext, false, false);
         } catch (PaymentApiException e) {
             failed = true;
         }
@@ -197,7 +190,7 @@ public class TestRetryService extends PaymentTestSuite {
                     });
                 } catch (TimeoutException e) {
                     if (curFailure == maxTries - 1) {
-                        fail("Failed to find succesful payment for attempt " + (curFailure + 1) + "/" + maxTries);
+                        fail("Failed to find successful payment for attempt " + (curFailure + 1) + "/" + maxTries);
                     }
                 }
             }

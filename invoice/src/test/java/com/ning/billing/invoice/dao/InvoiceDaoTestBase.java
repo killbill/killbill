@@ -35,8 +35,7 @@ import com.ning.billing.invoice.tests.InvoicingTestBase;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.InMemoryBus;
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.TestCallContext;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.tag.api.DefaultTagUserApi;
@@ -57,7 +56,6 @@ public class InvoiceDaoTestBase extends InvoicingTestBase {
     protected InvoiceItemSqlDao invoiceItemSqlDao;
     protected InvoicePaymentSqlDao invoicePaymentDao;
     protected Clock clock;
-    protected CallContext context;
     protected InvoiceGenerator generator;
     protected Bus bus;
 
@@ -109,14 +107,13 @@ public class InvoiceDaoTestBase extends InvoicingTestBase {
         final NextBillingDatePoster nextBillingDatePoster = new MockNextBillingDatePoster();
         final TagDefinitionDao tagDefinitionDao = new MockTagDefinitionDao();
         final TagDao tagDao = new AuditedTagDao(dbi, tagEventBuilder, bus);
-        final TagUserApi tagUserApi = new DefaultTagUserApi(tagDefinitionDao, tagDao);
+        final TagUserApi tagUserApi = new DefaultTagUserApi(new InternalCallContextFactory(dbi, clock), tagDefinitionDao, tagDao);
         invoiceDao = new AuditedInvoiceDao(dbi, nextBillingDatePoster, tagUserApi, clock, bus);
-        invoiceDao.test();
+        invoiceDao.test(internalCallContext);
 
         invoiceItemSqlDao = dbi.onDemand(InvoiceItemSqlDao.class);
         invoicePaymentDao = dbi.onDemand(InvoicePaymentSqlDao.class);
 
-        context = new TestCallContext("Invoice Dao Tests");
         generator = new DefaultInvoiceGenerator(clock, invoiceConfig);
 
         assertTrue(true);

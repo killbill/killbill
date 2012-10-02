@@ -43,19 +43,19 @@ public class TestOverdueWrapper extends OverdueTestBase {
         state = config.getBundleStateSet().findState("OD1");
         bundle = createBundle(clock.getUTCToday().minusDays(31));
         wrapper = overdueWrapperFactory.createOverdueWrapperFor(bundle);
-        wrapper.refresh();
+        wrapper.refresh(internalCallContext);
         checkStateApplied(state);
 
         state = config.getBundleStateSet().findState("OD2");
         bundle = createBundle(clock.getUTCToday().minusDays(41));
         wrapper = overdueWrapperFactory.createOverdueWrapperFor(bundle);
-        wrapper.refresh();
+        wrapper.refresh(internalCallContext);
         checkStateApplied(state);
 
         state = config.getBundleStateSet().findState("OD3");
         bundle = createBundle(clock.getUTCToday().minusDays(51));
         wrapper = overdueWrapperFactory.createOverdueWrapperFor(bundle);
-        wrapper.refresh();
+        wrapper.refresh(internalCallContext);
         checkStateApplied(state);
     }
 
@@ -72,7 +72,7 @@ public class TestOverdueWrapper extends OverdueTestBase {
         state = config.getBundleStateSet().findState(BlockingApi.CLEAR_STATE_NAME);
         bundle = createBundle(clock.getUTCToday().minusDays(31));
         wrapper = overdueWrapperFactory.createOverdueWrapperFor(bundle);
-        final OverdueState<SubscriptionBundle> result = wrapper.refresh();
+        final OverdueState<SubscriptionBundle> result = wrapper.refresh(internalCallContext);
 
         Assert.assertEquals(result.getName(), state.getName());
         Assert.assertEquals(result.blockChanges(), state.blockChanges());

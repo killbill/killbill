@@ -23,9 +23,6 @@ import org.joda.time.Interval;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Stage;
 import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.CatalogApiException;
@@ -42,6 +39,10 @@ import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.api.user.SubscriptionStatusDryRun.DryRunChangeReason;
 import com.ning.billing.entitlement.glue.MockEngineModuleSql;
 import com.ning.billing.util.clock.DefaultClock;
+
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Stage;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -71,7 +72,7 @@ public class TestUserApiAddOn extends TestApiBase {
             assertEquals(aoSubscription.getState(), SubscriptionState.ACTIVE);
 
             final DateTime now = clock.getUTCNow();
-            aoSubscription.cancel(now, context);
+            aoSubscription.cancel(now, callContext);
 
             testListener.reset();
             testListener.pushExpectedEvent(NextEvent.CANCEL);
@@ -115,14 +116,14 @@ public class TestUserApiAddOn extends TestApiBase {
             final Duration ctd = getDurationMonth(1);
             // Why not just use clock.getUTCNow().plusMonths(1) ?
             final DateTime newChargedThroughDate = DefaultClock.addDuration(now, ctd);
-            billingApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate.toLocalDate(), context);
-            baseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId());
+            billingApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate.toLocalDate(), callContext);
+            baseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
 
             // FUTURE CANCELLATION
-            baseSubscription.cancel(now, context);
+            baseSubscription.cancel(now, callContext);
 
             // REFETCH AO SUBSCRIPTION AND CHECK THIS IS ACTIVE
-            aoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId());
+            aoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId(), callContext);
             assertEquals(aoSubscription.getState(), SubscriptionState.ACTIVE);
             assertTrue(aoSubscription.isSubscriptionFutureCancelled());
 
@@ -136,7 +137,7 @@ public class TestUserApiAddOn extends TestApiBase {
             assertTrue(testListener.isCompleted(5000));
 
             // REFETCH AO SUBSCRIPTION AND CHECK THIS IS CANCELLED
-            aoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId());
+            aoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId(), callContext);
             assertEquals(aoSubscription.getState(), SubscriptionState.CANCELLED);
 
             assertListenerStatus();
@@ -175,15 +176,16 @@ public class TestUserApiAddOn extends TestApiBase {
             final DateTime now = clock.getUTCNow();
             final Duration ctd = getDurationMonth(1);
             final DateTime newChargedThroughDate = DefaultClock.addDuration(now, ctd);
-            billingApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate.toLocalDate(), context);
-            baseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId());
+            billingApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate.toLocalDate(), callContext);
+            baseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
 
             // CHANGE IMMEDIATELY WITH TO BP WITH NON INCLUDED ADDON
             final String newBaseProduct = "Assault-Rifle";
             final BillingPeriod newBaseTerm = BillingPeriod.MONTHLY;
             final String newBasePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
-            final List<SubscriptionStatusDryRun> aoStatus = entitlementApi.getDryRunChangePlanStatus(baseSubscription.getId(), newBaseProduct, now);
+            final List<SubscriptionStatusDryRun> aoStatus = entitlementApi.getDryRunChangePlanStatus(baseSubscription.getId(),
+                                                                                                     newBaseProduct, now, callContext);
             assertEquals(aoStatus.size(), 1);
             assertEquals(aoStatus.get(0).getId(), aoSubscription.getId());
             assertEquals(aoStatus.get(0).getProductName(), aoProduct);
@@ -195,11 +197,11 @@ public class TestUserApiAddOn extends TestApiBase {
             testListener.reset();
             testListener.pushExpectedEvent(NextEvent.CHANGE);
             testListener.pushExpectedEvent(NextEvent.CANCEL);
-            baseSubscription.changePlan(newBaseProduct, newBaseTerm, newBasePriceList, now, context);
+            baseSubscription.changePlan(newBaseProduct, newBaseTerm, newBasePriceList, now, callContext);
             assertTrue(testListener.isCompleted(5000));
 
             // REFETCH AO SUBSCRIPTION AND CHECK THIS CANCELLED
-            aoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId());
+            aoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId(), callContext);
             assertEquals(aoSubscription.getState(), SubscriptionState.CANCELLED);
 
             assertListenerStatus();
@@ -237,15 +239,16 @@ public class TestUserApiAddOn extends TestApiBase {
             final DateTime now = clock.getUTCNow();
             final Duration ctd = getDurationMonth(1);
             final DateTime newChargedThroughDate = DefaultClock.addDuration(now, ctd);
-            billingApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate.toLocalDate(), context);
-            baseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId());
+            billingApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate.toLocalDate(), callContext);
+            baseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
 
             // CHANGE IMMEDIATELY WITH TO BP WITH NON AVAILABLE ADDON
             final String newBaseProduct = "Pistol";
             final BillingPeriod newBaseTerm = BillingPeriod.MONTHLY;
             final String newBasePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
-            final List<SubscriptionStatusDryRun> aoStatus = entitlementApi.getDryRunChangePlanStatus(baseSubscription.getId(), newBaseProduct, now);
+            final List<SubscriptionStatusDryRun> aoStatus = entitlementApi.getDryRunChangePlanStatus(baseSubscription.getId(),
+                                                                                                     newBaseProduct, now, callContext);
             assertEquals(aoStatus.size(), 1);
             assertEquals(aoStatus.get(0).getId(), aoSubscription.getId());
             assertEquals(aoStatus.get(0).getProductName(), aoProduct);
@@ -254,10 +257,10 @@ public class TestUserApiAddOn extends TestApiBase {
             assertEquals(aoStatus.get(0).getPriceList(), aoSubscription.getCurrentPriceList().getName());
             assertEquals(aoStatus.get(0).getReason(), DryRunChangeReason.AO_NOT_AVAILABLE_IN_NEW_PLAN);
 
-            baseSubscription.changePlan(newBaseProduct, newBaseTerm, newBasePriceList, now, context);
+            baseSubscription.changePlan(newBaseProduct, newBaseTerm, newBasePriceList, now, callContext);
 
             // REFETCH AO SUBSCRIPTION AND CHECK THIS IS ACTIVE
-            aoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId());
+            aoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId(), callContext);
             assertEquals(aoSubscription.getState(), SubscriptionState.ACTIVE);
             assertTrue(aoSubscription.isSubscriptionFutureCancelled());
 
@@ -270,7 +273,7 @@ public class TestUserApiAddOn extends TestApiBase {
             assertTrue(testListener.isCompleted(5000));
 
             // REFETCH AO SUBSCRIPTION AND CHECK THIS CANCELLED
-            aoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId());
+            aoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId(), callContext);
             assertEquals(aoSubscription.getState(), SubscriptionState.CANCELLED);
 
             assertListenerStatus();
@@ -377,7 +380,7 @@ public class TestUserApiAddOn extends TestApiBase {
             assertTrue(testListener.isCompleted(5000));
 
             // CHECK EVERYTHING AGAIN
-            aoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId());
+            aoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId(), callContext);
 
             aoCurrentPlan = aoSubscription.getCurrentPlan();
             assertNotNull(aoCurrentPlan);
@@ -389,7 +392,7 @@ public class TestUserApiAddOn extends TestApiBase {
             assertNotNull(aoCurrentPhase);
             assertEquals(aoCurrentPhase.getPhaseType(), PhaseType.EVERGREEN);
 
-            aoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId());
+            aoSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(aoSubscription.getId(), callContext);
             aoPendingTranstion = aoSubscription.getPendingTransition();
             assertNull(aoPendingTranstion);
         } catch (EntitlementUserApiException e) {

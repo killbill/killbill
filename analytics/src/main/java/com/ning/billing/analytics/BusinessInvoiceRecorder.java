@@ -47,6 +47,8 @@ import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceUserApi;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.Clock;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -77,21 +79,21 @@ public class BusinessInvoiceRecorder {
         this.clock = clock;
     }
 
-    public void rebuildInvoicesForAccount(final UUID accountId) {
+    public void rebuildInvoicesForAccount(final UUID accountId, final InternalCallContext context) {
         sqlDao.inTransaction(new Transaction<Void, BusinessInvoiceSqlDao>() {
             @Override
             public Void inTransaction(final BusinessInvoiceSqlDao transactional, final TransactionStatus status) throws Exception {
-                rebuildInvoicesForAccountInTransaction(accountId, transactional);
+                rebuildInvoicesForAccountInTransaction(accountId, transactional, context);
                 return null;
             }
         });
     }
 
-    public void rebuildInvoicesForAccountInTransaction(final UUID accountId, final BusinessInvoiceSqlDao transactional) {
+    public void rebuildInvoicesForAccountInTransaction(final UUID accountId, final BusinessInvoiceSqlDao transactional, final InternalCallContext context) {
         // Lookup the associated account
         final String accountKey;
         try {
-            final Account account = accountApi.getAccountById(accountId);
+            final Account account = accountApi.getAccountById(accountId, context.toCallContext());
             accountKey = account.getExternalKey();
         } catch (AccountApiException e) {
             log.warn("Ignoring invoice update for account id {} (account does not exist)", accountId);
@@ -99,64 +101,67 @@ public class BusinessInvoiceRecorder {
         }
 
         log.info("Started rebuilding invoices for account id {}", accountId);
-        deleteInvoicesAndInvoiceItemsForAccountInTransaction(transactional, accountId);
+        deleteInvoicesAndInvoiceItemsForAccountInTransaction(transactional, accountId, context);
 
-        for (final Invoice invoice : invoiceApi.getInvoicesByAccount(accountId)) {
-            createInvoiceInTransaction(transactional, accountKey, invoice);
+        for (final Invoice invoice : invoiceApi.getInvoicesByAccount(accountId, context.toCallContext())) {
+            createInvoiceInTransaction(transactional, accountKey, invoice, context);
         }
 
         log.info("Finished rebuilding invoices for account id {}", accountId);
     }
 
-    private void deleteInvoicesAndInvoiceItemsForAccountInTransaction(final BusinessInvoiceSqlDao transactional, final UUID accountId) {
+    private void deleteInvoicesAndInvoiceItemsForAccountInTransaction(final BusinessInvoiceSqlDao transactional,
+                                                                      final UUID accountId, final InternalCallContext context) {
         // We don't use on cascade delete here as we don't want the database layer to be generic - hence we have
         // to delete the invoice items manually.
-        final List<BusinessInvoice> invoicesToDelete = transactional.getInvoicesForAccount(accountId.toString());
+        final List<BusinessInvoice> invoicesToDelete = transactional.getInvoicesForAccount(accountId.toString(), context);
         final BusinessInvoiceItemSqlDao invoiceItemSqlDao = transactional.become(BusinessInvoiceItemSqlDao.class);
         for (final BusinessInvoice businessInvoice : invoicesToDelete) {
-            final List<BusinessInvoiceItem> invoiceItemsForInvoice = invoiceItemSqlDao.getInvoiceItemsForInvoice(businessInvoice.getInvoiceId().toString());
+            final List<BusinessInvoiceItem> invoiceItemsForInvoice = invoiceItemSqlDao.getInvoiceItemsForInvoice(businessInvoice.getInvoiceId().toString(), context);
             for (final BusinessInvoiceItem invoiceItemToDelete : invoiceItemsForInvoice) {
                 log.info("Deleting invoice item {}", invoiceItemToDelete.getItemId());
-                invoiceItemSqlDao.deleteInvoiceItem(invoiceItemToDelete.getItemId().toString());
+                invoiceItemSqlDao.deleteInvoiceItem(invoiceItemToDelete.getItemId().toString(), context);
             }
         }
 
         log.info("Deleting invoices for account {}", accountId);
-        transactional.deleteInvoicesForAccount(accountId.toString());
+        transactional.deleteInvoicesForAccount(accountId.toString(), context);
     }
 
-    private void createInvoiceInTransaction(final BusinessInvoiceSqlDao transactional, final String accountKey, final Invoice invoice) {
+    private void createInvoiceInTransaction(final BusinessInvoiceSqlDao transactional, final String accountKey,
+                                            final Invoice invoice, final InternalCallContext context) {
         // Create the invoice
         final BusinessInvoice businessInvoice = new BusinessInvoice(accountKey, invoice);
 
         // Create associated invoice items
         final List<BusinessInvoiceItem> businessInvoiceItems = new ArrayList<BusinessInvoiceItem>();
         for (final InvoiceItem invoiceItem : invoice.getInvoiceItems()) {
-            final BusinessInvoiceItem businessInvoiceItem = createBusinessInvoiceItem(invoiceItem);
+            final BusinessInvoiceItem businessInvoiceItem = createBusinessInvoiceItem(invoiceItem, context);
             if (businessInvoiceItem != null) {
                 businessInvoiceItems.add(businessInvoiceItem);
             }
         }
 
-        createInvoiceInTransaction(transactional, invoice.getAccountId(), businessInvoice, businessInvoiceItems);
+        createInvoiceInTransaction(transactional, invoice.getAccountId(), businessInvoice, businessInvoiceItems, context);
     }
 
     private void createInvoiceInTransaction(final BusinessInvoiceSqlDao transactional, final UUID accountId,
-                                            final BusinessInvoice invoice, final Iterable<BusinessInvoiceItem> invoiceItems) {
+                                            final BusinessInvoice invoice, final Iterable<BusinessInvoiceItem> invoiceItems,
+                                            final InternalCallContext context) {
         // Create the invoice
         log.info("Adding invoice {}", invoice);
-        transactional.createInvoice(invoice);
+        transactional.createInvoice(invoice, context);
 
         // Add associated invoice items
         final BusinessInvoiceItemSqlDao invoiceItemSqlDao = transactional.become(BusinessInvoiceItemSqlDao.class);
         for (final BusinessInvoiceItem invoiceItem : invoiceItems) {
             log.info("Adding invoice item {}", invoiceItem);
-            invoiceItemSqlDao.createInvoiceItem(invoiceItem);
+            invoiceItemSqlDao.createInvoiceItem(invoiceItem, context);
         }
 
         // Update BAC
         final BusinessAccountSqlDao accountSqlDao = transactional.become(BusinessAccountSqlDao.class);
-        final BusinessAccount account = accountSqlDao.getAccount(accountId.toString());
+        final BusinessAccount account = accountSqlDao.getAccount(accountId.toString(), context);
         if (account == null) {
             throw new IllegalStateException("Account does not exist for id " + accountId);
         }
@@ -165,11 +170,11 @@ public class BusinessInvoiceRecorder {
         account.setTotalInvoiceBalance(account.getTotalInvoiceBalance().add(invoice.getBalance()));
         account.setUpdatedDt(clock.getUTCNow());
         log.info("Updating account {}", account);
-        accountSqlDao.saveAccount(account);
+        accountSqlDao.saveAccount(account, context);
     }
 
     @VisibleForTesting
-    BusinessInvoiceItem createBusinessInvoiceItem(final InvoiceItem invoiceItem) {
+    BusinessInvoiceItem createBusinessInvoiceItem(final InvoiceItem invoiceItem, final InternalTenantContext context) {
         String externalKey = null;
         Plan plan = null;
         PlanPhase planPhase = null;
@@ -177,7 +182,7 @@ public class BusinessInvoiceRecorder {
         // Subscription and bundle could be null for e.g. credits or adjustments
         if (invoiceItem.getBundleId() != null) {
             try {
-                final SubscriptionBundle bundle = entitlementApi.getBundleFromId(invoiceItem.getBundleId());
+                final SubscriptionBundle bundle = entitlementApi.getBundleFromId(invoiceItem.getBundleId(), context.toTenantContext());
                 externalKey = bundle.getKey();
             } catch (EntitlementUserApiException e) {
                 log.warn("Ignoring subscription fields for invoice item {} for bundle {} (bundle does not exist)",
@@ -197,7 +202,7 @@ public class BusinessInvoiceRecorder {
         if (invoiceItem.getSubscriptionId() != null && invoiceItem.getPhaseName() != null) {
             final Subscription subscription;
             try {
-                subscription = entitlementApi.getSubscriptionFromId(invoiceItem.getSubscriptionId());
+                subscription = entitlementApi.getSubscriptionFromId(invoiceItem.getSubscriptionId(), context.toTenantContext());
                 planPhase = catalogService.getFullCatalog().findPhase(invoiceItem.getPhaseName(), invoiceItem.getStartDate().toDateTimeAtStartOfDay(), subscription.getStartDate());
             } catch (EntitlementUserApiException e) {
                 log.warn("Ignoring subscription fields for invoice item {} for subscription {} (subscription does not exist)",

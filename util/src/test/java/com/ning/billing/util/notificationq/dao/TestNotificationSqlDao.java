@@ -30,8 +30,6 @@ import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
 import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
@@ -39,6 +37,9 @@ import com.ning.billing.util.notificationq.DefaultNotification;
 import com.ning.billing.util.notificationq.Notification;
 import com.ning.billing.util.notificationq.dao.NotificationSqlDao.NotificationSqlMapper;
 import com.ning.billing.util.queue.PersistentQueueEntryLifecycle.PersistentQueueEntryLifecycleState;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.Inject;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -80,11 +81,11 @@ public class TestNotificationSqlDao extends UtilTestSuiteWithEmbeddedDB {
         final String notificationKey = UUID.randomUUID().toString();
         final DateTime effDt = new DateTime();
         final Notification notif = new DefaultNotification("testBasic", hostname, notificationKey.getClass().getName(), notificationKey, accountId, effDt);
-        dao.insertNotification(notif);
+        dao.insertNotification(notif, internalCallContext);
 
         Thread.sleep(1000);
         final DateTime now = new DateTime();
-        final List<Notification> notifications = dao.getReadyNotifications(now.toDate(), hostname, 3, "testBasic");
+        final List<Notification> notifications = dao.getReadyNotifications(now.toDate(), hostname, 3, "testBasic", internalCallContext);
         assertNotNull(notifications);
         assertEquals(notifications.size(), 1);
 
@@ -96,9 +97,9 @@ public class TestNotificationSqlDao extends UtilTestSuiteWithEmbeddedDB {
         assertEquals(notification.getNextAvailableDate(), null);
 
         final DateTime nextAvailable = now.plusMinutes(5);
-        final int res = dao.claimNotification(ownerId, nextAvailable.toDate(), notification.getId().toString(), now.toDate());
+        final int res = dao.claimNotification(ownerId, nextAvailable.toDate(), notification.getId().toString(), now.toDate(), internalCallContext);
         assertEquals(res, 1);
-        dao.insertClaimedHistory(ownerId, now.toDate(), notification.getId().toString());
+        dao.insertClaimedHistory(ownerId, now.toDate(), notification.getId().toString(), internalCallContext);
 
         notification = fetchNotification(notification.getId().toString());
         assertEquals(notification.getNotificationKey(), notificationKey);
@@ -107,7 +108,7 @@ public class TestNotificationSqlDao extends UtilTestSuiteWithEmbeddedDB {
         assertEquals(notification.getProcessingState(), PersistentQueueEntryLifecycleState.IN_PROCESSING);
         validateDate(notification.getNextAvailableDate(), nextAvailable);
 
-        dao.clearNotification(notification.getId().toString(), ownerId);
+        dao.clearNotification(notification.getId().toString(), ownerId, internalCallContext);
 
         notification = fetchNotification(notification.getId().toString());
         assertEquals(notification.getNotificationKey(), notificationKey);
@@ -122,19 +123,19 @@ public class TestNotificationSqlDao extends UtilTestSuiteWithEmbeddedDB {
         final String notificationKey = UUID.randomUUID().toString();
         final DateTime effDt = new DateTime();
         final Notification notif1 = new DefaultNotification("testBasic1", hostname, notificationKey.getClass().getName(), notificationKey, accountId, effDt);
-        dao.insertNotification(notif1);
+        dao.insertNotification(notif1, internalCallContext);
 
         final Notification notif2 = new DefaultNotification("testBasic2", hostname, notificationKey.getClass().getName(), notificationKey, accountId, effDt);
-        dao.insertNotification(notif2);
+        dao.insertNotification(notif2, internalCallContext);
 
-        List<Notification> notifications = dao.getNotificationForAccountAndDate(accountId.toString(), effDt.toDate());
+        List<Notification> notifications = dao.getNotificationForAccountAndDate(accountId.toString(), effDt.toDate(), internalCallContext);
         assertEquals(notifications.size(), 2);
         for (final Notification cur : notifications) {
             Assert.assertEquals(cur.getProcessingState(), PersistentQueueEntryLifecycleState.AVAILABLE);
-            dao.removeNotification(cur.getId().toString());
+            dao.removeNotification(cur.getId().toString(), internalCallContext);
         }
 
-        notifications = dao.getNotificationForAccountAndDate(accountId.toString(), effDt.toDate());
+        notifications = dao.getNotificationForAccountAndDate(accountId.toString(), effDt.toDate(), internalCallContext);
         assertEquals(notifications.size(), 2);
         for (final Notification cur : notifications) {
             Assert.assertEquals(cur.getProcessingState(), PersistentQueueEntryLifecycleState.REMOVED);

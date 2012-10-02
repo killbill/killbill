@@ -36,7 +36,7 @@ import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.util.clock.Clock;
 
-public class TestBusinessInvoiceRecorder {
+public class TestBusinessInvoiceRecorder extends AnalyticsTestSuite {
 
     private final AccountUserApi accountApi = Mockito.mock(AccountUserApi.class);
     private final EntitlementUserApi entitlementApi = Mockito.mock(EntitlementUserApi.class);
@@ -59,7 +59,7 @@ public class TestBusinessInvoiceRecorder {
         Mockito.when(invoiceItem.getStartDate()).thenReturn(new LocalDate(1985, 9, 10));
         Mockito.when(invoiceItem.getInvoiceItemType()).thenReturn(InvoiceItemType.CREDIT_ADJ);
 
-        final BusinessInvoiceItem bii = recorder.createBusinessInvoiceItem(invoiceItem);
+        final BusinessInvoiceItem bii = recorder.createBusinessInvoiceItem(invoiceItem, internalCallContext);
         Assert.assertNotNull(bii);
         Assert.assertEquals(bii.getAmount(), invoiceItem.getAmount());
         Assert.assertEquals(bii.getCurrency(), invoiceItem.getCurrency());

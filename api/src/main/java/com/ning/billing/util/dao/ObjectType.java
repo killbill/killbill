@@ -28,7 +28,8 @@ public enum ObjectType {
     SUBSCRIPTION_EVENT("subscription event"),
     PAYMENT_METHOD("payment method"),
     REFUND("refund"),
-    TAG_DEFINITION("tag definition");
+    TAG_DEFINITION("tag definition"),
+    TENANT("tenant");
 
     private final String objectName;
 

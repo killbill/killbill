@@ -15,10 +15,6 @@
  */
 package com.ning.billing.beatrix.integration.overdue;
 
-import static com.jayway.awaitility.Awaitility.await;
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.testng.Assert.assertNotNull;
-
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.List;
@@ -46,6 +42,10 @@ import com.ning.billing.util.config.XMLLoader;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+
+import static com.jayway.awaitility.Awaitility.await;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.testng.Assert.assertNotNull;
 
 public abstract class TestOverdueBase extends TestIntegrationBase {
 
@@ -112,9 +112,9 @@ public abstract class TestOverdueBase extends TestIntegrationBase {
         account = createAccountWithPaymentMethod(getAccountData(0));
         assertNotNull(account);
 
-        paymentApi.addPaymentMethod(BeatrixModule.PLUGIN_NAME, account, true, paymentMethodPlugin, context);
+        paymentApi.addPaymentMethod(BeatrixModule.PLUGIN_NAME, account, true, paymentMethodPlugin, callContext);
 
-        bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever", context);
+        bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
 
         productName = "Shotgun";
         term = BillingPeriod.MONTHLY;
@@ -133,11 +133,11 @@ public abstract class TestOverdueBase extends TestIntegrationBase {
             await().atMost(10, SECONDS).until(new Callable<Boolean>() {
                 @Override
                 public Boolean call() throws Exception {
-                    return expected.equals(blockingApi.getBlockingStateFor(bundle).getStateName());
+                    return expected.equals(blockingApi.getBlockingStateFor(bundle, callContext).getStateName());
                 }
             });
         } catch (Exception e) {
-            Assert.assertEquals(blockingApi.getBlockingStateFor(bundle).getStateName(), expected, "Got exception: " + e.toString());
+            Assert.assertEquals(blockingApi.getBlockingStateFor(bundle, callContext).getStateName(), expected, "Got exception: " + e.toString());
         }
     }
 

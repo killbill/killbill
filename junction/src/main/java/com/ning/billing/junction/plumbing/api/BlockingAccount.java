@@ -26,15 +26,18 @@ import com.ning.billing.account.api.MutableAccountData;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.junction.api.BlockingState;
+import com.ning.billing.util.callcontext.TenantContext;
 
 public class BlockingAccount implements Account {
     private final Account account;
+    private final TenantContext context;
     private BlockingState blockingState = null;
     private final BlockingApi blockingApi;
 
-    public BlockingAccount(final Account account, final BlockingApi blockingApi) {
+    public BlockingAccount(final Account account, final BlockingApi blockingApi, final TenantContext context) {
         this.account = account;
         this.blockingApi = blockingApi;
+        this.context = context;
     }
 
     @Override
@@ -95,7 +98,7 @@ public class BlockingAccount implements Account {
     @Override
     public BlockingState getBlockingState() {
         if (blockingState == null) {
-            blockingState = blockingApi.getBlockingStateFor(account);
+            blockingState = blockingApi.getBlockingStateFor(account, context);
         }
         return blockingState;
     }

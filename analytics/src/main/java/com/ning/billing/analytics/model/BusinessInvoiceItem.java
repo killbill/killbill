@@ -77,7 +77,9 @@ public class BusinessInvoiceItem {
 
     public BusinessInvoiceItem(@Nullable final String externalKey, final InvoiceItem invoiceItem, @Nullable final Plan plan, @Nullable final PlanPhase planPhase) {
         this(invoiceItem.getAmount(), planPhase != null ? planPhase.getBillingPeriod().toString() : null, new DateTime(DateTimeZone.UTC), invoiceItem.getCurrency(),
-             invoiceItem.getEndDate(), externalKey, invoiceItem.getInvoiceId(), invoiceItem.getId(), invoiceItem.getLinkedItemId(), invoiceItem.getInvoiceItemType().toString(),
+             /* Populate end date for fixed items for convenience (null in invoice_items table) */
+             (invoiceItem.getEndDate() == null && planPhase != null) ? invoiceItem.getStartDate().plus(planPhase.getDuration().toJodaPeriod()) : invoiceItem.getEndDate(),
+             externalKey, invoiceItem.getInvoiceId(), invoiceItem.getId(), invoiceItem.getLinkedItemId(), invoiceItem.getInvoiceItemType().toString(),
              planPhase != null ? planPhase.getPhaseType().toString() : null, plan != null ? plan.getProduct().getCategory().toString() : null,
              plan != null ? plan.getProduct().getName() : null, plan != null ? plan.getProduct().getCatalogName() : null,
              planPhase != null ? planPhase.getName() : null, invoiceItem.getStartDate(), new DateTime(DateTimeZone.UTC));

@@ -64,7 +64,7 @@ public abstract class TestUserApiRecreate extends TestApiBase {
         testListener.pushExpectedEvent(NextEvent.PHASE);
         testListener.pushExpectedEvent(NextEvent.CREATE);
         SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
-                                                                                             getProductSpecifier(productName, planSetName, term, null), requestedDate, context);
+                                                                                             getProductSpecifier(productName, planSetName, term, null), requestedDate, callContext);
         assertNotNull(subscription);
         assertEquals(subscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
         assertEquals(subscription.getBundleId(), bundle.getId());
@@ -81,9 +81,9 @@ public abstract class TestUserApiRecreate extends TestApiBase {
 
             if (fromUserAPi) {
                 subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
-                                                                                    getProductSpecifier(productName, planSetName, term, null), requestedDate, context);
+                                                                                    getProductSpecifier(productName, planSetName, term, null), requestedDate, callContext);
             } else {
-                subscription.recreate(getProductSpecifier(productName, planSetName, term, null), requestedDate, context);
+                subscription.recreate(getProductSpecifier(productName, planSetName, term, null), requestedDate, callContext);
             }
             Assert.fail("Expected Create API to fail since BP already exists");
         } catch (EntitlementUserApiException e) {
@@ -92,7 +92,7 @@ public abstract class TestUserApiRecreate extends TestApiBase {
 
         // NOW CANCEL ADN THIS SHOULD WORK
         testListener.pushExpectedEvent(NextEvent.CANCEL);
-        subscription.cancel(null, context);
+        subscription.cancel(null, callContext);
 
         testListener.pushExpectedEvent(NextEvent.PHASE);
         testListener.pushExpectedEvent(NextEvent.RE_CREATE);
@@ -106,9 +106,9 @@ public abstract class TestUserApiRecreate extends TestApiBase {
 
         if (fromUserAPi) {
             subscription = (SubscriptionData) entitlementApi.createSubscription(bundle.getId(),
-                                                                                getProductSpecifier(productName, planSetName, term, null), requestedDate, context);
+                                                                                getProductSpecifier(productName, planSetName, term, null), requestedDate, callContext);
         } else {
-            subscription.recreate(getProductSpecifier(productName, planSetName, term, null), clock.getUTCNow(), context);
+            subscription.recreate(getProductSpecifier(productName, planSetName, term, null), clock.getUTCNow(), callContext);
         }
         assertEquals(subscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
         assertEquals(subscription.getBundleId(), bundle.getId());

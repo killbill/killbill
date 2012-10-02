@@ -23,10 +23,12 @@ import org.joda.time.DateTime;
 import com.ning.billing.util.clock.DefaultClock;
 
 public class TestCallContext implements CallContext {
+
     private final String userName;
     private final DateTime updatedDate;
     private final DateTime createdDate;
     private final UUID userToken;
+    private final UUID tenantId;
 
     public TestCallContext(final String userName) {
         this(userName, new DefaultClock().getUTCNow(), new DefaultClock().getUTCNow());
@@ -37,6 +39,7 @@ public class TestCallContext implements CallContext {
         this.createdDate = createdDate;
         this.updatedDate = updatedDate;
         this.userToken = UUID.randomUUID();
+        this.tenantId = UUID.randomUUID();
     }
 
     @Override
@@ -77,5 +80,10 @@ public class TestCallContext implements CallContext {
     @Override
     public UUID getUserToken() {
         return userToken;
+    }
+
+    @Override
+    public UUID getTenantId() {
+        return tenantId;
     }
 }

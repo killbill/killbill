@@ -16,8 +16,6 @@
 
 package com.ning.billing.account.glue;
 
-
-import com.google.inject.AbstractModule;
 import com.ning.billing.account.api.AccountService;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.api.DefaultAccountService;
@@ -27,6 +25,8 @@ import com.ning.billing.account.dao.AccountEmailDao;
 import com.ning.billing.account.dao.AuditedAccountDao;
 import com.ning.billing.account.dao.AuditedAccountEmailDao;
 import com.ning.billing.util.glue.RealImplementation;
+
+import com.google.inject.AbstractModule;
 
 public class AccountModule extends AbstractModule {
     private void installConfig() {

@@ -21,13 +21,11 @@ import java.util.Collection;
 
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.IDBI;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.dbi.MysqlTestingHelper;
-import com.ning.billing.util.UtilTestSuite;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.globallocker.TestMysqlGlobalLocker;
 import com.ning.billing.util.io.IOUtils;

@@ -22,16 +22,18 @@ import java.util.UUID;
 
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
-import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.entity.Entity;
 
 public interface AuditedCollectionDao<T extends Entity> {
+
     void saveEntitiesFromTransaction(Transmogrifier transactionalDao, UUID objectId, ObjectType objectType,
-                                     List<T> entities, CallContext context);
+                                     List<T> entities, InternalCallContext context);
 
-    void saveEntities(UUID objectId, ObjectType objectType, List<T> entities, CallContext context);
+    void saveEntities(UUID objectId, ObjectType objectType, List<T> entities, InternalCallContext context);
 
-    Map<String, T> loadEntities(UUID objectId, ObjectType objectType);
+    Map<String, T> loadEntities(UUID objectId, ObjectType objectType, InternalTenantContext context);
 
-    Map<String, T> loadEntitiesFromTransaction(Transmogrifier dao, UUID objectId, ObjectType objectType);
+    Map<String, T> loadEntitiesFromTransaction(Transmogrifier dao, UUID objectId, ObjectType objectType, InternalTenantContext context);
 }

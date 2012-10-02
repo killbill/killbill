@@ -53,6 +53,8 @@ import com.ning.billing.entitlement.events.user.ApiEventReCreate;
 import com.ning.billing.entitlement.events.user.ApiEventUncancel;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;
 
@@ -64,13 +66,16 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
     private final EntitlementDao dao;
     private final CatalogService catalogService;
     private final PlanAligner planAligner;
+    private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
-    public DefaultSubscriptionApiService(final Clock clock, final EntitlementDao dao, final CatalogService catalogService, final PlanAligner planAligner) {
+    public DefaultSubscriptionApiService(final Clock clock, final EntitlementDao dao, final CatalogService catalogService,
+                                         final PlanAligner planAligner, final InternalCallContextFactory internalCallContextFactory) {
         this.clock = clock;
         this.catalogService = catalogService;
         this.planAligner = planAligner;
         this.dao = dao;
+        this.internalCallContextFactory = internalCallContextFactory;
     }
 
     @Override
@@ -117,21 +122,23 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
     private void createFromSubscription(final SubscriptionData subscription, final Plan plan, final PhaseType initialPhase,
                                         final String realPriceList, final DateTime requestedDate, final DateTime effectiveDate, final DateTime processedDate,
                                         final boolean reCreate, final CallContext context) throws EntitlementUserApiException {
+        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(context);
+
         try {
             final TimedPhase[] curAndNextPhases = planAligner.getCurrentAndNextTimedPhaseOnCreate(subscription, plan, initialPhase, realPriceList, requestedDate, effectiveDate);
 
             final ApiEventBuilder createBuilder = new ApiEventBuilder()
-            .setSubscriptionId(subscription.getId())
-            .setEventPlan(plan.getName())
-            .setEventPlanPhase(curAndNextPhases[0].getPhase().getName())
-            .setEventPriceList(realPriceList)
-            .setActiveVersion(subscription.getActiveVersion())
-            .setProcessedDate(processedDate)
-            .setEffectiveDate(effectiveDate)
-            .setRequestedDate(requestedDate)
-            .setUserToken(context.getUserToken())
-            .setFromDisk(true);
-    final ApiEvent creationEvent = (reCreate) ? new ApiEventReCreate(createBuilder) : new ApiEventCreate(createBuilder);
+                    .setSubscriptionId(subscription.getId())
+                    .setEventPlan(plan.getName())
+                    .setEventPlanPhase(curAndNextPhases[0].getPhase().getName())
+                    .setEventPriceList(realPriceList)
+                    .setActiveVersion(subscription.getActiveVersion())
+                    .setProcessedDate(processedDate)
+                    .setEffectiveDate(effectiveDate)
+                    .setRequestedDate(requestedDate)
+                    .setUserToken(context.getUserToken())
+                    .setFromDisk(true);
+            final ApiEvent creationEvent = (reCreate) ? new ApiEventReCreate(createBuilder) : new ApiEventCreate(createBuilder);
 
             final TimedPhase nextTimedPhase = curAndNextPhases[1];
             final PhaseEvent nextPhaseEvent = (nextTimedPhase != null) ?
@@ -143,11 +150,11 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
                 events.add(nextPhaseEvent);
             }
             if (reCreate) {
-                dao.recreateSubscription(subscription, events, context);
+                dao.recreateSubscription(subscription, events, internalCallContext);
             } else {
-                dao.createSubscription(subscription, events, context);
+                dao.createSubscription(subscription, events, internalCallContext);
             }
-            subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId()), catalogService.getFullCatalog());
+            subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId(), internalCallContext), catalogService.getFullCatalog());
         } catch (CatalogApiException e) {
             throw new EntitlementUserApiException(e);
         }
@@ -195,19 +202,19 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
         final DateTime effectiveDate = subscription.getPlanChangeEffectiveDate(policy, requestedDate);
 
         final EntitlementEvent cancelEvent = new ApiEventCancel(new ApiEventBuilder()
-        .setSubscriptionId(subscription.getId())
-        .setActiveVersion(subscription.getActiveVersion())
-        .setProcessedDate(now)
-        .setEffectiveDate(effectiveDate)
-        .setRequestedDate(requestedDate)
-        .setUserToken(context.getUserToken())
-        .setFromDisk(true));
+                                                                        .setSubscriptionId(subscription.getId())
+                                                                        .setActiveVersion(subscription.getActiveVersion())
+                                                                        .setProcessedDate(now)
+                                                                        .setEffectiveDate(effectiveDate)
+                                                                        .setRequestedDate(requestedDate)
+                                                                        .setUserToken(context.getUserToken())
+                                                                        .setFromDisk(true));
 
-        dao.cancelSubscription(subscription, cancelEvent, context, 0);
-        subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId()), catalogService.getFullCatalog());
+        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(context);
+        dao.cancelSubscription(subscription, cancelEvent, internalCallContext, 0);
+        subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId(), internalCallContext), catalogService.getFullCatalog());
         return (policy == ActionPolicy.IMMEDIATE);
     }
-
 
     @Override
     public boolean uncancel(final SubscriptionData subscription, final CallContext context) throws EntitlementUserApiException {
@@ -236,8 +243,9 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
             uncancelEvents.add(nextPhaseEvent);
         }
 
-        dao.uncancelSubscription(subscription, uncancelEvents, context);
-        subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId()), catalogService.getFullCatalog());
+        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(context);
+        dao.uncancelSubscription(subscription, uncancelEvents, internalCallContext);
+        subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId(), internalCallContext), catalogService.getFullCatalog());
 
         return true;
     }
@@ -317,16 +325,16 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
         final TimedPhase currentTimedPhase = planAligner.getCurrentTimedPhaseOnChange(subscription, newPlan, newPriceList.getName(), requestedDate, effectiveDate);
 
         final EntitlementEvent changeEvent = new ApiEventChange(new ApiEventBuilder()
-        .setSubscriptionId(subscription.getId())
-        .setEventPlan(newPlan.getName())
-        .setEventPlanPhase(currentTimedPhase.getPhase().getName())
-        .setEventPriceList(newPriceList.getName())
-        .setActiveVersion(subscription.getActiveVersion())
-        .setProcessedDate(now)
-        .setEffectiveDate(effectiveDate)
-        .setRequestedDate(requestedDate)
-        .setUserToken(context.getUserToken())
-        .setFromDisk(true));
+                                                                        .setSubscriptionId(subscription.getId())
+                                                                        .setEventPlan(newPlan.getName())
+                                                                        .setEventPlanPhase(currentTimedPhase.getPhase().getName())
+                                                                        .setEventPriceList(newPriceList.getName())
+                                                                        .setActiveVersion(subscription.getActiveVersion())
+                                                                        .setProcessedDate(now)
+                                                                        .setEffectiveDate(effectiveDate)
+                                                                        .setRequestedDate(requestedDate)
+                                                                        .setUserToken(context.getUserToken())
+                                                                        .setFromDisk(true));
 
         final TimedPhase nextTimedPhase = planAligner.getNextTimedPhaseOnChange(subscription, newPlan, newPriceList.getName(), requestedDate, effectiveDate);
         final PhaseEvent nextPhaseEvent = (nextTimedPhase != null) ?
@@ -340,8 +348,9 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
         }
         changeEvents.add(changeEvent);
 
-        dao.changePlan(subscription, changeEvents, context);
-        subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId()), catalogService.getFullCatalog());
+        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(context);
+        dao.changePlan(subscription, changeEvents, internalCallContext);
+        subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId(), internalCallContext), catalogService.getFullCatalog());
 
         return (policy == ActionPolicy.IMMEDIATE);
     }

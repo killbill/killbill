@@ -19,9 +19,7 @@ package com.ning.billing.overdue.api;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
-import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.BlockingApi;
@@ -34,26 +32,34 @@ import com.ning.billing.overdue.config.api.OverdueException;
 import com.ning.billing.overdue.config.api.OverdueStateSet;
 import com.ning.billing.overdue.wrapper.OverdueWrapper;
 import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
+import com.ning.billing.util.callcontext.TenantContext;
+
+import com.google.inject.Inject;
 
 public class DefaultOverdueUserApi implements OverdueUserApi {
+
     Logger log = LoggerFactory.getLogger(DefaultOverdueUserApi.class);
 
     private final OverdueWrapperFactory factory;
     private final BlockingApi accessApi;
+    private final InternalCallContextFactory internalCallContextFactory;
 
     private OverdueConfig overdueConfig;
 
     @Inject
-    public DefaultOverdueUserApi(final OverdueWrapperFactory factory, final BlockingApi accessApi, final CatalogService catalogService) {
+    public DefaultOverdueUserApi(final OverdueWrapperFactory factory, final BlockingApi accessApi, final InternalCallContextFactory internalCallContextFactory) {
         this.factory = factory;
         this.accessApi = accessApi;
+        this.internalCallContextFactory = internalCallContextFactory;
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public <T extends Blockable> OverdueState<T> getOverdueStateFor(final T overdueable) throws OverdueException {
+    public <T extends Blockable> OverdueState<T> getOverdueStateFor(final T overdueable, final TenantContext context) throws OverdueException {
         try {
-            final String stateName = accessApi.getBlockingStateFor(overdueable).getStateName();
+            final String stateName = accessApi.getBlockingStateFor(overdueable, context).getStateName();
             final OverdueStateSet<SubscriptionBundle> states = overdueConfig.getBundleStateSet();
             return (OverdueState<T>) states.findState(stateName);
         } catch (OverdueApiException e) {
@@ -62,28 +68,26 @@ public class DefaultOverdueUserApi implements OverdueUserApi {
     }
 
     @Override
-    public <T extends Blockable> BillingState<T> getBillingStateFor(final T overdueable) throws OverdueException {
+    public <T extends Blockable> BillingState<T> getBillingStateFor(final T overdueable, final TenantContext context) throws OverdueException {
         log.info(String.format("Billing state of of %s requested", overdueable.getId()));
         final OverdueWrapper<T> wrapper = factory.createOverdueWrapperFor(overdueable);
-        return wrapper.billingState();
+        return wrapper.billingState(internalCallContextFactory.createInternalTenantContext(context));
     }
 
     @Override
-    public <T extends Blockable> OverdueState<T> refreshOverdueStateFor(final T blockable) throws OverdueException, OverdueApiException {
+    public <T extends Blockable> OverdueState<T> refreshOverdueStateFor(final T blockable, final CallContext context) throws OverdueException, OverdueApiException {
         log.info(String.format("Refresh of %s requested", blockable.getId()));
         final OverdueWrapper<T> wrapper = factory.createOverdueWrapperFor(blockable);
-        return wrapper.refresh();
+        // TODO accountId?
+        return wrapper.refresh(internalCallContextFactory.createInternalCallContext(context));
     }
 
-
     @Override
-    public <T extends Blockable> void setOverrideBillingStateForAccount(
-            final T overdueable, final BillingState<T> state) {
+    public <T extends Blockable> void setOverrideBillingStateForAccount(final T overdueable, final BillingState<T> state, final CallContext context) {
         throw new UnsupportedOperationException();
     }
 
     public void setOverdueConfig(final OverdueConfig config) {
         this.overdueConfig = config;
     }
-
 }

@@ -18,7 +18,6 @@ package com.ning.billing.entitlement.engine.addon;
 
 import org.joda.time.DateTime;
 
-import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
@@ -28,6 +27,8 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
+
+import com.google.inject.Inject;
 
 public class AddonUtils {
     private final CatalogService catalogService;

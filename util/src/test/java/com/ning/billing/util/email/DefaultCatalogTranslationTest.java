@@ -22,11 +22,12 @@ import org.skife.config.ConfigurationObjectFactory;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableMap;
 import com.ning.billing.util.UtilTestSuite;
 import com.ning.billing.util.template.translation.DefaultCatalogTranslator;
 import com.ning.billing.util.template.translation.Translator;
 import com.ning.billing.util.template.translation.TranslatorConfig;
+
+import com.google.common.collect.ImmutableMap;
 
 import static org.testng.Assert.assertEquals;
 

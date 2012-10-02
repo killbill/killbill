@@ -80,10 +80,6 @@ import com.ning.billing.payment.dao.PaymentAttemptModelDao;
 import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.dao.PaymentModelDao;
 import com.ning.billing.util.bus.Bus;
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallOrigin;
-import com.ning.billing.util.callcontext.DefaultCallContextFactory;
-import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;
 
@@ -106,7 +102,6 @@ public class TestAnalyticsService extends AnalyticsTestSuiteWithEmbeddedDB {
     private static final BigDecimal INVOICE_AMOUNT = BigDecimal.valueOf(1243.11);
 
     private final Clock clock = new DefaultClock();
-    private final CallContext context = new DefaultCallContextFactory(clock).createCallContext("Analytics Test", CallOrigin.TEST, UserType.TEST);
 
     @Inject
     private AccountUserApi accountApi;
@@ -166,7 +161,7 @@ public class TestAnalyticsService extends AnalyticsTestSuiteWithEmbeddedDB {
                 .build();
 
         try {
-            final Account storedAccount = accountApi.createAccount(account, context);
+            final Account storedAccount = accountApi.createAccount(account, callContext);
 
             // Create events for the bus and expected results
             createSubscriptionTransitionEvent(storedAccount);
@@ -178,7 +173,7 @@ public class TestAnalyticsService extends AnalyticsTestSuiteWithEmbeddedDB {
     }
 
     private void createSubscriptionTransitionEvent(final Account account) throws EntitlementUserApiException {
-        final SubscriptionBundle bundle = entitlementApi.createBundleForAccount(account.getId(), BUNDLE_EXTERNAL_KEY, context);
+        final SubscriptionBundle bundle = entitlementApi.createBundleForAccount(account.getId(), BUNDLE_EXTERNAL_KEY, callContext);
 
         // Verify we correctly initialized the account subsystem
         Assert.assertNotNull(bundle);
@@ -234,8 +229,8 @@ public class TestAnalyticsService extends AnalyticsTestSuiteWithEmbeddedDB {
                 INVOICE_AMOUNT, ACCOUNT_CURRENCY);
         invoice.addInvoiceItem(invoiceItem);
 
-        invoiceDao.create(invoice, invoice.getTargetDate().getDayOfMonth(), true, context);
-        final List<Invoice> invoices = invoiceDao.getInvoicesByAccount(account.getId());
+        invoiceDao.create(invoice, invoice.getTargetDate().getDayOfMonth(), true, internalCallContext);
+        final List<Invoice> invoices = invoiceDao.getInvoicesByAccount(account.getId(), internalCallContext);
         Assert.assertEquals(invoices.size(), 1);
         Assert.assertEquals(invoices.get(0).getInvoiceItems().size(), 1);
 
@@ -250,8 +245,8 @@ public class TestAnalyticsService extends AnalyticsTestSuiteWithEmbeddedDB {
                                                                 BigDecimal.ONE, Currency.USD, clock.getUTCNow(), PaymentStatus.SUCCESS);
         final PaymentAttemptModelDao paymentAttempt = new PaymentAttemptModelDao(account.getId(), invoice.getId(), paymentInfo.getId(),
                                                                                  clock.getUTCNow(), BigDecimal.ONE);
-        paymentDao.insertPaymentWithAttempt(paymentInfo, paymentAttempt, context);
-        Assert.assertEquals(paymentDao.getPaymentsForAccount(account.getId()).size(), 1);
+        paymentDao.insertPaymentWithAttempt(paymentInfo, paymentAttempt, internalCallContext);
+        Assert.assertEquals(paymentDao.getPaymentsForAccount(account.getId(), internalCallContext).size(), 1);
     }
 
     // Flaky
@@ -267,12 +262,12 @@ public class TestAnalyticsService extends AnalyticsTestSuiteWithEmbeddedDB {
             Assert.fail("Unable to start the bus or service! " + t);
         }
 
-        Assert.assertNull(accountSqlDao.getAccountByKey(ACCOUNT_KEY));
+        Assert.assertNull(accountSqlDao.getAccountByKey(ACCOUNT_KEY, internalCallContext));
 
         // Send events and wait for the async part...
         bus.post(accountCreationNotification);
         Thread.sleep(5000);
-        Assert.assertNotNull(accountSqlDao.getAccountByKey(ACCOUNT_KEY));
+        Assert.assertNotNull(accountSqlDao.getAccountByKey(ACCOUNT_KEY, internalCallContext));
 
         // Test subscriptions integration - this is just to exercise the code. It's hard to test the actual subscriptions
         // as we would need to mock a bunch of APIs (see integration tests in Beatrix instead)
@@ -280,12 +275,12 @@ public class TestAnalyticsService extends AnalyticsTestSuiteWithEmbeddedDB {
         Thread.sleep(5000);
 
         // Test invoice integration - the account creation notification has triggered a BAC update
-        Assert.assertEquals(accountSqlDao.getAccountByKey(ACCOUNT_KEY).getTotalInvoiceBalance().compareTo(INVOICE_AMOUNT), 1);
+        Assert.assertEquals(accountSqlDao.getAccountByKey(ACCOUNT_KEY, internalCallContext).getTotalInvoiceBalance().compareTo(INVOICE_AMOUNT), 1);
 
         // Post the same invoice event again - the invoice balance shouldn't change
         bus.post(invoiceCreationNotification);
         Thread.sleep(5000);
-        Assert.assertEquals(accountSqlDao.getAccountByKey(ACCOUNT_KEY).getTotalInvoiceBalance().compareTo(INVOICE_AMOUNT), 1);
+        Assert.assertEquals(accountSqlDao.getAccountByKey(ACCOUNT_KEY, internalCallContext).getTotalInvoiceBalance().compareTo(INVOICE_AMOUNT), 1);
 
         // Test payment integration - the fields have already been populated, just make sure the code is exercised
         // It's hard to test the actual payments fields though in bac, since we should mock the plugin

@@ -22,16 +22,21 @@ import java.util.UUID;
 import org.joda.time.LocalDate;
 
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.util.callcontext.CallContext;
 
 public interface InvoiceMigrationApi {
+
     /**
      * @param accountId  account id
      * @param targetDate maximum billing event day to consider (in the account timezone)
      * @param balance    invoice balance
      * @param currency   invoice currency
+     * @param context    call context
      * @return The UUID of the created invoice
      */
-    public UUID createMigrationInvoice(UUID accountId, LocalDate targetDate,
-                                       BigDecimal balance, Currency currency);
-
+    public UUID createMigrationInvoice(UUID accountId,
+                                       LocalDate targetDate,
+                                       BigDecimal balance,
+                                       Currency currency,
+                                       CallContext context);
 }

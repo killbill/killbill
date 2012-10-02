@@ -30,6 +30,7 @@ import com.ning.billing.util.audit.AuditLogsForInvoicePayments;
 import com.ning.billing.util.audit.AuditLogsForInvoices;
 import com.ning.billing.util.audit.AuditLogsForPayments;
 import com.ning.billing.util.audit.AuditLogsForRefunds;
+import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.dao.ObjectType;
 
 public interface AuditUserApi {
@@ -39,45 +40,50 @@ public interface AuditUserApi {
      *
      * @param bundles    the bundles to lookup
      * @param auditLevel audit level (verbosity)
+     * @param context    the tenant context
      * @return all audit logs for these refunds
      */
-    public AuditLogsForBundles getAuditLogsForBundles(final List<BundleTimeline> bundles, final AuditLevel auditLevel);
+    public AuditLogsForBundles getAuditLogsForBundles(List<BundleTimeline> bundles, AuditLevel auditLevel, TenantContext context);
 
     /**
      * Fetch all audit logs for invoice payments.
      *
      * @param invoicePayments the invoice payments to lookup
      * @param auditLevel      audit level (verbosity)
+     * @param context         the tenant context
      * @return all audit logs for these invoice payments
      */
-    public AuditLogsForInvoicePayments getAuditLogsForInvoicePayments(final List<InvoicePayment> invoicePayments, final AuditLevel auditLevel);
+    public AuditLogsForInvoicePayments getAuditLogsForInvoicePayments(List<InvoicePayment> invoicePayments, AuditLevel auditLevel, TenantContext context);
 
     /**
      * Fetch all audit logs for refunds.
      *
      * @param refunds    the refunds to lookup
      * @param auditLevel audit level (verbosity)
+     * @param context    the tenant context
      * @return all audit logs for these refunds
      */
-    public AuditLogsForRefunds getAuditLogsForRefunds(final List<Refund> refunds, final AuditLevel auditLevel);
+    public AuditLogsForRefunds getAuditLogsForRefunds(List<Refund> refunds, AuditLevel auditLevel, TenantContext context);
 
     /**
      * Fetch all audit logs for payments.
      *
      * @param payments   the payments to lookup
      * @param auditLevel audit level (verbosity)
+     * @param context    the tenant context
      * @return all audit logs for these payments
      */
-    public AuditLogsForPayments getAuditLogsForPayments(final List<Payment> payments, final AuditLevel auditLevel);
+    public AuditLogsForPayments getAuditLogsForPayments(List<Payment> payments, AuditLevel auditLevel, TenantContext context);
 
     /**
      * Fetch all audit logs for invoices and associated invoice items.
      *
      * @param invoices   the invoices to lookup
      * @param auditLevel audit level (verbosity)
+     * @param context    the tenant context
      * @return all audit logs for these invoices
      */
-    public AuditLogsForInvoices getAuditLogsForInvoices(final List<Invoice> invoices, final AuditLevel auditLevel);
+    public AuditLogsForInvoices getAuditLogsForInvoices(List<Invoice> invoices, AuditLevel auditLevel, TenantContext context);
 
     /**
      * Get all the audit entries for a given object.
@@ -85,7 +91,8 @@ public interface AuditUserApi {
      * @param objectId   the object id
      * @param objectType the type of object
      * @param auditLevel audit level (verbosity)
+     * @param context    the tenant context
      * @return all audit entries for that object
      */
-    public List<AuditLog> getAuditLogs(final UUID objectId, final ObjectType objectType, final AuditLevel auditLevel);
+    public List<AuditLog> getAuditLogs(UUID objectId, ObjectType objectType, AuditLevel auditLevel, TenantContext context);
 }

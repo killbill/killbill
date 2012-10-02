@@ -1,11 +1,16 @@
 group BusinessInvoicePaymentTag;
 
+CHECK_TENANT() ::= "tenant_record_id = :tenantRecordId"
+AND_CHECK_TENANT() ::= "AND <CHECK_TENANT()>"
+
 getTagsForInvoicePayment(payment_id) ::=<<
 select
   payment_id
 , name
+, tenant_record_id
 from bip_tags
 where payment_id = :payment_id
+<AND_CHECK_TENANT()>
 ;
 >>
 
@@ -13,16 +18,20 @@ addTag(payment_id, name) ::=<<
 insert into bip_tags (
   payment_id
 , name
+, account_record_id
+, tenant_record_id
 ) values (
   :payment_id
 , :name
+, :accountRecordId
+, :tenantRecordId
 );
 >>
 
 removeTag(payment_id, name) ::= <<
-delete from bip_tags where payment_id = :payment_id and name = :name;
+delete from bip_tags where payment_id = :payment_id and name = :name <AND_CHECK_TENANT()>;
 >>
 
 test() ::= <<
-select 1 from bip_tags;
+select 1 from bip_tags where <CHECK_TENANT()>;
 >>

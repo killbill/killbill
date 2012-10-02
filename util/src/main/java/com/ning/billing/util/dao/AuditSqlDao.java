@@ -27,8 +27,9 @@ import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 
 import com.ning.billing.util.audit.AuditLog;
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallContextBinder;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 
 @ExternalizedSqlViaStringTemplate3
 @RegisterMapper(AuditLogMapper.class)
@@ -36,28 +37,31 @@ public interface AuditSqlDao {
 
     @SqlUpdate
     public void insertAuditFromTransaction(@AuditBinder final EntityAudit audit,
-                                           @CallContextBinder final CallContext context);
+                                           @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlBatch(transactional = false)
     public void insertAuditFromTransaction(@AuditBinder final List<EntityAudit> audit,
-                                           @CallContextBinder final CallContext context);
+                                           @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlQuery
     public List<AuditLog> getAuditLogsForRecordId(@TableNameBinder final TableName tableName,
-                                                  @Bind("recordId") final long recordId);
+                                                  @Bind("recordId") final long recordId,
+                                                  @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
-    public Long getRecordId(@Bind("id") final String id);
+    public Long getRecordId(@Bind("id") final String id, @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
     public Long getRecordIdForTable(@Define("tableName") final String tableName,
-                                    @Bind("id") final String id);
+                                    @Bind("id") final String id,
+                                    @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
     public List<Long> getHistoryRecordIdsForTable(@Define("tableName") final String tableName,
-                                                  @Bind("id") final String id);
+                                                  @Bind("id") final String id,
+                                                  @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
-    public Long getHistoryRecordId(@Bind("recordId") final Long recordId);
-
+    public Long getHistoryRecordId(@Bind("recordId") final Long recordId,
+                                   @InternalTenantContextBinder final InternalTenantContext context);
 }

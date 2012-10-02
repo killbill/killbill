@@ -13,24 +13,26 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.entitlement.api.timeline;
 
 import java.util.UUID;
 
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.TenantContext;
 
 public interface EntitlementTimelineApi {
 
-    public BundleTimeline getBundleTimeline(final SubscriptionBundle bundle)
-    throws EntitlementRepairException;
+    public BundleTimeline getBundleTimeline(SubscriptionBundle bundle, TenantContext context)
+            throws EntitlementRepairException;
 
-    public BundleTimeline getBundleTimeline(final UUID accountId, final String bundleName)
-    throws EntitlementRepairException;
+    public BundleTimeline getBundleTimeline(UUID accountId, String bundleName, TenantContext context)
+            throws EntitlementRepairException;
 
-    public BundleTimeline getBundleTimeline(final UUID bundleId)
-    throws EntitlementRepairException;
+    public BundleTimeline getBundleTimeline(UUID bundleId, TenantContext context)
+            throws EntitlementRepairException;
 
-    public BundleTimeline repairBundle(final BundleTimeline input, final boolean dryRun, final CallContext context)
-    throws EntitlementRepairException;
+    public BundleTimeline repairBundle(BundleTimeline input, boolean dryRun, CallContext context)
+            throws EntitlementRepairException;
 }

@@ -37,6 +37,17 @@ import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
+import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
+import com.ning.billing.config.NotificationConfig;
+import com.ning.billing.dbi.MysqlTestingHelper;
+import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
+import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.io.IOUtils;
+import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
+import com.ning.billing.util.notificationq.dao.NotificationSqlDao;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Predicate;
@@ -44,15 +55,6 @@ import com.google.common.collect.Collections2;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.name.Names;
-import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
-import com.ning.billing.config.NotificationConfig;
-import com.ning.billing.dbi.MysqlTestingHelper;
-import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
-import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.clock.ClockMock;
-import com.ning.billing.util.io.IOUtils;
-import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
-import com.ning.billing.util.notificationq.dao.NotificationSqlDao;
 
 import static com.jayway.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -143,7 +145,8 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
                                                                                     }
                                                                                 }
                                                                             },
-                                                                            getNotificationConfig(false, 100, 1, 10000));
+                                                                            getNotificationConfig(false, 100, 1, 10000),
+                                                                            new InternalCallContextFactory(dbi, clock));
 
         queue.startQueue();
 
@@ -162,8 +165,7 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
                                       final TransactionStatus status) throws Exception {
 
                 transactional.insertDummy(obj);
-                queue.recordFutureNotificationFromTransaction(transactional,
-                                                              readyTime, accountId, notificationKey);
+                queue.recordFutureNotificationFromTransaction(transactional, readyTime, accountId, notificationKey, internalCallContext);
                 log.info("Posted key: " + notificationKey);
 
                 return null;
@@ -199,7 +201,8 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
                                                                                     }
                                                                                 }
                                                                             },
-                                                                            getNotificationConfig(false, 100, 10, 10000));
+                                                                            getNotificationConfig(false, 100, 10, 10000),
+                                                                            new InternalCallContextFactory(dbi, clock));
 
         queue.startQueue();
 
@@ -222,8 +225,8 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
                                           final TransactionStatus status) throws Exception {
 
                     transactional.insertDummy(obj);
-                    queue.recordFutureNotificationFromTransaction(transactional,
-                                                                  now.plus((currentIteration + 1) * nextReadyTimeIncrementMs), accountId, notificationKey);
+                    queue.recordFutureNotificationFromTransaction(transactional, now.plus((currentIteration + 1) * nextReadyTimeIncrementMs),
+                                                                  accountId, notificationKey, internalCallContext);
                     return null;
                 }
             });
@@ -278,7 +281,7 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
         final Map<NotificationKey, Boolean> expectedNotificationsFred = new TreeMap<NotificationKey, Boolean>();
         final Map<NotificationKey, Boolean> expectedNotificationsBarney = new TreeMap<NotificationKey, Boolean>();
 
-        final NotificationQueueService notificationQueueService = new DefaultNotificationQueueService(dbi, clock);
+        final NotificationQueueService notificationQueueService = new DefaultNotificationQueueService(dbi, clock, new InternalCallContextFactory(dbi, clock));
 
         final NotificationConfig config = new NotificationConfig() {
             @Override
@@ -333,11 +336,9 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
                                       final TransactionStatus status) throws Exception {
 
                 transactional.insertDummy(obj);
-                queueFred.recordFutureNotificationFromTransaction(transactional,
-                                                                  readyTime, accountId, notificationKeyFred);
+                queueFred.recordFutureNotificationFromTransaction(transactional, readyTime, accountId, notificationKeyFred, internalCallContext);
                 log.info("posted key: " + notificationKeyFred.toString());
-                queueBarney.recordFutureNotificationFromTransaction(transactional,
-                                                                    readyTime, accountId, notificationKeyBarney);
+                queueBarney.recordFutureNotificationFromTransaction(transactional, readyTime, accountId, notificationKeyBarney, internalCallContext);
                 log.info("posted key: " + notificationKeyBarney.toString());
 
                 return null;
@@ -397,7 +398,8 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
                                                                                     }
                                                                                 }
                                                                             },
-                                                                            getNotificationConfig(false, 100, 10, 10000));
+                                                                            getNotificationConfig(false, 100, 10, 10000),
+                                                                            new InternalCallContextFactory(dbi, clock));
 
         queue.startQueue();
 
@@ -411,17 +413,14 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
             public Void inTransaction(final DummySqlTest transactional,
                                       final TransactionStatus status) throws Exception {
 
-                queue.recordFutureNotificationFromTransaction(transactional,
-                                                              start.plus(nextReadyTimeIncrementMs), accountId, notificationKey);
-                queue.recordFutureNotificationFromTransaction(transactional,
-                                                              start.plus(2 * nextReadyTimeIncrementMs), accountId, notificationKey);
-                queue.recordFutureNotificationFromTransaction(transactional,
-                                                              start.plus(3 * nextReadyTimeIncrementMs), accountId, notificationKey2);
+                queue.recordFutureNotificationFromTransaction(transactional, start.plus(nextReadyTimeIncrementMs), accountId, notificationKey, internalCallContext);
+                queue.recordFutureNotificationFromTransaction(transactional, start.plus(2 * nextReadyTimeIncrementMs), accountId, notificationKey, internalCallContext);
+                queue.recordFutureNotificationFromTransaction(transactional, start.plus(3 * nextReadyTimeIncrementMs), accountId, notificationKey2, internalCallContext);
                 return null;
             }
         });
 
-        queue.removeNotificationsByKey(notificationKey); // should remove 2 of the 3
+        queue.removeNotificationsByKey(notificationKey, internalCallContext); // should remove 2 of the 3
 
         // Move time in the future after the notification effectiveDate
         ((ClockMock) clock).setDeltaFromReality(4000000 + nextReadyTimeIncrementMs * 3);

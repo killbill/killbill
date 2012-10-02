@@ -42,6 +42,7 @@ import com.ning.billing.util.audit.AuditLogsForPayments;
 import com.ning.billing.util.audit.AuditLogsForRefunds;
 import com.ning.billing.util.audit.AuditLogsTestBase;
 import com.ning.billing.util.audit.dao.MockAuditDao;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.Entity;
@@ -66,7 +67,7 @@ public class TestDefaultAuditUserApi extends AuditLogsTestBase {
             }
         }
 
-        auditUserApi = new DefaultAuditUserApi(auditDao);
+        auditUserApi = new DefaultAuditUserApi(auditDao, Mockito.mock(InternalCallContextFactory.class));
     }
 
     @Test(groups = "fast")
@@ -79,7 +80,7 @@ public class TestDefaultAuditUserApi extends AuditLogsTestBase {
         }
 
         for (final AuditLevel level : AuditLevel.values()) {
-            final AuditLogsForBundles auditLogsForBundles = auditUserApi.getAuditLogsForBundles(bundles, level);
+            final AuditLogsForBundles auditLogsForBundles = auditUserApi.getAuditLogsForBundles(bundles, level, callContext);
             verifyAuditLogs(auditLogsForBundles.getBundlesAuditLogs(), level);
         }
     }
@@ -89,7 +90,7 @@ public class TestDefaultAuditUserApi extends AuditLogsTestBase {
         final List<InvoicePayment> invoicePayments = createMocks(InvoicePayment.class);
 
         for (final AuditLevel level : AuditLevel.values()) {
-            final AuditLogsForInvoicePayments auditLogsForInvoicePayments = auditUserApi.getAuditLogsForInvoicePayments(invoicePayments, level);
+            final AuditLogsForInvoicePayments auditLogsForInvoicePayments = auditUserApi.getAuditLogsForInvoicePayments(invoicePayments, level, callContext);
             verifyAuditLogs(auditLogsForInvoicePayments.getInvoicePaymentsAuditLogs(), level);
         }
     }
@@ -99,7 +100,7 @@ public class TestDefaultAuditUserApi extends AuditLogsTestBase {
         final List<Refund> refunds = createMocks(Refund.class);
 
         for (final AuditLevel level : AuditLevel.values()) {
-            final AuditLogsForRefunds auditLogsForRefunds = auditUserApi.getAuditLogsForRefunds(refunds, level);
+            final AuditLogsForRefunds auditLogsForRefunds = auditUserApi.getAuditLogsForRefunds(refunds, level, callContext);
             verifyAuditLogs(auditLogsForRefunds.getRefundsAuditLogs(), level);
         }
     }
@@ -109,7 +110,7 @@ public class TestDefaultAuditUserApi extends AuditLogsTestBase {
         final List<Payment> payments = createMocks(Payment.class);
 
         for (final AuditLevel level : AuditLevel.values()) {
-            final AuditLogsForPayments auditLogsForPayments = auditUserApi.getAuditLogsForPayments(payments, level);
+            final AuditLogsForPayments auditLogsForPayments = auditUserApi.getAuditLogsForPayments(payments, level, callContext);
             verifyAuditLogs(auditLogsForPayments.getPaymentsAuditLogs(), level);
         }
     }
@@ -123,7 +124,7 @@ public class TestDefaultAuditUserApi extends AuditLogsTestBase {
         }
 
         for (final AuditLevel level : AuditLevel.values()) {
-            final AuditLogsForInvoices auditLogsForInvoices = auditUserApi.getAuditLogsForInvoices(invoices, level);
+            final AuditLogsForInvoices auditLogsForInvoices = auditUserApi.getAuditLogsForInvoices(invoices, level, callContext);
             verifyAuditLogs(auditLogsForInvoices.getInvoiceAuditLogs(), level);
             verifyAuditLogs(auditLogsForInvoices.getInvoiceItemsAuditLogs(), level);
         }
@@ -135,11 +136,11 @@ public class TestDefaultAuditUserApi extends AuditLogsTestBase {
             for (final UUID objectId : objectIds) {
                 for (final AuditLevel level : AuditLevel.values()) {
                     if (AuditLevel.NONE.equals(level)) {
-                        Assert.assertEquals(auditUserApi.getAuditLogs(objectId, objectType, level).size(), 0);
+                        Assert.assertEquals(auditUserApi.getAuditLogs(objectId, objectType, level, callContext).size(), 0);
                     } else if (AuditLevel.MINIMAL.equals(level)) {
-                        Assert.assertEquals(auditUserApi.getAuditLogs(objectId, objectType, level), ImmutableList.<AuditLog>of(auditLogs.get(0)));
+                        Assert.assertEquals(auditUserApi.getAuditLogs(objectId, objectType, level, callContext), ImmutableList.<AuditLog>of(auditLogs.get(0)));
                     } else {
-                        Assert.assertEquals(auditUserApi.getAuditLogs(objectId, objectType, level), auditLogs);
+                        Assert.assertEquals(auditUserApi.getAuditLogs(objectId, objectType, level, callContext), auditLogs);
                     }
                 }
             }

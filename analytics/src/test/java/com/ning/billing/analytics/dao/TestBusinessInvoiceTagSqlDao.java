@@ -42,12 +42,12 @@ public class TestBusinessInvoiceTagSqlDao extends AnalyticsTestSuiteWithEmbedded
         final String name = UUID.randomUUID().toString().substring(0, 20);
 
         // Verify initial state
-        Assert.assertEquals(invoiceTagSqlDao.getTagsForInvoice(invoiceId).size(), 0);
-        Assert.assertEquals(invoiceTagSqlDao.removeTag(invoiceId, name), 0);
+        Assert.assertEquals(invoiceTagSqlDao.getTagsForInvoice(invoiceId, internalCallContext).size(), 0);
+        Assert.assertEquals(invoiceTagSqlDao.removeTag(invoiceId, name, internalCallContext), 0);
 
         // Add an entry
-        Assert.assertEquals(invoiceTagSqlDao.addTag(invoiceId, name), 1);
-        final List<BusinessInvoiceTag> tagsForInvoice = invoiceTagSqlDao.getTagsForInvoice(invoiceId);
+        Assert.assertEquals(invoiceTagSqlDao.addTag(invoiceId, name, internalCallContext), 1);
+        final List<BusinessInvoiceTag> tagsForInvoice = invoiceTagSqlDao.getTagsForInvoice(invoiceId, internalCallContext);
         Assert.assertEquals(tagsForInvoice.size(), 1);
 
         // Retrieve it
@@ -56,8 +56,8 @@ public class TestBusinessInvoiceTagSqlDao extends AnalyticsTestSuiteWithEmbedded
         Assert.assertEquals(invoiceTag.getName(), name);
 
         // Delete it
-        Assert.assertEquals(invoiceTagSqlDao.removeTag(invoiceId, name), 1);
-        Assert.assertEquals(invoiceTagSqlDao.getTagsForInvoice(invoiceId).size(), 0);
+        Assert.assertEquals(invoiceTagSqlDao.removeTag(invoiceId, name, internalCallContext), 1);
+        Assert.assertEquals(invoiceTagSqlDao.getTagsForInvoice(invoiceId, internalCallContext).size(), 0);
     }
 
     @Test(groups = "slow")
@@ -68,24 +68,24 @@ public class TestBusinessInvoiceTagSqlDao extends AnalyticsTestSuiteWithEmbedded
         final String name2 = UUID.randomUUID().toString().substring(0, 20);
 
         // Add a tag to both invoices
-        Assert.assertEquals(invoiceTagSqlDao.addTag(invoiceId1, name1), 1);
-        Assert.assertEquals(invoiceTagSqlDao.addTag(invoiceId2, name2), 1);
+        Assert.assertEquals(invoiceTagSqlDao.addTag(invoiceId1, name1, internalCallContext), 1);
+        Assert.assertEquals(invoiceTagSqlDao.addTag(invoiceId2, name2, internalCallContext), 1);
 
-        Assert.assertEquals(invoiceTagSqlDao.getTagsForInvoice(invoiceId1).size(), 1);
-        Assert.assertEquals(invoiceTagSqlDao.getTagsForInvoice(invoiceId2).size(), 1);
+        Assert.assertEquals(invoiceTagSqlDao.getTagsForInvoice(invoiceId1, internalCallContext).size(), 1);
+        Assert.assertEquals(invoiceTagSqlDao.getTagsForInvoice(invoiceId2, internalCallContext).size(), 1);
 
         // Remove the tag for the first invoice
-        Assert.assertEquals(invoiceTagSqlDao.removeTag(invoiceId1, name1), 1);
+        Assert.assertEquals(invoiceTagSqlDao.removeTag(invoiceId1, name1, internalCallContext), 1);
 
-        Assert.assertEquals(invoiceTagSqlDao.getTagsForInvoice(invoiceId1).size(), 0);
-        Assert.assertEquals(invoiceTagSqlDao.getTagsForInvoice(invoiceId2).size(), 1);
+        Assert.assertEquals(invoiceTagSqlDao.getTagsForInvoice(invoiceId1, internalCallContext).size(), 0);
+        Assert.assertEquals(invoiceTagSqlDao.getTagsForInvoice(invoiceId2, internalCallContext).size(), 1);
     }
 
     @Test(groups = "slow")
     public void testHealthCheck() throws Exception {
         // HealthCheck test to make sure MySQL is setup properly
         try {
-            invoiceTagSqlDao.test();
+            invoiceTagSqlDao.test(internalCallContext);
         } catch (Throwable t) {
             Assert.fail(t.toString());
         }

@@ -16,8 +16,9 @@
 
 package com.ning.billing.analytics;
 
-import javax.inject.Inject;
 import java.util.UUID;
+
+import javax.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,9 +33,11 @@ import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionTagSqlDao;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.dao.ObjectType;
 
 public class BusinessTagRecorder {
+
     private static final Logger log = LoggerFactory.getLogger(BusinessTagRecorder.class);
 
     private final BusinessAccountTagSqlDao accountTagSqlDao;
@@ -59,55 +62,55 @@ public class BusinessTagRecorder {
         this.entitlementUserApi = entitlementUserApi;
     }
 
-    public void tagAdded(final ObjectType objectType, final UUID objectId, final String name) {
+    public void tagAdded(final ObjectType objectType, final UUID objectId, final String name, final InternalCallContext context) {
         if (objectType.equals(ObjectType.ACCOUNT)) {
-            tagAddedForAccount(objectId, name);
+            tagAddedForAccount(objectId, name, context);
         } else if (objectType.equals(ObjectType.BUNDLE)) {
-            tagAddedForBundle(objectId, name);
+            tagAddedForBundle(objectId, name, context);
         } else if (objectType.equals(ObjectType.INVOICE)) {
-            tagAddedForInvoice(objectId, name);
+            tagAddedForInvoice(objectId, name, context);
         } else if (objectType.equals(ObjectType.PAYMENT)) {
-            tagAddedForPayment(objectId, name);
+            tagAddedForPayment(objectId, name, context);
         } else {
             log.info("Ignoring tag addition of {} for object id {} (type {})", new Object[]{name, objectId.toString(), objectType.toString()});
         }
     }
 
-    public void tagRemoved(final ObjectType objectType, final UUID objectId, final String name) {
+    public void tagRemoved(final ObjectType objectType, final UUID objectId, final String name, final InternalCallContext context) {
         if (objectType.equals(ObjectType.ACCOUNT)) {
-            tagRemovedForAccount(objectId, name);
+            tagRemovedForAccount(objectId, name, context);
         } else if (objectType.equals(ObjectType.BUNDLE)) {
-            tagRemovedForBundle(objectId, name);
+            tagRemovedForBundle(objectId, name, context);
         } else if (objectType.equals(ObjectType.INVOICE)) {
-            tagRemovedForInvoice(objectId, name);
+            tagRemovedForInvoice(objectId, name, context);
         } else if (objectType.equals(ObjectType.PAYMENT)) {
-            tagRemovedForPayment(objectId, name);
+            tagRemovedForPayment(objectId, name, context);
         } else {
             log.info("Ignoring tag removal of {} for object id {} (type {})", new Object[]{name, objectId.toString(), objectType.toString()});
         }
     }
 
-    private void tagAddedForAccount(final UUID accountId, final String name) {
+    private void tagAddedForAccount(final UUID accountId, final String name, final InternalCallContext context) {
         final Account account;
         try {
-            account = accountApi.getAccountById(accountId);
+            account = accountApi.getAccountById(accountId, context.toCallContext());
         } catch (AccountApiException e) {
             log.warn("Ignoring tag addition of {} for account id {} (account does not exist)", name, accountId.toString());
             return;
         }
 
         final String accountKey = account.getExternalKey();
-        accountTagSqlDao.addTag(accountId.toString(), accountKey, name);
+        accountTagSqlDao.addTag(accountId.toString(), accountKey, name, context);
     }
 
-    private void tagRemovedForAccount(final UUID accountId, final String name) {
-        accountTagSqlDao.removeTag(accountId.toString(), name);
+    private void tagRemovedForAccount(final UUID accountId, final String name, final InternalCallContext context) {
+        accountTagSqlDao.removeTag(accountId.toString(), name, context);
     }
 
-    private void tagAddedForBundle(final UUID bundleId, final String name) {
+    private void tagAddedForBundle(final UUID bundleId, final String name, final InternalCallContext context) {
         final SubscriptionBundle bundle;
         try {
-            bundle = entitlementUserApi.getBundleFromId(bundleId);
+            bundle = entitlementUserApi.getBundleFromId(bundleId, context.toCallContext());
         } catch (EntitlementUserApiException e) {
             log.warn("Ignoring tag addition of {} for bundle id {} (bundle does not exist)", name, bundleId.toString());
             return;
@@ -115,7 +118,7 @@ public class BusinessTagRecorder {
 
         final Account account;
         try {
-            account = accountApi.getAccountById(bundle.getAccountId());
+            account = accountApi.getAccountById(bundle.getAccountId(), context.toCallContext());
         } catch (AccountApiException e) {
             log.warn("Ignoring tag addition of {} for bundle id {} and account id {} (account does not exist)", new Object[]{name, bundleId.toString(), bundle.getAccountId()});
             return;
@@ -126,26 +129,26 @@ public class BusinessTagRecorder {
          */
         final String accountKey = account.getExternalKey();
         final String externalKey = bundle.getKey();
-        subscriptionTransitionTagSqlDao.addTag(accountKey, bundleId.toString(), externalKey, name);
+        subscriptionTransitionTagSqlDao.addTag(accountKey, bundleId.toString(), externalKey, name, context);
     }
 
-    private void tagRemovedForBundle(final UUID bundleId, final String name) {
-        subscriptionTransitionTagSqlDao.removeTag(bundleId.toString(), name);
+    private void tagRemovedForBundle(final UUID bundleId, final String name, final InternalCallContext context) {
+        subscriptionTransitionTagSqlDao.removeTag(bundleId.toString(), name, context);
     }
 
-    private void tagAddedForInvoice(final UUID objectId, final String name) {
-        invoiceTagSqlDao.addTag(objectId.toString(), name);
+    private void tagAddedForInvoice(final UUID objectId, final String name, final InternalCallContext context) {
+        invoiceTagSqlDao.addTag(objectId.toString(), name, context);
     }
 
-    private void tagRemovedForInvoice(final UUID objectId, final String name) {
-        invoiceTagSqlDao.removeTag(objectId.toString(), name);
+    private void tagRemovedForInvoice(final UUID objectId, final String name, final InternalCallContext context) {
+        invoiceTagSqlDao.removeTag(objectId.toString(), name, context);
     }
 
-    private void tagAddedForPayment(final UUID objectId, final String name) {
-        invoicePaymentTagSqlDao.addTag(objectId.toString(), name);
+    private void tagAddedForPayment(final UUID objectId, final String name, final InternalCallContext context) {
+        invoicePaymentTagSqlDao.addTag(objectId.toString(), name, context);
     }
 
-    private void tagRemovedForPayment(final UUID objectId, final String name) {
-        invoicePaymentTagSqlDao.removeTag(objectId.toString(), name);
+    private void tagRemovedForPayment(final UUID objectId, final String name, final InternalCallContext context) {
+        invoicePaymentTagSqlDao.removeTag(objectId.toString(), name, context);
     }
 }

@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
 import com.ning.billing.jaxrs.json.TagJson;
+import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
 import com.ning.billing.util.api.AuditUserApi;
 import com.ning.billing.util.api.CustomFieldUserApi;
@@ -42,6 +43,7 @@ import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.customfield.StringCustomField;
 import com.ning.billing.util.dao.ObjectType;
@@ -60,29 +62,28 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
     protected final TagUserApi tagUserApi;
     protected final CustomFieldUserApi customFieldUserApi;
     protected final AuditUserApi auditUserApi;
+    protected final Context context;
 
     protected final DateTimeFormatter DATE_TIME_FORMATTER = ISODateTimeFormat.dateTimeParser();
 
     public JaxRsResourceBase(final JaxrsUriBuilder uriBuilder,
                              final TagUserApi tagUserApi,
                              final CustomFieldUserApi customFieldUserApi,
-                             final AuditUserApi auditUserApi) {
+                             final AuditUserApi auditUserApi,
+                             final Context context) {
         this.uriBuilder = uriBuilder;
         this.tagUserApi = tagUserApi;
         this.customFieldUserApi = customFieldUserApi;
         this.auditUserApi = auditUserApi;
+        this.context = context;
     }
 
-    protected abstract ObjectType getObjectType();
-
-    public JaxRsResourceBase(final JaxrsUriBuilder uriBuilder,
-                             final TagUserApi tagUserApi,
-                             final CustomFieldUserApi customFieldUserApi) {
-        this(uriBuilder, tagUserApi, customFieldUserApi, null);
+    protected ObjectType getObjectType() {
+        return null;
     }
 
-    protected Response getTags(final UUID id, final boolean withAudit) throws TagDefinitionApiException {
-        final Map<String, Tag> tags = tagUserApi.getTags(id, getObjectType());
+    protected Response getTags(final UUID id, final boolean withAudit, final TenantContext context) throws TagDefinitionApiException {
+        final Map<String, Tag> tags = tagUserApi.getTags(id, getObjectType(), context);
         final Collection<UUID> tagIdList = (tags.size() == 0) ?
                                            Collections.<UUID>emptyList() :
                                            Collections2.transform(tags.values(), new Function<Tag, UUID>() {
@@ -93,12 +94,12 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
                                            });
 
         final AtomicReference<TagDefinitionApiException> theException = new AtomicReference<TagDefinitionApiException>();
-        final List<TagDefinition> tagDefinitionList = tagUserApi.getTagDefinitions(tagIdList);
+        final List<TagDefinition> tagDefinitionList = tagUserApi.getTagDefinitions(tagIdList, context);
         final List<TagJson> result = ImmutableList.<TagJson>copyOf(Collections2.transform(tagIdList, new Function<UUID, TagJson>() {
             @Override
-            public TagJson apply(UUID input) {
+            public TagJson apply(final UUID input) {
                 try {
-                final TagDefinition tagDefinition = findTagDefinitionFromId(tagDefinitionList, input);
+                    final TagDefinition tagDefinition = findTagDefinitionFromId(tagDefinitionList, input);
                     return new TagJson(input.toString(), tagDefinition.getName(), null);
                 } catch (TagDefinitionApiException e) {
                     theException.set(e);
@@ -151,8 +152,8 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         return Response.status(Response.Status.OK).build();
     }
 
-    protected Response getCustomFields(final UUID id) {
-        final Map<String, CustomField> fields = customFieldUserApi.getCustomFields(id, getObjectType());
+    protected Response getCustomFields(final UUID id, final TenantContext context) {
+        final Map<String, CustomField> fields = customFieldUserApi.getCustomFields(id, getObjectType(), context);
 
         final List<CustomFieldJson> result = new LinkedList<CustomFieldJson>();
         for (final CustomField cur : fields.values()) {

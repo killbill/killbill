@@ -16,10 +16,10 @@
 
 package com.ning.billing.util.config;
 
+import java.net.URI;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import java.net.URI;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public abstract class ValidatingConfig<Context> {

@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.payment.core;
 
 import java.util.Map;
@@ -37,7 +38,8 @@ import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
 import com.ning.billing.util.bus.BusEvent;
-import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.globallocker.GlobalLock;
 import com.ning.billing.util.globallocker.GlobalLocker;
@@ -76,8 +78,8 @@ public abstract class ProcessorBase {
         this.tagUserApi = tagUserApi;
     }
 
-    protected boolean isAccountAutoPayOff(final UUID accountId) {
-        final Map<String, Tag> accountTags = tagUserApi.getTags(accountId, ObjectType.ACCOUNT);
+    protected boolean isAccountAutoPayOff(final UUID accountId, final InternalTenantContext context) {
+        final Map<String, Tag> accountTags = tagUserApi.getTags(accountId, ObjectType.ACCOUNT, context.toTenantContext());
         for (final Tag cur : accountTags.values()) {
             if (ControlTagType.AUTO_PAY_OFF.getId().equals(cur.getTagDefinitionId())) {
                 return true;
@@ -86,18 +88,17 @@ public abstract class ProcessorBase {
         return false;
     }
 
-
-    protected void setAccountAutoPayOff(UUID accountId, CallContext context) throws PaymentApiException {
+    protected void setAccountAutoPayOff(final UUID accountId, final InternalCallContext context) throws PaymentApiException {
         try {
-            tagUserApi.addTag(accountId, ObjectType.ACCOUNT, ControlTagType.AUTO_PAY_OFF.getId(), context);
+            tagUserApi.addTag(accountId, ObjectType.ACCOUNT, ControlTagType.AUTO_PAY_OFF.getId(), context.toCallContext());
         } catch (TagApiException e) {
             log.error("Failed to add AUTO_PAY_OFF on account " + accountId, e);
             throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, "Failed to add AUTO_PAY_OFF on account " + accountId);
         }
     }
 
-    protected PaymentPluginApi getPaymentProviderPlugin(final UUID paymentMethodId) throws PaymentApiException {
-        final PaymentMethodModelDao methodDao = paymentDao.getPaymentMethodIncludedDeleted(paymentMethodId);
+    protected PaymentPluginApi getPaymentProviderPlugin(final UUID paymentMethodId, final InternalTenantContext context) throws PaymentApiException {
+        final PaymentMethodModelDao methodDao = paymentDao.getPaymentMethodIncludedDeleted(paymentMethodId, context);
         if (methodDao == null) {
             log.error("PaymentMethod dpes not exist", paymentMethodId);
             throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, paymentMethodId);
@@ -105,24 +106,23 @@ public abstract class ProcessorBase {
         return pluginRegistry.getPlugin(methodDao.getPluginName());
     }
 
-
-    protected PaymentPluginApi getPaymentProviderPlugin(final String accountKey)
+    protected PaymentPluginApi getPaymentProviderPlugin(final String accountKey, final InternalTenantContext context)
             throws AccountApiException, PaymentApiException {
 
         final String paymentProviderName = null;
         if (accountKey != null) {
-            final Account account = accountUserApi.getAccountByKey(accountKey);
-            return getPaymentProviderPlugin(account);
+            final Account account = accountUserApi.getAccountByKey(accountKey, context.toTenantContext());
+            return getPaymentProviderPlugin(account, context);
         }
         return pluginRegistry.getPlugin(paymentProviderName);
     }
 
-    protected PaymentPluginApi getPaymentProviderPlugin(final Account account) throws PaymentApiException {
+    protected PaymentPluginApi getPaymentProviderPlugin(final Account account, final InternalTenantContext context) throws PaymentApiException {
         final UUID paymentMethodId = account.getPaymentMethodId();
         if (paymentMethodId == null) {
             throw new PaymentApiException(ErrorCode.PAYMENT_NO_DEFAULT_PAYMENT_METHOD, account.getId());
         }
-        return getPaymentProviderPlugin(paymentMethodId);
+        return getPaymentProviderPlugin(paymentMethodId, context);
     }
 
     protected void postPaymentEvent(final BusEvent ev, final UUID accountId) {
@@ -136,11 +136,10 @@ public abstract class ProcessorBase {
         }
     }
 
-
     public interface WithAccountLockCallback<T> {
+
         public T doOperation() throws PaymentApiException;
     }
-
 
     public static class CallableWithAccountLock<T> implements Callable<T> {
 

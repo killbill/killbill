@@ -19,7 +19,6 @@ package com.ning.billing.junction.plumbing.api;
 import java.util.List;
 import java.util.UUID;
 
-import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
@@ -28,9 +27,13 @@ import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.api.MigrationAccountData;
 import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.glue.RealImplementation;
 
+import com.google.inject.Inject;
+
 public class BlockingAccountUserApi implements AccountUserApi {
+
     private final AccountUserApi userApi;
     private final BlockingApi blockingApi;
 
@@ -67,28 +70,28 @@ public class BlockingAccountUserApi implements AccountUserApi {
     }
 
     @Override
-    public Account getAccountByKey(final String key) throws AccountApiException {
-        return new BlockingAccount(userApi.getAccountByKey(key), blockingApi);
+    public Account getAccountByKey(final String key, final TenantContext context) throws AccountApiException {
+        return new BlockingAccount(userApi.getAccountByKey(key, context), blockingApi, context);
     }
 
     @Override
-    public Account getAccountById(final UUID accountId) throws AccountApiException {
-        return userApi.getAccountById(accountId);
+    public Account getAccountById(final UUID accountId, final TenantContext context) throws AccountApiException {
+        return userApi.getAccountById(accountId, context);
     }
 
     @Override
-    public List<Account> getAccounts() {
-        return userApi.getAccounts();
+    public List<Account> getAccounts(final TenantContext context) {
+        return userApi.getAccounts(context);
     }
 
     @Override
-    public UUID getIdFromKey(final String externalKey) throws AccountApiException {
-        return userApi.getIdFromKey(externalKey);
+    public UUID getIdFromKey(final String externalKey, final TenantContext context) throws AccountApiException {
+        return userApi.getIdFromKey(externalKey, context);
     }
 
     @Override
-    public List<AccountEmail> getEmails(final UUID accountId) {
-        return userApi.getEmails(accountId);
+    public List<AccountEmail> getEmails(final UUID accountId, final TenantContext context) {
+        return userApi.getEmails(accountId, context);
     }
 
     @Override
@@ -107,14 +110,12 @@ public class BlockingAccountUserApi implements AccountUserApi {
     }
 
     @Override
-    public void updatePaymentMethod(UUID accountId, UUID paymentMethodId,
-            CallContext context) throws AccountApiException {
+    public void updatePaymentMethod(final UUID accountId, final UUID paymentMethodId, CallContext context) throws AccountApiException {
         userApi.updatePaymentMethod(accountId, paymentMethodId, context);
     }
 
     @Override
-    public void removePaymentMethod(UUID accountId, CallContext context)
-            throws AccountApiException {
+    public void removePaymentMethod(final UUID accountId, final CallContext context) throws AccountApiException {
         userApi.removePaymentMethod(accountId, context);
     }
 }

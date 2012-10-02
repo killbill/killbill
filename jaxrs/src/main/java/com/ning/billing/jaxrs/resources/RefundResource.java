@@ -18,6 +18,7 @@ package com.ning.billing.jaxrs.resources;
 
 import java.util.UUID;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -26,10 +27,12 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import com.ning.billing.jaxrs.json.RefundJson;
+import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.Refund;
+import com.ning.billing.util.api.AuditUserApi;
 import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.dao.ObjectType;
@@ -44,19 +47,22 @@ public class RefundResource extends JaxRsResourceBase {
     private final PaymentApi paymentApi;
 
     @Inject
-    public RefundResource(final JaxrsUriBuilder uriBuilder,
-                          final PaymentApi paymentApi,
+    public RefundResource(final PaymentApi paymentApi,
+                          final JaxrsUriBuilder uriBuilder,
                           final TagUserApi tagUserApi,
-                          final CustomFieldUserApi customFieldUserApi) {
-        super(uriBuilder, tagUserApi, customFieldUserApi);
+                          final CustomFieldUserApi customFieldUserApi,
+                          final AuditUserApi auditUserApi,
+                          final Context context) {
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, context);
         this.paymentApi = paymentApi;
     }
 
     @GET
     @Path("/{refundId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
-    public Response getRefund(@PathParam("refundId") final String refundId) throws PaymentApiException {
-        final Refund refund = paymentApi.getRefund(UUID.fromString(refundId));
+    public Response getRefund(@PathParam("refundId") final String refundId,
+                              @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
+        final Refund refund = paymentApi.getRefund(UUID.fromString(refundId), context.createContext(request));
         // TODO Return adjusted items and audits
         return Response.status(Status.OK).entity(new RefundJson(refund, null, null)).build();
     }

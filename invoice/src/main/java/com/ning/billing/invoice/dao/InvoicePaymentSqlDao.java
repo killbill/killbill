@@ -47,8 +47,9 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.InvoicePayment.InvoicePaymentType;
 import com.ning.billing.invoice.model.DefaultInvoicePayment;
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallContextBinder;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 import com.ning.billing.util.dao.AuditSqlDao;
 import com.ning.billing.util.dao.BinderBase;
 import com.ning.billing.util.dao.MapperBase;
@@ -60,46 +61,58 @@ import com.ning.billing.util.entity.dao.EntitySqlDao;
 public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePayment>, Transactional<InvoicePaymentSqlDao>, AuditSqlDao, Transmogrifier {
 
     @SqlQuery
-    List<Long> getRecordIds(@Bind("invoiceId") final String invoiceId);
+    List<Long> getRecordIds(@Bind("invoiceId") final String invoiceId,
+                            @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
-    public InvoicePayment getByPaymentId(@Bind("paymentId") final String paymentId);
+    public InvoicePayment getByPaymentId(@Bind("paymentId") final String paymentId,
+                                         @InternalTenantContextBinder final InternalTenantContext context);
 
     @Override
     @SqlQuery
-    public List<InvoicePayment> get();
+    public List<InvoicePayment> get(@InternalTenantContextBinder final InternalTenantContext context);
 
     @Override
     @SqlUpdate
-    public void create(@InvoicePaymentBinder final InvoicePayment invoicePayment, @CallContextBinder final CallContext context);
+    public void create(@InvoicePaymentBinder final InvoicePayment invoicePayment,
+                       @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlBatch(transactional = false)
-    void batchCreateFromTransaction(@InvoicePaymentBinder final List<InvoicePayment> items, @CallContextBinder final CallContext context);
+    void batchCreateFromTransaction(@InvoicePaymentBinder final List<InvoicePayment> items,
+                                    @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlQuery
-    public List<InvoicePayment> getPaymentsForInvoice(@Bind("invoiceId") final String invoiceId);
+    public List<InvoicePayment> getPaymentsForInvoice(@Bind("invoiceId") final String invoiceId,
+                                                      @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
-    List<InvoicePayment> getInvoicePayments(@Bind("paymentId") final String paymentId);
+    List<InvoicePayment> getInvoicePayments(@Bind("paymentId") final String paymentId,
+                                            @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
-    InvoicePayment getPaymentsForCookieId(@Bind("paymentCookieId") final String paymentCookieId);
+    InvoicePayment getPaymentsForCookieId(@Bind("paymentCookieId") final String paymentCookieId,
+                                          @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlUpdate
-    void notifyOfPayment(@InvoicePaymentBinder final InvoicePayment invoicePayment, @CallContextBinder final CallContext context);
+    void notifyOfPayment(@InvoicePaymentBinder final InvoicePayment invoicePayment,
+                         @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlQuery
-    BigDecimal getRemainingAmountPaid(@Bind("invoicePaymentId") final String invoicePaymentId);
+    BigDecimal getRemainingAmountPaid(@Bind("invoicePaymentId") final String invoicePaymentId,
+                                      @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
     @RegisterMapper(UuidMapper.class)
-    UUID getAccountIdFromInvoicePaymentId(@Bind("invoicePaymentId") final String invoicePaymentId);
+    UUID getAccountIdFromInvoicePaymentId(@Bind("invoicePaymentId") final String invoicePaymentId,
+                                          @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
-    List<InvoicePayment> getChargeBacksByAccountId(@Bind("accountId") final String accountId);
+    List<InvoicePayment> getChargeBacksByAccountId(@Bind("accountId") final String accountId,
+                                                   @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
-    List<InvoicePayment> getChargebacksByPaymentId(@Bind("paymentId") final String paymentId);
+    List<InvoicePayment> getChargebacksByPaymentId(@Bind("paymentId") final String paymentId,
+                                                   @InternalTenantContextBinder final InternalTenantContext context);
 
     public static class InvoicePaymentMapper extends MapperBase implements ResultSetMapper<InvoicePayment> {
 

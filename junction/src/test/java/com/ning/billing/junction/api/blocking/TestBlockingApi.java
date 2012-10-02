@@ -17,7 +17,6 @@
 package com.ning.billing.junction.api.blocking;
 
 import java.util.List;
-import java.util.SortedSet;
 import java.util.UUID;
 
 import org.mockito.Mockito;
@@ -26,7 +25,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
-import com.google.inject.Inject;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.junction.JunctionTestSuiteWithEmbeddedDB;
 import com.ning.billing.junction.MockModule;
@@ -36,6 +34,8 @@ import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.junction.api.DefaultBlockingState;
 import com.ning.billing.mock.glue.MockEntitlementModule;
 import com.ning.billing.util.clock.ClockMock;
+
+import com.google.inject.Inject;
 
 @Guice(modules = {MockModule.class, MockEntitlementModule.class})
 public class TestBlockingApi extends JunctionTestSuiteWithEmbeddedDB {
@@ -61,18 +61,18 @@ public class TestBlockingApi extends JunctionTestSuiteWithEmbeddedDB {
         final boolean blockBilling = false;
 
         final BlockingState state1 = new DefaultBlockingState(uuid, overdueStateName, Blockable.Type.SUBSCRIPTION_BUNDLE, service, blockChange, blockEntitlement, blockBilling);
-        api.setBlockingState(state1);
+        api.setBlockingState(state1, callContext);
         clock.setDeltaFromReality(1000 * 3600 * 24);
 
         final String overdueStateName2 = "NoReallyThisCantGoOn";
         final BlockingState state2 = new DefaultBlockingState(uuid, overdueStateName2, Blockable.Type.SUBSCRIPTION_BUNDLE, service, blockChange, blockEntitlement, blockBilling);
-        api.setBlockingState(state2);
+        api.setBlockingState(state2, callContext);
 
         final SubscriptionBundle bundle = Mockito.mock(SubscriptionBundle.class);
         Mockito.when(bundle.getId()).thenReturn(uuid);
 
-        Assert.assertEquals(api.getBlockingStateFor(bundle).getStateName(), overdueStateName2);
-        Assert.assertEquals(api.getBlockingStateFor(bundle.getId()).getStateName(), overdueStateName2);
+        Assert.assertEquals(api.getBlockingStateFor(bundle, callContext).getStateName(), overdueStateName2);
+        Assert.assertEquals(api.getBlockingStateFor(bundle.getId(), callContext).getStateName(), overdueStateName2);
     }
 
     @Test(groups = "slow")
@@ -86,19 +86,19 @@ public class TestBlockingApi extends JunctionTestSuiteWithEmbeddedDB {
         final boolean blockBilling = false;
 
         final BlockingState state1 = new DefaultBlockingState(uuid, overdueStateName, Blockable.Type.SUBSCRIPTION_BUNDLE, service, blockChange, blockEntitlement, blockBilling);
-        api.setBlockingState(state1);
+        api.setBlockingState(state1, callContext);
 
         clock.setDeltaFromReality(1000 * 3600 * 24);
 
         final String overdueStateName2 = "NoReallyThisCantGoOn";
         final BlockingState state2 = new DefaultBlockingState(uuid, overdueStateName2, Blockable.Type.SUBSCRIPTION_BUNDLE, service, blockChange, blockEntitlement, blockBilling);
-        api.setBlockingState(state2);
+        api.setBlockingState(state2, callContext);
 
         final SubscriptionBundle bundle = Mockito.mock(SubscriptionBundle.class);
         Mockito.when(bundle.getId()).thenReturn(uuid);
 
-        final List<BlockingState> history1 = api.getBlockingHistory(bundle);
-        final List<BlockingState> history2 = api.getBlockingHistory(bundle.getId());
+        final List<BlockingState> history1 = api.getBlockingHistory(bundle, callContext);
+        final List<BlockingState> history2 = api.getBlockingHistory(bundle.getId(), callContext);
 
         Assert.assertEquals(history1.size(), 2);
         Assert.assertEquals(history1.get(0).getStateName(), overdueStateName);

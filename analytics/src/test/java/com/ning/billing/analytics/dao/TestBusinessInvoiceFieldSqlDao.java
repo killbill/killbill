@@ -43,12 +43,12 @@ public class TestBusinessInvoiceFieldSqlDao extends AnalyticsTestSuiteWithEmbedd
         final String value = UUID.randomUUID().toString();
 
         // Verify initial state
-        Assert.assertEquals(invoiceFieldSqlDao.getFieldsForInvoice(invoiceId).size(), 0);
-        Assert.assertEquals(invoiceFieldSqlDao.removeField(invoiceId, name), 0);
+        Assert.assertEquals(invoiceFieldSqlDao.getFieldsForInvoice(invoiceId, internalCallContext).size(), 0);
+        Assert.assertEquals(invoiceFieldSqlDao.removeField(invoiceId, name, internalCallContext), 0);
 
         // Add an entry
-        Assert.assertEquals(invoiceFieldSqlDao.addField(invoiceId, name, value), 1);
-        final List<BusinessInvoiceField> fieldsForInvoice = invoiceFieldSqlDao.getFieldsForInvoice(invoiceId);
+        Assert.assertEquals(invoiceFieldSqlDao.addField(invoiceId, name, value, internalCallContext), 1);
+        final List<BusinessInvoiceField> fieldsForInvoice = invoiceFieldSqlDao.getFieldsForInvoice(invoiceId, internalCallContext);
         Assert.assertEquals(fieldsForInvoice.size(), 1);
 
         // Retrieve it
@@ -58,8 +58,8 @@ public class TestBusinessInvoiceFieldSqlDao extends AnalyticsTestSuiteWithEmbedd
         Assert.assertEquals(invoiceField.getValue(), value);
 
         // Delete it
-        Assert.assertEquals(invoiceFieldSqlDao.removeField(invoiceId, name), 1);
-        Assert.assertEquals(invoiceFieldSqlDao.getFieldsForInvoice(invoiceId).size(), 0);
+        Assert.assertEquals(invoiceFieldSqlDao.removeField(invoiceId, name, internalCallContext), 1);
+        Assert.assertEquals(invoiceFieldSqlDao.getFieldsForInvoice(invoiceId, internalCallContext).size(), 0);
     }
 
     @Test(groups = "slow")
@@ -70,24 +70,24 @@ public class TestBusinessInvoiceFieldSqlDao extends AnalyticsTestSuiteWithEmbedd
         final String name2 = UUID.randomUUID().toString().substring(0, 30);
 
         // Add a field to both invoices
-        Assert.assertEquals(invoiceFieldSqlDao.addField(invoiceId1, name1, UUID.randomUUID().toString()), 1);
-        Assert.assertEquals(invoiceFieldSqlDao.addField(invoiceId2, name2, UUID.randomUUID().toString()), 1);
+        Assert.assertEquals(invoiceFieldSqlDao.addField(invoiceId1, name1, UUID.randomUUID().toString(), internalCallContext), 1);
+        Assert.assertEquals(invoiceFieldSqlDao.addField(invoiceId2, name2, UUID.randomUUID().toString(), internalCallContext), 1);
 
-        Assert.assertEquals(invoiceFieldSqlDao.getFieldsForInvoice(invoiceId1).size(), 1);
-        Assert.assertEquals(invoiceFieldSqlDao.getFieldsForInvoice(invoiceId2).size(), 1);
+        Assert.assertEquals(invoiceFieldSqlDao.getFieldsForInvoice(invoiceId1, internalCallContext).size(), 1);
+        Assert.assertEquals(invoiceFieldSqlDao.getFieldsForInvoice(invoiceId2, internalCallContext).size(), 1);
 
         // Remove the field for the first invoice
-        Assert.assertEquals(invoiceFieldSqlDao.removeField(invoiceId1, name1), 1);
+        Assert.assertEquals(invoiceFieldSqlDao.removeField(invoiceId1, name1, internalCallContext), 1);
 
-        Assert.assertEquals(invoiceFieldSqlDao.getFieldsForInvoice(invoiceId1).size(), 0);
-        Assert.assertEquals(invoiceFieldSqlDao.getFieldsForInvoice(invoiceId2).size(), 1);
+        Assert.assertEquals(invoiceFieldSqlDao.getFieldsForInvoice(invoiceId1, internalCallContext).size(), 0);
+        Assert.assertEquals(invoiceFieldSqlDao.getFieldsForInvoice(invoiceId2, internalCallContext).size(), 1);
     }
 
     @Test(groups = "slow")
     public void testHealthCheck() throws Exception {
         // HealthCheck test to make sure MySQL is setup properly
         try {
-            invoiceFieldSqlDao.test();
+            invoiceFieldSqlDao.test(internalCallContext);
         } catch (Throwable t) {
             Assert.fail(t.toString());
         }

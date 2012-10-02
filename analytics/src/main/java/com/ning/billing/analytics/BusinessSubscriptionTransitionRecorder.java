@@ -25,7 +25,6 @@ import org.skife.jdbi.v2.TransactionStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
@@ -42,9 +41,13 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionEvent;
+import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.clock.Clock;
 
+import com.google.inject.Inject;
+
 public class BusinessSubscriptionTransitionRecorder {
+
     private static final Logger log = LoggerFactory.getLogger(BusinessSubscriptionTransitionRecorder.class);
 
     private final BusinessSubscriptionTransitionSqlDao sqlDao;
@@ -66,10 +69,10 @@ public class BusinessSubscriptionTransitionRecorder {
         this.clock = clock;
     }
 
-    public void rebuildTransitionsForBundle(final UUID bundleId) {
+    public void rebuildTransitionsForBundle(final UUID bundleId, final InternalCallContext context) {
         final SubscriptionBundle bundle;
         try {
-            bundle = entitlementApi.getBundleFromId(bundleId);
+            bundle = entitlementApi.getBundleFromId(bundleId, context.toCallContext());
         } catch (EntitlementUserApiException e) {
             log.warn("Ignoring update for bundle {}: bundle does not exist", bundleId);
             return;
@@ -77,13 +80,13 @@ public class BusinessSubscriptionTransitionRecorder {
 
         final Account account;
         try {
-            account = accountApi.getAccountById(bundle.getAccountId());
+            account = accountApi.getAccountById(bundle.getAccountId(), context.toCallContext());
         } catch (AccountApiException e) {
             log.warn("Ignoring update for bundle {}: account {} does not exist", bundleId, bundle.getAccountId());
             return;
         }
 
-        final List<Subscription> subscriptions = entitlementApi.getSubscriptionsForBundle(bundleId);
+        final List<Subscription> subscriptions = entitlementApi.getSubscriptionsForBundle(bundleId, context.toCallContext());
 
         final Currency currency = account.getCurrency();
 
@@ -91,7 +94,7 @@ public class BusinessSubscriptionTransitionRecorder {
             @Override
             public Void inTransaction(final BusinessSubscriptionTransitionSqlDao transactional, final TransactionStatus status) throws Exception {
                 log.info("Started rebuilding transitions for bundle id {}", bundleId);
-                transactional.deleteTransitionsForBundle(bundleId.toString());
+                transactional.deleteTransitionsForBundle(bundleId.toString(), context);
 
                 final ArrayList<BusinessSubscriptionTransition> transitions = new ArrayList<BusinessSubscriptionTransition>();
                 for (final Subscription subscription : subscriptions) {
@@ -116,13 +119,13 @@ public class BusinessSubscriptionTransitionRecorder {
                                 nextSubscription
                         );
 
-                        transactional.createTransition(transition);
+                        transactional.createTransition(transition, context);
                         transitions.add(transition);
                         log.info("Adding transition {}", transition);
 
                         // We need to manually add the system cancel event
                         if (SubscriptionTransitionType.CANCEL.equals(event.getTransitionType()) &&
-                                clock.getUTCNow().isAfter(event.getEffectiveTransitionTime())) {
+                            clock.getUTCNow().isAfter(event.getEffectiveTransitionTime())) {
                             final BusinessSubscriptionTransition systemCancelTransition = new BusinessSubscriptionTransition(
                                     event.getTotalOrdering(),
                                     bundleId,
@@ -135,7 +138,7 @@ public class BusinessSubscriptionTransitionRecorder {
                                     prevSubscription,
                                     nextSubscription
                             );
-                            transactional.createTransition(systemCancelTransition);
+                            transactional.createTransition(systemCancelTransition, context);
                             transitions.add(systemCancelTransition);
                             log.info("Adding transition {}", systemCancelTransition);
                         }
@@ -186,7 +189,6 @@ public class BusinessSubscriptionTransitionRecorder {
         return BusinessSubscriptionEvent.subscriptionTransfered(transfered.getNextPlan(), catalogService.getFullCatalog(), transfered.getEffectiveTransitionTime(), transfered.getSubscriptionStartDate());
     }
 
-
     private BusinessSubscriptionEvent subscriptionCancelled(final SubscriptionEvent cancelled) throws AccountApiException, EntitlementUserApiException {
         // cancelled.getNextPlan() is null here - need to look at the previous one to create the correct event name
         return BusinessSubscriptionEvent.subscriptionCancelled(cancelled.getPreviousPlan(), catalogService.getFullCatalog(), cancelled.getEffectiveTransitionTime(), cancelled.getSubscriptionStartDate());
@@ -203,7 +205,7 @@ public class BusinessSubscriptionTransitionRecorder {
     private BusinessSubscription createNextBusinessSubscription(final EffectiveSubscriptionEvent event, final BusinessSubscriptionEvent businessEvent, final Currency currency) {
         final BusinessSubscription nextSubscription;
         if (BusinessSubscriptionEvent.EventType.CANCEL.equals(businessEvent.getEventType()) ||
-                BusinessSubscriptionEvent.EventType.SYSTEM_CANCEL.equals(businessEvent.getEventType())) {
+            BusinessSubscriptionEvent.EventType.SYSTEM_CANCEL.equals(businessEvent.getEventType())) {
             nextSubscription = null;
         } else {
             nextSubscription = new BusinessSubscription(event.getNextPriceList(), event.getNextPlan(), event.getNextPhase(),
@@ -219,8 +221,8 @@ public class BusinessSubscriptionTransitionRecorder {
                                                                     final ArrayList<BusinessSubscriptionTransition> transitions,
                                                                     final Currency currency) {
         if (BusinessSubscriptionEvent.EventType.ADD.equals(businessEvent.getEventType()) ||
-                BusinessSubscriptionEvent.EventType.RE_ADD.equals(businessEvent.getEventType()) ||
-                BusinessSubscriptionEvent.EventType.TRANSFER.equals(businessEvent.getEventType())) {
+            BusinessSubscriptionEvent.EventType.RE_ADD.equals(businessEvent.getEventType()) ||
+            BusinessSubscriptionEvent.EventType.TRANSFER.equals(businessEvent.getEventType())) {
             return null;
         }
 

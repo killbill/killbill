@@ -35,7 +35,6 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.entitlement.api.billing.BillingEvent;
 import com.ning.billing.entitlement.api.billing.EntitlementBillingApiException;
 import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.invoice.api.Invoice;
@@ -56,6 +55,8 @@ import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
 import com.ning.billing.util.bus.BusEvent;
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.globallocker.GlobalLock;
 import com.ning.billing.util.globallocker.GlobalLocker;
@@ -79,15 +80,17 @@ public class InvoiceDispatcher {
     private final GlobalLocker locker;
     private final Bus eventBus;
     private final Clock clock;
+    private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
     public InvoiceDispatcher(final InvoiceGenerator generator, final AccountUserApi accountUserApi,
-            final BillingApi billingApi,
-            final InvoiceDao invoiceDao,
-            final InvoiceNotifier invoiceNotifier,
-            final GlobalLocker locker,
-            final Bus eventBus,
-            final Clock clock) {
+                             final BillingApi billingApi,
+                             final InvoiceDao invoiceDao,
+                             final InvoiceNotifier invoiceNotifier,
+                             final GlobalLocker locker,
+                             final Bus eventBus,
+                             final Clock clock,
+                             final InternalCallContextFactory internalCallContextFactory) {
         this.generator = generator;
         this.billingApi = billingApi;
         this.accountUserApi = accountUserApi;
@@ -96,33 +99,33 @@ public class InvoiceDispatcher {
         this.locker = locker;
         this.eventBus = eventBus;
         this.clock = clock;
+        this.internalCallContextFactory = internalCallContextFactory;
     }
 
     public void processSubscription(final EffectiveSubscriptionEvent transition,
-            final CallContext context) throws InvoiceApiException {
+                                    final CallContext context) throws InvoiceApiException {
         final UUID subscriptionId = transition.getSubscriptionId();
         final DateTime targetDate = transition.getEffectiveTransitionTime();
         log.info("Got subscription transition: type: " + transition.getTransitionType().toString() + "; id: " + subscriptionId.toString() + "; targetDate: " + targetDate.toString());
         processSubscription(subscriptionId, targetDate, context);
     }
 
-    public void processSubscription(final UUID subscriptionId, final DateTime targetDate,
-            final CallContext context) throws InvoiceApiException {
+    public void processSubscription(final UUID subscriptionId, final DateTime targetDate, final CallContext context) throws InvoiceApiException {
         try {
             if (subscriptionId == null) {
                 log.error("Failed handling entitlement change.", new InvoiceApiException(ErrorCode.INVOICE_INVALID_TRANSITION));
                 return;
             }
-            final UUID accountId = billingApi.getAccountIdFromSubscriptionId(subscriptionId);
+            final UUID accountId = billingApi.getAccountIdFromSubscriptionId(subscriptionId, context);
             processAccount(accountId, targetDate, false, context);
         } catch (EntitlementBillingApiException e) {
             log.error("Failed handling entitlement change.",
-                    new InvoiceApiException(ErrorCode.INVOICE_NO_ACCOUNT_ID_FOR_SUBSCRIPTION_ID, subscriptionId.toString()));
+                      new InvoiceApiException(ErrorCode.INVOICE_NO_ACCOUNT_ID_FOR_SUBSCRIPTION_ID, subscriptionId.toString()));
         }
     }
 
     public Invoice processAccount(final UUID accountId, final DateTime targetDate,
-            final boolean dryRun, final CallContext context) throws InvoiceApiException {
+                                  final boolean dryRun, final CallContext context) throws InvoiceApiException {
         GlobalLock lock = null;
         try {
             lock = locker.lockWithNumberOfTries(LockerType.ACCOUNT, accountId.toString(), NB_LOCK_TRY);
@@ -131,7 +134,7 @@ public class InvoiceDispatcher {
         } catch (LockFailedException e) {
             // Not good!
             log.error(String.format("Failed to process invoice for account %s, targetDate %s",
-                    accountId.toString(), targetDate), e);
+                                    accountId.toString(), targetDate), e);
         } finally {
             if (lock != null) {
                 lock.release();
@@ -141,15 +144,15 @@ public class InvoiceDispatcher {
     }
 
     private Invoice processAccountWithLock(final UUID accountId, final DateTime targetDateTime,
-            final boolean dryRun, final CallContext context) throws InvoiceApiException {
+                                           final boolean dryRun, final CallContext context) throws InvoiceApiException {
         try {
             // Make sure to first set the BCD if needed then get the account object (to have the BCD set)
-            final BillingEventSet billingEvents = billingApi.getBillingEventsForAccountAndUpdateAccountBCD(accountId);
-            final Account account = accountUserApi.getAccountById(accountId);
+            final BillingEventSet billingEvents = billingApi.getBillingEventsForAccountAndUpdateAccountBCD(accountId, context);
+            final Account account = accountUserApi.getAccountById(accountId, context);
 
             List<Invoice> invoices = new ArrayList<Invoice>();
             if (!billingEvents.isAccountAutoInvoiceOff()) {
-                invoices = invoiceDao.getInvoicesByAccount(accountId); //no need to fetch, invoicing is off on this account
+                invoices = invoiceDao.getInvoicesByAccount(accountId, internalCallContextFactory.createInternalTenantContext(account.getId(), context)); //no need to fetch, invoicing is off on this account
             }
 
             final Currency targetCurrency = account.getCurrency();
@@ -158,6 +161,7 @@ public class InvoiceDispatcher {
             final LocalDate targetDate = new LocalDate(targetDateTime, account.getTimeZone());
 
             final Invoice invoice = generator.generateInvoice(accountId, billingEvents, invoices, targetDate, account.getTimeZone(), targetCurrency);
+            final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), context);
 
             if (invoice == null) {
                 log.info("Generated null invoice.");
@@ -176,15 +180,15 @@ public class InvoiceDispatcher {
                         }
                     }).size() > 0;
 
-                    invoiceDao.create(invoice, account.getBillCycleDay().getDayOfMonthUTC(), isRealInvoiceWithItems, context);
+                    invoiceDao.create(invoice, account.getBillCycleDay().getDayOfMonthUTC(), isRealInvoiceWithItems, internalCallContext);
 
                     final List<InvoiceItem> fixedPriceInvoiceItems = invoice.getInvoiceItems(FixedPriceInvoiceItem.class);
                     final List<InvoiceItem> recurringInvoiceItems = invoice.getInvoiceItems(RecurringInvoiceItem.class);
                     setChargedThroughDates(account.getBillCycleDay(), account.getTimeZone(), fixedPriceInvoiceItems, recurringInvoiceItems, context);
 
                     final InvoiceCreationEvent event = new DefaultInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
-                            invoice.getBalance(), invoice.getCurrency(),
-                            context.getUserToken());
+                                                                                       invoice.getBalance(), invoice.getCurrency(),
+                                                                                       context.getUserToken());
 
                     if (isRealInvoiceWithItems) {
                         postEvent(event, accountId);
@@ -192,8 +196,9 @@ public class InvoiceDispatcher {
                 }
             }
 
-            if (account.isNotifiedForInvoices()) {
-                invoiceNotifier.notify(account, invoice);
+            if (account.isNotifiedForInvoices() && invoice != null && !dryRun) {
+                // Need to re-hydrate the invoice object to get the invoice number (record id)
+                invoiceNotifier.notify(account, invoiceDao.getById(invoice.getId(), internalCallContext), context);
             }
 
             return invoice;
@@ -204,10 +209,10 @@ public class InvoiceDispatcher {
     }
 
     private void setChargedThroughDates(final BillCycleDay billCycleDay,
-            final DateTimeZone accountTimeZone,
-            final Collection<InvoiceItem> fixedPriceItems,
-            final Collection<InvoiceItem> recurringItems,
-            final CallContext context) {
+                                        final DateTimeZone accountTimeZone,
+                                        final Collection<InvoiceItem> fixedPriceItems,
+                                        final Collection<InvoiceItem> recurringItems,
+                                        final CallContext context) {
         final Map<UUID, LocalDate> chargeThroughDates = new HashMap<UUID, LocalDate>();
         addInvoiceItemsToChargeThroughDates(billCycleDay, accountTimeZone, chargeThroughDates, fixedPriceItems);
         addInvoiceItemsToChargeThroughDates(billCycleDay, accountTimeZone, chargeThroughDates, recurringItems);
@@ -230,9 +235,9 @@ public class InvoiceDispatcher {
     }
 
     private void addInvoiceItemsToChargeThroughDates(final BillCycleDay billCycleDay,
-            final DateTimeZone accountTimeZone,
-            final Map<UUID, LocalDate> chargeThroughDates,
-            final Collection<InvoiceItem> items) {
+                                                     final DateTimeZone accountTimeZone,
+                                                     final Map<UUID, LocalDate> chargeThroughDates,
+                                                     final Collection<InvoiceItem> items) {
 
         for (final InvoiceItem item : items) {
             final UUID subscriptionId = item.getSubscriptionId();

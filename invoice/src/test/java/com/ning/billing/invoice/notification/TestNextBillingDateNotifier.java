@@ -32,10 +32,6 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Stage;
 import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.catalog.MockCatalogModule;
 import com.ning.billing.config.InvoiceConfig;
@@ -55,6 +51,8 @@ import com.ning.billing.mock.glue.MockJunctionModule;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.DefaultCallContextFactory;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
+import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.email.templates.TemplateModule;
@@ -64,6 +62,11 @@ import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.TagStoreModule;
 import com.ning.billing.util.notificationq.DummySqlTest;
 import com.ning.billing.util.notificationq.NotificationQueueService;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Stage;
 
 import static com.jayway.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -138,11 +141,12 @@ public class TestNextBillingDateNotifier extends InvoiceTestSuiteWithEmbeddedDB 
 
         final Subscription subscription = Mockito.mock(Subscription.class);
         final EntitlementUserApi entitlementUserApi = Mockito.mock(EntitlementUserApi.class);
-        Mockito.when(entitlementUserApi.getSubscriptionFromId(Mockito.<UUID>any())).thenReturn(subscription);
+        Mockito.when(entitlementUserApi.getSubscriptionFromId(Mockito.<UUID>any(), Mockito.<TenantContext>any())).thenReturn(subscription);
 
         final CallContextFactory factory = new DefaultCallContextFactory(clock);
         listener = new InvoiceListenerMock(factory, dispatcher);
-        notifier = new DefaultNextBillingDateNotifier(notificationQueueService, g.getInstance(InvoiceConfig.class), entitlementUserApi, listener);
+        notifier = new DefaultNextBillingDateNotifier(notificationQueueService, g.getInstance(InvoiceConfig.class), entitlementUserApi,
+                                                      listener, new DefaultCallContextFactory(clock));
     }
 
     @Test(groups = "slow")
@@ -152,7 +156,7 @@ public class TestNextBillingDateNotifier extends InvoiceTestSuiteWithEmbeddedDB 
         final UUID subscriptionId = new UUID(0L, 1L);
         final DateTime now = new DateTime();
         final DateTime readyTime = now.plusMillis(2000);
-        final NextBillingDatePoster poster = new DefaultNextBillingDatePoster(notificationQueueService);
+        final NextBillingDatePoster poster = new DefaultNextBillingDatePoster(notificationQueueService, new InternalCallContextFactory(getMysqlTestingHelper().getDBI(), clock));
 
         eventBus.start();
         notifier.initialize();

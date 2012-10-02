@@ -18,7 +18,6 @@ package com.ning.billing.entitlement.api.user;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.UUID;
 
 import com.ning.billing.entitlement.events.EntitlementEvent;
 

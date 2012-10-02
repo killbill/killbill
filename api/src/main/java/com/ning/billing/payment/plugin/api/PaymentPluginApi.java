@@ -22,41 +22,43 @@ import java.util.UUID;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.TenantContext;
 
 public interface PaymentPluginApi {
 
     public String getName();
 
-    public PaymentInfoPlugin processPayment(String externalAccountKey, UUID paymentId, BigDecimal amount)
+    public PaymentInfoPlugin processPayment(String externalAccountKey, UUID paymentId, BigDecimal amount, CallContext context)
             throws PaymentPluginApiException;
 
-    public PaymentInfoPlugin getPaymentInfo(UUID paymentId)
+    public PaymentInfoPlugin getPaymentInfo(UUID paymentId, TenantContext context)
             throws PaymentPluginApiException;
 
-    public void processRefund(final Account account, final UUID paymentId, BigDecimal refundAmount)
+    public void processRefund(final Account account, final UUID paymentId, BigDecimal refundAmount, CallContext context)
             throws PaymentPluginApiException;
 
-    public int getNbRefundForPaymentAmount(final Account account, final UUID paymentId, final BigDecimal refundAmount)
+    public int getNbRefundForPaymentAmount(final Account account, final UUID paymentId, final BigDecimal refundAmount, TenantContext context)
             throws PaymentPluginApiException;
 
-    public String createPaymentProviderAccount(Account account)
+    public String createPaymentProviderAccount(Account account, CallContext context)
             throws PaymentPluginApiException;
 
-    public List<PaymentMethodPlugin> getPaymentMethodDetails(String accountKey)
+    public List<PaymentMethodPlugin> getPaymentMethodDetails(String accountKey, TenantContext context)
             throws PaymentPluginApiException;
 
-    public PaymentMethodPlugin getPaymentMethodDetail(String accountKey, String externalPaymentMethodId)
+    public PaymentMethodPlugin getPaymentMethodDetail(String accountKey, String externalPaymentMethodId, TenantContext context)
             throws PaymentPluginApiException;
 
-    public String addPaymentMethod(String accountKey, PaymentMethodPlugin paymentMethodProps, boolean setDefault)
+    public String addPaymentMethod(String accountKey, PaymentMethodPlugin paymentMethodProps, boolean setDefault, CallContext context)
             throws PaymentPluginApiException;
 
-    public void updatePaymentMethod(String accountKey, PaymentMethodPlugin paymentMethodProps)
+    public void updatePaymentMethod(String accountKey, PaymentMethodPlugin paymentMethodProps, CallContext context)
             throws PaymentPluginApiException;
 
-    public void deletePaymentMethod(String accountKey, String externalPaymentMethodId)
+    public void deletePaymentMethod(String accountKey, String externalPaymentMethodId, CallContext context)
             throws PaymentPluginApiException;
 
-    public void setDefaultPaymentMethod(String accountKey, String externalPaymentId)
+    public void setDefaultPaymentMethod(String accountKey, String externalPaymentId, CallContext context)
             throws PaymentPluginApiException;
 }

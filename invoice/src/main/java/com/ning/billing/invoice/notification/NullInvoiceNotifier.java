@@ -19,11 +19,12 @@ package com.ning.billing.invoice.notification;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceNotifier;
+import com.ning.billing.util.callcontext.TenantContext;
 
 public class NullInvoiceNotifier implements InvoiceNotifier {
 
     @Override
-    public void notify(final Account account, final Invoice invoice) {
+    public void notify(final Account account, final Invoice invoice, final TenantContext context) {
         // deliberate no-op
     }
 }

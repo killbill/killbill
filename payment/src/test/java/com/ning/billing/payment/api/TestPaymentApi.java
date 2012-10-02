@@ -21,8 +21,6 @@ import java.math.RoundingMode;
 import java.util.List;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.mockito.Mockito;
 import org.slf4j.Logger;
@@ -33,7 +31,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
-import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountUserApi;
@@ -50,12 +47,10 @@ import com.ning.billing.payment.glue.PaymentTestModuleWithMocks;
 import com.ning.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallOrigin;
-import com.ning.billing.util.callcontext.DefaultCallContext;
-import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.glue.CallContextModule;
+
+import com.google.inject.Inject;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -79,14 +74,7 @@ public class TestPaymentApi extends PaymentTestSuite {
     @Inject
     protected Clock clock;
 
-    protected CallContext context;
-
     private Account account;
-
-    @Inject
-    public TestPaymentApi(final Clock clock) {
-        context = new DefaultCallContext("Payment Tests", CallOrigin.INTERNAL, UserType.SYSTEM, clock);
-    }
 
     @BeforeClass(groups = "fast")
     public void setupClass() throws Exception {
@@ -143,7 +131,7 @@ public class TestPaymentApi extends PaymentTestSuite {
 
     private void testSimplePayment(final BigDecimal invoiceAmount, final BigDecimal requestedAmount, final BigDecimal expectedAmount) throws Exception {
         final LocalDate now = clock.getUTCToday();
-        final Invoice invoice = testHelper.createTestInvoice(account, now, Currency.USD);
+        final Invoice invoice = testHelper.createTestInvoice(account, now, Currency.USD, callContext);
 
         final UUID subscriptionId = UUID.randomUUID();
         final UUID bundleId = UUID.randomUUID();
@@ -159,7 +147,7 @@ public class TestPaymentApi extends PaymentTestSuite {
                                                             Currency.USD));
 
         try {
-            final Payment paymentInfo = paymentApi.createPayment(account, invoice.getId(), requestedAmount, context);
+            final Payment paymentInfo = paymentApi.createPayment(account, invoice.getId(), requestedAmount, callContext);
             if (expectedAmount == null) {
                 fail("Expected to fail because requested amount > invoice amount");
             }
@@ -186,41 +174,37 @@ public class TestPaymentApi extends PaymentTestSuite {
 
     @Test(groups = "fast")
     public void testPaymentMethods() throws Exception {
-        List<PaymentMethod> methods = paymentApi.getPaymentMethods(account, false);
+        List<PaymentMethod> methods = paymentApi.getPaymentMethods(account, false, callContext);
         assertEquals(methods.size(), 1);
 
         final PaymentMethod initDefaultMethod = methods.get(0);
         assertEquals(initDefaultMethod.getId(), account.getPaymentMethodId());
 
         final PaymentMethodPlugin newPaymenrMethod = new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), true, null);
-        final UUID newPaymentMethodId = paymentApi.addPaymentMethod(PaymentTestModuleWithMocks.PLUGIN_TEST_NAME, account, true, newPaymenrMethod, context);
+        final UUID newPaymentMethodId = paymentApi.addPaymentMethod(PaymentTestModuleWithMocks.PLUGIN_TEST_NAME, account, true, newPaymenrMethod, callContext);
         Mockito.when(account.getPaymentMethodId()).thenReturn(newPaymentMethodId);
 
-        methods = paymentApi.getPaymentMethods(account, false);
+        methods = paymentApi.getPaymentMethods(account, false, callContext);
         assertEquals(methods.size(), 2);
 
         assertEquals(newPaymentMethodId, account.getPaymentMethodId());
 
         boolean failed = false;
         try {
-            paymentApi.deletedPaymentMethod(account, newPaymentMethodId, false, context);
+            paymentApi.deletedPaymentMethod(account, newPaymentMethodId, false, callContext);
         } catch (PaymentApiException e) {
             failed = true;
         }
         assertTrue(failed);
 
-        paymentApi.deletedPaymentMethod(account, initDefaultMethod.getId(), true,  context);
-        methods = paymentApi.getPaymentMethods(account, false);
+        paymentApi.deletedPaymentMethod(account, initDefaultMethod.getId(), true,  callContext);
+        methods = paymentApi.getPaymentMethods(account, false, callContext);
         assertEquals(methods.size(), 1);
 
         // NOW retry with default payment method with special flag
-        paymentApi.deletedPaymentMethod(account, newPaymentMethodId, true, context);
+        paymentApi.deletedPaymentMethod(account, newPaymentMethodId, true, callContext);
 
-        methods = paymentApi.getPaymentMethods(account, false);
+        methods = paymentApi.getPaymentMethods(account, false, callContext);
         assertEquals(methods.size(), 0);
-
-
-
     }
-
 }

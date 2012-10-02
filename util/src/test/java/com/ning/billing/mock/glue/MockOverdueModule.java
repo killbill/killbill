@@ -18,9 +18,10 @@ package com.ning.billing.mock.glue;
 
 import org.mockito.Mockito;
 
-import com.google.inject.AbstractModule;
 import com.ning.billing.glue.OverdueModule;
 import com.ning.billing.overdue.OverdueUserApi;
+
+import com.google.inject.AbstractModule;
 
 public class MockOverdueModule extends AbstractModule implements OverdueModule {
     @Override

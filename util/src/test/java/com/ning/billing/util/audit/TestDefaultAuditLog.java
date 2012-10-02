@@ -40,12 +40,13 @@ public class TestDefaultAuditLog extends UtilTestSuite {
         final ChangeType changeType = ChangeType.DELETE;
         final EntityAudit entityAudit = new EntityAudit(tableName, recordId, changeType);
 
+        final UUID tenantId = UUID.randomUUID();
         final String userName = UUID.randomUUID().toString();
         final CallOrigin callOrigin = CallOrigin.EXTERNAL;
         final UserType userType = UserType.CUSTOMER;
         final UUID userToken = UUID.randomUUID();
         final ClockMock clock = new ClockMock();
-        final CallContext callContext = new DefaultCallContext(userName, callOrigin, userType, userToken, clock);
+        final CallContext callContext = new DefaultCallContext(tenantId, userName, callOrigin, userType, userToken, clock);
 
         final AuditLog auditLog = new DefaultAuditLog(entityAudit, callContext);
         Assert.assertEquals(auditLog.getChangeType(), changeType);
@@ -63,12 +64,13 @@ public class TestDefaultAuditLog extends UtilTestSuite {
         final ChangeType changeType = ChangeType.DELETE;
         final EntityAudit entityAudit = new EntityAudit(tableName, recordId, changeType);
 
+        final UUID tenantId = UUID.randomUUID();
         final String userName = UUID.randomUUID().toString();
         final CallOrigin callOrigin = CallOrigin.EXTERNAL;
         final UserType userType = UserType.CUSTOMER;
         final UUID userToken = UUID.randomUUID();
         final ClockMock clock = new ClockMock();
-        final CallContext callContext = new DefaultCallContext(userName, callOrigin, userType, userToken, clock);
+        final CallContext callContext = new DefaultCallContext(tenantId, userName, callOrigin, userType, userToken, clock);
 
         final AuditLog auditLog = new DefaultAuditLog(entityAudit, callContext);
         Assert.assertEquals(auditLog, auditLog);
@@ -77,7 +79,7 @@ public class TestDefaultAuditLog extends UtilTestSuite {
         Assert.assertEquals(sameAuditLog, auditLog);
 
         clock.addMonths(1);
-        final CallContext otherCallContext = new DefaultCallContext(userName, callOrigin, userType, userToken, clock);
+        final CallContext otherCallContext = new DefaultCallContext(tenantId, userName, callOrigin, userType, userToken, clock);
         final AuditLog otherAuditLog = new DefaultAuditLog(entityAudit, otherCallContext);
         Assert.assertNotEquals(otherAuditLog, auditLog);
     }

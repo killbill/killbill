@@ -40,41 +40,46 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallContextBinder;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 import com.ning.billing.util.dao.AuditSqlDao;
 import com.ning.billing.util.dao.BinderBase;
 import com.ning.billing.util.dao.MapperBase;
 
 @ExternalizedSqlViaStringTemplate3()
 public interface SubscriptionSqlDao extends Transactional<SubscriptionSqlDao>, AuditSqlDao, CloseMe, Transmogrifier {
+
     @SqlUpdate
     public void insertSubscription(@Bind(binder = SubscriptionBinder.class) SubscriptionData sub,
-                                   @CallContextBinder final CallContext context);
+                                   @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlQuery
     @Mapper(SubscriptionMapper.class)
-    public Subscription getSubscriptionFromId(@Bind("id") String id);
+    public Subscription getSubscriptionFromId(@Bind("id") String id,
+                                              @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
     @Mapper(SubscriptionMapper.class)
-    public List<Subscription> getSubscriptionsFromBundleId(@Bind("bundleId") String bundleId);
+    public List<Subscription> getSubscriptionsFromBundleId(@Bind("bundleId") String bundleId,
+                                                           @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlUpdate
     public void updateChargedThroughDate(@Bind("id") String id, @Bind("chargedThroughDate") Date chargedThroughDate,
-                                         @CallContextBinder final CallContext context);
+                                         @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
     void updateActiveVersion(@Bind("id") String id, @Bind("activeVersion") long activeVersion,
-                             @CallContextBinder final CallContext context);
+                             @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
     public void updateForRepair(@Bind("id") String id, @Bind("activeVersion") long activeVersion,
                                 @Bind("startDate") Date startDate,
                                 @Bind("bundleStartDate") Date bundleStartDate,
-                                @CallContextBinder final CallContext context);
+                                @InternalTenantContextBinder final InternalCallContext context);
 
     public static class SubscriptionBinder extends BinderBase implements Binder<Bind, SubscriptionData> {
+
         @Override
         public void bind(@SuppressWarnings("rawtypes") final SQLStatement stmt, final Bind bind, final SubscriptionData sub) {
             stmt.bind("id", sub.getId().toString());
@@ -89,6 +94,7 @@ public interface SubscriptionSqlDao extends Transactional<SubscriptionSqlDao>, A
     }
 
     public static class SubscriptionMapper extends MapperBase implements ResultSetMapper<SubscriptionData> {
+
         @Override
         public SubscriptionData map(final int arg0, final ResultSet r, final StatementContext ctx)
                 throws SQLException {

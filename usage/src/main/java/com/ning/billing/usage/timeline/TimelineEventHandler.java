@@ -51,6 +51,8 @@ import com.ning.billing.usage.timeline.shutdown.ShutdownSaveMode;
 import com.ning.billing.usage.timeline.shutdown.StartTimes;
 import com.ning.billing.usage.timeline.sources.SourceSamplesForTimestamp;
 import com.ning.billing.usage.timeline.times.TimelineCoder;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -203,8 +205,10 @@ public class TimelineEventHandler {
      * @param eventType      event category
      * @param eventTimestamp event timestamp
      * @param samples        samples to record
+     * @param context        the call context
      */
-    public void record(final String sourceName, final String eventType, final DateTime eventTimestamp, final Map<String, Object> samples) {
+    public void record(final String sourceName, final String eventType, final DateTime eventTimestamp,
+                       final Map<String, Object> samples, final InternalCallContext context) {
         if (shuttingDown.get()) {
             eventsReceivedAfterShuttingDown.incrementAndGet();
             return;
@@ -213,11 +217,11 @@ public class TimelineEventHandler {
             handledEventCount.incrementAndGet();
 
             // Find the sourceId
-            final int sourceId = timelineDAO.getOrAddSource(sourceName);
+            final int sourceId = timelineDAO.getOrAddSource(sourceName, context);
 
             // Extract and parse samples
             final Map<Integer, ScalarSample> scalarSamples = new LinkedHashMap<Integer, ScalarSample>();
-            convertSamplesToScalarSamples(sourceId, eventType, samples, scalarSamples);
+            convertSamplesToScalarSamples(sourceId, eventType, samples, scalarSamples, context);
 
             if (scalarSamples.isEmpty()) {
                 eventsDiscarded.incrementAndGet();
@@ -230,7 +234,7 @@ public class TimelineEventHandler {
                 backingBuffer.append(sourceSamples);
             }
             // Then add them to the in-memory accumulator
-            processSamples(sourceSamples);
+            processSamples(sourceSamples, context);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -260,24 +264,27 @@ public class TimelineEventHandler {
     }
 
     @VisibleForTesting
-    public void processSamples(final SourceSamplesForTimestamp hostSamples) throws ExecutionException, IOException {
+    public void processSamples(final SourceSamplesForTimestamp hostSamples, final InternalTenantContext context) throws ExecutionException, IOException {
         final int sourceId = hostSamples.getSourceId();
         final String category = hostSamples.getCategory();
-        final int categoryId = timelineDAO.getEventCategoryId(category);
+        final int categoryId = timelineDAO.getEventCategoryId(category, context);
         final DateTime timestamp = hostSamples.getTimestamp();
         final TimelineSourceEventAccumulator accumulator = getOrAddSourceEventAccumulator(sourceId, categoryId, timestamp);
         accumulator.addSourceSamples(hostSamples);
     }
 
-    public Collection<? extends TimelineChunk> getInMemoryTimelineChunks(final Integer sourceId, @Nullable final DateTime filterStartTime, @Nullable final DateTime filterEndTime) throws IOException, ExecutionException {
-        return getInMemoryTimelineChunks(sourceId, ImmutableList.copyOf(timelineDAO.getMetricIdsBySourceId(sourceId)), filterStartTime, filterEndTime);
+    public Collection<? extends TimelineChunk> getInMemoryTimelineChunks(final Integer sourceId, @Nullable final DateTime filterStartTime,
+                                                                         @Nullable final DateTime filterEndTime, final InternalTenantContext context) throws IOException, ExecutionException {
+        return getInMemoryTimelineChunks(sourceId, ImmutableList.copyOf(timelineDAO.getMetricIdsBySourceId(sourceId, context)), filterStartTime, filterEndTime);
     }
 
-    public Collection<? extends TimelineChunk> getInMemoryTimelineChunks(final Integer sourceId, final Integer metricId, @Nullable final DateTime filterStartTime, @Nullable final DateTime filterEndTime) throws IOException, ExecutionException {
+    public Collection<? extends TimelineChunk> getInMemoryTimelineChunks(final Integer sourceId, final Integer metricId, @Nullable final DateTime filterStartTime,
+                                                                         @Nullable final DateTime filterEndTime) throws IOException, ExecutionException {
         return getInMemoryTimelineChunks(sourceId, ImmutableList.<Integer>of(metricId), filterStartTime, filterEndTime);
     }
 
-    public synchronized Collection<? extends TimelineChunk> getInMemoryTimelineChunks(final Integer sourceId, final List<Integer> metricIds, @Nullable final DateTime filterStartTime, @Nullable final DateTime filterEndTime) throws IOException, ExecutionException {
+    public synchronized Collection<? extends TimelineChunk> getInMemoryTimelineChunks(final Integer sourceId, final List<Integer> metricIds,
+                                                                                      @Nullable final DateTime filterStartTime, @Nullable final DateTime filterEndTime) throws IOException, ExecutionException {
         getInMemoryChunksCallCount.incrementAndGet();
         // Check first if there is an in-memory accumulator for this host
         final SourceAccumulatorsAndUpdateDate sourceAccumulatorsAndDate = accumulators.get(sourceId);
@@ -290,8 +297,8 @@ public class TimelineEventHandler {
         for (final TimelineSourceEventAccumulator accumulator : sourceAccumulatorsAndDate.getCategoryAccumulators().values()) {
             for (final TimelineChunk chunk : accumulator.getPendingTimelineChunks()) {
                 if ((filterStartTime != null && chunk.getEndTime().isBefore(filterStartTime)) ||
-                        (filterEndTime != null && chunk.getStartTime().isAfter(filterEndTime)) ||
-                        !metricIds.contains(chunk.getMetricId())) {
+                    (filterEndTime != null && chunk.getStartTime().isAfter(filterEndTime)) ||
+                    !metricIds.contains(chunk.getMetricId())) {
                     continue;
                 } else {
                     samplesBySourceName.add(chunk);
@@ -328,27 +335,28 @@ public class TimelineEventHandler {
     }
 
     @VisibleForTesting
-    void convertSamplesToScalarSamples(final Integer sourceId, final String eventType, final Map<String, Object> inputSamples, final Map<Integer, ScalarSample> outputSamples) {
+    void convertSamplesToScalarSamples(final Integer sourceId, final String eventType, final Map<String, Object> inputSamples,
+                                       final Map<Integer, ScalarSample> outputSamples, final InternalCallContext context) {
         if (inputSamples == null) {
             return;
         }
-        final Integer eventCategoryId = timelineDAO.getOrAddEventCategory(eventType);
+        final Integer eventCategoryId = timelineDAO.getOrAddEventCategory(eventType, context);
 
         for (final String attributeName : inputSamples.keySet()) {
-            final Integer metricId = timelineDAO.getOrAddMetric(sourceId, eventCategoryId, attributeName);
+            final Integer metricId = timelineDAO.getOrAddMetric(sourceId, eventCategoryId, attributeName, context);
             final Object sample = inputSamples.get(attributeName);
 
             outputSamples.put(metricId, ScalarSample.fromObject(sample));
         }
     }
 
-    public void replay(final String spoolDir) {
+    public void replay(final String spoolDir, final InternalCallContext context) {
         replayCount.incrementAndGet();
         log.info("Starting replay of files in {}", spoolDir);
         final Replayer replayer = new Replayer(spoolDir);
         StartTimes lastStartTimes = null;
         if (shutdownSaveMode == ShutdownSaveMode.SAVE_START_TIMES) {
-            lastStartTimes = timelineDAO.getLastStartTimes();
+            lastStartTimes = timelineDAO.getLastStartTimes(context);
             if (lastStartTimes == null) {
                 log.info("Did not find startTimes");
             } else {
@@ -374,22 +382,22 @@ public class TimelineEventHandler {
                         try {
                             final int sourceId = hostSamples.getSourceId();
                             final String category = hostSamples.getCategory();
-                            final int categoryId = timelineDAO.getEventCategoryId(category);
+                            final int categoryId = timelineDAO.getEventCategoryId(category, context);
                             // If startTimes is non-null and the samples come from before the first time for
                             // the given host and event category, ignore the samples
                             if (startTimes != null) {
                                 final DateTime timestamp = hostSamples.getTimestamp();
                                 final DateTime categoryStartTime = startTimes.getStartTimeForSourceIdAndCategoryId(sourceId, categoryId);
                                 if (timestamp == null ||
-                                        timestamp.isBefore(startTimes.getMinStartTime()) ||
-                                        (categoryStartTime != null && timestamp.isBefore(categoryStartTime))) {
+                                    timestamp.isBefore(startTimes.getMinStartTime()) ||
+                                    (categoryStartTime != null && timestamp.isBefore(categoryStartTime))) {
                                     replaySamplesOutsideTimeRangeCount.incrementAndGet();
                                     useSamples = false;
                                 }
                             }
                             if (useSamples) {
                                 replaySamplesProcessedCount.incrementAndGet();
-                                processSamples(hostSamples);
+                                processSamples(hostSamples, context);
                             }
                         } catch (Exception e) {
                             log.warn("Got exception replaying sample, data potentially lost! {}", hostSamples.toString());
@@ -400,7 +408,7 @@ public class TimelineEventHandler {
                 }
             });
             if (shutdownSaveMode == ShutdownSaveMode.SAVE_START_TIMES) {
-                timelineDAO.deleteLastStartTimes();
+                timelineDAO.deleteLastStartTimes(context);
                 log.info("Deleted old startTimes");
             }
             log.info(String.format("Replay completed; %d files skipped, samples read %d, samples outside time range %d, samples used %d",
@@ -420,13 +428,13 @@ public class TimelineEventHandler {
         log.info("Timelines committed");
     }
 
-    public void commitAndShutdown() {
+    public void commitAndShutdown(final InternalCallContext context) {
         shuttingDown.set(true);
         final boolean doingFastShutdown = shutdownSaveMode == ShutdownSaveMode.SAVE_START_TIMES;
         if (doingFastShutdown) {
             final StartTimes startTimes = new StartTimes();
             saveStartTimes(startTimes);
-            timelineDAO.insertLastStartTimes(startTimes);
+            timelineDAO.insertLastStartTimes(startTimes, context);
             log.info("During shutdown, saved timeline start times in the db");
         } else {
             saveAccumulators();

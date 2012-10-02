@@ -32,6 +32,7 @@ import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.overdue.config.api.BillingState;
 import com.ning.billing.overdue.config.api.OverdueException;
+import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.Clock;
 
 import com.google.inject.Inject;
@@ -60,7 +61,7 @@ public abstract class BillingStateCalculator<T extends Blockable> {
         this.clock = clock;
     }
 
-    public abstract BillingState<T> calculateBillingState(T overdueable) throws OverdueException;
+    public abstract BillingState<T> calculateBillingState(T overdueable, InternalTenantContext context) throws OverdueException;
 
     protected Invoice earliest(final SortedSet<Invoice> unpaidInvoices) {
         try {
@@ -78,8 +79,8 @@ public abstract class BillingStateCalculator<T extends Blockable> {
         return sum;
     }
 
-    protected SortedSet<Invoice> unpaidInvoicesForAccount(final UUID accountId, final DateTimeZone accountTimeZone) {
-        final Collection<Invoice> invoices = invoiceApi.getUnpaidInvoicesByAccountId(accountId, clock.getToday(accountTimeZone));
+    protected SortedSet<Invoice> unpaidInvoicesForAccount(final UUID accountId, final DateTimeZone accountTimeZone, final InternalTenantContext context) {
+        final Collection<Invoice> invoices = invoiceApi.getUnpaidInvoicesByAccountId(accountId, clock.getToday(accountTimeZone), context.toTenantContext());
         final SortedSet<Invoice> sortedInvoices = new TreeSet<Invoice>(new InvoiceDateComparator());
         sortedInvoices.addAll(invoices);
         return sortedInvoices;

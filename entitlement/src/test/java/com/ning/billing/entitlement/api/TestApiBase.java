@@ -16,13 +16,14 @@
 
 package com.ning.billing.entitlement.api;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
+
+import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -36,8 +37,6 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
-import com.google.inject.Injector;
-import com.google.inject.Key;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.api.TestApiListener;
@@ -55,7 +54,6 @@ import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.catalog.api.TimeUnit;
 import com.ning.billing.config.EntitlementConfig;
-import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
 import com.ning.billing.entitlement.api.billing.ChargeThruApi;
 import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi;
@@ -80,11 +78,12 @@ import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.mock.MockAccountBuilder;
 import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.bus.DefaultBusService;
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.TestCallContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.glue.RealImplementation;
+
+import com.google.inject.Injector;
+import com.google.inject.Key;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
@@ -92,6 +91,7 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
 public abstract class TestApiBase extends EntitlementTestSuiteWithEmbeddedDB implements TestListenerStatus {
+
     protected static final Logger log = LoggerFactory.getLogger(TestApiBase.class);
 
     protected EntitlementService entitlementService;
@@ -112,9 +112,6 @@ public abstract class TestApiBase extends EntitlementTestSuiteWithEmbeddedDB imp
     protected Catalog catalog;
     protected TestApiListener testListener;
     protected SubscriptionBundle bundle;
-
-    private MysqlTestingHelper helper;
-    protected CallContext context = new TestCallContext("Api Test");
 
     private boolean isListenerFailed;
     private String listenerFailedMsg;
@@ -175,7 +172,6 @@ public abstract class TestApiBase extends EntitlementTestSuiteWithEmbeddedDB imp
         config = g.getInstance(EntitlementConfig.class);
         dao = g.getInstance(EntitlementDao.class);
         clock = (ClockMock) g.getInstance(Clock.class);
-        helper = (isSqlTest(dao)) ? g.getInstance(MysqlTestingHelper.class) : null;
         init();
     }
 
@@ -239,7 +235,7 @@ public abstract class TestApiBase extends EntitlementTestSuiteWithEmbeddedDB imp
 
         // CREATE NEW BUNDLE FOR TEST
         final UUID accountId = UUID.randomUUID();
-        bundle = entitlementApi.createBundleForAccount(accountId, "myDefaultBundle", context);
+        bundle = entitlementApi.createBundleForAccount(accountId, "myDefaultBundle", callContext);
         assertNotNull(bundle);
     }
 
@@ -277,14 +273,14 @@ public abstract class TestApiBase extends EntitlementTestSuiteWithEmbeddedDB imp
         testListener.pushExpectedEvent(NextEvent.CREATE);
         final SubscriptionData subscription = (SubscriptionData) entitlementApi.createSubscription(bundleId,
                                                                                                    new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSet, null),
-                                                                                                   requestedDate == null ? clock.getUTCNow() : requestedDate, context);
+                                                                                                   requestedDate == null ? clock.getUTCNow() : requestedDate, callContext);
         assertNotNull(subscription);
         assertTrue(testListener.isCompleted(5000));
         return subscription;
     }
 
     protected void checkNextPhaseChange(final SubscriptionData subscription, final int expPendingEvents, final DateTime expPhaseChange) {
-        final List<EntitlementEvent> events = dao.getPendingEventsForSubscription(subscription.getId());
+        final List<EntitlementEvent> events = dao.getPendingEventsForSubscription(subscription.getId(), internalCallContext);
         assertNotNull(events);
         printEvents(events);
         assertEquals(events.size(), expPendingEvents);
@@ -407,10 +403,11 @@ public abstract class TestApiBase extends EntitlementTestSuiteWithEmbeddedDB imp
         }
     }
 
-
-    /**************************************************************
-        Utilities for migration tests
-    ***************************************************************/
+    /**
+     * ***********************************************************
+     * Utilities for migration tests
+     * *************************************************************
+     */
 
     protected EntitlementAccountMigration createAccountForMigrationTest(final List<List<EntitlementSubscriptionMigrationCaseWithCTD>> cases) {
         return new EntitlementAccountMigration() {
@@ -555,6 +552,7 @@ public abstract class TestApiBase extends EntitlementTestSuiteWithEmbeddedDB imp
     }
 
     public static class EntitlementSubscriptionMigrationCaseWithCTD implements EntitlementSubscriptionMigrationCase {
+
         private final PlanPhaseSpecifier pps;
         private final DateTime effDt;
         private final DateTime cancelDt;

@@ -60,10 +60,8 @@ import com.ning.billing.junction.api.BillingEventSet;
 import com.ning.billing.mock.api.MockBillCycleDay;
 import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.bus.DefaultBusService;
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallOrigin;
-import com.ning.billing.util.callcontext.DefaultCallContextFactory;
-import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
+import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.globallocker.GlobalLocker;
 
@@ -98,7 +96,8 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
     @Inject
     private Clock clock;
 
-    private CallContext context;
+    private final InternalCallContextFactory internalCallContextFactory = new InternalCallContextFactory(getMysqlTestingHelper().getDBI(), clock);
+
     private AccountUserApi accountUserApi;
     private Account account;
     private Subscription subscription;
@@ -108,15 +107,13 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
         notifier.initialize();
         notifier.start();
 
-        context = new DefaultCallContextFactory(clock).createCallContext("Miracle Max", CallOrigin.TEST, UserType.TEST);
-
         busService.getBus().start();
 
         accountUserApi = Mockito.mock(AccountUserApi.class);
         account = Mockito.mock(Account.class);
 
         final UUID accountId = UUID.randomUUID();
-        Mockito.when(accountUserApi.getAccountById(accountId)).thenReturn(account);
+        Mockito.when(accountUserApi.getAccountById(accountId, callContext)).thenReturn(account);
         Mockito.when(account.getCurrency()).thenReturn(Currency.USD);
         Mockito.when(account.getId()).thenReturn(accountId);
         Mockito.when(account.isNotifiedForInvoices()).thenReturn(true);
@@ -152,32 +149,34 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
                                           fixedPrice, BigDecimal.ONE, currency, BillingPeriod.MONTHLY, 1,
                                           BillingModeType.IN_ADVANCE, "", 1L, SubscriptionTransitionType.CREATE));
 
-        Mockito.when(billingApi.getBillingEventsForAccountAndUpdateAccountBCD(accountId)).thenReturn(events);
+        Mockito.when(billingApi.getBillingEventsForAccountAndUpdateAccountBCD(accountId, callContext)).thenReturn(events);
 
         final DateTime target = new DateTime();
 
         final InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
         final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountUserApi, billingApi, invoiceDao,
-                                                                   invoiceNotifier, locker, busService.getBus(), clock);
+                                                                   invoiceNotifier, locker, busService.getBus(),
+                                                                   clock, new InternalCallContextFactory(getMysqlTestingHelper().getDBI(), clock));
 
-        Invoice invoice = dispatcher.processAccount(accountId, target, true, context);
+        Invoice invoice = dispatcher.processAccount(accountId, target, true, callContext);
         Assert.assertNotNull(invoice);
 
-        List<Invoice> invoices = invoiceDao.getInvoicesByAccount(accountId);
+        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(accountId, callContext);
+        List<Invoice> invoices = invoiceDao.getInvoicesByAccount(accountId, internalTenantContext);
         Assert.assertEquals(invoices.size(), 0);
 
         // Try it again to double check
-        invoice = dispatcher.processAccount(accountId, target, true, context);
+        invoice = dispatcher.processAccount(accountId, target, true, callContext);
         Assert.assertNotNull(invoice);
 
-        invoices = invoiceDao.getInvoicesByAccount(accountId);
+        invoices = invoiceDao.getInvoicesByAccount(accountId, internalTenantContext);
         Assert.assertEquals(invoices.size(), 0);
 
         // This time no dry run
-        invoice = dispatcher.processAccount(accountId, target, false, context);
+        invoice = dispatcher.processAccount(accountId, target, false, callContext);
         Assert.assertNotNull(invoice);
 
-        invoices = invoiceDao.getInvoicesByAccount(accountId);
+        invoices = invoiceDao.getInvoicesByAccount(accountId, internalTenantContext);
         Assert.assertEquals(invoices.size(), 1);
     }
 
@@ -207,12 +206,13 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
                                           new MockPlanPhase(jetTrialEvergreen1000USD, PhaseType.EVERGREEN), null, new BigDecimal("1000"), account.getCurrency(), BillingPeriod.MONTHLY,
                                           31, 31, BillingModeType.IN_ADVANCE, "CHANGE", 3L, SubscriptionTransitionType.CHANGE));
 
-        Mockito.when(billingApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId())).thenReturn(events);
+        Mockito.when(billingApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), callContext)).thenReturn(events);
         final InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
         final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountUserApi, billingApi, invoiceDao,
-                                                                   invoiceNotifier, locker, busService.getBus(), clock);
+                                                                   invoiceNotifier, locker, busService.getBus(),
+                                                                   clock, internalCallContextFactory);
 
-        final Invoice invoice = dispatcher.processAccount(account.getId(), new DateTime("2012-07-30T00:00:00.000Z"), false, context);
+        final Invoice invoice = dispatcher.processAccount(account.getId(), new DateTime("2012-07-30T00:00:00.000Z"), false, callContext);
         Assert.assertNotNull(invoice);
 
         final List<InvoiceItem> invoiceItems = invoice.getInvoiceItems();

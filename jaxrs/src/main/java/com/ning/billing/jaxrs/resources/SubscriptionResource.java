@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -57,6 +58,7 @@ import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
 import com.ning.billing.jaxrs.util.KillbillEventHandler;
 import com.ning.billing.payment.api.PaymentErrorEvent;
 import com.ning.billing.payment.api.PaymentInfoEvent;
+import com.ning.billing.util.api.AuditUserApi;
 import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagDefinitionApiException;
@@ -78,30 +80,28 @@ public class SubscriptionResource extends JaxRsResourceBase {
     private static final String TAG_URI = JaxrsResource.TAGS + "/{" + ID_PARAM_NAME + ":" + UUID_PATTERN + "}";
 
     private final EntitlementUserApi entitlementApi;
-    private final Context context;
-    private final JaxrsUriBuilder uriBuilder;
     private final KillbillEventHandler killbillHandler;
 
     @Inject
-    public SubscriptionResource(final JaxrsUriBuilder uriBuilder,
-                                final EntitlementUserApi entitlementApi,
-                                final Context context,
+    public SubscriptionResource(final EntitlementUserApi entitlementApi,
                                 final KillbillEventHandler killbillHandler,
+                                final JaxrsUriBuilder uriBuilder,
                                 final TagUserApi tagUserApi,
-                                final CustomFieldUserApi customFieldUserApi) {
-        super(uriBuilder, tagUserApi, customFieldUserApi);
-        this.uriBuilder = uriBuilder;
+                                final CustomFieldUserApi customFieldUserApi,
+                                final AuditUserApi auditUserApi,
+                                final Context context) {
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, context);
         this.entitlementApi = entitlementApi;
-        this.context = context;
         this.killbillHandler = killbillHandler;
     }
 
     @GET
     @Path("/{subscriptionId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
-    public Response getSubscription(@PathParam("subscriptionId") final String subscriptionId) throws EntitlementUserApiException {
+    public Response getSubscription(@PathParam("subscriptionId") final String subscriptionId,
+                                    @javax.ws.rs.core.Context final HttpServletRequest request) throws EntitlementUserApiException {
         final UUID uuid = UUID.fromString(subscriptionId);
-        final Subscription subscription = entitlementApi.getSubscriptionFromId(uuid);
+        final Subscription subscription = entitlementApi.getSubscriptionFromId(uuid, context.createContext(request));
         final SubscriptionJsonNoEvents json = new SubscriptionJsonNoEvents(subscription, null);
         return Response.status(Status.OK).entity(json).build();
     }
@@ -115,7 +115,10 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                        @QueryParam(QUERY_CALL_TIMEOUT) @DefaultValue("3") final long timeoutSec,
                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                        @HeaderParam(HDR_REASON) final String reason,
-                                       @HeaderParam(HDR_COMMENT) final String comment) throws EntitlementUserApiException {
+                                       @HeaderParam(HDR_COMMENT) final String comment,
+                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws EntitlementUserApiException {
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+
         final SubscriptionCallCompletionCallback<Subscription> callback = new SubscriptionCallCompletionCallback<Subscription>() {
             @Override
             public Subscription doOperation(final CallContext ctx) throws EntitlementUserApiException, InterruptedException, TimeoutException {
@@ -141,7 +144,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
         };
 
         final SubscriptionCallCompletion<Subscription> callCompletionCreation = new SubscriptionCallCompletion<Subscription>();
-        return callCompletionCreation.withSynchronization(callback, timeoutSec, callCompletion, createdBy, reason, comment);
+        return callCompletionCreation.withSynchronization(callback, timeoutSec, callCompletion, callContext);
     }
 
     @PUT
@@ -156,7 +159,10 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                            @QueryParam(QUERY_POLICY) final String policyString,
                                            @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                            @HeaderParam(HDR_REASON) final String reason,
-                                           @HeaderParam(HDR_COMMENT) final String comment) throws EntitlementUserApiException {
+                                           @HeaderParam(HDR_COMMENT) final String comment,
+                                           @javax.ws.rs.core.Context final HttpServletRequest request) throws EntitlementUserApiException {
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+
         final SubscriptionCallCompletionCallback<Response> callback = new SubscriptionCallCompletionCallback<Response>() {
 
             private boolean isImmediateOp = true;
@@ -165,7 +171,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
             public Response doOperation(final CallContext ctx) throws EntitlementUserApiException, InterruptedException,
                                                                       TimeoutException {
                 final UUID uuid = UUID.fromString(subscriptionId);
-                final Subscription current = entitlementApi.getSubscriptionFromId(uuid);
+                final Subscription current = entitlementApi.getSubscriptionFromId(uuid, callContext);
                 final DateTime inputDate = (requestedDate != null) ? DATE_TIME_FORMATTER.parseDateTime(requestedDate) : null;
 
                 if (policyString == null) {
@@ -191,12 +197,12 @@ public class SubscriptionResource extends JaxRsResourceBase {
                     return operationResponse;
                 }
 
-                return getSubscription(subscriptionId);
+                return getSubscription(subscriptionId, request);
             }
         };
 
         final SubscriptionCallCompletion<Response> callCompletionCreation = new SubscriptionCallCompletion<Response>();
-        return callCompletionCreation.withSynchronization(callback, timeoutSec, callCompletion, createdBy, reason, comment);
+        return callCompletionCreation.withSynchronization(callback, timeoutSec, callCompletion, callContext);
     }
 
     @PUT
@@ -205,11 +211,12 @@ public class SubscriptionResource extends JaxRsResourceBase {
     public Response uncancelSubscriptionPlan(@PathParam("subscriptionId") final String subscriptionId,
                                              @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                              @HeaderParam(HDR_REASON) final String reason,
-                                             @HeaderParam(HDR_COMMENT) final String comment) throws EntitlementUserApiException {
+                                             @HeaderParam(HDR_COMMENT) final String comment,
+                                             @javax.ws.rs.core.Context final HttpServletRequest request) throws EntitlementUserApiException {
         final UUID uuid = UUID.fromString(subscriptionId);
-        final Subscription current = entitlementApi.getSubscriptionFromId(uuid);
+        final Subscription current = entitlementApi.getSubscriptionFromId(uuid, context.createContext(createdBy, reason, comment, request));
 
-        current.uncancel(context.createContext(createdBy, reason, comment));
+        current.uncancel(context.createContext(createdBy, reason, comment, request));
         return Response.status(Status.OK).build();
     }
 
@@ -224,7 +231,10 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                            @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                            @HeaderParam(HDR_REASON) final String reason,
                                            @HeaderParam(HDR_COMMENT) final String comment,
-                                           @javax.ws.rs.core.Context final UriInfo uriInfo) throws EntitlementUserApiException {
+                                           @javax.ws.rs.core.Context final UriInfo uriInfo,
+                                           @javax.ws.rs.core.Context final HttpServletRequest request) throws EntitlementUserApiException {
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+
         final SubscriptionCallCompletionCallback<Response> callback = new SubscriptionCallCompletionCallback<Response>() {
 
             private boolean isImmediateOp = true;
@@ -235,7 +245,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                            TimeoutException {
                 final UUID uuid = UUID.fromString(subscriptionId);
 
-                final Subscription current = entitlementApi.getSubscriptionFromId(uuid);
+                final Subscription current = entitlementApi.getSubscriptionFromId(uuid, callContext);
 
                 final DateTime inputDate = (requestedDate != null) ? DATE_TIME_FORMATTER.parseDateTime(requestedDate) : null;
                 if (policyString == null) {
@@ -259,7 +269,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
         };
 
         final SubscriptionCallCompletion<Response> callCompletionCreation = new SubscriptionCallCompletion<Response>();
-        return callCompletionCreation.withSynchronization(callback, timeoutSec, callCompletion, createdBy, reason, comment);
+        return callCompletionCreation.withSynchronization(callback, timeoutSec, callCompletion, callContext);
     }
 
     private static final class CompletionUserRequestSubscription extends CompletionUserRequestBase {
@@ -315,17 +325,13 @@ public class SubscriptionResource extends JaxRsResourceBase {
         public Response withSynchronization(final SubscriptionCallCompletionCallback<T> callback,
                                             final long timeoutSec,
                                             final boolean callCompletion,
-                                            final String createdBy,
-                                            final String reason,
-                                            final String comment) throws EntitlementUserApiException {
-
-            final CallContext ctx = context.createContext(createdBy, reason, comment);
-            final CompletionUserRequestSubscription waiter = callCompletion ? new CompletionUserRequestSubscription(ctx.getUserToken()) : null;
+                                            final CallContext callContext) throws EntitlementUserApiException {
+            final CompletionUserRequestSubscription waiter = callCompletion ? new CompletionUserRequestSubscription(callContext.getUserToken()) : null;
             try {
                 if (waiter != null) {
                     killbillHandler.registerCompletionUserRequestWaiter(waiter);
                 }
-                final T operationValue = callback.doOperation(ctx);
+                final T operationValue = callback.doOperation(callContext);
                 if (waiter != null && callback.isImmOperation()) {
                     waiter.waitForCompletion(timeoutSec * 1000);
                 }
@@ -345,8 +351,9 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @GET
     @Path(CUSTOM_FIELD_URI)
     @Produces(APPLICATION_JSON)
-    public Response getCustomFields(@PathParam(ID_PARAM_NAME) final String id) {
-        return super.getCustomFields(UUID.fromString(id));
+    public Response getCustomFields(@PathParam(ID_PARAM_NAME) final String id,
+                                    @javax.ws.rs.core.Context final HttpServletRequest request) {
+        return super.getCustomFields(UUID.fromString(id), context.createContext(request));
     }
 
     @POST
@@ -358,9 +365,10 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                        @HeaderParam(HDR_REASON) final String reason,
                                        @HeaderParam(HDR_COMMENT) final String comment,
-                                       @javax.ws.rs.core.Context final UriInfo uriInfo) {
+                                       @javax.ws.rs.core.Context final UriInfo uriInfo,
+                                       @javax.ws.rs.core.Context final HttpServletRequest request) {
         return super.createCustomFields(UUID.fromString(id), customFields,
-                                        context.createContext(createdBy, reason, comment));
+                                        context.createContext(createdBy, reason, comment, request));
     }
 
     @DELETE
@@ -372,16 +380,19 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                        @HeaderParam(HDR_REASON) final String reason,
                                        @HeaderParam(HDR_COMMENT) final String comment,
-                                       @javax.ws.rs.core.Context final UriInfo uriInfo) {
+                                       @javax.ws.rs.core.Context final UriInfo uriInfo,
+                                       @javax.ws.rs.core.Context final HttpServletRequest request) {
         return super.deleteCustomFields(UUID.fromString(id), customFieldList,
-                                        context.createContext(createdBy, reason, comment));
+                                        context.createContext(createdBy, reason, comment, request));
     }
 
     @GET
     @Path(TAG_URI)
     @Produces(APPLICATION_JSON)
-    public Response getTags(@PathParam(ID_PARAM_NAME) final String id, @QueryParam(QUERY_AUDIT) @DefaultValue("false") final Boolean withAudit) throws TagDefinitionApiException {
-        return super.getTags(UUID.fromString(id), withAudit);
+    public Response getTags(@PathParam(ID_PARAM_NAME) final String id,
+                            @QueryParam(QUERY_AUDIT) @DefaultValue("false") final Boolean withAudit,
+                            @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException {
+        return super.getTags(UUID.fromString(id), withAudit, context.createContext(request));
     }
 
     @POST
@@ -393,9 +404,10 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                @HeaderParam(HDR_REASON) final String reason,
                                @HeaderParam(HDR_COMMENT) final String comment,
-                               @javax.ws.rs.core.Context final UriInfo uriInfo) throws TagApiException {
+                               @javax.ws.rs.core.Context final UriInfo uriInfo,
+                               @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
         return super.createTags(UUID.fromString(id), tagList, uriInfo,
-                                context.createContext(createdBy, reason, comment));
+                                context.createContext(createdBy, reason, comment, request));
     }
 
     @DELETE
@@ -406,9 +418,10 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                @QueryParam(QUERY_TAGS) final String tagList,
                                @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                @HeaderParam(HDR_REASON) final String reason,
-                               @HeaderParam(HDR_COMMENT) final String comment) throws TagApiException {
+                               @HeaderParam(HDR_COMMENT) final String comment,
+                               @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
         return super.deleteTags(UUID.fromString(id), tagList,
-                                context.createContext(createdBy, reason, comment));
+                                context.createContext(createdBy, reason, comment, request));
     }
 
     @Override

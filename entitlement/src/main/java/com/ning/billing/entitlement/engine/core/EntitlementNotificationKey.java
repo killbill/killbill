@@ -17,9 +17,10 @@ package com.ning.billing.entitlement.engine.core;
 
 import java.util.UUID;
 
+import com.ning.billing.util.notificationq.NotificationKey;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.ning.billing.util.notificationq.NotificationKey;
 
 public class EntitlementNotificationKey implements NotificationKey {
 

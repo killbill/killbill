@@ -16,7 +16,6 @@
 
 package com.ning.billing.util.tag.dao;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -24,34 +23,37 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
-import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.tag.Tag;
-import com.ning.billing.util.tag.TagDefinition;
 
 public class MockTagDao implements TagDao {
+
     private final Map<UUID, List<Tag>> tagStore = new HashMap<UUID, List<Tag>>();
 
     @Override
     public void saveEntitiesFromTransaction(final Transmogrifier dao, final UUID objectId, final ObjectType objectType,
-                                            final List<Tag> tags, final CallContext context) {
+                                            final List<Tag> tags, final InternalCallContext context) {
         tagStore.put(objectId, tags);
     }
 
     @Override
-    public void saveEntities(final UUID objectId, final ObjectType objectType, final List<Tag> tags, final CallContext context) {
+    public void saveEntities(final UUID objectId, final ObjectType objectType, final List<Tag> tags, final InternalCallContext context) {
         tagStore.put(objectId, tags);
     }
 
     @Override
-    public Map<String, Tag> loadEntities(final UUID objectId, final ObjectType objectType) {
+    public Map<String, Tag> loadEntities(final UUID objectId, final ObjectType objectType, final InternalTenantContext context) {
         return getMap(tagStore.get(objectId));
     }
 
     @Override
-    public Map<String, Tag> loadEntitiesFromTransaction(final Transmogrifier dao, final UUID objectId, final ObjectType objectType) {
+    public Map<String, Tag> loadEntitiesFromTransaction(final Transmogrifier dao, final UUID objectId, final ObjectType objectType, final InternalTenantContext context) {
         return getMap(tagStore.get(objectId));
     }
 
@@ -67,7 +69,7 @@ public class MockTagDao implements TagDao {
 
     @Override
     public void insertTag(final UUID objectId, final ObjectType objectType,
-                          final UUID tagDefinitionId, final CallContext context) {
+                          final UUID tagDefinitionId, final InternalCallContext context) {
         final Tag tag = new Tag() {
             private final UUID id = UUID.randomUUID();
 
@@ -91,7 +93,7 @@ public class MockTagDao implements TagDao {
 
     @Override
     public void deleteTag(final UUID objectId, final ObjectType objectType,
-                          final UUID tagDefinitionId, final CallContext context) {
+                          final UUID tagDefinitionId, final InternalCallContext context) {
         final List<Tag> tags = tagStore.get(objectId);
         if (tags != null) {
             final Iterator<Tag> tagIterator = tags.iterator();

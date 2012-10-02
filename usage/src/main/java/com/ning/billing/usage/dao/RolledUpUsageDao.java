@@ -18,11 +18,14 @@ package com.ning.billing.usage.dao;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.util.callcontext.InternalCallContext;
+
 /**
  * Dao to record already rolled-up usage data (rolled-up by the user).
  * For raw tracking of the data, @see TimelineEventHandler.
  */
 public interface RolledUpUsageDao {
 
-    public void record(final String sourceName, final String eventType, final String metricName, final DateTime startDate, final DateTime endDate, final long value);
+    public void record(final String sourceName, final String eventType, final String metricName, final DateTime startDate,
+                       final DateTime endDate, final long value, final InternalCallContext context);
 }

@@ -42,6 +42,7 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.util.callcontext.TenantContext;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -59,7 +60,7 @@ public class BillCycleDayCalculator {
         this.entitlementApi = entitlementApi;
     }
 
-    protected BillCycleDay calculateBcd(final SubscriptionBundle bundle, final Subscription subscription, final EffectiveSubscriptionEvent transition, final Account account)
+    protected BillCycleDay calculateBcd(final SubscriptionBundle bundle, final Subscription subscription, final EffectiveSubscriptionEvent transition, final Account account, final TenantContext context)
             throws CatalogApiException, AccountApiException, EntitlementUserApiException {
 
         final Catalog catalog = catalogService.getFullCatalog();
@@ -83,12 +84,12 @@ public class BillCycleDayCalculator {
                                        phase.getPhaseType()),
                 transition.getRequestedTransitionTime());
 
-        return calculateBcdForAlignment(alignment, bundle, subscription, account, catalog, plan);
+        return calculateBcdForAlignment(alignment, bundle, subscription, account, catalog, plan, context);
     }
 
     @VisibleForTesting
     BillCycleDay calculateBcdForAlignment(final BillingAlignment alignment, final SubscriptionBundle bundle, final Subscription subscription,
-                                          final Account account, final Catalog catalog, final Plan plan) throws AccountApiException, EntitlementUserApiException, CatalogApiException {
+                                          final Account account, final Catalog catalog, final Plan plan, final TenantContext context) throws AccountApiException, EntitlementUserApiException, CatalogApiException {
         BillCycleDay result = null;
         switch (alignment) {
             case ACCOUNT:
@@ -98,7 +99,7 @@ public class BillCycleDayCalculator {
                 }
                 break;
             case BUNDLE:
-                final Subscription baseSub = entitlementApi.getBaseSubscription(bundle.getId());
+                final Subscription baseSub = entitlementApi.getBaseSubscription(bundle.getId(), context);
                 Plan basePlan = baseSub.getCurrentPlan();
                 if (basePlan == null) {
                     // The BP has been cancelled

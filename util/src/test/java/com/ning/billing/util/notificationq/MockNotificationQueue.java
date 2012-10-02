@@ -26,11 +26,13 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ning.billing.config.NotificationConfig;
+import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
 import com.ning.billing.util.queue.PersistentQueueEntryLifecycle.PersistentQueueEntryLifecycleState;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class MockNotificationQueue extends NotificationQueueBase implements NotificationQueue {
     private static final ObjectMapper objectMapper = new ObjectMapper();
@@ -52,7 +54,8 @@ public class MockNotificationQueue extends NotificationQueueBase implements Noti
     }
 
     @Override
-    public void recordFutureNotification(final DateTime futureNotificationTime, final UUID accountId, final NotificationKey notificationKey) throws IOException {
+    public void recordFutureNotification(final DateTime futureNotificationTime, final UUID accountId,
+                                         final NotificationKey notificationKey, final InternalCallContext context) throws IOException {
         final String json = objectMapper.writeValueAsString(notificationKey);
         final Notification notification = new DefaultNotification("MockQueue", getHostname(), notificationKey.getClass().getName(), json, accountId, futureNotificationTime);
         synchronized (notifications) {
@@ -61,8 +64,9 @@ public class MockNotificationQueue extends NotificationQueueBase implements Noti
     }
 
     @Override
-    public void recordFutureNotificationFromTransaction(final Transmogrifier transactionalDao, final DateTime futureNotificationTime, final UUID accountId, final NotificationKey notificationKey) throws IOException {
-        recordFutureNotification(futureNotificationTime, accountId, notificationKey);
+    public void recordFutureNotificationFromTransaction(final Transmogrifier transactionalDao, final DateTime futureNotificationTime,
+                                                        final UUID accountId, final NotificationKey notificationKey, final InternalCallContext context) throws IOException {
+        recordFutureNotification(futureNotificationTime, accountId, notificationKey, context);
     }
 
     public List<Notification> getPendingEvents() {
@@ -118,7 +122,7 @@ public class MockNotificationQueue extends NotificationQueueBase implements Noti
     }
 
     @Override
-    public void removeNotificationsByKey(final NotificationKey key) {
+    public void removeNotificationsByKey(final NotificationKey key, final InternalCallContext context) {
         final List<Notification> toClearNotifications = new ArrayList<Notification>();
         for (final Notification notification : notifications) {
             if (notification.getNotificationKey().equals(key.toString())) {
@@ -134,15 +138,11 @@ public class MockNotificationQueue extends NotificationQueueBase implements Noti
     }
 
     @Override
-    public List<Notification> getNotificationForAccountAndDate(UUID accountId,
-            DateTime effectiveDate) {
-        // TODO Auto-generated method stub
+    public List<Notification> getNotificationForAccountAndDate(final UUID accountId, final DateTime effectiveDate, final InternalCallContext context) {
         return null;
     }
 
     @Override
-    public void removeNotification(UUID notificationId) {
-        // TODO Auto-generated method stub
-
+    public void removeNotification(final UUID notificationId, final InternalCallContext context) {
     }
 }

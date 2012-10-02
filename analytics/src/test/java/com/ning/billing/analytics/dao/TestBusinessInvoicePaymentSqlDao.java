@@ -47,21 +47,21 @@ public class TestBusinessInvoicePaymentSqlDao extends AnalyticsTestSuiteWithEmbe
         final BusinessInvoicePayment invoicePayment = createInvoicePayment(extFirstPaymentRefId, extSecondPaymentRefId, accountKey);
 
         // Verify initial state
-        Assert.assertNull(invoicePaymentSqlDao.getInvoicePayment(invoicePayment.getPaymentId().toString()));
-        Assert.assertEquals(invoicePaymentSqlDao.getInvoicePaymentsForAccountByKey(invoicePayment.getAccountKey()).size(), 0);
+        Assert.assertNull(invoicePaymentSqlDao.getInvoicePayment(invoicePayment.getPaymentId().toString(), internalCallContext));
+        Assert.assertEquals(invoicePaymentSqlDao.getInvoicePaymentsForAccountByKey(invoicePayment.getAccountKey(), internalCallContext).size(), 0);
 
         // Add the invoice payment
-        Assert.assertEquals(invoicePaymentSqlDao.createInvoicePayment(invoicePayment), 1);
+        Assert.assertEquals(invoicePaymentSqlDao.createInvoicePayment(invoicePayment, internalCallContext), 1);
 
         // Retrieve it
-        Assert.assertEquals(invoicePaymentSqlDao.getInvoicePayment(invoicePayment.getPaymentId().toString()), invoicePayment);
-        Assert.assertEquals(invoicePaymentSqlDao.getInvoicePaymentsForAccountByKey(invoicePayment.getAccountKey()).size(), 1);
-        Assert.assertEquals(invoicePaymentSqlDao.getInvoicePaymentsForAccountByKey(invoicePayment.getAccountKey()).get(0), invoicePayment);
+        Assert.assertEquals(invoicePaymentSqlDao.getInvoicePayment(invoicePayment.getPaymentId().toString(), internalCallContext), invoicePayment);
+        Assert.assertEquals(invoicePaymentSqlDao.getInvoicePaymentsForAccountByKey(invoicePayment.getAccountKey(), internalCallContext).size(), 1);
+        Assert.assertEquals(invoicePaymentSqlDao.getInvoicePaymentsForAccountByKey(invoicePayment.getAccountKey(), internalCallContext).get(0), invoicePayment);
 
         // Delete it
-        Assert.assertEquals(invoicePaymentSqlDao.deleteInvoicePayment(invoicePayment.getPaymentId().toString()), 1);
-        Assert.assertNull(invoicePaymentSqlDao.getInvoicePayment(invoicePayment.getPaymentId().toString()));
-        Assert.assertEquals(invoicePaymentSqlDao.getInvoicePaymentsForAccountByKey(invoicePayment.getAccountKey()).size(), 0);
+        Assert.assertEquals(invoicePaymentSqlDao.deleteInvoicePayment(invoicePayment.getPaymentId().toString(), internalCallContext), 1);
+        Assert.assertNull(invoicePaymentSqlDao.getInvoicePayment(invoicePayment.getPaymentId().toString(), internalCallContext));
+        Assert.assertEquals(invoicePaymentSqlDao.getInvoicePaymentsForAccountByKey(invoicePayment.getAccountKey(), internalCallContext).size(), 0);
     }
 
     @Test(groups = "slow")
@@ -76,28 +76,28 @@ public class TestBusinessInvoicePaymentSqlDao extends AnalyticsTestSuiteWithEmbe
         final BusinessInvoicePayment invoicePayment2 = createInvoicePayment(extFirstPaymentRefId2, extSecondPaymentRefId2,  accountKey2);
 
         // Create both invoice payments
-        Assert.assertEquals(invoicePaymentSqlDao.createInvoicePayment(invoicePayment1), 1);
-        Assert.assertEquals(invoicePaymentSqlDao.createInvoicePayment(invoicePayment2), 1);
+        Assert.assertEquals(invoicePaymentSqlDao.createInvoicePayment(invoicePayment1, internalCallContext), 1);
+        Assert.assertEquals(invoicePaymentSqlDao.createInvoicePayment(invoicePayment2, internalCallContext), 1);
 
-        Assert.assertEquals(invoicePaymentSqlDao.getInvoicePayment(invoicePayment1.getPaymentId().toString()), invoicePayment1);
-        Assert.assertEquals(invoicePaymentSqlDao.getInvoicePayment(invoicePayment2.getPaymentId().toString()), invoicePayment2);
-        Assert.assertEquals(invoicePaymentSqlDao.getInvoicePaymentsForAccountByKey(invoicePayment1.getAccountKey()).size(), 1);
-        Assert.assertEquals(invoicePaymentSqlDao.getInvoicePaymentsForAccountByKey(invoicePayment2.getAccountKey()).size(), 1);
+        Assert.assertEquals(invoicePaymentSqlDao.getInvoicePayment(invoicePayment1.getPaymentId().toString(), internalCallContext), invoicePayment1);
+        Assert.assertEquals(invoicePaymentSqlDao.getInvoicePayment(invoicePayment2.getPaymentId().toString(), internalCallContext), invoicePayment2);
+        Assert.assertEquals(invoicePaymentSqlDao.getInvoicePaymentsForAccountByKey(invoicePayment1.getAccountKey(), internalCallContext).size(), 1);
+        Assert.assertEquals(invoicePaymentSqlDao.getInvoicePaymentsForAccountByKey(invoicePayment2.getAccountKey(), internalCallContext).size(), 1);
 
         // Remove the first invoice payment
-        Assert.assertEquals(invoicePaymentSqlDao.deleteInvoicePayment(invoicePayment1.getPaymentId().toString()), 1);
+        Assert.assertEquals(invoicePaymentSqlDao.deleteInvoicePayment(invoicePayment1.getPaymentId().toString(), internalCallContext), 1);
 
-        Assert.assertNull(invoicePaymentSqlDao.getInvoicePayment(invoicePayment1.getPaymentId().toString()));
-        Assert.assertEquals(invoicePaymentSqlDao.getInvoicePayment(invoicePayment2.getPaymentId().toString()), invoicePayment2);
-        Assert.assertEquals(invoicePaymentSqlDao.getInvoicePaymentsForAccountByKey(invoicePayment1.getAccountKey()).size(), 0);
-        Assert.assertEquals(invoicePaymentSqlDao.getInvoicePaymentsForAccountByKey(invoicePayment2.getAccountKey()).size(), 1);
+        Assert.assertNull(invoicePaymentSqlDao.getInvoicePayment(invoicePayment1.getPaymentId().toString(), internalCallContext));
+        Assert.assertEquals(invoicePaymentSqlDao.getInvoicePayment(invoicePayment2.getPaymentId().toString(), internalCallContext), invoicePayment2);
+        Assert.assertEquals(invoicePaymentSqlDao.getInvoicePaymentsForAccountByKey(invoicePayment1.getAccountKey(), internalCallContext).size(), 0);
+        Assert.assertEquals(invoicePaymentSqlDao.getInvoicePaymentsForAccountByKey(invoicePayment2.getAccountKey(), internalCallContext).size(), 1);
     }
 
     @Test(groups = "slow")
     public void testHealthCheck() throws Exception {
         // HealthCheck test to make sure MySQL is setup properly
         try {
-            invoicePaymentSqlDao.test();
+            invoicePaymentSqlDao.test(internalCallContext);
         } catch (Throwable t) {
             Assert.fail(t.toString());
         }

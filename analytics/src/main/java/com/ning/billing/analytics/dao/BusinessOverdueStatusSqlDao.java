@@ -27,19 +27,26 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 
 import com.ning.billing.analytics.model.BusinessOverdueStatus;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 
 @ExternalizedSqlViaStringTemplate3()
 @RegisterMapper(BusinessOverdueStatusMapper.class)
 public interface BusinessOverdueStatusSqlDao extends Transactional<BusinessOverdueStatusSqlDao>, Transmogrifier {
+
     @SqlQuery
-    List<BusinessOverdueStatus> getOverdueStatusesForBundleByKey(@Bind("external_key") final String externalKey);
+    List<BusinessOverdueStatus> getOverdueStatusesForBundleByKey(@Bind("external_key") final String externalKey,
+                                                                 @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlUpdate
-    int createOverdueStatus(@BusinessOverdueStatusBinder final BusinessOverdueStatus status);
+    int createOverdueStatus(@BusinessOverdueStatusBinder final BusinessOverdueStatus status,
+                            @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
-    void deleteOverdueStatusesForBundle(@Bind("bundle_id") final String bundleId);
+    void deleteOverdueStatusesForBundle(@Bind("bundle_id") final String bundleId,
+                                        @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
-    void test();
+    void test(@InternalTenantContextBinder final InternalTenantContext context);
 }

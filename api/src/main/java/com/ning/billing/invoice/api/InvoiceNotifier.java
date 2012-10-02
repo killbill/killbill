@@ -17,7 +17,9 @@
 package com.ning.billing.invoice.api;
 
 import com.ning.billing.account.api.Account;
+import com.ning.billing.util.callcontext.TenantContext;
 
 public interface InvoiceNotifier {
-    public void notify(Account account, Invoice invoice) throws InvoiceApiException;
+
+    public void notify(Account account, Invoice invoice, TenantContext tenantContext) throws InvoiceApiException;
 }

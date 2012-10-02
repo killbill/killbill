@@ -16,13 +16,14 @@
 
 package com.ning.billing.util.glue;
 
-import com.google.inject.AbstractModule;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.tag.api.DefaultTagUserApi;
 import com.ning.billing.util.tag.dao.AuditedTagDao;
 import com.ning.billing.util.tag.dao.DefaultTagDefinitionDao;
 import com.ning.billing.util.tag.dao.TagDao;
 import com.ning.billing.util.tag.dao.TagDefinitionDao;
+
+import com.google.inject.AbstractModule;
 
 public class TagStoreModule extends AbstractModule {
     protected void installDaos() {

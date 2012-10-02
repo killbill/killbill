@@ -33,8 +33,10 @@ import com.ning.billing.account.api.MigrationAccountData;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.mock.MockAccountBuilder;
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.TenantContext;
 
 public class MockAccountUserApi implements AccountUserApi {
+
     private final CopyOnWriteArrayList<Account> accounts = new CopyOnWriteArrayList<Account>();
 
     public Account createAccount(final UUID id,
@@ -87,7 +89,7 @@ public class MockAccountUserApi implements AccountUserApi {
     }
 
     @Override
-    public Account getAccountByKey(final String key) {
+    public Account getAccountByKey(final String key, final TenantContext context) {
         for (final Account account : accounts) {
             if (key.equals(account.getExternalKey())) {
                 return account;
@@ -97,7 +99,7 @@ public class MockAccountUserApi implements AccountUserApi {
     }
 
     @Override
-    public Account getAccountById(final UUID uid) {
+    public Account getAccountById(final UUID uid, final TenantContext context) {
         for (final Account account : accounts) {
             if (uid.equals(account.getId())) {
                 return account;
@@ -107,12 +109,12 @@ public class MockAccountUserApi implements AccountUserApi {
     }
 
     @Override
-    public List<Account> getAccounts() {
+    public List<Account> getAccounts(final TenantContext context) {
         return new ArrayList<Account>(accounts);
     }
 
     @Override
-    public UUID getIdFromKey(final String externalKey) {
+    public UUID getIdFromKey(final String externalKey, final TenantContext context) {
         for (final Account account : accounts) {
             if (externalKey.equals(account.getExternalKey())) {
                 return account.getId();
@@ -122,7 +124,7 @@ public class MockAccountUserApi implements AccountUserApi {
     }
 
     @Override
-    public List<AccountEmail> getEmails(final UUID accountId) {
+    public List<AccountEmail> getEmails(final UUID accountId, final TenantContext context) {
         throw new UnsupportedOperationException();
     }
 
@@ -167,15 +169,12 @@ public class MockAccountUserApi implements AccountUserApi {
     }
 
     @Override
-    public void updatePaymentMethod(UUID accountId, UUID paymentMethodId,
-            CallContext context) throws AccountApiException {
+    public void updatePaymentMethod(final UUID accountId, final UUID paymentMethodId, final CallContext context) throws AccountApiException {
         throw new UnsupportedOperationException();
-
     }
 
     @Override
-    public void removePaymentMethod(UUID accountId, CallContext context)
-            throws AccountApiException {
+    public void removePaymentMethod(final UUID accountId, final CallContext context) throws AccountApiException {
         throw new UnsupportedOperationException();
     }
 }

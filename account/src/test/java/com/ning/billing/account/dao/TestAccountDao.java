@@ -87,18 +87,18 @@ public class TestAccountDao extends AccountDaoTestBase {
     @Test(groups = "slow")
     public void testBasic() throws EntityPersistenceException {
         final Account a = createTestAccount(5);
-        accountDao.create(a, context);
+        accountDao.create(a, internalCallContext);
         final String key = a.getExternalKey();
 
-        Account r = accountDao.getAccountByKey(key);
+        Account r = accountDao.getAccountByKey(key, internalCallContext);
         assertNotNull(r);
         assertEquals(r.getExternalKey(), a.getExternalKey());
 
-        r = accountDao.getById(r.getId());
+        r = accountDao.getById(r.getId(), internalCallContext);
         assertNotNull(r);
         assertEquals(r.getExternalKey(), a.getExternalKey());
 
-        final List<Account> all = accountDao.get();
+        final List<Account> all = accountDao.get(internalCallContext);
         assertNotNull(all);
         assertTrue(all.size() >= 1);
     }
@@ -107,9 +107,9 @@ public class TestAccountDao extends AccountDaoTestBase {
     @Test(groups = "slow")
     public void testLongPhoneNumber() throws EntityPersistenceException {
         final Account account = createTestAccount(1, "123456789012345678901234");
-        accountDao.create(account, context);
+        accountDao.create(account, internalCallContext);
 
-        final Account saved = accountDao.getAccountByKey(account.getExternalKey());
+        final Account saved = accountDao.getAccountByKey(account.getExternalKey(), internalCallContext);
         assertNotNull(saved);
     }
 
@@ -117,7 +117,7 @@ public class TestAccountDao extends AccountDaoTestBase {
     @Test(groups = "slow", expectedExceptions = EntityPersistenceException.class)
     public void testOverlyLongPhoneNumber() throws EntityPersistenceException {
         final Account account = createTestAccount(1, "12345678901234567890123456");
-        accountDao.create(account, context);
+        accountDao.create(account, internalCallContext);
     }
 
     @Test(groups = "slow")
@@ -128,9 +128,9 @@ public class TestAccountDao extends AccountDaoTestBase {
         final String name = account.getName();
         final Integer firstNameLength = account.getFirstNameLength();
 
-        accountDao.create(account, context);
+        accountDao.create(account, internalCallContext);
 
-        account = accountDao.getById(id);
+        account = accountDao.getById(id, internalCallContext);
         assertNotNull(account);
         assertEquals(account.getId(), id);
         assertEquals(account.getExternalKey(), key);
@@ -147,9 +147,9 @@ public class TestAccountDao extends AccountDaoTestBase {
         final List<CustomField> customFields = new ArrayList<CustomField>();
         customFields.add(new StringCustomField(fieldName, fieldValue));
         final CustomFieldDao customFieldDao = new AuditedCustomFieldDao(dbi);
-        customFieldDao.saveEntities(accountId, ObjectType.ACCOUNT, customFields, context);
+        customFieldDao.saveEntities(accountId, ObjectType.ACCOUNT, customFields, internalCallContext);
 
-        final Map<String, CustomField> customFieldMap = customFieldDao.loadEntities(accountId, ObjectType.ACCOUNT);
+        final Map<String, CustomField> customFieldMap = customFieldDao.loadEntities(accountId, ObjectType.ACCOUNT, internalCallContext);
         assertEquals(customFieldMap.size(), 1);
         final CustomField customField = customFieldMap.get(fieldName);
         assertEquals(customField.getName(), fieldName);
@@ -161,12 +161,12 @@ public class TestAccountDao extends AccountDaoTestBase {
         final Account account = createTestAccount(1);
         final TagDefinition definition = new DefaultTagDefinition("Test Tag", "For testing only", false);
         final TagDefinitionSqlDao tagDescriptionDao = dbi.onDemand(TagDefinitionSqlDao.class);
-        tagDescriptionDao.create(definition, context);
+        tagDescriptionDao.create(definition, internalCallContext);
 
         final TagDao tagDao = new AuditedTagDao(dbi, tagEventBuilder, bus);
-        tagDao.insertTag(account.getId(), ObjectType.ACCOUNT, definition.getId(), context);
+        tagDao.insertTag(account.getId(), ObjectType.ACCOUNT, definition.getId(), internalCallContext);
 
-        final Map<String, Tag> tagMap = tagDao.loadEntities(account.getId(), ObjectType.ACCOUNT);
+        final Map<String, Tag> tagMap = tagDao.loadEntities(account.getId(), ObjectType.ACCOUNT, internalCallContext);
         assertEquals(tagMap.size(), 1);
 
         assertEquals(tagMap.values().iterator().next().getTagDefinitionId(), definition.getId());
@@ -175,10 +175,10 @@ public class TestAccountDao extends AccountDaoTestBase {
     @Test(groups = "slow")
     public void testGetIdFromKey() throws EntityPersistenceException {
         final Account account = createTestAccount(1);
-        accountDao.create(account, context);
+        accountDao.create(account, internalCallContext);
 
         try {
-            final UUID accountId = accountDao.getIdFromKey(account.getExternalKey());
+            final UUID accountId = accountDao.getIdFromKey(account.getExternalKey(), internalCallContext);
             assertEquals(accountId, account.getId());
         } catch (AccountApiException a) {
             fail("Retrieving account failed.");
@@ -188,13 +188,13 @@ public class TestAccountDao extends AccountDaoTestBase {
     @Test(groups = "slow", expectedExceptions = AccountApiException.class)
     public void testGetIdFromKeyForNullKey() throws AccountApiException {
         final String key = null;
-        accountDao.getIdFromKey(key);
+        accountDao.getIdFromKey(key, internalCallContext);
     }
 
     @Test(groups = "slow")
     public void testUpdate() throws Exception {
         final Account account = createTestAccount(1);
-        accountDao.create(account, context);
+        accountDao.create(account, internalCallContext);
 
         final AccountData accountData = new MockAccountBuilder(account).migrated(false)
                                                                        .isNotifiedForInvoices(false)
@@ -203,9 +203,9 @@ public class TestAccountDao extends AccountDaoTestBase {
                                                                        .build();
 
         final Account updatedAccount = new DefaultAccount(account.getId(), accountData);
-        accountDao.update(updatedAccount, context);
+        accountDao.update(updatedAccount, internalCallContext);
 
-        final Account savedAccount = accountDao.getAccountByKey(account.getExternalKey());
+        final Account savedAccount = accountDao.getAccountByKey(account.getExternalKey(), internalCallContext);
 
         assertNotNull(savedAccount);
         assertEquals(savedAccount.getName(), updatedAccount.getName());
@@ -227,18 +227,18 @@ public class TestAccountDao extends AccountDaoTestBase {
     @Test(groups = "slow")
     public void testUpdatePaymentMethod() throws Exception {
         final Account account = createTestAccount(1);
-        accountDao.create(account, context);
+        accountDao.create(account, internalCallContext);
 
         final UUID newPaymentMethodId = UUID.randomUUID();
-        accountDao.updatePaymentMethod(account.getId(), newPaymentMethodId, context);
+        accountDao.updatePaymentMethod(account.getId(), newPaymentMethodId, internalCallContext);
 
-        final Account newAccount = accountDao.getById(account.getId());
+        final Account newAccount = accountDao.getById(account.getId(), internalCallContext);
         assertEquals(newAccount.getPaymentMethodId(), newPaymentMethodId);
 
         // And then set it to null
-        accountDao.updatePaymentMethod(account.getId(), null, context);
+        accountDao.updatePaymentMethod(account.getId(), null, internalCallContext);
 
-        final Account newAccountWithPMNull = accountDao.getById(account.getId());
+        final Account newAccountWithPMNull = accountDao.getById(account.getId(), internalCallContext);
         assertNull(newAccountWithPMNull.getPaymentMethodId());
 
     }
@@ -250,7 +250,7 @@ public class TestAccountDao extends AccountDaoTestBase {
                                                           "John Smith", 4, Currency.USD, new DefaultBillCycleDay(15), null,
                                                           DateTimeZone.forID("America/Cambridge_Bay"), "EN-CA",
                                                           null, null, null, null, null, null, null, null, false, false);
-        accountDao.create(account, context);
+        accountDao.create(account, internalCallContext);
 
         final String address1 = "123 address 1";
         final String address2 = "456 address 2";
@@ -267,9 +267,9 @@ public class TestAccountDao extends AccountDaoTestBase {
                                                                  address1, address2, companyName, city, stateOrProvince, country,
                                                                  postalCode, phone, false, false);
 
-        accountDao.update(updatedAccount, context);
+        accountDao.update(updatedAccount, internalCallContext);
 
-        final Account savedAccount = accountDao.getById(accountId);
+        final Account savedAccount = accountDao.getById(accountId, internalCallContext);
 
         assertNotNull(savedAccount);
         assertEquals(savedAccount.getId(), accountId);
@@ -286,29 +286,29 @@ public class TestAccountDao extends AccountDaoTestBase {
     @Test(groups = "slow", expectedExceptions = IllegalArgumentException.class)
     public void testShouldntBeAbleToUpdateExternalKey() throws Exception {
         final Account account = createTestAccount();
-        accountDao.create(account, context);
+        accountDao.create(account, internalCallContext);
 
         final MutableAccountData otherAccount = account.toMutableAccountData();
         otherAccount.setExternalKey(UUID.randomUUID().toString());
 
-        accountDao.update(new DefaultAccount(account.getId(), otherAccount), context);
+        accountDao.update(new DefaultAccount(account.getId(), otherAccount), internalCallContext);
     }
 
     @Test(groups = "slow", expectedExceptions = IllegalArgumentException.class)
     public void testShouldntBeAbleToUpdateCurrency() throws Exception {
         final Account account = createTestAccount();
-        accountDao.create(account, context);
+        accountDao.create(account, internalCallContext);
 
         final MutableAccountData otherAccount = account.toMutableAccountData();
         otherAccount.setCurrency(Currency.GBP);
 
-        accountDao.update(new DefaultAccount(account.getId(), otherAccount), context);
+        accountDao.update(new DefaultAccount(account.getId(), otherAccount), internalCallContext);
     }
 
     @Test(groups = "slow", expectedExceptions = IllegalArgumentException.class)
     public void testShouldntBeAbleToUpdateBillCycleDay() throws Exception {
         final Account account = createTestAccount();
-        accountDao.create(account, context);
+        accountDao.create(account, internalCallContext);
 
         final MutableAccountData otherAccount = account.toMutableAccountData();
         otherAccount.setBillCycleDay(new BillCycleDay() {
@@ -323,28 +323,28 @@ public class TestAccountDao extends AccountDaoTestBase {
             }
         });
 
-        accountDao.update(new DefaultAccount(account.getId(), otherAccount), context);
+        accountDao.update(new DefaultAccount(account.getId(), otherAccount), internalCallContext);
     }
 
     @Test(groups = "slow")
     public void testShouldBeAbleToUpdateSomeFields() throws Exception {
         final Account account = createTestAccount();
-        accountDao.create(account, context);
+        accountDao.create(account, internalCallContext);
 
         final MutableAccountData otherAccount = account.toMutableAccountData();
         otherAccount.setAddress1(UUID.randomUUID().toString());
         otherAccount.setEmail(UUID.randomUUID().toString());
 
         final DefaultAccount newAccount = new DefaultAccount(account.getId(), otherAccount);
-        accountDao.update(newAccount, context);
+        accountDao.update(newAccount, internalCallContext);
 
-        Assert.assertEquals(accountDao.getById(account.getId()), newAccount);
+        Assert.assertEquals(accountDao.getById(account.getId(), internalCallContext), newAccount);
     }
 
     @Test(groups = "slow")
     public void testShouldBeAbleToPassNullForSomeFieldsToAvoidUpdate() throws Exception {
         final Account account = createTestAccount();
-        accountDao.create(account, context);
+        accountDao.create(account, internalCallContext);
 
         // Update the address and leave other fields null
         final MutableAccountData mutableAccountData = new DefaultMutableAccountData(null, null, null, 0, null, null, null,
@@ -354,19 +354,19 @@ public class TestAccountDao extends AccountDaoTestBase {
         mutableAccountData.setAddress1(newAddress1);
 
         final DefaultAccount newAccount = new DefaultAccount(account.getId(), mutableAccountData);
-        accountDao.update(newAccount, context);
+        accountDao.update(newAccount, internalCallContext);
 
-        Assert.assertEquals(accountDao.getById(account.getId()).getAddress1(), newAddress1);
-        Assert.assertEquals(accountDao.getById(account.getId()).getAddress2(), account.getAddress2());
-        Assert.assertEquals(accountDao.getById(account.getId()).getCurrency(), account.getCurrency());
-        Assert.assertEquals(accountDao.getById(account.getId()).getExternalKey(), account.getExternalKey());
-        Assert.assertEquals(accountDao.getById(account.getId()).getBillCycleDay(), account.getBillCycleDay());
+        Assert.assertEquals(accountDao.getById(account.getId(), internalCallContext).getAddress1(), newAddress1);
+        Assert.assertEquals(accountDao.getById(account.getId(), internalCallContext).getAddress2(), account.getAddress2());
+        Assert.assertEquals(accountDao.getById(account.getId(), internalCallContext).getCurrency(), account.getCurrency());
+        Assert.assertEquals(accountDao.getById(account.getId(), internalCallContext).getExternalKey(), account.getExternalKey());
+        Assert.assertEquals(accountDao.getById(account.getId(), internalCallContext).getBillCycleDay(), account.getBillCycleDay());
     }
 
     @Test(groups = "slow")
     public void testShouldBeAbleToHandleOtherBCDClass() throws Exception {
         final Account account = createTestAccount();
-        accountDao.create(account, context);
+        accountDao.create(account, internalCallContext);
 
         final MutableAccountData otherAccount = account.toMutableAccountData();
         otherAccount.setAddress1(UUID.randomUUID().toString());
@@ -385,9 +385,9 @@ public class TestAccountDao extends AccountDaoTestBase {
         });
 
         final DefaultAccount newAccount = new DefaultAccount(account.getId(), otherAccount);
-        accountDao.update(newAccount, context);
+        accountDao.update(newAccount, internalCallContext);
 
-        final Account newFetchedAccount = accountDao.getById(account.getId());
+        final Account newFetchedAccount = accountDao.getById(account.getId(), internalCallContext);
         Assert.assertEquals(newFetchedAccount.getAddress1(), newAccount.getAddress1());
         Assert.assertEquals(newFetchedAccount.getEmail(), newAccount.getEmail());
         // Same BCD
@@ -397,31 +397,31 @@ public class TestAccountDao extends AccountDaoTestBase {
     @Test(groups = "slow")
     public void testShouldBeAbleToHandleBCDOfZeroZero() throws Exception {
         final Account account = createTestAccount(0);
-        accountDao.create(account, context);
-        final Account fetchedAccount = accountDao.getById(account.getId());
+        accountDao.create(account, internalCallContext);
+        final Account fetchedAccount = accountDao.getById(account.getId(), internalCallContext);
 
         final MutableAccountData otherAccount = account.toMutableAccountData();
         // Set BCD to null
         otherAccount.setBillCycleDay(null);
 
         final DefaultAccount newAccount = new DefaultAccount(account.getId(), otherAccount);
-        accountDao.update(newAccount, context);
+        accountDao.update(newAccount, internalCallContext);
 
         // Same BCD (zero/zero)
-        Assert.assertEquals(accountDao.getById(account.getId()), fetchedAccount);
+        Assert.assertEquals(accountDao.getById(account.getId(), internalCallContext), fetchedAccount);
     }
 
     @Test(groups = "slow")
     public void testHandleDuplicateEmails() {
         final UUID accountId = UUID.randomUUID();
         final AccountEmail email = new DefaultAccountEmail(accountId, "test@gmail.com");
-        Assert.assertEquals(accountEmailDao.getEmails(accountId).size(), 0);
+        Assert.assertEquals(accountEmailDao.getEmails(accountId, internalCallContext).size(), 0);
 
-        accountEmailDao.addEmail(accountId, email, context);
-        Assert.assertEquals(accountEmailDao.getEmails(accountId).size(), 1);
+        accountEmailDao.addEmail(accountId, email, internalCallContext);
+        Assert.assertEquals(accountEmailDao.getEmails(accountId, internalCallContext).size(), 1);
 
-        accountEmailDao.addEmail(accountId, email, context);
-        Assert.assertEquals(accountEmailDao.getEmails(accountId).size(), 1);
+        accountEmailDao.addEmail(accountId, email, internalCallContext);
+        Assert.assertEquals(accountEmailDao.getEmails(accountId, internalCallContext).size(), 1);
     }
 
     @Test(groups = "slow")
@@ -434,8 +434,8 @@ public class TestAccountDao extends AccountDaoTestBase {
         // add a new e-mail
         final AccountEmail email = new DefaultAccountEmail(accountId, "test@gmail.com");
         emails.add(email);
-        accountEmailDao.saveEmails(accountId, emails, context);
-        emails = accountEmailDao.getEmails(accountId);
+        accountEmailDao.saveEmails(accountId, emails, internalCallContext);
+        emails = accountEmailDao.getEmails(accountId, internalCallContext);
         assertEquals(emails.size(), 1);
 
         // verify that history and audit contain one entry
@@ -445,8 +445,8 @@ public class TestAccountDao extends AccountDaoTestBase {
         final AccountEmail updatedEmail = new DefaultAccountEmail(email, "test2@gmail.com");
         emails.clear();
         emails.add(updatedEmail);
-        accountEmailDao.saveEmails(accountId, emails, context);
-        emails = accountEmailDao.getEmails(accountId);
+        accountEmailDao.saveEmails(accountId, emails, internalCallContext);
+        emails = accountEmailDao.getEmails(accountId, internalCallContext);
         assertEquals(emails.size(), 1);
 
         // verify that history and audit contain three entries
@@ -454,8 +454,8 @@ public class TestAccountDao extends AccountDaoTestBase {
         verifyAccountEmailAuditAndHistoryCount(accountId, 3);
 
         // delete e-mail
-        accountEmailDao.saveEmails(accountId, new ArrayList<AccountEmail>(), context);
-        emails = accountEmailDao.getEmails(accountId);
+        accountEmailDao.saveEmails(accountId, new ArrayList<AccountEmail>(), internalCallContext);
+        emails = accountEmailDao.getEmails(accountId, internalCallContext);
         assertEquals(emails.size(), 0);
 
         // verify that history and audit contain four entries
@@ -469,20 +469,20 @@ public class TestAccountDao extends AccountDaoTestBase {
         final String email2 = UUID.randomUUID().toString();
 
         // Verify the original state
-        assertEquals(accountEmailDao.getEmails(accountId).size(), 0);
+        assertEquals(accountEmailDao.getEmails(accountId, internalCallContext).size(), 0);
 
         // Add a new e-mail
         final AccountEmail accountEmail1 = new DefaultAccountEmail(accountId, email1);
-        accountEmailDao.addEmail(accountId, accountEmail1, context);
-        final List<AccountEmail> firstEmails = accountEmailDao.getEmails(accountId);
+        accountEmailDao.addEmail(accountId, accountEmail1, internalCallContext);
+        final List<AccountEmail> firstEmails = accountEmailDao.getEmails(accountId, internalCallContext);
         assertEquals(firstEmails.size(), 1);
         assertEquals(firstEmails.get(0).getAccountId(), accountId);
         assertEquals(firstEmails.get(0).getEmail(), email1);
 
         // Add a second e-mail
         final AccountEmail accountEmail2 = new DefaultAccountEmail(accountId, email2);
-        accountEmailDao.addEmail(accountId, accountEmail2, context);
-        final List<AccountEmail> secondEmails = accountEmailDao.getEmails(accountId);
+        accountEmailDao.addEmail(accountId, accountEmail2, internalCallContext);
+        final List<AccountEmail> secondEmails = accountEmailDao.getEmails(accountId, internalCallContext);
         assertEquals(secondEmails.size(), 2);
         assertTrue(secondEmails.get(0).getAccountId().equals(accountId));
         assertTrue(secondEmails.get(1).getAccountId().equals(accountId));
@@ -490,8 +490,8 @@ public class TestAccountDao extends AccountDaoTestBase {
         assertTrue(secondEmails.get(1).getEmail().equals(email1) || secondEmails.get(1).getEmail().equals(email2));
 
         // Delete the first e-mail
-        accountEmailDao.removeEmail(accountId, accountEmail1, context);
-        final List<AccountEmail> thirdEmails = accountEmailDao.getEmails(accountId);
+        accountEmailDao.removeEmail(accountId, accountEmail1, internalCallContext);
+        final List<AccountEmail> thirdEmails = accountEmailDao.getEmails(accountId, internalCallContext);
         assertEquals(thirdEmails.size(), 1);
         assertEquals(thirdEmails.get(0).getAccountId(), accountId);
         assertEquals(thirdEmails.get(0).getEmail(), email2);

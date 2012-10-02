@@ -18,7 +18,6 @@ package com.ning.billing.mock.glue;
 
 import org.mockito.Mockito;
 
-import com.google.inject.AbstractModule;
 import com.ning.billing.entitlement.api.EntitlementService;
 import com.ning.billing.entitlement.api.billing.ChargeThruApi;
 import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi;
@@ -27,6 +26,8 @@ import com.ning.billing.entitlement.api.transfer.EntitlementTransferApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.glue.EntitlementModule;
 import com.ning.billing.util.glue.RealImplementation;
+
+import com.google.inject.AbstractModule;
 
 public class MockEntitlementModule extends AbstractModule implements EntitlementModule {
     @Override

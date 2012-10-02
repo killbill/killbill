@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.payment.dao;
 
 import java.util.List;
@@ -20,50 +21,53 @@ import java.util.UUID;
 
 import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
-import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
 
 public interface PaymentDao {
 
     // STEPH do we need object returned?
-    public PaymentModelDao insertPaymentWithAttempt(final PaymentModelDao paymentInfo, final PaymentAttemptModelDao attempt, final CallContext context);
+    public PaymentModelDao insertPaymentWithAttempt(PaymentModelDao paymentInfo, PaymentAttemptModelDao attempt, InternalCallContext context);
 
-    public PaymentAttemptModelDao insertNewAttemptForPayment(final UUID paymentId, final PaymentAttemptModelDao attempt, final CallContext context);
+    public PaymentAttemptModelDao insertNewAttemptForPayment(UUID paymentId, PaymentAttemptModelDao attempt, InternalCallContext context);
 
-    public void updateStatusForPaymentWithAttempt(final UUID paymentId, final PaymentStatus paymentStatus, final String gatewayErrorCode, final String gatewayErrorMsg, final String extFirstPaymentRefId, final String extSecondPaymentRefId, final UUID attemptId, final CallContext context);
+    public void updateStatusForPaymentWithAttempt(UUID paymentId, PaymentStatus paymentStatus, String gatewayErrorCode,
+                                                  String gatewayErrorMsg, String extFirstPaymentRefId, String extSecondPaymentRefId,
+                                                  UUID attemptId, InternalCallContext context);
 
-    public PaymentAttemptModelDao getPaymentAttempt(final UUID attemptId);
+    public PaymentAttemptModelDao getPaymentAttempt(UUID attemptId, InternalTenantContext context);
 
-    public List<PaymentModelDao> getPaymentsForInvoice(final UUID invoiceId);
+    public List<PaymentModelDao> getPaymentsForInvoice(UUID invoiceId, InternalTenantContext context);
 
-    public List<PaymentModelDao> getPaymentsForAccount(final UUID accountId);
+    public List<PaymentModelDao> getPaymentsForAccount(UUID accountId, InternalTenantContext context);
 
-    public PaymentModelDao getLastPaymentForPaymentMethod(final UUID accountId, final UUID paymentMethodId);
+    public PaymentModelDao getLastPaymentForPaymentMethod(UUID accountId, UUID paymentMethodId, InternalTenantContext context);
 
-    public PaymentModelDao getPayment(final UUID paymentId);
+    public PaymentModelDao getPayment(UUID paymentId, InternalTenantContext context);
 
-    public List<PaymentAttemptModelDao> getAttemptsForPayment(final UUID paymentId);
+    public List<PaymentAttemptModelDao> getAttemptsForPayment(UUID paymentId, InternalTenantContext context);
 
-    public RefundModelDao insertRefund(RefundModelDao refundInfo, final CallContext context);
+    public RefundModelDao insertRefund(RefundModelDao refundInfo, InternalCallContext context);
 
-    public void updateRefundStatus(UUID refundId, RefundStatus status, final CallContext context);
+    public void updateRefundStatus(UUID refundId, RefundStatus status, InternalCallContext context);
 
-    public RefundModelDao getRefund(UUID refundId);
+    public RefundModelDao getRefund(UUID refundId, InternalTenantContext context);
 
-    public List<RefundModelDao> getRefundsForPayment(final UUID paymentId);
+    public List<RefundModelDao> getRefundsForPayment(UUID paymentId, InternalTenantContext context);
 
-    public List<RefundModelDao> getRefundsForAccount(final UUID accountId);
+    public List<RefundModelDao> getRefundsForAccount(UUID accountId, InternalTenantContext context);
 
-    public PaymentMethodModelDao insertPaymentMethod(final PaymentMethodModelDao paymentMethod, final CallContext context);
+    public PaymentMethodModelDao insertPaymentMethod(PaymentMethodModelDao paymentMethod, InternalCallContext context);
 
-    public List<PaymentMethodModelDao> refreshPaymentMethods(final UUID accountId, final List<PaymentMethodModelDao> paymentMethods, final CallContext context);
+    public List<PaymentMethodModelDao> refreshPaymentMethods(UUID accountId, List<PaymentMethodModelDao> paymentMethods, InternalCallContext context);
 
-    public PaymentMethodModelDao getPaymentMethod(final UUID paymentMethodId);
+    public PaymentMethodModelDao getPaymentMethod(UUID paymentMethodId, InternalTenantContext context);
 
-    public PaymentMethodModelDao getPaymentMethodIncludedDeleted(final UUID paymentMethodId);
+    public PaymentMethodModelDao getPaymentMethodIncludedDeleted(UUID paymentMethodId, InternalTenantContext context);
 
-    public List<PaymentMethodModelDao> getPaymentMethods(final UUID accountId);
+    public List<PaymentMethodModelDao> getPaymentMethods(UUID accountId, InternalTenantContext context);
 
-    public void deletedPaymentMethod(final UUID paymentMethodId);
+    public void deletedPaymentMethod(UUID paymentMethodId, InternalCallContext context);
 
-    public void undeletedPaymentMethod(final UUID paymentMethodId);
+    public void undeletedPaymentMethod(UUID paymentMethodId, InternalCallContext context);
 }

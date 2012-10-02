@@ -18,6 +18,7 @@ package com.ning.billing.jaxrs.resources;
 
 import java.util.UUID;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -33,10 +34,16 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.jaxrs.json.OverdueStateJson;
+import com.ning.billing.jaxrs.util.Context;
+import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
 import com.ning.billing.overdue.OverdueApiException;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.OverdueUserApi;
 import com.ning.billing.overdue.config.api.OverdueException;
+import com.ning.billing.util.api.AuditUserApi;
+import com.ning.billing.util.api.CustomFieldUserApi;
+import com.ning.billing.util.api.TagUserApi;
+import com.ning.billing.util.callcontext.TenantContext;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -45,7 +52,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Singleton
 @Path(JaxrsResource.OVERDUE_PATH)
-public class OverdueResource implements JaxrsResource {
+public class OverdueResource extends JaxRsResourceBase {
 
     private final OverdueUserApi overdueApi;
     private final AccountUserApi accountApi;
@@ -54,7 +61,13 @@ public class OverdueResource implements JaxrsResource {
     @Inject
     public OverdueResource(final OverdueUserApi overdueApi,
                            final AccountUserApi accountApi,
-                           final EntitlementUserApi entitlementApi) {
+                           final EntitlementUserApi entitlementApi,
+                           final JaxrsUriBuilder uriBuilder,
+                           final TagUserApi tagUserApi,
+                           final CustomFieldUserApi customFieldUserApi,
+                           final AuditUserApi auditUserApi,
+                           final Context context) {
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, context);
         this.overdueApi = overdueApi;
         this.accountApi = accountApi;
         this.entitlementApi = entitlementApi;
@@ -63,9 +76,12 @@ public class OverdueResource implements JaxrsResource {
     @GET
     @Path("/" + ACCOUNTS + "/{accountId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
-    public Response getOverdueAccount(@PathParam("accountId") final String accountId) throws AccountApiException, OverdueException, OverdueApiException {
-        final Account account = accountApi.getAccountById(UUID.fromString(accountId));
-        final OverdueState<Account> overdueState = overdueApi.getOverdueStateFor(account);
+    public Response getOverdueAccount(@PathParam("accountId") final String accountId,
+                                      @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, OverdueException, OverdueApiException {
+        final TenantContext tenantContext = context.createContext(request);
+
+        final Account account = accountApi.getAccountById(UUID.fromString(accountId), tenantContext);
+        final OverdueState<Account> overdueState = overdueApi.getOverdueStateFor(account, tenantContext);
 
         return Response.status(Status.OK).entity(new OverdueStateJson(overdueState)).build();
     }
@@ -73,9 +89,12 @@ public class OverdueResource implements JaxrsResource {
     @GET
     @Path("/" + BUNDLES + "/{bundleId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
-    public Response getOverdueBundle(@PathParam("bundleId") final String bundleId) throws EntitlementUserApiException, OverdueException, OverdueApiException {
-        final SubscriptionBundle bundle = entitlementApi.getBundleFromId(UUID.fromString(bundleId));
-        final OverdueState<SubscriptionBundle> overdueState = overdueApi.getOverdueStateFor(bundle);
+    public Response getOverdueBundle(@PathParam("bundleId") final String bundleId,
+                                     @javax.ws.rs.core.Context final HttpServletRequest request) throws EntitlementUserApiException, OverdueException, OverdueApiException {
+        final TenantContext tenantContext = context.createContext(request);
+
+        final SubscriptionBundle bundle = entitlementApi.getBundleFromId(UUID.fromString(bundleId), tenantContext);
+        final OverdueState<SubscriptionBundle> overdueState = overdueApi.getOverdueStateFor(bundle, tenantContext);
 
         return Response.status(Status.OK).entity(new OverdueStateJson(overdueState)).build();
     }
@@ -83,9 +102,12 @@ public class OverdueResource implements JaxrsResource {
     @GET
     @Path("/" + SUBSCRIPTIONS + "/{subscriptionId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
-    public Response getOverdueSubscription(@PathParam("subscriptionId") final String subscriptionId) throws EntitlementUserApiException, OverdueException, OverdueApiException {
-        final Subscription subscription = entitlementApi.getSubscriptionFromId(UUID.fromString(subscriptionId));
-        final OverdueState<Subscription> overdueState = overdueApi.getOverdueStateFor(subscription);
+    public Response getOverdueSubscription(@PathParam("subscriptionId") final String subscriptionId,
+                                           @javax.ws.rs.core.Context final HttpServletRequest request) throws EntitlementUserApiException, OverdueException, OverdueApiException {
+        final TenantContext tenantContext = context.createContext(request);
+
+        final Subscription subscription = entitlementApi.getSubscriptionFromId(UUID.fromString(subscriptionId), tenantContext);
+        final OverdueState<Subscription> overdueState = overdueApi.getOverdueStateFor(subscription, tenantContext);
 
         return Response.status(Status.OK).entity(new OverdueStateJson(overdueState)).build();
     }

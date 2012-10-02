@@ -20,24 +20,23 @@ import java.util.UUID;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.entity.EntityPersistenceException;
 import com.ning.billing.util.entity.dao.UpdatableEntityDao;
 
 public interface AccountDao extends UpdatableEntityDao<Account> {
-    public Account getAccountByKey(String key);
+
+    public Account getAccountByKey(String key, InternalTenantContext context);
 
     /**
-     * @param externalKey
-     * @return
      * @throws AccountApiException when externalKey is null
      */
-    public UUID getIdFromKey(String externalKey) throws AccountApiException;
+    public UUID getIdFromKey(String externalKey, InternalTenantContext context) throws AccountApiException;
 
     /**
-     *
-     * @param accountId the id of the account
+     * @param accountId       the id of the account
      * @param paymentMethodId the is of the current default paymentMethod
      */
-    public void updatePaymentMethod(UUID accountId, UUID paymentMethodId, final CallContext context) throws EntityPersistenceException;
+    public void updatePaymentMethod(UUID accountId, UUID paymentMethodId, InternalCallContext context) throws EntityPersistenceException;
 }

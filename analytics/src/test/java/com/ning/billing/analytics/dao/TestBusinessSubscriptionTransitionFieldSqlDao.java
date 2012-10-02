@@ -45,12 +45,12 @@ public class TestBusinessSubscriptionTransitionFieldSqlDao extends AnalyticsTest
         final String value = UUID.randomUUID().toString();
 
         // Verify initial state
-        Assert.assertEquals(subscriptionTransitionFieldSqlDao.getFieldsForBusinessSubscriptionTransitionByKey(externalKey).size(), 0);
-        Assert.assertEquals(subscriptionTransitionFieldSqlDao.removeField(bundleId.toString(), name), 0);
+        Assert.assertEquals(subscriptionTransitionFieldSqlDao.getFieldsForBusinessSubscriptionTransitionByKey(externalKey, internalCallContext).size(), 0);
+        Assert.assertEquals(subscriptionTransitionFieldSqlDao.removeField(bundleId.toString(), name, internalCallContext), 0);
 
         // Add an entry
-        Assert.assertEquals(subscriptionTransitionFieldSqlDao.addField(accountKey, bundleId.toString(), externalKey, name, value), 1);
-        final List<BusinessSubscriptionTransitionField> fieldsForBusinessSubscriptionTransition = subscriptionTransitionFieldSqlDao.getFieldsForBusinessSubscriptionTransitionByKey(externalKey);
+        Assert.assertEquals(subscriptionTransitionFieldSqlDao.addField(accountKey, bundleId.toString(), externalKey, name, value, internalCallContext), 1);
+        final List<BusinessSubscriptionTransitionField> fieldsForBusinessSubscriptionTransition = subscriptionTransitionFieldSqlDao.getFieldsForBusinessSubscriptionTransitionByKey(externalKey, internalCallContext);
         Assert.assertEquals(fieldsForBusinessSubscriptionTransition.size(), 1);
 
         // Retrieve it
@@ -61,8 +61,8 @@ public class TestBusinessSubscriptionTransitionFieldSqlDao extends AnalyticsTest
         Assert.assertEquals(subscriptionTransitionField.getValue(), value);
 
         // Delete it
-        Assert.assertEquals(subscriptionTransitionFieldSqlDao.removeField(bundleId.toString(), name), 1);
-        Assert.assertEquals(subscriptionTransitionFieldSqlDao.getFieldsForBusinessSubscriptionTransitionByKey(externalKey).size(), 0);
+        Assert.assertEquals(subscriptionTransitionFieldSqlDao.removeField(bundleId.toString(), name, internalCallContext), 1);
+        Assert.assertEquals(subscriptionTransitionFieldSqlDao.getFieldsForBusinessSubscriptionTransitionByKey(externalKey, internalCallContext).size(), 0);
     }
 
     @Test(groups = "slow")
@@ -76,24 +76,24 @@ public class TestBusinessSubscriptionTransitionFieldSqlDao extends AnalyticsTest
         final String name2 = UUID.randomUUID().toString().substring(0, 30);
 
         // Add a field to both transitions
-        Assert.assertEquals(subscriptionTransitionFieldSqlDao.addField(accountKey, bundleId1.toString(), externalKey1, name1, UUID.randomUUID().toString()), 1);
-        Assert.assertEquals(subscriptionTransitionFieldSqlDao.addField(accountKey, bundleId2.toString(), externalKey2, name2, UUID.randomUUID().toString()), 1);
+        Assert.assertEquals(subscriptionTransitionFieldSqlDao.addField(accountKey, bundleId1.toString(), externalKey1, name1, UUID.randomUUID().toString(), internalCallContext), 1);
+        Assert.assertEquals(subscriptionTransitionFieldSqlDao.addField(accountKey, bundleId2.toString(), externalKey2, name2, UUID.randomUUID().toString(), internalCallContext), 1);
 
-        Assert.assertEquals(subscriptionTransitionFieldSqlDao.getFieldsForBusinessSubscriptionTransitionByKey(externalKey1).size(), 1);
-        Assert.assertEquals(subscriptionTransitionFieldSqlDao.getFieldsForBusinessSubscriptionTransitionByKey(externalKey2).size(), 1);
+        Assert.assertEquals(subscriptionTransitionFieldSqlDao.getFieldsForBusinessSubscriptionTransitionByKey(externalKey1, internalCallContext).size(), 1);
+        Assert.assertEquals(subscriptionTransitionFieldSqlDao.getFieldsForBusinessSubscriptionTransitionByKey(externalKey2, internalCallContext).size(), 1);
 
         // Remove the field for the first transition
-        Assert.assertEquals(subscriptionTransitionFieldSqlDao.removeField(bundleId1.toString(), name1), 1);
+        Assert.assertEquals(subscriptionTransitionFieldSqlDao.removeField(bundleId1.toString(), name1, internalCallContext), 1);
 
-        Assert.assertEquals(subscriptionTransitionFieldSqlDao.getFieldsForBusinessSubscriptionTransitionByKey(externalKey1).size(), 0);
-        Assert.assertEquals(subscriptionTransitionFieldSqlDao.getFieldsForBusinessSubscriptionTransitionByKey(externalKey2).size(), 1);
+        Assert.assertEquals(subscriptionTransitionFieldSqlDao.getFieldsForBusinessSubscriptionTransitionByKey(externalKey1, internalCallContext).size(), 0);
+        Assert.assertEquals(subscriptionTransitionFieldSqlDao.getFieldsForBusinessSubscriptionTransitionByKey(externalKey2, internalCallContext).size(), 1);
     }
 
     @Test(groups = "slow")
     public void testHealthCheck() throws Exception {
         // HealthCheck test to make sure MySQL is setup properly
         try {
-            subscriptionTransitionFieldSqlDao.test();
+            subscriptionTransitionFieldSqlDao.test(internalCallContext);
         } catch (Throwable t) {
             Assert.fail(t.toString());
         }

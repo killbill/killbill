@@ -19,17 +19,12 @@ package com.ning.billing.util.callcontext;
 import org.joda.time.DateTime;
 
 public class MigrationCallContext extends CallContextBase {
+
     private final DateTime createdDate;
     private final DateTime updatedDate;
 
-    public MigrationCallContext(final String userName, final CallOrigin callOrigin, final UserType userType, final DateTime createdDate, final DateTime updatedDate) {
-        super(userName, callOrigin, userType);
-        this.createdDate = createdDate;
-        this.updatedDate = updatedDate;
-    }
-
     public MigrationCallContext(final CallContext context, final DateTime createdDate, final DateTime updatedDate) {
-        super(context.getUserName(), context.getCallOrigin(), context.getUserType());
+        super(context.getTenantId(), context.getUserName(), context.getCallOrigin(), context.getUserType());
         this.createdDate = createdDate;
         this.updatedDate = updatedDate;
     }

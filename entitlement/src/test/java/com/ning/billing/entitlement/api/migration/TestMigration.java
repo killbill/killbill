@@ -16,26 +16,18 @@
 
 package com.ning.billing.entitlement.api.migration;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
 import org.testng.Assert;
 
 import com.ning.billing.api.TestApiListener.NextEvent;
-import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PhaseType;
-import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.TestApiBase;
 import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi.EntitlementAccountMigration;
-import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi.EntitlementBundleMigration;
-import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi.EntitlementSubscriptionMigration;
-import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi.EntitlementSubscriptionMigrationCase;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
@@ -54,14 +46,14 @@ public abstract class TestMigration extends TestApiBase {
             final DateTime afterMigration = clock.getUTCNow();
 
             testListener.pushExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
-            migrationApi.migrate(toBeMigrated, context);
+            migrationApi.migrate(toBeMigrated, callContext);
             assertTrue(testListener.isCompleted(5000));
 
-            final List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(toBeMigrated.getAccountKey());
+            final List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(toBeMigrated.getAccountKey(), callContext);
             assertEquals(bundles.size(), 1);
             final SubscriptionBundle bundle = bundles.get(0);
 
-            final List<Subscription> subscriptions = entitlementApi.getSubscriptionsForBundle(bundle.getId());
+            final List<Subscription> subscriptions = entitlementApi.getSubscriptionsForBundle(bundle.getId(), callContext);
             assertEquals(subscriptions.size(), 1);
             final Subscription subscription = subscriptions.get(0);
             assertDateWithin(subscription.getStartDate(), beforeMigration, afterMigration);
@@ -88,14 +80,14 @@ public abstract class TestMigration extends TestApiBase {
 
             testListener.pushExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
             testListener.pushExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
-            migrationApi.migrate(toBeMigrated, context);
+            migrationApi.migrate(toBeMigrated, callContext);
             assertTrue(testListener.isCompleted(5000));
 
-            final List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(toBeMigrated.getAccountKey());
+            final List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(toBeMigrated.getAccountKey(), callContext);
             assertEquals(bundles.size(), 1);
             final SubscriptionBundle bundle = bundles.get(0);
 
-            final List<Subscription> subscriptions = entitlementApi.getSubscriptionsForBundle(bundle.getId());
+            final List<Subscription> subscriptions = entitlementApi.getSubscriptionsForBundle(bundle.getId(), callContext);
             assertEquals(subscriptions.size(), 2);
 
             final Subscription baseSubscription = (subscriptions.get(0).getCurrentPlan().getProduct().getCategory() == ProductCategory.BASE) ?
@@ -135,15 +127,15 @@ public abstract class TestMigration extends TestApiBase {
             final DateTime afterMigration = clock.getUTCNow();
 
             testListener.pushExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
-            migrationApi.migrate(toBeMigrated, context);
+            migrationApi.migrate(toBeMigrated, callContext);
             assertTrue(testListener.isCompleted(5000));
 
-            final List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(toBeMigrated.getAccountKey());
+            final List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(toBeMigrated.getAccountKey(), callContext);
             assertEquals(bundles.size(), 1);
             final SubscriptionBundle bundle = bundles.get(0);
             //assertEquals(bundle.getStartDate(), effectiveDate);
 
-            final List<Subscription> subscriptions = entitlementApi.getSubscriptionsForBundle(bundle.getId());
+            final List<Subscription> subscriptions = entitlementApi.getSubscriptionsForBundle(bundle.getId(), callContext);
             assertEquals(subscriptions.size(), 1);
             final Subscription subscription = subscriptions.get(0);
             assertDateWithin(subscription.getStartDate(), beforeMigration, afterMigration);
@@ -181,14 +173,14 @@ public abstract class TestMigration extends TestApiBase {
             final EntitlementAccountMigration toBeMigrated = createAccountForMigrationFuturePendingPhase(trialDate);
 
             testListener.pushExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
-            migrationApi.migrate(toBeMigrated, context);
+            migrationApi.migrate(toBeMigrated, callContext);
             assertTrue(testListener.isCompleted(5000));
 
-            final List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(toBeMigrated.getAccountKey());
+            final List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(toBeMigrated.getAccountKey(), callContext);
             assertEquals(bundles.size(), 1);
             final SubscriptionBundle bundle = bundles.get(0);
 
-            final List<Subscription> subscriptions = entitlementApi.getSubscriptionsForBundle(bundle.getId());
+            final List<Subscription> subscriptions = entitlementApi.getSubscriptionsForBundle(bundle.getId(), callContext);
             assertEquals(subscriptions.size(), 1);
             final Subscription subscription = subscriptions.get(0);
 
@@ -228,14 +220,14 @@ public abstract class TestMigration extends TestApiBase {
             final DateTime afterMigration = clock.getUTCNow();
 
             testListener.pushExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
-            migrationApi.migrate(toBeMigrated, context);
+            migrationApi.migrate(toBeMigrated, callContext);
             assertTrue(testListener.isCompleted(5000));
 
-            final List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(toBeMigrated.getAccountKey());
+            final List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(toBeMigrated.getAccountKey(), callContext);
             assertEquals(bundles.size(), 1);
             final SubscriptionBundle bundle = bundles.get(0);
 
-            final List<Subscription> subscriptions = entitlementApi.getSubscriptionsForBundle(bundle.getId());
+            final List<Subscription> subscriptions = entitlementApi.getSubscriptionsForBundle(bundle.getId(), callContext);
             assertEquals(subscriptions.size(), 1);
             final Subscription subscription = subscriptions.get(0);
             assertDateWithin(subscription.getStartDate(), beforeMigration, afterMigration);

@@ -16,9 +16,10 @@
 
 package com.ning.billing.util.bus;
 
-import com.google.inject.Inject;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
+
+import com.google.inject.Inject;
 
 public class DefaultBusService implements BusService {
 

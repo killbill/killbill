@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.payment.retry;
 
 import java.util.UUID;
@@ -22,12 +23,14 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
-import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.config.PaymentConfig;
 import com.ning.billing.payment.core.PaymentProcessor;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.notificationq.NotificationQueueService;
+
+import com.google.inject.Inject;
 
 public class PluginFailureRetryService extends BaseRetryService implements RetryService {
 
@@ -37,23 +40,19 @@ public class PluginFailureRetryService extends BaseRetryService implements Retry
 
     private final PaymentProcessor paymentProcessor;
 
-
     @Inject
-    public PluginFailureRetryService(final AccountUserApi accountUserApi,
-                                     final Clock clock,
-                                     final NotificationQueueService notificationQueueService,
+    public PluginFailureRetryService(final NotificationQueueService notificationQueueService,
                                      final PaymentConfig config,
-                                     final PaymentProcessor paymentProcessor) {
-        super(notificationQueueService, clock, config);
+                                     final PaymentProcessor paymentProcessor,
+                                     final InternalCallContextFactory internalCallContextFactory) {
+        super(notificationQueueService, config, internalCallContextFactory);
         this.paymentProcessor = paymentProcessor;
     }
 
-
     @Override
-    public void retry(final UUID paymentId) {
-        paymentProcessor.retryPluginFailure(paymentId);
+    public void retry(final UUID paymentId, final InternalCallContext context) {
+        paymentProcessor.retryPluginFailure(paymentId, context);
     }
-
 
     public static class PluginFailureRetryServiceScheduler extends RetryServiceScheduler {
 
@@ -62,8 +61,10 @@ public class PluginFailureRetryService extends BaseRetryService implements Retry
 
         @Inject
         public PluginFailureRetryServiceScheduler(final NotificationQueueService notificationQueueService,
-                                                  final Clock clock, final PaymentConfig config) {
-            super(notificationQueueService);
+                                                  final InternalCallContextFactory internalCallContextFactory,
+                                                  final Clock clock,
+                                                  final PaymentConfig config) {
+            super(notificationQueueService, internalCallContextFactory);
             this.clock = clock;
             this.config = config;
         }
@@ -91,7 +92,6 @@ public class PluginFailureRetryService extends BaseRetryService implements Retry
 
         private DateTime getNextRetryDate(final int retryAttempt) {
 
-
             if (retryAttempt > config.getPluginFailureRetryMaxAttempts()) {
                 return null;
             }
@@ -102,7 +102,6 @@ public class PluginFailureRetryService extends BaseRetryService implements Retry
             }
             return clock.getUTCNow().plusSeconds(nbSec);
         }
-
     }
 
     @Override

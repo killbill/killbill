@@ -43,6 +43,7 @@ public interface JaxrsResource {
      * Query parameters
      */
     public static final String QUERY_EXTERNAL_KEY = "externalKey";
+    public static final String QUERY_API_KEY = "apiKey";
     public static final String QUERY_REQUESTED_DT = "requestedDate";
     public static final String QUERY_CALL_COMPLETION = "callCompletion";
     public static final String QUERY_CALL_TIMEOUT = "callTimeoutSec";
@@ -122,4 +123,7 @@ public interface JaxrsResource {
 
     public static final String OVERDUE = "overdue";
     public static final String OVERDUE_PATH = PREFIX + "/" + OVERDUE;
+
+    public static final String TENANTS = "tenants";
+    public static final String TENANTS_PATH = PREFIX + "/" + TENANTS;
 }

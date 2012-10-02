@@ -30,53 +30,57 @@ import com.ning.billing.analytics.model.BusinessInvoiceItem;
 import com.ning.billing.analytics.model.BusinessInvoicePayment;
 import com.ning.billing.analytics.model.BusinessOverdueStatus;
 import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
+import com.ning.billing.util.callcontext.TenantContext;
 
 public class DefaultAnalyticsUserApi implements AnalyticsUserApi {
 
+    private final InternalCallContextFactory internalCallContextFactory;
     private final AnalyticsDao analyticsDao;
 
     @Inject
-    public DefaultAnalyticsUserApi(final AnalyticsDao analyticsDao) {
+    public DefaultAnalyticsUserApi(final AnalyticsDao analyticsDao, final InternalCallContextFactory internalCallContextFactory) {
         this.analyticsDao = analyticsDao;
+        this.internalCallContextFactory = internalCallContextFactory;
     }
 
     @Override
-    public TimeSeriesData getAccountsCreatedOverTime() {
-        return analyticsDao.getAccountsCreatedOverTime();
+    public TimeSeriesData getAccountsCreatedOverTime(final TenantContext context) {
+        return analyticsDao.getAccountsCreatedOverTime(internalCallContextFactory.createInternalTenantContext(context));
     }
 
     @Override
-    public TimeSeriesData getSubscriptionsCreatedOverTime(final String productType, final String slug) {
-        return analyticsDao.getSubscriptionsCreatedOverTime(productType, slug);
+    public TimeSeriesData getSubscriptionsCreatedOverTime(final String productType, final String slug, final TenantContext context) {
+        return analyticsDao.getSubscriptionsCreatedOverTime(productType, slug, internalCallContextFactory.createInternalTenantContext(context));
     }
 
     // Note: the following is not exposed in api yet, as the models need to be extracted first
 
-    public BusinessAccount getAccountByKey(final String accountKey) {
-        return analyticsDao.getAccountByKey(accountKey);
+    public BusinessAccount getAccountByKey(final String accountKey, final TenantContext context) {
+        return analyticsDao.getAccountByKey(accountKey, internalCallContextFactory.createInternalTenantContext(context));
     }
 
-    public List<BusinessSubscriptionTransition> getTransitionsForBundle(final String externalKey) {
-        return analyticsDao.getTransitionsByKey(externalKey);
+    public List<BusinessSubscriptionTransition> getTransitionsForBundle(final String externalKey, final TenantContext context) {
+        return analyticsDao.getTransitionsByKey(externalKey, internalCallContextFactory.createInternalTenantContext(context));
     }
 
-    public List<BusinessInvoice> getInvoicesForAccount(final String accountKey) {
-        return analyticsDao.getInvoicesByKey(accountKey);
+    public List<BusinessInvoice> getInvoicesForAccount(final String accountKey, final TenantContext context) {
+        return analyticsDao.getInvoicesByKey(accountKey, internalCallContextFactory.createInternalTenantContext(context));
     }
 
-    public List<BusinessAccountTag> getTagsForAccount(final String accountKey) {
-        return analyticsDao.getTagsForAccount(accountKey);
+    public List<BusinessAccountTag> getTagsForAccount(final String accountKey, final TenantContext context) {
+        return analyticsDao.getTagsForAccount(accountKey, internalCallContextFactory.createInternalTenantContext(context));
     }
 
-    public List<BusinessOverdueStatus> getOverdueStatusesForBundle(final String externalKey) {
-        return analyticsDao.getOverdueStatusesForBundleByKey(externalKey);
+    public List<BusinessOverdueStatus> getOverdueStatusesForBundle(final String externalKey, final TenantContext context) {
+        return analyticsDao.getOverdueStatusesForBundleByKey(externalKey, internalCallContextFactory.createInternalTenantContext(context));
     }
 
-    public List<BusinessInvoiceItem> getInvoiceItemsForInvoice(final UUID invoiceId) {
-        return analyticsDao.getInvoiceItemsForInvoice(invoiceId.toString());
+    public List<BusinessInvoiceItem> getInvoiceItemsForInvoice(final UUID invoiceId, final TenantContext context) {
+        return analyticsDao.getInvoiceItemsForInvoice(invoiceId.toString(), internalCallContextFactory.createInternalTenantContext(context));
     }
 
-    public List<BusinessInvoicePayment> getInvoicePaymentsForAccount(final String accountKey) {
-        return analyticsDao.getInvoicePaymentsForAccountByKey(accountKey);
+    public List<BusinessInvoicePayment> getInvoicePaymentsForAccount(final String accountKey, final TenantContext context) {
+        return analyticsDao.getInvoicePaymentsForAccountByKey(accountKey, internalCallContextFactory.createInternalTenantContext(context));
     }
 }

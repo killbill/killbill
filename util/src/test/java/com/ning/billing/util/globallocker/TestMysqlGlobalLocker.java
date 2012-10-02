@@ -28,13 +28,14 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
 import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.globallocker.GlobalLocker.LockerType;
 import com.ning.billing.util.io.IOUtils;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.Inject;
 
 @Guice(modules = TestMysqlGlobalLocker.TestMysqlGlobalLockerModule.class)
 public class TestMysqlGlobalLocker extends UtilTestSuiteWithEmbeddedDB {

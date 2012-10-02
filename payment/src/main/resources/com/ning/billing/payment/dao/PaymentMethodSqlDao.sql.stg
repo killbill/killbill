@@ -1,5 +1,8 @@
 group PaymentMethodSqlDao;
 
+CHECK_TENANT() ::= "tenant_record_id = :tenantRecordId"
+AND_CHECK_TENANT() ::= "AND <CHECK_TENANT()>"
+
 paymentMethodFields(prefix) ::= <<
     <prefix>id,
     <prefix>account_id,
@@ -9,30 +12,38 @@ paymentMethodFields(prefix) ::= <<
     <prefix>created_by,
     <prefix>created_date,
     <prefix>updated_by,
-    <prefix>updated_date
+    <prefix>updated_date,
+    <prefix>account_record_id,
+    <prefix>tenant_record_id
 >>
 
 insertPaymentMethod() ::= <<
     INSERT INTO payment_methods (<paymentMethodFields()>)
-    VALUES (:id, :accountId, :pluginName , :isActive, :externalId, :userName, :createdDate, :userName, :createdDate);
+    VALUES (:id, :accountId, :pluginName , :isActive, :externalId, :userName, :createdDate, :userName, :createdDate, :accountRecordId, :tenantRecordId);
 >>
 
 markPaymentMethodAsDeleted() ::= <<
     UPDATE payment_methods 
     SET is_active = 0
-    WHERE  id = :id;
+    WHERE  id = :id
+    <AND_CHECK_TENANT()>
+    ;
 >>
 
 unmarkPaymentMethodAsDeleted() ::= <<
     UPDATE payment_methods
     SET is_active = 1
-    WHERE  id = :id;
+    WHERE  id = :id
+    <AND_CHECK_TENANT()>
+    ;
 >>
 
 getPaymentMethod() ::= <<
     SELECT <paymentMethodFields()>
       FROM payment_methods
-    WHERE id = :id AND is_active = 1;
+    WHERE id = :id AND is_active = 1
+    <AND_CHECK_TENANT()>
+    ;
 >>
 
 getPaymentMethodIncludedDelete() ::= <<
@@ -44,13 +55,17 @@ getPaymentMethodIncludedDelete() ::= <<
 getPaymentMethods() ::= <<
     SELECT <paymentMethodFields()>
       FROM payment_methods
-    WHERE account_id = :accountId AND is_active = 1;
+    WHERE account_id = :accountId AND is_active = 1
+    <AND_CHECK_TENANT()>
+    ;
 >>
 
 getRecordId() ::= <<
     SELECT record_id
     FROM payment_methods
-    WHERE id = :id;
+    WHERE id = :id
+    <AND_CHECK_TENANT()>
+    ;
 >>
 
 historyFields(prefix) ::= <<
@@ -63,18 +78,22 @@ historyFields(prefix) ::= <<
     <prefix>created_by,
     <prefix>created_date,
     <prefix>updated_by,
-    <prefix>updated_date
+    <prefix>updated_date,
+    <prefix>account_record_id,
+    <prefix>tenant_record_id
 >>
 
 insertHistoryFromTransaction() ::= <<
     INSERT INTO payment_method_history (<historyFields()>)
-    VALUES (:recordId, :id, :accountId, :pluginName , :isActive, :externalId ,:userName, :createdDate, :userName, :createdDate);
+    VALUES (:recordId, :id, :accountId, :pluginName , :isActive, :externalId ,:userName, :createdDate, :userName, :createdDate, :accountRecordId, :tenantRecordId);
 >>
 
 getHistoryRecordId() ::= <<
     SELECT MAX(history_record_id)
     FROM payment_method_history
-    WHERE record_id = :recordId;
+    WHERE record_id = :recordId
+    <AND_CHECK_TENANT()>
+    ;
 >>
 
 auditFields(prefix) ::= <<
@@ -85,12 +104,14 @@ auditFields(prefix) ::= <<
     <prefix>changed_by,
     <prefix>reason_code,
     <prefix>comments,
-    <prefix>user_token
+    <prefix>user_token,
+    <prefix>account_record_id,
+    <prefix>tenant_record_id
 >>
 
 insertAuditFromTransaction() ::= <<
     INSERT INTO audit_log(<auditFields()>)
-    VALUES(:tableName, :recordId, :changeType, :createdDate, :userName, :reasonCode, :comment, :userToken);
+    VALUES(:tableName, :recordId, :changeType, :createdDate, :userName, :reasonCode, :comment, :userToken, :accountRecordId, :tenantRecordId);
 >>
 
 

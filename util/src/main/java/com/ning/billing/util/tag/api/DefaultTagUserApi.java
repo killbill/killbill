@@ -21,89 +21,98 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import com.google.inject.Inject;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
+import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;
 import com.ning.billing.util.tag.dao.TagDao;
 import com.ning.billing.util.tag.dao.TagDefinitionDao;
 
+import com.google.inject.Inject;
+
 public class DefaultTagUserApi implements TagUserApi {
+
+    private final InternalCallContextFactory internalCallContextFactory;
     private final TagDefinitionDao tagDefinitionDao;
     private final TagDao tagDao;
 
     @Inject
-    public DefaultTagUserApi(final TagDefinitionDao tagDefinitionDao, final TagDao tagDao) {
+    public DefaultTagUserApi(final InternalCallContextFactory internalCallContextFactory, final TagDefinitionDao tagDefinitionDao, final TagDao tagDao) {
+        this.internalCallContextFactory = internalCallContextFactory;
         this.tagDefinitionDao = tagDefinitionDao;
         this.tagDao = tagDao;
     }
 
     @Override
-    public List<TagDefinition> getTagDefinitions() {
-        return tagDefinitionDao.getTagDefinitions();
+    public List<TagDefinition> getTagDefinitions(final TenantContext context) {
+        return tagDefinitionDao.getTagDefinitions(internalCallContextFactory.createInternalTenantContext(context));
     }
 
     @Override
     public TagDefinition create(final String definitionName, final String description, final CallContext context) throws TagDefinitionApiException {
-        return tagDefinitionDao.create(definitionName, description, context);
+        return tagDefinitionDao.create(definitionName, description, internalCallContextFactory.createInternalCallContext(context));
     }
 
     @Override
     public void deleteTagDefinition(final UUID definitionId, final CallContext context) throws TagDefinitionApiException {
-        tagDefinitionDao.deleteById(definitionId, context);
+        tagDefinitionDao.deleteById(definitionId, internalCallContextFactory.createInternalCallContext(context));
     }
 
     @Override
-    public TagDefinition getTagDefinition(final UUID tagDefinitionId)
+    public TagDefinition getTagDefinition(final UUID tagDefinitionId, final TenantContext context)
             throws TagDefinitionApiException {
-        return tagDefinitionDao.getById(tagDefinitionId);
+        return tagDefinitionDao.getById(tagDefinitionId, internalCallContextFactory.createInternalTenantContext(context));
     }
 
-
     @Override
-    public List<TagDefinition> getTagDefinitions(Collection<UUID> tagDefinitionIds)
+    public List<TagDefinition> getTagDefinitions(final Collection<UUID> tagDefinitionIds, final TenantContext context)
             throws TagDefinitionApiException {
-        return tagDefinitionDao.getByIds(tagDefinitionIds);
+        return tagDefinitionDao.getByIds(tagDefinitionIds, internalCallContextFactory.createInternalTenantContext(context));
     }
 
     @Override
     public void addTags(final UUID objectId, final ObjectType objectType, final Collection<UUID> tagDefinitionIds, final CallContext context) throws TagApiException {
         // TODO: consider making this batch
         for (final UUID tagDefinitionId : tagDefinitionIds) {
-            tagDao.insertTag(objectId, objectType, tagDefinitionId, context);
+            // TODO accountId?
+            tagDao.insertTag(objectId, objectType, tagDefinitionId, internalCallContextFactory.createInternalCallContext(context));
         }
     }
 
     @Override
     public void addTag(final UUID objectId, final ObjectType objectType, final UUID tagDefinitionId, final CallContext context) throws TagApiException {
-        tagDao.insertTag(objectId, objectType, tagDefinitionId, context);
+        // TODO accountId?
+        tagDao.insertTag(objectId, objectType, tagDefinitionId, internalCallContextFactory.createInternalCallContext(context));
     }
 
     @Override
     public void removeTag(final UUID objectId, final ObjectType objectType, final UUID tagDefinitionId, final CallContext context) throws TagApiException {
-        tagDao.deleteTag(objectId, objectType, tagDefinitionId, context);
+        // TODO accountId?
+        tagDao.deleteTag(objectId, objectType, tagDefinitionId, internalCallContextFactory.createInternalCallContext(context));
     }
 
     @Override
     public void removeTags(final UUID objectId, final ObjectType objectType, final Collection<UUID> tagDefinitionIds, final CallContext context) throws TagApiException {
         // TODO: consider making this batch
         for (final UUID tagDefinitionId : tagDefinitionIds) {
-            tagDao.deleteTag(objectId, objectType, tagDefinitionId, context);
+            // TODO accountId?
+            tagDao.deleteTag(objectId, objectType, tagDefinitionId, internalCallContextFactory.createInternalCallContext(context));
         }
     }
 
     @Override
-    public Map<String, Tag> getTags(final UUID objectId, final ObjectType objectType) {
-        return tagDao.loadEntities(objectId, objectType);
+    public Map<String, Tag> getTags(final UUID objectId, final ObjectType objectType, final TenantContext context) {
+        return tagDao.loadEntities(objectId, objectType, internalCallContextFactory.createInternalTenantContext(context));
     }
 
     @Override
-    public TagDefinition getTagDefinitionForName(String tagDefinitionName)
+    public TagDefinition getTagDefinitionForName(final String tagDefinitionName, final TenantContext context)
             throws TagDefinitionApiException {
-        return tagDefinitionDao.getByName(tagDefinitionName);
+        return tagDefinitionDao.getByName(tagDefinitionName, internalCallContextFactory.createInternalTenantContext(context));
     }
 }

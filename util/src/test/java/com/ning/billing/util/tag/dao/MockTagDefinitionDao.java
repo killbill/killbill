@@ -24,26 +24,28 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.ning.billing.util.api.TagDefinitionApiException;
-import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.tag.DefaultTagDefinition;
 import com.ning.billing.util.tag.TagDefinition;
 
 public class MockTagDefinitionDao implements TagDefinitionDao {
+
     private final Map<String, TagDefinition> tags = new ConcurrentHashMap<String, TagDefinition>();
 
     @Override
-    public List<TagDefinition> getTagDefinitions() {
+    public List<TagDefinition> getTagDefinitions(final InternalTenantContext context) {
         return new ArrayList<TagDefinition>(tags.values());
     }
 
     @Override
-    public TagDefinition getByName(final String definitionName) {
+    public TagDefinition getByName(final String definitionName, final InternalTenantContext context) {
         return tags.get(definitionName);
     }
 
     @Override
     public TagDefinition create(final String definitionName, final String description,
-                                final CallContext context) throws TagDefinitionApiException {
+                                final InternalCallContext context) throws TagDefinitionApiException {
         final TagDefinition tag = new DefaultTagDefinition(definitionName, description, false);
 
         tags.put(tag.getId().toString(), tag);
@@ -51,17 +53,17 @@ public class MockTagDefinitionDao implements TagDefinitionDao {
     }
 
     @Override
-    public void deleteById(final UUID definitionId, final CallContext context) throws TagDefinitionApiException {
+    public void deleteById(final UUID definitionId, final InternalCallContext context) throws TagDefinitionApiException {
         tags.remove(definitionId.toString());
     }
 
     @Override
-    public TagDefinition getById(UUID definitionId) {
+    public TagDefinition getById(final UUID definitionId, final InternalTenantContext context) {
         return null;
     }
 
     @Override
-    public List<TagDefinition> getByIds(Collection<UUID> definitionIds) {
+    public List<TagDefinition> getByIds(final Collection<UUID> definitionIds, final InternalTenantContext context) {
         return null;
     }
 }

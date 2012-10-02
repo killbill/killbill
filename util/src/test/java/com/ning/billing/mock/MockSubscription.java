@@ -23,8 +23,6 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.mockito.Mockito;
 
-import com.google.common.collect.ImmutableList;
-
 import com.ning.billing.catalog.api.ActionPolicy;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Plan;
@@ -37,6 +35,8 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.util.callcontext.CallContext;
+
+import com.google.common.collect.ImmutableList;
 
 public class MockSubscription implements Subscription {
     private final UUID id;

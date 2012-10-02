@@ -18,9 +18,6 @@ package com.ning.billing.junction.glue;
 
 import org.skife.jdbi.v2.IDBI;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
-import com.google.inject.Provider;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.glue.JunctionModule;
@@ -35,6 +32,10 @@ import com.ning.billing.junction.plumbing.api.BlockingAccountUserApi;
 import com.ning.billing.junction.plumbing.api.BlockingEntitlementUserApi;
 import com.ning.billing.junction.plumbing.billing.BlockingCalculator;
 import com.ning.billing.junction.plumbing.billing.DefaultBillingApi;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.Inject;
+import com.google.inject.Provider;
 
 public class DefaultJunctionModule extends AbstractModule implements JunctionModule {
 

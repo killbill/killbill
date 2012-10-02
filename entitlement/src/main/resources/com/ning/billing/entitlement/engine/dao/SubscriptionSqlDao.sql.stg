@@ -1,5 +1,8 @@
 group SubscriptionSqlDao;
 
+CHECK_TENANT() ::= "tenant_record_id = :tenantRecordId"
+AND_CHECK_TENANT() ::= "AND <CHECK_TENANT()>"
+
 insertSubscription() ::= <<
     insert into subscriptions (
         id
@@ -14,6 +17,8 @@ insertSubscription() ::= <<
       , created_date
       , updated_by
       , updated_date
+      , account_record_id
+      , tenant_record_id
     ) values (
         :id
       , :bundleId
@@ -27,6 +32,8 @@ insertSubscription() ::= <<
       , :createdDate
       , :userName
       , :updatedDate
+      , :accountRecordId
+      , :tenantRecordId
     );
 >>
 
@@ -42,6 +49,7 @@ getSubscriptionFromId() ::= <<
       , paid_through_date    
     from subscriptions
     where id = :id
+    <AND_CHECK_TENANT()>
     ;
 >>
 
@@ -57,6 +65,7 @@ getSubscriptionsFromBundleId() ::= <<
       , paid_through_date    
     from subscriptions
     where bundle_id = :bundleId
+    <AND_CHECK_TENANT()>
     ;
 >>
 
@@ -67,6 +76,7 @@ updateChargedThroughDate() ::= <<
       , updated_by = :userName
       , updated_date = :updatedDate
     where id = :id
+    <AND_CHECK_TENANT()>
     ;
 >>
 
@@ -89,13 +99,16 @@ updateForRepair() ::= <<
       , updated_by = :userName
       , updated_date = :updatedDate
     where id = :id
+    <AND_CHECK_TENANT()>
     ;
 >>
 
 getRecordId() ::= <<
     SELECT record_id
     FROM subscriptions
-    WHERE id = :id;
+    WHERE id = :id
+    <AND_CHECK_TENANT()>
+    ;
 >>
 
 auditFields(prefix) ::= <<
@@ -106,10 +119,12 @@ auditFields(prefix) ::= <<
     <prefix>changed_by,
     <prefix>reason_code,
     <prefix>comments,
-    <prefix>user_token
+    <prefix>user_token,
+    <prefix>account_record_id,
+    <prefix>tenant_record_id
 >>
 
 insertAuditFromTransaction() ::= <<
     INSERT INTO audit_log(<auditFields()>)
-    VALUES(:tableName, :recordId, :changeType, :createdDate, :userName, :reasonCode, :comment, :userToken);
+    VALUES(:tableName, :recordId, :changeType, :createdDate, :userName, :reasonCode, :comment, :userToken, :accountRecordId, :tenantRecordId);
 >>

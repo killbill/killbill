@@ -43,12 +43,12 @@ public class TestBusinessAccountTagSqlDao extends AnalyticsTestSuiteWithEmbedded
         final String name = UUID.randomUUID().toString().substring(0, 20);
 
         // Verify initial state
-        Assert.assertEquals(accountTagSqlDao.getTagsForAccountByKey(accountKey).size(), 0);
-        Assert.assertEquals(accountTagSqlDao.removeTag(accountId.toString(), name), 0);
+        Assert.assertEquals(accountTagSqlDao.getTagsForAccountByKey(accountKey, internalCallContext).size(), 0);
+        Assert.assertEquals(accountTagSqlDao.removeTag(accountId.toString(), name, internalCallContext), 0);
 
         // Add an entry
-        Assert.assertEquals(accountTagSqlDao.addTag(accountId.toString(), accountKey, name), 1);
-        final List<BusinessAccountTag> tagsForAccount = accountTagSqlDao.getTagsForAccountByKey(accountKey);
+        Assert.assertEquals(accountTagSqlDao.addTag(accountId.toString(), accountKey, name, internalCallContext), 1);
+        final List<BusinessAccountTag> tagsForAccount = accountTagSqlDao.getTagsForAccountByKey(accountKey, internalCallContext);
         Assert.assertEquals(tagsForAccount.size(), 1);
 
         // Retrieve it
@@ -58,8 +58,8 @@ public class TestBusinessAccountTagSqlDao extends AnalyticsTestSuiteWithEmbedded
         Assert.assertEquals(accountTag.getName(), name);
 
         // Delete it
-        Assert.assertEquals(accountTagSqlDao.removeTag(accountId.toString(), name), 1);
-        Assert.assertEquals(accountTagSqlDao.getTagsForAccountByKey(accountKey).size(), 0);
+        Assert.assertEquals(accountTagSqlDao.removeTag(accountId.toString(), name, internalCallContext), 1);
+        Assert.assertEquals(accountTagSqlDao.getTagsForAccountByKey(accountKey, internalCallContext).size(), 0);
     }
 
     @Test(groups = "slow")
@@ -72,24 +72,24 @@ public class TestBusinessAccountTagSqlDao extends AnalyticsTestSuiteWithEmbedded
         final String name2 = UUID.randomUUID().toString().substring(0, 20);
 
         // Add a tag to both accounts
-        Assert.assertEquals(accountTagSqlDao.addTag(accountId1.toString(), accountKey1, name1), 1);
-        Assert.assertEquals(accountTagSqlDao.addTag(accountId2.toString(), accountKey2, name2), 1);
+        Assert.assertEquals(accountTagSqlDao.addTag(accountId1.toString(), accountKey1, name1, internalCallContext), 1);
+        Assert.assertEquals(accountTagSqlDao.addTag(accountId2.toString(), accountKey2, name2, internalCallContext), 1);
 
-        Assert.assertEquals(accountTagSqlDao.getTagsForAccountByKey(accountKey1).size(), 1);
-        Assert.assertEquals(accountTagSqlDao.getTagsForAccountByKey(accountKey2).size(), 1);
+        Assert.assertEquals(accountTagSqlDao.getTagsForAccountByKey(accountKey1, internalCallContext).size(), 1);
+        Assert.assertEquals(accountTagSqlDao.getTagsForAccountByKey(accountKey2, internalCallContext).size(), 1);
 
         // Remove the tag for the first account
-        Assert.assertEquals(accountTagSqlDao.removeTag(accountId1.toString(), name1), 1);
+        Assert.assertEquals(accountTagSqlDao.removeTag(accountId1.toString(), name1, internalCallContext), 1);
 
-        Assert.assertEquals(accountTagSqlDao.getTagsForAccountByKey(accountKey1).size(), 0);
-        Assert.assertEquals(accountTagSqlDao.getTagsForAccountByKey(accountKey2).size(), 1);
+        Assert.assertEquals(accountTagSqlDao.getTagsForAccountByKey(accountKey1, internalCallContext).size(), 0);
+        Assert.assertEquals(accountTagSqlDao.getTagsForAccountByKey(accountKey2, internalCallContext).size(), 1);
     }
 
     @Test(groups = "slow")
     public void testHealthCheck() throws Exception {
         // HealthCheck test to make sure MySQL is setup properly
         try {
-            accountTagSqlDao.test();
+            accountTagSqlDao.test(internalCallContext);
         } catch (Throwable t) {
             Assert.fail(t.toString());
         }

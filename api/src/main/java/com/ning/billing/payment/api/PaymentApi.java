@@ -24,16 +24,17 @@ import java.util.UUID;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.TenantContext;
 
 public interface PaymentApi {
 
-    public Payment createPayment(final Account account, final UUID invoiceId, final BigDecimal amount, final CallContext context)
+    public Payment createPayment(Account account, UUID invoiceId, BigDecimal amount, CallContext context)
             throws PaymentApiException;
 
-    public Payment createExternalPayment(final Account account, final UUID invoiceId, final BigDecimal amount, final CallContext context)
+    public Payment createExternalPayment(Account account, UUID invoiceId, BigDecimal amount, CallContext context)
             throws PaymentApiException;
 
-    public Refund getRefund(final UUID refundId)
+    public Refund getRefund(UUID refundId, TenantContext context)
             throws PaymentApiException;
 
     /**
@@ -46,7 +47,7 @@ public interface PaymentApi {
      * @return the created Refund
      * @throws PaymentApiException
      */
-    public Refund createRefund(final Account account, final UUID paymentId, final BigDecimal refundAmount, final CallContext context)
+    public Refund createRefund(Account account, UUID paymentId, BigDecimal refundAmount, CallContext context)
             throws PaymentApiException;
 
     /**
@@ -59,7 +60,7 @@ public interface PaymentApi {
      * @return the created Refund
      * @throws PaymentApiException
      */
-    public Refund createRefundWithAdjustment(final Account account, final UUID paymentId, final BigDecimal refundAmount, final CallContext context)
+    public Refund createRefundWithAdjustment(Account account, UUID paymentId, BigDecimal refundAmount, CallContext context)
             throws PaymentApiException;
 
     /**
@@ -73,7 +74,7 @@ public interface PaymentApi {
      * @return the created Refund
      * @throws PaymentApiException
      */
-    public Refund createRefundWithItemsAdjustments(final Account account, final UUID paymentId, final Set<UUID> invoiceItemIds, final CallContext context)
+    public Refund createRefundWithItemsAdjustments(Account account, UUID paymentId, Set<UUID> invoiceItemIds, CallContext context)
             throws PaymentApiException;
 
     /**
@@ -87,22 +88,22 @@ public interface PaymentApi {
      * @return the created Refund
      * @throws PaymentApiException
      */
-    public Refund createRefundWithItemsAdjustments(final Account account, final UUID paymentId, final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts, final CallContext context)
+    public Refund createRefundWithItemsAdjustments(Account account, UUID paymentId, Map<UUID, BigDecimal> invoiceItemIdsWithAmounts, CallContext context)
             throws PaymentApiException;
 
-    public List<Refund> getAccountRefunds(final Account account)
+    public List<Refund> getAccountRefunds(Account account, TenantContext context)
             throws PaymentApiException;
 
-    public List<Refund> getPaymentRefunds(final UUID paymentId)
+    public List<Refund> getPaymentRefunds(UUID paymentId, TenantContext context)
             throws PaymentApiException;
 
-    public List<Payment> getInvoicePayments(final UUID invoiceId)
+    public List<Payment> getInvoicePayments(UUID invoiceId, TenantContext context)
             throws PaymentApiException;
 
-    public List<Payment> getAccountPayments(final UUID accountId)
+    public List<Payment> getAccountPayments(UUID accountId, TenantContext context)
             throws PaymentApiException;
 
-    public Payment getPayment(final UUID paymentId)
+    public Payment getPayment(UUID paymentId, TenantContext context)
             throws PaymentApiException;
 
     /*
@@ -110,31 +111,31 @@ public interface PaymentApi {
      */
     public Set<String> getAvailablePlugins();
 
-    public String initializeAccountPlugin(final String pluginName, final Account account)
+    public String initializeAccountPlugin(String pluginName, Account account, CallContext context)
             throws PaymentApiException;
 
-    public UUID addPaymentMethod(final String pluginName, final Account account, boolean setDefault, final PaymentMethodPlugin paymentMethodInfo, final CallContext context)
+    public UUID addPaymentMethod(String pluginName, Account account, boolean setDefault, PaymentMethodPlugin paymentMethodInfo, CallContext context)
             throws PaymentApiException;
 
-    public List<PaymentMethod> refreshPaymentMethods(final String pluginName, final Account account, final CallContext context)
+    public List<PaymentMethod> refreshPaymentMethods(String pluginName, Account account, CallContext context)
             throws PaymentApiException;
 
-    public List<PaymentMethod> getPaymentMethods(final Account account, final boolean withPluginDetail)
+    public List<PaymentMethod> getPaymentMethods(Account account, boolean withPluginDetail, TenantContext context)
             throws PaymentApiException;
 
-    public PaymentMethod getPaymentMethodById(final UUID paymentMethodId)
+    public PaymentMethod getPaymentMethodById(UUID paymentMethodId, TenantContext context)
             throws PaymentApiException;
 
-    public PaymentMethod getPaymentMethod(final Account account, final UUID paymentMethodId, final boolean withPluginDetail)
+    public PaymentMethod getPaymentMethod(Account account, UUID paymentMethodId, boolean withPluginDetail, TenantContext context)
             throws PaymentApiException;
 
-    public void updatePaymentMethod(final Account account, final UUID paymentMethodId, final PaymentMethodPlugin paymentMetghodInfo)
+    public void updatePaymentMethod(Account account, UUID paymentMethodId, PaymentMethodPlugin paymentMethodInfo, CallContext context)
             throws PaymentApiException;
 
-    public void deletedPaymentMethod(final Account account, final UUID paymentMethodId, final boolean deleteDefaultPaymentMethodWithAutoPayOff, final CallContext context)
+    public void deletedPaymentMethod(Account account, UUID paymentMethodId, boolean deleteDefaultPaymentMethodWithAutoPayOff, CallContext context)
             throws PaymentApiException;
 
-    public void setDefaultPaymentMethod(final Account account, final UUID paymentMethodId, final CallContext context)
+    public void setDefaultPaymentMethod(Account account, UUID paymentMethodId, CallContext context)
             throws PaymentApiException;
 
 }

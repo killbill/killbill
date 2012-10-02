@@ -1,5 +1,8 @@
 group RefundSqlDao;
 
+CHECK_TENANT() ::= "tenant_record_id = :tenantRecordId"
+AND_CHECK_TENANT() ::= "AND <CHECK_TENANT()>"
+
 refundFields(prefix) ::= <<
 <prefix>id,
 <prefix>account_id,
@@ -11,42 +14,55 @@ refundFields(prefix) ::= <<
 <prefix>created_by,
 <prefix>created_date,
 <prefix>updated_by,
-<prefix>updated_date
+<prefix>updated_date,
+<prefix>account_record_id,
+<prefix>tenant_record_id
 >>
 
 insertRefund() ::= <<
     INSERT INTO refunds (<refundFields()>)
-    VALUES (:id, :accountId, :paymentId, :amount, :currency, :isAdjusted, :refundStatus, :userName, :createdDate, :userName, :createdDate);
+    VALUES (:id, :accountId, :paymentId, :amount, :currency, :isAdjusted, :refundStatus, :userName, :createdDate,
+            :userName, :createdDate, :accountRecordId, :tenantRecordId);
 >>
 
 updateStatus() ::= <<
     UPDATE refunds
     SET refund_status = :refundStatus
-    WHERE id = :id;
+    WHERE id = :id
+    <AND_CHECK_TENANT()>
+    ;
 >>
 
 getRefund() ::= <<
     SELECT <refundFields()>
     FROM refunds
-    WHERE id = :id;
+    WHERE id = :id
+    <AND_CHECK_TENANT()>
+    ;
 >>
 
 getRefundsForPayment()  ::= <<
     SELECT <refundFields()>
     FROM refunds
-    WHERE payment_id = :paymentId;
+    WHERE payment_id = :paymentId
+    <AND_CHECK_TENANT()>
+    ;
 >>
 
 getRefundsForAccount()  ::= <<
     SELECT <refundFields()>
     FROM refunds
-    WHERE account_id = :accountId;
+    WHERE account_id = :accountId
+    <AND_CHECK_TENANT()>
+    ;
 >> 
 
 getRecordId() ::= <<
     SELECT record_id
     FROM refunds
-    WHERE id = :id;
+    WHERE id = :id
+    <AND_CHECK_TENANT()>
+    ;
 >>
 
 historyFields(prefix) ::= <<
@@ -61,18 +77,23 @@ historyFields(prefix) ::= <<
     <prefix>created_by,
     <prefix>created_date,
     <prefix>updated_by,
-    <prefix>updated_date
+    <prefix>updated_date,
+    <prefix>account_record_id,
+    <prefix>tenant_record_id
 >>
 
 insertHistoryFromTransaction() ::= <<
     INSERT INTO refund_history (<historyFields()>)
-    VALUES (:recordId, :id, :accountId, :paymentId, :amount, :currency,  :isAdjusted, :refundStatus, :userName, :createdDate, :userName, :createdDate);
+    VALUES (:recordId, :id, :accountId, :paymentId, :amount, :currency,  :isAdjusted, :refundStatus, :userName,
+            :createdDate, :userName, :createdDate, :accountRecordId, :tenantRecordId);
 >>
 
 getHistoryRecordId() ::= <<
     SELECT MAX(history_record_id)
     FROM payment_method_history
-    WHERE record_id = :recordId;
+    WHERE record_id = :recordId
+    <AND_CHECK_TENANT()>
+    ;
 >>
 
 auditFields(prefix) ::= <<
@@ -83,10 +104,12 @@ auditFields(prefix) ::= <<
     <prefix>changed_by,
     <prefix>reason_code,
     <prefix>comments,
-    <prefix>user_token
+    <prefix>user_token,
+    <prefix>account_record_id,
+    <prefix>tenant_record_id
 >>
 
 insertAuditFromTransaction() ::= <<
     INSERT INTO audit_log(<auditFields()>)
-    VALUES(:tableName, :recordId, :changeType, :createdDate, :userName, :reasonCode, :comment, :userToken);
+    VALUES(:tableName, :recordId, :changeType, :createdDate, :userName, :reasonCode, :comment, :userToken, :accountRecordId, :tenantRecordId);
 >>

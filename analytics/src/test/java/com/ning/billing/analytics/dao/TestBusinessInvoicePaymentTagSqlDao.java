@@ -42,12 +42,12 @@ public class TestBusinessInvoicePaymentTagSqlDao extends AnalyticsTestSuiteWithE
         final String name = UUID.randomUUID().toString().substring(0, 20);
 
         // Verify initial state
-        Assert.assertEquals(invoicePaymentTagSqlDao.getTagsForInvoicePayment(paymentId).size(), 0);
-        Assert.assertEquals(invoicePaymentTagSqlDao.removeTag(paymentId, name), 0);
+        Assert.assertEquals(invoicePaymentTagSqlDao.getTagsForInvoicePayment(paymentId, internalCallContext).size(), 0);
+        Assert.assertEquals(invoicePaymentTagSqlDao.removeTag(paymentId, name, internalCallContext), 0);
 
         // Add an entry
-        Assert.assertEquals(invoicePaymentTagSqlDao.addTag(paymentId, name), 1);
-        final List<BusinessInvoicePaymentTag> tagsForInvoicePayment = invoicePaymentTagSqlDao.getTagsForInvoicePayment(paymentId);
+        Assert.assertEquals(invoicePaymentTagSqlDao.addTag(paymentId, name, internalCallContext), 1);
+        final List<BusinessInvoicePaymentTag> tagsForInvoicePayment = invoicePaymentTagSqlDao.getTagsForInvoicePayment(paymentId, internalCallContext);
         Assert.assertEquals(tagsForInvoicePayment.size(), 1);
 
         // Retrieve it
@@ -56,8 +56,8 @@ public class TestBusinessInvoicePaymentTagSqlDao extends AnalyticsTestSuiteWithE
         Assert.assertEquals(invoicePaymentTag.getName(), name);
 
         // Delete it
-        Assert.assertEquals(invoicePaymentTagSqlDao.removeTag(paymentId, name), 1);
-        Assert.assertEquals(invoicePaymentTagSqlDao.getTagsForInvoicePayment(paymentId).size(), 0);
+        Assert.assertEquals(invoicePaymentTagSqlDao.removeTag(paymentId, name, internalCallContext), 1);
+        Assert.assertEquals(invoicePaymentTagSqlDao.getTagsForInvoicePayment(paymentId, internalCallContext).size(), 0);
     }
 
     @Test(groups = "slow")
@@ -68,24 +68,24 @@ public class TestBusinessInvoicePaymentTagSqlDao extends AnalyticsTestSuiteWithE
         final String name2 = UUID.randomUUID().toString().substring(0, 20);
 
         // Add a tag to both invoice payments
-        Assert.assertEquals(invoicePaymentTagSqlDao.addTag(paymentId1, name1), 1);
-        Assert.assertEquals(invoicePaymentTagSqlDao.addTag(paymentId2, name2), 1);
+        Assert.assertEquals(invoicePaymentTagSqlDao.addTag(paymentId1, name1, internalCallContext), 1);
+        Assert.assertEquals(invoicePaymentTagSqlDao.addTag(paymentId2, name2, internalCallContext), 1);
 
-        Assert.assertEquals(invoicePaymentTagSqlDao.getTagsForInvoicePayment(paymentId1).size(), 1);
-        Assert.assertEquals(invoicePaymentTagSqlDao.getTagsForInvoicePayment(paymentId2).size(), 1);
+        Assert.assertEquals(invoicePaymentTagSqlDao.getTagsForInvoicePayment(paymentId1, internalCallContext).size(), 1);
+        Assert.assertEquals(invoicePaymentTagSqlDao.getTagsForInvoicePayment(paymentId2, internalCallContext).size(), 1);
 
         // Remove the tag for the first invoice payment
-        Assert.assertEquals(invoicePaymentTagSqlDao.removeTag(paymentId1, name1), 1);
+        Assert.assertEquals(invoicePaymentTagSqlDao.removeTag(paymentId1, name1, internalCallContext), 1);
 
-        Assert.assertEquals(invoicePaymentTagSqlDao.getTagsForInvoicePayment(paymentId1).size(), 0);
-        Assert.assertEquals(invoicePaymentTagSqlDao.getTagsForInvoicePayment(paymentId2).size(), 1);
+        Assert.assertEquals(invoicePaymentTagSqlDao.getTagsForInvoicePayment(paymentId1, internalCallContext).size(), 0);
+        Assert.assertEquals(invoicePaymentTagSqlDao.getTagsForInvoicePayment(paymentId2, internalCallContext).size(), 1);
     }
 
     @Test(groups = "slow")
     public void testHealthCheck() throws Exception {
         // HealthCheck test to make sure MySQL is setup properly
         try {
-            invoicePaymentTagSqlDao.test();
+            invoicePaymentTagSqlDao.test(internalCallContext);
         } catch (Throwable t) {
             Assert.fail(t.toString());
         }

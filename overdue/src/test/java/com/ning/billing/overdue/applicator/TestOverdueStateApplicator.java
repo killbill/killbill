@@ -26,7 +26,6 @@ import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.google.inject.Inject;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.overdue.OverdueChangeEvent;
@@ -35,6 +34,8 @@ import com.ning.billing.overdue.OverdueTestBase;
 import com.ning.billing.overdue.config.OverdueConfig;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.config.XMLLoader;
+
+import com.google.inject.Inject;
 
 import static com.jayway.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -63,17 +64,17 @@ public class TestOverdueStateApplicator extends OverdueTestBase {
         OverdueState<SubscriptionBundle> state;
 
         state = config.getBundleStateSet().findState("OD1");
-        applicator.apply(null, null, bundle, BlockingApi.CLEAR_STATE_NAME, state);
+        applicator.apply(null, null, bundle, BlockingApi.CLEAR_STATE_NAME, state, internalCallContext);
         checkStateApplied(state);
         checkBussEvent("OD1");
 
         state = config.getBundleStateSet().findState("OD2");
-        applicator.apply(null, null,bundle, BlockingApi.CLEAR_STATE_NAME, state);
+        applicator.apply(null, null,bundle, BlockingApi.CLEAR_STATE_NAME, state, internalCallContext);
         checkStateApplied(state);
         checkBussEvent("OD2");
 
         state = config.getBundleStateSet().findState("OD3");
-        applicator.apply(null, null, bundle, BlockingApi.CLEAR_STATE_NAME, state);
+        applicator.apply(null, null, bundle, BlockingApi.CLEAR_STATE_NAME, state, internalCallContext);
         checkStateApplied(state);
         checkBussEvent("OD3");
         bus.stop();

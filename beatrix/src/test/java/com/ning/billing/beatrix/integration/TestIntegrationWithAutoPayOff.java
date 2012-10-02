@@ -15,10 +15,6 @@
  */
 package com.ning.billing.beatrix.integration;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
-
 import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.Map;
@@ -29,7 +25,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
-import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -47,6 +42,12 @@ import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.Tag;
+
+import com.google.inject.Inject;
+
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
 
 @Guice(modules = {BeatrixModule.class})
 public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
@@ -75,7 +76,7 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
         account = createAccountWithPaymentMethod(getAccountData(25));
         assertNotNull(account);
 
-        bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever", context);
+        bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
 
         productName = "Shotgun";
         term = BillingPeriod.MONTHLY;
@@ -90,11 +91,11 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
         busHandler.pushExpectedEvents(NextEvent.CREATE);
         final SubscriptionData baseSubscription = subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(),
-                                                                                                                   new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, context));
+                                                                                                                   new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, callContext));
         assertNotNull(baseSubscription);
         assertTrue(busHandler.isCompleted(DELAY));
 
-        Collection<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId());
+        Collection<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId(), callContext);
         assertEquals(invoices.size(), 1);
 
         busHandler.pushExpectedEvents(NextEvent.PHASE);
@@ -103,7 +104,7 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
 
         assertTrue(busHandler.isCompleted(DELAY));
 
-        invoices = invoiceApi.getInvoicesByAccount(account.getId());
+        invoices = invoiceApi.getInvoicesByAccount(account.getId(), callContext);
         assertEquals(invoices.size(), 2);
         for (Invoice cur : invoices) {
             if (cur.getChargedAmount().compareTo(BigDecimal.ZERO) == 0) {
@@ -117,7 +118,7 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
 
         assertTrue(busHandler.isCompleted(DELAY));
 
-        invoices = invoiceApi.getInvoicesByAccount(account.getId());
+        invoices = invoiceApi.getInvoicesByAccount(account.getId(), callContext);
         assertEquals(invoices.size(), 2);
         for (Invoice cur : invoices) {
             if (cur.getChargedAmount().compareTo(BigDecimal.ZERO) == 0) {
@@ -138,11 +139,11 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
         busHandler.pushExpectedEvents(NextEvent.CREATE);
         final SubscriptionData baseSubscription = subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(),
-                                                                                                                   new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, context));
+                                                                                                                   new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, callContext));
         assertNotNull(baseSubscription);
         assertTrue(busHandler.isCompleted(DELAY));
 
-        Collection<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId());
+        Collection<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId(), callContext);
         assertEquals(invoices.size(), 1);
 
         busHandler.pushExpectedEvents(NextEvent.PHASE);
@@ -151,7 +152,7 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
 
         assertTrue(busHandler.isCompleted(DELAY));
 
-        invoices = invoiceApi.getInvoicesByAccount(account.getId());
+        invoices = invoiceApi.getInvoicesByAccount(account.getId(), callContext);
         assertEquals(invoices.size(), 2);
         for (Invoice cur : invoices) {
             if (cur.getChargedAmount().compareTo(BigDecimal.ZERO) == 0) {
@@ -165,7 +166,7 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.PAYMENT_ERROR);
         assertTrue(busHandler.isCompleted(DELAY));
 
-        invoices = invoiceApi.getInvoicesByAccount(account.getId());
+        invoices = invoiceApi.getInvoicesByAccount(account.getId(), callContext);
         assertEquals(invoices.size(), 2);
         for (Invoice cur : invoices) {
             if (cur.getChargedAmount().compareTo(BigDecimal.ZERO) == 0) {
@@ -182,7 +183,7 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
         clock.addDays(nbDaysBeforeRetry + 1);
         assertTrue(busHandler.isCompleted(DELAY));
 
-        invoices = invoiceApi.getInvoicesByAccount(account.getId());
+        invoices = invoiceApi.getInvoicesByAccount(account.getId(), callContext);
         for (Invoice cur : invoices) {
             if (cur.getChargedAmount().compareTo(BigDecimal.ZERO) == 0) {
                 continue;
@@ -203,11 +204,11 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
         busHandler.pushExpectedEvents(NextEvent.CREATE);
         final SubscriptionData baseSubscription = subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(),
-                                                                                                                   new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, context));
+                                                                                                                   new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, callContext));
         assertNotNull(baseSubscription);
         assertTrue(busHandler.isCompleted(DELAY));
 
-        Collection<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId());
+        Collection<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId(), callContext);
         assertEquals(invoices.size(), 1);
 
         busHandler.pushExpectedEvents(NextEvent.PHASE);
@@ -216,7 +217,7 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
 
         assertTrue(busHandler.isCompleted(DELAY));
 
-        invoices = invoiceApi.getInvoicesByAccount(account.getId());
+        invoices = invoiceApi.getInvoicesByAccount(account.getId(), callContext);
         assertEquals(invoices.size(), 2);
         for (Invoice cur : invoices) {
             if (cur.getChargedAmount().compareTo(BigDecimal.ZERO) == 0) {
@@ -230,7 +231,7 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.PAYMENT_ERROR);
         assertTrue(busHandler.isCompleted(DELAY));
 
-        invoices = invoiceApi.getInvoicesByAccount(account.getId());
+        invoices = invoiceApi.getInvoicesByAccount(account.getId(), callContext);
         assertEquals(invoices.size(), 2);
         for (Invoice cur : invoices) {
             if (cur.getChargedAmount().compareTo(BigDecimal.ZERO) == 0) {
@@ -264,7 +265,7 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
         assertTrue(busHandler.isCompleted(DELAY));
 
 
-        invoices = invoiceApi.getInvoicesByAccount(account.getId());
+        invoices = invoiceApi.getInvoicesByAccount(account.getId(), callContext);
         for (Invoice cur : invoices) {
             if (cur.getChargedAmount().compareTo(BigDecimal.ZERO) == 0) {
                 continue;
@@ -278,13 +279,13 @@ public class TestIntegrationWithAutoPayOff extends TestIntegrationBase {
 
 
     private void add_AUTO_PAY_OFF_Tag(final UUID id, final ObjectType type) throws TagDefinitionApiException, TagApiException {
-        tagApi.addTag(id, type, ControlTagType.AUTO_PAY_OFF.getId(), context);
-        final Map<String, Tag> tags = tagApi.getTags(id, type);
+        tagApi.addTag(id, type, ControlTagType.AUTO_PAY_OFF.getId(), callContext);
+        final Map<String, Tag> tags = tagApi.getTags(id, type, callContext);
         assertEquals(tags.size(), 1);
     }
 
     private void remove_AUTO_PAY_OFF_Tag(final UUID id, final ObjectType type) throws TagDefinitionApiException, TagApiException {
-        tagApi.removeTag(id, type, ControlTagType.AUTO_PAY_OFF.getId(), context);
+        tagApi.removeTag(id, type, ControlTagType.AUTO_PAY_OFF.getId(), callContext);
     }
 }
 

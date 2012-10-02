@@ -18,15 +18,13 @@ package com.ning.billing.payment.glue;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
 
 import org.mockito.Mockito;
-import org.skife.config.ConfigSource;
 import org.skife.config.SimplePropertyConfigSource;
+import org.skife.jdbi.v2.IDBI;
 
-import com.google.common.collect.ImmutableMap;
 import com.ning.billing.config.PaymentConfig;
 import com.ning.billing.mock.glue.MockInvoiceModule;
 import com.ning.billing.mock.glue.MockNotificationQueueModule;
@@ -34,12 +32,17 @@ import com.ning.billing.payment.dao.MockPaymentDao;
 import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;
 import com.ning.billing.util.api.TagUserApi;
+import com.ning.billing.util.callcontext.CallContextSqlDao;
+import com.ning.billing.util.callcontext.MockCallContextSqlDao;
+import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.globallocker.MockGlobalLocker;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.BusModule.BusType;
 import com.ning.billing.util.tag.Tag;
+
+import com.google.common.collect.ImmutableMap;
 
 import static org.testng.Assert.assertNotNull;
 
@@ -63,21 +66,11 @@ public class PaymentTestModuleWithMocks extends PaymentModule {
         }
     }
 
-    private static final class MapConfigSource implements ConfigSource {
-        private final Map<String, String> map;
-
-        private MapConfigSource(final Map<String, String> map) {
-            this.map = map;
-        }
-
-        @Override
-        public String getString(final String propertyName) {
-            return map.get(propertyName);
-        }
-    }
-
     @Override
     protected void installPaymentDao() {
+        final IDBI idbi = Mockito.mock(IDBI.class);
+        Mockito.when(idbi.onDemand(CallContextSqlDao.class)).thenReturn(new MockCallContextSqlDao());
+        bind(IDBI.class).toInstance(idbi);
         bind(PaymentDao.class).to(MockPaymentDao.class).asEagerSingleton();
     }
 
@@ -96,7 +89,7 @@ public class PaymentTestModuleWithMocks extends PaymentModule {
 
         final TagUserApi tagUserApi = Mockito.mock(TagUserApi.class);
         bind(TagUserApi.class).toInstance(tagUserApi);
-        Mockito.when(tagUserApi.getTags(Mockito.<UUID>any(), Mockito.<ObjectType>any())).thenReturn(ImmutableMap.<String, Tag>of());
+        Mockito.when(tagUserApi.getTags(Mockito.<UUID>any(), Mockito.<ObjectType>any(), Mockito.<TenantContext>any())).thenReturn(ImmutableMap.<String, Tag>of());
 
         bind(GlobalLocker.class).to(MockGlobalLocker.class).asEagerSingleton();
     }

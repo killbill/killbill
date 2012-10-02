@@ -1,5 +1,8 @@
 group BusinessInvoiceItem;
 
+CHECK_TENANT() ::= "tenant_record_id = :tenantRecordId"
+AND_CHECK_TENANT() ::= "AND <CHECK_TENANT()>"
+
 getInvoiceItem(item_id) ::= <<
 select
   item_id
@@ -19,8 +22,10 @@ select
 , amount
 , currency
 , linked_item_id
+, tenant_record_id
 from bii
 where item_id = :item_id
+<AND_CHECK_TENANT()>
 limit 1
 ;
 >>
@@ -44,8 +49,10 @@ select
 , amount
 , currency
 , linked_item_id
+, tenant_record_id
 from bii
 where invoice_id = :invoice_id
+<AND_CHECK_TENANT()>
 order by created_date asc
 ;
 >>
@@ -69,8 +76,10 @@ select
 , amount
 , currency
 , linked_item_id
+, tenant_record_id
 from bii
 where external_key = :external_key
+<AND_CHECK_TENANT()>
 order by created_date asc
 ;
 >>
@@ -94,6 +103,8 @@ insert into bii (
 , amount
 , currency
 , linked_item_id
+, account_record_id
+, tenant_record_id
 ) values (
   :item_id
 , :created_date
@@ -112,13 +123,15 @@ insert into bii (
 , :amount
 , :currency
 , :linked_item_id
+, :accountRecordId
+, :tenantRecordId
 );
 >>
 
 deleteInvoiceItem(item_id) ::= <<
-delete from bii where item_id = :item_id;
+delete from bii where item_id = :item_id <AND_CHECK_TENANT()>;
 >>
 
 test() ::= <<
-select 1 from bii;
+select 1 from bii where <CHECK_TENANT()>;
 >>

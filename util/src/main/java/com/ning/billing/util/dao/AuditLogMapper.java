@@ -44,7 +44,8 @@ public class AuditLogMapper extends MapperBase implements ResultSetMapper<AuditL
         final UUID userToken = getUUID(r, "user_token");
 
         final EntityAudit entityAudit = new EntityAudit(TableName.valueOf(tableName), recordId, ChangeType.valueOf(changeType));
-        final CallContext callContext = new DefaultCallContext(changedBy, changeDate, reasonCode, comments, userToken);
+        // TODO - we have the tenant_record_id but not the tenant id here
+        final CallContext callContext = new DefaultCallContext(null, changedBy, changeDate, reasonCode, comments, userToken);
         return new DefaultAuditLog(entityAudit, callContext);
     }
 }

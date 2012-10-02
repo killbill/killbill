@@ -1,5 +1,8 @@
 group BusinessSubscriptionTransition;
 
+CHECK_TENANT() ::= "tenant_record_id = :tenantRecordId"
+AND_CHECK_TENANT() ::= "AND <CHECK_TENANT()>"
+
 getSubscriptionsCreatedOverTime(product_type, slug) ::= <<
   select
     date(from_unixtime(requested_timestamp / 1000)) day
@@ -8,6 +11,7 @@ getSubscriptionsCreatedOverTime(product_type, slug) ::= <<
   where event in ('ADD_ADD_ON', 'ADD_BASE', 'ADD_STANDALONE')
   and next_product_type = :product_type
   and next_slug = :slug
+  <AND_CHECK_TENANT()>
   group by 1
   order by 1
   ;
@@ -47,8 +51,10 @@ getTransitionsByKey(external_key) ::= <<
   , next_currency
   , next_start_date
   , next_state
+  , tenant_record_id
   from bst
   where external_key=:external_key
+  <AND_CHECK_TENANT()>
   order by requested_timestamp asc
   ;
 >>
@@ -87,8 +93,10 @@ getTransitionForSubscription(subscription_id) ::= <<
   , next_currency
   , next_start_date
   , next_state
+  , tenant_record_id
   from bst
   where subscription_id = :subscription_id
+  <AND_CHECK_TENANT()>
   order by requested_timestamp asc
   ;
 >>
@@ -127,6 +135,8 @@ createTransition() ::= <<
   , next_currency
   , next_start_date
   , next_state
+  , account_record_id
+  , tenant_record_id
   ) values (
     :total_ordering
   , :bundle_id
@@ -160,15 +170,18 @@ createTransition() ::= <<
   , :next_currency
   , :next_start_date
   , :next_state
+  , :accountRecordId
+  , :tenantRecordId
   );
 >>
 
 deleteTransitionsForBundle(bundle_id) ::= <<
   delete from bst
   where bundle_id=:bundle_id
+  <AND_CHECK_TENANT()>
   ;
 >>
 
 test() ::= <<
-  select 1 from bst;
+  select 1 from bst where <CHECK_TENANT()>;
 >>

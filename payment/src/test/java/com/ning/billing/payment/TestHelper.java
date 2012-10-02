@@ -21,7 +21,6 @@ import java.util.UUID;
 import org.joda.time.LocalDate;
 import org.mockito.Mockito;
 
-import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.api.Currency;
@@ -40,8 +39,11 @@ import com.ning.billing.util.bus.Bus.EventBusException;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
+
+import com.google.inject.Inject;
 
 public class TestHelper {
     protected final AccountUserApi accountUserApi;
@@ -59,12 +61,13 @@ public class TestHelper {
         this.invoicePaymentApi = invoicePaymentApi;
         this.paymentApi = paymentApi;
         this.clock = clock;
-        context = factory.createCallContext("Princess Buttercup", CallOrigin.TEST, UserType.TEST);
+        context = factory.createCallContext(null, "Princess Buttercup", CallOrigin.TEST, UserType.TEST);
     }
 
     public Invoice createTestInvoice(final Account account,
                                      final LocalDate targetDate,
                                      final Currency currency,
+                                     final CallContext context,
                                      final InvoiceItem... items) throws EventBusException, InvoiceApiException {
         final Invoice invoice = new MockInvoice(account.getId(), clock.getUTCToday(), targetDate, currency);
 
@@ -85,7 +88,7 @@ public class TestHelper {
             }
         }
 
-        Mockito.when(invoicePaymentApi.getInvoice(invoice.getId())).thenReturn(invoice);
+        Mockito.when(invoicePaymentApi.getInvoice(Mockito.eq(invoice.getId()), Mockito.<TenantContext>any())).thenReturn(invoice);
         final InvoiceCreationEvent event = new MockInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
                                                                         invoice.getBalance(), invoice.getCurrency(),
                                                                         invoice.getInvoiceDate(),
@@ -111,8 +114,8 @@ public class TestHelper {
         Mockito.when(account.isMigrated()).thenReturn(false);
         Mockito.when(account.isNotifiedForInvoices()).thenReturn(false);
 
-        Mockito.when(accountUserApi.getAccountById(Mockito.<UUID>any())).thenReturn(account);
-        Mockito.when(accountUserApi.getAccountByKey(Mockito.anyString())).thenReturn(account);
+        Mockito.when(accountUserApi.getAccountById(Mockito.<UUID>any(), Mockito.<TenantContext>any())).thenReturn(account);
+        Mockito.when(accountUserApi.getAccountByKey(Mockito.anyString(), Mockito.<TenantContext>any())).thenReturn(account);
 
         if (addPaymentMethod) {
             final PaymentMethodPlugin pm = new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), true, null);

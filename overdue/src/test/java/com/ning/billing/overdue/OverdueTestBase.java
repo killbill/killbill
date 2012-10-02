@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.mockito.Mockito;
@@ -31,7 +30,6 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Guice;
 
-import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
@@ -59,12 +57,15 @@ import com.ning.billing.overdue.glue.DefaultOverdueModule;
 import com.ning.billing.overdue.service.DefaultOverdueService;
 import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
 import com.ning.billing.util.bus.BusService;
+import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.email.EmailModule;
 import com.ning.billing.util.email.templates.TemplateModule;
 import com.ning.billing.util.glue.CallContextModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
+
+import com.google.inject.Inject;
 
 @Guice(modules = {DefaultOverdueModule.class, OverdueListenerTesterModule.class, MockClockModule.class, ApplicatorMockJunctionModule.class,
                   CallContextModule.class, CatalogModule.class, MockInvoiceModule.class, MockPaymentModule.class, NotificationQueueModule.class,
@@ -190,7 +191,7 @@ public abstract class OverdueTestBase extends OverdueTestSuiteWithEmbeddedDB {
         account = Mockito.mock(Account.class);
         Mockito.when(account.getId()).thenReturn(accountId);
         Mockito.when(account.getTimeZone()).thenReturn(DateTimeZone.UTC);
-        Mockito.when(accountUserApi.getAccountById(account.getId())).thenReturn(account);
+        Mockito.when(accountUserApi.getAccountById(Mockito.eq(account.getId()), Mockito.<TenantContext>any())).thenReturn(account);
 
         Mockito.when(bundle.getAccountId()).thenReturn(accountId);
 
@@ -208,13 +209,13 @@ public abstract class OverdueTestBase extends OverdueTestSuiteWithEmbeddedDB {
 
         final List<Invoice> invoices = new ArrayList<Invoice>();
         invoices.add(invoice);
-        Mockito.when(invoiceApi.getUnpaidInvoicesByAccountId(Mockito.<UUID>any(), Mockito.<LocalDate>any())).thenReturn(invoices);
+        Mockito.when(invoiceApi.getUnpaidInvoicesByAccountId(Mockito.<UUID>any(), Mockito.<LocalDate>any(), Mockito.<TenantContext>any())).thenReturn(invoices);
 
         final Subscription base = Mockito.mock(Subscription.class);
         Mockito.when(base.getCurrentPlan()).thenReturn(MockPlan.createBicycleNoTrialEvergreen1USD());
         Mockito.when(base.getCurrentPriceList()).thenReturn(new MockPriceList());
         Mockito.when(base.getCurrentPhase()).thenReturn(MockPlan.createBicycleNoTrialEvergreen1USD().getFinalPhase());
-        Mockito.when(entitlementApi.getBaseSubscription(Mockito.<UUID>any())).thenReturn(base);
+        Mockito.when(entitlementApi.getBaseSubscription(Mockito.<UUID>any(), Mockito.<TenantContext>any())).thenReturn(base);
 
         return bundle;
     }

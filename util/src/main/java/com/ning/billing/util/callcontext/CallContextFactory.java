@@ -18,17 +18,20 @@ package com.ning.billing.util.callcontext;
 
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
 
 public interface CallContextFactory {
-    CallContext createCallContext(String userName, CallOrigin callOrigin, UserType userType, UUID userToken);
 
-    CallContext createCallContext(String userName, CallOrigin callOrigin, UserType userType,
+    TenantContext createTenantContext(@Nullable UUID tenantId);
+
+    CallContext createCallContext(@Nullable UUID tenantId, String userName, CallOrigin callOrigin, UserType userType, UUID userToken);
+
+    CallContext createCallContext(@Nullable UUID tenantId, String userName, CallOrigin callOrigin, UserType userType,
                                   String reasonCode, String comment, UUID userToken);
 
-    CallContext createCallContext(String userName, CallOrigin callOrigin, UserType userType);
+    CallContext createCallContext(@Nullable UUID tenantId, String userName, CallOrigin callOrigin, UserType userType);
 
-    CallContext createMigrationCallContext(String userName, CallOrigin callOrigin, UserType userType, DateTime createdDate, DateTime updatedDate);
-
-    CallContext toMigrationCallContext(CallContext callContext, DateTime createdDate, DateTime updatedDate);
+    CallContext toMigrationCallContext(@Nullable CallContext callContext, DateTime createdDate, DateTime updatedDate);
 }

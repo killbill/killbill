@@ -45,6 +45,8 @@ import com.ning.billing.invoice.template.HtmlInvoiceGenerator;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
+import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.Tag;
@@ -58,57 +60,61 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     private final AccountUserApi accountUserApi;
     private final TagUserApi tagUserApi;
     private final HtmlInvoiceGenerator generator;
+    private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
     public DefaultInvoiceUserApi(final InvoiceDao dao, final InvoiceDispatcher dispatcher, final AccountUserApi accountUserApi,
-                                 final TagUserApi tagUserApi, final HtmlInvoiceGenerator generator) {
+                                 final TagUserApi tagUserApi, final HtmlInvoiceGenerator generator, final InternalCallContextFactory internalCallContextFactory) {
         this.dao = dao;
         this.dispatcher = dispatcher;
         this.accountUserApi = accountUserApi;
         this.tagUserApi = tagUserApi;
         this.generator = generator;
+        this.internalCallContextFactory = internalCallContextFactory;
     }
 
     @Override
-    public List<Invoice> getInvoicesByAccount(final UUID accountId) {
-        return dao.getInvoicesByAccount(accountId);
+    public List<Invoice> getInvoicesByAccount(final UUID accountId, final TenantContext context) {
+        return dao.getInvoicesByAccount(accountId, internalCallContextFactory.createInternalTenantContext(accountId, context));
     }
 
     @Override
-    public List<Invoice> getInvoicesByAccount(final UUID accountId, final LocalDate fromDate) {
-        return dao.getInvoicesByAccount(accountId, fromDate);
+    public List<Invoice> getInvoicesByAccount(final UUID accountId, final LocalDate fromDate, final TenantContext context) {
+        return dao.getInvoicesByAccount(accountId, fromDate, internalCallContextFactory.createInternalTenantContext(accountId, context));
     }
 
     @Override
-    public void notifyOfPayment(final InvoicePayment invoicePayment, final CallContext context) {
-        dao.notifyOfPayment(invoicePayment, context);
+    public void notifyOfPayment(final InvoicePayment invoicePayment, final CallContext context) throws InvoiceApiException {
+        // Retrieve the account id for the internal call context
+        final UUID accountId = dao.getAccountIdFromInvoicePaymentId(invoicePayment.getId(), internalCallContextFactory.createInternalCallContext(context));
+        dao.notifyOfPayment(invoicePayment, internalCallContextFactory.createInternalCallContext(accountId, context));
     }
 
     @Override
-    public BigDecimal getAccountBalance(final UUID accountId) {
-        final BigDecimal result = dao.getAccountBalance(accountId);
+    public BigDecimal getAccountBalance(final UUID accountId, final TenantContext context) {
+        final BigDecimal result = dao.getAccountBalance(accountId, internalCallContextFactory.createInternalTenantContext(accountId, context));
         return result == null ? BigDecimal.ZERO : result;
     }
 
     @Override
-    public BigDecimal getAccountCBA(final UUID accountId) {
-        final BigDecimal result = dao.getAccountCBA(accountId);
+    public BigDecimal getAccountCBA(final UUID accountId, final TenantContext context) {
+        final BigDecimal result = dao.getAccountCBA(accountId, internalCallContextFactory.createInternalTenantContext(accountId, context));
         return result == null ? BigDecimal.ZERO : result;
     }
 
     @Override
-    public Invoice getInvoice(final UUID invoiceId) throws InvoiceApiException {
-        return dao.getById(invoiceId);
+    public Invoice getInvoice(final UUID invoiceId, final TenantContext context) throws InvoiceApiException {
+        return dao.getById(invoiceId, internalCallContextFactory.createInternalTenantContext(context));
     }
 
     @Override
-    public Invoice getInvoiceByNumber(final Integer number) throws InvoiceApiException {
-        return dao.getByNumber(number);
+    public Invoice getInvoiceByNumber(final Integer number, final TenantContext context) throws InvoiceApiException {
+        return dao.getByNumber(number, internalCallContextFactory.createInternalTenantContext(context));
     }
 
     @Override
-    public List<Invoice> getUnpaidInvoicesByAccountId(final UUID accountId, final LocalDate upToDate) {
-        return dao.getUnpaidInvoicesByAccountId(accountId, upToDate);
+    public List<Invoice> getUnpaidInvoicesByAccountId(final UUID accountId, final LocalDate upToDate, final TenantContext context) {
+        return dao.getUnpaidInvoicesByAccountId(accountId, upToDate, internalCallContextFactory.createInternalTenantContext(accountId, context));
     }
 
     @Override
@@ -116,7 +122,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                                             final CallContext context) throws InvoiceApiException {
         final Account account;
         try {
-            account = accountUserApi.getAccountById(accountId);
+            account = accountUserApi.getAccountById(accountId, context);
         } catch (AccountApiException e) {
             throw new InvoiceApiException(e, ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID, e.toString());
         }
@@ -131,18 +137,22 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
 
     @Override
-    public void tagInvoiceAsWrittenOff(final UUID invoiceId, final CallContext context) throws TagApiException {
-        dao.setWrittenOff(invoiceId, context);
+    public void tagInvoiceAsWrittenOff(final UUID invoiceId, final CallContext context) throws TagApiException, InvoiceApiException {
+        // Retrieve the invoice for the internal call context
+        final Invoice invoice = dao.getById(invoiceId, internalCallContextFactory.createInternalCallContext(context));
+        dao.setWrittenOff(invoiceId, internalCallContextFactory.createInternalCallContext(invoice.getAccountId(), context));
     }
 
     @Override
-    public void tagInvoiceAsNotWrittenOff(final UUID invoiceId, final CallContext context) throws TagApiException {
-        dao.removeWrittenOff(invoiceId, context);
+    public void tagInvoiceAsNotWrittenOff(final UUID invoiceId, final CallContext context) throws TagApiException, InvoiceApiException {
+        // Retrieve the invoice for the internal call context
+        final Invoice invoice = dao.getById(invoiceId, internalCallContextFactory.createInternalCallContext(context));
+        dao.removeWrittenOff(invoiceId, internalCallContextFactory.createInternalCallContext(invoice.getAccountId(), context));
     }
 
     @Override
-    public InvoiceItem getExternalChargeById(final UUID externalChargeId) throws InvoiceApiException {
-        final InvoiceItem externalChargeItem = dao.getExternalChargeById(externalChargeId);
+    public InvoiceItem getExternalChargeById(final UUID externalChargeId, final TenantContext context) throws InvoiceApiException {
+        final InvoiceItem externalChargeItem = dao.getExternalChargeById(externalChargeId, internalCallContextFactory.createInternalTenantContext(context));
         if (externalChargeItem == null) {
             throw new InvoiceApiException(ErrorCode.INVOICE_NO_SUCH_EXTERNAL_CHARGE, externalChargeId);
         }
@@ -178,12 +188,12 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
             throw new InvoiceApiException(ErrorCode.EXTERNAL_CHARGE_AMOUNT_INVALID, amount);
         }
 
-        return dao.insertExternalCharge(accountId, invoiceId, bundleId, description, amount, effectiveDate, currency, context);
+        return dao.insertExternalCharge(accountId, invoiceId, bundleId, description, amount, effectiveDate, currency, internalCallContextFactory.createInternalCallContext(accountId, context));
     }
 
     @Override
-    public InvoiceItem getCreditById(final UUID creditId) throws InvoiceApiException {
-        final InvoiceItem creditItem = dao.getCreditById(creditId);
+    public InvoiceItem getCreditById(final UUID creditId, final TenantContext context) throws InvoiceApiException {
+        final InvoiceItem creditItem = dao.getCreditById(creditId, internalCallContextFactory.createInternalTenantContext(context));
         if (creditItem == null) {
             throw new InvoiceApiException(ErrorCode.INVOICE_NO_SUCH_CREDIT, creditId);
         }
@@ -205,7 +215,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
             throw new InvoiceApiException(ErrorCode.CREDIT_AMOUNT_INVALID, amount);
         }
 
-        return dao.insertCredit(accountId, invoiceId, amount, effectiveDate, currency, context);
+        return dao.insertCredit(accountId, invoiceId, amount, effectiveDate, currency, internalCallContextFactory.createInternalCallContext(accountId, context));
     }
 
     @Override
@@ -222,26 +232,26 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
             throw new InvoiceApiException(ErrorCode.INVOICE_ITEM_ADJUSTMENT_AMOUNT_INVALID, amount);
         }
 
-        return dao.insertInvoiceItemAdjustment(accountId, invoiceId, invoiceItemId, effectiveDate, amount, currency, context);
+        return dao.insertInvoiceItemAdjustment(accountId, invoiceId, invoiceItemId, effectiveDate, amount, currency, internalCallContextFactory.createInternalCallContext(accountId, context));
     }
 
     @Override
     public void deleteCBA(final UUID accountId, final UUID invoiceId, final UUID invoiceItemId, final CallContext context) throws InvoiceApiException {
-        dao.deleteCBA(accountId, invoiceId, invoiceItemId, context);
+        dao.deleteCBA(accountId, invoiceId, invoiceItemId, internalCallContextFactory.createInternalCallContext(accountId, context));
     }
 
     @Override
-    public String getInvoiceAsHTML(final UUID invoiceId) throws AccountApiException, IOException, InvoiceApiException {
-        final Invoice invoice = getInvoice(invoiceId);
+    public String getInvoiceAsHTML(final UUID invoiceId, final TenantContext context) throws AccountApiException, IOException, InvoiceApiException {
+        final Invoice invoice = getInvoice(invoiceId, context);
         if (invoice == null) {
             throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND, invoiceId);
         }
 
-        final Account account = accountUserApi.getAccountById(invoice.getAccountId());
+        final Account account = accountUserApi.getAccountById(invoice.getAccountId(), context);
 
         // Check if this account has the MANUAL_PAY system tag
         boolean manualPay = false;
-        final Map<String, Tag> accountTags = tagUserApi.getTags(account.getId(), ObjectType.ACCOUNT);
+        final Map<String, Tag> accountTags = tagUserApi.getTags(account.getId(), ObjectType.ACCOUNT, context);
         for (final Tag tag : accountTags.values()) {
             if (ControlTagType.MANUAL_PAY.getId().equals(tag.getTagDefinitionId())) {
                 manualPay = true;

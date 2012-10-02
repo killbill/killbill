@@ -73,7 +73,7 @@ public class TestRepairIntegration extends TestIntegrationBase {
 
         final Account account = createAccountWithPaymentMethod(getAccountData(25));
 
-        final SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever", context);
+        final SubscriptionBundle bundle = entitlementUserApi.createBundleForAccount(account.getId(), "whatever", callContext);
 
         final String productName = "Shotgun";
         final BillingPeriod term = BillingPeriod.MONTHLY;
@@ -82,7 +82,7 @@ public class TestRepairIntegration extends TestIntegrationBase {
         busHandler.pushExpectedEvent(NextEvent.CREATE);
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
         final SubscriptionData baseSubscription = subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(),
-                                                                                                                   new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, context));
+                                                                                                                   new PlanPhaseSpecifier(productName, ProductCategory.BASE, term, planSetName, null), null, callContext));
         assertNotNull(baseSubscription);
         assertTrue(busHandler.isCompleted(DELAY));
 
@@ -94,14 +94,14 @@ public class TestRepairIntegration extends TestIntegrationBase {
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
         busHandler.pushExpectedEvent(NextEvent.PAYMENT);
         final SubscriptionData aoSubscription = subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(),
-                                                                                                                 new PlanPhaseSpecifier("Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null), null, context));
+                                                                                                                 new PlanPhaseSpecifier("Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null), null, callContext));
         assertTrue(busHandler.isCompleted(DELAY));
 
         busHandler.pushExpectedEvent(NextEvent.CREATE);
         busHandler.pushExpectedEvent(NextEvent.INVOICE);
         busHandler.pushExpectedEvent(NextEvent.PAYMENT);
         final SubscriptionData aoSubscription2 = subscriptionDataFromSubscription(entitlementUserApi.createSubscription(bundle.getId(),
-                                                                                                                  new PlanPhaseSpecifier("Laser-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null), null, context));
+                                                                                                                  new PlanPhaseSpecifier("Laser-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null), null, callContext));
         assertTrue(busHandler.isCompleted(DELAY));
 
 
@@ -121,7 +121,7 @@ public class TestRepairIntegration extends TestIntegrationBase {
         }
         final boolean ifRepair = false;
         if (ifRepair) {
-            BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId());
+            BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId(), callContext);
             sortEventsOnBundle(bundleRepair);
 
             // Quick check
@@ -150,21 +150,21 @@ public class TestRepairIntegration extends TestIntegrationBase {
             busHandler.pushExpectedEvent(NextEvent.INVOICE);
             busHandler.pushExpectedEvent(NextEvent.PAYMENT);
             busHandler.pushExpectedEvent(NextEvent.REPAIR_BUNDLE);
-            repairApi.repairBundle(bundleRepair, false, context);
+            repairApi.repairBundle(bundleRepair, false, callContext);
             assertTrue(busHandler.isCompleted(DELAY));
 
-            final SubscriptionData newAoSubscription = subscriptionDataFromSubscription(entitlementUserApi.getSubscriptionFromId(aoSubscription.getId()));
+            final SubscriptionData newAoSubscription = subscriptionDataFromSubscription(entitlementUserApi.getSubscriptionFromId(aoSubscription.getId(), callContext));
             assertEquals(newAoSubscription.getState(), SubscriptionState.CANCELLED);
             assertEquals(newAoSubscription.getAllTransitions().size(), 2);
             assertEquals(newAoSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
 
-            final SubscriptionData newAoSubscription2 = subscriptionDataFromSubscription(entitlementUserApi.getSubscriptionFromId(aoSubscription2.getId()));
+            final SubscriptionData newAoSubscription2 = subscriptionDataFromSubscription(entitlementUserApi.getSubscriptionFromId(aoSubscription2.getId(), callContext));
             assertEquals(newAoSubscription2.getState(), SubscriptionState.ACTIVE);
             assertEquals(newAoSubscription2.getAllTransitions().size(), 2);
             assertEquals(newAoSubscription2.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
 
 
-            final SubscriptionData newBaseSubscription = subscriptionDataFromSubscription(entitlementUserApi.getSubscriptionFromId(baseSubscription.getId()));
+            final SubscriptionData newBaseSubscription = subscriptionDataFromSubscription(entitlementUserApi.getSubscriptionFromId(baseSubscription.getId(), callContext));
             assertEquals(newBaseSubscription.getState(), SubscriptionState.ACTIVE);
             assertEquals(newBaseSubscription.getAllTransitions().size(), 3);
             assertEquals(newBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);

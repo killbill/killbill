@@ -23,6 +23,7 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
+import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.queue.QueueLifecycle;
 
 public interface NotificationQueue extends QueueLifecycle {
@@ -33,8 +34,11 @@ public interface NotificationQueue extends QueueLifecycle {
      * @param futureNotificationTime the time at which the notification is ready
      * @param notificationKey        the key for that notification
      */
-    public void recordFutureNotification(final DateTime futureNotificationTime, final UUID accountId, final NotificationKey notificationKey)
-        throws IOException;
+    public void recordFutureNotification(final DateTime futureNotificationTime,
+                                         final UUID accountId,
+                                         final NotificationKey notificationKey,
+                                         final InternalCallContext context)
+            throws IOException;
 
     /**
      * Record from within a transaction the need to be called back when the notification is ready
@@ -46,23 +50,22 @@ public interface NotificationQueue extends QueueLifecycle {
     public void recordFutureNotificationFromTransaction(final Transmogrifier transactionalDao,
                                                         final DateTime futureNotificationTime,
                                                         final UUID accountId,
-                                                        final NotificationKey notificationKey)
-        throws IOException;
-
+                                                        final NotificationKey notificationKey,
+                                                        final InternalCallContext context)
+            throws IOException;
 
     /**
      * Remove all notifications associated with this key
-     *
-     * @param key
      */
-    public void removeNotificationsByKey(final NotificationKey notificationKey);
+    public void removeNotificationsByKey(final NotificationKey notificationKey,
+                                         final InternalCallContext context);
 
+    public List<Notification> getNotificationForAccountAndDate(final UUID accountId,
+                                                               final DateTime effectiveDate,
+                                                               final InternalCallContext context);
 
-
-    public List<Notification> getNotificationForAccountAndDate(final UUID accountId, final DateTime effectiveDate);
-
-    public void removeNotification(final UUID notificationId);
-
+    public void removeNotification(final UUID notificationId,
+                                   final InternalCallContext context);
 
     /**
      * This is only valid when the queue has been configured with isNotificationProcessingOff is true
@@ -86,6 +89,4 @@ public interface NotificationQueue extends QueueLifecycle {
      * @return the queue name associated
      */
     public String getQueueName();
-
-
 }

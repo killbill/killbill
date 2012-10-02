@@ -6,6 +6,25 @@
         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
         version="2.5">
     <display-name>irs</display-name>
+    <listener>
+        <!-- Initialize Shiro WebEnvironment and put it into the ServletContext -->
+        <listener-class>org.apache.shiro.web.env.EnvironmentLoaderListener</listener-class>
+    </listener>
+    <filter>
+        <!-- Filter all requests through Shiro -->
+        <filter-name>ShiroFilter</filter-name>
+        <filter-class>org.apache.shiro.web.servlet.ShiroFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <!-- The Shitor filter-mapping should come first -->
+        <filter-name>ShiroFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+        <dispatcher>REQUEST</dispatcher>
+        <dispatcher>FORWARD</dispatcher>
+        <dispatcher>INCLUDE</dispatcher>
+        <dispatcher>ERROR</dispatcher>
+    </filter-mapping>
+
     <filter>
         <!-- Guice emulates Servlet API with DI -->
         <filter-name>guiceFilter</filter-name>
@@ -23,6 +42,7 @@
         <!-- Context listener: called at startup time and creates the injector -->
         <listener-class>com.ning.billing.server.listeners.KillbillGuiceListener</listener-class>
     </listener>
+
     <!-- ServletHandler#handle requires a backend servlet, it won't be used though (handled by Guice) -->
     <servlet>
         <servlet-name>log-invalid-resources</servlet-name>

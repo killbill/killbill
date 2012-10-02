@@ -16,11 +16,12 @@
 
 package com.ning.billing.util.glue;
 
-import com.google.inject.AbstractModule;
 import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.customfield.api.DefaultCustomFieldUserApi;
 import com.ning.billing.util.customfield.dao.AuditedCustomFieldDao;
 import com.ning.billing.util.customfield.dao.CustomFieldDao;
+
+import com.google.inject.AbstractModule;
 
 public class CustomFieldModule extends AbstractModule {
     @Override

@@ -38,8 +38,9 @@ import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallContextBinder;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 import com.ning.billing.util.dao.AuditSqlDao;
 import com.ning.billing.util.dao.BinderBase;
 import com.ning.billing.util.dao.MapperBase;
@@ -51,22 +52,29 @@ public interface BundleSqlDao extends Transactional<BundleSqlDao>, EntitySqlDao<
                                       AuditSqlDao, CloseMe, Transmogrifier {
     @SqlUpdate
     public void insertBundle(@Bind(binder = SubscriptionBundleBinder.class) SubscriptionBundleData bundle,
-                             @CallContextBinder final CallContext context);
+                             @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
-    public void updateBundleLastSysTime(@Bind("id") String id, @Bind("lastSysUpdateDate") Date lastSysUpdate);
+    public void updateBundleLastSysTime(@Bind("id") String id,
+                                        @Bind("lastSysUpdateDate") Date lastSysUpdate,
+                                        @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlQuery
-    public SubscriptionBundle getBundleFromId(@Bind("id") String id);
+    public SubscriptionBundle getBundleFromId(@Bind("id") String id,
+                                              @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
-    public SubscriptionBundle getBundleFromAccountAndKey(@Bind("accountId") String accountId, @Bind("externalKey") String externalKey);
+    public SubscriptionBundle getBundleFromAccountAndKey(@Bind("accountId") String accountId,
+                                                         @Bind("externalKey") String externalKey,
+                                                         @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
-    public List<SubscriptionBundle> getBundleFromAccount(@Bind("accountId") String accountId);
+    public List<SubscriptionBundle> getBundleFromAccount(@Bind("accountId") String accountId,
+                                                         @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
-    public List<SubscriptionBundle> getBundlesForKey(@Bind("externalKey") String externalKey);
+    public List<SubscriptionBundle> getBundlesForKey(@Bind("externalKey") String externalKey,
+                                                     @InternalTenantContextBinder final InternalTenantContext context);
 
     public static class SubscriptionBundleBinder extends BinderBase implements Binder<Bind, SubscriptionBundleData> {
         @Override

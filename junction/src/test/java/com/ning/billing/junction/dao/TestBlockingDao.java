@@ -17,7 +17,6 @@
 package com.ning.billing.junction.dao;
 
 import java.util.List;
-import java.util.SortedSet;
 import java.util.UUID;
 
 import org.mockito.Mockito;
@@ -25,7 +24,6 @@ import org.testng.Assert;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
-import com.google.inject.Inject;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.junction.JunctionTestSuiteWithEmbeddedDB;
 import com.ning.billing.junction.MockModule;
@@ -33,12 +31,20 @@ import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.junction.api.DefaultBlockingState;
 import com.ning.billing.mock.glue.MockEntitlementModule;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.ClockMock;
+
+import com.google.inject.Inject;
 
 @Guice(modules = {MockModule.class, MockEntitlementModule.class})
 public class TestBlockingDao extends JunctionTestSuiteWithEmbeddedDB {
+
     @Inject
     private BlockingStateDao dao;
+
+    private final InternalTenantContext tenantContext = Mockito.mock(InternalTenantContext.class);
+    private final InternalCallContext context = Mockito.mock(InternalCallContext.class);
 
     @Test(groups = "slow")
     public void testDao() {
@@ -52,18 +58,18 @@ public class TestBlockingDao extends JunctionTestSuiteWithEmbeddedDB {
         final boolean blockBilling = false;
 
         final BlockingState state1 = new DefaultBlockingState(uuid, overdueStateName, Blockable.Type.SUBSCRIPTION_BUNDLE, service, blockChange, blockEntitlement, blockBilling);
-        dao.setBlockingState(state1, clock);
+        dao.setBlockingState(state1, clock, context);
         clock.setDeltaFromReality(1000 * 3600 * 24);
 
         final String overdueStateName2 = "NoReallyThisCantGoOn";
         final BlockingState state2 = new DefaultBlockingState(uuid, overdueStateName2, Blockable.Type.SUBSCRIPTION_BUNDLE, service, blockChange, blockEntitlement, blockBilling);
-        dao.setBlockingState(state2, clock);
+        dao.setBlockingState(state2, clock, context);
 
         final SubscriptionBundle bundle = Mockito.mock(SubscriptionBundle.class);
         Mockito.when(bundle.getId()).thenReturn(uuid);
 
-        Assert.assertEquals(dao.getBlockingStateFor(bundle).getStateName(), state2.getStateName());
-        Assert.assertEquals(dao.getBlockingStateFor(bundle.getId()).getStateName(), overdueStateName2);
+        Assert.assertEquals(dao.getBlockingStateFor(bundle, tenantContext).getStateName(), state2.getStateName());
+        Assert.assertEquals(dao.getBlockingStateFor(bundle.getId(), tenantContext).getStateName(), overdueStateName2);
     }
 
     @Test(groups = "slow")
@@ -78,18 +84,18 @@ public class TestBlockingDao extends JunctionTestSuiteWithEmbeddedDB {
         final boolean blockBilling = false;
 
         final BlockingState state1 = new DefaultBlockingState(uuid, overdueStateName, Blockable.Type.SUBSCRIPTION_BUNDLE, service, blockChange, blockEntitlement, blockBilling);
-        dao.setBlockingState(state1, clock);
+        dao.setBlockingState(state1, clock, context);
         clock.setDeltaFromReality(1000 * 3600 * 24);
 
         final String overdueStateName2 = "NoReallyThisCantGoOn";
         final BlockingState state2 = new DefaultBlockingState(uuid, overdueStateName2, Blockable.Type.SUBSCRIPTION_BUNDLE, service, blockChange, blockEntitlement, blockBilling);
-        dao.setBlockingState(state2, clock);
+        dao.setBlockingState(state2, clock, context);
 
         final SubscriptionBundle bundle = Mockito.mock(SubscriptionBundle.class);
         Mockito.when(bundle.getId()).thenReturn(uuid);
 
-        final List<BlockingState> history1 = dao.getBlockingHistoryFor(bundle);
-        final List<BlockingState> history2 = dao.getBlockingHistoryFor(bundle.getId());
+        final List<BlockingState> history1 = dao.getBlockingHistoryFor(bundle, tenantContext);
+        final List<BlockingState> history2 = dao.getBlockingHistoryFor(bundle.getId(), tenantContext);
 
         Assert.assertEquals(history1.size(), 2);
         Assert.assertEquals(history1.get(0).getStateName(), overdueStateName);

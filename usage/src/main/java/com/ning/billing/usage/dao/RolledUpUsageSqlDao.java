@@ -24,11 +24,17 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContextBinder;
+
 @ExternalizedSqlViaStringTemplate3()
 public interface RolledUpUsageSqlDao extends Transactional<RolledUpUsageSqlDao>, Transmogrifier {
 
     @SqlUpdate
-    public void record(@Bind("sourceId") final int sourceId, @Bind("metricId") final int metricId,
-                       @Bind("startTime") final Date startTime, @Bind("endTime") final Date endTime,
-                       @Bind("value") final long value);
+    public void record(@Bind("sourceId") final int sourceId,
+                       @Bind("metricId") final int metricId,
+                       @Bind("startTime") final Date startTime,
+                       @Bind("endTime") final Date endTime,
+                       @Bind("value") final long value,
+                       @InternalTenantContextBinder final InternalCallContext context);
 }

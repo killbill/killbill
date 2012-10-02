@@ -51,24 +51,24 @@ public class TestBusinessInvoiceItemSqlDao extends AnalyticsTestSuiteWithEmbedde
         final BusinessInvoiceItem invoiceItem = createInvoiceItem(invoiceId, externalKey);
 
         // Verify initial state
-        Assert.assertNull(invoiceItemSqlDao.getInvoiceItem(invoiceItem.getItemId().toString()));
-        Assert.assertEquals(invoiceItemSqlDao.deleteInvoiceItem(invoiceItem.getItemId().toString()), 0);
+        Assert.assertNull(invoiceItemSqlDao.getInvoiceItem(invoiceItem.getItemId().toString(), internalCallContext));
+        Assert.assertEquals(invoiceItemSqlDao.deleteInvoiceItem(invoiceItem.getItemId().toString(), internalCallContext), 0);
 
         // Add the invoice item
-        Assert.assertEquals(invoiceItemSqlDao.createInvoiceItem(invoiceItem), 1);
+        Assert.assertEquals(invoiceItemSqlDao.createInvoiceItem(invoiceItem, internalCallContext), 1);
 
         // Retrieve it
-        Assert.assertEquals(invoiceItemSqlDao.getInvoiceItem(invoiceItem.getItemId().toString()), invoiceItem);
-        Assert.assertEquals(invoiceItemSqlDao.getInvoiceItemsForBundleByKey(invoiceItem.getExternalKey()).size(), 1);
-        Assert.assertEquals(invoiceItemSqlDao.getInvoiceItemsForBundleByKey(invoiceItem.getExternalKey()).get(0), invoiceItem);
-        Assert.assertEquals(invoiceItemSqlDao.getInvoiceItemsForInvoice(invoiceItem.getInvoiceId().toString()).size(), 1);
-        Assert.assertEquals(invoiceItemSqlDao.getInvoiceItemsForInvoice(invoiceItem.getInvoiceId().toString()).get(0), invoiceItem);
+        Assert.assertEquals(invoiceItemSqlDao.getInvoiceItem(invoiceItem.getItemId().toString(), internalCallContext), invoiceItem);
+        Assert.assertEquals(invoiceItemSqlDao.getInvoiceItemsForBundleByKey(invoiceItem.getExternalKey(), internalCallContext).size(), 1);
+        Assert.assertEquals(invoiceItemSqlDao.getInvoiceItemsForBundleByKey(invoiceItem.getExternalKey(), internalCallContext).get(0), invoiceItem);
+        Assert.assertEquals(invoiceItemSqlDao.getInvoiceItemsForInvoice(invoiceItem.getInvoiceId().toString(), internalCallContext).size(), 1);
+        Assert.assertEquals(invoiceItemSqlDao.getInvoiceItemsForInvoice(invoiceItem.getInvoiceId().toString(), internalCallContext).get(0), invoiceItem);
 
         // Delete it
-        Assert.assertEquals(invoiceItemSqlDao.deleteInvoiceItem(invoiceItem.getItemId().toString()), 1);
-        Assert.assertNull(invoiceItemSqlDao.getInvoiceItem(invoiceItem.getItemId().toString()));
-        Assert.assertEquals(invoiceItemSqlDao.getInvoiceItemsForBundleByKey(invoiceItem.getExternalKey()).size(), 0);
-        Assert.assertEquals(invoiceItemSqlDao.getInvoiceItemsForInvoice(invoiceItem.getInvoiceId().toString()).size(), 0);
+        Assert.assertEquals(invoiceItemSqlDao.deleteInvoiceItem(invoiceItem.getItemId().toString(), internalCallContext), 1);
+        Assert.assertNull(invoiceItemSqlDao.getInvoiceItem(invoiceItem.getItemId().toString(), internalCallContext));
+        Assert.assertEquals(invoiceItemSqlDao.getInvoiceItemsForBundleByKey(invoiceItem.getExternalKey(), internalCallContext).size(), 0);
+        Assert.assertEquals(invoiceItemSqlDao.getInvoiceItemsForInvoice(invoiceItem.getInvoiceId().toString(), internalCallContext).size(), 0);
     }
 
     @Test(groups = "slow")
@@ -81,28 +81,28 @@ public class TestBusinessInvoiceItemSqlDao extends AnalyticsTestSuiteWithEmbedde
         final BusinessInvoiceItem invoiceItem2 = createInvoiceItem(invoiceId2, externalKey2);
 
         // Create both invoice items
-        Assert.assertEquals(invoiceItemSqlDao.createInvoiceItem(invoiceItem1), 1);
-        Assert.assertEquals(invoiceItemSqlDao.createInvoiceItem(invoiceItem2), 1);
+        Assert.assertEquals(invoiceItemSqlDao.createInvoiceItem(invoiceItem1, internalCallContext), 1);
+        Assert.assertEquals(invoiceItemSqlDao.createInvoiceItem(invoiceItem2, internalCallContext), 1);
 
-        Assert.assertEquals(invoiceItemSqlDao.getInvoiceItemsForBundleByKey(externalKey1).size(), 1);
-        Assert.assertEquals(invoiceItemSqlDao.getInvoiceItemsForBundleByKey(externalKey2).size(), 1);
-        Assert.assertEquals(invoiceItemSqlDao.getInvoiceItemsForInvoice(invoiceId1.toString()).size(), 1);
-        Assert.assertEquals(invoiceItemSqlDao.getInvoiceItemsForInvoice(invoiceId2.toString()).size(), 1);
+        Assert.assertEquals(invoiceItemSqlDao.getInvoiceItemsForBundleByKey(externalKey1, internalCallContext).size(), 1);
+        Assert.assertEquals(invoiceItemSqlDao.getInvoiceItemsForBundleByKey(externalKey2, internalCallContext).size(), 1);
+        Assert.assertEquals(invoiceItemSqlDao.getInvoiceItemsForInvoice(invoiceId1.toString(), internalCallContext).size(), 1);
+        Assert.assertEquals(invoiceItemSqlDao.getInvoiceItemsForInvoice(invoiceId2.toString(), internalCallContext).size(), 1);
 
         // Remove the first invoice item
-        Assert.assertEquals(invoiceItemSqlDao.deleteInvoiceItem(invoiceItem1.getItemId().toString()), 1);
+        Assert.assertEquals(invoiceItemSqlDao.deleteInvoiceItem(invoiceItem1.getItemId().toString(), internalCallContext), 1);
 
-        Assert.assertEquals(invoiceItemSqlDao.getInvoiceItemsForBundleByKey(externalKey1).size(), 0);
-        Assert.assertEquals(invoiceItemSqlDao.getInvoiceItemsForBundleByKey(externalKey2).size(), 1);
-        Assert.assertEquals(invoiceItemSqlDao.getInvoiceItemsForInvoice(invoiceId1.toString()).size(), 0);
-        Assert.assertEquals(invoiceItemSqlDao.getInvoiceItemsForInvoice(invoiceId2.toString()).size(), 1);
+        Assert.assertEquals(invoiceItemSqlDao.getInvoiceItemsForBundleByKey(externalKey1, internalCallContext).size(), 0);
+        Assert.assertEquals(invoiceItemSqlDao.getInvoiceItemsForBundleByKey(externalKey2, internalCallContext).size(), 1);
+        Assert.assertEquals(invoiceItemSqlDao.getInvoiceItemsForInvoice(invoiceId1.toString(), internalCallContext).size(), 0);
+        Assert.assertEquals(invoiceItemSqlDao.getInvoiceItemsForInvoice(invoiceId2.toString(), internalCallContext).size(), 1);
     }
 
     @Test(groups = "slow")
     public void testHealthCheck() throws Exception {
         // HealthCheck test to make sure MySQL is setup properly
         try {
-            invoiceItemSqlDao.test();
+            invoiceItemSqlDao.test(internalCallContext);
         } catch (Throwable t) {
             Assert.fail(t.toString());
         }

@@ -44,12 +44,12 @@ public class TestBusinessSubscriptionTransitionTagSqlDao extends AnalyticsTestSu
         final String name = UUID.randomUUID().toString().substring(0, 20);
 
         // Verify initial state
-        Assert.assertEquals(subscriptionTransitionTagSqlDao.getTagsForBusinessSubscriptionTransitionByKey(externalKey).size(), 0);
-        Assert.assertEquals(subscriptionTransitionTagSqlDao.removeTag(bundleId.toString(), name), 0);
+        Assert.assertEquals(subscriptionTransitionTagSqlDao.getTagsForBusinessSubscriptionTransitionByKey(externalKey, internalCallContext).size(), 0);
+        Assert.assertEquals(subscriptionTransitionTagSqlDao.removeTag(bundleId.toString(), name, internalCallContext), 0);
 
         // Add an entry
-        Assert.assertEquals(subscriptionTransitionTagSqlDao.addTag(accountKey, bundleId.toString(), externalKey, name), 1);
-        final List<BusinessSubscriptionTransitionTag> tagsForBusinessSubscriptionTransition = subscriptionTransitionTagSqlDao.getTagsForBusinessSubscriptionTransitionByKey(externalKey);
+        Assert.assertEquals(subscriptionTransitionTagSqlDao.addTag(accountKey, bundleId.toString(), externalKey, name, internalCallContext), 1);
+        final List<BusinessSubscriptionTransitionTag> tagsForBusinessSubscriptionTransition = subscriptionTransitionTagSqlDao.getTagsForBusinessSubscriptionTransitionByKey(externalKey, internalCallContext);
         Assert.assertEquals(tagsForBusinessSubscriptionTransition.size(), 1);
 
         // Retrieve it
@@ -59,8 +59,8 @@ public class TestBusinessSubscriptionTransitionTagSqlDao extends AnalyticsTestSu
         Assert.assertEquals(subscriptionTransitionTag.getName(), name);
 
         // Delete it
-        Assert.assertEquals(subscriptionTransitionTagSqlDao.removeTag(bundleId.toString(), name), 1);
-        Assert.assertEquals(subscriptionTransitionTagSqlDao.getTagsForBusinessSubscriptionTransitionByKey(externalKey).size(), 0);
+        Assert.assertEquals(subscriptionTransitionTagSqlDao.removeTag(bundleId.toString(), name, internalCallContext), 1);
+        Assert.assertEquals(subscriptionTransitionTagSqlDao.getTagsForBusinessSubscriptionTransitionByKey(externalKey, internalCallContext).size(), 0);
     }
 
     @Test(groups = "slow")
@@ -74,24 +74,24 @@ public class TestBusinessSubscriptionTransitionTagSqlDao extends AnalyticsTestSu
         final String name2 = UUID.randomUUID().toString().substring(0, 20);
 
         // Add a tag to both transitions
-        Assert.assertEquals(subscriptionTransitionTagSqlDao.addTag(accountKey, bundleId1.toString(), externalKey1, name1), 1);
-        Assert.assertEquals(subscriptionTransitionTagSqlDao.addTag(accountKey, bundleId2.toString(), externalKey2, name2), 1);
+        Assert.assertEquals(subscriptionTransitionTagSqlDao.addTag(accountKey, bundleId1.toString(), externalKey1, name1, internalCallContext), 1);
+        Assert.assertEquals(subscriptionTransitionTagSqlDao.addTag(accountKey, bundleId2.toString(), externalKey2, name2, internalCallContext), 1);
 
-        Assert.assertEquals(subscriptionTransitionTagSqlDao.getTagsForBusinessSubscriptionTransitionByKey(externalKey1).size(), 1);
-        Assert.assertEquals(subscriptionTransitionTagSqlDao.getTagsForBusinessSubscriptionTransitionByKey(externalKey2).size(), 1);
+        Assert.assertEquals(subscriptionTransitionTagSqlDao.getTagsForBusinessSubscriptionTransitionByKey(externalKey1, internalCallContext).size(), 1);
+        Assert.assertEquals(subscriptionTransitionTagSqlDao.getTagsForBusinessSubscriptionTransitionByKey(externalKey2, internalCallContext).size(), 1);
 
         // Remove the tag for the first transition
-        Assert.assertEquals(subscriptionTransitionTagSqlDao.removeTag(bundleId1.toString(), name1), 1);
+        Assert.assertEquals(subscriptionTransitionTagSqlDao.removeTag(bundleId1.toString(), name1, internalCallContext), 1);
 
-        Assert.assertEquals(subscriptionTransitionTagSqlDao.getTagsForBusinessSubscriptionTransitionByKey(externalKey1).size(), 0);
-        Assert.assertEquals(subscriptionTransitionTagSqlDao.getTagsForBusinessSubscriptionTransitionByKey(externalKey2).size(), 1);
+        Assert.assertEquals(subscriptionTransitionTagSqlDao.getTagsForBusinessSubscriptionTransitionByKey(externalKey1, internalCallContext).size(), 0);
+        Assert.assertEquals(subscriptionTransitionTagSqlDao.getTagsForBusinessSubscriptionTransitionByKey(externalKey2, internalCallContext).size(), 1);
     }
 
     @Test(groups = "slow")
     public void testHealthCheck() throws Exception {
         // HealthCheck test to make sure MySQL is setup properly
         try {
-            subscriptionTransitionTagSqlDao.test();
+            subscriptionTransitionTagSqlDao.test(internalCallContext);
         } catch (Throwable t) {
             Assert.fail(t.toString());
         }

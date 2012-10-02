@@ -16,8 +16,9 @@
 
 package com.ning.billing.entitlement.api.user;
 
-import javax.annotation.Nullable;
 import java.util.UUID;
+
+import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 

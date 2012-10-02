@@ -26,7 +26,6 @@ import org.skife.jdbi.v2.TransactionStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
@@ -37,13 +36,17 @@ import com.ning.billing.account.api.user.DefaultAccountCreationEvent;
 import com.ning.billing.util.ChangeType;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
-import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.dao.EntityAudit;
 import com.ning.billing.util.dao.EntityHistory;
 import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.EntityPersistenceException;
 
+import com.google.inject.Inject;
+
 public class AuditedAccountDao implements AccountDao {
+
     private static final Logger log = LoggerFactory.getLogger(AuditedAccountDao.class);
 
     private final AccountSqlDao accountSqlDao;
@@ -56,36 +59,41 @@ public class AuditedAccountDao implements AccountDao {
     }
 
     @Override
-    public Account getAccountByKey(final String key) {
-        return accountSqlDao.getAccountByKey(key);
+    public Account getAccountByKey(final String key, final InternalTenantContext context) {
+        return accountSqlDao.getAccountByKey(key, context);
     }
 
     @Override
-    public UUID getIdFromKey(final String externalKey) throws AccountApiException {
+    public UUID getIdFromKey(final String externalKey, final InternalTenantContext context) throws AccountApiException {
         if (externalKey == null) {
             throw new AccountApiException(ErrorCode.ACCOUNT_CANNOT_MAP_NULL_KEY, "");
         }
-        return accountSqlDao.getIdFromKey(externalKey);
+        return accountSqlDao.getIdFromKey(externalKey, context);
     }
 
     @Override
-    public Account getById(final UUID id) {
-        return accountSqlDao.getById(id.toString());
+    public Account getById(final UUID id, final InternalTenantContext context) {
+        return accountSqlDao.getById(id.toString(), context);
     }
 
     @Override
-    public List<Account> get() {
-        return accountSqlDao.get();
+    public List<Account> get(final InternalTenantContext context) {
+        return accountSqlDao.get(context);
     }
 
     @Override
-    public void create(final Account account, final CallContext context) throws EntityPersistenceException {
+    public Long getRecordId(final UUID id, final InternalTenantContext context) {
+        return accountSqlDao.getRecordId(id.toString(), context);
+    }
+
+    @Override
+    public void create(final Account account, final InternalCallContext context) throws EntityPersistenceException {
         final String key = account.getExternalKey();
         try {
             accountSqlDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
                 @Override
                 public Void inTransaction(final AccountSqlDao transactionalDao, final TransactionStatus status) throws AccountApiException, Bus.EventBusException {
-                    final Account currentAccount = transactionalDao.getAccountByKey(key);
+                    final Account currentAccount = transactionalDao.getAccountByKey(key, context);
                     if (currentAccount != null) {
                         throw new AccountApiException(ErrorCode.ACCOUNT_ALREADY_EXISTS, key);
                     }
@@ -93,12 +101,12 @@ public class AuditedAccountDao implements AccountDao {
                     transactionalDao.create(account, context);
 
                     // Insert history
-                    final Long recordId = accountSqlDao.getRecordId(account.getId().toString());
+                    final Long recordId = accountSqlDao.getRecordId(account.getId().toString(), context);
                     final EntityHistory<Account> history = new EntityHistory<Account>(account.getId(), recordId, account, ChangeType.INSERT);
                     accountSqlDao.insertHistoryFromTransaction(history, context);
 
                     // Insert audit
-                    final Long historyRecordId = accountSqlDao.getHistoryRecordId(recordId);
+                    final Long historyRecordId = accountSqlDao.getHistoryRecordId(recordId, context);
                     final EntityAudit audit = new EntityAudit(TableName.ACCOUNT_HISTORY, historyRecordId, ChangeType.INSERT);
                     accountSqlDao.insertAuditFromTransaction(audit, context);
 
@@ -123,13 +131,13 @@ public class AuditedAccountDao implements AccountDao {
     }
 
     @Override
-    public void update(final Account specifiedAccount, final CallContext context) throws EntityPersistenceException {
+    public void update(final Account specifiedAccount, final InternalCallContext context) throws EntityPersistenceException {
         try {
             accountSqlDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
                 @Override
                 public Void inTransaction(final AccountSqlDao transactional, final TransactionStatus status) throws EntityPersistenceException, Bus.EventBusException {
                     final UUID accountId = specifiedAccount.getId();
-                    final Account currentAccount = transactional.getById(accountId.toString());
+                    final Account currentAccount = transactional.getById(accountId.toString(), context);
                     if (currentAccount == null) {
                         throw new EntityPersistenceException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID, accountId);
                     }
@@ -139,11 +147,11 @@ public class AuditedAccountDao implements AccountDao {
 
                     transactional.update(account, context);
 
-                    final Long recordId = accountSqlDao.getRecordId(accountId.toString());
+                    final Long recordId = accountSqlDao.getRecordId(accountId.toString(), context);
                     final EntityHistory<Account> history = new EntityHistory<Account>(accountId, recordId, account, ChangeType.UPDATE);
                     accountSqlDao.insertHistoryFromTransaction(history, context);
 
-                    final Long historyRecordId = accountSqlDao.getHistoryRecordId(recordId);
+                    final Long historyRecordId = accountSqlDao.getHistoryRecordId(recordId, context);
                     final EntityAudit audit = new EntityAudit(TableName.ACCOUNT_HISTORY, historyRecordId, ChangeType.UPDATE);
                     accountSqlDao.insertAuditFromTransaction(audit, context);
 
@@ -168,31 +176,31 @@ public class AuditedAccountDao implements AccountDao {
     }
 
     @Override
-    public void test() {
-        accountSqlDao.test();
+    public void test(final InternalTenantContext context) {
+        accountSqlDao.test(context);
     }
 
     @Override
-    public void updatePaymentMethod(final UUID accountId, final UUID paymentMethodId, final CallContext context) throws EntityPersistenceException {
+    public void updatePaymentMethod(final UUID accountId, final UUID paymentMethodId, final InternalCallContext context) throws EntityPersistenceException {
         try {
             accountSqlDao.inTransaction(new Transaction<Void, AccountSqlDao>() {
                 @Override
                 public Void inTransaction(final AccountSqlDao transactional, final TransactionStatus status) throws EntityPersistenceException, Bus.EventBusException {
 
-                    final Account currentAccount = transactional.getById(accountId.toString());
+                    final Account currentAccount = transactional.getById(accountId.toString(), context);
                     if (currentAccount == null) {
                         throw new EntityPersistenceException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID, accountId);
                     }
                     final String thePaymentMethodId = paymentMethodId != null ? paymentMethodId.toString() : null;
                     transactional.updatePaymentMethod(accountId.toString(), thePaymentMethodId, context);
 
-                    final Account account = transactional.getById(accountId.toString());
+                    final Account account = transactional.getById(accountId.toString(), context);
 
-                    final Long recordId = accountSqlDao.getRecordId(accountId.toString());
+                    final Long recordId = accountSqlDao.getRecordId(accountId.toString(), context);
                     final EntityHistory<Account> history = new EntityHistory<Account>(accountId, recordId, account, ChangeType.UPDATE);
                     accountSqlDao.insertHistoryFromTransaction(history, context);
 
-                    final Long historyRecordId = accountSqlDao.getHistoryRecordId(recordId);
+                    final Long historyRecordId = accountSqlDao.getHistoryRecordId(recordId, context);
                     final EntityAudit audit = new EntityAudit(TableName.ACCOUNT_HISTORY, historyRecordId, ChangeType.UPDATE);
                     accountSqlDao.insertAuditFromTransaction(audit, context);
 

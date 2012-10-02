@@ -21,9 +21,10 @@ import java.util.UUID;
 
 import com.ning.billing.util.api.AuditLevel;
 import com.ning.billing.util.audit.AuditLog;
+import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.dao.TableName;
 
 public interface AuditDao {
 
-    public List<AuditLog> getAuditLogsForId(final TableName tableName, final UUID objectId, final AuditLevel auditLevel);
+    public List<AuditLog> getAuditLogsForId(TableName tableName, UUID objectId, AuditLevel auditLevel, InternalTenantContext context);
 }

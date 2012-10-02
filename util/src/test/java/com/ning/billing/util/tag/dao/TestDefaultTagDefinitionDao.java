@@ -28,25 +28,21 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
-import com.google.common.eventbus.Subscribe;
-import com.google.inject.Inject;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.BusEvent;
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallOrigin;
-import com.ning.billing.util.callcontext.DefaultCallContextFactory;
-import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.io.IOUtils;
 import com.ning.billing.util.tag.MockTagStoreModuleSql;
 import com.ning.billing.util.tag.TagDefinition;
-import com.ning.billing.util.tag.TestTagStore;
 import com.ning.billing.util.tag.api.TagDefinitionEvent;
+
+import com.google.common.eventbus.Subscribe;
+import com.google.inject.Inject;
 
 @Guice(modules = MockTagStoreModuleSql.class)
 public class TestDefaultTagDefinitionDao extends UtilTestSuiteWithEmbeddedDB {
+
     @Inject
     private MysqlTestingHelper helper;
 
@@ -59,12 +55,10 @@ public class TestDefaultTagDefinitionDao extends UtilTestSuiteWithEmbeddedDB {
     @Inject
     private Bus bus;
 
-    private CallContext context;
     private EventsListener eventsListener;
 
     @BeforeClass(groups = "slow")
     public void setup() throws IOException {
-        context = new DefaultCallContextFactory(clock).createCallContext("TagDefinition DAO test", CallOrigin.TEST, UserType.TEST, UUID.randomUUID());
         bus.start();
     }
 
@@ -89,12 +83,12 @@ public class TestDefaultTagDefinitionDao extends UtilTestSuiteWithEmbeddedDB {
         Assert.assertEquals(eventsListener.getTagDefinitionEvents().size(), 0);
 
         // Make sure we can create a tag definition
-        final TagDefinition createdTagDefinition = tagDefinitionDao.create(definitionName, description, context);
+        final TagDefinition createdTagDefinition = tagDefinitionDao.create(definitionName, description, internalCallContext);
         Assert.assertEquals(createdTagDefinition.getName(), definitionName);
         Assert.assertEquals(createdTagDefinition.getDescription(), description);
 
         // Make sure we can retrieve it via the DAO
-        final TagDefinition foundTagDefinition = tagDefinitionDao.getByName(definitionName);
+        final TagDefinition foundTagDefinition = tagDefinitionDao.getByName(definitionName, internalCallContext);
         Assert.assertEquals(foundTagDefinition, createdTagDefinition);
 
         // Verify we caught an event on the bus
@@ -105,13 +99,13 @@ public class TestDefaultTagDefinitionDao extends UtilTestSuiteWithEmbeddedDB {
         Assert.assertEquals(tagDefinitionFirstEventReceived.getTagDefinitionId(), createdTagDefinition.getId());
         Assert.assertEquals(tagDefinitionFirstEventReceived.getTagDefinition(), createdTagDefinition);
         Assert.assertEquals(tagDefinitionFirstEventReceived.getBusEventType(), BusEvent.BusEventType.USER_TAGDEFINITION_CREATION);
-        Assert.assertEquals(tagDefinitionFirstEventReceived.getUserToken(), context.getUserToken());
+        Assert.assertEquals(tagDefinitionFirstEventReceived.getUserToken(), internalCallContext.getUserToken());
 
         // Delete the tag definition
-        tagDefinitionDao.deleteById(foundTagDefinition.getId(), context);
+        tagDefinitionDao.deleteById(foundTagDefinition.getId(), internalCallContext);
 
         // Make sure the tag definition is deleted
-        Assert.assertNull(tagDefinitionDao.getByName(definitionName));
+        Assert.assertNull(tagDefinitionDao.getByName(definitionName, internalCallContext));
 
         // Verify we caught an event on the bus
         Assert.assertEquals(eventsListener.getEvents().size(), 2);
@@ -121,10 +115,11 @@ public class TestDefaultTagDefinitionDao extends UtilTestSuiteWithEmbeddedDB {
         Assert.assertEquals(tagDefinitionSecondEventReceived.getTagDefinitionId(), createdTagDefinition.getId());
         Assert.assertEquals(tagDefinitionSecondEventReceived.getTagDefinition(), createdTagDefinition);
         Assert.assertEquals(tagDefinitionSecondEventReceived.getBusEventType(), BusEvent.BusEventType.USER_TAGDEFINITION_DELETION);
-        Assert.assertEquals(tagDefinitionSecondEventReceived.getUserToken(), context.getUserToken());
+        Assert.assertEquals(tagDefinitionSecondEventReceived.getUserToken(), internalCallContext.getUserToken());
     }
 
     private static final class EventsListener {
+
         private final List<BusEvent> events = new ArrayList<BusEvent>();
         private final List<TagDefinitionEvent> tagDefinitionEvents = new ArrayList<TagDefinitionEvent>();
 

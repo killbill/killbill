@@ -27,8 +27,8 @@ import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.mixins.CloseMe;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallContextBinder;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 import com.ning.billing.util.dao.AuditSqlDao;
 import com.ning.billing.util.dao.CollectionHistorySqlDao;
 import com.ning.billing.util.dao.HistoryRecordIdMapper;
@@ -38,18 +38,20 @@ import com.ning.billing.util.dao.ObjectTypeBinder;
 import com.ning.billing.util.entity.Entity;
 
 public interface UpdatableEntityCollectionSqlDao<T extends Entity> extends EntityCollectionSqlDao<T>,
-        CollectionHistorySqlDao<T>,
-        AuditSqlDao, CloseMe, Transmogrifier {
+                                                                           CollectionHistorySqlDao<T>,
+                                                                           AuditSqlDao, CloseMe, Transmogrifier {
+
     @SqlBatch
     public void updateFromTransaction(@Bind("objectId") final String objectId,
                                       @ObjectTypeBinder final ObjectType objectType,
                                       @BindBean final Collection<T> entities,
-                                      @CallContextBinder final CallContext context);
+                                      @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlQuery
-    public long getMaxHistoryRecordId();
+    public long getMaxHistoryRecordId(@InternalTenantContextBinder final InternalCallContext context);
 
     @SqlQuery
     @RegisterMapper(HistoryRecordIdMapper.class)
-    public List<Mapper<Long, Long>> getHistoryRecordIds(@Bind("maxHistoryRecordId") final long maxHistoryRecordId);
+    public List<Mapper<Long, Long>> getHistoryRecordIds(@Bind("maxHistoryRecordId") final long maxHistoryRecordId,
+                                                        @InternalTenantContextBinder final InternalCallContext context);
 }

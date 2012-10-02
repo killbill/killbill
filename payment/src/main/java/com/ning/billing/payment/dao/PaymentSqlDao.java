@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.payment.dao;
 
 import java.math.BigDecimal;
@@ -37,8 +38,9 @@ import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.payment.api.PaymentStatus;
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallContextBinder;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 import com.ning.billing.util.dao.BinderBase;
 import com.ning.billing.util.dao.EntityHistory;
 import com.ning.billing.util.dao.MapperBase;
@@ -50,37 +52,44 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, UpdatableEn
 
     @SqlUpdate
     void insertPayment(@Bind(binder = PaymentModelDaoBinder.class) final PaymentModelDao paymentInfo,
-                       @CallContextBinder final CallContext context);
+                       @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
-    void updatePaymentStatusAndExtRef(@Bind("id") final String paymentId, @Bind("paymentStatus") final String paymentStatus,
-            @Bind("extFirstPaymentRefId") final String extFirstPaymentRefId,  @Bind("extSecondPaymentRefId") final String extSecondPaymentRefId,
-            @CallContextBinder final CallContext context);
+    void updatePaymentStatusAndExtRef(@Bind("id") final String paymentId,
+                                      @Bind("paymentStatus") final String paymentStatus,
+                                      @Bind("extFirstPaymentRefId") final String extFirstPaymentRefId,
+                                      @Bind("extSecondPaymentRefId") final String extSecondPaymentRefId,
+                                      @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
-    void updatePaymentAmount(@Bind("id") final String paymentId, @Bind("amount") final BigDecimal amount,
-                             @CallContextBinder final CallContext context);
+    void updatePaymentAmount(@Bind("id") final String paymentId,
+                             @Bind("amount") final BigDecimal amount,
+                             @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlQuery
-    PaymentModelDao getPayment(@Bind("id") final String paymentId);
+    PaymentModelDao getPayment(@Bind("id") final String paymentId,
+                               @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
-    PaymentModelDao getLastPaymentForAccountAndPaymentMethod(@Bind("accountId") final String accountId, @Bind("paymentMethodId") final String paymentMethodId);
+    PaymentModelDao getLastPaymentForAccountAndPaymentMethod(@Bind("accountId") final String accountId,
+                                                             @Bind("paymentMethodId") final String paymentMethodId,
+                                                             @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
-    List<PaymentModelDao> getPaymentsForInvoice(@Bind("invoiceId") final String invoiceId);
+    List<PaymentModelDao> getPaymentsForInvoice(@Bind("invoiceId") final String invoiceId,
+                                                @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
-    List<PaymentModelDao> getPaymentsForAccount(@Bind("accountId") final String accountId);
-
+    List<PaymentModelDao> getPaymentsForAccount(@Bind("accountId") final String accountId,
+                                                @InternalTenantContextBinder final InternalTenantContext context);
 
     @Override
     @SqlUpdate
     void insertHistoryFromTransaction(@PaymentHistoryBinder final EntityHistory<PaymentModelDao> payment,
-                                      @CallContextBinder final CallContext context);
-
+                                      @InternalTenantContextBinder final InternalCallContext context);
 
     public static final class PaymentModelDaoBinder extends BinderBase implements Binder<Bind, PaymentModelDao> {
+
         @Override
         public void bind(@SuppressWarnings("rawtypes") final SQLStatement stmt, final Bind bind, final PaymentModelDao payment) {
             stmt.bind("id", payment.getId().toString());

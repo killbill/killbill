@@ -38,8 +38,9 @@ import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallContextBinder;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 import com.ning.billing.util.dao.BinderBase;
 import com.ning.billing.util.dao.EntityHistory;
 import com.ning.billing.util.dao.MapperBase;
@@ -51,24 +52,29 @@ public interface RefundSqlDao extends Transactional<RefundSqlDao>, UpdatableEnti
 
     @SqlUpdate
     void insertRefund(@Bind(binder = RefundModelDaoBinder.class) final RefundModelDao refundInfo,
-                      @CallContextBinder final CallContext context);
+                      @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
-    void updateStatus(@Bind("id") final String refundId, @Bind("refundStatus") final String status);
+    void updateStatus(@Bind("id") final String refundId,
+                      @Bind("refundStatus") final String status,
+                      @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlQuery
-    RefundModelDao getRefund(@Bind("id") final String refundId);
+    RefundModelDao getRefund(@Bind("id") final String refundId,
+                             @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
-    List<RefundModelDao> getRefundsForPayment(@Bind("paymentId") final String paymentId);
+    List<RefundModelDao> getRefundsForPayment(@Bind("paymentId") final String paymentId,
+                                              @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
-    List<RefundModelDao> getRefundsForAccount(@Bind("accountId") final String accountId);
+    List<RefundModelDao> getRefundsForAccount(@Bind("accountId") final String accountId,
+                                              @InternalTenantContextBinder final InternalTenantContext context);
 
     @Override
     @SqlUpdate
     public void insertHistoryFromTransaction(@RefundHistoryBinder final EntityHistory<RefundModelDao> payment,
-                                             @CallContextBinder final CallContext context);
+                                             @InternalTenantContextBinder final InternalCallContext context);
 
     public static final class RefundModelDaoBinder extends BinderBase implements Binder<Bind, RefundModelDao> {
 
@@ -81,7 +87,7 @@ public interface RefundSqlDao extends Transactional<RefundSqlDao>, UpdatableEnti
             stmt.bind("currency", refund.getCurrency().toString());
             stmt.bind("isAdjusted", refund.isAdjsuted());
             stmt.bind("refundStatus", refund.getRefundStatus().toString());
-            // createdDate and updatedDate are populated by the @CallContextBinder
+            // createdDate and updatedDate are populated by the @InternalTenantContextBinder
         }
     }
 

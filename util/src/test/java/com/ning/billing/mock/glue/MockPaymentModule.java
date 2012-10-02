@@ -18,8 +18,9 @@ package com.ning.billing.mock.glue;
 
 import org.mockito.Mockito;
 
-import com.google.inject.AbstractModule;
 import com.ning.billing.payment.api.PaymentApi;
+
+import com.google.inject.AbstractModule;
 
 public class MockPaymentModule extends AbstractModule {
     @Override

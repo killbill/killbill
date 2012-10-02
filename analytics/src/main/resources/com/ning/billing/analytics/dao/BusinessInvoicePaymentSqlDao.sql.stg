@@ -1,5 +1,8 @@
 group BusinessInvoicePayment;
 
+CHECK_TENANT() ::= "tenant_record_id = :tenantRecordId"
+AND_CHECK_TENANT() ::= "AND <CHECK_TENANT()>"
+
 getInvoicePayment(payment_id) ::= <<
 select
   payment_id
@@ -22,8 +25,10 @@ select
 , card_country
 , invoice_payment_type
 , linked_invoice_payment_id
+, tenant_record_id
 from bip
 where payment_id = :payment_id
+<AND_CHECK_TENANT()>
 limit 1
 ;
 >>
@@ -50,8 +55,10 @@ select
 , card_country
 , invoice_payment_type
 , linked_invoice_payment_id
+, tenant_record_id
 from bip
 where account_key = :account_key
+<AND_CHECK_TENANT()>
 order by created_date asc
 ;
 >>
@@ -78,6 +85,8 @@ insert into bip (
 , card_country
 , invoice_payment_type
 , linked_invoice_payment_id
+, account_record_id
+, tenant_record_id
 ) values (
   :payment_id
 , :created_date
@@ -99,13 +108,15 @@ insert into bip (
 , :card_country
 , :invoice_payment_type
 , :linked_invoice_payment_id
+, :accountRecordId
+, :tenantRecordId
 );
 >>
 
 deleteInvoicePayment(payment_id) ::= <<
-delete from bip where payment_id = :payment_id
+delete from bip where payment_id = :payment_id <AND_CHECK_TENANT()>
 >>
 
 test() ::= <<
-select 1 from bip;
+select 1 from bip where <CHECK_TENANT()>;
 >>

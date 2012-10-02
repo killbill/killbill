@@ -25,34 +25,35 @@ import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.util.callcontext.CallContext;
-
+import com.ning.billing.util.callcontext.TenantContext;
 
 public interface EntitlementUserApi {
 
-    public SubscriptionBundle getBundleFromId(final UUID id) throws EntitlementUserApiException;
+    public SubscriptionBundle getBundleFromId(UUID id, TenantContext context) throws EntitlementUserApiException;
 
-    public Subscription getSubscriptionFromId(final UUID id) throws EntitlementUserApiException;
+    public Subscription getSubscriptionFromId(UUID id, TenantContext context) throws EntitlementUserApiException;
 
-    public List<SubscriptionBundle> getBundlesForKey(final String bundleKey) throws EntitlementUserApiException;
+    public List<SubscriptionBundle> getBundlesForKey(String bundleKey, TenantContext context) throws EntitlementUserApiException;
 
-    public SubscriptionBundle getBundleForAccountAndKey(final UUID accountId, final String bundleKey) throws EntitlementUserApiException;
+    public SubscriptionBundle getBundleForAccountAndKey(UUID accountId, String bundleKey, TenantContext context) throws EntitlementUserApiException;
 
-    public List<SubscriptionBundle> getBundlesForAccount(final UUID accountId);
+    public List<SubscriptionBundle> getBundlesForAccount(UUID accountId, TenantContext context);
 
-    public List<Subscription> getSubscriptionsForBundle(final UUID bundleId);
+    public List<Subscription> getSubscriptionsForBundle(UUID bundleId, TenantContext context);
 
-    public List<Subscription> getSubscriptionsForAccountAndKey(final UUID accountId, final String bundleKey);
+    public List<Subscription> getSubscriptionsForAccountAndKey(UUID accountId, String bundleKey, TenantContext context);
 
-    public Subscription getBaseSubscription(final UUID bundleId) throws EntitlementUserApiException;
+    public Subscription getBaseSubscription(UUID bundleId, TenantContext context) throws EntitlementUserApiException;
 
-    public SubscriptionBundle createBundleForAccount(final UUID accountId, final String bundleKey, final CallContext context)
+    public SubscriptionBundle createBundleForAccount(UUID accountId, String bundleKey, CallContext context)
             throws EntitlementUserApiException;
 
-    public Subscription createSubscription(final UUID bundleId, final PlanPhaseSpecifier spec, final DateTime requestedDate, final CallContext context)
+    public Subscription createSubscription(UUID bundleId, PlanPhaseSpecifier spec, DateTime requestedDate, CallContext context)
             throws EntitlementUserApiException;
 
-    public List<SubscriptionStatusDryRun> getDryRunChangePlanStatus(final UUID subscriptionId, @Nullable final String productName, final DateTime requestedDate)
+    public List<SubscriptionStatusDryRun> getDryRunChangePlanStatus(UUID subscriptionId, @Nullable String productName,
+                                                                    DateTime requestedDate, TenantContext context)
             throws EntitlementUserApiException;
 
-    public DateTime getNextBillingDate(final UUID account);
+    public DateTime getNextBillingDate(UUID account, TenantContext context);
 }

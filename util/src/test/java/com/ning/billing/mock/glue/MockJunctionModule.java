@@ -18,12 +18,13 @@ package com.ning.billing.mock.glue;
 
 import org.mockito.Mockito;
 
-import com.google.inject.AbstractModule;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.glue.JunctionModule;
 import com.ning.billing.junction.api.BillingApi;
 import com.ning.billing.junction.api.BlockingApi;
+
+import com.google.inject.AbstractModule;
 
 public class MockJunctionModule extends AbstractModule implements JunctionModule {
     private final BillingApi billingApi = Mockito.mock(BillingApi.class);

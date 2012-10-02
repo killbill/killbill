@@ -1,46 +1,59 @@
 group TagDao;
 
+CHECK_TENANT() ::= "tenant_record_id = :tenantRecordId"
+AND_CHECK_TENANT() ::= "AND <CHECK_TENANT()>"
+
 fields(prefix) ::= <<
     <prefix>id,
     <prefix>tag_definition_id,
     <prefix>object_id,
     <prefix>object_type,
     <prefix>created_by,
-    <prefix>created_date
+    <prefix>created_date,
+    <prefix>account_record_id,
+    <prefix>tenant_record_id
 >>
 
 insertFromTransaction() ::= <<
   INSERT INTO tags(<fields()>)
-  VALUES (:id, :tagDefinitionId, :objectId, :objectType, :userName, :createdDate);
+  VALUES (:id, :tagDefinitionId, :objectId, :objectType, :userName, :createdDate, :accountRecordId, :tenantRecordId);
 >>
 
 deleteFromTransaction() ::= <<
     DELETE FROM tags
     WHERE tag_definition_id = :tagDefinitionId
-        AND object_id = :objectId AND object_type = :objectType;
+        AND object_id = :objectId AND object_type = :objectType
+    <AND_CHECK_TENANT()>
+    ;
 >>
 
 addTagFromTransaction() ::= <<
     INSERT INTO tags(<fields()>)
-    VALUES (:id, :tagDefinitionId, :objectId, :objectType, :userName, :createdDate);
+    VALUES (:id, :tagDefinitionId, :objectId, :objectType, :userName, :createdDate, :accountRecordId, :tenantRecordId);
 >>
 
 removeTagFromTransaction() ::= <<
     DELETE FROM tags
     WHERE tag_definition_id = :tagDefinitionId
-    AND object_id = :objectId AND object_type = :objectType;
+    AND object_id = :objectId AND object_type = :objectType
+    <AND_CHECK_TENANT()>
+    ;
 >>
 
 findTag() ::= <<
     SELECT <fields()> FROM tags
     WHERE tag_definition_id = :tagDefinitionId
-    AND object_id = :objectId AND object_type = :objectType;
+    AND object_id = :objectId AND object_type = :objectType
+    <AND_CHECK_TENANT()>
+    ;
 >>
 
 getRecordIds() ::= <<
     SELECT record_id, id
     FROM tags
-    WHERE object_id = :objectId AND object_type = :objectType;
+    WHERE object_id = :objectId AND object_type = :objectType
+    <AND_CHECK_TENANT()>
+    ;
 >>
 
 historyFields(prefix) ::= <<
@@ -51,23 +64,29 @@ historyFields(prefix) ::= <<
   <prefix>tag_definition_id,
   <prefix>updated_by,
   <prefix>date,
-  <prefix>change_type
+  <prefix>change_type,
+  <prefix>account_record_id,
+  <prefix>tenant_record_id
 >>
 
 addHistoryFromTransaction() ::= <<
     INSERT INTO tag_history(<historyFields()>)
-    VALUES(:recordId, :id, :objectId, :objectType, :tagDefinitionId, :userName, :updatedDate, :changeType);
+    VALUES(:recordId, :id, :objectId, :objectType, :tagDefinitionId, :userName, :updatedDate, :changeType, :accountRecordId, :tenantRecordId);
 >>
 
 getMaxHistoryRecordId() ::= <<
     SELECT MAX(history_record_id)
-    FROM tag_history;
+    FROM tag_history
+    WHERE <CHECK_TENANT()>
+    ;
 >>
 
 getHistoryRecordIds() ::= <<
     SELECT history_record_id, record_id
     FROM tag_history
-    WHERE history_record_id > :maxHistoryRecordId;
+    WHERE history_record_id > :maxHistoryRecordId
+    <AND_CHECK_TENANT()>
+    ;
 >>
 
 auditFields(prefix) ::= <<
@@ -78,21 +97,24 @@ auditFields(prefix) ::= <<
     <prefix>changed_by,
     <prefix>reason_code,
     <prefix>comments,
-    <prefix>user_token
+    <prefix>user_token,
+    <prefix>account_record_id,
+    <prefix>tenant_record_id
 >>
 
 load() ::= <<
   SELECT <fields()>
     FROM tags
-  WHERE object_id = :objectId AND object_type = :objectType;
+  WHERE object_id = :objectId AND object_type = :objectType
+  <AND_CHECK_TENANT()>;
 >>
 
 insertAuditFromTransaction() ::= <<
     INSERT INTO audit_log(<auditFields()>)
-    VALUES(:tableName, :recordId, :changeType, :createdDate, :userName, :reasonCode, :comment, :userToken);
+    VALUES(:tableName, :recordId, :changeType, :createdDate, :userName, :reasonCode, :comment, :userToken, :accountRecordId, :tenantRecordId);
 >>
 
 test() ::= <<
-  SELECT 1 FROM tags;
+  SELECT 1 FROM tags WHERE <CHECK_TENANT()>;
 >>
 ;

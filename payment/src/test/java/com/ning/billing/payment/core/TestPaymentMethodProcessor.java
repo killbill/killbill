@@ -35,10 +35,7 @@ import com.ning.billing.payment.provider.DefaultPaymentProviderPluginRegistry;
 import com.ning.billing.payment.provider.ExternalPaymentProviderPlugin;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.bus.Bus;
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
-import com.ning.billing.util.clock.DefaultClock;
 import com.ning.billing.util.globallocker.GlobalLocker;
 
 public class TestPaymentMethodProcessor extends PaymentTestSuite {
@@ -50,14 +47,13 @@ public class TestPaymentMethodProcessor extends PaymentTestSuite {
         final DefaultPaymentProviderPluginRegistry pluginRegistry = new DefaultPaymentProviderPluginRegistry(Mockito.mock(PaymentConfig.class));
         pluginRegistry.register(new ExternalPaymentProviderPlugin(new ClockMock()), ExternalPaymentProviderPlugin.PLUGIN_NAME);
 
-        final Clock clock = new DefaultClock();
         final AccountUserApi accountUserApi = Mockito.mock(AccountUserApi.class);
         final Bus bus = Mockito.mock(Bus.class);
         final MockPaymentDao paymentDao = new MockPaymentDao();
         final GlobalLocker globalLocker = Mockito.mock(GlobalLocker.class);
         final ExecutorService executorService = Mockito.mock(ExecutorService.class);
         final TagUserApi tagUserApi =  Mockito.mock(TagUserApi.class);
-        processor = new PaymentMethodProcessor(pluginRegistry, accountUserApi, bus, paymentDao, tagUserApi, clock, globalLocker, executorService);
+        processor = new PaymentMethodProcessor(pluginRegistry, accountUserApi, bus, paymentDao, tagUserApi, globalLocker, executorService);
     }
 
     @Test(groups = "fast")
@@ -66,14 +62,13 @@ public class TestPaymentMethodProcessor extends PaymentTestSuite {
         final Account account = Mockito.mock(Account.class);
         Mockito.when(account.getId()).thenReturn(accountId);
         Mockito.when(account.getExternalKey()).thenReturn(accountId.toString());
-        final CallContext context = Mockito.mock(CallContext.class);
 
-        Assert.assertEquals(processor.getPaymentMethods(account, false).size(), 0);
+        Assert.assertEquals(processor.getPaymentMethods(account, false, internalCallContext).size(), 0);
 
         // The first call should create the payment method
-        final ExternalPaymentProviderPlugin providerPlugin = processor.getExternalPaymentProviderPlugin(account, context);
+        final ExternalPaymentProviderPlugin providerPlugin = processor.getExternalPaymentProviderPlugin(account, internalCallContext);
         Assert.assertEquals(providerPlugin.getName(), ExternalPaymentProviderPlugin.PLUGIN_NAME);
-        final List<PaymentMethod> paymentMethods = processor.getPaymentMethods(account, false);
+        final List<PaymentMethod> paymentMethods = processor.getPaymentMethods(account, false, internalCallContext);
         Assert.assertEquals(paymentMethods.size(), 1);
         Assert.assertEquals(paymentMethods.get(0).getPluginName(), ExternalPaymentProviderPlugin.PLUGIN_NAME);
         Assert.assertEquals(paymentMethods.get(0).getAccountId(), account.getId());
@@ -81,10 +76,10 @@ public class TestPaymentMethodProcessor extends PaymentTestSuite {
         // The succeeding calls should not create any other payment method
         final UUID externalPaymentMethodId = paymentMethods.get(0).getId();
         for (int i = 0; i < 50; i++) {
-            final ExternalPaymentProviderPlugin foundProviderPlugin = processor.getExternalPaymentProviderPlugin(account, context);
+            final ExternalPaymentProviderPlugin foundProviderPlugin = processor.getExternalPaymentProviderPlugin(account, internalCallContext);
             Assert.assertEquals(foundProviderPlugin.getName(), ExternalPaymentProviderPlugin.PLUGIN_NAME);
 
-            final List<PaymentMethod> foundPaymentMethods = processor.getPaymentMethods(account, false);
+            final List<PaymentMethod> foundPaymentMethods = processor.getPaymentMethods(account, false, internalCallContext);
             Assert.assertEquals(foundPaymentMethods.size(), 1);
             Assert.assertEquals(foundPaymentMethods.get(0).getPluginName(), ExternalPaymentProviderPlugin.PLUGIN_NAME);
             Assert.assertEquals(foundPaymentMethods.get(0).getAccountId(), account.getId());

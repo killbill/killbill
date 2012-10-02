@@ -26,6 +26,9 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 
 import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 
 @ExternalizedSqlViaStringTemplate3()
 @RegisterMapper({BusinessSubscriptionTransitionMapper.class, TimeSeriesTupleMapper.class})
@@ -33,20 +36,25 @@ public interface BusinessSubscriptionTransitionSqlDao extends Transactional<Busi
 
     @SqlQuery
     List<TimeSeriesTuple> getSubscriptionsCreatedOverTime(@Bind("product_type") final String productType,
-                                                          @Bind("slug") final String slug);
+                                                          @Bind("slug") final String slug,
+                                                          @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
-    List<BusinessSubscriptionTransition> getTransitionsByKey(@Bind("external_key") final String externalKey);
+    List<BusinessSubscriptionTransition> getTransitionsByKey(@Bind("external_key") final String externalKey,
+                                                             @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
-    List<BusinessSubscriptionTransition> getTransitionForSubscription(@Bind("subscription_id") final String subscriptionId);
+    List<BusinessSubscriptionTransition> getTransitionForSubscription(@Bind("subscription_id") final String subscriptionId,
+                                                                      @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlUpdate
-    int createTransition(@BusinessSubscriptionTransitionBinder final BusinessSubscriptionTransition transition);
+    int createTransition(@BusinessSubscriptionTransitionBinder final BusinessSubscriptionTransition transition,
+                         @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
-    void deleteTransitionsForBundle(@Bind("bundle_id") final String bundleId);
+    void deleteTransitionsForBundle(@Bind("bundle_id") final String bundleId,
+                                    @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
-    void test();
+    void test(@InternalTenantContextBinder final InternalTenantContext context);
 }

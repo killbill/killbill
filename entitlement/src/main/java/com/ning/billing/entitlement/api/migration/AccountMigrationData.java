@@ -24,7 +24,6 @@ import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.Subscrip
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.events.EntitlementEvent;
-import com.ning.billing.entitlement.events.user.ApiEventMigrateBilling;
 
 public class AccountMigrationData {
 

@@ -31,6 +31,7 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.InvoicePayment.InvoicePaymentType;
 import com.ning.billing.invoice.model.DefaultInvoicePayment;
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.TenantContext;
 
 public class MockInvoicePaymentApi implements InvoicePaymentApi {
     private final CopyOnWriteArrayList<Invoice> invoices = new CopyOnWriteArrayList<Invoice>();
@@ -51,7 +52,7 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi {
     }
 
     @Override
-    public List<Invoice> getAllInvoicesByAccount(final UUID accountId) {
+    public List<Invoice> getAllInvoicesByAccount(final UUID accountId, final TenantContext context) {
         final ArrayList<Invoice> result = new ArrayList<Invoice>();
 
         for (final Invoice invoice : invoices) {
@@ -63,7 +64,7 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi {
     }
 
     @Override
-    public Invoice getInvoice(final UUID invoiceId) {
+    public Invoice getInvoice(final UUID invoiceId, final TenantContext context) {
         for (final Invoice invoice : invoices) {
             if (invoiceId.equals(invoice.getId())) {
                 return invoice;
@@ -73,18 +74,18 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi {
     }
 
     @Override
-    public Invoice getInvoiceForPaymentId(final UUID paymentId) {
+    public Invoice getInvoiceForPaymentId(final UUID paymentId, final TenantContext context) {
         for (final InvoicePayment invoicePayment : invoicePayments) {
             if (invoicePayment.getPaymentId().equals(paymentId)) {
-                return getInvoice(invoicePayment.getInvoiceId());
+                return getInvoice(invoicePayment.getInvoiceId(), context);
             }
         }
         return null;
     }
 
     @Override
-    public List<InvoicePayment> getInvoicePayments(final UUID paymentId) {
-        List<InvoicePayment> result = new LinkedList<InvoicePayment>();
+    public List<InvoicePayment> getInvoicePayments(final UUID paymentId, final TenantContext context) {
+        final List<InvoicePayment> result = new LinkedList<InvoicePayment>();
         for (final InvoicePayment invoicePayment : invoicePayments) {
             if (paymentId.equals(invoicePayment.getPaymentId())) {
                 result.add(invoicePayment);
@@ -94,7 +95,7 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi {
     }
 
     @Override
-    public InvoicePayment getInvoicePaymentForAttempt(UUID paymentId) {
+    public InvoicePayment getInvoicePaymentForAttempt(final UUID paymentId, final TenantContext context) {
         for (final InvoicePayment invoicePayment : invoicePayments) {
             if (paymentId.equals(invoicePayment.getPaymentId()) && invoicePayment.getType() == InvoicePaymentType.ATTEMPT) {
                 return invoicePayment;
@@ -145,7 +146,7 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi {
     }
 
     @Override
-    public BigDecimal getRemainingAmountPaid(final UUID invoicePaymentId) {
+    public BigDecimal getRemainingAmountPaid(final UUID invoicePaymentId, final TenantContext context) {
         BigDecimal amount = BigDecimal.ZERO;
         for (final InvoicePayment payment : invoicePayments) {
             if (payment.getId().equals(invoicePaymentId)) {
@@ -161,22 +162,22 @@ public class MockInvoicePaymentApi implements InvoicePaymentApi {
     }
 
     @Override
-    public List<InvoicePayment> getChargebacksByAccountId(final UUID accountId) {
+    public List<InvoicePayment> getChargebacksByAccountId(final UUID accountId, final TenantContext context) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public UUID getAccountIdFromInvoicePaymentId(final UUID uuid) throws InvoiceApiException {
+    public UUID getAccountIdFromInvoicePaymentId(final UUID uuid, final TenantContext context) throws InvoiceApiException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public List<InvoicePayment> getChargebacksByPaymentId(final UUID paymentId) {
+    public List<InvoicePayment> getChargebacksByPaymentId(final UUID paymentId, final TenantContext context) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public InvoicePayment getChargebackById(final UUID chargebackId) {
+    public InvoicePayment getChargebackById(final UUID chargebackId, final TenantContext context) {
         throw new UnsupportedOperationException();
     }
 

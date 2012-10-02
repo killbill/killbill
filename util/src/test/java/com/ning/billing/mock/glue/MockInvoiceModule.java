@@ -18,11 +18,12 @@ package com.ning.billing.mock.glue;
 
 import org.mockito.Mockito;
 
-import com.google.inject.AbstractModule;
 import com.ning.billing.glue.InvoiceModule;
 import com.ning.billing.invoice.api.InvoiceMigrationApi;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.api.InvoiceUserApi;
+
+import com.google.inject.AbstractModule;
 
 public class MockInvoiceModule extends AbstractModule implements InvoiceModule {
     @Override

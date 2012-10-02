@@ -25,19 +25,28 @@ import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 
 import com.ning.billing.analytics.model.BusinessInvoicePaymentTag;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 
 @ExternalizedSqlViaStringTemplate3()
 @RegisterMapper(BusinessInvoicePaymentTagMapper.class)
 public interface BusinessInvoicePaymentTagSqlDao {
+
     @SqlQuery
-    List<BusinessInvoicePaymentTag> getTagsForInvoicePayment(@Bind("payment_id") final String paymentId);
+    List<BusinessInvoicePaymentTag> getTagsForInvoicePayment(@Bind("payment_id") final String paymentId,
+                                                             @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlUpdate
-    int addTag(@Bind("payment_id") final String paymentId, @Bind("name") final String name);
+    int addTag(@Bind("payment_id") final String paymentId,
+               @Bind("name") final String name,
+               @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
-    int removeTag(@Bind("payment_id") final String paymentId, @Bind("name") final String name);
+    int removeTag(@Bind("payment_id") final String paymentId,
+                  @Bind("name") final String name,
+                  @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
-    void test();
+    void test(@InternalTenantContextBinder final InternalTenantContext context);
 }

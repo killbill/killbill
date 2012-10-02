@@ -44,6 +44,10 @@ import com.ning.billing.usage.timeline.codec.SampleCoder;
 import com.ning.billing.usage.timeline.consumer.TimelineChunkConsumer;
 import com.ning.billing.usage.timeline.persistent.DefaultTimelineDao;
 import com.ning.billing.usage.timeline.times.TimelineCoder;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
+import com.ning.billing.util.callcontext.UserType;
 
 import com.google.inject.Inject;
 
@@ -63,6 +67,8 @@ public class TimelineAggregator {
     private final UsageConfig config;
     private final TimelineAggregatorSqlDao aggregatorSqlDao;
     private final TimelineChunkMapper timelineChunkMapper;
+    private final InternalCallContextFactory internalCallContextFactory;
+
     private final ScheduledExecutorService aggregatorThread = Executors.newSingleThreadScheduledExecutor();
 
     private Map<String, AtomicLong> aggregatorCounters = new LinkedHashMap<String, AtomicLong>();
@@ -88,7 +94,8 @@ public class TimelineAggregator {
     private final List<Long> chunkIdsToInvalidateOrDelete = new ArrayList<Long>();
 
     @Inject
-    public TimelineAggregator(final IDBI dbi, final DefaultTimelineDao timelineDao, final TimelineCoder timelineCoder, final SampleCoder sampleCoder, final UsageConfig config) {
+    public TimelineAggregator(final IDBI dbi, final DefaultTimelineDao timelineDao, final TimelineCoder timelineCoder,
+                              final SampleCoder sampleCoder, final UsageConfig config, final InternalCallContextFactory internalCallContextFactory) {
         this.dbi = dbi;
         this.timelineDao = timelineDao;
         this.timelineCoder = timelineCoder;
@@ -96,6 +103,7 @@ public class TimelineAggregator {
         this.config = config;
         this.aggregatorSqlDao = dbi.onDemand(TimelineAggregatorSqlDao.class);
         this.timelineChunkMapper = new TimelineChunkMapper();
+        this.internalCallContextFactory = internalCallContextFactory;
     }
 
     private int aggregateTimelineCandidates(final List<TimelineChunk> timelineChunkCandidates, final int aggregationLevel, final int chunksToAggregate) {
@@ -181,7 +189,7 @@ public class TimelineAggregator {
         // or invalidate the ones that were aggregated.  This should be very fast.
         final long startWriteTime = System.currentTimeMillis();
         aggregatorSqlDao.begin();
-        timelineDao.bulkInsertTimelineChunks(chunksToWrite);
+        timelineDao.bulkInsertTimelineChunks(chunksToWrite, createCallContext());
         if (config.getDeleteAggregatedChunks()) {
             aggregatorSqlDao.deleteTimelineChunks(chunkIdsToInvalidateOrDelete);
         } else {
@@ -415,5 +423,9 @@ public class TimelineAggregator {
                 getAndProcessTimelineAggregationCandidates();
             }
         });
+    }
+
+    private InternalCallContext createCallContext() {
+        return internalCallContextFactory.createInternalCallContext("TimelineAggregator", CallOrigin.INTERNAL, UserType.SYSTEM, null);
     }
 }

@@ -272,8 +272,19 @@ public enum ErrorCode {
     EMAIL_SENDING_FAILED(9000, "Sending email failed"),
     EMAIL_PROPERTIES_FILE_MISSING(9001, "The properties file for email configuration could not be found."),
     MISSING_TRANSLATION_RESOURCE(9010, "The resources for %s translation could not be found."),
-    MISSING_DEFAULT_TRANSLATION_RESOURCE(9011, "The default resource for %s translation could not be found.");
+    MISSING_DEFAULT_TRANSLATION_RESOURCE(9011, "The default resource for %s translation could not be found."),
 
+    /*
+    *
+    * Range 10000: TENANT
+    *
+    */
+    TENANT_ALREADY_EXISTS(10000, "Tenant already exists for key %s"),
+    TENANT_DOES_NOT_EXIST_FOR_ID(10001, "Tenant does not exist for id %s"),
+    TENANT_DOES_NOT_EXIST_FOR_KEY(10002, "Tenant does not exist for key %s"),
+    TENANT_DOES_NOT_EXIST_FOR_API_KEY(10003, "Tenant does not exist for api key %s"),
+    TENANT_CREATION_FAILED(10004, "Tenant creation failed."),
+    TENANT_UPDATE_FAILED(10005, "Tenant update failed.");
 
     private final int code;
     private final String format;

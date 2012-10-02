@@ -28,11 +28,6 @@ import org.testng.annotations.Test;
 import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallOrigin;
-import com.ning.billing.util.callcontext.DefaultCallContextFactory;
-import com.ning.billing.util.callcontext.UserType;
-import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.customfield.dao.AuditedCustomFieldDao;
 import com.ning.billing.util.customfield.dao.CustomFieldDao;
 import com.ning.billing.util.customfield.dao.CustomFieldSqlDao;
@@ -44,7 +39,6 @@ import static org.testng.Assert.fail;
 public class TestFieldStore extends UtilTestSuiteWithEmbeddedDB {
     private final Logger log = LoggerFactory.getLogger(TestFieldStore.class);
     private final MysqlTestingHelper helper = KillbillTestSuiteWithEmbeddedDB.getMysqlTestingHelper();
-    private CallContext context;
     private IDBI dbi;
     private CustomFieldDao customFieldDao;
 
@@ -53,7 +47,6 @@ public class TestFieldStore extends UtilTestSuiteWithEmbeddedDB {
         try {
             dbi = helper.getDBI();
             customFieldDao = new AuditedCustomFieldDao(dbi);
-            context = new DefaultCallContextFactory(new ClockMock()).createCallContext("Fezzik", CallOrigin.TEST, UserType.TEST);
         } catch (Throwable t) {
             log.error("Setup failed", t);
             fail(t.toString());
@@ -72,21 +65,21 @@ public class TestFieldStore extends UtilTestSuiteWithEmbeddedDB {
         fieldStore1.setValue(fieldName, fieldValue);
 
         final CustomFieldSqlDao customFieldSqlDao = dbi.onDemand(CustomFieldSqlDao.class);
-        customFieldDao.saveEntitiesFromTransaction(customFieldSqlDao, id, objectType, fieldStore1.getEntityList(), context);
+        customFieldDao.saveEntitiesFromTransaction(customFieldSqlDao, id, objectType, fieldStore1.getEntityList(), internalCallContext);
 
         final FieldStore fieldStore2 = DefaultFieldStore.create(id, objectType);
-        fieldStore2.add(customFieldSqlDao.load(id.toString(), objectType));
+        fieldStore2.add(customFieldSqlDao.load(id.toString(), objectType, internalCallContext));
 
         assertEquals(fieldStore2.getValue(fieldName), fieldValue);
 
         fieldValue = "Cape Canaveral";
         fieldStore2.setValue(fieldName, fieldValue);
         assertEquals(fieldStore2.getValue(fieldName), fieldValue);
-        customFieldDao.saveEntitiesFromTransaction(customFieldSqlDao, id, objectType, fieldStore2.getEntityList(), context);
+        customFieldDao.saveEntitiesFromTransaction(customFieldSqlDao, id, objectType, fieldStore2.getEntityList(), internalCallContext);
 
         final FieldStore fieldStore3 = DefaultFieldStore.create(id, objectType);
         assertEquals(fieldStore3.getValue(fieldName), null);
-        fieldStore3.add(customFieldSqlDao.load(id.toString(), objectType));
+        fieldStore3.add(customFieldSqlDao.load(id.toString(), objectType, internalCallContext));
 
         assertEquals(fieldStore3.getValue(fieldName), fieldValue);
     }

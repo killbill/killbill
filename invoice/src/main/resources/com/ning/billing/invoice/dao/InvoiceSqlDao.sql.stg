@@ -1,5 +1,8 @@
 group InvoiceDao;
 
+CHECK_TENANT(prefix) ::= "<prefix>tenant_record_id = :tenantRecordId"
+AND_CHECK_TENANT(prefix) ::= "AND <CHECK_TENANT(prefix)>"
+
 invoiceFields(prefix) ::= <<
     <prefix>id,
     <prefix>account_id,
@@ -8,12 +11,15 @@ invoiceFields(prefix) ::= <<
     <prefix>currency,
     <prefix>migrated,
     <prefix>created_by,
-    <prefix>created_date
+    <prefix>created_date,
+    <prefix>account_record_id,
+    <prefix>tenant_record_id
 >>
 
 get() ::= <<
   SELECT record_id as invoice_number, <invoiceFields()>
   FROM invoices
+  WHERE <CHECK_TENANT()>
   ORDER BY target_date ASC;
 >>
 
@@ -21,6 +27,7 @@ getInvoicesByAccount() ::= <<
   SELECT record_id as invoice_number, <invoiceFields()>
   FROM invoices
   WHERE account_id = :accountId AND migrated = '0'
+  <AND_CHECK_TENANT()>
   ORDER BY target_date ASC;
 >>
 
@@ -28,6 +35,7 @@ getAllInvoicesByAccount() ::= <<
   SELECT record_id as invoice_number, <invoiceFields()>
   FROM invoices
   WHERE account_id = :accountId
+  <AND_CHECK_TENANT()>
   ORDER BY target_date ASC;
 >>
 
@@ -35,6 +43,7 @@ getInvoicesByAccountAfterDate() ::= <<
   SELECT record_id as invoice_number, <invoiceFields()>
   FROM invoices
   WHERE account_id = :accountId AND target_date >= :fromDate AND migrated = '0'
+  <AND_CHECK_TENANT()>
   ORDER BY target_date ASC;
 >>
 
@@ -42,24 +51,31 @@ getInvoicesBySubscription() ::= <<
   SELECT i.record_id as invoice_number, <invoiceFields("i.")>
   FROM invoices i
   JOIN invoice_items ii ON i.id = ii.invoice_id
-  WHERE ii.subscription_id = :subscriptionId AND i.migrated = '0';
+  WHERE ii.subscription_id = :subscriptionId AND i.migrated = '0'
+  <AND_CHECK_TENANT("i.")>
+  <AND_CHECK_TENANT("ii.")>
+  ;
 >>
 
 getById() ::= <<
   SELECT record_id as invoice_number, <invoiceFields()>
   FROM invoices
-  WHERE id = :id;
+  WHERE id = :id
+  <AND_CHECK_TENANT()>
+  ;
 >>
 
 getByRecordId() ::= <<
   SELECT record_id as invoice_number, <invoiceFields()>
   FROM invoices
-  WHERE record_id = :recordId;
+  WHERE record_id = :recordId
+  <AND_CHECK_TENANT()>
+  ;
 >>
 
 create() ::= <<
   INSERT INTO invoices(<invoiceFields()>)
-  VALUES (:id, :accountId, :invoiceDate, :targetDate, :currency, :migrated, :userName, :createdDate);
+  VALUES (:id, :accountId, :invoiceDate, :targetDate, :currency, :migrated, :userName, :createdDate, :accountRecordId, :tenantRecordId);
 >>
 
 getInvoiceIdByPaymentId() ::= <<
@@ -67,13 +83,17 @@ getInvoiceIdByPaymentId() ::= <<
     FROM invoices i, invoice_payments ip
    WHERE ip.invoice_id = i.id
      AND ip.payment_id = :paymentId
+   <AND_CHECK_TENANT("i.")>
+   <AND_CHECK_TENANT("ip.")>
 >>
 
 
 getRecordId() ::= <<
     SELECT record_id
     FROM invoices
-    WHERE id = :id;
+    WHERE id = :id
+    <AND_CHECK_TENANT()>
+    ;
 >>
 
 auditFields(prefix) ::= <<
@@ -84,16 +104,20 @@ auditFields(prefix) ::= <<
     <prefix>changed_by,
     <prefix>reason_code,
     <prefix>comments,
-    <prefix>user_token
+    <prefix>user_token,
+    <prefix>account_record_id,
+    <prefix>tenant_record_id
 >>
 
 insertAuditFromTransaction() ::= <<
     INSERT INTO audit_log(<auditFields()>)
-    VALUES(:tableName, :recordId, :changeType, :createdDate, :userName, :reasonCode, :comment, :userToken);
+    VALUES(:tableName, :recordId, :changeType, :createdDate, :userName, :reasonCode, :comment, :userToken, :accountRecordId, :tenantRecordId);
 >>
 
 test() ::= <<
   SELECT 1
-  FROM invoices;
+  FROM invoices
+  WHERE <CHECK_TENANT()>
+  ;
 >>
 ;

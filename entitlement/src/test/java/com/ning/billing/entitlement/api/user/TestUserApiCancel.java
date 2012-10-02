@@ -64,7 +64,7 @@ public abstract class TestUserApiCancel extends TestApiBase {
 
 
             // CANCEL in trial period to get IMM policy
-            subscription.cancel(clock.getUTCNow(), context);
+            subscription.cancel(clock.getUTCNow(), callContext);
             currentPhase = subscription.getCurrentPhase();
             testListener.isCompleted(3000);
 
@@ -110,8 +110,8 @@ public abstract class TestUserApiCancel extends TestApiBase {
             // SET CTD + RE READ SUBSCRIPTION + CHANGE PLAN
             final Duration ctd = getDurationMonth(1);
             final DateTime newChargedThroughDate = DefaultClock.addDuration(expectedPhaseTrialChange, ctd);
-            billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate.toLocalDate(), context);
-            subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId());
+            billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate.toLocalDate(), callContext);
+            subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId(), callContext);
 
             assertEquals(subscription.getLastActiveProductName(), prod);
             assertEquals(subscription.getLastActivePriceListName(), planSet);
@@ -121,7 +121,7 @@ public abstract class TestUserApiCancel extends TestApiBase {
             // CANCEL
             testListener.setNonExpectedMode();
             testListener.pushExpectedEvent(NextEvent.CANCEL);
-            subscription.cancel(clock.getUTCNow(), context);
+            subscription.cancel(clock.getUTCNow(), callContext);
             assertFalse(testListener.isCompleted(3000));
             testListener.reset();
 
@@ -131,7 +131,7 @@ public abstract class TestUserApiCancel extends TestApiBase {
             assertEquals(subscription.getLastActiveBillingPeriod(), term.toString());
             assertEquals(subscription.getLastActiveCategoryName(), "BASE");
 
-            DateTime futureEndDate = subscription.getFutureEndDate();
+            final DateTime futureEndDate = subscription.getFutureEndDate();
             Assert.assertNotNull(futureEndDate);
 
             // MOVE TO EOT + RECHECK
@@ -186,7 +186,7 @@ public abstract class TestUserApiCancel extends TestApiBase {
             testListener.pushExpectedEvent(NextEvent.CANCEL);
 
             // CANCEL
-            subscription.cancel(clock.getUTCNow(), context);
+            subscription.cancel(clock.getUTCNow(), callContext);
             assertTrue(testListener.isCompleted(5000));
 
             final PlanPhase currentPhase = subscription.getCurrentPhase();
@@ -228,13 +228,13 @@ public abstract class TestUserApiCancel extends TestApiBase {
             // SET CTD + RE READ SUBSCRIPTION + CHANGE PLAN
             final Duration ctd = getDurationMonth(1);
             final DateTime newChargedThroughDate = DefaultClock.addDuration(expectedPhaseTrialChange, ctd);
-            billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate.toLocalDate(), context);
-            subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId());
+            billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate.toLocalDate(), callContext);
+            subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId(), callContext);
 
             // CANCEL EOT
-            subscription.cancel(clock.getUTCNow(), context);
+            subscription.cancel(clock.getUTCNow(), callContext);
 
-            subscription.uncancel(context);
+            subscription.uncancel(callContext);
 
             // MOVE TO EOT + RECHECK
             testListener.pushExpectedEvent(NextEvent.UNCANCEL);

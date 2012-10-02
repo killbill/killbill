@@ -26,24 +26,25 @@ import com.ning.billing.analytics.model.BusinessInvoiceItem;
 import com.ning.billing.analytics.model.BusinessInvoicePayment;
 import com.ning.billing.analytics.model.BusinessOverdueStatus;
 import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
+import com.ning.billing.util.callcontext.InternalTenantContext;
 
 public interface AnalyticsDao {
 
-    TimeSeriesData getAccountsCreatedOverTime();
+    TimeSeriesData getAccountsCreatedOverTime(InternalTenantContext context);
 
-    TimeSeriesData getSubscriptionsCreatedOverTime(final String productType, final String slug);
+    TimeSeriesData getSubscriptionsCreatedOverTime(String productType, String slug, InternalTenantContext context);
 
-    BusinessAccount getAccountByKey(final String accountKey);
+    BusinessAccount getAccountByKey(String accountKey, InternalTenantContext context);
 
-    List<BusinessSubscriptionTransition> getTransitionsByKey(final String externalKey);
+    List<BusinessSubscriptionTransition> getTransitionsByKey(String externalKey, InternalTenantContext context);
 
-    List<BusinessInvoice> getInvoicesByKey(final String accountKey);
+    List<BusinessInvoice> getInvoicesByKey(String accountKey, InternalTenantContext context);
 
-    List<BusinessAccountTag> getTagsForAccount(final String accountKey);
+    List<BusinessAccountTag> getTagsForAccount(String accountKey, InternalTenantContext context);
 
-    List<BusinessInvoiceItem> getInvoiceItemsForInvoice(final String invoiceId);
+    List<BusinessInvoiceItem> getInvoiceItemsForInvoice(String invoiceId, InternalTenantContext context);
 
-    List<BusinessOverdueStatus> getOverdueStatusesForBundleByKey(final String externalKey);
+    List<BusinessOverdueStatus> getOverdueStatusesForBundleByKey(String externalKey, InternalTenantContext context);
 
-    List<BusinessInvoicePayment> getInvoicePaymentsForAccountByKey(final String accountKey);
+    List<BusinessInvoicePayment> getInvoicePaymentsForAccountByKey(String accountKey, InternalTenantContext context);
 }

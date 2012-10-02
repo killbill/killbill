@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.payment.dao;
 
 import java.util.ArrayList;
@@ -26,7 +27,8 @@ import java.util.UUID;
 
 import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
-import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
 
 public class MockPaymentDao implements PaymentDao {
 
@@ -35,7 +37,7 @@ public class MockPaymentDao implements PaymentDao {
 
     @Override
     public PaymentModelDao insertPaymentWithAttempt(final PaymentModelDao paymentInfo, final PaymentAttemptModelDao attempt,
-                                                    final CallContext context) {
+                                                    final InternalCallContext context) {
         synchronized (this) {
             payments.put(paymentInfo.getId(), paymentInfo);
             attempts.put(attempt.getId(), attempt);
@@ -44,20 +46,17 @@ public class MockPaymentDao implements PaymentDao {
     }
 
     @Override
-    public PaymentAttemptModelDao insertNewAttemptForPayment(final UUID paymentId,
-                                                             final PaymentAttemptModelDao attempt, final CallContext context) {
+    public PaymentAttemptModelDao insertNewAttemptForPayment(final UUID paymentId, final PaymentAttemptModelDao attempt, final InternalCallContext context) {
         synchronized (this) {
             attempts.put(attempt.getId(), attempt);
         }
         return attempt;
     }
 
-
     @Override
-    public void updateStatusForPaymentWithAttempt(UUID paymentId,
-            PaymentStatus paymentStatus, String gatewayErrorCode, String gatewayErrorMsg,
-            String extFirstPaymentRefId, String extSecondPaymentRefId,
-            UUID attemptId, CallContext context) {
+    public void updateStatusForPaymentWithAttempt(final UUID paymentId, final PaymentStatus paymentStatus, final String gatewayErrorCode,
+                                                  final String gatewayErrorMsg, final String extFirstPaymentRefId, final String extSecondPaymentRefId,
+                                                  final UUID attemptId, final InternalCallContext context) {
         synchronized (this) {
             final PaymentModelDao entry = payments.remove(paymentId);
             if (entry != null) {
@@ -71,12 +70,12 @@ public class MockPaymentDao implements PaymentDao {
     }
 
     @Override
-    public PaymentAttemptModelDao getPaymentAttempt(final UUID attemptId) {
+    public PaymentAttemptModelDao getPaymentAttempt(final UUID attemptId, final InternalTenantContext context) {
         return attempts.get(attemptId);
     }
 
     @Override
-    public List<PaymentModelDao> getPaymentsForInvoice(final UUID invoiceId) {
+    public List<PaymentModelDao> getPaymentsForInvoice(final UUID invoiceId, final InternalTenantContext context) {
         final List<PaymentModelDao> result = new ArrayList<PaymentModelDao>();
         synchronized (this) {
             for (final PaymentModelDao cur : payments.values()) {
@@ -89,7 +88,7 @@ public class MockPaymentDao implements PaymentDao {
     }
 
     @Override
-    public List<PaymentModelDao> getPaymentsForAccount(final UUID accountId) {
+    public List<PaymentModelDao> getPaymentsForAccount(final UUID accountId, final InternalTenantContext context) {
         final List<PaymentModelDao> result = new ArrayList<PaymentModelDao>();
         synchronized (this) {
             for (final PaymentModelDao cur : payments.values()) {
@@ -102,12 +101,12 @@ public class MockPaymentDao implements PaymentDao {
     }
 
     @Override
-    public PaymentModelDao getPayment(final UUID paymentId) {
+    public PaymentModelDao getPayment(final UUID paymentId, final InternalTenantContext context) {
         return payments.get(paymentId);
     }
 
     @Override
-    public List<PaymentAttemptModelDao> getAttemptsForPayment(final UUID paymentId) {
+    public List<PaymentAttemptModelDao> getAttemptsForPayment(final UUID paymentId, final InternalTenantContext context) {
         final List<PaymentAttemptModelDao> result = new ArrayList<PaymentAttemptModelDao>();
         synchronized (this) {
             for (final PaymentAttemptModelDao cur : attempts.values()) {
@@ -122,18 +121,18 @@ public class MockPaymentDao implements PaymentDao {
     private final List<PaymentMethodModelDao> paymentMethods = new LinkedList<PaymentMethodModelDao>();
 
     @Override
-    public PaymentMethodModelDao insertPaymentMethod(final PaymentMethodModelDao paymentMethod, final CallContext context) {
+    public PaymentMethodModelDao insertPaymentMethod(final PaymentMethodModelDao paymentMethod, final InternalCallContext context) {
         paymentMethods.add(paymentMethod);
         return paymentMethod;
     }
 
     @Override
-    public List<PaymentMethodModelDao> refreshPaymentMethods(final UUID accountId, final List<PaymentMethodModelDao> newPaymentMethods, final CallContext context) {
+    public List<PaymentMethodModelDao> refreshPaymentMethods(final UUID accountId, final List<PaymentMethodModelDao> newPaymentMethods, final InternalCallContext context) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public PaymentMethodModelDao getPaymentMethod(final UUID paymentMethodId) {
+    public PaymentMethodModelDao getPaymentMethod(final UUID paymentMethodId, final InternalTenantContext context) {
         for (final PaymentMethodModelDao cur : paymentMethods) {
             if (cur.getId().equals(paymentMethodId)) {
                 return cur;
@@ -143,7 +142,7 @@ public class MockPaymentDao implements PaymentDao {
     }
 
     @Override
-    public List<PaymentMethodModelDao> getPaymentMethods(final UUID accountId) {
+    public List<PaymentMethodModelDao> getPaymentMethods(final UUID accountId, final InternalTenantContext context) {
         final List<PaymentMethodModelDao> result = new ArrayList<PaymentMethodModelDao>();
         for (final PaymentMethodModelDao cur : paymentMethods) {
             if (cur.getAccountId().equals(accountId)) {
@@ -154,7 +153,7 @@ public class MockPaymentDao implements PaymentDao {
     }
 
     @Override
-    public void deletedPaymentMethod(final UUID paymentMethodId) {
+    public void deletedPaymentMethod(final UUID paymentMethodId, final InternalCallContext context) {
         final Iterator<PaymentMethodModelDao> it = paymentMethods.iterator();
         while (it.hasNext()) {
             final PaymentMethodModelDao cur = it.next();
@@ -166,45 +165,41 @@ public class MockPaymentDao implements PaymentDao {
     }
 
     @Override
-    public void undeletedPaymentMethod(final UUID paymentMethodId) {
+    public void undeletedPaymentMethod(final UUID paymentMethodId, final InternalCallContext context) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public RefundModelDao insertRefund(RefundModelDao refundInfo,
-            CallContext context) {
+    public RefundModelDao insertRefund(final RefundModelDao refundInfo, final InternalCallContext context) {
         return null;
     }
 
     @Override
-    public void updateRefundStatus(UUID refundId, RefundStatus status,
-            CallContext context) {
+    public void updateRefundStatus(final UUID refundId, final RefundStatus status, final InternalCallContext context) {
     }
 
     @Override
-    public RefundModelDao getRefund(UUID refundId) {
+    public RefundModelDao getRefund(final UUID refundId, final InternalTenantContext context) {
         return null;
     }
 
     @Override
-    public List<RefundModelDao> getRefundsForPayment(UUID paymentId) {
+    public List<RefundModelDao> getRefundsForPayment(final UUID paymentId, final InternalTenantContext context) {
         return Collections.emptyList();
     }
 
     @Override
-    public List<RefundModelDao> getRefundsForAccount(UUID accountId) {
+    public List<RefundModelDao> getRefundsForAccount(final UUID accountId, final InternalTenantContext context) {
         return Collections.emptyList();
     }
 
     @Override
-    public PaymentModelDao getLastPaymentForPaymentMethod(UUID accountId,
-            UUID paymentMethodId) {
+    public PaymentModelDao getLastPaymentForPaymentMethod(final UUID accountId, final UUID paymentMethodId, final InternalTenantContext context) {
         return null;
     }
 
     @Override
-    public PaymentMethodModelDao getPaymentMethodIncludedDeleted(
-            UUID paymentMethodId) {
-        return getPaymentMethod(paymentMethodId);
+    public PaymentMethodModelDao getPaymentMethodIncludedDeleted(final UUID paymentMethodId, final InternalTenantContext context) {
+        return getPaymentMethod(paymentMethodId, context);
     }
 }

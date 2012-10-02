@@ -26,6 +26,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ning.billing.invoice.api.DefaultInvoiceService;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
+import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.notificationq.Notification;
 import com.ning.billing.util.notificationq.NotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService;
@@ -38,33 +42,43 @@ public class DefaultNextBillingDatePoster implements NextBillingDatePoster {
     private static final Logger log = LoggerFactory.getLogger(DefaultNextBillingDatePoster.class);
 
     private final NotificationQueueService notificationQueueService;
+    private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
-    public DefaultNextBillingDatePoster(final NotificationQueueService notificationQueueService) {
+    public DefaultNextBillingDatePoster(final NotificationQueueService notificationQueueService,
+                                        final InternalCallContextFactory internalCallContextFactory) {
         this.notificationQueueService = notificationQueueService;
+        this.internalCallContextFactory = internalCallContextFactory;
     }
 
     @Override
     public void insertNextBillingNotification(final Transmogrifier transactionalDao, final UUID accountId,
                                               final UUID subscriptionId, final DateTime futureNotificationTime) {
+        final InternalCallContext context = createCallContext();
+
         final NotificationQueue nextBillingQueue;
         try {
             nextBillingQueue = notificationQueueService.getNotificationQueue(DefaultInvoiceService.INVOICE_SERVICE_NAME,
                                                                              DefaultNextBillingDateNotifier.NEXT_BILLING_DATE_NOTIFIER_QUEUE);
             log.info("Queuing next billing date notification. id: {}, timestamp: {}", subscriptionId.toString(), futureNotificationTime.toString());
 
-            final List<Notification> existingNotifications = nextBillingQueue.getNotificationForAccountAndDate(accountId, futureNotificationTime);
+            final List<Notification> existingNotifications = nextBillingQueue.getNotificationForAccountAndDate(accountId, futureNotificationTime, context);
             if (existingNotifications.size() > 0) {
                 log.info(String.format("%s : notification for account %s and date %s already exist, skip...",
                                        DefaultNextBillingDateNotifier.NEXT_BILLING_DATE_NOTIFIER_QUEUE, accountId, futureNotificationTime));
                 return;
             }
 
-            nextBillingQueue.recordFutureNotificationFromTransaction(transactionalDao, futureNotificationTime, accountId, new NextBillingDateNotificationKey(subscriptionId));
+            nextBillingQueue.recordFutureNotificationFromTransaction(transactionalDao, futureNotificationTime, accountId,
+                                                                     new NextBillingDateNotificationKey(subscriptionId), context);
         } catch (NoSuchNotificationQueue e) {
             log.error("Attempting to put items on a non-existent queue (NextBillingDateNotifier).", e);
         } catch (IOException e) {
             log.error("Failed to serialize notficationKey for subscriptionId {}", subscriptionId);
         }
+    }
+
+    private InternalCallContext createCallContext() {
+        return internalCallContextFactory.createInternalCallContext("NextBillingDatePoster", CallOrigin.INTERNAL, UserType.SYSTEM, null);
     }
 }

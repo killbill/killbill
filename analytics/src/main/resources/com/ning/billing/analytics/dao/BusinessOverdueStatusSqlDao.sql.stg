@@ -1,5 +1,8 @@
 group BusinessOverdueStatus;
 
+CHECK_TENANT() ::= "tenant_record_id = :tenantRecordId"
+AND_CHECK_TENANT() ::= "AND <CHECK_TENANT()>"
+
 getOverdueStatusesForBundleByKey(external_key) ::= <<
 select
   bundle_id
@@ -8,8 +11,10 @@ select
 , status
 , start_date
 , end_date
+, tenant_record_id
 from bos
 where external_key = :external_key
+<AND_CHECK_TENANT()>
 order by start_date asc
 ;
 >>
@@ -22,6 +27,8 @@ insert into bos (
 , status
 , start_date
 , end_date
+, account_record_id
+, tenant_record_id
 ) values (
   :bundle_id
 , :external_key
@@ -29,13 +36,15 @@ insert into bos (
 , :status
 , :start_date
 , :end_date
+, :accountRecordId
+, :tenantRecordId
 );
 >>
 
 deleteOverdueStatusesForBundle(bundle_id) ::= <<
-delete from bos where bundle_id = :bundle_id;
+delete from bos where bundle_id = :bundle_id <AND_CHECK_TENANT()>;
 >>
 
 test() ::= <<
-select 1 from bos;
+select 1 from bos where <CHECK_TENANT()>;
 >>

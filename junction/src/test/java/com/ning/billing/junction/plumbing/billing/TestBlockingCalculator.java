@@ -139,9 +139,9 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         blockingStates.add(new DefaultBlockingState(bundleId1, DISABLED_BUNDLE, Blockable.Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now));
         blockingStates.add(new DefaultBlockingState(bundleId1, CLEAR_BUNDLE, Blockable.Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now.plusDays(2)));
 
-        Mockito.when(blockingApi.getBlockingHistory(bundleId1)).thenReturn(blockingStates);
+        Mockito.when(blockingApi.getBlockingHistory(bundleId1, callContext)).thenReturn(blockingStates);
 
-        odc.insertBlockingEvents(billingEvents);
+        odc.insertBlockingEvents(billingEvents, callContext);
 
         assertEquals(billingEvents.size(), 7);
 
@@ -751,9 +751,9 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         blockingEvents.add(new DefaultBlockingState(ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, new LocalDate(2012, 7, 25).toDateTimeAtStartOfDay(DateTimeZone.UTC)));
         blockingEvents.add(new DefaultBlockingState(ovdId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, new LocalDate(2012, 7, 25).toDateTimeAtStartOfDay(DateTimeZone.UTC)));
 
-        Mockito.when(blockingApi.getBlockingHistory(bundleId1)).thenReturn(blockingEvents);
+        Mockito.when(blockingApi.getBlockingHistory(bundleId1, callContext)).thenReturn(blockingEvents);
 
-        odc.insertBlockingEvents(billingEvents);
+        odc.insertBlockingEvents(billingEvents, callContext);
 
         assertEquals(billingEvents.size(), 5);
         final List<BillingEvent> events = new ArrayList<BillingEvent>(billingEvents);

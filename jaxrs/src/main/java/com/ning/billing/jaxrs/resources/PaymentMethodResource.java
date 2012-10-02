@@ -18,6 +18,7 @@ package com.ning.billing.jaxrs.resources;
 
 import java.util.UUID;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -40,8 +41,11 @@ import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
 import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.PaymentMethod;
+import com.ning.billing.util.api.AuditUserApi;
 import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.api.TagUserApi;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.dao.ObjectType;
 
 import com.google.inject.Inject;
@@ -55,30 +59,32 @@ public class PaymentMethodResource extends JaxRsResourceBase {
 
     private final PaymentApi paymentApi;
     private final AccountUserApi accountApi;
-    private final Context context;
 
     @Inject
-    public PaymentMethodResource(final JaxrsUriBuilder uriBuilder,
+    public PaymentMethodResource(final PaymentApi paymentApi,
                                  final AccountUserApi accountApi,
-                                 final PaymentApi paymentApi,
+                                 final JaxrsUriBuilder uriBuilder,
                                  final TagUserApi tagUserApi,
                                  final CustomFieldUserApi customFieldUserApi,
+                                 final AuditUserApi auditUserApi,
                                  final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, context);
         this.paymentApi = paymentApi;
         this.accountApi = accountApi;
-        this.context = context;
     }
 
     @GET
     @Path("/{paymentMethodId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
     public Response getPaymentMethod(@PathParam("paymentMethodId") final String paymentMethodId,
-                                     @QueryParam(QUERY_PAYMENT_METHOD_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo) throws AccountApiException, PaymentApiException {
-        PaymentMethod paymentMethod = paymentApi.getPaymentMethodById(UUID.fromString(paymentMethodId));
-        final Account account = accountApi.getAccountById(paymentMethod.getAccountId());
+                                     @QueryParam(QUERY_PAYMENT_METHOD_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
+                                     @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, PaymentApiException {
+        final TenantContext tenantContext = context.createContext(request);
+
+        PaymentMethod paymentMethod = paymentApi.getPaymentMethodById(UUID.fromString(paymentMethodId), tenantContext);
+        final Account account = accountApi.getAccountById(paymentMethod.getAccountId(), tenantContext);
         if (withPluginInfo) {
-            paymentMethod = paymentApi.getPaymentMethod(account, paymentMethod.getId(), true);
+            paymentMethod = paymentApi.getPaymentMethod(account, paymentMethod.getId(), true, tenantContext);
         }
         final PaymentMethodJson json = PaymentMethodJson.toPaymentMethodJson(account, paymentMethod);
 
@@ -90,14 +96,20 @@ public class PaymentMethodResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @Path("/{paymentMethodId:" + UUID_PATTERN + "}")
     public Response updatePaymentMethod(final PaymentMethodJson json,
-                                        @PathParam("paymentMethodId") final String paymentMethodId) throws PaymentApiException, AccountApiException {
+                                        @PathParam("paymentMethodId") final String paymentMethodId,
+                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                        @HeaderParam(HDR_REASON) final String reason,
+                                        @HeaderParam(HDR_COMMENT) final String comment,
+                                        @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+
         final PaymentMethod input = json.toPaymentMethod();
-        final PaymentMethod paymentMethod = paymentApi.getPaymentMethodById(UUID.fromString(paymentMethodId));
-        final Account account = accountApi.getAccountById(paymentMethod.getAccountId());
+        final PaymentMethod paymentMethod = paymentApi.getPaymentMethodById(UUID.fromString(paymentMethodId), callContext);
+        final Account account = accountApi.getAccountById(paymentMethod.getAccountId(), callContext);
 
-        paymentApi.updatePaymentMethod(account, paymentMethod.getId(), input.getPluginDetail());
+        paymentApi.updatePaymentMethod(account, paymentMethod.getId(), input.getPluginDetail(), callContext);
 
-        return getPaymentMethod(paymentMethod.getId().toString(), false);
+        return getPaymentMethod(paymentMethod.getId().toString(), false, request);
     }
 
     @DELETE
@@ -107,11 +119,14 @@ public class PaymentMethodResource extends JaxRsResourceBase {
                                         @QueryParam(QUERY_DELETE_DEFAULT_PM_WITH_AUTO_PAY_OFF) @DefaultValue("false") final Boolean deleteDefaultPaymentMethodWithAutoPayOff,
                                         @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                         @HeaderParam(HDR_REASON) final String reason,
-                                        @HeaderParam(HDR_COMMENT) final String comment) throws PaymentApiException, AccountApiException {
-        final PaymentMethod paymentMethod = paymentApi.getPaymentMethodById(UUID.fromString(paymentMethodId));
-        final Account account = accountApi.getAccountById(paymentMethod.getAccountId());
+                                        @HeaderParam(HDR_COMMENT) final String comment,
+                                        @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
-        paymentApi.deletedPaymentMethod(account, UUID.fromString(paymentMethodId), deleteDefaultPaymentMethodWithAutoPayOff, context.createContext(createdBy, reason, comment));
+        final PaymentMethod paymentMethod = paymentApi.getPaymentMethodById(UUID.fromString(paymentMethodId), callContext);
+        final Account account = accountApi.getAccountById(paymentMethod.getAccountId(), callContext);
+
+        paymentApi.deletedPaymentMethod(account, UUID.fromString(paymentMethodId), deleteDefaultPaymentMethodWithAutoPayOff, callContext);
 
         return Response.status(Status.OK).build();
     }

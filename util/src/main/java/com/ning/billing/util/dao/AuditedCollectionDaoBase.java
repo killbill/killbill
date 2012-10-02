@@ -16,7 +16,6 @@
 
 package com.ning.billing.util.dao;
 
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -27,13 +26,16 @@ import java.util.UUID;
 
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
-import com.google.common.collect.Sets;
 import com.ning.billing.util.ChangeType;
-import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.entity.Entity;
 import com.ning.billing.util.entity.collection.dao.UpdatableEntityCollectionSqlDao;
 
+import com.google.common.collect.Sets;
+
 public abstract class AuditedCollectionDaoBase<T extends Entity, V> implements AuditedCollectionDao<T> {
+
     /**
      * Returns equivalence object for the entities, so that dao
      * can figure out if entities have changed (UPDATE statement) or
@@ -61,11 +63,12 @@ public abstract class AuditedCollectionDaoBase<T extends Entity, V> implements A
      * @param context          the current content
      */
     @Override
-    public void saveEntitiesFromTransaction(final Transmogrifier transactionalDao, final UUID objectId, final ObjectType objectType, final List<T> newEntities, final CallContext context) {
-        final UpdatableEntityCollectionSqlDao<T> dao = transmogrifyDao(transactionalDao);
+    public void saveEntitiesFromTransaction(final Transmogrifier transactionalDao, final UUID objectId, final ObjectType objectType,
+                                            final List<T> newEntities, final InternalCallContext context) {
+        final UpdatableEntityCollectionSqlDao<T> dao = transmogrifyDao(transactionalDao, context);
 
         // Get list of all existing entities for this parent object, e.g. find all email addresses for this account
-        final List<T> currentEntities = dao.load(objectId.toString(), objectType);
+        final List<T> currentEntities = dao.load(objectId.toString(), objectType, context);
 
         // Compute the list of objects to add, remove and/or update
         final Map<V, T> currentObjs = new HashMap<V, T>(currentEntities.size());
@@ -111,7 +114,7 @@ public abstract class AuditedCollectionDaoBase<T extends Entity, V> implements A
         }
 
         // Find all pairs <entity id, record id> (including those that are about to be deleted) for this parent object
-        final List<Mapper<UUID, Long>> recordIds = dao.getRecordIds(objectId.toString(), objectType);
+        final List<Mapper<UUID, Long>> recordIds = dao.getRecordIds(objectId.toString(), objectType, context);
         // Flip the map to look up the record id associated with an entity id
         final Map<UUID, Long> recordIdMap = convertToHistoryMap(recordIds, objectType);
 
@@ -126,41 +129,41 @@ public abstract class AuditedCollectionDaoBase<T extends Entity, V> implements A
         entityHistories.addAll(convertToHistory(objsToUpdate, recordIdMap, ChangeType.UPDATE));
         entityHistories.addAll(convertToHistory(objsToRemove, recordIdMap, ChangeType.DELETE));
 
-        final Long maxHistoryRecordId = dao.getMaxHistoryRecordId();
+        final Long maxHistoryRecordId = dao.getMaxHistoryRecordId(context);
         // Save the records in the history table
         dao.addHistoryFromTransaction(objectId.toString(), objectType, entityHistories, context);
 
         // We have to fetch history record ids to update audit log
-        final List<Mapper<Long, Long>> historyRecordIds = dao.getHistoryRecordIds(maxHistoryRecordId);
+        final List<Mapper<Long, Long>> historyRecordIds = dao.getHistoryRecordIds(maxHistoryRecordId, context);
         final Map<Long, Long> historyRecordIdMap = convertToAuditMap(historyRecordIds);
-        final List<EntityAudit> entityAudits = convertToAudits(entityHistories, historyRecordIdMap);
+        final List<EntityAudit> entityAudits = convertToAudits(entityHistories, historyRecordIdMap, context);
 
         // Save an entry in the audit log
         dao.insertAuditFromTransaction(entityAudits, context);
     }
 
     @Override
-    public void saveEntities(final UUID objectId, final ObjectType objectType, final List<T> entities, final CallContext context) {
-        this.saveEntitiesFromTransaction(getSqlDao(), objectId, objectType, entities, context);
+    public void saveEntities(final UUID objectId, final ObjectType objectType, final List<T> entities, final InternalCallContext context) {
+        this.saveEntitiesFromTransaction(getSqlDao(context), objectId, objectType, entities, context);
     }
 
     @Override
-    public Map<String, T> loadEntities(final UUID objectId, final ObjectType objectType) {
-        final UpdatableEntityCollectionSqlDao<T> thisDao = getSqlDao();
-        return getMap(thisDao, objectId, objectType);
+    public Map<String, T> loadEntities(final UUID objectId, final ObjectType objectType, final InternalTenantContext context) {
+        final UpdatableEntityCollectionSqlDao<T> thisDao = getSqlDao(context);
+        return getMap(thisDao, objectId, objectType, context);
     }
 
     @Override
-    public Map<String, T> loadEntitiesFromTransaction(final Transmogrifier dao, final UUID objectId, final ObjectType objectType) {
-        final UpdatableEntityCollectionSqlDao<T> thisDao = transmogrifyDao(dao);
-        return getMap(thisDao, objectId, objectType);
+    public Map<String, T> loadEntitiesFromTransaction(final Transmogrifier dao, final UUID objectId, final ObjectType objectType, final InternalTenantContext context) {
+        final UpdatableEntityCollectionSqlDao<T> thisDao = transmogrifyDao(dao, context);
+        return getMap(thisDao, objectId, objectType, context);
     }
 
-    private Map<String, T> getMap(final UpdatableEntityCollectionSqlDao<T> dao, final UUID objectId, final ObjectType objectType) {
-        final List<T> entities = dao.load(objectId.toString(), objectType);
+    private Map<String, T> getMap(final UpdatableEntityCollectionSqlDao<T> dao, final UUID objectId, final ObjectType objectType, final InternalTenantContext context) {
+        final List<T> entities = dao.load(objectId.toString(), objectType, context);
         final Map<String, T> results = new HashMap<String, T>();
         for (final T entity : entities) {
-            results.put(getKey(entity), entity);
+            results.put(getKey(entity, context), entity);
         }
         return results;
     }
@@ -181,13 +184,13 @@ public abstract class AuditedCollectionDaoBase<T extends Entity, V> implements A
         return histories;
     }
 
-    protected List<EntityAudit> convertToAudits(final List<EntityHistory<T>> histories, final Map<Long, Long> historyRecordIds) {
+    protected List<EntityAudit> convertToAudits(final List<EntityHistory<T>> histories, final Map<Long, Long> historyRecordIds, final InternalTenantContext context) {
         final List<EntityAudit> audits = new ArrayList<EntityAudit>();
 
         for (final EntityHistory<T> history : histories) {
             final Long recordId = history.getValue();
             final Long historyRecordId = historyRecordIds.get(recordId);
-            audits.add(new EntityAudit(getTableName(), historyRecordId, history.getChangeType()));
+            audits.add(new EntityAudit(getTableName(context), historyRecordId, history.getChangeType()));
         }
 
         return audits;
@@ -217,11 +220,11 @@ public abstract class AuditedCollectionDaoBase<T extends Entity, V> implements A
         return historyRecordIdMap;
     }
 
-    protected abstract TableName getTableName();
+    protected abstract TableName getTableName(InternalTenantContext context);
 
-    protected abstract UpdatableEntityCollectionSqlDao<T> transmogrifyDao(Transmogrifier transactionalDao);
+    protected abstract UpdatableEntityCollectionSqlDao<T> transmogrifyDao(Transmogrifier transactionalDao, InternalTenantContext context);
 
-    protected abstract UpdatableEntityCollectionSqlDao<T> getSqlDao();
+    protected abstract UpdatableEntityCollectionSqlDao<T> getSqlDao(InternalTenantContext context);
 
-    protected abstract String getKey(T entity);
+    protected abstract String getKey(T entity, InternalTenantContext context);
 }

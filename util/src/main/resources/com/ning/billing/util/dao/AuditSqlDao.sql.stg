@@ -1,5 +1,8 @@
 group AuditSqlDao;
 
+CHECK_TENANT() ::= "tenant_record_id = :tenantRecordId"
+AND_CHECK_TENANT() ::= "AND <CHECK_TENANT()>"
+
 fields(prefix) ::= <<
     <prefix>table_name,
     <prefix>record_id,
@@ -8,12 +11,14 @@ fields(prefix) ::= <<
     <prefix>changed_by,
     <prefix>reason_code,
     <prefix>comments,
-    <prefix>user_token
+    <prefix>user_token,
+    <prefix>account_record_id,
+    <prefix>tenant_record_id
 >>
 
 insertAuditFromTransaction() ::= <<
     INSERT INTO audit_log(<fields()>)
-    VALUES(:tableName, :recordId, :changeType, :createdDate, :userName, :reasonCode, :comment, :userToken);
+    VALUES(:tableName, :recordId, :changeType, :createdDate, :userName, :reasonCode, :comment, :userToken, :accountRecordId, :tenantRecordId);
 >>
 
 getAuditLogsForRecordId() ::= <<
@@ -21,6 +26,7 @@ getAuditLogsForRecordId() ::= <<
   FROM audit_log
   WHERE record_id = :recordId
   AND table_name = :tableName
+  <AND_CHECK_TENANT()>
   ORDER BY change_date ASC
 >>
 
@@ -28,6 +34,7 @@ getRecordIdForTable(tableName) ::= <<
   SELECT record_id
   FROM <tableName>
   WHERE id = :id
+  <AND_CHECK_TENANT()>
   LIMIT 1
 >>
 
@@ -35,4 +42,5 @@ getHistoryRecordIdsForTable(tableName) ::= <<
   SELECT history_record_id record_id
   FROM <tableName>
   WHERE id = :id
+  <AND_CHECK_TENANT()>
 >>

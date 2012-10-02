@@ -26,24 +26,18 @@ import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.bus.DefaultBusService;
 import com.ning.billing.util.bus.InMemoryBus;
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallOrigin;
-import com.ning.billing.util.callcontext.DefaultCallContextFactory;
-import com.ning.billing.util.callcontext.UserType;
-import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.tag.api.user.TagEventBuilder;
 
 import static org.testng.Assert.fail;
 
 public abstract class AccountDaoTestBase extends AccountTestSuiteWithEmbeddedDB {
+
     protected final TagEventBuilder tagEventBuilder = new TagEventBuilder();
 
     protected AccountDao accountDao;
     protected AccountEmailDao accountEmailDao;
     protected IDBI dbi;
     protected Bus bus;
-    protected CallContext context;
 
     @BeforeClass(groups = "slow")
     protected void setup() throws IOException {
@@ -56,14 +50,11 @@ public abstract class AccountDaoTestBase extends AccountTestSuiteWithEmbeddedDB 
 
             accountDao = new AuditedAccountDao(dbi, bus);
             // Health check test to make sure MySQL is setup properly
-            accountDao.test();
+            accountDao.test(internalCallContext);
 
             accountEmailDao = new AuditedAccountEmailDao(dbi);
             // Health check test to make sure MySQL is setup properly
-            accountEmailDao.test();
-
-            final Clock clock = new ClockMock();
-            context = new DefaultCallContextFactory(clock).createCallContext("Account Dao Tests", CallOrigin.TEST, UserType.TEST);
+            accountEmailDao.test(internalCallContext);
         } catch (Throwable t) {
             fail(t.toString());
         }

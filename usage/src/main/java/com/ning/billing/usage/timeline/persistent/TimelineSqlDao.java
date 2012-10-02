@@ -42,90 +42,111 @@ import com.ning.billing.usage.timeline.shutdown.StartTimesBinder;
 import com.ning.billing.usage.timeline.shutdown.StartTimesMapper;
 import com.ning.billing.usage.timeline.sources.SourceIdAndMetricId;
 import com.ning.billing.usage.timeline.sources.SourceIdAndMetricIdMapper;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 
 @ExternalizedSqlViaStringTemplate3()
 @RegisterMapper({CategoryIdAndMetricMapper.class, StartTimesMapper.class, SourceIdAndMetricIdMapper.class})
 public interface TimelineSqlDao extends Transactional<TimelineSqlDao>, Transmogrifier {
 
     @SqlQuery
-    Integer getSourceId(@Bind("sourceName") final String source);
+    Integer getSourceId(@Bind("sourceName") final String source,
+                        @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
-    String getSource(@Bind("sourceId") final Integer sourceId);
-
-    @SqlQuery
-    @Mapper(DefaultMapper.class)
-    List<Map<String, Object>> getSources();
-
-    @SqlUpdate
-    void addSource(@Bind("sourceName") final String source);
-
-    @SqlBatch
-    @BatchChunkSize(1000)
-    void bulkInsertSources(@Bind("sourceName") Iterator<String> sourcesIterator);
-
-    @SqlQuery
-    Integer getEventCategoryId(@Bind("eventCategory") final String eventCategory);
-
-    @SqlQuery
-    String getEventCategory(@Bind("eventCategoryId") final Integer eventCategoryId);
-
-    @SqlUpdate
-    void addEventCategory(@Bind("eventCategory") final String eventCategory);
-
-    @SqlBatch
-    @BatchChunkSize(1000)
-    void bulkInsertEventCategories(@Bind("eventCategory") Iterator<String> cateogoryNames);
-
-    @SqlQuery
-    Iterable<Integer> getMetricIdsBySourceId(@Bind("sourceId") final Integer sourceId);
-
-    @SqlQuery
-    Iterable<SourceIdAndMetricId> getMetricIdsForAllSources();
-
-    @SqlQuery
-    Integer getMetricId(@Bind("eventCategoryId") final int eventCategoryId, @Bind("metric") final String metric);
-
-    @SqlQuery
-    CategoryIdAndMetric getEventCategoryIdAndMetric(@Bind("metricId") final Integer metricId);
-
-    @SqlUpdate
-    void addMetric(@Bind("eventCategoryId") final int eventCategoryId, @Bind("metric") final String metric);
-
-    @SqlBatch
-    @BatchChunkSize(1000)
-    void bulkInsertMetrics(@CategoryIdAndMetricBinder Iterator<CategoryIdAndMetric> categoriesAndMetrics);
+    String getSource(@Bind("sourceId") final Integer sourceId,
+                     @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
     @Mapper(DefaultMapper.class)
-    List<Map<String, Object>> getEventCategories();
-
-    @SqlQuery
-    @Mapper(DefaultMapper.class)
-    List<Map<String, Object>> getMetrics();
-
-    @SqlQuery
-    int getLastInsertedId();
-
-    @SqlQuery
-    long getHighestTimelineChunkId();
+    List<Map<String, Object>> getSources(@InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlUpdate
-    void insertTimelineChunk(@TimelineChunkBinder final TimelineChunk timelineChunk);
+    void addSource(@Bind("sourceName") final String source,
+                   @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlBatch
     @BatchChunkSize(1000)
-    void bulkInsertTimelineChunks(@TimelineChunkBinder Iterator<TimelineChunk> chunkIterator);
-
-    @SqlUpdate
-    Integer insertLastStartTimes(@StartTimesBinder final StartTimes startTimes);
+    void bulkInsertSources(@Bind("sourceName") Iterator<String> sourcesIterator,
+                           @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlQuery
-    StartTimes getLastStartTimes();
+    Integer getEventCategoryId(@Bind("eventCategory") final String eventCategory,
+                               @InternalTenantContextBinder final InternalTenantContext context);
+
+    @SqlQuery
+    String getEventCategory(@Bind("eventCategoryId") final Integer eventCategoryId,
+                            @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlUpdate
-    void deleteLastStartTimes();
+    void addEventCategory(@Bind("eventCategory") final String eventCategory,
+                          @InternalTenantContextBinder final InternalCallContext context);
+
+    @SqlBatch
+    @BatchChunkSize(1000)
+    void bulkInsertEventCategories(@Bind("eventCategory") Iterator<String> categoryNames,
+                                   @InternalTenantContextBinder final InternalCallContext context);
+
+    @SqlQuery
+    Iterable<Integer> getMetricIdsBySourceId(@Bind("sourceId") final Integer sourceId,
+                                             @InternalTenantContextBinder final InternalTenantContext context);
+
+    @SqlQuery
+    Iterable<SourceIdAndMetricId> getMetricIdsForAllSources(@InternalTenantContextBinder final InternalTenantContext context);
+
+    @SqlQuery
+    Integer getMetricId(@Bind("eventCategoryId") final int eventCategoryId,
+                        @Bind("metric") final String metric,
+                        @InternalTenantContextBinder final InternalTenantContext context);
+
+    @SqlQuery
+    CategoryIdAndMetric getEventCategoryIdAndMetric(@Bind("metricId") final Integer metricId,
+                                                    @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlUpdate
-    void test();
+    void addMetric(@Bind("eventCategoryId") final int eventCategoryId,
+                   @Bind("metric") final String metric,
+                   @InternalTenantContextBinder final InternalCallContext context);
+
+    @SqlBatch
+    @BatchChunkSize(1000)
+    void bulkInsertMetrics(@CategoryIdAndMetricBinder Iterator<CategoryIdAndMetric> categoriesAndMetrics,
+                           @InternalTenantContextBinder final InternalCallContext context);
+
+    @SqlQuery
+    @Mapper(DefaultMapper.class)
+    List<Map<String, Object>> getEventCategories(@InternalTenantContextBinder final InternalTenantContext context);
+
+    @SqlQuery
+    @Mapper(DefaultMapper.class)
+    List<Map<String, Object>> getMetrics(@InternalTenantContextBinder final InternalTenantContext context);
+
+    @SqlQuery
+    int getLastInsertedId(@InternalTenantContextBinder final InternalTenantContext context);
+
+    @SqlQuery
+    long getHighestTimelineChunkId(@InternalTenantContextBinder final InternalTenantContext context);
+
+    @SqlUpdate
+    void insertTimelineChunk(@TimelineChunkBinder final TimelineChunk timelineChunk,
+                             @InternalTenantContextBinder final InternalCallContext context);
+
+    @SqlBatch
+    @BatchChunkSize(1000)
+    void bulkInsertTimelineChunks(@TimelineChunkBinder Iterator<TimelineChunk> chunkIterator,
+                                  @InternalTenantContextBinder final InternalCallContext context);
+
+    @SqlUpdate
+    Integer insertLastStartTimes(@StartTimesBinder final StartTimes startTimes,
+                                 @InternalTenantContextBinder final InternalCallContext context);
+
+    @SqlQuery
+    StartTimes getLastStartTimes(@InternalTenantContextBinder final InternalTenantContext context);
+
+    @SqlUpdate
+    void deleteLastStartTimes(@InternalTenantContextBinder final InternalCallContext context);
+
+    @SqlUpdate
+    void test(@InternalTenantContextBinder final InternalTenantContext context);
 }

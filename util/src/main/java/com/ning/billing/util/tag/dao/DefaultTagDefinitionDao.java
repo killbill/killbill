@@ -28,20 +28,23 @@ import org.skife.jdbi.v2.exceptions.TransactionFailedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
-import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.bus.Bus;
-import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.DefaultTagDefinition;
 import com.ning.billing.util.tag.TagDefinition;
 import com.ning.billing.util.tag.api.TagDefinitionEvent;
 import com.ning.billing.util.tag.api.user.TagEventBuilder;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
+import com.google.inject.Inject;
+
 public class DefaultTagDefinitionDao implements TagDefinitionDao {
+
     private static final Logger log = LoggerFactory.getLogger(DefaultTagDefinitionDao.class);
 
     private final TagDefinitionSqlDao tagDefinitionSqlDao;
@@ -56,10 +59,10 @@ public class DefaultTagDefinitionDao implements TagDefinitionDao {
     }
 
     @Override
-    public List<TagDefinition> getTagDefinitions() {
+    public List<TagDefinition> getTagDefinitions(final InternalTenantContext context) {
         // Get user definitions from the database
         final List<TagDefinition> definitionList = new LinkedList<TagDefinition>();
-        definitionList.addAll(tagDefinitionSqlDao.get());
+        definitionList.addAll(tagDefinitionSqlDao.get(context));
 
         // Add control tag definitions
         for (final ControlTagType controlTag : ControlTagType.values()) {
@@ -69,28 +72,27 @@ public class DefaultTagDefinitionDao implements TagDefinitionDao {
     }
 
     @Override
-    public TagDefinition getByName(final String definitionName) {
+    public TagDefinition getByName(final String definitionName, final InternalTenantContext context) {
         for (final ControlTagType controlTag : ControlTagType.values()) {
             if (controlTag.name().equals(definitionName)) {
                 return new DefaultTagDefinition(controlTag);
             }
-         }
-        return tagDefinitionSqlDao.getByName(definitionName);
+        }
+        return tagDefinitionSqlDao.getByName(definitionName, context);
     }
 
-
     @Override
-    public TagDefinition getById(final UUID definitionId) {
+    public TagDefinition getById(final UUID definitionId, final InternalTenantContext context) {
         for (final ControlTagType controlTag : ControlTagType.values()) {
             if (controlTag.getId().equals(definitionId)) {
                 return new DefaultTagDefinition(controlTag);
             }
         }
-        return tagDefinitionSqlDao.getById(definitionId.toString());
+        return tagDefinitionSqlDao.getById(definitionId.toString(), context);
     }
 
     @Override
-    public List<TagDefinition> getByIds(final Collection<UUID> definitionIds) {
+    public List<TagDefinition> getByIds(final Collection<UUID> definitionIds, final InternalTenantContext context) {
         final List<TagDefinition> result = new LinkedList<TagDefinition>();
         for (final UUID cur : definitionIds) {
             for (final ControlTagType controlTag : ControlTagType.values()) {
@@ -103,18 +105,18 @@ public class DefaultTagDefinitionDao implements TagDefinitionDao {
         if (definitionIds.size() > 0) {
             result.addAll(tagDefinitionSqlDao.getByIds(Collections2.transform(definitionIds, new Function<UUID, String>() {
                 @Override
-                public String apply(UUID input) {
+                public String apply(final UUID input) {
                     return input.toString();
                 }
 
-            })));
+            }), context));
         }
         return result;
     }
 
     @Override
     public TagDefinition create(final String definitionName, final String description,
-                                final CallContext context) throws TagDefinitionApiException {
+                                final InternalCallContext context) throws TagDefinitionApiException {
         // Make sure a control tag with this name don't already exist
         if (isControlTagName(definitionName)) {
             throw new TagDefinitionApiException(ErrorCode.TAG_DEFINITION_CONFLICTS_WITH_CONTROL_TAG, definitionName);
@@ -125,7 +127,7 @@ public class DefaultTagDefinitionDao implements TagDefinitionDao {
                 @Override
                 public TagDefinition inTransaction(final TagDefinitionSqlDao tagDefinitionSqlDao, final TransactionStatus status) throws Exception {
                     // Make sure the tag definition doesn't exist already
-                    final TagDefinition existingDefinition = tagDefinitionSqlDao.getByName(definitionName);
+                    final TagDefinition existingDefinition = tagDefinitionSqlDao.getByName(definitionName, context);
                     if (existingDefinition != null) {
                         throw new TagDefinitionApiException(ErrorCode.TAG_DEFINITION_ALREADY_EXISTS, definitionName);
                     }
@@ -170,19 +172,19 @@ public class DefaultTagDefinitionDao implements TagDefinitionDao {
     }
 
     @Override
-    public void deleteById(final UUID definitionId, final CallContext context) throws TagDefinitionApiException {
+    public void deleteById(final UUID definitionId, final InternalCallContext context) throws TagDefinitionApiException {
         try {
             tagDefinitionSqlDao.inTransaction(new Transaction<Void, TagDefinitionSqlDao>() {
                 @Override
                 public Void inTransaction(final TagDefinitionSqlDao tagDefinitionSqlDao, final TransactionStatus status) throws Exception {
                     // Make sure the tag definition exists
-                    final TagDefinition tagDefinition = tagDefinitionSqlDao.getById(definitionId.toString());
+                    final TagDefinition tagDefinition = tagDefinitionSqlDao.getById(definitionId.toString(), context);
                     if (tagDefinition == null) {
                         throw new TagDefinitionApiException(ErrorCode.TAG_DEFINITION_DOES_NOT_EXIST, definitionId);
                     }
 
                     // Make sure it is not used currently
-                    if (tagDefinitionSqlDao.tagDefinitionUsageCount(definitionId.toString()) > 0) {
+                    if (tagDefinitionSqlDao.tagDefinitionUsageCount(definitionId.toString(), context) > 0) {
                         throw new TagDefinitionApiException(ErrorCode.TAG_DEFINITION_IN_USE, definitionId);
                     }
 

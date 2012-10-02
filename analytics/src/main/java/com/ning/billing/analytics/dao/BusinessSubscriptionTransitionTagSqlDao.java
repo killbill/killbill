@@ -25,20 +25,30 @@ import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 
 import com.ning.billing.analytics.model.BusinessSubscriptionTransitionTag;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 
 @ExternalizedSqlViaStringTemplate3()
 @RegisterMapper(BusinessSubscriptionTransitionTagMapper.class)
 public interface BusinessSubscriptionTransitionTagSqlDao {
+
     @SqlQuery
-    List<BusinessSubscriptionTransitionTag> getTagsForBusinessSubscriptionTransitionByKey(@Bind("external_key") final String externalKey);
+    List<BusinessSubscriptionTransitionTag> getTagsForBusinessSubscriptionTransitionByKey(@Bind("external_key") final String externalKey,
+                                                                                          @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlUpdate
-    int addTag(@Bind("account_key") final String accountKey, @Bind("bundle_id") final String bundleId,
-               @Bind("external_key") final String externalKey, @Bind("name") final String name);
+    int addTag(@Bind("account_key") final String accountKey,
+               @Bind("bundle_id") final String bundleId,
+               @Bind("external_key") final String externalKey,
+               @Bind("name") final String name,
+               @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
-    int removeTag(@Bind("bundle_id") final String bundleId, @Bind("name") final String name);
+    int removeTag(@Bind("bundle_id") final String bundleId,
+                  @Bind("name") final String name,
+                  @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
-    void test();
+    void test(@InternalTenantContextBinder final InternalTenantContext context);
 }

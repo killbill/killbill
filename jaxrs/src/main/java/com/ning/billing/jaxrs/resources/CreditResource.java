@@ -18,6 +18,7 @@ package com.ning.billing.jaxrs.resources;
 
 import java.util.UUID;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
@@ -38,8 +39,11 @@ import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.jaxrs.json.CreditJson;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
+import com.ning.billing.util.api.AuditUserApi;
 import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.api.TagUserApi;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.dao.ObjectType;
 
 import com.google.inject.Inject;
@@ -53,27 +57,28 @@ public class CreditResource extends JaxRsResourceBase {
 
     private final InvoiceUserApi invoiceUserApi;
     private final AccountUserApi accountUserApi;
-    private final Context context;
 
     @Inject
-    public CreditResource(final JaxrsUriBuilder uriBuilder,
-                          final InvoiceUserApi invoiceUserApi,
+    public CreditResource(final InvoiceUserApi invoiceUserApi,
                           final AccountUserApi accountUserApi,
+                          final JaxrsUriBuilder uriBuilder,
                           final TagUserApi tagUserApi,
                           final CustomFieldUserApi customFieldUserApi,
+                          final AuditUserApi auditUserApi,
                           final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, context);
         this.invoiceUserApi = invoiceUserApi;
         this.accountUserApi = accountUserApi;
-        this.context = context;
     }
 
     @GET
     @Path("/{creditId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
-    public Response getCredit(@PathParam("creditId") final String creditId) throws InvoiceApiException, AccountApiException {
-        final InvoiceItem credit = invoiceUserApi.getCreditById(UUID.fromString(creditId));
-        final Account account = accountUserApi.getAccountById(credit.getAccountId());
+    public Response getCredit(@PathParam("creditId") final String creditId,
+                              @javax.ws.rs.core.Context final HttpServletRequest request) throws InvoiceApiException, AccountApiException {
+        final TenantContext tenantContext = context.createContext(request);
+        final InvoiceItem credit = invoiceUserApi.getCreditById(UUID.fromString(creditId), tenantContext);
+        final Account account = accountUserApi.getAccountById(credit.getAccountId(), tenantContext);
         final CreditJson creditJson = new CreditJson(credit, account.getTimeZone());
         return Response.status(Response.Status.OK).entity(creditJson).build();
     }
@@ -84,19 +89,22 @@ public class CreditResource extends JaxRsResourceBase {
     public Response createCredit(final CreditJson json,
                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                  @HeaderParam(HDR_REASON) final String reason,
-                                 @HeaderParam(HDR_COMMENT) final String comment) throws AccountApiException, InvoiceApiException {
-        final Account account = accountUserApi.getAccountById(UUID.fromString(json.getAccountId()));
+                                 @HeaderParam(HDR_COMMENT) final String comment,
+                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, InvoiceApiException {
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+
+        final Account account = accountUserApi.getAccountById(UUID.fromString(json.getAccountId()), callContext);
         final LocalDate effectiveDate = json.getEffectiveDate().toDateTime(account.getTimeZone()).toLocalDate();
 
         final InvoiceItem credit;
         if (json.getInvoiceId() != null) {
             // Apply an invoice level credit
             credit = invoiceUserApi.insertCreditForInvoice(account.getId(), UUID.fromString(json.getInvoiceId()), json.getCreditAmount(),
-                                                           effectiveDate, account.getCurrency(), context.createContext(createdBy, reason, comment));
+                                                           effectiveDate, account.getCurrency(), callContext);
         } else {
             // Apply a account level credit
             credit = invoiceUserApi.insertCredit(account.getId(), json.getCreditAmount(), effectiveDate,
-                                                 account.getCurrency(), context.createContext(createdBy, reason, comment));
+                                                 account.getCurrency(), callContext);
         }
 
         return uriBuilder.buildResponse(CreditResource.class, "getCredit", credit.getId());

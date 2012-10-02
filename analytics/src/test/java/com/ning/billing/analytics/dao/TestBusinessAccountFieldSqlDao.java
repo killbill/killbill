@@ -44,12 +44,12 @@ public class TestBusinessAccountFieldSqlDao extends AnalyticsTestSuiteWithEmbedd
         final String value = UUID.randomUUID().toString();
 
         // Verify initial state
-        Assert.assertEquals(accountFieldSqlDao.getFieldsForAccountByKey(accountKey).size(), 0);
-        Assert.assertEquals(accountFieldSqlDao.removeField(accountId.toString(), name), 0);
+        Assert.assertEquals(accountFieldSqlDao.getFieldsForAccountByKey(accountKey, internalCallContext).size(), 0);
+        Assert.assertEquals(accountFieldSqlDao.removeField(accountId.toString(), name, internalCallContext), 0);
 
         // Add an entry
-        Assert.assertEquals(accountFieldSqlDao.addField(accountId.toString(), accountKey, name, value), 1);
-        final List<BusinessAccountField> fieldsForAccount = accountFieldSqlDao.getFieldsForAccountByKey(accountKey);
+        Assert.assertEquals(accountFieldSqlDao.addField(accountId.toString(), accountKey, name, value, internalCallContext), 1);
+        final List<BusinessAccountField> fieldsForAccount = accountFieldSqlDao.getFieldsForAccountByKey(accountKey, internalCallContext);
         Assert.assertEquals(fieldsForAccount.size(), 1);
 
         // Retrieve it
@@ -60,8 +60,8 @@ public class TestBusinessAccountFieldSqlDao extends AnalyticsTestSuiteWithEmbedd
         Assert.assertEquals(accountField.getValue(), value);
 
         // Delete it
-        Assert.assertEquals(accountFieldSqlDao.removeField(accountId.toString(), name), 1);
-        Assert.assertEquals(accountFieldSqlDao.getFieldsForAccountByKey(accountKey).size(), 0);
+        Assert.assertEquals(accountFieldSqlDao.removeField(accountId.toString(), name, internalCallContext), 1);
+        Assert.assertEquals(accountFieldSqlDao.getFieldsForAccountByKey(accountKey, internalCallContext).size(), 0);
     }
 
     @Test(groups = "slow")
@@ -74,24 +74,24 @@ public class TestBusinessAccountFieldSqlDao extends AnalyticsTestSuiteWithEmbedd
         final String name2 = UUID.randomUUID().toString().substring(0, 30);
 
         // Add a field to both accounts
-        Assert.assertEquals(accountFieldSqlDao.addField(accountId1.toString(), accountKey1, name1, UUID.randomUUID().toString()), 1);
-        Assert.assertEquals(accountFieldSqlDao.addField(accountId2.toString(), accountKey2, name2, UUID.randomUUID().toString()), 1);
+        Assert.assertEquals(accountFieldSqlDao.addField(accountId1.toString(), accountKey1, name1, UUID.randomUUID().toString(), internalCallContext), 1);
+        Assert.assertEquals(accountFieldSqlDao.addField(accountId2.toString(), accountKey2, name2, UUID.randomUUID().toString(), internalCallContext), 1);
 
-        Assert.assertEquals(accountFieldSqlDao.getFieldsForAccountByKey(accountKey1).size(), 1);
-        Assert.assertEquals(accountFieldSqlDao.getFieldsForAccountByKey(accountKey2).size(), 1);
+        Assert.assertEquals(accountFieldSqlDao.getFieldsForAccountByKey(accountKey1, internalCallContext).size(), 1);
+        Assert.assertEquals(accountFieldSqlDao.getFieldsForAccountByKey(accountKey2, internalCallContext).size(), 1);
 
         // Remove the field for the first account
-        Assert.assertEquals(accountFieldSqlDao.removeField(accountId1.toString(), name1), 1);
+        Assert.assertEquals(accountFieldSqlDao.removeField(accountId1.toString(), name1, internalCallContext), 1);
 
-        Assert.assertEquals(accountFieldSqlDao.getFieldsForAccountByKey(accountKey1).size(), 0);
-        Assert.assertEquals(accountFieldSqlDao.getFieldsForAccountByKey(accountKey2).size(), 1);
+        Assert.assertEquals(accountFieldSqlDao.getFieldsForAccountByKey(accountKey1, internalCallContext).size(), 0);
+        Assert.assertEquals(accountFieldSqlDao.getFieldsForAccountByKey(accountKey2, internalCallContext).size(), 1);
     }
 
     @Test(groups = "slow")
     public void testHealthCheck() throws Exception {
         // HealthCheck test to make sure MySQL is setup properly
         try {
-            accountFieldSqlDao.test();
+            accountFieldSqlDao.test(internalCallContext);
         } catch (Throwable t) {
             Assert.fail(t.toString());
         }

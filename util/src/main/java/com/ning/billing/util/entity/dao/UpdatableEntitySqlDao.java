@@ -18,17 +18,20 @@ package com.ning.billing.util.entity.dao;
 
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
-import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 import com.ning.billing.util.dao.AuditSqlDao;
 import com.ning.billing.util.dao.EntityHistory;
 import com.ning.billing.util.entity.Entity;
 
-// this interface needs to be extended by an interface that provides (externalized) sql and object binders and mappers
+// This interface needs to be extended by an interface that provides (externalized) sql and object binders and mappers
 public interface UpdatableEntitySqlDao<T extends Entity> extends EntitySqlDao<T>, AuditSqlDao {
+
     @SqlUpdate
-    public void update(final T entity, final CallContext context);
+    public void update(final T entity,
+                       @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
     public void insertHistoryFromTransaction(final EntityHistory<T> account,
-                                             final CallContext context);
+                                             @InternalTenantContextBinder final InternalCallContext context);
 }

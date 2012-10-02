@@ -30,62 +30,64 @@ import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.events.EntitlementEvent;
-import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
 
 public interface EntitlementDao {
+
     // Bundle apis
-    public List<SubscriptionBundle> getSubscriptionBundleForAccount(final UUID accountId);
+    public List<SubscriptionBundle> getSubscriptionBundleForAccount(UUID accountId, InternalTenantContext context);
 
-    public List<SubscriptionBundle> getSubscriptionBundlesForKey(final String bundleKey);
+    public List<SubscriptionBundle> getSubscriptionBundlesForKey(String bundleKey, InternalTenantContext context);
 
-    public SubscriptionBundle getSubscriptionBundleFromAccountAndKey(final UUID accountId, final String bundleKey);
+    public SubscriptionBundle getSubscriptionBundleFromAccountAndKey(UUID accountId, String bundleKey, InternalTenantContext context);
 
-    public SubscriptionBundle getSubscriptionBundleFromId(final UUID bundleId);
+    public SubscriptionBundle getSubscriptionBundleFromId(UUID bundleId, InternalTenantContext context);
 
-    public SubscriptionBundle createSubscriptionBundle(final SubscriptionBundleData bundle, CallContext context);
+    public SubscriptionBundle createSubscriptionBundle(SubscriptionBundleData bundle, InternalCallContext context);
 
-    public Subscription getSubscriptionFromId(final SubscriptionFactory factory, final UUID subscriptionId);
+    public Subscription getSubscriptionFromId(SubscriptionFactory factory, UUID subscriptionId, InternalTenantContext context);
 
     // ACCOUNT retrieval
-    public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId);
+    public UUID getAccountIdFromSubscriptionId(UUID subscriptionId, InternalTenantContext context);
 
     // Subscription retrieval
-    public Subscription getBaseSubscription(final SubscriptionFactory factory, final UUID bundleId);
+    public Subscription getBaseSubscription(SubscriptionFactory factory, UUID bundleId, InternalTenantContext context);
 
-    public List<Subscription> getSubscriptions(final SubscriptionFactory factory, final UUID bundleId);
+    public List<Subscription> getSubscriptions(SubscriptionFactory factory, UUID bundleId, InternalTenantContext context);
 
-    public List<Subscription> getSubscriptionsForAccountAndKey(final SubscriptionFactory factory, final UUID accountId, final String bundleKey);
+    public List<Subscription> getSubscriptionsForAccountAndKey(SubscriptionFactory factory, UUID accountId, String bundleKey, InternalTenantContext context);
 
     // Update
-    public void updateChargedThroughDate(final SubscriptionData subscription, final CallContext context);
+    public void updateChargedThroughDate(SubscriptionData subscription, InternalCallContext context);
 
     // Event apis
-    public void createNextPhaseEvent(final SubscriptionData subscription, final EntitlementEvent nextPhase, final CallContext context);
+    public void createNextPhaseEvent(SubscriptionData subscription, EntitlementEvent nextPhase, InternalCallContext context);
 
-    public EntitlementEvent getEventById(final UUID eventId);
+    public EntitlementEvent getEventById(UUID eventId, InternalTenantContext context);
 
-    public Map<UUID, List<EntitlementEvent>> getEventsForBundle(final UUID bundleId);
+    public Map<UUID, List<EntitlementEvent>> getEventsForBundle(UUID bundleId, InternalTenantContext context);
 
-    public List<EntitlementEvent> getEventsForSubscription(final UUID subscriptionId);
+    public List<EntitlementEvent> getEventsForSubscription(UUID subscriptionId, InternalTenantContext context);
 
-    public List<EntitlementEvent> getPendingEventsForSubscription(final UUID subscriptionId);
+    public List<EntitlementEvent> getPendingEventsForSubscription(UUID subscriptionId, InternalTenantContext context);
 
     // Subscription creation, cancellation, changePlan apis
-    public void createSubscription(final SubscriptionData subscription, final List<EntitlementEvent> initialEvents, final CallContext context);
+    public void createSubscription(SubscriptionData subscription, List<EntitlementEvent> initialEvents, InternalCallContext context);
 
-    public void recreateSubscription(final SubscriptionData subscription, final List<EntitlementEvent> recreateEvents, final CallContext context);
+    public void recreateSubscription(SubscriptionData subscription, List<EntitlementEvent> recreateEvents, InternalCallContext context);
 
-    public void cancelSubscription(final SubscriptionData subscription, final EntitlementEvent cancelEvent, final CallContext context, final int cancelSeq);
+    public void cancelSubscription(SubscriptionData subscription, EntitlementEvent cancelEvent, InternalCallContext context, int cancelSeq);
 
-    public void uncancelSubscription(final SubscriptionData subscription, final List<EntitlementEvent> uncancelEvents, final CallContext context);
+    public void uncancelSubscription(SubscriptionData subscription, List<EntitlementEvent> uncancelEvents, InternalCallContext context);
 
-    public void changePlan(final SubscriptionData subscription, final List<EntitlementEvent> changeEvents, final CallContext context);
+    public void changePlan(SubscriptionData subscription, List<EntitlementEvent> changeEvents, InternalCallContext context);
 
-    public void migrate(final UUID accountId, final AccountMigrationData data, final CallContext context);
+    public void migrate(UUID accountId, AccountMigrationData data, InternalCallContext context);
 
-    public void transfer(final UUID srcAccountId, final UUID destAccountId, final BundleMigrationData data, final List<TransferCancelData> transferCancelData, final CallContext context);
+    public void transfer(UUID srcAccountId, UUID destAccountId, BundleMigrationData data, List<TransferCancelData> transferCancelData, InternalCallContext context);
 
     // Repair
-    public void repair(final UUID accountId, final UUID bundleId, final List<SubscriptionDataRepair> inRepair, final CallContext context);
+    public void repair(UUID accountId, UUID bundleId, List<SubscriptionDataRepair> inRepair, InternalCallContext context);
 }
 

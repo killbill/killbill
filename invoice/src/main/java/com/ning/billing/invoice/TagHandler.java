@@ -20,8 +20,6 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.eventbus.Subscribe;
-import com.google.inject.Inject;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallOrigin;
@@ -31,6 +29,9 @@ import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.api.ControlTagDeletionEvent;
+
+import com.google.common.eventbus.Subscribe;
+import com.google.inject.Inject;
 
 public class TagHandler {
 
@@ -56,7 +57,8 @@ public class TagHandler {
 
     private void processUnpaid_AUTO_INVOICING_OFF_invoices(final UUID accountId, final UUID userToken) {
         try {
-            final CallContext context = new DefaultCallContext("InvoiceTagHandler", CallOrigin.INTERNAL, UserType.SYSTEM, userToken, clock);
+            // TODO retrieve tenantId?
+            final CallContext context = new DefaultCallContext(null, "InvoiceTagHandler", CallOrigin.INTERNAL, UserType.SYSTEM, userToken, clock);
             dispatcher.processAccount(accountId, clock.getUTCNow(), false, context);
         } catch (InvoiceApiException e) {
             log.warn(String.format("Failed to process process removal AUTO_INVOICING_OFF for account %s", accountId), e);

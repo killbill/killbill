@@ -13,43 +13,44 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.ning.billing.server.listeners;
 
+package com.ning.billing.server.listeners;
 
 import javax.servlet.ServletContextEvent;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Injector;
-import com.google.inject.Module;
 import com.ning.billing.beatrix.lifecycle.DefaultLifecycle;
 import com.ning.billing.jaxrs.util.KillbillEventHandler;
 import com.ning.billing.server.config.KillbillServerConfig;
 import com.ning.billing.server.healthchecks.KillbillHealthcheck;
 import com.ning.billing.server.modules.KillbillServerModule;
+import com.ning.billing.server.security.TenantFilter;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.BusService;
 import com.ning.jetty.base.modules.ServerModuleBuilder;
 import com.ning.jetty.core.listeners.SetupServer;
 
+import com.google.inject.Injector;
+import com.google.inject.Module;
+
 public class KillbillGuiceListener extends SetupServer {
+
     public static final Logger logger = LoggerFactory.getLogger(KillbillGuiceListener.class);
+    public static final String KILLBILL_MULTITENANT_PROPERTY = "killbill.server.multitenant";
 
     private DefaultLifecycle killbillLifecycle;
     private BusService killbillBusService;
     private KillbillEventHandler killbilleventHandler;
 
-
     protected Module getModule() {
         return new KillbillServerModule();
     }
 
-    
-   
     @Override
     public void contextInitialized(final ServletContextEvent event) {
-
+        final boolean multitenant = Boolean.parseBoolean(System.getProperty(KILLBILL_MULTITENANT_PROPERTY, "false"));
 
         final ServerModuleBuilder builder = new ServerModuleBuilder()
                 .addConfig(KillbillServerConfig.class)
@@ -59,6 +60,9 @@ public class KillbillGuiceListener extends SetupServer {
                 .addJerseyResource("com.ning.billing.jaxrs.mappers")
                 .addJerseyResource("com.ning.billing.jaxrs.resources");
 
+        if (multitenant) {
+            builder.addFilter("/*", TenantFilter.class);
+        }
 
         guiceModule = builder.build();
 

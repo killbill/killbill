@@ -25,27 +25,35 @@ import com.ning.billing.util.clock.Clock;
 public class DefaultCallContext extends CallContextBase {
 
     private final DateTime createdDate;
+    private final DateTime updateDate;
 
-    public DefaultCallContext(final String userName, final CallOrigin callOrigin, final UserType userType, final UUID userToken, final Clock clock) {
-        super(userName, callOrigin, userType, userToken);
+    public DefaultCallContext(final UUID tenantId, final String userName, final CallOrigin callOrigin, final UserType userType,
+                              final UUID userToken, final Clock clock) {
+        super(tenantId, userName, callOrigin, userType, userToken);
         this.createdDate = clock.getUTCNow();
+        this.updateDate = createdDate;
     }
 
-    public DefaultCallContext(final String userName, final CallOrigin callOrigin, final UserType userType,
+    public DefaultCallContext(final UUID tenantId, final String userName, final CallOrigin callOrigin, final UserType userType,
                               final String reasonCode, final String comment,
                               final UUID userToken, final Clock clock) {
-        super(userName, callOrigin, userType, reasonCode, comment, userToken);
+        super(tenantId, userName, callOrigin, userType, reasonCode, comment, userToken);
         this.createdDate = clock.getUTCNow();
+        this.updateDate = createdDate;
     }
 
-    public DefaultCallContext(final String userName, final CallOrigin callOrigin, final UserType userType, final Clock clock) {
-        this(userName, callOrigin, userType, null, clock);
-    }
-
-    public DefaultCallContext(final String userName, final DateTime createdDate, final String reasonCode,
+    public DefaultCallContext(final UUID tenantId, final String userName, final DateTime createdDate, final String reasonCode,
                               final String comment, final UUID userToken) {
-        super(userName, null, null, reasonCode, comment, userToken);
+        super(tenantId, userName, null, null, reasonCode, comment, userToken);
         this.createdDate = createdDate;
+        this.updateDate = createdDate;
+    }
+
+    public DefaultCallContext(final UUID tenantId, final String userName, final CallOrigin callOrigin, final UserType userType, final String reasonCode,
+                              final String comment, final UUID userToken, final DateTime createdDate, final DateTime updatedDate) {
+        super(tenantId, userName, callOrigin, userType, reasonCode, comment, userToken);
+        this.createdDate = createdDate;
+        this.updateDate = updatedDate;
     }
 
     @Override

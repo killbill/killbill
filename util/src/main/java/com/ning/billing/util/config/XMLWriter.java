@@ -16,9 +16,10 @@
 
 package com.ning.billing.util.config;
 
+import java.io.ByteArrayOutputStream;
+
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Marshaller;
-import java.io.ByteArrayOutputStream;
 
 public class XMLWriter<T> {
     private static final int MAX_XML_SIZE_IN_BYTES = 100000;

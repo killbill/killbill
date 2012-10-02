@@ -32,10 +32,12 @@ import com.ning.billing.util.validation.ColumnInfo;
 @ExternalizedSqlViaStringTemplate3
 @RegisterMapper(DatabaseSchemaSqlDao.ColumnInfoMapper.class)
 public interface DatabaseSchemaSqlDao {
+
     @SqlQuery
     List<ColumnInfo> getSchemaInfo(@Bind("schemaName") final String schemaName);
 
     class ColumnInfoMapper implements ResultSetMapper<ColumnInfo> {
+
         @Override
         public ColumnInfo map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
             final String tableName = r.getString("table_name");

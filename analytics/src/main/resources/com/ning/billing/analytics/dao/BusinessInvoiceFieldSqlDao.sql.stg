@@ -1,5 +1,8 @@
 group BusinessInvoiceField;
 
+CHECK_TENANT() ::= "tenant_record_id = :tenantRecordId"
+AND_CHECK_TENANT() ::= "AND <CHECK_TENANT()>"
+
 getFieldsForInvoice(invoice_id) ::=<<
 select
   invoice_id
@@ -7,6 +10,7 @@ select
 , value
 from bin_fields
 where invoice_id = :invoice_id
+<AND_CHECK_TENANT()>
 ;
 >>
 
@@ -15,17 +19,21 @@ insert into bin_fields (
   invoice_id
 , name
 , value
+, account_record_id
+, tenant_record_id
 ) values (
   :invoice_id
 , :name
 , :value
+, :accountRecordId
+, :tenantRecordId
 );
 >>
 
 removeField(invoice_id, name, value) ::= <<
-delete from bin_fields where invoice_id = :invoice_id and name = :name;
+delete from bin_fields where invoice_id = :invoice_id and name = :name <AND_CHECK_TENANT()>;
 >>
 
 test() ::= <<
-select 1 from bin_tags;
+select 1 from bin_tags where <CHECK_TENANT()>;
 >>

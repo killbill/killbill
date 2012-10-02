@@ -40,6 +40,7 @@ import com.ning.billing.entitlement.api.billing.BillingModeType;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.junction.api.BlockingState;
+import com.ning.billing.util.callcontext.CallContext;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -79,7 +80,7 @@ public class BlockingCalculator {
      *
      * @param billingEvents the original list of billing events to update (without overdue events)
      */
-    public void insertBlockingEvents(final SortedSet<BillingEvent> billingEvents) {
+    public void insertBlockingEvents(final SortedSet<BillingEvent> billingEvents, final CallContext context) {
         if (billingEvents.size() <= 0) {
             return;
         }
@@ -92,8 +93,8 @@ public class BlockingCalculator {
         final SortedSet<BillingEvent> billingEventsToRemove = new TreeSet<BillingEvent>();
 
         for (final UUID bundleId : bundleMap.keySet()) {
-            final List<BlockingState> blockingEvents = blockingApi.getBlockingHistory(bundleId);
-            blockingEvents.addAll(blockingApi.getBlockingHistory(account.getId()));
+            final List<BlockingState> blockingEvents = blockingApi.getBlockingHistory(bundleId, context);
+            blockingEvents.addAll(blockingApi.getBlockingHistory(account.getId(), context));
             final List<DisabledDuration> blockingDurations = createBlockingDurations(blockingEvents);
 
             for (final Subscription subscription : bundleMap.get(bundleId)) {

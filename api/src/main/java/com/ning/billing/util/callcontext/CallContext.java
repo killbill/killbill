@@ -20,7 +20,11 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
-public interface CallContext {
+/**
+ * External use
+ */
+public interface CallContext extends TenantContext {
+
     public UUID getUserToken();
 
     public String getUserName();

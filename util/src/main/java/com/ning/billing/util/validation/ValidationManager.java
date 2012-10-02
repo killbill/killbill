@@ -23,8 +23,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.google.inject.Inject;
 import com.ning.billing.util.validation.dao.DatabaseSchemaDao;
+
+import com.google.inject.Inject;
 
 public class ValidationManager {
     private final DatabaseSchemaDao dao;

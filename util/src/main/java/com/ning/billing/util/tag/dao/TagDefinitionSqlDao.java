@@ -41,8 +41,9 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallContextBinder;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 import com.ning.billing.util.entity.dao.EntitySqlDao;
 import com.ning.billing.util.tag.DefaultTagDefinition;
 import com.ning.billing.util.tag.TagDefinition;
@@ -50,23 +51,30 @@ import com.ning.billing.util.tag.TagDefinition;
 @ExternalizedSqlViaStringTemplate3
 @RegisterMapper(TagDefinitionSqlDao.TagDefinitionMapper.class)
 public interface TagDefinitionSqlDao extends EntitySqlDao<TagDefinition>, Transactional<TagDefinitionSqlDao>, Transmogrifier {
+
     @Override
     @SqlUpdate
-    public void create(@TagDefinitionBinder final TagDefinition entity, @CallContextBinder final CallContext context);
+    public void create(@TagDefinitionBinder final TagDefinition entity,
+                       @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlQuery
-    public TagDefinition getByName(@Bind("name") final String definitionName);
+    public TagDefinition getByName(@Bind("name") final String definitionName,
+                                   @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlUpdate
-    public void deleteTagDefinition(@Bind("id") final String definitionId, @CallContextBinder final CallContext context);
+    public void deleteTagDefinition(@Bind("id") final String definitionId,
+                                    @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlQuery
-    public int tagDefinitionUsageCount(@Bind("id") final String definitionId);
+    public int tagDefinitionUsageCount(@Bind("id") final String definitionId,
+                                       @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
-    public List<TagDefinition> getByIds(@UUIDCollectionBinder final Collection<String> definitionIds);
+    public List<TagDefinition> getByIds(@UUIDCollectionBinder final Collection<String> definitionIds,
+                                        @InternalTenantContextBinder final InternalTenantContext context);
 
     public class TagDefinitionMapper implements ResultSetMapper<TagDefinition> {
+
         @Override
         public TagDefinition map(final int index, final ResultSet result, final StatementContext context) throws SQLException {
             final UUID id = UUID.fromString(result.getString("id"));
@@ -80,7 +88,9 @@ public interface TagDefinitionSqlDao extends EntitySqlDao<TagDefinition>, Transa
     @Retention(RetentionPolicy.RUNTIME)
     @Target({ElementType.PARAMETER})
     public @interface TagDefinitionBinder {
+
         public static class TagDefinitionBinderFactory implements BinderFactory {
+
             @Override
             public Binder build(final Annotation annotation) {
                 return new Binder<TagDefinitionBinder, TagDefinition>() {

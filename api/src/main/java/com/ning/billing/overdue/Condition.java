@@ -16,9 +16,7 @@
 
 package com.ning.billing.overdue;
 
-
 import org.joda.time.LocalDate;
-import org.joda.time.Period;
 
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.overdue.config.api.BillingState;

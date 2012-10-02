@@ -17,25 +17,26 @@
 package com.ning.billing.junction.dao;
 
 import java.util.List;
-import java.util.SortedSet;
 import java.util.UUID;
 
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.BlockingState;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.Clock;
 
 public interface BlockingStateDao {
 
-    //Read
-    public BlockingState getBlockingStateFor(Blockable blockable);
+    // Read
+    public BlockingState getBlockingStateFor(Blockable blockable, InternalTenantContext context);
 
-    public BlockingState getBlockingStateFor(UUID blockableId);
+    public BlockingState getBlockingStateFor(UUID blockableId, InternalTenantContext context);
 
-    public List<BlockingState> getBlockingHistoryFor(Blockable blockable);
+    public List<BlockingState> getBlockingHistoryFor(Blockable blockable, InternalTenantContext context);
 
-    public List<BlockingState> getBlockingHistoryFor(UUID blockableId);
+    public List<BlockingState> getBlockingHistoryFor(UUID blockableId, InternalTenantContext context);
 
-    //Write
-    <T extends Blockable> void setBlockingState(BlockingState state, Clock clock);
+    // Write
+    <T extends Blockable> void setBlockingState(BlockingState state, Clock clock, InternalCallContext context);
 
 } 

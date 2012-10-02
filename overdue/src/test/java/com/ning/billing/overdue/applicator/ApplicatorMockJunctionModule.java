@@ -17,7 +17,6 @@
 package com.ning.billing.overdue.applicator;
 
 import java.util.List;
-import java.util.SortedSet;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -27,9 +26,13 @@ import com.ning.billing.junction.api.Blockable.Type;
 import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.mock.glue.MockJunctionModule;
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.TenantContext;
 
 public class ApplicatorMockJunctionModule extends MockJunctionModule {
+
     public static class ApplicatorBlockingApi implements BlockingApi {
+
         private BlockingState blockingState;
 
         public BlockingState getBlockingState() {
@@ -37,7 +40,7 @@ public class ApplicatorMockJunctionModule extends MockJunctionModule {
         }
 
         @Override
-        public BlockingState getBlockingStateFor(final Blockable overdueable) {
+        public BlockingState getBlockingStateFor(final Blockable overdueable, TenantContext context) {
             return new BlockingState() {
 
                 @Override
@@ -85,22 +88,22 @@ public class ApplicatorMockJunctionModule extends MockJunctionModule {
         }
 
         @Override
-        public BlockingState getBlockingStateFor(final UUID overdueableId) {
+        public BlockingState getBlockingStateFor(final UUID overdueableId, final TenantContext context) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public List<BlockingState> getBlockingHistory(final Blockable overdueable) {
+        public List<BlockingState> getBlockingHistory(final Blockable overdueable, final TenantContext context) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public List<BlockingState> getBlockingHistory(final UUID overdueableId) {
+        public List<BlockingState> getBlockingHistory(final UUID overdueableId, final TenantContext context) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public <T extends Blockable> void setBlockingState(final BlockingState state) {
+        public <T extends Blockable> void setBlockingState(final BlockingState state, final CallContext context) {
             blockingState = state;
         }
 

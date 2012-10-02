@@ -21,6 +21,7 @@ import java.util.UUID;
 import org.joda.time.LocalDate;
 
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.TenantContext;
 
 public interface ChargeThruApi {
 
@@ -28,7 +29,7 @@ public interface ChargeThruApi {
      * @param subscriptionId
      * @return UUID of
      */
-    public UUID getAccountIdFromSubscriptionId(UUID subscriptionId) throws EntitlementBillingApiException;
+    public UUID getAccountIdFromSubscriptionId(UUID subscriptionId, TenantContext context) throws EntitlementBillingApiException;
 
     /**
      * Sets the charged through date for the subscription with that Id.

@@ -16,17 +16,16 @@
 
 package com.ning.billing.entitlement.api.user;
 
-import javax.annotation.Nullable;
 import java.util.UUID;
+
+import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
+import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Stage;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.catalog.api.ActionPolicy;
@@ -37,13 +36,21 @@ import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.entitlement.api.TestApiBase;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.entitlement.glue.MockEngineModuleMemory;
+import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.clock.DefaultClock;
+
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Stage;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
 public class TestUserApiError extends TestApiBase {
+
+    private final TenantContext tenantContext = Mockito.mock(TenantContext.class);
+
     @Override
     protected Injector getInjector() {
         return Guice.createInjector(Stage.DEVELOPMENT, new MockEngineModuleMemory());
@@ -88,7 +95,7 @@ public class TestUserApiError extends TestApiBase {
         try {
             final SubscriptionData subscription = createSubscription("Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME);
             try {
-                subscription.recreate(getProductSpecifier("Pistol", PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, null), clock.getUTCNow(), context);
+                subscription.recreate(getProductSpecifier("Pistol", PriceListSet.DEFAULT_PRICELIST_NAME, BillingPeriod.MONTHLY, null), clock.getUTCNow(), callContext);
                 Assert.assertFalse(true);
             } catch (EntitlementUserApiException e) {
                 assertEquals(e.getCode(), ErrorCode.ENT_RECREATE_BAD_STATE.getCode());
@@ -102,7 +109,7 @@ public class TestUserApiError extends TestApiBase {
     public void testCreateSubscriptionAddOnNotAvailable() {
         try {
             final UUID accountId = UUID.randomUUID();
-            final SubscriptionBundle aoBundle = entitlementApi.createBundleForAccount(accountId, "myAOBundle", context);
+            final SubscriptionBundle aoBundle = entitlementApi.createBundleForAccount(accountId, "myAOBundle", callContext);
             createSubscriptionWithBundle(aoBundle.getId(), "Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
             tCreateSubscriptionInternal(aoBundle.getId(), "Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.ENT_CREATE_AO_NOT_AVAILABLE);
         } catch (Exception e) {
@@ -115,7 +122,7 @@ public class TestUserApiError extends TestApiBase {
         log.info("Starting testCreateSubscriptionAddOnIncluded");
         try {
             final UUID accountId = UUID.randomUUID();
-            final SubscriptionBundle aoBundle = entitlementApi.createBundleForAccount(accountId, "myAOBundle", context);
+            final SubscriptionBundle aoBundle = entitlementApi.createBundleForAccount(accountId, "myAOBundle", callContext);
             createSubscriptionWithBundle(aoBundle.getId(), "Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
             tCreateSubscriptionInternal(aoBundle.getId(), "Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.ENT_CREATE_AO_ALREADY_INCLUDED);
         } catch (Exception e) {
@@ -128,7 +135,7 @@ public class TestUserApiError extends TestApiBase {
         try {
             entitlementApi.createSubscription(bundleId,
                                               getProductSpecifier(productName, planSet, term, null),
-                                              clock.getUTCNow(), context);
+                                              clock.getUTCNow(), callContext);
             Assert.fail("Exception expected, error code: " + expected);
         } catch (EntitlementUserApiException e) {
             assertEquals(e.getCode(), expected.getCode());
@@ -146,9 +153,9 @@ public class TestUserApiError extends TestApiBase {
             final Subscription subscription = createSubscription("Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME);
 
             testListener.pushExpectedEvent(NextEvent.CANCEL);
-            subscription.cancel(clock.getUTCNow(), context);
+            subscription.cancel(clock.getUTCNow(), callContext);
             try {
-                subscription.changePlan("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow(), context);
+                subscription.changePlan("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow(), callContext);
             } catch (EntitlementUserApiException e) {
                 assertEquals(e.getCode(), ErrorCode.ENT_CHANGE_NON_ACTIVE.getCode());
                 try {
@@ -167,15 +174,15 @@ public class TestUserApiError extends TestApiBase {
         final Subscription subscription = createSubscription("Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME);
 
         try {
-            subscription.changePlanWithPolicy("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow(), ActionPolicy.ILLEGAL, context);
+            subscription.changePlanWithPolicy("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow(), ActionPolicy.ILLEGAL, callContext);
             Assert.fail();
         } catch (EntitlementError error) {
             assertTrue(true);
-            assertEquals(entitlementApi.getSubscriptionFromId(subscription.getId()).getCurrentPlan().getBillingPeriod(), BillingPeriod.ANNUAL);
+            assertEquals(entitlementApi.getSubscriptionFromId(subscription.getId(), tenantContext).getCurrentPlan().getBillingPeriod(), BillingPeriod.ANNUAL);
         }
 
-        assertTrue(subscription.changePlanWithPolicy("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow(), ActionPolicy.IMMEDIATE, context));
-        assertEquals(entitlementApi.getSubscriptionFromId(subscription.getId()).getCurrentPlan().getBillingPeriod(), BillingPeriod.MONTHLY);
+        assertTrue(subscription.changePlanWithPolicy("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow(), ActionPolicy.IMMEDIATE, callContext));
+        assertEquals(entitlementApi.getSubscriptionFromId(subscription.getId(), tenantContext).getCurrentPlan().getBillingPeriod(), BillingPeriod.MONTHLY);
     }
 
     @Test(groups = "fast")
@@ -195,13 +202,13 @@ public class TestUserApiError extends TestApiBase {
             final DateTime expectedPhaseTrialChange = DefaultClock.addDuration(subscription.getStartDate(), trialPhase.getDuration());
             final Duration ctd = getDurationMonth(1);
             final DateTime newChargedThroughDate = DefaultClock.addDuration(expectedPhaseTrialChange, ctd);
-            billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate.toLocalDate(), context);
+            billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate.toLocalDate(), callContext);
 
-            subscription = entitlementApi.getSubscriptionFromId(subscription.getId());
+            subscription = entitlementApi.getSubscriptionFromId(subscription.getId(), tenantContext);
 
-            subscription.cancel(clock.getUTCNow(), context);
+            subscription.cancel(clock.getUTCNow(), callContext);
             try {
-                subscription.changePlan("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow(), context);
+                subscription.changePlan("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, clock.getUTCNow(), callContext);
             } catch (EntitlementUserApiException e) {
                 assertEquals(e.getCode(), ErrorCode.ENT_CHANGE_FUTURE_CANCELLED.getCode());
                 try {
@@ -227,7 +234,7 @@ public class TestUserApiError extends TestApiBase {
             final Subscription subscription = createSubscription("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
 
             try {
-                subscription.uncancel(context);
+                subscription.uncancel(callContext);
             } catch (EntitlementUserApiException e) {
                 assertEquals(e.getCode(), ErrorCode.ENT_UNCANCEL_BAD_STATE.getCode());
                 try {

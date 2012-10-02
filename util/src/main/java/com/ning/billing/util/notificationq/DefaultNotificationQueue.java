@@ -29,25 +29,35 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ning.billing.config.NotificationConfig;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
+import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
 import com.ning.billing.util.notificationq.dao.NotificationSqlDao;
 
 public class DefaultNotificationQueue extends NotificationQueueBase {
+
     private static final Logger log = LoggerFactory.getLogger(DefaultNotificationQueue.class);
 
     private final NotificationSqlDao dao;
+    private final InternalCallContextFactory internalCallContextFactory;
 
     public DefaultNotificationQueue(final IDBI dbi, final Clock clock, final String svcName, final String queueName,
-                                    final NotificationQueueHandler handler, final NotificationConfig config) {
+                                    final NotificationQueueHandler handler, final NotificationConfig config,
+                                    final InternalCallContextFactory internalCallContextFactory) {
         super(clock, svcName, queueName, handler, config);
         this.dao = dbi.onDemand(NotificationSqlDao.class);
+        this.internalCallContextFactory = internalCallContextFactory;
     }
 
     @Override
     public int doProcessEvents() {
+        final InternalCallContext context = createCallContext();
+
         logDebug("ENTER doProcessEvents");
-        final List<Notification> notifications = getReadyNotifications();
+        final List<Notification> notifications = getReadyNotifications(context);
         if (notifications.size() == 0) {
             logDebug("EXIT doProcessEvents");
             return 0;
@@ -62,7 +72,7 @@ public class DefaultNotificationQueue extends NotificationQueueBase {
             final NotificationKey key = deserializeEvent(cur.getNotificationKeyClass(), cur.getNotificationKey());
             getHandler().handleReadyNotification(key, cur.getEffectiveDate());
             result++;
-            clearNotification(cur);
+            clearNotification(cur, context);
             logDebug("done handling notification %s, key = %s for time %s", cur.getId(), cur.getNotificationKey(), cur.getEffectiveDate());
         }
 
@@ -70,50 +80,54 @@ public class DefaultNotificationQueue extends NotificationQueueBase {
     }
 
     @Override
-    public void recordFutureNotification(final DateTime futureNotificationTime, final UUID accountId, final NotificationKey notificationKey) throws IOException {
-        recordFutureNotificationInternal(futureNotificationTime, accountId, notificationKey, dao);
+    public void recordFutureNotification(final DateTime futureNotificationTime,
+                                         final UUID accountId,
+                                         final NotificationKey notificationKey,
+                                         final InternalCallContext context) throws IOException {
+        recordFutureNotificationInternal(futureNotificationTime, accountId, notificationKey, dao, context);
     }
 
     @Override
     public void recordFutureNotificationFromTransaction(final Transmogrifier transactionalDao,
                                                         final DateTime futureNotificationTime,
                                                         final UUID accountId,
-                                                        final NotificationKey notificationKey) throws IOException {
+                                                        final NotificationKey notificationKey,
+                                                        final InternalCallContext context) throws IOException {
         final NotificationSqlDao transactionalNotificationDao = transactionalDao.become(NotificationSqlDao.class);
-        recordFutureNotificationInternal(futureNotificationTime, accountId, notificationKey, transactionalNotificationDao);
+        recordFutureNotificationInternal(futureNotificationTime, accountId, notificationKey, transactionalNotificationDao, context);
     }
 
     private void recordFutureNotificationInternal(final DateTime futureNotificationTime,
-            final UUID accountId,
-            final NotificationKey notificationKey,
-
-                                                  final NotificationSqlDao thisDao) throws IOException {
+                                                  final UUID accountId,
+                                                  final NotificationKey notificationKey,
+                                                  final NotificationSqlDao thisDao,
+                                                  final InternalCallContext context) throws IOException {
         final String json = objectMapper.writeValueAsString(notificationKey);
         final Notification notification = new DefaultNotification(getFullQName(), getHostname(), notificationKey.getClass().getName(), json, accountId, futureNotificationTime);
-        thisDao.insertNotification(notification);
+        thisDao.insertNotification(notification, context);
     }
 
-    private void clearNotification(final Notification cleared) {
-        dao.clearNotification(cleared.getId().toString(), getHostname());
+    private void clearNotification(final Notification cleared, final InternalCallContext context) {
+        dao.clearNotification(cleared.getId().toString(), getHostname(), context);
     }
 
-    private List<Notification> getReadyNotifications() {
+    private List<Notification> getReadyNotifications(final InternalCallContext context) {
         final Date now = getClock().getUTCNow().toDate();
         final Date nextAvailable = getClock().getUTCNow().plus(CLAIM_TIME_MS).toDate();
-        final List<Notification> input = dao.getReadyNotifications(now, getHostname(), CLAIM_TIME_MS, getFullQName());
+        final List<Notification> input = dao.getReadyNotifications(now, getHostname(), CLAIM_TIME_MS, getFullQName(), context);
 
         final List<Notification> claimedNotifications = new ArrayList<Notification>();
         for (final Notification cur : input) {
             logDebug("about to claim notification %s,  key = %s for time %s",
                      cur.getId(), cur.getNotificationKey(), cur.getEffectiveDate());
 
-            final boolean claimed = (dao.claimNotification(getHostname(), nextAvailable, cur.getId().toString(), now) == 1);
+            final boolean claimed = (dao.claimNotification(getHostname(), nextAvailable, cur.getId().toString(), now, context) == 1);
             logDebug("claimed notification %s, key = %s for time %s result = %s",
                      cur.getId(), cur.getNotificationKey(), cur.getEffectiveDate(), claimed);
 
             if (claimed) {
                 claimedNotifications.add(cur);
-                dao.insertClaimedHistory(getHostname(), now, cur.getId().toString());
+                dao.insertClaimedHistory(getHostname(), now, cur.getId().toString(), context);
             }
         }
 
@@ -134,17 +148,21 @@ public class DefaultNotificationQueue extends NotificationQueueBase {
     }
 
     @Override
-    public void removeNotificationsByKey(final NotificationKey notificationKey) {
-        dao.removeNotificationsByKey(notificationKey.toString());
+    public void removeNotificationsByKey(final NotificationKey notificationKey, final InternalCallContext context) {
+        dao.removeNotificationsByKey(notificationKey.toString(), context);
     }
 
     @Override
-    public List<Notification> getNotificationForAccountAndDate(final UUID accountId, final DateTime effectiveDate) {
-        return dao.getNotificationForAccountAndDate(accountId.toString(), effectiveDate.toDate());
+    public List<Notification> getNotificationForAccountAndDate(final UUID accountId, final DateTime effectiveDate, final InternalCallContext context) {
+        return dao.getNotificationForAccountAndDate(accountId.toString(), effectiveDate.toDate(), context);
     }
 
     @Override
-    public void removeNotification(UUID notificationId) {
-        dao.removeNotification(notificationId.toString());
+    public void removeNotification(final UUID notificationId, final InternalCallContext context) {
+        dao.removeNotification(notificationId.toString(), context);
+    }
+
+    private InternalCallContext createCallContext() {
+        return internalCallContextFactory.createInternalCallContext("NotificationQueue", CallOrigin.INTERNAL, UserType.SYSTEM, null);
     }
 }

@@ -14,25 +14,17 @@
  * under the License.
  */
 
-package com.ning.billing.overdue.notification;
+package com.ning.billing.tenant.api;
 
-import org.joda.time.DateTime;
+import java.util.UUID;
 
-import com.ning.billing.junction.api.Blockable;
-import com.ning.billing.ovedue.notification.OverdueCheckPoster;
+import com.ning.billing.util.callcontext.CallContext;
 
-public class MockOverdueCheckPoster implements OverdueCheckPoster {
+public interface TenantUserApi {
 
-    @Override
-    public void insertOverdueCheckNotification(final Blockable overdueable,
-                                               final DateTime futureNotificationTime) {
-        // TODO Auto-generated method stub
+    public Tenant createTenant(TenantData data, CallContext context) throws TenantApiException;
 
-    }
+    public Tenant getTenantByApiKey(String key) throws TenantApiException;
 
-    @Override
-    public void clearNotificationsFor(final Blockable blockable) {
-        // TODO Auto-generated method stub
-
-    }
+    public Tenant getTenantById(UUID tenantId) throws TenantApiException;
 }

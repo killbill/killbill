@@ -35,6 +35,9 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 import com.ning.billing.util.dao.BinderBase;
 import com.ning.billing.util.dao.MapperBase;
 import com.ning.billing.util.notificationq.DefaultNotification;
@@ -49,30 +52,47 @@ public interface NotificationSqlDao extends Transactional<NotificationSqlDao>, C
     //
     @SqlQuery
     @Mapper(NotificationSqlMapper.class)
-    public List<Notification> getReadyNotifications(@Bind("now") Date now, @Bind("owner") String owner, @Bind("max") int max, @Bind("queueName") String queueName);
+    public List<Notification> getReadyNotifications(@Bind("now") Date now,
+                                                    @Bind("owner") String owner,
+                                                    @Bind("max") int max,
+                                                    @Bind("queueName") String queueName,
+                                                    @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
     @Mapper(NotificationSqlMapper.class)
-    public List<Notification> getNotificationForAccountAndDate(@Bind("accountId") final String accountId, @Bind("effectiveDate") final Date effectiveDate);
+    public List<Notification> getNotificationForAccountAndDate(@Bind("accountId") final String accountId,
+                                                               @Bind("effectiveDate") final Date effectiveDate,
+                                                               @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlUpdate
-    public void removeNotification(@Bind("id") String id);
+    public void removeNotification(@Bind("id") String id,
+                                   @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlUpdate
-    public int claimNotification(@Bind("owner") String owner, @Bind("nextAvailable") Date nextAvailable,
-                                 @Bind("id") String id, @Bind("now") Date now);
+    public int claimNotification(@Bind("owner") String owner,
+                                 @Bind("nextAvailable") Date nextAvailable,
+                                 @Bind("id") String id,
+                                 @Bind("now") Date now,
+                                 @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
-    public void clearNotification(@Bind("id") String id, @Bind("owner") String owner);
+    public void clearNotification(@Bind("id") String id,
+                                  @Bind("owner") String owner,
+                                  @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
-    public void removeNotificationsByKey(@Bind("notificationKey") String key);
+    public void removeNotificationsByKey(@Bind("notificationKey") String key,
+                                         @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
-    public void insertNotification(@Bind(binder = NotificationSqlDaoBinder.class) Notification evt);
+    public void insertNotification(@Bind(binder = NotificationSqlDaoBinder.class) Notification evt,
+                                   @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
-    public void insertClaimedHistory(@Bind("ownerId") String ownerId, @Bind("claimedDate") Date claimedDate, @Bind("notificationId") String notificationId);
+    public void insertClaimedHistory(@Bind("ownerId") String ownerId,
+                                     @Bind("claimedDate") Date claimedDate,
+                                     @Bind("notificationId") String notificationId,
+                                     @InternalTenantContextBinder final InternalCallContext context);
 
     public static class NotificationSqlDaoBinder extends BinderBase implements Binder<Bind, Notification> {
         @Override

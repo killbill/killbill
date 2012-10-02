@@ -21,11 +21,8 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
-
-import com.google.inject.Inject;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
@@ -44,8 +41,11 @@ import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.overdue.config.api.BillingStateBundle;
 import com.ning.billing.overdue.config.api.OverdueException;
 import com.ning.billing.overdue.config.api.PaymentResponse;
+import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.tag.Tag;
+
+import com.google.inject.Inject;
 
 public class BillingStateCalculatorBundle extends BillingStateCalculator<SubscriptionBundle> {
 
@@ -61,12 +61,12 @@ public class BillingStateCalculatorBundle extends BillingStateCalculator<Subscri
     }
 
     @Override
-    public BillingStateBundle calculateBillingState(final SubscriptionBundle bundle) throws OverdueException {
+    public BillingStateBundle calculateBillingState(final SubscriptionBundle bundle, final InternalTenantContext context) throws OverdueException {
         try {
-            final Account account = accountApi.getAccountById(bundle.getAccountId());
-            final SortedSet<Invoice> unpaidInvoices = unpaidInvoicesForBundle(bundle.getId(), bundle.getAccountId(), account.getTimeZone());
+            final Account account = accountApi.getAccountById(bundle.getAccountId(), context.toTenantContext());
+            final SortedSet<Invoice> unpaidInvoices = unpaidInvoicesForBundle(bundle.getId(), bundle.getAccountId(), account.getTimeZone(), context);
 
-            final Subscription basePlan = entitlementApi.getBaseSubscription(bundle.getId());
+            final Subscription basePlan = entitlementApi.getBaseSubscription(bundle.getId(), context.toTenantContext());
 
             final UUID id = bundle.getId();
             final int numberOfUnpaidInvoices = unpaidInvoices.size();
@@ -117,8 +117,8 @@ public class BillingStateCalculatorBundle extends BillingStateCalculator<Subscri
         }
     }
 
-    public SortedSet<Invoice> unpaidInvoicesForBundle(final UUID bundleId, final UUID accountId, final DateTimeZone accountTimeZone) {
-        final SortedSet<Invoice> unpaidInvoices = unpaidInvoicesForAccount(accountId, accountTimeZone);
+    public SortedSet<Invoice> unpaidInvoicesForBundle(final UUID bundleId, final UUID accountId, final DateTimeZone accountTimeZone, final InternalTenantContext context) {
+        final SortedSet<Invoice> unpaidInvoices = unpaidInvoicesForAccount(accountId, accountTimeZone, context);
         final SortedSet<Invoice> result = new TreeSet<Invoice>(new InvoiceDateComparator());
         result.addAll(unpaidInvoices);
         for (final Invoice invoice : unpaidInvoices) {

@@ -22,7 +22,6 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
 import com.ning.billing.config.InvoiceConfig;
 import com.ning.billing.config.NotificationConfig;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
@@ -30,6 +29,7 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.invoice.InvoiceListener;
 import com.ning.billing.invoice.api.DefaultInvoiceService;
+import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.notificationq.NotificationKey;
 import com.ning.billing.util.notificationq.NotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService;
@@ -37,7 +37,10 @@ import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotifi
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
 
+import com.google.inject.Inject;
+
 public class DefaultNextBillingDateNotifier implements NextBillingDateNotifier {
+
     private static final Logger log = LoggerFactory.getLogger(DefaultNextBillingDateNotifier.class);
 
     public static final String NEXT_BILLING_DATE_NOTIFIER_QUEUE = "next-billing-date-queue";
@@ -45,17 +48,22 @@ public class DefaultNextBillingDateNotifier implements NextBillingDateNotifier {
     private final NotificationQueueService notificationQueueService;
     private final InvoiceConfig config;
     private final EntitlementUserApi entitlementUserApi;
+    private final InvoiceListener listener;
+    private final CallContextFactory callContextFactory;
 
     private NotificationQueue nextBillingQueue;
-    private final InvoiceListener listener;
 
     @Inject
     public DefaultNextBillingDateNotifier(final NotificationQueueService notificationQueueService,
-                                          final InvoiceConfig config, final EntitlementUserApi entitlementUserApi, final InvoiceListener listener) {
+                                          final InvoiceConfig config,
+                                          final EntitlementUserApi entitlementUserApi,
+                                          final InvoiceListener listener,
+                                          final CallContextFactory callContextFactory) {
         this.notificationQueueService = notificationQueueService;
         this.config = config;
         this.entitlementUserApi = entitlementUserApi;
         this.listener = listener;
+        this.callContextFactory = callContextFactory;
     }
 
     @Override
@@ -83,7 +91,7 @@ public class DefaultNextBillingDateNotifier implements NextBillingDateNotifier {
 
                     final NextBillingDateNotificationKey key = (NextBillingDateNotificationKey) notificationKey;
                     try {
-                        final Subscription subscription = entitlementUserApi.getSubscriptionFromId(key.getUuidKey());
+                        final Subscription subscription = entitlementUserApi.getSubscriptionFromId(key.getUuidKey(), callContextFactory.createTenantContext(null));
                         if (subscription == null) {
                             log.warn("Next Billing Date Notification Queue handled spurious notification (key: " + key + ")");
                         } else {

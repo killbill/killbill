@@ -43,12 +43,12 @@ public class TestBusinessInvoicePaymentFieldSqlDao extends AnalyticsTestSuiteWit
         final String value = UUID.randomUUID().toString();
 
         // Verify initial state
-        Assert.assertEquals(invoicePaymentFieldSqlDao.getFieldsForInvoicePayment(paymentId).size(), 0);
-        Assert.assertEquals(invoicePaymentFieldSqlDao.removeField(paymentId, name), 0);
+        Assert.assertEquals(invoicePaymentFieldSqlDao.getFieldsForInvoicePayment(paymentId, internalCallContext).size(), 0);
+        Assert.assertEquals(invoicePaymentFieldSqlDao.removeField(paymentId, name, internalCallContext), 0);
 
         // Add an entry
-        Assert.assertEquals(invoicePaymentFieldSqlDao.addField(paymentId, name, value), 1);
-        final List<BusinessInvoicePaymentField> fieldsForInvoicePayment = invoicePaymentFieldSqlDao.getFieldsForInvoicePayment(paymentId);
+        Assert.assertEquals(invoicePaymentFieldSqlDao.addField(paymentId, name, value, internalCallContext), 1);
+        final List<BusinessInvoicePaymentField> fieldsForInvoicePayment = invoicePaymentFieldSqlDao.getFieldsForInvoicePayment(paymentId, internalCallContext);
         Assert.assertEquals(fieldsForInvoicePayment.size(), 1);
 
         // Retrieve it
@@ -58,8 +58,8 @@ public class TestBusinessInvoicePaymentFieldSqlDao extends AnalyticsTestSuiteWit
         Assert.assertEquals(invoicePaymentField.getValue(), value);
 
         // Delete it
-        Assert.assertEquals(invoicePaymentFieldSqlDao.removeField(paymentId, name), 1);
-        Assert.assertEquals(invoicePaymentFieldSqlDao.getFieldsForInvoicePayment(paymentId).size(), 0);
+        Assert.assertEquals(invoicePaymentFieldSqlDao.removeField(paymentId, name, internalCallContext), 1);
+        Assert.assertEquals(invoicePaymentFieldSqlDao.getFieldsForInvoicePayment(paymentId, internalCallContext).size(), 0);
     }
 
     @Test(groups = "slow")
@@ -70,24 +70,24 @@ public class TestBusinessInvoicePaymentFieldSqlDao extends AnalyticsTestSuiteWit
         final String name2 = UUID.randomUUID().toString().substring(0, 30);
 
         // Add a field to both invoice payments
-        Assert.assertEquals(invoicePaymentFieldSqlDao.addField(paymentId1, name1, UUID.randomUUID().toString()), 1);
-        Assert.assertEquals(invoicePaymentFieldSqlDao.addField(paymentId2, name2, UUID.randomUUID().toString()), 1);
+        Assert.assertEquals(invoicePaymentFieldSqlDao.addField(paymentId1, name1, UUID.randomUUID().toString(), internalCallContext), 1);
+        Assert.assertEquals(invoicePaymentFieldSqlDao.addField(paymentId2, name2, UUID.randomUUID().toString(), internalCallContext), 1);
 
-        Assert.assertEquals(invoicePaymentFieldSqlDao.getFieldsForInvoicePayment(paymentId1).size(), 1);
-        Assert.assertEquals(invoicePaymentFieldSqlDao.getFieldsForInvoicePayment(paymentId2).size(), 1);
+        Assert.assertEquals(invoicePaymentFieldSqlDao.getFieldsForInvoicePayment(paymentId1, internalCallContext).size(), 1);
+        Assert.assertEquals(invoicePaymentFieldSqlDao.getFieldsForInvoicePayment(paymentId2, internalCallContext).size(), 1);
 
         // Remove the field for the first invoice payment
-        Assert.assertEquals(invoicePaymentFieldSqlDao.removeField(paymentId1, name1), 1);
+        Assert.assertEquals(invoicePaymentFieldSqlDao.removeField(paymentId1, name1, internalCallContext), 1);
 
-        Assert.assertEquals(invoicePaymentFieldSqlDao.getFieldsForInvoicePayment(paymentId1).size(), 0);
-        Assert.assertEquals(invoicePaymentFieldSqlDao.getFieldsForInvoicePayment(paymentId2).size(), 1);
+        Assert.assertEquals(invoicePaymentFieldSqlDao.getFieldsForInvoicePayment(paymentId1, internalCallContext).size(), 0);
+        Assert.assertEquals(invoicePaymentFieldSqlDao.getFieldsForInvoicePayment(paymentId2, internalCallContext).size(), 1);
     }
 
     @Test(groups = "slow")
     public void testHealthCheck() throws Exception {
         // HealthCheck test to make sure MySQL is setup properly
         try {
-            invoicePaymentFieldSqlDao.test();
+            invoicePaymentFieldSqlDao.test(internalCallContext);
         } catch (Throwable t) {
             Assert.fail(t.toString());
         }

@@ -19,11 +19,12 @@ package com.ning.billing.mock.glue;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.IDBI;
 
-import com.google.inject.AbstractModule;
 import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.dbi.DBIProvider;
 import com.ning.billing.dbi.DbiConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
+
+import com.google.inject.AbstractModule;
 
 public class MockDbHelperModule extends AbstractModule {
     @Override

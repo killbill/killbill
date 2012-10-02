@@ -19,7 +19,6 @@ package com.ning.billing.junction.dao;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.SortedSet;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -42,6 +41,9 @@ import com.ning.billing.junction.api.BlockingApiException;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.junction.api.DefaultBlockingState;
 import com.ning.billing.overdue.OverdueState;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.dao.BinderBase;
 import com.ning.billing.util.dao.MapperBase;
@@ -51,31 +53,33 @@ public interface BlockingStateSqlDao extends BlockingStateDao, CloseMe, Transmog
 
     @Override
     @SqlUpdate
-    public abstract <T extends Blockable> void setBlockingState(
-            @Bind(binder = BlockingStateBinder.class) BlockingState state,
-            @Bind(binder = CurrentTimeBinder.class) Clock clock);
-
-
-    @Override
-    @SqlQuery
-    @Mapper(BlockingHistorySqlMapper.class)
-    public abstract BlockingState getBlockingStateFor(@Bind(binder = BlockableBinder.class) Blockable overdueable);
+    public abstract <T extends Blockable> void setBlockingState(@Bind(binder = BlockingStateBinder.class) BlockingState state,
+                                                                @Bind(binder = CurrentTimeBinder.class) Clock clock,
+                                                                @InternalTenantContextBinder final InternalCallContext context);
 
     @Override
     @SqlQuery
     @Mapper(BlockingHistorySqlMapper.class)
-    public abstract BlockingState getBlockingStateFor(@Bind(binder = UUIDBinder.class) UUID overdueableId);
+    public abstract BlockingState getBlockingStateFor(@Bind(binder = BlockableBinder.class) Blockable overdueable,
+                                                      @InternalTenantContextBinder final InternalTenantContext context);
 
     @Override
     @SqlQuery
     @Mapper(BlockingHistorySqlMapper.class)
-    public abstract List<BlockingState> getBlockingHistoryFor(@Bind(binder = BlockableBinder.class) Blockable blockable);
+    public abstract BlockingState getBlockingStateFor(@Bind(binder = UUIDBinder.class) UUID overdueableId,
+                                                      @InternalTenantContextBinder final InternalTenantContext context);
 
     @Override
     @SqlQuery
     @Mapper(BlockingHistorySqlMapper.class)
-    public abstract List<BlockingState> getBlockingHistoryFor(@Bind(binder = UUIDBinder.class) UUID blockableId);
+    public abstract List<BlockingState> getBlockingHistoryFor(@Bind(binder = BlockableBinder.class) Blockable blockable,
+                                                              @InternalTenantContextBinder final InternalTenantContext context);
 
+    @Override
+    @SqlQuery
+    @Mapper(BlockingHistorySqlMapper.class)
+    public abstract List<BlockingState> getBlockingHistoryFor(@Bind(binder = UUIDBinder.class) UUID blockableId,
+                                                              @InternalTenantContextBinder final InternalTenantContext context);
 
     public class BlockingHistorySqlMapper extends MapperBase implements ResultSetMapper<BlockingState> {
 
@@ -117,6 +121,7 @@ public interface BlockingStateSqlDao extends BlockingStateDao, CloseMe, Transmog
     }
 
     public static class BlockingStateBinder extends BinderBase implements Binder<Bind, DefaultBlockingState> {
+
         @Override
         public void bind(@SuppressWarnings("rawtypes") final SQLStatement stmt, final Bind bind, final DefaultBlockingState state) {
             stmt.bind("id", state.getBlockedId().toString());
@@ -130,6 +135,7 @@ public interface BlockingStateSqlDao extends BlockingStateDao, CloseMe, Transmog
     }
 
     public static class UUIDBinder extends BinderBase implements Binder<Bind, UUID> {
+
         @Override
         public void bind(@SuppressWarnings("rawtypes") final SQLStatement stmt, final Bind bind, final UUID id) {
             stmt.bind("id", id.toString());
@@ -137,6 +143,7 @@ public interface BlockingStateSqlDao extends BlockingStateDao, CloseMe, Transmog
     }
 
     public static class BlockableBinder extends BinderBase implements Binder<Bind, Blockable> {
+
         @Override
         public void bind(@SuppressWarnings("rawtypes") final SQLStatement stmt, final Bind bind, final Blockable overdueable) {
             stmt.bind("id", overdueable.getId().toString());
@@ -144,6 +151,7 @@ public interface BlockingStateSqlDao extends BlockingStateDao, CloseMe, Transmog
     }
 
     public static class OverdueStateBinder<T extends Blockable> extends BinderBase implements Binder<Bind, OverdueState<T>> {
+
         @Override
         public void bind(final SQLStatement<?> stmt, final Bind bind, final OverdueState<T> overdueState) {
             stmt.bind("state", overdueState.getName());
@@ -160,6 +168,7 @@ public interface BlockingStateSqlDao extends BlockingStateDao, CloseMe, Transmog
     }
 
     public static class CurrentTimeBinder extends BinderBase implements Binder<Bind, Clock> {
+
         @Override
         public void bind(@SuppressWarnings("rawtypes") final SQLStatement stmt, final Bind bind, final Clock clock) {
             stmt.bind("created_date", clock.getUTCNow().toDate());

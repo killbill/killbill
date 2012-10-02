@@ -31,45 +31,46 @@ import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.util.api.TagApiException;
-import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
 
 public interface InvoiceDao {
 
-    void create(final Invoice invoice, final int billCycleDayUTC, final boolean isRealInvoice, final CallContext context);
+    void create(Invoice invoice, int billCycleDayUTC, boolean isRealInvoice, InternalCallContext context);
 
-    Invoice getById(final UUID id) throws InvoiceApiException;
+    Invoice getById(UUID id, InternalTenantContext context) throws InvoiceApiException;
 
-    Invoice getByNumber(final Integer number) throws InvoiceApiException;
+    Invoice getByNumber(Integer number, InternalTenantContext context) throws InvoiceApiException;
 
-    List<Invoice> get();
+    List<Invoice> get(InternalTenantContext context);
 
-    List<Invoice> getInvoicesByAccount(final UUID accountId);
+    List<Invoice> getInvoicesByAccount(UUID accountId, InternalTenantContext context);
 
-    List<Invoice> getInvoicesByAccount(final UUID accountId, final LocalDate fromDate);
+    List<Invoice> getInvoicesByAccount(UUID accountId, LocalDate fromDate, InternalTenantContext context);
 
-    List<Invoice> getInvoicesBySubscription(final UUID subscriptionId);
+    List<Invoice> getInvoicesBySubscription(UUID subscriptionId, InternalTenantContext context);
 
-    UUID getInvoiceIdByPaymentId(final UUID paymentId);
+    UUID getInvoiceIdByPaymentId(UUID paymentId, InternalTenantContext context);
 
-    List<InvoicePayment> getInvoicePayments(final UUID paymentId);
+    List<InvoicePayment> getInvoicePayments(UUID paymentId, InternalTenantContext context);
 
-    void notifyOfPayment(final InvoicePayment invoicePayment, final CallContext context);
+    void notifyOfPayment(InvoicePayment invoicePayment, InternalCallContext context);
 
-    BigDecimal getAccountBalance(final UUID accountId);
+    BigDecimal getAccountBalance(UUID accountId, InternalTenantContext context);
 
-    public BigDecimal getAccountCBA(final UUID accountId);
+    public BigDecimal getAccountCBA(UUID accountId, InternalTenantContext context);
 
-    List<Invoice> getUnpaidInvoicesByAccountId(final UUID accountId, @Nullable final LocalDate upToDate);
+    List<Invoice> getUnpaidInvoicesByAccountId(UUID accountId, @Nullable LocalDate upToDate, InternalTenantContext context);
 
-    void test();
+    void test(InternalTenantContext context);
 
-    List<Invoice> getAllInvoicesByAccount(final UUID accountId);
+    List<Invoice> getAllInvoicesByAccount(UUID accountId, InternalTenantContext context);
 
-    void setWrittenOff(final UUID invoiceId, final CallContext context) throws TagApiException;
+    void setWrittenOff(UUID invoiceId, InternalCallContext context) throws TagApiException;
 
-    void removeWrittenOff(final UUID invoiceId, final CallContext context) throws TagApiException;
+    void removeWrittenOff(UUID invoiceId, InternalCallContext context) throws TagApiException;
 
-    InvoicePayment postChargeback(final UUID invoicePaymentId, final BigDecimal amount, final CallContext context) throws InvoiceApiException;
+    InvoicePayment postChargeback(UUID invoicePaymentId, BigDecimal amount, InternalCallContext context) throws InvoiceApiException;
 
     /**
      * Create a refund.
@@ -83,18 +84,18 @@ public interface InvoiceDao {
      * @return the created invoice payment object associated with this refund
      * @throws InvoiceApiException
      */
-    InvoicePayment createRefund(final UUID paymentId, final BigDecimal amount, final boolean isInvoiceAdjusted, final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts,
-                                final UUID paymentCookieId, final CallContext context) throws InvoiceApiException;
+    InvoicePayment createRefund(UUID paymentId, BigDecimal amount, boolean isInvoiceAdjusted, Map<UUID, BigDecimal> invoiceItemIdsWithAmounts,
+                                UUID paymentCookieId, InternalCallContext context) throws InvoiceApiException;
 
-    BigDecimal getRemainingAmountPaid(final UUID invoicePaymentId);
+    BigDecimal getRemainingAmountPaid(UUID invoicePaymentId, InternalTenantContext context);
 
-    UUID getAccountIdFromInvoicePaymentId(final UUID invoicePaymentId) throws InvoiceApiException;
+    UUID getAccountIdFromInvoicePaymentId(UUID invoicePaymentId, InternalTenantContext context) throws InvoiceApiException;
 
-    List<InvoicePayment> getChargebacksByAccountId(final UUID accountId);
+    List<InvoicePayment> getChargebacksByAccountId(UUID accountId, InternalTenantContext context);
 
-    List<InvoicePayment> getChargebacksByPaymentId(final UUID paymentId);
+    List<InvoicePayment> getChargebacksByPaymentId(UUID paymentId, InternalTenantContext context);
 
-    InvoicePayment getChargebackById(final UUID chargebackId) throws InvoiceApiException;
+    InvoicePayment getChargebackById(UUID chargebackId, InternalTenantContext context) throws InvoiceApiException;
 
     /**
      * Retrieve am external charge by id.
@@ -103,7 +104,7 @@ public interface InvoiceDao {
      * @return the external charge invoice item
      * @throws InvoiceApiException
      */
-    InvoiceItem getExternalChargeById(final UUID externalChargeId) throws InvoiceApiException;
+    InvoiceItem getExternalChargeById(UUID externalChargeId, InternalTenantContext context) throws InvoiceApiException;
 
     /**
      * Add an external charge to a given account and invoice. If invoiceId is null, a new invoice will be created.
@@ -118,8 +119,8 @@ public interface InvoiceDao {
      * @param context       the call context
      * @return the newly created external charge invoice item
      */
-    InvoiceItem insertExternalCharge(final UUID accountId, @Nullable final UUID invoiceId, @Nullable final UUID bundleId, @Nullable final String description,
-                                     final BigDecimal amount, final LocalDate effectiveDate, final Currency currency, final CallContext context) throws InvoiceApiException;
+    InvoiceItem insertExternalCharge(UUID accountId, @Nullable UUID invoiceId, @Nullable UUID bundleId, @Nullable String description,
+                                     BigDecimal amount, LocalDate effectiveDate, Currency currency, InternalCallContext context) throws InvoiceApiException;
 
     /**
      * Retrieve a credit by id.
@@ -128,7 +129,7 @@ public interface InvoiceDao {
      * @return the credit invoice item
      * @throws InvoiceApiException
      */
-    InvoiceItem getCreditById(final UUID creditId) throws InvoiceApiException;
+    InvoiceItem getCreditById(UUID creditId, InternalTenantContext context) throws InvoiceApiException;
 
     /**
      * Add a credit to a given account and invoice. If invoiceId is null, a new invoice will be created.
@@ -141,8 +142,8 @@ public interface InvoiceDao {
      * @param context       the call context
      * @return the newly created credit invoice item
      */
-    InvoiceItem insertCredit(final UUID accountId, @Nullable final UUID invoiceId, final BigDecimal amount,
-                             final LocalDate effectiveDate, final Currency currency, final CallContext context);
+    InvoiceItem insertCredit(UUID accountId, @Nullable UUID invoiceId, BigDecimal amount,
+                             LocalDate effectiveDate, Currency currency, InternalCallContext context);
 
     /**
      * Adjust an invoice item.
@@ -156,8 +157,8 @@ public interface InvoiceDao {
      * @param context       the call context
      * @return the newly created adjustment item
      */
-    InvoiceItem insertInvoiceItemAdjustment(final UUID accountId, final UUID invoiceId, final UUID invoiceItemId, final LocalDate effectiveDate,
-                                            @Nullable final BigDecimal amount, @Nullable final Currency currency, final CallContext context);
+    InvoiceItem insertInvoiceItemAdjustment(UUID accountId, UUID invoiceId, UUID invoiceItemId, LocalDate effectiveDate,
+                                            @Nullable BigDecimal amount, @Nullable Currency currency, InternalCallContext context);
 
     /**
      * Delete a CBA item.
@@ -166,5 +167,5 @@ public interface InvoiceDao {
      * @param invoiceId     the invoice id
      * @param invoiceItemId the invoice item id of the cba item to delete
      */
-    void deleteCBA(final UUID accountId, final UUID invoiceId, final UUID invoiceItemId, final CallContext context) throws InvoiceApiException;
+    void deleteCBA(UUID accountId, UUID invoiceId, UUID invoiceItemId, InternalCallContext context) throws InvoiceApiException;
 }

@@ -39,11 +39,15 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextFactory;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
+import com.ning.billing.util.callcontext.InternalTenantContext;
 
 public class TestDefaultAccountUserApi extends AccountTestSuite {
 
     private final CallContextFactory factory = Mockito.mock(CallContextFactory.class);
+    private final InternalCallContextFactory internalFactory = Mockito.mock(InternalCallContextFactory.class);
     private final CallContext callContext = Mockito.mock(CallContext.class);
+    private final InternalTenantContext tenantContext = Mockito.mock(InternalTenantContext.class);
 
     private AccountDao accountDao;
     private AccountEmailDao accountEmailDao;
@@ -53,7 +57,7 @@ public class TestDefaultAccountUserApi extends AccountTestSuite {
     public void setUp() throws Exception {
         accountDao = new MockAccountDao(Mockito.mock(Bus.class));
         accountEmailDao = new MockAccountEmailDao();
-        accountUserApi = new DefaultAccountUserApi(factory, accountDao, accountEmailDao);
+        accountUserApi = new DefaultAccountUserApi(factory, internalFactory, accountDao, accountEmailDao);
     }
 
     @Test(groups = "fast")
@@ -84,7 +88,7 @@ public class TestDefaultAccountUserApi extends AccountTestSuite {
 
         accountUserApi.createAccount(data, callContext);
 
-        final Account account = accountDao.getAccountByKey(externalKey);
+        final Account account = accountDao.getAccountByKey(externalKey, tenantContext);
         Assert.assertEquals(account.getExternalKey(), externalKey);
         Assert.assertEquals(account.getEmail(), email);
         Assert.assertEquals(account.getName(), name);
@@ -111,20 +115,20 @@ public class TestDefaultAccountUserApi extends AccountTestSuite {
         final UUID accountId = UUID.randomUUID();
 
         // Verify the initial state
-        Assert.assertEquals(accountEmailDao.getEmails(accountId).size(), 0);
+        Assert.assertEquals(accountEmailDao.getEmails(accountId, tenantContext).size(), 0);
 
         // Add the first email
         final String email1 = UUID.randomUUID().toString();
         accountUserApi.addEmail(accountId, new DefaultAccountEmail(accountId, email1), callContext);
-        Assert.assertEquals(accountEmailDao.getEmails(accountId).size(), 1);
+        Assert.assertEquals(accountEmailDao.getEmails(accountId, tenantContext).size(), 1);
 
         // Add a second one
         final String email2 = UUID.randomUUID().toString();
         accountUserApi.addEmail(accountId, new DefaultAccountEmail(accountId, email2), callContext);
-        Assert.assertEquals(accountEmailDao.getEmails(accountId).size(), 2);
+        Assert.assertEquals(accountEmailDao.getEmails(accountId, tenantContext).size(), 2);
 
         // Remove the first second one
         accountUserApi.removeEmail(accountId, new DefaultAccountEmail(accountId, email1), callContext);
-        Assert.assertEquals(accountEmailDao.getEmails(accountId).size(), 1);
+        Assert.assertEquals(accountEmailDao.getEmails(accountId, tenantContext).size(), 1);
     }
 }

@@ -54,8 +54,9 @@ import com.ning.billing.entitlement.events.user.ApiEventTransfer;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.events.user.ApiEventUncancel;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallContextBinder;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 import com.ning.billing.util.dao.AuditSqlDao;
 import com.ning.billing.util.dao.BinderBase;
 import com.ning.billing.util.dao.MapperBase;
@@ -63,38 +64,43 @@ import com.ning.billing.util.entity.dao.EntitySqlDao;
 
 @ExternalizedSqlViaStringTemplate3()
 public interface EntitlementEventSqlDao extends Transactional<EntitlementEventSqlDao>, AuditSqlDao,
-        EntitySqlDao<EntitlementEvent>, CloseMe, Transmogrifier {
+                                                EntitySqlDao<EntitlementEvent>, CloseMe, Transmogrifier {
 
     @SqlQuery
     @Mapper(EventSqlMapper.class)
-    public EntitlementEvent getEventById(@Bind("id") String id);
+    public EntitlementEvent getEventById(@Bind("id") String id,
+                                         @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlUpdate
     public void insertEvent(@Bind(binder = EventSqlDaoBinder.class) EntitlementEvent evt,
-                            @CallContextBinder final CallContext context);
+                            @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
     public void unactiveEvent(@Bind("id") String id,
-                              @CallContextBinder final CallContext context);
+                              @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
     public void reactiveEvent(@Bind("id") String id,
-                              @CallContextBinder final CallContext context);
+                              @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
     public void updateVersion(@Bind("id") String id,
                               @Bind("currentVersion") Long currentVersion,
-                              @CallContextBinder final CallContext context);
+                              @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlQuery
     @Mapper(EventSqlMapper.class)
-    public List<EntitlementEvent> getFutureActiveEventForSubscription(@Bind("subscriptionId") String subscriptionId, @Bind("now") Date now);
+    public List<EntitlementEvent> getFutureActiveEventForSubscription(@Bind("subscriptionId") String subscriptionId,
+                                                                      @Bind("now") Date now,
+                                                                      @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
     @Mapper(EventSqlMapper.class)
-    public List<EntitlementEvent> getEventsForSubscription(@Bind("subscriptionId") String subscriptionId);
+    public List<EntitlementEvent> getEventsForSubscription(@Bind("subscriptionId") String subscriptionId,
+                                                           @InternalTenantContextBinder final InternalTenantContext context);
 
     public static class EventSqlDaoBinder extends BinderBase implements Binder<Bind, EntitlementEvent> {
+
         @Override
         public void bind(@SuppressWarnings("rawtypes") final SQLStatement stmt, final Bind bind, final EntitlementEvent evt) {
 
@@ -126,6 +132,7 @@ public interface EntitlementEventSqlDao extends Transactional<EntitlementEventSq
     }
 
     public static class EventSqlMapper extends MapperBase implements ResultSetMapper<EntitlementEvent> {
+
         @Override
         public EntitlementEvent map(final int index, final ResultSet r, final StatementContext ctx)
                 throws SQLException {
@@ -146,8 +153,8 @@ public interface EntitlementEventSqlDao extends Transactional<EntitlementEventSq
             final UUID userToken = r.getString("user_token") != null ? UUID.fromString(r.getString("user_token")) : null;
 
             final EventBaseBuilder<?> base = ((eventType == EventType.PHASE) ?
-                    new PhaseEventBuilder() :
-                    new ApiEventBuilder())
+                                              new PhaseEventBuilder() :
+                                              new ApiEventBuilder())
                     .setTotalOrdering(totalOrdering)
                     .setUuid(id)
                     .setSubscriptionId(subscriptionId)

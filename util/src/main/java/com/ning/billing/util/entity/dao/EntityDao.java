@@ -19,16 +19,20 @@ package com.ning.billing.util.entity.dao;
 import java.util.List;
 import java.util.UUID;
 
-import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.entity.Entity;
 import com.ning.billing.util.entity.EntityPersistenceException;
 
 public interface EntityDao<T extends Entity> {
-    public void create(final T entity, final CallContext context) throws EntityPersistenceException;
 
-    public T getById(final UUID id);
+    public void create(T entity, InternalCallContext context) throws EntityPersistenceException;
 
-    public List<T> get();
+    public Long getRecordId(UUID id, InternalTenantContext context);
 
-    public void test();
+    public T getById(UUID id, InternalTenantContext context);
+
+    public List<T> get(InternalTenantContext context);
+
+    public void test(InternalTenantContext context);
 }

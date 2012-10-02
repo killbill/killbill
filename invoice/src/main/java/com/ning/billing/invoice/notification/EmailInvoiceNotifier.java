@@ -31,6 +31,8 @@ import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceNotifier;
 import com.ning.billing.invoice.template.HtmlInvoiceGenerator;
 import com.ning.billing.util.api.TagUserApi;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
+import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.email.DefaultEmailSender;
 import com.ning.billing.util.email.EmailApiException;
@@ -44,22 +46,29 @@ public class EmailInvoiceNotifier implements InvoiceNotifier {
     private final TagUserApi tagUserApi;
     private final HtmlInvoiceGenerator generator;
     private final EmailConfig config;
+    private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
-    public EmailInvoiceNotifier(final AccountUserApi accountUserApi, final TagUserApi tagUserApi,
-                                final HtmlInvoiceGenerator generator, final EmailConfig config) {
+    public EmailInvoiceNotifier(final AccountUserApi accountUserApi,
+                                final TagUserApi tagUserApi,
+                                final HtmlInvoiceGenerator generator,
+                                final EmailConfig config,
+                                final InternalCallContextFactory internalCallContextFactory) {
         this.accountUserApi = accountUserApi;
         this.tagUserApi = tagUserApi;
         this.generator = generator;
         this.config = config;
+        this.internalCallContextFactory = internalCallContextFactory;
     }
 
     @Override
-    public void notify(final Account account, final Invoice invoice) throws InvoiceApiException {
+    public void notify(final Account account, final Invoice invoice, final TenantContext context) throws InvoiceApiException {
+        final TenantContext tenantContext = internalCallContextFactory.createInternalTenantContext(account.getId(), context).toTenantContext();
+
         final List<String> to = new ArrayList<String>();
         to.add(account.getEmail());
 
-        final List<AccountEmail> accountEmailList = accountUserApi.getEmails(account.getId());
+        final List<AccountEmail> accountEmailList = accountUserApi.getEmails(account.getId(), tenantContext);
         final List<String> cc = new ArrayList<String>();
         for (final AccountEmail email : accountEmailList) {
             cc.add(email.getEmail());
@@ -67,7 +76,7 @@ public class EmailInvoiceNotifier implements InvoiceNotifier {
 
         // Check if this account has the MANUAL_PAY system tag
         boolean manualPay = false;
-        final Map<String, Tag> accountTags = tagUserApi.getTags(account.getId(), ObjectType.ACCOUNT);
+        final Map<String, Tag> accountTags = tagUserApi.getTags(account.getId(), ObjectType.ACCOUNT, tenantContext);
         for (final Tag tag : accountTags.values()) {
             if (ControlTagType.MANUAL_PAY.getId().equals(tag.getTagDefinitionId())) {
                 manualPay = true;

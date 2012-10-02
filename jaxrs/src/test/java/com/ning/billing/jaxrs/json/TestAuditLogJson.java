@@ -26,12 +26,7 @@ import com.ning.billing.jaxrs.JaxrsTestSuite;
 import com.ning.billing.util.ChangeType;
 import com.ning.billing.util.audit.AuditLog;
 import com.ning.billing.util.audit.DefaultAuditLog;
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallOrigin;
-import com.ning.billing.util.callcontext.DefaultCallContext;
-import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.clock.DefaultClock;
 import com.ning.billing.util.dao.EntityAudit;
 import com.ning.billing.util.dao.TableName;
@@ -87,21 +82,14 @@ public class TestAuditLogJson extends JaxrsTestSuite {
         final ChangeType changeType = ChangeType.DELETE;
         final EntityAudit entityAudit = new EntityAudit(tableName, recordId, changeType);
 
-        final String userName = UUID.randomUUID().toString();
-        final CallOrigin callOrigin = CallOrigin.EXTERNAL;
-        final UserType userType = UserType.CUSTOMER;
-        final UUID userToken = UUID.randomUUID();
-        final ClockMock clock = new ClockMock();
-        final CallContext callContext = new DefaultCallContext(userName, callOrigin, userType, userToken, clock);
-
         final AuditLog auditLog = new DefaultAuditLog(entityAudit, callContext);
 
         final AuditLogJson auditLogJson = new AuditLogJson(auditLog);
         Assert.assertEquals(auditLogJson.getChangeType(), changeType.toString());
         Assert.assertNotNull(auditLogJson.getChangeDate());
-        Assert.assertEquals(auditLogJson.getChangedBy(), userName);
-        Assert.assertNull(auditLogJson.getReasonCode());
-        Assert.assertNull(auditLogJson.getComments());
-        Assert.assertEquals(auditLogJson.getUserToken(), userToken.toString());
+        Assert.assertEquals(auditLogJson.getChangedBy(), callContext.getUserName());
+        Assert.assertEquals(auditLogJson.getReasonCode(), callContext.getReasonCode());
+        Assert.assertEquals(auditLogJson.getComments(), callContext.getComment());
+        Assert.assertEquals(auditLogJson.getUserToken(), callContext.getUserToken().toString());
     }
 }

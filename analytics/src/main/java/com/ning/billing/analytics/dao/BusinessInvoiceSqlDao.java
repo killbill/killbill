@@ -27,28 +27,38 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 
 import com.ning.billing.analytics.model.BusinessInvoice;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 
 @ExternalizedSqlViaStringTemplate3()
 @RegisterMapper(BusinessInvoiceMapper.class)
 public interface BusinessInvoiceSqlDao extends Transactional<BusinessInvoiceSqlDao>, Transmogrifier {
-    @SqlQuery
-    BusinessInvoice getInvoice(@Bind("invoice_id") final String invoiceId);
 
     @SqlQuery
-    List<BusinessInvoice> getInvoicesForAccount(@Bind("account_id") final String accountId);
+    BusinessInvoice getInvoice(@Bind("invoice_id") final String invoiceId,
+                               @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
-    List<BusinessInvoice> getInvoicesForAccountByKey(@Bind("account_key") final String accountKey);
+    List<BusinessInvoice> getInvoicesForAccount(@Bind("account_id") final String accountId,
+                                                @InternalTenantContextBinder final InternalTenantContext context);
+
+    @SqlQuery
+    List<BusinessInvoice> getInvoicesForAccountByKey(@Bind("account_key") final String accountKey,
+                                                     @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlUpdate
-    int createInvoice(@BusinessInvoiceBinder final BusinessInvoice invoice);
+    int createInvoice(@BusinessInvoiceBinder final BusinessInvoice invoice,
+                      @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
-    int deleteInvoice(@Bind("invoice_id") final String invoiceId);
+    int deleteInvoice(@Bind("invoice_id") final String invoiceId,
+                      @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
-    void deleteInvoicesForAccount(@Bind("account_id") final String accountId);
+    void deleteInvoicesForAccount(@Bind("account_id") final String accountId,
+                                  @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
-    void test();
+    void test(@InternalTenantContextBinder final InternalTenantContext context);
 }

@@ -22,13 +22,15 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.overdue.service.DefaultOverdueService;
+import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.notificationq.NotificationKey;
 import com.ning.billing.util.notificationq.NotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotificationQueue;
+
+import com.google.inject.Inject;
 
 public class DefaultOverdueCheckPoster implements OverdueCheckPoster {
     private static final Logger log = LoggerFactory.getLogger(DefaultOverdueCheckNotifier.class);
@@ -43,14 +45,14 @@ public class DefaultOverdueCheckPoster implements OverdueCheckPoster {
     }
 
     @Override
-    public void insertOverdueCheckNotification(final Blockable overdueable, final DateTime futureNotificationTime) {
+    public void insertOverdueCheckNotification(final Blockable overdueable, final DateTime futureNotificationTime, final InternalCallContext context) {
         final NotificationQueue checkOverdueQueue;
         try {
             checkOverdueQueue = notificationQueueService.getNotificationQueue(DefaultOverdueService.OVERDUE_SERVICE_NAME,
                                                                               DefaultOverdueCheckNotifier.OVERDUE_CHECK_NOTIFIER_QUEUE);
             log.info("Queuing overdue check notification. id: {}, timestamp: {}", overdueable.getId().toString(), futureNotificationTime.toString());
 
-            checkOverdueQueue.recordFutureNotification(futureNotificationTime, null, new OverdueCheckNotificationKey(overdueable.getId(), Blockable.Type.get(overdueable)));
+            checkOverdueQueue.recordFutureNotification(futureNotificationTime, null, new OverdueCheckNotificationKey(overdueable.getId(), Blockable.Type.get(overdueable)), context);
         } catch (NoSuchNotificationQueue e) {
             log.error("Attempting to put items on a non-existent queue (DefaultOverdueCheck).", e);
         } catch (IOException e) {
@@ -60,7 +62,7 @@ public class DefaultOverdueCheckPoster implements OverdueCheckPoster {
 
 
     @Override
-    public void clearNotificationsFor(final Blockable overdueable) {
+    public void clearNotificationsFor(final Blockable overdueable, final InternalCallContext context) {
         final NotificationQueue checkOverdueQueue;
         try {
             checkOverdueQueue = notificationQueueService.getNotificationQueue(DefaultOverdueService.OVERDUE_SERVICE_NAME,
@@ -71,7 +73,7 @@ public class DefaultOverdueCheckPoster implements OverdueCheckPoster {
                     return overdueable.getId().toString();
                 }
             };
-            checkOverdueQueue.removeNotificationsByKey(key);
+            checkOverdueQueue.removeNotificationsByKey(key, context);
         } catch (NoSuchNotificationQueue e) {
             log.error("Attempting to clear items from a non-existent queue (DefaultOverdueCheck).", e);
         }

@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.payment.bus;
 
 import java.util.UUID;
@@ -20,8 +21,6 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.eventbus.Subscribe;
-import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
@@ -30,11 +29,15 @@ import com.ning.billing.payment.core.PaymentProcessor;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.DefaultCallContext;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.api.ControlTagDeletionEvent;
+
+import com.google.common.eventbus.Subscribe;
+import com.google.inject.Inject;
 
 public class TagHandler {
 
@@ -43,19 +46,22 @@ public class TagHandler {
     private final Clock clock;
     private final AccountUserApi accountUserApi;
     private final PaymentProcessor paymentProcessor;
+    private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
     public TagHandler(final Clock clock,
-            final AccountUserApi accountUserApi,
-            final PaymentProcessor paymentProcessor) {
+                      final AccountUserApi accountUserApi,
+                      final PaymentProcessor paymentProcessor,
+                      final InternalCallContextFactory internalCallContextFactory) {
         this.clock = clock;
         this.accountUserApi = accountUserApi;
         this.paymentProcessor = paymentProcessor;
+        this.internalCallContextFactory = internalCallContextFactory;
     }
 
     @Subscribe
     public void process_AUTO_PAY_OFF_removal(final ControlTagDeletionEvent event) {
-        if (event.getTagDefinition().getName().equals(ControlTagType.AUTO_PAY_OFF.toString()) && event.getObjectType() ==  ObjectType.ACCOUNT) {
+        if (event.getTagDefinition().getName().equals(ControlTagType.AUTO_PAY_OFF.toString()) && event.getObjectType() == ObjectType.ACCOUNT) {
             final UUID accountId = event.getObjectId();
             processUnpaid_AUTO_PAY_OFF_payments(accountId, event.getUserToken());
         }
@@ -63,10 +69,11 @@ public class TagHandler {
 
     private void processUnpaid_AUTO_PAY_OFF_payments(final UUID accountId, final UUID userToken) {
         try {
-            final CallContext context = new DefaultCallContext("PaymentRequestProcessor", CallOrigin.INTERNAL, UserType.SYSTEM, userToken, clock);
-            final Account account = accountUserApi.getAccountById(accountId);
+            // TODO retrieve tenantId?
+            final CallContext context = new DefaultCallContext(null, "PaymentRequestProcessor", CallOrigin.INTERNAL, UserType.SYSTEM, userToken, clock);
+            final Account account = accountUserApi.getAccountById(accountId, context);
 
-            paymentProcessor.process_AUTO_PAY_OFF_removal(account, context);
+            paymentProcessor.process_AUTO_PAY_OFF_removal(account, internalCallContextFactory.createInternalCallContext(accountId, context));
 
         } catch (AccountApiException e) {
             log.warn(String.format("Failed to process process  removal AUTO_PAY_OFF for account %s", accountId), e);

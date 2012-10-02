@@ -1,5 +1,8 @@
 group PaymentSqlDao;
 
+CHECK_TENANT() ::= "tenant_record_id = :tenantRecordId"
+AND_CHECK_TENANT() ::= "AND <CHECK_TENANT()>"
+
 paymentFields(prefix) ::= <<
     <prefix>id,
     <prefix>account_id,
@@ -14,19 +17,24 @@ paymentFields(prefix) ::= <<
     <prefix>created_by,
     <prefix>created_date,
     <prefix>updated_by,
-    <prefix>updated_date
+    <prefix>updated_date,
+    <prefix>account_record_id,
+    <prefix>tenant_record_id
 >>
 
 insertPayment() ::= <<
     INSERT INTO payments (<paymentFields()>)
-    VALUES (:id, :accountId, :invoiceId, :paymentMethodId, :amount, :effectiveDate, :currency, :paymentStatus, :extFirstPaymentRefId, :extSecondPaymentRefId, :userName, :createdDate, :userName, :createdDate);
+    VALUES (:id, :accountId, :invoiceId, :paymentMethodId, :amount, :effectiveDate, :currency, :paymentStatus,
+            :extFirstPaymentRefId, :extSecondPaymentRefId, :userName, :createdDate, :userName, :createdDate, :accountRecordId, :tenantRecordId);
 >>
 
 getPayment() ::= <<
     SELECT <paymentFields()>
     , record_id as payment_number
       FROM payments
-    WHERE id = :id;
+    WHERE id = :id
+    <AND_CHECK_TENANT()>
+    ;
 >>
 
 getLastPaymentForAccountAndPaymentMethod() ::= <<
@@ -34,6 +42,7 @@ getLastPaymentForAccountAndPaymentMethod() ::= <<
     , record_id as payment_number
       FROM payments
     WHERE account_id = :accountId AND payment_method_id = :paymentMethodId
+    <AND_CHECK_TENANT()>
     ORDER BY effective_date desc limit 1;
 >> 
 
@@ -41,14 +50,18 @@ getPaymentsForInvoice() ::= <<
     SELECT <paymentFields()>
     , record_id as payment_number
       FROM payments
-    WHERE invoice_id = :invoiceId;
+    WHERE invoice_id = :invoiceId
+    <AND_CHECK_TENANT()>
+    ;
 >>
 
 getPaymentsForAccount() ::= <<
     SELECT <paymentFields()>
     , record_id as payment_number
       FROM payments
-    WHERE account_id = :accountId;
+    WHERE account_id = :accountId
+    <AND_CHECK_TENANT()>
+    ;
 >>
 
 
@@ -57,19 +70,25 @@ updatePaymentStatusAndExtRef() ::= <<
     SET payment_status = :paymentStatus,
         ext_first_payment_ref_id = :extFirstPaymentRefId,
         ext_second_payment_ref_id = :extSecondPaymentRefId
-    WHERE id = :id;
+    WHERE id = :id
+    <AND_CHECK_TENANT()>
+    ;
 >>
 
 updatePaymentAmount() ::= <<
     UPDATE payments
     SET amount = :amount
-    WHERE id = :id;
+    WHERE id = :id
+    <AND_CHECK_TENANT()>
+    ;
 >>
 
 getRecordId() ::= <<
     SELECT record_id
     FROM payments
-    WHERE id = :id;
+    WHERE id = :id
+    <AND_CHECK_TENANT()>
+    ;
 >>
 
 
@@ -88,19 +107,24 @@ historyFields(prefix) ::= <<
     <prefix>created_by,
     <prefix>created_date,
     <prefix>updated_by,
-    <prefix>updated_date 
+    <prefix>updated_date,
+    <prefix>account_record_id,
+    <prefix>tenant_record_id
 >>
 
 insertHistoryFromTransaction() ::= <<
     INSERT INTO payment_history (<historyFields()>)
-    VALUES (:recordId, :id, :accountId, :invoiceId, :paymentMethodId, :amount, :effectiveDate, :currency, :paymentStatus, :extFirstPaymentRefId, :extSecondPaymentRefId, :userName, :createdDate, :userName, :updatedDate);
+    VALUES (:recordId, :id, :accountId, :invoiceId, :paymentMethodId, :amount, :effectiveDate, :currency, :paymentStatus,
+            :extFirstPaymentRefId, :extSecondPaymentRefId, :userName, :createdDate, :userName, :updatedDate, :accountRecordId, :tenantRecordId);
 >>
 
 
 getHistoryRecordId() ::= <<
     SELECT MAX(history_record_id)
     FROM payment_history
-    WHERE record_id = :recordId;
+    WHERE record_id = :recordId
+    <AND_CHECK_TENANT()>
+    ;
 >>
 
 auditFields(prefix) ::= <<
@@ -111,11 +135,13 @@ auditFields(prefix) ::= <<
     <prefix>changed_by,
     <prefix>reason_code,
     <prefix>comments,
-    <prefix>user_token
+    <prefix>user_token,
+    <prefix>account_record_id,
+    <prefix>tenant_record_id
 >>
 
 insertAuditFromTransaction() ::= <<
     INSERT INTO audit_log(<auditFields()>)
-    VALUES(:tableName, :recordId, :changeType, :createdDate, :userName, :reasonCode, :comment, :userToken);
+    VALUES(:tableName, :recordId, :changeType, :createdDate, :userName, :reasonCode, :comment, :userToken, :accountRecordId, :tenantRecordId);
 >>
 

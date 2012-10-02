@@ -25,8 +25,6 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.alignment.MigrationPlanAligner;
 import com.ning.billing.entitlement.alignment.TimedMigration;
@@ -50,30 +48,38 @@ import com.ning.billing.entitlement.events.user.ApiEventMigrateEntitlement;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.Clock;
 
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+
 public class DefaultEntitlementMigrationApi implements EntitlementMigrationApi {
+
     private final EntitlementDao dao;
     private final MigrationPlanAligner migrationAligner;
     private final SubscriptionFactory factory;
     private final Clock clock;
+    private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
     public DefaultEntitlementMigrationApi(final MigrationPlanAligner migrationAligner,
                                           final SubscriptionFactory factory,
                                           final EntitlementDao dao,
-                                          final Clock clock) {
+                                          final Clock clock,
+                                          final InternalCallContextFactory internalCallContextFactory) {
         this.dao = dao;
         this.migrationAligner = migrationAligner;
         this.factory = factory;
         this.clock = clock;
+        this.internalCallContextFactory = internalCallContextFactory;
     }
 
     @Override
     public void migrate(final EntitlementAccountMigration toBeMigrated, final CallContext context)
             throws EntitlementMigrationApiException {
         final AccountMigrationData accountMigrationData = createAccountMigrationData(toBeMigrated, context);
-        dao.migrate(toBeMigrated.getAccountKey(), accountMigrationData, context);
+        dao.migrate(toBeMigrated.getAccountKey(), accountMigrationData, internalCallContextFactory.createInternalCallContext(context));
     }
 
     private AccountMigrationData createAccountMigrationData(final EntitlementAccountMigration toBeMigrated, final CallContext context)

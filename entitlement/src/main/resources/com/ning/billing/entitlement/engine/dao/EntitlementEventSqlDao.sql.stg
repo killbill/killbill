@@ -1,5 +1,8 @@
 group EventSqlDao;
 
+CHECK_TENANT() ::= "tenant_record_id = :tenantRecordId"
+AND_CHECK_TENANT() ::= "AND <CHECK_TENANT()>"
+
 fields(prefix) ::= <<
     <prefix>id,
     <prefix>event_type,
@@ -16,7 +19,9 @@ fields(prefix) ::= <<
     <prefix>created_by,
     <prefix>created_date,
     <prefix>updated_by,
-    <prefix>updated_date
+    <prefix>updated_date,
+    <prefix>account_record_id,
+    <prefix>tenant_record_id
 >>
 
 getEventById() ::= <<
@@ -24,6 +29,7 @@ getEventById() ::= <<
   from subscription_events
   where
       id = :id
+  <AND_CHECK_TENANT()>
   ;
 >>
 
@@ -46,7 +52,9 @@ insertEvent() ::= <<
     , :createdDate
     , :userName
     , :updatedDate
-    );   
+    , :accountRecordId
+    , :tenantRecordId
+    );
 >>
 
 updateVersion() ::= <<
@@ -55,6 +63,7 @@ updateVersion() ::= <<
       current_version = :currentVersion
     where
       id = :id
+    <AND_CHECK_TENANT()>
     ;
 >>
 
@@ -66,6 +75,7 @@ unactiveEvent() ::= <<
       , updated_date = :updatedDate
     where
       id = :id
+    <AND_CHECK_TENANT()>
     ;
 >>
 
@@ -77,6 +87,7 @@ reactiveEvent() ::= <<
       , updated_date = :updatedDate
     where
       event_id = :eventId
+    <AND_CHECK_TENANT()>
     ;
 >>
 
@@ -88,6 +99,7 @@ getFutureActiveEventForSubscription() ::= <<
       subscription_id = :subscriptionId
       and is_active = 1
       and effective_date > :now
+    <AND_CHECK_TENANT()>
     order by
       effective_date asc
       , record_id asc
@@ -99,6 +111,7 @@ getEventsForSubscription() ::= <<
     from subscription_events
     where
       subscription_id = :subscriptionId
+    <AND_CHECK_TENANT()>
     order by
       effective_date asc
       , record_id asc
@@ -108,7 +121,9 @@ getEventsForSubscription() ::= <<
 getRecordId() ::= <<
     SELECT record_id
     FROM subscription_events
-    WHERE id = :id;
+    WHERE id = :id
+    <AND_CHECK_TENANT()>
+    ;
 >>
 
 auditFields(prefix) ::= <<
@@ -119,12 +134,14 @@ auditFields(prefix) ::= <<
     <prefix>changed_by,
     <prefix>reason_code,
     <prefix>comments,
-    <prefix>user_token
+    <prefix>user_token,
+    <prefix>account_record_id,
+    <prefix>tenant_record_id
 >>
 
 insertAuditFromTransaction() ::= <<
     INSERT INTO audit_log(<auditFields()>)
-    VALUES(:tableName, :recordId, :changeType, :createdDate, :userName, :reasonCode, :comment, :userToken);
+    VALUES(:tableName, :recordId, :changeType, :createdDate, :userName, :reasonCode, :comment, :userToken, :accountRecordId, :tenantRecordId);
 >>
 
 

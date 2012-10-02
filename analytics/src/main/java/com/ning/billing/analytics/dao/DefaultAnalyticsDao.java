@@ -29,6 +29,7 @@ import com.ning.billing.analytics.model.BusinessInvoiceItem;
 import com.ning.billing.analytics.model.BusinessInvoicePayment;
 import com.ning.billing.analytics.model.BusinessOverdueStatus;
 import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
+import com.ning.billing.util.callcontext.InternalTenantContext;
 
 public class DefaultAnalyticsDao implements AnalyticsDao {
 
@@ -58,47 +59,47 @@ public class DefaultAnalyticsDao implements AnalyticsDao {
     }
 
     @Override
-    public TimeSeriesData getAccountsCreatedOverTime() {
-        return new DefaultTimeSeriesData(accountSqlDao.getAccountsCreatedOverTime());
+    public TimeSeriesData getAccountsCreatedOverTime(final InternalTenantContext context) {
+        return new DefaultTimeSeriesData(accountSqlDao.getAccountsCreatedOverTime(context));
     }
 
     @Override
-    public TimeSeriesData getSubscriptionsCreatedOverTime(final String productType, final String slug) {
-        return new DefaultTimeSeriesData(subscriptionTransitionSqlDao.getSubscriptionsCreatedOverTime(productType, slug));
+    public TimeSeriesData getSubscriptionsCreatedOverTime(final String productType, final String slug, final InternalTenantContext context) {
+        return new DefaultTimeSeriesData(subscriptionTransitionSqlDao.getSubscriptionsCreatedOverTime(productType, slug, context));
     }
 
     @Override
-    public BusinessAccount getAccountByKey(final String accountKey) {
-        return accountSqlDao.getAccountByKey(accountKey);
+    public BusinessAccount getAccountByKey(final String accountKey, final InternalTenantContext context) {
+        return accountSqlDao.getAccountByKey(accountKey, context);
     }
 
     @Override
-    public List<BusinessSubscriptionTransition> getTransitionsByKey(final String externalKey) {
-        return subscriptionTransitionSqlDao.getTransitionsByKey(externalKey);
+    public List<BusinessSubscriptionTransition> getTransitionsByKey(final String externalKey, final InternalTenantContext context) {
+        return subscriptionTransitionSqlDao.getTransitionsByKey(externalKey, context);
     }
 
     @Override
-    public List<BusinessInvoice> getInvoicesByKey(final String accountKey) {
-        return invoiceSqlDao.getInvoicesForAccountByKey(accountKey);
+    public List<BusinessInvoice> getInvoicesByKey(final String accountKey, final InternalTenantContext context) {
+        return invoiceSqlDao.getInvoicesForAccountByKey(accountKey, context);
     }
 
     @Override
-    public List<BusinessAccountTag> getTagsForAccount(final String accountKey) {
-        return accountTagSqlDao.getTagsForAccountByKey(accountKey);
+    public List<BusinessAccountTag> getTagsForAccount(final String accountKey, final InternalTenantContext context) {
+        return accountTagSqlDao.getTagsForAccountByKey(accountKey, context);
     }
 
     @Override
-    public List<BusinessInvoiceItem> getInvoiceItemsForInvoice(final String invoiceId) {
-        return invoiceItemSqlDao.getInvoiceItemsForInvoice(invoiceId);
+    public List<BusinessInvoiceItem> getInvoiceItemsForInvoice(final String invoiceId, final InternalTenantContext context) {
+        return invoiceItemSqlDao.getInvoiceItemsForInvoice(invoiceId, context);
     }
 
     @Override
-    public List<BusinessOverdueStatus> getOverdueStatusesForBundleByKey(final String externalKey) {
-        return overdueStatusSqlDao.getOverdueStatusesForBundleByKey(externalKey);
+    public List<BusinessOverdueStatus> getOverdueStatusesForBundleByKey(final String externalKey, final InternalTenantContext context) {
+        return overdueStatusSqlDao.getOverdueStatusesForBundleByKey(externalKey, context);
     }
 
     @Override
-    public List<BusinessInvoicePayment> getInvoicePaymentsForAccountByKey(final String accountKey) {
-        return invoicePaymentSqlDao.getInvoicePaymentsForAccountByKey(accountKey);
+    public List<BusinessInvoicePayment> getInvoicePaymentsForAccountByKey(final String accountKey, final InternalTenantContext context) {
+        return invoicePaymentSqlDao.getInvoicePaymentsForAccountByKey(accountKey, context);
     }
 }

@@ -25,9 +25,6 @@ import org.joda.time.DateTime;
 import org.joda.time.Interval;
 import org.testng.annotations.Test;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Stage;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -48,12 +45,17 @@ import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.api.user.SubscriptionEvents;
 import com.ning.billing.entitlement.glue.MockEngineModuleSql;
 
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Stage;
+
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 public class TestRepairBP extends TestApiBaseRepair {
+
     @Override
     public Injector getInjector() {
         return Guice.createInjector(Stage.DEVELOPMENT, new MockEngineModuleSql());
@@ -74,7 +76,7 @@ public class TestRepairBP extends TestApiBaseRepair {
 
         final SubscriptionData aoSubscription = createSubscription(aoProduct, aoTerm, aoPriceList);
 
-        final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId());
+        final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId(), callContext);
         final List<SubscriptionTimeline> subscriptionRepair = bundleRepair.getSubscriptions();
         assertEquals(subscriptionRepair.size(), 2);
 
@@ -134,7 +136,7 @@ public class TestRepairBP extends TestApiBaseRepair {
         final Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(10));
         clock.addDeltaFromReality(it.toDurationMillis());
 
-        final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId());
+        final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId(), callContext);
         sortEventsOnBundle(bundleRepair);
 
         final List<DeletedEvent> des = new LinkedList<SubscriptionTimeline.DeletedEvent>();
@@ -147,7 +149,7 @@ public class TestRepairBP extends TestApiBaseRepair {
         final BundleTimeline bRepair = createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
 
         boolean dryRun = true;
-        final BundleTimeline dryRunBundleRepair = repairApi.repairBundle(bRepair, dryRun, context);
+        final BundleTimeline dryRunBundleRepair = repairApi.repairBundle(bRepair, dryRun, callContext);
         sortEventsOnBundle(dryRunBundleRepair);
         List<SubscriptionTimeline> subscriptionRepair = dryRunBundleRepair.getSubscriptions();
         assertEquals(subscriptionRepair.size(), 1);
@@ -165,7 +167,7 @@ public class TestRepairBP extends TestApiBaseRepair {
             validateExistingEventForAssertion(e, events.get(index++));
         }
 
-        final SubscriptionData dryRunBaseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId());
+        final SubscriptionData dryRunBaseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
 
         assertEquals(dryRunBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
         assertEquals(dryRunBaseSubscription.getBundleId(), bundle.getId());
@@ -184,7 +186,7 @@ public class TestRepairBP extends TestApiBaseRepair {
         // SECOND RE-ISSUE CALL-- NON DRY RUN
         dryRun = false;
         testListener.pushExpectedEvent(NextEvent.REPAIR_BUNDLE);
-        final BundleTimeline realRunBundleRepair = repairApi.repairBundle(bRepair, dryRun, context);
+        final BundleTimeline realRunBundleRepair = repairApi.repairBundle(bRepair, dryRun, callContext);
         assertTrue(testListener.isCompleted(5000));
 
         subscriptionRepair = realRunBundleRepair.getSubscriptions();
@@ -195,7 +197,7 @@ public class TestRepairBP extends TestApiBaseRepair {
         for (final ExistingEvent e : expected) {
             validateExistingEventForAssertion(e, events.get(index++));
         }
-        final SubscriptionData realRunBaseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId());
+        final SubscriptionData realRunBaseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
         assertEquals(realRunBaseSubscription.getAllTransitions().size(), 2);
 
         assertEquals(realRunBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
@@ -249,7 +251,7 @@ public class TestRepairBP extends TestApiBaseRepair {
         assertTrue(testListener.isCompleted(5000));
 
         // CHECK WHAT"S GOING ON AFTER WE MOVE CLOCK-- FUTURE MOTIFICATION SHOULD KICK IN
-        final SubscriptionData subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscriptionId);
+        final SubscriptionData subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscriptionId, callContext);
 
         assertEquals(subscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
         assertEquals(subscription.getBundleId(), bundle.getId());
@@ -306,7 +308,7 @@ public class TestRepairBP extends TestApiBaseRepair {
             }
         }
 
-        final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId());
+        final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId(), callContext);
         sortEventsOnBundle(bundleRepair);
 
         final DateTime newCreateTime = baseSubscription.getStartDate().plusDays(clockShift - 1);
@@ -324,7 +326,7 @@ public class TestRepairBP extends TestApiBaseRepair {
         final BundleTimeline bRepair = createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
 
         boolean dryRun = true;
-        final BundleTimeline dryRunBundleRepair = repairApi.repairBundle(bRepair, dryRun, context);
+        final BundleTimeline dryRunBundleRepair = repairApi.repairBundle(bRepair, dryRun, callContext);
         List<SubscriptionTimeline> subscriptionRepair = dryRunBundleRepair.getSubscriptions();
         assertEquals(subscriptionRepair.size(), 1);
         SubscriptionTimeline cur = subscriptionRepair.get(0);
@@ -336,7 +338,7 @@ public class TestRepairBP extends TestApiBaseRepair {
         for (final ExistingEvent e : expectedEvents) {
             validateExistingEventForAssertion(e, events.get(index++));
         }
-        final SubscriptionData dryRunBaseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId());
+        final SubscriptionData dryRunBaseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
 
         assertEquals(dryRunBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
         assertEquals(dryRunBaseSubscription.getBundleId(), bundle.getId());
@@ -359,7 +361,7 @@ public class TestRepairBP extends TestApiBaseRepair {
         // SECOND RE-ISSUE CALL-- NON DRY RUN
         dryRun = false;
         testListener.pushExpectedEvent(NextEvent.REPAIR_BUNDLE);
-        final BundleTimeline realRunBundleRepair = repairApi.repairBundle(bRepair, dryRun, context);
+        final BundleTimeline realRunBundleRepair = repairApi.repairBundle(bRepair, dryRun, callContext);
         assertTrue(testListener.isCompleted(5000));
         subscriptionRepair = realRunBundleRepair.getSubscriptions();
         assertEquals(subscriptionRepair.size(), 1);
@@ -375,7 +377,7 @@ public class TestRepairBP extends TestApiBaseRepair {
         for (final ExistingEvent e : expectedEvents) {
             validateExistingEventForAssertion(e, events.get(index++));
         }
-        final SubscriptionData realRunBaseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId());
+        final SubscriptionData realRunBaseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
         assertEquals(realRunBaseSubscription.getAllTransitions().size(), 2);
 
         assertEquals(realRunBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
@@ -419,7 +421,7 @@ public class TestRepairBP extends TestApiBaseRepair {
         final Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(32));
         clock.addDeltaFromReality(it.toDurationMillis());
         assertTrue(testListener.isCompleted(5000));
-        final SubscriptionData subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscriptionId);
+        final SubscriptionData subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscriptionId, callContext);
 
         assertEquals(subscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
         assertEquals(subscription.getBundleId(), bundle.getId());
@@ -476,7 +478,7 @@ public class TestRepairBP extends TestApiBaseRepair {
             assertTrue(testListener.isCompleted(5000));
         }
 
-        final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId());
+        final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId(), callContext);
         sortEventsOnBundle(bundleRepair);
 
         final DateTime changeTime = baseSubscription.getStartDate().plusDays(clockShift - 1);
@@ -494,7 +496,7 @@ public class TestRepairBP extends TestApiBaseRepair {
         final BundleTimeline bRepair = createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
 
         boolean dryRun = true;
-        final BundleTimeline dryRunBundleRepair = repairApi.repairBundle(bRepair, dryRun, context);
+        final BundleTimeline dryRunBundleRepair = repairApi.repairBundle(bRepair, dryRun, callContext);
 
         List<SubscriptionTimeline> subscriptionRepair = dryRunBundleRepair.getSubscriptions();
         assertEquals(subscriptionRepair.size(), 1);
@@ -507,7 +509,7 @@ public class TestRepairBP extends TestApiBaseRepair {
         for (final ExistingEvent e : expectedEvents) {
             validateExistingEventForAssertion(e, events.get(index++));
         }
-        final SubscriptionData dryRunBaseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId());
+        final SubscriptionData dryRunBaseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
 
         assertEquals(dryRunBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION);
         assertEquals(dryRunBaseSubscription.getBundleId(), bundle.getId());
@@ -530,7 +532,7 @@ public class TestRepairBP extends TestApiBaseRepair {
         // SECOND RE-ISSUE CALL-- NON DRY RUN
         dryRun = false;
         testListener.pushExpectedEvent(NextEvent.REPAIR_BUNDLE);
-        final BundleTimeline realRunBundleRepair = repairApi.repairBundle(bRepair, dryRun, context);
+        final BundleTimeline realRunBundleRepair = repairApi.repairBundle(bRepair, dryRun, callContext);
         assertTrue(testListener.isCompleted(5000));
 
         subscriptionRepair = realRunBundleRepair.getSubscriptions();
@@ -544,7 +546,7 @@ public class TestRepairBP extends TestApiBaseRepair {
         for (final ExistingEvent e : expectedEvents) {
             validateExistingEventForAssertion(e, events.get(index++));
         }
-        final SubscriptionData realRunBaseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId());
+        final SubscriptionData realRunBaseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
         assertEquals(realRunBaseSubscription.getAllTransitions().size(), expectedTransitions);
 
         assertEquals(realRunBaseSubscription.getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
@@ -583,11 +585,11 @@ public class TestRepairBP extends TestApiBaseRepair {
 
         // SET CTD to BASE SUBSCRIPTION SP CANCEL OCCURS EOT
         final DateTime newChargedThroughDate = baseSubscription.getStartDate().plusDays(30).plusMonths(1);
-        billingApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate.toLocalDate(), context);
-        baseSubscription = entitlementApi.getSubscriptionFromId(baseSubscription.getId());
+        billingApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate.toLocalDate(), callContext);
+        baseSubscription = entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
 
         final DateTime requestedChange = clock.getUTCNow();
-        baseSubscription.changePlan("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, requestedChange, context);
+        baseSubscription.changePlan("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, requestedChange, callContext);
 
         // CHECK CHANGE DID NOT OCCUR YET
         Plan currentPlan = baseSubscription.getCurrentPlan();
@@ -597,7 +599,7 @@ public class TestRepairBP extends TestApiBaseRepair {
         assertEquals(currentPlan.getBillingPeriod(), BillingPeriod.MONTHLY);
 
         final DateTime repairTime = clock.getUTCNow().minusDays(1);
-        final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId());
+        final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId(), callContext);
         sortEventsOnBundle(bundleRepair);
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
@@ -613,10 +615,10 @@ public class TestRepairBP extends TestApiBaseRepair {
 
         final boolean dryRun = false;
         testListener.pushExpectedEvent(NextEvent.REPAIR_BUNDLE);
-        repairApi.repairBundle(bRepair, dryRun, context);
+        repairApi.repairBundle(bRepair, dryRun, callContext);
         assertTrue(testListener.isCompleted(5000));
 
-        baseSubscription = entitlementApi.getSubscriptionFromId(baseSubscription.getId());
+        baseSubscription = entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
 
         assertEquals(((SubscriptionData) baseSubscription).getActiveVersion(), SubscriptionEvents.INITIAL_VERSION + 1);
         assertEquals(baseSubscription.getBundleId(), bundle.getId());
@@ -647,7 +649,7 @@ public class TestRepairBP extends TestApiBaseRepair {
             @Override
             public void doTest() throws EntitlementRepairException, EntitlementUserApiException {
 
-                final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId());
+                final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId(), callContext);
                 sortEventsOnBundle(bundleRepair);
                 final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
                 final NewEvent ne = createNewEvent(SubscriptionTransitionType.CHANGE, baseSubscription.getStartDate().plusDays(10), spec);
@@ -660,10 +662,10 @@ public class TestRepairBP extends TestApiBaseRepair {
 
                 testListener.pushExpectedEvent(NextEvent.CHANGE);
                 final DateTime changeTime = clock.getUTCNow();
-                baseSubscription.changePlan("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, changeTime, context);
+                baseSubscription.changePlan("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, changeTime, callContext);
                 assertTrue(testListener.isCompleted(5000));
 
-                repairApi.repairBundle(bRepair, true, context);
+                repairApi.repairBundle(bRepair, true, callContext);
                 assertListenerStatus();
             }
         }, ErrorCode.ENT_REPAIR_VIEW_CHANGED);
@@ -680,7 +682,7 @@ public class TestRepairBP extends TestApiBaseRepair {
             @Override
             public void doTest() throws EntitlementRepairException, EntitlementUserApiException {
 
-                final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId());
+                final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId(), callContext);
                 sortEventsOnBundle(bundleRepair);
                 final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
                 final NewEvent ne = createNewEvent(SubscriptionTransitionType.CHANGE, baseSubscription.getStartDate().plusDays(10), spec);
@@ -696,10 +698,10 @@ public class TestRepairBP extends TestApiBaseRepair {
                 // Move clock at least a sec to make sure the last_sys_update from bundle is different-- and therefore generates a different viewId
                 clock.setDeltaFromReality(1000);
 
-                billingApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate.toLocalDate(), context);
-                entitlementApi.getSubscriptionFromId(baseSubscription.getId());
+                billingApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate.toLocalDate(), callContext);
+                entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
 
-                repairApi.repairBundle(bRepair, true, context);
+                repairApi.repairBundle(bRepair, true, callContext);
 
                 assertListenerStatus();
             }

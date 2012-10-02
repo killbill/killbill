@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.util.bus;
 
 import java.util.Collections;
@@ -21,6 +22,8 @@ import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
+import javax.annotation.Nullable;
+
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
@@ -28,14 +31,18 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.eventbus.EventBus;
-import com.google.inject.Inject;
 import com.ning.billing.util.Hostname;
 import com.ning.billing.util.bus.dao.BusEventEntry;
 import com.ning.billing.util.bus.dao.PersistentBusSqlDao;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
+import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.jackson.ObjectMapper;
 import com.ning.billing.util.queue.PersistentQueueBase;
+
+import com.google.common.eventbus.EventBus;
+import com.google.inject.Inject;
 
 public class PersistentBus extends PersistentQueueBase implements Bus {
 
@@ -46,12 +53,13 @@ public class PersistentBus extends PersistentQueueBase implements Bus {
 
     private final PersistentBusSqlDao dao;
 
-
     private final EventBusDelegate eventBusDelegate;
     private final Clock clock;
     private final String hostname;
+    private final InternalCallContextFactory internalCallContextFactory;
 
     private static final class EventBusDelegate extends EventBus {
+
         public EventBusDelegate(final String busName) {
             super(busName);
         }
@@ -72,8 +80,7 @@ public class PersistentBus extends PersistentQueueBase implements Bus {
     }
 
     @Inject
-    public PersistentBus(final IDBI dbi, final Clock clock, final PersistentBusConfig config) {
-
+    public PersistentBus(final IDBI dbi, final Clock clock, final PersistentBusConfig config, final InternalCallContextFactory internalCallContextFactory) {
         super("Bus", Executors.newFixedThreadPool(config.getNbThreads(), new ThreadFactory() {
             @Override
             public Thread newThread(final Runnable r) {
@@ -86,6 +93,7 @@ public class PersistentBus extends PersistentQueueBase implements Bus {
         this.clock = clock;
         this.eventBusDelegate = new EventBusDelegate("Killbill EventBus");
         this.hostname = Hostname.get();
+        this.internalCallContextFactory = internalCallContextFactory;
     }
 
     @Override
@@ -100,8 +108,9 @@ public class PersistentBus extends PersistentQueueBase implements Bus {
 
     @Override
     public int doProcessEvents() {
+        final InternalCallContext context = createCallContext(null);
 
-        final List<BusEventEntry> events = getNextBusEvent();
+        final List<BusEventEntry> events = getNextBusEvent(context);
         if (events.size() == 0) {
             return 0;
         }
@@ -112,25 +121,23 @@ public class PersistentBus extends PersistentQueueBase implements Bus {
             result++;
             // STEPH exception handling is done by GUAVA-- logged a bug Issue-780
             eventBusDelegate.post(evt);
-            dao.clearBusEvent(cur.getId(), hostname);
+            dao.clearBusEvent(cur.getId(), hostname, context);
         }
         return result;
     }
 
-
-    private List<BusEventEntry> getNextBusEvent() {
-
+    private List<BusEventEntry> getNextBusEvent(final InternalCallContext context) {
         final Date now = clock.getUTCNow().toDate();
         final Date nextAvailable = clock.getUTCNow().plus(DELTA_IN_PROCESSING_TIME_MS).toDate();
 
-        final BusEventEntry input = dao.getNextBusEventEntry(MAX_BUS_EVENTS, hostname, now);
+        final BusEventEntry input = dao.getNextBusEventEntry(MAX_BUS_EVENTS, hostname, now, context);
         if (input == null) {
             return Collections.emptyList();
         }
 
-        final boolean claimed = (dao.claimBusEvent(hostname, nextAvailable, input.getId(), now) == 1);
+        final boolean claimed = (dao.claimBusEvent(hostname, nextAvailable, input.getId(), now, context) == 1);
         if (claimed) {
-            dao.insertClaimedHistory(hostname, now, input.getId());
+            dao.insertClaimedHistory(hostname, now, input.getId(), context);
             return Collections.singletonList(input);
         }
         return Collections.emptyList();
@@ -169,9 +176,14 @@ public class PersistentBus extends PersistentQueueBase implements Bus {
         try {
             final String json = objectMapper.writeValueAsString(event);
             final BusEventEntry entry = new BusEventEntry(hostname, event.getClass().getName(), json);
-            transactional.insertBusEvent(entry);
+            transactional.insertBusEvent(entry, createCallContext(event));
         } catch (Exception e) {
             log.error("Failed to post BusEvent " + event, e);
         }
+    }
+
+    private InternalCallContext createCallContext(@Nullable final BusEvent event) {
+        return internalCallContextFactory.createInternalCallContext("PersistentBus", CallOrigin.INTERNAL, UserType.SYSTEM,
+                                                                    event == null ? null : event.getUserToken());
     }
 }

@@ -18,8 +18,6 @@ package com.ning.billing.entitlement.glue;
 
 import org.skife.config.ConfigurationObjectFactory;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.name.Names;
 import com.ning.billing.config.EntitlementConfig;
 import com.ning.billing.entitlement.alignment.MigrationPlanAligner;
 import com.ning.billing.entitlement.alignment.PlanAligner;
@@ -48,6 +46,9 @@ import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.engine.dao.RepairEntitlementDao;
 import com.ning.billing.glue.EntitlementModule;
 import com.ning.billing.util.glue.RealImplementation;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.name.Names;
 
 public class DefaultEntitlementModule extends AbstractModule implements EntitlementModule {
 

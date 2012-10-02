@@ -45,30 +45,30 @@ public class TestBusinessOverdueStatusSqlDao extends AnalyticsTestSuiteWithEmbed
         final BusinessOverdueStatus firstOverdueStatus = createOverdueStatus(accountKey, bundleId, externalKey);
 
         // Verify initial state
-        Assert.assertEquals(overdueStatusSqlDao.getOverdueStatusesForBundleByKey(externalKey).size(), 0);
+        Assert.assertEquals(overdueStatusSqlDao.getOverdueStatusesForBundleByKey(externalKey, internalCallContext).size(), 0);
 
         // Add the overdue status
-        Assert.assertEquals(overdueStatusSqlDao.createOverdueStatus(firstOverdueStatus), 1);
+        Assert.assertEquals(overdueStatusSqlDao.createOverdueStatus(firstOverdueStatus, internalCallContext), 1);
 
         // Retrieve it
-        Assert.assertEquals(overdueStatusSqlDao.getOverdueStatusesForBundleByKey(externalKey).size(), 1);
-        Assert.assertEquals(overdueStatusSqlDao.getOverdueStatusesForBundleByKey(externalKey).get(0), firstOverdueStatus);
+        Assert.assertEquals(overdueStatusSqlDao.getOverdueStatusesForBundleByKey(externalKey, internalCallContext).size(), 1);
+        Assert.assertEquals(overdueStatusSqlDao.getOverdueStatusesForBundleByKey(externalKey, internalCallContext).get(0), firstOverdueStatus);
 
         // Add a second one
         final BusinessOverdueStatus secondOverdueStatus = createOverdueStatus(accountKey, bundleId, externalKey);
-        Assert.assertEquals(overdueStatusSqlDao.createOverdueStatus(secondOverdueStatus), 1);
+        Assert.assertEquals(overdueStatusSqlDao.createOverdueStatus(secondOverdueStatus, internalCallContext), 1);
 
         // Retrieve both
-        Assert.assertEquals(overdueStatusSqlDao.getOverdueStatusesForBundleByKey(externalKey).size(), 2);
-        Assert.assertEquals(overdueStatusSqlDao.getOverdueStatusesForBundleByKey(externalKey).get(0), firstOverdueStatus);
-        Assert.assertEquals(overdueStatusSqlDao.getOverdueStatusesForBundleByKey(externalKey).get(1), secondOverdueStatus);
+        Assert.assertEquals(overdueStatusSqlDao.getOverdueStatusesForBundleByKey(externalKey, internalCallContext).size(), 2);
+        Assert.assertEquals(overdueStatusSqlDao.getOverdueStatusesForBundleByKey(externalKey, internalCallContext).get(0), firstOverdueStatus);
+        Assert.assertEquals(overdueStatusSqlDao.getOverdueStatusesForBundleByKey(externalKey, internalCallContext).get(1), secondOverdueStatus);
     }
 
     @Test(groups = "slow")
     public void testHealthCheck() throws Exception {
         // HealthCheck test to make sure MySQL is setup properly
         try {
-            overdueStatusSqlDao.test();
+            overdueStatusSqlDao.test(internalCallContext);
         } catch (Throwable t) {
             Assert.fail(t.toString());
         }

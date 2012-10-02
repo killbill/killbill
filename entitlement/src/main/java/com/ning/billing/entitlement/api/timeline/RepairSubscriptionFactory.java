@@ -18,8 +18,6 @@ package com.ning.billing.entitlement.api.timeline;
 
 import java.util.List;
 
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.entitlement.api.SubscriptionApiService;
 import com.ning.billing.entitlement.api.SubscriptionFactory;
@@ -29,25 +27,36 @@ import com.ning.billing.entitlement.engine.addon.AddonUtils;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.Clock;
 
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
+
 public class RepairSubscriptionFactory extends DefaultSubscriptionFactory implements SubscriptionFactory {
+
     private final AddonUtils addonUtils;
     private final EntitlementDao repairDao;
+    private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
     public RepairSubscriptionFactory(@Named(DefaultEntitlementModule.REPAIR_NAMED) final SubscriptionApiService apiService,
                                      @Named(DefaultEntitlementModule.REPAIR_NAMED) final EntitlementDao dao,
-                                     final Clock clock, final CatalogService catalogService, final AddonUtils addonUtils) {
+                                     final Clock clock,
+                                     final CatalogService catalogService,
+                                     final AddonUtils addonUtils,
+                                     final InternalCallContextFactory internalCallContextFactory) {
         super(apiService, clock, catalogService);
         this.addonUtils = addonUtils;
         this.repairDao = dao;
+        this.internalCallContextFactory = internalCallContextFactory;
     }
 
     @Override
     public SubscriptionData createSubscription(final SubscriptionBuilder builder,
                                                final List<EntitlementEvent> events) {
-        final SubscriptionData subscription = new SubscriptionDataRepair(builder, events, getApiService(), repairDao, getClock(), addonUtils, getCatalogService());
+        final SubscriptionData subscription = new SubscriptionDataRepair(builder, events, getApiService(), repairDao, getClock(),
+                                                                         addonUtils, getCatalogService(), internalCallContextFactory);
         subscription.rebuildTransitions(events, getCatalogService().getFullCatalog());
         return subscription;
     }

@@ -21,19 +21,21 @@ import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.util.api.TagDefinitionApiException;
-import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.tag.TagDefinition;
 
 public interface TagDefinitionDao {
-    public List<TagDefinition> getTagDefinitions();
 
-    public TagDefinition getById(final UUID definitionId);
+    public List<TagDefinition> getTagDefinitions(InternalTenantContext context);
 
-    public TagDefinition getByName(final String definitionName);
+    public TagDefinition getById(UUID definitionId, InternalTenantContext context);
 
-    public List<TagDefinition> getByIds(final Collection<UUID> definitionIds);
+    public TagDefinition getByName(String definitionName, InternalTenantContext context);
 
-    public TagDefinition create(final String definitionName, final String description, final CallContext context) throws TagDefinitionApiException;
+    public List<TagDefinition> getByIds(Collection<UUID> definitionIds, InternalTenantContext context);
 
-    public void deleteById(final UUID definitionId, final CallContext context) throws TagDefinitionApiException;
+    public TagDefinition create(String definitionName, String description, InternalCallContext context) throws TagDefinitionApiException;
+
+    public void deleteById(UUID definitionId, InternalCallContext context) throws TagDefinitionApiException;
 }

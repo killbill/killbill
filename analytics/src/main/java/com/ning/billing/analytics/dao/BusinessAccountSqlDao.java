@@ -27,26 +27,33 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 
 import com.ning.billing.analytics.model.BusinessAccount;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 
 @ExternalizedSqlViaStringTemplate3()
 @RegisterMapper({BusinessAccountMapper.class, TimeSeriesTupleMapper.class})
 public interface BusinessAccountSqlDao extends Transactional<BusinessAccountSqlDao>, Transmogrifier {
 
     @SqlQuery
-    List<TimeSeriesTuple> getAccountsCreatedOverTime();
+    List<TimeSeriesTuple> getAccountsCreatedOverTime(@InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
-    BusinessAccount getAccount(@Bind("account_id") final String accountId);
+    BusinessAccount getAccount(@Bind("account_id") final String accountId,
+                               @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlQuery
-    BusinessAccount getAccountByKey(@Bind("account_key") String accountKey);
+    BusinessAccount getAccountByKey(@Bind("account_key") String accountKey,
+                                    @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlUpdate
-    int createAccount(@BusinessAccountBinder final BusinessAccount account);
+    int createAccount(@BusinessAccountBinder final BusinessAccount account,
+                      @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
-    int saveAccount(@BusinessAccountBinder final BusinessAccount account);
+    int saveAccount(@BusinessAccountBinder final BusinessAccount account,
+                    @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
-    void test();
+    void test(@InternalTenantContextBinder final InternalTenantContext context);
 }

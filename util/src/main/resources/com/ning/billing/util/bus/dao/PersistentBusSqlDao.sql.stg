@@ -1,5 +1,8 @@
 group PersistentBusSqlDao;
           
+CHECK_TENANT() ::= "tenant_record_id = :tenantRecordId"
+AND_CHECK_TENANT() ::= "AND <CHECK_TENANT()>"
+
 getNextBusEventEntry() ::= <<
     select
       record_id
@@ -65,6 +68,8 @@ insertBusEvent() ::= <<
     , processing_owner
     , processing_available_date
     , processing_state
+    , account_record_id
+    , tenant_record_id
     ) values (
       :className
     , :eventJson
@@ -73,7 +78,9 @@ insertBusEvent() ::= <<
     , :processingOwner
     , :processingAvailableDate
     , :processingState
-    );   
+    , :accountRecordId
+    , :tenantRecordId
+    );
 >>
 
 insertClaimedHistory() ::= <<
@@ -81,9 +88,13 @@ insertClaimedHistory() ::= <<
           owner_id
         , claimed_date
         , bus_event_id
+        , account_record_id
+        , tenant_record_id
       ) values (
           :ownerId
         , :claimedDate
         , :busEventId
+        , :accountRecordId
+        , :tenantRecordId
       );
 >>

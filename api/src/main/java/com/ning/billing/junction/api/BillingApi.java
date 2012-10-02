@@ -19,11 +19,12 @@ package com.ning.billing.junction.api;
 import java.util.UUID;
 
 import com.ning.billing.entitlement.api.billing.ChargeThruApi;
+import com.ning.billing.util.callcontext.CallContext;
 
 public interface BillingApi extends ChargeThruApi {
+
     /**
-     * @param accountId
      * @return an ordered list of billing event for the given accounts
      */
-    public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(UUID accountId);
+    public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(UUID accountId, CallContext context);
 }

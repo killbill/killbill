@@ -28,8 +28,9 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallContextBinder;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 import com.ning.billing.util.dao.EntityHistory;
 import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.dao.ObjectTypeBinder;
@@ -39,49 +40,51 @@ import com.ning.billing.util.tag.Tag;
 @ExternalizedSqlViaStringTemplate3
 @RegisterMapper(TagMapper.class)
 public interface TagSqlDao extends UpdatableEntityCollectionSqlDao<Tag>, Transactional<TagSqlDao>, Transmogrifier {
+
     @Override
     @SqlBatch(transactional = false)
     public void insertFromTransaction(@Bind("objectId") final String objectId,
                                       @ObjectTypeBinder final ObjectType objectType,
                                       @TagBinder final Collection<Tag> tags,
-                                      @CallContextBinder final CallContext context);
+                                      @InternalTenantContextBinder final InternalCallContext context);
 
     @Override
     @SqlBatch(transactional = false)
     public void updateFromTransaction(@Bind("objectId") final String objectId,
                                       @ObjectTypeBinder final ObjectType objectType,
                                       @TagBinder final Collection<Tag> tags,
-                                      @CallContextBinder final CallContext context);
+                                      @InternalTenantContextBinder final InternalCallContext context);
 
     @Override
     @SqlBatch(transactional = false)
     public void deleteFromTransaction(@Bind("objectId") final String objectId,
                                       @ObjectTypeBinder final ObjectType objectType,
                                       @TagBinder final Collection<Tag> tags,
-                                      @CallContextBinder final CallContext context);
+                                      @InternalTenantContextBinder final InternalCallContext context);
 
     @Override
     @SqlBatch(transactional = false)
     public void addHistoryFromTransaction(@Bind("objectId") final String objectId,
                                           @ObjectTypeBinder final ObjectType objectType,
                                           @TagHistoryBinder final List<EntityHistory<Tag>> histories,
-                                          @CallContextBinder final CallContext context);
+                                          @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
     public void addTagFromTransaction(@Bind("id") final String tagId,
                                       @Bind("tagDefinitionId") final String tagDefinitionId,
                                       @Bind("objectId") final String objectId,
                                       @ObjectTypeBinder final ObjectType objectType,
-                                      @CallContextBinder final CallContext context);
+                                      @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
     public void removeTagFromTransaction(@Bind("tagDefinitionId") final String tagDefinitionId,
                                          @Bind("objectId") final String objectId,
                                          @ObjectTypeBinder final ObjectType objectType,
-                                         @CallContextBinder final CallContext context);
+                                         @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlQuery
     public Tag findTag(@Bind("tagDefinitionId") final String tagDefinitionId,
                        @Bind("objectId") final String objectId,
-                       @ObjectTypeBinder final ObjectType objectType);
+                       @ObjectTypeBinder final ObjectType objectType,
+                       @InternalTenantContextBinder final InternalTenantContext context);
 }

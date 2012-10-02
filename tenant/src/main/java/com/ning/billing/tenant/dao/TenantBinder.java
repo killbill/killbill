@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2012 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.util.callcontext;
+package com.ning.billing.tenant.dao;
 
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
@@ -27,22 +27,23 @@ import org.skife.jdbi.v2.sqlobject.Binder;
 import org.skife.jdbi.v2.sqlobject.BinderFactory;
 import org.skife.jdbi.v2.sqlobject.BindingAnnotation;
 
-@BindingAnnotation(CallContextBinder.CallContextBinderFactory.class)
+import com.ning.billing.tenant.api.Tenant;
+
+@BindingAnnotation(TenantBinder.TenantBinderFactory.class)
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.PARAMETER})
-public @interface CallContextBinder {
-    public static class CallContextBinderFactory implements BinderFactory {
+public @interface TenantBinder {
+
+    public static class TenantBinderFactory implements BinderFactory {
+
         @Override
-        public Binder build(final Annotation annotation) {
-            return new Binder<CallContextBinder, CallContext>() {
+        public Binder<TenantBinder, Tenant> build(final Annotation annotation) {
+            return new Binder<TenantBinder, Tenant>() {
                 @Override
-                public void bind(final SQLStatement q, final CallContextBinder bind, final CallContext callContext) {
-                    q.bind("userName", callContext.getUserName());
-                    q.bind("createdDate", callContext.getCreatedDate().toDate());
-                    q.bind("updatedDate", callContext.getUpdatedDate().toDate());
-                    q.bind("reasonCode", callContext.getReasonCode());
-                    q.bind("comment", callContext.getComment());
-                    q.bind("userToken", (callContext.getUserToken() != null) ? callContext.getUserToken().toString() : null);
+                public void bind(@SuppressWarnings("rawtypes") final SQLStatement q, final TenantBinder bind, final Tenant tenant) {
+                    q.bind("id", tenant.getId().toString());
+                    q.bind("externalKey", tenant.getExternalKey());
+                    q.bind("apiKey", tenant.getApiKey());
                 }
             };
         }

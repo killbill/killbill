@@ -54,12 +54,15 @@ import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.mock.MockPlan;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
+import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 
 public class TestDefaultAnalyticsUserApi extends AnalyticsTestSuiteWithEmbeddedDB {
 
     private final Clock clock = new ClockMock();
+    private final TenantContext tenantContext = Mockito.mock(TenantContext.class);
 
     private AnalyticsUserApi analyticsUserApi;
     private BusinessAccountSqlDao accountSqlDao;
@@ -83,16 +86,16 @@ public class TestDefaultAnalyticsUserApi extends AnalyticsTestSuiteWithEmbeddedD
 
         final AnalyticsDao analyticsDao = new DefaultAnalyticsDao(accountSqlDao, subscriptionTransitionSqlDao, invoiceSqlDao,
                                                                   invoiceItemSqlDao, accountTagSqlDao, overdueStatusSqlDao, invoicePaymentSqlDao);
-        analyticsUserApi = new DefaultAnalyticsUserApi(analyticsDao);
+        analyticsUserApi = new DefaultAnalyticsUserApi(analyticsDao, new InternalCallContextFactory(dbi, clock));
     }
 
     @Test(groups = "slow")
     public void testAccountsCreatedOverTime() throws Exception {
         final BusinessAccount account = new BusinessAccount(UUID.randomUUID(), UUID.randomUUID().toString(), UUID.randomUUID().toString(), BigDecimal.ONE, clock.getUTCToday(),
                                                             BigDecimal.TEN, "ERROR_NOT_ENOUGH_FUNDS", "CreditCard", "Visa", "FRANCE", "USD");
-        accountSqlDao.createAccount(account);
+        accountSqlDao.createAccount(account, internalCallContext);
 
-        final TimeSeriesData data = analyticsUserApi.getAccountsCreatedOverTime();
+        final TimeSeriesData data = analyticsUserApi.getAccountsCreatedOverTime(tenantContext);
         Assert.assertEquals(data.getDates().size(), 1);
         Assert.assertEquals(data.getDates().get(0), new LocalDate());
         Assert.assertEquals(data.getValues().size(), 1);
@@ -120,13 +123,13 @@ public class TestDefaultAnalyticsUserApi extends AnalyticsTestSuiteWithEmbeddedD
                 null,
                 new BusinessSubscription("DEFAULT", plan.getName(), phase.getName(), Currency.USD, clock.getUTCNow(), Subscription.SubscriptionState.ACTIVE, catalog)
         );
-        subscriptionTransitionSqlDao.createTransition(transition);
+        subscriptionTransitionSqlDao.createTransition(transition, internalCallContext);
 
-        final TimeSeriesData notFoundData = analyticsUserApi.getSubscriptionsCreatedOverTime(productType, UUID.randomUUID().toString());
+        final TimeSeriesData notFoundData = analyticsUserApi.getSubscriptionsCreatedOverTime(productType, UUID.randomUUID().toString(), tenantContext);
         Assert.assertEquals(notFoundData.getDates().size(), 0);
         Assert.assertEquals(notFoundData.getValues().size(), 0);
 
-        final TimeSeriesData data = analyticsUserApi.getSubscriptionsCreatedOverTime(productType, phase.getName());
+        final TimeSeriesData data = analyticsUserApi.getSubscriptionsCreatedOverTime(productType, phase.getName(), tenantContext);
         Assert.assertEquals(data.getDates().size(), 1);
         Assert.assertEquals(data.getDates().get(0), new LocalDate());
         Assert.assertEquals(data.getValues().size(), 1);

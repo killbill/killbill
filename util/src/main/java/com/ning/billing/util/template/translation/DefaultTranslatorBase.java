@@ -27,10 +27,11 @@ import java.util.ResourceBundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.util.LocaleUtils;
 import com.ning.billing.util.config.UriAccessor;
+
+import com.google.inject.Inject;
 
 public abstract class DefaultTranslatorBase implements Translator {
     protected final TranslatorConfig config;

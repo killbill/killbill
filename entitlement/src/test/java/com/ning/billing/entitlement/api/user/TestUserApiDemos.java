@@ -25,9 +25,6 @@ import org.joda.time.Interval;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Stage;
 import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.Duration;
@@ -39,6 +36,10 @@ import com.ning.billing.entitlement.api.TestApiBase;
 import com.ning.billing.entitlement.api.billing.EntitlementBillingApiException;
 import com.ning.billing.entitlement.glue.MockEngineModuleSql;
 import com.ning.billing.util.clock.DefaultClock;
+
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Stage;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
@@ -80,7 +81,7 @@ public class TestUserApiDemos extends TestApiBase {
 
             /* STEP 2. CHANGE PLAN WHILE IN TRIAL */
             testListener.pushExpectedEvent(NextEvent.CHANGE);
-            subscription.changePlan("Assault-Rifle", BillingPeriod.ANNUAL, "gunclubDiscount", clock.getUTCNow(), context);
+            subscription.changePlan("Assault-Rifle", BillingPeriod.ANNUAL, "gunclubDiscount", clock.getUTCNow(), callContext);
             assertTrue(testListener.isCompleted(5000));
 
             displayState(subscription.getId(), "STEP 2. CHANGED PLAN WHILE IN TRIAL");
@@ -100,12 +101,12 @@ public class TestUserApiDemos extends TestApiBase {
 
             final Duration ctd = getDurationMonth(1);
             final DateTime newChargedThroughDate = DefaultClock.addDuration(startDiscountPhase, ctd);
-            billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate.toLocalDate(), context);
-            subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId());
+            billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate.toLocalDate(), callContext);
+            subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId(), callContext);
 
             testListener.setNonExpectedMode();
             testListener.pushExpectedEvent(NextEvent.CHANGE);
-            subscription.changePlan("Shotgun", BillingPeriod.ANNUAL, "gunclubDiscount", clock.getUTCNow(), context);
+            subscription.changePlan("Shotgun", BillingPeriod.ANNUAL, "gunclubDiscount", clock.getUTCNow(), callContext);
             assertFalse(testListener.isCompleted(3000));
             testListener.reset();
 
@@ -114,7 +115,7 @@ public class TestUserApiDemos extends TestApiBase {
             /* STEP 5. CHANGE AGAIN */
             testListener.setNonExpectedMode();
             testListener.pushExpectedEvent(NextEvent.CHANGE);
-            subscription.changePlan("Pistol", BillingPeriod.ANNUAL, "gunclubDiscount", clock.getUTCNow(), context);
+            subscription.changePlan("Pistol", BillingPeriod.ANNUAL, "gunclubDiscount", clock.getUTCNow(), callContext);
             assertFalse(testListener.isCompleted(3000));
             testListener.reset();
 
@@ -143,7 +144,7 @@ public class TestUserApiDemos extends TestApiBase {
             it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(6));
             clock.addDeltaFromReality(it.toDurationMillis());
             assertTrue(testListener.isCompleted(5000));
-            subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId());
+            subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId(), callContext);
 
             currentPlan = subscription.getCurrentPlan();
             assertNotNull(currentPlan);
@@ -159,7 +160,7 @@ public class TestUserApiDemos extends TestApiBase {
 
             /* STEP 8. CANCEL IMM (NO CTD) */
             testListener.pushExpectedEvent(NextEvent.CANCEL);
-            subscription.cancel(clock.getUTCNow(), context);
+            subscription.cancel(clock.getUTCNow(), callContext);
 
             displayState(subscription.getId(), "STEP 8.  CANCELLATION");
 
@@ -174,7 +175,7 @@ public class TestUserApiDemos extends TestApiBase {
         System.out.println("");
         System.out.println("******\t STEP " + stepMsg + " **************");
         try {
-            final SubscriptionData subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscriptionId);
+            final SubscriptionData subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscriptionId, callContext);
 
             final Plan currentPlan = subscription.getCurrentPlan();
             final PlanPhase currentPhase = subscription.getCurrentPhase();

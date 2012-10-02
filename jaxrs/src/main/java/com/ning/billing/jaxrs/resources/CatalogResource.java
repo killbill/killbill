@@ -16,12 +16,10 @@
 
 package com.ning.billing.jaxrs.resources;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML;
-
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -29,37 +27,52 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Listing;
 import com.ning.billing.catalog.api.StaticCatalog;
 import com.ning.billing.jaxrs.json.CatalogJsonSimple;
 import com.ning.billing.jaxrs.json.PlanDetailJason;
+import com.ning.billing.jaxrs.util.Context;
+import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
+import com.ning.billing.util.api.AuditUserApi;
+import com.ning.billing.util.api.CustomFieldUserApi;
+import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.config.XMLWriter;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
 
 @Singleton
 @Path(JaxrsResource.CATALOG_PATH)
-public class CatalogResource implements JaxrsResource {
+public class CatalogResource extends JaxRsResourceBase {
 
     private final CatalogService catalogService;
 
     @Inject
-    public CatalogResource(final CatalogService catalogService) {
+    public CatalogResource(final CatalogService catalogService,
+                           final JaxrsUriBuilder uriBuilder,
+                           final TagUserApi tagUserApi,
+                           final CustomFieldUserApi customFieldUserApi,
+                           final AuditUserApi auditUserApi,
+                           final Context context) {
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, context);
         this.catalogService = catalogService;
     }
 
     @GET
     @Produces(APPLICATION_XML)
-    public Response getCatalogXml() throws Exception {
+    public Response getCatalogXml(@javax.ws.rs.core.Context final HttpServletRequest request) throws Exception {
         return Response.status(Status.OK).entity(XMLWriter.writeXML(catalogService.getCurrentCatalog(), StaticCatalog.class)).build();
     }
 
     @GET
     @Produces(APPLICATION_JSON)
-    public Response getCatalogJson() throws Exception {
-        StaticCatalog catalog = catalogService.getCurrentCatalog();
+    public Response getCatalogJson(@javax.ws.rs.core.Context final HttpServletRequest request) throws Exception {
+        final StaticCatalog catalog = catalogService.getCurrentCatalog();
 
         return Response.status(Status.OK).entity(catalog).build();
     }
@@ -78,11 +91,11 @@ public class CatalogResource implements JaxrsResource {
     //        return result;
     //    }
 
-
     @GET
     @Path("/availableAddons")
     @Produces(APPLICATION_JSON)
-    public Response getAvailableAddons(@QueryParam("baseProductName") final String baseProductName) throws CatalogApiException {
+    public Response getAvailableAddons(@QueryParam("baseProductName") final String baseProductName,
+                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws CatalogApiException {
         final StaticCatalog catalog = catalogService.getCurrentCatalog();
         final List<Listing> listings = catalog.getAvailableAddonListings(baseProductName);
         final List<PlanDetailJason> details = new ArrayList<PlanDetailJason>();
@@ -95,7 +108,7 @@ public class CatalogResource implements JaxrsResource {
     @GET
     @Path("/availableBasePlans")
     @Produces(APPLICATION_JSON)
-    public Response getAvailableBasePlans() throws CatalogApiException {
+    public Response getAvailableBasePlans(@javax.ws.rs.core.Context final HttpServletRequest request) throws CatalogApiException {
         final StaticCatalog catalog = catalogService.getCurrentCatalog();
         final List<Listing> listings = catalog.getAvailableBasePlanListings();
         final List<PlanDetailJason> details = new ArrayList<PlanDetailJason>();
@@ -108,11 +121,10 @@ public class CatalogResource implements JaxrsResource {
     @GET
     @Path("/simpleCatalog")
     @Produces(APPLICATION_JSON)
-    public Response getSimpleCatalog() throws CatalogApiException {
+    public Response getSimpleCatalog(@javax.ws.rs.core.Context final HttpServletRequest request) throws CatalogApiException {
+        final StaticCatalog catalog = catalogService.getCurrentCatalog();
 
-        StaticCatalog catalog  = catalogService.getCurrentCatalog();
-
-        CatalogJsonSimple json = new CatalogJsonSimple(catalog);
+        final CatalogJsonSimple json = new CatalogJsonSimple(catalog);
         return Response.status(Status.OK).entity(json).build();
     }
 }

@@ -16,10 +16,8 @@
 
 package com.ning.billing.entitlement.alignment;
 
-
 import org.joda.time.DateTime;
 
-import com.google.inject.Inject;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Duration;
@@ -32,6 +30,8 @@ import com.ning.billing.entitlement.api.migration.EntitlementMigrationApiExcepti
 import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.util.clock.DefaultClock;
+
+import com.google.inject.Inject;
 
 public class MigrationPlanAligner {
 

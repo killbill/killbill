@@ -52,21 +52,21 @@ public class TestBusinessInvoiceSqlDao extends AnalyticsTestSuiteWithEmbeddedDB 
         final BusinessInvoice invoice = createInvoice(accountId, invoiceId, accountKey);
 
         // Verify initial state
-        Assert.assertNull(invoiceSqlDao.getInvoice(invoice.getInvoiceId().toString()));
-        Assert.assertEquals(invoiceSqlDao.deleteInvoice(invoice.getInvoiceId().toString()), 0);
+        Assert.assertNull(invoiceSqlDao.getInvoice(invoice.getInvoiceId().toString(), internalCallContext));
+        Assert.assertEquals(invoiceSqlDao.deleteInvoice(invoice.getInvoiceId().toString(), internalCallContext), 0);
 
         // Add the invoice
-        Assert.assertEquals(invoiceSqlDao.createInvoice(invoice), 1);
+        Assert.assertEquals(invoiceSqlDao.createInvoice(invoice, internalCallContext), 1);
 
         // Retrieve it
-        Assert.assertEquals(invoiceSqlDao.getInvoice(invoice.getInvoiceId().toString()), invoice);
-        Assert.assertEquals(invoiceSqlDao.getInvoicesForAccount(invoice.getAccountId().toString()).size(), 1);
-        Assert.assertEquals(invoiceSqlDao.getInvoicesForAccount(invoice.getAccountId().toString()).get(0), invoice);
+        Assert.assertEquals(invoiceSqlDao.getInvoice(invoice.getInvoiceId().toString(), internalCallContext), invoice);
+        Assert.assertEquals(invoiceSqlDao.getInvoicesForAccount(invoice.getAccountId().toString(), internalCallContext).size(), 1);
+        Assert.assertEquals(invoiceSqlDao.getInvoicesForAccount(invoice.getAccountId().toString(), internalCallContext).get(0), invoice);
 
         // Delete it
-        Assert.assertEquals(invoiceSqlDao.deleteInvoice(invoice.getInvoiceId().toString()), 1);
-        Assert.assertNull(invoiceSqlDao.getInvoice(invoice.getInvoiceId().toString()));
-        Assert.assertEquals(invoiceSqlDao.getInvoicesForAccount(invoice.getAccountId().toString()).size(), 0);
+        Assert.assertEquals(invoiceSqlDao.deleteInvoice(invoice.getInvoiceId().toString(), internalCallContext), 1);
+        Assert.assertNull(invoiceSqlDao.getInvoice(invoice.getInvoiceId().toString(), internalCallContext));
+        Assert.assertEquals(invoiceSqlDao.getInvoicesForAccount(invoice.getAccountId().toString(), internalCallContext).size(), 0);
     }
 
     @Test(groups = "slow")
@@ -81,24 +81,24 @@ public class TestBusinessInvoiceSqlDao extends AnalyticsTestSuiteWithEmbeddedDB 
         final BusinessInvoice invoice2 = createInvoice(invoiceId2, accountId2, accountKey2);
 
         // Create both invoices
-        Assert.assertEquals(invoiceSqlDao.createInvoice(invoice1), 1);
-        Assert.assertEquals(invoiceSqlDao.createInvoice(invoice2), 1);
+        Assert.assertEquals(invoiceSqlDao.createInvoice(invoice1, internalCallContext), 1);
+        Assert.assertEquals(invoiceSqlDao.createInvoice(invoice2, internalCallContext), 1);
 
-        Assert.assertEquals(invoiceSqlDao.getInvoicesForAccount(accountId1.toString()).size(), 1);
-        Assert.assertEquals(invoiceSqlDao.getInvoicesForAccount(accountId2.toString()).size(), 1);
+        Assert.assertEquals(invoiceSqlDao.getInvoicesForAccount(accountId1.toString(), internalCallContext).size(), 1);
+        Assert.assertEquals(invoiceSqlDao.getInvoicesForAccount(accountId2.toString(), internalCallContext).size(), 1);
 
         // Remove the first invoice
-        Assert.assertEquals(invoiceSqlDao.deleteInvoice(invoice1.getInvoiceId().toString()), 1);
+        Assert.assertEquals(invoiceSqlDao.deleteInvoice(invoice1.getInvoiceId().toString(), internalCallContext), 1);
 
-        Assert.assertEquals(invoiceSqlDao.getInvoicesForAccount(accountId1.toString()).size(), 0);
-        Assert.assertEquals(invoiceSqlDao.getInvoicesForAccount(accountId2.toString()).size(), 1);
+        Assert.assertEquals(invoiceSqlDao.getInvoicesForAccount(accountId1.toString(), internalCallContext).size(), 0);
+        Assert.assertEquals(invoiceSqlDao.getInvoicesForAccount(accountId2.toString(), internalCallContext).size(), 1);
     }
 
     @Test(groups = "slow")
     public void testHealthCheck() throws Exception {
         // HealthCheck test to make sure MySQL is setup properly
         try {
-            invoiceSqlDao.test();
+            invoiceSqlDao.test(internalCallContext);
         } catch (Throwable t) {
             Assert.fail(t.toString());
         }

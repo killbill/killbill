@@ -1,5 +1,8 @@
 group BusinessAccountTag;
 
+CHECK_TENANT() ::= "tenant_record_id = :tenantRecordId"
+AND_CHECK_TENANT() ::= "AND <CHECK_TENANT()>"
+
 getTagsForAccountByKey(account_key) ::=<<
 select
   account_id
@@ -7,6 +10,7 @@ select
 , name
 from bac_tags
 where account_key = :account_key
+<AND_CHECK_TENANT()>
 ;
 >>
 
@@ -15,17 +19,21 @@ insert into bac_tags (
   account_id
 , account_key
 , name
+, account_record_id
+, tenant_record_id
 ) values (
   :account_id
 , :account_key
 , :name
+, :accountRecordId
+, :tenantRecordId
 );
 >>
 
 removeTag(account_id, name) ::= <<
-delete from bac_tags where account_id = :account_id and name = :name;
+delete from bac_tags where account_id = :account_id and name = :name <AND_CHECK_TENANT()>;
 >>
 
 test() ::= <<
-select 1 from bac_tags;
+select 1 from bac_tags where <CHECK_TENANT()>;
 >>

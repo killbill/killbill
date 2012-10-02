@@ -17,12 +17,21 @@
 package com.ning.billing;
 
 import java.lang.reflect.Method;
+import java.util.UUID;
 
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.ITestResult;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
+
+import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
+import com.ning.billing.util.callcontext.UserType;
 
 public class KillbillTestSuite {
 
@@ -30,6 +39,12 @@ public class KillbillTestSuite {
     protected static final Logger log = LoggerFactory.getLogger(KillbillTestSuite.class.getSimpleName());
 
     private boolean hasFailed = false;
+
+    protected final InternalCallContext internalCallContext = new InternalCallContext(InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID, 1687L, UUID.randomUUID(),
+                                                                                      UUID.randomUUID().toString(), CallOrigin.TEST,
+                                                                                      UserType.TEST, "Testing", "This is a test",
+                                                                                      new DateTime(DateTimeZone.UTC), new DateTime(DateTimeZone.UTC));
+    protected final CallContext callContext = internalCallContext.toCallContext();
 
     @BeforeMethod(alwaysRun = true)
     public void startTestSuite(final Method method) throws Exception {

@@ -15,19 +15,7 @@
  */
 package com.ning.billing.beatrix.integration.overdue;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertTrue;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 import java.math.BigDecimal;
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
-
-import junit.framework.Assert;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
@@ -42,6 +30,8 @@ import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.junction.api.BlockingApi;
+
+import static junit.framework.Assert.assertTrue;
 
 @Test(groups = "slow")
 @Guice(modules = {BeatrixModule.class})
@@ -79,14 +69,14 @@ public class TestOverdueWithSubscriptionCancellation extends TestOverdueBase {
         paymentPlugin.makeAllInvoicesFailWithError(true);
         final Subscription baseSubscription = createSubscriptionAndCheckForCompletion(bundle.getId(), productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.INVOICE);
 
-        invoiceChecker.checkInvoice(account.getId(), 1, new ExpectedItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
-        invoiceChecker.checkChargedThroughDate(baseSubscription.getId(), new LocalDate(2012, 5, 1));
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+        invoiceChecker.checkChargedThroughDate(baseSubscription.getId(), new LocalDate(2012, 5, 1), callContext);
 
         // DAY 30 have to get out of trial before first payment
         addDaysAndCheckForCompletion(30, NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR);
 
-        invoiceChecker.checkInvoice(account.getId(), 2, new ExpectedItemCheck(new LocalDate(2012, 5, 31), new LocalDate(2012, 6, 30), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
-        invoiceChecker.checkChargedThroughDate(baseSubscription.getId(), new LocalDate(2012, 6, 30));
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedItemCheck(new LocalDate(2012, 5, 31), new LocalDate(2012, 6, 30), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+        invoiceChecker.checkChargedThroughDate(baseSubscription.getId(), new LocalDate(2012, 6, 30), callContext);
 
         // Should still be in clear state
         checkODState(BlockingApi.CLEAR_STATE_NAME);
@@ -97,7 +87,7 @@ public class TestOverdueWithSubscriptionCancellation extends TestOverdueBase {
         // Should be in OD1
         checkODState("OD1");
 
-        Subscription cancelledBaseSubscription = entitlementUserApi.getSubscriptionFromId(baseSubscription.getId());
+        final Subscription cancelledBaseSubscription = entitlementUserApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
         assertTrue(cancelledBaseSubscription.getState() == SubscriptionState.CANCELLED);
     }
 }

@@ -16,11 +16,6 @@
 
 package com.ning.billing.beatrix.util;
 
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertNull;
-import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.fail;
-
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
@@ -33,8 +28,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
@@ -43,6 +36,15 @@ import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.invoice.api.InvoiceUserApi;
+import com.ning.billing.util.callcontext.TenantContext;
+
+import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
+
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 public class InvoiceChecker {
 
@@ -57,37 +59,37 @@ public class InvoiceChecker {
         this.entitlementApi = entitlementApi;
     }
 
-    public void checkInvoice(final UUID accountId, final int invoiceOrderingNumber, final ExpectedItemCheck... expected) throws InvoiceApiException {
-        checkInvoice(accountId, invoiceOrderingNumber, ImmutableList.<ExpectedItemCheck>copyOf(expected));
+    public void checkInvoice(final UUID accountId, final int invoiceOrderingNumber, final TenantContext context, final ExpectedItemCheck... expected) throws InvoiceApiException {
+        checkInvoice(accountId, invoiceOrderingNumber, context, ImmutableList.<ExpectedItemCheck>copyOf(expected));
     }
 
-    public void checkInvoice(final UUID accountId, final int invoiceOrderingNumber, final List<ExpectedItemCheck> expected) throws InvoiceApiException {
-        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId);
+    public void checkInvoice(final UUID accountId, final int invoiceOrderingNumber, final TenantContext context, final List<ExpectedItemCheck> expected) throws InvoiceApiException {
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId, context);
         Assert.assertEquals(invoices.size(), invoiceOrderingNumber);
         final Invoice invoice = invoices.get(invoiceOrderingNumber - 1);
-        checkInvoice(invoice.getId(), expected);
+        checkInvoice(invoice.getId(), context, expected);
     }
 
-    public void checkRepairedInvoice(final UUID accountId, final int invoiceNb, final ExpectedItemCheck... expected) throws InvoiceApiException {
-        checkRepairedInvoice(accountId, invoiceNb, ImmutableList.<ExpectedItemCheck>copyOf(expected));
+    public void checkRepairedInvoice(final UUID accountId, final int invoiceNb, final TenantContext context, final ExpectedItemCheck... expected) throws InvoiceApiException {
+        checkRepairedInvoice(accountId, invoiceNb, context, ImmutableList.<ExpectedItemCheck>copyOf(expected));
     }
 
-    public void checkRepairedInvoice(final UUID accountId, final int invoiceNb, final List<ExpectedItemCheck> expected) throws InvoiceApiException {
-        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId);
+    public void checkRepairedInvoice(final UUID accountId, final int invoiceNb, final TenantContext context, final List<ExpectedItemCheck> expected) throws InvoiceApiException {
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId, context);
         Assert.assertTrue(invoices.size() > invoiceNb);
         final Invoice invoice = invoices.get(invoiceNb - 1);
-        checkInvoice(invoice.getId(), expected);
+        checkInvoice(invoice.getId(), context, expected);
     }
 
-    public void checkInvoice(final UUID invoiceId, final List<ExpectedItemCheck> expected) throws InvoiceApiException {
-        final Invoice invoice = invoiceUserApi.getInvoice(invoiceId);
+    public void checkInvoice(final UUID invoiceId, final TenantContext context, final List<ExpectedItemCheck> expected) throws InvoiceApiException {
+        final Invoice invoice = invoiceUserApi.getInvoice(invoiceId, context);
         Assert.assertNotNull(invoice);
 
         final List<InvoiceItem> actual = invoice.getInvoiceItems();
         Assert.assertEquals(expected.size(), actual.size());
-        for (ExpectedItemCheck cur : expected) {
+        for (final ExpectedItemCheck cur : expected) {
             boolean found = false;
-            for (InvoiceItem in : actual) {
+            for (final InvoiceItem in : actual) {
                 // Match first on type and start date
                 if (in.getInvoiceItemType() != cur.getType() || (in.getStartDate().compareTo(cur.getStartDate()) != 0)) {
                     continue;
@@ -113,13 +115,13 @@ public class InvoiceChecker {
         }
     }
 
-    public void checkNullChargedThroughDate(final UUID subscriptionId) {
-        checkChargedThroughDate(subscriptionId, null);
+    public void checkNullChargedThroughDate(final UUID subscriptionId, final TenantContext context) {
+        checkChargedThroughDate(subscriptionId, null, context);
     }
 
-    public void checkChargedThroughDate(final UUID subscriptionId, final LocalDate expectedLocalCTD) {
+    public void checkChargedThroughDate(final UUID subscriptionId, final LocalDate expectedLocalCTD, final TenantContext context) {
         try {
-            Subscription subscription = entitlementApi.getSubscriptionFromId(subscriptionId);
+            final Subscription subscription = entitlementApi.getSubscriptionFromId(subscriptionId, context);
             if (expectedLocalCTD == null) {
                 assertNull(subscription.getChargedThroughDate());
             } else {

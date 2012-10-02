@@ -22,17 +22,20 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.google.inject.Inject;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountChangeEvent;
 import com.ning.billing.account.api.user.DefaultAccountChangeEvent;
 import com.ning.billing.account.api.user.DefaultAccountCreationEvent;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
-import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.entity.EntityPersistenceException;
 
+import com.google.inject.Inject;
+
 public class MockAccountDao implements AccountDao {
+
     private final Bus eventBus;
     private final Map<UUID, Account> accounts = new ConcurrentHashMap<UUID, Account>();
 
@@ -42,7 +45,12 @@ public class MockAccountDao implements AccountDao {
     }
 
     @Override
-    public void create(final Account account, final CallContext context) {
+    public Long getRecordId(final UUID id, final InternalTenantContext context) {
+        return 1L;
+    }
+
+    @Override
+    public void create(final Account account, final InternalCallContext context) {
         accounts.put(account.getId(), account);
 
         try {
@@ -53,21 +61,21 @@ public class MockAccountDao implements AccountDao {
     }
 
     @Override
-    public Account getById(final UUID id) {
+    public Account getById(final UUID id, final InternalTenantContext context) {
         return accounts.get(id);
     }
 
     @Override
-    public List<Account> get() {
+    public List<Account> get(final InternalTenantContext context) {
         return new ArrayList<Account>(accounts.values());
     }
 
     @Override
-    public void test() {
+    public void test(final InternalTenantContext context) {
     }
 
     @Override
-    public Account getAccountByKey(final String externalKey) {
+    public Account getAccountByKey(final String externalKey, final InternalTenantContext context) {
         for (final Account account : accounts.values()) {
             if (externalKey.equals(account.getExternalKey())) {
                 return account;
@@ -77,13 +85,13 @@ public class MockAccountDao implements AccountDao {
     }
 
     @Override
-    public UUID getIdFromKey(final String externalKey) {
-        final Account account = getAccountByKey(externalKey);
+    public UUID getIdFromKey(final String externalKey, final InternalTenantContext context) {
+        final Account account = getAccountByKey(externalKey, context);
         return account == null ? null : account.getId();
     }
 
     @Override
-    public void update(final Account account, final CallContext context) {
+    public void update(final Account account, final InternalCallContext context) {
         final Account currentAccount = accounts.put(account.getId(), account);
 
         final AccountChangeEvent changeEvent = new DefaultAccountChangeEvent(account.getId(), null, currentAccount, account);
@@ -97,9 +105,6 @@ public class MockAccountDao implements AccountDao {
     }
 
     @Override
-    public void updatePaymentMethod(UUID accountId, UUID paymentMethodId,
-            CallContext context) throws EntityPersistenceException {
-        // TODO Auto-generated method stub
-
+    public void updatePaymentMethod(final UUID accountId, final UUID paymentMethodId, final InternalCallContext context) throws EntityPersistenceException {
     }
 }

@@ -19,7 +19,6 @@ package com.ning.billing.entitlement.glue;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.IDBI;
 
-import com.google.inject.name.Names;
 import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.dbi.DBIProvider;
 import com.ning.billing.dbi.DbiConfig;
@@ -32,6 +31,8 @@ import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.BusModule.BusType;
 import com.ning.billing.util.glue.CustomFieldModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
+
+import com.google.inject.name.Names;
 
 public class MockEngineModuleSql extends MockEngineModule {
     @Override

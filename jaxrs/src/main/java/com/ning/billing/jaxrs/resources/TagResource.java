@@ -20,6 +20,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -34,6 +35,7 @@ import javax.ws.rs.core.Response.Status;
 import com.ning.billing.jaxrs.json.TagDefinitionJson;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
+import com.ning.billing.util.api.AuditUserApi;
 import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.api.TagUserApi;
@@ -49,21 +51,19 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 @Path(JaxrsResource.TAG_DEFINITIONS_PATH)
 public class TagResource extends JaxRsResourceBase {
 
-    private final Context context;
-
     @Inject
     public TagResource(final JaxrsUriBuilder uriBuilder,
                        final TagUserApi tagUserApi,
                        final CustomFieldUserApi customFieldUserApi,
+                       final AuditUserApi auditUserApi,
                        final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi);
-        this.context = context;
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, context);
     }
 
     @GET
     @Produces(APPLICATION_JSON)
-    public Response getTagDefinitions() {
-        final List<TagDefinition> tagDefinitions = tagUserApi.getTagDefinitions();
+    public Response getTagDefinitions(@javax.ws.rs.core.Context final HttpServletRequest request) {
+        final List<TagDefinition> tagDefinitions = tagUserApi.getTagDefinitions(context.createContext(request));
 
         final List<TagDefinitionJson> result = new LinkedList<TagDefinitionJson>();
         for (final TagDefinition cur : tagDefinitions) {
@@ -76,8 +76,9 @@ public class TagResource extends JaxRsResourceBase {
     @GET
     @Path("/{tagDefinitionId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
-    public Response getTagDefinition(@PathParam("tagDefinitionId") final String tagDefId) throws TagDefinitionApiException {
-        final TagDefinition tagDef = tagUserApi.getTagDefinition(UUID.fromString(tagDefId));
+    public Response getTagDefinition(@PathParam("tagDefinitionId") final String tagDefId,
+                                     @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException {
+        final TagDefinition tagDef = tagUserApi.getTagDefinition(UUID.fromString(tagDefId), context.createContext(request));
         final TagDefinitionJson json = new TagDefinitionJson(tagDef);
         return Response.status(Status.OK).entity(json).build();
     }
@@ -88,8 +89,9 @@ public class TagResource extends JaxRsResourceBase {
     public Response createTagDefinition(final TagDefinitionJson json,
                                         @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                         @HeaderParam(HDR_REASON) final String reason,
-                                        @HeaderParam(HDR_COMMENT) final String comment) throws TagDefinitionApiException {
-        final TagDefinition createdTagDef = tagUserApi.create(json.getName(), json.getDescription(), context.createContext(createdBy, reason, comment));
+                                        @HeaderParam(HDR_COMMENT) final String comment,
+                                        @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException {
+        final TagDefinition createdTagDef = tagUserApi.create(json.getName(), json.getDescription(), context.createContext(createdBy, reason, comment, request));
         return uriBuilder.buildResponse(TagResource.class, "getTagDefinition", createdTagDef.getId());
     }
 
@@ -99,8 +101,9 @@ public class TagResource extends JaxRsResourceBase {
     public Response deleteTagDefinition(@PathParam("tagDefinitionId") final String tagDefId,
                                         @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                         @HeaderParam(HDR_REASON) final String reason,
-                                        @HeaderParam(HDR_COMMENT) final String comment) throws TagDefinitionApiException {
-        tagUserApi.deleteTagDefinition(UUID.fromString(tagDefId), context.createContext(createdBy, reason, comment));
+                                        @HeaderParam(HDR_COMMENT) final String comment,
+                                        @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException {
+        tagUserApi.deleteTagDefinition(UUID.fromString(tagDefId), context.createContext(createdBy, reason, comment, request));
         return Response.status(Status.NO_CONTENT).build();
     }
 

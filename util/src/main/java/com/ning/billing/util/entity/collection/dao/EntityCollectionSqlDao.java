@@ -27,8 +27,9 @@ import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallContextBinder;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 import com.ning.billing.util.dao.Mapper;
 import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.dao.ObjectTypeBinder;
@@ -42,27 +43,30 @@ import com.ning.billing.util.entity.Entity;
  * @param <T>
  */
 public interface EntityCollectionSqlDao<T extends Entity> {
+
     @SqlBatch
     public void insertFromTransaction(@Bind("objectId") final String objectId,
                                       @ObjectTypeBinder final ObjectType objectType,
                                       @BindBean final Collection<T> entities,
-                                      @CallContextBinder final CallContext context);
+                                      @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlBatch
     public void deleteFromTransaction(@Bind("objectId") final String objectId,
                                       @ObjectTypeBinder final ObjectType objectType,
                                       @BindBean final Collection<T> entities,
-                                      @CallContextBinder final CallContext context);
+                                      @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlQuery
     public List<T> load(@Bind("objectId") final String objectId,
-                        @ObjectTypeBinder final ObjectType objectType);
+                        @ObjectTypeBinder final ObjectType objectType,
+                        @InternalTenantContextBinder final InternalTenantContext context);
 
     @RegisterMapper(RecordIdMapper.class)
     @SqlQuery
     public List<Mapper<UUID, Long>> getRecordIds(@Bind("objectId") final String objectId,
-                                                 @ObjectTypeBinder final ObjectType objectType);
+                                                 @ObjectTypeBinder final ObjectType objectType,
+                                                 @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlUpdate
-    public void test();
+    public void test(@InternalTenantContextBinder final InternalTenantContext context);
 }

@@ -16,15 +16,18 @@
 
 package com.ning.billing.util.callcontext;
 
-import javax.annotation.Nullable;
 import java.util.UUID;
+
+import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 
-import com.google.inject.Inject;
 import com.ning.billing.util.clock.Clock;
 
+import com.google.inject.Inject;
+
 public class DefaultCallContextFactory implements CallContextFactory {
+
     private final Clock clock;
 
     @Inject
@@ -33,25 +36,25 @@ public class DefaultCallContextFactory implements CallContextFactory {
     }
 
     @Override
-    public CallContext createCallContext(final String userName, final CallOrigin callOrigin, final UserType userType,
-                                         @Nullable final UUID userToken) {
-        return new DefaultCallContext(userName, callOrigin, userType, userToken, clock);
+    public TenantContext createTenantContext(final UUID tenantId) {
+        return new DefaultTenantContext(tenantId);
     }
 
     @Override
-    public CallContext createCallContext(final String userName, final CallOrigin callOrigin, final UserType userType,
-                                         final String reasonCode, final String comment, final UUID userToken) {
-        return new DefaultCallContext(userName, callOrigin, userType, reasonCode, comment, userToken, clock);
+    public CallContext createCallContext(@Nullable final UUID tenantId, final String userName, final CallOrigin callOrigin,
+                                         final UserType userType, @Nullable final UUID userToken) {
+        return new DefaultCallContext(tenantId, userName, callOrigin, userType, userToken, clock);
     }
 
     @Override
-    public CallContext createCallContext(final String userName, final CallOrigin callOrigin, final UserType userType) {
-        return createCallContext(userName, callOrigin, userType, null);
+    public CallContext createCallContext(@Nullable final UUID tenantId, final String userName, final CallOrigin callOrigin,
+                                         final UserType userType, final String reasonCode, final String comment, final UUID userToken) {
+        return new DefaultCallContext(tenantId, userName, callOrigin, userType, reasonCode, comment, userToken, clock);
     }
 
     @Override
-    public CallContext createMigrationCallContext(final String userName, final CallOrigin callOrigin, final UserType userType, final DateTime createdDate, final DateTime updatedDate) {
-        return new MigrationCallContext(userName, callOrigin, userType, createdDate, updatedDate);
+    public CallContext createCallContext(@Nullable final UUID tenantId, final String userName, final CallOrigin callOrigin, final UserType userType) {
+        return createCallContext(tenantId, userName, callOrigin, userType, null);
     }
 
     @Override

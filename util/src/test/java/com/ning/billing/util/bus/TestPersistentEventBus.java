@@ -21,8 +21,6 @@ import org.skife.jdbi.v2.IDBI;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
 import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.dbi.DBIProvider;
 import com.ning.billing.dbi.DbiConfig;
@@ -31,6 +29,9 @@ import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.BusModule.BusType;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.Inject;
 
 @Guice(modules = TestPersistentEventBus.PersistentBusModuleTest.class)
 public class TestPersistentEventBus extends TestEventBusBase {

@@ -34,6 +34,10 @@ import org.slf4j.LoggerFactory;
 import com.ning.billing.config.UsageConfig;
 import com.ning.billing.usage.timeline.chunks.TimelineChunk;
 import com.ning.billing.usage.timeline.persistent.TimelineDao;
+import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
+import com.ning.billing.util.callcontext.UserType;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -57,6 +61,7 @@ public class BackgroundDBChunkWriter {
     private final TimelineDao timelineDAO;
     private final UsageConfig config;
     private final boolean performForegroundWrites;
+    private final InternalCallContextFactory internalCallContextFactory;
 
     private final AtomicInteger pendingChunkCount = new AtomicInteger();
     private final AtomicBoolean shuttingDown = new AtomicBoolean();
@@ -76,14 +81,16 @@ public class BackgroundDBChunkWriter {
     private final AtomicLong foregroundChunksWritten = new AtomicLong();
 
     @Inject
-    public BackgroundDBChunkWriter(final TimelineDao timelineDAO, final UsageConfig config) {
-        this(timelineDAO, config, config.getPerformForegroundWrites());
+    public BackgroundDBChunkWriter(final TimelineDao timelineDAO, final UsageConfig config, final InternalCallContextFactory internalCallContextFactory) {
+        this(timelineDAO, config, config.getPerformForegroundWrites(), internalCallContextFactory);
     }
 
-    public BackgroundDBChunkWriter(final TimelineDao timelineDAO, @Nullable final UsageConfig config, final boolean performForegroundWrites) {
+    public BackgroundDBChunkWriter(final TimelineDao timelineDAO, @Nullable final UsageConfig config,
+                                   final boolean performForegroundWrites, final InternalCallContextFactory internalCallContextFactory) {
         this.timelineDAO = timelineDAO;
         this.config = config;
         this.performForegroundWrites = performForegroundWrites;
+        this.internalCallContextFactory = internalCallContextFactory;
     }
 
     public synchronized void addPendingChunkMap(final PendingChunkMap chunkMap) {
@@ -94,7 +101,7 @@ public class BackgroundDBChunkWriter {
                 foregroundChunkMapsWritten.incrementAndGet();
                 final List<TimelineChunk> chunksToWrite = new ArrayList<TimelineChunk>(chunkMap.getChunkMap().values());
                 foregroundChunksWritten.addAndGet(chunksToWrite.size());
-                timelineDAO.bulkInsertTimelineChunks(chunksToWrite);
+                timelineDAO.bulkInsertTimelineChunks(chunksToWrite, createCallContext());
                 chunkMap.getAccumulator().markPendingChunkMapConsumed(chunkMap.getPendingChunkMapId());
             } else {
                 pendingChunkMapsAdded.incrementAndGet();
@@ -120,7 +127,7 @@ public class BackgroundDBChunkWriter {
             pendingChunksWritten.addAndGet(map.getChunkMap().size());
             chunks.addAll(map.getChunkMap().values());
         }
-        timelineDAO.bulkInsertTimelineChunks(chunks);
+        timelineDAO.bulkInsertTimelineChunks(chunks, createCallContext());
         for (final PendingChunkMap map : chunkMapsToWrite) {
             pendingChunkMapsMarkedConsumed.incrementAndGet();
             map.getAccumulator().markPendingChunkMapConsumed(map.getPendingChunkMapId());
@@ -213,5 +220,9 @@ public class BackgroundDBChunkWriter {
 
     public long getForegroundChunksWritten() {
         return foregroundChunksWritten.get();
+    }
+
+    private InternalCallContext createCallContext() {
+        return internalCallContextFactory.createInternalCallContext("ChunkWriter", CallOrigin.INTERNAL, UserType.SYSTEM, null);
     }
 }

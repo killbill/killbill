@@ -1,11 +1,15 @@
 group BusinessAccount;
 
+CHECK_TENANT() ::= "tenant_record_id = :tenantRecordId"
+AND_CHECK_TENANT() ::= "AND <CHECK_TENANT()>"
+
 getAccountsCreatedOverTime() ::= <<
   select
     date(from_unixtime(created_date / 1000)) day
     -- TODO: use account_record_id, once populated
   , count(record_id) count
   from bac
+  where <CHECK_TENANT()>
   group by 1
   order by 1
   ;
@@ -26,8 +30,10 @@ getAccount(account_id) ::= <<
   , credit_card_type
   , billing_address_country
   , currency
+  , tenant_record_id
   from bac
   where account_id=:account_id
+  <AND_CHECK_TENANT()>
   limit 1
   ;
 >>
@@ -47,8 +53,10 @@ getAccountByKey(account_key) ::= <<
   , credit_card_type
   , billing_address_country
   , currency
+  , tenant_record_id
   from bac
   where account_key=:account_key
+  <AND_CHECK_TENANT()>
   limit 1
   ;
 >>
@@ -68,6 +76,8 @@ createAccount() ::= <<
   , credit_card_type
   , billing_address_country
   , currency
+  , account_record_id
+  , tenant_record_id
   ) values (
     :account_id
   , :account_key
@@ -82,6 +92,8 @@ createAccount() ::= <<
   , :credit_card_type
   , :billing_address_country
   , :currency
+  , :accountRecordId
+  , :tenantRecordId
   );
 >>
 
@@ -98,9 +110,10 @@ saveAccount() ::= <<
   , billing_address_country=:billing_address_country
   , currency=:currency
   where account_id=:account_id
+  <AND_CHECK_TENANT()>
   ;
 >>
 
 test() ::= <<
-  select 1 from bac;
+  select 1 from bac where <CHECK_TENANT()>;
 >>

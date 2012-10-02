@@ -15,11 +15,6 @@
  */
 package com.ning.billing.entitlement.api.transfer;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertNull;
-import static org.testng.Assert.assertTrue;
-
 import java.util.List;
 import java.util.UUID;
 
@@ -29,9 +24,6 @@ import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Stage;
 import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PhaseType;
@@ -40,13 +32,22 @@ import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.TestApiBase;
-import com.ning.billing.entitlement.api.migration.EntitlementMigrationApiException;
 import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi.EntitlementAccountMigration;
+import com.ning.billing.entitlement.api.migration.EntitlementMigrationApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
-import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.glue.MockEngineModuleSql;
+
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Stage;
+
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
+import static org.testng.Assert.assertTrue;
 
 public class TestTransfer extends TestApiBase {
 
@@ -72,14 +73,14 @@ public class TestTransfer extends TestApiBase {
             final DateTime afterMigration = clock.getUTCNow();
 
             testListener.pushExpectedEvent(NextEvent.MIGRATE_ENTITLEMENT);
-            migrationApi.migrate(toBeMigrated, context);
+            migrationApi.migrate(toBeMigrated, callContext);
             assertTrue(testListener.isCompleted(5000));
 
-            final List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(toBeMigrated.getAccountKey());
+            final List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(toBeMigrated.getAccountKey(), callContext);
             assertEquals(bundles.size(), 1);
             final SubscriptionBundle bundle = bundles.get(0);
 
-            final List<Subscription> subscriptions = entitlementApi.getSubscriptionsForBundle(bundle.getId());
+            final List<Subscription> subscriptions = entitlementApi.getSubscriptionsForBundle(bundle.getId(), callContext);
             assertEquals(subscriptions.size(), 1);
             final Subscription subscription = subscriptions.get(0);
             assertDateWithin(subscription.getStartDate(), beforeMigration, afterMigration);
@@ -103,10 +104,10 @@ public class TestTransfer extends TestApiBase {
 
             testListener.pushExpectedEvent(NextEvent.TRANSFER);
             testListener.pushExpectedEvent(NextEvent.CANCEL);
-            transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getKey(), transferRequestedDate, false, true, context);
+            transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getKey(), transferRequestedDate, false, true, callContext);
             assertTrue(testListener.isCompleted(3000));
 
-            final Subscription oldBaseSubscription = entitlementApi.getBaseSubscription(bundle.getId());
+            final Subscription oldBaseSubscription = entitlementApi.getBaseSubscription(bundle.getId(), callContext);
             assertTrue(oldBaseSubscription.getState() == SubscriptionState.CANCELLED);
             // The MIGRATE_BILLING event should have been invalidated
             assertEquals(oldBaseSubscription.getBillingTransitions().size(), 1);
@@ -141,20 +142,20 @@ public class TestTransfer extends TestApiBase {
 
         testListener.pushExpectedEvent(NextEvent.TRANSFER);
         testListener.pushExpectedEvent(NextEvent.CANCEL);
-        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getKey(), transferRequestedDate, false, false, context);
+        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getKey(), transferRequestedDate, false, false, callContext);
         assertTrue(testListener.isCompleted(3000));
         final DateTime afterTransferDate = clock.getUTCNow();
 
         // CHECK OLD BASE IS CANCEL AT THE TRANSFER DATE
-        final Subscription oldBaseSubscription = entitlementApi.getSubscriptionFromId(baseSubscription.getId());
+        final Subscription oldBaseSubscription = entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
         assertNotNull(oldBaseSubscription.getEndDate());
         assertDateWithin(oldBaseSubscription.getEndDate(), beforeTransferDate, afterTransferDate);
         assertTrue(oldBaseSubscription.getEndDate().compareTo(transferRequestedDate) == 0);
 
-        // CHECK NEW BUNDLE EXIST, WITH ONE SUBSCRIPTION SARTING ON TRANSFER_DATE
-        SubscriptionBundle newBundle = entitlementApi.getBundleForAccountAndKey(newAccountId, bundle.getKey());
+        // CHECK NEW BUNDLE EXIST, WITH ONE SUBSCRIPTION STARTING ON TRANSFER_DATE
+        final SubscriptionBundle newBundle = entitlementApi.getBundleForAccountAndKey(newAccountId, bundle.getKey(), callContext);
 
-        List<Subscription> subscriptions = entitlementApi.getSubscriptionsForBundle(newBundle.getId());
+        final List<Subscription> subscriptions = entitlementApi.getSubscriptionsForBundle(newBundle.getId(), callContext);
         assertEquals(subscriptions.size(), 1);
 
         final Subscription newBaseSubscription = subscriptions.get(0);
@@ -164,7 +165,7 @@ public class TestTransfer extends TestApiBase {
         assertEquals(newBaseSubscription.getAllTransitions().size(), 2);
         assertTrue(newBaseSubscription.getAllTransitions().get(1).getEffectiveTransitionTime().compareTo(evergreenPhaseDate) == 0);
 
-        Plan newPlan = newBaseSubscription.getCurrentPlan();
+        final Plan newPlan = newBaseSubscription.getCurrentPlan();
         assertEquals(newPlan.getProduct().getName(), baseProduct);
         assertEquals(newBaseSubscription.getCurrentPhase().getPhaseType(), PhaseType.TRIAL);
     }
@@ -183,7 +184,7 @@ public class TestTransfer extends TestApiBase {
         final Subscription baseSubscription = createSubscription(baseProduct, baseTerm, basePriceList);
         final DateTime ctd = baseSubscription.getStartDate().plusDays(30);
 
-        billingApi.setChargedThroughDate(baseSubscription.getId(), ctd.toLocalDate(), context);
+        billingApi.setChargedThroughDate(baseSubscription.getId(), ctd.toLocalDate(), callContext);
 
         final DateTime evergreenPhaseDate = baseSubscription.getPendingTransition().getEffectiveTransitionTime();
 
@@ -192,18 +193,18 @@ public class TestTransfer extends TestApiBase {
 
         testListener.pushExpectedEvent(NextEvent.TRANSFER);
         final DateTime transferRequestedDate = clock.getUTCNow();
-        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getKey(), transferRequestedDate, false, false, context);
+        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getKey(), transferRequestedDate, false, false, callContext);
         assertTrue(testListener.isCompleted(3000));
 
         // CHECK OLD BASE IS CANCEL AT THE TRANSFER DATE
-        final Subscription oldBaseSubscription = entitlementApi.getSubscriptionFromId(baseSubscription.getId());
+        final Subscription oldBaseSubscription = entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
         assertNotNull(oldBaseSubscription.getFutureEndDate());
         assertTrue(oldBaseSubscription.getFutureEndDate().compareTo(ctd) == 0);
 
-        // CHECK NEW BUNDLE EXIST, WITH ONE SUBSCRIPTION SARTING ON TRANSFER_DATE
-        SubscriptionBundle newBundle = entitlementApi.getBundleForAccountAndKey(newAccountId, bundle.getKey());
+        // CHECK NEW BUNDLE EXIST, WITH ONE SUBSCRIPTION STARTING ON TRANSFER_DATE
+        final SubscriptionBundle newBundle = entitlementApi.getBundleForAccountAndKey(newAccountId, bundle.getKey(), callContext);
 
-        List<Subscription> subscriptions = entitlementApi.getSubscriptionsForBundle(newBundle.getId());
+        final List<Subscription> subscriptions = entitlementApi.getSubscriptionsForBundle(newBundle.getId(), callContext);
         assertEquals(subscriptions.size(), 1);
 
         final Subscription newBaseSubscription = subscriptions.get(0);
@@ -213,7 +214,7 @@ public class TestTransfer extends TestApiBase {
         assertEquals(newBaseSubscription.getAllTransitions().size(), 2);
         assertTrue(newBaseSubscription.getAllTransitions().get(1).getEffectiveTransitionTime().compareTo(evergreenPhaseDate) == 0);
 
-        Plan newPlan = newBaseSubscription.getCurrentPlan();
+        final Plan newPlan = newBaseSubscription.getCurrentPlan();
         assertEquals(newPlan.getProduct().getName(), baseProduct);
         assertEquals(newBaseSubscription.getCurrentPhase().getPhaseType(), PhaseType.TRIAL);
     }
@@ -240,20 +241,20 @@ public class TestTransfer extends TestApiBase {
         final DateTime transferRequestedDate = clock.getUTCNow();
         testListener.pushExpectedEvent(NextEvent.TRANSFER);
         testListener.pushExpectedEvent(NextEvent.CANCEL);
-        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getKey(), transferRequestedDate, false, false, context);
+        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getKey(), transferRequestedDate, false, false, callContext);
         assertTrue(testListener.isCompleted(3000));
         final DateTime afterTransferDate = clock.getUTCNow();
 
         // CHECK OLD BASE IS CANCEL AT THE TRANSFER DATE
-        final Subscription oldBaseSubscription = entitlementApi.getSubscriptionFromId(baseSubscription.getId());
+        final Subscription oldBaseSubscription = entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
         assertNotNull(oldBaseSubscription.getEndDate());
         assertDateWithin(oldBaseSubscription.getEndDate(), beforeTransferDate, afterTransferDate);
         assertTrue(oldBaseSubscription.getEndDate().compareTo(transferRequestedDate) == 0);
 
-        // CHECK NEW BUNDLE EXIST, WITH ONE SUBSCRIPTION SARTING ON TRANSFER_DATE
-        SubscriptionBundle newBundle = entitlementApi.getBundleForAccountAndKey(newAccountId, bundle.getKey());
+        // CHECK NEW BUNDLE EXIST, WITH ONE SUBSCRIPTION STARTING ON TRANSFER_DATE
+        final SubscriptionBundle newBundle = entitlementApi.getBundleForAccountAndKey(newAccountId, bundle.getKey(), callContext);
 
-        List<Subscription> subscriptions = entitlementApi.getSubscriptionsForBundle(newBundle.getId());
+        final List<Subscription> subscriptions = entitlementApi.getSubscriptionsForBundle(newBundle.getId(), callContext);
         assertEquals(subscriptions.size(), 1);
 
         final Subscription newBaseSubscription = subscriptions.get(0);
@@ -262,7 +263,7 @@ public class TestTransfer extends TestApiBase {
         // CHECK ONLY ONE PHASE EXISTS
         assertEquals(newBaseSubscription.getAllTransitions().size(), 1);
 
-        Plan newPlan = newBaseSubscription.getCurrentPlan();
+        final Plan newPlan = newBaseSubscription.getCurrentPlan();
         assertEquals(newPlan.getProduct().getName(), baseProduct);
         assertEquals(newBaseSubscription.getCurrentPhase().getPhaseType(), PhaseType.EVERGREEN);
     }
@@ -286,23 +287,23 @@ public class TestTransfer extends TestApiBase {
 
         // SET CTD
         final DateTime ctd = baseSubscription.getStartDate().plusDays(30).plusMonths(1);
-        billingApi.setChargedThroughDate(baseSubscription.getId(), ctd.toLocalDate(), context);
+        billingApi.setChargedThroughDate(baseSubscription.getId(), ctd.toLocalDate(), callContext);
 
 
         final DateTime transferRequestedDate = clock.getUTCNow();
         testListener.pushExpectedEvent(NextEvent.TRANSFER);
-        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getKey(), transferRequestedDate, false, false, context);
+        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getKey(), transferRequestedDate, false, false, callContext);
         assertTrue(testListener.isCompleted(3000));
 
         // CHECK OLD BASE IS CANCEL AT THE TRANSFER DATE
-        final Subscription oldBaseSubscription = entitlementApi.getSubscriptionFromId(baseSubscription.getId());
+        final Subscription oldBaseSubscription = entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
         assertNotNull(oldBaseSubscription.getFutureEndDate());
         assertTrue(oldBaseSubscription.getFutureEndDate().compareTo(ctd) == 0);
 
-        // CHECK NEW BUNDLE EXIST, WITH ONE SUBSCRIPTION SARTING ON TRANSFER_DATE
-        SubscriptionBundle newBundle = entitlementApi.getBundleForAccountAndKey(newAccountId, bundle.getKey());
+        // CHECK NEW BUNDLE EXIST, WITH ONE SUBSCRIPTION STARTING ON TRANSFER_DATE
+        final SubscriptionBundle newBundle = entitlementApi.getBundleForAccountAndKey(newAccountId, bundle.getKey(), callContext);
 
-        List<Subscription> subscriptions = entitlementApi.getSubscriptionsForBundle(newBundle.getId());
+        final List<Subscription> subscriptions = entitlementApi.getSubscriptionsForBundle(newBundle.getId(), callContext);
         assertEquals(subscriptions.size(), 1);
 
         final Subscription newBaseSubscription = subscriptions.get(0);
@@ -321,7 +322,7 @@ public class TestTransfer extends TestApiBase {
         final String newBaseProduct1 = "Assault-Rifle";
         final BillingPeriod newBaseTerm1 = BillingPeriod.ANNUAL;
         final DateTime changeDate1 = clock.getUTCNow();
-        newBaseSubscription.changePlan(newBaseProduct1, newBaseTerm1, basePriceList, changeDate1, context);
+        newBaseSubscription.changePlan(newBaseProduct1, newBaseTerm1, basePriceList, changeDate1, callContext);
 
         newPlan = newBaseSubscription.getCurrentPlan();
         assertEquals(newPlan.getProduct().getName(), newBaseProduct1);
@@ -330,14 +331,14 @@ public class TestTransfer extends TestApiBase {
         // SET CTD AND MAKE CHANGE EOT
         clock.addDays(2);
 
-        DateTime newCtd = newBaseSubscription.getStartDate().plusYears(1);
-        billingApi.setChargedThroughDate(newBaseSubscription.getId(), newCtd.toLocalDate(), context);
-        final Subscription newBaseSubscriptionWithCtd = entitlementApi.getSubscriptionFromId(newBaseSubscription.getId());
+        final DateTime newCtd = newBaseSubscription.getStartDate().plusYears(1);
+        billingApi.setChargedThroughDate(newBaseSubscription.getId(), newCtd.toLocalDate(), callContext);
+        final Subscription newBaseSubscriptionWithCtd = entitlementApi.getSubscriptionFromId(newBaseSubscription.getId(), callContext);
 
         final String newBaseProduct2 = "Pistol";
         final BillingPeriod newBaseTerm2 = BillingPeriod.ANNUAL;
         final DateTime changeDate2 = clock.getUTCNow();
-        newBaseSubscriptionWithCtd.changePlan(newBaseProduct2, newBaseTerm2, basePriceList, changeDate2, context);
+        newBaseSubscriptionWithCtd.changePlan(newBaseProduct2, newBaseTerm2, basePriceList, changeDate2, callContext);
 
         newPlan = newBaseSubscriptionWithCtd.getCurrentPlan();
         assertEquals(newPlan.getProduct().getName(), newBaseProduct1);
@@ -382,23 +383,23 @@ public class TestTransfer extends TestApiBase {
 
         // SET CTD TO TRIGGER CANCELLATION EOT
         final DateTime ctd = baseSubscription.getStartDate().plusDays(30).plusMonths(1);
-        billingApi.setChargedThroughDate(baseSubscription.getId(), ctd.toLocalDate(), context);
+        billingApi.setChargedThroughDate(baseSubscription.getId(), ctd.toLocalDate(), callContext);
 
         final DateTime transferRequestedDate = clock.getUTCNow();
         testListener.pushExpectedEvent(NextEvent.TRANSFER);
-        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getKey(), transferRequestedDate, true, false, context);
+        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getKey(), transferRequestedDate, true, false, callContext);
         assertTrue(testListener.isCompleted(3000));
 
         // RETRIEVE NEW BUNDLE AND CHECK SUBSCRIPTIONS
-        SubscriptionBundle newBundle = entitlementApi.getBundleForAccountAndKey(newAccountId, bundle.getKey());
-        List<Subscription> subscriptions = entitlementApi.getSubscriptionsForBundle(newBundle.getId());
+        final SubscriptionBundle newBundle = entitlementApi.getBundleForAccountAndKey(newAccountId, bundle.getKey(), callContext);
+        final List<Subscription> subscriptions = entitlementApi.getSubscriptionsForBundle(newBundle.getId(), callContext);
         assertEquals(subscriptions.size(), 3);
         boolean foundBP = false;
         boolean foundAO1 = false;
         boolean foundAO2 = false;
-        for (Subscription cur : subscriptions) {
-            Plan curPlan = cur.getCurrentPlan();
-            Product curProduct = curPlan.getProduct();
+        for (final Subscription cur : subscriptions) {
+            final Plan curPlan = cur.getCurrentPlan();
+            final Product curProduct = curPlan.getProduct();
             if (curProduct.getName().equals(baseProduct)) {
                 foundBP = true;
                 assertTrue(((SubscriptionData) cur).getAlignStartDate().compareTo(((SubscriptionData) baseSubscription).getAlignStartDate()) == 0);
@@ -431,7 +432,7 @@ public class TestTransfer extends TestApiBase {
         final UUID finalNewAccountId = UUID.randomUUID();
         final DateTime newTransferRequestedDate = clock.getUTCNow();
         testListener.pushExpectedEvent(NextEvent.TRANSFER);
-        transferApi.transferBundle(newBundle.getAccountId(), finalNewAccountId, newBundle.getKey(), newTransferRequestedDate, true, false, context);
+        transferApi.transferBundle(newBundle.getAccountId(), finalNewAccountId, newBundle.getKey(), newTransferRequestedDate, true, false, callContext);
         assertTrue(testListener.isCompleted(3000));
 
     }

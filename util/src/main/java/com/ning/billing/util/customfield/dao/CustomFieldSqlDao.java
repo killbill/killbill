@@ -26,8 +26,8 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallContextBinder;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 import com.ning.billing.util.customfield.CustomField;
 import com.ning.billing.util.dao.EntityHistory;
 import com.ning.billing.util.dao.ObjectType;
@@ -37,32 +37,33 @@ import com.ning.billing.util.entity.collection.dao.UpdatableEntityCollectionSqlD
 @ExternalizedSqlViaStringTemplate3
 @RegisterMapper(CustomFieldMapper.class)
 public interface CustomFieldSqlDao extends UpdatableEntityCollectionSqlDao<CustomField>,
-        Transactional<CustomFieldSqlDao>, Transmogrifier {
+                                           Transactional<CustomFieldSqlDao>, Transmogrifier {
+
     @Override
     @SqlBatch
     public void insertFromTransaction(@Bind("objectId") final String objectId,
                                       @ObjectTypeBinder final ObjectType objectType,
                                       @CustomFieldBinder final Collection<CustomField> entities,
-                                      @CallContextBinder final CallContext context);
+                                      @InternalTenantContextBinder final InternalCallContext context);
 
     @Override
     @SqlBatch
     public void updateFromTransaction(@Bind("objectId") final String objectId,
                                       @ObjectTypeBinder final ObjectType objectType,
                                       @CustomFieldBinder final Collection<CustomField> entities,
-                                      @CallContextBinder final CallContext context);
+                                      @InternalTenantContextBinder final InternalCallContext context);
 
     @Override
     @SqlBatch
     public void deleteFromTransaction(@Bind("objectId") final String objectId,
                                       @ObjectTypeBinder final ObjectType objectType,
                                       @CustomFieldBinder final Collection<CustomField> entities,
-                                      @CallContextBinder final CallContext context);
+                                      @InternalTenantContextBinder final InternalCallContext context);
 
     @Override
     @SqlBatch
     public void addHistoryFromTransaction(@Bind("objectId") final String objectId,
                                           @ObjectTypeBinder final ObjectType objectType,
                                           @CustomFieldHistoryBinder final List<EntityHistory<CustomField>> entities,
-                                          @CallContextBinder final CallContext context);
+                                          @InternalTenantContextBinder final InternalCallContext context);
 }

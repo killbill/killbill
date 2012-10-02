@@ -24,13 +24,14 @@ import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 
+import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
+import com.ning.billing.util.bus.BusEvent.BusEventType;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
-import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
-import com.ning.billing.util.bus.BusEvent.BusEventType;
 
 public abstract class TestEventBusBase extends UtilTestSuiteWithEmbeddedDB {
     protected static final Logger log = LoggerFactory.getLogger(TestEventBusBase.class);

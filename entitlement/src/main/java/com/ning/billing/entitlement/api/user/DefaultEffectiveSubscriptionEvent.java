@@ -20,9 +20,10 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.entitlement.api.SubscriptionTransitionType;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 
 public class DefaultEffectiveSubscriptionEvent extends DefaultSubscriptionEvent implements EffectiveSubscriptionEvent {
     public DefaultEffectiveSubscriptionEvent(final SubscriptionTransitionData in, final DateTime startDate) {

@@ -16,9 +16,10 @@
 
 package com.ning.billing.util.notificationq;
 
-import com.google.inject.Inject;
 import com.ning.billing.config.NotificationConfig;
 import com.ning.billing.util.clock.Clock;
+
+import com.google.inject.Inject;
 
 public class MockNotificationQueueService extends NotificationQueueServiceBase {
 

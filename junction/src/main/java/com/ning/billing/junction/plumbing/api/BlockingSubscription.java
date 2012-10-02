@@ -36,18 +36,25 @@ import com.ning.billing.junction.api.BlockingApiException;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.junction.block.BlockingChecker;
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
+import com.ning.billing.util.callcontext.TenantContext;
 
 public class BlockingSubscription implements Subscription {
     private final Subscription subscription;
     private final BlockingApi blockingApi;
     private final BlockingChecker checker;
+    private final TenantContext context;
+    private final InternalCallContextFactory internalCallContextFactory;
 
     private BlockingState blockingState = null;
 
-    public BlockingSubscription(final Subscription subscription, final BlockingApi blockingApi, final BlockingChecker checker) {
+    public BlockingSubscription(final Subscription subscription, final BlockingApi blockingApi, final BlockingChecker checker,
+                                final TenantContext context, final InternalCallContextFactory internalCallContextFactory) {
         this.subscription = subscription;
         this.blockingApi = blockingApi;
         this.checker = checker;
+        this.context = context;
+        this.internalCallContextFactory = internalCallContextFactory;
     }
 
     @Override
@@ -76,7 +83,7 @@ public class BlockingSubscription implements Subscription {
     public boolean changePlan(final String productName, final BillingPeriod term, final String priceList, final DateTime requestedDate,
             final CallContext context) throws EntitlementUserApiException {
         try {
-            checker.checkBlockedChange(this);
+            checker.checkBlockedChange(this, internalCallContextFactory.createInternalTenantContext(context));
         } catch (BlockingApiException e) {
             throw new EntitlementUserApiException(e, e.getCode(), e.getMessage());
         }
@@ -87,7 +94,7 @@ public class BlockingSubscription implements Subscription {
     public boolean changePlanWithPolicy(final String productName, final BillingPeriod term, final String priceList,
             final DateTime requestedDate, final ActionPolicy policy, final CallContext context) throws EntitlementUserApiException {
         try {
-            checker.checkBlockedChange(this);
+            checker.checkBlockedChange(this, internalCallContextFactory.createInternalTenantContext(context));
         } catch (BlockingApiException e) {
             throw new EntitlementUserApiException(e, e.getCode(), e.getMessage());
         }
@@ -183,7 +190,7 @@ public class BlockingSubscription implements Subscription {
     @Override
     public BlockingState getBlockingState() {
         if (blockingState == null) {
-            blockingState = blockingApi.getBlockingStateFor(this);
+            blockingState = blockingApi.getBlockingStateFor(this, context);
         }
         return blockingState;
     }

@@ -41,6 +41,7 @@ public enum TableName {
     REFUNDS("refunds", ObjectType.REFUND, REFUND_HISTORY),
     TAG_DEFINITIONS("tag_definitions", ObjectType.TAG_DEFINITION),
     TAG_HISTORY("tag_history"),
+    TENANT("tenants", ObjectType.TENANT),
     TAG("tags", TAG_HISTORY);
 
     private final String tableName;

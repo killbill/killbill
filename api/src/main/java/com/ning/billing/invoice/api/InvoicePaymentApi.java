@@ -25,6 +25,7 @@ import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.TenantContext;
 
 public interface InvoicePaymentApi {
 
@@ -32,23 +33,22 @@ public interface InvoicePaymentApi {
      * @param accountId id of the account
      * @return All invoices, including migrated invoices
      */
-    public List<Invoice> getAllInvoicesByAccount(UUID accountId);
+    public List<Invoice> getAllInvoicesByAccount(UUID accountId, TenantContext context);
 
-    public Invoice getInvoice(UUID invoiceId) throws InvoiceApiException;
+    public Invoice getInvoice(UUID invoiceId, TenantContext context) throws InvoiceApiException;
 
-    public Invoice getInvoiceForPaymentId(UUID paymentId) throws InvoiceApiException;
+    public Invoice getInvoiceForPaymentId(UUID paymentId, TenantContext context) throws InvoiceApiException;
 
-    public List<InvoicePayment> getInvoicePayments(UUID paymentId);
+    public List<InvoicePayment> getInvoicePayments(UUID paymentId, TenantContext context);
 
-    public InvoicePayment getInvoicePaymentForAttempt(UUID paymentId);
+    public InvoicePayment getInvoicePaymentForAttempt(UUID paymentId, TenantContext context);
 
-    public void notifyOfPayment(InvoicePayment invoicePayment, CallContext context);
+    public void notifyOfPayment(InvoicePayment invoicePayment, CallContext context) throws InvoiceApiException;
 
-    public void notifyOfPayment(UUID invoiceId, BigDecimal amountOutstanding, Currency currency, UUID paymentId, DateTime paymentDate, CallContext context);
+    public void notifyOfPayment(UUID invoiceId, BigDecimal amountOutstanding, Currency currency, UUID paymentId, DateTime paymentDate, CallContext context) throws InvoiceApiException;
 
     /**
      * Create a refund.
-     *
      *
      * @param paymentId                 payment associated with that refund
      * @param amount                    amount to refund
@@ -66,13 +66,13 @@ public interface InvoicePaymentApi {
 
     public InvoicePayment createChargeback(UUID invoicePaymentId, CallContext context) throws InvoiceApiException;
 
-    public BigDecimal getRemainingAmountPaid(UUID invoicePaymentId);
+    public BigDecimal getRemainingAmountPaid(UUID invoicePaymentId, TenantContext context);
 
-    public List<InvoicePayment> getChargebacksByAccountId(UUID accountId);
+    public List<InvoicePayment> getChargebacksByAccountId(UUID accountId, TenantContext context);
 
-    public UUID getAccountIdFromInvoicePaymentId(UUID uuid) throws InvoiceApiException;
+    public UUID getAccountIdFromInvoicePaymentId(UUID uuid, TenantContext context) throws InvoiceApiException;
 
-    public List<InvoicePayment> getChargebacksByPaymentId(UUID paymentId);
+    public List<InvoicePayment> getChargebacksByPaymentId(UUID paymentId, TenantContext context);
 
-    public InvoicePayment getChargebackById(UUID chargebackId) throws InvoiceApiException;
+    public InvoicePayment getChargebackById(UUID chargebackId, TenantContext context) throws InvoiceApiException;
 }

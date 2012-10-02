@@ -16,9 +16,10 @@
 
 package com.ning.billing.util.glue;
 
-import com.google.inject.AbstractModule;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.DefaultCallContextFactory;
+
+import com.google.inject.AbstractModule;
 
 public class CallContextModule extends AbstractModule {
     @Override

@@ -1,5 +1,8 @@
 group AccountDaoSql;
 
+CHECK_TENANT() ::= "tenant_record_id = :tenantRecordId"
+AND_CHECK_TENANT() ::= "AND <CHECK_TENANT()>"
+
 accountFields(prefix) ::= <<
     <prefix>id,
     <prefix>external_key,
@@ -25,7 +28,8 @@ accountFields(prefix) ::= <<
     <prefix>created_by,
     <prefix>created_date,
     <prefix>updated_by,
-    <prefix>updated_date
+    <prefix>updated_date,
+    <prefix>tenant_record_id
 >>
 
 create() ::= <<
@@ -34,8 +38,8 @@ create() ::= <<
     VALUES
       (:id, :externalKey, :email, :name, :firstNameLength, :currency, :billingCycleDayLocal,
        :billingCycleDayUTC, :paymentMethodId, :timeZone, :locale,
-      :address1, :address2, :companyName, :city, :stateOrProvince, :country, :postalCode, :phone,
-      :migrated, :isNotifiedForInvoices, :userName, :createdDate, :userName, :updatedDate);
+       :address1, :address2, :companyName, :city, :stateOrProvince, :country, :postalCode, :phone,
+       :migrated, :isNotifiedForInvoices, :userName, :createdDate, :userName, :updatedDate, :tenantRecordId);
 >>
 
 update() ::= <<
@@ -46,7 +50,7 @@ update() ::= <<
         address1 = :address1, address2 = :address2, company_name = :companyName, city = :city, state_or_province = :stateOrProvince,
         country = :country, postal_code = :postalCode, phone = :phone,
         is_notified_for_invoices = :isNotifiedForInvoices, updated_date = :updatedDate, updated_by = :userName
-    WHERE id = :id;
+    WHERE id = :id <AND_CHECK_TENANT()>;
 >>
 
 
@@ -55,7 +59,7 @@ updatePaymentMethod() ::= <<
     SET payment_method_id = :paymentMethodId
     , updated_date = :updatedDate
     , updated_by = :userName
-    WHERE id = :id;
+    WHERE id = :id <AND_CHECK_TENANT()>;
 >>
 
 
@@ -84,19 +88,20 @@ historyFields() ::= <<
     is_notified_for_invoices,
     change_type,
     updated_by,
-    date
+    date,
+    tenant_record_id
 >>
 
 getRecordId() ::= <<
     SELECT record_id
     FROM accounts
-    WHERE id = :id;
+    WHERE id = :id <AND_CHECK_TENANT()>;
 >>
 
 getHistoryRecordId() ::= <<
     SELECT MAX(history_record_id)
     FROM account_history
-    WHERE record_id = :recordId;
+    WHERE record_id = :recordId <AND_CHECK_TENANT()>;
 >>
 
 insertHistoryFromTransaction() ::= <<
@@ -105,30 +110,31 @@ insertHistoryFromTransaction() ::= <<
     (:recordId, :id, :externalKey, :email, :name, :firstNameLength, :currency,
      :billingCycleDayLocal, :billingCycleDayUTC, :paymentMethodId, :timeZone, :locale,
      :address1, :address2, :companyName, :city, :stateOrProvince,
-     :country, :postalCode, :phone, :migrated, :isNotifiedForInvoices, :changeType, :userName, :createdDate);
+     :country, :postalCode, :phone, :migrated, :isNotifiedForInvoices, :changeType, :userName, :createdDate, :tenantRecordId);
 >>
 
 getAccountByKey() ::= <<
     select <accountFields()>
     from accounts
-    where external_key = :externalKey;
+    where external_key = :externalKey <AND_CHECK_TENANT()>;
 >>
 
 getById() ::= <<
     SELECT <accountFields()>
     FROM accounts
-    WHERE id = :id;
+    WHERE id = :id <AND_CHECK_TENANT()>;
 >>
 
 get() ::= <<
     SELECT <accountFields()>
-    FROM accounts;
+    FROM accounts
+    WHERE <CHECK_TENANT()>;
 >>
 
 getIdFromKey() ::= <<
     SELECT id
     FROM accounts
-    WHERE external_key = :externalKey;
+    WHERE external_key = :externalKey <AND_CHECK_TENANT()>;
 >>
 
 auditFields(prefix) ::= <<
@@ -139,15 +145,16 @@ auditFields(prefix) ::= <<
     <prefix>changed_by,
     <prefix>reason_code,
     <prefix>comments,
-    <prefix>user_token
+    <prefix>user_token,
+    <prefix>tenant_record_id
 >>
 
 insertAuditFromTransaction() ::= <<
     INSERT INTO audit_log(<auditFields()>)
-    VALUES(:tableName, :recordId, :changeType, :createdDate, :userName, :reasonCode, :comment, :userToken);
+    VALUES(:tableName, :recordId, :changeType, :createdDate, :userName, :reasonCode, :comment, :userToken, :tenantRecordId);
 >>
 
 test() ::= <<
-    SELECT 1 FROM accounts;
+    SELECT 1 FROM accounts WHERE <CHECK_TENANT()>;
 >>
 ;

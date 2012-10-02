@@ -27,6 +27,7 @@ import org.skife.jdbi.v2.IDBI;
 import com.ning.billing.util.ChangeType;
 import com.ning.billing.util.api.AuditLevel;
 import com.ning.billing.util.audit.AuditLog;
+import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.dao.AuditSqlDao;
 import com.ning.billing.util.dao.TableName;
 
@@ -42,43 +43,43 @@ public class DefaultAuditDao implements AuditDao {
     }
 
     @Override
-    public List<AuditLog> getAuditLogsForId(final TableName tableName, final UUID objectId, final AuditLevel auditLevel) {
+    public List<AuditLog> getAuditLogsForId(final TableName tableName, final UUID objectId, final AuditLevel auditLevel, final InternalTenantContext context) {
         if (tableName.hasHistoryTable()) {
-            return doGetAuditLogsViaHistoryForId(tableName, objectId, auditLevel);
+            return doGetAuditLogsViaHistoryForId(tableName, objectId, auditLevel, context);
         } else {
-            return doGetAuditLogsForId(tableName, objectId, auditLevel);
+            return doGetAuditLogsForId(tableName, objectId, auditLevel, context);
         }
     }
 
-    private List<AuditLog> doGetAuditLogsForId(final TableName tableName, final UUID objectId, final AuditLevel auditLevel) {
+    private List<AuditLog> doGetAuditLogsForId(final TableName tableName, final UUID objectId, final AuditLevel auditLevel, final InternalTenantContext context) {
         // Look at the table and gather all record_id for that objectId
-        final Long recordId = auditSqlDao.getRecordIdForTable(tableName.getTableName().toLowerCase(), objectId.toString());
+        final Long recordId = auditSqlDao.getRecordIdForTable(tableName.getTableName().toLowerCase(), objectId.toString(), context);
         if (recordId == null) {
             return ImmutableList.<AuditLog>of();
         } else {
-            return getAuditLogsForRecordId(tableName, recordId, auditLevel);
+            return getAuditLogsForRecordId(tableName, recordId, auditLevel, context);
         }
     }
 
-    private List<AuditLog> doGetAuditLogsViaHistoryForId(final TableName tableName, final UUID objectId, final AuditLevel auditLevel) {
+    private List<AuditLog> doGetAuditLogsViaHistoryForId(final TableName tableName, final UUID objectId, final AuditLevel auditLevel, final InternalTenantContext context) {
         final List<AuditLog> auditLogs = new ArrayList<AuditLog>();
 
         // Look at the history table and gather all the history_record_id for that objectId
         final List<Long> recordIds = auditSqlDao.getHistoryRecordIdsForTable(tableName.getHistoryTableName().getTableName().toLowerCase(),
-                                                                             objectId.toString());
+                                                                             objectId.toString(), context);
         if (recordIds == null) {
             return auditLogs;
         } else {
             for (final Long recordId : recordIds) {
-                auditLogs.addAll(getAuditLogsForRecordId(tableName.getHistoryTableName(), recordId, auditLevel));
+                auditLogs.addAll(getAuditLogsForRecordId(tableName.getHistoryTableName(), recordId, auditLevel, context));
             }
 
             return auditLogs;
         }
     }
 
-    private List<AuditLog> getAuditLogsForRecordId(final TableName tableName, final Long recordId, final AuditLevel auditLevel) {
-        final List<AuditLog> allAuditLogs = auditSqlDao.getAuditLogsForRecordId(tableName, recordId);
+    private List<AuditLog> getAuditLogsForRecordId(final TableName tableName, final Long recordId, final AuditLevel auditLevel, final InternalTenantContext context) {
+        final List<AuditLog> allAuditLogs = auditSqlDao.getAuditLogsForRecordId(tableName, recordId, context);
         if (AuditLevel.FULL.equals(auditLevel)) {
             return allAuditLogs;
         } else if (AuditLevel.MINIMAL.equals(auditLevel) && allAuditLogs.size() > 0) {

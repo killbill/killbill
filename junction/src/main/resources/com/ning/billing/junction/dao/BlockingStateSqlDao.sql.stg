@@ -1,5 +1,8 @@
 group BlockingStateSqlDao;
 
+CHECK_TENANT() ::= "tenant_record_id = :tenantRecordId"
+AND_CHECK_TENANT() ::= "AND <CHECK_TENANT()>"
+
 getBlockingStateFor() ::= <<
     select
         id
@@ -9,9 +12,11 @@ getBlockingStateFor() ::= <<
       , block_change
       , block_entitlement
       , block_billing
-      , created_date   
+      , created_date
+      , tenant_record_id
     from blocking_states
     where id = :id
+    <AND_CHECK_TENANT()>
     -- We want the current state, hence the order desc and limit 1
     order by created_date desc, record_id desc
     limit 1
@@ -27,9 +32,11 @@ getBlockingHistoryFor() ::= <<
       , block_change
       , block_entitlement
       , block_billing
-      , created_date   
+      , created_date
+      , tenant_record_id
     from blocking_states
     where id = :id
+    <AND_CHECK_TENANT()>
     -- We want the history in order
     order by created_date asc, record_id asc
     ;
@@ -44,7 +51,9 @@ setBlockingState() ::= <<
       , block_change
       , block_entitlement
       , block_billing
-      , created_date   
+      , created_date
+      , account_record_id
+      , tenant_record_id
     ) values (
         :id
       , :state
@@ -52,7 +61,9 @@ setBlockingState() ::= <<
       , :service
       , :block_change
       , :block_entitlement
-      , :block_billing   
-      , :created_date 
+      , :block_billing
+      , :created_date
+      , :accountRecordId
+      , :tenantRecordId
     );
 >>

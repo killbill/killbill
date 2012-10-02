@@ -20,8 +20,10 @@ import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.TenantContext;
 
 public interface AccountUserApi {
+
     public Account createAccount(AccountData data, CallContext context) throws AccountApiException;
 
     public Account migrateAccount(MigrationAccountData data, CallContext context) throws AccountApiException;
@@ -39,19 +41,19 @@ public interface AccountUserApi {
 
     public void updateAccount(UUID accountId, AccountData accountData, CallContext context) throws AccountApiException;
 
-    public void removePaymentMethod(final UUID accountId, final CallContext context) throws AccountApiException;
+    public void removePaymentMethod(UUID accountId, CallContext context) throws AccountApiException;
 
     public void updatePaymentMethod(UUID accountId, UUID paymentMethodId, CallContext context) throws AccountApiException;
 
-    public Account getAccountByKey(String key) throws AccountApiException;
+    public Account getAccountByKey(String key, TenantContext context) throws AccountApiException;
 
-    public Account getAccountById(UUID accountId) throws AccountApiException;
+    public Account getAccountById(UUID accountId, TenantContext context) throws AccountApiException;
 
-    public List<Account> getAccounts();
+    public List<Account> getAccounts(TenantContext context);
 
-    public UUID getIdFromKey(String externalKey) throws AccountApiException;
+    public UUID getIdFromKey(String externalKey, TenantContext context) throws AccountApiException;
 
-    public List<AccountEmail> getEmails(UUID accountId);
+    public List<AccountEmail> getEmails(UUID accountId, TenantContext context);
 
     public void saveEmails(UUID accountId, List<AccountEmail> emails, CallContext context);
 

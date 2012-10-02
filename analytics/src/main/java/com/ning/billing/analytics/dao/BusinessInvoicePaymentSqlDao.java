@@ -27,22 +27,30 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 
 import com.ning.billing.analytics.model.BusinessInvoicePayment;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 
 @ExternalizedSqlViaStringTemplate3()
 @RegisterMapper(BusinessInvoicePaymentMapper.class)
 public interface BusinessInvoicePaymentSqlDao extends Transactional<BusinessInvoicePaymentSqlDao>, Transmogrifier {
-    @SqlQuery
-    BusinessInvoicePayment getInvoicePayment(@Bind("payment_id") final String paymentId);
 
     @SqlQuery
-    List<BusinessInvoicePayment> getInvoicePaymentsForAccountByKey(@Bind("account_key") final String accountKey);
+    BusinessInvoicePayment getInvoicePayment(@Bind("payment_id") final String paymentId,
+                                             @InternalTenantContextBinder final InternalTenantContext context);
+
+    @SqlQuery
+    List<BusinessInvoicePayment> getInvoicePaymentsForAccountByKey(@Bind("account_key") final String accountKey,
+                                                                   @InternalTenantContextBinder final InternalTenantContext context);
 
     @SqlUpdate
-    int createInvoicePayment(@BusinessInvoicePaymentBinder final BusinessInvoicePayment payment);
+    int createInvoicePayment(@BusinessInvoicePaymentBinder final BusinessInvoicePayment payment,
+                             @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
-    int deleteInvoicePayment(@Bind("payment_id") final String paymentId);
+    int deleteInvoicePayment(@Bind("payment_id") final String paymentId,
+                             @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
-    void test();
+    void test(@InternalTenantContextBinder final InternalTenantContext context);
 }

@@ -16,10 +16,11 @@
 
 package com.ning.billing.util.config;
 
-import javax.xml.bind.JAXBException;
-import javax.xml.transform.TransformerException;
 import java.io.IOException;
 import java.io.InputStream;
+
+import javax.xml.bind.JAXBException;
+import javax.xml.transform.TransformerException;
 
 import org.testng.annotations.Test;
 

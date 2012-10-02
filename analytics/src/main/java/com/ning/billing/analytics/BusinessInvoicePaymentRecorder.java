@@ -40,6 +40,7 @@ import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.PaymentMethod;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
+import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.clock.Clock;
 
 public class BusinessInvoicePaymentRecorder {
@@ -68,7 +69,7 @@ public class BusinessInvoicePaymentRecorder {
     }
 
     public void invoicePaymentPosted(final UUID accountId, @Nullable final UUID paymentId, @Nullable final String extFirstPaymentRefId,
-                                     @Nullable final String extSecondPaymentRefId, final String message) {
+                                     @Nullable final String extSecondPaymentRefId, final String message, final InternalCallContext context) {
         // Payment attempt with no default payment method. Ignore.
         if (paymentId == null) {
             return;
@@ -76,7 +77,7 @@ public class BusinessInvoicePaymentRecorder {
 
         final Account account;
         try {
-            account = accountApi.getAccountById(accountId);
+            account = accountApi.getAccountById(accountId, context.toCallContext());
         } catch (AccountApiException e) {
             log.warn("Ignoring payment {}: account {} does not exist", paymentId, accountId);
             return;
@@ -84,26 +85,27 @@ public class BusinessInvoicePaymentRecorder {
 
         final Payment payment;
         try {
-            payment = paymentApi.getPayment(paymentId);
+            payment = paymentApi.getPayment(paymentId, context.toCallContext());
         } catch (PaymentApiException e) {
             log.warn("Ignoring payment {}: payment does not exist", paymentId);
             return;
         }
 
-        final InvoicePayment invoicePayment = invoicePaymentApi.getInvoicePaymentForAttempt(paymentId);
+        final InvoicePayment invoicePayment = invoicePaymentApi.getInvoicePaymentForAttempt(paymentId, context.toCallContext());
         final PaymentMethod paymentMethod;
         try {
-            paymentMethod = paymentApi.getPaymentMethod(account, payment.getPaymentMethodId(), true);
+            paymentMethod = paymentApi.getPaymentMethod(account, payment.getPaymentMethodId(), true, context.toCallContext());
         } catch (PaymentApiException e) {
             log.warn("Ignoring payment {}: payment method {} does not exist", paymentId, payment.getPaymentMethodId());
             return;
         }
 
-        createPayment(account, invoicePayment, payment, paymentMethod, extFirstPaymentRefId, extSecondPaymentRefId, message);
+        createPayment(account, invoicePayment, payment, paymentMethod, extFirstPaymentRefId, extSecondPaymentRefId, message, context);
     }
 
     private void createPayment(final Account account, @Nullable final InvoicePayment invoicePayment, final Payment payment,
-                               final PaymentMethod paymentMethod, final String extFirstPaymentRefId, final String extSecondPaymentRefId, final String message) {
+                               final PaymentMethod paymentMethod, final String extFirstPaymentRefId, final String extSecondPaymentRefId,
+                               final String message, final InternalCallContext context) {
         final PaymentMethodPlugin pluginDetail = paymentMethod.getPluginDetail();
         final String cardCountry = PaymentMethodUtils.getCardCountry(pluginDetail);
         final String cardType = PaymentMethodUtils.getCardType(pluginDetail);
@@ -113,7 +115,7 @@ public class BusinessInvoicePaymentRecorder {
             @Override
             public Void inTransaction(final BusinessInvoicePaymentSqlDao transactional, final TransactionStatus status) throws Exception {
                 // Delete the existing payment if it exists - this is to make the call idempotent
-                transactional.deleteInvoicePayment(payment.getId().toString());
+                transactional.deleteInvoicePayment(payment.getId().toString(), context);
 
                 // invoicePayment may be null on payment failures
                 final String invoicePaymentType;
@@ -148,15 +150,15 @@ public class BusinessInvoicePaymentRecorder {
                         clock.getUTCNow(),
                         invoicePaymentType,
                         linkedInvoicePaymentId);
-                transactional.createInvoicePayment(businessInvoicePayment);
+                transactional.createInvoicePayment(businessInvoicePayment, context);
 
                 // Update bin to get the latest invoice(s) balance(s)
                 final BusinessInvoiceSqlDao invoiceSqlDao = transactional.become(BusinessInvoiceSqlDao.class);
-                invoiceRecorder.rebuildInvoicesForAccountInTransaction(account.getId(), invoiceSqlDao);
+                invoiceRecorder.rebuildInvoicesForAccountInTransaction(account.getId(), invoiceSqlDao, context);
 
                 // Update bac to get the latest account balance, total invoice balance, etc.
                 final BusinessAccountSqlDao accountSqlDao = transactional.become(BusinessAccountSqlDao.class);
-                accountRecorder.updateAccountInTransaction(account, accountSqlDao);
+                accountRecorder.updateAccountInTransaction(account, accountSqlDao, context);
 
                 log.info("Added payment {}", businessInvoicePayment);
                 return null;

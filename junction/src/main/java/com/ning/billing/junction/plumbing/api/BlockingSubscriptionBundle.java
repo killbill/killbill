@@ -22,16 +22,19 @@ import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.overdue.OverdueState;
+import com.ning.billing.util.callcontext.TenantContext;
 
 public class BlockingSubscriptionBundle implements SubscriptionBundle {
     private final SubscriptionBundle subscriptionBundle;
     private final BlockingApi blockingApi;
+    private final TenantContext context;
 
     private BlockingState blockingState = null;
 
-    public BlockingSubscriptionBundle(final SubscriptionBundle subscriptionBundle, final BlockingApi blockingApi) {
+    public BlockingSubscriptionBundle(final SubscriptionBundle subscriptionBundle, final BlockingApi blockingApi, final TenantContext context) {
         this.subscriptionBundle = subscriptionBundle;
         this.blockingApi = blockingApi;
+        this.context = context;
     }
 
     public UUID getAccountId() {
@@ -53,7 +56,7 @@ public class BlockingSubscriptionBundle implements SubscriptionBundle {
     @Override
     public BlockingState getBlockingState() {
         if (blockingState == null) {
-            blockingState = blockingApi.getBlockingStateFor(this);
+            blockingState = blockingApi.getBlockingStateFor(this, context);
         }
         return blockingState;
     }

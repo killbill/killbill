@@ -35,7 +35,8 @@ import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.user.DefaultInvoiceCreationEvent;
 import com.ning.billing.util.bus.Bus;
-import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
 
 import com.google.inject.Inject;
 
@@ -51,7 +52,7 @@ public class MockInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public void create(final Invoice invoice, final int billCycleDay, final boolean isRealInvoice, final CallContext context) {
+    public void create(final Invoice invoice, final int billCycleDay, final boolean isRealInvoice, final InternalCallContext context) {
         synchronized (monitor) {
             invoices.put(invoice.getId(), invoice);
         }
@@ -65,14 +66,14 @@ public class MockInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public Invoice getById(final UUID id) {
+    public Invoice getById(final UUID id, final InternalTenantContext context) {
         synchronized (monitor) {
             return invoices.get(id);
         }
     }
 
     @Override
-    public Invoice getByNumber(final Integer number) {
+    public Invoice getByNumber(final Integer number, final InternalTenantContext context) {
         synchronized (monitor) {
             for (final Invoice invoice : invoices.values()) {
                 if (invoice.getInvoiceNumber().equals(number)) {
@@ -85,14 +86,14 @@ public class MockInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public List<Invoice> get() {
+    public List<Invoice> get(final InternalTenantContext context) {
         synchronized (monitor) {
             return new ArrayList<Invoice>(invoices.values());
         }
     }
 
     @Override
-    public List<Invoice> getInvoicesByAccount(final UUID accountId) {
+    public List<Invoice> getInvoicesByAccount(final UUID accountId, final InternalTenantContext context) {
         final List<Invoice> result = new ArrayList<Invoice>();
 
         synchronized (monitor) {
@@ -106,11 +107,11 @@ public class MockInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public List<Invoice> getInvoicesByAccount(final UUID accountId, final LocalDate fromDate) {
+    public List<Invoice> getInvoicesByAccount(final UUID accountId, final LocalDate fromDate, final InternalTenantContext context) {
         final List<Invoice> invoicesForAccount = new ArrayList<Invoice>();
 
         synchronized (monitor) {
-            for (final Invoice invoice : get()) {
+            for (final Invoice invoice : get(context)) {
                 if (accountId.equals(invoice.getAccountId()) && !invoice.getTargetDate().isBefore(fromDate) && !invoice.isMigrationInvoice()) {
                     invoicesForAccount.add(invoice);
                 }
@@ -121,7 +122,7 @@ public class MockInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public List<Invoice> getInvoicesBySubscription(final UUID subscriptionId) {
+    public List<Invoice> getInvoicesBySubscription(final UUID subscriptionId, final InternalTenantContext context) {
         final List<Invoice> result = new ArrayList<Invoice>();
 
         synchronized (monitor) {
@@ -138,11 +139,11 @@ public class MockInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public void test() {
+    public void test(final InternalTenantContext context) {
     }
 
     @Override
-    public UUID getInvoiceIdByPaymentId(final UUID paymentId) {
+    public UUID getInvoiceIdByPaymentId(final UUID paymentId, final InternalTenantContext context) {
         synchronized (monitor) {
             for (final Invoice invoice : invoices.values()) {
                 for (final InvoicePayment payment : invoice.getPayments()) {
@@ -156,8 +157,8 @@ public class MockInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public List<InvoicePayment> getInvoicePayments(final UUID paymentId) {
-        List<InvoicePayment> result = new LinkedList<InvoicePayment>();
+    public List<InvoicePayment> getInvoicePayments(final UUID paymentId, final InternalTenantContext context) {
+        final List<InvoicePayment> result = new LinkedList<InvoicePayment>();
         synchronized (monitor) {
             for (final Invoice invoice : invoices.values()) {
                 for (final InvoicePayment payment : invoice.getPayments()) {
@@ -171,7 +172,7 @@ public class MockInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public void notifyOfPayment(final InvoicePayment invoicePayment, final CallContext context) {
+    public void notifyOfPayment(final InvoicePayment invoicePayment, final InternalCallContext context) {
         synchronized (monitor) {
             final Invoice invoice = invoices.get(invoicePayment.getInvoiceId());
             if (invoice != null) {
@@ -181,10 +182,10 @@ public class MockInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public BigDecimal getAccountBalance(final UUID accountId) {
+    public BigDecimal getAccountBalance(final UUID accountId, final InternalTenantContext context) {
         BigDecimal balance = BigDecimal.ZERO;
 
-        for (final Invoice invoice : get()) {
+        for (final Invoice invoice : get(context)) {
             if (accountId.equals(invoice.getAccountId())) {
                 balance = balance.add(invoice.getBalance());
             }
@@ -194,10 +195,10 @@ public class MockInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public List<Invoice> getUnpaidInvoicesByAccountId(final UUID accountId, final LocalDate upToDate) {
+    public List<Invoice> getUnpaidInvoicesByAccountId(final UUID accountId, final LocalDate upToDate, final InternalTenantContext context) {
         final List<Invoice> unpaidInvoices = new ArrayList<Invoice>();
 
-        for (final Invoice invoice : get()) {
+        for (final Invoice invoice : get(context)) {
             if (accountId.equals(invoice.getAccountId()) && (invoice.getBalance().compareTo(BigDecimal.ZERO) > 0) && !invoice.isMigrationInvoice()) {
                 unpaidInvoices.add(invoice);
             }
@@ -207,7 +208,7 @@ public class MockInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public List<Invoice> getAllInvoicesByAccount(final UUID accountId) {
+    public List<Invoice> getAllInvoicesByAccount(final UUID accountId, final InternalTenantContext context) {
         final List<Invoice> result = new ArrayList<Invoice>();
 
         synchronized (monitor) {
@@ -221,88 +222,90 @@ public class MockInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public void setWrittenOff(final UUID objectId, final CallContext context) {
+    public void setWrittenOff(final UUID objectId, final InternalCallContext context) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void removeWrittenOff(final UUID objectId, final CallContext context) {
+    public void removeWrittenOff(final UUID objectId, final InternalCallContext context) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public InvoicePayment postChargeback(final UUID invoicePaymentId, final BigDecimal amount, final CallContext context) throws InvoiceApiException {
+    public InvoicePayment postChargeback(final UUID invoicePaymentId, final BigDecimal amount, final InternalCallContext context) throws InvoiceApiException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public BigDecimal getRemainingAmountPaid(final UUID invoicePaymentId) {
+    public BigDecimal getRemainingAmountPaid(final UUID invoicePaymentId, final InternalTenantContext context) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public UUID getAccountIdFromInvoicePaymentId(final UUID invoicePaymentId) throws InvoiceApiException {
+    public UUID getAccountIdFromInvoicePaymentId(final UUID invoicePaymentId, final InternalTenantContext context) throws InvoiceApiException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public List<InvoicePayment> getChargebacksByAccountId(final UUID accountId) {
+    public List<InvoicePayment> getChargebacksByAccountId(final UUID accountId, final InternalTenantContext context) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public List<InvoicePayment> getChargebacksByPaymentId(final UUID paymentId) {
+    public List<InvoicePayment> getChargebacksByPaymentId(final UUID paymentId, final InternalTenantContext context) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public InvoicePayment getChargebackById(final UUID chargebackId) throws InvoiceApiException {
+    public InvoicePayment getChargebackById(final UUID chargebackId, final InternalTenantContext context) throws InvoiceApiException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public InvoiceItem getExternalChargeById(final UUID externalChargeId) throws InvoiceApiException {
+    public InvoiceItem getExternalChargeById(final UUID externalChargeId, final InternalTenantContext context) throws InvoiceApiException {
         throw new UnsupportedOperationException();
     }
 
     @Override
     public InvoiceItem insertExternalCharge(final UUID accountId, @Nullable final UUID invoiceId, @Nullable final UUID bundleId,
                                             @Nullable final String description, final BigDecimal amount, final LocalDate effectiveDate,
-                                            final Currency currency, final CallContext context) {
+                                            final Currency currency, final InternalCallContext context) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public InvoiceItem getCreditById(final UUID creditId) throws InvoiceApiException {
+    public InvoiceItem getCreditById(final UUID creditId, final InternalTenantContext context) throws InvoiceApiException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public InvoiceItem insertCredit(final UUID accountId, final UUID invoiceId, final BigDecimal amount, final LocalDate effectiveDate, final Currency currency, final CallContext context) {
+    public InvoiceItem insertCredit(final UUID accountId, final UUID invoiceId, final BigDecimal amount, final LocalDate effectiveDate,
+                                    final Currency currency, final InternalCallContext context) {
         throw new UnsupportedOperationException();
     }
 
     @Override
     public InvoiceItem insertInvoiceItemAdjustment(final UUID accountId, final UUID invoiceId, final UUID invoiceItemId,
-                                                   final LocalDate effectiveDate, @Nullable final BigDecimal amount, @Nullable final Currency currency, final CallContext context) {
+                                                   final LocalDate effectiveDate, @Nullable final BigDecimal amount,
+                                                   @Nullable final Currency currency, final InternalCallContext context) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public BigDecimal getAccountCBA(UUID accountId) {
+    public BigDecimal getAccountCBA(final UUID accountId, final InternalTenantContext context) {
         return null;
     }
 
     @Override
     public InvoicePayment createRefund(final UUID paymentId, final BigDecimal amount, final boolean isInvoiceAdjusted,
                                        final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts, final UUID paymentCookieId,
-                                       final CallContext context)
+                                       final InternalCallContext context)
             throws InvoiceApiException {
         return null;
     }
 
     @Override
-    public void deleteCBA(final UUID accountId, final UUID invoiceId, final UUID invoiceItemId, final CallContext context) throws InvoiceApiException {
+    public void deleteCBA(final UUID accountId, final UUID invoiceId, final UUID invoiceItemId, final InternalCallContext context) throws InvoiceApiException {
         throw new UnsupportedOperationException();
     }
 }

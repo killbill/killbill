@@ -53,7 +53,7 @@ public class TestExternalPaymentProviderPlugin extends PaymentTestSuite {
         final String externalKey = UUID.randomUUID().toString();
         final UUID paymentId = UUID.randomUUID();
         final BigDecimal amount = BigDecimal.TEN;
-        final PaymentInfoPlugin paymentInfoPlugin = plugin.processPayment(externalKey, paymentId, amount);
+        final PaymentInfoPlugin paymentInfoPlugin = plugin.processPayment(externalKey, paymentId, amount, callContext);
 
         Assert.assertEquals(paymentInfoPlugin.getAmount(), amount);
         Assert.assertEquals(Seconds.secondsBetween(paymentInfoPlugin.getCreatedDate(), clock.getUTCNow()).getSeconds(), 0);
@@ -64,35 +64,35 @@ public class TestExternalPaymentProviderPlugin extends PaymentTestSuite {
         Assert.assertNull(paymentInfoPlugin.getGatewayErrorCode());
         Assert.assertEquals(paymentInfoPlugin.getStatus(), PaymentPluginStatus.PROCESSED);
 
-        final PaymentInfoPlugin retrievedPaymentInfoPlugin = plugin.getPaymentInfo(paymentId);
+        final PaymentInfoPlugin retrievedPaymentInfoPlugin = plugin.getPaymentInfo(paymentId, callContext);
         Assert.assertEquals(retrievedPaymentInfoPlugin, paymentInfoPlugin);
     }
 
     @Test(groups = "fast", expectedExceptions = PaymentPluginApiException.class)
     public void testRefundForNonExistingPayment() throws Exception {
-        plugin.processRefund(Mockito.mock(Account.class), UUID.randomUUID(), BigDecimal.ONE);
+        plugin.processRefund(Mockito.mock(Account.class), UUID.randomUUID(), BigDecimal.ONE, callContext);
     }
 
     @Test(groups = "fast", expectedExceptions = PaymentPluginApiException.class)
     public void testRefundTooLarge() throws Exception {
         final UUID paymentId = UUID.randomUUID();
-        plugin.processPayment(UUID.randomUUID().toString(), paymentId, BigDecimal.ZERO);
+        plugin.processPayment(UUID.randomUUID().toString(), paymentId, BigDecimal.ZERO, callContext);
 
-        plugin.processRefund(Mockito.mock(Account.class), paymentId, BigDecimal.ONE);
+        plugin.processRefund(Mockito.mock(Account.class), paymentId, BigDecimal.ONE, callContext);
     }
 
     @Test(groups = "fast")
     public void testRefundTooLargeMultipleTimes() throws Exception {
         final UUID paymentId = UUID.randomUUID();
-        plugin.processPayment(UUID.randomUUID().toString(), paymentId, BigDecimal.TEN);
+        plugin.processPayment(UUID.randomUUID().toString(), paymentId, BigDecimal.TEN, callContext);
 
         final Account account = Mockito.mock(Account.class);
         for (int i = 0; i < 10; i++) {
-            plugin.processRefund(account, paymentId, BigDecimal.ONE);
+            plugin.processRefund(account, paymentId, BigDecimal.ONE, callContext);
         }
 
         try {
-            plugin.processRefund(account, paymentId, BigDecimal.ONE);
+            plugin.processRefund(account, paymentId, BigDecimal.ONE, callContext);
             Assert.fail("Shouldn't have been able to refund");
         } catch (PaymentPluginApiException e) {
             Assert.assertTrue(true);
@@ -105,32 +105,32 @@ public class TestExternalPaymentProviderPlugin extends PaymentTestSuite {
         final String externalKey = UUID.randomUUID().toString();
         final UUID paymentId = UUID.randomUUID();
         final BigDecimal amount = BigDecimal.TEN;
-        plugin.processPayment(externalKey, paymentId, amount);
+        plugin.processPayment(externalKey, paymentId, amount, callContext);
 
-        plugin.processRefund(Mockito.mock(Account.class), paymentId, BigDecimal.ONE);
-        Assert.assertEquals(plugin.getNbRefundForPaymentAmount(Mockito.mock(Account.class), UUID.randomUUID(), BigDecimal.ONE), 0);
-        Assert.assertEquals(plugin.getNbRefundForPaymentAmount(Mockito.mock(Account.class), paymentId, BigDecimal.TEN), 0);
-        Assert.assertEquals(plugin.getNbRefundForPaymentAmount(Mockito.mock(Account.class), paymentId, BigDecimal.ONE), 1);
-        Assert.assertEquals(plugin.getNbRefundForPaymentAmount(Mockito.mock(Account.class), paymentId, new BigDecimal("5")), 0);
+        plugin.processRefund(Mockito.mock(Account.class), paymentId, BigDecimal.ONE, callContext);
+        Assert.assertEquals(plugin.getNbRefundForPaymentAmount(Mockito.mock(Account.class), UUID.randomUUID(), BigDecimal.ONE, callContext), 0);
+        Assert.assertEquals(plugin.getNbRefundForPaymentAmount(Mockito.mock(Account.class), paymentId, BigDecimal.TEN, callContext), 0);
+        Assert.assertEquals(plugin.getNbRefundForPaymentAmount(Mockito.mock(Account.class), paymentId, BigDecimal.ONE, callContext), 1);
+        Assert.assertEquals(plugin.getNbRefundForPaymentAmount(Mockito.mock(Account.class), paymentId, new BigDecimal("5"), callContext), 0);
 
         // Try multiple refunds
 
-        plugin.processRefund(Mockito.mock(Account.class), paymentId, BigDecimal.ONE);
-        Assert.assertEquals(plugin.getNbRefundForPaymentAmount(Mockito.mock(Account.class), UUID.randomUUID(), BigDecimal.ONE), 0);
-        Assert.assertEquals(plugin.getNbRefundForPaymentAmount(Mockito.mock(Account.class), paymentId, BigDecimal.TEN), 0);
-        Assert.assertEquals(plugin.getNbRefundForPaymentAmount(Mockito.mock(Account.class), paymentId, BigDecimal.ONE), 2);
-        Assert.assertEquals(plugin.getNbRefundForPaymentAmount(Mockito.mock(Account.class), paymentId, new BigDecimal("5")), 0);
+        plugin.processRefund(Mockito.mock(Account.class), paymentId, BigDecimal.ONE, callContext);
+        Assert.assertEquals(plugin.getNbRefundForPaymentAmount(Mockito.mock(Account.class), UUID.randomUUID(), BigDecimal.ONE, callContext), 0);
+        Assert.assertEquals(plugin.getNbRefundForPaymentAmount(Mockito.mock(Account.class), paymentId, BigDecimal.TEN, callContext), 0);
+        Assert.assertEquals(plugin.getNbRefundForPaymentAmount(Mockito.mock(Account.class), paymentId, BigDecimal.ONE, callContext), 2);
+        Assert.assertEquals(plugin.getNbRefundForPaymentAmount(Mockito.mock(Account.class), paymentId, new BigDecimal("5"), callContext), 0);
 
-        plugin.processRefund(Mockito.mock(Account.class), paymentId, BigDecimal.ONE);
-        Assert.assertEquals(plugin.getNbRefundForPaymentAmount(Mockito.mock(Account.class), UUID.randomUUID(), BigDecimal.ONE), 0);
-        Assert.assertEquals(plugin.getNbRefundForPaymentAmount(Mockito.mock(Account.class), paymentId, BigDecimal.TEN), 0);
-        Assert.assertEquals(plugin.getNbRefundForPaymentAmount(Mockito.mock(Account.class), paymentId, BigDecimal.ONE), 3);
-        Assert.assertEquals(plugin.getNbRefundForPaymentAmount(Mockito.mock(Account.class), paymentId, new BigDecimal("5")), 0);
+        plugin.processRefund(Mockito.mock(Account.class), paymentId, BigDecimal.ONE, callContext);
+        Assert.assertEquals(plugin.getNbRefundForPaymentAmount(Mockito.mock(Account.class), UUID.randomUUID(), BigDecimal.ONE, callContext), 0);
+        Assert.assertEquals(plugin.getNbRefundForPaymentAmount(Mockito.mock(Account.class), paymentId, BigDecimal.TEN, callContext), 0);
+        Assert.assertEquals(plugin.getNbRefundForPaymentAmount(Mockito.mock(Account.class), paymentId, BigDecimal.ONE, callContext), 3);
+        Assert.assertEquals(plugin.getNbRefundForPaymentAmount(Mockito.mock(Account.class), paymentId, new BigDecimal("5"), callContext), 0);
 
-        plugin.processRefund(Mockito.mock(Account.class), paymentId, new BigDecimal("5"));
-        Assert.assertEquals(plugin.getNbRefundForPaymentAmount(Mockito.mock(Account.class), UUID.randomUUID(), BigDecimal.ONE), 0);
-        Assert.assertEquals(plugin.getNbRefundForPaymentAmount(Mockito.mock(Account.class), paymentId, BigDecimal.TEN), 0);
-        Assert.assertEquals(plugin.getNbRefundForPaymentAmount(Mockito.mock(Account.class), paymentId, BigDecimal.ONE), 3);
-        Assert.assertEquals(plugin.getNbRefundForPaymentAmount(Mockito.mock(Account.class), paymentId, new BigDecimal("5")), 1);
+        plugin.processRefund(Mockito.mock(Account.class), paymentId, new BigDecimal("5"), callContext);
+        Assert.assertEquals(plugin.getNbRefundForPaymentAmount(Mockito.mock(Account.class), UUID.randomUUID(), BigDecimal.ONE, callContext), 0);
+        Assert.assertEquals(plugin.getNbRefundForPaymentAmount(Mockito.mock(Account.class), paymentId, BigDecimal.TEN, callContext), 0);
+        Assert.assertEquals(plugin.getNbRefundForPaymentAmount(Mockito.mock(Account.class), paymentId, BigDecimal.ONE, callContext), 3);
+        Assert.assertEquals(plugin.getNbRefundForPaymentAmount(Mockito.mock(Account.class), paymentId, new BigDecimal("5"), callContext), 1);
     }
 }

@@ -25,6 +25,7 @@ import org.mockito.Mockito;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.InvoicePayment.InvoicePaymentType;
@@ -33,6 +34,7 @@ import com.ning.billing.invoice.dao.InvoiceItemSqlDao;
 import com.ning.billing.invoice.dao.InvoiceSqlDao;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.Clock;
 
 import com.google.common.collect.ImmutableList;
@@ -46,9 +48,10 @@ public class InvoiceTestUtils {
                                                   final Clock clock,
                                                   final BigDecimal amount,
                                                   final Currency currency,
-                                                  final CallContext callContext) {
+                                                  final CallContext callContext,
+                                                  final InternalCallContextFactory internalCallContextFactory) {
         return createAndPersistInvoice(invoiceSqlDao, invoiceItemSqlDao, clock, ImmutableList.<BigDecimal>of(amount),
-                                       currency, callContext);
+                                       currency, callContext, internalCallContextFactory);
     }
 
     public static Invoice createAndPersistInvoice(final InvoiceSqlDao invoiceSqlDao,
@@ -56,7 +59,8 @@ public class InvoiceTestUtils {
                                                   final Clock clock,
                                                   final List<BigDecimal> amounts,
                                                   final Currency currency,
-                                                  final CallContext callContext) {
+                                                  final CallContext callContext,
+                                                  final InternalCallContextFactory internalCallContextFactory) {
         final Invoice invoice = Mockito.mock(Invoice.class);
         final UUID invoiceId = UUID.randomUUID();
         final UUID accountId = UUID.randomUUID();
@@ -71,12 +75,12 @@ public class InvoiceTestUtils {
         final List<InvoiceItem> invoiceItems = new ArrayList<InvoiceItem>();
         for (final BigDecimal amount : amounts) {
             final InvoiceItem invoiceItem = createInvoiceItem(clock, invoiceId, accountId, amount, currency);
-            invoiceItemSqlDao.create(invoiceItem, callContext);
+            invoiceItemSqlDao.create(invoiceItem, internalCallContextFactory.createInternalCallContext(callContext));
             invoiceItems.add(invoiceItem);
         }
         Mockito.when(invoice.getInvoiceItems()).thenReturn(invoiceItems);
 
-        invoiceSqlDao.create(invoice, callContext);
+        invoiceSqlDao.create(invoice, internalCallContextFactory.createInternalCallContext(callContext));
 
         return invoice;
     }
@@ -91,7 +95,7 @@ public class InvoiceTestUtils {
                                                          final UUID invoiceId,
                                                          final BigDecimal amount,
                                                          final Currency currency,
-                                                         final CallContext callContext) {
+                                                         final CallContext callContext) throws InvoiceApiException {
         final InvoicePayment payment = Mockito.mock(InvoicePayment.class);
         Mockito.when(payment.getId()).thenReturn(UUID.randomUUID());
         Mockito.when(payment.getType()).thenReturn(InvoicePaymentType.ATTEMPT);

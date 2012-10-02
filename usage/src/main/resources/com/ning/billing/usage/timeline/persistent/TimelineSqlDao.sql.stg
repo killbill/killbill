@@ -1,10 +1,14 @@
 group TimelineSqlDao;
 
+CHECK_TENANT() ::= "tenant_record_id = :tenantRecordId"
+AND_CHECK_TENANT() ::= "AND <CHECK_TENANT()>"
+
 getSource() ::= <<
   select
     source_name
   from sources
   where source_id = :sourceId
+  <AND_CHECK_TENANT()>
   ;
 >>
 
@@ -13,17 +17,19 @@ getSources() ::= <<
     source_id
   , source_name
   from sources
+  where <CHECK_TENANT()>
   ;
 >>
 
 addSource() ::= <<
-  insert ignore into sources (source_name, created_dt)
-  values (:sourceName, unix_timestamp());
+  insert ignore into sources (source_name, created_dt, account_record_id, tenant_record_id)
+  values (:sourceName, unix_timestamp(), :accountRecordId, :tenantRecordId);
 >>
 
 getEventCategories() ::= <<
   select event_category_id, event_category
   from event_categories
+  where <CHECK_TENANT()>
   order by event_category_id asc
   ;
 >>
@@ -33,6 +39,7 @@ getEventCategoryId() ::= <<
     event_category_id
   from event_categories
   where event_category = :eventCategory
+  <AND_CHECK_TENANT()>
   ;
 >>
 
@@ -41,12 +48,13 @@ getEventCategory() ::= <<
     event_category
   from event_categories
   where event_category_id = :eventCategoryId
+  <AND_CHECK_TENANT()>
   ;
 >>
 
 addEventCategory() ::= <<
-  insert ignore into event_categories (event_category)
-  values (:eventCategory);
+  insert ignore into event_categories (event_category, account_record_id, tenant_record_id)
+  values (:eventCategory, :accountRecordId, :tenantRecordId);
 >>
 
 getMetricId() ::= <<
@@ -55,6 +63,7 @@ getMetricId() ::= <<
   from metrics
   where metric = :metric
     and event_category_id = :eventCategoryId
+  <AND_CHECK_TENANT()>
   ;
 >>
 
@@ -64,6 +73,7 @@ getEventCategoryIdAndMetric() ::= <<
   , metric
   from metrics
   where metric_id = :metricId
+  <AND_CHECK_TENANT()>
   ;
 >>
 
@@ -72,24 +82,27 @@ getMetric() ::= <<
     metric
   from metrics
   where metric_id = :metricId
+  <AND_CHECK_TENANT()>
   ;
 >>
 
 addMetric() ::= <<
-  insert ignore into metrics (event_category_id, metric)
-  values (:eventCategoryId, :metric);
+  insert ignore into metrics (event_category_id, metric, account_record_id, tenant_record_id)
+  values (:eventCategoryId, :metric, :accountRecordId, :tenantRecordId);
 >>
 
 getMetricIdsBySourceId() ::= <<
   select distinct metric_id
   from timeline_chunks c
   where source_id = :sourceId
+  <AND_CHECK_TENANT()>
   ;
 >>
 
 getMetricIdsForAllSources() ::= <<
   select distinct metric_id, source_id
   from timeline_chunks c
+  where <CHECK_TENANT()>
   ;
 >>
 
@@ -99,6 +112,7 @@ getMetrics() ::= <<
   , event_category_id
   , metric
   from metrics
+  <AND_CHECK_TENANT()>
   ;
 >>
 
@@ -107,8 +121,8 @@ getLastInsertedId() ::= <<
 >>
 
 insertTimelineChunk() ::= <<
-  insert into timeline_chunks (record_id, source_id, metric_id, sample_count, start_time, end_time, in_row_samples, blob_samples, aggregation_level, not_valid, dont_aggregate)
-  values (:chunkId, :sourceId, :metricId, :sampleCount, :startTime, :endTime, :inRowSamples, :blobSamples, :aggregationLevel, :notValid, :dontAggregate);
+  insert into timeline_chunks (record_id, source_id, metric_id, sample_count, start_time, end_time, in_row_samples, blob_samples, aggregation_level, not_valid, dont_aggregate, account_record_id, tenant_record_id)
+  values (:chunkId, :sourceId, :metricId, :sampleCount, :startTime, :endTime, :inRowSamples, :blobSamples, :aggregationLevel, :notValid, :dontAggregate, :accountRecordId, :tenantRecordId);
 >>
 
 getSamplesBySourceIdsAndMetricIds(sourceIds, metricIds) ::= <<
@@ -132,50 +146,52 @@ getSamplesBySourceIdsAndMetricIds(sourceIds, metricIds) ::= <<
     and metric_id in (<metricIds>)
   <endif>
   and not_valid = 0
+  <AND_CHECK_TENANT()>
   order by source_id, metric_id, start_time asc
   ;
 >>
 
 insertLastStartTimes() ::= <<
-  insert into last_start_times (time_inserted, start_times)
-                        values (:timeInserted, :startTimes)
+  insert into last_start_times (time_inserted, start_times, account_record_id, tenant_record_id)
+                        values (:timeInserted, :startTimes, :accountRecordId, :tenantRecordId)
 >>
 
 getLastStartTimes() ::= <<
   select time_inserted, start_times
   from last_start_times
+  where <CHECK_TENANT()>
   order by time_inserted desc
   limit 1
 >>
 
 deleteLastStartTimes() ::= <<
-  delete from last_start_times
+  delete from last_start_times where <CHECK_TENANT()>
 >>
 
 bulkInsertSources() ::= <<
-  insert into sources (source_name, created_dt)
-  values (:sourceName, unix_timestamp());
+  insert into sources (source_name, created_dt, account_record_id, tenant_record_id)
+  values (:sourceName, unix_timestamp(), :accountRecordId, :tenantRecordId);
 >>
 
 bulkInsertEventCategories() ::= <<
-  insert into event_categories (event_category)
-  values (:eventCategory);
+  insert into event_categories (event_category, account_record_id, tenant_record_id)
+  values (:eventCategory, :accountRecordId, :tenantRecordId);
 >>
 
 bulkInsertMetrics() ::= <<
-  insert into metrics (event_category_id, metric)
-  values (:eventCategoryId, :metric);
+  insert into metrics (event_category_id, metric, account_record_id, tenant_record_id)
+  values (:eventCategoryId, :metric, :accountRecordId, :tenantRecordId);
 >>
 
 bulkInsertTimelineChunks() ::= <<
-  insert into timeline_chunks (record_id, source_id, metric_id, sample_count, start_time, end_time, not_valid, dont_aggregate, aggregation_level, in_row_samples, blob_samples)
-  values (:chunkId, :sourceId, :metricId, :sampleCount, :startTime, :endTime, :dontAggregate, :notValid, :aggregationLevel, :inRowSamples, :blobSamples);
+  insert into timeline_chunks (record_id, source_id, metric_id, sample_count, start_time, end_time, not_valid, dont_aggregate, aggregation_level, in_row_samples, blob_samples, account_record_id, tenant_record_id)
+  values (:chunkId, :sourceId, :metricId, :sampleCount, :startTime, :endTime, :dontAggregate, :notValid, :aggregationLevel, :inRowSamples, :blobSamples, :accountRecordId, :tenantRecordId);
 >>
 
 getHighestTimelineChunkId() ::= <<
-  select record_id from timeline_chunks order by record_id desc limit 1;
+  select record_id from timeline_chunks where <CHECK_TENANT()> order by record_id desc limit 1;
 >>
 
 test() ::= <<
-  select 1;
+  select 1 where <CHECK_TENANT()>;
 >>

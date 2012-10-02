@@ -26,9 +26,6 @@ import org.joda.time.Interval;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Stage;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -43,6 +40,10 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.entitlement.glue.MockEngineModuleMemory;
+
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Stage;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
@@ -78,7 +79,7 @@ public class TestRepairWithError extends TestApiBaseRepair {
 
                 assertTrue(testListener.isCompleted(5000));
 
-                final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId());
+                final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId(), callContext);
                 sortEventsOnBundle(bundleRepair);
                 final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
                 final NewEvent ne = createNewEvent(SubscriptionTransitionType.CHANGE, baseSubscription.getStartDate().plusDays(10), spec);
@@ -87,7 +88,7 @@ public class TestRepairWithError extends TestApiBaseRepair {
 
                 final BundleTimeline bRepair = createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
 
-                repairApi.repairBundle(bRepair, true, context);
+                repairApi.repairBundle(bRepair, true, callContext);
             }
         }, ErrorCode.ENT_REPAIR_NEW_EVENT_BEFORE_LAST_BP_REMAINING);
     }
@@ -103,7 +104,7 @@ public class TestRepairWithError extends TestApiBaseRepair {
 
                 testListener.pushExpectedEvent(NextEvent.CHANGE);
                 final DateTime changeTime = clock.getUTCNow();
-                baseSubscription.changePlan("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, changeTime, context);
+                baseSubscription.changePlan("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, changeTime, callContext);
                 assertTrue(testListener.isCompleted(5000));
 
                 // MOVE AFTER TRIAL
@@ -112,7 +113,7 @@ public class TestRepairWithError extends TestApiBaseRepair {
                 clock.addDeltaFromReality(it.toDurationMillis());
                 assertTrue(testListener.isCompleted(5000));
 
-                final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId());
+                final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId(), callContext);
                 sortEventsOnBundle(bundleRepair);
                 final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
                 final NewEvent ne = createNewEvent(SubscriptionTransitionType.CHANGE, baseSubscription.getStartDate().plusDays(10), spec);
@@ -121,7 +122,7 @@ public class TestRepairWithError extends TestApiBaseRepair {
                 final SubscriptionTimeline sRepair = createSubscriptionRepair(baseSubscription.getId(), Collections.singletonList(de), Collections.singletonList(ne));
                 final BundleTimeline bRepair = createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
 
-                repairApi.repairBundle(bRepair, true, context);
+                repairApi.repairBundle(bRepair, true, callContext);
             }
         }, ErrorCode.ENT_REPAIR_INVALID_DELETE_SET);
     }
@@ -132,7 +133,7 @@ public class TestRepairWithError extends TestApiBaseRepair {
             @Override
             public void doTest() throws EntitlementRepairException {
 
-                final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId());
+                final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId(), callContext);
                 sortEventsOnBundle(bundleRepair);
                 final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
                 final NewEvent ne = createNewEvent(SubscriptionTransitionType.CHANGE, baseSubscription.getStartDate().plusDays(10), spec);
@@ -141,7 +142,7 @@ public class TestRepairWithError extends TestApiBaseRepair {
 
                 final BundleTimeline bRepair = createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
 
-                repairApi.repairBundle(bRepair, true, context);
+                repairApi.repairBundle(bRepair, true, callContext);
             }
         }, ErrorCode.ENT_REPAIR_NON_EXISTENT_DELETE_EVENT);
     }
@@ -158,7 +159,7 @@ public class TestRepairWithError extends TestApiBaseRepair {
                 clock.addDeltaFromReality(it.toDurationMillis());
                 assertTrue(testListener.isCompleted(5000));
 
-                final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId());
+                final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId(), callContext);
                 sortEventsOnBundle(bundleRepair);
                 final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
                 final NewEvent ne = createNewEvent(SubscriptionTransitionType.CREATE, baseSubscription.getStartDate().plusDays(10), spec);
@@ -168,7 +169,7 @@ public class TestRepairWithError extends TestApiBaseRepair {
 
                 final BundleTimeline bRepair = createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
 
-                repairApi.repairBundle(bRepair, true, context);
+                repairApi.repairBundle(bRepair, true, callContext);
 
             }
         }, ErrorCode.ENT_REPAIR_SUB_RECREATE_NOT_EMPTY);
@@ -187,7 +188,7 @@ public class TestRepairWithError extends TestApiBaseRepair {
                 clock.addDeltaFromReality(it.toDurationMillis());
                 assertTrue(testListener.isCompleted(5000));
 
-                final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId());
+                final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId(), callContext);
                 sortEventsOnBundle(bundleRepair);
                 final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
                 final NewEvent ne = createNewEvent(SubscriptionTransitionType.CHANGE, baseSubscription.getStartDate().plusDays(10), spec);
@@ -198,7 +199,7 @@ public class TestRepairWithError extends TestApiBaseRepair {
 
                 final BundleTimeline bRepair = createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
 
-                repairApi.repairBundle(bRepair, true, context);
+                repairApi.repairBundle(bRepair, true, callContext);
             }
         }, ErrorCode.ENT_REPAIR_SUB_EMPTY);
     }
@@ -217,7 +218,7 @@ public class TestRepairWithError extends TestApiBaseRepair {
                 it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(4));
                 clock.addDeltaFromReality(it.toDurationMillis());
 
-                final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId());
+                final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId(), callContext);
                 sortEventsOnBundle(bundleRepair);
 
                 // Quick check
@@ -240,7 +241,7 @@ public class TestRepairWithError extends TestApiBaseRepair {
                 final BundleTimeline bRepair = createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(saoRepair));
 
                 final boolean dryRun = true;
-                repairApi.repairBundle(bRepair, dryRun, context);
+                repairApi.repairBundle(bRepair, dryRun, callContext);
             }
         }, ErrorCode.ENT_REPAIR_AO_CREATE_BEFORE_BP_START);
     }
@@ -260,7 +261,7 @@ public class TestRepairWithError extends TestApiBaseRepair {
                 it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(4));
                 clock.addDeltaFromReality(it.toDurationMillis());
 
-                BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId());
+                BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId(), callContext);
                 sortEventsOnBundle(bundleRepair);
 
                 // Quick check
@@ -281,7 +282,7 @@ public class TestRepairWithError extends TestApiBaseRepair {
                 bundleRepair = createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(saoRepair));
 
                 final boolean dryRun = true;
-                repairApi.repairBundle(bundleRepair, dryRun, context);
+                repairApi.repairBundle(bundleRepair, dryRun, callContext);
             }
         }, ErrorCode.ENT_REPAIR_NEW_EVENT_BEFORE_LAST_AO_REMAINING);
     }
@@ -300,7 +301,7 @@ public class TestRepairWithError extends TestApiBaseRepair {
 
                 final SubscriptionData aoSubscription = createSubscription("Laser-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
 
-                final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId());
+                final BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId(), callContext);
                 sortEventsOnBundle(bundleRepair);
 
                 final DateTime newCreateTime = baseSubscription.getStartDate().plusDays(3);
@@ -318,7 +319,7 @@ public class TestRepairWithError extends TestApiBaseRepair {
                 final BundleTimeline bRepair = createBundleRepair(bundle.getId(), bundleRepair.getViewId(), Collections.singletonList(sRepair));
 
                 final boolean dryRun = true;
-                repairApi.repairBundle(bRepair, dryRun, context);
+                repairApi.repairBundle(bRepair, dryRun, callContext);
             }
         }, ErrorCode.ENT_REPAIR_BP_RECREATE_MISSING_AO);
     }
@@ -366,7 +367,7 @@ public class TestRepairWithError extends TestApiBaseRepair {
                 BundleRepair bRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), allRepairs);
                 
                 boolean dryRun = true;
-                repairApi.repairBundle(bRepair, dryRun, context);
+                repairApi.repairBundle(bRepair, dryRun, callContext);
                 */
             }
         }, ErrorCode.ENT_REPAIR_BP_RECREATE_MISSING_AO_CREATE);
@@ -394,7 +395,7 @@ public class TestRepairWithError extends TestApiBaseRepair {
                 assertTrue(testListener.isCompleted(5000));
 
                 DateTime requestedChange = clock.getUTCNow();
-                baseSubscription.changePlan("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, requestedChange, context);
+                baseSubscription.changePlan("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, requestedChange, callContext);
 
                 DateTime reapairTime = clock.getUTCNow().minusDays(1);
 
@@ -417,7 +418,7 @@ public class TestRepairWithError extends TestApiBaseRepair {
                 bundleRepair =  createBundleRepair(bundle.getId(), bundleRepair.getViewId(), allRepairs);
                 
                 boolean dryRun = false;
-                repairApi.repairBundle(bundleRepair, dryRun, context);
+                repairApi.repairBundle(bundleRepair, dryRun, callContext);
                 */
             }
         }, ErrorCode.ENT_REPAIR_MISSING_AO_DELETE_EVENT);
