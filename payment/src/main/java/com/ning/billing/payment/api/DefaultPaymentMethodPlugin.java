@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -46,7 +46,11 @@ public class DefaultPaymentMethodPlugin implements PaymentMethodPlugin {
 
     @Override
     public String getValueString(final String key) {
-        throw new RuntimeException("Not implemented");
+        for (PaymentMethodKVInfo cur : properties) {
+            if (cur.getKey().equals(key)) {
+                return cur.getValue() != null ? cur.getValue().toString() : null;
+            }
+        }
+        return null;
     }
-
 }

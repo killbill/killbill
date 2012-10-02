@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -57,6 +57,9 @@ public interface PaymentMethodSqlDao extends Transactional<PaymentMethodSqlDao>,
 
     @SqlQuery
     PaymentMethodModelDao getPaymentMethod(@Bind("id") final String paymentMethodId);
+
+    @SqlQuery
+    PaymentMethodModelDao getPaymentMethodIncludedDelete(@Bind("id") final String paymentMethodId);
 
     @SqlQuery
     List<PaymentMethodModelDao> getPaymentMethods(@Bind("accountId") final String accountId);

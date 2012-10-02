@@ -33,9 +33,6 @@ import javax.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
-import com.google.inject.name.Named;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
@@ -72,6 +69,10 @@ import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.globallocker.GlobalLocker;
+
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
+import com.google.inject.name.Named;
 
 public class PaymentProcessor extends ProcessorBase {
 
@@ -461,7 +462,7 @@ public class PaymentProcessor extends ProcessorBase {
 
                 paymentDao.updateStatusForPaymentWithAttempt(paymentInput.getId(), paymentStatus, paymentPluginInfo.getGatewayErrorCode(),  paymentPluginInfo.getGatewayError(),null, null, attemptInput.getId(), context);
 
-                log.warn(String.format("Could not process payment for account %s, invoice %s, error = %s",
+                log.info(String.format("Could not process payment for account %s, invoice %s, error = %s",
                          account.getId(), invoice.getId(), paymentPluginInfo.getGatewayError()));
 
                 event = new DefaultPaymentErrorEvent(account.getId(), invoice.getId(), paymentInput.getId(), paymentPluginInfo.getGatewayError(), context.getUserToken());
