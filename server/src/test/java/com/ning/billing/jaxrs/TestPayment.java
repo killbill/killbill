@@ -194,8 +194,8 @@ public class TestPayment extends TestJaxrsBase {
         // Verify the refund via the payment API
         final PaymentJsonWithBundleKeys retrievedPaymentJsonWithBundleKeys = getPaymentWithRefundsAndChargebacks(paymentJsonSimple.getPaymentId());
         Assert.assertEquals(retrievedPaymentJsonWithBundleKeys.getPaymentId(), paymentJsonSimple.getPaymentId());
-        Assert.assertEquals(retrievedPaymentJsonWithBundleKeys.getPaidAmount(), paymentJsonSimple.getPaidAmount().add(refundAmount.negate()).setScale(2, RoundingMode.HALF_UP));
-        Assert.assertEquals(retrievedPaymentJsonWithBundleKeys.getAmount(), paymentJsonSimple.getAmount());
+        Assert.assertEquals(retrievedPaymentJsonWithBundleKeys.getPaidAmount().setScale(2, RoundingMode.HALF_UP), paymentJsonSimple.getPaidAmount().add(refundAmount.negate()).setScale(2, RoundingMode.HALF_UP));
+        Assert.assertEquals(retrievedPaymentJsonWithBundleKeys.getAmount().setScale(2, RoundingMode.HALF_UP), paymentJsonSimple.getAmount().setScale(2, RoundingMode.HALF_UP));
         Assert.assertEquals(retrievedPaymentJsonWithBundleKeys.getAccountId(), paymentJsonSimple.getAccountId());
         Assert.assertEquals(retrievedPaymentJsonWithBundleKeys.getInvoiceId(), paymentJsonSimple.getInvoiceId());
         Assert.assertEquals(retrievedPaymentJsonWithBundleKeys.getRequestedDate(), paymentJsonSimple.getRequestedDate());

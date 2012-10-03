@@ -35,7 +35,6 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.entitlement.api.billing.BillingEvent;
 import com.ning.billing.entitlement.api.billing.EntitlementBillingApiException;
 import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.invoice.api.Invoice;
@@ -192,7 +191,7 @@ public class InvoiceDispatcher {
                 }
             }
 
-            if (account.isNotifiedForInvoices() && invoice != null) {
+            if (account.isNotifiedForInvoices() && invoice != null && !dryRun) {
                 // Need to re-hydrate the invoice object to get the invoice number (record id)
                 invoiceNotifier.notify(account, invoiceDao.getById(invoice.getId()));
             }
