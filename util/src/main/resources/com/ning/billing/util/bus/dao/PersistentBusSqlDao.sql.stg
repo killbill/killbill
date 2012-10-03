@@ -17,7 +17,6 @@ getNextBusEventEntry() ::= <<
     where
       processing_state != 'PROCESSED'
       and processing_state != 'REMOVED'
-      and creating_owner = :owner
       and (processing_owner IS NULL OR processing_available_date \<= :now)
     order by
       record_id asc
