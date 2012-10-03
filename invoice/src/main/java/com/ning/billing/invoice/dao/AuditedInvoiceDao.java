@@ -72,7 +72,6 @@ import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableMap.Builder;
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 public class AuditedInvoiceDao implements InvoiceDao {
@@ -799,8 +798,7 @@ public class AuditedInvoiceDao implements InvoiceDao {
                         // Add a single adjustment per invoice
                         BigDecimal positiveCBAAdjItemAmount = BigDecimal.ZERO;
 
-                        // Start with the most recent invoice to limit the impact on overdue
-                        for (final InvoiceItem cbaUsed : Lists.reverse(invoiceFollowing.getInvoiceItems())) {
+                        for (final InvoiceItem cbaUsed : invoiceFollowing.getInvoiceItems()) {
                             // Ignore non CBA items or credits (CBA >= 0)
                             if (!InvoiceItemType.CBA_ADJ.equals(cbaUsed.getInvoiceItemType()) ||
                                     cbaUsed.getAmount().compareTo(BigDecimal.ZERO) >= 0) {
@@ -811,7 +809,7 @@ public class AuditedInvoiceDao implements InvoiceDao {
                             final BigDecimal positiveNextCBAAdjItemAmount;
                             if (positiveCBAUsedAmount.compareTo(positiveRemainderToAdjust) < 0) {
                                 positiveNextCBAAdjItemAmount = positiveCBAUsedAmount;
-                                positiveRemainderToAdjust = positiveRemainderToAdjust.min(positiveNextCBAAdjItemAmount);
+                                positiveRemainderToAdjust = positiveRemainderToAdjust.subtract(positiveNextCBAAdjItemAmount);
                             } else {
                                 positiveNextCBAAdjItemAmount = positiveRemainderToAdjust;
                                 positiveRemainderToAdjust = BigDecimal.ZERO;
