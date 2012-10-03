@@ -148,7 +148,7 @@ public class DefaultBlockingChecker implements BlockingChecker {
                 throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION, ACTION_CHANGE, TYPE_ACCOUNT, blockable.getId().toString());
             }
         } catch (EntitlementUserApiException e) {
-            throw new BlockingApiException(e, ErrorCode.values()[e.getCode()]);
+            throw new BlockingApiException(e, ErrorCode.fromCode(e.getCode()));
         }
     }
 
@@ -163,7 +163,7 @@ public class DefaultBlockingChecker implements BlockingChecker {
                 throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION, ACTION_ENTITLEMENT, TYPE_ACCOUNT, blockable.getId().toString());
             }
         } catch (EntitlementUserApiException e) {
-            throw new BlockingApiException(e, ErrorCode.values()[e.getCode()]);
+            throw new BlockingApiException(e, ErrorCode.fromCode(e.getCode()));
         }
     }
 
@@ -178,7 +178,7 @@ public class DefaultBlockingChecker implements BlockingChecker {
                 throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION, ACTION_BILLING, TYPE_ACCOUNT, blockable.getId().toString());
             }
         } catch (EntitlementUserApiException e) {
-            throw new BlockingApiException(e, ErrorCode.values()[e.getCode()]);
+            throw new BlockingApiException(e, ErrorCode.fromCode(e.getCode()));
         }
     }
 
@@ -195,7 +195,7 @@ public class DefaultBlockingChecker implements BlockingChecker {
 
             }
         } catch (EntitlementUserApiException e) {
-            throw new BlockingApiException(e, ErrorCode.values()[e.getCode()]);
+            throw new BlockingApiException(e, ErrorCode.fromCode(e.getCode()));
         }
     }
 
@@ -210,7 +210,7 @@ public class DefaultBlockingChecker implements BlockingChecker {
                 throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION, ACTION_ENTITLEMENT, TYPE_ACCOUNT, blockableId.toString());
             }
         } catch (EntitlementUserApiException e) {
-            throw new BlockingApiException(e, ErrorCode.values()[e.getCode()]);
+            throw new BlockingApiException(e, ErrorCode.fromCode(e.getCode()));
         }
     }
 
@@ -225,7 +225,7 @@ public class DefaultBlockingChecker implements BlockingChecker {
                 throw new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION, ACTION_BILLING, TYPE_ACCOUNT, blockableId.toString());
             }
         } catch (EntitlementUserApiException e) {
-            throw new BlockingApiException(e, ErrorCode.values()[e.getCode()]);
+            throw new BlockingApiException(e, ErrorCode.fromCode(e.getCode()));
         }
     }
 

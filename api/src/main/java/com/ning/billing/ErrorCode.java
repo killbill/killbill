@@ -17,6 +17,7 @@
 package com.ning.billing;
 
 public enum ErrorCode {
+
     /*
      * Range 0 : COMMON EXCEPTIONS
      */
@@ -78,10 +79,8 @@ public enum ErrorCode {
     ENT_REPAIR_BP_RECREATE_MISSING_AO_CREATE(1104, "BP recreation for bundle %s implies that all AO should be start also with a CREATE"),
     ENT_REPAIR_AO_CREATE_BEFORE_BP_START(1105, "Can't recreate AO %s for bundle %s before BP starts"),
 
-
     ENT_BUNDLE_IS_OVERDUE_BLOCKED(1090, "Changes to this bundle are blocked by overdue enforcement (%s :  %s)"),
     ENT_ACCOUNT_IS_OVERDUE_BLOCKED(1091, "Changes to this account are blocked by overdue enforcement (%s)"),
-
 
     /*
     *
@@ -95,7 +94,7 @@ public enum ErrorCode {
 
     /* Plan change is disallowed by the catalog */
     CAT_ILLEGAL_CHANGE_REQUEST(2001, "Attempting to change plan from (product: '%s', billing period: '%s', " +
-            "pricelist '%s') to (product: '%s', billing period: '%s', pricelist '%s'). This transition is not allowed by catalog rules"),
+                                     "pricelist '%s') to (product: '%s', billing period: '%s', pricelist '%s'). This transition is not allowed by catalog rules"),
 
     /*
       * Price list
@@ -226,7 +225,6 @@ public enum ErrorCode {
     BLOCK_BLOCKED_ACTION(6000, "The action %s is block on this %s with id=%s"),
     BLOCK_TYPE_NOT_SUPPORTED(6001, "The Blockable type '%s' is not supported"),
 
-
     /*
     * Range 7000 : Payment
     */
@@ -263,7 +261,6 @@ public enum ErrorCode {
     PAYMENT_PLUGIN_TIMEOUT(7100, "Plugin timeout for account %s and invoice %s"),
     PAYMENT_PLUGIN_ACCOUNT_INIT(7101, "Account initialization for account %s and plugin % s failed: %s"),
 
-
     /*
     *
     * Range 9000: Miscellaneous
@@ -284,7 +281,9 @@ public enum ErrorCode {
     TENANT_DOES_NOT_EXIST_FOR_KEY(10002, "Tenant does not exist for key %s"),
     TENANT_DOES_NOT_EXIST_FOR_API_KEY(10003, "Tenant does not exist for api key %s"),
     TENANT_CREATION_FAILED(10004, "Tenant creation failed."),
-    TENANT_UPDATE_FAILED(10005, "Tenant update failed.");
+    TENANT_UPDATE_FAILED(10005, "Tenant update failed."),
+
+    __UNKNOWN_ERROR_CODE(-1, "Unknown ErrorCode");
 
     private final int code;
     private final String format;
@@ -302,4 +301,12 @@ public enum ErrorCode {
         return code;
     }
 
+    public static ErrorCode fromCode(final int code) {
+        for (final ErrorCode errorCode : ErrorCode.values()) {
+            if (errorCode.getCode() == code) {
+                return errorCode;
+            }
+        }
+        return __UNKNOWN_ERROR_CODE;
+    }
 }
