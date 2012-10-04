@@ -11,6 +11,7 @@ create table sources (
 , primary key(record_id)
 , index created_date_record_id_dx (created_date, record_id)
 ) engine = innodb default charset = latin1;
+create index sources_tenant_account_record_id on sources(tenant_record_id, account_record_id);
 
 create table event_categories (
   record_id integer not null auto_increment
@@ -19,6 +20,7 @@ create table event_categories (
 , primary key(record_id)
 , unique index event_category_unq (event_category)
 ) engine = innodb default charset = latin1;
+create index event_categories_tenant_record_id on event_categories(tenant_record_id);
 
 create table metrics (
   record_id int(11) unsigned not null auto_increment
@@ -28,6 +30,7 @@ create table metrics (
 , primary key(record_id)
 , unique index metric_unq (event_category_id, metric)
 ) engine = innodb default charset = latin1;
+create index metrics_tenant_record_id on metrics(tenant_record_id);
 
 create table timeline_chunks (
   record_id bigint not null auto_increment
@@ -65,3 +68,4 @@ create table timeline_rolled_up_chunk (
 , tenant_record_id int(11) unsigned default null
 , primary key(record_id)
 ) engine = innodb default charset = latin1;
+create index timeline_rolled_up_chunk_tenant_account_record_id on timeline_rolled_up_chunk(tenant_record_id, account_record_id);

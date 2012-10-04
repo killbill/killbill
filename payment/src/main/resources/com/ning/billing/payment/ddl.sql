@@ -1,6 +1,4 @@
-
-
-DROP TABLE IF EXISTS payments; 
+DROP TABLE IF EXISTS payments;
 CREATE TABLE payments (
     record_id int(11) unsigned NOT NULL AUTO_INCREMENT,
     id char(36) NOT NULL,
@@ -24,6 +22,7 @@ CREATE TABLE payments (
 CREATE UNIQUE INDEX payments_id ON payments(id);
 CREATE INDEX payments_inv ON payments(invoice_id);
 CREATE INDEX payments_accnt ON payments(account_id);
+CREATE INDEX payments_tenant_account_record_id ON payments(tenant_record_id, account_record_id);
 
 DROP TABLE IF EXISTS payment_history; 
 CREATE TABLE payment_history (
@@ -48,7 +47,7 @@ CREATE TABLE payment_history (
     PRIMARY KEY (history_record_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 CREATE INDEX payment_history_record_id ON payment_history(record_id);
-
+CREATE INDEX payment_history_tenant_account_record_id ON payment_history(tenant_record_id, account_record_id);
 
 DROP TABLE IF EXISTS payment_attempts;
 CREATE TABLE payment_attempts (
@@ -69,7 +68,7 @@ CREATE TABLE payment_attempts (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 CREATE UNIQUE INDEX payment_attempts_id ON payment_attempts(id);
 CREATE INDEX payment_attempts_payment ON payment_attempts(payment_id);
-
+CREATE INDEX payment_attempts_tenant_account_record_id ON payment_attempts(tenant_record_id, account_record_id);
 
 DROP TABLE IF EXISTS payment_attempt_history;
 CREATE TABLE payment_attempt_history (
@@ -90,7 +89,7 @@ CREATE TABLE payment_attempt_history (
     PRIMARY KEY (history_record_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 CREATE INDEX payment_attempt_history_record_id ON payment_attempt_history(record_id);
-
+CREATE INDEX payment_attempt_history_tenant_account_record_id ON payment_attempt_history(tenant_record_id, account_record_id);
 
 DROP TABLE IF EXISTS payment_methods;
 CREATE TABLE payment_methods (
@@ -110,7 +109,7 @@ CREATE TABLE payment_methods (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 CREATE UNIQUE INDEX payment_methods_id ON payment_methods(id);
 CREATE INDEX payment_methods_active_accnt ON payment_methods(is_active, account_id);
-
+CREATE INDEX payment_methods_tenant_account_record_id ON payment_methods(tenant_record_id, account_record_id);
 
 DROP TABLE IF EXISTS payment_method_history;
 CREATE TABLE payment_method_history (
@@ -130,6 +129,7 @@ CREATE TABLE payment_method_history (
     PRIMARY KEY (history_record_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 CREATE UNIQUE INDEX payment_method_history_record_id ON payment_method_history(record_id);
+CREATE INDEX payment_method_history_tenant_account_record_id ON payment_method_history(tenant_record_id, account_record_id);
 
 DROP TABLE IF EXISTS refunds; 
 CREATE TABLE refunds (
@@ -152,6 +152,7 @@ CREATE TABLE refunds (
 CREATE UNIQUE INDEX refunds_id ON refunds(id);
 CREATE INDEX refunds_pay ON refunds(payment_id);
 CREATE INDEX refunds_accnt ON refunds(account_id);
+CREATE INDEX refunds_tenant_account_record_id ON refunds(tenant_record_id, account_record_id);
 
 DROP TABLE IF EXISTS refund_history; 
 CREATE TABLE refund_history (
@@ -173,7 +174,7 @@ CREATE TABLE refund_history (
     PRIMARY KEY (history_record_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 CREATE INDEX refund_history_record_id ON refund_history(record_id);
-
+CREATE INDEX refund_history_tenant_account_record_id ON refund_history(tenant_record_id, account_record_id);
 
 
 
