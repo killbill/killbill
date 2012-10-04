@@ -41,9 +41,6 @@ import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
-import com.ning.billing.util.dao.ObjectType;
-import com.ning.billing.util.tag.ControlTagType;
-import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.api.DefaultTagUserApi;
 import com.ning.billing.util.tag.dao.MockTagDao;
 import com.ning.billing.util.tag.dao.MockTagDefinitionDao;
@@ -133,34 +130,5 @@ public class TestDefaultInvoiceDao extends InvoiceTestSuite {
             Assert.fail();
         } catch (InvoiceApiException e) {
         }
-    }
-
-    @Test(groups = "fast")
-    public void testSetWrittenOff() throws Exception {
-        final UUID invoiceId = UUID.randomUUID();
-
-        final Map<String, Tag> beforeTags = tagUserApi.getTags(invoiceId, ObjectType.INVOICE, callContext);
-        Assert.assertEquals(beforeTags.keySet().size(), 0);
-
-        dao.setWrittenOff(invoiceId, internalCallContext);
-
-        final Map<String, Tag> afterTags = tagUserApi.getTags(invoiceId, ObjectType.INVOICE, callContext);
-        Assert.assertEquals(afterTags.keySet().size(), 1);
-        final UUID tagDefinitionId = ControlTagType.WRITTEN_OFF.getId();
-        Assert.assertEquals(afterTags.values().iterator().next().getTagDefinitionId(), tagDefinitionId);
-    }
-
-    @Test(groups = "fast")
-    public void testRemoveWrittenOff() throws Exception {
-        final UUID invoiceId = UUID.randomUUID();
-
-        dao.setWrittenOff(invoiceId, internalCallContext);
-
-        final Map<String, Tag> beforeTags = tagUserApi.getTags(invoiceId, ObjectType.INVOICE, callContext);
-        Assert.assertEquals(beforeTags.keySet().size(), 1);
-        dao.removeWrittenOff(invoiceId, internalCallContext);
-
-        final Map<String, Tag> afterTags = tagUserApi.getTags(invoiceId, ObjectType.INVOICE, callContext);
-        Assert.assertEquals(afterTags.keySet().size(), 0);
     }
 }

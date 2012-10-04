@@ -53,6 +53,7 @@ import com.ning.billing.invoice.tests.InvoicingTestBase;
 import com.ning.billing.junction.api.BillingApi;
 import com.ning.billing.junction.api.BillingEventSet;
 import com.ning.billing.mock.api.MockBillCycleDay;
+import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.bus.DefaultBusService;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
@@ -89,6 +90,9 @@ public abstract class InvoiceApiTestBase extends InvoicingTestBase {
 
     @Inject
     protected InvoiceDao invoiceDao;
+
+    @Inject
+    protected TagUserApi tagUserApi;
 
     @Inject
     protected GlobalLocker locker;

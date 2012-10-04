@@ -55,7 +55,6 @@ import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.invoice.model.RefundAdjInvoiceItem;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.util.ChangeType;
-import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
@@ -63,9 +62,7 @@ import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.dao.EntityAudit;
-import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.dao.TableName;
-import com.ning.billing.util.tag.ControlTagType;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
@@ -323,38 +320,6 @@ public class AuditedInvoiceDao implements InvoiceDao {
     @Override
     public List<InvoicePayment> getInvoicePayments(final UUID paymentId, final InternalTenantContext context) {
         return invoicePaymentSqlDao.getInvoicePayments(paymentId.toString(), context);
-    }
-
-    @Override
-    public void setWrittenOff(final UUID invoiceId, final InternalCallContext context) throws TagApiException {
-        invoiceSqlDao.inTransaction(new Transaction<Void, InvoiceSqlDao>() {
-            @Override
-            public Void inTransaction(final InvoiceSqlDao transactional, final TransactionStatus status) throws Exception {
-                // Note: the tagUserApi is audited
-                tagUserApi.addTag(invoiceId, ObjectType.INVOICE, ControlTagType.WRITTEN_OFF.getId(), context.toCallContext());
-
-                final Invoice invoice = transactional.getById(invoiceId.toString(), context);
-                notifyBusOfInvoiceAdjustment(transactional, invoiceId, invoice.getAccountId(), context.getUserToken());
-
-                return null;
-            }
-        });
-    }
-
-    @Override
-    public void removeWrittenOff(final UUID invoiceId, final InternalCallContext context) throws TagApiException {
-        invoiceSqlDao.inTransaction(new Transaction<Void, InvoiceSqlDao>() {
-            @Override
-            public Void inTransaction(final InvoiceSqlDao transactional, final TransactionStatus status) throws Exception {
-                // Note: the tagUserApi is audited
-                tagUserApi.removeTag(invoiceId, ObjectType.INVOICE, ControlTagType.WRITTEN_OFF.getId(), context.toCallContext());
-
-                final Invoice invoice = transactional.getById(invoiceId.toString(), context);
-                notifyBusOfInvoiceAdjustment(transactional, invoiceId, invoice.getAccountId(), context.getUserToken());
-
-                return null;
-            }
-        });
     }
 
     @Override
