@@ -30,6 +30,7 @@ import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.notificationq.NotificationKey;
 import com.ning.billing.util.notificationq.NotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService;
@@ -132,7 +133,7 @@ public abstract class BaseRetryService implements RetryService {
         }
 
         private boolean scheduleRetryInternal(final UUID paymentId, final DateTime timeOfRetry, final Transmogrifier transactionalDao) {
-            final InternalCallContext context = createCallContext();
+            final InternalCallContext context = createCallContextFromPaymentId(paymentId);
 
             try {
                 final NotificationQueue retryQueue = notificationQueueService.getNotificationQueue(DefaultPaymentService.SERVICE_NAME, getQueueName());
@@ -154,8 +155,8 @@ public abstract class BaseRetryService implements RetryService {
             return true;
         }
 
-        protected InternalCallContext createCallContext() {
-            return internalCallContextFactory.createInternalCallContext(PAYMENT_RETRY_SERVICE, CallOrigin.INTERNAL, UserType.SYSTEM, null);
+        protected InternalCallContext createCallContextFromPaymentId(final UUID paymentId) {
+            return internalCallContextFactory.createInternalCallContext(paymentId, ObjectType.PAYMENT, PAYMENT_RETRY_SERVICE, CallOrigin.INTERNAL, UserType.SYSTEM, null);
         }
 
         public abstract String getQueueName();

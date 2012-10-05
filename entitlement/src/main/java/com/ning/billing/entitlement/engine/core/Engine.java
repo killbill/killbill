@@ -54,9 +54,11 @@ import com.ning.billing.util.bus.Bus.EventBusException;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.notificationq.NotificationKey;
 import com.ning.billing.util.notificationq.NotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService;
@@ -211,7 +213,7 @@ public class Engine implements EventListener, EntitlementService {
                                               PhaseEventData.createNextPhaseEvent(nextTimedPhase.getPhase().getName(), subscription, now, nextTimedPhase.getStartPhase()) :
                                               null;
             if (nextPhaseEvent != null) {
-                dao.createNextPhaseEvent(subscription, nextPhaseEvent, internalCallContextFactory.createInternalCallContext(context));
+                dao.createNextPhaseEvent(subscription, nextPhaseEvent, createCallContextFromBundleId(subscription.getBundleId(), context));
             }
         } catch (EntitlementError e) {
             log.error(String.format("Failed to insert next phase for subscription %s", subscription.getId()), e);
@@ -257,10 +259,14 @@ public class Engine implements EventListener, EntitlementService {
         final int addOnSize = addOnCancellations.size();
         int cancelSeq = addOnSize - 1;
         for (final UUID key : addOnCancellations.keySet()) {
-            dao.cancelSubscription(addOnCancellationSubscriptions.get(key), addOnCancellations.get(key), internalCallContextFactory.createInternalCallContext(context), cancelSeq);
+            dao.cancelSubscription(addOnCancellationSubscriptions.get(key), addOnCancellations.get(key), createCallContextFromBundleId(baseSubscription.getBundleId(), context), cancelSeq);
             cancelSeq--;
         }
 
         return addOnSize;
+    }
+
+    private InternalCallContext createCallContextFromBundleId(final UUID bundleId, final CallContext context) {
+        return internalCallContextFactory.createInternalCallContext(bundleId, ObjectType.BUNDLE, context);
     }
 }

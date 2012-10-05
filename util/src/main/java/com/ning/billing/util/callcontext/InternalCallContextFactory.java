@@ -71,6 +71,17 @@ public class InternalCallContextFactory {
         return createInternalCallContext(INTERNAL_TENANT_RECORD_ID, null, new DefaultCallContext(INTERNAL_TENANT_ID, userName, callOrigin, userType, userToken, clock));
     }
 
+    public InternalCallContext createInternalCallContext(final UUID objectId, final ObjectType objectType, final String userName,
+                                                         final CallOrigin callOrigin, final UserType userType, @Nullable final UUID userToken) {
+        // TODO retrieve the same way the tenant
+        return createInternalCallContext(objectId, objectType, new DefaultCallContext(INTERNAL_TENANT_ID, userName, callOrigin, userType, userToken, clock));
+    }
+
+    public InternalCallContext createInternalCallContext(final UUID accountId, final String userName, final CallOrigin callOrigin, final UserType userType, @Nullable final UUID userToken) {
+        // TODO retrieve the same way the tenant
+        return createInternalCallContext(accountId, new DefaultCallContext(INTERNAL_TENANT_ID, userName, callOrigin, userType, userToken, clock));
+    }
+
     /**
      * Crate an internal call context from a call context, and retrieving the account_record_id from another table
      *

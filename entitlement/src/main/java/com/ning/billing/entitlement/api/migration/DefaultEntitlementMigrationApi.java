@@ -79,7 +79,7 @@ public class DefaultEntitlementMigrationApi implements EntitlementMigrationApi {
     public void migrate(final EntitlementAccountMigration toBeMigrated, final CallContext context)
             throws EntitlementMigrationApiException {
         final AccountMigrationData accountMigrationData = createAccountMigrationData(toBeMigrated, context);
-        dao.migrate(toBeMigrated.getAccountKey(), accountMigrationData, internalCallContextFactory.createInternalCallContext(context));
+        dao.migrate(toBeMigrated.getAccountKey(), accountMigrationData, internalCallContextFactory.createInternalCallContext(toBeMigrated.getAccountKey(), context));
     }
 
     private AccountMigrationData createAccountMigrationData(final EntitlementAccountMigration toBeMigrated, final CallContext context)

@@ -18,6 +18,7 @@ package com.ning.billing.entitlement.api.user;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import org.joda.time.DateTime;
 
@@ -57,6 +58,7 @@ import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;
+import com.ning.billing.util.dao.ObjectType;
 
 import com.google.inject.Inject;
 
@@ -122,7 +124,7 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
     private void createFromSubscription(final SubscriptionData subscription, final Plan plan, final PhaseType initialPhase,
                                         final String realPriceList, final DateTime requestedDate, final DateTime effectiveDate, final DateTime processedDate,
                                         final boolean reCreate, final CallContext context) throws EntitlementUserApiException {
-        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(context);
+        final InternalCallContext internalCallContext = createCallContextFromBundleId(subscription.getBundleId(), context);
 
         try {
             final TimedPhase[] curAndNextPhases = planAligner.getCurrentAndNextTimedPhaseOnCreate(subscription, plan, initialPhase, realPriceList, requestedDate, effectiveDate);
@@ -210,7 +212,7 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
                                                                         .setUserToken(context.getUserToken())
                                                                         .setFromDisk(true));
 
-        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(context);
+        final InternalCallContext internalCallContext = createCallContextFromBundleId(subscription.getBundleId(), context);
         dao.cancelSubscription(subscription, cancelEvent, internalCallContext, 0);
         subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId(), internalCallContext), catalogService.getFullCatalog());
         return (policy == ActionPolicy.IMMEDIATE);
@@ -243,7 +245,7 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
             uncancelEvents.add(nextPhaseEvent);
         }
 
-        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(context);
+        final InternalCallContext internalCallContext = createCallContextFromBundleId(subscription.getBundleId(), context);
         dao.uncancelSubscription(subscription, uncancelEvents, internalCallContext);
         subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId(), internalCallContext), catalogService.getFullCatalog());
 
@@ -348,7 +350,7 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
         }
         changeEvents.add(changeEvent);
 
-        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(context);
+        final InternalCallContext internalCallContext = createCallContextFromBundleId(subscription.getBundleId(), context);
         dao.changePlan(subscription, changeEvents, internalCallContext);
         subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId(), internalCallContext), catalogService.getFullCatalog());
 
@@ -377,5 +379,9 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
         if (subscription.isSubscriptionFutureCancelled()) {
             throw new EntitlementUserApiException(ErrorCode.ENT_CHANGE_FUTURE_CANCELLED, subscription.getId());
         }
+    }
+
+    private InternalCallContext createCallContextFromBundleId(final UUID bundleId, final CallContext context) {
+        return internalCallContextFactory.createInternalCallContext(bundleId, ObjectType.BUNDLE, context);
     }
 }
