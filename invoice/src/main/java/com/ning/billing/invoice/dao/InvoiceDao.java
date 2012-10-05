@@ -30,7 +30,6 @@ import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
-import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 
@@ -65,10 +64,6 @@ public interface InvoiceDao {
     void test(InternalTenantContext context);
 
     List<Invoice> getAllInvoicesByAccount(UUID accountId, InternalTenantContext context);
-
-    void setWrittenOff(UUID invoiceId, InternalCallContext context) throws TagApiException;
-
-    void removeWrittenOff(UUID invoiceId, InternalCallContext context) throws TagApiException;
 
     InvoicePayment postChargeback(UUID invoicePaymentId, BigDecimal amount, InternalCallContext context) throws InvoiceApiException;
 

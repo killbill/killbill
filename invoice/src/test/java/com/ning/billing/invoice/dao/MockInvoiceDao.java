@@ -222,16 +222,6 @@ public class MockInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public void setWrittenOff(final UUID objectId, final InternalCallContext context) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void removeWrittenOff(final UUID objectId, final InternalCallContext context) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public InvoicePayment postChargeback(final UUID invoicePaymentId, final BigDecimal amount, final InternalCallContext context) throws InvoiceApiException {
         throw new UnsupportedOperationException();
     }

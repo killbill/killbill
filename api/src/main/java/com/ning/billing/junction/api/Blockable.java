@@ -21,6 +21,7 @@ import java.util.UUID;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
+import com.ning.billing.util.dao.ObjectType;
 
 public interface Blockable {
 
@@ -51,6 +52,23 @@ public interface Blockable {
             throw new IllegalStateException("Unsupported type of blockable " + type);
         }
 
+        public static ObjectType getObjectType(final Blockable o) {
+            final Type type = get(o);
+            return getObjectType(type);
+        }
+
+        public static ObjectType getObjectType(final Type type) {
+            switch (type) {
+                case ACCOUNT:
+                    return ObjectType.ACCOUNT;
+                case SUBSCRIPTION_BUNDLE:
+                    return ObjectType.BUNDLE;
+                case SUBSCRIPTION:
+                    return ObjectType.SUBSCRIPTION;
+                default:
+                    throw new IllegalStateException("Unsupported type of blockable " + type);
+            }
+        }
     }
 
     public UUID getId();

@@ -55,17 +55,13 @@ import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.invoice.model.RefundAdjInvoiceItem;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.util.ChangeType;
-import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.Bus.EventBusException;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.dao.EntityAudit;
-import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.dao.TableName;
-import com.ning.billing.util.svcapi.tag.TagInternalApi;
-import com.ning.billing.util.tag.ControlTagType;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
@@ -80,7 +76,6 @@ public class AuditedInvoiceDao implements InvoiceDao {
 
     private final InvoiceSqlDao invoiceSqlDao;
     private final InvoicePaymentSqlDao invoicePaymentSqlDao;
-    private final TagInternalApi tagInternalApi;
     private final NextBillingDatePoster nextBillingDatePoster;
     private final InvoiceItemSqlDao invoiceItemSqlDao;
     private final Clock clock;
@@ -89,14 +84,12 @@ public class AuditedInvoiceDao implements InvoiceDao {
     @Inject
     public AuditedInvoiceDao(final IDBI dbi,
             final NextBillingDatePoster nextBillingDatePoster,
-            final TagInternalApi tagInternalApi,
             final Clock clock,
             final Bus eventBus) {
         this.invoiceSqlDao = dbi.onDemand(InvoiceSqlDao.class);
         this.invoicePaymentSqlDao = dbi.onDemand(InvoicePaymentSqlDao.class);
         this.invoiceItemSqlDao = dbi.onDemand(InvoiceItemSqlDao.class);
         this.nextBillingDatePoster = nextBillingDatePoster;
-        this.tagInternalApi = tagInternalApi;
         this.clock = clock;
         this.eventBus = eventBus;
     }
@@ -326,43 +319,7 @@ public class AuditedInvoiceDao implements InvoiceDao {
     }
 
     @Override
-    public void setWrittenOff(final UUID invoiceId, final InternalCallContext context) throws TagApiException {
 
-        tagInternalApi.addTag(invoiceId, ObjectType.INVOICE, ControlTagType.WRITTEN_OFF.getId(), context);
-
-        invoiceSqlDao.inTransaction(new Transaction<Void, InvoiceSqlDao>() {
-            @Override
-            public Void inTransaction(final InvoiceSqlDao transactional, final TransactionStatus status) throws Exception {
-
-
-                final Invoice invoice = transactional.getById(invoiceId.toString(), context);
-                notifyBusOfInvoiceAdjustment(transactional, invoiceId, invoice.getAccountId(), context.getUserToken());
-
-                return null;
-            }
-        });
-    }
-
-    @Override
-    public void removeWrittenOff(final UUID invoiceId, final InternalCallContext context) throws TagApiException {
-
-        // Note: the tagInternalApi is audited
-        tagInternalApi.removeTag(invoiceId, ObjectType.INVOICE, ControlTagType.WRITTEN_OFF.getId(), context);
-
-
-        invoiceSqlDao.inTransaction(new Transaction<Void, InvoiceSqlDao>() {
-            @Override
-            public Void inTransaction(final InvoiceSqlDao transactional, final TransactionStatus status) throws Exception {
-
-                final Invoice invoice = transactional.getById(invoiceId.toString(), context);
-                notifyBusOfInvoiceAdjustment(transactional, invoiceId, invoice.getAccountId(), context.getUserToken());
-
-                return null;
-            }
-        });
-    }
-
-    @Override
     public InvoicePayment createRefund(final UUID paymentId, final BigDecimal requestedRefundAmount, final boolean isInvoiceAdjusted,
                                        final Map<UUID, BigDecimal> invoiceItemIdsWithNullAmounts, final UUID paymentCookieId,
                                        final InternalCallContext context)

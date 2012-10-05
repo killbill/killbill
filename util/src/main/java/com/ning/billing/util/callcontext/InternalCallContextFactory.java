@@ -16,16 +16,22 @@
 
 package com.ning.billing.util.callcontext;
 
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 
+import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
+import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.util.dao.TableName;
 
 public class InternalCallContextFactory {
 
@@ -34,11 +40,13 @@ public class InternalCallContextFactory {
     public static final UUID INTERNAL_TENANT_ID = new UUID(0L, 0L);
     public static final long INTERNAL_TENANT_RECORD_ID = 0L;
 
+    private final IDBI dbi;
     private final CallContextSqlDao callContextSqlDao;
     private final Clock clock;
 
     @Inject
     public InternalCallContextFactory(final IDBI dbi, final Clock clock) {
+        this.dbi = dbi;
         this.callContextSqlDao = dbi.onDemand(CallContextSqlDao.class);
         this.clock = clock;
     }
@@ -48,7 +56,7 @@ public class InternalCallContextFactory {
         return createInternalTenantContext(INTERNAL_TENANT_RECORD_ID, null);
     }
 
-    // Used for r/o or update/delete operations - we don't need the account id in that case
+    // Used for r/o operations - we don't need the account id in that case
     public InternalTenantContext createInternalTenantContext(final TenantContext context) {
         return createInternalTenantContext(getTenantRecordId(context), null);
     }
@@ -63,8 +71,51 @@ public class InternalCallContextFactory {
         return createInternalCallContext(INTERNAL_TENANT_RECORD_ID, null, new DefaultCallContext(INTERNAL_TENANT_ID, userName, callOrigin, userType, userToken, clock));
     }
 
-    // Used for r/o or update/delete operations - we don't need the account id in that case
-    // TODO - more work is needed for this statement to hold (especially for junction, overdue, custom fields and tags)
+    /**
+     * Crate an internal call context from a call context, and retrieving the account_record_id from another table
+     *
+     * @param objectId   the id of the row in the table pointed by object type where to look for account_record_id
+     * @param objectType the object type pointed by this objectId
+     * @param context    original call context
+     * @return internal call context from context, with a non null account_record_id (if found)
+     */
+    public InternalCallContext createInternalCallContext(final UUID objectId, final ObjectType objectType, final CallContext context) {
+        final Long accountRecordId;
+
+        final TableName tableName = TableName.fromObjectType(objectType);
+        if (tableName != null) {
+            accountRecordId = dbi.withHandle(new HandleCallback<Long>() {
+                @Override
+                public Long withHandle(final Handle handle) throws Exception {
+                    final String columnName;
+                    if (TableName.TAG_DEFINITIONS.equals(tableName) || TableName.TAG_DEFINITION_HISTORY.equals(tableName)) {
+                        // Not tied to an account
+                        return null;
+                    } else if (TableName.ACCOUNT.equals(tableName) || TableName.ACCOUNT_HISTORY.equals(tableName)) {
+                        // Lookup the record_id directly
+                        columnName = "record_id";
+                    } else {
+                        // The table should have an account_record_id column
+                        columnName = "account_record_id";
+                    }
+
+                    final List<Map<String, Object>> values = handle.select(String.format("select %s from %s where id = ?;", columnName, tableName.getTableName()), objectId.toString());
+                    if (values.size() == 0) {
+                        return null;
+                    } else {
+                        return (Long) values.get(0).get(columnName);
+                    }
+                }
+            });
+        } else {
+            accountRecordId = null;
+        }
+
+        return createInternalCallContext(getTenantRecordId(context), accountRecordId, context);
+    }
+
+    // Used for update/delete operations - we don't need the account id in that case
+    // Used also when we don't have an account_record_id column (e.g. tenants, tag_definitions)
     public InternalCallContext createInternalCallContext(final CallContext context) {
         return createInternalCallContext(getTenantRecordId(context), null, context);
     }

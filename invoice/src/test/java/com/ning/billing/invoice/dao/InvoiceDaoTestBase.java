@@ -39,12 +39,7 @@ import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.InMemoryBus;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
-import com.ning.billing.util.svcapi.tag.TagInternalApi;
 import com.ning.billing.util.tag.api.user.TagEventBuilder;
-import com.ning.billing.util.tag.dao.AuditedTagDao;
-import com.ning.billing.util.tag.dao.MockTagDefinitionDao;
-import com.ning.billing.util.tag.dao.TagDao;
-import com.ning.billing.util.tag.dao.TagDefinitionDao;
 
 public class InvoiceDaoTestBase extends InvoicingTestBase {
     protected final TagEventBuilder tagEventBuilder = new TagEventBuilder();
@@ -103,11 +98,7 @@ public class InvoiceDaoTestBase extends InvoicingTestBase {
         bus.start();
 
         final NextBillingDatePoster nextBillingDatePoster = new MockNextBillingDatePoster();
-        final TagDefinitionDao tagDefinitionDao = new MockTagDefinitionDao();
-        final TagDao tagDao = new AuditedTagDao(dbi, tagEventBuilder, bus);
-        // API_FIX
-        final TagInternalApi tagUserApi = null; // new DefaultTagInternalApi(new InternalCallContextFactory(dbi, clock), tagDefinitionDao, tagDao);
-        invoiceDao = new AuditedInvoiceDao(dbi, nextBillingDatePoster, tagUserApi, clock, bus);
+        invoiceDao = new AuditedInvoiceDao(dbi, nextBillingDatePoster, clock, bus);
         invoiceDao.test(internalCallContext);
 
         invoiceItemSqlDao = dbi.onDemand(InvoiceItemSqlDao.class);

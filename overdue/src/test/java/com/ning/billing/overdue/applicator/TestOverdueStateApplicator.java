@@ -41,6 +41,7 @@ import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 import com.google.inject.Inject;
 
 public class TestOverdueStateApplicator extends OverdueTestBase {
+
     @Inject
     OverdueStateApplicator<SubscriptionBundle> applicator;
 

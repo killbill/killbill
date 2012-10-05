@@ -79,29 +79,25 @@ public class DefaultTagUserApi implements TagUserApi {
     public void addTags(final UUID objectId, final ObjectType objectType, final Collection<UUID> tagDefinitionIds, final CallContext context) throws TagApiException {
         // TODO: consider making this batch
         for (final UUID tagDefinitionId : tagDefinitionIds) {
-            // TODO accountId?
-            tagDao.insertTag(objectId, objectType, tagDefinitionId, internalCallContextFactory.createInternalCallContext(context));
+            tagDao.insertTag(objectId, objectType, tagDefinitionId, internalCallContextFactory.createInternalCallContext(objectId, objectType, context));
         }
     }
 
     @Override
     public void addTag(final UUID objectId, final ObjectType objectType, final UUID tagDefinitionId, final CallContext context) throws TagApiException {
-        // TODO accountId?
-        tagDao.insertTag(objectId, objectType, tagDefinitionId, internalCallContextFactory.createInternalCallContext(context));
+        tagDao.insertTag(objectId, objectType, tagDefinitionId, internalCallContextFactory.createInternalCallContext(objectId, objectType, context));
     }
 
     @Override
     public void removeTag(final UUID objectId, final ObjectType objectType, final UUID tagDefinitionId, final CallContext context) throws TagApiException {
-        // TODO accountId?
-        tagDao.deleteTag(objectId, objectType, tagDefinitionId, internalCallContextFactory.createInternalCallContext(context));
+        tagDao.deleteTag(objectId, objectType, tagDefinitionId, internalCallContextFactory.createInternalCallContext(objectId, objectType, context));
     }
 
     @Override
     public void removeTags(final UUID objectId, final ObjectType objectType, final Collection<UUID> tagDefinitionIds, final CallContext context) throws TagApiException {
         // TODO: consider making this batch
         for (final UUID tagDefinitionId : tagDefinitionIds) {
-            // TODO accountId?
-            tagDao.deleteTag(objectId, objectType, tagDefinitionId, internalCallContextFactory.createInternalCallContext(context));
+            tagDao.deleteTag(objectId, objectType, tagDefinitionId, internalCallContextFactory.createInternalCallContext(objectId, objectType, context));
         }
     }
 

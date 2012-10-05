@@ -17,6 +17,7 @@
 package com.ning.billing.invoice.api.user;
 
 import java.math.BigDecimal;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -33,11 +34,17 @@ import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.invoice.api.migration.InvoiceApiTestBase;
 import com.ning.billing.invoice.model.InvoicingConfiguration;
+import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.util.tag.ControlTagType;
+import com.ning.billing.util.tag.Tag;
+
+import static org.testng.Assert.assertEquals;
 
 public class TestDefaultInvoiceUserApi extends InvoiceApiTestBase {
 
@@ -315,5 +322,18 @@ public class TestDefaultInvoiceUserApi extends InvoiceApiTestBase {
                                                                                                             InvoicingConfiguration.getRoundingMode()))
                                                                            .setScale(InvoicingConfiguration.getNumberOfDecimals(),
                                                                                      InvoicingConfiguration.getRoundingMode())), 0);
+    }
+
+    @Test(groups = "slow")
+    public void testAddRemoveWrittenOffTag() throws InvoiceApiException, TagApiException {
+        invoiceUserApi.tagInvoiceAsWrittenOff(invoiceId, callContext);
+
+        Map<String, Tag> tags = tagUserApi.getTags(invoiceId, ObjectType.INVOICE, tenantContext);
+        assertEquals(tags.size(), 1);
+        assertEquals(tags.values().iterator().next().getTagDefinitionId(), ControlTagType.WRITTEN_OFF.getId());
+
+        invoiceUserApi.tagInvoiceAsNotWrittenOff(invoiceId, callContext);
+        tags = tagUserApi.getTags(invoiceId, ObjectType.INVOICE, tenantContext);
+        assertEquals(tags.size(), 0);
     }
 }

@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.junction.api.Blockable;
+import com.ning.billing.junction.api.Blockable.Type;
 import com.ning.billing.overdue.OverdueApiException;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.OverdueUserApi;
@@ -32,8 +33,10 @@ import com.ning.billing.overdue.config.api.OverdueStateSet;
 import com.ning.billing.overdue.wrapper.OverdueWrapper;
 import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.TenantContext;
+import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.svcapi.junction.BlockingApi;
 
 import com.google.inject.Inject;
@@ -78,8 +81,12 @@ public class DefaultOverdueUserApi implements OverdueUserApi {
     public <T extends Blockable> OverdueState<T> refreshOverdueStateFor(final T blockable, final CallContext context) throws OverdueException, OverdueApiException {
         log.info(String.format("Refresh of %s requested", blockable.getId()));
         final OverdueWrapper<T> wrapper = factory.createOverdueWrapperFor(blockable);
-        // TODO accountId?
-        return wrapper.refresh(internalCallContextFactory.createInternalCallContext(context));
+        return wrapper.refresh(createInternalCallContext(blockable, context));
+    }
+
+    private <T extends Blockable> InternalCallContext createInternalCallContext(final T blockable, final CallContext context) {
+        final ObjectType objectType = Type.getObjectType(blockable);
+        return internalCallContextFactory.createInternalCallContext(blockable.getId(), objectType, context);
     }
 
     @Override

@@ -16,6 +16,11 @@
 
 package com.ning.billing.invoice.dao;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
+import static org.testng.Assert.assertTrue;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -59,24 +64,13 @@ import com.ning.billing.invoice.model.DefaultInvoicePayment;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.invoice.model.RepairAdjInvoiceItem;
-import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.clock.ClockMock;
-import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.entity.EntityPersistenceException;
 import com.ning.billing.util.svcapi.junction.BillingEvent;
 import com.ning.billing.util.svcapi.junction.BillingEventSet;
 import com.ning.billing.util.svcapi.junction.BillingModeType;
-import com.ning.billing.util.tag.ControlTagType;
-import com.ning.billing.util.tag.Tag;
-import com.ning.billing.util.tag.dao.AuditedTagDao;
-import com.ning.billing.util.tag.dao.TagDao;
 
 import com.google.common.collect.ImmutableMap;
-
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertNull;
-import static org.testng.Assert.assertTrue;
 
 public class TestInvoiceDao extends InvoiceDaoTestBase {
 
@@ -1314,72 +1308,6 @@ public class TestInvoiceDao extends InvoiceDaoTestBase {
         invoiceDao.create(invoice2, invoice2.getTargetDate().getDayOfMonth(), true, internalCallContext);
         invoice2 = invoiceDao.getById(invoice2.getId(), internalCallContext);
         assertNotNull(invoice2.getInvoiceNumber());
-    }
-
-    @Test(groups = "slow")
-    public void testAddingWrittenOffTag() throws InvoiceApiException, TagApiException {
-        final Subscription subscription = getZombieSubscription();
-
-        final Plan plan = Mockito.mock(Plan.class);
-        Mockito.when(plan.getName()).thenReturn("plan");
-
-        final PlanPhase phase1 = Mockito.mock(PlanPhase.class);
-        Mockito.when(phase1.getName()).thenReturn("plan-phase1");
-
-        final DateTime targetDate1 = clock.getUTCNow();
-        final Currency currency = Currency.USD;
-
-        // create pseudo-random invoice
-        final BillingEvent event1 = createMockBillingEvent(null, subscription, targetDate1, plan, phase1, null,
-                                                           TEN, currency,
-                                                           BillingPeriod.MONTHLY, 31, BillingModeType.IN_ADVANCE,
-                                                           "testEvent1", 1L, SubscriptionTransitionType.CHANGE);
-        final BillingEventSet events = new MockBillingEventSet();
-        events.add(event1);
-
-        final Invoice invoice = generator.generateInvoice(UUID.randomUUID(), events, null, new LocalDate(targetDate1), DateTimeZone.UTC, Currency.USD);
-        invoiceDao.create(invoice, invoice.getTargetDate().getDayOfMonth(), true, internalCallContext);
-        invoiceDao.setWrittenOff(invoice.getId(), internalCallContext);
-
-        final TagDao tagDao = new AuditedTagDao(dbi, tagEventBuilder, bus);
-        final Map<String, Tag> tags = tagDao.loadEntities(invoice.getId(), ObjectType.INVOICE, internalCallContext);
-        assertEquals(tags.size(), 1);
-        assertEquals(tags.values().iterator().next().getTagDefinitionId(), ControlTagType.WRITTEN_OFF.getId());
-    }
-
-    @Test(groups = "slow")
-    public void testRemoveWrittenOffTag() throws InvoiceApiException, TagApiException {
-        final Subscription subscription = getZombieSubscription();
-
-        final Plan plan = Mockito.mock(Plan.class);
-        Mockito.when(plan.getName()).thenReturn("plan");
-
-        final PlanPhase phase1 = Mockito.mock(PlanPhase.class);
-        Mockito.when(phase1.getName()).thenReturn("plan-phase1");
-
-        final DateTime targetDate1 = clock.getUTCNow();
-        final Currency currency = Currency.USD;
-
-        // create pseudo-random invoice
-        final BillingEvent event1 = createMockBillingEvent(null, subscription, targetDate1, plan, phase1, null,
-                                                           TEN, currency,
-                                                           BillingPeriod.MONTHLY, 31, BillingModeType.IN_ADVANCE,
-                                                           "testEvent1", 1L, SubscriptionTransitionType.CHANGE);
-        final BillingEventSet events = new MockBillingEventSet();
-        events.add(event1);
-
-        final Invoice invoice = generator.generateInvoice(UUID.randomUUID(), events, null, new LocalDate(targetDate1), DateTimeZone.UTC, Currency.USD);
-        invoiceDao.create(invoice, invoice.getTargetDate().getDayOfMonth(), true, internalCallContext);
-        invoiceDao.setWrittenOff(invoice.getId(), internalCallContext);
-
-        final TagDao tagDao = new AuditedTagDao(dbi, tagEventBuilder, bus);
-        Map<String, Tag> tags = tagDao.loadEntities(invoice.getId(), ObjectType.INVOICE, internalCallContext);
-        assertEquals(tags.size(), 1);
-        assertEquals(tags.values().iterator().next().getTagDefinitionId(), ControlTagType.WRITTEN_OFF.getId());
-
-        invoiceDao.removeWrittenOff(invoice.getId(), internalCallContext);
-        tags = tagDao.loadEntities(invoice.getId(), ObjectType.INVOICE, internalCallContext);
-        assertEquals(tags.size(), 0);
     }
 
     @Test(groups = "slow")
