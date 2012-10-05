@@ -95,7 +95,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     @Override
     public void notifyOfPayment(final InvoicePayment invoicePayment, final CallContext context) throws InvoiceApiException {
         // Retrieve the account id for the internal call context
-        final UUID accountId = dao.getAccountIdFromInvoicePaymentId(invoicePayment.getId(), internalCallContextFactory.createInternalCallContext(context));
+        final UUID accountId = dao.getAccountIdFromInvoicePaymentId(invoicePayment.getId(), internalCallContextFactory.createInternalTenantContext(context));
         dao.notifyOfPayment(invoicePayment, internalCallContextFactory.createInternalCallContext(accountId, context));
     }
 
@@ -151,7 +151,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         tagUserApi.addTag(invoiceId, ObjectType.INVOICE, ControlTagType.WRITTEN_OFF.getId(), context);
 
         // Retrieve the invoice for the account id
-        final Invoice invoice = dao.getById(invoiceId, internalCallContextFactory.createInternalCallContext(context));
+        final Invoice invoice = dao.getById(invoiceId, internalCallContextFactory.createInternalTenantContext(context));
         // This is for overdue
         notifyBusOfInvoiceAdjustment(invoiceId, invoice.getAccountId(), context.getUserToken());
     }
@@ -162,7 +162,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         tagUserApi.removeTag(invoiceId, ObjectType.INVOICE, ControlTagType.WRITTEN_OFF.getId(), context);
 
         // Retrieve the invoice for the account id
-        final Invoice invoice = dao.getById(invoiceId, internalCallContextFactory.createInternalCallContext(context));
+        final Invoice invoice = dao.getById(invoiceId, internalCallContextFactory.createInternalTenantContext(context));
         // This is for overdue
         notifyBusOfInvoiceAdjustment(invoiceId, invoice.getAccountId(), context.getUserToken());
     }

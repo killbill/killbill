@@ -54,7 +54,7 @@ public class DefaultChargeThruApi implements ChargeThruApi {
 
     @Override
     public void setChargedThroughDate(final UUID subscriptionId, final LocalDate ctd, final CallContext context) {
-        final SubscriptionData subscription = (SubscriptionData) entitlementDao.getSubscriptionFromId(subscriptionFactory, subscriptionId, internalCallContextFactory.createInternalCallContext(context));
+        final SubscriptionData subscription = (SubscriptionData) entitlementDao.getSubscriptionFromId(subscriptionFactory, subscriptionId, internalCallContextFactory.createInternalTenantContext(context));
         final DateTime chargedThroughDate = ctd.toDateTime(new LocalTime(subscription.getStartDate(), DateTimeZone.UTC), DateTimeZone.UTC);
         final SubscriptionBuilder builder = new SubscriptionBuilder(subscription)
                 .setChargedThroughDate(chargedThroughDate)

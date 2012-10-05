@@ -56,7 +56,7 @@ public class InternalCallContextFactory {
         return createInternalTenantContext(INTERNAL_TENANT_RECORD_ID, null);
     }
 
-    // Used for r/o or update/delete operations - we don't need the account id in that case
+    // Used for r/o operations - we don't need the account id in that case
     public InternalTenantContext createInternalTenantContext(final TenantContext context) {
         return createInternalTenantContext(getTenantRecordId(context), null);
     }
@@ -114,7 +114,7 @@ public class InternalCallContextFactory {
         return createInternalCallContext(getTenantRecordId(context), accountRecordId, context);
     }
 
-    // Used for r/o or update/delete operations - we don't need the account id in that case
+    // Used for update/delete operations - we don't need the account id in that case
     // Used also when we don't have an account_record_id column (e.g. tenants, tag_definitions)
     public InternalCallContext createInternalCallContext(final CallContext context) {
         return createInternalCallContext(getTenantRecordId(context), null, context);

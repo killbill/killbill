@@ -35,7 +35,6 @@ import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.model.DefaultInvoicePayment;
 import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.TenantContext;
@@ -107,7 +106,7 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
         final InvoicePayment invoicePayment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentId, invoiceId, paymentDate, amount, currency);
 
         // Retrieve the account id for the internal call context
-        final Invoice invoice = dao.getById(invoiceId, internalCallContextFactory.createInternalCallContext(context));
+        final Invoice invoice = dao.getById(invoiceId, internalCallContextFactory.createInternalTenantContext(context));
         final UUID accountId = invoice.getAccountId();
 
         dao.notifyOfPayment(invoicePayment, internalCallContextFactory.createInternalCallContext(accountId, context));
@@ -152,7 +151,7 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
                 }
 
                 // Retrieve the account id for the internal call context
-                final InternalCallContext internalCallContextNoAccountId = internalCallContextFactory.createInternalCallContext(context);
+                final InternalTenantContext internalCallContextNoAccountId = internalCallContextFactory.createInternalTenantContext(context);
                 final List<InvoicePayment> invoicePayments = dao.getInvoicePayments(paymentId, internalCallContextNoAccountId);
                 final UUID accountId = dao.getAccountIdFromInvoicePaymentId(invoicePayments.get(0).getId(), internalCallContextNoAccountId);
 
@@ -173,7 +172,7 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
             @Override
             public InvoicePayment doHandle() throws InvoiceApiException {
                 // Retrieve the account id for the internal call context
-                final UUID accountId = dao.getAccountIdFromInvoicePaymentId(invoicePaymentId, internalCallContextFactory.createInternalCallContext(context));
+                final UUID accountId = dao.getAccountIdFromInvoicePaymentId(invoicePaymentId, internalCallContextFactory.createInternalTenantContext(context));
                 return dao.postChargeback(invoicePaymentId, amount, internalCallContextFactory.createInternalCallContext(accountId, context));
             }
         });

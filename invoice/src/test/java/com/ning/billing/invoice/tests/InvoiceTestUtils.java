@@ -75,12 +75,12 @@ public class InvoiceTestUtils {
         final List<InvoiceItem> invoiceItems = new ArrayList<InvoiceItem>();
         for (final BigDecimal amount : amounts) {
             final InvoiceItem invoiceItem = createInvoiceItem(clock, invoiceId, accountId, amount, currency);
-            invoiceItemSqlDao.create(invoiceItem, internalCallContextFactory.createInternalCallContext(callContext));
+            invoiceItemSqlDao.create(invoiceItem, internalCallContextFactory.createInternalCallContext(accountId, callContext));
             invoiceItems.add(invoiceItem);
         }
         Mockito.when(invoice.getInvoiceItems()).thenReturn(invoiceItems);
 
-        invoiceSqlDao.create(invoice, internalCallContextFactory.createInternalCallContext(callContext));
+        invoiceSqlDao.create(invoice, internalCallContextFactory.createInternalCallContext(accountId, callContext));
 
         return invoice;
     }
