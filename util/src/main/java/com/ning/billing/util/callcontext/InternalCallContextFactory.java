@@ -115,7 +115,7 @@ public class InternalCallContextFactory {
     }
 
     // Used for r/o or update/delete operations - we don't need the account id in that case
-    // TODO - more work is needed for this statement to hold (especially for junction, overdue, custom fields and tags)
+    // Used also when we don't have an account_record_id column (e.g. tenants, tag_definitions)
     public InternalCallContext createInternalCallContext(final CallContext context) {
         return createInternalCallContext(getTenantRecordId(context), null, context);
     }
