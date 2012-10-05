@@ -56,7 +56,7 @@ import com.ning.billing.overdue.config.OverdueConfig;
 import com.ning.billing.overdue.glue.DefaultOverdueModule;
 import com.ning.billing.overdue.service.DefaultOverdueService;
 import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
-import com.ning.billing.util.bus.BusService;
+import com.ning.billing.util.svcsapi.bus.BusService;
 import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.email.EmailModule;

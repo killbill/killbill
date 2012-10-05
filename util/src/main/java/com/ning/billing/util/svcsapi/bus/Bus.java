@@ -14,12 +14,13 @@
  * under the License.
  */
 
-package com.ning.billing.util.bus;
+package com.ning.billing.util.svcsapi.bus;
 
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
-import com.google.common.eventbus.Subscribe;
+import com.ning.billing.util.bus.BusEvent;
 
+import com.google.common.eventbus.Subscribe;
 
 /**
  * Bus API based on the guava EventBus API

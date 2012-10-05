@@ -44,7 +44,7 @@ import com.ning.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;
 import com.ning.billing.payment.provider.ExternalPaymentProviderPlugin;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
 import com.ning.billing.util.api.TagUserApi;
-import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.Bus;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.globallocker.GlobalLocker;

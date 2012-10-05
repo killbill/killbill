@@ -48,7 +48,7 @@ import com.ning.billing.payment.provider.MockPaymentProviderPlugin;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
 import com.ning.billing.payment.retry.FailedPaymentRetryService;
 import com.ning.billing.payment.retry.PluginFailureRetryService;
-import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.Bus;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.glue.CallContextModule;
 

@@ -23,7 +23,7 @@ import com.ning.billing.overdue.OverdueUserApi;
 import com.ning.billing.overdue.listener.OverdueListener;
 import com.ning.billing.overdue.service.DefaultOverdueService;
 import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
-import com.ning.billing.util.bus.BusService;
+import com.ning.billing.util.svcsapi.bus.BusService;
 
 public class MockOverdueService extends DefaultOverdueService {
     @Inject

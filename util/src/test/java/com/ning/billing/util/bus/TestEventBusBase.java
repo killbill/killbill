@@ -26,6 +26,7 @@ import org.testng.annotations.BeforeClass;
 
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.bus.BusEvent.BusEventType;
+import com.ning.billing.util.svcsapi.bus.Bus;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;

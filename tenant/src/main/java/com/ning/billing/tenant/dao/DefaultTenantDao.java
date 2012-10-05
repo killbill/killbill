@@ -29,7 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ning.billing.tenant.api.Tenant;
-import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.Bus;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.entity.EntityPersistenceException;

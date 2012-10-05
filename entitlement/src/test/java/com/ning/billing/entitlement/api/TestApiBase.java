@@ -76,7 +76,7 @@ import com.ning.billing.entitlement.events.phase.PhaseEvent;
 import com.ning.billing.entitlement.events.user.ApiEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.mock.MockAccountBuilder;
-import com.ning.billing.util.bus.BusService;
+import com.ning.billing.util.svcsapi.bus.BusService;
 import com.ning.billing.util.bus.DefaultBusService;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;

@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.util.bus;
+package com.ning.billing.util.svcsapi.bus;
 
 import com.ning.billing.lifecycle.KillbillService;
 

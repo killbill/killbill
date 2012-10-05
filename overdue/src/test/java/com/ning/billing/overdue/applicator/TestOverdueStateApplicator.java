@@ -32,7 +32,7 @@ import com.ning.billing.overdue.OverdueChangeEvent;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.OverdueTestBase;
 import com.ning.billing.overdue.config.OverdueConfig;
-import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.Bus;
 import com.ning.billing.util.config.XMLLoader;
 
 import com.google.inject.Inject;

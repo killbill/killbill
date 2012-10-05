@@ -59,7 +59,7 @@ import com.ning.billing.payment.retry.AutoPayRetryService.AutoPayRetryServiceSch
 import com.ning.billing.payment.retry.FailedPaymentRetryService.FailedPaymentRetryServiceScheduler;
 import com.ning.billing.payment.retry.PluginFailureRetryService.PluginFailureRetryServiceScheduler;
 import com.ning.billing.util.api.TagUserApi;
-import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.Bus;
 import com.ning.billing.util.bus.BusEvent;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;

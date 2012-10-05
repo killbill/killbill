@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.Inject;
 import com.ning.billing.analytics.AnalyticsListener;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
-import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.Bus;
 
 public class DefaultAnalyticsService implements AnalyticsService {
     private static final Logger log = LoggerFactory.getLogger(DefaultAnalyticsService.class);

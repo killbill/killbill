@@ -49,7 +49,7 @@ import com.ning.billing.overdue.OverdueService;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.config.api.BillingState;
 import com.ning.billing.overdue.config.api.OverdueException;
-import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.Bus;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;

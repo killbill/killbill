@@ -33,7 +33,7 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.util.ChangeType;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagDefinitionApiException;
-import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.Bus;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.dao.AuditedCollectionDaoBase;

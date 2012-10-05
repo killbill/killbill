@@ -36,7 +36,7 @@ import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.util.api.TagUserApi;
-import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.Bus;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.Clock;

@@ -40,6 +40,7 @@ import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.queue.PersistentQueueBase;
+import com.ning.billing.util.svcsapi.bus.Bus;
 
 import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;

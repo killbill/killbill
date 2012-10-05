@@ -18,8 +18,8 @@ package com.ning.billing.util.glue;
 
 import org.skife.config.ConfigurationObjectFactory;
 
-import com.ning.billing.util.bus.Bus;
-import com.ning.billing.util.bus.BusService;
+import com.ning.billing.util.svcsapi.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.BusService;
 import com.ning.billing.util.bus.DefaultBusService;
 import com.ning.billing.util.bus.InMemoryBus;
 import com.ning.billing.util.bus.PersistentBus;
