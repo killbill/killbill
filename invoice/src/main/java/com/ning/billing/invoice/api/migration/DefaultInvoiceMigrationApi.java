@@ -25,7 +25,6 @@ import org.slf4j.LoggerFactory;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
@@ -35,19 +34,20 @@ import com.ning.billing.invoice.model.MigrationInvoiceItem;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.svcapi.account.AccountInternalApi;
 
 import com.google.inject.Inject;
 
 public class DefaultInvoiceMigrationApi implements InvoiceMigrationApi {
     private static final Logger log = LoggerFactory.getLogger(DefaultInvoiceMigrationApi.class);
 
-    private final AccountUserApi accountUserApi;
+    private final AccountInternalApi accountUserApi;
     private final AuditedInvoiceDao dao;
     private final Clock clock;
     private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
-    public DefaultInvoiceMigrationApi(final AccountUserApi accountUserApi,
+    public DefaultInvoiceMigrationApi(final AccountInternalApi accountUserApi,
                                       final AuditedInvoiceDao dao,
                                       final Clock clock,
                                       final InternalCallContextFactory internalCallContextFactory) {
@@ -61,7 +61,7 @@ public class DefaultInvoiceMigrationApi implements InvoiceMigrationApi {
     public UUID createMigrationInvoice(final UUID accountId, final LocalDate targetDate, final BigDecimal balance, final Currency currency, final CallContext context) {
         final Account account;
         try {
-            account = accountUserApi.getAccountById(accountId, context);
+            account = accountUserApi.getAccountById(accountId, internalCallContextFactory.createInternalTenantContext(context));
         } catch (AccountApiException e) {
             log.warn("Unable to find account for id {}", accountId);
             return null;

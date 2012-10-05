@@ -16,6 +16,7 @@
 
 package com.ning.billing.account.api.svcs;
 
+import java.util.List;
 import java.util.UUID;
 
 import javax.inject.Inject;
@@ -24,6 +25,7 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
+import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.account.dao.AccountDao;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
@@ -50,6 +52,34 @@ public class DefaultAccountInternalApi implements AccountInternalApi {
 
     @Override
     public void updateAccount(String key, AccountData accountData,
+            InternalCallContext context) throws AccountApiException {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public List<AccountEmail> getEmails(UUID accountId,
+            InternalTenantContext context)  {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Account getAccountByKey(String key, InternalTenantContext context)
+            throws AccountApiException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void removePaymentMethod(UUID accountId, InternalCallContext context)
+            throws AccountApiException {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void updatePaymentMethod(UUID accountId, UUID paymentMethodId,
             InternalCallContext context) throws AccountApiException {
         // TODO Auto-generated method stub
 

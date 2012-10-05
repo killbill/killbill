@@ -32,7 +32,6 @@ import org.slf4j.LoggerFactory;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
@@ -59,9 +58,10 @@ import com.ning.billing.util.globallocker.GlobalLock;
 import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.globallocker.GlobalLocker.LockerType;
 import com.ning.billing.util.globallocker.LockFailedException;
+import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.entitlement.EntitlementBillingApiException;
-import com.ning.billing.util.svcapi.junction.BillingInternalApi;
 import com.ning.billing.util.svcapi.junction.BillingEventSet;
+import com.ning.billing.util.svcapi.junction.BillingInternalApi;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
@@ -74,7 +74,7 @@ public class InvoiceDispatcher {
 
     private final InvoiceGenerator generator;
     private final BillingInternalApi billingApi;
-    private final AccountUserApi accountUserApi;
+    private final AccountInternalApi accountApi;
     private final InvoiceDao invoiceDao;
     private final InvoiceNotifier invoiceNotifier;
     private final GlobalLocker locker;
@@ -83,7 +83,7 @@ public class InvoiceDispatcher {
     private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
-    public InvoiceDispatcher(final InvoiceGenerator generator, final AccountUserApi accountUserApi,
+    public InvoiceDispatcher(final InvoiceGenerator generator, final AccountInternalApi accountApi,
                              final BillingInternalApi billingApi,
                              final InvoiceDao invoiceDao,
                              final InvoiceNotifier invoiceNotifier,
@@ -93,7 +93,7 @@ public class InvoiceDispatcher {
                              final InternalCallContextFactory internalCallContextFactory) {
         this.generator = generator;
         this.billingApi = billingApi;
-        this.accountUserApi = accountUserApi;
+        this.accountApi = accountApi;
         this.invoiceDao = invoiceDao;
         this.invoiceNotifier = invoiceNotifier;
         this.locker = locker;
@@ -146,10 +146,13 @@ public class InvoiceDispatcher {
     private Invoice processAccountWithLock(final UUID accountId, final DateTime targetDateTime,
                                            final boolean dryRun, final CallContext context) throws InvoiceApiException {
         try {
-            // Make sure to first set the BCD if needed then get the account object (to have the BCD set)
-            final BillingEventSet billingEvents = billingApi.getBillingEventsForAccountAndUpdateAccountBCD(accountId, internalCallContextFactory.createInternalCallContext(context));
 
-            final Account account = accountUserApi.getAccountById(accountId, context);
+            // API_FIX
+            // Make sure to first set the BCD if needed then get the account object (to have the BCD set)
+            final InternalCallContext internalCallContextNoAccounrRecordId = internalCallContextFactory.createInternalCallContext(context);
+            final BillingEventSet billingEvents = billingApi.getBillingEventsForAccountAndUpdateAccountBCD(accountId, internalCallContextNoAccounrRecordId);
+
+            final Account account = accountApi.getAccountById(accountId,  internalCallContextNoAccounrRecordId);
 
             final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), context);
 

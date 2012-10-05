@@ -18,6 +18,8 @@ package com.ning.billing.util.svcapi.tag;
 import java.util.Map;
 import java.util.UUID;
 
+import com.ning.billing.util.api.TagApiException;
+import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.tag.Tag;
@@ -25,4 +27,8 @@ import com.ning.billing.util.tag.Tag;
 public interface TagInternalApi {
 
     public Map<String, Tag> getTags(UUID objectId, ObjectType objectType, InternalTenantContext context);
+
+    public void addTag(UUID objectId, ObjectType objectType, UUID tagDefinitionId, InternalCallContext context) throws TagApiException;
+
+    public void removeTag(UUID objectId, ObjectType objectType, UUID tagDefinitionId, InternalCallContext context) throws TagApiException;
 }

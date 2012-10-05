@@ -15,17 +15,27 @@
  */
 package com.ning.billing.util.svcapi.account;
 
+import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
+import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 
 public interface AccountInternalApi {
 
+    public Account getAccountByKey(String key, InternalTenantContext context) throws AccountApiException;
+
     public Account getAccountById(UUID accountId, InternalTenantContext context) throws AccountApiException;
 
     public void updateAccount(String key, AccountData accountData, InternalCallContext context) throws AccountApiException;
+
+    public List<AccountEmail> getEmails(UUID accountId, InternalTenantContext context);
+
+    public void removePaymentMethod(UUID accountId, InternalCallContext context) throws AccountApiException;
+
+    public void updatePaymentMethod(UUID accountId, UUID paymentMethodId, InternalCallContext context) throws AccountApiException;
 }

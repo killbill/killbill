@@ -35,16 +35,13 @@ import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
-import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.bus.Bus;
-import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.util.svcapi.tag.TagInternalApi;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.Tag;
-import com.ning.billing.util.tag.api.DefaultTagUserApi;
 import com.ning.billing.util.tag.dao.MockTagDao;
 import com.ning.billing.util.tag.dao.MockTagDefinitionDao;
 import com.ning.billing.util.tag.dao.TagDao;
@@ -55,7 +52,7 @@ import com.google.common.collect.ImmutableMap;
 public class TestDefaultInvoiceDao extends InvoiceTestSuite {
 
     private InvoiceSqlDao invoiceSqlDao;
-    private TagUserApi tagUserApi;
+    private TagInternalApi tagInternalApi;
     private AuditedInvoiceDao dao;
 
     @BeforeMethod(groups = "fast")
@@ -80,8 +77,9 @@ public class TestDefaultInvoiceDao extends InvoiceTestSuite {
         final NextBillingDatePoster poster = Mockito.mock(NextBillingDatePoster.class);
         final TagDefinitionDao tagDefinitionDao = new MockTagDefinitionDao();
         final TagDao tagDao = new MockTagDao();
-        tagUserApi = new DefaultTagUserApi(new InternalCallContextFactory(Mockito.mock(IDBI.class), new ClockMock()), tagDefinitionDao, tagDao);
-        dao = new AuditedInvoiceDao(idbi, poster, tagUserApi, Mockito.mock(Clock.class), Mockito.mock(Bus.class));
+        // API_FIX
+        tagInternalApi = null; //new DefaultTagInternalApi(new InternalCallContextFactory(Mockito.mock(IDBI.class), new ClockMock()), tagDefinitionDao, tagDao);
+        dao = new AuditedInvoiceDao(idbi, poster, tagInternalApi, Mockito.mock(Clock.class), Mockito.mock(Bus.class));
     }
 
     @Test(groups = "fast")
@@ -139,12 +137,12 @@ public class TestDefaultInvoiceDao extends InvoiceTestSuite {
     public void testSetWrittenOff() throws Exception {
         final UUID invoiceId = UUID.randomUUID();
 
-        final Map<String, Tag> beforeTags = tagUserApi.getTags(invoiceId, ObjectType.INVOICE, callContext);
+        final Map<String, Tag> beforeTags = tagInternalApi.getTags(invoiceId, ObjectType.INVOICE, internalCallContext);
         Assert.assertEquals(beforeTags.keySet().size(), 0);
 
         dao.setWrittenOff(invoiceId, internalCallContext);
 
-        final Map<String, Tag> afterTags = tagUserApi.getTags(invoiceId, ObjectType.INVOICE, callContext);
+        final Map<String, Tag> afterTags = tagInternalApi.getTags(invoiceId, ObjectType.INVOICE, internalCallContext);
         Assert.assertEquals(afterTags.keySet().size(), 1);
         final UUID tagDefinitionId = ControlTagType.WRITTEN_OFF.getId();
         Assert.assertEquals(afterTags.values().iterator().next().getTagDefinitionId(), tagDefinitionId);
@@ -156,11 +154,11 @@ public class TestDefaultInvoiceDao extends InvoiceTestSuite {
 
         dao.setWrittenOff(invoiceId, internalCallContext);
 
-        final Map<String, Tag> beforeTags = tagUserApi.getTags(invoiceId, ObjectType.INVOICE, callContext);
+        final Map<String, Tag> beforeTags = tagInternalApi.getTags(invoiceId, ObjectType.INVOICE, internalCallContext);
         Assert.assertEquals(beforeTags.keySet().size(), 1);
         dao.removeWrittenOff(invoiceId, internalCallContext);
 
-        final Map<String, Tag> afterTags = tagUserApi.getTags(invoiceId, ObjectType.INVOICE, callContext);
+        final Map<String, Tag> afterTags = tagInternalApi.getTags(invoiceId, ObjectType.INVOICE, internalCallContext);
         Assert.assertEquals(afterTags.keySet().size(), 0);
     }
 }

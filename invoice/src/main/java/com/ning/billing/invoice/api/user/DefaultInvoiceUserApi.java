@@ -30,7 +30,6 @@ import org.joda.time.LocalDate;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.InvoiceDispatcher;
 import com.ning.billing.invoice.api.Invoice;
@@ -43,11 +42,13 @@ import com.ning.billing.invoice.model.CreditAdjInvoiceItem;
 import com.ning.billing.invoice.model.ExternalChargeInvoiceItem;
 import com.ning.billing.invoice.template.HtmlInvoiceGenerator;
 import com.ning.billing.util.api.TagApiException;
-import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
+import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.util.svcapi.account.AccountInternalApi;
+import com.ning.billing.util.svcapi.tag.TagInternalApi;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.Tag;
 
@@ -57,14 +58,14 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
 
     private final InvoiceDao dao;
     private final InvoiceDispatcher dispatcher;
-    private final AccountUserApi accountUserApi;
-    private final TagUserApi tagUserApi;
+    private final AccountInternalApi accountUserApi;
+    private final TagInternalApi tagUserApi;
     private final HtmlInvoiceGenerator generator;
     private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
-    public DefaultInvoiceUserApi(final InvoiceDao dao, final InvoiceDispatcher dispatcher, final AccountUserApi accountUserApi,
-                                 final TagUserApi tagUserApi, final HtmlInvoiceGenerator generator, final InternalCallContextFactory internalCallContextFactory) {
+    public DefaultInvoiceUserApi(final InvoiceDao dao, final InvoiceDispatcher dispatcher, final AccountInternalApi accountUserApi,
+                                 final TagInternalApi tagUserApi, final HtmlInvoiceGenerator generator, final InternalCallContextFactory internalCallContextFactory) {
         this.dao = dao;
         this.dispatcher = dispatcher;
         this.accountUserApi = accountUserApi;
@@ -122,7 +123,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                                             final CallContext context) throws InvoiceApiException {
         final Account account;
         try {
-            account = accountUserApi.getAccountById(accountId, context);
+            account = accountUserApi.getAccountById(accountId, internalCallContextFactory.createInternalTenantContext(context));
         } catch (AccountApiException e) {
             throw new InvoiceApiException(e, ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID, e.toString());
         }
@@ -247,11 +248,12 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
             throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND, invoiceId);
         }
 
-        final Account account = accountUserApi.getAccountById(invoice.getAccountId(), context);
+        final InternalTenantContext internalContext =  internalCallContextFactory.createInternalTenantContext(context);
+        final Account account = accountUserApi.getAccountById(invoice.getAccountId(), internalContext);
 
         // Check if this account has the MANUAL_PAY system tag
         boolean manualPay = false;
-        final Map<String, Tag> accountTags = tagUserApi.getTags(account.getId(), ObjectType.ACCOUNT, context);
+        final Map<String, Tag> accountTags = tagUserApi.getTags(account.getId(), ObjectType.ACCOUNT, internalContext);
         for (final Tag tag : accountTags.values()) {
             if (ControlTagType.MANUAL_PAY.getId().equals(tag.getTagDefinitionId())) {
                 manualPay = true;

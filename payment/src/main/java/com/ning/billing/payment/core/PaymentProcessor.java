@@ -15,6 +15,8 @@
  */
 package com.ning.billing.payment.core;
 
+import static com.ning.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR_NAMED;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Collection;
@@ -34,7 +36,6 @@ import org.slf4j.LoggerFactory;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.config.PaymentConfig;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
@@ -58,19 +59,18 @@ import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
 import com.ning.billing.payment.retry.AutoPayRetryService.AutoPayRetryServiceScheduler;
 import com.ning.billing.payment.retry.FailedPaymentRetryService.FailedPaymentRetryServiceScheduler;
 import com.ning.billing.payment.retry.PluginFailureRetryService.PluginFailureRetryServiceScheduler;
-import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.BusEvent;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.globallocker.GlobalLocker;
+import com.ning.billing.util.svcapi.account.AccountInternalApi;
+import com.ning.billing.util.svcapi.tag.TagInternalApi;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.inject.name.Named;
-
-import static com.ning.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR_NAMED;
 
 public class PaymentProcessor extends ProcessorBase {
 
@@ -92,9 +92,9 @@ public class PaymentProcessor extends ProcessorBase {
     @Inject
     public PaymentProcessor(final PaymentProviderPluginRegistry pluginRegistry,
                             final PaymentMethodProcessor paymentMethodProcessor,
-                            final AccountUserApi accountUserApi,
+                            final AccountInternalApi accountUserApi,
                             final InvoicePaymentApi invoicePaymentApi,
-                            final TagUserApi tagUserApi,
+                            final TagInternalApi tagUserApi,
                             final FailedPaymentRetryServiceScheduler failedPaymentRetryService,
                             final PluginFailureRetryServiceScheduler pluginFailureRetryService,
                             final AutoPayRetryServiceScheduler autoPayoffRetryService,
@@ -328,7 +328,7 @@ public class PaymentProcessor extends ProcessorBase {
                 return;
             }
 
-            final Account account = accountUserApi.getAccountById(payment.getAccountId(), context.toCallContext());
+            final Account account = accountInternalApi.getAccountById(payment.getAccountId(), context);
             final PaymentPluginApi plugin = getPaymentProviderPlugin(account, context);
 
             voidPluginDispatcher.dispatchWithAccountLock(new CallableWithAccountLock<Void>(locker,

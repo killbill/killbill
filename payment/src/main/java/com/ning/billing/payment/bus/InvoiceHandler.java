@@ -22,7 +22,6 @@ import org.slf4j.LoggerFactory;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.invoice.api.InvoiceCreationEvent;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.core.PaymentProcessor;
@@ -30,8 +29,10 @@ import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.DefaultCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
+import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.svcapi.account.AccountInternalApi;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
@@ -39,7 +40,7 @@ import com.google.inject.Inject;
 public class InvoiceHandler {
 
     private final PaymentProcessor paymentProcessor;
-    private final AccountUserApi accountUserApi;
+    private final AccountInternalApi accountApi;
     private final Clock clock;
     private final InternalCallContextFactory internalCallContextFactory;
 
@@ -47,11 +48,11 @@ public class InvoiceHandler {
 
     @Inject
     public InvoiceHandler(final Clock clock,
-                          final AccountUserApi accountUserApi,
+                          final AccountInternalApi accountApi,
                           final PaymentProcessor paymentProcessor,
                           final InternalCallContextFactory internalCallContextFactory) {
         this.clock = clock;
-        this.accountUserApi = accountUserApi;
+        this.accountApi = accountApi;
         this.paymentProcessor = paymentProcessor;
         this.internalCallContextFactory = internalCallContextFactory;
     }
@@ -64,9 +65,10 @@ public class InvoiceHandler {
 
         final Account account;
         try {
-            // TODO retrieve tenantId?
+            // API_FIX
             final CallContext context = new DefaultCallContext(null, "PaymentRequestProcessor", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken(), clock);
-            account = accountUserApi.getAccountById(event.getAccountId(), context);
+            final InternalTenantContext internalContext = internalCallContextFactory.createInternalCallContext(event.getAccountId(), context);
+            account = accountApi.getAccountById(event.getAccountId(), internalContext);
             paymentProcessor.createPayment(account, event.getInvoiceId(), null, internalCallContextFactory.createInternalCallContext(event.getAccountId(), context), false, false);
         } catch (AccountApiException e) {
             log.error("Failed to process invoice payment", e);

@@ -29,7 +29,6 @@ import org.testng.annotations.Guice;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.MockPlan;
 import com.ning.billing.catalog.MockPlanPhase;
 import com.ning.billing.catalog.api.BillingPeriod;
@@ -55,8 +54,9 @@ import com.ning.billing.util.bus.DefaultBusService;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.globallocker.GlobalLocker;
-import com.ning.billing.util.svcapi.junction.BillingInternalApi;
+import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.junction.BillingEventSet;
+import com.ning.billing.util.svcapi.junction.BillingInternalApi;
 import com.ning.billing.util.svcapi.junction.BillingModeType;
 
 import com.google.inject.Inject;
@@ -82,7 +82,7 @@ public abstract class InvoiceApiTestBase extends InvoicingTestBase {
     protected BillingInternalApi billingApi;
 
     @Inject
-    protected AccountUserApi accountUserApi;
+    protected AccountInternalApi accountApi;
 
     @Inject
     protected BusService busService;
@@ -130,7 +130,7 @@ public abstract class InvoiceApiTestBase extends InvoicingTestBase {
         Mockito.when(billingApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), internalCallContext)).thenReturn(events);
 
         final InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
-        final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountUserApi, billingApi,
+        final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountApi, billingApi,
                                                                    invoiceDao, invoiceNotifier, locker, busService.getBus(),
                                                                    clock, internalCallContextFactory);
 
@@ -152,7 +152,7 @@ public abstract class InvoiceApiTestBase extends InvoicingTestBase {
     protected Account createAccount() throws AccountApiException {
         final UUID accountId = UUID.randomUUID();
         final Account account = Mockito.mock(Account.class);
-        Mockito.when(accountUserApi.getAccountById(accountId, callContext)).thenReturn(account);
+        Mockito.when(accountApi.getAccountById(accountId, internalCallContext)).thenReturn(account);
         Mockito.when(account.getCurrency()).thenReturn(accountCurrency);
         Mockito.when(account.getId()).thenReturn(accountId);
         Mockito.when(account.isNotifiedForInvoices()).thenReturn(true);
