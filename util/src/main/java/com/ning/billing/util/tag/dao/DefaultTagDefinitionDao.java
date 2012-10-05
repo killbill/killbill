@@ -144,7 +144,7 @@ public class DefaultTagDefinitionDao implements TagDefinitionDao {
                         tagDefinitionEvent = tagEventBuilder.newUserTagDefinitionCreationEvent(tagDefinition.getId(), tagDefinition, context.getUserToken());
                     }
                     try {
-                        bus.postFromTransaction(tagDefinitionEvent, tagDefinitionSqlDao);
+                        bus.postFromTransaction(tagDefinitionEvent, tagDefinitionSqlDao, context);
                     } catch (Bus.EventBusException e) {
                         log.warn("Failed to post tag definition creation event for tag " + tagDefinition.getId(), e);
                     }
@@ -199,7 +199,7 @@ public class DefaultTagDefinitionDao implements TagDefinitionDao {
                         tagDefinitionEvent = tagEventBuilder.newUserTagDefinitionDeletionEvent(tagDefinition.getId(), tagDefinition, context.getUserToken());
                     }
                     try {
-                        bus.postFromTransaction(tagDefinitionEvent, tagDefinitionSqlDao);
+                        bus.postFromTransaction(tagDefinitionEvent, tagDefinitionSqlDao, context);
                     } catch (Bus.EventBusException e) {
                         log.warn("Failed to post tag definition deletion event for tag " + tagDefinition.getId(), e);
                     }

@@ -125,12 +125,12 @@ public abstract class ProcessorBase {
         return getPaymentProviderPlugin(paymentMethodId, context);
     }
 
-    protected void postPaymentEvent(final BusEvent ev, final UUID accountId) {
+    protected void postPaymentEvent(final BusEvent ev, final UUID accountId, final InternalCallContext context) {
         if (ev == null) {
             return;
         }
         try {
-            eventBus.post(ev);
+            eventBus.post(ev, context);
         } catch (EventBusException e) {
             log.error("Failed to post Payment event event for account {} ", accountId, e);
         }

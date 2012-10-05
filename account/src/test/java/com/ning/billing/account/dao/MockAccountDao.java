@@ -54,7 +54,7 @@ public class MockAccountDao implements AccountDao {
         accounts.put(account.getId(), account);
 
         try {
-            eventBus.post(new DefaultAccountCreationEvent(account, null));
+            eventBus.post(new DefaultAccountCreationEvent(account, null), context);
         } catch (EventBusException ex) {
             throw new RuntimeException(ex);
         }
@@ -97,7 +97,7 @@ public class MockAccountDao implements AccountDao {
         final AccountChangeEvent changeEvent = new DefaultAccountChangeEvent(account.getId(), null, currentAccount, account);
         if (changeEvent.hasChanges()) {
             try {
-                eventBus.post(changeEvent);
+                eventBus.post(changeEvent, context);
             } catch (EventBusException ex) {
                 throw new RuntimeException(ex);
             }

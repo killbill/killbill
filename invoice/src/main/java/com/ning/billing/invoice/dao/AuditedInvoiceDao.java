@@ -402,7 +402,7 @@ public class AuditedInvoiceDao implements InvoiceDao {
                 }
 
                 // Notify the bus since the balance of the invoice changed
-                notifyBusOfInvoiceAdjustment(transactional, invoice.getId(), invoice.getAccountId(), context.getUserToken());
+                notifyBusOfInvoiceAdjustment(transactional, invoice.getId(), invoice.getAccountId(), context.getUserToken(), context);
 
                 // Save audit logs
                 transactional.insertAuditFromTransaction(audits, context);
@@ -543,7 +543,7 @@ public class AuditedInvoiceDao implements InvoiceDao {
 
                     // Notify the bus since the balance of the invoice changed
                     final UUID accountId = transactional.getAccountIdFromInvoicePaymentId(chargeBack.getId().toString(), context);
-                    notifyBusOfInvoiceAdjustment(transactional, payment.getInvoiceId(), accountId, context.getUserToken());
+                    notifyBusOfInvoiceAdjustment(transactional, payment.getInvoiceId(), accountId, context.getUserToken(), context);
 
                     return chargeBack;
                 }
@@ -637,7 +637,7 @@ public class AuditedInvoiceDao implements InvoiceDao {
                 }
 
                 // Notify the bus since the balance of the invoice changed
-                notifyBusOfInvoiceAdjustment(transactional, invoiceId, accountId, context.getUserToken());
+                notifyBusOfInvoiceAdjustment(transactional, invoiceId, accountId, context.getUserToken(), context);
 
                 // Save audit logs
                 transactional.insertAuditFromTransaction(audits, context);
@@ -676,7 +676,7 @@ public class AuditedInvoiceDao implements InvoiceDao {
                 insertItemAndAddCBAIfNeeded(transactional, credit, audits, context);
 
                 // Notify the bus since the balance of the invoice changed
-                notifyBusOfInvoiceAdjustment(transactional, invoiceId, accountId, context.getUserToken());
+                notifyBusOfInvoiceAdjustment(transactional, invoiceId, accountId, context.getUserToken(), context);
 
                 // Save audit logs
                 transactional.insertAuditFromTransaction(audits, context);
@@ -697,7 +697,7 @@ public class AuditedInvoiceDao implements InvoiceDao {
                 final InvoiceItem invoiceItemAdjustment = createAdjustmentItem(transactional, invoiceId, invoiceItemId, positiveAdjAmount,
                                                                                currency, effectiveDate, context);
                 insertItemAndAddCBAIfNeeded(transactional, invoiceItemAdjustment, audits, context);
-                notifyBusOfInvoiceAdjustment(transactional, invoiceId, accountId, context.getUserToken());
+                notifyBusOfInvoiceAdjustment(transactional, invoiceId, accountId, context.getUserToken(), context);
 
                 // Save audit logs
                 transactional.insertAuditFromTransaction(audits, context);
@@ -978,9 +978,10 @@ public class AuditedInvoiceDao implements InvoiceDao {
         }
     }
 
-    private void notifyBusOfInvoiceAdjustment(final Transmogrifier transactional, final UUID invoiceId, final UUID accountId, final UUID userToken) {
+    private void notifyBusOfInvoiceAdjustment(final Transmogrifier transactional, final UUID invoiceId, final UUID accountId,
+                                              final UUID userToken, final InternalCallContext context) {
         try {
-            eventBus.postFromTransaction(new DefaultInvoiceAdjustmentEvent(invoiceId, accountId, userToken), transactional);
+            eventBus.postFromTransaction(new DefaultInvoiceAdjustmentEvent(invoiceId, accountId, userToken), transactional, context);
         } catch (EventBusException e) {
             log.warn("Failed to post adjustment event for invoice " + invoiceId, e);
         }

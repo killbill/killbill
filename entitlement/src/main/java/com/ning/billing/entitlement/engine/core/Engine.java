@@ -199,7 +199,8 @@ public class Engine implements EventListener, EntitlementService {
         }
 
         try {
-            eventBus.post(subscription.getTransitionFromEvent(event, theRealSeqId));
+            final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(subscription.getBundleId(), ObjectType.BUNDLE, context);
+            eventBus.post(subscription.getTransitionFromEvent(event, theRealSeqId), internalCallContext);
         } catch (EventBusException e) {
             log.warn("Failed to post entitlement event " + event, e);
         }

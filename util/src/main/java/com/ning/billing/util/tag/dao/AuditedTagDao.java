@@ -130,7 +130,7 @@ public class AuditedTagDao extends AuditedCollectionDaoBase<Tag, Tag> implements
                     tagEvent = tagEventBuilder.newUserTagCreationEvent(tag.getId(), objectId, objectType, tagDefinition, context.getUserToken());
                 }
                 try {
-                    bus.postFromTransaction(tagEvent, AuditedTagDao.this.tagSqlDao);
+                    bus.postFromTransaction(tagEvent, tagSqlDao, context);
                 } catch (Bus.EventBusException e) {
                     log.warn("Failed to post tag creation event for tag " + tag.getId().toString(), e);
                 }
@@ -180,7 +180,7 @@ public class AuditedTagDao extends AuditedCollectionDaoBase<Tag, Tag> implements
                         tagEvent = tagEventBuilder.newUserTagDeletionEvent(tag.getId(), objectId, objectType, tagDefinition, context.getUserToken());
                     }
                     try {
-                        bus.postFromTransaction(tagEvent, tagSqlDao);
+                        bus.postFromTransaction(tagEvent, tagSqlDao, context);
                     } catch (Bus.EventBusException e) {
                         log.warn("Failed to post tag deletion event for tag " + tag.getId().toString(), e);
                     }

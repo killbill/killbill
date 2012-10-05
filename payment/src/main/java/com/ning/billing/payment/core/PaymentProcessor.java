@@ -214,7 +214,7 @@ public class PaymentProcessor extends ProcessorBase {
             // This means that events will be posted for null and zero dollar invoices (e.g. trials).
             final PaymentErrorEvent event = new DefaultPaymentErrorEvent(account.getId(), invoiceId, null,
                                                                          ErrorCode.PAYMENT_NO_DEFAULT_PAYMENT_METHOD.toString(), context.getUserToken());
-            postPaymentEvent(event, account.getId());
+            postPaymentEvent(event, account.getId(), context);
             throw e;
         }
 
@@ -484,7 +484,7 @@ public class PaymentProcessor extends ProcessorBase {
             throw new PaymentApiException(ErrorCode.INVOICE_NOT_FOUND, invoice.getId(), e.toString());
         } finally {
             if (event != null) {
-                postPaymentEvent(event, account.getId());
+                postPaymentEvent(event, account.getId(), context);
             }
         }
         return new DefaultPayment(payment, allAttempts, Collections.<RefundModelDao>emptyList());

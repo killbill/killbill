@@ -201,7 +201,7 @@ public abstract class TestEventBusBase extends UtilTestSuiteWithEmbeddedDB {
             final MyEventHandler handler = new MyEventHandler(1);
             eventBus.register(handler);
 
-            eventBus.post(new MyEventWithException("my-event", 1L, UUID.randomUUID(), BusEventType.ACCOUNT_CHANGE.toString()));
+            eventBus.post(new MyEventWithException("my-event", 1L, UUID.randomUUID(), BusEventType.ACCOUNT_CHANGE.toString()), internalCallContext);
 
             Thread.sleep(50000);
         } catch (Exception ignored) {
@@ -215,7 +215,7 @@ public abstract class TestEventBusBase extends UtilTestSuiteWithEmbeddedDB {
             eventBus.register(handler);
 
             for (int i = 0; i < nbEvents; i++) {
-                eventBus.post(new MyEvent("my-event", (long) i, UUID.randomUUID(), BusEventType.ACCOUNT_CHANGE.toString()));
+                eventBus.post(new MyEvent("my-event", (long) i, UUID.randomUUID(), BusEventType.ACCOUNT_CHANGE.toString()), internalCallContext);
             }
 
             final boolean completed = handler.waitForCompletion(10000);
@@ -231,9 +231,9 @@ public abstract class TestEventBusBase extends UtilTestSuiteWithEmbeddedDB {
             eventBus.register(handler);
 
             for (int i = 0; i < 5; i++) {
-                eventBus.post(new MyOtherEvent("my-other-event", (double) i, UUID.randomUUID(), BusEventType.BUNDLE_REPAIR.toString()));
+                eventBus.post(new MyOtherEvent("my-other-event", (double) i, UUID.randomUUID(), BusEventType.BUNDLE_REPAIR.toString()), internalCallContext);
             }
-            eventBus.post(new MyEvent("my-event", 11l, UUID.randomUUID(), BusEventType.ACCOUNT_CHANGE.toString()));
+            eventBus.post(new MyEvent("my-event", 11l, UUID.randomUUID(), BusEventType.ACCOUNT_CHANGE.toString()), internalCallContext);
 
             final boolean completed = handler.waitForCompletion(10000);
             Assert.assertEquals(completed, true);

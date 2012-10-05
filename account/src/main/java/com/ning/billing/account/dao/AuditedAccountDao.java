@@ -112,7 +112,7 @@ public class AuditedAccountDao implements AccountDao {
 
                     final AccountCreationEvent creationEvent = new DefaultAccountCreationEvent(account, context.getUserToken());
                     try {
-                        eventBus.postFromTransaction(creationEvent, transactionalDao);
+                        eventBus.postFromTransaction(creationEvent, transactionalDao, context);
                     } catch (EventBusException e) {
                         log.warn("Failed to post account creation event for account " + account.getId(), e);
                     }
@@ -158,7 +158,7 @@ public class AuditedAccountDao implements AccountDao {
                     final AccountChangeEvent changeEvent = new DefaultAccountChangeEvent(accountId, context.getUserToken(), currentAccount, account);
                     if (changeEvent.hasChanges()) {
                         try {
-                            eventBus.postFromTransaction(changeEvent, transactional);
+                            eventBus.postFromTransaction(changeEvent, transactional, context);
                         } catch (EventBusException e) {
                             log.warn("Failed to post account change event for account " + accountId, e);
                         }
@@ -207,7 +207,7 @@ public class AuditedAccountDao implements AccountDao {
                     final AccountChangeEvent changeEvent = new DefaultAccountChangeEvent(accountId, context.getUserToken(), currentAccount, account);
                     if (changeEvent.hasChanges()) {
                         try {
-                            eventBus.postFromTransaction(changeEvent, transactional);
+                            eventBus.postFromTransaction(changeEvent, transactional, context);
                         } catch (EventBusException e) {
                             log.warn("Failed to post account change event for account " + accountId, e);
                         }

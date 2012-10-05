@@ -167,7 +167,7 @@ public class InvoiceDispatcher {
                 log.info("Generated null invoice.");
                 if (!dryRun) {
                     final BusEvent event = new DefaultNullInvoiceEvent(accountId, clock.getUTCToday(), context.getUserToken());
-                    postEvent(event, accountId);
+                    postEvent(event, accountId, internalCallContext);
                 }
             } else {
                 log.info("Generated invoice {} with {} items.", invoice.getId().toString(), invoice.getNumberOfItems());
@@ -191,7 +191,7 @@ public class InvoiceDispatcher {
                                                                                        context.getUserToken());
 
                     if (isRealInvoiceWithItems) {
-                        postEvent(event, accountId);
+                        postEvent(event, accountId, internalCallContext);
                     }
                 }
             }
@@ -226,9 +226,9 @@ public class InvoiceDispatcher {
         }
     }
 
-    private void postEvent(final BusEvent event, final UUID accountId) {
+    private void postEvent(final BusEvent event, final UUID accountId, final InternalCallContext context) {
         try {
-            eventBus.post(event);
+            eventBus.post(event, context);
         } catch (EventBusException e) {
             log.error(String.format("Failed to post event %s for account %s", event.getBusEventType(), accountId), e);
         }

@@ -19,6 +19,7 @@ package com.ning.billing.util.svcsapi.bus;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
 import com.ning.billing.util.bus.BusEvent;
+import com.ning.billing.util.callcontext.InternalCallContext;
 
 import com.google.common.eventbus.Subscribe;
 
@@ -31,7 +32,6 @@ import com.google.common.eventbus.Subscribe;
  * DB, this API is behaves the same as the regular post() call.
  */
 public interface Bus {
-
 
     public class EventBusException extends Exception {
 
@@ -64,38 +64,36 @@ public interface Bus {
      * Registers all handler methods on {@code object} to receive events.
      * Handler methods need to be Annotated with {@link Subscribe}
      *
-     * @param handlerInstance
+     * @param handlerInstance handler to register
      * @throws EventBusException if bus not been started yet
      */
     public void register(Object handlerInstance) throws EventBusException;
 
-
     /**
      * Unregister the handler for a particular type of event
      *
-     * @param handlerInstance
+     * @param handlerInstance handler to unregister
      * @throws EventBusException
      */
     public void unregister(Object handlerInstance) throws EventBusException;
 
-
     /**
      * Post an event asynchronously
      *
-     * @param event to be posted
+     * @param event   to be posted
+     * @param context call context. account record id and tenant id are expected to be populated
      * @throws EventBusException if bus not been started yet
      */
-    public void post(BusEvent event) throws EventBusException;
+    public void post(BusEvent event, InternalCallContext context) throws EventBusException;
 
     /**
      * Post an event from within a transaction.
      * Guarantees that the event is persisted on disk from within the same transaction
      *
-     * @param event to be posted
-     * @param dao   a valid DAO object obtained through the DBI.onDemand() API.
+     * @param event   to be posted
+     * @param dao     a valid DAO object obtained through the DBI.onDemand() API.
+     * @param context call context. account record id and tenant id are expected to be populated
      * @throws EventBusException if bus not been started yet
      */
-    public void postFromTransaction(BusEvent event, Transmogrifier dao) throws EventBusException;
-
-
+    public void postFromTransaction(BusEvent event, Transmogrifier dao, InternalCallContext context) throws EventBusException;
 }

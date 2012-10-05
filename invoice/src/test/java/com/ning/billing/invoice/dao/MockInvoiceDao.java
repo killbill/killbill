@@ -59,7 +59,7 @@ public class MockInvoiceDao implements InvoiceDao {
         try {
             eventBus.post(new DefaultInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
                                                           invoice.getBalance(), invoice.getCurrency(),
-                                                          null));
+                                                          null), context);
         } catch (Bus.EventBusException ex) {
             throw new RuntimeException(ex);
         }

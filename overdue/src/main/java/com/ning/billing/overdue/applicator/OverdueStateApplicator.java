@@ -134,7 +134,7 @@ public class OverdueStateApplicator<T extends Blockable> {
         }
 
         try {
-            bus.post(createOverdueEvent(overdueable, previousOverdueStateName, nextOverdueState.getName()));
+            bus.post(createOverdueEvent(overdueable, previousOverdueStateName, nextOverdueState.getName()), context);
         } catch (Exception e) {
             log.error("Error posting overdue change event to bus", e);
         }
