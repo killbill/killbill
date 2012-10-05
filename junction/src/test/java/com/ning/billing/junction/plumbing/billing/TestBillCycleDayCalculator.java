@@ -33,11 +33,11 @@ import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
-import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.junction.JunctionTestSuite;
-import com.ning.billing.util.callcontext.TenantContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 
 public class TestBillCycleDayCalculator extends JunctionTestSuite {
 
@@ -49,8 +49,8 @@ public class TestBillCycleDayCalculator extends JunctionTestSuite {
 
         // Create the calculator
         final CatalogService catalogService = Mockito.mock(CatalogService.class);
-        final EntitlementUserApi entitlementUserApi = Mockito.mock(EntitlementUserApi.class);
-        final BillCycleDayCalculator billCycleDayCalculator = new BillCycleDayCalculator(catalogService, entitlementUserApi);
+        final EntitlementInternalApi entitlementApi = Mockito.mock(EntitlementInternalApi.class);
+        final BillCycleDayCalculator billCycleDayCalculator = new BillCycleDayCalculator(catalogService, entitlementApi);
 
         // Create a Bundle associated with a subscription
         final SubscriptionBundle bundle = Mockito.mock(SubscriptionBundle.class);
@@ -59,7 +59,7 @@ public class TestBillCycleDayCalculator extends JunctionTestSuite {
         Mockito.when(subscription.getStartDate()).thenReturn(bpStartDateUTC);
         Mockito.when(subscription.getPreviousTransition()).thenReturn(previousTransition);
         // subscription.getCurrentPlan() will return null as expected (cancelled BP)
-        Mockito.when(entitlementUserApi.getBaseSubscription(Mockito.<UUID>any(), Mockito.<TenantContext>any())).thenReturn(subscription);
+        Mockito.when(entitlementApi.getBaseSubscription(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
 
         // Create a the base plan associated with that subscription
         final Plan plan = Mockito.mock(Plan.class);
@@ -70,7 +70,7 @@ public class TestBillCycleDayCalculator extends JunctionTestSuite {
         final Account account = Mockito.mock(Account.class);
         Mockito.when(account.getTimeZone()).thenReturn(accountTimeZone);
         final BillCycleDay billCycleDay = billCycleDayCalculator.calculateBcdForAlignment(BillingAlignment.BUNDLE, bundle, subscription,
-                                                                                          account, catalog, null, callContext);
+                                                                                          account, catalog, null, internalCallContext);
 
         Assert.assertEquals(billCycleDay.getDayOfMonthUTC(), expectedBCDUTC);
     }
@@ -137,7 +137,7 @@ public class TestBillCycleDayCalculator extends JunctionTestSuite {
     }
 
     private void verifyBCDCalculation(final DateTimeZone accountTimeZone, final DateTime startDateUTC, final int bcdUTC, final int bcdLocal) throws AccountApiException, CatalogApiException {
-        final BillCycleDayCalculator billCycleDayCalculator = new BillCycleDayCalculator(Mockito.mock(CatalogService.class), Mockito.mock(EntitlementUserApi.class));
+        final BillCycleDayCalculator billCycleDayCalculator = new BillCycleDayCalculator(Mockito.mock(CatalogService.class), Mockito.mock(EntitlementInternalApi.class));
 
         final Subscription subscription = Mockito.mock(Subscription.class);
         Mockito.when(subscription.getStartDate()).thenReturn(startDateUTC);

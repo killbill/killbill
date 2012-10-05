@@ -14,17 +14,17 @@
  * under the License.
  */
 
-package com.ning.billing.junction.api;
+package com.ning.billing.util.svcapi.junction;
 
 import java.util.UUID;
 
-import com.ning.billing.entitlement.api.billing.ChargeThruApi;
-import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.svcapi.entitlement.ChargeThruInternalApi;
 
-public interface BillingApi extends ChargeThruApi {
+public interface BillingInternalApi extends ChargeThruInternalApi {
 
     /**
      * @return an ordered list of billing event for the given accounts
      */
-    public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(UUID accountId, CallContext context);
+    public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(UUID accountId, InternalCallContext context);
 }

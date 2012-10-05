@@ -24,24 +24,24 @@ import org.joda.time.Period;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.junction.api.Blockable;
-import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.overdue.OverdueApiException;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.config.api.BillingState;
 import com.ning.billing.overdue.config.api.OverdueStateSet;
 import com.ning.billing.util.config.ValidatingConfig;
 import com.ning.billing.util.config.ValidationErrors;
+import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public abstract class DefaultOverdueStateSet<T extends Blockable> extends ValidatingConfig<OverdueConfig> implements OverdueStateSet<T> {
     private static final Period ZERO_PERIOD = new Period();
-    private final DefaultOverdueState<T> clearState = new DefaultOverdueState<T>().setName(BlockingApi.CLEAR_STATE_NAME).setClearState(true);
+    private final DefaultOverdueState<T> clearState = new DefaultOverdueState<T>().setName(DefaultBlockingState.CLEAR_STATE_NAME).setClearState(true);
 
     protected abstract DefaultOverdueState<T>[] getStates();
 
     @Override
     public OverdueState<T> findState(final String stateName) throws OverdueApiException {
-        if (stateName.equals(BlockingApi.CLEAR_STATE_NAME)) {
+        if (stateName.equals(DefaultBlockingState.CLEAR_STATE_NAME)) {
             return clearState;
         }
         for (final DefaultOverdueState<T> state : getStates()) {

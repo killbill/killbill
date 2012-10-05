@@ -34,17 +34,17 @@ import com.ning.billing.catalog.MockPlan;
 import com.ning.billing.catalog.MockPriceList;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PriceList;
-import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
-import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.overdue.config.api.BillingStateBundle;
 import com.ning.billing.overdue.config.api.PaymentResponse;
-import com.ning.billing.util.callcontext.TenantContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
+import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
@@ -63,15 +63,15 @@ public class TestBillingStateCalculatorBundle extends TestBillingStateCalculator
 
     @Test(groups = "fast")
     public void testBillingStateAfterCancellation() throws Exception {
-        Mockito.when(invoiceApi.getUnpaidInvoicesByAccountId(Mockito.<UUID>any(), Mockito.<LocalDate>any(), Mockito.<TenantContext>any())).thenReturn(ImmutableList.<Invoice>of());
+        Mockito.when(invoiceApi.getUnpaidInvoicesByAccountId(Mockito.<UUID>any(), Mockito.<LocalDate>any(), Mockito.<InternalTenantContext>any())).thenReturn(ImmutableList.<Invoice>of());
 
         final UUID bundleId = UUID.randomUUID();
         final SubscriptionBundle bundle = Mockito.mock(SubscriptionBundle.class);
         Mockito.when(bundle.getId()).thenReturn(bundleId);
 
-        final EntitlementUserApi entitlementApi = Mockito.mock(EntitlementUserApi.class);
+        final EntitlementInternalApi entitlementApi = Mockito.mock(EntitlementInternalApi.class);
         final Subscription subscription = Mockito.mock(Subscription.class);
-        Mockito.when(entitlementApi.getBaseSubscription(Mockito.eq(bundleId), Mockito.<TenantContext>any())).thenReturn(subscription);
+        Mockito.when(entitlementApi.getBaseSubscription(Mockito.eq(bundleId), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
 
         final BillingStateCalculatorBundle calc = new BillingStateCalculatorBundle(entitlementApi, invoiceApi, accountApi, clock);
         final BillingStateBundle billingStateBundle = calc.calculateBillingState(bundle, internalCallContext);
@@ -96,9 +96,9 @@ public class TestBillingStateCalculatorBundle extends TestBillingStateCalculator
         invoices.add(createInvoice(now.plusDays(4), new BigDecimal("10000.00"), createInvoiceItems(new UUID[]{thatBundleId, thisBundleId})));
 
         final Clock clock = new ClockMock();
-        final InvoiceUserApi invoiceApi = Mockito.mock(InvoiceUserApi.class);
-        final EntitlementUserApi entitlementApi = Mockito.mock(EntitlementUserApi.class);
-        Mockito.when(invoiceApi.getUnpaidInvoicesByAccountId(Mockito.<UUID>any(), Mockito.<LocalDate>any(), Mockito.<TenantContext>any())).thenReturn(Collections2.filter(invoices, new Predicate<Invoice>() {
+        final InvoiceInternalApi invoiceApi = Mockito.mock(InvoiceInternalApi.class);
+        final EntitlementInternalApi entitlementApi = Mockito.mock(EntitlementInternalApi.class);
+        Mockito.when(invoiceApi.getUnpaidInvoicesByAccountId(Mockito.<UUID>any(), Mockito.<LocalDate>any(), Mockito.<InternalTenantContext>any())).thenReturn(Collections2.filter(invoices, new Predicate<Invoice>() {
             @Override
             public boolean apply(@Nullable final Invoice invoice) {
                 return invoice != null && BigDecimal.ZERO.compareTo(invoice.getBalance()) < 0;
@@ -127,16 +127,16 @@ public class TestBillingStateCalculatorBundle extends TestBillingStateCalculator
         invoices.add(createInvoice(now.minusDays(1), new BigDecimal("10000.00"), createInvoiceItems(new UUID[]{thatBundleId, thisBundleId})));
 
         final Clock clock = new ClockMock();
-        final InvoiceUserApi invoiceApi = Mockito.mock(InvoiceUserApi.class);
-        Mockito.when(invoiceApi.getUnpaidInvoicesByAccountId(Mockito.<UUID>any(), Mockito.<LocalDate>any(), Mockito.<TenantContext>any())).thenReturn(invoices);
+        final InvoiceInternalApi invoiceApi = Mockito.mock(InvoiceInternalApi.class);
+        Mockito.when(invoiceApi.getUnpaidInvoicesByAccountId(Mockito.<UUID>any(), Mockito.<LocalDate>any(), Mockito.<InternalTenantContext>any())).thenReturn(invoices);
 
         final SubscriptionBundle bundle = Mockito.mock(SubscriptionBundle.class);
         Mockito.when(bundle.getId()).thenReturn(thisBundleId);
         Mockito.when(bundle.getAccountId()).thenReturn(UUID.randomUUID());
 
-        final EntitlementUserApi entitlementApi = Mockito.mock(EntitlementUserApi.class);
+        final EntitlementInternalApi entitlementApi = Mockito.mock(EntitlementInternalApi.class);
         final Subscription subscription = Mockito.mock(Subscription.class);
-        Mockito.when(entitlementApi.getBaseSubscription(Mockito.<UUID>any(), Mockito.<TenantContext>any())).thenReturn(subscription);
+        Mockito.when(entitlementApi.getBaseSubscription(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
 
         final Plan plan = MockPlan.createBicycleNoTrialEvergreen1USD();
         final PriceList pricelist = new MockPriceList();
@@ -168,16 +168,16 @@ public class TestBillingStateCalculatorBundle extends TestBillingStateCalculator
         final List<Invoice> invoices = new ArrayList<Invoice>(5);
 
         final Clock clock = new ClockMock();
-        final InvoiceUserApi invoiceApi = Mockito.mock(InvoiceUserApi.class);
-        Mockito.when(invoiceApi.getUnpaidInvoicesByAccountId(Mockito.<UUID>any(), Mockito.<LocalDate>any(), Mockito.<TenantContext>any())).thenReturn(invoices);
+        final InvoiceInternalApi invoiceApi = Mockito.mock(InvoiceInternalApi.class);
+        Mockito.when(invoiceApi.getUnpaidInvoicesByAccountId(Mockito.<UUID>any(), Mockito.<LocalDate>any(), Mockito.<InternalTenantContext>any())).thenReturn(invoices);
 
         final SubscriptionBundle bundle = Mockito.mock(SubscriptionBundle.class);
         Mockito.when(bundle.getId()).thenReturn(thisBundleId);
         Mockito.when(bundle.getAccountId()).thenReturn(UUID.randomUUID());
 
-        final EntitlementUserApi entitlementApi = Mockito.mock(EntitlementUserApi.class);
+        final EntitlementInternalApi entitlementApi = Mockito.mock(EntitlementInternalApi.class);
         final Subscription subscription = Mockito.mock(Subscription.class);
-        Mockito.when(entitlementApi.getBaseSubscription(Mockito.<UUID>any(), Mockito.<TenantContext>any())).thenReturn(subscription);
+        Mockito.when(entitlementApi.getBaseSubscription(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
 
         final Plan plan = MockPlan.createBicycleNoTrialEvergreen1USD();
         final PriceList pricelist = new MockPriceList();

@@ -16,6 +16,10 @@
 
 package com.ning.billing.junction.plumbing.billing;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Hashtable;
@@ -41,27 +45,23 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
-import com.ning.billing.entitlement.api.billing.BillingEvent;
-import com.ning.billing.entitlement.api.billing.BillingModeType;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.junction.JunctionTestSuite;
 import com.ning.billing.junction.api.Blockable;
-import com.ning.billing.junction.api.Blockable.Type;
-import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.junction.api.BlockingState;
-import com.ning.billing.junction.api.DefaultBlockingState;
+import com.ning.billing.junction.api.Blockable.Type;
 import com.ning.billing.junction.dao.BlockingStateDao;
 import com.ning.billing.junction.plumbing.billing.BlockingCalculator.DisabledDuration;
 import com.ning.billing.mock.api.MockBillCycleDay;
 import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.svcapi.junction.BillingEvent;
+import com.ning.billing.util.svcapi.junction.BillingModeType;
+import com.ning.billing.util.svcapi.junction.BlockingApi;
+import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertNull;
 
 public class TestBlockingCalculator extends JunctionTestSuite {
 
@@ -139,9 +139,9 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         blockingStates.add(new DefaultBlockingState(bundleId1, DISABLED_BUNDLE, Blockable.Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now));
         blockingStates.add(new DefaultBlockingState(bundleId1, CLEAR_BUNDLE, Blockable.Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now.plusDays(2)));
 
-        Mockito.when(blockingApi.getBlockingHistory(bundleId1, callContext)).thenReturn(blockingStates);
+        Mockito.when(blockingApi.getBlockingHistory(bundleId1, internalCallContext)).thenReturn(blockingStates);
 
-        odc.insertBlockingEvents(billingEvents, callContext);
+        odc.insertBlockingEvents(billingEvents, internalCallContext);
 
         assertEquals(billingEvents.size(), 7);
 
@@ -751,9 +751,9 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         blockingEvents.add(new DefaultBlockingState(ovdId, DISABLED_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, new LocalDate(2012, 7, 25).toDateTimeAtStartOfDay(DateTimeZone.UTC)));
         blockingEvents.add(new DefaultBlockingState(ovdId, CLEAR_BUNDLE, Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, new LocalDate(2012, 7, 25).toDateTimeAtStartOfDay(DateTimeZone.UTC)));
 
-        Mockito.when(blockingApi.getBlockingHistory(bundleId1, callContext)).thenReturn(blockingEvents);
+        Mockito.when(blockingApi.getBlockingHistory(bundleId1, internalCallContext)).thenReturn(blockingEvents);
 
-        odc.insertBlockingEvents(billingEvents, callContext);
+        odc.insertBlockingEvents(billingEvents, internalCallContext);
 
         assertEquals(billingEvents.size(), 5);
         final List<BillingEvent> events = new ArrayList<BillingEvent>(billingEvents);

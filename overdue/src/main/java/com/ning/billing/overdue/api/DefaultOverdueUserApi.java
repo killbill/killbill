@@ -22,7 +22,6 @@ import org.slf4j.LoggerFactory;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.junction.api.Blockable;
-import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.overdue.OverdueApiException;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.OverdueUserApi;
@@ -35,6 +34,7 @@ import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.TenantContext;
+import com.ning.billing.util.svcapi.junction.BlockingApi;
 
 import com.google.inject.Inject;
 
@@ -59,7 +59,7 @@ public class DefaultOverdueUserApi implements OverdueUserApi {
     @Override
     public <T extends Blockable> OverdueState<T> getOverdueStateFor(final T overdueable, final TenantContext context) throws OverdueException {
         try {
-            final String stateName = accessApi.getBlockingStateFor(overdueable, context).getStateName();
+            final String stateName = accessApi.getBlockingStateFor(overdueable, internalCallContextFactory.createInternalTenantContext(context)).getStateName();
             final OverdueStateSet<SubscriptionBundle> states = overdueConfig.getBundleStateSet();
             return (OverdueState<T>) states.findState(stateName);
         } catch (OverdueApiException e) {

@@ -55,7 +55,6 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.catalog.api.TimeUnit;
 import com.ning.billing.config.EntitlementConfig;
 import com.ning.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
-import com.ning.billing.entitlement.api.billing.ChargeThruApi;
 import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi;
 import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi.EntitlementAccountMigration;
 import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi.EntitlementBundleMigration;
@@ -81,6 +80,7 @@ import com.ning.billing.util.bus.DefaultBusService;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.glue.RealImplementation;
+import com.ning.billing.util.svcapi.entitlement.ChargeThruInternalApi;
 
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -96,7 +96,7 @@ public abstract class TestApiBase extends EntitlementTestSuiteWithEmbeddedDB imp
 
     protected EntitlementService entitlementService;
     protected EntitlementUserApi entitlementApi;
-    protected ChargeThruApi billingApi;
+    protected ChargeThruInternalApi billingApi;
     protected EntitlementTransferApi transferApi;
 
     protected EntitlementMigrationApi migrationApi;
@@ -163,7 +163,7 @@ public abstract class TestApiBase extends EntitlementTestSuiteWithEmbeddedDB imp
 
         entitlementService = g.getInstance(EntitlementService.class);
         entitlementApi = g.getInstance(Key.get(EntitlementUserApi.class, RealImplementation.class));
-        billingApi = g.getInstance(ChargeThruApi.class);
+        billingApi = g.getInstance(ChargeThruInternalApi.class);
         migrationApi = g.getInstance(EntitlementMigrationApi.class);
         repairApi = g.getInstance(EntitlementTimelineApi.class);
         transferApi = g.getInstance(EntitlementTransferApi.class);

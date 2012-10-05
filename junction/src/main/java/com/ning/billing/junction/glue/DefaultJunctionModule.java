@@ -21,8 +21,6 @@ import org.skife.jdbi.v2.IDBI;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.glue.JunctionModule;
-import com.ning.billing.junction.api.BillingApi;
-import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.junction.api.blocking.DefaultBlockingApi;
 import com.ning.billing.junction.block.BlockingChecker;
 import com.ning.billing.junction.block.DefaultBlockingChecker;
@@ -32,6 +30,8 @@ import com.ning.billing.junction.plumbing.api.BlockingAccountUserApi;
 import com.ning.billing.junction.plumbing.api.BlockingEntitlementUserApi;
 import com.ning.billing.junction.plumbing.billing.BlockingCalculator;
 import com.ning.billing.junction.plumbing.billing.DefaultBillingApi;
+import com.ning.billing.util.svcapi.junction.BillingInternalApi;
+import com.ning.billing.util.svcapi.junction.BlockingApi;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
@@ -59,7 +59,7 @@ public class DefaultJunctionModule extends AbstractModule implements JunctionMod
     }
 
     public void installBillingApi() {
-        bind(BillingApi.class).to(DefaultBillingApi.class).asEagerSingleton();
+        bind(BillingInternalApi.class).to(DefaultBillingApi.class).asEagerSingleton();
     }
 
     public void installBlockingStateDao() {

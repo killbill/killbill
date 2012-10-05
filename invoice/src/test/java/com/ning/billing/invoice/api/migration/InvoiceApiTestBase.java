@@ -37,7 +37,6 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
-import com.ning.billing.entitlement.api.billing.BillingModeType;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.invoice.InvoiceDispatcher;
 import com.ning.billing.invoice.MockBillingEventSet;
@@ -50,14 +49,15 @@ import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.generator.InvoiceGenerator;
 import com.ning.billing.invoice.notification.NullInvoiceNotifier;
 import com.ning.billing.invoice.tests.InvoicingTestBase;
-import com.ning.billing.junction.api.BillingApi;
-import com.ning.billing.junction.api.BillingEventSet;
 import com.ning.billing.mock.api.MockBillCycleDay;
 import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.bus.DefaultBusService;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.globallocker.GlobalLocker;
+import com.ning.billing.util.svcapi.junction.BillingInternalApi;
+import com.ning.billing.util.svcapi.junction.BillingEventSet;
+import com.ning.billing.util.svcapi.junction.BillingModeType;
 
 import com.google.inject.Inject;
 
@@ -79,7 +79,7 @@ public abstract class InvoiceApiTestBase extends InvoicingTestBase {
     protected InvoiceGenerator generator;
 
     @Inject
-    protected BillingApi billingApi;
+    protected BillingInternalApi billingApi;
 
     @Inject
     protected AccountUserApi accountUserApi;
@@ -127,7 +127,7 @@ public abstract class InvoiceApiTestBase extends InvoicingTestBase {
                                           fixedPrice, BigDecimal.ONE, currency, BillingPeriod.MONTHLY, 1,
                                           BillingModeType.IN_ADVANCE, "", 1L, SubscriptionTransitionType.CREATE));
 
-        Mockito.when(billingApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), callContext)).thenReturn(events);
+        Mockito.when(billingApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), internalCallContext)).thenReturn(events);
 
         final InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
         final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountUserApi, billingApi,

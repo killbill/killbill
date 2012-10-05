@@ -16,6 +16,10 @@
 
 package com.ning.billing.entitlement.api.user;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
+
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -42,10 +46,6 @@ import com.ning.billing.util.clock.DefaultClock;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
-
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertTrue;
 
 public class TestUserApiError extends TestApiBase {
 
@@ -202,7 +202,7 @@ public class TestUserApiError extends TestApiBase {
             final DateTime expectedPhaseTrialChange = DefaultClock.addDuration(subscription.getStartDate(), trialPhase.getDuration());
             final Duration ctd = getDurationMonth(1);
             final DateTime newChargedThroughDate = DefaultClock.addDuration(expectedPhaseTrialChange, ctd);
-            billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate.toLocalDate(), callContext);
+            billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate.toLocalDate(), internalCallContext);
 
             subscription = entitlementApi.getSubscriptionFromId(subscription.getId(), tenantContext);
 

@@ -16,6 +16,11 @@
 
 package com.ning.billing.entitlement.api.timeline;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
+import static org.testng.Assert.assertTrue;
+
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -48,11 +53,6 @@ import com.ning.billing.entitlement.glue.MockEngineModuleSql;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
-
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertNull;
-import static org.testng.Assert.assertTrue;
 
 public class TestRepairBP extends TestApiBaseRepair {
 
@@ -585,7 +585,7 @@ public class TestRepairBP extends TestApiBaseRepair {
 
         // SET CTD to BASE SUBSCRIPTION SP CANCEL OCCURS EOT
         final DateTime newChargedThroughDate = baseSubscription.getStartDate().plusDays(30).plusMonths(1);
-        billingApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate.toLocalDate(), callContext);
+        billingApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate.toLocalDate(), internalCallContext);
         baseSubscription = entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
 
         final DateTime requestedChange = clock.getUTCNow();
@@ -698,7 +698,7 @@ public class TestRepairBP extends TestApiBaseRepair {
                 // Move clock at least a sec to make sure the last_sys_update from bundle is different-- and therefore generates a different viewId
                 clock.setDeltaFromReality(1000);
 
-                billingApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate.toLocalDate(), callContext);
+                billingApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate.toLocalDate(), internalCallContext);
                 entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
 
                 repairApi.repairBundle(bRepair, true, callContext);

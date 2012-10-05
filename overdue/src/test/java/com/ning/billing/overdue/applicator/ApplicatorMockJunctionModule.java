@@ -22,12 +22,13 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import com.ning.billing.junction.api.Blockable;
-import com.ning.billing.junction.api.Blockable.Type;
-import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.junction.api.BlockingState;
+import com.ning.billing.junction.api.Blockable.Type;
 import com.ning.billing.mock.glue.MockJunctionModule;
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.TenantContext;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.svcapi.junction.BlockingApi;
+import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 
 public class ApplicatorMockJunctionModule extends MockJunctionModule {
 
@@ -40,12 +41,12 @@ public class ApplicatorMockJunctionModule extends MockJunctionModule {
         }
 
         @Override
-        public BlockingState getBlockingStateFor(final Blockable overdueable, TenantContext context) {
+        public BlockingState getBlockingStateFor(final Blockable overdueable, InternalTenantContext context) {
             return new BlockingState() {
 
                 @Override
                 public String getStateName() {
-                    return BlockingApi.CLEAR_STATE_NAME;
+                    return DefaultBlockingState.CLEAR_STATE_NAME;
                 }
 
                 @Override
@@ -88,22 +89,22 @@ public class ApplicatorMockJunctionModule extends MockJunctionModule {
         }
 
         @Override
-        public BlockingState getBlockingStateFor(final UUID overdueableId, final TenantContext context) {
+        public BlockingState getBlockingStateFor(final UUID overdueableId, final InternalTenantContext context) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public List<BlockingState> getBlockingHistory(final Blockable overdueable, final TenantContext context) {
+        public List<BlockingState> getBlockingHistory(final Blockable overdueable, final InternalTenantContext context) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public List<BlockingState> getBlockingHistory(final UUID overdueableId, final TenantContext context) {
+        public List<BlockingState> getBlockingHistory(final UUID overdueableId, final InternalTenantContext context) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public <T extends Blockable> void setBlockingState(final BlockingState state, final CallContext context) {
+        public <T extends Blockable> void setBlockingState(final BlockingState state, final InternalCallContext context) {
             blockingState = state;
         }
 

@@ -14,13 +14,11 @@
  * under the License.
  */
 
-package com.ning.billing.junction.api;
+package com.ning.billing.util.svcapi.junction;
 
 import java.util.List;
 import java.util.SortedSet;
 import java.util.UUID;
-
-import com.ning.billing.entitlement.api.billing.BillingEvent;
 
 public interface BillingEventSet extends SortedSet<BillingEvent> {
 

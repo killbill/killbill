@@ -43,7 +43,6 @@ import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
-import com.ning.billing.entitlement.api.billing.BillingModeType;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
@@ -55,8 +54,6 @@ import com.ning.billing.invoice.generator.InvoiceGenerator;
 import com.ning.billing.invoice.notification.NextBillingDateNotifier;
 import com.ning.billing.invoice.notification.NullInvoiceNotifier;
 import com.ning.billing.invoice.tests.InvoicingTestBase;
-import com.ning.billing.junction.api.BillingApi;
-import com.ning.billing.junction.api.BillingEventSet;
 import com.ning.billing.mock.api.MockBillCycleDay;
 import com.ning.billing.util.bus.BusService;
 import com.ning.billing.util.bus.DefaultBusService;
@@ -64,6 +61,9 @@ import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.globallocker.GlobalLocker;
+import com.ning.billing.util.svcapi.junction.BillingInternalApi;
+import com.ning.billing.util.svcapi.junction.BillingEventSet;
+import com.ning.billing.util.svcapi.junction.BillingModeType;
 
 import com.google.inject.Inject;
 
@@ -91,7 +91,7 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
     private BusService busService;
 
     @Inject
-    private BillingApi billingApi;
+    private BillingInternalApi billingApi;
 
     @Inject
     private Clock clock;
@@ -149,7 +149,7 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
                                           fixedPrice, BigDecimal.ONE, currency, BillingPeriod.MONTHLY, 1,
                                           BillingModeType.IN_ADVANCE, "", 1L, SubscriptionTransitionType.CREATE));
 
-        Mockito.when(billingApi.getBillingEventsForAccountAndUpdateAccountBCD(accountId, callContext)).thenReturn(events);
+        Mockito.when(billingApi.getBillingEventsForAccountAndUpdateAccountBCD(accountId, internalCallContext)).thenReturn(events);
 
         final DateTime target = new DateTime();
 
@@ -206,7 +206,7 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
                                           new MockPlanPhase(jetTrialEvergreen1000USD, PhaseType.EVERGREEN), null, new BigDecimal("1000"), account.getCurrency(), BillingPeriod.MONTHLY,
                                           31, 31, BillingModeType.IN_ADVANCE, "CHANGE", 3L, SubscriptionTransitionType.CHANGE));
 
-        Mockito.when(billingApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), callContext)).thenReturn(events);
+        Mockito.when(billingApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), internalCallContext)).thenReturn(events);
         final InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
         final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountUserApi, billingApi, invoiceDao,
                                                                    invoiceNotifier, locker, busService.getBus(),

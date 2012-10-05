@@ -21,6 +21,7 @@ import java.util.UUID;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.Blockable.Type;
 import com.ning.billing.overdue.OverdueChangeEvent;

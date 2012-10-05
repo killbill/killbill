@@ -24,7 +24,6 @@ import com.ning.billing.entitlement.alignment.PlanAligner;
 import com.ning.billing.entitlement.api.EntitlementService;
 import com.ning.billing.entitlement.api.SubscriptionApiService;
 import com.ning.billing.entitlement.api.SubscriptionFactory;
-import com.ning.billing.entitlement.api.billing.ChargeThruApi;
 import com.ning.billing.entitlement.api.billing.DefaultChargeThruApi;
 import com.ning.billing.entitlement.api.migration.DefaultEntitlementMigrationApi;
 import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi;
@@ -46,6 +45,7 @@ import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.engine.dao.RepairEntitlementDao;
 import com.ning.billing.glue.EntitlementModule;
 import com.ning.billing.util.glue.RealImplementation;
+import com.ning.billing.util.svcapi.entitlement.ChargeThruInternalApi;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
@@ -113,7 +113,7 @@ public class DefaultEntitlementModule extends AbstractModule implements Entitlem
 
     @Override
     public void installChargeThruApi() {
-        bind(ChargeThruApi.class).to(DefaultChargeThruApi.class).asEagerSingleton();
+        bind(ChargeThruInternalApi.class).to(DefaultChargeThruApi.class).asEagerSingleton();
     }
 
     @Override

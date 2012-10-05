@@ -25,10 +25,12 @@ import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.api.MigrationAccountData;
-import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
+import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.glue.RealImplementation;
+import com.ning.billing.util.svcapi.junction.BlockingApi;
 
 import com.google.inject.Inject;
 
@@ -37,10 +39,13 @@ public class BlockingAccountUserApi implements AccountUserApi {
     private final AccountUserApi userApi;
     private final BlockingApi blockingApi;
 
+    private final InternalCallContextFactory factory;
+
     @Inject
-    public BlockingAccountUserApi(@RealImplementation final AccountUserApi userApi, final BlockingApi blockingApi) {
+    public BlockingAccountUserApi(@RealImplementation final AccountUserApi userApi, final BlockingApi blockingApi, final InternalCallContextFactory factory) {
         this.userApi = userApi;
         this.blockingApi = blockingApi;
+        this.factory = factory;
     }
 
     @Override
@@ -71,7 +76,8 @@ public class BlockingAccountUserApi implements AccountUserApi {
 
     @Override
     public Account getAccountByKey(final String key, final TenantContext context) throws AccountApiException {
-        return new BlockingAccount(userApi.getAccountByKey(key, context), blockingApi, context);
+        final InternalTenantContext internalContext = factory.createInternalTenantContext(context);
+        return new BlockingAccount(userApi.getAccountByKey(key, context), blockingApi, internalContext);
     }
 
     @Override

@@ -20,14 +20,13 @@ import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.junction.api.Blockable;
-import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.junction.api.BlockingState;
-import com.ning.billing.junction.api.DefaultBlockingState;
 import com.ning.billing.junction.dao.BlockingStateDao;
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.InternalCallContextFactory;
-import com.ning.billing.util.callcontext.TenantContext;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.svcapi.junction.BlockingApi;
+import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 
 import com.google.inject.Inject;
 
@@ -35,18 +34,16 @@ public class DefaultBlockingApi implements BlockingApi {
 
     private final BlockingStateDao dao;
     private final Clock clock;
-    private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
-    public DefaultBlockingApi(final BlockingStateDao dao, final Clock clock, final InternalCallContextFactory internalCallContextFactory) {
+    public DefaultBlockingApi(final BlockingStateDao dao, final Clock clock) {
         this.dao = dao;
         this.clock = clock;
-        this.internalCallContextFactory = internalCallContextFactory;
     }
 
     @Override
-    public BlockingState getBlockingStateFor(final Blockable overdueable, final TenantContext context) {
-        BlockingState state = dao.getBlockingStateFor(overdueable, internalCallContextFactory.createInternalTenantContext(context));
+    public BlockingState getBlockingStateFor(final Blockable overdueable, final InternalTenantContext context) {
+        BlockingState state = dao.getBlockingStateFor(overdueable, context);
         if (state == null) {
             state = DefaultBlockingState.getClearState();
         }
@@ -54,23 +51,22 @@ public class DefaultBlockingApi implements BlockingApi {
     }
 
     @Override
-    public BlockingState getBlockingStateFor(final UUID overdueableId, final TenantContext context) {
-        return dao.getBlockingStateFor(overdueableId, internalCallContextFactory.createInternalTenantContext(context));
+    public BlockingState getBlockingStateFor(final UUID overdueableId, final InternalTenantContext context) {
+        return dao.getBlockingStateFor(overdueableId, context);
     }
 
     @Override
-    public List<BlockingState> getBlockingHistory(final Blockable overdueable, final TenantContext context) {
-        return dao.getBlockingHistoryFor(overdueable, internalCallContextFactory.createInternalTenantContext(context));
+    public List<BlockingState> getBlockingHistory(final Blockable overdueable, final InternalTenantContext context) {
+        return dao.getBlockingHistoryFor(overdueable, context);
     }
 
     @Override
-    public List<BlockingState> getBlockingHistory(final UUID overdueableId, final TenantContext context) {
-        return dao.getBlockingHistoryFor(overdueableId, internalCallContextFactory.createInternalTenantContext(context));
+    public List<BlockingState> getBlockingHistory(final UUID overdueableId, final InternalTenantContext context) {
+        return dao.getBlockingHistoryFor(overdueableId, context);
     }
 
     @Override
-    public <T extends Blockable> void setBlockingState(final BlockingState state, final CallContext context) {
-        // TODO accountId?
-        dao.setBlockingState(state, clock, internalCallContextFactory.createInternalCallContext(context));
+    public <T extends Blockable> void setBlockingState(final BlockingState state, final InternalCallContext context) {
+        dao.setBlockingState(state, clock, context);
     }
 }

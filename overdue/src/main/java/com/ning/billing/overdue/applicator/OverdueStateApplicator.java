@@ -37,10 +37,8 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.junction.api.Blockable;
-import com.ning.billing.junction.api.Blockable.Type;
-import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.junction.api.BlockingApiException;
-import com.ning.billing.junction.api.DefaultBlockingState;
+import com.ning.billing.junction.api.Blockable.Type;
 import com.ning.billing.ovedue.notification.OverdueCheckPoster;
 import com.ning.billing.overdue.OverdueApiException;
 import com.ning.billing.overdue.OverdueCancellationPolicicy;
@@ -50,7 +48,6 @@ import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.config.api.BillingState;
 import com.ning.billing.overdue.config.api.OverdueException;
 import com.ning.billing.util.bus.Bus;
-import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.Clock;
@@ -58,14 +55,14 @@ import com.ning.billing.util.email.DefaultEmailSender;
 import com.ning.billing.util.email.EmailApiException;
 import com.ning.billing.util.email.EmailConfig;
 import com.ning.billing.util.email.EmailSender;
+import com.ning.billing.util.svcapi.junction.BlockingApi;
+import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.samskivert.mustache.MustacheException;
 
 public class OverdueStateApplicator<T extends Blockable> {
-
-    private static final String API_USER_NAME = "OverdueStateApplicator";
 
     private static final Logger log = LoggerFactory.getLogger(OverdueStateApplicator.class);
 
@@ -75,14 +72,13 @@ public class OverdueStateApplicator<T extends Blockable> {
     private final Bus bus;
     private final AccountUserApi accountUserApi;
     private final EntitlementUserApi entitlementUserApi;
-    private final CallContextFactory factory;
     private final OverdueEmailGenerator overdueEmailGenerator;
     private final EmailSender emailSender;
 
     @Inject
     public OverdueStateApplicator(final BlockingApi accessApi, final AccountUserApi accountUserApi, final EntitlementUserApi entitlementUserApi,
                                   final Clock clock, final OverdueCheckPoster poster, final OverdueEmailGenerator overdueEmailGenerator,
-                                  final EmailConfig config, final Bus bus, final CallContextFactory factory) {
+                                  final EmailConfig config, final Bus bus) {
         this.blockingApi = accessApi;
         this.accountUserApi = accountUserApi;
         this.entitlementUserApi = entitlementUserApi;
@@ -91,7 +87,6 @@ public class OverdueStateApplicator<T extends Blockable> {
         this.overdueEmailGenerator = overdueEmailGenerator;
         this.emailSender = new DefaultEmailSender(config);
         this.bus = bus;
-        this.factory = factory;
     }
 
     public void apply(final OverdueState<T> firstOverdueState, final BillingState<T> billingState,
@@ -153,7 +148,7 @@ public class OverdueStateApplicator<T extends Blockable> {
                                                                   blockChanges(nextOverdueState),
                                                                   blockEntitlement(nextOverdueState),
                                                                   blockBilling(nextOverdueState)),
-                                         context.toCallContext());
+                                                                  context);
         } catch (Exception e) {
             throw new OverdueException(e, ErrorCode.OVERDUE_CAT_ERROR_ENCOUNTERED, blockable.getId(), blockable.getClass().getName());
         }

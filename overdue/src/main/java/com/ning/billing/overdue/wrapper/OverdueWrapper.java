@@ -17,7 +17,6 @@
 package com.ning.billing.overdue.wrapper;
 
 import com.ning.billing.junction.api.Blockable;
-import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.overdue.OverdueApiException;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.applicator.OverdueStateApplicator;
@@ -28,6 +27,7 @@ import com.ning.billing.overdue.config.api.OverdueStateSet;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.svcapi.junction.BlockingApi;
 
 public class OverdueWrapper<T extends Blockable> {
     private final T overdueable;
@@ -56,7 +56,7 @@ public class OverdueWrapper<T extends Blockable> {
         }
 
         final BillingState<T> billingState = billingState(context);
-        final String previousOverdueStateName = api.getBlockingStateFor(overdueable, context.toCallContext()).getStateName();
+        final String previousOverdueStateName = api.getBlockingStateFor(overdueable, context).getStateName();
         final OverdueState<T> nextOverdueState = overdueStateSet.calculateOverdueState(billingState, clock.getToday(billingState.getAccountTimeZone()));
 
         overdueStateApplicator.apply(overdueStateSet.getFirstState(), billingState, overdueable, previousOverdueStateName, nextOverdueState, context);

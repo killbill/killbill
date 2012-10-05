@@ -38,11 +38,11 @@ import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
-import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.util.callcontext.TenantContext;
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -52,15 +52,15 @@ public class BillCycleDayCalculator {
     private static final Logger log = LoggerFactory.getLogger(BillCycleDayCalculator.class);
 
     private final CatalogService catalogService;
-    private final EntitlementUserApi entitlementApi;
+    private final EntitlementInternalApi entitlementApi;
 
     @Inject
-    public BillCycleDayCalculator(final CatalogService catalogService, final EntitlementUserApi entitlementApi) {
+    public BillCycleDayCalculator(final CatalogService catalogService, final EntitlementInternalApi entitlementApi) {
         this.catalogService = catalogService;
         this.entitlementApi = entitlementApi;
     }
 
-    protected BillCycleDay calculateBcd(final SubscriptionBundle bundle, final Subscription subscription, final EffectiveSubscriptionEvent transition, final Account account, final TenantContext context)
+    protected BillCycleDay calculateBcd(final SubscriptionBundle bundle, final Subscription subscription, final EffectiveSubscriptionEvent transition, final Account account, final InternalCallContext context)
             throws CatalogApiException, AccountApiException, EntitlementUserApiException {
 
         final Catalog catalog = catalogService.getFullCatalog();
@@ -89,7 +89,7 @@ public class BillCycleDayCalculator {
 
     @VisibleForTesting
     BillCycleDay calculateBcdForAlignment(final BillingAlignment alignment, final SubscriptionBundle bundle, final Subscription subscription,
-                                          final Account account, final Catalog catalog, final Plan plan, final TenantContext context) throws AccountApiException, EntitlementUserApiException, CatalogApiException {
+                                          final Account account, final Catalog catalog, final Plan plan, final InternalCallContext context) throws AccountApiException, EntitlementUserApiException, CatalogApiException {
         BillCycleDay result = null;
         switch (alignment) {
             case ACCOUNT:

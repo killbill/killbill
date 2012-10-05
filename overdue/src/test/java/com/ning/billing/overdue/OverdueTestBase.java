@@ -43,7 +43,6 @@ import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceUserApi;
-import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.mock.glue.MockClockModule;
 import com.ning.billing.mock.glue.MockInvoiceModule;
@@ -64,6 +63,7 @@ import com.ning.billing.util.email.templates.TemplateModule;
 import com.ning.billing.util.glue.CallContextModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
+import com.ning.billing.util.svcapi.junction.BlockingApi;
 
 import com.google.inject.Inject;
 

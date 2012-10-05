@@ -16,6 +16,10 @@
 
 package com.ning.billing.entitlement.api.user;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
+
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
 import org.testng.Assert;
@@ -27,17 +31,13 @@ import com.ning.billing.catalog.api.Duration;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.entitlement.api.TestApiBase;
-import com.ning.billing.entitlement.api.billing.EntitlementBillingApiException;
 import com.ning.billing.entitlement.glue.MockEngineModuleSql;
 import com.ning.billing.util.clock.DefaultClock;
+import com.ning.billing.util.svcapi.entitlement.EntitlementBillingApiException;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
-
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertTrue;
 
 public class TestUserApiScenarios extends TestApiBase {
     @Override
@@ -66,7 +66,7 @@ public class TestUserApiScenarios extends TestApiBase {
             final Duration ctd = getDurationMonth(1);
             final DateTime expectedPhaseTrialChange = DefaultClock.addDuration(subscription.getStartDate(), trialPhase.getDuration());
             final DateTime newChargedThroughDate = DefaultClock.addDuration(expectedPhaseTrialChange, ctd);
-            billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate.toLocalDate(), callContext);
+            billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate.toLocalDate(), internalCallContext);
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId(), callContext);
 
             // CANCEL EOT

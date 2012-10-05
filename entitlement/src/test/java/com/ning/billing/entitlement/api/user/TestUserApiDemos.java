@@ -16,6 +16,11 @@
 
 package com.ning.billing.entitlement.api.user;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -33,18 +38,13 @@ import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.TestApiBase;
-import com.ning.billing.entitlement.api.billing.EntitlementBillingApiException;
 import com.ning.billing.entitlement.glue.MockEngineModuleSql;
 import com.ning.billing.util.clock.DefaultClock;
+import com.ning.billing.util.svcapi.entitlement.EntitlementBillingApiException;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
-
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
 
 public class TestUserApiDemos extends TestApiBase {
     @Override
@@ -101,7 +101,7 @@ public class TestUserApiDemos extends TestApiBase {
 
             final Duration ctd = getDurationMonth(1);
             final DateTime newChargedThroughDate = DefaultClock.addDuration(startDiscountPhase, ctd);
-            billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate.toLocalDate(), callContext);
+            billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate.toLocalDate(), internalCallContext);
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId(), callContext);
 
             testListener.setNonExpectedMode();

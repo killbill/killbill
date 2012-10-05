@@ -13,22 +13,16 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+package com.ning.billing.util.svcapi.tag;
 
-package com.ning.billing.junction;
+import java.util.Map;
+import java.util.UUID;
 
-import org.mockito.Mockito;
+import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.util.tag.Tag;
 
-import com.ning.billing.junction.dao.BlockingStateDao;
-import com.ning.billing.util.svcapi.junction.BlockingApi;
+public interface TagInternalApi {
 
-import com.google.inject.AbstractModule;
-
-public class MockBlockingModule extends AbstractModule {
-    @Override
-    protected void configure() {
-        bind(BlockingStateDao.class).toInstance(Mockito.mock(BlockingStateDao.class));
-
-        final BlockingApi blockingApi = Mockito.mock(BlockingApi.class);
-        bind(BlockingApi.class).toInstance(blockingApi);
-    }
+    public Map<String, Tag> getTags(UUID objectId, ObjectType objectType, InternalTenantContext context);
 }

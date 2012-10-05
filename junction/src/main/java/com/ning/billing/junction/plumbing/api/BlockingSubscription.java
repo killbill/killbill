@@ -31,25 +31,25 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.junction.api.BlockingApiException;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.junction.block.BlockingChecker;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
-import com.ning.billing.util.callcontext.TenantContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.svcapi.junction.BlockingApi;
 
 public class BlockingSubscription implements Subscription {
     private final Subscription subscription;
     private final BlockingApi blockingApi;
     private final BlockingChecker checker;
-    private final TenantContext context;
+    private final InternalTenantContext context;
     private final InternalCallContextFactory internalCallContextFactory;
 
     private BlockingState blockingState = null;
 
     public BlockingSubscription(final Subscription subscription, final BlockingApi blockingApi, final BlockingChecker checker,
-                                final TenantContext context, final InternalCallContextFactory internalCallContextFactory) {
+                                final InternalTenantContext context, final InternalCallContextFactory internalCallContextFactory) {
         this.subscription = subscription;
         this.blockingApi = blockingApi;
         this.checker = checker;

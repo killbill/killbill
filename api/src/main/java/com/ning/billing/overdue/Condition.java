@@ -21,6 +21,7 @@ import org.joda.time.LocalDate;
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.overdue.config.api.BillingState;
 
+
 public interface Condition<T extends Blockable> {
 
     /**

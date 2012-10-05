@@ -32,7 +32,6 @@ import com.ning.billing.invoice.notification.MockNextBillingDatePoster;
 import com.ning.billing.invoice.notification.NextBillingDateNotifier;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.invoice.notification.NullInvoiceNotifier;
-import com.ning.billing.junction.api.BillingApi;
 import com.ning.billing.mock.glue.MockEntitlementModule;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.DefaultCallContextFactory;
@@ -45,6 +44,7 @@ import com.ning.billing.util.glue.GlobalLockerModule;
 import com.ning.billing.util.glue.TagStoreModule;
 import com.ning.billing.util.notificationq.MockNotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService;
+import com.ning.billing.util.svcapi.junction.BillingInternalApi;
 
 import static org.testng.Assert.assertNotNull;
 
@@ -77,8 +77,8 @@ public class InvoiceModuleWithEmbeddedDb extends DefaultInvoiceModule {
         installNotificationQueue();
         bind(AccountUserApi.class).toInstance(Mockito.mock(AccountUserApi.class));
 
-        final BillingApi billingApi = Mockito.mock(BillingApi.class);
-        bind(BillingApi.class).toInstance(billingApi);
+        final BillingInternalApi billingApi = Mockito.mock(BillingInternalApi.class);
+        bind(BillingInternalApi.class).toInstance(billingApi);
 
         install(new CatalogModule());
         install(new MockEntitlementModule());

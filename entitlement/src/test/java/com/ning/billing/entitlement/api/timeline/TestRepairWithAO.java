@@ -16,6 +16,10 @@
 
 package com.ning.billing.entitlement.api.timeline;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
+
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -44,10 +48,6 @@ import com.ning.billing.entitlement.glue.MockEngineModuleSql;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
-
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
 
 public class TestRepairWithAO extends TestApiBaseRepair {
 
@@ -349,7 +349,7 @@ public class TestRepairWithAO extends TestApiBaseRepair {
 
         // SET CTD to BASE SUBSCRIPTION SP CANCEL OCCURS EOT
         final DateTime newChargedThroughDate = baseSubscription.getStartDate().plusDays(30).plusMonths(1);
-        billingApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate.toLocalDate(), callContext);
+        billingApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate.toLocalDate(), internalCallContext);
         baseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
 
         BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId(), callContext);

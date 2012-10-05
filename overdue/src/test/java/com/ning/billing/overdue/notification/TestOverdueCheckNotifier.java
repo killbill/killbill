@@ -36,7 +36,6 @@ import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.config.CatalogConfig;
 import com.ning.billing.config.InvoiceConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
-import com.ning.billing.entitlement.api.billing.ChargeThruApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
@@ -69,6 +68,7 @@ import com.ning.billing.util.globallocker.MySqlGlobalLocker;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.notificationq.DefaultNotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService;
+import com.ning.billing.util.svcapi.entitlement.ChargeThruInternalApi;
 import com.ning.billing.util.tag.dao.AuditedTagDao;
 import com.ning.billing.util.tag.dao.TagDao;
 
@@ -131,7 +131,7 @@ public class TestOverdueCheckNotifier extends OverdueTestSuiteWithEmbeddedDB {
                 bind(TagDao.class).to(AuditedTagDao.class).asEagerSingleton();
                 bind(CustomFieldDao.class).to(AuditedCustomFieldDao.class).asEagerSingleton();
                 bind(GlobalLocker.class).to(MySqlGlobalLocker.class).asEagerSingleton();
-                bind(ChargeThruApi.class).toInstance(Mockito.mock(ChargeThruApi.class));
+                bind(ChargeThruInternalApi.class).toInstance(Mockito.mock(ChargeThruInternalApi.class));
                 install(new MockJunctionModule());
                 install(new EmailModule());
                 install(new TemplateModule());

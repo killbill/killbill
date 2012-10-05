@@ -33,7 +33,6 @@ import com.ning.billing.junction.JunctionTestSuite;
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.BlockingApiException;
 import com.ning.billing.junction.api.BlockingState;
-import com.ning.billing.junction.api.DefaultBlockingState;
 import com.ning.billing.junction.block.BlockingChecker;
 import com.ning.billing.junction.block.DefaultBlockingChecker;
 import com.ning.billing.junction.dao.BlockingStateDao;
@@ -41,6 +40,7 @@ import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;

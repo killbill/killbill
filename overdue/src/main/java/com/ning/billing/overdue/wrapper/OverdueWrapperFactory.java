@@ -26,7 +26,6 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.junction.api.Blockable;
-import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.overdue.applicator.OverdueStateApplicator;
 import com.ning.billing.overdue.calculator.BillingStateCalculatorBundle;
 import com.ning.billing.overdue.config.DefaultOverdueState;
@@ -36,6 +35,7 @@ import com.ning.billing.overdue.config.api.OverdueException;
 import com.ning.billing.overdue.config.api.OverdueStateSet;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.svcapi.junction.BlockingApi;
 
 import com.google.inject.Inject;
 

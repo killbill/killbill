@@ -31,30 +31,29 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
-import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.overdue.OverdueTestSuite;
 import com.ning.billing.overdue.config.api.BillingState;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.svcapi.account.AccountInternalApi;
+import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
 
 public class TestBillingStateCalculator extends OverdueTestSuite {
 
     Clock clock = new ClockMock();
-    InvoiceUserApi invoiceApi = Mockito.mock(InvoiceUserApi.class);
-    AccountUserApi accountApi = Mockito.mock(AccountUserApi.class);
+    InvoiceInternalApi invoiceApi = Mockito.mock(InvoiceInternalApi.class);
+    AccountInternalApi accountApi = Mockito.mock(AccountInternalApi.class);
     LocalDate now;
 
     @BeforeMethod(groups = "fast")
     public void setUp() throws Exception {
         final Account account = Mockito.mock(Account.class);
         Mockito.when(account.getTimeZone()).thenReturn(DateTimeZone.UTC);
-        Mockito.when(accountApi.getAccountById(Mockito.<UUID>any(), Mockito.<TenantContext>any())).thenReturn(account);
+        Mockito.when(accountApi.getAccountById(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(account);
     }
 
     public BillingStateCalculator<SubscriptionBundle> createBSCalc() {
@@ -64,7 +63,7 @@ public class TestBillingStateCalculator extends OverdueTestSuite {
         invoices.add(createInvoice(now.plusDays(1), BigDecimal.TEN, null));
         invoices.add(createInvoice(now.plusDays(2), new BigDecimal("100.0"), null));
 
-        Mockito.when(invoiceApi.getUnpaidInvoicesByAccountId(Mockito.<UUID>any(), Mockito.<LocalDate>any(), Mockito.<TenantContext>any())).thenReturn(invoices);
+        Mockito.when(invoiceApi.getUnpaidInvoicesByAccountId(Mockito.<UUID>any(), Mockito.<LocalDate>any(), Mockito.<InternalTenantContext>any())).thenReturn(invoices);
 
         return new BillingStateCalculator<SubscriptionBundle>(invoiceApi, clock) {
             @Override

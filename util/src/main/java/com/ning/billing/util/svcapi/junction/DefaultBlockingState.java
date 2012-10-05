@@ -14,14 +14,19 @@
  * under the License.
  */
 
-package com.ning.billing.junction.api;
+package com.ning.billing.util.svcapi.junction;
 
 import java.util.UUID;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.junction.api.Blockable;
+import com.ning.billing.junction.api.BlockingState;
+
 
 public class DefaultBlockingState implements BlockingState {
+
+    public static final String CLEAR_STATE_NAME = "__KILLBILL__CLEAR__OVERDUE_STATE__";
 
     private static BlockingState clearState = null;
 
@@ -36,7 +41,7 @@ public class DefaultBlockingState implements BlockingState {
 
     public static BlockingState getClearState() {
         if (clearState == null) {
-            clearState = new DefaultBlockingState(null, BlockingApi.CLEAR_STATE_NAME, null, null, false, false, false);
+            clearState = new DefaultBlockingState(null, CLEAR_STATE_NAME, null, null, false, false, false);
         }
         return clearState;
     }
@@ -135,6 +140,7 @@ public class DefaultBlockingState implements BlockingState {
     /* (non-Javadoc)
      * @see com.ning.billing.junction.api.blocking.BlockingState#compareTo(com.ning.billing.junction.api.blocking.DefaultBlockingState)
      */
+    @Override
     public int compareTo(final BlockingState arg0) {
         if (timestamp.compareTo(arg0.getTimestamp()) != 0) {
             return timestamp.compareTo(arg0.getTimestamp());

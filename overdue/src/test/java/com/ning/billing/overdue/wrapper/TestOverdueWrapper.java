@@ -23,11 +23,11 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.OverdueTestBase;
 import com.ning.billing.overdue.config.OverdueConfig;
 import com.ning.billing.util.config.XMLLoader;
+import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 
 public class TestOverdueWrapper extends OverdueTestBase {
     @Test(groups = "slow")
@@ -69,7 +69,7 @@ public class TestOverdueWrapper extends OverdueTestBase {
 
         final InputStream is = new ByteArrayInputStream(configXml.getBytes());
         config = XMLLoader.getObjectFromStreamNoValidation(is, OverdueConfig.class);
-        state = config.getBundleStateSet().findState(BlockingApi.CLEAR_STATE_NAME);
+        state = config.getBundleStateSet().findState(DefaultBlockingState.CLEAR_STATE_NAME);
         bundle = createBundle(clock.getUTCToday().minusDays(31));
         wrapper = overdueWrapperFactory.createOverdueWrapperFor(bundle);
         final OverdueState<SubscriptionBundle> result = wrapper.refresh(internalCallContext);
