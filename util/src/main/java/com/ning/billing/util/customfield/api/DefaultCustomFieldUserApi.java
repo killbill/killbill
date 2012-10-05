@@ -48,7 +48,6 @@ public class DefaultCustomFieldUserApi implements CustomFieldUserApi {
 
     @Override
     public void saveCustomFields(final UUID objectId, final ObjectType objectType, final List<CustomField> fields, final CallContext context) {
-        // TODO accountId?
-        customFieldDao.saveEntities(objectId, objectType, fields, internalCallContextFactory.createInternalCallContext(context));
+        customFieldDao.saveEntities(objectId, objectType, fields, internalCallContextFactory.createInternalCallContext(objectId, objectType, context));
     }
 }
