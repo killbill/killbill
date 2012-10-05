@@ -39,7 +39,8 @@ public enum TableName {
     SUBSCRIPTION_EVENTS("subscription_events", ObjectType.SUBSCRIPTION_EVENT),
     REFUND_HISTORY("refund_history"),
     REFUNDS("refunds", ObjectType.REFUND, REFUND_HISTORY),
-    TAG_DEFINITIONS("tag_definitions", ObjectType.TAG_DEFINITION),
+    TAG_DEFINITION_HISTORY("tag_definition_history"),
+    TAG_DEFINITIONS("tag_definitions", ObjectType.TAG_DEFINITION, TAG_DEFINITION_HISTORY),
     TAG_HISTORY("tag_history"),
     TENANT("tenants", ObjectType.TENANT),
     TAG("tags", TAG_HISTORY);
@@ -64,6 +65,15 @@ public enum TableName {
 
     TableName(final String tableName) {
         this(tableName, null, null);
+    }
+
+    public static TableName fromObjectType(final ObjectType objectType) {
+        for (final TableName tableName : values()) {
+            if (tableName.getObjectType() != null && tableName.getObjectType().equals(objectType)) {
+                return tableName;
+            }
+        }
+        return null;
     }
 
     public String getTableName() {

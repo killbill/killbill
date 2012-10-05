@@ -26,5 +26,4 @@ public interface CallContextSqlDao {
 
     @SqlQuery("select record_id from accounts where id = :accountId;")
     public Long getAccountRecordId(@Bind("accountId") final String accountId);
-
 }
