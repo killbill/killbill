@@ -41,6 +41,7 @@ import static com.jayway.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class TestOverdueStateApplicator extends OverdueTestBase {
+
     @Inject
     OverdueStateApplicator<SubscriptionBundle> applicator;
 
@@ -69,7 +70,7 @@ public class TestOverdueStateApplicator extends OverdueTestBase {
         checkBussEvent("OD1");
 
         state = config.getBundleStateSet().findState("OD2");
-        applicator.apply(null, null,bundle, BlockingApi.CLEAR_STATE_NAME, state, internalCallContext);
+        applicator.apply(null, null, bundle, BlockingApi.CLEAR_STATE_NAME, state, internalCallContext);
         checkStateApplied(state);
         checkBussEvent("OD2");
 

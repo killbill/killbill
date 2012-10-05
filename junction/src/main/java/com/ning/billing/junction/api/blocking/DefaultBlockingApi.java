@@ -20,14 +20,17 @@ import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.junction.api.Blockable;
+import com.ning.billing.junction.api.Blockable.Type;
 import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.junction.api.DefaultBlockingState;
 import com.ning.billing.junction.dao.BlockingStateDao;
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.dao.ObjectType;
 
 import com.google.inject.Inject;
 
@@ -70,7 +73,12 @@ public class DefaultBlockingApi implements BlockingApi {
 
     @Override
     public <T extends Blockable> void setBlockingState(final BlockingState state, final CallContext context) {
-        // TODO accountId?
-        dao.setBlockingState(state, clock, internalCallContextFactory.createInternalCallContext(context));
+        // TODO remove the cast (needed because the id is not exposed in BlockingState)
+        dao.setBlockingState(state, clock, createInternalCallContext((DefaultBlockingState) state, context));
+    }
+
+    private InternalCallContext createInternalCallContext(final DefaultBlockingState blockingState, final CallContext context) {
+        final ObjectType objectType = Type.getObjectType(blockingState.getType());
+        return internalCallContextFactory.createInternalCallContext(blockingState.getBlockedId(), objectType, context);
     }
 }

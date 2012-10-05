@@ -54,6 +54,10 @@ public interface Blockable {
 
         public static ObjectType getObjectType(final Blockable o) {
             final Type type = get(o);
+            return getObjectType(type);
+        }
+
+        public static ObjectType getObjectType(final Type type) {
             switch (type) {
                 case ACCOUNT:
                     return ObjectType.ACCOUNT;
