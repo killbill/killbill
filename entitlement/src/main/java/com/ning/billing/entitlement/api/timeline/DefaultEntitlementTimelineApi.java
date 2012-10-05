@@ -234,7 +234,7 @@ public class DefaultEntitlementTimelineApi implements EntitlementTimelineApi {
                 final List<SubscriptionTimeline> repairs = createGetSubscriptionRepairList(subscriptions, convertDataRepair(inRepair));
                 return createGetBundleRepair(input.getBundleId(), bundle.getKey(), input.getViewId(), repairs);
             } else {
-                dao.repair(bundle.getAccountId(), input.getBundleId(), inRepair, internalCallContextFactory.createInternalCallContext(context));
+                dao.repair(bundle.getAccountId(), input.getBundleId(), inRepair, internalCallContextFactory.createInternalCallContext(bundle.getAccountId(), context));
                 return getBundleTimeline(input.getBundleId(), context);
             }
         } catch (CatalogApiException e) {

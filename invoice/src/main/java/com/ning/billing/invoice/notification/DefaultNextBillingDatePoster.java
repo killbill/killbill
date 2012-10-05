@@ -54,7 +54,7 @@ public class DefaultNextBillingDatePoster implements NextBillingDatePoster {
     @Override
     public void insertNextBillingNotification(final Transmogrifier transactionalDao, final UUID accountId,
                                               final UUID subscriptionId, final DateTime futureNotificationTime) {
-        final InternalCallContext context = createCallContext();
+        final InternalCallContext context = createCallContext(accountId);
 
         final NotificationQueue nextBillingQueue;
         try {
@@ -78,7 +78,7 @@ public class DefaultNextBillingDatePoster implements NextBillingDatePoster {
         }
     }
 
-    private InternalCallContext createCallContext() {
-        return internalCallContextFactory.createInternalCallContext("NextBillingDatePoster", CallOrigin.INTERNAL, UserType.SYSTEM, null);
+    private InternalCallContext createCallContext(final UUID accountId) {
+        return internalCallContextFactory.createInternalCallContext(accountId, "NextBillingDatePoster", CallOrigin.INTERNAL, UserType.SYSTEM, null);
     }
 }

@@ -30,6 +30,7 @@ import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.TenantContext;
+import com.ning.billing.util.dao.ObjectType;
 
 import com.google.inject.Inject;
 
@@ -59,6 +60,6 @@ public class DefaultChargeThruApi implements ChargeThruApi {
         final SubscriptionBuilder builder = new SubscriptionBuilder(subscription)
                 .setChargedThroughDate(chargedThroughDate)
                 .setPaidThroughDate(subscription.getPaidThroughDate());
-        entitlementDao.updateChargedThroughDate(new SubscriptionData(builder), internalCallContextFactory.createInternalCallContext(context));
+        entitlementDao.updateChargedThroughDate(new SubscriptionData(builder), internalCallContextFactory.createInternalCallContext(subscriptionId, ObjectType.SUBSCRIPTION, context));
     }
 }

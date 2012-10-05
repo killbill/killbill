@@ -45,6 +45,7 @@ import com.ning.billing.entitlement.events.user.ApiEventCancel;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.dao.ObjectType;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
@@ -171,7 +172,7 @@ public class SubscriptionDataRepair extends SubscriptionData {
                                                                                 .setRequestedDate(now)
                                                                                 .setUserToken(context.getUserToken())
                                                                                 .setFromDisk(true));
-                repairDao.cancelSubscription(cur, cancelEvent, internalCallContextFactory.createInternalCallContext(context), 0);
+                repairDao.cancelSubscription(cur, cancelEvent, internalCallContextFactory.createInternalCallContext(cur.getId(), ObjectType.SUBSCRIPTION, context), 0);
                 cur.rebuildTransitions(repairDao.getEventsForSubscription(cur.getId(), internalCallContextFactory.createInternalTenantContext(context)), catalogService.getFullCatalog());
             }
         }
