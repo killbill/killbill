@@ -85,7 +85,7 @@ public class DefaultEntitlementTimelineApi implements EntitlementTimelineApi {
     @Override
     public BundleTimeline getBundleTimeline(final UUID accountId, final String bundleName, final TenantContext context)
             throws EntitlementRepairException {
-        final SubscriptionBundle bundle = dao.getSubscriptionBundleFromAccountAndKey(accountId, bundleName, internalCallContextFactory.createInternalTenantContext(accountId, context));
+        final SubscriptionBundle bundle = dao.getSubscriptionBundleFromAccountAndKey(accountId, bundleName, internalCallContextFactory.createInternalTenantContext(context));
         return getBundleTimelineInternal(bundle, bundleName + " [accountId= " + accountId.toString() + "]", context);
     }
 

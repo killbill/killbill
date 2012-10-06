@@ -26,8 +26,6 @@ import javax.inject.Inject;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.tweak.HandleCallback;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.dao.ObjectType;
@@ -35,9 +33,6 @@ import com.ning.billing.util.dao.TableName;
 
 public class InternalCallContextFactory {
 
-    private static final Logger log = LoggerFactory.getLogger(InternalCallContextFactory.class);
-
-    public static final UUID INTERNAL_TENANT_ID = new UUID(0L, 0L);
     public static final long INTERNAL_TENANT_RECORD_ID = 0L;
 
     private final IDBI dbi;
@@ -51,35 +46,29 @@ public class InternalCallContextFactory {
         this.clock = clock;
     }
 
-    // Internal use only (notification queue, etc.) - no tenant for now
-    public InternalTenantContext createInternalTenantContext() {
-        return createInternalTenantContext(INTERNAL_TENANT_RECORD_ID, null);
-    }
-
     // Used for r/o operations - we don't need the account id in that case
     public InternalTenantContext createInternalTenantContext(final TenantContext context) {
         return createInternalTenantContext(getTenantRecordId(context), null);
     }
 
-    // Used for r/w operations - we need the account id to populate the account_record_id field
-    public InternalTenantContext createInternalTenantContext(final UUID accountId, final TenantContext context) {
-        return createInternalTenantContext(getTenantRecordId(context), getAccountRecordId(accountId));
-    }
-
-    // Internal use only (notification queue, etc.) - no tenant for now
-    public InternalCallContext createInternalCallContext(final String userName, final CallOrigin callOrigin, final UserType userType, @Nullable final UUID userToken) {
-        return createInternalCallContext(INTERNAL_TENANT_RECORD_ID, null, new DefaultCallContext(INTERNAL_TENANT_ID, userName, callOrigin, userType, userToken, clock));
+    // Used by notification queue and persistent bus - accountRecordId is expected to be non null
+    public InternalCallContext createInternalCallContext(final Long tenantRecordId, final Long accountRecordId, final String userName,
+                                                         final CallOrigin callOrigin, final UserType userType, @Nullable final UUID userToken) {
+        return new InternalCallContext(tenantRecordId, accountRecordId, userToken, userName, callOrigin, userType, null, null, clock.getUTCNow(), clock.getUTCNow());
     }
 
     public InternalCallContext createInternalCallContext(final UUID objectId, final ObjectType objectType, final String userName,
                                                          final CallOrigin callOrigin, final UserType userType, @Nullable final UUID userToken) {
-        // TODO retrieve the same way the tenant
-        return createInternalCallContext(objectId, objectType, new DefaultCallContext(INTERNAL_TENANT_ID, userName, callOrigin, userType, userToken, clock));
+        final Long tenantRecordId = retrieveTenantRecordIdFromObject(objectId, objectType);
+        final Long accountRecordId = retrieveAccountRecordIdFromObject(objectId, objectType);
+        return createInternalCallContext(tenantRecordId, accountRecordId, userName, callOrigin, userType, userToken);
     }
 
-    public InternalCallContext createInternalCallContext(final UUID accountId, final String userName, final CallOrigin callOrigin, final UserType userType, @Nullable final UUID userToken) {
-        // TODO retrieve the same way the tenant
-        return createInternalCallContext(accountId, new DefaultCallContext(INTERNAL_TENANT_ID, userName, callOrigin, userType, userToken, clock));
+    public InternalCallContext createInternalCallContext(final UUID accountId, final String userName, final CallOrigin callOrigin,
+                                                         final UserType userType, @Nullable final UUID userToken) {
+        final Long tenantRecordId = retrieveTenantRecordIdFromObject(accountId, ObjectType.ACCOUNT);
+        final Long accountRecordId = getAccountRecordId(accountId);
+        return createInternalCallContext(tenantRecordId, accountRecordId, userName, callOrigin, userType, userToken);
     }
 
     /**
@@ -91,6 +80,65 @@ public class InternalCallContextFactory {
      * @return internal call context from context, with a non null account_record_id (if found)
      */
     public InternalCallContext createInternalCallContext(final UUID objectId, final ObjectType objectType, final CallContext context) {
+        // Don't trust the context to have populated correctly the tenant...
+        final Long tenantRecordId;
+        if (context.getTenantId() == null) {
+            tenantRecordId = retrieveTenantRecordIdFromObject(objectId, objectType);
+        } else {
+            tenantRecordId = getTenantRecordId(context);
+        }
+
+        final Long accountRecordId = retrieveAccountRecordIdFromObject(objectId, objectType);
+        return createInternalCallContext(tenantRecordId, accountRecordId, context);
+    }
+
+    // Used for update/delete operations - we don't need the account id in that case
+    // Used also when we don't have an account_record_id column (e.g. tenants, tag_definitions)
+    public InternalCallContext createInternalCallContext(final CallContext context) {
+        return createInternalCallContext(getTenantRecordId(context), null, context);
+    }
+
+    // Used for r/w operations - we need the account id to populate the account_record_id field
+    public InternalCallContext createInternalCallContext(final UUID accountId, final CallContext context) {
+        return createInternalCallContext(getTenantRecordId(context), getAccountRecordId(accountId), context);
+    }
+
+    public InternalTenantContext createInternalTenantContext(final Long tenantRecordId, @Nullable final Long accountRecordId) {
+        return new InternalTenantContext(tenantRecordId, accountRecordId);
+    }
+
+    private InternalCallContext createInternalCallContext(final Long tenantRecordId, @Nullable final Long accountRecordId, final CallContext context) {
+        return new InternalCallContext(tenantRecordId, accountRecordId, context);
+    }
+
+    // Used when we need to re-hydrate the context with the account_record_id (when creating the account)
+    public InternalCallContext createInternalCallContext(final Long accountRecordId, final InternalCallContext context) {
+        return new InternalCallContext(context.getTenantRecordId(), accountRecordId, context.getUserToken(), context.getUserName(),
+                                       context.getCallOrigin(), context.getUserType(), context.getReasonCode(), context.getComment(),
+                                       context.getCreatedDate(), context.getUpdatedDate());
+    }
+
+    // Used when we need to re-hydrate the context with the tenant_record_id and account_record_id (when claiming bus events)
+    public InternalCallContext createInternalCallContext(final Long tenantRecordId, final Long accountRecordId, final InternalCallContext context) {
+        return new InternalCallContext(tenantRecordId, accountRecordId, context.getUserToken(), context.getUserName(),
+                                       context.getCallOrigin(), context.getUserType(), context.getReasonCode(), context.getComment(),
+                                       context.getCreatedDate(), context.getUpdatedDate());
+    }
+
+    private Long getTenantRecordId(final TenantContext context) {
+        // Default to single default tenant (e.g. single tenant mode)
+        if (context.getTenantId() == null) {
+            return INTERNAL_TENANT_RECORD_ID;
+        } else {
+            return callContextSqlDao.getTenantRecordId(context.getTenantId().toString());
+        }
+    }
+
+    private Long getAccountRecordId(final UUID accountId) {
+        return callContextSqlDao.getAccountRecordId(accountId.toString());
+    }
+
+    private Long retrieveAccountRecordIdFromObject(final UUID objectId, final ObjectType objectType) {
         final Long accountRecordId;
 
         final TableName tableName = TableName.fromObjectType(objectType);
@@ -121,46 +169,42 @@ public class InternalCallContextFactory {
         } else {
             accountRecordId = null;
         }
-
-        return createInternalCallContext(getTenantRecordId(context), accountRecordId, context);
+        return accountRecordId;
     }
 
-    // Used for update/delete operations - we don't need the account id in that case
-    // Used also when we don't have an account_record_id column (e.g. tenants, tag_definitions)
-    public InternalCallContext createInternalCallContext(final CallContext context) {
-        return createInternalCallContext(getTenantRecordId(context), null, context);
-    }
+    private Long retrieveTenantRecordIdFromObject(final UUID objectId, final ObjectType objectType) {
+        final Long tenantRecordId;
 
-    // Used for r/w operations - we need the account id to populate the account_record_id field
-    public InternalCallContext createInternalCallContext(final UUID accountId, final CallContext context) {
-        return createInternalCallContext(getTenantRecordId(context), getAccountRecordId(accountId), context);
-    }
+        final TableName tableName = TableName.fromObjectType(objectType);
+        if (tableName != null) {
+            tenantRecordId = dbi.withHandle(new HandleCallback<Long>() {
+                @Override
+                public Long withHandle(final Handle handle) throws Exception {
+                    final String columnName;
+                    if (TableName.TENANT.equals(tableName)) {
+                        // Lookup the record_id directly
+                        columnName = "record_id";
+                    } else {
+                        // The table should have an tenant_record_id column
+                        columnName = "tenant_record_id";
+                    }
 
-    private InternalTenantContext createInternalTenantContext(final Long tenantRecordId, @Nullable final Long accountRecordId) {
-        return new InternalTenantContext(tenantRecordId, accountRecordId);
-    }
-
-    private InternalCallContext createInternalCallContext(final Long tenantRecordId, @Nullable final Long accountRecordId, final CallContext context) {
-        return new InternalCallContext(tenantRecordId, accountRecordId, context);
-    }
-
-    // Used when we need to re-hydrate the context with the account_record_id (when creating the account)
-    public InternalCallContext createInternalCallContext(final Long accountRecordId, final InternalCallContext context) {
-        return new InternalCallContext(context.getTenantRecordId(), accountRecordId, context.getUserToken(), context.getUserName(),
-                                       context.getCallOrigin(), context.getUserType(), context.getReasonCode(), context.getComment(),
-                                       context.getCreatedDate(), context.getUpdatedDate());
-    }
-
-    private Long getTenantRecordId(final TenantContext context) {
-        // Default to single default tenant (e.g. single tenant mode)
-        if (context.getTenantId() == null) {
-            return INTERNAL_TENANT_RECORD_ID;
+                    final List<Map<String, Object>> values = handle.select(String.format("select %s from %s where id = ?;", columnName, tableName.getTableName()), objectId.toString());
+                    if (values.size() == 0) {
+                        return null;
+                    } else {
+                        return (Long) values.get(0).get(columnName);
+                    }
+                }
+            });
         } else {
-            return callContextSqlDao.getTenantRecordId(context.getTenantId().toString());
+            tenantRecordId = null;
         }
+        return tenantRecordId;
     }
 
-    private Long getAccountRecordId(final UUID accountId) {
-        return callContextSqlDao.getAccountRecordId(accountId.toString());
+    // TODO - remove
+    public InternalCallContext createInternalCallContext(final String userName, final CallOrigin callOrigin, final UserType userType, final UUID userToken) {
+        return createInternalCallContext(INTERNAL_TENANT_RECORD_ID, null, userName, callOrigin, userType, userToken);
     }
 }

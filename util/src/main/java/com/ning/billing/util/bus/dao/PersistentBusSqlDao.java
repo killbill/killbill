@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.util.bus.dao;
 
 import java.sql.ResultSet;
@@ -41,7 +42,6 @@ import com.ning.billing.util.queue.PersistentQueueEntryLifecycle.PersistentQueue
 
 @ExternalizedSqlViaStringTemplate3()
 public interface PersistentBusSqlDao extends Transactional<PersistentBusSqlDao>, CloseMe {
-
 
     @SqlQuery
     @Mapper(PersistentBusSqlMapper.class)
@@ -103,8 +103,11 @@ public interface PersistentBusSqlDao extends Transactional<PersistentBusSqlDao>,
             final DateTime nextAvailableDate = getDateTime(r, "processing_available_date");
             final String processingOwner = r.getString("processing_owner");
             final PersistentQueueEntryLifecycleState processingState = PersistentQueueEntryLifecycleState.valueOf(r.getString("processing_state"));
+            final Long accountRecordId = r.getLong("account_record_id");
+            final Long tenantRecordId = r.getLong("tenant_record_id");
 
-            return new BusEventEntry(recordId, createdOwner, processingOwner, nextAvailableDate, processingState, className, eventJson);
+            return new BusEventEntry(recordId, createdOwner, processingOwner, nextAvailableDate, processingState, className,
+                                     eventJson, accountRecordId, tenantRecordId);
         }
     }
 }

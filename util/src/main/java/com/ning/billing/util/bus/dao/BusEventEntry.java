@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.util.bus.dao;
 
 import org.joda.time.DateTime;
@@ -28,8 +29,12 @@ public class BusEventEntry implements PersistentQueueEntryLifecycle {
     private final PersistentQueueEntryLifecycleState processingState;
     private final String busEventClass;
     private final String busEventJson;
+    private final Long accountRecordId;
+    private final Long tenantRecordId;
 
-    public BusEventEntry(final long id, final String createdOwner, final String owner, final DateTime nextAvailable, final PersistentQueueEntryLifecycleState processingState, final String busEventClass, final String busEventJson) {
+    public BusEventEntry(final long id, final String createdOwner, final String owner, final DateTime nextAvailable,
+                         final PersistentQueueEntryLifecycleState processingState, final String busEventClass, final String busEventJson,
+                         final Long accountRecordId, final Long tenantRecordId) {
         this.id = id;
         this.createdOwner = createdOwner;
         this.owner = owner;
@@ -37,12 +42,14 @@ public class BusEventEntry implements PersistentQueueEntryLifecycle {
         this.processingState = processingState;
         this.busEventClass = busEventClass;
         this.busEventJson = busEventJson;
+        this.accountRecordId = accountRecordId;
+        this.tenantRecordId = tenantRecordId;
     }
 
-    public BusEventEntry(final String createdOwner, final String busEventClass, final String busEventJson) {
-        this(0, createdOwner, null, null, null, busEventClass, busEventJson);
+    public BusEventEntry(final String createdOwner, final String busEventClass, final String busEventJson,
+                         final Long accountRecordId, final Long tenantRecordId) {
+        this(0, createdOwner, null, null, null, busEventClass, busEventJson, accountRecordId, tenantRecordId);
     }
-
 
     public long getId() {
         return id;
@@ -90,8 +97,18 @@ public class BusEventEntry implements PersistentQueueEntryLifecycle {
             case PROCESSED:
                 return false;
             default:
-                throw new RuntimeException(String.format("Unkwnon IEvent processing state %s", processingState));
+                throw new RuntimeException(String.format("Unknown IEvent processing state %s", processingState));
         }
         return true;
+    }
+
+    @Override
+    public Long getAccountRecordId() {
+        return accountRecordId;
+    }
+
+    @Override
+    public Long getTenantRecordId() {
+        return tenantRecordId;
     }
 }

@@ -57,7 +57,8 @@ public class MockNotificationQueue extends NotificationQueueBase implements Noti
     public void recordFutureNotification(final DateTime futureNotificationTime, final UUID accountId,
                                          final NotificationKey notificationKey, final InternalCallContext context) throws IOException {
         final String json = objectMapper.writeValueAsString(notificationKey);
-        final Notification notification = new DefaultNotification("MockQueue", getHostname(), notificationKey.getClass().getName(), json, accountId, futureNotificationTime);
+        final Notification notification = new DefaultNotification("MockQueue", getHostname(), notificationKey.getClass().getName(), json, accountId, futureNotificationTime,
+                                                                  null, 0L);
         synchronized (notifications) {
             notifications.add(notification);
         }
@@ -99,11 +100,12 @@ public class MockNotificationQueue extends NotificationQueueBase implements Noti
         result = readyNotifications.size();
         for (final Notification cur : readyNotifications) {
             final NotificationKey key = deserializeEvent(cur.getNotificationKeyClass(), cur.getNotificationKey());
-            getHandler().handleReadyNotification(key, cur.getEffectiveDate());
+            getHandler().handleReadyNotification(key, cur.getEffectiveDate(), cur.getAccountRecordId(), cur.getTenantRecordId());
             final DefaultNotification processedNotification = new DefaultNotification(-1L, cur.getId(), getHostname(), getHostname(),
                                                                                       "MockQueue", getClock().getUTCNow().plus(CLAIM_TIME_MS),
                                                                                       PersistentQueueEntryLifecycleState.PROCESSED, cur.getNotificationKeyClass(),
-                                                                                      cur.getNotificationKey(), cur.getAccountId(), cur.getEffectiveDate());
+                                                                                      cur.getNotificationKey(), cur.getAccountId(), cur.getEffectiveDate(),
+                                                                                      cur.getAccountRecordId(), cur.getTenantRecordId());
             oldNotifications.add(cur);
             processedNotifications.add(processedNotification);
         }

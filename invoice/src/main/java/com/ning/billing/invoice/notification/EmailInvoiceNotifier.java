@@ -65,7 +65,6 @@ public class EmailInvoiceNotifier implements InvoiceNotifier {
 
     @Override
     public void notify(final Account account, final Invoice invoice, final TenantContext context) throws InvoiceApiException {
-
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(context);
         final List<String> to = new ArrayList<String>();
         to.add(account.getEmail());

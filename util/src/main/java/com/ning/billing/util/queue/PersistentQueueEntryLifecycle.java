@@ -18,7 +18,6 @@ package com.ning.billing.util.queue;
 
 import org.joda.time.DateTime;
 
-
 public interface PersistentQueueEntryLifecycle {
 
     public enum PersistentQueueEntryLifecycleState {
@@ -28,6 +27,10 @@ public interface PersistentQueueEntryLifecycle {
         REMOVED
     }
 
+    public Long getTenantRecordId();
+
+    public Long getAccountRecordId();
+
     public String getOwner();
 
     public String getCreatedOwner();
@@ -35,7 +38,6 @@ public interface PersistentQueueEntryLifecycle {
     public DateTime getNextAvailableDate();
 
     public PersistentQueueEntryLifecycleState getProcessingState();
-
 
     public boolean isAvailableForProcessing(DateTime now);
 }

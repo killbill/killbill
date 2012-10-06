@@ -192,8 +192,10 @@ public class MysqlTestingHelper {
         initDb("drop table if exists tenants; create table tenants(record_id int(11) unsigned not null auto_increment, id char(36) not null, primary key(record_id)) engine=innodb;");
 
         // We always want the basic tables when we do account_record_id lookups (e.g. for custom fields, tags or junction)
-        initDb("drop table if exists bundles; create table bundles(record_id int(11) unsigned not null auto_increment, id char(36) not null, account_record_id int(11) unsigned not null, primary key(record_id)) engine=innodb;");
-        initDb("drop table if exists subscriptions; create table subscriptions(record_id int(11) unsigned not null auto_increment, id char(36) not null, account_record_id int(11) unsigned not null, primary key(record_id)) engine=innodb;");
+        initDb("drop table if exists bundles; create table bundles(record_id int(11) unsigned not null auto_increment, id char(36) not null, " +
+               "account_record_id int(11) unsigned not null, tenant_record_id int(11) unsigned default 0, primary key(record_id)) engine=innodb;");
+        initDb("drop table if exists subscriptions; create table subscriptions(record_id int(11) unsigned not null auto_increment, id char(36) not null, " +
+               "account_record_id int(11) unsigned not null, tenant_record_id int(11) unsigned default 0, primary key(record_id)) engine=innodb;");
 
         for (final String pack : new String[]{"account", "analytics", "entitlement", "util", "payment", "invoice", "junction", "tenant"}) {
             final String ddl;

@@ -95,6 +95,7 @@ public interface NotificationSqlDao extends Transactional<NotificationSqlDao>, C
                                      @InternalTenantContextBinder final InternalCallContext context);
 
     public static class NotificationSqlDaoBinder extends BinderBase implements Binder<Bind, Notification> {
+
         @Override
         public void bind(@SuppressWarnings("rawtypes") final SQLStatement stmt, final Bind bind, final Notification evt) {
             stmt.bind("id", evt.getId().toString());
@@ -111,8 +112,8 @@ public interface NotificationSqlDao extends Transactional<NotificationSqlDao>, C
         }
     }
 
-
     public static class NotificationSqlMapper extends MapperBase implements ResultSetMapper<Notification> {
+
         @Override
         public Notification map(final int index, final ResultSet r, final StatementContext ctx)
                 throws SQLException {
@@ -128,10 +129,12 @@ public interface NotificationSqlDao extends Transactional<NotificationSqlDao>, C
             final DateTime nextAvailableDate = getDateTime(r, "processing_available_date");
             final String processingOwner = r.getString("processing_owner");
             final PersistentQueueEntryLifecycleState processingState = PersistentQueueEntryLifecycleState.valueOf(r.getString("processing_state"));
+            final Long accountRecordId = r.getLong("account_record_id");
+            final Long tenantRecordId = r.getLong("tenant_record_id");
 
             return new DefaultNotification(ordering, id, createdOwner, processingOwner, queueName, nextAvailableDate,
-                                           processingState, className, notificationKey, accountId, effectiveDate);
-
+                                           processingState, className, notificationKey, accountId, effectiveDate,
+                                           accountRecordId, tenantRecordId);
         }
     }
 }

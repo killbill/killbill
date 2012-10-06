@@ -24,6 +24,7 @@ import com.ning.billing.util.entity.Entity;
 import com.ning.billing.util.queue.PersistentQueueEntryLifecycle;
 
 public interface Notification extends PersistentQueueEntryLifecycle, Entity {
+
     public Long getOrdering();
 
     public String getNotificationKeyClass();
@@ -34,5 +35,6 @@ public interface Notification extends PersistentQueueEntryLifecycle, Entity {
 
     public String getQueueName();
 
+    // TODO - do we still need it now we have account_record_id?
     public UUID getAccountId();
 }

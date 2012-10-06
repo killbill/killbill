@@ -103,19 +103,22 @@ public class AuditedAccountDao implements AccountDao {
 
                     transactionalDao.create(account, context);
 
-                    // Insert history
                     final Long recordId = accountSqlDao.getRecordId(account.getId().toString(), context);
+                    // We need to re-hydrate the context with the account record id
+                    final InternalCallContext rehydratedContext = internalCallContextFactory.createInternalCallContext(recordId, context);
+
+                    // Insert history
                     final EntityHistory<Account> history = new EntityHistory<Account>(account.getId(), recordId, account, ChangeType.INSERT);
-                    accountSqlDao.insertHistoryFromTransaction(history, context);
+                    accountSqlDao.insertHistoryFromTransaction(history, rehydratedContext);
 
                     // Insert audit
-                    final Long historyRecordId = accountSqlDao.getHistoryRecordId(recordId, context);
+                    final Long historyRecordId = accountSqlDao.getHistoryRecordId(recordId, rehydratedContext);
                     final EntityAudit audit = new EntityAudit(TableName.ACCOUNT_HISTORY, historyRecordId, ChangeType.INSERT);
-                    accountSqlDao.insertAuditFromTransaction(audit, context);
+                    accountSqlDao.insertAuditFromTransaction(audit, rehydratedContext);
 
-                    final AccountCreationEvent creationEvent = new DefaultAccountCreationEvent(account, context.getUserToken());
+                    final AccountCreationEvent creationEvent = new DefaultAccountCreationEvent(account, rehydratedContext.getUserToken());
                     try {
-                        eventBus.postFromTransaction(creationEvent, transactionalDao, internalCallContextFactory.createInternalCallContext(recordId, context));
+                        eventBus.postFromTransaction(creationEvent, transactionalDao, rehydratedContext);
                     } catch (EventBusException e) {
                         log.warn("Failed to post account creation event for account " + account.getId(), e);
                     }

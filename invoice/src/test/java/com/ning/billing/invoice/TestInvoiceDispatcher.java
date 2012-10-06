@@ -173,7 +173,7 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
         Invoice invoice = dispatcher.processAccount(accountId, target, true, callContext);
         Assert.assertNotNull(invoice);
 
-        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(accountId, callContext);
+        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(callContext);
         List<Invoice> invoices = invoiceDao.getInvoicesByAccount(accountId, internalTenantContext);
         Assert.assertEquals(invoices.size(), 0);
 

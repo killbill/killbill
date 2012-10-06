@@ -135,9 +135,11 @@ public class PersistentBus extends PersistentQueueBase implements Bus {
             return Collections.emptyList();
         }
 
-        final boolean claimed = (dao.claimBusEvent(hostname, nextAvailable, input.getId(), now, context) == 1);
+        // We need to re-hydrate the context with the record ids from the BusEventEntry
+        final InternalCallContext rehydratedContext = internalCallContextFactory.createInternalCallContext(input.getTenantRecordId(), input.getAccountRecordId(), context);
+        final boolean claimed = (dao.claimBusEvent(hostname, nextAvailable, input.getId(), now, rehydratedContext) == 1);
         if (claimed) {
-            dao.insertClaimedHistory(hostname, now, input.getId(), context);
+            dao.insertClaimedHistory(hostname, now, input.getId(), rehydratedContext);
             return Collections.singletonList(input);
         }
         return Collections.emptyList();
@@ -175,7 +177,7 @@ public class PersistentBus extends PersistentQueueBase implements Bus {
     private void postFromTransaction(final BusEvent event, final InternalCallContext context, final PersistentBusSqlDao transactional) {
         try {
             final String json = objectMapper.writeValueAsString(event);
-            final BusEventEntry entry = new BusEventEntry(hostname, event.getClass().getName(), json);
+            final BusEventEntry entry = new BusEventEntry(hostname, event.getClass().getName(), json, context.getAccountRecordId(), context.getTenantRecordId());
             transactional.insertBusEvent(entry, context);
         } catch (Exception e) {
             log.error("Failed to post BusEvent " + event, e);

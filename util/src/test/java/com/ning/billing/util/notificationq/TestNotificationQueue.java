@@ -136,7 +136,7 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
         final DefaultNotificationQueue queue = new DefaultNotificationQueue(dbi, clock, "test-svc", "foo",
                                                                             new NotificationQueueHandler() {
                                                                                 @Override
-                                                                                public void handleReadyNotification(final NotificationKey notificationKey, final DateTime eventDateTime) {
+                                                                                public void handleReadyNotification(final NotificationKey notificationKey, final DateTime eventDateTime, final Long accountRecordId, final Long tenantRecordId) {
                                                                                     synchronized (expectedNotifications) {
                                                                                         log.info("Handler received key: " + notificationKey);
 
@@ -194,7 +194,7 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
         final DefaultNotificationQueue queue = new DefaultNotificationQueue(dbi, clock, "test-svc", "many",
                                                                             new NotificationQueueHandler() {
                                                                                 @Override
-                                                                                public void handleReadyNotification(final NotificationKey notificationKey, final DateTime eventDateTime) {
+                                                                                public void handleReadyNotification(final NotificationKey notificationKey, final DateTime eventDateTime, final Long accountRecordId, final Long tenantRecordId) {
                                                                                     synchronized (expectedNotifications) {
                                                                                         expectedNotifications.put(notificationKey, Boolean.TRUE);
                                                                                         expectedNotifications.notify();
@@ -297,7 +297,7 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
 
         final NotificationQueue queueFred = notificationQueueService.createNotificationQueue("UtilTest", "Fred", new NotificationQueueHandler() {
             @Override
-            public void handleReadyNotification(final NotificationKey notificationKey, final DateTime eventDateTime) {
+            public void handleReadyNotification(final NotificationKey notificationKey, final DateTime eventDateTime, final Long accountRecordId, final Long tenantRecordId) {
                 log.info("Fred received key: " + notificationKey);
                 expectedNotificationsFred.put(notificationKey, Boolean.TRUE);
                 eventsReceived++;
@@ -307,7 +307,7 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
 
         final NotificationQueue queueBarney = notificationQueueService.createNotificationQueue("UtilTest", "Barney", new NotificationQueueHandler() {
             @Override
-            public void handleReadyNotification(final NotificationKey notificationKey, final DateTime eventDateTime) {
+            public void handleReadyNotification(final NotificationKey notificationKey, final DateTime eventDateTime, final Long accountRecordId, final Long tenantRecordId) {
                 log.info("Barney received key: " + notificationKey);
                 expectedNotificationsBarney.put(notificationKey, Boolean.TRUE);
                 eventsReceived++;
@@ -391,7 +391,7 @@ public class TestNotificationQueue extends UtilTestSuiteWithEmbeddedDB {
         final DefaultNotificationQueue queue = new DefaultNotificationQueue(dbi, clock, "test-svc", "many",
                                                                             new NotificationQueueHandler() {
                                                                                 @Override
-                                                                                public void handleReadyNotification(final NotificationKey inputKey, final DateTime eventDateTime) {
+                                                                                public void handleReadyNotification(final NotificationKey inputKey, final DateTime eventDateTime, final Long accountRecordId, final Long tenantRecordId) {
                                                                                     if (inputKey.equals(notificationKey) || inputKey.equals(notificationKey2)) { //ignore stray events from other tests
                                                                                         log.info("Received notification with key: " + notificationKey);
                                                                                         eventsReceived++;

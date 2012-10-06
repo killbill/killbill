@@ -83,7 +83,7 @@ public class DefaultPaymentApi implements PaymentApi {
     @Override
     public List<Payment> getAccountPayments(final UUID accountId, final TenantContext context)
             throws PaymentApiException {
-        return paymentProcessor.getAccountPayments(accountId, internalCallContextFactory.createInternalTenantContext(accountId, context));
+        return paymentProcessor.getAccountPayments(accountId, internalCallContextFactory.createInternalTenantContext(context));
     }
 
     @Override
@@ -129,7 +129,7 @@ public class DefaultPaymentApi implements PaymentApi {
     @Override
     public List<Refund> getAccountRefunds(final Account account, final TenantContext context)
             throws PaymentApiException {
-        return refundProcessor.getAccountRefunds(account, internalCallContextFactory.createInternalTenantContext(account.getId(), context));
+        return refundProcessor.getAccountRefunds(account, internalCallContextFactory.createInternalTenantContext(context));
     }
 
     @Override
@@ -167,7 +167,7 @@ public class DefaultPaymentApi implements PaymentApi {
     @Override
     public List<PaymentMethod> getPaymentMethods(final Account account, final boolean withPluginDetail, final TenantContext context)
             throws PaymentApiException {
-        return methodProcessor.getPaymentMethods(account, withPluginDetail, internalCallContextFactory.createInternalTenantContext(account.getId(), context));
+        return methodProcessor.getPaymentMethods(account, withPluginDetail, internalCallContextFactory.createInternalTenantContext(context));
     }
 
     @Override
@@ -179,7 +179,7 @@ public class DefaultPaymentApi implements PaymentApi {
     @Override
     public PaymentMethod getPaymentMethod(final Account account, final UUID paymentMethod, final boolean withPluginDetail, final TenantContext context)
             throws PaymentApiException {
-        return methodProcessor.getPaymentMethod(account, paymentMethod, withPluginDetail, internalCallContextFactory.createInternalTenantContext(account.getId(), context));
+        return methodProcessor.getPaymentMethod(account, paymentMethod, withPluginDetail, internalCallContextFactory.createInternalTenantContext(context));
     }
 
     @Override

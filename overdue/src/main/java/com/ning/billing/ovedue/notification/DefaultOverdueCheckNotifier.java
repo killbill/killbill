@@ -21,7 +21,6 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
 import com.ning.billing.config.NotificationConfig;
 import com.ning.billing.overdue.OverdueProperties;
 import com.ning.billing.overdue.listener.OverdueListener;
@@ -32,6 +31,8 @@ import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueHandler;
+
+import com.google.inject.Inject;
 
 public class DefaultOverdueCheckNotifier implements OverdueCheckNotifier {
     private static final Logger log = LoggerFactory.getLogger(DefaultOverdueCheckNotifier.class);
@@ -68,7 +69,7 @@ public class DefaultOverdueCheckNotifier implements OverdueCheckNotifier {
 
         final NotificationQueueHandler notificationQueueHandler = new NotificationQueueHandler() {
             @Override
-            public void handleReadyNotification(final NotificationKey notificationKey, final DateTime eventDate) {
+            public void handleReadyNotification(final NotificationKey notificationKey, final DateTime eventDate, final Long accountRecordId, final Long tenantRecordId) {
                 try {
                     if (!(notificationKey instanceof OverdueCheckNotificationKey)) {
                         log.error("Overdue service received Unexpected notificationKey {}", notificationKey.getClass().getName());

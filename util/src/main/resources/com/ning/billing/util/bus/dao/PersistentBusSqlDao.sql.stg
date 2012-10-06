@@ -13,6 +13,8 @@ getNextBusEventEntry() ::= <<
       , processing_owner
       , processing_available_date
       , processing_state
+      , account_record_id
+      , tenant_record_id
     from bus_events
     where
       processing_state != 'PROCESSED'
