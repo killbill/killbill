@@ -20,7 +20,7 @@ import org.skife.jdbi.v2.IDBI;
 
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.entitlement.engine.addon.AddonUtils;
-import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.Bus;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 

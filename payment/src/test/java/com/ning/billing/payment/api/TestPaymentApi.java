@@ -45,8 +45,8 @@ import com.ning.billing.payment.TestHelper;
 import com.ning.billing.payment.api.Payment.PaymentAttempt;
 import com.ning.billing.payment.glue.PaymentTestModuleWithMocks;
 import com.ning.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;
-import com.ning.billing.util.bus.Bus;
-import com.ning.billing.util.bus.Bus.EventBusException;
+import com.ning.billing.util.svcsapi.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.Bus.EventBusException;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.glue.CallContextModule;
 

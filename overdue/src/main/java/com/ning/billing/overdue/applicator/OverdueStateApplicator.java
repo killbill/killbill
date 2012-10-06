@@ -45,7 +45,6 @@ import com.ning.billing.overdue.OverdueService;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.config.api.BillingState;
 import com.ning.billing.overdue.config.api.OverdueException;
-import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.Clock;
@@ -57,6 +56,7 @@ import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 import com.ning.billing.util.svcapi.junction.BlockingApi;
 import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
+import com.ning.billing.util.svcsapi.bus.Bus;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -129,7 +129,7 @@ public class OverdueStateApplicator<T extends Blockable> {
         }
 
         try {
-            bus.post(createOverdueEvent(overdueable, previousOverdueStateName, nextOverdueState.getName()));
+            bus.post(createOverdueEvent(overdueable, previousOverdueStateName, nextOverdueState.getName()), context);
         } catch (Exception e) {
             log.error("Error posting overdue change event to bus", e);
         }

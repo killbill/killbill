@@ -27,8 +27,8 @@ import com.ning.billing.server.config.KillbillServerConfig;
 import com.ning.billing.server.healthchecks.KillbillHealthcheck;
 import com.ning.billing.server.modules.KillbillServerModule;
 import com.ning.billing.server.security.TenantFilter;
-import com.ning.billing.util.bus.Bus;
-import com.ning.billing.util.bus.BusService;
+import com.ning.billing.util.svcsapi.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.BusService;
 import com.ning.jetty.base.modules.ServerModuleBuilder;
 import com.ning.jetty.core.listeners.SetupServer;
 

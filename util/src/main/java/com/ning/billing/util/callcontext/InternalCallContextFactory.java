@@ -144,6 +144,13 @@ public class InternalCallContextFactory {
         return new InternalCallContext(tenantRecordId, accountRecordId, context);
     }
 
+    // Used when we need to re-hydrate the context with the account_record_id (when creating the account)
+    public InternalCallContext createInternalCallContext(final Long accountRecordId, final InternalCallContext context) {
+        return new InternalCallContext(context.getTenantRecordId(), accountRecordId, context.getUserToken(), context.getUserName(),
+                                       context.getCallOrigin(), context.getUserType(), context.getReasonCode(), context.getComment(),
+                                       context.getCreatedDate(), context.getUpdatedDate());
+    }
+
     private Long getTenantRecordId(final TenantContext context) {
         // Default to single default tenant (e.g. single tenant mode)
         if (context.getTenantId() == null) {

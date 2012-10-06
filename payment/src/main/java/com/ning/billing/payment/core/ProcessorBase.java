@@ -33,8 +33,6 @@ import com.ning.billing.payment.dao.PaymentMethodModelDao;
 import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
 import com.ning.billing.util.api.TagApiException;
-import com.ning.billing.util.bus.Bus;
-import com.ning.billing.util.bus.Bus.EventBusException;
 import com.ning.billing.util.bus.BusEvent;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
@@ -45,6 +43,8 @@ import com.ning.billing.util.globallocker.GlobalLocker.LockerType;
 import com.ning.billing.util.globallocker.LockFailedException;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.tag.TagInternalApi;
+import com.ning.billing.util.svcsapi.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.Bus.EventBusException;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.Tag;
 
@@ -125,12 +125,12 @@ public abstract class ProcessorBase {
         return getPaymentProviderPlugin(paymentMethodId, context);
     }
 
-    protected void postPaymentEvent(final BusEvent ev, final UUID accountId) {
+    protected void postPaymentEvent(final BusEvent ev, final UUID accountId, final InternalCallContext context) {
         if (ev == null) {
             return;
         }
         try {
-            eventBus.post(ev);
+            eventBus.post(ev, context);
         } catch (EventBusException e) {
             log.error("Failed to post Payment event event for account {} ", accountId, e);
         }

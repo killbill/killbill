@@ -32,7 +32,7 @@ import org.testng.annotations.Test;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.api.TagDefinitionApiException;
-import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.Bus;
 import com.ning.billing.util.bus.BusEvent;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.dao.ObjectType;

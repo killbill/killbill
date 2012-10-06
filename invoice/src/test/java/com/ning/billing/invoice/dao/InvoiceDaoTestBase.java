@@ -35,10 +35,10 @@ import com.ning.billing.invoice.glue.InvoiceModuleWithEmbeddedDb;
 import com.ning.billing.invoice.notification.MockNextBillingDatePoster;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.invoice.tests.InvoicingTestBase;
-import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.bus.InMemoryBus;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.svcsapi.bus.Bus;
 import com.ning.billing.util.tag.api.user.TagEventBuilder;
 
 public class InvoiceDaoTestBase extends InvoicingTestBase {

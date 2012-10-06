@@ -44,8 +44,6 @@ import com.ning.billing.invoice.model.CreditAdjInvoiceItem;
 import com.ning.billing.invoice.model.ExternalChargeInvoiceItem;
 import com.ning.billing.invoice.template.HtmlInvoiceGenerator;
 import com.ning.billing.util.api.TagApiException;
-import com.ning.billing.util.bus.Bus;
-import com.ning.billing.util.bus.Bus.EventBusException;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
@@ -54,6 +52,8 @@ import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.tag.TagInternalApi;
+import com.ning.billing.util.svcsapi.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.Bus.EventBusException;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.Tag;
 
@@ -155,7 +155,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         // Retrieve the invoice for the account id
         final Invoice invoice = dao.getById(invoiceId, internalContext);
         // This is for overdue
-        notifyBusOfInvoiceAdjustment(invoiceId, invoice.getAccountId(), context.getUserToken());
+        notifyBusOfInvoiceAdjustment(invoiceId, invoice.getAccountId(), context.getUserToken(), internalCallContextFactory.createInternalCallContext(invoice.getAccountId(), context));
     }
 
     @Override
@@ -167,7 +167,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         // Retrieve the invoice for the account id
         final Invoice invoice = dao.getById(invoiceId, internalContext);
         // This is for overdue
-        notifyBusOfInvoiceAdjustment(invoiceId, invoice.getAccountId(), context.getUserToken());
+        notifyBusOfInvoiceAdjustment(invoiceId, invoice.getAccountId(), context.getUserToken(), internalCallContextFactory.createInternalCallContext(invoice.getAccountId(), context));
     }
 
     @Override
@@ -283,9 +283,9 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         return generator.generateInvoice(account, invoice, manualPay);
     }
 
-    private void notifyBusOfInvoiceAdjustment(final UUID invoiceId, final UUID accountId, final UUID userToken) {
+    private void notifyBusOfInvoiceAdjustment(final UUID invoiceId, final UUID accountId, final UUID userToken, final InternalCallContext context) {
         try {
-            eventBus.post(new DefaultInvoiceAdjustmentEvent(invoiceId, accountId, userToken));
+            eventBus.post(new DefaultInvoiceAdjustmentEvent(invoiceId, accountId, userToken), context);
         } catch (EventBusException e) {
             log.warn("Failed to post adjustment event for invoice " + invoiceId, e);
         }

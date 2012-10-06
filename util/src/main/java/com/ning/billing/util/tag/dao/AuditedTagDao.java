@@ -33,7 +33,7 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.util.ChangeType;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagDefinitionApiException;
-import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.Bus;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.dao.AuditedCollectionDaoBase;
@@ -130,7 +130,7 @@ public class AuditedTagDao extends AuditedCollectionDaoBase<Tag, Tag> implements
                     tagEvent = tagEventBuilder.newUserTagCreationEvent(tag.getId(), objectId, objectType, tagDefinition, context.getUserToken());
                 }
                 try {
-                    bus.postFromTransaction(tagEvent, AuditedTagDao.this.tagSqlDao);
+                    bus.postFromTransaction(tagEvent, tagSqlDao, context);
                 } catch (Bus.EventBusException e) {
                     log.warn("Failed to post tag creation event for tag " + tag.getId().toString(), e);
                 }
@@ -180,7 +180,7 @@ public class AuditedTagDao extends AuditedCollectionDaoBase<Tag, Tag> implements
                         tagEvent = tagEventBuilder.newUserTagDeletionEvent(tag.getId(), objectId, objectType, tagDefinition, context.getUserToken());
                     }
                     try {
-                        bus.postFromTransaction(tagEvent, tagSqlDao);
+                        bus.postFromTransaction(tagEvent, tagSqlDao, context);
                     } catch (Bus.EventBusException e) {
                         log.warn("Failed to post tag deletion event for tag " + tag.getId().toString(), e);
                     }

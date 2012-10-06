@@ -22,8 +22,6 @@ import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
-import javax.annotation.Nullable;
-
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
@@ -40,6 +38,7 @@ import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.queue.PersistentQueueBase;
+import com.ning.billing.util.svcsapi.bus.Bus;
 
 import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
@@ -108,7 +107,8 @@ public class PersistentBus extends PersistentQueueBase implements Bus {
 
     @Override
     public int doProcessEvents() {
-        final InternalCallContext context = createCallContext(null);
+        // Note: retrieving and clearing bus events is not done per tenant (yet?)
+        final InternalCallContext context = internalCallContextFactory.createInternalCallContext("PersistentBus", CallOrigin.INTERNAL, UserType.SYSTEM, null);
 
         final List<BusEventEntry> events = getNextBusEvent(context);
         if (events.size() == 0) {
@@ -154,36 +154,31 @@ public class PersistentBus extends PersistentQueueBase implements Bus {
     }
 
     @Override
-    public void post(final BusEvent event) throws EventBusException {
+    public void post(final BusEvent event, final InternalCallContext context) throws EventBusException {
         dao.inTransaction(new Transaction<Void, PersistentBusSqlDao>() {
             @Override
             public Void inTransaction(final PersistentBusSqlDao transactional,
                                       final TransactionStatus status) throws Exception {
-                postFromTransaction(event, transactional);
+                postFromTransaction(event, context, transactional);
                 return null;
             }
         });
     }
 
     @Override
-    public void postFromTransaction(final BusEvent event, final Transmogrifier transmogrifier)
+    public void postFromTransaction(final BusEvent event, final Transmogrifier transmogrifier, final InternalCallContext context)
             throws EventBusException {
         final PersistentBusSqlDao transactional = transmogrifier.become(PersistentBusSqlDao.class);
-        postFromTransaction(event, transactional);
+        postFromTransaction(event, context, transactional);
     }
 
-    private void postFromTransaction(final BusEvent event, final PersistentBusSqlDao transactional) {
+    private void postFromTransaction(final BusEvent event, final InternalCallContext context, final PersistentBusSqlDao transactional) {
         try {
             final String json = objectMapper.writeValueAsString(event);
             final BusEventEntry entry = new BusEventEntry(hostname, event.getClass().getName(), json);
-            transactional.insertBusEvent(entry, createCallContext(event));
+            transactional.insertBusEvent(entry, context);
         } catch (Exception e) {
             log.error("Failed to post BusEvent " + event, e);
         }
-    }
-
-    private InternalCallContext createCallContext(@Nullable final BusEvent event) {
-        return internalCallContextFactory.createInternalCallContext("PersistentBus", CallOrigin.INTERNAL, UserType.SYSTEM,
-                                                                    event == null ? null : event.getUserToken());
     }
 }

@@ -32,11 +32,11 @@ import com.ning.billing.payment.api.PaymentMethod;
 import com.ning.billing.payment.dao.MockPaymentDao;
 import com.ning.billing.payment.provider.DefaultPaymentProviderPluginRegistry;
 import com.ning.billing.payment.provider.ExternalPaymentProviderPlugin;
-import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.tag.TagInternalApi;
+import com.ning.billing.util.svcsapi.bus.Bus;
 
 public class TestPaymentMethodProcessor extends PaymentTestSuite {
 

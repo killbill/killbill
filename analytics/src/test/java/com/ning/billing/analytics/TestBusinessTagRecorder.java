@@ -54,6 +54,7 @@ import com.ning.billing.mock.MockAccountBuilder;
 import com.ning.billing.util.bus.InMemoryBus;
 import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
+import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.clock.DefaultClock;
 import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.notificationq.DefaultNotificationQueueService;
@@ -75,7 +76,7 @@ public class TestBusinessTagRecorder extends AnalyticsTestSuiteWithEmbeddedDB {
         final BusinessInvoicePaymentTagSqlDao invoicePaymentTagSqlDao = dbi.onDemand(BusinessInvoicePaymentTagSqlDao.class);
         subscriptionTransitionTagSqlDao = dbi.onDemand(BusinessSubscriptionTransitionTagSqlDao.class);
         eventBus = new InMemoryBus();
-        final AccountDao accountDao = new AuditedAccountDao(dbi, eventBus);
+        final AccountDao accountDao = new AuditedAccountDao(dbi, eventBus, new InternalCallContextFactory(dbi, new ClockMock()));
         final AccountEmailDao accountEmailDao = new AuditedAccountEmailDao(dbi);
         final DefaultClock clock = new DefaultClock();
         callContextFactory = new DefaultCallContextFactory(clock);

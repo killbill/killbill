@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.util.api.TagDefinitionApiException;
-import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.Bus;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.tag.ControlTagType;
@@ -144,7 +144,7 @@ public class DefaultTagDefinitionDao implements TagDefinitionDao {
                         tagDefinitionEvent = tagEventBuilder.newUserTagDefinitionCreationEvent(tagDefinition.getId(), tagDefinition, context.getUserToken());
                     }
                     try {
-                        bus.postFromTransaction(tagDefinitionEvent, tagDefinitionSqlDao);
+                        bus.postFromTransaction(tagDefinitionEvent, tagDefinitionSqlDao, context);
                     } catch (Bus.EventBusException e) {
                         log.warn("Failed to post tag definition creation event for tag " + tagDefinition.getId(), e);
                     }
@@ -199,7 +199,7 @@ public class DefaultTagDefinitionDao implements TagDefinitionDao {
                         tagDefinitionEvent = tagEventBuilder.newUserTagDefinitionDeletionEvent(tagDefinition.getId(), tagDefinition, context.getUserToken());
                     }
                     try {
-                        bus.postFromTransaction(tagDefinitionEvent, tagDefinitionSqlDao);
+                        bus.postFromTransaction(tagDefinitionEvent, tagDefinitionSqlDao, context);
                     } catch (Bus.EventBusException e) {
                         log.warn("Failed to post tag definition deletion event for tag " + tagDefinition.getId(), e);
                     }

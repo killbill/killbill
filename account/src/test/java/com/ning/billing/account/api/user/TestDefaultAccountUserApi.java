@@ -36,7 +36,7 @@ import com.ning.billing.account.dao.AccountEmailDao;
 import com.ning.billing.account.dao.MockAccountDao;
 import com.ning.billing.account.dao.MockAccountEmailDao;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.Bus;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;

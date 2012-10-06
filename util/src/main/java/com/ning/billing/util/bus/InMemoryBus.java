@@ -25,6 +25,9 @@ import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.svcsapi.bus.Bus;
+
 import com.google.common.eventbus.AsyncEventBus;
 
 public class InMemoryBus implements Bus {
@@ -87,13 +90,13 @@ public class InMemoryBus implements Bus {
     }
 
     @Override
-    public void post(final BusEvent event) throws EventBusException {
+    public void post(final BusEvent event, final InternalCallContext context) throws EventBusException {
         checkInitialized("post");
         delegate.post(event);
     }
 
     @Override
-    public void postFromTransaction(final BusEvent event, final Transmogrifier dao) throws EventBusException {
+    public void postFromTransaction(final BusEvent event, final Transmogrifier dao, final InternalCallContext context) throws EventBusException {
         checkInitialized("postFromTransaction");
         delegate.post(event);
     }

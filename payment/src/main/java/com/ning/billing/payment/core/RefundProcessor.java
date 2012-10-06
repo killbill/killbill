@@ -49,7 +49,6 @@ import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
 import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 import com.ning.billing.payment.plugin.api.PaymentPluginApiException;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
-import com.ning.billing.util.bus.Bus;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
@@ -58,6 +57,7 @@ import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.tag.TagInternalApi;
+import com.ning.billing.util.svcsapi.bus.Bus;
 
 import com.google.common.base.Function;
 import com.google.common.base.Objects;

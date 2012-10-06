@@ -34,8 +34,9 @@ import com.ning.billing.account.api.AccountCreationEvent;
 import com.ning.billing.account.api.user.DefaultAccountChangeEvent;
 import com.ning.billing.account.api.user.DefaultAccountCreationEvent;
 import com.ning.billing.util.ChangeType;
-import com.ning.billing.util.bus.Bus;
-import com.ning.billing.util.bus.Bus.EventBusException;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
+import com.ning.billing.util.svcsapi.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.Bus.EventBusException;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.dao.EntityAudit;
@@ -51,11 +52,13 @@ public class AuditedAccountDao implements AccountDao {
 
     private final AccountSqlDao accountSqlDao;
     private final Bus eventBus;
+    private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
-    public AuditedAccountDao(final IDBI dbi, final Bus eventBus) {
+    public AuditedAccountDao(final IDBI dbi, final Bus eventBus, final InternalCallContextFactory internalCallContextFactory) {
         this.eventBus = eventBus;
         this.accountSqlDao = dbi.onDemand(AccountSqlDao.class);
+        this.internalCallContextFactory = internalCallContextFactory;
     }
 
     @Override
@@ -112,7 +115,7 @@ public class AuditedAccountDao implements AccountDao {
 
                     final AccountCreationEvent creationEvent = new DefaultAccountCreationEvent(account, context.getUserToken());
                     try {
-                        eventBus.postFromTransaction(creationEvent, transactionalDao);
+                        eventBus.postFromTransaction(creationEvent, transactionalDao, internalCallContextFactory.createInternalCallContext(recordId, context));
                     } catch (EventBusException e) {
                         log.warn("Failed to post account creation event for account " + account.getId(), e);
                     }
@@ -158,7 +161,7 @@ public class AuditedAccountDao implements AccountDao {
                     final AccountChangeEvent changeEvent = new DefaultAccountChangeEvent(accountId, context.getUserToken(), currentAccount, account);
                     if (changeEvent.hasChanges()) {
                         try {
-                            eventBus.postFromTransaction(changeEvent, transactional);
+                            eventBus.postFromTransaction(changeEvent, transactional, context);
                         } catch (EventBusException e) {
                             log.warn("Failed to post account change event for account " + accountId, e);
                         }
@@ -207,7 +210,7 @@ public class AuditedAccountDao implements AccountDao {
                     final AccountChangeEvent changeEvent = new DefaultAccountChangeEvent(accountId, context.getUserToken(), currentAccount, account);
                     if (changeEvent.hasChanges()) {
                         try {
-                            eventBus.postFromTransaction(changeEvent, transactional);
+                            eventBus.postFromTransaction(changeEvent, transactional, context);
                         } catch (EventBusException e) {
                             log.warn("Failed to post account change event for account " + accountId, e);
                         }

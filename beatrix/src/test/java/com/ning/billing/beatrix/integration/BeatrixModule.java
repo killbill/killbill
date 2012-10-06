@@ -52,7 +52,7 @@ import com.ning.billing.overdue.OverdueService;
 import com.ning.billing.payment.api.PaymentService;
 import com.ning.billing.payment.glue.PaymentModule;
 import com.ning.billing.payment.provider.MockPaymentProviderPluginModule;
-import com.ning.billing.util.bus.BusService;
+import com.ning.billing.util.svcsapi.bus.BusService;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.email.EmailModule;

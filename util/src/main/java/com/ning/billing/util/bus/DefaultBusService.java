@@ -18,6 +18,8 @@ package com.ning.billing.util.bus;
 
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
+import com.ning.billing.util.svcsapi.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.BusService;
 
 import com.google.inject.Inject;
 

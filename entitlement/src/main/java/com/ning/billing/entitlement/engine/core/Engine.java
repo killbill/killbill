@@ -49,8 +49,8 @@ import com.ning.billing.entitlement.events.user.ApiEventCancel;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.lifecycle.LifecycleHandlerType;
 import com.ning.billing.lifecycle.LifecycleHandlerType.LifecycleLevel;
-import com.ning.billing.util.bus.Bus;
-import com.ning.billing.util.bus.Bus.EventBusException;
+import com.ning.billing.util.svcsapi.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.Bus.EventBusException;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.CallOrigin;
@@ -199,7 +199,8 @@ public class Engine implements EventListener, EntitlementService {
         }
 
         try {
-            eventBus.post(subscription.getTransitionFromEvent(event, theRealSeqId));
+            final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(subscription.getBundleId(), ObjectType.BUNDLE, context);
+            eventBus.post(subscription.getTransitionFromEvent(event, theRealSeqId), internalCallContext);
         } catch (EventBusException e) {
             log.warn("Failed to post entitlement event " + event, e);
         }

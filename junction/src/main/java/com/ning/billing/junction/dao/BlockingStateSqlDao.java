@@ -95,7 +95,7 @@ public interface BlockingStateSqlDao extends BlockingStateDao, CloseMe, Transmog
             final boolean blockBilling;
             final Type type;
             try {
-                timestamp = new DateTime(r.getDate("created_date"));
+                timestamp = getDateTime(r, "created_date");
                 blockableId = UUID.fromString(r.getString("id"));
                 stateName = r.getString("state") == null ? DefaultBlockingState.CLEAR_STATE_NAME : r.getString("state");
                 type = Type.get(r.getString("type"));

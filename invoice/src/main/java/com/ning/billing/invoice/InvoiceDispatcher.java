@@ -48,8 +48,6 @@ import com.ning.billing.invoice.generator.InvoiceDateUtils;
 import com.ning.billing.invoice.generator.InvoiceGenerator;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
-import com.ning.billing.util.bus.Bus;
-import com.ning.billing.util.bus.Bus.EventBusException;
 import com.ning.billing.util.bus.BusEvent;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContext;
@@ -63,6 +61,8 @@ import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 import com.ning.billing.util.svcapi.junction.BillingEventSet;
 import com.ning.billing.util.svcapi.junction.BillingInternalApi;
+import com.ning.billing.util.svcsapi.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.Bus.EventBusException;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
@@ -175,7 +175,7 @@ public class InvoiceDispatcher {
                 log.info("Generated null invoice.");
                 if (!dryRun) {
                     final BusEvent event = new DefaultNullInvoiceEvent(accountId, clock.getUTCToday(), context.getUserToken());
-                    postEvent(event, accountId);
+                    postEvent(event, accountId, internalCallContext);
                 }
             } else {
                 log.info("Generated invoice {} with {} items.", invoice.getId().toString(), invoice.getNumberOfItems());
@@ -199,7 +199,7 @@ public class InvoiceDispatcher {
                                                                                        context.getUserToken());
 
                     if (isRealInvoiceWithItems) {
-                        postEvent(event, accountId);
+                        postEvent(event, accountId, internalCallContext);
                     }
                 }
             }
@@ -234,9 +234,9 @@ public class InvoiceDispatcher {
         }
     }
 
-    private void postEvent(final BusEvent event, final UUID accountId) {
+    private void postEvent(final BusEvent event, final UUID accountId, final InternalCallContext context) {
         try {
-            eventBus.post(event);
+            eventBus.post(event, context);
         } catch (EventBusException e) {
             log.error(String.format("Failed to post event %s for account %s", event.getBusEventType(), accountId), e);
         }

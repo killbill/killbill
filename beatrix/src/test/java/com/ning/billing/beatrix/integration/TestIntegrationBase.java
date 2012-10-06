@@ -76,7 +76,7 @@ import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.payment.provider.MockPaymentProviderPlugin;
 import com.ning.billing.util.api.TagUserApi;
-import com.ning.billing.util.bus.BusService;
+import com.ning.billing.util.svcsapi.bus.BusService;
 import com.ning.billing.util.clock.ClockMock;
 
 import com.google.common.base.Function;

@@ -67,8 +67,8 @@ import com.ning.billing.entitlement.events.user.ApiEventChange;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 import com.ning.billing.util.ChangeType;
-import com.ning.billing.util.bus.Bus;
-import com.ning.billing.util.bus.Bus.EventBusException;
+import com.ning.billing.util.svcsapi.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.Bus.EventBusException;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.Clock;
@@ -237,7 +237,7 @@ public class AuditedEntitlementDao implements EntitlementDao {
                                                         context);
 
                 // Notify the Bus of the requested change
-                notifyBusOfRequestedChange(transactional, subscription, nextPhase);
+                notifyBusOfRequestedChange(transactional, subscription, nextPhase, context);
 
                 return null;
             }
@@ -312,7 +312,7 @@ public class AuditedEntitlementDao implements EntitlementDao {
 
                 // Notify the Bus of the latest requested change, if needed
                 if (initialEvents.size() > 0) {
-                    notifyBusOfRequestedChange(eventsDaoFromSameTransaction, subscription, initialEvents.get(initialEvents.size() - 1));
+                    notifyBusOfRequestedChange(eventsDaoFromSameTransaction, subscription, initialEvents.get(initialEvents.size() - 1), context);
                 }
 
                 return null;
@@ -341,7 +341,7 @@ public class AuditedEntitlementDao implements EntitlementDao {
                 transactional.insertAuditFromTransaction(audits, context);
 
                 // Notify the Bus of the latest requested change
-                notifyBusOfRequestedChange(transactional, subscription, recreateEvents.get(recreateEvents.size() - 1));
+                notifyBusOfRequestedChange(transactional, subscription, recreateEvents.get(recreateEvents.size() - 1), context);
 
                 return null;
             }
@@ -399,7 +399,7 @@ public class AuditedEntitlementDao implements EntitlementDao {
                     transactional.insertAuditFromTransaction(eventAudits, context);
 
                     // Notify the Bus of the latest requested change
-                    notifyBusOfRequestedChange(transactional, subscription, uncancelEvents.get(uncancelEvents.size() - 1));
+                    notifyBusOfRequestedChange(transactional, subscription, uncancelEvents.get(uncancelEvents.size() - 1), context);
                 }
 
                 return null;
@@ -431,7 +431,7 @@ public class AuditedEntitlementDao implements EntitlementDao {
 
                 // Notify the Bus of the latest requested change
                 final EntitlementEvent finalEvent = changeEvents.get(changeEvents.size() - 1);
-                notifyBusOfRequestedChange(transactional, subscription, finalEvent);
+                notifyBusOfRequestedChange(transactional, subscription, finalEvent, context);
 
                 return null;
             }
@@ -454,7 +454,7 @@ public class AuditedEntitlementDao implements EntitlementDao {
                                                 context);
 
         // Notify the Bus of the requested change
-        notifyBusOfRequestedChange(transactional, subscription, cancelEvent);
+        notifyBusOfRequestedChange(transactional, subscription, cancelEvent, context);
     }
 
     private void cancelNextPhaseEventFromTransaction(final UUID subscriptionId, final EntitlementEventSqlDao dao, final InternalCallContext context) {
@@ -644,7 +644,7 @@ public class AuditedEntitlementDao implements EntitlementDao {
                 try {
                     // Note: we don't send a requested change event here, but a repair event
                     final RepairEntitlementEvent busEvent = new DefaultRepairEntitlementEvent(context.getUserToken(), accountId, bundleId, clock.getUTCNow());
-                    eventBus.postFromTransaction(busEvent, transactional);
+                    eventBus.postFromTransaction(busEvent, transactional, context);
                 } catch (EventBusException e) {
                     log.warn("Failed to post repair entitlement event for bundle " + bundleId, e);
                 }
@@ -697,9 +697,10 @@ public class AuditedEntitlementDao implements EntitlementDao {
         }
     }
 
-    private void notifyBusOfRequestedChange(final EntitlementEventSqlDao transactional, final SubscriptionData subscription, final EntitlementEvent nextEvent) {
+    private void notifyBusOfRequestedChange(final EntitlementEventSqlDao transactional, final SubscriptionData subscription,
+                                            final EntitlementEvent nextEvent, final InternalCallContext context) {
         try {
-            eventBus.postFromTransaction(new DefaultRequestedSubscriptionEvent(subscription, nextEvent), transactional);
+            eventBus.postFromTransaction(new DefaultRequestedSubscriptionEvent(subscription, nextEvent), transactional, context);
         } catch (EventBusException e) {
             log.warn("Failed to post requested change event for subscription " + subscription.getId(), e);
         }
@@ -738,7 +739,7 @@ public class AuditedEntitlementDao implements EntitlementDao {
 
             // Notify the Bus of the latest requested change
             final EntitlementEvent finalEvent = curSubscription.getInitialEvents().get(curSubscription.getInitialEvents().size() - 1);
-            notifyBusOfRequestedChange(transactional, subData, finalEvent);
+            notifyBusOfRequestedChange(transactional, subData, finalEvent, context);
         }
 
         transBundleDao.insertBundle(bundleData, context);

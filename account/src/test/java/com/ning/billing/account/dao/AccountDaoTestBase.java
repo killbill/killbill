@@ -22,8 +22,10 @@ import org.skife.jdbi.v2.IDBI;
 import org.testng.annotations.BeforeClass;
 
 import com.ning.billing.account.AccountTestSuiteWithEmbeddedDB;
-import com.ning.billing.util.bus.Bus;
-import com.ning.billing.util.bus.BusService;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
+import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.svcsapi.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.BusService;
 import com.ning.billing.util.bus.DefaultBusService;
 import com.ning.billing.util.bus.InMemoryBus;
 import com.ning.billing.util.tag.api.user.TagEventBuilder;
@@ -48,7 +50,7 @@ public abstract class AccountDaoTestBase extends AccountTestSuiteWithEmbeddedDB 
             final BusService busService = new DefaultBusService(bus);
             ((DefaultBusService) busService).startBus();
 
-            accountDao = new AuditedAccountDao(dbi, bus);
+            accountDao = new AuditedAccountDao(dbi, bus, new InternalCallContextFactory(dbi, new ClockMock()));
             // Health check test to make sure MySQL is setup properly
             accountDao.test(internalCallContext);
 

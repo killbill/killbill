@@ -55,7 +55,7 @@ import com.ning.billing.overdue.OverdueProperties;
 import com.ning.billing.overdue.OverdueTestSuiteWithEmbeddedDB;
 import com.ning.billing.overdue.glue.DefaultOverdueModule;
 import com.ning.billing.overdue.listener.OverdueListener;
-import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.Bus;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;

@@ -33,7 +33,7 @@ import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.server.ServerTestSuiteWithEmbeddedDB;
 import com.ning.billing.tenant.api.DefaultTenant;
 import com.ning.billing.tenant.dao.DefaultTenantDao;
-import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.Bus;
 
 import com.jolbox.bonecp.BoneCPConfig;
 import com.jolbox.bonecp.BoneCPDataSource;

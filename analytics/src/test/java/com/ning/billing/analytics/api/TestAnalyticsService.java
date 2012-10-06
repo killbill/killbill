@@ -79,7 +79,7 @@ import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.payment.dao.PaymentAttemptModelDao;
 import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.dao.PaymentModelDao;
-import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.Bus;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;
 
@@ -265,26 +265,26 @@ public class TestAnalyticsService extends AnalyticsTestSuiteWithEmbeddedDB {
         Assert.assertNull(accountSqlDao.getAccountByKey(ACCOUNT_KEY, internalCallContext));
 
         // Send events and wait for the async part...
-        bus.post(accountCreationNotification);
+        bus.post(accountCreationNotification, internalCallContext);
         Thread.sleep(5000);
         Assert.assertNotNull(accountSqlDao.getAccountByKey(ACCOUNT_KEY, internalCallContext));
 
         // Test subscriptions integration - this is just to exercise the code. It's hard to test the actual subscriptions
         // as we would need to mock a bunch of APIs (see integration tests in Beatrix instead)
-        bus.post(transition);
+        bus.post(transition, internalCallContext);
         Thread.sleep(5000);
 
         // Test invoice integration - the account creation notification has triggered a BAC update
         Assert.assertEquals(accountSqlDao.getAccountByKey(ACCOUNT_KEY, internalCallContext).getTotalInvoiceBalance().compareTo(INVOICE_AMOUNT), 1);
 
         // Post the same invoice event again - the invoice balance shouldn't change
-        bus.post(invoiceCreationNotification);
+        bus.post(invoiceCreationNotification, internalCallContext);
         Thread.sleep(5000);
         Assert.assertEquals(accountSqlDao.getAccountByKey(ACCOUNT_KEY, internalCallContext).getTotalInvoiceBalance().compareTo(INVOICE_AMOUNT), 1);
 
         // Test payment integration - the fields have already been populated, just make sure the code is exercised
         // It's hard to test the actual payments fields though in bac, since we should mock the plugin
-        bus.post(paymentInfoNotification);
+        bus.post(paymentInfoNotification, internalCallContext);
         Thread.sleep(5000);
 
         // Test the shutdown sequence

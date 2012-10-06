@@ -50,7 +50,7 @@ import com.ning.billing.invoice.glue.InvoiceModuleWithMocks;
 import com.ning.billing.lifecycle.KillbillService;
 import com.ning.billing.mock.glue.MockClockModule;
 import com.ning.billing.mock.glue.MockJunctionModule;
-import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.Bus;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;

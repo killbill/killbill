@@ -21,7 +21,7 @@ import org.skife.jdbi.v2.IDBI;
 import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.mock.glue.MockClockModule;
-import com.ning.billing.util.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.Bus;
 import com.ning.billing.util.bus.InMemoryBus;
 import com.ning.billing.util.glue.TagStoreModule;
 

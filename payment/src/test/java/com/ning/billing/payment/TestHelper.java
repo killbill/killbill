@@ -34,8 +34,9 @@ import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.payment.glue.PaymentTestModuleWithMocks;
 import com.ning.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;
-import com.ning.billing.util.bus.Bus;
-import com.ning.billing.util.bus.Bus.EventBusException;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
+import com.ning.billing.util.svcsapi.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.Bus.EventBusException;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.CallOrigin;
@@ -52,15 +53,17 @@ public class TestHelper {
     private final CallContext context;
     private final Bus eventBus;
     private final Clock clock;
+    private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
     public TestHelper(final CallContextFactory factory, final AccountUserApi accountUserApi, final InvoicePaymentApi invoicePaymentApi,
-                      final PaymentApi paymentApi, final Bus eventBus, final Clock clock) {
+                      final PaymentApi paymentApi, final Bus eventBus, final Clock clock, final InternalCallContextFactory internalCallContextFactory) {
         this.eventBus = eventBus;
         this.accountUserApi = accountUserApi;
         this.invoicePaymentApi = invoicePaymentApi;
         this.paymentApi = paymentApi;
         this.clock = clock;
+        this.internalCallContextFactory = internalCallContextFactory;
         context = factory.createCallContext(null, "Princess Buttercup", CallOrigin.TEST, UserType.TEST);
     }
 
@@ -94,7 +97,7 @@ public class TestHelper {
                                                                         invoice.getInvoiceDate(),
                                                                         context.getUserToken());
 
-        eventBus.post(event);
+        eventBus.post(event, internalCallContextFactory.createInternalCallContext(account.getId(), context));
         return invoice;
     }
 
