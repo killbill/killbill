@@ -151,15 +151,12 @@ public class InvoiceDispatcher {
                                            final boolean dryRun, final CallContext context) throws InvoiceApiException {
         try {
 
-            // API_FIX
+            final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(accountId, context);
+
             // Make sure to first set the BCD if needed then get the account object (to have the BCD set)
-            final InternalCallContext internalCallContextNoAccounrRecordId = internalCallContextFactory.createInternalCallContext(context);
-            final BillingEventSet billingEvents = billingApi.getBillingEventsForAccountAndUpdateAccountBCD(accountId, internalCallContextNoAccounrRecordId);
+            final BillingEventSet billingEvents = billingApi.getBillingEventsForAccountAndUpdateAccountBCD(accountId, internalCallContext);
 
-            final Account account = accountApi.getAccountById(accountId,  internalCallContextNoAccounrRecordId);
-
-            final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), context);
-
+            final Account account = accountApi.getAccountById(accountId,  internalCallContext);
             List<Invoice> invoices = new ArrayList<Invoice>();
             if (!billingEvents.isAccountAutoInvoiceOff()) {
                 invoices = invoiceDao.getInvoicesByAccount(accountId, internalCallContextFactory.createInternalTenantContext(account.getId(), context)); //no need to fetch, invoicing is off on this account

@@ -16,6 +16,8 @@
 
 package com.ning.billing.invoice.glue;
 
+import static org.testng.Assert.assertNotNull;
+
 import java.io.IOException;
 import java.net.URL;
 
@@ -23,7 +25,6 @@ import org.mockito.Mockito;
 import org.skife.jdbi.v2.IDBI;
 
 import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
-import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.invoice.api.InvoiceNotifier;
@@ -44,9 +45,8 @@ import com.ning.billing.util.glue.GlobalLockerModule;
 import com.ning.billing.util.glue.TagStoreModule;
 import com.ning.billing.util.notificationq.MockNotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService;
+import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.junction.BillingInternalApi;
-
-import static org.testng.Assert.assertNotNull;
 
 public class InvoiceModuleWithEmbeddedDb extends DefaultInvoiceModule {
     private final MysqlTestingHelper helper = KillbillTestSuiteWithEmbeddedDB.getMysqlTestingHelper();
@@ -75,7 +75,7 @@ public class InvoiceModuleWithEmbeddedDb extends DefaultInvoiceModule {
         install(new TagStoreModule());
 
         installNotificationQueue();
-        bind(AccountUserApi.class).toInstance(Mockito.mock(AccountUserApi.class));
+        bind(AccountInternalApi.class).toInstance(Mockito.mock(AccountInternalApi.class));
 
         final BillingInternalApi billingApi = Mockito.mock(BillingInternalApi.class);
         bind(BillingInternalApi.class).toInstance(billingApi);

@@ -54,16 +54,18 @@ import com.ning.billing.invoice.notification.NextBillingDateNotifier;
 import com.ning.billing.invoice.notification.NullInvoiceNotifier;
 import com.ning.billing.invoice.tests.InvoicingTestBase;
 import com.ning.billing.mock.api.MockBillCycleDay;
-import com.ning.billing.util.svcsapi.bus.BusService;
 import com.ning.billing.util.bus.DefaultBusService;
+import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
+import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 import com.ning.billing.util.svcapi.junction.BillingEventSet;
 import com.ning.billing.util.svcapi.junction.BillingInternalApi;
 import com.ning.billing.util.svcapi.junction.BillingModeType;
+import com.ning.billing.util.svcsapi.bus.BusService;
 
 import com.google.inject.Inject;
 
@@ -96,9 +98,16 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
     @Inject
     private Clock clock;
 
-    private final InternalCallContextFactory internalCallContextFactory = new InternalCallContextFactory(getMysqlTestingHelper().getDBI(), clock);
-
+    @Inject
     private AccountInternalApi accountInternalApi;
+
+    @Inject
+    private EntitlementInternalApi entitlementInternalApi;
+
+    @Inject
+    private InternalCallContextFactory internalCallContextFactory;
+
+
     private Account account;
     private Subscription subscription;
 
@@ -109,11 +118,14 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
 
         busService.getBus().start();
 
-        accountInternalApi = Mockito.mock(AccountInternalApi.class);
+        //accountInternalApi = Mockito.mock(AccountInternalApi.class);
         account = Mockito.mock(Account.class);
 
         final UUID accountId = UUID.randomUUID();
-        Mockito.when(accountInternalApi.getAccountById(accountId, internalCallContext)).thenReturn(account);
+
+
+        Mockito.when(accountInternalApi.getAccountById(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(account);
+
         Mockito.when(account.getCurrency()).thenReturn(Currency.USD);
         Mockito.when(account.getId()).thenReturn(accountId);
         Mockito.when(account.isNotifiedForInvoices()).thenReturn(true);
@@ -149,12 +161,12 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
                                           fixedPrice, BigDecimal.ONE, currency, BillingPeriod.MONTHLY, 1,
                                           BillingModeType.IN_ADVANCE, "", 1L, SubscriptionTransitionType.CREATE));
 
-        Mockito.when(billingApi.getBillingEventsForAccountAndUpdateAccountBCD(accountId, internalCallContext)).thenReturn(events);
+        Mockito.when(billingApi.getBillingEventsForAccountAndUpdateAccountBCD(Mockito.<UUID>any(), Mockito.<InternalCallContext>any())).thenReturn(events);
 
         final DateTime target = new DateTime();
 
         final InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
-        final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountInternalApi, billingApi, null, invoiceDao,
+        final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountInternalApi, billingApi, entitlementInternalApi, invoiceDao,
                                                                    invoiceNotifier, locker, busService.getBus(),
                                                                    clock, new InternalCallContextFactory(getMysqlTestingHelper().getDBI(), clock));
 
@@ -206,9 +218,9 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
                                           new MockPlanPhase(jetTrialEvergreen1000USD, PhaseType.EVERGREEN), null, new BigDecimal("1000"), account.getCurrency(), BillingPeriod.MONTHLY,
                                           31, 31, BillingModeType.IN_ADVANCE, "CHANGE", 3L, SubscriptionTransitionType.CHANGE));
 
-        Mockito.when(billingApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), internalCallContext)).thenReturn(events);
+        Mockito.when(billingApi.getBillingEventsForAccountAndUpdateAccountBCD(Mockito.<UUID>any(), Mockito.<InternalCallContext>any())).thenReturn(events);
         final InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
-        final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountInternalApi, billingApi, null, invoiceDao,
+        final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountInternalApi, billingApi, entitlementInternalApi, invoiceDao,
                                                                    invoiceNotifier, locker, busService.getBus(),
                                                                    clock, internalCallContextFactory);
 
