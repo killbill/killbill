@@ -61,7 +61,6 @@ public class MockModule extends AbstractModule {
         bind(Clock.class).toInstance(clock);
         bind(ClockMock.class).toInstance(clock);
         bind(CallContextFactory.class).to(DefaultCallContextFactory.class).asEagerSingleton();
-        bind(InternalCallContextFactory.class).asEagerSingleton();
         install(new TagStoreModule());
         install(new CustomFieldModule());
 
