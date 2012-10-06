@@ -91,7 +91,7 @@ public class DefaultNextBillingDateNotifier implements NextBillingDateNotifier {
 
                     final NextBillingDateNotificationKey key = (NextBillingDateNotificationKey) notificationKey;
                     try {
-                        final Subscription subscription = entitlementApi.getSubscriptionFromId(key.getUuidKey(), callContextFactory.createInternalTenantContext(null));
+                        final Subscription subscription = entitlementApi.getSubscriptionFromId(key.getUuidKey(), callContextFactory.createInternalTenantContext(tenantRecordId, accountRecordId));
                         if (subscription == null) {
                             log.warn("Next Billing Date Notification Queue handled spurious notification (key: " + key + ")");
                         } else {
