@@ -23,6 +23,7 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 
+import org.joda.time.DateTime;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.tweak.HandleCallback;
@@ -90,7 +91,8 @@ public class InternalCallContextFactory {
         //                         "tenant of the pointed object (%s) and the context (%s) don't match!", tenantRecordIdFromObject, tenantRecordIdFromContext);
 
         return createInternalCallContext(objectId, objectType, context.getUserName(), context.getCallOrigin(),
-                                         context.getUserType(), context.getUserToken());
+                                         context.getUserType(), context.getUserToken(), context.getReasonCode(), context.getComment(),
+                                         context.getCreatedDate(), context.getUpdatedDate());
     }
 
     /**
@@ -103,8 +105,9 @@ public class InternalCallContextFactory {
      * @return internal call context
      */
     public InternalCallContext createInternalCallContext(final UUID accountId, final CallContext context) {
-        return createInternalCallContext(accountId, context.getUserName(), context.getCallOrigin(),
-                                         context.getUserType(), context.getUserToken());
+        return createInternalCallContext(accountId, ObjectType.ACCOUNT, context.getUserName(), context.getCallOrigin(),
+                                         context.getUserType(), context.getUserToken(), context.getReasonCode(), context.getComment(),
+                                         context.getCreatedDate(), context.getUpdatedDate());
     }
 
     /**
@@ -135,9 +138,17 @@ public class InternalCallContextFactory {
      */
     public InternalCallContext createInternalCallContext(final UUID objectId, final ObjectType objectType, final String userName,
                                                          final CallOrigin callOrigin, final UserType userType, @Nullable final UUID userToken) {
+        return createInternalCallContext(objectId, objectType, userName, callOrigin, userType, userToken, null, null, clock.getUTCNow(), clock.getUTCNow());
+    }
+
+    public InternalCallContext createInternalCallContext(final UUID objectId, final ObjectType objectType, final String userName,
+                                                         final CallOrigin callOrigin, final UserType userType, @Nullable final UUID userToken,
+                                                         @Nullable final String reasonCode, @Nullable final String comment, final DateTime createdDate,
+                                                         final DateTime updatedDate) {
         final Long tenantRecordId = retrieveTenantRecordIdFromObject(objectId, objectType);
         final Long accountRecordId = retrieveAccountRecordIdFromObject(objectId, objectType);
-        return createInternalCallContext(tenantRecordId, accountRecordId, userName, callOrigin, userType, userToken);
+        return createInternalCallContext(tenantRecordId, accountRecordId, userName, callOrigin, userType, userToken,
+                                         reasonCode, comment, createdDate, updatedDate);
     }
 
     /**
@@ -155,10 +166,19 @@ public class InternalCallContextFactory {
      */
     public InternalCallContext createInternalCallContext(@Nullable final Long tenantRecordId, final Long accountRecordId, final String userName,
                                                          final CallOrigin callOrigin, final UserType userType, @Nullable final UUID userToken) {
+        return new InternalCallContext(tenantRecordId, accountRecordId, userToken, userName, callOrigin, userType, null, null,
+                                       clock.getUTCNow(), clock.getUTCNow());
+    }
+
+    private InternalCallContext createInternalCallContext(@Nullable final Long tenantRecordId, final Long accountRecordId, final String userName,
+                                                          final CallOrigin callOrigin, final UserType userType, @Nullable final UUID userToken,
+                                                          @Nullable final String reasonCode, @Nullable final String comment, final DateTime createdDate,
+                                                          final DateTime updatedDate) {
         //Preconditions.checkNotNull(accountRecordId, "accountRecordId cannot be null");
         final Long nonNulTenantRecordId = Objects.firstNonNull(tenantRecordId, INTERNAL_TENANT_RECORD_ID);
 
-        return new InternalCallContext(nonNulTenantRecordId, accountRecordId, userToken, userName, callOrigin, userType, null, null, clock.getUTCNow(), clock.getUTCNow());
+        return new InternalCallContext(nonNulTenantRecordId, accountRecordId, userToken, userName, callOrigin, userType, reasonCode, comment,
+                                       createdDate, updatedDate);
     }
 
     /**
