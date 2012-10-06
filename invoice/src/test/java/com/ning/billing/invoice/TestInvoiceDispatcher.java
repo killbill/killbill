@@ -96,7 +96,8 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
     @Inject
     private Clock clock;
 
-    private final InternalCallContextFactory internalCallContextFactory = new InternalCallContextFactory(getMysqlTestingHelper().getDBI(), clock);
+    @Inject
+    private InternalCallContextFactory internalCallContextFactory;
 
     private AccountUserApi accountUserApi;
     private Account account;

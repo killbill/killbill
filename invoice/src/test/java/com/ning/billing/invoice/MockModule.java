@@ -22,7 +22,6 @@ import java.net.URL;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.IDBI;
 
-import com.google.inject.AbstractModule;
 import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
 import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.dbi.DBIProvider;
@@ -35,6 +34,7 @@ import com.ning.billing.invoice.template.formatters.DefaultInvoiceFormatterFacto
 import com.ning.billing.mock.glue.MockJunctionModule;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.DefaultCallContextFactory;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.email.EmailModule;
@@ -44,6 +44,8 @@ import com.ning.billing.util.glue.CustomFieldModule;
 import com.ning.billing.util.glue.GlobalLockerModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.TagStoreModule;
+
+import com.google.inject.AbstractModule;
 
 import static org.testng.Assert.assertNotNull;
 
@@ -55,6 +57,7 @@ public class MockModule extends AbstractModule {
         bind(Clock.class).to(ClockMock.class).asEagerSingleton();
         bind(ClockMock.class).asEagerSingleton();
         bind(CallContextFactory.class).to(DefaultCallContextFactory.class).asEagerSingleton();
+        bind(InternalCallContextFactory.class).asEagerSingleton();
         install(new TagStoreModule());
         install(new CustomFieldModule());
 
