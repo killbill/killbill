@@ -118,14 +118,14 @@ public class Engine implements EventListener, EntitlementService {
         try {
             final NotificationQueueHandler queueHandler = new NotificationQueueHandler() {
                 @Override
-                public void handleReadyNotification(final NotificationKey inputKey, final DateTime eventDateTime) {
+                public void handleReadyNotification(final NotificationKey inputKey, final DateTime eventDateTime, final Long accountRecordId, final Long tenantRecordId) {
                     if (!(inputKey instanceof EntitlementNotificationKey)) {
                         log.error("Entitlement service received an unexpected event type {}" + inputKey.getClass().getName());
                         return;
                     }
 
                     final EntitlementNotificationKey key = (EntitlementNotificationKey) inputKey;
-                    final EntitlementEvent event = dao.getEventById(key.getEventId(), internalCallContextFactory.createInternalTenantContext());
+                    final EntitlementEvent event = dao.getEventById(key.getEventId(), internalCallContextFactory.createInternalTenantContext(tenantRecordId, accountRecordId));
                     if (event == null) {
                         log.warn("Failed to extract event for notification key {}", inputKey);
                         return;

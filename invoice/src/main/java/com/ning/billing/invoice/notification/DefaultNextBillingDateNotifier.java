@@ -82,7 +82,7 @@ public class DefaultNextBillingDateNotifier implements NextBillingDateNotifier {
 
         final NotificationQueueHandler notificationQueueHandler = new NotificationQueueHandler() {
             @Override
-            public void handleReadyNotification(final NotificationKey notificationKey, final DateTime eventDate) {
+            public void handleReadyNotification(final NotificationKey notificationKey, final DateTime eventDate, final Long accountRecordId, final Long tenantRecordId) {
                 try {
                     if (!(notificationKey instanceof NextBillingDateNotificationKey)) {
                         log.error("Invoice service received an unexpected event type {}", notificationKey.getClass().getName());

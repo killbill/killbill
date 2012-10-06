@@ -152,7 +152,7 @@ public class InvoiceDispatcher {
 
             List<Invoice> invoices = new ArrayList<Invoice>();
             if (!billingEvents.isAccountAutoInvoiceOff()) {
-                invoices = invoiceDao.getInvoicesByAccount(accountId, internalCallContextFactory.createInternalTenantContext(account.getId(), context)); //no need to fetch, invoicing is off on this account
+                invoices = invoiceDao.getInvoicesByAccount(accountId, internalCallContextFactory.createInternalTenantContext(context)); //no need to fetch, invoicing is off on this account
             }
 
             final Currency targetCurrency = account.getCurrency();

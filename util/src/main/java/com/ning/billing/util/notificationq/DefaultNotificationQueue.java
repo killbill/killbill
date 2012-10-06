@@ -22,6 +22,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
@@ -54,10 +56,9 @@ public class DefaultNotificationQueue extends NotificationQueueBase {
 
     @Override
     public int doProcessEvents() {
-        final InternalCallContext context = createCallContext();
-
         logDebug("ENTER doProcessEvents");
-        final List<Notification> notifications = getReadyNotifications(context);
+        // Finding and claiming notifications is not done per tenant (yet?)
+        final List<Notification> notifications = getReadyNotifications(createCallContext(null, null));
         if (notifications.size() == 0) {
             logDebug("EXIT doProcessEvents");
             return 0;
@@ -70,9 +71,9 @@ public class DefaultNotificationQueue extends NotificationQueueBase {
             getNbProcessedEvents().incrementAndGet();
             logDebug("handling notification %s, key = %s for time %s", cur.getId(), cur.getNotificationKey(), cur.getEffectiveDate());
             final NotificationKey key = deserializeEvent(cur.getNotificationKeyClass(), cur.getNotificationKey());
-            getHandler().handleReadyNotification(key, cur.getEffectiveDate());
+            getHandler().handleReadyNotification(key, cur.getEffectiveDate(), cur.getAccountRecordId(), cur.getTenantRecordId());
             result++;
-            clearNotification(cur, context);
+            clearNotification(cur, createCallContext(cur.getTenantRecordId(), cur.getAccountRecordId()));
             logDebug("done handling notification %s, key = %s for time %s", cur.getId(), cur.getNotificationKey(), cur.getEffectiveDate());
         }
 
@@ -103,7 +104,8 @@ public class DefaultNotificationQueue extends NotificationQueueBase {
                                                   final NotificationSqlDao thisDao,
                                                   final InternalCallContext context) throws IOException {
         final String json = objectMapper.writeValueAsString(notificationKey);
-        final Notification notification = new DefaultNotification(getFullQName(), getHostname(), notificationKey.getClass().getName(), json, accountId, futureNotificationTime);
+        final Notification notification = new DefaultNotification(getFullQName(), getHostname(), notificationKey.getClass().getName(), json,
+                                                                  accountId, futureNotificationTime, context.getAccountRecordId(), context.getTenantRecordId());
         thisDao.insertNotification(notification, context);
     }
 
@@ -162,7 +164,7 @@ public class DefaultNotificationQueue extends NotificationQueueBase {
         dao.removeNotification(notificationId.toString(), context);
     }
 
-    private InternalCallContext createCallContext() {
-        return internalCallContextFactory.createInternalCallContext("NotificationQueue", CallOrigin.INTERNAL, UserType.SYSTEM, null);
+    private InternalCallContext createCallContext(@Nullable final Long tenantRecordId, @Nullable final Long accountRecordId) {
+        return internalCallContextFactory.createInternalCallContext(tenantRecordId, accountRecordId, "NotificationQueue", CallOrigin.INTERNAL, UserType.SYSTEM, null);
     }
 }

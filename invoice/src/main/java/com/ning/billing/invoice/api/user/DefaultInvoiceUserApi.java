@@ -85,12 +85,12 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
 
     @Override
     public List<Invoice> getInvoicesByAccount(final UUID accountId, final TenantContext context) {
-        return dao.getInvoicesByAccount(accountId, internalCallContextFactory.createInternalTenantContext(accountId, context));
+        return dao.getInvoicesByAccount(accountId, internalCallContextFactory.createInternalTenantContext(context));
     }
 
     @Override
     public List<Invoice> getInvoicesByAccount(final UUID accountId, final LocalDate fromDate, final TenantContext context) {
-        return dao.getInvoicesByAccount(accountId, fromDate, internalCallContextFactory.createInternalTenantContext(accountId, context));
+        return dao.getInvoicesByAccount(accountId, fromDate, internalCallContextFactory.createInternalTenantContext(context));
     }
 
     @Override
@@ -102,13 +102,13 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
 
     @Override
     public BigDecimal getAccountBalance(final UUID accountId, final TenantContext context) {
-        final BigDecimal result = dao.getAccountBalance(accountId, internalCallContextFactory.createInternalTenantContext(accountId, context));
+        final BigDecimal result = dao.getAccountBalance(accountId, internalCallContextFactory.createInternalTenantContext(context));
         return result == null ? BigDecimal.ZERO : result;
     }
 
     @Override
     public BigDecimal getAccountCBA(final UUID accountId, final TenantContext context) {
-        final BigDecimal result = dao.getAccountCBA(accountId, internalCallContextFactory.createInternalTenantContext(accountId, context));
+        final BigDecimal result = dao.getAccountCBA(accountId, internalCallContextFactory.createInternalTenantContext(context));
         return result == null ? BigDecimal.ZERO : result;
     }
 
@@ -124,7 +124,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
 
     @Override
     public List<Invoice> getUnpaidInvoicesByAccountId(final UUID accountId, final LocalDate upToDate, final TenantContext context) {
-        return dao.getUnpaidInvoicesByAccountId(accountId, upToDate, internalCallContextFactory.createInternalTenantContext(accountId, context));
+        return dao.getUnpaidInvoicesByAccountId(accountId, upToDate, internalCallContextFactory.createInternalTenantContext(context));
     }
 
     @Override

@@ -20,19 +20,22 @@ import org.joda.time.DateTime;
 
 import com.ning.billing.config.NotificationConfig;
 
-
 public interface NotificationQueueService {
 
     public interface NotificationQueueHandler {
+
         /**
          * Called for each notification ready
          *
          * @param notificationKey the notification key associated to that notification entry
+         * @param accountRecordId account record id associated with that notification entry
+         * @param tenantRecordId  tenant record id associated with that notification entry
          */
-        public void handleReadyNotification(NotificationKey notificationKey, DateTime eventDateTime);
+        public void handleReadyNotification(NotificationKey notificationKey, DateTime eventDateTime, Long accountRecordId, Long tenantRecordId);
     }
 
     public static final class NotificationQueueAlreadyExists extends Exception {
+
         private static final long serialVersionUID = 1541281L;
 
         public NotificationQueueAlreadyExists(final String msg) {
@@ -41,6 +44,7 @@ public interface NotificationQueueService {
     }
 
     public static final class NoSuchNotificationQueue extends Exception {
+
         private static final long serialVersionUID = 1541281L;
 
         public NoSuchNotificationQueue(final String msg) {
@@ -83,7 +87,6 @@ public interface NotificationQueueService {
      */
     public void deleteNotificationQueue(final String svcName, final String queueName)
             throws NoSuchNotificationQueue;
-
 
     /**
      * @param services

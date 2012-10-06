@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import com.google.inject.Inject;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountEmail;
@@ -40,6 +39,8 @@ import com.ning.billing.util.email.EmailConfig;
 import com.ning.billing.util.email.EmailSender;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.Tag;
+
+import com.google.inject.Inject;
 
 public class EmailInvoiceNotifier implements InvoiceNotifier {
     private final AccountUserApi accountUserApi;
@@ -63,12 +64,10 @@ public class EmailInvoiceNotifier implements InvoiceNotifier {
 
     @Override
     public void notify(final Account account, final Invoice invoice, final TenantContext context) throws InvoiceApiException {
-        final TenantContext tenantContext = internalCallContextFactory.createInternalTenantContext(account.getId(), context).toTenantContext();
-
         final List<String> to = new ArrayList<String>();
         to.add(account.getEmail());
 
-        final List<AccountEmail> accountEmailList = accountUserApi.getEmails(account.getId(), tenantContext);
+        final List<AccountEmail> accountEmailList = accountUserApi.getEmails(account.getId(), context);
         final List<String> cc = new ArrayList<String>();
         for (final AccountEmail email : accountEmailList) {
             cc.add(email.getEmail());
@@ -76,7 +75,7 @@ public class EmailInvoiceNotifier implements InvoiceNotifier {
 
         // Check if this account has the MANUAL_PAY system tag
         boolean manualPay = false;
-        final Map<String, Tag> accountTags = tagUserApi.getTags(account.getId(), ObjectType.ACCOUNT, tenantContext);
+        final Map<String, Tag> accountTags = tagUserApi.getTags(account.getId(), ObjectType.ACCOUNT, context);
         for (final Tag tag : accountTags.values()) {
             if (ControlTagType.MANUAL_PAY.getId().equals(tag.getTagDefinitionId())) {
                 manualPay = true;

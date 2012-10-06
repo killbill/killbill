@@ -82,7 +82,7 @@ public class DefaultAccountUserApi implements AccountUserApi {
 
     @Override
     public Account getAccountById(final UUID id, final TenantContext context) throws AccountApiException {
-        final Account account = accountDao.getById(id, internalCallContextFactory.createInternalTenantContext(id, context));
+        final Account account = accountDao.getById(id, internalCallContextFactory.createInternalTenantContext(context));
         if (account == null) {
             throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID, id);
         }
@@ -151,7 +151,7 @@ public class DefaultAccountUserApi implements AccountUserApi {
 
     @Override
     public List<AccountEmail> getEmails(final UUID accountId, final TenantContext context) {
-        return accountEmailDao.getEmails(accountId, internalCallContextFactory.createInternalTenantContext(accountId, context));
+        return accountEmailDao.getEmails(accountId, internalCallContextFactory.createInternalTenantContext(context));
     }
 
     @Override

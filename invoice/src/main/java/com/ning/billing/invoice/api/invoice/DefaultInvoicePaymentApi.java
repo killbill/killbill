@@ -66,7 +66,7 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
 
     @Override
     public List<Invoice> getAllInvoicesByAccount(final UUID accountId, final TenantContext context) {
-        return dao.getAllInvoicesByAccount(accountId, internalCallContextFactory.createInternalTenantContext(accountId, context));
+        return dao.getAllInvoicesByAccount(accountId, internalCallContextFactory.createInternalTenantContext(context));
     }
 
     @Override
@@ -119,7 +119,7 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
 
     @Override
     public List<InvoicePayment> getChargebacksByAccountId(final UUID accountId, final TenantContext context) {
-        return dao.getChargebacksByAccountId(accountId, internalCallContextFactory.createInternalTenantContext(accountId, context));
+        return dao.getChargebacksByAccountId(accountId, internalCallContextFactory.createInternalTenantContext(context));
     }
 
     @Override

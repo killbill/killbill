@@ -91,7 +91,7 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
 
     @Override
     public SubscriptionBundle getBundleForAccountAndKey(final UUID accountId, final String bundleKey, final TenantContext context) throws EntitlementUserApiException {
-        final SubscriptionBundle result = dao.getSubscriptionBundleFromAccountAndKey(accountId, bundleKey, internalCallContextFactory.createInternalTenantContext(accountId, context));
+        final SubscriptionBundle result = dao.getSubscriptionBundleFromAccountAndKey(accountId, bundleKey, internalCallContextFactory.createInternalTenantContext(context));
         if (result == null) {
             throw new EntitlementUserApiException(ErrorCode.ENT_GET_INVALID_BUNDLE_KEY, bundleKey);
         }
@@ -106,12 +106,12 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
 
     @Override
     public List<SubscriptionBundle> getBundlesForAccount(final UUID accountId, final TenantContext context) {
-        return dao.getSubscriptionBundleForAccount(accountId, internalCallContextFactory.createInternalTenantContext(accountId, context));
+        return dao.getSubscriptionBundleForAccount(accountId, internalCallContextFactory.createInternalTenantContext(context));
     }
 
     @Override
     public List<Subscription> getSubscriptionsForAccountAndKey(final UUID accountId, final String bundleKey, final TenantContext context) {
-        return dao.getSubscriptionsForAccountAndKey(subscriptionFactory, accountId, bundleKey, internalCallContextFactory.createInternalTenantContext(accountId, context));
+        return dao.getSubscriptionsForAccountAndKey(subscriptionFactory, accountId, bundleKey, internalCallContextFactory.createInternalTenantContext(context));
     }
 
     @Override

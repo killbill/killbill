@@ -80,7 +80,8 @@ public class TestNotificationSqlDao extends UtilTestSuiteWithEmbeddedDB {
 
         final String notificationKey = UUID.randomUUID().toString();
         final DateTime effDt = new DateTime();
-        final Notification notif = new DefaultNotification("testBasic", hostname, notificationKey.getClass().getName(), notificationKey, accountId, effDt);
+        final Notification notif = new DefaultNotification("testBasic", hostname, notificationKey.getClass().getName(), notificationKey, accountId, effDt,
+                                                           null, internalCallContext.getTenantRecordId());
         dao.insertNotification(notif, internalCallContext);
 
         Thread.sleep(1000);
@@ -122,10 +123,12 @@ public class TestNotificationSqlDao extends UtilTestSuiteWithEmbeddedDB {
     public void testGetByAccountAndDate() throws InterruptedException {
         final String notificationKey = UUID.randomUUID().toString();
         final DateTime effDt = new DateTime();
-        final Notification notif1 = new DefaultNotification("testBasic1", hostname, notificationKey.getClass().getName(), notificationKey, accountId, effDt);
+        final Notification notif1 = new DefaultNotification("testBasic1", hostname, notificationKey.getClass().getName(), notificationKey, accountId, effDt,
+                                                            null, internalCallContext.getTenantRecordId());
         dao.insertNotification(notif1, internalCallContext);
 
-        final Notification notif2 = new DefaultNotification("testBasic2", hostname, notificationKey.getClass().getName(), notificationKey, accountId, effDt);
+        final Notification notif2 = new DefaultNotification("testBasic2", hostname, notificationKey.getClass().getName(), notificationKey, accountId, effDt,
+                                                            null, internalCallContext.getTenantRecordId());
         dao.insertNotification(notif2, internalCallContext);
 
         List<Notification> notifications = dao.getNotificationForAccountAndDate(accountId.toString(), effDt.toDate(), internalCallContext);
@@ -159,6 +162,8 @@ public class TestNotificationSqlDao extends UtilTestSuiteWithEmbeddedDB {
                                                   ", processing_owner" +
                                                   ", processing_available_date" +
                                                   ", processing_state" +
+                                                  ", account_record_id" +
+                                                  ", tenant_record_id" +
                                                   "    from notifications " +
                                                   " where " +
                                                   " id = '" + notificationId + "';")
