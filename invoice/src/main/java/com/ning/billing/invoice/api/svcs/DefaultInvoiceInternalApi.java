@@ -13,30 +13,32 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+package com.ning.billing.invoice.api.svcs;
 
-package com.ning.billing.util.svcapi.entitlement;
-
+import java.util.Collection;
 import java.util.UUID;
+
+import javax.inject.Inject;
 
 import org.joda.time.LocalDate;
 
-import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
 
-public interface ChargeThruInternalApi {
+public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
 
-    /**
-     * @param subscriptionId
-     * @return UUID of
-     */
-    public UUID getAccountIdFromSubscriptionId(UUID subscriptionId, InternalTenantContext context) throws EntitlementBillingApiException;
+    private final InvoiceDao dao;
 
-    /**
-     * Sets the charged through date for the subscription with that Id.
-     *
-     * @param subscriptionId
-     * @param ctd
-     * @param context
-     */
-    public void setChargedThroughDate(UUID subscriptionId, LocalDate localChargedThruDate, InternalCallContext context);
+    @Inject
+    public DefaultInvoiceInternalApi(final InvoiceDao dao) {
+        this.dao  = dao;
+    }
+
+    @Override
+    public Collection<Invoice> getUnpaidInvoicesByAccountId(UUID accountId,
+            LocalDate upToDate, InternalTenantContext context) {
+        return dao.getUnpaidInvoicesByAccountId(accountId, upToDate, context);
+    }
 }

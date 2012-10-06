@@ -27,17 +27,21 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.AccountEmail;
 import com.ning.billing.account.dao.AccountDao;
+import com.ning.billing.account.dao.AccountEmailDao;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.entity.EntityPersistenceException;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 
 public class DefaultAccountInternalApi implements AccountInternalApi {
 
     private final AccountDao accountDao;
+    private final AccountEmailDao accountEmailDao;
 
     @Inject
-    public DefaultAccountInternalApi(final AccountDao accountDao) {
+    public DefaultAccountInternalApi(final AccountDao accountDao, final AccountEmailDao accountEmailDao) {
         this.accountDao = accountDao;
+        this.accountEmailDao = accountEmailDao;
     }
 
     @Override
@@ -51,37 +55,45 @@ public class DefaultAccountInternalApi implements AccountInternalApi {
     }
 
     @Override
-    public void updateAccount(String key, AccountData accountData,
+    public void updateAccount(String externalKey, AccountData accountData,
             InternalCallContext context) throws AccountApiException {
-        // TODO Auto-generated method stub
-
+        final Account account = getAccountByKey(externalKey, context);
+        try {
+            accountDao.update(account,context);
+        } catch (EntityPersistenceException e) {
+            throw new AccountApiException(e, ErrorCode.ACCOUNT_UPDATE_FAILED);
+        }
     }
 
     @Override
     public List<AccountEmail> getEmails(UUID accountId,
             InternalTenantContext context)  {
-        // TODO Auto-generated method stub
-        return null;
+        return accountEmailDao.getEmails(accountId, context);
     }
 
     @Override
     public Account getAccountByKey(String key, InternalTenantContext context)
             throws AccountApiException {
-        // TODO Auto-generated method stub
-        return null;
+        final Account account = accountDao.getAccountByKey(key, context);
+        if (account == null) {
+            throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_KEY, key);
+        }
+        return account;
     }
 
     @Override
     public void removePaymentMethod(UUID accountId, InternalCallContext context)
             throws AccountApiException {
-        // TODO Auto-generated method stub
-
+        updatePaymentMethod(accountId, null, context);
     }
 
     @Override
     public void updatePaymentMethod(UUID accountId, UUID paymentMethodId,
             InternalCallContext context) throws AccountApiException {
-        // TODO Auto-generated method stub
-
+        try {
+            accountDao.updatePaymentMethod(accountId, paymentMethodId, context);
+        } catch (EntityPersistenceException e) {
+            throw new AccountApiException(e, e.getCode(), e.getMessage());
+        }
     }
 }

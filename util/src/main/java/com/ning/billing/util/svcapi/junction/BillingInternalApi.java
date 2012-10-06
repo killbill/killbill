@@ -19,9 +19,8 @@ package com.ning.billing.util.svcapi.junction;
 import java.util.UUID;
 
 import com.ning.billing.util.callcontext.InternalCallContext;
-import com.ning.billing.util.svcapi.entitlement.ChargeThruInternalApi;
 
-public interface BillingInternalApi extends ChargeThruInternalApi {
+public interface BillingInternalApi {
 
     /**
      * @return an ordered list of billing event for the given accounts

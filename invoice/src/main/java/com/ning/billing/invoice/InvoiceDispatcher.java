@@ -35,6 +35,7 @@ import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
+import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceCreationEvent;
@@ -59,7 +60,7 @@ import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.globallocker.GlobalLocker.LockerType;
 import com.ning.billing.util.globallocker.LockFailedException;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
-import com.ning.billing.util.svcapi.entitlement.EntitlementBillingApiException;
+import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 import com.ning.billing.util.svcapi.junction.BillingEventSet;
 import com.ning.billing.util.svcapi.junction.BillingInternalApi;
 
@@ -75,6 +76,7 @@ public class InvoiceDispatcher {
     private final InvoiceGenerator generator;
     private final BillingInternalApi billingApi;
     private final AccountInternalApi accountApi;
+    private final EntitlementInternalApi entitlementApi;
     private final InvoiceDao invoiceDao;
     private final InvoiceNotifier invoiceNotifier;
     private final GlobalLocker locker;
@@ -85,6 +87,7 @@ public class InvoiceDispatcher {
     @Inject
     public InvoiceDispatcher(final InvoiceGenerator generator, final AccountInternalApi accountApi,
                              final BillingInternalApi billingApi,
+                             final EntitlementInternalApi entitlementApi,
                              final InvoiceDao invoiceDao,
                              final InvoiceNotifier invoiceNotifier,
                              final GlobalLocker locker,
@@ -93,6 +96,7 @@ public class InvoiceDispatcher {
                              final InternalCallContextFactory internalCallContextFactory) {
         this.generator = generator;
         this.billingApi = billingApi;
+        this.entitlementApi = entitlementApi;
         this.accountApi = accountApi;
         this.invoiceDao = invoiceDao;
         this.invoiceNotifier = invoiceNotifier;
@@ -116,9 +120,9 @@ public class InvoiceDispatcher {
                 log.error("Failed handling entitlement change.", new InvoiceApiException(ErrorCode.INVOICE_INVALID_TRANSITION));
                 return;
             }
-            final UUID accountId = billingApi.getAccountIdFromSubscriptionId(subscriptionId, internalCallContextFactory.createInternalTenantContext(context));
+            final UUID accountId = entitlementApi.getAccountIdFromSubscriptionId(subscriptionId, internalCallContextFactory.createInternalTenantContext(context));
             processAccount(accountId, targetDate, false, context);
-        } catch (EntitlementBillingApiException e) {
+        } catch (EntitlementUserApiException e) {
             log.error("Failed handling entitlement change.",
                       new InvoiceApiException(ErrorCode.INVOICE_NO_ACCOUNT_ID_FOR_SUBSCRIPTION_ID, subscriptionId.toString()));
         }
@@ -225,7 +229,7 @@ public class InvoiceDispatcher {
             if (subscriptionId != null) {
                 final LocalDate chargeThroughDate = chargeThroughDates.get(subscriptionId);
                 log.info("Setting CTD for subscription {} to {}", subscriptionId.toString(), chargeThroughDate.toString());
-                billingApi.setChargedThroughDate(subscriptionId, chargeThroughDate, internalCallContextFactory.createInternalCallContext(context));
+                entitlementApi.setChargedThroughDate(subscriptionId, chargeThroughDate, internalCallContextFactory.createInternalCallContext(context));
             }
         }
     }

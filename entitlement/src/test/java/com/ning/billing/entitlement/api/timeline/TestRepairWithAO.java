@@ -349,7 +349,7 @@ public class TestRepairWithAO extends TestApiBaseRepair {
 
         // SET CTD to BASE SUBSCRIPTION SP CANCEL OCCURS EOT
         final DateTime newChargedThroughDate = baseSubscription.getStartDate().plusDays(30).plusMonths(1);
-        billingApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate.toLocalDate(), internalCallContext);
+        entitlementInternalApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate.toLocalDate(), internalCallContext);
         baseSubscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(baseSubscription.getId(), callContext);
 
         BundleTimeline bundleRepair = repairApi.getBundleTimeline(bundle.getId(), callContext);

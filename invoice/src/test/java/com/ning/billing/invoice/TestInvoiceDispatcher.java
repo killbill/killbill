@@ -154,7 +154,7 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
         final DateTime target = new DateTime();
 
         final InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
-        final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountInternalApi, billingApi, invoiceDao,
+        final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountInternalApi, billingApi, null, invoiceDao,
                                                                    invoiceNotifier, locker, busService.getBus(),
                                                                    clock, new InternalCallContextFactory(getMysqlTestingHelper().getDBI(), clock));
 
@@ -208,7 +208,7 @@ public class TestInvoiceDispatcher extends InvoicingTestBase {
 
         Mockito.when(billingApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), internalCallContext)).thenReturn(events);
         final InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
-        final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountInternalApi, billingApi, invoiceDao,
+        final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountInternalApi, billingApi, null, invoiceDao,
                                                                    invoiceNotifier, locker, busService.getBus(),
                                                                    clock, internalCallContextFactory);
 

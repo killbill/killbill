@@ -134,7 +134,7 @@ public abstract class InvoiceApiTestBase extends InvoicingTestBase {
         Mockito.when(billingApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), internalCallContext)).thenReturn(events);
 
         final InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
-        final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountApi, billingApi,
+        final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountApi, billingApi, null,
                                                                    invoiceDao, invoiceNotifier, locker, busService.getBus(),
                                                                    clock, internalCallContextFactory);
 

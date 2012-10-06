@@ -72,9 +72,9 @@ import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
-import com.ning.billing.util.svcapi.junction.BillingInternalApi;
 import com.ning.billing.util.svcapi.junction.BillingEvent;
 import com.ning.billing.util.svcapi.junction.BillingEventSet;
+import com.ning.billing.util.svcapi.junction.BillingInternalApi;
 import com.ning.billing.util.svcapi.junction.BillingModeType;
 import com.ning.billing.util.svcapi.junction.BlockingApi;
 import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
@@ -146,9 +146,7 @@ public class TestBillingApi extends JunctionTestSuite {
 
         bcdCalculator = new BillCycleDayCalculator(catalogService, entitlementApi);
 
-        // API_FIX null
-        factory = new InternalCallContextFactory(null, clock);
-        api = new DefaultBillingApi(null, factory, accountApi, bcdCalculator, entitlementApi, blockCalculator, catalogService, tagApi);
+        api = new DefaultInternalBillingApi(accountApi, bcdCalculator, entitlementApi, blockCalculator, catalogService, tagApi);
 
         // Set a default alignment
         ((MockCatalog) catalogService.getFullCatalog()).setBillingAlignment(BillingAlignment.ACCOUNT);
@@ -258,7 +256,7 @@ public class TestBillingApi extends JunctionTestSuite {
             }
         });
 
-        final BillingInternalApi api = new DefaultBillingApi(null, factory, accountApi, bcdCalculator, entitlementApi, blockingCal, catalogService, tagApi);
+        final BillingInternalApi api = new DefaultInternalBillingApi(accountApi, bcdCalculator, entitlementApi, blockingCal, catalogService, tagApi);
         final SortedSet<BillingEvent> events = api.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), internalCallContext);
 
         Assert.assertEquals(events.size(), 3);

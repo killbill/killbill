@@ -29,7 +29,7 @@ import com.ning.billing.junction.dao.BlockingStateSqlDao;
 import com.ning.billing.junction.plumbing.api.BlockingAccountUserApi;
 import com.ning.billing.junction.plumbing.api.BlockingEntitlementUserApi;
 import com.ning.billing.junction.plumbing.billing.BlockingCalculator;
-import com.ning.billing.junction.plumbing.billing.DefaultBillingApi;
+import com.ning.billing.junction.plumbing.billing.DefaultInternalBillingApi;
 import com.ning.billing.util.svcapi.junction.BillingInternalApi;
 import com.ning.billing.util.svcapi.junction.BlockingApi;
 
@@ -59,7 +59,7 @@ public class DefaultJunctionModule extends AbstractModule implements JunctionMod
     }
 
     public void installBillingApi() {
-        bind(BillingInternalApi.class).to(DefaultBillingApi.class).asEagerSingleton();
+        bind(BillingInternalApi.class).to(DefaultInternalBillingApi.class).asEagerSingleton();
     }
 
     public void installBlockingStateDao() {

@@ -19,12 +19,14 @@ package com.ning.billing.account.glue;
 import com.ning.billing.account.api.AccountService;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.api.DefaultAccountService;
+import com.ning.billing.account.api.svcs.DefaultAccountInternalApi;
 import com.ning.billing.account.api.user.DefaultAccountUserApi;
 import com.ning.billing.account.dao.AccountDao;
 import com.ning.billing.account.dao.AccountEmailDao;
 import com.ning.billing.account.dao.AuditedAccountDao;
 import com.ning.billing.account.dao.AuditedAccountEmailDao;
 import com.ning.billing.util.glue.RealImplementation;
+import com.ning.billing.util.svcapi.account.AccountInternalApi;
 
 import com.google.inject.AbstractModule;
 
@@ -39,6 +41,7 @@ public class AccountModule extends AbstractModule {
 
     protected void installAccountUserApi() {
         bind(AccountUserApi.class).annotatedWith(RealImplementation.class).to(DefaultAccountUserApi.class).asEagerSingleton();
+        bind(AccountInternalApi.class).annotatedWith(RealImplementation.class).to(DefaultAccountInternalApi.class).asEagerSingleton();
     }
 
     private void installAccountService() {

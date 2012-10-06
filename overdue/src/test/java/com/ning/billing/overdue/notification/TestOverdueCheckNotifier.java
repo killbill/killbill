@@ -16,6 +16,9 @@
 
 package com.ning.billing.overdue.notification;
 
+import static com.jayway.awaitility.Awaitility.await;
+import static java.util.concurrent.TimeUnit.MINUTES;
+
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.UUID;
@@ -68,16 +71,12 @@ import com.ning.billing.util.globallocker.MySqlGlobalLocker;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.notificationq.DefaultNotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService;
-import com.ning.billing.util.svcapi.entitlement.ChargeThruInternalApi;
 import com.ning.billing.util.tag.dao.AuditedTagDao;
 import com.ning.billing.util.tag.dao.TagDao;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
-
-import static com.jayway.awaitility.Awaitility.await;
-import static java.util.concurrent.TimeUnit.MINUTES;
 
 public class TestOverdueCheckNotifier extends OverdueTestSuiteWithEmbeddedDB {
     private Clock clock;
@@ -131,7 +130,6 @@ public class TestOverdueCheckNotifier extends OverdueTestSuiteWithEmbeddedDB {
                 bind(TagDao.class).to(AuditedTagDao.class).asEagerSingleton();
                 bind(CustomFieldDao.class).to(AuditedCustomFieldDao.class).asEagerSingleton();
                 bind(GlobalLocker.class).to(MySqlGlobalLocker.class).asEagerSingleton();
-                bind(ChargeThruInternalApi.class).toInstance(Mockito.mock(ChargeThruInternalApi.class));
                 install(new MockJunctionModule());
                 install(new EmailModule());
                 install(new TemplateModule());

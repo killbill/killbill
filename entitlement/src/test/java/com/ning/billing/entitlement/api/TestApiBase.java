@@ -16,6 +16,11 @@
 
 package com.ning.billing.entitlement.api;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
+
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -80,15 +85,10 @@ import com.ning.billing.util.bus.DefaultBusService;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.glue.RealImplementation;
-import com.ning.billing.util.svcapi.entitlement.ChargeThruInternalApi;
+import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 
 import com.google.inject.Injector;
 import com.google.inject.Key;
-
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
 
 public abstract class TestApiBase extends EntitlementTestSuiteWithEmbeddedDB implements TestListenerStatus {
 
@@ -96,7 +96,7 @@ public abstract class TestApiBase extends EntitlementTestSuiteWithEmbeddedDB imp
 
     protected EntitlementService entitlementService;
     protected EntitlementUserApi entitlementApi;
-    protected ChargeThruInternalApi billingApi;
+    protected EntitlementInternalApi entitlementInternalApi;
     protected EntitlementTransferApi transferApi;
 
     protected EntitlementMigrationApi migrationApi;
@@ -163,7 +163,7 @@ public abstract class TestApiBase extends EntitlementTestSuiteWithEmbeddedDB imp
 
         entitlementService = g.getInstance(EntitlementService.class);
         entitlementApi = g.getInstance(Key.get(EntitlementUserApi.class, RealImplementation.class));
-        billingApi = g.getInstance(ChargeThruInternalApi.class);
+        entitlementInternalApi = g.getInstance(EntitlementInternalApi.class);
         migrationApi = g.getInstance(EntitlementMigrationApi.class);
         repairApi = g.getInstance(EntitlementTimelineApi.class);
         transferApi = g.getInstance(EntitlementTransferApi.class);

@@ -202,7 +202,7 @@ public class TestUserApiError extends TestApiBase {
             final DateTime expectedPhaseTrialChange = DefaultClock.addDuration(subscription.getStartDate(), trialPhase.getDuration());
             final Duration ctd = getDurationMonth(1);
             final DateTime newChargedThroughDate = DefaultClock.addDuration(expectedPhaseTrialChange, ctd);
-            billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate.toLocalDate(), internalCallContext);
+            entitlementInternalApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate.toLocalDate(), internalCallContext);
 
             subscription = entitlementApi.getSubscriptionFromId(subscription.getId(), tenantContext);
 

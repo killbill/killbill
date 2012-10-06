@@ -110,7 +110,7 @@ public abstract class TestUserApiCancel extends TestApiBase {
             // SET CTD + RE READ SUBSCRIPTION + CHANGE PLAN
             final Duration ctd = getDurationMonth(1);
             final DateTime newChargedThroughDate = DefaultClock.addDuration(expectedPhaseTrialChange, ctd);
-            billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate.toLocalDate(), internalCallContext);
+            entitlementInternalApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate.toLocalDate(), internalCallContext);
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId(), callContext);
 
             assertEquals(subscription.getLastActiveProductName(), prod);
@@ -228,7 +228,7 @@ public abstract class TestUserApiCancel extends TestApiBase {
             // SET CTD + RE READ SUBSCRIPTION + CHANGE PLAN
             final Duration ctd = getDurationMonth(1);
             final DateTime newChargedThroughDate = DefaultClock.addDuration(expectedPhaseTrialChange, ctd);
-            billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate.toLocalDate(), internalCallContext);
+            entitlementInternalApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate.toLocalDate(), internalCallContext);
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId(), callContext);
 
             // CANCEL EOT

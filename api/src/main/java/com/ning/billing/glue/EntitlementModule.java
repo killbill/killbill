@@ -26,7 +26,7 @@ public interface EntitlementModule {
 
     public abstract void installEntitlementMigrationApi();
 
-    public abstract void installChargeThruApi();
+    public abstract void installEntitlementInternalApi();
 
     public abstract void installEntitlementTimelineApi();
 

@@ -24,9 +24,9 @@ import com.ning.billing.entitlement.alignment.PlanAligner;
 import com.ning.billing.entitlement.api.EntitlementService;
 import com.ning.billing.entitlement.api.SubscriptionApiService;
 import com.ning.billing.entitlement.api.SubscriptionFactory;
-import com.ning.billing.entitlement.api.billing.DefaultChargeThruApi;
 import com.ning.billing.entitlement.api.migration.DefaultEntitlementMigrationApi;
 import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi;
+import com.ning.billing.entitlement.api.svcs.DefaultEntitlementInternalApi;
 import com.ning.billing.entitlement.api.timeline.DefaultEntitlementTimelineApi;
 import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
 import com.ning.billing.entitlement.api.timeline.RepairEntitlementLifecycleDao;
@@ -45,7 +45,7 @@ import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.engine.dao.RepairEntitlementDao;
 import com.ning.billing.glue.EntitlementModule;
 import com.ning.billing.util.glue.RealImplementation;
-import com.ning.billing.util.svcapi.entitlement.ChargeThruInternalApi;
+import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
@@ -82,7 +82,7 @@ public class DefaultEntitlementModule extends AbstractModule implements Entitlem
         installEntitlementService();
         installEntitlementTimelineApi();
         installEntitlementMigrationApi();
-        installChargeThruApi();
+        installEntitlementInternalApi();
         installEntitlementUserApi();
         installEntitlementTransferApi();
     }
@@ -112,8 +112,8 @@ public class DefaultEntitlementModule extends AbstractModule implements Entitlem
 
 
     @Override
-    public void installChargeThruApi() {
-        bind(ChargeThruInternalApi.class).to(DefaultChargeThruApi.class).asEagerSingleton();
+    public void installEntitlementInternalApi() {
+        bind(EntitlementInternalApi.class).to(DefaultEntitlementInternalApi.class).asEagerSingleton();
     }
 
     @Override

@@ -118,7 +118,7 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
             // SET CTD
             final Duration ctd = getDurationMonth(1);
             final DateTime newChargedThroughDate = DefaultClock.addDuration(expectedPhaseTrialChange, ctd);
-            billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate.toLocalDate(), internalCallContext);
+            entitlementInternalApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate.toLocalDate(), internalCallContext);
 
             // RE READ SUBSCRIPTION + CHANGE PLAN
             testListener.setNonExpectedMode();
@@ -221,7 +221,7 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
             // SET CTD
             final Duration ctd = getDurationMonth(1);
             final DateTime newChargedThroughDate = DefaultClock.addDuration(expectedPhaseTrialChange, ctd);
-            billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate.toLocalDate(), internalCallContext);
+            entitlementInternalApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate.toLocalDate(), internalCallContext);
 
             // RE READ SUBSCRIPTION + CHECK CURRENT PHASE
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId(), callContext);
@@ -302,7 +302,7 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
             final DateTime startDiscountPhase = DefaultClock.addDuration(subscription.getStartDate(), durationList);
             final Duration ctd = getDurationMonth(1);
             final DateTime newChargedThroughDate = DefaultClock.addDuration(startDiscountPhase, ctd);
-            billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate.toLocalDate(), internalCallContext);
+            entitlementInternalApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate.toLocalDate(), internalCallContext);
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId(), callContext);
 
             // CHANGE EOT
@@ -350,7 +350,7 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
             final DateTime startDiscountPhase = DefaultClock.addDuration(subscription.getStartDate(), durationList);
             final Duration ctd = getDurationMonth(1);
             final DateTime newChargedThroughDate = DefaultClock.addDuration(startDiscountPhase, ctd);
-            billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate.toLocalDate(), internalCallContext);
+            entitlementInternalApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate.toLocalDate(), internalCallContext);
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId(), callContext);
 
             // CHANGE EOT

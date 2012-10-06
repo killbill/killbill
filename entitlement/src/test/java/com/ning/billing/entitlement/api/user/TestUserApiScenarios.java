@@ -66,7 +66,7 @@ public class TestUserApiScenarios extends TestApiBase {
             final Duration ctd = getDurationMonth(1);
             final DateTime expectedPhaseTrialChange = DefaultClock.addDuration(subscription.getStartDate(), trialPhase.getDuration());
             final DateTime newChargedThroughDate = DefaultClock.addDuration(expectedPhaseTrialChange, ctd);
-            billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate.toLocalDate(), internalCallContext);
+            entitlementInternalApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate.toLocalDate(), internalCallContext);
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId(), callContext);
 
             // CANCEL EOT

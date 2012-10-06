@@ -101,7 +101,7 @@ public class TestUserApiDemos extends TestApiBase {
 
             final Duration ctd = getDurationMonth(1);
             final DateTime newChargedThroughDate = DefaultClock.addDuration(startDiscountPhase, ctd);
-            billingApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate.toLocalDate(), internalCallContext);
+            entitlementInternalApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate.toLocalDate(), internalCallContext);
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId(), callContext);
 
             testListener.setNonExpectedMode();
