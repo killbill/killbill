@@ -188,7 +188,7 @@ public class MysqlTestingHelper {
 
     public void initDb() throws IOException {
         // We always want the accounts and tenants table
-        initDb("drop table if exists accounts; create table accounts(record_id int(11) unsigned not null auto_increment, id char(36) not null, primary key(record_id)) engine=innodb;");
+        initDb("drop table if exists accounts; create table accounts(record_id int(11) unsigned not null auto_increment, id char(36) not null, email varchar(128) not null, name varchar(100) not null, first_name_length int not null, is_notified_for_invoices boolean not null, created_date datetime NOT NULL, created_by varchar(50) NOT NULL, updated_date datetime NOT NULL, updated_by varchar(50) NULL, primary key(record_id)) engine=innodb;");
         initDb("drop table if exists tenants; create table tenants(record_id int(11) unsigned not null auto_increment, id char(36) not null, primary key(record_id)) engine=innodb;");
 
         // We always want the basic tables when we do account_record_id lookups (e.g. for custom fields, tags or junction)

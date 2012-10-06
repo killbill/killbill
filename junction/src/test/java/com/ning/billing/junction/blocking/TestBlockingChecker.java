@@ -25,7 +25,6 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
@@ -38,8 +37,8 @@ import com.ning.billing.junction.block.DefaultBlockingChecker;
 import com.ning.billing.junction.dao.BlockingStateDao;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 
 import com.google.inject.AbstractModule;
@@ -118,10 +117,11 @@ public class TestBlockingChecker extends JunctionTestSuite {
 
                 bind(BlockingStateDao.class).toInstance(dao);
 
-                final EntitlementUserApi entitlementUserApi = Mockito.mock(EntitlementUserApi.class);
-                bind(EntitlementUserApi.class).toInstance(entitlementUserApi);
+                final EntitlementInternalApi entitlementInternalApi = Mockito.mock(EntitlementInternalApi.class);
+                bind(EntitlementInternalApi.class).toInstance(entitlementInternalApi);
+
                 try {
-                    Mockito.when(entitlementUserApi.getBundleFromId(Mockito.<UUID>any(), Mockito.<TenantContext>any())).thenReturn(bundle);
+                    Mockito.when(entitlementInternalApi.getBundleFromId(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(bundle);
                 } catch (EntitlementUserApiException e) {
                     Assert.fail(e.toString());
                 }

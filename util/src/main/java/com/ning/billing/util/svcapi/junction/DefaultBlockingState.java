@@ -210,7 +210,7 @@ public class DefaultBlockingState implements BlockingState {
             if (other.timestamp != null) {
                 return false;
             }
-        } else if (!timestamp.equals(other.timestamp)) {
+        } else if (timestamp.compareTo(other.timestamp) != 0) {
             return false;
         }
         if (type != other.type) {
