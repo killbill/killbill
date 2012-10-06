@@ -20,7 +20,6 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.joda.time.LocalDate;
 import org.mockito.Mockito;
 import org.skife.jdbi.v2.IDBI;
 import org.testng.Assert;
@@ -97,7 +96,7 @@ public class TestDefaultAnalyticsUserApi extends AnalyticsTestSuiteWithEmbeddedD
 
         final TimeSeriesData data = analyticsUserApi.getAccountsCreatedOverTime(tenantContext);
         Assert.assertEquals(data.getDates().size(), 1);
-        Assert.assertEquals(data.getDates().get(0), new LocalDate());
+        Assert.assertEquals(data.getDates().get(0), clock.getUTCToday());
         Assert.assertEquals(data.getValues().size(), 1);
         Assert.assertEquals(data.getValues().get(0), (double) 1);
     }
@@ -131,7 +130,7 @@ public class TestDefaultAnalyticsUserApi extends AnalyticsTestSuiteWithEmbeddedD
 
         final TimeSeriesData data = analyticsUserApi.getSubscriptionsCreatedOverTime(productType, phase.getName(), tenantContext);
         Assert.assertEquals(data.getDates().size(), 1);
-        Assert.assertEquals(data.getDates().get(0), new LocalDate());
+        Assert.assertEquals(data.getDates().get(0), clock.getUTCToday());
         Assert.assertEquals(data.getValues().size(), 1);
         Assert.assertEquals(data.getValues().get(0), (double) 1);
     }
