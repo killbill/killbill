@@ -26,6 +26,7 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.AccountEmail;
+import com.ning.billing.account.api.DefaultAccount;
 import com.ning.billing.account.dao.AccountDao;
 import com.ning.billing.account.dao.AccountEmailDao;
 import com.ning.billing.util.callcontext.InternalCallContext;
@@ -59,7 +60,8 @@ public class DefaultAccountInternalApi implements AccountInternalApi {
             InternalCallContext context) throws AccountApiException {
         final Account account = getAccountByKey(externalKey, context);
         try {
-            accountDao.update(account,context);
+            final Account updatedAccount = new DefaultAccount(account.getId(), accountData);
+            accountDao.update(updatedAccount,context);
         } catch (EntityPersistenceException e) {
             throw new AccountApiException(e, ErrorCode.ACCOUNT_UPDATE_FAILED);
         }

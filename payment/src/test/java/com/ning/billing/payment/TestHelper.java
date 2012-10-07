@@ -22,7 +22,6 @@ import org.joda.time.LocalDate;
 import org.mockito.Mockito;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
@@ -34,20 +33,22 @@ import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.payment.glue.PaymentTestModuleWithMocks;
 import com.ning.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;
-import com.ning.billing.util.callcontext.InternalCallContextFactory;
-import com.ning.billing.util.svcsapi.bus.Bus;
-import com.ning.billing.util.svcsapi.bus.Bus.EventBusException;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.CallOrigin;
+import com.ning.billing.util.callcontext.InternalCallContextFactory;
+import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.svcapi.account.AccountInternalApi;
+import com.ning.billing.util.svcsapi.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.Bus.EventBusException;
 
 import com.google.inject.Inject;
 
 public class TestHelper {
-    protected final AccountUserApi accountUserApi;
+    protected final AccountInternalApi AccountApi;
     protected final InvoicePaymentApi invoicePaymentApi;
     protected PaymentApi paymentApi;
     private final CallContext context;
@@ -56,10 +57,10 @@ public class TestHelper {
     private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
-    public TestHelper(final CallContextFactory factory, final AccountUserApi accountUserApi, final InvoicePaymentApi invoicePaymentApi,
+    public TestHelper(final CallContextFactory factory, final AccountInternalApi AccountApi, final InvoicePaymentApi invoicePaymentApi,
                       final PaymentApi paymentApi, final Bus eventBus, final Clock clock, final InternalCallContextFactory internalCallContextFactory) {
         this.eventBus = eventBus;
-        this.accountUserApi = accountUserApi;
+        this.AccountApi = AccountApi;
         this.invoicePaymentApi = invoicePaymentApi;
         this.paymentApi = paymentApi;
         this.clock = clock;
@@ -117,8 +118,8 @@ public class TestHelper {
         Mockito.when(account.isMigrated()).thenReturn(false);
         Mockito.when(account.isNotifiedForInvoices()).thenReturn(false);
 
-        Mockito.when(accountUserApi.getAccountById(Mockito.<UUID>any(), Mockito.<TenantContext>any())).thenReturn(account);
-        Mockito.when(accountUserApi.getAccountByKey(Mockito.anyString(), Mockito.<TenantContext>any())).thenReturn(account);
+        Mockito.when(AccountApi.getAccountById(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(account);
+        Mockito.when(AccountApi.getAccountByKey(Mockito.anyString(), Mockito.<InternalTenantContext>any())).thenReturn(account);
 
         if (addPaymentMethod) {
             final PaymentMethodPlugin pm = new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), true, null);

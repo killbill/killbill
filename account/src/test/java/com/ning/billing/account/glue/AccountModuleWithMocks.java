@@ -24,7 +24,7 @@ import com.ning.billing.account.dao.MockAccountDao;
 import com.ning.billing.mock.glue.MockClockModule;
 import com.ning.billing.util.glue.CallContextModule;
 
-public class AccountModuleWithMocks extends AccountModule {
+public class AccountModuleWithMocks extends DefaultAccountModule {
     @Override
     protected void installAccountDao() {
         bind(MockAccountDao.class).asEagerSingleton();

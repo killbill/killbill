@@ -45,6 +45,7 @@ public class MockInvoiceModule extends AbstractModule implements InvoiceModule {
     @Override
     protected void configure() {
         installInvoiceUserApi();
+        installInvoiceInternalApi();
         installInvoicePaymentApi();
         installInvoiceMigrationApi();
     }

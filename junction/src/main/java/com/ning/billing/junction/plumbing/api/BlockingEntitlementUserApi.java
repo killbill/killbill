@@ -147,7 +147,6 @@ public class BlockingEntitlementUserApi implements EntitlementUserApi {
             final InternalTenantContext internalContext = internalCallContextFactory.createInternalTenantContext(context);
             checker.checkBlockedChange(bundleId, Blockable.Type.SUBSCRIPTION_BUNDLE, internalContext);
             return new BlockingSubscription(entitlementUserApi.createSubscription(bundleId, spec, requestedDate, context), blockingApi, checker,  internalContext, internalCallContextFactory);
-
         } catch (BlockingApiException e) {
             throw new EntitlementUserApiException(e, e.getCode(), e.getMessage());
         }

@@ -34,7 +34,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
 
 import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
-import com.ning.billing.account.glue.AccountModule;
+import com.ning.billing.account.glue.DefaultAccountModule;
 import com.ning.billing.analytics.setup.AnalyticsModule;
 import com.ning.billing.api.TestApiListener;
 import com.ning.billing.beatrix.glue.BeatrixModule;
@@ -172,7 +172,7 @@ public class TestJaxrsBase extends KillbillClient {
             install(new BusModule());
             install(new NotificationQueueModule());
             install(new CallContextModule());
-            install(new AccountModule());
+            install(new DefaultAccountModule());
             install(new InvoiceModuleWithMockSender());
             install(new TemplateModule());
             install(new DefaultEntitlementModule());

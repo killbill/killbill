@@ -34,12 +34,13 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
+import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.catalog.DefaultCatalogService;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.config.CatalogConfig;
 import com.ning.billing.config.InvoiceConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
-import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.junction.api.Blockable;
@@ -55,11 +56,10 @@ import com.ning.billing.overdue.OverdueProperties;
 import com.ning.billing.overdue.OverdueTestSuiteWithEmbeddedDB;
 import com.ning.billing.overdue.glue.DefaultOverdueModule;
 import com.ning.billing.overdue.listener.OverdueListener;
-import com.ning.billing.util.svcsapi.bus.Bus;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
-import com.ning.billing.util.callcontext.TenantContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.customfield.dao.AuditedCustomFieldDao;
@@ -71,6 +71,9 @@ import com.ning.billing.util.globallocker.MySqlGlobalLocker;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.notificationq.DefaultNotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService;
+import com.ning.billing.util.svcapi.account.AccountInternalApi;
+import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
+import com.ning.billing.util.svcsapi.bus.Bus;
 import com.ning.billing.util.tag.dao.AuditedTagDao;
 import com.ning.billing.util.tag.dao.TagDao;
 
@@ -110,7 +113,7 @@ public class TestOverdueCheckNotifier extends OverdueTestSuiteWithEmbeddedDB {
     }
 
     @BeforeClass(groups = "slow")
-    public void setup() throws ServiceException, IOException, ClassNotFoundException, SQLException, EntitlementUserApiException {
+    public void setup() throws ServiceException, IOException, ClassNotFoundException, SQLException, EntitlementUserApiException, AccountApiException {
         final Injector g = Guice.createInjector(Stage.PRODUCTION, new MockInvoiceModule(), new MockPaymentModule(), new BusModule(), new DefaultOverdueModule() {
             @Override
             protected void configure() {
@@ -133,6 +136,12 @@ public class TestOverdueCheckNotifier extends OverdueTestSuiteWithEmbeddedDB {
                 install(new MockJunctionModule());
                 install(new EmailModule());
                 install(new TemplateModule());
+
+                final AccountInternalApi accountApi = Mockito.mock(AccountInternalApi.class);
+                bind(AccountInternalApi.class).toInstance(accountApi);
+
+                final EntitlementInternalApi entitlementApi = Mockito.mock(EntitlementInternalApi.class);
+                bind(EntitlementInternalApi.class).toInstance(entitlementApi);
             }
         });
 
@@ -143,9 +152,13 @@ public class TestOverdueCheckNotifier extends OverdueTestSuiteWithEmbeddedDB {
 
         final OverdueProperties properties = g.getInstance(OverdueProperties.class);
 
+        final Account account = Mockito.mock(Account.class);
+        final AccountInternalApi accountApi = g.getInstance(AccountInternalApi.class);
+        Mockito.when(accountApi.getAccountById(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(account);
+
         final Subscription subscription = Mockito.mock(Subscription.class);
-        final EntitlementUserApi entitlementUserApi = Mockito.mock(EntitlementUserApi.class);
-        Mockito.when(entitlementUserApi.getSubscriptionFromId(Mockito.<UUID>any(), Mockito.<TenantContext>any())).thenReturn(subscription);
+        final EntitlementInternalApi entitlementApi = g.getInstance(EntitlementInternalApi.class);
+        Mockito.when(entitlementApi.getSubscriptionFromId(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
 
         listener = new OverdueListenerMock();
         notifier = new DefaultOverdueCheckNotifier(notificationQueueService,
