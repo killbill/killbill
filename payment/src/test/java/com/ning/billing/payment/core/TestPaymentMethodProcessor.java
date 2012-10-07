@@ -26,17 +26,17 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.config.PaymentConfig;
 import com.ning.billing.payment.PaymentTestSuite;
 import com.ning.billing.payment.api.PaymentMethod;
 import com.ning.billing.payment.dao.MockPaymentDao;
 import com.ning.billing.payment.provider.DefaultPaymentProviderPluginRegistry;
 import com.ning.billing.payment.provider.ExternalPaymentProviderPlugin;
-import com.ning.billing.util.api.TagUserApi;
-import com.ning.billing.util.svcsapi.bus.Bus;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.globallocker.GlobalLocker;
+import com.ning.billing.util.svcapi.account.AccountInternalApi;
+import com.ning.billing.util.svcapi.tag.TagInternalApi;
+import com.ning.billing.util.svcsapi.bus.Bus;
 
 public class TestPaymentMethodProcessor extends PaymentTestSuite {
 
@@ -47,12 +47,12 @@ public class TestPaymentMethodProcessor extends PaymentTestSuite {
         final DefaultPaymentProviderPluginRegistry pluginRegistry = new DefaultPaymentProviderPluginRegistry(Mockito.mock(PaymentConfig.class));
         pluginRegistry.register(new ExternalPaymentProviderPlugin(new ClockMock()), ExternalPaymentProviderPlugin.PLUGIN_NAME);
 
-        final AccountUserApi accountUserApi = Mockito.mock(AccountUserApi.class);
+        final AccountInternalApi accountUserApi = Mockito.mock(AccountInternalApi.class);
         final Bus bus = Mockito.mock(Bus.class);
         final MockPaymentDao paymentDao = new MockPaymentDao();
         final GlobalLocker globalLocker = Mockito.mock(GlobalLocker.class);
         final ExecutorService executorService = Mockito.mock(ExecutorService.class);
-        final TagUserApi tagUserApi =  Mockito.mock(TagUserApi.class);
+        final TagInternalApi tagUserApi =  Mockito.mock(TagInternalApi.class);
         processor = new PaymentMethodProcessor(pluginRegistry, accountUserApi, bus, paymentDao, tagUserApi, globalLocker, executorService);
     }
 

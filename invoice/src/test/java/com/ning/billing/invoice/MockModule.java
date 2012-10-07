@@ -16,9 +16,12 @@
 
 package com.ning.billing.invoice;
 
+import static org.testng.Assert.assertNotNull;
+
 import java.io.IOException;
 import java.net.URL;
 
+import org.mockito.Mockito;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.IDBI;
 
@@ -44,20 +47,20 @@ import com.ning.billing.util.glue.CustomFieldModule;
 import com.ning.billing.util.glue.GlobalLockerModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.TagStoreModule;
+import com.ning.billing.util.svcapi.account.AccountInternalApi;
+import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 
 import com.google.inject.AbstractModule;
-
-import static org.testng.Assert.assertNotNull;
 
 public class MockModule extends AbstractModule {
     @Override
     protected void configure() {
         loadSystemPropertiesFromClasspath("/resource.properties");
 
-        bind(Clock.class).to(ClockMock.class).asEagerSingleton();
-        bind(ClockMock.class).asEagerSingleton();
+        final ClockMock clock = new ClockMock();
+        bind(Clock.class).toInstance(clock);
+        bind(ClockMock.class).toInstance(clock);
         bind(CallContextFactory.class).to(DefaultCallContextFactory.class).asEagerSingleton();
-        bind(InternalCallContextFactory.class).asEagerSingleton();
         install(new TagStoreModule());
         install(new CustomFieldModule());
 
@@ -72,7 +75,13 @@ public class MockModule extends AbstractModule {
             bind(IDBI.class).toInstance(dbi);
         }
 
+        final InternalCallContextFactory internalCallContextFactory = new InternalCallContextFactory(helper.getDBI(), clock);
+        bind(InternalCallContextFactory.class).toInstance(internalCallContextFactory);
+
         bind(InvoiceFormatterFactory.class).to(DefaultInvoiceFormatterFactory.class).asEagerSingleton();
+
+        bind(AccountInternalApi.class).toInstance(Mockito.mock(AccountInternalApi.class));
+        bind(EntitlementInternalApi.class).toInstance(Mockito.mock(EntitlementInternalApi.class));
 
         install(new EmailModule());
         install(new GlobalLockerModule());

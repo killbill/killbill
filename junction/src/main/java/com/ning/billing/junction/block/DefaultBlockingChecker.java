@@ -79,21 +79,26 @@ public class DefaultBlockingChecker implements BlockingChecker {
     private static final Object ACTION_ENTITLEMENT = "Entitlement";
     private static final Object ACTION_BILLING = "Billing";
 
+    // FIX_API
+    // We should use the internal API, however, doing so will return UnsupportedOperationException
+    // as objects will not be BlockingSubscriptioneBundle but SubscriptionBundleData
+    // We could create Blocking API for our internal API and have them return the correct objects
+    //private final EntitlementInternalApi entitlementApi;
     private final EntitlementUserApi entitlementApi;
     private final BlockingStateDao dao;
 
     @Inject
-    public DefaultBlockingChecker(final EntitlementUserApi entitlementApi, final BlockingStateDao dao) {
+    public DefaultBlockingChecker(final /* EntitlementInternalApi */ EntitlementUserApi entitlementApi, final BlockingStateDao dao) {
         this.entitlementApi = entitlementApi;
         this.dao = dao;
     }
 
-    public BlockingAggregator getBlockedStateSubscriptionId(final UUID subscriptionId, final InternalTenantContext context) throws EntitlementUserApiException {
+    private BlockingAggregator getBlockedStateSubscriptionId(final UUID subscriptionId, final InternalTenantContext context) throws EntitlementUserApiException {
         final Subscription subscription = entitlementApi.getSubscriptionFromId(subscriptionId, context.toTenantContext());
         return getBlockedStateSubscription(subscription, context);
     }
 
-    public BlockingAggregator getBlockedStateSubscription(final Subscription subscription, final InternalTenantContext context) throws EntitlementUserApiException {
+    private BlockingAggregator getBlockedStateSubscription(final Subscription subscription, final InternalTenantContext context) throws EntitlementUserApiException {
         final BlockingAggregator result = new BlockingAggregator();
         if (subscription != null) {
             final BlockingState subscriptionState = subscription.getBlockingState();
@@ -107,12 +112,12 @@ public class DefaultBlockingChecker implements BlockingChecker {
         return result;
     }
 
-    public BlockingAggregator getBlockedStateBundleId(final UUID bundleId, final InternalTenantContext context) throws EntitlementUserApiException {
+    private BlockingAggregator getBlockedStateBundleId(final UUID bundleId, final InternalTenantContext context) throws EntitlementUserApiException {
         final SubscriptionBundle bundle = entitlementApi.getBundleFromId(bundleId, context.toTenantContext());
         return getBlockedStateBundle(bundle, context);
     }
 
-    public BlockingAggregator getBlockedStateBundle(final SubscriptionBundle bundle, final InternalTenantContext context) {
+    private BlockingAggregator getBlockedStateBundle(final SubscriptionBundle bundle, final InternalTenantContext context) {
         final BlockingAggregator result = getBlockedStateAccountId(bundle.getAccountId(), context);
         final BlockingState bundleState = bundle.getBlockingState();
         if (bundleState != null) {

@@ -16,6 +16,9 @@
 
 package com.ning.billing.invoice.dao;
 
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
+
 import java.io.IOException;
 import java.net.URL;
 
@@ -32,21 +35,11 @@ import com.ning.billing.invoice.glue.InvoiceModuleWithEmbeddedDb;
 import com.ning.billing.invoice.notification.MockNextBillingDatePoster;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.invoice.tests.InvoicingTestBase;
-import com.ning.billing.util.api.TagUserApi;
-import com.ning.billing.util.svcsapi.bus.Bus;
 import com.ning.billing.util.bus.InMemoryBus;
-import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
-import com.ning.billing.util.tag.api.DefaultTagUserApi;
+import com.ning.billing.util.svcsapi.bus.Bus;
 import com.ning.billing.util.tag.api.user.TagEventBuilder;
-import com.ning.billing.util.tag.dao.AuditedTagDao;
-import com.ning.billing.util.tag.dao.MockTagDefinitionDao;
-import com.ning.billing.util.tag.dao.TagDao;
-import com.ning.billing.util.tag.dao.TagDefinitionDao;
-
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
 
 public class InvoiceDaoTestBase extends InvoicingTestBase {
     protected final TagEventBuilder tagEventBuilder = new TagEventBuilder();
@@ -105,10 +98,7 @@ public class InvoiceDaoTestBase extends InvoicingTestBase {
         bus.start();
 
         final NextBillingDatePoster nextBillingDatePoster = new MockNextBillingDatePoster();
-        final TagDefinitionDao tagDefinitionDao = new MockTagDefinitionDao();
-        final TagDao tagDao = new AuditedTagDao(dbi, tagEventBuilder, bus);
-        final TagUserApi tagUserApi = new DefaultTagUserApi(new InternalCallContextFactory(dbi, clock), tagDefinitionDao, tagDao);
-        invoiceDao = new AuditedInvoiceDao(dbi, nextBillingDatePoster, tagUserApi, clock, bus);
+        invoiceDao = new AuditedInvoiceDao(dbi, nextBillingDatePoster, clock, bus);
         invoiceDao.test(internalCallContext);
 
         invoiceItemSqlDao = dbi.onDemand(InvoiceItemSqlDao.class);

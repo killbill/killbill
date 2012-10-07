@@ -40,11 +40,11 @@ import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.Plan;
 import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
-import com.ning.billing.entitlement.api.billing.BillingEvent;
-import com.ning.billing.entitlement.api.billing.BillingModeType;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.junction.JunctionTestSuite;
 import com.ning.billing.mock.api.MockBillCycleDay;
+import com.ning.billing.util.svcapi.junction.BillingEvent;
+import com.ning.billing.util.svcapi.junction.BillingModeType;
 
 public class TestDefaultBillingEvent extends JunctionTestSuite {
 

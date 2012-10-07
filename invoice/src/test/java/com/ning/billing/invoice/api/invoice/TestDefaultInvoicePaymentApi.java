@@ -16,6 +16,9 @@
 
 package com.ning.billing.invoice.api.invoice;
 
+import static com.ning.billing.invoice.tests.InvoiceTestUtils.createAndPersistInvoice;
+import static com.ning.billing.invoice.tests.InvoiceTestUtils.createAndPersistPayment;
+
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -44,22 +47,13 @@ import com.ning.billing.invoice.dao.InvoiceItemSqlDao;
 import com.ning.billing.invoice.dao.InvoiceSqlDao;
 import com.ning.billing.invoice.notification.MockNextBillingDatePoster;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
-import com.ning.billing.util.api.TagUserApi;
-import com.ning.billing.util.svcsapi.bus.Bus;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
-import com.ning.billing.util.tag.api.DefaultTagUserApi;
-import com.ning.billing.util.tag.dao.MockTagDao;
-import com.ning.billing.util.tag.dao.MockTagDefinitionDao;
-import com.ning.billing.util.tag.dao.TagDao;
-import com.ning.billing.util.tag.dao.TagDefinitionDao;
+import com.ning.billing.util.svcsapi.bus.Bus;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
-import static com.ning.billing.invoice.tests.InvoiceTestUtils.createAndPersistInvoice;
-import static com.ning.billing.invoice.tests.InvoiceTestUtils.createAndPersistPayment;
 
 public class TestDefaultInvoicePaymentApi extends InvoiceTestSuiteWithEmbeddedDB {
 
@@ -85,11 +79,8 @@ public class TestDefaultInvoicePaymentApi extends InvoiceTestSuiteWithEmbeddedDB
         invoiceItemSqlDao.test(internalCallContext);
 
         final NextBillingDatePoster nextBillingDatePoster = new MockNextBillingDatePoster();
-        final TagDefinitionDao tagDefinitionDao = new MockTagDefinitionDao();
-        final TagDao tagDao = new MockTagDao();
         internalCallContextFactory = new InternalCallContextFactory(dbi, clock);
-        final TagUserApi tagUserApi = new DefaultTagUserApi(internalCallContextFactory, tagDefinitionDao, tagDao);
-        final InvoiceDao invoiceDao = new AuditedInvoiceDao(dbi, nextBillingDatePoster, tagUserApi, clock, Mockito.mock(Bus.class));
+        final InvoiceDao invoiceDao = new AuditedInvoiceDao(dbi, nextBillingDatePoster, clock, Mockito.mock(Bus.class));
         invoicePaymentApi = new DefaultInvoicePaymentApi(invoiceDao, internalCallContextFactory);
     }
 

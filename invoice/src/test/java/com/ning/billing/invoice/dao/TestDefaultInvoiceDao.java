@@ -35,13 +35,9 @@ import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
-import com.ning.billing.util.api.TagUserApi;
-import com.ning.billing.util.svcsapi.bus.Bus;
-import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.clock.ClockMock;
-import com.ning.billing.util.tag.api.DefaultTagUserApi;
+import com.ning.billing.util.svcsapi.bus.Bus;
 import com.ning.billing.util.tag.dao.MockTagDao;
 import com.ning.billing.util.tag.dao.MockTagDefinitionDao;
 import com.ning.billing.util.tag.dao.TagDao;
@@ -52,7 +48,6 @@ import com.google.common.collect.ImmutableMap;
 public class TestDefaultInvoiceDao extends InvoiceTestSuite {
 
     private InvoiceSqlDao invoiceSqlDao;
-    private TagUserApi tagUserApi;
     private AuditedInvoiceDao dao;
 
     @BeforeMethod(groups = "fast")
@@ -77,8 +72,7 @@ public class TestDefaultInvoiceDao extends InvoiceTestSuite {
         final NextBillingDatePoster poster = Mockito.mock(NextBillingDatePoster.class);
         final TagDefinitionDao tagDefinitionDao = new MockTagDefinitionDao();
         final TagDao tagDao = new MockTagDao();
-        tagUserApi = new DefaultTagUserApi(new InternalCallContextFactory(Mockito.mock(IDBI.class), new ClockMock()), tagDefinitionDao, tagDao);
-        dao = new AuditedInvoiceDao(idbi, poster, tagUserApi, Mockito.mock(Clock.class), Mockito.mock(Bus.class));
+        dao = new AuditedInvoiceDao(idbi, poster, Mockito.mock(Clock.class), Mockito.mock(Bus.class));
     }
 
     @Test(groups = "fast")

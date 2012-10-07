@@ -22,7 +22,6 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.junction.api.Blockable;
@@ -30,25 +29,26 @@ import com.ning.billing.overdue.OverdueApiException;
 import com.ning.billing.overdue.config.api.OverdueException;
 import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
 import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 
 import com.google.inject.Inject;
 
 public class OverdueDispatcher {
     Logger log = LoggerFactory.getLogger(OverdueDispatcher.class);
 
-    private final EntitlementUserApi entitlementUserApi;
+    private final EntitlementInternalApi entitlementApi;
     private final OverdueWrapperFactory factory;
 
     @Inject
     public OverdueDispatcher(
-            final EntitlementUserApi entitlementUserApi,
+            final EntitlementInternalApi entitlementApi,
             final OverdueWrapperFactory factory) {
-        this.entitlementUserApi = entitlementUserApi;
+        this.entitlementApi = entitlementApi;
         this.factory = factory;
     }
 
     public void processOverdueForAccount(final UUID accountId, final InternalCallContext context) {
-        final List<SubscriptionBundle> bundles = entitlementUserApi.getBundlesForAccount(accountId, context.toCallContext());
+        final List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(accountId, context);
         for (final SubscriptionBundle bundle : bundles) {
             processOverdue(bundle, context);
         }
@@ -56,7 +56,7 @@ public class OverdueDispatcher {
 
     public void processOverdueForBundle(final UUID bundleId, final InternalCallContext context) {
         try {
-            final SubscriptionBundle bundle = entitlementUserApi.getBundleFromId(bundleId, context.toCallContext());
+            final SubscriptionBundle bundle = entitlementApi.getBundleFromId(bundleId, context);
             processOverdue(bundle, context);
         } catch (EntitlementUserApiException e) {
             log.error("Error processing Overdue for Bundle with id: " + bundleId.toString(), e);

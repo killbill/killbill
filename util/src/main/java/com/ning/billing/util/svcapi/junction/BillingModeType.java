@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -14,17 +14,8 @@
  * under the License.
  */
 
-package com.ning.billing.junction.api;
+package com.ning.billing.util.svcapi.junction;
 
-import java.util.UUID;
-
-import com.ning.billing.entitlement.api.billing.ChargeThruApi;
-import com.ning.billing.util.callcontext.CallContext;
-
-public interface BillingApi extends ChargeThruApi {
-
-    /**
-     * @return an ordered list of billing event for the given accounts
-     */
-    public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(UUID accountId, CallContext context);
+public enum BillingModeType {
+    IN_ADVANCE
 }

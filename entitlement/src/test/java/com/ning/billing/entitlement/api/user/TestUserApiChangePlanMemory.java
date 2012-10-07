@@ -18,8 +18,8 @@ package com.ning.billing.entitlement.api.user;
 
 import org.testng.annotations.Test;
 
-import com.ning.billing.entitlement.api.billing.EntitlementBillingApiException;
 import com.ning.billing.entitlement.glue.MockEngineModuleMemory;
+import com.ning.billing.util.svcapi.entitlement.EntitlementBillingApiException;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;

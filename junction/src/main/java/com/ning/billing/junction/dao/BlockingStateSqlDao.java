@@ -35,11 +35,9 @@ import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTempla
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import com.ning.billing.junction.api.Blockable;
-import com.ning.billing.junction.api.Blockable.Type;
-import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.junction.api.BlockingApiException;
 import com.ning.billing.junction.api.BlockingState;
-import com.ning.billing.junction.api.DefaultBlockingState;
+import com.ning.billing.junction.api.Blockable.Type;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
@@ -47,6 +45,7 @@ import com.ning.billing.util.callcontext.InternalTenantContextBinder;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.dao.BinderBase;
 import com.ning.billing.util.dao.MapperBase;
+import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 
 @ExternalizedSqlViaStringTemplate3()
 public interface BlockingStateSqlDao extends BlockingStateDao, CloseMe, Transmogrifier {
@@ -98,7 +97,7 @@ public interface BlockingStateSqlDao extends BlockingStateDao, CloseMe, Transmog
             try {
                 timestamp = getDateTime(r, "created_date");
                 blockableId = UUID.fromString(r.getString("id"));
-                stateName = r.getString("state") == null ? BlockingApi.CLEAR_STATE_NAME : r.getString("state");
+                stateName = r.getString("state") == null ? DefaultBlockingState.CLEAR_STATE_NAME : r.getString("state");
                 type = Type.get(r.getString("type"));
                 service = r.getString("service");
                 blockChange = r.getBoolean("block_change");
@@ -116,7 +115,7 @@ public interface BlockingStateSqlDao extends BlockingStateDao, CloseMe, Transmog
         @Override
         public String map(final int index, final ResultSet r, final StatementContext ctx)
                 throws SQLException {
-            return r.getString("state") == null ? BlockingApi.CLEAR_STATE_NAME : r.getString("state");
+            return r.getString("state") == null ? DefaultBlockingState.CLEAR_STATE_NAME : r.getString("state");
         }
     }
 

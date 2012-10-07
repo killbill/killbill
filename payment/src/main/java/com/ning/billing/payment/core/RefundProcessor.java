@@ -16,6 +16,8 @@
 
 package com.ning.billing.payment.core;
 
+import static com.ning.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR_NAMED;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -34,7 +36,6 @@ import org.slf4j.LoggerFactory;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
@@ -48,14 +49,15 @@ import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
 import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 import com.ning.billing.payment.plugin.api.PaymentPluginApiException;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
-import com.ning.billing.util.api.TagUserApi;
-import com.ning.billing.util.svcsapi.bus.Bus;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.globallocker.GlobalLocker;
+import com.ning.billing.util.svcapi.account.AccountInternalApi;
+import com.ning.billing.util.svcapi.tag.TagInternalApi;
+import com.ning.billing.util.svcsapi.bus.Bus;
 
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
@@ -63,8 +65,6 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.name.Named;
-
-import static com.ning.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR_NAMED;
 
 public class RefundProcessor extends ProcessorBase {
 
@@ -75,15 +75,15 @@ public class RefundProcessor extends ProcessorBase {
 
     @Inject
     public RefundProcessor(final PaymentProviderPluginRegistry pluginRegistry,
-                           final AccountUserApi accountUserApi,
+                           final AccountInternalApi accountApi,
                            final InvoicePaymentApi invoicePaymentApi,
                            final Bus eventBus,
                            final InternalCallContextFactory internalCallContextFactory,
-                           final TagUserApi tagUserApi,
+                           final TagInternalApi tagUserApi,
                            final PaymentDao paymentDao,
                            final GlobalLocker locker,
                            @Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor) {
-        super(pluginRegistry, accountUserApi, eventBus, paymentDao, tagUserApi, locker, executor);
+        super(pluginRegistry, accountApi, eventBus, paymentDao, tagUserApi, locker, executor);
         this.invoicePaymentApi = invoicePaymentApi;
         this.internalCallContextFactory = internalCallContextFactory;
     }
@@ -293,7 +293,7 @@ public class RefundProcessor extends ProcessorBase {
 
         try {
             final InternalCallContext context = internalCallContextFactory.createInternalCallContext("RefundProcessor", CallOrigin.INTERNAL, UserType.SYSTEM, null);
-            final Account account = accountUserApi.getAccountById(refundsToBeFixed.iterator().next().getAccountId(), context.toCallContext());
+            final Account account = accountInternalApi.getAccountById(refundsToBeFixed.iterator().next().getAccountId(), context);
             new WithAccountLock<Void>().processAccountWithLock(locker, account.getExternalKey(), new WithAccountLockCallback<Void>() {
 
                 @Override

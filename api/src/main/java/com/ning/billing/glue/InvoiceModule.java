@@ -17,9 +17,12 @@
 package com.ning.billing.glue;
 
 public interface InvoiceModule {
+
     public abstract void installInvoiceUserApi();
 
     public abstract void installInvoicePaymentApi();
 
     public abstract void installInvoiceMigrationApi();
+
+    public abstract void installInvoiceInternalApi();
 }

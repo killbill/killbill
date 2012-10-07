@@ -16,6 +16,9 @@
 
 package com.ning.billing.invoice.notification;
 
+import static com.jayway.awaitility.Awaitility.await;
+import static java.util.concurrent.TimeUnit.MINUTES;
+
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.UUID;
@@ -38,21 +41,20 @@ import com.ning.billing.config.InvoiceConfig;
 import com.ning.billing.dbi.DBIProvider;
 import com.ning.billing.dbi.DbiConfig;
 import com.ning.billing.dbi.MysqlTestingHelper;
-import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.invoice.InvoiceDispatcher;
 import com.ning.billing.invoice.InvoiceListener;
 import com.ning.billing.invoice.InvoiceTestSuiteWithEmbeddedDB;
+import com.ning.billing.invoice.api.formatters.InvoiceFormatterFactory;
 import com.ning.billing.invoice.glue.InvoiceModuleWithMocks;
+import com.ning.billing.invoice.template.formatters.DefaultInvoiceFormatterFactory;
 import com.ning.billing.lifecycle.KillbillService;
-import com.ning.billing.mock.glue.MockClockModule;
 import com.ning.billing.mock.glue.MockJunctionModule;
-import com.ning.billing.util.svcsapi.bus.Bus;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
-import com.ning.billing.util.callcontext.TenantContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.email.templates.TemplateModule;
@@ -62,14 +64,16 @@ import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.TagStoreModule;
 import com.ning.billing.util.notificationq.DummySqlTest;
 import com.ning.billing.util.notificationq.NotificationQueueService;
+import com.ning.billing.util.svcapi.account.AccountInternalApi;
+import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
+import com.ning.billing.util.svcsapi.bus.Bus;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 
-import static com.jayway.awaitility.Awaitility.await;
-import static java.util.concurrent.TimeUnit.MINUTES;
+
 
 public class TestNextBillingDateNotifier extends InvoiceTestSuiteWithEmbeddedDB {
     private Clock clock;
@@ -78,6 +82,7 @@ public class TestNextBillingDateNotifier extends InvoiceTestSuiteWithEmbeddedDB 
     private Bus eventBus;
     private InvoiceListenerMock listener;
     private NotificationQueueService notificationQueueService;
+    private InternalCallContextFactory internalCallContextFactory;
 
     private static final class InvoiceListenerMock extends InvoiceListener {
         int eventCount = 0;
@@ -110,7 +115,11 @@ public class TestNextBillingDateNotifier extends InvoiceTestSuiteWithEmbeddedDB 
         final Injector g = Guice.createInjector(Stage.PRODUCTION, new AbstractModule() {
             @Override
             protected void configure() {
-                install(new MockClockModule());
+
+                final ClockMock clock = new ClockMock();
+                bind(Clock.class).toInstance(clock);
+                bind(ClockMock.class).toInstance(clock);
+
                 install(new BusModule(BusType.MEMORY));
                 install(new InvoiceModuleWithMocks());
                 install(new MockJunctionModule());
@@ -129,6 +138,14 @@ public class TestNextBillingDateNotifier extends InvoiceTestSuiteWithEmbeddedDB 
                     final IDBI dbi = helper.getDBI();
                     bind(IDBI.class).toInstance(dbi);
                 }
+
+                final InternalCallContextFactory internalCallContextFactory = new InternalCallContextFactory(helper.getDBI(), clock);
+                bind(InternalCallContextFactory.class).toInstance(internalCallContextFactory);
+
+                bind(InvoiceFormatterFactory.class).to(DefaultInvoiceFormatterFactory.class).asEagerSingleton();
+
+                bind(AccountInternalApi.class).toInstance(Mockito.mock(AccountInternalApi.class));
+                bind(EntitlementInternalApi.class).toInstance(Mockito.mock(EntitlementInternalApi.class));
             }
         });
 
@@ -140,13 +157,14 @@ public class TestNextBillingDateNotifier extends InvoiceTestSuiteWithEmbeddedDB 
         final InvoiceDispatcher dispatcher = g.getInstance(InvoiceDispatcher.class);
 
         final Subscription subscription = Mockito.mock(Subscription.class);
-        final EntitlementUserApi entitlementUserApi = Mockito.mock(EntitlementUserApi.class);
-        Mockito.when(entitlementUserApi.getSubscriptionFromId(Mockito.<UUID>any(), Mockito.<TenantContext>any())).thenReturn(subscription);
+        final EntitlementInternalApi entitlementUserApi = Mockito.mock(EntitlementInternalApi.class);
+        Mockito.when(entitlementUserApi.getSubscriptionFromId(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
 
         final CallContextFactory factory = new DefaultCallContextFactory(clock);
         listener = new InvoiceListenerMock(factory, dispatcher);
+        internalCallContextFactory = g.getInstance(InternalCallContextFactory.class);
         notifier = new DefaultNextBillingDateNotifier(notificationQueueService, g.getInstance(InvoiceConfig.class), entitlementUserApi,
-                                                      listener, new DefaultCallContextFactory(clock));
+                                                      listener, internalCallContextFactory);
     }
 
     @Test(groups = "slow")
@@ -156,7 +174,7 @@ public class TestNextBillingDateNotifier extends InvoiceTestSuiteWithEmbeddedDB 
         final UUID subscriptionId = new UUID(0L, 1L);
         final DateTime now = new DateTime();
         final DateTime readyTime = now.plusMillis(2000);
-        final NextBillingDatePoster poster = new DefaultNextBillingDatePoster(notificationQueueService, new InternalCallContextFactory(getMysqlTestingHelper().getDBI(), clock));
+        final NextBillingDatePoster poster = new DefaultNextBillingDatePoster(notificationQueueService, internalCallContextFactory);
 
         eventBus.start();
         notifier.initialize();

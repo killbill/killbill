@@ -19,36 +19,40 @@ package com.ning.billing.junction.plumbing.api;
 import java.util.UUID;
 
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.overdue.OverdueState;
-import com.ning.billing.util.callcontext.TenantContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.svcapi.junction.BlockingApi;
 
 public class BlockingSubscriptionBundle implements SubscriptionBundle {
     private final SubscriptionBundle subscriptionBundle;
     private final BlockingApi blockingApi;
-    private final TenantContext context;
+    private final InternalTenantContext context;
 
     private BlockingState blockingState = null;
 
-    public BlockingSubscriptionBundle(final SubscriptionBundle subscriptionBundle, final BlockingApi blockingApi, final TenantContext context) {
+    public BlockingSubscriptionBundle(final SubscriptionBundle subscriptionBundle, final BlockingApi blockingApi, final InternalTenantContext context) {
         this.subscriptionBundle = subscriptionBundle;
         this.blockingApi = blockingApi;
         this.context = context;
     }
 
+    @Override
     public UUID getAccountId() {
         return subscriptionBundle.getAccountId();
     }
 
+    @Override
     public UUID getId() {
         return subscriptionBundle.getId();
     }
 
+    @Override
     public String getKey() {
         return subscriptionBundle.getKey();
     }
 
+    @Override
     public OverdueState<SubscriptionBundle> getOverdueState() {
         return subscriptionBundle.getOverdueState();
     }

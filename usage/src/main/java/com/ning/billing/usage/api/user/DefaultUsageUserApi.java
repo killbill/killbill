@@ -22,7 +22,6 @@ import javax.inject.Inject;
 
 import org.joda.time.DateTime;
 
-import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.usage.api.UsageUserApi;
@@ -32,6 +31,7 @@ import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -41,19 +41,19 @@ public class DefaultUsageUserApi implements UsageUserApi {
 
     private final RolledUpUsageDao rolledUpUsageDao;
     private final TimelineEventHandler timelineEventHandler;
-    private final EntitlementUserApi entitlementUserApi;
+    private final EntitlementInternalApi entitlementApi;
     private final Clock clock;
     private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
     public DefaultUsageUserApi(final RolledUpUsageDao rolledUpUsageDao,
                                final TimelineEventHandler timelineEventHandler,
-                               final EntitlementUserApi entitlementUserApi,
+                               final EntitlementInternalApi entitlementApi,
                                final Clock clock,
                                final InternalCallContextFactory internalCallContextFactory) {
         this.rolledUpUsageDao = rolledUpUsageDao;
         this.timelineEventHandler = timelineEventHandler;
-        this.entitlementUserApi = entitlementUserApi;
+        this.entitlementApi = entitlementApi;
         this.clock = clock;
         this.internalCallContextFactory = internalCallContextFactory;
     }
@@ -79,7 +79,8 @@ public class DefaultUsageUserApi implements UsageUserApi {
 
     private InternalCallContext createInternalCallContext(final UUID bundleId, final CallContext context) throws EntitlementUserApiException {
         // Retrieve the bundle to get the account id for the internal call context
-        final SubscriptionBundle bundle = entitlementUserApi.getBundleFromId(bundleId, context);
+        // API_FIX
+        final SubscriptionBundle bundle = null; // entitlementApi.getBundleFromId(bundleId, context);
         return internalCallContextFactory.createInternalCallContext(bundle.getAccountId(), context);
     }
 

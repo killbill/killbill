@@ -22,6 +22,7 @@ import com.ning.billing.glue.InvoiceModule;
 import com.ning.billing.invoice.api.InvoiceMigrationApi;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.invoice.api.InvoiceUserApi;
+import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
 
 import com.google.inject.AbstractModule;
 
@@ -44,7 +45,13 @@ public class MockInvoiceModule extends AbstractModule implements InvoiceModule {
     @Override
     protected void configure() {
         installInvoiceUserApi();
+        installInvoiceInternalApi();
         installInvoicePaymentApi();
         installInvoiceMigrationApi();
+    }
+
+    @Override
+    public void installInvoiceInternalApi() {
+        bind(InvoiceInternalApi.class).toInstance(Mockito.mock(InvoiceInternalApi.class));
     }
 }

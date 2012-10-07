@@ -36,9 +36,9 @@ import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.junction.api.Blockable;
-import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.svcapi.junction.BlockingApi;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -94,8 +94,7 @@ public class BusinessOverdueStatusRecorder {
             public Void inTransaction(final BusinessOverdueStatusSqlDao transactional, final TransactionStatus status) throws Exception {
                 log.info("Started rebuilding overdue statuses for bundle id {}", bundleId);
                 transactional.deleteOverdueStatusesForBundle(bundleId.toString(), context);
-
-                final List<BlockingState> blockingHistory = blockingApi.getBlockingHistory(bundleId, context.toCallContext());
+                final List<BlockingState> blockingHistory = blockingApi.getBlockingHistory(bundleId, context);
                 if (blockingHistory != null && blockingHistory.size() > 0) {
                     final List<BlockingState> overdueStates = ImmutableList.<BlockingState>copyOf(blockingHistory);
                     final List<BlockingState> overdueStatesReversed = Lists.reverse(overdueStates);

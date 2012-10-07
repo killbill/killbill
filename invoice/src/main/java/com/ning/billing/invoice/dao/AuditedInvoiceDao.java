@@ -55,14 +55,13 @@ import com.ning.billing.invoice.model.RecurringInvoiceItem;
 import com.ning.billing.invoice.model.RefundAdjInvoiceItem;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.util.ChangeType;
-import com.ning.billing.util.api.TagUserApi;
-import com.ning.billing.util.svcsapi.bus.Bus;
-import com.ning.billing.util.svcsapi.bus.Bus.EventBusException;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.dao.EntityAudit;
 import com.ning.billing.util.dao.TableName;
+import com.ning.billing.util.svcsapi.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.Bus.EventBusException;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
@@ -77,7 +76,6 @@ public class AuditedInvoiceDao implements InvoiceDao {
 
     private final InvoiceSqlDao invoiceSqlDao;
     private final InvoicePaymentSqlDao invoicePaymentSqlDao;
-    private final TagUserApi tagUserApi;
     private final NextBillingDatePoster nextBillingDatePoster;
     private final InvoiceItemSqlDao invoiceItemSqlDao;
     private final Clock clock;
@@ -86,14 +84,12 @@ public class AuditedInvoiceDao implements InvoiceDao {
     @Inject
     public AuditedInvoiceDao(final IDBI dbi,
             final NextBillingDatePoster nextBillingDatePoster,
-            final TagUserApi tagUserApi,
             final Clock clock,
             final Bus eventBus) {
         this.invoiceSqlDao = dbi.onDemand(InvoiceSqlDao.class);
         this.invoicePaymentSqlDao = dbi.onDemand(InvoicePaymentSqlDao.class);
         this.invoiceItemSqlDao = dbi.onDemand(InvoiceItemSqlDao.class);
         this.nextBillingDatePoster = nextBillingDatePoster;
-        this.tagUserApi = tagUserApi;
         this.clock = clock;
         this.eventBus = eventBus;
     }
@@ -323,6 +319,7 @@ public class AuditedInvoiceDao implements InvoiceDao {
     }
 
     @Override
+
     public InvoicePayment createRefund(final UUID paymentId, final BigDecimal requestedRefundAmount, final boolean isInvoiceAdjusted,
                                        final Map<UUID, BigDecimal> invoiceItemIdsWithNullAmounts, final UUID paymentCookieId,
                                        final InternalCallContext context)

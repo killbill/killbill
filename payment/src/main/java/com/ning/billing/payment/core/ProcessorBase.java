@@ -27,16 +27,12 @@ import org.slf4j.LoggerFactory;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.dao.PaymentMethodModelDao;
 import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
 import com.ning.billing.util.api.TagApiException;
-import com.ning.billing.util.api.TagUserApi;
-import com.ning.billing.util.svcsapi.bus.Bus;
-import com.ning.billing.util.svcsapi.bus.Bus.EventBusException;
 import com.ning.billing.util.bus.BusEvent;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
@@ -45,6 +41,10 @@ import com.ning.billing.util.globallocker.GlobalLock;
 import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.globallocker.GlobalLocker.LockerType;
 import com.ning.billing.util.globallocker.LockFailedException;
+import com.ning.billing.util.svcapi.account.AccountInternalApi;
+import com.ning.billing.util.svcapi.tag.TagInternalApi;
+import com.ning.billing.util.svcsapi.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.Bus.EventBusException;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.Tag;
 
@@ -53,33 +53,33 @@ public abstract class ProcessorBase {
     private static final int NB_LOCK_TRY = 5;
 
     protected final PaymentProviderPluginRegistry pluginRegistry;
-    protected final AccountUserApi accountUserApi;
+    protected final AccountInternalApi accountInternalApi;
     protected final Bus eventBus;
     protected final GlobalLocker locker;
     protected final ExecutorService executor;
     protected final PaymentDao paymentDao;
-    protected final TagUserApi tagUserApi;
+    protected final TagInternalApi tagInternalApi;
 
     private static final Logger log = LoggerFactory.getLogger(ProcessorBase.class);
 
     public ProcessorBase(final PaymentProviderPluginRegistry pluginRegistry,
-                         final AccountUserApi accountUserApi,
+                         final AccountInternalApi accountInternalApi,
                          final Bus eventBus,
                          final PaymentDao paymentDao,
-                         final TagUserApi tagUserApi,
+                         final TagInternalApi tagInternalApi,
                          final GlobalLocker locker,
                          final ExecutorService executor) {
         this.pluginRegistry = pluginRegistry;
-        this.accountUserApi = accountUserApi;
+        this.accountInternalApi = accountInternalApi;
         this.eventBus = eventBus;
         this.paymentDao = paymentDao;
         this.locker = locker;
         this.executor = executor;
-        this.tagUserApi = tagUserApi;
+        this.tagInternalApi = tagInternalApi;
     }
 
     protected boolean isAccountAutoPayOff(final UUID accountId, final InternalTenantContext context) {
-        final Map<String, Tag> accountTags = tagUserApi.getTags(accountId, ObjectType.ACCOUNT, context.toTenantContext());
+        final Map<String, Tag> accountTags = tagInternalApi.getTags(accountId, ObjectType.ACCOUNT, context);
         for (final Tag cur : accountTags.values()) {
             if (ControlTagType.AUTO_PAY_OFF.getId().equals(cur.getTagDefinitionId())) {
                 return true;
@@ -90,7 +90,7 @@ public abstract class ProcessorBase {
 
     protected void setAccountAutoPayOff(final UUID accountId, final InternalCallContext context) throws PaymentApiException {
         try {
-            tagUserApi.addTag(accountId, ObjectType.ACCOUNT, ControlTagType.AUTO_PAY_OFF.getId(), context.toCallContext());
+            tagInternalApi.addTag(accountId, ObjectType.ACCOUNT, ControlTagType.AUTO_PAY_OFF.getId(), context);
         } catch (TagApiException e) {
             log.error("Failed to add AUTO_PAY_OFF on account " + accountId, e);
             throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, "Failed to add AUTO_PAY_OFF on account " + accountId);
@@ -111,7 +111,7 @@ public abstract class ProcessorBase {
 
         final String paymentProviderName = null;
         if (accountKey != null) {
-            final Account account = accountUserApi.getAccountByKey(accountKey, context.toTenantContext());
+            final Account account = accountInternalApi.getAccountByKey(accountKey, context);
             return getPaymentProviderPlugin(account, context);
         }
         return pluginRegistry.getPlugin(paymentProviderName);

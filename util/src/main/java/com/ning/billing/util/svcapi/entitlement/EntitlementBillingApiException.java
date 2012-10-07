@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.entitlement.api.billing;
+package com.ning.billing.util.svcapi.entitlement;
 
 import com.ning.billing.BillingExceptionBase;
 import com.ning.billing.ErrorCode;

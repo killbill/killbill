@@ -16,6 +16,8 @@
 
 package com.ning.billing.payment.core;
 
+import static com.ning.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR_NAMED;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -29,7 +31,6 @@ import org.slf4j.LoggerFactory;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.payment.api.DefaultPaymentMethod;
 import com.ning.billing.payment.api.DefaultPaymentMethodPlugin;
 import com.ning.billing.payment.api.PaymentApiException;
@@ -43,11 +44,12 @@ import com.ning.billing.payment.plugin.api.PaymentPluginApiException;
 import com.ning.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;
 import com.ning.billing.payment.provider.ExternalPaymentProviderPlugin;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
-import com.ning.billing.util.api.TagUserApi;
-import com.ning.billing.util.svcsapi.bus.Bus;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.globallocker.GlobalLocker;
+import com.ning.billing.util.svcapi.account.AccountInternalApi;
+import com.ning.billing.util.svcapi.tag.TagInternalApi;
+import com.ning.billing.util.svcsapi.bus.Bus;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
@@ -55,21 +57,19 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
-import static com.ning.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR_NAMED;
-
 public class PaymentMethodProcessor extends ProcessorBase {
 
     private static final Logger log = LoggerFactory.getLogger(PaymentMethodProcessor.class);
 
     @Inject
     public PaymentMethodProcessor(final PaymentProviderPluginRegistry pluginRegistry,
-                                  final AccountUserApi accountUserApi,
+                                  final AccountInternalApi accountInternalApi,
                                   final Bus eventBus,
                                   final PaymentDao paymentDao,
-                                  final TagUserApi tagUserApi,
+                                  final TagInternalApi tagUserApi,
                                   final GlobalLocker locker,
                                   @Named(PLUGIN_EXECUTOR_NAMED) final ExecutorService executor) {
-        super(pluginRegistry, accountUserApi, eventBus, paymentDao, tagUserApi, locker, executor);
+        super(pluginRegistry, accountInternalApi, eventBus, paymentDao, tagUserApi, locker, executor);
     }
 
     public Set<String> getAvailablePlugins() {
@@ -113,7 +113,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                     paymentDao.insertPaymentMethod(pmModel, context);
 
                     if (setDefault) {
-                        accountUserApi.updatePaymentMethod(account.getId(), pm.getId(), context.toCallContext());
+                        accountInternalApi.updatePaymentMethod(account.getId(), pm.getId(), context);
                     }
                 } catch (PaymentPluginApiException e) {
                     // STEPH all errors should also take a pluginName
@@ -301,7 +301,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                                 log.info("Setting account {} to AUTO_PAY_OFF because of default payment method deletion");
                                 setAccountAutoPayOff(account.getId(), context);
                             }
-                            accountUserApi.removePaymentMethod(account.getId(), context.toCallContext());
+                            accountInternalApi.removePaymentMethod(account.getId(), context);
                         }
                     }
                     final PaymentPluginApi pluginApi = getPluginApi(paymentMethodId, account.getId(), context);
@@ -333,7 +333,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                     final PaymentPluginApi pluginApi = getPluginApi(paymentMethodId, account.getId(), context);
 
                     pluginApi.setDefaultPaymentMethod(account.getExternalKey(), paymentMethodModel.getExternalId(), context.toCallContext());
-                    accountUserApi.updatePaymentMethod(account.getId(), paymentMethodId, context.toCallContext());
+                    accountInternalApi.updatePaymentMethod(account.getId(), paymentMethodId, context);
                     return null;
                 } catch (PaymentPluginApiException e) {
                     throw new PaymentApiException(ErrorCode.PAYMENT_UPD_PAYMENT_METHOD, account.getId(), e.getErrorMessage());

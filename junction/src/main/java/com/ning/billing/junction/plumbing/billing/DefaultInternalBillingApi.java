@@ -21,70 +21,61 @@ import java.util.Map;
 import java.util.SortedSet;
 import java.util.UUID;
 
-import org.joda.time.LocalDate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.account.api.MutableAccountData;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
-import com.ning.billing.entitlement.api.billing.BillingEvent;
-import com.ning.billing.entitlement.api.billing.ChargeThruApi;
-import com.ning.billing.entitlement.api.billing.EntitlementBillingApiException;
 import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
-import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.junction.api.BillingApi;
-import com.ning.billing.junction.api.BillingEventSet;
-import com.ning.billing.util.api.TagUserApi;
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.CallContextFactory;
-import com.ning.billing.util.callcontext.TenantContext;
+import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.util.svcapi.account.AccountInternalApi;
+import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
+import com.ning.billing.util.svcapi.junction.BillingEvent;
+import com.ning.billing.util.svcapi.junction.BillingEventSet;
+import com.ning.billing.util.svcapi.junction.BillingInternalApi;
+import com.ning.billing.util.svcapi.tag.TagInternalApi;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.Tag;
 
 import com.google.inject.Inject;
 
-public class DefaultBillingApi implements BillingApi {
-    private static final String API_USER_NAME = "Billing Api";
-    private static final Logger log = LoggerFactory.getLogger(DefaultBillingApi.class);
-    private final ChargeThruApi chargeThruApi;
-    private final CallContextFactory factory;
-    private final AccountUserApi accountApi;
+public class DefaultInternalBillingApi implements BillingInternalApi {
+
+    private static final Logger log = LoggerFactory.getLogger(DefaultInternalBillingApi.class);
+    private final AccountInternalApi accountApi;
     private final BillCycleDayCalculator bcdCalculator;
-    private final EntitlementUserApi entitlementUserApi;
+    private final EntitlementInternalApi entitlementApi;
     private final CatalogService catalogService;
     private final BlockingCalculator blockCalculator;
-    private final TagUserApi tagApi;
+    private final TagInternalApi tagApi;
 
     @Inject
-    public DefaultBillingApi(final ChargeThruApi chargeThruApi, final CallContextFactory factory, final AccountUserApi accountApi,
-                             final BillCycleDayCalculator bcdCalculator, final EntitlementUserApi entitlementUserApi, final BlockingCalculator blockCalculator,
-                             final CatalogService catalogService, final TagUserApi tagApi) {
-
-        this.chargeThruApi = chargeThruApi;
+    public DefaultInternalBillingApi(final AccountInternalApi accountApi,
+            final BillCycleDayCalculator bcdCalculator,
+            final EntitlementInternalApi entitlementApi,
+            final BlockingCalculator blockCalculator,
+            final CatalogService catalogService, final TagInternalApi tagApi) {
         this.accountApi = accountApi;
         this.bcdCalculator = bcdCalculator;
-        this.factory = factory;
-        this.entitlementUserApi = entitlementUserApi;
+        this.entitlementApi = entitlementApi;
         this.catalogService = catalogService;
         this.blockCalculator = blockCalculator;
         this.tagApi = tagApi;
     }
 
     @Override
-    public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(final UUID accountId, final CallContext context) {
-        // TODO
-        //final CallContext context = factory.createCallContext(API_USER_NAME, CallOrigin.INTERNAL, UserType.SYSTEM);
+    public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(final UUID accountId, final InternalCallContext context) {
 
-        final List<SubscriptionBundle> bundles = entitlementUserApi.getBundlesForAccount(accountId, context);
+        //final TenantContext context = factory.createTenantContext(API_USER_NAME, CallOrigin.INTERNAL, UserType.SYSTEM);
+
+        final List<SubscriptionBundle> bundles = entitlementApi.getBundlesForAccount(accountId, context);
         final DefaultBillingEventSet result = new DefaultBillingEventSet();
 
         try {
@@ -119,10 +110,10 @@ public class DefaultBillingApi implements BillingApi {
         }
     }
 
-    private void addBillingEventsForBundles(final List<SubscriptionBundle> bundles, final Account account, final CallContext context,
-                                            final DefaultBillingEventSet result) {
+    private void addBillingEventsForBundles(final List<SubscriptionBundle> bundles, final Account account, final InternalCallContext context,
+            final DefaultBillingEventSet result) {
         for (final SubscriptionBundle bundle : bundles) {
-            final List<Subscription> subscriptions = entitlementUserApi.getSubscriptionsForBundle(bundle.getId(), context);
+            final List<Subscription> subscriptions = entitlementApi.getSubscriptionsForBundle(bundle.getId(), context);
 
             //Check if billing is off for the bundle
             final Map<String, Tag> bundleTags = tagApi.getTags(bundle.getId(), ObjectType.BUNDLE, context);
@@ -144,7 +135,7 @@ public class DefaultBillingApi implements BillingApi {
         }
     }
 
-    private void addBillingEventsForSubscription(final List<Subscription> subscriptions, final SubscriptionBundle bundle, final Account account, final CallContext context, final DefaultBillingEventSet result) {
+    private void addBillingEventsForSubscription(final List<Subscription> subscriptions, final SubscriptionBundle bundle, final Account account, final InternalCallContext context, final DefaultBillingEventSet result) {
         for (final Subscription subscription : subscriptions) {
             for (final EffectiveSubscriptionEvent transition : subscription.getBillingTransitions()) {
                 try {
@@ -160,7 +151,7 @@ public class DefaultBillingApi implements BillingApi {
                     result.add(event);
                 } catch (CatalogApiException e) {
                     log.error("Failing to identify catalog components while creating BillingEvent from transition: " +
-                              transition.getId().toString(), e);
+                            transition.getId().toString(), e);
                 } catch (Exception e) {
                     log.warn("Failed while getting BillingEvent", e);
                 }
@@ -168,9 +159,11 @@ public class DefaultBillingApi implements BillingApi {
         }
     }
 
+    /*
+
     @Override
-    public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId, final TenantContext context) throws EntitlementBillingApiException {
-        final UUID result = chargeThruApi.getAccountIdFromSubscriptionId(subscriptionId, context);
+    public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId, final InternalTenantContext context) throws EntitlementUserApiException {
+        final UUID result = entitlementApi.getAccountIdFromSubscriptionId(subscriptionId, context);
         if (result == null) {
             throw new EntitlementBillingApiException(ErrorCode.ENT_INVALID_SUBSCRIPTION_ID, subscriptionId.toString());
         }
@@ -178,7 +171,9 @@ public class DefaultBillingApi implements BillingApi {
     }
 
     @Override
-    public void setChargedThroughDate(final UUID subscriptionId, final LocalDate ctd, final CallContext context) {
-        chargeThruApi.setChargedThroughDate(subscriptionId, ctd, context);
+    public void setChargedThroughDate(final UUID subscriptionId, final LocalDate ctd, final InternalCallContext context) {
+        entitlementApi.setChargedThroughDate(subscriptionId, ctd, context);
     }
+
+     */
 }

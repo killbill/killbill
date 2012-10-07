@@ -28,18 +28,18 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 
 import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.overdue.config.api.BillingState;
 import com.ning.billing.overdue.config.api.OverdueException;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
 
 import com.google.inject.Inject;
 
 public abstract class BillingStateCalculator<T extends Blockable> {
 
-    private final InvoiceUserApi invoiceApi;
+    private final InvoiceInternalApi invoiceApi;
     private final Clock clock;
 
     protected class InvoiceDateComparator implements Comparator<Invoice> {
@@ -56,7 +56,7 @@ public abstract class BillingStateCalculator<T extends Blockable> {
     }
 
     @Inject
-    public BillingStateCalculator(final InvoiceUserApi invoiceApi, final Clock clock) {
+    public BillingStateCalculator(final InvoiceInternalApi invoiceApi, final Clock clock) {
         this.invoiceApi = invoiceApi;
         this.clock = clock;
     }
@@ -80,7 +80,7 @@ public abstract class BillingStateCalculator<T extends Blockable> {
     }
 
     protected SortedSet<Invoice> unpaidInvoicesForAccount(final UUID accountId, final DateTimeZone accountTimeZone, final InternalTenantContext context) {
-        final Collection<Invoice> invoices = invoiceApi.getUnpaidInvoicesByAccountId(accountId, clock.getToday(accountTimeZone), context.toTenantContext());
+        final Collection<Invoice> invoices = invoiceApi.getUnpaidInvoicesByAccountId(accountId, clock.getToday(accountTimeZone), context);
         final SortedSet<Invoice> sortedInvoices = new TreeSet<Invoice>(new InvoiceDateComparator());
         sortedInvoices.addAll(invoices);
         return sortedInvoices;

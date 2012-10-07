@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2012 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -14,8 +14,16 @@
  * under the License.
  */
 
-package com.ning.billing.entitlement.api.billing;
+package com.ning.billing.util.svcapi.junction;
 
-public enum BillingModeType {
-    IN_ADVANCE
+import java.util.UUID;
+
+import com.ning.billing.util.callcontext.InternalCallContext;
+
+public interface BillingInternalApi {
+
+    /**
+     * @return an ordered list of billing event for the given accounts
+     */
+    public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(UUID accountId, InternalCallContext context);
 }

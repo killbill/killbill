@@ -16,13 +16,14 @@
 
 package com.ning.billing.beatrix.integration.overdue;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
+
 import java.math.BigDecimal;
 import java.util.Collection;
 
-
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
@@ -38,12 +39,9 @@ import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.invoice.api.InvoicePayment;
-import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.junction.api.BlockingApiException;
 import com.ning.billing.payment.api.Payment;
-
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
+import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 
 @Test(groups = "slow")
 @Guice(modules = {BeatrixModule.class})
@@ -121,13 +119,13 @@ public class TestOverdueIntegration extends TestOverdueBase {
         invoiceChecker.checkChargedThroughDate(baseSubscription.getId(), new LocalDate(2012, 6, 30), callContext);
 
         // Should still be in clear state
-        checkODState(BlockingApi.CLEAR_STATE_NAME);
+        checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
 
         // DAY 45 - 15 days after invoice
         addDaysAndCheckForCompletion(15, NextEvent.PAYMENT_ERROR);
 
         // Should still be in clear state
-        checkODState(BlockingApi.CLEAR_STATE_NAME);
+        checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
 
         // Note: we have two tracks of payment retries because of the invoice generated at the phase change
 
@@ -170,7 +168,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
             }
         }
 
-        checkODState(BlockingApi.CLEAR_STATE_NAME);
+        checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
         checkChangePlanWithOverdueState(baseSubscription, false);
 
         invoiceChecker.checkRepairedInvoice(account.getId(), 3,
@@ -215,13 +213,13 @@ public class TestOverdueIntegration extends TestOverdueBase {
         invoiceChecker.checkChargedThroughDate(baseSubscription.getId(), new LocalDate(2012, 6, 30), callContext);
 
         // Should still be in clear state
-        checkODState(BlockingApi.CLEAR_STATE_NAME);
+        checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
 
         // DAY 45 - 15 days after invoice
         addDaysAndCheckForCompletion(15);
 
         // Should still be in clear state
-        checkODState(BlockingApi.CLEAR_STATE_NAME);
+        checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
 
         // DAY 65 - 35 days after invoice
         // Single PAYMENT_ERROR here here triggered by the invoice
@@ -266,7 +264,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
             }
         }
 
-        checkODState(BlockingApi.CLEAR_STATE_NAME);
+        checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
         checkChangePlanWithOverdueState(baseSubscription, false);
 
         invoiceChecker.checkRepairedInvoice(account.getId(), 3,
@@ -315,7 +313,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         // Should still be in clear state - the invoice for the bundle has been paid, but not the invoice with the external charge
         // We refresh overdue just to be safe, see below
         overdueApi.refreshOverdueStateFor(bundle, callContext);
-        checkODState(BlockingApi.CLEAR_STATE_NAME);
+        checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
 
         // Past 30 days since the external charge
         addDaysAndCheckForCompletion(6);
@@ -330,7 +328,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         final Invoice externalChargeInvoice = invoiceApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext).iterator().next();
         createExternalPaymentAndCheckForCompletion(account, externalChargeInvoice, NextEvent.PAYMENT);
         // We should be clear now
-        checkODState(BlockingApi.CLEAR_STATE_NAME);
+        checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
     }
 
     @Test(groups = "slow")
@@ -350,13 +348,13 @@ public class TestOverdueIntegration extends TestOverdueBase {
         invoiceChecker.checkChargedThroughDate(baseSubscription.getId(), new LocalDate(2012, 6, 30), callContext);
 
         // Should still be in clear state
-        checkODState(BlockingApi.CLEAR_STATE_NAME);
+        checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
 
         // DAY 45 - 15 days after invoice
         addDaysAndCheckForCompletion(15);
 
         // Should still be in clear state
-        checkODState(BlockingApi.CLEAR_STATE_NAME);
+        checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
 
         // DAY 65 - 35 days after invoice
         addDaysAndCheckForCompletion(20, NextEvent.INVOICE, NextEvent.PAYMENT);
@@ -365,7 +363,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         invoiceChecker.checkChargedThroughDate(baseSubscription.getId(), new LocalDate(2012, 7, 31), callContext);
 
         // Should still be in clear state
-        checkODState(BlockingApi.CLEAR_STATE_NAME);
+        checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
 
         // Now, refund the second (first non-zero dollar) invoice
         final Payment payment = paymentApi.getPayment(invoiceApi.getInvoicesByAccount(account.getId(), callContext).get(1).getPayments().get(0).getPaymentId(), callContext);
@@ -392,13 +390,13 @@ public class TestOverdueIntegration extends TestOverdueBase {
         invoiceChecker.checkChargedThroughDate(baseSubscription.getId(), new LocalDate(2012, 6, 30), callContext);
 
         // Should still be in clear state
-        checkODState(BlockingApi.CLEAR_STATE_NAME);
+        checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
 
         // DAY 45 - 15 days after invoice
         addDaysAndCheckForCompletion(15);
 
         // Should still be in clear state
-        checkODState(BlockingApi.CLEAR_STATE_NAME);
+        checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
 
         // DAY 65 - 35 days after invoice
         addDaysAndCheckForCompletion(20, NextEvent.INVOICE, NextEvent.PAYMENT);
@@ -407,7 +405,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         invoiceChecker.checkChargedThroughDate(baseSubscription.getId(), new LocalDate(2012, 7, 31), callContext);
 
         // Should still be in clear state
-        checkODState(BlockingApi.CLEAR_STATE_NAME);
+        checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
 
         // Now, create a chargeback for the second (first non-zero dollar) invoice
         final InvoicePayment payment = invoicePaymentApi.getInvoicePayments(invoiceApi.getInvoicesByAccount(account.getId(), callContext).get(1).getPayments().get(0).getPaymentId(), callContext).get(0);
@@ -435,13 +433,13 @@ public class TestOverdueIntegration extends TestOverdueBase {
         invoiceChecker.checkChargedThroughDate(baseSubscription.getId(), new LocalDate(2012, 6, 30), callContext);
 
         // Should still be in clear state
-        checkODState(BlockingApi.CLEAR_STATE_NAME);
+        checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
 
         // DAY 45 - 15 days after invoice
         addDaysAndCheckForCompletion(15, NextEvent.PAYMENT_ERROR);
 
         // Should still be in clear state
-        checkODState(BlockingApi.CLEAR_STATE_NAME);
+        checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
 
         // DAY 65 - 35 days after invoice
         addDaysAndCheckForCompletion(20, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR, NextEvent.PAYMENT_ERROR);
@@ -459,7 +457,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         final Invoice firstNonZeroInvoice = invoiceApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext).iterator().next();
         createExternalPaymentAndCheckForCompletion(account, firstNonZeroInvoice, NextEvent.PAYMENT);
         // We should be clear now
-        checkODState(BlockingApi.CLEAR_STATE_NAME);
+        checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
     }
 
     @Test(groups = "slow", enabled = false)
@@ -485,13 +483,13 @@ public class TestOverdueIntegration extends TestOverdueBase {
         invoiceChecker.checkChargedThroughDate(baseSubscription.getId(), new LocalDate(2012, 6, 30), callContext);
 
         // Should still be in clear state
-        checkODState(BlockingApi.CLEAR_STATE_NAME);
+        checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
 
         // DAY 45 - 15 days after invoice
         addDaysAndCheckForCompletion(15, NextEvent.PAYMENT_ERROR);
 
         // Should still be in clear state
-        checkODState(BlockingApi.CLEAR_STATE_NAME);
+        checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
 
         // DAY 65 - 35 days after invoice
         addDaysAndCheckForCompletion(20, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR, NextEvent.PAYMENT_ERROR);
@@ -509,7 +507,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         final Invoice firstNonZeroInvoice = invoiceApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext).iterator().next();
         fullyAdjustInvoiceItemAndCheckForCompletion(account, firstNonZeroInvoice, 1, NextEvent.INVOICE_ADJUSTMENT);
         // We should be clear now
-        checkODState(BlockingApi.CLEAR_STATE_NAME);
+        checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
 
         invoiceChecker.checkRepairedInvoice(account.getId(), 2,
                                             callContext, new ExpectedItemCheck(new LocalDate(2012, 5, 31), new LocalDate(2012, 6, 30), InvoiceItemType.RECURRING, new BigDecimal("249.95")),
@@ -520,13 +518,13 @@ public class TestOverdueIntegration extends TestOverdueBase {
         addDaysAndCheckForCompletion(5);
 
         // We should still be clear
-        checkODState(BlockingApi.CLEAR_STATE_NAME);
+        checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
 
         // DAY 80 - 20 days after second invoice
         addDaysAndCheckForCompletion(10, NextEvent.PAYMENT_ERROR);
 
         // We should still be clear
-        checkODState(BlockingApi.CLEAR_STATE_NAME);
+        checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
 
         // DAY 95 - 35 days after second invoice
         addDaysAndCheckForCompletion(15, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR);
@@ -546,7 +544,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         }
 
         // We should be cleared again
-        checkODState(BlockingApi.CLEAR_STATE_NAME);
+        checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
     }
 
     private void checkChangePlanWithOverdueState(final Subscription subscription, final boolean shouldFail) {

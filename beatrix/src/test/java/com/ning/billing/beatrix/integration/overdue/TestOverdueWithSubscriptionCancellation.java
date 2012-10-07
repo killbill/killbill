@@ -15,6 +15,8 @@
  */
 package com.ning.billing.beatrix.integration.overdue;
 
+import static junit.framework.Assert.assertTrue;
+
 import java.math.BigDecimal;
 
 import org.joda.time.DateTime;
@@ -29,9 +31,7 @@ import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.invoice.api.InvoiceItemType;
-import com.ning.billing.junction.api.BlockingApi;
-
-import static junit.framework.Assert.assertTrue;
+import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 
 @Test(groups = "slow")
 @Guice(modules = {BeatrixModule.class})
@@ -79,7 +79,7 @@ public class TestOverdueWithSubscriptionCancellation extends TestOverdueBase {
         invoiceChecker.checkChargedThroughDate(baseSubscription.getId(), new LocalDate(2012, 6, 30), callContext);
 
         // Should still be in clear state
-        checkODState(BlockingApi.CLEAR_STATE_NAME);
+        checkODState(DefaultBlockingState.CLEAR_STATE_NAME);
 
         // DAY 36 -- RIGHT AFTER OD1
         addDaysAndCheckForCompletion(6, NextEvent.CANCEL);

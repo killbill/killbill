@@ -19,7 +19,7 @@ package com.ning.billing.analytics;
 import org.mockito.Mockito;
 import org.skife.jdbi.v2.IDBI;
 
-import com.ning.billing.account.glue.AccountModule;
+import com.ning.billing.account.glue.DefaultAccountModule;
 import com.ning.billing.analytics.setup.AnalyticsModule;
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogService;
@@ -51,7 +51,7 @@ public class AnalyticsTestModule extends AnalyticsModule {
         install(new CallContextModule());
         install(new CustomFieldModule());
         install(new TagStoreModule());
-        install(new AccountModule());
+        install(new DefaultAccountModule());
         install(new BusModule());
         install(new DefaultEntitlementModule());
         install(new DefaultInvoiceModule());

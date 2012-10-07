@@ -23,16 +23,17 @@ import org.slf4j.LoggerFactory;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.core.PaymentProcessor;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.DefaultCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
+import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.api.ControlTagDeletionEvent;
 
@@ -44,17 +45,17 @@ public class TagHandler {
     private static final Logger log = LoggerFactory.getLogger(TagHandler.class);
 
     private final Clock clock;
-    private final AccountUserApi accountUserApi;
+    private final AccountInternalApi accountApi;
     private final PaymentProcessor paymentProcessor;
     private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
     public TagHandler(final Clock clock,
-                      final AccountUserApi accountUserApi,
+                      final AccountInternalApi accountApi,
                       final PaymentProcessor paymentProcessor,
                       final InternalCallContextFactory internalCallContextFactory) {
         this.clock = clock;
-        this.accountUserApi = accountUserApi;
+        this.accountApi = accountApi;
         this.paymentProcessor = paymentProcessor;
         this.internalCallContextFactory = internalCallContextFactory;
     }
@@ -71,7 +72,8 @@ public class TagHandler {
         try {
             // TODO retrieve tenantId?
             final CallContext context = new DefaultCallContext(null, "PaymentRequestProcessor", CallOrigin.INTERNAL, UserType.SYSTEM, userToken, clock);
-            final Account account = accountUserApi.getAccountById(accountId, context);
+            final InternalTenantContext internalContext = internalCallContextFactory.createInternalCallContext(context);
+            final Account account = accountApi.getAccountById(accountId, internalContext);
 
             paymentProcessor.process_AUTO_PAY_OFF_removal(account, internalCallContextFactory.createInternalCallContext(accountId, context));
 

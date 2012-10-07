@@ -13,30 +13,18 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+package com.ning.billing.util.svcapi.invoice;
 
-package com.ning.billing.entitlement.api.billing;
-
+import java.util.Collection;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
 
-import com.ning.billing.util.callcontext.CallContext;
-import com.ning.billing.util.callcontext.TenantContext;
+import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.util.callcontext.InternalTenantContext;
 
-public interface ChargeThruApi {
+public interface InvoiceInternalApi {
 
-    /**
-     * @param subscriptionId
-     * @return UUID of
-     */
-    public UUID getAccountIdFromSubscriptionId(UUID subscriptionId, TenantContext context) throws EntitlementBillingApiException;
+    public Collection<Invoice> getUnpaidInvoicesByAccountId(UUID accountId, LocalDate upToDate, InternalTenantContext context);
 
-    /**
-     * Sets the charged through date for the subscription with that Id.
-     *
-     * @param subscriptionId
-     * @param ctd
-     * @param context
-     */
-    public void setChargedThroughDate(UUID subscriptionId, LocalDate localChargedThruDate, CallContext context);
 }

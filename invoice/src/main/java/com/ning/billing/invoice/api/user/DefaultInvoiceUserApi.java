@@ -32,7 +32,6 @@ import org.slf4j.LoggerFactory;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.InvoiceDispatcher;
 import com.ning.billing.invoice.api.Invoice;
@@ -45,12 +44,14 @@ import com.ning.billing.invoice.model.CreditAdjInvoiceItem;
 import com.ning.billing.invoice.model.ExternalChargeInvoiceItem;
 import com.ning.billing.invoice.template.HtmlInvoiceGenerator;
 import com.ning.billing.util.api.TagApiException;
-import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
+import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.util.svcapi.account.AccountInternalApi;
+import com.ning.billing.util.svcapi.tag.TagInternalApi;
 import com.ning.billing.util.svcsapi.bus.Bus;
 import com.ning.billing.util.svcsapi.bus.Bus.EventBusException;
 import com.ning.billing.util.tag.ControlTagType;
@@ -64,20 +65,19 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
 
     private final InvoiceDao dao;
     private final InvoiceDispatcher dispatcher;
-    private final AccountUserApi accountUserApi;
-    private final TagUserApi tagUserApi;
+    private final AccountInternalApi accountUserApi;
+    private final TagInternalApi tagApi;
     private final HtmlInvoiceGenerator generator;
     private final InternalCallContextFactory internalCallContextFactory;
     private final Bus eventBus;
 
     @Inject
-    public DefaultInvoiceUserApi(final InvoiceDao dao, final InvoiceDispatcher dispatcher, final AccountUserApi accountUserApi,
-                                 final TagUserApi tagUserApi, final HtmlInvoiceGenerator generator, final InternalCallContextFactory internalCallContextFactory,
-                                 final Bus eventBus) {
+    public DefaultInvoiceUserApi(final InvoiceDao dao, final InvoiceDispatcher dispatcher, final AccountInternalApi accountUserApi,  final Bus eventBus,
+                                 final TagInternalApi tagApi, final HtmlInvoiceGenerator generator, final InternalCallContextFactory internalCallContextFactory) {
         this.dao = dao;
         this.dispatcher = dispatcher;
         this.accountUserApi = accountUserApi;
-        this.tagUserApi = tagUserApi;
+        this.tagApi = tagApi;
         this.generator = generator;
         this.internalCallContextFactory = internalCallContextFactory;
         this.eventBus = eventBus;
@@ -132,7 +132,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                                             final CallContext context) throws InvoiceApiException {
         final Account account;
         try {
-            account = accountUserApi.getAccountById(accountId, context);
+            account = accountUserApi.getAccountById(accountId, internalCallContextFactory.createInternalTenantContext(context));
         } catch (AccountApiException e) {
             throw new InvoiceApiException(e, ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID, e.toString());
         }
@@ -148,22 +148,24 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
 
     @Override
     public void tagInvoiceAsWrittenOff(final UUID invoiceId, final CallContext context) throws TagApiException, InvoiceApiException {
-        // Note: the tagUserApi is audited
-        tagUserApi.addTag(invoiceId, ObjectType.INVOICE, ControlTagType.WRITTEN_OFF.getId(), context);
+        // Note: the tagApi is audited
+        final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(context);
+        tagApi.addTag(invoiceId, ObjectType.INVOICE, ControlTagType.WRITTEN_OFF.getId(), internalContext);
 
         // Retrieve the invoice for the account id
-        final Invoice invoice = dao.getById(invoiceId, internalCallContextFactory.createInternalTenantContext(context));
+        final Invoice invoice = dao.getById(invoiceId, internalContext);
         // This is for overdue
         notifyBusOfInvoiceAdjustment(invoiceId, invoice.getAccountId(), context.getUserToken(), internalCallContextFactory.createInternalCallContext(invoice.getAccountId(), context));
     }
 
     @Override
     public void tagInvoiceAsNotWrittenOff(final UUID invoiceId, final CallContext context) throws TagApiException, InvoiceApiException {
-        // Note: the tagUserApi is audited
-        tagUserApi.removeTag(invoiceId, ObjectType.INVOICE, ControlTagType.WRITTEN_OFF.getId(), context);
+        // Note: the tagApi is audited
+        final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(context);
+        tagApi.removeTag(invoiceId, ObjectType.INVOICE, ControlTagType.WRITTEN_OFF.getId(), internalContext);
 
         // Retrieve the invoice for the account id
-        final Invoice invoice = dao.getById(invoiceId, internalCallContextFactory.createInternalTenantContext(context));
+        final Invoice invoice = dao.getById(invoiceId, internalContext);
         // This is for overdue
         notifyBusOfInvoiceAdjustment(invoiceId, invoice.getAccountId(), context.getUserToken(), internalCallContextFactory.createInternalCallContext(invoice.getAccountId(), context));
     }
@@ -265,11 +267,12 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
             throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND, invoiceId);
         }
 
-        final Account account = accountUserApi.getAccountById(invoice.getAccountId(), context);
+        final InternalTenantContext internalContext =  internalCallContextFactory.createInternalTenantContext(context);
+        final Account account = accountUserApi.getAccountById(invoice.getAccountId(), internalContext);
 
         // Check if this account has the MANUAL_PAY system tag
         boolean manualPay = false;
-        final Map<String, Tag> accountTags = tagUserApi.getTags(account.getId(), ObjectType.ACCOUNT, context);
+        final Map<String, Tag> accountTags = tagApi.getTags(account.getId(), ObjectType.ACCOUNT, internalContext);
         for (final Tag tag : accountTags.values()) {
             if (ControlTagType.MANUAL_PAY.getId().equals(tag.getTagDefinitionId())) {
                 manualPay = true;

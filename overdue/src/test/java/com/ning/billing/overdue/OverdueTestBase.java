@@ -32,20 +32,18 @@ import org.testng.annotations.Guice;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.MockPlan;
 import com.ning.billing.catalog.MockPriceList;
 import com.ning.billing.catalog.glue.CatalogModule;
-import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
-import com.ning.billing.invoice.api.InvoiceUserApi;
-import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.junction.api.BlockingState;
+import com.ning.billing.mock.glue.MockAccountModule;
 import com.ning.billing.mock.glue.MockClockModule;
+import com.ning.billing.mock.glue.MockEntitlementModule;
 import com.ning.billing.mock.glue.MockInvoiceModule;
 import com.ning.billing.mock.glue.MockPaymentModule;
 import com.ning.billing.mock.glue.TestDbiModule;
@@ -56,20 +54,24 @@ import com.ning.billing.overdue.config.OverdueConfig;
 import com.ning.billing.overdue.glue.DefaultOverdueModule;
 import com.ning.billing.overdue.service.DefaultOverdueService;
 import com.ning.billing.overdue.wrapper.OverdueWrapperFactory;
-import com.ning.billing.util.svcsapi.bus.BusService;
-import com.ning.billing.util.callcontext.TenantContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.email.EmailModule;
 import com.ning.billing.util.email.templates.TemplateModule;
 import com.ning.billing.util.glue.CallContextModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.notificationq.NotificationQueueService.NotificationQueueAlreadyExists;
+import com.ning.billing.util.svcapi.account.AccountInternalApi;
+import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
+import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
+import com.ning.billing.util.svcapi.junction.BlockingApi;
+import com.ning.billing.util.svcsapi.bus.BusService;
 
 import com.google.inject.Inject;
 
 @Guice(modules = {DefaultOverdueModule.class, OverdueListenerTesterModule.class, MockClockModule.class, ApplicatorMockJunctionModule.class,
                   CallContextModule.class, CatalogModule.class, MockInvoiceModule.class, MockPaymentModule.class, NotificationQueueModule.class,
-                  EmailModule.class, TemplateModule.class, TestDbiModule.class})
+                  EmailModule.class, TemplateModule.class, TestDbiModule.class, MockEntitlementModule.class, MockInvoiceModule.class, MockAccountModule.class})
 public abstract class OverdueTestBase extends OverdueTestSuiteWithEmbeddedDB {
     protected final String configXml =
             "<overdueConfig>" +
@@ -130,16 +132,16 @@ public abstract class OverdueTestBase extends OverdueTestSuiteWithEmbeddedDB {
     protected OverdueUserApi overdueApi;
 
     @Inject
-    protected InvoiceUserApi invoiceApi;
+    protected InvoiceInternalApi invoiceApi;
 
     protected Account account;
     protected SubscriptionBundle bundle;
 
     @Inject
-    AccountUserApi accountUserApi;
+    AccountInternalApi accountApi;
 
     @Inject
-    EntitlementUserApi entitlementApi;
+    EntitlementInternalApi entitlementApi;
 
     @Inject
     protected DefaultOverdueService service;
@@ -191,7 +193,7 @@ public abstract class OverdueTestBase extends OverdueTestSuiteWithEmbeddedDB {
         account = Mockito.mock(Account.class);
         Mockito.when(account.getId()).thenReturn(accountId);
         Mockito.when(account.getTimeZone()).thenReturn(DateTimeZone.UTC);
-        Mockito.when(accountUserApi.getAccountById(Mockito.eq(account.getId()), Mockito.<TenantContext>any())).thenReturn(account);
+        Mockito.when(accountApi.getAccountById(Mockito.eq(account.getId()), Mockito.<InternalTenantContext>any())).thenReturn(account);
 
         Mockito.when(bundle.getAccountId()).thenReturn(accountId);
 
@@ -209,13 +211,13 @@ public abstract class OverdueTestBase extends OverdueTestSuiteWithEmbeddedDB {
 
         final List<Invoice> invoices = new ArrayList<Invoice>();
         invoices.add(invoice);
-        Mockito.when(invoiceApi.getUnpaidInvoicesByAccountId(Mockito.<UUID>any(), Mockito.<LocalDate>any(), Mockito.<TenantContext>any())).thenReturn(invoices);
+        Mockito.when(invoiceApi.getUnpaidInvoicesByAccountId(Mockito.<UUID>any(), Mockito.<LocalDate>any(), Mockito.<InternalTenantContext>any())).thenReturn(invoices);
 
         final Subscription base = Mockito.mock(Subscription.class);
         Mockito.when(base.getCurrentPlan()).thenReturn(MockPlan.createBicycleNoTrialEvergreen1USD());
         Mockito.when(base.getCurrentPriceList()).thenReturn(new MockPriceList());
         Mockito.when(base.getCurrentPhase()).thenReturn(MockPlan.createBicycleNoTrialEvergreen1USD().getFinalPhase());
-        Mockito.when(entitlementApi.getBaseSubscription(Mockito.<UUID>any(), Mockito.<TenantContext>any())).thenReturn(base);
+        Mockito.when(entitlementApi.getBaseSubscription(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(base);
 
         return bundle;
     }

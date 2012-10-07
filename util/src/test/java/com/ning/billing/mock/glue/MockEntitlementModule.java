@@ -19,13 +19,13 @@ package com.ning.billing.mock.glue;
 import org.mockito.Mockito;
 
 import com.ning.billing.entitlement.api.EntitlementService;
-import com.ning.billing.entitlement.api.billing.ChargeThruApi;
 import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi;
 import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
 import com.ning.billing.entitlement.api.transfer.EntitlementTransferApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.glue.EntitlementModule;
 import com.ning.billing.util.glue.RealImplementation;
+import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 
 import com.google.inject.AbstractModule;
 
@@ -46,8 +46,8 @@ public class MockEntitlementModule extends AbstractModule implements Entitlement
     }
 
     @Override
-    public void installChargeThruApi() {
-        bind(ChargeThruApi.class).toInstance(Mockito.mock(ChargeThruApi.class));
+    public void installEntitlementInternalApi() {
+        bind(EntitlementInternalApi.class).toInstance(Mockito.mock(EntitlementInternalApi.class));
     }
 
     @Override
@@ -55,7 +55,7 @@ public class MockEntitlementModule extends AbstractModule implements Entitlement
         installEntitlementService();
         installEntitlementUserApi();
         installEntitlementMigrationApi();
-        installChargeThruApi();
+        installEntitlementInternalApi();
         installEntitlementTimelineApi();
     }
 

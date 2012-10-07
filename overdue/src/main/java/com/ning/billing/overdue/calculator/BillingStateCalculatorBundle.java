@@ -26,35 +26,35 @@ import org.joda.time.LocalDate;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PhaseType;
 import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.Product;
-import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItem;
-import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.overdue.config.api.BillingStateBundle;
 import com.ning.billing.overdue.config.api.OverdueException;
 import com.ning.billing.overdue.config.api.PaymentResponse;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.svcapi.account.AccountInternalApi;
+import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
+import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
 import com.ning.billing.util.tag.Tag;
 
 import com.google.inject.Inject;
 
 public class BillingStateCalculatorBundle extends BillingStateCalculator<SubscriptionBundle> {
 
-    private final EntitlementUserApi entitlementApi;
-    private final AccountUserApi accountApi;
+    private final EntitlementInternalApi entitlementApi;
+    private final AccountInternalApi accountApi;
 
     @Inject
-    public BillingStateCalculatorBundle(final EntitlementUserApi entitlementApi, final InvoiceUserApi invoiceApi,
-                                        final AccountUserApi accountApi, final Clock clock) {
+    public BillingStateCalculatorBundle(final EntitlementInternalApi entitlementApi, final InvoiceInternalApi invoiceApi,
+                                        final AccountInternalApi accountApi, final Clock clock) {
         super(invoiceApi, clock);
         this.entitlementApi = entitlementApi;
         this.accountApi = accountApi;
@@ -63,10 +63,10 @@ public class BillingStateCalculatorBundle extends BillingStateCalculator<Subscri
     @Override
     public BillingStateBundle calculateBillingState(final SubscriptionBundle bundle, final InternalTenantContext context) throws OverdueException {
         try {
-            final Account account = accountApi.getAccountById(bundle.getAccountId(), context.toTenantContext());
+            final Account account = accountApi.getAccountById(bundle.getAccountId(), context);
             final SortedSet<Invoice> unpaidInvoices = unpaidInvoicesForBundle(bundle.getId(), bundle.getAccountId(), account.getTimeZone(), context);
 
-            final Subscription basePlan = entitlementApi.getBaseSubscription(bundle.getId(), context.toTenantContext());
+            final Subscription basePlan = entitlementApi.getBaseSubscription(bundle.getId(), context);
 
             final UUID id = bundle.getId();
             final int numberOfUnpaidInvoices = unpaidInvoices.size();

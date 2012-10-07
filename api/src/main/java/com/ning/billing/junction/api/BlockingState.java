@@ -18,6 +18,7 @@ package com.ning.billing.junction.api;
 
 import org.joda.time.DateTime;
 
+
 public interface BlockingState extends Comparable<BlockingState> {
 
     public abstract String getStateName();

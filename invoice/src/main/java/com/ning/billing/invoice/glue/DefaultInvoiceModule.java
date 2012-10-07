@@ -31,6 +31,7 @@ import com.ning.billing.invoice.api.InvoiceUserApi;
 import com.ning.billing.invoice.api.formatters.InvoiceFormatterFactory;
 import com.ning.billing.invoice.api.invoice.DefaultInvoicePaymentApi;
 import com.ning.billing.invoice.api.migration.DefaultInvoiceMigrationApi;
+import com.ning.billing.invoice.api.svcs.DefaultInvoiceInternalApi;
 import com.ning.billing.invoice.api.user.DefaultInvoiceUserApi;
 import com.ning.billing.invoice.dao.AuditedInvoiceDao;
 import com.ning.billing.invoice.dao.InvoiceDao;
@@ -42,6 +43,7 @@ import com.ning.billing.invoice.notification.EmailInvoiceNotifier;
 import com.ning.billing.invoice.notification.NextBillingDateNotifier;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.invoice.notification.NullInvoiceNotifier;
+import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
 import com.ning.billing.util.template.translation.TranslatorConfig;
 
 import com.google.inject.AbstractModule;
@@ -57,6 +59,11 @@ public class DefaultInvoiceModule extends AbstractModule implements InvoiceModul
     @Override
     public void installInvoiceUserApi() {
         bind(InvoiceUserApi.class).to(DefaultInvoiceUserApi.class).asEagerSingleton();
+    }
+
+    @Override
+    public void installInvoiceInternalApi() {
+        bind(InvoiceInternalApi.class).to(DefaultInvoiceInternalApi.class).asEagerSingleton();
     }
 
     @Override
@@ -119,6 +126,7 @@ public class DefaultInvoiceModule extends AbstractModule implements InvoiceModul
         installInvoiceGenerator();
         installInvoiceDao();
         installInvoiceUserApi();
+        installInvoiceInternalApi();
         installInvoicePaymentApi();
         installInvoiceMigrationApi();
     }

@@ -21,8 +21,8 @@ import java.util.List;
 import java.util.TreeSet;
 import java.util.UUID;
 
-import com.ning.billing.entitlement.api.billing.BillingEvent;
-import com.ning.billing.junction.api.BillingEventSet;
+import com.ning.billing.util.svcapi.junction.BillingEvent;
+import com.ning.billing.util.svcapi.junction.BillingEventSet;
 
 public class MockBillingEventSet extends TreeSet<BillingEvent> implements BillingEventSet {
 

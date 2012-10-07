@@ -29,11 +29,11 @@ import com.ning.billing.junction.JunctionTestSuiteWithEmbeddedDB;
 import com.ning.billing.junction.MockModule;
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.BlockingState;
-import com.ning.billing.junction.api.DefaultBlockingState;
 import com.ning.billing.mock.glue.MockEntitlementModule;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 
 import com.google.inject.Inject;
 

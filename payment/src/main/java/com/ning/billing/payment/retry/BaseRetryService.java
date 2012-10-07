@@ -52,8 +52,8 @@ public abstract class BaseRetryService implements RetryService {
     private NotificationQueue retryQueue;
 
     public BaseRetryService(final NotificationQueueService notificationQueueService,
-                            final PaymentConfig config,
-                            final InternalCallContextFactory internalCallContextFactory) {
+            final PaymentConfig config,
+            final InternalCallContextFactory internalCallContextFactory) {
         this.notificationQueueService = notificationQueueService;
         this.config = config;
         this.internalCallContextFactory = internalCallContextFactory;
@@ -62,20 +62,20 @@ public abstract class BaseRetryService implements RetryService {
     @Override
     public void initialize(final String svcName) throws NotificationQueueAlreadyExists {
         retryQueue = notificationQueueService.createNotificationQueue(svcName,
-                                                                      getQueueName(),
-                                                                      new NotificationQueueHandler() {
-                                                                          @Override
-                                                                          public void handleReadyNotification(final NotificationKey notificationKey, final DateTime eventDateTime, final Long accountRecordId, final Long tenantRecordId) {
-                                                                              if (!(notificationKey instanceof PaymentRetryNotificationKey)) {
-                                                                                  log.error("Payment service got an unexpected notification type {}", notificationKey.getClass().getName());
-                                                                                  return;
-                                                                              }
-                                                                              final PaymentRetryNotificationKey key = (PaymentRetryNotificationKey) notificationKey;
-                                                                              final InternalCallContext callContext =  internalCallContextFactory.createInternalCallContext(tenantRecordId, accountRecordId, PAYMENT_RETRY_SERVICE, CallOrigin.INTERNAL, UserType.SYSTEM, null);
-                                                                              retry(key.getUuidKey(), callContext);
-                                                                          }
-                                                                      },
-                                                                      config);
+                getQueueName(),
+                new NotificationQueueHandler() {
+            @Override
+            public void handleReadyNotification(final NotificationKey notificationKey, final DateTime eventDateTime, final Long accountRecordId, final Long tenantRecordId) {
+                if (!(notificationKey instanceof PaymentRetryNotificationKey)) {
+                    log.error("Payment service got an unexpected notification type {}", notificationKey.getClass().getName());
+                    return;
+                }
+                final PaymentRetryNotificationKey key = (PaymentRetryNotificationKey) notificationKey;
+                final InternalCallContext callContext = internalCallContextFactory.createInternalCallContext(tenantRecordId, accountRecordId, PAYMENT_RETRY_SERVICE, CallOrigin.INTERNAL, UserType.SYSTEM, null);
+                retry(key.getUuidKey(), callContext);
+            }
+        },
+        config);
     }
 
     @Override
@@ -101,7 +101,7 @@ public abstract class BaseRetryService implements RetryService {
 
         @Inject
         public RetryServiceScheduler(final NotificationQueueService notificationQueueService,
-                                     final InternalCallContextFactory internalCallContextFactory) {
+                final InternalCallContextFactory internalCallContextFactory) {
             this.notificationQueueService = notificationQueueService;
             this.internalCallContextFactory = internalCallContextFactory;
         }

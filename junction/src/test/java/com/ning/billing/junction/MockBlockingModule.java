@@ -18,8 +18,8 @@ package com.ning.billing.junction;
 
 import org.mockito.Mockito;
 
-import com.ning.billing.junction.api.BlockingApi;
 import com.ning.billing.junction.dao.BlockingStateDao;
+import com.ning.billing.util.svcapi.junction.BlockingApi;
 
 import com.google.inject.AbstractModule;
 

@@ -16,6 +16,8 @@
 
 package com.ning.billing.invoice.glue;
 
+import static org.testng.Assert.assertNotNull;
+
 import java.io.IOException;
 import java.net.URL;
 
@@ -23,7 +25,6 @@ import org.mockito.Mockito;
 import org.skife.jdbi.v2.IDBI;
 
 import com.ning.billing.KillbillTestSuiteWithEmbeddedDB;
-import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.catalog.glue.CatalogModule;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.invoice.api.InvoiceNotifier;
@@ -32,7 +33,6 @@ import com.ning.billing.invoice.notification.MockNextBillingDatePoster;
 import com.ning.billing.invoice.notification.NextBillingDateNotifier;
 import com.ning.billing.invoice.notification.NextBillingDatePoster;
 import com.ning.billing.invoice.notification.NullInvoiceNotifier;
-import com.ning.billing.junction.api.BillingApi;
 import com.ning.billing.mock.glue.MockEntitlementModule;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.DefaultCallContextFactory;
@@ -45,8 +45,8 @@ import com.ning.billing.util.glue.GlobalLockerModule;
 import com.ning.billing.util.glue.TagStoreModule;
 import com.ning.billing.util.notificationq.MockNotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService;
-
-import static org.testng.Assert.assertNotNull;
+import com.ning.billing.util.svcapi.account.AccountInternalApi;
+import com.ning.billing.util.svcapi.junction.BillingInternalApi;
 
 public class InvoiceModuleWithEmbeddedDb extends DefaultInvoiceModule {
     private final MysqlTestingHelper helper = KillbillTestSuiteWithEmbeddedDB.getMysqlTestingHelper();
@@ -75,10 +75,10 @@ public class InvoiceModuleWithEmbeddedDb extends DefaultInvoiceModule {
         install(new TagStoreModule());
 
         installNotificationQueue();
-        bind(AccountUserApi.class).toInstance(Mockito.mock(AccountUserApi.class));
+        bind(AccountInternalApi.class).toInstance(Mockito.mock(AccountInternalApi.class));
 
-        final BillingApi billingApi = Mockito.mock(BillingApi.class);
-        bind(BillingApi.class).toInstance(billingApi);
+        final BillingInternalApi billingApi = Mockito.mock(BillingInternalApi.class);
+        bind(BillingInternalApi.class).toInstance(billingApi);
 
         install(new CatalogModule());
         install(new MockEntitlementModule());
