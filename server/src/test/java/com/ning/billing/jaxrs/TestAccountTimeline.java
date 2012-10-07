@@ -57,8 +57,7 @@ public class TestAccountTimeline extends TestJaxrsBase {
     }
 
 
-    // API_FIX
-    @Test(groups = "slow", enabled=false)
+    @Test(groups = "slow")
     public void testAccountTimelineWithAudits() throws Exception {
         final DateTime startTime = clock.getUTCNow();
         final AccountJson accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
