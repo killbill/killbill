@@ -225,7 +225,8 @@ public class BusinessSubscriptionTransitionRecorder {
                                                                     final BusinessSubscriptionEvent businessEvent,
                                                                     final ArrayList<BusinessSubscriptionTransition> transitions,
                                                                     final Currency currency) {
-        if (BusinessSubscriptionEvent.EventType.ADD.equals(businessEvent.getEventType()) ||
+        if (BusinessSubscriptionEvent.EventType.MIGRATE.equals(businessEvent.getEventType()) ||
+            BusinessSubscriptionEvent.EventType.ADD.equals(businessEvent.getEventType()) ||
             BusinessSubscriptionEvent.EventType.RE_ADD.equals(businessEvent.getEventType()) ||
             BusinessSubscriptionEvent.EventType.TRANSFER.equals(businessEvent.getEventType())) {
             return null;
