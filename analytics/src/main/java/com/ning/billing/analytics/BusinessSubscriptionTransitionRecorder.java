@@ -155,6 +155,7 @@ public class BusinessSubscriptionTransitionRecorder {
         switch (event.getTransitionType()) {
             // A subscription enters either through migration or as newly created subscription
             case MIGRATE_ENTITLEMENT:
+                return subscriptionMigrated(event);
             case CREATE:
                 return subscriptionCreated(event);
             case RE_CREATE:
@@ -175,6 +176,10 @@ public class BusinessSubscriptionTransitionRecorder {
                 log.warn("Unexpected event type " + event.getTransitionType());
                 return null;
         }
+    }
+
+    private BusinessSubscriptionEvent subscriptionMigrated(final SubscriptionEvent created) throws AccountApiException, EntitlementUserApiException {
+        return BusinessSubscriptionEvent.subscriptionMigrated(created.getNextPlan(), catalogService.getFullCatalog(), created.getEffectiveTransitionTime(), created.getSubscriptionStartDate());
     }
 
     private BusinessSubscriptionEvent subscriptionCreated(final SubscriptionEvent created) throws AccountApiException, EntitlementUserApiException {

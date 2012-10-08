@@ -38,6 +38,7 @@ public class BusinessSubscriptionEvent {
     private static final String MISC = "MISC";
 
     public enum EventType {
+        MIGRATE,
         ADD,
         CANCEL,
         RE_ADD,
@@ -80,6 +81,10 @@ public class BusinessSubscriptionEvent {
 
     public EventType getEventType() {
         return eventType;
+    }
+
+    public static BusinessSubscriptionEvent subscriptionMigrated(final String plan, final Catalog catalog, final DateTime eventTime, final DateTime subscriptionCreationDate) {
+        return eventFromType(EventType.MIGRATE, plan, catalog, eventTime, subscriptionCreationDate);
     }
 
     public static BusinessSubscriptionEvent subscriptionCreated(final String plan, final Catalog catalog, final DateTime eventTime, final DateTime subscriptionCreationDate) {
