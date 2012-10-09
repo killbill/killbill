@@ -48,7 +48,7 @@ import com.google.inject.Inject;
 
 public class AnalyticsListener {
 
-    private final BusinessSubscriptionTransitionRecorder bstRecorder;
+    private final BusinessSubscriptionTransitionDao bstDao;
     private final BusinessAccountDao bacDao;
     private final BusinessInvoiceDao invoiceDao;
     private final BusinessOverdueStatusDao bosDao;
@@ -57,14 +57,14 @@ public class AnalyticsListener {
     private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
-    public AnalyticsListener(final BusinessSubscriptionTransitionRecorder bstRecorder,
+    public AnalyticsListener(final BusinessSubscriptionTransitionDao bstDao,
                              final BusinessAccountDao bacDao,
                              final BusinessInvoiceDao invoiceDao,
                              final BusinessOverdueStatusDao bosDao,
                              final BusinessInvoicePaymentDao bipDao,
                              final BusinessTagRecorder tagRecorder,
                              final InternalCallContextFactory internalCallContextFactory) {
-        this.bstRecorder = bstRecorder;
+        this.bstDao = bstDao;
         this.bacDao = bacDao;
         this.invoiceDao = invoiceDao;
         this.bosDao = bosDao;
@@ -76,19 +76,19 @@ public class AnalyticsListener {
     @Subscribe
     public void handleEffectiveSubscriptionTransitionChange(final EffectiveSubscriptionEvent eventEffective) throws AccountApiException, EntitlementUserApiException {
         // The event is used as a trigger to rebuild all transitions for this bundle
-        bstRecorder.rebuildTransitionsForBundle(eventEffective.getBundleId(), createCallContext(eventEffective));
+        bstDao.rebuildTransitionsForBundle(eventEffective.getBundleId(), createCallContext(eventEffective));
     }
 
     @Subscribe
     public void handleRequestedSubscriptionTransitionChange(final RequestedSubscriptionEvent eventRequested) throws AccountApiException, EntitlementUserApiException {
         // The event is used as a trigger to rebuild all transitions for this bundle
-        bstRecorder.rebuildTransitionsForBundle(eventRequested.getBundleId(), createCallContext(eventRequested));
+        bstDao.rebuildTransitionsForBundle(eventRequested.getBundleId(), createCallContext(eventRequested));
     }
 
     @Subscribe
     public void handleRepairEntitlement(final RepairEntitlementEvent event) {
         // In case of repair, just rebuild all transitions
-        bstRecorder.rebuildTransitionsForBundle(event.getBundleId(), createCallContext(event));
+        bstDao.rebuildTransitionsForBundle(event.getBundleId(), createCallContext(event));
     }
 
     @Subscribe

@@ -46,9 +46,9 @@ import com.ning.billing.util.clock.Clock;
 
 import com.google.inject.Inject;
 
-public class BusinessSubscriptionTransitionRecorder {
+public class BusinessSubscriptionTransitionDao {
 
-    private static final Logger log = LoggerFactory.getLogger(BusinessSubscriptionTransitionRecorder.class);
+    private static final Logger log = LoggerFactory.getLogger(BusinessSubscriptionTransitionDao.class);
 
     private final BusinessSubscriptionTransitionSqlDao sqlDao;
     private final EntitlementUserApi entitlementApi;
@@ -57,11 +57,11 @@ public class BusinessSubscriptionTransitionRecorder {
     private final Clock clock;
 
     @Inject
-    public BusinessSubscriptionTransitionRecorder(final BusinessSubscriptionTransitionSqlDao sqlDao,
-                                                  final CatalogService catalogService,
-                                                  final EntitlementUserApi entitlementApi,
-                                                  final AccountUserApi accountApi,
-                                                  final Clock clock) {
+    public BusinessSubscriptionTransitionDao(final BusinessSubscriptionTransitionSqlDao sqlDao,
+                                             final CatalogService catalogService,
+                                             final EntitlementUserApi entitlementApi,
+                                             final AccountUserApi accountApi,
+                                             final Clock clock) {
         this.sqlDao = sqlDao;
         this.catalogService = catalogService;
         this.entitlementApi = entitlementApi;
