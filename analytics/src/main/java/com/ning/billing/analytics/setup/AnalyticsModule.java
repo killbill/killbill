@@ -17,7 +17,7 @@
 package com.ning.billing.analytics.setup;
 
 import com.ning.billing.analytics.AnalyticsListener;
-import com.ning.billing.analytics.BusinessAccountRecorder;
+import com.ning.billing.analytics.BusinessAccountDao;
 import com.ning.billing.analytics.BusinessSubscriptionTransitionRecorder;
 import com.ning.billing.analytics.BusinessTagRecorder;
 import com.ning.billing.analytics.api.AnalyticsService;
@@ -62,7 +62,7 @@ public class AnalyticsModule extends AbstractModule {
         bind(BusinessSubscriptionTransitionTagSqlDao.class).toProvider(new BusinessSqlProvider<BusinessSubscriptionTransitionTagSqlDao>(BusinessSubscriptionTransitionTagSqlDao.class));
 
         bind(BusinessSubscriptionTransitionRecorder.class).asEagerSingleton();
-        bind(BusinessAccountRecorder.class).asEagerSingleton();
+        bind(BusinessAccountDao.class).asEagerSingleton();
         bind(BusinessTagRecorder.class).asEagerSingleton();
         bind(AnalyticsListener.class).asEagerSingleton();
 

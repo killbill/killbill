@@ -57,12 +57,12 @@ public class BusinessInvoicePaymentDao {
     private final PaymentApi paymentApi;
     private final Clock clock;
     private final BusinessInvoiceDao invoiceDao;
-    private final BusinessAccountRecorder accountRecorder;
+    private final BusinessAccountDao accountDao;
 
     @Inject
     public BusinessInvoicePaymentDao(final BusinessInvoicePaymentSqlDao invoicePaymentSqlDao, final AccountInternalApi accountApi,
                                      final InvoicePaymentApi invoicePaymentApi, final InvoiceInternalApi invoiceApi, final PaymentApi paymentApi,
-                                     final Clock clock, final BusinessInvoiceDao invoiceDao, final BusinessAccountRecorder accountRecorder) {
+                                     final Clock clock, final BusinessInvoiceDao invoiceDao, final BusinessAccountDao accountDao) {
         this.invoicePaymentSqlDao = invoicePaymentSqlDao;
         this.accountApi = accountApi;
         this.invoicePaymentApi = invoicePaymentApi;
@@ -70,7 +70,7 @@ public class BusinessInvoicePaymentDao {
         this.paymentApi = paymentApi;
         this.clock = clock;
         this.invoiceDao = invoiceDao;
-        this.accountRecorder = accountRecorder;
+        this.accountDao = accountDao;
     }
 
     public void invoicePaymentPosted(final UUID accountId, @Nullable final UUID paymentId, @Nullable final String extFirstPaymentRefId,
@@ -176,7 +176,7 @@ public class BusinessInvoicePaymentDao {
 
                 // Update bac to get the latest account balance, total invoice balance, etc.
                 final BusinessAccountSqlDao accountSqlDao = transactional.become(BusinessAccountSqlDao.class);
-                accountRecorder.updateAccountInTransaction(account, accountSqlDao, context);
+                accountDao.updateAccountInTransaction(account, accountSqlDao, context);
 
                 log.info("Added payment {}", businessInvoicePayment);
                 return null;

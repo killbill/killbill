@@ -40,7 +40,7 @@ public class TestBusinessInvoiceRecorder extends AnalyticsTestSuite {
     private final AccountInternalApi accountApi = Mockito.mock(AccountInternalApi.class);
     private final EntitlementInternalApi entitlementApi = Mockito.mock(EntitlementInternalApi.class);
     private final InvoiceInternalApi invoiceApi = Mockito.mock(InvoiceInternalApi.class);
-    private final BusinessAccountRecorder bacDao = Mockito.mock(BusinessAccountRecorder.class);
+    private final BusinessAccountDao bacDao = Mockito.mock(BusinessAccountDao.class);
     private final BusinessInvoiceSqlDao sqlDao = Mockito.mock(BusinessInvoiceSqlDao.class);
 
     @Test(groups = "fast")

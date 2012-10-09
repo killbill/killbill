@@ -49,7 +49,7 @@ import com.google.inject.Inject;
 public class AnalyticsListener {
 
     private final BusinessSubscriptionTransitionRecorder bstRecorder;
-    private final BusinessAccountRecorder bacRecorder;
+    private final BusinessAccountDao bacDao;
     private final BusinessInvoiceDao invoiceDao;
     private final BusinessOverdueStatusRecorder bosRecorder;
     private final BusinessInvoicePaymentDao bipDao;
@@ -58,14 +58,14 @@ public class AnalyticsListener {
 
     @Inject
     public AnalyticsListener(final BusinessSubscriptionTransitionRecorder bstRecorder,
-                             final BusinessAccountRecorder bacRecorder,
+                             final BusinessAccountDao bacDao,
                              final BusinessInvoiceDao invoiceDao,
                              final BusinessOverdueStatusRecorder bosRecorder,
                              final BusinessInvoicePaymentDao bipDao,
                              final BusinessTagRecorder tagRecorder,
                              final InternalCallContextFactory internalCallContextFactory) {
         this.bstRecorder = bstRecorder;
-        this.bacRecorder = bacRecorder;
+        this.bacDao = bacDao;
         this.invoiceDao = invoiceDao;
         this.bosRecorder = bosRecorder;
         this.bipDao = bipDao;
@@ -93,7 +93,7 @@ public class AnalyticsListener {
 
     @Subscribe
     public void handleAccountCreation(final AccountCreationEvent event) {
-        bacRecorder.accountCreated(event.getData(), createCallContext(event));
+        bacDao.accountCreated(event.getData(), createCallContext(event));
     }
 
     @Subscribe
@@ -102,7 +102,7 @@ public class AnalyticsListener {
             return;
         }
 
-        bacRecorder.accountUpdated(event.getAccountId(), createCallContext(event));
+        bacDao.accountUpdated(event.getAccountId(), createCallContext(event));
     }
 
     @Subscribe

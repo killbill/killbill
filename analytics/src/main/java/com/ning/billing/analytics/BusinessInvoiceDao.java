@@ -61,7 +61,7 @@ public class BusinessInvoiceDao {
     private final AccountInternalApi accountApi;
     private final EntitlementInternalApi entitlementApi;
     private final InvoiceInternalApi invoiceApi;
-    private final BusinessAccountRecorder businessAccountRecorder;
+    private final BusinessAccountDao businessAccountDao;
     private final BusinessInvoiceSqlDao sqlDao;
     private final CatalogService catalogService;
 
@@ -69,13 +69,13 @@ public class BusinessInvoiceDao {
     public BusinessInvoiceDao(final AccountInternalApi accountApi,
                               final EntitlementInternalApi entitlementApi,
                               final InvoiceInternalApi invoiceApi,
-                              final BusinessAccountRecorder businessAccountRecorder,
+                              final BusinessAccountDao businessAccountDao,
                               final BusinessInvoiceSqlDao sqlDao,
                               final CatalogService catalogService) {
         this.accountApi = accountApi;
         this.entitlementApi = entitlementApi;
         this.invoiceApi = invoiceApi;
-        this.businessAccountRecorder = businessAccountRecorder;
+        this.businessAccountDao = businessAccountDao;
         this.sqlDao = sqlDao;
         this.catalogService = catalogService;
     }
@@ -117,7 +117,7 @@ public class BusinessInvoiceDao {
 
                 // Update balance, last invoice date and total invoice balance in BAC
                 final BusinessAccountSqlDao accountSqlDao = transactional.become(BusinessAccountSqlDao.class);
-                businessAccountRecorder.updateAccountInTransaction(account, accountSqlDao, context);
+                businessAccountDao.updateAccountInTransaction(account, accountSqlDao, context);
                 return null;
             }
         });

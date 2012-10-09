@@ -43,9 +43,9 @@ import com.ning.billing.util.callcontext.InternalTenantContext;
 
 import com.google.inject.Inject;
 
-public class BusinessAccountRecorder {
+public class BusinessAccountDao {
 
-    private static final Logger log = LoggerFactory.getLogger(BusinessAccountRecorder.class);
+    private static final Logger log = LoggerFactory.getLogger(BusinessAccountDao.class);
 
     private final BusinessAccountSqlDao sqlDao;
     private final AccountUserApi accountApi;
@@ -53,8 +53,8 @@ public class BusinessAccountRecorder {
     private final PaymentApi paymentApi;
 
     @Inject
-    public BusinessAccountRecorder(final BusinessAccountSqlDao sqlDao, final AccountUserApi accountApi,
-                                   final InvoiceUserApi invoiceUserApi, final PaymentApi paymentApi) {
+    public BusinessAccountDao(final BusinessAccountSqlDao sqlDao, final AccountUserApi accountApi,
+                              final InvoiceUserApi invoiceUserApi, final PaymentApi paymentApi) {
         this.sqlDao = sqlDao;
         this.accountApi = accountApi;
         this.invoiceUserApi = invoiceUserApi;
