@@ -50,7 +50,7 @@ public class AnalyticsListener {
 
     private final BusinessSubscriptionTransitionRecorder bstRecorder;
     private final BusinessAccountRecorder bacRecorder;
-    private final BusinessInvoiceRecorder invoiceRecorder;
+    private final BusinessInvoiceDao invoiceDao;
     private final BusinessOverdueStatusRecorder bosRecorder;
     private final BusinessInvoicePaymentRecorder bipRecorder;
     private final BusinessTagRecorder tagRecorder;
@@ -59,14 +59,14 @@ public class AnalyticsListener {
     @Inject
     public AnalyticsListener(final BusinessSubscriptionTransitionRecorder bstRecorder,
                              final BusinessAccountRecorder bacRecorder,
-                             final BusinessInvoiceRecorder invoiceRecorder,
+                             final BusinessInvoiceDao invoiceDao,
                              final BusinessOverdueStatusRecorder bosRecorder,
                              final BusinessInvoicePaymentRecorder bipRecorder,
                              final BusinessTagRecorder tagRecorder,
                              final InternalCallContextFactory internalCallContextFactory) {
         this.bstRecorder = bstRecorder;
         this.bacRecorder = bacRecorder;
-        this.invoiceRecorder = invoiceRecorder;
+        this.invoiceDao = invoiceDao;
         this.bosRecorder = bosRecorder;
         this.bipRecorder = bipRecorder;
         this.tagRecorder = tagRecorder;
@@ -108,7 +108,7 @@ public class AnalyticsListener {
     @Subscribe
     public void handleInvoiceCreation(final InvoiceCreationEvent event) {
         // The event is used as a trigger to rebuild all invoices and invoice items for this account
-        invoiceRecorder.rebuildInvoicesForAccount(event.getAccountId(), createCallContext(event));
+        invoiceDao.rebuildInvoicesForAccount(event.getAccountId(), createCallContext(event));
     }
 
     @Subscribe
@@ -119,7 +119,7 @@ public class AnalyticsListener {
     @Subscribe
     public void handleInvoiceAdjustment(final InvoiceAdjustmentEvent event) {
         // The event is used as a trigger to rebuild all invoices and invoice items for this account
-        invoiceRecorder.rebuildInvoicesForAccount(event.getAccountId(), createCallContext(event));
+        invoiceDao.rebuildInvoicesForAccount(event.getAccountId(), createCallContext(event));
     }
 
     @Subscribe

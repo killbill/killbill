@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.util.svcapi.invoice;
 
 import java.util.Collection;
@@ -21,10 +22,14 @@ import java.util.UUID;
 import org.joda.time.LocalDate;
 
 import com.ning.billing.invoice.api.Invoice;
+import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 
 public interface InvoiceInternalApi {
 
+    public Invoice getInvoiceById(UUID invoiceId, InternalTenantContext context) throws InvoiceApiException;
+
     public Collection<Invoice> getUnpaidInvoicesByAccountId(UUID accountId, LocalDate upToDate, InternalTenantContext context);
 
+    public Collection<Invoice> getInvoicesByAccountId(UUID accountId, InternalTenantContext context);
 }
