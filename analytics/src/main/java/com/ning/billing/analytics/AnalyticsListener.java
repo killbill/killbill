@@ -52,7 +52,7 @@ public class AnalyticsListener {
     private final BusinessAccountRecorder bacRecorder;
     private final BusinessInvoiceDao invoiceDao;
     private final BusinessOverdueStatusRecorder bosRecorder;
-    private final BusinessInvoicePaymentRecorder bipRecorder;
+    private final BusinessInvoicePaymentDao bipDao;
     private final BusinessTagRecorder tagRecorder;
     private final InternalCallContextFactory internalCallContextFactory;
 
@@ -61,14 +61,14 @@ public class AnalyticsListener {
                              final BusinessAccountRecorder bacRecorder,
                              final BusinessInvoiceDao invoiceDao,
                              final BusinessOverdueStatusRecorder bosRecorder,
-                             final BusinessInvoicePaymentRecorder bipRecorder,
+                             final BusinessInvoicePaymentDao bipDao,
                              final BusinessTagRecorder tagRecorder,
                              final InternalCallContextFactory internalCallContextFactory) {
         this.bstRecorder = bstRecorder;
         this.bacRecorder = bacRecorder;
         this.invoiceDao = invoiceDao;
         this.bosRecorder = bosRecorder;
-        this.bipRecorder = bipRecorder;
+        this.bipDao = bipDao;
         this.tagRecorder = tagRecorder;
         this.internalCallContextFactory = internalCallContextFactory;
     }
@@ -124,7 +124,7 @@ public class AnalyticsListener {
 
     @Subscribe
     public void handlePaymentInfo(final PaymentInfoEvent paymentInfo) {
-        bipRecorder.invoicePaymentPosted(paymentInfo.getAccountId(),
+        bipDao.invoicePaymentPosted(paymentInfo.getAccountId(),
                                          paymentInfo.getPaymentId(),
                                          paymentInfo.getExtFirstPaymentRefId(),
                                          paymentInfo.getExtSecondPaymentRefId(),
@@ -134,7 +134,7 @@ public class AnalyticsListener {
 
     @Subscribe
     public void handlePaymentError(final PaymentErrorEvent paymentError) {
-        bipRecorder.invoicePaymentPosted(paymentError.getAccountId(),
+        bipDao.invoicePaymentPosted(paymentError.getAccountId(),
                                          paymentError.getPaymentId(),
                                          null,
                                          null,

@@ -46,9 +46,9 @@ import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
 
-public class BusinessInvoicePaymentRecorder {
+public class BusinessInvoicePaymentDao {
 
-    private static final Logger log = LoggerFactory.getLogger(BusinessInvoicePaymentRecorder.class);
+    private static final Logger log = LoggerFactory.getLogger(BusinessInvoicePaymentDao.class);
 
     private final BusinessInvoicePaymentSqlDao invoicePaymentSqlDao;
     private final AccountInternalApi accountApi;
@@ -60,9 +60,9 @@ public class BusinessInvoicePaymentRecorder {
     private final BusinessAccountRecorder accountRecorder;
 
     @Inject
-    public BusinessInvoicePaymentRecorder(final BusinessInvoicePaymentSqlDao invoicePaymentSqlDao, final AccountInternalApi accountApi,
-                                          final InvoicePaymentApi invoicePaymentApi, final InvoiceInternalApi invoiceApi, final PaymentApi paymentApi,
-                                          final Clock clock, final BusinessInvoiceDao invoiceDao, final BusinessAccountRecorder accountRecorder) {
+    public BusinessInvoicePaymentDao(final BusinessInvoicePaymentSqlDao invoicePaymentSqlDao, final AccountInternalApi accountApi,
+                                     final InvoicePaymentApi invoicePaymentApi, final InvoiceInternalApi invoiceApi, final PaymentApi paymentApi,
+                                     final Clock clock, final BusinessInvoiceDao invoiceDao, final BusinessAccountRecorder accountRecorder) {
         this.invoicePaymentSqlDao = invoicePaymentSqlDao;
         this.accountApi = accountApi;
         this.invoicePaymentApi = invoicePaymentApi;
