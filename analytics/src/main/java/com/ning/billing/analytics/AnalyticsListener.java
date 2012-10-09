@@ -53,7 +53,7 @@ public class AnalyticsListener {
     private final BusinessInvoiceDao invoiceDao;
     private final BusinessOverdueStatusDao bosDao;
     private final BusinessInvoicePaymentDao bipDao;
-    private final BusinessTagRecorder tagRecorder;
+    private final BusinessTagDao tagDao;
     private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
@@ -62,14 +62,14 @@ public class AnalyticsListener {
                              final BusinessInvoiceDao invoiceDao,
                              final BusinessOverdueStatusDao bosDao,
                              final BusinessInvoicePaymentDao bipDao,
-                             final BusinessTagRecorder tagRecorder,
+                             final BusinessTagDao tagDao,
                              final InternalCallContextFactory internalCallContextFactory) {
         this.bstDao = bstDao;
         this.bacDao = bacDao;
         this.invoiceDao = invoiceDao;
         this.bosDao = bosDao;
         this.bipDao = bipDao;
-        this.tagRecorder = tagRecorder;
+        this.tagDao = tagDao;
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
@@ -149,22 +149,22 @@ public class AnalyticsListener {
 
     @Subscribe
     public void handleControlTagCreation(final ControlTagCreationEvent event) {
-        tagRecorder.tagAdded(event.getObjectType(), event.getObjectId(), event.getTagDefinition().getName(), createCallContext(event));
+        tagDao.tagAdded(event.getObjectType(), event.getObjectId(), event.getTagDefinition().getName(), createCallContext(event));
     }
 
     @Subscribe
     public void handleControlTagDeletion(final ControlTagDeletionEvent event) {
-        tagRecorder.tagRemoved(event.getObjectType(), event.getObjectId(), event.getTagDefinition().getName(), createCallContext(event));
+        tagDao.tagRemoved(event.getObjectType(), event.getObjectId(), event.getTagDefinition().getName(), createCallContext(event));
     }
 
     @Subscribe
     public void handleUserTagCreation(final UserTagCreationEvent event) {
-        tagRecorder.tagAdded(event.getObjectType(), event.getObjectId(), event.getTagDefinition().getName(), createCallContext(event));
+        tagDao.tagAdded(event.getObjectType(), event.getObjectId(), event.getTagDefinition().getName(), createCallContext(event));
     }
 
     @Subscribe
     public void handleUserTagDeletion(final UserTagDeletionEvent event) {
-        tagRecorder.tagRemoved(event.getObjectType(), event.getObjectId(), event.getTagDefinition().getName(), createCallContext(event));
+        tagDao.tagRemoved(event.getObjectType(), event.getObjectId(), event.getTagDefinition().getName(), createCallContext(event));
     }
 
     @Subscribe

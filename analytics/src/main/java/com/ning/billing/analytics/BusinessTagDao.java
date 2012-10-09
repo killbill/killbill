@@ -36,9 +36,9 @@ import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.dao.ObjectType;
 
-public class BusinessTagRecorder {
+public class BusinessTagDao {
 
-    private static final Logger log = LoggerFactory.getLogger(BusinessTagRecorder.class);
+    private static final Logger log = LoggerFactory.getLogger(BusinessTagDao.class);
 
     private final BusinessAccountTagSqlDao accountTagSqlDao;
     private final BusinessInvoiceTagSqlDao invoiceTagSqlDao;
@@ -48,12 +48,12 @@ public class BusinessTagRecorder {
     private final EntitlementUserApi entitlementUserApi;
 
     @Inject
-    public BusinessTagRecorder(final BusinessAccountTagSqlDao accountTagSqlDao,
-                               final BusinessInvoicePaymentTagSqlDao invoicePaymentTagSqlDao,
-                               final BusinessInvoiceTagSqlDao invoiceTagSqlDao,
-                               final BusinessSubscriptionTransitionTagSqlDao subscriptionTransitionTagSqlDao,
-                               final AccountUserApi accountApi,
-                               final EntitlementUserApi entitlementUserApi) {
+    public BusinessTagDao(final BusinessAccountTagSqlDao accountTagSqlDao,
+                          final BusinessInvoicePaymentTagSqlDao invoicePaymentTagSqlDao,
+                          final BusinessInvoiceTagSqlDao invoiceTagSqlDao,
+                          final BusinessSubscriptionTransitionTagSqlDao subscriptionTransitionTagSqlDao,
+                          final AccountUserApi accountApi,
+                          final EntitlementUserApi entitlementUserApi) {
         this.accountTagSqlDao = accountTagSqlDao;
         this.invoicePaymentTagSqlDao = invoicePaymentTagSqlDao;
         this.invoiceTagSqlDao = invoiceTagSqlDao;

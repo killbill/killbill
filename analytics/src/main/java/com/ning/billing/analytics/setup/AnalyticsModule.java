@@ -19,7 +19,7 @@ package com.ning.billing.analytics.setup;
 import com.ning.billing.analytics.AnalyticsListener;
 import com.ning.billing.analytics.BusinessAccountDao;
 import com.ning.billing.analytics.BusinessSubscriptionTransitionDao;
-import com.ning.billing.analytics.BusinessTagRecorder;
+import com.ning.billing.analytics.BusinessTagDao;
 import com.ning.billing.analytics.api.AnalyticsService;
 import com.ning.billing.analytics.api.DefaultAnalyticsService;
 import com.ning.billing.analytics.api.user.AnalyticsUserApi;
@@ -63,7 +63,7 @@ public class AnalyticsModule extends AbstractModule {
 
         bind(BusinessSubscriptionTransitionDao.class).asEagerSingleton();
         bind(BusinessAccountDao.class).asEagerSingleton();
-        bind(BusinessTagRecorder.class).asEagerSingleton();
+        bind(BusinessTagDao.class).asEagerSingleton();
         bind(AnalyticsListener.class).asEagerSingleton();
 
         bind(AnalyticsDao.class).to(DefaultAnalyticsDao.class).asEagerSingleton();

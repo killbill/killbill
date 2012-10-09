@@ -66,7 +66,7 @@ public class TestBusinessTagRecorder extends AnalyticsTestSuiteWithEmbeddedDB {
     private DefaultCallContextFactory callContextFactory;
     private AccountUserApi accountUserApi;
     private EntitlementUserApi entitlementUserApi;
-    private BusinessTagRecorder tagRecorder;
+    private BusinessTagDao tagDao;
 
     @BeforeMethod(groups = "slow")
     public void setUp() throws Exception {
@@ -91,7 +91,7 @@ public class TestBusinessTagRecorder extends AnalyticsTestSuiteWithEmbeddedDB {
         final DefaultSubscriptionFactory subscriptionFactory = new DefaultSubscriptionFactory(apiService, clock, catalogService);
         entitlementUserApi = new DefaultEntitlementUserApi(clock, entitlementDao, catalogService,
                                                            apiService, subscriptionFactory, addonUtils, internalCallContextFactory);
-        tagRecorder = new BusinessTagRecorder(accountTagSqlDao, invoicePaymentTagSqlDao, invoiceTagSqlDao, subscriptionTransitionTagSqlDao,
+        tagDao = new BusinessTagDao(accountTagSqlDao, invoicePaymentTagSqlDao, invoiceTagSqlDao, subscriptionTransitionTagSqlDao,
                                               accountUserApi, entitlementUserApi);
 
         eventBus.start();
@@ -115,9 +115,9 @@ public class TestBusinessTagRecorder extends AnalyticsTestSuiteWithEmbeddedDB {
         final UUID accountId = account.getId();
 
         Assert.assertEquals(accountTagSqlDao.getTagsForAccountByKey(accountKey, internalCallContext).size(), 0);
-        tagRecorder.tagAdded(ObjectType.ACCOUNT, accountId, name, internalCallContext);
+        tagDao.tagAdded(ObjectType.ACCOUNT, accountId, name, internalCallContext);
         Assert.assertEquals(accountTagSqlDao.getTagsForAccountByKey(accountKey, internalCallContext).size(), 1);
-        tagRecorder.tagRemoved(ObjectType.ACCOUNT, accountId, name, internalCallContext);
+        tagDao.tagRemoved(ObjectType.ACCOUNT, accountId, name, internalCallContext);
         Assert.assertEquals(accountTagSqlDao.getTagsForAccountByKey(accountKey, internalCallContext).size(), 0);
     }
 
@@ -134,9 +134,9 @@ public class TestBusinessTagRecorder extends AnalyticsTestSuiteWithEmbeddedDB {
         final UUID bundleId = bundle.getId();
 
         Assert.assertEquals(subscriptionTransitionTagSqlDao.getTagsForBusinessSubscriptionTransitionByKey(externalKey, internalCallContext).size(), 0);
-        tagRecorder.tagAdded(ObjectType.BUNDLE, bundleId, name, internalCallContext);
+        tagDao.tagAdded(ObjectType.BUNDLE, bundleId, name, internalCallContext);
         Assert.assertEquals(subscriptionTransitionTagSqlDao.getTagsForBusinessSubscriptionTransitionByKey(externalKey, internalCallContext).size(), 1);
-        tagRecorder.tagRemoved(ObjectType.BUNDLE, bundleId, name, internalCallContext);
+        tagDao.tagRemoved(ObjectType.BUNDLE, bundleId, name, internalCallContext);
         Assert.assertEquals(subscriptionTransitionTagSqlDao.getTagsForBusinessSubscriptionTransitionByKey(externalKey, internalCallContext).size(), 0);
     }
 }
