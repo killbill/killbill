@@ -43,9 +43,9 @@ import com.ning.billing.util.svcapi.junction.BlockingApi;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
-public class BusinessOverdueStatusRecorder {
+public class BusinessOverdueStatusDao {
 
-    private static final Logger log = LoggerFactory.getLogger(BusinessOverdueStatusRecorder.class);
+    private static final Logger log = LoggerFactory.getLogger(BusinessOverdueStatusDao.class);
 
     private final BusinessOverdueStatusSqlDao overdueStatusSqlDao;
     private final AccountUserApi accountApi;
@@ -53,8 +53,8 @@ public class BusinessOverdueStatusRecorder {
     private final BlockingApi blockingApi;
 
     @Inject
-    public BusinessOverdueStatusRecorder(final BusinessOverdueStatusSqlDao overdueStatusSqlDao, final AccountUserApi accountApi,
-                                         final EntitlementUserApi entitlementApi, final BlockingApi blockingApi) {
+    public BusinessOverdueStatusDao(final BusinessOverdueStatusSqlDao overdueStatusSqlDao, final AccountUserApi accountApi,
+                                    final EntitlementUserApi entitlementApi, final BlockingApi blockingApi) {
         this.overdueStatusSqlDao = overdueStatusSqlDao;
         this.accountApi = accountApi;
         this.entitlementApi = entitlementApi;

@@ -51,7 +51,7 @@ public class AnalyticsListener {
     private final BusinessSubscriptionTransitionRecorder bstRecorder;
     private final BusinessAccountDao bacDao;
     private final BusinessInvoiceDao invoiceDao;
-    private final BusinessOverdueStatusRecorder bosRecorder;
+    private final BusinessOverdueStatusDao bosDao;
     private final BusinessInvoicePaymentDao bipDao;
     private final BusinessTagRecorder tagRecorder;
     private final InternalCallContextFactory internalCallContextFactory;
@@ -60,14 +60,14 @@ public class AnalyticsListener {
     public AnalyticsListener(final BusinessSubscriptionTransitionRecorder bstRecorder,
                              final BusinessAccountDao bacDao,
                              final BusinessInvoiceDao invoiceDao,
-                             final BusinessOverdueStatusRecorder bosRecorder,
+                             final BusinessOverdueStatusDao bosDao,
                              final BusinessInvoicePaymentDao bipDao,
                              final BusinessTagRecorder tagRecorder,
                              final InternalCallContextFactory internalCallContextFactory) {
         this.bstRecorder = bstRecorder;
         this.bacDao = bacDao;
         this.invoiceDao = invoiceDao;
-        this.bosRecorder = bosRecorder;
+        this.bosDao = bosDao;
         this.bipDao = bipDao;
         this.tagRecorder = tagRecorder;
         this.internalCallContextFactory = internalCallContextFactory;
@@ -144,7 +144,7 @@ public class AnalyticsListener {
 
     @Subscribe
     public void handleOverdueChange(final OverdueChangeEvent changeEvent) {
-        bosRecorder.overdueStatusChanged(changeEvent.getOverdueObjectType(), changeEvent.getOverdueObjectId(), createCallContext(changeEvent));
+        bosDao.overdueStatusChanged(changeEvent.getOverdueObjectType(), changeEvent.getOverdueObjectId(), createCallContext(changeEvent));
     }
 
     @Subscribe
