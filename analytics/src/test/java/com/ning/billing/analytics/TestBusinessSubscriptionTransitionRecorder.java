@@ -25,18 +25,18 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionSqlDao;
 import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
 import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
-import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.util.callcontext.TenantContext;
+import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.DefaultClock;
+import com.ning.billing.util.svcapi.account.AccountInternalApi;
+import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 
 import com.google.common.collect.ImmutableList;
 
@@ -61,14 +61,14 @@ public class TestBusinessSubscriptionTransitionRecorder extends AnalyticsTestSui
         Mockito.when(bundle.getId()).thenReturn(bundleId);
         Mockito.when(bundle.getAccountId()).thenReturn(accountId);
         Mockito.when(bundle.getKey()).thenReturn(externalKey.toString());
-        final EntitlementUserApi entitlementApi = Mockito.mock(EntitlementUserApi.class);
-        Mockito.when(entitlementApi.getBundleFromId(Mockito.<UUID>any(), Mockito.<TenantContext>any())).thenReturn(bundle);
+        final EntitlementInternalApi entitlementApi = Mockito.mock(EntitlementInternalApi.class);
+        Mockito.when(entitlementApi.getBundleFromId(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(bundle);
 
         // Setup the account API
         final Account account = Mockito.mock(Account.class);
         Mockito.when(account.getExternalKey()).thenReturn(externalKey.toString());
-        final AccountUserApi accountApi = Mockito.mock(AccountUserApi.class);
-        Mockito.when(accountApi.getAccountById(Mockito.eq(bundle.getAccountId()), Mockito.<TenantContext>any())).thenReturn(account);
+        final AccountInternalApi accountApi = Mockito.mock(AccountInternalApi.class);
+        Mockito.when(accountApi.getAccountById(Mockito.eq(bundle.getAccountId()), Mockito.<InternalTenantContext>any())).thenReturn(account);
 
         // Create an new subscription event
         final EffectiveSubscriptionEvent eventEffective = Mockito.mock(EffectiveSubscriptionEvent.class);
@@ -83,7 +83,7 @@ public class TestBusinessSubscriptionTransitionRecorder extends AnalyticsTestSui
         final Subscription subscription = Mockito.mock(Subscription.class);
         Mockito.when(subscription.getId()).thenReturn(subscriptionId);
         Mockito.when(subscription.getAllTransitions()).thenReturn(ImmutableList.<EffectiveSubscriptionEvent>of(eventEffective));
-        Mockito.when(entitlementApi.getSubscriptionsForBundle(Mockito.<UUID>any(), Mockito.<TenantContext>any())).thenReturn(ImmutableList.<Subscription>of(subscription));
+        Mockito.when(entitlementApi.getSubscriptionsForBundle(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(ImmutableList.<Subscription>of(subscription));
 
         final BusinessSubscriptionTransitionDao dao = new BusinessSubscriptionTransitionDao(sqlDao, catalogService, entitlementApi, accountApi, new DefaultClock());
         dao.rebuildTransitionsForBundle(bundle.getId(), internalCallContext);

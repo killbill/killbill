@@ -27,7 +27,6 @@ import org.slf4j.LoggerFactory;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionSqlDao;
 import com.ning.billing.analytics.model.BusinessSubscription;
 import com.ning.billing.analytics.model.BusinessSubscriptionEvent;
@@ -36,13 +35,14 @@ import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
-import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionEvent;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.svcapi.account.AccountInternalApi;
+import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 
 import com.google.inject.Inject;
 
@@ -51,16 +51,16 @@ public class BusinessSubscriptionTransitionDao {
     private static final Logger log = LoggerFactory.getLogger(BusinessSubscriptionTransitionDao.class);
 
     private final BusinessSubscriptionTransitionSqlDao sqlDao;
-    private final EntitlementUserApi entitlementApi;
-    private final AccountUserApi accountApi;
+    private final EntitlementInternalApi entitlementApi;
+    private final AccountInternalApi accountApi;
     private final CatalogService catalogService;
     private final Clock clock;
 
     @Inject
     public BusinessSubscriptionTransitionDao(final BusinessSubscriptionTransitionSqlDao sqlDao,
                                              final CatalogService catalogService,
-                                             final EntitlementUserApi entitlementApi,
-                                             final AccountUserApi accountApi,
+                                             final EntitlementInternalApi entitlementApi,
+                                             final AccountInternalApi accountApi,
                                              final Clock clock) {
         this.sqlDao = sqlDao;
         this.catalogService = catalogService;
@@ -72,7 +72,7 @@ public class BusinessSubscriptionTransitionDao {
     public void rebuildTransitionsForBundle(final UUID bundleId, final InternalCallContext context) {
         final SubscriptionBundle bundle;
         try {
-            bundle = entitlementApi.getBundleFromId(bundleId, context.toCallContext());
+            bundle = entitlementApi.getBundleFromId(bundleId, context);
         } catch (EntitlementUserApiException e) {
             log.warn("Ignoring update for bundle {}: bundle does not exist", bundleId);
             return;
@@ -80,13 +80,13 @@ public class BusinessSubscriptionTransitionDao {
 
         final Account account;
         try {
-            account = accountApi.getAccountById(bundle.getAccountId(), context.toCallContext());
+            account = accountApi.getAccountById(bundle.getAccountId(), context);
         } catch (AccountApiException e) {
             log.warn("Ignoring update for bundle {}: account {} does not exist", bundleId, bundle.getAccountId());
             return;
         }
 
-        final List<Subscription> subscriptions = entitlementApi.getSubscriptionsForBundle(bundleId, context.toCallContext());
+        final List<Subscription> subscriptions = entitlementApi.getSubscriptionsForBundle(bundleId, context);
 
         final Currency currency = account.getCurrency();
 

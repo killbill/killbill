@@ -16,6 +16,7 @@
 
 package com.ning.billing.invoice.api.svcs;
 
+import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.UUID;
 
@@ -51,5 +52,10 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
     @Override
     public Collection<Invoice> getInvoicesByAccountId(final UUID accountId, final InternalTenantContext context) {
         return dao.getInvoicesByAccount(accountId, context);
+    }
+
+    @Override
+    public BigDecimal getAccountBalance(final UUID accountId, final InternalTenantContext context) {
+        return dao.getAccountBalance(accountId, context);
     }
 }

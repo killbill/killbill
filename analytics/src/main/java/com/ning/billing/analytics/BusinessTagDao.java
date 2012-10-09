@@ -25,16 +25,16 @@ import org.slf4j.LoggerFactory;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.analytics.dao.BusinessAccountTagSqlDao;
 import com.ning.billing.analytics.dao.BusinessInvoicePaymentTagSqlDao;
 import com.ning.billing.analytics.dao.BusinessInvoiceTagSqlDao;
 import com.ning.billing.analytics.dao.BusinessSubscriptionTransitionTagSqlDao;
-import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.util.svcapi.account.AccountInternalApi;
+import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 
 public class BusinessTagDao {
 
@@ -44,22 +44,22 @@ public class BusinessTagDao {
     private final BusinessInvoiceTagSqlDao invoiceTagSqlDao;
     private final BusinessInvoicePaymentTagSqlDao invoicePaymentTagSqlDao;
     private final BusinessSubscriptionTransitionTagSqlDao subscriptionTransitionTagSqlDao;
-    private final AccountUserApi accountApi;
-    private final EntitlementUserApi entitlementUserApi;
+    private final AccountInternalApi accountApi;
+    private final EntitlementInternalApi entitlementApi;
 
     @Inject
     public BusinessTagDao(final BusinessAccountTagSqlDao accountTagSqlDao,
                           final BusinessInvoicePaymentTagSqlDao invoicePaymentTagSqlDao,
                           final BusinessInvoiceTagSqlDao invoiceTagSqlDao,
                           final BusinessSubscriptionTransitionTagSqlDao subscriptionTransitionTagSqlDao,
-                          final AccountUserApi accountApi,
-                          final EntitlementUserApi entitlementUserApi) {
+                          final AccountInternalApi accountApi,
+                          final EntitlementInternalApi entitlementApi) {
         this.accountTagSqlDao = accountTagSqlDao;
         this.invoicePaymentTagSqlDao = invoicePaymentTagSqlDao;
         this.invoiceTagSqlDao = invoiceTagSqlDao;
         this.subscriptionTransitionTagSqlDao = subscriptionTransitionTagSqlDao;
         this.accountApi = accountApi;
-        this.entitlementUserApi = entitlementUserApi;
+        this.entitlementApi = entitlementApi;
     }
 
     public void tagAdded(final ObjectType objectType, final UUID objectId, final String name, final InternalCallContext context) {
@@ -93,7 +93,7 @@ public class BusinessTagDao {
     private void tagAddedForAccount(final UUID accountId, final String name, final InternalCallContext context) {
         final Account account;
         try {
-            account = accountApi.getAccountById(accountId, context.toCallContext());
+            account = accountApi.getAccountById(accountId, context);
         } catch (AccountApiException e) {
             log.warn("Ignoring tag addition of {} for account id {} (account does not exist)", name, accountId.toString());
             return;
@@ -110,7 +110,7 @@ public class BusinessTagDao {
     private void tagAddedForBundle(final UUID bundleId, final String name, final InternalCallContext context) {
         final SubscriptionBundle bundle;
         try {
-            bundle = entitlementUserApi.getBundleFromId(bundleId, context.toCallContext());
+            bundle = entitlementApi.getBundleFromId(bundleId, context);
         } catch (EntitlementUserApiException e) {
             log.warn("Ignoring tag addition of {} for bundle id {} (bundle does not exist)", name, bundleId.toString());
             return;
@@ -118,7 +118,7 @@ public class BusinessTagDao {
 
         final Account account;
         try {
-            account = accountApi.getAccountById(bundle.getAccountId(), context.toCallContext());
+            account = accountApi.getAccountById(bundle.getAccountId(), context);
         } catch (AccountApiException e) {
             log.warn("Ignoring tag addition of {} for bundle id {} and account id {} (account does not exist)", new Object[]{name, bundleId.toString(), bundle.getAccountId()});
             return;

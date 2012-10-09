@@ -27,6 +27,7 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountUserApi;
+import com.ning.billing.account.api.svcs.DefaultAccountInternalApi;
 import com.ning.billing.account.api.user.DefaultAccountUserApi;
 import com.ning.billing.account.dao.AccountDao;
 import com.ning.billing.account.dao.AccountEmailDao;
@@ -42,6 +43,7 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.catalog.io.VersionedCatalogLoader;
 import com.ning.billing.config.CatalogConfig;
 import com.ning.billing.entitlement.alignment.PlanAligner;
+import com.ning.billing.entitlement.api.svcs.DefaultEntitlementInternalApi;
 import com.ning.billing.entitlement.api.user.DefaultEntitlementUserApi;
 import com.ning.billing.entitlement.api.user.DefaultSubscriptionApiService;
 import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory;
@@ -58,13 +60,18 @@ import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.clock.DefaultClock;
 import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.notificationq.DefaultNotificationQueueService;
+import com.ning.billing.util.svcapi.account.AccountInternalApi;
+import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 
 public class TestBusinessTagRecorder extends AnalyticsTestSuiteWithEmbeddedDB {
+
     private BusinessAccountTagSqlDao accountTagSqlDao;
     private BusinessSubscriptionTransitionTagSqlDao subscriptionTransitionTagSqlDao;
     private InMemoryBus eventBus;
     private DefaultCallContextFactory callContextFactory;
+    private AccountInternalApi accountApi;
     private AccountUserApi accountUserApi;
+    private EntitlementInternalApi entitlementApi;
     private EntitlementUserApi entitlementUserApi;
     private BusinessTagDao tagDao;
 
@@ -81,6 +88,7 @@ public class TestBusinessTagRecorder extends AnalyticsTestSuiteWithEmbeddedDB {
         final DefaultClock clock = new DefaultClock();
         callContextFactory = new DefaultCallContextFactory(clock);
         final InternalCallContextFactory internalCallContextFactory = new InternalCallContextFactory(dbi, clock);
+        accountApi = new DefaultAccountInternalApi(accountDao, accountEmailDao);
         accountUserApi = new DefaultAccountUserApi(callContextFactory, internalCallContextFactory, accountDao, accountEmailDao);
         final CatalogService catalogService = new DefaultCatalogService(Mockito.mock(CatalogConfig.class), Mockito.mock(VersionedCatalogLoader.class));
         final AddonUtils addonUtils = new AddonUtils(catalogService);
@@ -89,10 +97,10 @@ public class TestBusinessTagRecorder extends AnalyticsTestSuiteWithEmbeddedDB {
         final PlanAligner planAligner = new PlanAligner(catalogService);
         final DefaultSubscriptionApiService apiService = new DefaultSubscriptionApiService(clock, entitlementDao, catalogService, planAligner, internalCallContextFactory);
         final DefaultSubscriptionFactory subscriptionFactory = new DefaultSubscriptionFactory(apiService, clock, catalogService);
-        entitlementUserApi = new DefaultEntitlementUserApi(clock, entitlementDao, catalogService,
-                                                           apiService, subscriptionFactory, addonUtils, internalCallContextFactory);
+        entitlementApi = new DefaultEntitlementInternalApi(entitlementDao, subscriptionFactory);
+        entitlementUserApi = new DefaultEntitlementUserApi(clock, entitlementDao, catalogService, apiService, subscriptionFactory, addonUtils, internalCallContextFactory);
         tagDao = new BusinessTagDao(accountTagSqlDao, invoicePaymentTagSqlDao, invoiceTagSqlDao, subscriptionTransitionTagSqlDao,
-                                              accountUserApi, entitlementUserApi);
+                                    accountApi, entitlementApi);
 
         eventBus.start();
     }

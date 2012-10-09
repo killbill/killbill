@@ -16,6 +16,7 @@
 
 package com.ning.billing.util.svcapi.invoice;
 
+import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.UUID;
 
@@ -32,4 +33,6 @@ public interface InvoiceInternalApi {
     public Collection<Invoice> getUnpaidInvoicesByAccountId(UUID accountId, LocalDate upToDate, InternalTenantContext context);
 
     public Collection<Invoice> getInvoicesByAccountId(UUID accountId, InternalTenantContext context);
+
+    public BigDecimal getAccountBalance(UUID accountId, InternalTenantContext context);
 }
