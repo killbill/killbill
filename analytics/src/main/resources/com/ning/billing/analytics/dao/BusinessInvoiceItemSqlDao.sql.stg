@@ -133,7 +133,7 @@ delete from bii where item_id = :item_id <AND_CHECK_TENANT()>;
 >>
 
 deleteInvoiceItemsForAccount(account_id) ::= <<
-delete bii.* from bii left join bin using(invoice_id) where bin.account_id = :account_id <AND_CHECK_TENANT("bii.")> <AND_CHECK_TENANT("bin.")>;
+delete from bii where bii.invoice_id in (select invoice_id from bin where bin.account_id = :account_id <AND_CHECK_TENANT("bin.")> for update) <AND_CHECK_TENANT("bii.")>;
 >>
 
 test() ::= <<
