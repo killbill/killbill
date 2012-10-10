@@ -60,6 +60,11 @@ public class MockBusinessSubscriptionTransitionSqlDao implements BusinessSubscri
     }
 
     @Override
+    public List<BusinessSubscriptionTransition> getTransitionsForAccount(@Bind("account_id") final String accountId, @InternalTenantContextBinder final InternalTenantContext context) {
+        return ImmutableList.<BusinessSubscriptionTransition>of();
+    }
+
+    @Override
     public int createTransition(@BusinessSubscriptionTransitionBinder final BusinessSubscriptionTransition transition,
                                 @InternalTenantContextBinder final InternalCallContext context) {
         if (content.get(transition.getExternalKey()) == null) {
