@@ -93,7 +93,7 @@ public class AnalyticsListener {
 
     @Subscribe
     public void handleAccountCreation(final AccountCreationEvent event) {
-        bacDao.accountCreated(event.getData(), createCallContext(event));
+        bacDao.accountUpdated(event.getId(), createCallContext(event));
     }
 
     @Subscribe
@@ -125,21 +125,21 @@ public class AnalyticsListener {
     @Subscribe
     public void handlePaymentInfo(final PaymentInfoEvent paymentInfo) {
         bipDao.invoicePaymentPosted(paymentInfo.getAccountId(),
-                                         paymentInfo.getPaymentId(),
-                                         paymentInfo.getExtFirstPaymentRefId(),
-                                         paymentInfo.getExtSecondPaymentRefId(),
-                                         paymentInfo.getStatus().toString(),
-                                         createCallContext(paymentInfo));
+                                    paymentInfo.getPaymentId(),
+                                    paymentInfo.getExtFirstPaymentRefId(),
+                                    paymentInfo.getExtSecondPaymentRefId(),
+                                    paymentInfo.getStatus().toString(),
+                                    createCallContext(paymentInfo));
     }
 
     @Subscribe
     public void handlePaymentError(final PaymentErrorEvent paymentError) {
         bipDao.invoicePaymentPosted(paymentError.getAccountId(),
-                                         paymentError.getPaymentId(),
-                                         null,
-                                         null,
-                                         paymentError.getMessage(),
-                                         createCallContext(paymentError));
+                                    paymentError.getPaymentId(),
+                                    null,
+                                    null,
+                                    paymentError.getMessage(),
+                                    createCallContext(paymentError));
     }
 
     @Subscribe
