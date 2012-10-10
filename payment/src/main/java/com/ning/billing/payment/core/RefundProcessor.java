@@ -16,8 +16,6 @@
 
 package com.ning.billing.payment.core;
 
-import static com.ning.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR_NAMED;
-
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -65,6 +63,8 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.name.Named;
+
+import static com.ning.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR_NAMED;
 
 public class RefundProcessor extends ProcessorBase {
 
@@ -170,7 +170,8 @@ public class RefundProcessor extends ProcessorBase {
 
                     paymentDao.updateRefundStatus(refundInfo.getId(), RefundStatus.COMPLETED, context);
 
-                    return new DefaultRefund(refundInfo.getId(), paymentId, refundInfo.getAmount(), account.getCurrency(),
+                    return new DefaultRefund(refundInfo.getId(),refundInfo.getCreatedDate(), refundInfo.getUpdatedDate(),
+                                             paymentId, refundInfo.getAmount(), account.getCurrency(),
                                              isAdjusted, refundInfo.getCreatedDate());
                 } catch (PaymentPluginApiException e) {
                     throw new PaymentApiException(ErrorCode.PAYMENT_CREATE_REFUND, account.getId(), e.getMessage());
@@ -236,7 +237,8 @@ public class RefundProcessor extends ProcessorBase {
         if (completePluginCompletedRefund(filteredInput)) {
             result = paymentDao.getRefund(refundId, context);
         }
-        return new DefaultRefund(result.getId(), result.getPaymentId(), result.getAmount(), result.getCurrency(),
+        return new DefaultRefund(result.getId(), result.getCreatedDate(), result.getUpdatedDate(),
+                                 result.getPaymentId(), result.getAmount(), result.getCurrency(),
                                  result.isAdjsuted(), result.getCreatedDate());
     }
 
@@ -264,7 +266,8 @@ public class RefundProcessor extends ProcessorBase {
         return new ArrayList<Refund>(Collections2.transform(in, new Function<RefundModelDao, Refund>() {
             @Override
             public Refund apply(final RefundModelDao cur) {
-                return new DefaultRefund(cur.getId(), cur.getPaymentId(), cur.getAmount(), cur.getCurrency(),
+                return new DefaultRefund(cur.getId(), cur.getCreatedDate(), cur.getUpdatedDate(),
+                                         cur.getPaymentId(), cur.getAmount(), cur.getCurrency(),
                                          cur.isAdjsuted(), cur.getCreatedDate());
             }
         }));

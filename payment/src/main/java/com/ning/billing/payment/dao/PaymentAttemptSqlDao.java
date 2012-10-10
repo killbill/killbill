@@ -100,7 +100,11 @@ public interface PaymentAttemptSqlDao extends Transactional<PaymentAttemptSqlDao
             final String gatewayErrorCode = rs.getString("gateway_error_code");
             final String gatewayErrorMsg = rs.getString("gateway_error_msg");
             final BigDecimal requestedAmount = rs.getBigDecimal("requested_amount");
-            return new PaymentAttemptModelDao(id, accountId, invoiceId, paymentId, processingStatus, effectiveDate, requestedAmount, gatewayErrorCode, gatewayErrorMsg);
+            final DateTime createdDate = getDateTime(rs, "created_date");
+            final DateTime updatedDate = getDateTime(rs, "updated_date");
+
+            return new PaymentAttemptModelDao(id, createdDate, updatedDate, accountId, invoiceId, paymentId, processingStatus,
+                                              effectiveDate, requestedAmount, gatewayErrorCode, gatewayErrorMsg);
         }
     }
 }

@@ -16,8 +16,6 @@
 
 package com.ning.billing.payment.core;
 
-import static com.ning.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR_NAMED;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -56,6 +54,8 @@ import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+
+import static com.ning.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR_NAMED;
 
 public class PaymentMethodProcessor extends ProcessorBase {
 
@@ -109,7 +109,8 @@ public class PaymentMethodProcessor extends ProcessorBase {
                     pluginApi = pluginRegistry.getPlugin(pluginName);
                     pm = new DefaultPaymentMethod(account.getId(), pluginName, paymentMethodProps);
                     final String externalId = pluginApi.addPaymentMethod(account.getExternalKey(), paymentMethodProps, setDefault, context.toCallContext());
-                    final PaymentMethodModelDao pmModel = new PaymentMethodModelDao(pm.getId(), pm.getAccountId(), pm.getPluginName(), pm.isActive(), externalId);
+                    final PaymentMethodModelDao pmModel = new PaymentMethodModelDao(pm.getId(), pm.getCreatedDate(), pm.getUpdatedDate(),
+                                                                                    pm.getAccountId(), pm.getPluginName(), pm.isActive(), externalId);
                     paymentDao.insertPaymentMethod(pmModel, context);
 
                     if (setDefault) {
@@ -145,7 +146,9 @@ public class PaymentMethodProcessor extends ProcessorBase {
                     final List<PaymentMethodModelDao> finalPaymentMethods = new ArrayList<PaymentMethodModelDao>();
                     for (final PaymentMethodPlugin cur : pluginPms) {
                         final PaymentMethod input = new DefaultPaymentMethod(account.getId(), pluginName, cur);
-                        final PaymentMethodModelDao pmModel = new PaymentMethodModelDao(input.getId(), input.getAccountId(), input.getPluginName(), input.isActive(), input.getPluginDetail().getExternalPaymentMethodId());
+                        final PaymentMethodModelDao pmModel = new PaymentMethodModelDao(input.getId(), input.getCreatedDate(), input.getUpdatedDate(),
+                                                                                        input.getAccountId(), input.getPluginName(), input.isActive(),
+                                                                                        input.getPluginDetail().getExternalPaymentMethodId());
                         finalPaymentMethods.add(pmModel);
                     }
 

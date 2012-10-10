@@ -18,11 +18,15 @@ package com.ning.billing.jaxrs.json;
 
 import java.util.UUID;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import org.joda.time.DateTime;
+
 import com.ning.billing.account.api.AccountEmail;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class AccountEmailJson {
+
     private final String accountId;
     private final String email;
 
@@ -57,6 +61,16 @@ public class AccountEmailJson {
             @Override
             public UUID getId() {
                 return accountEmailId;
+            }
+
+            @Override
+            public DateTime getCreatedDate() {
+                return null;
+            }
+
+            @Override
+            public DateTime getUpdatedDate() {
+                return null;
             }
         };
     }

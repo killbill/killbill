@@ -27,6 +27,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
@@ -120,8 +121,9 @@ public interface InvoiceSqlDao extends EntitySqlDao<Invoice>, AuditSqlDao, Trans
             final LocalDate targetDate = getDate(result, "target_date");
             final Currency currency = Currency.valueOf(result.getString("currency"));
             final boolean isMigrationInvoice = result.getBoolean("migrated");
+            final DateTime createdDate = getDateTime(result, "created_date");
 
-            return new DefaultInvoice(id, accountId, invoiceNumber, invoiceDate, targetDate, currency, isMigrationInvoice);
+            return new DefaultInvoice(id, createdDate, accountId, invoiceNumber, invoiceDate, targetDate, currency, isMigrationInvoice);
         }
     }
 }

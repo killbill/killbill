@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -262,6 +263,16 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
     @Override
     public UUID getId() {
         return invoice.getId();
+    }
+
+    @Override
+    public DateTime getCreatedDate() {
+        return invoice.getCreatedDate();
+    }
+
+    @Override
+    public DateTime getUpdatedDate() {
+        return invoice.getUpdatedDate();
     }
 
     // Expose the fields for children classes. This is useful for further customization of the invoices

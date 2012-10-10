@@ -20,6 +20,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
@@ -31,6 +32,7 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.dao.MapperBase;
 
 public class AccountMapper extends MapperBase implements ResultSetMapper<Account> {
+
     @Override
     public Account map(final int index, final ResultSet result, final StatementContext context) throws SQLException {
         final UUID id = UUID.fromString(result.getString("id"));
@@ -63,7 +65,9 @@ public class AccountMapper extends MapperBase implements ResultSetMapper<Account
         final Boolean isMigrated = result.getBoolean("migrated");
         final Boolean isNotifiedForInvoices = result.getBoolean("is_notified_for_invoices");
 
-        return new DefaultAccount(id, externalKey, email, name, firstNameLength, currency,
+        final DateTime createdDate = getDateTime(result, "created_date");
+        final DateTime updatedDate = getDateTime(result, "updated_date");
+        return new DefaultAccount(id, createdDate, updatedDate, externalKey, email, name, firstNameLength, currency,
                                   new DefaultBillCycleDay(billingCycleDayLocal, billingCycleDayUTC), paymentMethodId, timeZone, locale,
                                   address1, address2, companyName, city, stateOrProvince, country, postalCode, phone,
                                   isMigrated, isNotifiedForInvoices);

@@ -20,14 +20,17 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
+import org.joda.time.DateTime;
+
 import com.ning.billing.account.api.Account;
 import com.ning.billing.payment.api.PaymentMethod;
 import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.payment.api.PaymentMethodPlugin.PaymentMethodKVInfo;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
 
 public class PaymentMethodJson {
 
@@ -85,6 +88,16 @@ public class PaymentMethodJson {
             @Override
             public UUID getId() {
                 return paymentMethodId != null ? UUID.fromString(paymentMethodId) : null;
+            }
+
+            @Override
+            public DateTime getCreatedDate() {
+                return null;
+            }
+
+            @Override
+            public DateTime getUpdatedDate() {
+                return null;
             }
 
             @Override

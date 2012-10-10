@@ -16,9 +16,10 @@
 
 package com.ning.billing.invoice.model;
 
-import javax.annotation.Nullable;
 import java.math.BigDecimal;
 import java.util.UUID;
+
+import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 
@@ -27,6 +28,7 @@ import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.util.entity.EntityBase;
 
 public class DefaultInvoicePayment extends EntityBase implements InvoicePayment {
+
     private final UUID paymentId;
     private final InvoicePaymentType type;
     private final UUID invoiceId;
@@ -38,13 +40,19 @@ public class DefaultInvoicePayment extends EntityBase implements InvoicePayment 
 
     public DefaultInvoicePayment(final InvoicePaymentType type, final UUID paymentId, final UUID invoiceId, final DateTime paymentDate,
                                  final BigDecimal amount, final Currency currency) {
-        this(UUID.randomUUID(), type, paymentId, invoiceId, paymentDate, amount, currency, null, null);
+        this(UUID.randomUUID(), null, type, paymentId, invoiceId, paymentDate, amount, currency, null, null);
     }
 
     public DefaultInvoicePayment(final UUID id, final InvoicePaymentType type, final UUID paymentId, final UUID invoiceId, final DateTime paymentDate,
                                  @Nullable final BigDecimal amount, @Nullable final Currency currency, @Nullable final UUID paymentCookieId,
                                  @Nullable final UUID linkedInvoicePaymentId) {
-        super(id);
+        this(id, null, type, paymentId, invoiceId, paymentDate, amount, currency, paymentCookieId, linkedInvoicePaymentId);
+    }
+
+    public DefaultInvoicePayment(final UUID id, @Nullable final DateTime createdDate, final InvoicePaymentType type, final UUID paymentId, final UUID invoiceId, final DateTime paymentDate,
+                                 @Nullable final BigDecimal amount, @Nullable final Currency currency, @Nullable final UUID paymentCookieId,
+                                 @Nullable final UUID linkedInvoicePaymentId) {
+        super(id, createdDate, createdDate);
         this.type = type;
         this.paymentId = paymentId;
         this.amount = amount;

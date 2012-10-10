@@ -98,7 +98,6 @@ public interface SubscriptionSqlDao extends Transactional<SubscriptionSqlDao>, A
         @Override
         public SubscriptionData map(final int arg0, final ResultSet r, final StatementContext ctx)
                 throws SQLException {
-
             final UUID id = UUID.fromString(r.getString("id"));
             final UUID bundleId = UUID.fromString(r.getString("bundle_id"));
             final ProductCategory category = ProductCategory.valueOf(r.getString("category"));
@@ -107,11 +106,14 @@ public interface SubscriptionSqlDao extends Transactional<SubscriptionSqlDao>, A
             final DateTime ctd = getDateTime(r, "charged_through_date");
             final DateTime ptd = getDateTime(r, "paid_through_date");
             final long activeVersion = r.getLong("active_version");
-
+            final DateTime createdDate = getDateTime(r, "created_date");
+            final DateTime updatedDate = getDateTime(r, "updated_date");
             return new SubscriptionData(new SubscriptionBuilder()
                                                 .setId(id)
                                                 .setBundleId(bundleId)
                                                 .setCategory(category)
+                                                .setCreatedDate(createdDate)
+                                                .setUpdatedDate(updatedDate)
                                                 .setBundleStartDate(bundleStartDate)
                                                 .setAlignStartDate(startDate)
                                                 .setActiveVersion(activeVersion)

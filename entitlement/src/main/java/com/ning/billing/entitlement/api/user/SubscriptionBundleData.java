@@ -26,9 +26,12 @@ import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.overdue.OverdueState;
 
 public class SubscriptionBundleData implements SubscriptionBundle {
+
     private final UUID id;
     private final String key;
     private final UUID accountId;
+    private final DateTime createdDate;
+    private final DateTime updatedDate;
     private final DateTime lastSysTimeUpdate;
     private final OverdueState<SubscriptionBundle> overdueState;
 
@@ -46,6 +49,10 @@ public class SubscriptionBundleData implements SubscriptionBundle {
         this.accountId = accountId;
         this.lastSysTimeUpdate = lastSysUpdate;
         this.overdueState = overdueState;
+
+        // TODO add column in bundles table
+        createdDate = null;
+        updatedDate = null;
     }
 
     @Override
@@ -56,6 +63,16 @@ public class SubscriptionBundleData implements SubscriptionBundle {
     @Override
     public UUID getId() {
         return id;
+    }
+
+    @Override
+    public DateTime getCreatedDate() {
+        return createdDate;
+    }
+
+    @Override
+    public DateTime getUpdatedDate() {
+        return updatedDate;
     }
 
     @Override

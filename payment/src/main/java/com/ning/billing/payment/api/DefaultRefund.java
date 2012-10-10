@@ -19,6 +19,8 @@ package com.ning.billing.payment.api;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
 
 import com.ning.billing.catalog.api.Currency;
@@ -32,9 +34,10 @@ public class DefaultRefund extends EntityBase implements Refund {
     private final boolean isAdjusted;
     private final DateTime effectiveDate;
 
-    public DefaultRefund(final UUID id, final UUID paymentId, final BigDecimal amount,
+    public DefaultRefund(final UUID id, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate,
+                         final UUID paymentId, final BigDecimal amount,
                          final Currency currency, final boolean isAdjusted, final DateTime effectiveDate) {
-        super(id);
+        super(id, createdDate, updatedDate);
         this.paymentId = paymentId;
         this.amount = amount;
         this.currency = currency;

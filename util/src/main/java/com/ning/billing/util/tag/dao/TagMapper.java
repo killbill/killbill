@@ -20,6 +20,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
@@ -30,6 +31,7 @@ import com.ning.billing.util.tag.DescriptiveTag;
 import com.ning.billing.util.tag.Tag;
 
 public class TagMapper extends MapperBase implements ResultSetMapper<Tag> {
+
     @Override
     public Tag map(final int index, final ResultSet result, final StatementContext context) throws SQLException {
 
@@ -43,10 +45,11 @@ public class TagMapper extends MapperBase implements ResultSetMapper<Tag> {
         }
 
         final UUID id = getUUID(result, "id");
+        final DateTime createdDate = getDateTime(result, "created_date");
         if (thisTagType == null) {
-            return new DescriptiveTag(id, tagDefinitionId);
+            return new DescriptiveTag(id, createdDate, tagDefinitionId);
         } else {
-            return new DefaultControlTag(id, thisTagType);
+            return new DefaultControlTag(id, createdDate, thisTagType);
         }
     }
 }

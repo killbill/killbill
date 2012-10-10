@@ -25,6 +25,7 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import org.joda.time.DateTime;
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
 import com.ning.billing.util.callcontext.InternalCallContext;
@@ -81,6 +82,16 @@ public class MockTagDao implements TagDao {
             @Override
             public UUID getId() {
                 return id;
+            }
+
+            @Override
+            public DateTime getCreatedDate() {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public DateTime getUpdatedDate() {
+                throw new UnsupportedOperationException();
             }
         };
 

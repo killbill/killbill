@@ -18,6 +18,10 @@ package com.ning.billing.util.tag;
 
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
+import org.joda.time.DateTime;
+
 import com.ning.billing.util.entity.EntityBase;
 
 public class DescriptiveTag extends EntityBase implements Tag {
@@ -25,8 +29,8 @@ public class DescriptiveTag extends EntityBase implements Tag {
     private final UUID tagDefinitionId;
 
     // use to hydrate objects from the persistence layer
-    public DescriptiveTag(final UUID id, final UUID tagDefinitionId) {
-        super(id);
+    public DescriptiveTag(final UUID id, @Nullable final DateTime createdDate, final UUID tagDefinitionId) {
+        super(id, createdDate, createdDate);
         this.tagDefinitionId = tagDefinitionId;
     }
 
@@ -36,12 +40,10 @@ public class DescriptiveTag extends EntityBase implements Tag {
         this.tagDefinitionId = tagDefinitionId;
     }
 
-
     @Override
     public UUID getTagDefinitionId() {
         return tagDefinitionId;
     }
-
 
     @Override
     public String toString() {
@@ -53,7 +55,7 @@ public class DescriptiveTag extends EntityBase implements Tag {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((tagDefinitionId == null) ? 0
-                : tagDefinitionId.hashCode());
+                                                             : tagDefinitionId.hashCode());
         return result;
     }
 

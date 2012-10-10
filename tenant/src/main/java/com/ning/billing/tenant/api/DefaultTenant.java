@@ -18,6 +18,10 @@ package com.ning.billing.tenant.api;
 
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
+import org.joda.time.DateTime;
+
 import com.ning.billing.util.entity.EntityBase;
 
 public class DefaultTenant extends EntityBase implements Tenant {
@@ -43,11 +47,12 @@ public class DefaultTenant extends EntityBase implements Tenant {
      * @param data TenantData new data for the existing tenant
      */
     public DefaultTenant(final UUID id, final TenantData data) {
-        this(id, data.getExternalKey(), data.getApiKey(), data.getApiSecret());
+        this(id, null, null, data.getExternalKey(), data.getApiKey(), data.getApiSecret());
     }
 
-    public DefaultTenant(final UUID id, final String externalKey, final String apiKey, final String apiSecret) {
-        super(id);
+    public DefaultTenant(final UUID id, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate,
+                         final String externalKey, final String apiKey, final String apiSecret) {
+        super(id, createdDate, updatedDate);
         this.externalKey = externalKey;
         this.apiKey = apiKey;
         this.apiSecret = apiSecret;

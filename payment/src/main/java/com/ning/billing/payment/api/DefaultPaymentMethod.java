@@ -13,31 +13,28 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.payment.api;
 
 import java.util.UUID;
+
+import javax.annotation.Nullable;
+
+import org.joda.time.DateTime;
 
 import com.ning.billing.payment.dao.PaymentMethodModelDao;
 import com.ning.billing.util.entity.EntityBase;
 
 public class DefaultPaymentMethod extends EntityBase implements PaymentMethod {
 
-
     private final UUID accountId;
     private final Boolean isActive;
     private final String pluginName;
     private final PaymentMethodPlugin pluginDetail;
 
-    public DefaultPaymentMethod(final UUID paymentMethodId, final UUID accountId, final Boolean isActive, final String pluginName) {
-        super(paymentMethodId);
-        this.accountId = accountId;
-        this.isActive = isActive;
-        this.pluginName = pluginName;
-        this.pluginDetail = null;
-    }
-
-    public DefaultPaymentMethod(final UUID paymentMethodId, final UUID accountId, final Boolean isActive, final String pluginName, final PaymentMethodPlugin pluginDetail) {
-        super(paymentMethodId);
+    public DefaultPaymentMethod(final UUID paymentMethodId, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate,
+                                final UUID accountId, final Boolean isActive, final String pluginName, final PaymentMethodPlugin pluginDetail) {
+        super(paymentMethodId, createdDate, updatedDate);
         this.accountId = accountId;
         this.isActive = isActive;
         this.pluginName = pluginName;
@@ -45,17 +42,12 @@ public class DefaultPaymentMethod extends EntityBase implements PaymentMethod {
     }
 
     public DefaultPaymentMethod(final UUID accountId, final String pluginName, final PaymentMethodPlugin pluginDetail) {
-        this(UUID.randomUUID(), accountId, true, pluginName, pluginDetail);
-    }
-
-    public DefaultPaymentMethod(final PaymentMethodModelDao input) {
-        this(input.getId(), input.getAccountId(), input.isActive(), input.getPluginName());
+        this(UUID.randomUUID(), null, null, accountId, true, pluginName, pluginDetail);
     }
 
     public DefaultPaymentMethod(final PaymentMethodModelDao input, final PaymentMethodPlugin pluginDetail) {
-        this(input.getId(), input.getAccountId(), input.isActive(), input.getPluginName(), pluginDetail);
+        this(input.getId(), input.getCreatedDate(), input.getUpdatedDate(), input.getAccountId(), input.isActive(), input.getPluginName(), pluginDetail);
     }
-
 
     @Override
     public UUID getAccountId() {

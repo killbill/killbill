@@ -23,9 +23,12 @@ import org.joda.time.DateTime;
 import com.ning.billing.entitlement.events.user.ApiEvent;
 
 public abstract class EventBase implements EntitlementEvent {
+
     private final long totalOrdering;
     private final UUID uuid;
     private final UUID subscriptionId;
+    private final DateTime createdDate;
+    private final DateTime updatedDate;
     private final DateTime requestedDate;
     private final DateTime effectiveDate;
     private final DateTime processedDate;
@@ -37,6 +40,8 @@ public abstract class EventBase implements EntitlementEvent {
         this.totalOrdering = builder.getTotalOrdering();
         this.uuid = builder.getUuid();
         this.subscriptionId = builder.getSubscriptionId();
+        this.createdDate = builder.getCreatedDate();
+        this.updatedDate = builder.getUpdatedDate();
         this.requestedDate = builder.getRequestedDate();
         this.effectiveDate = builder.getEffectiveDate();
         this.processedDate = builder.getProcessedDate();
@@ -72,6 +77,16 @@ public abstract class EventBase implements EntitlementEvent {
     @Override
     public UUID getId() {
         return uuid;
+    }
+
+    @Override
+    public DateTime getCreatedDate() {
+        return createdDate;
+    }
+
+    @Override
+    public DateTime getUpdatedDate() {
+        return updatedDate;
     }
 
     @Override

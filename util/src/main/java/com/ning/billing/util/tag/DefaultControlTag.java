@@ -18,7 +18,12 @@ package com.ning.billing.util.tag;
 
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
+import org.joda.time.DateTime;
+
 public class DefaultControlTag extends DescriptiveTag implements ControlTag {
+
     private final ControlTagType controlTagType;
 
     // use to create new objects
@@ -28,8 +33,8 @@ public class DefaultControlTag extends DescriptiveTag implements ControlTag {
     }
 
     // use to hydrate objects when loaded from the persistence layer
-    public DefaultControlTag(final UUID id, final ControlTagType controlTagType) {
-        super(id, controlTagType.getId());
+    public DefaultControlTag(final UUID id, @Nullable final DateTime createdDate, final ControlTagType controlTagType) {
+        super(id, createdDate, controlTagType.getId());
         this.controlTagType = controlTagType;
     }
 
@@ -48,7 +53,7 @@ public class DefaultControlTag extends DescriptiveTag implements ControlTag {
         final int prime = 31;
         int result = super.hashCode();
         result = prime * result + ((controlTagType == null) ? 0
-                : controlTagType.hashCode());
+                                                            : controlTagType.hashCode());
         return result;
     }
 
