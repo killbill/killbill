@@ -26,15 +26,15 @@ import com.ning.billing.account.api.MutableAccountData;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.svcapi.junction.BlockingApi;
+import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
 
 public class BlockingAccount implements Account {
     private final Account account;
     private final InternalTenantContext context;
     private BlockingState blockingState = null;
-    private final BlockingApi blockingApi;
+    private final BlockingInternalApi blockingApi;
 
-    public BlockingAccount(final Account account, final BlockingApi blockingApi, final InternalTenantContext context) {
+    public BlockingAccount(final Account account, final BlockingInternalApi blockingApi, final InternalTenantContext context) {
         this.account = account;
         this.blockingApi = blockingApi;
         this.context = context;

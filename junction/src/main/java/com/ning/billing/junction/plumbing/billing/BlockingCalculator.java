@@ -40,7 +40,7 @@ import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.svcapi.junction.BillingEvent;
 import com.ning.billing.util.svcapi.junction.BillingModeType;
-import com.ning.billing.util.svcapi.junction.BlockingApi;
+import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -49,7 +49,7 @@ public class BlockingCalculator {
 
     private static final AtomicLong globaltotalOrder = new AtomicLong();
 
-    private final BlockingApi blockingApi;
+    private final BlockingInternalApi blockingApi;
 
     protected static class DisabledDuration {
         private final DateTime start;
@@ -71,7 +71,7 @@ public class BlockingCalculator {
     }
 
     @Inject
-    public BlockingCalculator(final BlockingApi blockingApi) {
+    public BlockingCalculator(final BlockingInternalApi blockingApi) {
         this.blockingApi = blockingApi;
     }
 

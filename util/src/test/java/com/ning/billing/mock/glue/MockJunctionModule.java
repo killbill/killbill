@@ -22,13 +22,13 @@ import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.glue.JunctionModule;
 import com.ning.billing.util.svcapi.junction.BillingInternalApi;
-import com.ning.billing.util.svcapi.junction.BlockingApi;
+import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
 
 import com.google.inject.AbstractModule;
 
 public class MockJunctionModule extends AbstractModule implements JunctionModule {
     private final BillingInternalApi billingApi = Mockito.mock(BillingInternalApi.class);
-    private final BlockingApi blockingApi = Mockito.mock(BlockingApi.class);
+    private final BlockingInternalApi blockingApi = Mockito.mock(BlockingInternalApi.class);
     private final AccountUserApi userApi = Mockito.mock(AccountUserApi.class);
     private final EntitlementUserApi entUserApi = Mockito.mock(EntitlementUserApi.class);
 
@@ -52,7 +52,7 @@ public class MockJunctionModule extends AbstractModule implements JunctionModule
 
     @Override
     public void installBlockingApi() {
-        bind(BlockingApi.class).toInstance(blockingApi);
+        bind(BlockingInternalApi.class).toInstance(blockingApi);
     }
 
     @Override

@@ -27,12 +27,12 @@ import com.ning.billing.junction.api.Blockable.Type;
 import com.ning.billing.mock.glue.MockJunctionModule;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.svcapi.junction.BlockingApi;
+import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
 import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 
 public class ApplicatorMockJunctionModule extends MockJunctionModule {
 
-    public static class ApplicatorBlockingApi implements BlockingApi {
+    public static class ApplicatorBlockingApi implements BlockingInternalApi {
 
         private BlockingState blockingState;
 
@@ -112,6 +112,6 @@ public class ApplicatorMockJunctionModule extends MockJunctionModule {
 
     @Override
     public void installBlockingApi() {
-        bind(BlockingApi.class).toInstance(new ApplicatorBlockingApi());
+        bind(BlockingInternalApi.class).toInstance(new ApplicatorBlockingApi());
     }
 }

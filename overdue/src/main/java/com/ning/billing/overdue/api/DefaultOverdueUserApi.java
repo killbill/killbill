@@ -37,7 +37,7 @@ import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.dao.ObjectType;
-import com.ning.billing.util.svcapi.junction.BlockingApi;
+import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
 
 import com.google.inject.Inject;
 
@@ -46,13 +46,13 @@ public class DefaultOverdueUserApi implements OverdueUserApi {
     Logger log = LoggerFactory.getLogger(DefaultOverdueUserApi.class);
 
     private final OverdueWrapperFactory factory;
-    private final BlockingApi accessApi;
+    private final BlockingInternalApi accessApi;
     private final InternalCallContextFactory internalCallContextFactory;
 
     private OverdueConfig overdueConfig;
 
     @Inject
-    public DefaultOverdueUserApi(final OverdueWrapperFactory factory, final BlockingApi accessApi, final InternalCallContextFactory internalCallContextFactory) {
+    public DefaultOverdueUserApi(final OverdueWrapperFactory factory, final BlockingInternalApi accessApi, final InternalCallContextFactory internalCallContextFactory) {
         this.factory = factory;
         this.accessApi = accessApi;
         this.internalCallContextFactory = internalCallContextFactory;

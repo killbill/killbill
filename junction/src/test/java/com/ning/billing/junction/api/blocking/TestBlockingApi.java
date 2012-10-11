@@ -32,7 +32,7 @@ import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.mock.glue.MockEntitlementModule;
 import com.ning.billing.util.clock.ClockMock;
-import com.ning.billing.util.svcapi.junction.BlockingApi;
+import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
 import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 
 import com.google.inject.Inject;
@@ -40,7 +40,7 @@ import com.google.inject.Inject;
 @Guice(modules = {MockModule.class, MockEntitlementModule.class})
 public class TestBlockingApi extends JunctionTestSuiteWithEmbeddedDB {
     @Inject
-    private BlockingApi api;
+    private BlockingInternalApi api;
 
     @Inject
     private ClockMock clock;

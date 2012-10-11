@@ -24,7 +24,7 @@ import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 
-public interface BlockingApi {
+public interface BlockingInternalApi {
 
     public BlockingState getBlockingStateFor(Blockable overdueable, InternalTenantContext context);
 

@@ -22,16 +22,16 @@ import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.svcapi.junction.BlockingApi;
+import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
 
 public class BlockingSubscriptionBundle implements SubscriptionBundle {
     private final SubscriptionBundle subscriptionBundle;
-    private final BlockingApi blockingApi;
+    private final BlockingInternalApi blockingApi;
     private final InternalTenantContext context;
 
     private BlockingState blockingState = null;
 
-    public BlockingSubscriptionBundle(final SubscriptionBundle subscriptionBundle, final BlockingApi blockingApi, final InternalTenantContext context) {
+    public BlockingSubscriptionBundle(final SubscriptionBundle subscriptionBundle, final BlockingInternalApi blockingApi, final InternalTenantContext context) {
         this.subscriptionBundle = subscriptionBundle;
         this.blockingApi = blockingApi;
         this.context = context;

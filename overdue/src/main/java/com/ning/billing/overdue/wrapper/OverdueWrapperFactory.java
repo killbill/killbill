@@ -35,7 +35,7 @@ import com.ning.billing.overdue.config.api.OverdueStateSet;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
-import com.ning.billing.util.svcapi.junction.BlockingApi;
+import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
 
 import com.google.inject.Inject;
 
@@ -45,12 +45,12 @@ public class OverdueWrapperFactory {
     private final EntitlementInternalApi entitlementApi;
     private final BillingStateCalculatorBundle billingStateCalcuatorBundle;
     private final OverdueStateApplicator<SubscriptionBundle> overdueStateApplicatorBundle;
-    private final BlockingApi api;
+    private final BlockingInternalApi api;
     private final Clock clock;
     private OverdueConfig config;
 
     @Inject
-    public OverdueWrapperFactory(final BlockingApi api, final Clock clock,
+    public OverdueWrapperFactory(final BlockingInternalApi api, final Clock clock,
                                  final BillingStateCalculatorBundle billingStateCalcuatorBundle,
                                  final OverdueStateApplicator<SubscriptionBundle> overdueStateApplicatorBundle,
                                  final EntitlementInternalApi entitlementApi) {

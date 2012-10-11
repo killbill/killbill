@@ -37,18 +37,18 @@ import com.ning.billing.junction.block.BlockingChecker;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.InternalTenantContext;
-import com.ning.billing.util.svcapi.junction.BlockingApi;
+import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
 
 public class BlockingSubscription implements Subscription {
     private final Subscription subscription;
-    private final BlockingApi blockingApi;
+    private final BlockingInternalApi blockingApi;
     private final BlockingChecker checker;
     private final InternalTenantContext context;
     private final InternalCallContextFactory internalCallContextFactory;
 
     private BlockingState blockingState = null;
 
-    public BlockingSubscription(final Subscription subscription, final BlockingApi blockingApi, final BlockingChecker checker,
+    public BlockingSubscription(final Subscription subscription, final BlockingInternalApi blockingApi, final BlockingChecker checker,
                                 final InternalTenantContext context, final InternalCallContextFactory internalCallContextFactory) {
         this.subscription = subscription;
         this.blockingApi = blockingApi;

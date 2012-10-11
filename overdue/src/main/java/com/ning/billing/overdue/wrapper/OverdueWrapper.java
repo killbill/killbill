@@ -27,17 +27,17 @@ import com.ning.billing.overdue.config.api.OverdueStateSet;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.svcapi.junction.BlockingApi;
+import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
 
 public class OverdueWrapper<T extends Blockable> {
     private final T overdueable;
-    private final BlockingApi api;
+    private final BlockingInternalApi api;
     private final Clock clock;
     private final OverdueStateSet<T> overdueStateSet;
     private final BillingStateCalculator<T> billingStateCalcuator;
     private final OverdueStateApplicator<T> overdueStateApplicator;
 
-    public OverdueWrapper(final T overdueable, final BlockingApi api,
+    public OverdueWrapper(final T overdueable, final BlockingInternalApi api,
                           final OverdueStateSet<T> overdueStateSet,
                           final Clock clock,
                           final BillingStateCalculator<T> billingStateCalcuator,

@@ -20,7 +20,6 @@ import java.util.UUID;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
-import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
@@ -29,6 +28,7 @@ import com.ning.billing.junction.api.BlockingApiException;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.junction.dao.BlockingStateDao;
 import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 
 import com.google.inject.Inject;
 
@@ -79,67 +79,69 @@ public class DefaultBlockingChecker implements BlockingChecker {
     private static final Object ACTION_ENTITLEMENT = "Entitlement";
     private static final Object ACTION_BILLING = "Billing";
 
-    // FIX_API
-    // We should use the internal API, however, doing so will return UnsupportedOperationException
-    // as objects will not be BlockingSubscriptioneBundle but SubscriptionBundleData
-    // We could create Blocking API for our internal API and have them return the correct objects
-    //private final EntitlementInternalApi entitlementApi;
-    private final EntitlementUserApi entitlementApi;
+    private final EntitlementInternalApi entitlementApi;
     private final BlockingStateDao dao;
 
     @Inject
-    public DefaultBlockingChecker(final /* EntitlementInternalApi */ EntitlementUserApi entitlementApi, final BlockingStateDao dao) {
+    public DefaultBlockingChecker(final EntitlementInternalApi entitlementApi, final BlockingStateDao dao) {
         this.entitlementApi = entitlementApi;
         this.dao = dao;
     }
 
     private BlockingAggregator getBlockedStateSubscriptionId(final UUID subscriptionId, final InternalTenantContext context) throws EntitlementUserApiException {
-        final Subscription subscription = entitlementApi.getSubscriptionFromId(subscriptionId, context.toTenantContext());
+        final Subscription subscription = entitlementApi.getSubscriptionFromId(subscriptionId, context);
         return getBlockedStateSubscription(subscription, context);
     }
 
     private BlockingAggregator getBlockedStateSubscription(final Subscription subscription, final InternalTenantContext context) throws EntitlementUserApiException {
         final BlockingAggregator result = new BlockingAggregator();
         if (subscription != null) {
-            final BlockingState subscriptionState = subscription.getBlockingState();
+            final BlockingAggregator subscriptionState = getBlockedStateForId(subscription.getId(), context);
             if (subscriptionState != null) {
                 result.or(subscriptionState);
             }
             if (subscription.getBundleId() != null) {
+                // Recursive call to also fetch account state
                 result.or(getBlockedStateBundleId(subscription.getBundleId(), context));
             }
         }
         return result;
     }
 
+
     private BlockingAggregator getBlockedStateBundleId(final UUID bundleId, final InternalTenantContext context) throws EntitlementUserApiException {
-        final SubscriptionBundle bundle = entitlementApi.getBundleFromId(bundleId, context.toTenantContext());
+        final SubscriptionBundle bundle = entitlementApi.getBundleFromId(bundleId, context);
         return getBlockedStateBundle(bundle, context);
     }
 
+
     private BlockingAggregator getBlockedStateBundle(final SubscriptionBundle bundle, final InternalTenantContext context) {
         final BlockingAggregator result = getBlockedStateAccountId(bundle.getAccountId(), context);
-        final BlockingState bundleState = bundle.getBlockingState();
+        final BlockingAggregator bundleState = getBlockedStateForId(bundle.getId(), context);
         if (bundleState != null) {
             result.or(bundleState);
         }
         return result;
     }
 
-    public BlockingAggregator getBlockedStateAccountId(final UUID accountId, final InternalTenantContext context) {
-        final BlockingAggregator result = new BlockingAggregator();
-        if (accountId != null) {
-            final BlockingState accountState = dao.getBlockingStateFor(accountId, context);
-            result.or(accountState);
-        }
-        return result;
-    }
-
-    public BlockingAggregator getBlockedStateAccount(final Account account, final InternalTenantContext context) {
+    private BlockingAggregator getBlockedStateAccount(final Account account, final InternalTenantContext context) {
         if (account != null) {
-            return getBlockedStateAccountId(account.getId(), context);
+            return getBlockedStateForId(account.getId(), context);
         }
         return new BlockingAggregator();
+    }
+
+    private BlockingAggregator getBlockedStateAccountId(final UUID accountId, final InternalTenantContext context) {
+        return getBlockedStateForId(accountId, context);
+    }
+
+    private BlockingAggregator getBlockedStateForId(final UUID blockableId, final InternalTenantContext context) {
+        final BlockingAggregator result = new BlockingAggregator();
+        if (blockableId != null) {
+            final BlockingState blockableState = dao.getBlockingStateFor(blockableId, context);
+            result.or(blockableState);
+        }
+        return result;
     }
 
     @Override

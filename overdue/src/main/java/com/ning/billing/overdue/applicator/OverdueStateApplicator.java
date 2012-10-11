@@ -54,7 +54,7 @@ import com.ning.billing.util.email.EmailConfig;
 import com.ning.billing.util.email.EmailSender;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
-import com.ning.billing.util.svcapi.junction.BlockingApi;
+import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
 import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 import com.ning.billing.util.svcsapi.bus.Bus;
 
@@ -66,7 +66,7 @@ public class OverdueStateApplicator<T extends Blockable> {
 
     private static final Logger log = LoggerFactory.getLogger(OverdueStateApplicator.class);
 
-    private final BlockingApi blockingApi;
+    private final BlockingInternalApi blockingApi;
     private final Clock clock;
     private final OverdueCheckPoster poster;
     private final Bus bus;
@@ -76,7 +76,7 @@ public class OverdueStateApplicator<T extends Blockable> {
     private final EmailSender emailSender;
 
     @Inject
-    public OverdueStateApplicator(final BlockingApi accessApi, final AccountInternalApi accountApi, final EntitlementInternalApi entitlementUserApi,
+    public OverdueStateApplicator(final BlockingInternalApi accessApi, final AccountInternalApi accountApi, final EntitlementInternalApi entitlementUserApi,
                                   final Clock clock, final OverdueCheckPoster poster, final OverdueEmailGenerator overdueEmailGenerator,
                                   final EmailConfig config, final Bus bus) {
         this.blockingApi = accessApi;

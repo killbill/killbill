@@ -42,7 +42,7 @@ import com.ning.billing.payment.api.PaymentMethodPlugin;
 import com.ning.billing.payment.provider.MockPaymentProviderPlugin;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.config.XMLLoader;
-import com.ning.billing.util.svcapi.junction.BlockingApi;
+import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -58,7 +58,7 @@ public abstract class TestOverdueBase extends TestIntegrationBase {
     MockPaymentProviderPlugin paymentPlugin;
 
     @Inject
-    protected BlockingApi blockingApi;
+    protected BlockingInternalApi blockingApi;
 
     @Inject
     protected OverdueWrapperFactory overdueWrapperFactory;

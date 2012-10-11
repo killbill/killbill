@@ -56,7 +56,7 @@ import com.ning.billing.mock.api.MockBillCycleDay;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.svcapi.junction.BillingEvent;
 import com.ning.billing.util.svcapi.junction.BillingModeType;
-import com.ning.billing.util.svcapi.junction.BlockingApi;
+import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
 import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 
 import com.google.inject.AbstractModule;
@@ -68,7 +68,7 @@ public class TestBlockingCalculator extends JunctionTestSuite {
     private static final String DISABLED_BUNDLE = "disabled-bundle";
     private static final String CLEAR_BUNDLE = "clear-bundle";
 
-    private BlockingApi blockingApi;
+    private BlockingInternalApi blockingApi;
     private Account account;
     private Subscription subscription1;
     private Subscription subscription2;
@@ -86,7 +86,7 @@ public class TestBlockingCalculator extends JunctionTestSuite {
         final Injector i = Guice.createInjector(new AbstractModule() {
             @Override
             protected void configure() {
-                blockingApi = Mockito.mock(BlockingApi.class);
+                blockingApi = Mockito.mock(BlockingInternalApi.class);
                 account = Mockito.mock(Account.class);
                 subscription1 = Mockito.mock(Subscription.class);
                 subscription2 = Mockito.mock(Subscription.class);
@@ -103,7 +103,7 @@ public class TestBlockingCalculator extends JunctionTestSuite {
                 Mockito.when(subscription4.getId()).thenReturn(UUID.randomUUID());
 
                 bind(BlockingStateDao.class).toInstance(Mockito.mock(BlockingStateDao.class));
-                bind(BlockingApi.class).toInstance(blockingApi);
+                bind(BlockingInternalApi.class).toInstance(blockingApi);
             }
 
         });

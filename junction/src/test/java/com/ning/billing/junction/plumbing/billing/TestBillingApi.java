@@ -76,7 +76,7 @@ import com.ning.billing.util.svcapi.junction.BillingEvent;
 import com.ning.billing.util.svcapi.junction.BillingEventSet;
 import com.ning.billing.util.svcapi.junction.BillingInternalApi;
 import com.ning.billing.util.svcapi.junction.BillingModeType;
-import com.ning.billing.util.svcapi.junction.BlockingApi;
+import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
 import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 import com.ning.billing.util.svcapi.tag.TagInternalApi;
 import com.ning.billing.util.tag.ControlTagType;
@@ -227,7 +227,7 @@ public class TestBillingApi extends JunctionTestSuite {
         blockingStates.add(new DefaultBlockingState(bunId, DISABLED_BUNDLE, Blockable.Type.SUBSCRIPTION_BUNDLE, "test", true, true, true, now.plusDays(1)));
         blockingStates.add(new DefaultBlockingState(bunId, CLEAR_BUNDLE, Blockable.Type.SUBSCRIPTION_BUNDLE, "test", false, false, false, now.plusDays(2)));
 
-        final BlockingCalculator blockingCal = new BlockingCalculator(new BlockingApi() {
+        final BlockingCalculator blockingCal = new BlockingCalculator(new BlockingInternalApi() {
             @Override
             public <T extends Blockable> void setBlockingState(final BlockingState state, final InternalCallContext context) {
             }

@@ -38,19 +38,19 @@ import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.glue.RealImplementation;
-import com.ning.billing.util.svcapi.junction.BlockingApi;
+import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
 
 import com.google.inject.Inject;
 
 public class BlockingEntitlementUserApi implements EntitlementUserApi {
 
     private final EntitlementUserApi entitlementUserApi;
-    private final BlockingApi blockingApi;
+    private final BlockingInternalApi blockingApi;
     private final BlockingChecker checker;
     private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
-    public BlockingEntitlementUserApi(@RealImplementation final EntitlementUserApi userApi, final BlockingApi blockingApi,
+    public BlockingEntitlementUserApi(@RealImplementation final EntitlementUserApi userApi, final BlockingInternalApi blockingApi,
                                       final BlockingChecker checker, final InternalCallContextFactory internalCallContextFactory) {
         this.entitlementUserApi = userApi;
         this.blockingApi = blockingApi;

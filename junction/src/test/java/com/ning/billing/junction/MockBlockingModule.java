@@ -19,7 +19,7 @@ package com.ning.billing.junction;
 import org.mockito.Mockito;
 
 import com.ning.billing.junction.dao.BlockingStateDao;
-import com.ning.billing.util.svcapi.junction.BlockingApi;
+import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
 
 import com.google.inject.AbstractModule;
 
@@ -28,7 +28,7 @@ public class MockBlockingModule extends AbstractModule {
     protected void configure() {
         bind(BlockingStateDao.class).toInstance(Mockito.mock(BlockingStateDao.class));
 
-        final BlockingApi blockingApi = Mockito.mock(BlockingApi.class);
-        bind(BlockingApi.class).toInstance(blockingApi);
+        final BlockingInternalApi blockingApi = Mockito.mock(BlockingInternalApi.class);
+        bind(BlockingInternalApi.class).toInstance(blockingApi);
     }
 }

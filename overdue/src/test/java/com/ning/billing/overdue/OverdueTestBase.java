@@ -64,7 +64,7 @@ import com.ning.billing.util.notificationq.NotificationQueueService.Notification
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 import com.ning.billing.util.svcapi.invoice.InvoiceInternalApi;
-import com.ning.billing.util.svcapi.junction.BlockingApi;
+import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
 import com.ning.billing.util.svcsapi.bus.BusService;
 
 import com.google.inject.Inject;
@@ -123,7 +123,7 @@ public abstract class OverdueTestBase extends OverdueTestSuiteWithEmbeddedDB {
     protected ClockMock clock;
 
     @Inject
-    protected BlockingApi blockingApi;
+    protected BlockingInternalApi blockingApi;
 
     @Inject
     protected OverdueWrapperFactory overdueWrapperFactory;

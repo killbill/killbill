@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.ning.billing.junction.api.blocking;
+package com.ning.billing.junction.api.svcs;
 
 import java.util.List;
 import java.util.UUID;
@@ -25,18 +25,18 @@ import com.ning.billing.junction.dao.BlockingStateDao;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.Clock;
-import com.ning.billing.util.svcapi.junction.BlockingApi;
+import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
 import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 
 import com.google.inject.Inject;
 
-public class DefaultBlockingApi implements BlockingApi {
+public class DefaultInternalBlockingApi implements BlockingInternalApi {
 
     private final BlockingStateDao dao;
     private final Clock clock;
 
     @Inject
-    public DefaultBlockingApi(final BlockingStateDao dao, final Clock clock) {
+    public DefaultInternalBlockingApi(final BlockingStateDao dao, final Clock clock) {
         this.dao = dao;
         this.clock = clock;
     }
