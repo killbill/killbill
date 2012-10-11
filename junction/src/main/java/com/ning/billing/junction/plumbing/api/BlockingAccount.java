@@ -18,6 +18,7 @@ package com.ning.billing.junction.plumbing.api;
 
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import com.ning.billing.account.api.Account;
@@ -29,6 +30,7 @@ import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.svcapi.junction.BlockingApi;
 
 public class BlockingAccount implements Account {
+
     private final Account account;
     private final InternalTenantContext context;
     private BlockingState blockingState = null;
@@ -43,6 +45,16 @@ public class BlockingAccount implements Account {
     @Override
     public UUID getId() {
         return account.getId();
+    }
+
+    @Override
+    public DateTime getCreatedDate() {
+        return account.getCreatedDate();
+    }
+
+    @Override
+    public DateTime getUpdatedDate() {
+        return account.getUpdatedDate();
     }
 
     @Override

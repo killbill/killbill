@@ -36,7 +36,7 @@ public class TestDefaultTenantDao extends TenantTestSuiteWithEmbeddedDb {
     public void testWeCanStoreAndMatchCredentials() throws Exception {
         final DefaultTenantDao tenantDao = new DefaultTenantDao(getMysqlTestingHelper().getDBI(), Mockito.mock(Bus.class));
 
-        final DefaultTenant tenant = new DefaultTenant(UUID.randomUUID(), UUID.randomUUID().toString(),
+        final DefaultTenant tenant = new DefaultTenant(UUID.randomUUID(), null, null, UUID.randomUUID().toString(),
                                                        UUID.randomUUID().toString(), UUID.randomUUID().toString());
         tenantDao.create(tenant, internalCallContext);
 

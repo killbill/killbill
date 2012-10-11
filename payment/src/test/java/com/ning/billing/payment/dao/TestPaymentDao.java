@@ -282,7 +282,8 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         final Boolean isActive = Boolean.TRUE;
         final String externalPaymentId = UUID.randomUUID().toString();
 
-        final PaymentMethodModelDao method = new PaymentMethodModelDao(paymentMethodId, accountId, pluginName, isActive, externalPaymentId);
+        final PaymentMethodModelDao method = new PaymentMethodModelDao(paymentMethodId, null, null,
+                                                                       accountId, pluginName, isActive, externalPaymentId);
 
         PaymentMethodModelDao savedMethod = paymentDao.insertPaymentMethod(method, internalCallContext);
         assertEquals(savedMethod.getId(), paymentMethodId);

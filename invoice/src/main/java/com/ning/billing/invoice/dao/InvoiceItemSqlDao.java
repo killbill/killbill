@@ -27,6 +27,7 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
@@ -137,32 +138,33 @@ public interface InvoiceItemSqlDao extends EntitySqlDao<InvoiceItem> {
             final BigDecimal rate = result.getBigDecimal("rate");
             final Currency currency = Currency.valueOf(result.getString("currency"));
             final UUID linkedItemId = getUUID(result, "linked_item_id");
+            final DateTime createdDate = getDateTime(result, "created_date");
 
             final InvoiceItem item;
             switch (type) {
                 case EXTERNAL_CHARGE:
-                    item = new ExternalChargeInvoiceItem(id, invoiceId, accountId, bundleId, planName, startDate, amount, currency);
+                    item = new ExternalChargeInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, planName, startDate, amount, currency);
                     break;
                 case FIXED:
-                    item = new FixedPriceInvoiceItem(id, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, amount, currency);
+                    item = new FixedPriceInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, amount, currency);
                     break;
                 case RECURRING:
-                    item = new RecurringInvoiceItem(id, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, rate, currency);
+                    item = new RecurringInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, rate, currency);
                     break;
                 case CBA_ADJ:
-                    item = new CreditBalanceAdjInvoiceItem(id, invoiceId, accountId, startDate, linkedItemId, amount, currency);
+                    item = new CreditBalanceAdjInvoiceItem(id, createdDate, invoiceId, accountId, startDate, linkedItemId, amount, currency);
                     break;
                 case CREDIT_ADJ:
-                    item = new CreditAdjInvoiceItem(id, invoiceId, accountId, startDate, amount, currency);
+                    item = new CreditAdjInvoiceItem(id, createdDate, invoiceId, accountId, startDate, amount, currency);
                     break;
                 case REFUND_ADJ:
-                    item = new RefundAdjInvoiceItem(id, invoiceId, accountId, startDate, amount, currency);
+                    item = new RefundAdjInvoiceItem(id, createdDate, invoiceId, accountId, startDate, amount, currency);
                     break;
                 case REPAIR_ADJ:
-                    item = new RepairAdjInvoiceItem(id, invoiceId, accountId, startDate, endDate, amount, currency, linkedItemId);
+                    item = new RepairAdjInvoiceItem(id, createdDate, invoiceId, accountId, startDate, endDate, amount, currency, linkedItemId);
                     break;
                 case ITEM_ADJ:
-                    item = new ItemAdjInvoiceItem(id, invoiceId, accountId, startDate, amount, currency, linkedItemId);
+                    item = new ItemAdjInvoiceItem(id, createdDate, invoiceId, accountId, startDate, amount, currency, linkedItemId);
                     break;
                 default:
                     throw new RuntimeException("Unexpected type of event item " + type);

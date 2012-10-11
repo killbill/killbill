@@ -19,10 +19,12 @@ package com.ning.billing.analytics.model;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.ning.billing.account.api.Account;
 import com.ning.billing.analytics.AnalyticsTestSuite;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;
@@ -36,7 +38,8 @@ public class TestBusinessAccount extends AnalyticsTestSuite {
     @BeforeMethod(groups = "fast")
     public void setUp() throws Exception {
         account = new BusinessAccount(UUID.randomUUID(), "pierre", UUID.randomUUID().toString(), BigDecimal.ONE, clock.getUTCToday(),
-                                      BigDecimal.TEN, "ERROR_NOT_ENOUGH_FUNDS", "CreditCard", "Visa", "", UUID.randomUUID().toString());
+                                      BigDecimal.TEN, "ERROR_NOT_ENOUGH_FUNDS", "CreditCard", "Visa", "", UUID.randomUUID().toString(),
+                                      clock.getUTCNow(), clock.getUTCNow());
     }
 
     @Test(groups = "fast")
@@ -48,13 +51,14 @@ public class TestBusinessAccount extends AnalyticsTestSuite {
         final BusinessAccount otherAccount = new BusinessAccount(UUID.randomUUID(), "pierre cardin", UUID.randomUUID().toString(),
                                                                  BigDecimal.ONE, clock.getUTCToday(),
                                                                  BigDecimal.TEN, "ERROR_NOT_ENOUGH_FUNDS", "CreditCard", "Visa",
-                                                                 "", UUID.randomUUID().toString());
+                                                                 "", UUID.randomUUID().toString(), clock.getUTCNow(), clock.getUTCNow());
         Assert.assertFalse(account.equals(otherAccount));
     }
 
     @Test(groups = "fast")
     public void testDefaultBigDecimalValues() throws Exception {
-        final BusinessAccount bac = new BusinessAccount(UUID.randomUUID());
+        final Account account = Mockito.mock(Account.class);
+        final BusinessAccount bac = new BusinessAccount(account);
         Assert.assertEquals(bac.getBalance(), BigDecimal.ZERO);
         Assert.assertEquals(bac.getTotalInvoiceBalance(), BigDecimal.ZERO);
 

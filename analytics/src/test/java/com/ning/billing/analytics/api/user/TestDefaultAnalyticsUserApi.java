@@ -27,6 +27,12 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.ning.billing.analytics.AnalyticsTestSuiteWithEmbeddedDB;
+import com.ning.billing.analytics.BusinessAccountDao;
+import com.ning.billing.analytics.BusinessInvoiceDao;
+import com.ning.billing.analytics.BusinessInvoicePaymentDao;
+import com.ning.billing.analytics.BusinessOverdueStatusDao;
+import com.ning.billing.analytics.BusinessSubscriptionTransitionDao;
+import com.ning.billing.analytics.BusinessTagDao;
 import com.ning.billing.analytics.MockDuration;
 import com.ning.billing.analytics.MockPhase;
 import com.ning.billing.analytics.MockProduct;
@@ -53,10 +59,13 @@ import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.mock.MockPlan;
+import com.ning.billing.payment.api.PaymentApi;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
+import com.ning.billing.util.svcapi.tag.TagInternalApi;
 
 public class TestDefaultAnalyticsUserApi extends AnalyticsTestSuiteWithEmbeddedDB {
 
@@ -85,13 +94,23 @@ public class TestDefaultAnalyticsUserApi extends AnalyticsTestSuiteWithEmbeddedD
 
         final AnalyticsDao analyticsDao = new DefaultAnalyticsDao(accountSqlDao, subscriptionTransitionSqlDao, invoiceSqlDao,
                                                                   invoiceItemSqlDao, accountTagSqlDao, overdueStatusSqlDao, invoicePaymentSqlDao);
-        analyticsUserApi = new DefaultAnalyticsUserApi(analyticsDao, new InternalCallContextFactory(dbi, clock));
+        analyticsUserApi = new DefaultAnalyticsUserApi(analyticsDao,
+                                                       Mockito.mock(BusinessSubscriptionTransitionDao.class),
+                                                       Mockito.mock(BusinessAccountDao.class),
+                                                       Mockito.mock(BusinessInvoiceDao.class),
+                                                       Mockito.mock(BusinessOverdueStatusDao.class),
+                                                       Mockito.mock(BusinessInvoicePaymentDao.class),
+                                                       Mockito.mock(BusinessTagDao.class),
+                                                       Mockito.mock(EntitlementInternalApi.class),
+                                                       Mockito.mock(PaymentApi.class),
+                                                       Mockito.mock(TagInternalApi.class),
+                                                       new InternalCallContextFactory(dbi, clock));
     }
 
     @Test(groups = "slow")
     public void testAccountsCreatedOverTime() throws Exception {
         final BusinessAccount account = new BusinessAccount(UUID.randomUUID(), UUID.randomUUID().toString(), UUID.randomUUID().toString(), BigDecimal.ONE, clock.getUTCToday(),
-                                                            BigDecimal.TEN, "ERROR_NOT_ENOUGH_FUNDS", "CreditCard", "Visa", "FRANCE", "USD");
+                                                            BigDecimal.TEN, "ERROR_NOT_ENOUGH_FUNDS", "CreditCard", "Visa", "FRANCE", "USD", clock.getUTCNow(), clock.getUTCNow());
         accountSqlDao.createAccount(account, internalCallContext);
 
         final TimeSeriesData data = analyticsUserApi.getAccountsCreatedOverTime(tenantContext);

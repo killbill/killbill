@@ -48,52 +48,52 @@ import com.google.inject.Inject;
 
 public class AnalyticsListener {
 
-    private final BusinessSubscriptionTransitionRecorder bstRecorder;
-    private final BusinessAccountRecorder bacRecorder;
-    private final BusinessInvoiceRecorder invoiceRecorder;
-    private final BusinessOverdueStatusRecorder bosRecorder;
-    private final BusinessInvoicePaymentRecorder bipRecorder;
-    private final BusinessTagRecorder tagRecorder;
+    private final BusinessSubscriptionTransitionDao bstDao;
+    private final BusinessAccountDao bacDao;
+    private final BusinessInvoiceDao invoiceDao;
+    private final BusinessOverdueStatusDao bosDao;
+    private final BusinessInvoicePaymentDao bipDao;
+    private final BusinessTagDao tagDao;
     private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
-    public AnalyticsListener(final BusinessSubscriptionTransitionRecorder bstRecorder,
-                             final BusinessAccountRecorder bacRecorder,
-                             final BusinessInvoiceRecorder invoiceRecorder,
-                             final BusinessOverdueStatusRecorder bosRecorder,
-                             final BusinessInvoicePaymentRecorder bipRecorder,
-                             final BusinessTagRecorder tagRecorder,
+    public AnalyticsListener(final BusinessSubscriptionTransitionDao bstDao,
+                             final BusinessAccountDao bacDao,
+                             final BusinessInvoiceDao invoiceDao,
+                             final BusinessOverdueStatusDao bosDao,
+                             final BusinessInvoicePaymentDao bipDao,
+                             final BusinessTagDao tagDao,
                              final InternalCallContextFactory internalCallContextFactory) {
-        this.bstRecorder = bstRecorder;
-        this.bacRecorder = bacRecorder;
-        this.invoiceRecorder = invoiceRecorder;
-        this.bosRecorder = bosRecorder;
-        this.bipRecorder = bipRecorder;
-        this.tagRecorder = tagRecorder;
+        this.bstDao = bstDao;
+        this.bacDao = bacDao;
+        this.invoiceDao = invoiceDao;
+        this.bosDao = bosDao;
+        this.bipDao = bipDao;
+        this.tagDao = tagDao;
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
     @Subscribe
     public void handleEffectiveSubscriptionTransitionChange(final EffectiveSubscriptionEvent eventEffective) throws AccountApiException, EntitlementUserApiException {
         // The event is used as a trigger to rebuild all transitions for this bundle
-        bstRecorder.rebuildTransitionsForBundle(eventEffective.getBundleId(), createCallContext(eventEffective));
+        bstDao.rebuildTransitionsForBundle(eventEffective.getBundleId(), createCallContext(eventEffective));
     }
 
     @Subscribe
     public void handleRequestedSubscriptionTransitionChange(final RequestedSubscriptionEvent eventRequested) throws AccountApiException, EntitlementUserApiException {
         // The event is used as a trigger to rebuild all transitions for this bundle
-        bstRecorder.rebuildTransitionsForBundle(eventRequested.getBundleId(), createCallContext(eventRequested));
+        bstDao.rebuildTransitionsForBundle(eventRequested.getBundleId(), createCallContext(eventRequested));
     }
 
     @Subscribe
     public void handleRepairEntitlement(final RepairEntitlementEvent event) {
         // In case of repair, just rebuild all transitions
-        bstRecorder.rebuildTransitionsForBundle(event.getBundleId(), createCallContext(event));
+        bstDao.rebuildTransitionsForBundle(event.getBundleId(), createCallContext(event));
     }
 
     @Subscribe
     public void handleAccountCreation(final AccountCreationEvent event) {
-        bacRecorder.accountCreated(event.getData(), createCallContext(event));
+        bacDao.accountUpdated(event.getId(), createCallContext(event));
     }
 
     @Subscribe
@@ -102,13 +102,13 @@ public class AnalyticsListener {
             return;
         }
 
-        bacRecorder.accountUpdated(event.getAccountId(), createCallContext(event));
+        bacDao.accountUpdated(event.getAccountId(), createCallContext(event));
     }
 
     @Subscribe
     public void handleInvoiceCreation(final InvoiceCreationEvent event) {
         // The event is used as a trigger to rebuild all invoices and invoice items for this account
-        invoiceRecorder.rebuildInvoicesForAccount(event.getAccountId(), createCallContext(event));
+        invoiceDao.rebuildInvoicesForAccount(event.getAccountId(), createCallContext(event));
     }
 
     @Subscribe
@@ -119,52 +119,52 @@ public class AnalyticsListener {
     @Subscribe
     public void handleInvoiceAdjustment(final InvoiceAdjustmentEvent event) {
         // The event is used as a trigger to rebuild all invoices and invoice items for this account
-        invoiceRecorder.rebuildInvoicesForAccount(event.getAccountId(), createCallContext(event));
+        invoiceDao.rebuildInvoicesForAccount(event.getAccountId(), createCallContext(event));
     }
 
     @Subscribe
     public void handlePaymentInfo(final PaymentInfoEvent paymentInfo) {
-        bipRecorder.invoicePaymentPosted(paymentInfo.getAccountId(),
-                                         paymentInfo.getPaymentId(),
-                                         paymentInfo.getExtFirstPaymentRefId(),
-                                         paymentInfo.getExtSecondPaymentRefId(),
-                                         paymentInfo.getStatus().toString(),
-                                         createCallContext(paymentInfo));
+        bipDao.invoicePaymentPosted(paymentInfo.getAccountId(),
+                                    paymentInfo.getPaymentId(),
+                                    paymentInfo.getExtFirstPaymentRefId(),
+                                    paymentInfo.getExtSecondPaymentRefId(),
+                                    paymentInfo.getStatus().toString(),
+                                    createCallContext(paymentInfo));
     }
 
     @Subscribe
     public void handlePaymentError(final PaymentErrorEvent paymentError) {
-        bipRecorder.invoicePaymentPosted(paymentError.getAccountId(),
-                                         paymentError.getPaymentId(),
-                                         null,
-                                         null,
-                                         paymentError.getMessage(),
-                                         createCallContext(paymentError));
+        bipDao.invoicePaymentPosted(paymentError.getAccountId(),
+                                    paymentError.getPaymentId(),
+                                    null,
+                                    null,
+                                    paymentError.getMessage(),
+                                    createCallContext(paymentError));
     }
 
     @Subscribe
     public void handleOverdueChange(final OverdueChangeEvent changeEvent) {
-        bosRecorder.overdueStatusChanged(changeEvent.getOverdueObjectType(), changeEvent.getOverdueObjectId(), createCallContext(changeEvent));
+        bosDao.overdueStatusChanged(changeEvent.getOverdueObjectType(), changeEvent.getOverdueObjectId(), createCallContext(changeEvent));
     }
 
     @Subscribe
     public void handleControlTagCreation(final ControlTagCreationEvent event) {
-        tagRecorder.tagAdded(event.getObjectType(), event.getObjectId(), event.getTagDefinition().getName(), createCallContext(event));
+        tagDao.tagAdded(event.getObjectType(), event.getObjectId(), event.getTagDefinition().getName(), createCallContext(event));
     }
 
     @Subscribe
     public void handleControlTagDeletion(final ControlTagDeletionEvent event) {
-        tagRecorder.tagRemoved(event.getObjectType(), event.getObjectId(), event.getTagDefinition().getName(), createCallContext(event));
+        tagDao.tagRemoved(event.getObjectType(), event.getObjectId(), event.getTagDefinition().getName(), createCallContext(event));
     }
 
     @Subscribe
     public void handleUserTagCreation(final UserTagCreationEvent event) {
-        tagRecorder.tagAdded(event.getObjectType(), event.getObjectId(), event.getTagDefinition().getName(), createCallContext(event));
+        tagDao.tagAdded(event.getObjectType(), event.getObjectId(), event.getTagDefinition().getName(), createCallContext(event));
     }
 
     @Subscribe
     public void handleUserTagDeletion(final UserTagDeletionEvent event) {
-        tagRecorder.tagRemoved(event.getObjectType(), event.getObjectId(), event.getTagDefinition().getName(), createCallContext(event));
+        tagDao.tagRemoved(event.getObjectType(), event.getObjectId(), event.getTagDefinition().getName(), createCallContext(event));
     }
 
     @Subscribe

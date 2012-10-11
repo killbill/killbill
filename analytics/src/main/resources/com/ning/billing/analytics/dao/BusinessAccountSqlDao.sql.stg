@@ -114,6 +114,10 @@ saveAccount() ::= <<
   ;
 >>
 
+deleteAccount(account_id) ::= <<
+delete from bac where account_id = :account_id <AND_CHECK_TENANT()>;
+>>
+
 test() ::= <<
   select 1 from bac where <CHECK_TENANT()>;
 >>

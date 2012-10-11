@@ -33,6 +33,7 @@ import com.ning.billing.util.clock.Clock;
 import com.google.inject.Inject;
 
 public class DefaultSubscriptionFactory implements SubscriptionFactory {
+
     private final SubscriptionApiService apiService;
     private final Clock clock;
     private final CatalogService catalogService;
@@ -54,8 +55,11 @@ public class DefaultSubscriptionFactory implements SubscriptionFactory {
     }
 
     public static class SubscriptionBuilder {
+
         private UUID id;
         private UUID bundleId;
+        private DateTime createdDate;
+        private DateTime updatedDate;
         private DateTime alignStartDate;
         private DateTime bundleStartDate;
         private Long activeVersion;
@@ -80,6 +84,16 @@ public class DefaultSubscriptionFactory implements SubscriptionFactory {
 
         public SubscriptionBuilder setId(final UUID id) {
             this.id = id;
+            return this;
+        }
+
+        public SubscriptionBuilder setCreatedDate(final DateTime createdDate) {
+            this.createdDate = createdDate;
+            return this;
+        }
+
+        public SubscriptionBuilder setUpdatedDate(final DateTime updatedDate) {
+            this.updatedDate = updatedDate;
             return this;
         }
 
@@ -120,6 +134,14 @@ public class DefaultSubscriptionFactory implements SubscriptionFactory {
 
         public UUID getId() {
             return id;
+        }
+
+        public DateTime getCreatedDate() {
+            return createdDate;
+        }
+
+        public DateTime getUpdatedDate() {
+            return updatedDate;
         }
 
         public UUID getBundleId() {

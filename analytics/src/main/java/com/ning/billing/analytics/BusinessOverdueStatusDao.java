@@ -29,32 +29,32 @@ import org.slf4j.LoggerFactory;
 
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.analytics.dao.BusinessOverdueStatusSqlDao;
 import com.ning.billing.analytics.model.BusinessOverdueStatus;
-import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.svcapi.account.AccountInternalApi;
+import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 import com.ning.billing.util.svcapi.junction.BlockingApi;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
-public class BusinessOverdueStatusRecorder {
+public class BusinessOverdueStatusDao {
 
-    private static final Logger log = LoggerFactory.getLogger(BusinessOverdueStatusRecorder.class);
+    private static final Logger log = LoggerFactory.getLogger(BusinessOverdueStatusDao.class);
 
     private final BusinessOverdueStatusSqlDao overdueStatusSqlDao;
-    private final AccountUserApi accountApi;
-    private final EntitlementUserApi entitlementApi;
+    private final AccountInternalApi accountApi;
+    private final EntitlementInternalApi entitlementApi;
     private final BlockingApi blockingApi;
 
     @Inject
-    public BusinessOverdueStatusRecorder(final BusinessOverdueStatusSqlDao overdueStatusSqlDao, final AccountUserApi accountApi,
-                                         final EntitlementUserApi entitlementApi, final BlockingApi blockingApi) {
+    public BusinessOverdueStatusDao(final BusinessOverdueStatusSqlDao overdueStatusSqlDao, final AccountInternalApi accountApi,
+                                    final EntitlementInternalApi entitlementApi, final BlockingApi blockingApi) {
         this.overdueStatusSqlDao = overdueStatusSqlDao;
         this.accountApi = accountApi;
         this.entitlementApi = entitlementApi;
@@ -72,7 +72,7 @@ public class BusinessOverdueStatusRecorder {
     private void overdueStatusChangedForBundle(final UUID bundleId, final InternalCallContext context) {
         final SubscriptionBundle bundle;
         try {
-            bundle = entitlementApi.getBundleFromId(bundleId, context.toCallContext());
+            bundle = entitlementApi.getBundleFromId(bundleId, context);
         } catch (EntitlementUserApiException e) {
             log.warn("Ignoring update for bundle {}: bundle does not exist", bundleId);
             return;
@@ -80,7 +80,7 @@ public class BusinessOverdueStatusRecorder {
 
         final Account account;
         try {
-            account = accountApi.getAccountById(bundle.getAccountId(), context.toCallContext());
+            account = accountApi.getAccountById(bundle.getAccountId(), context);
         } catch (AccountApiException e) {
             log.warn("Ignoring update for bundle {}: account {} does not exist", bundleId, bundle.getAccountId());
             return;

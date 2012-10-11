@@ -79,6 +79,11 @@ public class DefaultAnalyticsDao implements AnalyticsDao {
     }
 
     @Override
+    public List<BusinessSubscriptionTransition> getTransitionsForAccount(final String accountKey, final InternalTenantContext context) {
+        return subscriptionTransitionSqlDao.getTransitionsForAccount(accountKey, context);
+    }
+
+    @Override
     public List<BusinessInvoice> getInvoicesByKey(final String accountKey, final InternalTenantContext context) {
         return invoiceSqlDao.getInvoicesForAccountByKey(accountKey, context);
     }

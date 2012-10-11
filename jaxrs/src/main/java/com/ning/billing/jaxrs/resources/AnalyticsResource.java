@@ -16,15 +16,23 @@
 
 package com.ning.billing.jaxrs.resources;
 
+import java.util.UUID;
+
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import com.ning.billing.account.api.Account;
+import com.ning.billing.account.api.AccountApiException;
+import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.analytics.api.TimeSeriesData;
 import com.ning.billing.analytics.api.user.AnalyticsUserApi;
 import com.ning.billing.jaxrs.json.TimeSeriesDataJson;
@@ -33,6 +41,7 @@ import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
 import com.ning.billing.util.api.AuditUserApi;
 import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.api.TagUserApi;
+import com.ning.billing.util.callcontext.CallContext;
 
 import com.google.inject.Singleton;
 
@@ -42,17 +51,33 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 @Path(JaxrsResource.ANALYTICS_PATH)
 public class AnalyticsResource extends JaxRsResourceBase {
 
+    private final AccountUserApi accountUserApi;
     private final AnalyticsUserApi analyticsUserApi;
 
     @Inject
-    public AnalyticsResource(final AnalyticsUserApi analyticsUserApi,
+    public AnalyticsResource(final AccountUserApi accountUserApi,
+                             final AnalyticsUserApi analyticsUserApi,
                              final JaxrsUriBuilder uriBuilder,
                              final TagUserApi tagUserApi,
                              final CustomFieldUserApi customFieldUserApi,
                              final AuditUserApi auditUserApi,
                              final Context context) {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, context);
+        this.accountUserApi = accountUserApi;
         this.analyticsUserApi = analyticsUserApi;
+    }
+
+    @PUT
+    @Path("/{accountId:" + UUID_PATTERN + "}")
+    public Response rebuildAnalyticsForAccount(@PathParam("accountId") final String accountId,
+                                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                               @HeaderParam(HDR_REASON) final String reason,
+                                               @HeaderParam(HDR_COMMENT) final String comment,
+                                               @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final Account account = accountUserApi.getAccountById(UUID.fromString(accountId), callContext);
+        analyticsUserApi.rebuildAnalyticsForAccount(account, callContext);
+        return Response.status(Status.OK).build();
     }
 
     @GET

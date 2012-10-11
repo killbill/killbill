@@ -26,13 +26,14 @@ public class EventBaseBuilder<T extends EventBaseBuilder<T>> {
     private long totalOrdering;
     private UUID uuid;
     private UUID subscriptionId;
+    private DateTime createdDate;
+    private DateTime updatedDate;
     private DateTime requestedDate;
     private DateTime effectiveDate;
     private DateTime processedDate;
 
     private long activeVersion;
     private boolean isActive;
-
 
     public EventBaseBuilder() {
         this.uuid = UUID.randomUUID();
@@ -58,6 +59,16 @@ public class EventBaseBuilder<T extends EventBaseBuilder<T>> {
 
     public T setUuid(final UUID uuid) {
         this.uuid = uuid;
+        return (T) this;
+    }
+
+    public T setCreatedDate(final DateTime createdDate) {
+        this.createdDate = createdDate;
+        return (T) this;
+    }
+
+    public T setUpdatedDate(final DateTime updatedDate) {
+        this.updatedDate = updatedDate;
         return (T) this;
     }
 
@@ -97,6 +108,14 @@ public class EventBaseBuilder<T extends EventBaseBuilder<T>> {
 
     public UUID getUuid() {
         return uuid;
+    }
+
+    public DateTime getCreatedDate() {
+        return createdDate;
+    }
+
+    public DateTime getUpdatedDate() {
+        return updatedDate;
     }
 
     public UUID getSubscriptionId() {

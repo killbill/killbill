@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.payment.api;
 
 import java.math.BigDecimal;
@@ -21,10 +22,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.payment.dao.PaymentAttemptModelDao;
 import com.ning.billing.payment.dao.PaymentModelDao;
@@ -32,8 +33,10 @@ import com.ning.billing.payment.dao.RefundModelDao;
 import com.ning.billing.payment.dao.RefundModelDao.RefundStatus;
 import com.ning.billing.util.entity.EntityBase;
 
-public class DefaultPayment extends EntityBase implements Payment {
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
 
+public class DefaultPayment extends EntityBase implements Payment {
 
     private final UUID accountId;
     private final UUID invoiceId;
@@ -48,13 +51,12 @@ public class DefaultPayment extends EntityBase implements Payment {
     private final String extSecondPaymentIdRef;
     private final List<PaymentAttempt> attempts;
 
-
-    private DefaultPayment(final UUID id, final UUID accountId, final UUID invoiceId,
-                           final UUID paymentMethodId, final BigDecimal amount, BigDecimal paidAmount, final Currency currency,
+    private DefaultPayment(final UUID id, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate, final UUID accountId, final UUID invoiceId,
+                           final UUID paymentMethodId, final BigDecimal amount, final BigDecimal paidAmount, final Currency currency,
                            final DateTime effectiveDate, final Integer paymentNumber,
                            final PaymentStatus paymentStatus, final String paymentError, final String extFirstPaymentIdRef,
                            final String extSecondPaymentIdRef, final List<PaymentAttempt> attempts) {
-        super(id);
+        super(id, createdDate, updatedDate);
         this.accountId = accountId;
         this.invoiceId = invoiceId;
         this.paymentMethodId = paymentMethodId;
@@ -71,6 +73,8 @@ public class DefaultPayment extends EntityBase implements Payment {
 
     public DefaultPayment(final PaymentModelDao src, final List<PaymentAttemptModelDao> attempts, final List<RefundModelDao> refunds) {
         this(src.getId(),
+             src.getCreatedDate(),
+             src.getUpdatedDate(),
              src.getAccountId(),
              src.getInvoiceId(),
              src.getPaymentMethodId(),
@@ -140,7 +144,6 @@ public class DefaultPayment extends EntityBase implements Payment {
     public String getExtSecondPaymentIdRef() {
         return extSecondPaymentIdRef;
     }
-
 
     @Override
     public List<PaymentAttempt> getAttempts() {

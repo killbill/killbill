@@ -30,9 +30,10 @@ import com.ning.billing.analytics.model.BusinessAccount;
 import com.ning.billing.util.dao.MapperBase;
 
 public class BusinessAccountMapper extends MapperBase implements ResultSetMapper<BusinessAccount> {
+
     @Override
     public BusinessAccount map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
-        final BusinessAccount account = new BusinessAccount(
+        return new BusinessAccount(
                 UUID.fromString(r.getString(1)),
                 r.getString(2),
                 r.getString(6),
@@ -43,11 +44,9 @@ public class BusinessAccountMapper extends MapperBase implements ResultSetMapper
                 r.getString(10),
                 r.getString(11),
                 r.getString(12),
-                r.getString(13)
+                r.getString(13),
+                new DateTime(r.getLong(3), DateTimeZone.UTC),
+                new DateTime(r.getLong(4), DateTimeZone.UTC)
         );
-        account.setCreatedDt(new DateTime(r.getLong(3), DateTimeZone.UTC));
-        account.setUpdatedDt(new DateTime(r.getLong(4), DateTimeZone.UTC));
-
-        return account;
     }
 }

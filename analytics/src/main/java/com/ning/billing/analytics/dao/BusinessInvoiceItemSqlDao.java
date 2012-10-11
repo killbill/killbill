@@ -56,5 +56,9 @@ public interface BusinessInvoiceItemSqlDao extends Transactional<BusinessInvoice
                           @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
+    void deleteInvoiceItemsForAccount(@Bind("account_id") final String accountId,
+                                      @InternalTenantContextBinder final InternalCallContext context);
+
+    @SqlUpdate
     void test(@InternalTenantContextBinder final InternalTenantContext context);
 }

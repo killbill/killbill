@@ -20,6 +20,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
@@ -34,7 +35,9 @@ public class TenantMapper extends MapperBase implements ResultSetMapper<Tenant> 
         final UUID id = getUUID(result, "id");
         final String externalKey = result.getString("external_key");
         final String apiKey = result.getString("api_key");
+        final DateTime createdDate = getDateTime(result, "created_date");
+        final DateTime updatedDate = getDateTime(result, "updated_date");
 
-        return new DefaultTenant(id, externalKey, apiKey, null);
+        return new DefaultTenant(id, createdDate, updatedDate, externalKey, apiKey, null);
     }
 }

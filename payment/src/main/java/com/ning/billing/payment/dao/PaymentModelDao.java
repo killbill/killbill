@@ -13,10 +13,13 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.payment.dao;
 
 import java.math.BigDecimal;
 import java.util.UUID;
+
+import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 
@@ -39,10 +42,11 @@ public class PaymentModelDao extends EntityBase {
     private final String extFirstPaymentRefId;
     private final String extSecondPaymentRefId;
 
-    public PaymentModelDao(final UUID id, final UUID accountId, final UUID invoiceId, final UUID paymentMethodId,
+    public PaymentModelDao(final UUID id, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate, final UUID accountId,
+                           final UUID invoiceId, final UUID paymentMethodId,
                            final Integer paymentNumber, final BigDecimal amount, final Currency currency,
                            final PaymentStatus paymentStatus, final DateTime effectiveDate, final String extFirstPaymentRefId, final String extSecondPaymentRefId) {
-        super(id);
+        super(id, createdDate, updatedDate);
         this.accountId = accountId;
         this.invoiceId = invoiceId;
         this.paymentMethodId = paymentMethodId;
@@ -56,17 +60,18 @@ public class PaymentModelDao extends EntityBase {
     }
 
     public PaymentModelDao(final UUID accountId, final UUID invoiceId, final UUID paymentMethodId,
-            final BigDecimal amount, final Currency currency, final DateTime effectiveDate, final PaymentStatus paymentStatus) {
-        this(UUID.randomUUID(), accountId, invoiceId, paymentMethodId, INVALID_PAYMENT_NUMBER, amount, currency, paymentStatus, effectiveDate, null, null);
+                           final BigDecimal amount, final Currency currency, final DateTime effectiveDate, final PaymentStatus paymentStatus) {
+        this(UUID.randomUUID(), null, null, accountId, invoiceId, paymentMethodId, INVALID_PAYMENT_NUMBER, amount, currency, paymentStatus, effectiveDate, null, null);
     }
 
     public PaymentModelDao(final UUID accountId, final UUID invoiceId, final UUID paymentMethodId,
-            final BigDecimal amount, final Currency currency, final DateTime effectiveDate) {
-        this(UUID.randomUUID(), accountId, invoiceId, paymentMethodId, INVALID_PAYMENT_NUMBER, amount, currency, PaymentStatus.UNKNOWN, effectiveDate, null, null);
+                           final BigDecimal amount, final Currency currency, final DateTime effectiveDate) {
+        this(UUID.randomUUID(), null, null, accountId, invoiceId, paymentMethodId, INVALID_PAYMENT_NUMBER, amount, currency, PaymentStatus.UNKNOWN, effectiveDate, null, null);
     }
 
     public PaymentModelDao(final PaymentModelDao src, final PaymentStatus newPaymentStatus) {
-        this(src.getId(), src.getAccountId(), src.getInvoiceId(), src.getPaymentMethodId(), src.getPaymentNumber(), src.getAmount(), src.getCurrency(), newPaymentStatus, src.getEffectiveDate(), null, null);
+        this(src.getId(), src.getCreatedDate(), src.getUpdatedDate(), src.getAccountId(), src.getInvoiceId(), src.getPaymentMethodId(),
+             src.getPaymentNumber(), src.getAmount(), src.getCurrency(), newPaymentStatus, src.getEffectiveDate(), null, null);
     }
 
     public UUID getAccountId() {

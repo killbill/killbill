@@ -47,7 +47,7 @@ public class TestKillbillJdbcRealm extends ServerTestSuiteWithEmbeddedDB {
     public void setUp() throws Exception {
         // Create the tenant
         final DefaultTenantDao tenantDao = new DefaultTenantDao(getMysqlTestingHelper().getDBI(), Mockito.mock(Bus.class));
-        tenant = new DefaultTenant(UUID.randomUUID(), UUID.randomUUID().toString(),
+        tenant = new DefaultTenant(UUID.randomUUID(), null, null, UUID.randomUUID().toString(),
                                    UUID.randomUUID().toString(), UUID.randomUUID().toString());
         tenantDao.create(tenant, internalCallContext);
 

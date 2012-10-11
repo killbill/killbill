@@ -38,6 +38,8 @@ public interface AnalyticsDao {
 
     List<BusinessSubscriptionTransition> getTransitionsByKey(String externalKey, InternalTenantContext context);
 
+    List<BusinessSubscriptionTransition> getTransitionsForAccount(String accountKey, InternalTenantContext context);
+
     List<BusinessInvoice> getInvoicesByKey(String accountKey, InternalTenantContext context);
 
     List<BusinessAccountTag> getTagsForAccount(String accountKey, InternalTenantContext context);

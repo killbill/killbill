@@ -17,8 +17,9 @@ package com.ning.billing.payment.api;
 
 import java.util.UUID;
 
+import com.ning.billing.util.entity.Entity;
 
-public interface PaymentMethod {
+public interface PaymentMethod extends Entity {
 
     public UUID getId();
 

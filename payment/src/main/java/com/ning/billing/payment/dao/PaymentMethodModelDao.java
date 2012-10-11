@@ -13,9 +13,14 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.payment.dao;
 
 import java.util.UUID;
+
+import javax.annotation.Nullable;
+
+import org.joda.time.DateTime;
 
 import com.ning.billing.util.entity.EntityBase;
 
@@ -26,9 +31,10 @@ public class PaymentMethodModelDao extends EntityBase {
     private final Boolean isActive;
     private final String externalId;
 
-    public PaymentMethodModelDao(final UUID id, final UUID accountId, final String pluginName,
+    public PaymentMethodModelDao(final UUID id, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate,
+                                 final UUID accountId, final String pluginName,
                                  final Boolean isActive, final String externalId) {
-        super(id);
+        super(id, createdDate, updatedDate);
         this.accountId = accountId;
         this.pluginName = pluginName;
         this.isActive = isActive;

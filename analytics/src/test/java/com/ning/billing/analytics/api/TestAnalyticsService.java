@@ -79,9 +79,9 @@ import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.payment.dao.PaymentAttemptModelDao;
 import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.dao.PaymentModelDao;
-import com.ning.billing.util.svcsapi.bus.Bus;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;
+import com.ning.billing.util.svcsapi.bus.Bus;
 
 import com.google.inject.Inject;
 
@@ -224,9 +224,8 @@ public class TestAnalyticsService extends AnalyticsTestSuiteWithEmbeddedDB {
 
     private void createInvoiceAndPaymentCreationEvents(final Account account) {
         final DefaultInvoice invoice = new DefaultInvoice(account.getId(), clock.getUTCToday(), clock.getUTCToday(), ACCOUNT_CURRENCY);
-        final FixedPriceInvoiceItem invoiceItem = new FixedPriceInvoiceItem(
-                UUID.randomUUID(), invoice.getId(), account.getId(), UUID.randomUUID(), UUID.randomUUID(), "somePlan", "somePhase", clock.getUTCToday(),
-                INVOICE_AMOUNT, ACCOUNT_CURRENCY);
+        final FixedPriceInvoiceItem invoiceItem = new FixedPriceInvoiceItem(invoice.getId(), account.getId(), UUID.randomUUID(), UUID.randomUUID(), "somePlan", "somePhase", clock.getUTCToday(),
+                                                                            INVOICE_AMOUNT, ACCOUNT_CURRENCY);
         invoice.addInvoiceItem(invoiceItem);
 
         invoiceDao.create(invoice, invoice.getTargetDate().getDayOfMonth(), true, internalCallContext);

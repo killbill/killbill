@@ -19,6 +19,9 @@ package com.ning.billing.invoice.model;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 
 import com.ning.billing.catalog.api.Currency;
@@ -29,13 +32,18 @@ public class ItemAdjInvoiceItem extends AdjInvoiceItem {
 
     public ItemAdjInvoiceItem(final InvoiceItem invoiceItem, final LocalDate effectiveDate,
                               final BigDecimal amount, final Currency currency) {
-        super(invoiceItem.getInvoiceId(), invoiceItem.getAccountId(), effectiveDate, effectiveDate,
-              amount, currency, invoiceItem.getId());
+        this(UUID.randomUUID(), invoiceItem.getInvoiceId(), invoiceItem.getAccountId(), effectiveDate,
+             amount, currency, invoiceItem.getId());
     }
 
     public ItemAdjInvoiceItem(final UUID id, final UUID invoiceId, final UUID accountId, final LocalDate startDate,
                               final BigDecimal amount, final Currency currency, final UUID linkedItemId) {
-        super(id, invoiceId, accountId, startDate, startDate, amount, currency, linkedItemId);
+        this(id, null, invoiceId, accountId, startDate, amount, currency, linkedItemId);
+    }
+
+    public ItemAdjInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, final LocalDate startDate,
+                              final BigDecimal amount, final Currency currency, final UUID linkedItemId) {
+        super(id, createdDate, invoiceId, accountId, startDate, startDate, amount, currency, linkedItemId);
     }
 
     @Override

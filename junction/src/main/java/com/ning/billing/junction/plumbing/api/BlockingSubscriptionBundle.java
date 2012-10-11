@@ -18,6 +18,8 @@ package com.ning.billing.junction.plumbing.api;
 
 import java.util.UUID;
 
+import org.joda.time.DateTime;
+
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.overdue.OverdueState;
@@ -45,6 +47,16 @@ public class BlockingSubscriptionBundle implements SubscriptionBundle {
     @Override
     public UUID getId() {
         return subscriptionBundle.getId();
+    }
+
+    @Override
+    public DateTime getCreatedDate() {
+        return subscriptionBundle.getCreatedDate();
+    }
+
+    @Override
+    public DateTime getUpdatedDate() {
+        return subscriptionBundle.getUpdatedDate();
     }
 
     @Override

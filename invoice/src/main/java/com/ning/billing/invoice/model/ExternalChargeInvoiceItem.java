@@ -21,6 +21,7 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 
 import com.ning.billing.catalog.api.Currency;
@@ -31,12 +32,17 @@ public class ExternalChargeInvoiceItem extends InvoiceItemBase {
 
     public ExternalChargeInvoiceItem(final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId, @Nullable final String description,
                                      final LocalDate date, final BigDecimal amount, final Currency currency) {
-        super(invoiceId, accountId, bundleId, null, description, null, date, null, amount, currency);
+        this(UUID.randomUUID(), invoiceId, accountId, bundleId, description, date, amount, currency);
     }
 
     public ExternalChargeInvoiceItem(final UUID id, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
                                      @Nullable final String description, final LocalDate date, final BigDecimal amount, final Currency currency) {
-        super(id, invoiceId, accountId, bundleId, (UUID) null, description, null, date, null, amount, currency);
+        this(id, null, invoiceId, accountId, bundleId, description, date, amount, currency);
+    }
+
+    public ExternalChargeInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
+                                     @Nullable final String description, final LocalDate date, final BigDecimal amount, final Currency currency) {
+        super(id, createdDate, invoiceId, accountId, bundleId, (UUID) null, description, null, date, null, amount, currency);
     }
 
     @Override

@@ -19,6 +19,8 @@ package com.ning.billing.invoice.model;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 
@@ -27,20 +29,15 @@ import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceItemType;
 
 public abstract class AdjInvoiceItem extends InvoiceItemBase {
-    public AdjInvoiceItem(final UUID invoiceId, final UUID accountId, final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final Currency currency) {
-        this(UUID.randomUUID(), invoiceId, accountId, startDate, endDate, amount, currency);
+
+    public AdjInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId,
+                          final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final Currency currency) {
+        this(id, createdDate, invoiceId, accountId, startDate, endDate, amount, currency, null);
     }
 
-    public AdjInvoiceItem(final UUID invoiceId, final UUID accountId, final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final Currency currency, final UUID reversingId) {
-        this(UUID.randomUUID(), invoiceId, accountId, startDate, endDate, amount, currency, reversingId);
-    }
-
-    public AdjInvoiceItem(final UUID id, final UUID invoiceId, final UUID accountId, final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final Currency currency) {
-        super(id, invoiceId, accountId, null, null, null, null, startDate, endDate, amount, currency);
-    }
-
-    public AdjInvoiceItem(final UUID id, final UUID invoiceId, final UUID accountId, final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final Currency currency, final UUID reversingId) {
-        super(id, invoiceId, accountId, null, null, null, null, startDate, endDate, amount, currency, reversingId);
+    public AdjInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId,
+                          final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final Currency currency, @Nullable final UUID reversingId) {
+        super(id, createdDate, invoiceId, accountId, null, null, null, null, startDate, endDate, amount, currency, reversingId);
     }
 
     @Override

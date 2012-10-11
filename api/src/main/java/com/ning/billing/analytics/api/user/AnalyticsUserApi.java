@@ -16,7 +16,9 @@
 
 package com.ning.billing.analytics.api.user;
 
+import com.ning.billing.account.api.Account;
 import com.ning.billing.analytics.api.TimeSeriesData;
+import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.TenantContext;
 
 public interface AnalyticsUserApi {
@@ -32,4 +34,12 @@ public interface AnalyticsUserApi {
      * @return the number of new subscriptions created per day (transfers not included)
      */
     public TimeSeriesData getSubscriptionsCreatedOverTime(String productType, String slug, TenantContext context);
+
+    /**
+     * Rebuild all analytics tables for an account
+     *
+     * @param account account
+     * @param context call context
+     */
+    void rebuildAnalyticsForAccount(Account account, CallContext context);
 }
