@@ -55,21 +55,21 @@ public class MigrationPlanAligner {
                                                                                        input[1].getPlanPhaseSpecifier().getBillingPeriod(), input[1].getPlanPhaseSpecifier().getPriceListName(), now) :
                     null;
 
-            DateTime migrationStartDate = now;
+            DateTime migrationStartDate = input[0].getEffectiveDate();
 
             if (isRegularMigratedSubscription(input)) {
 
                 events = getEventsOnRegularMigration(plan0,
                                                      getPlanPhase(plan0, input[0].getPlanPhaseSpecifier().getPhaseType()),
                                                      input[0].getPlanPhaseSpecifier().getPriceListName(),
-                                                     now);
+                                                     migrationStartDate);
 
             } else if (isRegularFutureCancelledMigratedSubscription(input)) {
 
                 events = getEventsOnFuturePlanCancelMigration(plan0,
                                                               getPlanPhase(plan0, input[0].getPlanPhaseSpecifier().getPhaseType()),
                                                               input[0].getPlanPhaseSpecifier().getPriceListName(),
-                                                              now,
+                                                              migrationStartDate,
                                                               input[0].getCancelledDate());
 
             } else if (isPhaseChangeMigratedSubscription(input)) {
@@ -101,7 +101,7 @@ public class MigrationPlanAligner {
                                                               plan1,
                                                               getPlanPhase(plan1, input[1].getPlanPhaseSpecifier().getPhaseType()),
                                                               input[0].getPlanPhaseSpecifier().getPriceListName(),
-                                                              now,
+                                                              migrationStartDate,
                                                               input[1].getEffectiveDate());
 
             } else {

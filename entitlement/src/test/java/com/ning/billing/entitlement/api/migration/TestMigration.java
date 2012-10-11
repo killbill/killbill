@@ -16,6 +16,11 @@
 
 package com.ning.billing.entitlement.api.migration;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
+import static org.testng.Assert.assertTrue;
+
 import java.util.List;
 
 import org.joda.time.DateTime;
@@ -31,11 +36,6 @@ import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi.Entitl
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertNull;
-import static org.testng.Assert.assertTrue;
 
 public abstract class TestMigration extends TestApiBase {
     public void testSingleBasePlan() {
@@ -56,7 +56,7 @@ public abstract class TestMigration extends TestApiBase {
             final List<Subscription> subscriptions = entitlementApi.getSubscriptionsForBundle(bundle.getId(), callContext);
             assertEquals(subscriptions.size(), 1);
             final Subscription subscription = subscriptions.get(0);
-            assertDateWithin(subscription.getStartDate(), beforeMigration, afterMigration);
+            assertTrue(subscription.getStartDate().compareTo(startDate) == 0);
             assertEquals(subscription.getEndDate(), null);
             assertEquals(subscription.getCurrentPriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
             assertEquals(subscription.getCurrentPhase().getPhaseType(), PhaseType.EVERGREEN);
@@ -92,7 +92,7 @@ public abstract class TestMigration extends TestApiBase {
 
             final Subscription baseSubscription = (subscriptions.get(0).getCurrentPlan().getProduct().getCategory() == ProductCategory.BASE) ?
                     subscriptions.get(0) : subscriptions.get(1);
-            assertDateWithin(baseSubscription.getStartDate(), beforeMigration, afterMigration);
+            assertTrue(baseSubscription.getStartDate().compareTo(initalBPStart) == 0);
             assertEquals(baseSubscription.getEndDate(), null);
             assertEquals(baseSubscription.getCurrentPriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
             assertEquals(baseSubscription.getCurrentPhase().getPhaseType(), PhaseType.EVERGREEN);
@@ -138,7 +138,7 @@ public abstract class TestMigration extends TestApiBase {
             final List<Subscription> subscriptions = entitlementApi.getSubscriptionsForBundle(bundle.getId(), callContext);
             assertEquals(subscriptions.size(), 1);
             final Subscription subscription = subscriptions.get(0);
-            assertDateWithin(subscription.getStartDate(), beforeMigration, afterMigration);
+            assertTrue(subscription.getStartDate().compareTo(startDate) == 0);
             assertEquals(subscription.getCurrentPriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
             assertEquals(subscription.getCurrentPhase().getPhaseType(), PhaseType.EVERGREEN);
             assertEquals(subscription.getState(), SubscriptionState.ACTIVE);
@@ -153,7 +153,7 @@ public abstract class TestMigration extends TestApiBase {
             clock.addDeltaFromReality(it.toDurationMillis());
             assertTrue(testListener.isCompleted(5000));
 
-            assertDateWithin(subscription.getStartDate(), beforeMigration, afterMigration);
+            assertTrue(subscription.getStartDate().compareTo(startDate) == 0);
             assertNotNull(subscription.getEndDate());
             assertTrue(subscription.getEndDate().isAfterNow());
             assertEquals(subscription.getCurrentPriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
