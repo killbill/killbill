@@ -32,7 +32,6 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.analytics.dao.BusinessAccountSqlDao;
 import com.ning.billing.analytics.model.BusinessAccount;
-import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.api.PaymentApi;
@@ -91,12 +90,7 @@ public class BusinessAccountDao {
     }
 
     public BusinessAccount createBusinessAccountFromAccount(final Account account, final InternalTenantContext context) {
-        final BusinessAccount bac = new BusinessAccount(account.getId());
-
-        bac.setName(account.getName());
-        bac.setKey(account.getExternalKey());
-        final Currency currency = account.getCurrency();
-        bac.setCurrency(currency != null ? currency.toString() : bac.getCurrency());
+        final BusinessAccount bac = new BusinessAccount(account);
 
         try {
             LocalDate lastInvoiceDate = bac.getLastInvoiceDate();

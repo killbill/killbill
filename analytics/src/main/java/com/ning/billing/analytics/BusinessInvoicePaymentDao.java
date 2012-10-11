@@ -21,6 +21,7 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 
+import org.joda.time.DateTime;
 import org.skife.jdbi.v2.Transaction;
 import org.skife.jdbi.v2.TransactionStatus;
 import org.slf4j.Logger;
@@ -129,12 +130,18 @@ public class BusinessInvoicePaymentDao {
         // invoicePayment may be null on payment failures
         final String invoicePaymentType;
         final UUID linkedInvoicePaymentId;
+        final DateTime createdDate;
+        final DateTime updatedDate;
         if (invoicePayment != null) {
             invoicePaymentType = invoicePayment.getType().toString();
             linkedInvoicePaymentId = invoicePayment.getLinkedInvoicePaymentId();
+            createdDate = invoicePayment.getCreatedDate();
+            updatedDate = invoicePayment.getUpdatedDate();
         } else {
             invoicePaymentType = null;
             linkedInvoicePaymentId = null;
+            createdDate = clock.getUTCNow();
+            updatedDate = createdDate;
         }
 
         final BusinessInvoicePayment businessInvoicePayment = new BusinessInvoicePayment(
@@ -144,7 +151,7 @@ public class BusinessInvoicePaymentDao {
                 extSecondPaymentRefId,
                 cardCountry,
                 cardType,
-                clock.getUTCNow(),
+                createdDate,
                 payment.getCurrency(),
                 payment.getEffectiveDate(),
                 payment.getInvoiceId(),
@@ -155,7 +162,7 @@ public class BusinessInvoicePaymentDao {
                 paymentMethod.getPluginName(),
                 payment.getPaymentStatus().toString(),
                 payment.getAmount(),
-                clock.getUTCNow(),
+                updatedDate,
                 invoicePaymentType,
                 linkedInvoicePaymentId);
 

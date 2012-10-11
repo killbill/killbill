@@ -47,7 +47,12 @@ public @interface BusinessAccountBinder {
                     } else {
                         q.bind("created_date", dateTimeNow.getMillis());
                     }
-                    q.bind("updated_date", dateTimeNow.getMillis());
+
+                    if (account.getUpdatedDt() != null) {
+                        q.bind("updated_date", account.getUpdatedDt().getMillis());
+                    } else {
+                        q.bind("updated_date", dateTimeNow.getMillis());
+                    }
 
                     q.bind("account_id", account.getAccountId().toString());
                     q.bind("account_key", account.getKey());
