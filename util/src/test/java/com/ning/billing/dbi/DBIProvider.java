@@ -18,6 +18,7 @@ package com.ning.billing.dbi;
 
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.IDBI;
+import org.skife.jdbi.v2.tweak.transactions.SerializableTransactionRunner;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -25,6 +26,7 @@ import com.jolbox.bonecp.BoneCPConfig;
 import com.jolbox.bonecp.BoneCPDataSource;
 
 public class DBIProvider implements Provider<IDBI> {
+
     private final DbiConfig config;
 
     @Inject
@@ -48,6 +50,8 @@ public class DBIProvider implements Provider<IDBI> {
 
         final BoneCPDataSource ds = new BoneCPDataSource(dbConfig);
         final DBI dbi = new DBI(ds);
+        // Restart transactions in case of deadlocks
+        dbi.setTransactionHandler(new SerializableTransactionRunner());
         //final SQLLog log = new Log4JLog();
         //dbi.setSQLLog(log);
 
