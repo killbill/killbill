@@ -25,7 +25,6 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
@@ -44,7 +43,6 @@ import com.ning.billing.invoice.api.InvoiceItemType;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.InvoicePayment.InvoicePaymentType;
 import com.ning.billing.invoice.api.user.DefaultInvoiceAdjustmentEvent;
-import com.ning.billing.invoice.generator.InvoiceDateUtils;
 import com.ning.billing.invoice.model.CreditAdjInvoiceItem;
 import com.ning.billing.invoice.model.CreditBalanceAdjInvoiceItem;
 import com.ning.billing.invoice.model.DefaultInvoice;
@@ -206,7 +204,7 @@ public class AuditedInvoiceDao implements InvoiceDao {
                     audits.addAll(createAudits(TableName.INVOICE_ITEMS, recordIdList));
 
                     final List<InvoiceItem> recurringInvoiceItems = invoice.getInvoiceItems(RecurringInvoiceItem.class);
-                    notifyOfFutureBillingEvents(transactional, invoice.getAccountId(), billCycleDayUTC, recurringInvoiceItems);
+                    notifyOfFutureBillingEvents(transactional, invoice.getAccountId(), recurringInvoiceItems);
 
                     final List<InvoicePayment> invoicePayments = invoice.getPayments();
                     final InvoicePaymentSqlDao invoicePaymentSqlDao = transactional.become(InvoicePaymentSqlDao.class);
@@ -948,30 +946,21 @@ public class AuditedInvoiceDao implements InvoiceDao {
         invoice.addPayments(invoicePayments);
     }
 
-    private void notifyOfFutureBillingEvents(final InvoiceSqlDao dao, final UUID accountId, final int billCycleDayUTC, final List<InvoiceItem> invoiceItems) {
-        UUID subscriptionForNextNotification = null;
-        boolean shouldBeNotified = false;
+    private void notifyOfFutureBillingEvents(final InvoiceSqlDao dao, final UUID accountId, final List<InvoiceItem> invoiceItems) {
+
         for (final InvoiceItem item : invoiceItems) {
             if (item.getInvoiceItemType() == InvoiceItemType.RECURRING) {
                 final RecurringInvoiceItem recurringInvoiceItem = (RecurringInvoiceItem) item;
                 if ((recurringInvoiceItem.getEndDate() != null) &&
                         (recurringInvoiceItem.getAmount() == null ||
                         recurringInvoiceItem.getAmount().compareTo(BigDecimal.ZERO) >= 0)) {
-                    subscriptionForNextNotification = recurringInvoiceItem.getSubscriptionId();
-                    shouldBeNotified = true;
-                    break;
+                    //
+                    // We insert a future notification for each recurring subscription at the end of the service period  = new CTD of the subscription
+                    //
+                    nextBillingDatePoster.insertNextBillingNotification(dao, accountId, recurringInvoiceItem.getSubscriptionId(),
+                            recurringInvoiceItem.getEndDate().toDateTimeAtCurrentTime());
                 }
             }
-        }
-
-        // We only need to get notified on the BCD. For other invoice events (e.g. phase changes),
-        // we'll be notified by entitlement.
-        if (shouldBeNotified) {
-            // We could be notified at any time during the day at the billCycleDay - use the current time to
-            // spread the load.
-            final DateTime nextNotificationDateTime = InvoiceDateUtils.calculateBillingCycleDateAfter(clock.getUTCNow(), billCycleDayUTC);
-            // NextBillingDatePoster will ignore duplicates
-            nextBillingDatePoster.insertNextBillingNotification(dao, accountId, subscriptionForNextNotification, nextNotificationDateTime);
         }
     }
 
