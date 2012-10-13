@@ -20,6 +20,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
@@ -27,19 +29,19 @@ import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.ExternalizedSqlViaStringTemplate3;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import com.ning.billing.util.validation.ColumnInfo;
+import com.ning.billing.util.validation.DefaultColumnInfo;
 
 @ExternalizedSqlViaStringTemplate3
 @RegisterMapper(DatabaseSchemaSqlDao.ColumnInfoMapper.class)
 public interface DatabaseSchemaSqlDao {
 
     @SqlQuery
-    List<ColumnInfo> getSchemaInfo(@Bind("schemaName") final String schemaName);
+    List<DefaultColumnInfo> getSchemaInfo(@Nullable @Bind("schemaName") final String schemaName);
 
-    class ColumnInfoMapper implements ResultSetMapper<ColumnInfo> {
+    class ColumnInfoMapper implements ResultSetMapper<DefaultColumnInfo> {
 
         @Override
-        public ColumnInfo map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
+        public DefaultColumnInfo map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
             final String tableName = r.getString("table_name");
             final String columnName = r.getString("column_name");
             final Integer scale = r.getInt("numeric_scale");
@@ -48,7 +50,7 @@ public interface DatabaseSchemaSqlDao {
             final Integer maximumLength = r.getInt("character_maximum_length");
             final String dataType = r.getString("data_type");
 
-            return new ColumnInfo(tableName, columnName, scale, precision, isNullable, maximumLength, dataType);
+            return new DefaultColumnInfo(tableName, columnName, scale, precision, isNullable, maximumLength, dataType);
         }
     }
 }

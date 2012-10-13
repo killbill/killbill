@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2012 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,13 +18,18 @@ package com.ning.billing.util.validation.dao;
 
 import java.util.List;
 
+import javax.annotation.Nullable;
+import javax.inject.Singleton;
+
 import org.skife.jdbi.v2.IDBI;
 
-import com.ning.billing.util.validation.ColumnInfo;
+import com.ning.billing.util.validation.DefaultColumnInfo;
 
 import com.google.inject.Inject;
 
+@Singleton
 public class DatabaseSchemaDao {
+
     private final DatabaseSchemaSqlDao dao;
 
     @Inject
@@ -32,7 +37,11 @@ public class DatabaseSchemaDao {
         this.dao = dbi.onDemand(DatabaseSchemaSqlDao.class);
     }
 
-    public List<ColumnInfo> getColumnInfoList(final String schemaName) {
+    public List<DefaultColumnInfo> getColumnInfoList() {
+        return getColumnInfoList(null);
+    }
+
+    public List<DefaultColumnInfo> getColumnInfoList(@Nullable final String schemaName) {
         return dao.getSchemaInfo(schemaName);
     }
 }

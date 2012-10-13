@@ -62,6 +62,7 @@ import com.ning.billing.util.glue.AuditModule;
 import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.CallContextModule;
 import com.ning.billing.util.glue.CustomFieldModule;
+import com.ning.billing.util.glue.ExportModule;
 import com.ning.billing.util.glue.GlobalLockerModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.TagStoreModule;
@@ -182,6 +183,7 @@ public class TestJaxrsBase extends KillbillClient {
             install(new DefaultJunctionModule());
             install(new DefaultOverdueModule());
             install(new TenantModule());
+            install(new ExportModule());
             installClock();
         }
 

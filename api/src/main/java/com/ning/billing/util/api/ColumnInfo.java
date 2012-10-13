@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2012 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -14,16 +14,13 @@
  * under the License.
  */
 
-package com.ning.billing.util.validation;
+package com.ning.billing.util.api;
 
-import java.util.HashMap;
+public interface ColumnInfo {
 
-public class ValidationConfiguration extends HashMap<String, DefaultColumnInfo> {
-    public void addMapping(final String propertyName, final DefaultColumnInfo columnInfo) {
-        super.put(propertyName, columnInfo);
-    }
+    public String getTableName();
 
-    public boolean hasMapping(final String propertyName) {
-        return super.get(propertyName) != null;
-    }
+    public String getColumnName();
+
+    public String getDataType();
 }

@@ -20,7 +20,6 @@ package com.ning.billing.server.modules;
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.IDBI;
 
-import com.google.inject.AbstractModule;
 import com.ning.billing.account.glue.DefaultAccountModule;
 import com.ning.billing.analytics.setup.AnalyticsModule;
 import com.ning.billing.beatrix.glue.BeatrixModule;
@@ -49,10 +48,13 @@ import com.ning.billing.util.glue.BusModule;
 import com.ning.billing.util.glue.CallContextModule;
 import com.ning.billing.util.glue.ClockModule;
 import com.ning.billing.util.glue.CustomFieldModule;
+import com.ning.billing.util.glue.ExportModule;
 import com.ning.billing.util.glue.GlobalLockerModule;
 import com.ning.billing.util.glue.NotificationQueueModule;
 import com.ning.billing.util.glue.TagStoreModule;
 import com.ning.jetty.jdbi.guice.providers.DBIProvider;
+
+import com.google.inject.AbstractModule;
 
 public class KillbillServerModule extends AbstractModule {
     @Override
@@ -111,6 +113,7 @@ public class KillbillServerModule extends AbstractModule {
         install(new DefaultJunctionModule());
         install(new DefaultOverdueModule());
         install(new TenantModule());
+        install(new ExportModule());
         installClock();
     }
 }

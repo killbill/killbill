@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2012 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -14,16 +14,21 @@
  * under the License.
  */
 
-package com.ning.billing.util.validation;
+package com.ning.billing.util.glue;
 
-import java.util.HashMap;
+import com.ning.billing.util.api.ExportUserApi;
+import com.ning.billing.util.export.api.DefaultExportUserApi;
 
-public class ValidationConfiguration extends HashMap<String, DefaultColumnInfo> {
-    public void addMapping(final String propertyName, final DefaultColumnInfo columnInfo) {
-        super.put(propertyName, columnInfo);
+import com.google.inject.AbstractModule;
+
+public class ExportModule extends AbstractModule {
+
+    protected void installUserApi() {
+        bind(ExportUserApi.class).to(DefaultExportUserApi.class).asEagerSingleton();
     }
 
-    public boolean hasMapping(final String propertyName) {
-        return super.get(propertyName) != null;
+    @Override
+    protected void configure() {
+        installUserApi();
     }
 }
