@@ -16,6 +16,10 @@
 
 package com.ning.billing.beatrix.integration;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
+
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
@@ -40,10 +44,6 @@ import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceItemType;
-
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
 
 @Guice(modules = {BeatrixModule.class})
 public class TestIntegration extends TestIntegrationBase {
@@ -116,10 +116,10 @@ public class TestIntegration extends TestIntegrationBase {
         //
         // MOVE 4 * TIME THE CLOCK
         //
-        setDateAndCheckForCompletion(new DateTime(2012, 2, 28, 0, 3, 45, 0, testTimeZone));
-        setDateAndCheckForCompletion(new DateTime(2012, 2, 29, 0, 3, 45, 0, testTimeZone));
-        setDateAndCheckForCompletion(new DateTime(2012, 3, 1, 0, 3, 45, 0, testTimeZone));
-        setDateAndCheckForCompletion(new DateTime(2012, 3, 2, 0, 3, 45, 0, testTimeZone), NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
+        setDateAndCheckForCompletion(new DateTime(2012, 2, 28, 23, 59, 59, 0, testTimeZone));
+        setDateAndCheckForCompletion(new DateTime(2012, 2, 29, 23, 59, 59, 0, testTimeZone));
+        setDateAndCheckForCompletion(new DateTime(2012, 3, 1, 23, 59, 59, 0, testTimeZone));
+        setDateAndCheckForCompletion(new DateTime(2012, 3, 2, 23, 59, 59, 0, testTimeZone), NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
         invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedItemCheck(new LocalDate(2012, 3, 2),
                                                                                                new LocalDate(2012, 3, 31), InvoiceItemType.RECURRING, new BigDecimal("561.25")));
         invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 3, 31), callContext);
@@ -198,10 +198,10 @@ public class TestIntegration extends TestIntegrationBase {
         //
         // MOVE 4 * TIME THE CLOCK
         //
-        setDateAndCheckForCompletion(new DateTime(2012, 2, 28, 0, 3, 45, 0, testTimeZone));
-        setDateAndCheckForCompletion(new DateTime(2012, 2, 29, 0, 3, 45, 0, testTimeZone));
-        setDateAndCheckForCompletion(new DateTime(2012, 3, 1, 0, 3, 45, 0, testTimeZone));
-        setDateAndCheckForCompletion(new DateTime(2012, 3, 2, 0, 3, 45, 0, testTimeZone), NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
+        setDateAndCheckForCompletion(new DateTime(2012, 2, 28, 23, 59, 59, 0, testTimeZone));
+        setDateAndCheckForCompletion(new DateTime(2012, 2, 29, 23, 59, 59, 0, testTimeZone));
+        setDateAndCheckForCompletion(new DateTime(2012, 3, 1, 23, 59, 59, 0, testTimeZone));
+        setDateAndCheckForCompletion(new DateTime(2012, 3, 2, 23, 59, 59, 0, testTimeZone), NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
         invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedItemCheck(new LocalDate(2012, 3, 2),
                                                                                                new LocalDate(2012, 4, 2), InvoiceItemType.RECURRING, new BigDecimal("599.95")));
         invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 4, 2), callContext);
@@ -280,16 +280,16 @@ public class TestIntegration extends TestIntegrationBase {
         //
         // MOVE 4 * TIME THE CLOCK
         //
-        setDateAndCheckForCompletion(new DateTime(2012, 2, 28, 0, 3, 45, 0, testTimeZone));
-        setDateAndCheckForCompletion(new DateTime(2012, 2, 29, 0, 3, 45, 0, testTimeZone));
-        setDateAndCheckForCompletion(new DateTime(2012, 3, 1, 0, 3, 45, 0, testTimeZone));
-        setDateAndCheckForCompletion(new DateTime(2012, 3, 2, 0, 3, 45, 0, testTimeZone), NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
+        setDateAndCheckForCompletion(new DateTime(2012, 2, 28,  23, 59, 59, 0, testTimeZone));
+        setDateAndCheckForCompletion(new DateTime(2012, 2, 29,  23, 59, 59, 0, testTimeZone));
+        setDateAndCheckForCompletion(new DateTime(2012, 3, 1,  23, 59, 59, 0, testTimeZone));
+        setDateAndCheckForCompletion(new DateTime(2012, 3, 2,  23, 59, 59, 0, testTimeZone), NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT);
         // PRO_RATION
         invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedItemCheck(new LocalDate(2012, 3, 2),
                                                                                                new LocalDate(2012, 3, 3), InvoiceItemType.RECURRING, new BigDecimal("20.70")));
         invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 3, 3), callContext);
 
-        setDateAndCheckForCompletion(new DateTime(2012, 3, 3, 0, 3, 45, 0, testTimeZone), NextEvent.INVOICE, NextEvent.PAYMENT);
+        setDateAndCheckForCompletion(new DateTime(2012, 3, 3, 23, 59, 59, 0, testTimeZone), NextEvent.INVOICE, NextEvent.PAYMENT);
         invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedItemCheck(new LocalDate(2012, 3, 3),
                                                                                                new LocalDate(2012, 4, 3), InvoiceItemType.RECURRING, new BigDecimal("599.95")));
         invoiceChecker.checkChargedThroughDate(subscription.getId(), new LocalDate(2012, 4, 3), callContext);
