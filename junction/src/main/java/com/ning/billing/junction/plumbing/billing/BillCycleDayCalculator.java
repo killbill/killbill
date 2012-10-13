@@ -175,5 +175,15 @@ public class BillCycleDayCalculator {
         public int getDayOfMonthLocal() {
             return bcdTime.toDateTime(accountTimeZone).getDayOfMonth();
         }
+
+        @Override
+        public String toString() {
+            final StringBuilder sb = new StringBuilder();
+            sb.append("CalculatedBillCycleDay");
+            sb.append("{bcdTime=").append(bcdTime);
+            sb.append(", accountTimeZone=").append(accountTimeZone);
+            sb.append('}');
+            return sb.toString();
+        }
     }
 }
