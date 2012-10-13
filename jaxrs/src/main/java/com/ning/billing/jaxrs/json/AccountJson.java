@@ -135,7 +135,11 @@ public class AccountJson extends AccountJsonSimple {
 
             @Override
             public Currency getCurrency() {
-                return Currency.valueOf(currency);
+                if (currency == null) {
+                    return null;
+                } else {
+                    return Currency.valueOf(currency);
+                }
             }
 
             @Override

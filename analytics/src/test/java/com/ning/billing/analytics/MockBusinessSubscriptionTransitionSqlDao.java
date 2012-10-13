@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.skife.jdbi.v2.Transaction;
+import org.skife.jdbi.v2.TransactionIsolationLevel;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.testng.Assert;
 
@@ -117,5 +118,10 @@ public class MockBusinessSubscriptionTransitionSqlDao implements BusinessSubscri
             Assert.fail(e.toString());
             return null;
         }
+    }
+
+    @Override
+    public <ReturnType> ReturnType inTransaction(final TransactionIsolationLevel isolation, final Transaction<ReturnType, BusinessSubscriptionTransitionSqlDao> func) {
+        return inTransaction(func);
     }
 }
