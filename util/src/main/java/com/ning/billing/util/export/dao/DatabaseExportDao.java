@@ -31,6 +31,7 @@ import org.skife.jdbi.v2.tweak.HandleCallback;
 import com.ning.billing.util.api.ColumnInfo;
 import com.ning.billing.util.api.DatabaseExportOutputStream;
 import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.validation.DefaultColumnInfo;
 import com.ning.billing.util.validation.dao.DatabaseSchemaDao;
 
@@ -88,16 +89,22 @@ public class DatabaseExportDao {
             }
         }
 
-        // Don't export non-account specific tables - TODO accounts
-        if (!hasAccountRecordIdColumn) {
+        final String tableName = columnsForTable.get(0).getTableName();
+        final boolean isAccountTable = TableName.ACCOUNT.getTableName().equals(tableName);
+
+        // Don't export non-account specific tables
+        if (!isAccountTable && !hasAccountRecordIdColumn) {
             return;
         }
 
         // Build the query - make sure to filter by account and tenant!
-        final String tableName = columnsForTable.get(0).getTableName();
         queryBuilder.append(" from ")
-                    .append(tableName)
-                    .append(" where account_record_id = :accountRecordId and tenant_record_id = :tenantRecordId");
+                    .append(tableName);
+        if (isAccountTable) {
+            queryBuilder.append(" where record_id = :accountRecordId and tenant_record_id = :tenantRecordId");
+        } else {
+            queryBuilder.append(" where account_record_id = :accountRecordId and tenant_record_id = :tenantRecordId");
+        }
 
         // Notify the stream that we're about to write data for a different table
         out.newTable(tableName, columnsForTable);

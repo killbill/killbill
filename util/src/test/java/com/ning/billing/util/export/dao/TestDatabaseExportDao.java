@@ -17,6 +17,8 @@
 package com.ning.billing.util.export.dao;
 
 import java.io.ByteArrayOutputStream;
+import java.util.Date;
+import java.util.UUID;
 
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.tweak.HandleCallback;
@@ -44,6 +46,16 @@ public class TestDatabaseExportDao extends UtilTestSuiteWithEmbeddedDB {
         final String dump = getDump();
         Assert.assertEquals(dump, "");
 
+        final String accountId = UUID.randomUUID().toString();
+        final String accountEmail = UUID.randomUUID().toString().substring(0, 4) + '@' + UUID.randomUUID().toString().substring(0, 4);
+        final String accountName = UUID.randomUUID().toString().substring(0, 4);
+        final int firstNameLength = 4;
+        final boolean isNotifiedForInvoices = false;
+        final Date createdDate = new Date(12421982000L);
+        final String createdBy = UUID.randomUUID().toString().substring(0, 4);
+        final Date updatedDate = new Date(382910622000L);
+        final String updatedBy = UUID.randomUUID().toString().substring(0, 4);
+
         final String tableNameA = "test_database_export_dao_a";
         final String tableNameB = "test_database_export_dao_b";
         getMysqlTestingHelper().getDBI().withHandle(new HandleCallback<Void>() {
@@ -63,13 +75,22 @@ public class TestDatabaseExportDao extends UtilTestSuiteWithEmbeddedDB {
                                internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());
                 handle.execute("insert into " + tableNameB + " (account_record_id, tenant_record_id) values (?, ?)",
                                internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());
+
+                // Add row in accounts table
+                handle.execute("insert into accounts (record_id, id, email, name, first_name_length, is_notified_for_invoices, created_date, created_by, updated_date, updated_by, tenant_record_id) " +
+                               "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                               internalCallContext.getAccountRecordId(), accountId, accountEmail, accountName, firstNameLength, isNotifiedForInvoices, createdDate, createdBy, updatedDate, updatedBy, internalCallContext.getTenantRecordId());
                 return null;
             }
         });
 
         // Verify new dump
         final String newDump = getDump();
-        Assert.assertEquals(newDump, "-- " + tableNameA + " record_id,a_column,account_record_id,tenant_record_id\n" +
+        // Note: unclear why Jackson would quote the header?
+        Assert.assertEquals(newDump, "-- accounts record_id,id,email,name,first_name_length,\"is_notified_for_invoices\",created_date,created_by,updated_date,updated_by,tenant_record_id" + "\n" +
+                                     String.format("%s,\"%s\",%s,%s,%s,%s,%s,%s,%s,%s,%s", internalCallContext.getAccountRecordId(), accountId, accountEmail, accountName, firstNameLength,
+                                                   isNotifiedForInvoices, createdDate.getTime(), createdBy, updatedDate.getTime(), updatedBy, internalCallContext.getTenantRecordId()) + "\n" +
+                                     "-- " + tableNameA + " record_id,a_column,account_record_id,tenant_record_id\n" +
                                      "1,a," + internalCallContext.getAccountRecordId() + "," + internalCallContext.getTenantRecordId() + "\n" +
                                      "-- " + tableNameB + " record_id,b_column,account_record_id,tenant_record_id\n" +
                                      "1,b," + internalCallContext.getAccountRecordId() + "," + internalCallContext.getTenantRecordId() + "\n");
