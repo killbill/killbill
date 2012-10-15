@@ -505,6 +505,10 @@ public class AuditedEntitlementDao implements EntitlementDao {
         final List<Subscription> bundleInput = new ArrayList<Subscription>();
         if (input.getCategory() == ProductCategory.ADD_ON) {
             final Subscription baseSubscription = getBaseSubscription(factory, input.getBundleId(), false, context);
+            if (baseSubscription == null) {
+                return null;
+            }
+
             bundleInput.add(baseSubscription);
             bundleInput.add(input);
         } else {
@@ -530,17 +534,6 @@ public class AuditedEntitlementDao implements EntitlementDao {
         Collections.sort(input, new Comparator<Subscription>() {
             @Override
             public int compare(final Subscription o1, final Subscription o2) {
-
-                //
-                // STEPH production NPE needs debugging:
-                //
-                if (o1 == null) {
-                    log.error("o1 :Unexpected null subscription in compareMethod for bundle {}, input.size() = {}", bundleId, input.size());
-                }
-                if (o2 == null) {
-                    log.error("o2 :Unexpected null subscription in compareMethod for bundle {}, input.size() = {}", bundleId, input.size());
-                }
-
                 if (o1.getCategory() == ProductCategory.BASE) {
                     return -1;
                 } else if (o2.getCategory() == ProductCategory.BASE) {
