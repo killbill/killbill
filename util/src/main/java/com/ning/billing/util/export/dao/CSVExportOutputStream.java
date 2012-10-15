@@ -25,6 +25,7 @@ import com.ning.billing.util.api.ColumnInfo;
 import com.ning.billing.util.api.DatabaseExportOutputStream;
 
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema.ColumnType;
@@ -42,6 +43,9 @@ public class CSVExportOutputStream extends OutputStream implements DatabaseExpor
 
     public CSVExportOutputStream(final OutputStream delegate) {
         this.delegate = delegate;
+
+        // To be mysqlimport friendly with datetime type
+        mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
     }
 
     @Override
