@@ -85,8 +85,10 @@ public class BillingStateCalculatorBundle extends BillingStateCalculator<Subscri
             final BillingPeriod basePlanBillingPeriod;
             final PriceList basePlanPriceList;
             final PhaseType basePlanPhaseType;
-            if (basePlan.getCurrentPlan() == null) {
-                // The subscription has been cancelled since
+            //
+            // basePlan is null for standalone subscriptions
+            // basePlan.getCurrentPlan() is null if basePlan has been cancelled
+            if (basePlan == null || basePlan.getCurrentPlan() == null) {
                 basePlanProduct = null;
                 basePlanBillingPeriod = null;
                 basePlanPriceList = null;

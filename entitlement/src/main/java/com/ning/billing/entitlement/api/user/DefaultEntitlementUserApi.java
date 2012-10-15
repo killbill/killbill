@@ -247,6 +247,11 @@ public class DefaultEntitlementUserApi implements EntitlementUserApi {
                 continue;
             }
 
+            // If ADDON is cancelled, skip
+            if (cur.getState() == SubscriptionState.CANCELLED) {
+                continue;
+            }
+
             final DryRunChangeReason reason;
             // If baseProductName is null, it's a cancellation dry-run. In this case, return all addons, so they are cancelled
             if (baseProductName != null && addonUtils.isAddonIncludedFromProdName(baseProductName, requestedDate, cur.getCurrentPlan())) {
