@@ -44,12 +44,12 @@ public abstract class ExceptionMapperBase {
 
     protected Response buildNotFoundResponse(final Exception e, final UriInfo uriInfo) {
         // Log the full stacktrace
-        log.warn("Not found", e);
+        log.info("Not found", e);
         return buildNotFoundResponse(e.toString(), uriInfo);
     }
 
     protected Response buildNotFoundResponse(final String error, final UriInfo uriInfo) {
-        log.warn("Not found for {}: {}", uriInfo.getRequestUri(), error);
+        log.info("Not found for {}: {}", uriInfo.getRequestUri(), error);
         return Response.status(Status.NOT_FOUND)
                        .entity(error)
                        .type(MediaType.TEXT_PLAIN_TYPE)
