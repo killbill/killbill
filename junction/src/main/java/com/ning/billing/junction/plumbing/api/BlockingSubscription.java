@@ -40,6 +40,7 @@ import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
 
 public class BlockingSubscription implements Subscription {
+
     private final Subscription subscription;
     private final BlockingInternalApi blockingApi;
     private final BlockingChecker checker;
@@ -63,6 +64,16 @@ public class BlockingSubscription implements Subscription {
     }
 
     @Override
+    public DateTime getCreatedDate() {
+        return subscription.getCreatedDate();
+    }
+
+    @Override
+    public DateTime getUpdatedDate() {
+        return subscription.getUpdatedDate();
+    }
+
+    @Override
     public boolean cancel(final DateTime requestedDate, final CallContext context) throws EntitlementUserApiException {
         return subscription.cancel(requestedDate, context);
     }
@@ -73,7 +84,6 @@ public class BlockingSubscription implements Subscription {
         return subscription.cancelWithPolicy(requestedDate, policy, context);
     }
 
-
     @Override
     public boolean uncancel(final CallContext context) throws EntitlementUserApiException {
         return subscription.uncancel(context);
@@ -81,7 +91,7 @@ public class BlockingSubscription implements Subscription {
 
     @Override
     public boolean changePlan(final String productName, final BillingPeriod term, final String priceList, final DateTime requestedDate,
-            final CallContext context) throws EntitlementUserApiException {
+                              final CallContext context) throws EntitlementUserApiException {
         try {
             checker.checkBlockedChange(this, internalCallContextFactory.createInternalTenantContext(context));
         } catch (BlockingApiException e) {
@@ -92,7 +102,7 @@ public class BlockingSubscription implements Subscription {
 
     @Override
     public boolean changePlanWithPolicy(final String productName, final BillingPeriod term, final String priceList,
-            final DateTime requestedDate, final ActionPolicy policy, final CallContext context) throws EntitlementUserApiException {
+                                        final DateTime requestedDate, final ActionPolicy policy, final CallContext context) throws EntitlementUserApiException {
         try {
             checker.checkBlockedChange(this, internalCallContextFactory.createInternalTenantContext(context));
         } catch (BlockingApiException e) {
@@ -103,7 +113,7 @@ public class BlockingSubscription implements Subscription {
 
     @Override
     public boolean recreate(final PlanPhaseSpecifier spec, final DateTime requestedDate, final CallContext context)
-    throws EntitlementUserApiException {
+            throws EntitlementUserApiException {
         return subscription.recreate(spec, requestedDate, context);
     }
 

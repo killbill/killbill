@@ -142,6 +142,7 @@ public interface EntitlementEventSqlDao extends Transactional<EntitlementEventSq
             final EventType eventType = EventType.valueOf(r.getString("event_type"));
             final ApiEventType userType = (eventType == EventType.API_USER) ? ApiEventType.valueOf(r.getString("user_type")) : null;
             final DateTime createdDate = getDateTime(r, "created_date");
+            final DateTime updatedDate = getDateTime(r, "updated_date");
             final DateTime requestedDate = getDateTime(r, "requested_date");
             final DateTime effectiveDate = getDateTime(r, "effective_date");
             final UUID subscriptionId = UUID.fromString(r.getString("subscription_id"));
@@ -158,6 +159,8 @@ public interface EntitlementEventSqlDao extends Transactional<EntitlementEventSq
                     .setTotalOrdering(totalOrdering)
                     .setUuid(id)
                     .setSubscriptionId(subscriptionId)
+                    .setCreatedDate(createdDate)
+                    .setUpdatedDate(updatedDate)
                     .setRequestedDate(requestedDate)
                     .setEffectiveDate(effectiveDate)
                     .setProcessedDate(createdDate)

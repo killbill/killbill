@@ -31,7 +31,7 @@ public class ValidationManager {
     private final DatabaseSchemaDao dao;
 
     // table name, string name, column info
-    private final Map<String, Map<String, ColumnInfo>> columnInfoMap = new HashMap<String, Map<String, ColumnInfo>>();
+    private final Map<String, Map<String, DefaultColumnInfo>> columnInfoMap = new HashMap<String, Map<String, DefaultColumnInfo>>();
     private final Map<Class, ValidationConfiguration> configurations = new HashMap<Class, ValidationConfiguration>();
 
     @Inject
@@ -44,23 +44,23 @@ public class ValidationManager {
         columnInfoMap.clear();
 
         // get schema information and map it to columnInfo
-        final List<ColumnInfo> columnInfoList = dao.getColumnInfoList(schemaName);
-        for (final ColumnInfo columnInfo : columnInfoList) {
+        final List<DefaultColumnInfo> columnInfoList = dao.getColumnInfoList(schemaName);
+        for (final DefaultColumnInfo columnInfo : columnInfoList) {
             final String tableName = columnInfo.getTableName();
 
             if (!columnInfoMap.containsKey(tableName)) {
-                columnInfoMap.put(tableName, new HashMap<String, ColumnInfo>());
+                columnInfoMap.put(tableName, new HashMap<String, DefaultColumnInfo>());
             }
 
             columnInfoMap.get(tableName).put(columnInfo.getColumnName(), columnInfo);
         }
     }
 
-    public Collection<ColumnInfo> getTableInfo(final String tableName) {
+    public Collection<DefaultColumnInfo> getTableInfo(final String tableName) {
         return columnInfoMap.get(tableName).values();
     }
 
-    public ColumnInfo getColumnInfo(final String tableName, final String columnName) {
+    public DefaultColumnInfo getColumnInfo(final String tableName, final String columnName) {
         return (columnInfoMap.get(tableName) == null) ? null : columnInfoMap.get(tableName).get(columnName);
     }
 
@@ -82,7 +82,7 @@ public class ValidationManager {
 
                 final Object value = field.get(o);
 
-                final ColumnInfo columnInfo = configuration.get(propertyName);
+                final DefaultColumnInfo columnInfo = configuration.get(propertyName);
                 if (columnInfo == null) {
                     // no column info means the property hasn't been properly mapped; suppress validation
                     return true;
@@ -114,7 +114,7 @@ public class ValidationManager {
         return true;
     }
 
-    private boolean hasValidNullability(final ColumnInfo columnInfo, final Object value) {
+    private boolean hasValidNullability(final DefaultColumnInfo columnInfo, final Object value) {
         if (!columnInfo.getIsNullable()) {
             if (value == null) {
                 return false;
@@ -124,7 +124,7 @@ public class ValidationManager {
         return true;
     }
 
-    private boolean isValidLengthString(final ColumnInfo columnInfo, final Object value) {
+    private boolean isValidLengthString(final DefaultColumnInfo columnInfo, final Object value) {
         if (columnInfo.getMaximumLength() != 0) {
             if (value != null) {
                 if (value.toString().length() > columnInfo.getMaximumLength()) {
@@ -136,7 +136,7 @@ public class ValidationManager {
         return true;
     }
 
-    private boolean isValidLengthChar(final ColumnInfo columnInfo, final Object value) {
+    private boolean isValidLengthChar(final DefaultColumnInfo columnInfo, final Object value) {
         if (columnInfo.getDataType().equals("char")) {
             if (value == null) {
                 return false;
@@ -150,7 +150,7 @@ public class ValidationManager {
         return true;
     }
 
-    private boolean hasValidPrecision(final ColumnInfo columnInfo, final Object value) {
+    private boolean hasValidPrecision(final DefaultColumnInfo columnInfo, final Object value) {
         if (columnInfo.getPrecision() != 0) {
             if (value != null) {
                 final BigDecimal bigDecimalValue = new BigDecimal(value.toString());
@@ -163,7 +163,7 @@ public class ValidationManager {
         return true;
     }
 
-    private boolean hasValidScale(final ColumnInfo columnInfo, final Object value) {
+    private boolean hasValidScale(final DefaultColumnInfo columnInfo, final Object value) {
         if (columnInfo.getScale() != 0) {
             if (value != null) {
                 final BigDecimal bigDecimalValue = new BigDecimal(value.toString());
@@ -184,7 +184,7 @@ public class ValidationManager {
         return configurations.get(clazz);
     }
 
-    public void setConfiguration(final Class clazz, final String propertyName, final ColumnInfo columnInfo) {
+    public void setConfiguration(final Class clazz, final String propertyName, final DefaultColumnInfo columnInfo) {
         if (!configurations.containsKey(clazz)) {
             configurations.put(clazz, new ValidationConfiguration());
         }

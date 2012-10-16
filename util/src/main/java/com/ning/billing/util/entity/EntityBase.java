@@ -47,12 +47,12 @@ public abstract class EntityBase implements Entity {
         return id;
     }
 
-    // TODO surface it in Entity
+    @Override
     public DateTime getCreatedDate() {
         return createdDate;
     }
 
-    // TODO surface it in Entity
+    @Override
     public DateTime getUpdatedDate() {
         return updatedDate;
     }

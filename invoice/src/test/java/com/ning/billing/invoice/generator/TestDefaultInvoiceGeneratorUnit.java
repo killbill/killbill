@@ -21,7 +21,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -119,7 +118,7 @@ public class TestDefaultInvoiceGeneratorUnit extends InvoicingTestBase {
         final BigDecimal rate2 = new BigDecimal("14.85");
         final BigDecimal amount2 = rate2;
         final List<InvoiceItem> items = new LinkedList<InvoiceItem>();
-        final InvoiceItem item1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount1, rate1, currency, null);
+        final InvoiceItem item1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount1, rate1, currency);
         items.add(item1);
         items.add(new RepairAdjInvoiceItem(invoiceId, accountId, startDate, endDate, amount1.negate(), currency, item1.getId()));
         items.add(new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, endDate, nextEndDate, amount2, rate2, currency));
@@ -219,7 +218,7 @@ public class TestDefaultInvoiceGeneratorUnit extends InvoicingTestBase {
         existing.add(item1);
 
         final List<InvoiceItem> proposed = new LinkedList<InvoiceItem>();
-        final InvoiceItem other = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, endDate, nextEndDate, amount3, rate3, currency, null);
+        final InvoiceItem other = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, endDate, nextEndDate, amount3, rate3, currency);
         proposed.add(item1);
         proposed.add(other);
 
@@ -244,11 +243,11 @@ public class TestDefaultInvoiceGeneratorUnit extends InvoicingTestBase {
         final BigDecimal amount2 = rate2;
 
         final List<InvoiceItem> existing = new LinkedList<InvoiceItem>();
-        final InvoiceItem item1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount1, rate1, currency, null);
+        final InvoiceItem item1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount1, rate1, currency);
         existing.add(item1);
 
         final List<InvoiceItem> proposed = new LinkedList<InvoiceItem>();
-        final InvoiceItem other = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, endDate, nextEndDate, amount2, rate2, currency, null);
+        final InvoiceItem other = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, endDate, nextEndDate, amount2, rate2, currency);
         proposed.add(item1);
         proposed.add(other);
 
@@ -275,11 +274,11 @@ public class TestDefaultInvoiceGeneratorUnit extends InvoicingTestBase {
 
         final UUID firstInvoiceId = UUID.randomUUID();
         final List<InvoiceItem> existing = new LinkedList<InvoiceItem>();
-        final InvoiceItem item1 = new RecurringInvoiceItem(firstInvoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount1, rate1, currency, null);
+        final InvoiceItem item1 = new RecurringInvoiceItem(firstInvoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount1, rate1, currency);
         existing.add(item1);
 
         final List<InvoiceItem> proposed = new LinkedList<InvoiceItem>();
-        final InvoiceItem other = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, endDate, nextEndDate, amount2, rate2, currency, null);
+        final InvoiceItem other = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, endDate, nextEndDate, amount2, rate2, currency);
         proposed.add(other);
 
         gen.addRepairedItems(existing, proposed);
@@ -308,7 +307,7 @@ public class TestDefaultInvoiceGeneratorUnit extends InvoicingTestBase {
         final BigDecimal amount1 = rate1;
 
         final List<InvoiceItem> existing = new LinkedList<InvoiceItem>();
-        final InvoiceItem item1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount1, rate1, currency, null);
+        final InvoiceItem item1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount1, rate1, currency);
         existing.add(item1);
 
         final UUID existingInvoiceId = UUID.randomUUID();
@@ -323,7 +322,7 @@ public class TestDefaultInvoiceGeneratorUnit extends InvoicingTestBase {
 
         final List<InvoiceItem> proposed = new LinkedList<InvoiceItem>();
         final InvoiceItem reversedItem1 = new RepairAdjInvoiceItem(existingInvoiceId, accountId, startDate, nextEndDate, item1.getAmount().negate(), currency, item1.getId());
-        final InvoiceItem newItem1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount2, rate2, currency, null);
+        final InvoiceItem newItem1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount2, rate2, currency);
         proposed.add(reversedItem1);
         proposed.add(newItem1);
 
@@ -372,9 +371,9 @@ public class TestDefaultInvoiceGeneratorUnit extends InvoicingTestBase {
         final List<InvoiceItem> existing = new LinkedList<InvoiceItem>();
         final BigDecimal pcba1 = new BigDecimal("10.00");
 
-        final InvoiceItem item1 = new RecurringInvoiceItem(firstInvoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount1, rate1, currency, null);
+        final InvoiceItem item1 = new RecurringInvoiceItem(firstInvoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount1, rate1, currency);
         final InvoiceItem reversedItem1 = new RepairAdjInvoiceItem(firstInvoiceId, accountId, startDate, nextEndDate, amount1.negate(), currency, item1.getId());
-        final InvoiceItem newItem1 = new RecurringInvoiceItem(firstInvoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount2, rate2, currency, null);
+        final InvoiceItem newItem1 = new RecurringInvoiceItem(firstInvoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount2, rate2, currency);
         final InvoiceItem cba1 = new CreditBalanceAdjInvoiceItem(firstInvoiceId, accountId, startDate, pcba1, currency);
         existing.add(item1);
         existing.add(reversedItem1);
@@ -385,7 +384,7 @@ public class TestDefaultInvoiceGeneratorUnit extends InvoicingTestBase {
         final BigDecimal newAmount2 = newRate2;
 
         final List<InvoiceItem> proposed = new LinkedList<InvoiceItem>();
-        final InvoiceItem item2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate.plusMonths(1), endDate.plusMonths(1), newAmount2, newRate2, currency, null);
+        final InvoiceItem item2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate.plusMonths(1), endDate.plusMonths(1), newAmount2, newRate2, currency);
         proposed.add(item2);
 
         gen.consumeExistingCredit(invoiceId, firstInvoiceId, existing, proposed, currency);

@@ -1,7 +1,7 @@
 group BusinessInvoiceItem;
 
-CHECK_TENANT() ::= "tenant_record_id = :tenantRecordId"
-AND_CHECK_TENANT() ::= "AND <CHECK_TENANT()>"
+CHECK_TENANT(prefix) ::= "<prefix>tenant_record_id = :tenantRecordId"
+AND_CHECK_TENANT(prefix) ::= "AND <CHECK_TENANT(prefix)>"
 
 getInvoiceItem(item_id) ::= <<
 select
@@ -130,6 +130,10 @@ insert into bii (
 
 deleteInvoiceItem(item_id) ::= <<
 delete from bii where item_id = :item_id <AND_CHECK_TENANT()>;
+>>
+
+deleteInvoiceItemsForAccount(account_id) ::= <<
+delete from bii where bii.invoice_id in (select invoice_id from bin where bin.account_id = :account_id <AND_CHECK_TENANT("bin.")> for update) <AND_CHECK_TENANT("bii.")>;
 >>
 
 test() ::= <<

@@ -128,8 +128,9 @@ public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePayment>, Tran
             final Currency currency = (currencyString == null) ? null : Currency.valueOf(currencyString);
             final UUID paymentCookieId = getUUID(result, "payment_cookie_id");
             final UUID linkedInvoicePaymentId = getUUID(result, "linked_invoice_payment_id");
+            final DateTime createdDate = getDateTime(result, "created_date");
 
-            return new DefaultInvoicePayment(id, type, paymentId, invoiceId, paymentDate,
+            return new DefaultInvoicePayment(id, createdDate, type, paymentId, invoiceId, paymentDate,
                                              amount, currency, paymentCookieId, linkedInvoicePaymentId);
         }
     }

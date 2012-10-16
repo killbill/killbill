@@ -107,7 +107,7 @@ public class TestAnalyticsDao extends AnalyticsTestSuiteWithEmbeddedDB {
 
     private void setupBusinessAccount() {
         account = new BusinessAccount(UUID.randomUUID(), ACCOUNT_KEY, UUID.randomUUID().toString(), BigDecimal.ONE, clock.getUTCToday(),
-                                      BigDecimal.TEN, "ERROR_NOT_ENOUGH_FUNDS", "CreditCard", "Visa", "FRANCE", CURRENCY);
+                                      BigDecimal.TEN, "ERROR_NOT_ENOUGH_FUNDS", "CreditCard", "Visa", "FRANCE", CURRENCY, clock.getUTCNow(), clock.getUTCNow());
 
         final IDBI dbi = helper.getDBI();
         businessAccountSqlDao = dbi.onDemand(BusinessAccountSqlDao.class);
@@ -278,15 +278,11 @@ public class TestAnalyticsDao extends AnalyticsTestSuiteWithEmbeddedDB {
         // Create and retrieve an account
         businessAccountSqlDao.createAccount(account, internalCallContext);
         final BusinessAccount foundAccount = businessAccountSqlDao.getAccountByKey(ACCOUNT_KEY, internalCallContext);
-        Assert.assertNotNull(foundAccount.getCreatedDt());
-        Assert.assertEquals(foundAccount.getCreatedDt(), foundAccount.getUpdatedDt());
-        // Verify the dates by backfilling them
-        account.setCreatedDt(foundAccount.getCreatedDt());
-        account.setUpdatedDt(foundAccount.getUpdatedDt());
+        Assert.assertEquals(foundAccount.getCreatedDt().getMillis(), account.getCreatedDt().getMillis());
+        Assert.assertEquals(foundAccount.getUpdatedDt().getMillis(), account.getUpdatedDt().getMillis());
         Assert.assertTrue(foundAccount.equals(account));
 
         // Try to update the account
-        final DateTime previousUpdatedDt = account.getUpdatedDt();
         account.setBalance(BigDecimal.TEN);
         account.setPaymentMethod("PayPal");
         account.setCurrency("CAD");
@@ -296,7 +292,6 @@ public class TestAnalyticsDao extends AnalyticsTestSuiteWithEmbeddedDB {
         Assert.assertEquals(Rounder.round(BigDecimal.TEN), account.getRoundedBalance());
         Assert.assertEquals("PayPal", account.getPaymentMethod());
         Assert.assertEquals("CAD", account.getCurrency());
-        Assert.assertTrue(account.getUpdatedDt().compareTo(previousUpdatedDt) > 0);
 
         // ACCOUNT not found
         Assert.assertNull(businessAccountSqlDao.getAccountByKey("Doesn't exist", internalCallContext));

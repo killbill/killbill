@@ -21,6 +21,7 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.skife.jdbi.v2.SQLStatement;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.Bind;
@@ -97,7 +98,9 @@ public interface PaymentMethodSqlDao extends Transactional<PaymentMethodSqlDao>,
             final String pluginName = rs.getString("plugin_name");
             final Boolean isActive = rs.getBoolean("is_active");
             final String externalId = rs.getString("external_id");
-            return new PaymentMethodModelDao(id, accountId, pluginName, isActive, externalId);
+            final DateTime createdDate = getDateTime(rs, "created_date");
+            final DateTime updatedDate = getDateTime(rs, "updated_date");
+            return new PaymentMethodModelDao(id, createdDate, updatedDate, accountId, pluginName, isActive, externalId);
         }
     }
 }

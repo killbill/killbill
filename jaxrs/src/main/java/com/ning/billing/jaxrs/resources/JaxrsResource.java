@@ -126,4 +126,7 @@ public interface JaxrsResource {
 
     public static final String TENANTS = "tenants";
     public static final String TENANTS_PATH = PREFIX + "/" + TENANTS;
+
+    public static final String EXPORT = "export";
+    public static final String EXPORT_PATH = PREFIX + "/" + EXPORT;
 }

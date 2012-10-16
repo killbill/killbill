@@ -17,7 +17,6 @@
 package com.ning.billing.invoice.notification;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -30,7 +29,6 @@ import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.UserType;
-import com.ning.billing.util.notificationq.Notification;
 import com.ning.billing.util.notificationq.NotificationQueue;
 import com.ning.billing.util.notificationq.NotificationQueueService;
 import com.ning.billing.util.notificationq.NotificationQueueService.NoSuchNotificationQueue;
@@ -61,13 +59,6 @@ public class DefaultNextBillingDatePoster implements NextBillingDatePoster {
             nextBillingQueue = notificationQueueService.getNotificationQueue(DefaultInvoiceService.INVOICE_SERVICE_NAME,
                                                                              DefaultNextBillingDateNotifier.NEXT_BILLING_DATE_NOTIFIER_QUEUE);
             log.info("Queuing next billing date notification. id: {}, timestamp: {}", subscriptionId.toString(), futureNotificationTime.toString());
-
-            final List<Notification> existingNotifications = nextBillingQueue.getNotificationForAccountAndDate(accountId, futureNotificationTime, context);
-            if (existingNotifications.size() > 0) {
-                log.info(String.format("%s : notification for account %s and date %s already exist, skip...",
-                                       DefaultNextBillingDateNotifier.NEXT_BILLING_DATE_NOTIFIER_QUEUE, accountId, futureNotificationTime));
-                return;
-            }
 
             nextBillingQueue.recordFutureNotificationFromTransaction(transactionalDao, futureNotificationTime, accountId,
                                                                      new NextBillingDateNotificationKey(subscriptionId), context);

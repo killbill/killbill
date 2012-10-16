@@ -39,6 +39,7 @@ import com.ning.billing.util.callcontext.CallContext;
 import com.google.common.collect.ImmutableList;
 
 public class MockSubscription implements Subscription {
+
     private final UUID id;
     private final UUID bundleId;
     private final SubscriptionState state;
@@ -76,7 +77,7 @@ public class MockSubscription implements Subscription {
 
     @Override
     public boolean cancelWithPolicy(DateTime requestedDate,
-            ActionPolicy policy, CallContext context)
+                                    ActionPolicy policy, CallContext context)
             throws EntitlementUserApiException {
         return sub.cancelWithPolicy(requestedDate, policy, context);
     }
@@ -107,6 +108,16 @@ public class MockSubscription implements Subscription {
     @Override
     public UUID getId() {
         return id;
+    }
+
+    @Override
+    public DateTime getCreatedDate() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public DateTime getUpdatedDate() {
+        throw new UnsupportedOperationException();
     }
 
     @Override

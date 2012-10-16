@@ -22,15 +22,12 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 
+import com.ning.billing.account.api.Account;
 import com.ning.billing.analytics.utils.Rounder;
 
 import com.google.common.base.Objects;
 
 public class BusinessAccount {
-
-    // Populated by the database
-    private DateTime createdDt = null;
-    private DateTime updatedDt = null;
 
     private final UUID accountId;
     private String key;
@@ -43,15 +40,13 @@ public class BusinessAccount {
     private String creditCardType;
     private String billingAddressCountry;
     private String currency;
-
-    public BusinessAccount(final UUID accountId) {
-        this.accountId = accountId;
-    }
+    private DateTime createdDt;
+    private DateTime updatedDt;
 
     public BusinessAccount(final UUID accountId, final String key, final String name, final BigDecimal balance,
                            final LocalDate lastInvoiceDate, final BigDecimal totalInvoiceBalance, final String lastPaymentStatus,
                            final String paymentMethod, final String creditCardType, final String billingAddressCountry,
-                           final String currency) {
+                           final String currency, final DateTime createdDt, final DateTime updatedDt) {
         this.accountId = accountId;
         this.key = key;
         this.balance = balance;
@@ -63,6 +58,19 @@ public class BusinessAccount {
         this.paymentMethod = paymentMethod;
         this.totalInvoiceBalance = totalInvoiceBalance;
         this.currency = currency;
+        this.createdDt = createdDt;
+        this.updatedDt = updatedDt;
+    }
+
+    public BusinessAccount(final Account account) {
+        this.accountId = account.getId();
+        this.name = account.getName();
+        this.key = account.getExternalKey();
+        if (account.getCurrency() != null) {
+            this.currency = account.getCurrency().toString();
+        }
+        this.createdDt = account.getCreatedDate();
+        this.updatedDt = account.getUpdatedDate();
     }
 
     public UUID getAccountId() {

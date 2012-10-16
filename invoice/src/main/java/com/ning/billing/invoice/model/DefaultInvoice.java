@@ -33,6 +33,7 @@ import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.util.entity.EntityBase;
 
 public class DefaultInvoice extends EntityBase implements Invoice {
+
     private final InvoiceItemList invoiceItems = new InvoiceItemList();
     private final List<InvoicePayment> payments = new ArrayList<InvoicePayment>();
     private final UUID accountId;
@@ -47,10 +48,16 @@ public class DefaultInvoice extends EntityBase implements Invoice {
         this(UUID.randomUUID(), accountId, null, invoiceDate, targetDate, currency, false);
     }
 
-    // Used to hydrate invoice from persistence layer
     public DefaultInvoice(final UUID invoiceId, final UUID accountId, @Nullable final Integer invoiceNumber, final LocalDate invoiceDate,
                           final LocalDate targetDate, final Currency currency, final boolean isMigrationInvoice) {
-        super(invoiceId);
+        this(invoiceId, null, accountId, invoiceNumber, invoiceDate, targetDate, currency, isMigrationInvoice);
+    }
+
+    // Used to hydrate invoice from persistence layer
+    public DefaultInvoice(final UUID invoiceId, @Nullable final DateTime createdDate, final UUID accountId,
+                          @Nullable final Integer invoiceNumber, final LocalDate invoiceDate,
+                          final LocalDate targetDate, final Currency currency, final boolean isMigrationInvoice) {
+        super(invoiceId, createdDate, createdDate);
         this.accountId = accountId;
         this.invoiceNumber = invoiceNumber;
         this.invoiceDate = invoiceDate;

@@ -55,5 +55,9 @@ public interface BusinessAccountSqlDao extends Transactional<BusinessAccountSqlD
                     @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlUpdate
+    int deleteAccount(@Bind("account_id") final String accountId,
+                      @InternalTenantContextBinder final InternalCallContext context);
+
+    @SqlUpdate
     void test(@InternalTenantContextBinder final InternalTenantContext context);
 }

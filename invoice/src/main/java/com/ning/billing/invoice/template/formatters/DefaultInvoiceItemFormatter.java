@@ -21,6 +21,7 @@ import java.text.NumberFormat;
 import java.util.Locale;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormatter;
 
@@ -141,6 +142,16 @@ public class DefaultInvoiceItemFormatter implements InvoiceItemFormatter {
     @Override
     public UUID getId() {
         return item.getId();
+    }
+
+    @Override
+    public DateTime getCreatedDate() {
+        return item.getCreatedDate();
+    }
+
+    @Override
+    public DateTime getUpdatedDate() {
+        return item.getUpdatedDate();
     }
 
     @Override

@@ -47,6 +47,10 @@ public interface BusinessSubscriptionTransitionSqlDao extends Transactional<Busi
     List<BusinessSubscriptionTransition> getTransitionForSubscription(@Bind("subscription_id") final String subscriptionId,
                                                                       @InternalTenantContextBinder final InternalTenantContext context);
 
+    @SqlQuery
+    List<BusinessSubscriptionTransition> getTransitionsForAccount(@Bind("account_key") final String accountKey,
+                                                                  @InternalTenantContextBinder final InternalTenantContext context);
+
     @SqlUpdate
     int createTransition(@BusinessSubscriptionTransitionBinder final BusinessSubscriptionTransition transition,
                          @InternalTenantContextBinder final InternalCallContext context);

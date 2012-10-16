@@ -72,7 +72,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     private final Bus eventBus;
 
     @Inject
-    public DefaultInvoiceUserApi(final InvoiceDao dao, final InvoiceDispatcher dispatcher, final AccountInternalApi accountUserApi,  final Bus eventBus,
+    public DefaultInvoiceUserApi(final InvoiceDao dao, final InvoiceDispatcher dispatcher, final AccountInternalApi accountUserApi, final Bus eventBus,
                                  final TagInternalApi tagApi, final HtmlInvoiceGenerator generator, final InternalCallContextFactory internalCallContextFactory) {
         this.dao = dao;
         this.dispatcher = dispatcher;
@@ -218,7 +218,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
             throw new InvoiceApiException(ErrorCode.INVOICE_NO_SUCH_CREDIT, creditId);
         }
 
-        return new CreditAdjInvoiceItem(creditItem.getId(), creditItem.getInvoiceId(), creditItem.getAccountId(),
+        return new CreditAdjInvoiceItem(creditItem.getId(), creditItem.getCreatedDate(), creditItem.getInvoiceId(), creditItem.getAccountId(),
                                         creditItem.getStartDate(), creditItem.getAmount().negate(), creditItem.getCurrency());
     }
 
@@ -267,7 +267,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
             throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND, invoiceId);
         }
 
-        final InternalTenantContext internalContext =  internalCallContextFactory.createInternalTenantContext(context);
+        final InternalTenantContext internalContext = internalCallContextFactory.createInternalTenantContext(context);
         final Account account = accountUserApi.getAccountById(invoice.getAccountId(), internalContext);
 
         // Check if this account has the MANUAL_PAY system tag

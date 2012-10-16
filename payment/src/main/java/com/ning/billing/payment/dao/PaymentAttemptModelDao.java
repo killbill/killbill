@@ -13,10 +13,13 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.ning.billing.payment.dao;
 
 import java.math.BigDecimal;
 import java.util.UUID;
+
+import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 
@@ -34,10 +37,11 @@ public class PaymentAttemptModelDao extends EntityBase {
     private final String gatewayErrorMsg;
     private final BigDecimal requestedAmount;
 
-    public PaymentAttemptModelDao(final UUID id, final UUID accountId, final UUID invoiceId,
+    public PaymentAttemptModelDao(final UUID id, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate,
+                                  final UUID accountId, final UUID invoiceId,
                                   final UUID paymentId, final PaymentStatus processingStatus, final DateTime effectiveDate,
                                   final BigDecimal requestedAmount, final String gatewayErrorCode, final String gatewayErrorMsg) {
-        super(id);
+        super(id, createdDate, updatedDate);
         this.accountId = accountId;
         this.invoiceId = invoiceId;
         this.paymentId = paymentId;
@@ -49,15 +53,15 @@ public class PaymentAttemptModelDao extends EntityBase {
     }
 
     public PaymentAttemptModelDao(final UUID accountId, final UUID invoiceId, final UUID paymentId, final PaymentStatus paymentStatus, final DateTime effectiveDate, final BigDecimal requestedAmount) {
-        this(UUID.randomUUID(), accountId, invoiceId, paymentId, paymentStatus, effectiveDate, requestedAmount, null, null);
+        this(UUID.randomUUID(), null, null, accountId, invoiceId, paymentId, paymentStatus, effectiveDate, requestedAmount, null, null);
     }
 
     public PaymentAttemptModelDao(final UUID accountId, final UUID invoiceId, final UUID paymentId, final DateTime effectiveDate, final BigDecimal requestedAmount) {
-        this(UUID.randomUUID(), accountId, invoiceId, paymentId, PaymentStatus.UNKNOWN, effectiveDate, requestedAmount, null, null);
+        this(UUID.randomUUID(), null, null, accountId, invoiceId, paymentId, PaymentStatus.UNKNOWN, effectiveDate, requestedAmount, null, null);
     }
 
     public PaymentAttemptModelDao(final PaymentAttemptModelDao src, final PaymentStatus newProcessingStatus, final String gatewayErrorCode, final String gatewayErrorMsg) {
-        this(src.getId(), src.getAccountId(), src.getInvoiceId(), src.getPaymentId(), newProcessingStatus,
+        this(src.getId(), src.getCreatedDate(), src.getUpdatedDate(), src.getAccountId(), src.getInvoiceId(), src.getPaymentId(), newProcessingStatus,
              src.getEffectiveDate(), src.getRequestedAmount(), gatewayErrorCode, gatewayErrorMsg);
     }
 

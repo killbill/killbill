@@ -18,8 +18,8 @@ package com.ning.billing.util.validation;
 
 import java.util.HashMap;
 
-public class ValidationConfiguration extends HashMap<String, ColumnInfo> {
-    public void addMapping(final String propertyName, final ColumnInfo columnInfo) {
+public class ValidationConfiguration extends HashMap<String, DefaultColumnInfo> {
+    public void addMapping(final String propertyName, final DefaultColumnInfo columnInfo) {
         super.put(propertyName, columnInfo);
     }
 

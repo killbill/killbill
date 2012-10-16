@@ -18,6 +18,9 @@ package com.ning.billing.account.api;
 
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
+import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import com.ning.billing.catalog.api.Currency;
@@ -90,7 +93,21 @@ public class DefaultAccount extends EntityBase implements Account {
                           final String city, final String stateOrProvince, final String country,
                           final String postalCode, final String phone,
                           final Boolean isMigrated, final Boolean isNotifiedForInvoices) {
-        super(id);
+        this(id, null, null, externalKey, email, name, firstNameLength, currency, billCycleDay, paymentMethodId,
+             timeZone, locale, address1, address2, companyName, city, stateOrProvince, country, postalCode,
+             phone, isMigrated, isNotifiedForInvoices);
+    }
+
+    public DefaultAccount(final UUID id, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate,
+                          final String externalKey, final String email,
+                          final String name, final Integer firstNameLength,
+                          final Currency currency, final BillCycleDay billCycleDay, final UUID paymentMethodId,
+                          final DateTimeZone timeZone, final String locale,
+                          final String address1, final String address2, final String companyName,
+                          final String city, final String stateOrProvince, final String country,
+                          final String postalCode, final String phone,
+                          final Boolean isMigrated, final Boolean isNotifiedForInvoices) {
+        super(id, createdDate, updatedDate);
         this.externalKey = externalKey;
         this.email = email;
         this.name = name;

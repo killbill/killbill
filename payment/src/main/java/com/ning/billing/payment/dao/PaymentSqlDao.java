@@ -121,7 +121,10 @@ public interface PaymentSqlDao extends Transactional<PaymentSqlDao>, UpdatableEn
             final PaymentStatus paymentStatus = PaymentStatus.valueOf(rs.getString("payment_status"));
             final String extFirstPaymentRefId = rs.getString("ext_first_payment_ref_id");
             final String extSecondPaymentRefId = rs.getString("ext_second_payment_ref_id");
-            return new PaymentModelDao(id, accountId, invoiceId, paymentMethodId, paymentNumber, amount, currency, paymentStatus, effectiveDate, extFirstPaymentRefId, extSecondPaymentRefId);
+            final DateTime createdDate = getDateTime(rs, "created_date");
+            final DateTime updatedDate = getDateTime(rs, "updated_date");
+            return new PaymentModelDao(id, createdDate, updatedDate, accountId, invoiceId, paymentMethodId, paymentNumber,
+                                       amount, currency, paymentStatus, effectiveDate, extFirstPaymentRefId, extSecondPaymentRefId);
         }
     }
 }

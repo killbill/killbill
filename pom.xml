@@ -17,7 +17,7 @@
     <groupId>com.ning.billing</groupId>
     <artifactId>killbill</artifactId>
     <packaging>pom</packaging>
-    <version>0.1.35-SNAPSHOT</version>
+    <version>0.1.40-SNAPSHOT</version>
     <name>killbill</name>
     <description>Library for managing recurring subscriptions and the associated billing</description>
     <url>http://github.com/ning/killbill</url>
@@ -248,6 +248,11 @@
                 <version>2.0.0</version>
             </dependency>
             <dependency>
+                <groupId>com.fasterxml.jackson.dataformat</groupId>
+                <artifactId>jackson-dataformat-csv</artifactId>
+                <version>2.1.0</version>
+            </dependency>
+            <dependency>
                 <groupId>com.fasterxml.util</groupId>
                 <artifactId>low-gc-membuffers</artifactId>
                 <version>0.9.0</version>
@@ -322,7 +327,7 @@
             <dependency>
                 <groupId>org.jdbi</groupId>
                 <artifactId>jdbi</artifactId>
-                <version>2.37.1</version>
+                <version>2.39.1</version>
             </dependency>
             <dependency>
                 <groupId>org.skife.config</groupId>

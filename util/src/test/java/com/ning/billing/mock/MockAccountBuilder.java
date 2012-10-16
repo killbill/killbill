@@ -18,6 +18,7 @@ package com.ning.billing.mock;
 
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import com.ning.billing.account.api.Account;
@@ -28,6 +29,7 @@ import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.junction.api.BlockingState;
 
 public class MockAccountBuilder {
+
     private final UUID id;
     private String externalKey = "";
     private String email = "";
@@ -177,6 +179,16 @@ public class MockAccountBuilder {
 
     public Account build() {
         return new Account() {
+            @Override
+            public DateTime getCreatedDate() {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public DateTime getUpdatedDate() {
+                throw new UnsupportedOperationException();
+            }
+
             @Override
             public String getExternalKey() {
                 return externalKey;
