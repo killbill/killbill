@@ -188,10 +188,37 @@ public class MysqlTestingHelper {
 
     public void initDb() throws IOException {
         // We always want the accounts and tenants table
-        initDb("drop table if exists accounts; create table accounts(record_id int(11) unsigned not null auto_increment, id char(36) not null, " +
-               "email varchar(128) not null, name varchar(100) not null, first_name_length int not null, is_notified_for_invoices boolean not null, " +
-               "created_date datetime NOT NULL, created_by varchar(50) NOT NULL, updated_date datetime NOT NULL, updated_by varchar(50) NULL, " +
-               "tenant_record_id int(11) unsigned default 0, primary key(record_id)) engine=innodb;");
+        initDb("drop table if exists accounts;" +
+               "CREATE TABLE accounts (\n" +
+               "    record_id int(11) unsigned NOT NULL AUTO_INCREMENT,\n" +
+               "    id char(36) NOT NULL,\n" +
+               "    external_key varchar(128) NULL,\n" +
+               "    email varchar(128) NOT NULL,\n" +
+               "    name varchar(100) NOT NULL,\n" +
+               "    first_name_length int NOT NULL,\n" +
+               "    currency char(3) DEFAULT NULL,\n" +
+               "    billing_cycle_day_local int DEFAULT NULL,\n" +
+               "    billing_cycle_day_utc int DEFAULT NULL,\n" +
+               "    payment_method_id char(36) DEFAULT NULL,\n" +
+               "    time_zone varchar(50) DEFAULT NULL,\n" +
+               "    locale varchar(5) DEFAULT NULL,\n" +
+               "    address1 varchar(100) DEFAULT NULL,\n" +
+               "    address2 varchar(100) DEFAULT NULL,\n" +
+               "    company_name varchar(50) DEFAULT NULL,\n" +
+               "    city varchar(50) DEFAULT NULL,\n" +
+               "    state_or_province varchar(50) DEFAULT NULL,\n" +
+               "    country varchar(50) DEFAULT NULL,\n" +
+               "    postal_code varchar(16) DEFAULT NULL,\n" +
+               "    phone varchar(25) DEFAULT NULL,\n" +
+               "    migrated bool DEFAULT false,\n" +
+               "    is_notified_for_invoices boolean NOT NULL,\n" +
+               "    created_date datetime NOT NULL,\n" +
+               "    created_by varchar(50) NOT NULL,\n" +
+               "    updated_date datetime DEFAULT NULL,\n" +
+               "    updated_by varchar(50) DEFAULT NULL,\n" +
+               "    tenant_record_id int(11) unsigned default null,\n" +
+               "    PRIMARY KEY(record_id)\n" +
+               ") ENGINE=innodb;");
         initDb("drop table if exists tenants; create table tenants(record_id int(11) unsigned not null auto_increment, id char(36) not null, primary key(record_id)) engine=innodb;");
 
         // We always want the basic tables when we do account_record_id lookups (e.g. for custom fields, tags or junction)

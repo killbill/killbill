@@ -27,6 +27,7 @@ import org.testng.annotations.BeforeSuite;
 import com.ning.billing.dbi.MysqlTestingHelper;
 
 public class KillbillTestSuiteWithEmbeddedDB extends KillbillTestSuite {
+
     protected static final MysqlTestingHelper helper = new MysqlTestingHelper();
 
     public static MysqlTestingHelper getMysqlTestingHelper() {

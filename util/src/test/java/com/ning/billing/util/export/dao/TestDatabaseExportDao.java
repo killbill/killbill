@@ -87,8 +87,8 @@ public class TestDatabaseExportDao extends UtilTestSuiteWithEmbeddedDB {
         // Verify new dump
         final String newDump = getDump();
         // Note: unclear why Jackson would quote the header?
-        Assert.assertEquals(newDump, "-- accounts record_id,id,email,name,first_name_length,\"is_notified_for_invoices\",created_date,created_by,updated_date,updated_by,tenant_record_id" + "\n" +
-                                     String.format("%s,\"%s\",%s,%s,%s,%s,\"%s\",%s,\"%s\",%s,%s", internalCallContext.getAccountRecordId(), accountId, accountEmail, accountName, firstNameLength,
+        Assert.assertEquals(newDump, "-- accounts record_id,id,external_key,email,name,first_name_length,currency,\"billing_cycle_day_local\",\"billing_cycle_day_utc\",payment_method_id,time_zone,locale,address1,address2,company_name,city,state_or_province,country,postal_code,phone,migrated,\"is_notified_for_invoices\",created_date,created_by,updated_date,updated_by,tenant_record_id\n" +
+                                     String.format("%s,\"%s\",,%s,%s,%s,,,,,,,,,,,,,,,false,%s,\"%s\",%s,\"%s\",%s,%s", internalCallContext.getAccountRecordId(), accountId, accountEmail, accountName, firstNameLength,
                                                    isNotifiedForInvoices, "1970-05-24T18:33:02.000+0000", createdBy, "1982-02-18T20:03:42.000+0000", updatedBy, internalCallContext.getTenantRecordId()) + "\n" +
                                      "-- " + tableNameA + " record_id,a_column,account_record_id,tenant_record_id\n" +
                                      "1,a," + internalCallContext.getAccountRecordId() + "," + internalCallContext.getTenantRecordId() + "\n" +
