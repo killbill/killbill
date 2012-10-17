@@ -27,7 +27,8 @@ public class MySqlGlobalLocker implements GlobalLocker {
 
     private static final Logger logger = LoggerFactory.getLogger(MySqlGlobalLocker.class);
 
-    private static final long DEFAULT_TIMEOUT = 5L; // 5 seconds
+    // Note that we could hold the lock while talking to the payment gateway, hence be generous in the timeout length
+    private static final long DEFAULT_TIMEOUT = 10L; // 10 seconds
 
     private final IDBI dbi;
     private long timeout;
