@@ -58,7 +58,6 @@ public class MySqlGlobalLocker implements GlobalLocker {
     }
 
     private GlobalLock lock(final String lockName) throws LockFailedException {
-
         final Handle h = dbi.open();
         final MySqlGlobalLockerDao dao = h.attach(MySqlGlobalLockerDao.class);
 
@@ -70,13 +69,13 @@ public class MySqlGlobalLocker implements GlobalLocker {
                     try {
                         dao.releaseLock(lockName);
                     } finally {
-                        if (h != null) {
-                            h.close();
-                        }
+                        h.close();
                     }
                 }
             };
         } else {
+            // Make sure to close the handle if we couldn't obtain the lock (otherwise we would leak connections)
+            h.close();
             return null;
         }
     }
