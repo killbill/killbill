@@ -132,7 +132,7 @@ public class InvoiceDispatcher {
                                   final boolean dryRun, final CallContext context) throws InvoiceApiException {
         GlobalLock lock = null;
         try {
-            lock = locker.lockWithNumberOfTries(LockerType.ACCOUNT, accountId.toString(), NB_LOCK_TRY);
+            lock = locker.lockWithNumberOfTries(LockerType.ACCOUNT_FOR_INVOICE_PAYMENTS, accountId.toString(), NB_LOCK_TRY);
 
             return processAccountWithLock(accountId, targetDate, dryRun, context);
         } catch (LockFailedException e) {

@@ -23,7 +23,7 @@ public interface GlobalLocker {
     Boolean isFree(final LockerType service, final String lockKey);
 
     public enum LockerType {
-        // Global ACCOUNT locking
-        ACCOUNT
+        ACCOUNT_FOR_INVOICE_PAYMENTS,
+        ACCOUNT_FOR_ANALYTICS
     }
 }

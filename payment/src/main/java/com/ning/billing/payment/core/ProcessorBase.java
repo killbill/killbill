@@ -167,7 +167,7 @@ public abstract class ProcessorBase {
                 throws PaymentApiException {
             GlobalLock lock = null;
             try {
-                lock = locker.lockWithNumberOfTries(LockerType.ACCOUNT, accountExternalKey, NB_LOCK_TRY);
+                lock = locker.lockWithNumberOfTries(LockerType.ACCOUNT_FOR_INVOICE_PAYMENTS, accountExternalKey, NB_LOCK_TRY);
                 return callback.doOperation();
             } catch (LockFailedException e) {
                 final String format = String.format("Failed to lock account %s", accountExternalKey);

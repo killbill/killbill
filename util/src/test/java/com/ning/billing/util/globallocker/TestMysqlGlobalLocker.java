@@ -57,7 +57,7 @@ public class TestMysqlGlobalLocker extends UtilTestSuiteWithEmbeddedDB {
         final String lockName = UUID.randomUUID().toString();
 
         final GlobalLocker locker = new MySqlGlobalLocker(dbi);
-        final GlobalLock lock = locker.lockWithNumberOfTries(LockerType.ACCOUNT, lockName, 3);
+        final GlobalLock lock = locker.lockWithNumberOfTries(LockerType.ACCOUNT_FOR_INVOICE_PAYMENTS, lockName, 3);
 
         dbi.inTransaction(new TransactionCallback<Void>() {
             @Override
@@ -67,11 +67,11 @@ public class TestMysqlGlobalLocker extends UtilTestSuiteWithEmbeddedDB {
                 return null;
             }
         });
-        Assert.assertEquals(locker.isFree(LockerType.ACCOUNT, lockName), Boolean.FALSE);
+        Assert.assertEquals(locker.isFree(LockerType.ACCOUNT_FOR_INVOICE_PAYMENTS, lockName), Boolean.FALSE);
 
         boolean gotException = false;
         try {
-            locker.lockWithNumberOfTries(LockerType.ACCOUNT, lockName, 1);
+            locker.lockWithNumberOfTries(LockerType.ACCOUNT_FOR_INVOICE_PAYMENTS, lockName, 1);
         } catch (LockFailedException e) {
             gotException = true;
         }
@@ -79,7 +79,7 @@ public class TestMysqlGlobalLocker extends UtilTestSuiteWithEmbeddedDB {
 
         lock.release();
 
-        Assert.assertEquals(locker.isFree(LockerType.ACCOUNT, lockName), Boolean.TRUE);
+        Assert.assertEquals(locker.isFree(LockerType.ACCOUNT_FOR_INVOICE_PAYMENTS, lockName), Boolean.TRUE);
     }
 
     public static final class TestMysqlGlobalLockerModule extends AbstractModule {
