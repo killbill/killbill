@@ -133,7 +133,9 @@ public class BusinessSubscriptionTransitionDao {
                                     bundle.getAccountId(),
                                     account.getExternalKey(),
                                     subscription.getId(),
-                                    event.getRequestedTransitionTime(),
+                                    // Note! The system cancel event requested time is the effective time when the subscription
+                                    // is cancelled, which is the effective time of the cancel event
+                                    event.getEffectiveTransitionTime(),
                                     new BusinessSubscriptionEvent(BusinessSubscriptionEvent.EventType.SYSTEM_CANCEL, businessEvent.getCategory()),
                                     prevSubscription,
                                     nextSubscription
