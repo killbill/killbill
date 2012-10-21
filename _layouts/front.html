@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Killbill, Open-Source subscription management system</title>
+
+        <!--[if lt IE 9]>
+        <script src="http://html5shim.googlecode.com/svn/trunk/html5.js" type="text/javascript"></script>
+        <![endif]-->
+
+        <link rel=stylesheet type="text/css" href="stylesheets/bootstrap.min.css">
+        <link rel=stylesheet type="text/css" href="stylesheets/prettify.css">
+        <link rel=stylesheet type="text/css" href="stylesheets/killbill.css">
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+        <script src="javascripts/prettify.js"></script>
+        <script src="javascripts/bootstrap.min.js"></script>
+
+        <script type="text/javascript">
+            var _gaq = _gaq || [];
+            _gaq.push(['_setAccount', 'UA-32705710-1']);
+            _gaq.push(['_trackPageview']);
+            (function() {
+                var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+                ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+                var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+                })();
+        </script>
+    </head>
+
+    <body onload="prettyPrint();" data-spy="scroll" data-target=".bs-docs-sidebar">
+        <div class="navbar navbar-inverse navbar-fixed-top">
+            <div class="navbar-inner">
+                <div class="container">
+                    <div class="nav-collapse collapse">
+                        <ul class="nav pull-right">
+                            <li><a href="http://groups.google.com/group/killbilling-users" target="_blank">User Mailing-List</a></li>
+                            <li><a href="http://groups.google.com/group/killbilling-dev" target="_blank">Dev Mailing-List</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{ content }}
+    </body>
+</html>
