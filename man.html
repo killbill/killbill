@@ -1,0 +1,1434 @@
+---
+layout: default
+---
+
+<div class="container">
+    <div class="row">
+        <div class="span3 bs-docs-sidebar">
+            <ul class="nav nav-list bs-docs-sidenav affix">
+                <li><a href="#configuration"><i class="icon-chevron-right"></i>Configuration</a></li>
+                <li><a href="#catalog"><i class="icon-chevron-right"></i>Catalog</a></li>
+                <li><a href="#analytics"><i class="icon-chevron-right"></i>Analytics</a></li>
+                <li><a href="#http_api"><i class="icon-chevron-right"></i>HTTP API</a></li>
+                <li><a href="#ui"><i class="icon-chevron-right"></i>UI</a></li>
+            </ul>
+        </div>
+
+        <div class="span8">
+            <section id="configuration">
+                <div class="page-header">
+                    <h1>Configuration</h1>
+                </div>
+                <table class="table table-striped table-bordered table-condensed">
+                    <thead>
+                        <tr>
+                            <th>Property</th>
+                            <th>Default</th>
+                            <th>Description</th>
+                            <th>Required?</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>killbill.catalog.uri</td>
+                            <td>jar:///com/ning/billing/irs/catalog/Catalog.xml</td>
+                            <td>Catalog location. Either in the classpath or in the filesystem</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>killbill.entitlement.engine.notifications.sleep</td>
+                            <td>500</td>
+                            <td>Sleep time in milliseconds for the entitlement notifications</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>killbill.entitlement.engine.notifications.off</td>
+                            <td>false</td>
+                            <td>Whether the entitlement notification queue should be disabled (useful for testing)</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>killbill.invoice.engine.notifications.sleep</td>
+                            <td>500</td>
+                            <td>Sleep time in milliseconds for the invoice notifications</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>killbill.invoice.engine.notifications.off</td>
+                            <td>false</td>
+                            <td>Whether the invoice notification queue should be disabled (useful for testing)</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>killbill.invoice.maxNumberOfMonthsInFuture</td>
+                            <td>36</td>
+                            <td>Maximum target date to consider when generating an invoice</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>killbill.invoice.emailNotificationsEnabled</td>
+                            <td>false</td>
+                            <td>Whether to send email notifications on invoice creation (for configured accounts)</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>killbill.mail.smtp.host</td>
+                            <td><em>null</em></td>
+                            <td>MTA host used for email notifications</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>killbill.mail.smtp.port</td>
+                            <td><em>null</em></td>
+                            <td>MTA port used for email notifications</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>killbill.mail.smtp.auth</td>
+                            <td>false</td>
+                            <td>Whether to authenticate against the MTA</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>killbill.mail.smtp.user</td>
+                            <td><em>null</em></td>
+                            <td>Username to use to authenticate against the MTA</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>killbill.mail.smtp.password</td>
+                            <td><em>null</em></td>
+                            <td>Password to use to authenticate against the MTA</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>killbill.mail.from</td>
+                            <td>support@example.com</td>
+                            <td>Default From: field for email notifications</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>killbill.overdue.uri</td>
+                            <td>jar:///com/ning/billing/irs/overdue/Config.xml</td>
+                            <td>Overdue configuration location. Either in the classpath or in the filesystem</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>killbill.overdue.engine.notifications.sleep</td>
+                            <td>500</td>
+                            <td>Sleep time in milliseconds for the overdue notifications</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>killbill.overdue.engine.notifications.off</td>
+                            <td>false</td>
+                            <td>Whether the overdue notification queue should be disabled (useful for testing)</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>killbill.payment.engine.notifications.sleep</td>
+                            <td>500</td>
+                            <td>Sleep time in milliseconds for the payment notifications</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>killbill.payment.engine.notifications.off</td>
+                            <td>false</td>
+                            <td>Whether the payment notification queue should be disabled (useful for testing)</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>killbill.payment.provider.default</td>
+                            <td>noop</td>
+                            <td>Default payment provider to use</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>killbill.payment.retry.days</td>
+                            <td>8,8,8</td>
+                            <td>Schedule to use to retry payments</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>killbill.payment.failure.retry.start.sec</td>
+                            <td>300</td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>killbill.payment.failure.retry.multiplier</td>
+                            <td>2</td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>killbill.payment.failure.retry.max.attempts</td>
+                            <td>8</td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>killbill.payment.failure.retry.multiplier</td>
+                            <td>2</td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section id="catalog">
+                <div class="page-header">
+                    <h1>Catalog</h1>
+                </div>
+                <p></p>
+            </section>
+
+            <section id="analytics">
+                <div class="page-header">
+                    <h1>Analytics</h1>
+                </div>
+                <h2>Overview</h2>
+                <div class="row">
+                    <p>Killbill maintains a reporting schema that is kept current in realtime for Analytics purposes. In contrary to other tables
+                        in the system, this set of tables is stable and potentially changes only between major revisions of Killbill.</p>
+                    <p>To distinguish with Killbill objects, the Analytics objects are prefixed with Business, e.g. a Killbill account will
+                        have a representation in the Analytics subsystem by a Business Account object. For ease of tracking, Analytics objects
+                        contain id references to the Killbill ones but we strongly advise against using them for reporting purposes. Instead,
+                        use the external keys as much as possible, as they are tied to your business concepts. For instance, to count the number
+                        of accounts in the system, run a query using <code>count(distinct account_key)</code>, not
+                        <code>count(distinct account_id)</code>.</p>
+                </div>
+                <h2>Accounts</h2>
+                <div class="row">
+                    <p>The table <strong>bac</strong> (stands for Business Accounts) maintains information about Killbill accounts. The table
+                        doesn't contain historic records (it will contain at most one record per Killbill account).</p>
+                    <table class="table table-striped table-bordered table-condensed">
+                        <thead>
+                            <tr>
+                                <th>Column name</th>
+                                <th>Column type</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>record_id</td>
+                                <td>int(11) unsigned</td>
+                                <td>Unique identifier for that record, e.g. <code>10</code></td>
+                            </tr>
+                            <tr>
+                                <td>account_id</td>
+                                <td>char(36)</td>
+                                <td>Killbill account id, e.g. <code>b2d69f1e-27cb-4c43-b997-71c28da4a170</code></td>
+                            </tr>
+                            <tr>
+                                <td>account_key</td>
+                                <td>varchar(50)</td>
+                                <td>External key associated with that account</td>
+                            </tr>
+                            <tr>
+                                <td>name</td>
+                                <td>varchar(100)</td>
+                                <td>Name associated with that account, e.g. <code>Jean DuJardin</code></td>
+                            </tr>
+                            <tr>
+                                <td>created_date</td>
+                                <td>bigint(20)</td>
+                                <td>Epoch when the account was created, e.g. <code>1341957285516</code></td>
+                            </tr>
+                            <tr>
+                                <td>updated_date</td>
+                                <td>bigint(20)</td>
+                                <td>Epoch when the account was last updated, e.g. <code>1341957519902</code></td>
+                            </tr>
+                            <tr>
+                                <td>balance</td>
+                                <td>decimal(10,4)</td>
+                                <td>Account balance (takes into account invoices balance and credits), e.g. <code>254.4500</code></td>
+                            </tr>
+                            <tr>
+                                <td>last_invoice_date</td>
+                                <td>bigint(20)</td>
+                                <td>Last invoice date for that account, e.g. <code>1341957522967</code></td>
+                            </tr>
+                            <tr>
+                                <td>total_invoice_balance</td>
+                                <td>decimal(10,4)</td>
+                                <td>Sum of all invoices balance for that account, e.g. <code>299.7500</code></td>
+                            </tr>
+                            <tr>
+                                <td>last_payment_status</td>
+                                <td>varchar(255)</td>
+                                <td>Last payment status, e.g. <code>SUCCESS</code></td>
+                            </tr>
+                            <tr>
+                                <td>payment_method</td>
+                                <td>varchar(100)</td>
+                                <td>Default payment method (if any), e.g. <code>Paypal</code></td>
+                            </tr>
+                            <tr>
+                                <td>credit_card_type</td>
+                                <td>varchar(50)</td>
+                                <td>Default card type, if any, associated with that account, e.g. <code>VISA</code></td>
+                            </tr>
+                            <tr>
+                                <td>billing_address_country</td>
+                                <td>varchar(50)</td>
+                                <td>Billing country for that account, e.g. <code>FR</code></td>
+                            </tr>
+                            <tr>
+                                <td>currency</td>
+                                <td>varchar(50)</td>
+                                <td>Default account currency, e.g. <code>MXN</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <h2>Subscriptions</h2>
+                <div class="row">
+                    <p>The table <strong>bst</strong> (stands for Business Subscription Transitions) maintains information about Killbill
+                        subscriptions. It describe the history of changes (both past and future, i.e. requested changes) for bundles associated
+                        to accounts.</p>
+                    <table class="table table-striped table-bordered table-condensed">
+                        <thead>
+                            <tr>
+                                <th>Column name</th>
+                                <th>Column type</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>record_id</td>
+                                <td>int(11) unsigned</td>
+                                <td>Unique identifier for that record, e.g. <code>4</code></td>
+                            </tr>
+                            <tr>
+                                <td>total_ordering</td>
+                                <td>bigint(20)</td>
+                                <td>Killbill event id (unique in the system), e.g. <code>2</code></td>
+                            </tr>
+                            <tr>
+                                <td>bundle_id</td>
+                                <td>char(36)</td>
+                                <td>Killbill bundle id, e.g. <code>20906750-3d17-4f5b-bb1f-fe14f0e803fb</code></td>
+                            </tr>
+                            <tr>
+                                <td>account_id</td>
+                                <td>char(36)</td>
+                                <td>Killbill account id, e.g. <code>c99df6ef-6571-400b-b62d-c8b75394b9f1</code></td>
+                            </tr>
+                            <tr>
+                                <td>external_key</td>
+                                <td>varchar(50)</td>
+                                <td>Bundle external key</td>
+                            </tr>
+                            <tr>
+                                <td>account_key</td>
+                                <td>varchar(50)</td>
+                                <td>Account external key</td>
+                            </tr>
+                            <tr>
+                                <td>subscription_id</td>
+                                <td>char(36)</td>
+                                <td>Killbill subscription id, e.g. <code>205e11dd-9c88-451e-939a-46704d0bd3c3</code></td>
+                            </tr>
+                            <tr>
+                                <td>requested_timestamp</td>
+                                <td>bigint(20)</td>
+                                <td>Epoch when the subscription change was requested, e.g. <code>1341957064000</code></td>
+                            </tr>
+                            <tr>
+                                <td>event</td>
+                                <td>varchar(50)</td>
+                                <td>Subscription change type, e.g. <code>SYSTEM_CHANGE_BASE</code></td>
+                            </tr>
+                            <tr>
+                                <td>prev_product_name</td>
+                                <td>varchar(50)</td>
+                                <td>Catalog product name previous to the change, e.g. <code>Pistol</code></td>
+                            </tr>
+                            <tr>
+                                <td>prev_product_type</td>
+                                <td>varchar(50)</td>
+                                <td>Previous catalog name, e.g. <code>WeaponsHireSmall</code></td>
+                            </tr>
+                            <tr>
+                                <td>prev_product_category</td>
+                                <td>varchar(50)</td>
+                                <td>Previous catalog product category, e.g. <code>BASE</code></td>
+                            </tr>
+                            <tr>
+                                <td>prev_slug</td>
+                                <td>varchar(50)</td>
+                                <td>Previous slug, i.e. phase identifier, e.g. <code>pistol-monthly-trial</code></td>
+                            </tr>
+                            <tr>
+                                <td>prev_phase</td>
+                                <td>varchar(50)</td>
+                                <td>Previous phase type, e.g. <code>TRIAL</code></td>
+                            </tr>
+                            <tr>
+                                <td>prev_billing_period</td>
+                                <td>varchar(50)</td>
+                                <td>Previous billing period, e.g. <code>MONTHLY</code></td>
+                            </tr>
+                            <tr>
+                                <td>prev_price</td>
+                                <td>decimal(10,4)</td>
+                                <td>Previous price, e.g. <code>2.9500</code></td>
+                            </tr>
+                            <tr>
+                                <td>prev_price_list</td>
+                                <td>varchar(50)</td>
+                                <td>Previous price list, e.g. <code>DEFAULT</code></td>
+                            </tr>
+                            <tr>
+                                <td>prev_mrr</td>
+                                <td>decimal(10,4)</td>
+                                <td>Previous monthly run rate, e.g. <code>19.9500</code></td>
+                            </tr>
+                            <tr>
+                                <td>prev_currency</td>
+                                <td>varchar(50)</td>
+                                <td>Previous currency, e.g. <code>USD</code></td>
+                            </tr>
+                            <tr>
+                                <td>prev_start_date</td>
+                                <td>bigint(20)</td>
+                                <td>Epoch of the previous phase start date, e.g. <code>1341312568000</code></td>
+                            </tr>
+                            <tr>
+                                <td>prev_state</td>
+                                <td>varchar(50)</td>
+                                <td>Previous subscription state, e.g. <code>ACTIVE</code></td>
+                            </tr>
+                            <tr>
+                                <td>next_product_name</td>
+                                <td>varchar(50)</td>
+                                <td>Catalog product name after the change, e.g. <code>Shotgun</code></td>
+                            </tr>
+                            <tr>
+                                <td>next_product_type</td>
+                                <td>varchar(50)</td>
+                                <td>Catalog name after the change, e.g. <code>Firearms</code></td>
+                            </tr>
+                            <tr>
+                                <td>next_product_category</td>
+                                <td>varchar(50)</td>
+                                <td>Next catalog product category, e.g. <code>ADD_ON</code></td>
+                            </tr>
+                            <tr>
+                                <td>next_slug</td>
+                                <td>varchar(50)</td>
+                                <td>Next slug, i.e. phase identifier, e.g. <code>shotgun-monthly-evergreen</code></td>
+                            </tr>
+                            <tr>
+                                <td>next_phase</td>
+                                <td>varchar(50)</td>
+                                <td>Next phase type, e.g. <code>EVERGREEN</code></td>
+                            </tr>
+                            <tr>
+                                <td>next_billing_period</td>
+                                <td>varchar(50)</td>
+                                <td>Next billing period, e.g. <code>MONTHLY</code></td>
+                            </tr>
+                            <tr>
+                                <td>next_price</td>
+                                <td>decimal(10,4)</td>
+                                <td>Next price, e.g. <code>2.9500</code></td>
+                            </tr>
+                            <tr>
+                                <td>next_price_list</td>
+                                <td>varchar(50)</td>
+                                <td>Next price list, e.g. <code>rescue</code></td>
+                            </tr>
+                            <tr>
+                                <td>next_mrr</td>
+                                <td>decimal(10,4)</td>
+                                <td>Next monthly run rate, e.g. <code>2.9500</code></td>
+                            </tr>
+                            <tr>
+                                <td>next_currency</td>
+                                <td>varchar(50)</td>
+                                <td>Next currency, e.g. <code>BRL</code></td>
+                            </tr>
+                            <tr>
+                                <td>next_start_date</td>
+                                <td>bigint(20)</td>
+                                <td>Epoch of the next phase start date, e.g. <code>1343904568000</code></td>
+                            </tr>
+                            <tr>
+                                <td>next_state</td>
+                                <td>varchar(50)</td>
+                                <td>Next subscription state, e.g. <code>ACTIVE</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <h2>Invoices and invoice items</h2>
+                <div class="row">
+                    <p>The tables <strong>bin</strong> (stands for Business Invoices) and <strong>bii</strong> (stands for Business Invoice
+                        Items) maintain information about invoices posted by account. The tables don't contain historic records (they will contain
+                        at most one record per Killbill invoice and invoice item).</p>
+                    <table class="table table-striped table-bordered table-condensed">
+                        <thead>
+                            <tr>
+                                <th>Column name</th>
+                                <th>Column type</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>record_id</td>
+                                <td>int(11) unsigned</td>
+                                <td>Unique identifier for that record, e.g. <code>5</code></td>
+                            </tr>
+                            <tr>
+                                <td>invoice_id</td>
+                                <td>char(36)</td>
+                                <td>Killbill invoice id, e.g. <code>bb85b927-bfc9-48f4-8c72-2693733fabdd</code></td>
+                            </tr>
+                            <tr>
+                                <td>invoice_number</td>
+                                <td>bigint(20)</td>
+                                <td>Invoice number, e.g. <code>401</code></td>
+                            </tr>
+                            <tr>
+                                <td>created_date</td>
+                                <td>bigint(20)</td>
+                                <td>Epoch when the invoice was created, e.g. <code>1341958418930</code></td>
+                            </tr>
+                            <tr>
+                                <td>updated_date</td>
+                                <td>bigint(20)</td>
+                                <td>Epoch when the invoice was last updated (should always be created_date as invoices are immutable), e.g. <code>1341958418930</code></td>
+                            </tr>
+                            <tr>
+                                <td>account_id</td>
+                                <td>char(36)</td>
+                                <td>Killbill account id, e.g. <code>667e6a69-c8c2-4a04-a18e-31049818eb78</code></td>
+                            </tr>
+                            <tr>
+                                <td>account_key</td>
+                                <td>varchar(50)</td>
+                                <td>Account external key</td>
+                            </tr>
+                            <tr>
+                                <td>invoice_date</td>
+                                <td>date</td>
+                                <td>Invoice date in the account timezone, e.g. <code>2012-07-16</code></td>
+                            </tr>
+                            <tr>
+                                <td>target_date</td>
+                                <td>date</td>
+                                <td>Invoice target date (maximum service period end date for the items) in the account timezone, e.g. <code>2012-07-16</code></td>
+                            </tr>
+                            <tr>
+                                <td>currency</td>
+                                <td>char(5)</td>
+                                <td>Invoice currency, e.g. <code>EUR</code></td>
+                            </tr>
+                            <tr>
+                                <td>balance</td>
+                                <td>decimal(10,4)</td>
+                                <td>Invoice balance, e.g. <code>44.8500</code></td>
+                            </tr>
+                            <tr>
+                                <td>amount_paid</td>
+                                <td>decimal(10,4)</td>
+                                <td>Amount paid, e.g. <code>0.0000</code></td>
+                            </tr>
+                            <tr>
+                                <td>amount_charged</td>
+                                <td>decimal(10,4)</td>
+                                <td>Amount charged, e.g. <code>44.8500</code></td>
+                            </tr>
+                            <tr>
+                                <td>amount_credited</td>
+                                <td>decimal(10,4)</td>
+                                <td>Amount credited, e.g. <code>2.1000</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <table class="table table-striped table-bordered table-condensed">
+                        <thead>
+                            <tr>
+                                <th>Column name</th>
+                                <th>Column type</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>record_id</td>
+                                <td>int(11) unsigned</td>
+                                <td>Unique identifier for that record, e.g. <code>2</code></td>
+                            </tr>
+                            <tr>
+                                <td>item_id</td>
+                                <td>char(36)</td>
+                                <td>Killbill invoice item id, e.g. <code>1b43978b-68b5-4a05-8d51-18690148bf9e</code></td>
+                            </tr>
+                            <tr>
+                                <td>created_date</td>
+                                <td>bigint(20)</td>
+                                <td>Epoch when the invoice item was created, e.g. <code>1342462966241</code></td>
+                            </tr>
+                            <tr>
+                                <td>updated_date</td>
+                                <td>bigint(20)</td>
+                                <td>Epoch when the invoice item was updated, e.g. <code>1342462966241</code></td>
+                            </tr>
+                            <tr>
+                                <td>invoice_id</td>
+                                <td>char(36)</td>
+                                <td>The invoice this item belongs to, e.g. <code>b72b0ca8-b4e7-4026-a335-5b479136531c</code></td>
+                            </tr>
+                            <tr>
+                                <td>item_type</td>
+                                <td>char(50)</td>
+                                <td>Invoice item type, e.g. <code>FIXED</code></td>
+                            </tr>
+                            <tr>
+                                <td>external_key</td>
+                                <td>varchar(50)</td>
+                                <td>Bundle external key for this item</td>
+                            </tr>
+                            <tr>
+                                <td>product_name</td>
+                                <td>varchar(50)</td>
+                                <td>Product name associated with this item, e.g. <code>Shotgun</code></td>
+                            </tr>
+                            <tr>
+                                <td>product_type</td>
+                                <td>varchar(50)</td>
+                                <td>Catalog name associated with this product, e.g. <code>Firearms</code></td>
+                            </tr>
+                            <tr>
+                                <td>product_category</td>
+                                <td>varchar(50)</td>
+                                <td>Catalog product category for this product, e.g. <code>ADD_ON</code></td>
+                            </tr>
+                            <tr>
+                                <td>slug</td>
+                                <td>varchar(50)</td>
+                                <td>Product slug, i.e. phase identifier, e.g. <code>shotgun-monthly-evergreen</code></td>
+                            </tr>
+                            <tr>
+                                <td>phase</td>
+                                <td>varchar(50)</td>
+                                <td>Phase type for this product, e.g. <code>TRIAL</code></td>
+                            </tr>
+                            <tr>
+                                <td>billing_period</td>
+                                <td>varchar(50)</td>
+                                <td>Billing period for this item, e.g. <code>MONTHLY</code></td>
+                            </tr>
+                            <tr>
+                                <td>start_date</td>
+                                <td>date</td>
+                                <td>Service period start date in the account timezone, e.g. <code>2012-07-16</code></td>
+                            </tr>
+                            <tr>
+                                <td>end_date</td>
+                                <td>date</td>
+                                <td>Service period end date in the account timezone, e.g. <code>2012-07-16</code></td>
+                            </tr>
+                            <tr>
+                                <td>amount</td>
+                                <td>decimal(10,4)</td>
+                                <td>Item price, e.g. <code>0.0000</code></td>
+                            </tr>
+                            <tr>
+                                <td>currency</td>
+                                <td>char(50)</td>
+                                <td>Amount currency, e.g. <code>USD</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <h2>Payments</h2>
+                <div class="row">
+                    <p>The table <strong>bip</strong> (stands for Business Invoice Payments) maintains information about Killbill payments,
+                        refunds and chargebacks. The table doesn't contain historic records (it will contain at most one record per Killbill
+                        invoice payment).</p>
+                    <table class="table table-striped table-bordered table-condensed">
+                        <thead>
+                            <tr>
+                                <th>Column name</th>
+                                <th>Column type</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>record_id</td>
+                                <td>int(11) unsigned</td>
+                                <td>Unique identifier for that record, e.g. <code></code></td>
+                            </tr>
+                            <tr>
+                                <td>payment_id</td>
+                                <td>char(36)</td>
+                                <td>, e.g. <code></code></td>
+                            </tr>
+                            <tr>
+                                <td>created_date</td>
+                                <td>bigint(20)</td>
+                                <td>, e.g. <code></code></td>
+                            </tr>
+                            <tr>
+                                <td>updated_date</td>
+                                <td>bigint(20)</td>
+                                <td>, e.g. <code></code></td>
+                            </tr>
+                            <tr>
+                                <td>ext_payment_ref_id</td>
+                                <td>varchar(255)</td>
+                                <td>, e.g. <code></code></td>
+                            </tr>
+                            <tr>
+                                <td>account_key</td>
+                                <td>varchar(50)</td>
+                                <td>, e.g. <code></code></td>
+                            </tr>
+                            <tr>
+                                <td>invoice_id</td>
+                                <td>char(36)</td>
+                                <td>, e.g. <code></code></td>
+                            </tr>
+                            <tr>
+                                <td>effective_date</td>
+                                <td>bigint(20)</td>
+                                <td>, e.g. <code></code></td>
+                            </tr>
+                            <tr>
+                                <td>amount</td>
+                                <td>decimal(10,4)</td>
+                                <td>, e.g. <code></code></td>
+                            </tr>
+                            <tr>
+                                <td>currency</td>
+                                <td>char(5)</td>
+                                <td>, e.g. <code></code></td>
+                            </tr>
+                            <tr>
+                                <td>payment_error</td>
+                                <td>varchar(255)</td>
+                                <td>, e.g. <code></code></td>
+                            </tr>
+                            <tr>
+                                <td>processing_status</td>
+                                <td>varchar(5)</td>
+                                <td>, e.g. <code></code></td>
+                            </tr>
+                            <tr>
+                                <td>requested_amount</td>
+                                <td>decimal(10,4)</td>
+                                <td>, e.g. <code></code></td>
+                            </tr>
+                            <tr>
+                                <td>plugin_name</td>
+                                <td>varchar(50)</td>
+                                <td>, e.g. <code></code></td>
+                            </tr>
+                            <tr>
+                                <td>payment_type</td>
+                                <td>varchar(50)</td>
+                                <td>, e.g. <code></code></td>
+                            </tr>
+                            <tr>
+                                <td>payment_method</td>
+                                <td>varchar(50)</td>
+                                <td>, e.g. <code></code></td>
+                            </tr>
+                            <tr>
+                                <td>card_type</td>
+                                <td>varchar(50)</td>
+                                <td>, e.g. <code></code></td>
+                            </tr>
+                            <tr>
+                                <td>card_country</td>
+                                <td>varchar(50)</td>
+                                <td>, e.g. <code></code></td>
+                            </tr>
+                            <tr>
+                                <td>invoice_payment_type</td>
+                                <td>varchar(50)</td>
+                                <td>, e.g. <code></code></td>
+                            </tr>
+                            <tr>
+                                <td>linked_invoice_payment_id</td>
+                                <td>char(36)</td>
+                                <td>, e.g. <code></code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <h2>Overdue status</h2>
+                <div class="row">
+                    <p>The table <strong>bos</strong> (stands for Business Overdue Status) maintains information about Killbill bundles
+                        overdue status. The table contains historic status for a given bundle.</p>
+                    <table class="table table-striped table-bordered table-condensed">
+                        <thead>
+                            <tr>
+                                <th>Column name</th>
+                                <th>Column type</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>record_id</td>
+                                <td>int(11) unsigned</td>
+                                <td>Unique identifier for that record</td>
+                            </tr>
+                            <tr>
+                                <td>bundle_id</td>
+                                <td>char(36)</td>
+                                <td>Killbill bundle id, e.g. <code>ce3d45ec-30b7-4489-949c-d80808111993</code></td>
+                            </tr>
+                            <tr>
+                                <td>external_key</td>
+                                <td>varchar(50)</td>
+                                <td>Bundle external key</td>
+                            </tr>
+                            <tr>
+                                <td>account_key</td>
+                                <td>varchar(50)</td>
+                                <td>Account external key</td>
+                            </tr>
+                            <tr>
+                                <td>status</td>
+                                <td>varchar(50)</td>
+                                <td>Overdue status, e.g. <code>PRE_WARNING</code></td>
+                            </tr>
+                            <tr>
+                                <td>start_date</td>
+                                <td>bigint(20)</td>
+                                <td>Epoch of the overdue status start period, e.g. <code>1342396800000</code></td>
+                            </tr>
+                            <tr>
+                                <td>end_date</td>
+                                <td>bigint(20)</td>
+                                <td>Epoch of the overdue status end period, e.g. <code>1342396800000</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <h2>Tags and custom fields</h2>
+                <div class="row">
+                    <p>Information about tags and custom fields are captured in the tables <strong>bac_tags</strong>,
+                        <strong>bac_fields</strong>, <strong>bst_tags</strong>, <strong>bst_fields</strong>, <strong>bin_tags</strong>,
+                        <strong>bin_fields</strong>, <strong>bip_tags</strong> and <strong>bip_fields</strong>. The tables don't contain
+                        historic records (they will contain the current state of tags and custom fields).</p>
+                    <table class="table table-striped table-bordered table-condensed">
+                        <thead>
+                            <tr>
+                                <th>Column name</th>
+                                <th>Column type</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>record_id</td>
+                                <td>int(11) unsigned</td>
+                                <td>Unique identifier for that record</td>
+                            </tr>
+                            <tr>
+                                <td>account_id</td>
+                                <td>char(36)</td>
+                                <td>, e.g. <code></code></td>
+                            </tr>
+                            <tr>
+                                <td>account_key</td>
+                                <td>varchar(50)</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>name</td>
+                                <td>varchar(50)</td>
+                                <td>, e.g. <code></code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <table class="table table-striped table-bordered table-condensed">
+                        <thead>
+                            <tr>
+                                <th>Column name</th>
+                                <th>Column type</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>record_id</td>
+                                <td>int(11) unsigned</td>
+                                <td>Unique identifier for that record</td>
+                            </tr>
+                            <tr>
+                                <td>account_id</td>
+                                <td>char(36)</td>
+                                <td>, e.g. <code></code></td>
+                            </tr>
+                            <tr>
+                                <td>account_key</td>
+                                <td>varchar(50)</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>name</td>
+                                <td>varchar(50)</td>
+                                <td>, e.g. <code></code></td>
+                            </tr>
+                            <tr>
+                                <td>value</td>
+                                <td>varchar(255)</td>
+                                <td>, e.g. <code></code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="http_api">
+                <div class="page-header">
+                    <h1>HTTP API</h1>
+                </div>
+                <p class="lead">
+                Each POST/PUT/DELETE needs at least a non null X-Killbill-CreatedBy header; failure to do so will return a 400 (BAD_REQUEST) error code.
+                </p>
+
+                <h2>Account</h2>
+                <div class="api_table">
+                    <table class="table table-striped table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Resource</th>
+                                <th>Query params</th>
+                                <th>Description</th>
+                                <th>Return codes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>GET /1.0/kb/accounts/&lt;account_id&gt;</td>
+                                <td></td>
+                                <td>Retrieve account specified by account_id</td>
+                                <td>200, 204, 400</td>
+                            </tr>
+                            <tr>
+                                <td>GET /1.0/kb/accounts/&lt;account_id&gt;/bundles</td>
+                                <td></td>
+                                <td>Retrieve bundles associated with account specified by account_id</td>
+                                <td>200, 204, 400</td>
+                            </tr>
+                            <tr>
+                                <td>GET /1.0/kb/accounts/&lt;account_id&gt;/paymentMethods</td>
+                                <td>withPluginInfo</td>
+                                <td>Retrieves the payment methods by account_id</td>
+                                <td>200, 204, 400</td>
+                            </tr>
+                            <tr>
+                                <td>GET /1.0/kb/accounts</td>
+                                <td>external_key</td>
+                                <td>Retrieves account specified by external_key</td>
+                                <td>200, 204, 400</td>
+                            </tr>
+                            <tr>
+                                <td>POST /1.0/kb/accounts</td>
+                                <td></td>
+                                <td>Create account</td>
+                                <td>201, 400</td>
+                            </tr>
+                            <tr>
+                                <td>PUT /1.0/kb/accounts/&lt;account_id&gt;</td>
+                                <td></td>
+                                <td>Update account</td>
+                                <td>200, 204, 400</td>
+                            </tr>
+                            <tr>
+                                <td>DELETE /1.0/kb/accounts/&lt;account_id&gt;</td>
+                                <td></td>
+                                <td>Delete account specified by account_id – cancel all subscriptions</td>
+                                <td>204, 400</td>
+                            </tr>
+                            <tr>
+                                <td>POST /1.0/kb/accounts/&lt;account_id&gt;/paymentMethods</td>
+                                <td>isDefault</td>
+                                <td>Creates a new payment method for the account specified account_id</td>
+                                <td>201, 400</td>
+                            </tr>
+                            <tr>
+                                <td>PUT /1.0/kb/accounts/&lt;account_id&gt;/paymentMethods/payment_method_id/setDefault</td>
+                                <td></td>
+                                <td>Set paymentMethod as default for the account specified account_id</td>
+                                <td>200, 400</td>
+                            </tr>
+                            <tr>
+                                <td>GET /1.0/kb/accounts/&lt;account_id&gt;/emails</td>
+                                <td></td>
+                                <td></td>
+                                <td>200, 400</td>
+                            </tr>
+                            <tr>
+                                <td>POST /1.0/kb/accounts/&lt;account_id&gt;/emails</td>
+                                <td></td>
+                                <td>Get the list of emails associated with an account</td>
+                                <td>201, 400</td>
+                            </tr>
+                            <tr>
+                                <td>DELETE /1.0/kb/accounts/&lt;account_id&gt;/emails/<email></td>
+                                <td></td>
+                                <td>Remove an email associated with an account</td>
+                                <td>200, 400</td>
+                            </tr>
+                            <tr>
+                                <td>GET /1.0/kb/accounts/&lt;account_id&gt;/emailNotifications</td>
+                                <td></td>
+                                <td>Check whether email notifications are turned on for this account</td>
+                                <td>200, 404</td>
+                            </tr>
+                            <tr>
+                                <td>PUT /1.0/kb/accounts/&lt;account_id&gt;/emailNotifications</td>
+                                <td></td>
+                                <td>Update email notifications for this account</td>
+                                <td>200, 404</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h2>Bundle</h2>
+                <div class="api_table">
+                    <table class="table table-striped table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Resource</th>
+                                <th>Query params</th>
+                                <th>Description</th>
+                                <th>Return codes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>GET /1.0/kb/bundles/&lt;bundle_id&gt;</td>
+                                <td></td>
+                                <td>Retrieve bundle specified by bundle_id</td>
+                                <td>200, 204, 400</td>
+                            </tr>
+                            <tr>
+                                <td>GET /1.0/kb/bundles/&lt;bundle_id&gt;/subscriptions</td>
+                                <td></td>
+                                <td>Retrieve subscriptions associated with bundle specified by bundle_id</td>
+                                <td>200, 204, 400</td>
+                            </tr>
+                            <tr>
+                                <td>GET /1.0/kb/bundles</td>
+                                <td>external_key</td>
+                                <td>Retrieve bundle specified by external_key</td>
+                                <td>200, 204, 400</td>
+                            </tr>
+                            <tr>
+                                <td>POST /1.0/kb/bundles</td>
+                                <td></td>
+                                <td>Create bundle</td>
+                                <td>201, 400, 404</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h2>Subscription</h2>
+                <div class="api_table">
+                    <table class="table table-striped table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Resource</th>
+                                <th>Query params</th>
+                                <th>Description</th>
+                                <th>Return codes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>GET /1.0/kb/subscriptions/&lt;subscription_id&gt;</td>
+                                <td></td>
+                                <td>Retrieve the current subscription state</td>
+                                <td>200, 204, 400</td>
+                            </tr>
+                            <tr>
+                                <td>POST /1.0/kb/subscriptions</td>
+                                <td>requested_date,call_completion,call_timeout_sec</td>
+                                <td>Create a new subscription</td>
+                                <td>201, 400</td>
+                            </tr>
+                            <tr>
+                                <td>PUT /1.0/kb/subscriptions/&lt;subscription_id&gt;</td>
+                                <td>requested_date,call_completion,call_timeout_sec</td>
+                                <td>Change subscription</td>
+                                <td>200, 204, 400</td>
+                            </tr>
+                            <tr>
+                                <td>PUT /1.0/kb/subscriptions/&lt;subscription_id&gt;/uncancel</td>
+                                <td></td>
+                                <td>Uncancel a future cancelled subscription</td>
+                                <td>200, 204, 400</td>
+                            </tr>
+                            <tr>
+                                <td>DELETE /1.0/kb/subscriptions/&lt;subscription_id&gt;</td>
+                                <td>requested_date,call_completion,call_timeout_sec</td>
+                                <td>Cancel subscription specified by subscription_id</td>
+                                <td>200, 204, 400</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h2>Tag</h2>
+                <div class="api_table">
+                    <table class="table table-striped table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Resource</th>
+                                <th>Query params</th>
+                                <th>Description</th>
+                                <th>Return codes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>GET /1.0/kb/tag_definitions</td>
+                                <td></td>
+                                <td>Retrieve all tag definitions </td>
+                                <td>200, 204</td>
+                            </tr>
+                            <tr>
+                                <td>POST /1.0/kb/tag_definitions/&lt;tag_name&gt;</td>
+                                <td></td>
+                                <td>Create a new tag definition</td>
+                                <td>201, 400</td>
+                            </tr>
+                            <tr>
+                                <td>DELETE /1.0/kb/tag_definitions/&lt;tag_name&gt;</td>
+                                <td>force_if_used</td>
+                                <td>Remove the tag definition</td>
+                                <td>204, 400</td>
+                            </tr>
+                            <tr>
+                                <td>GET /1.0/kb/&lt;object_type&gt;/tags/&lt;object_id&gt;/tags</td>
+                                <td></td>
+                                <td>Retrieve the tags associated with that object</td>
+                                <td>200, 404</td>
+                            </tr>
+                            <tr>
+                                <td>POST /1.0/kb/&lt;object_type&gt;/tags/&lt;object_id&gt;</td>
+                                <td>taglist</td>
+                                <td>Attach a list of tags to that object</td>
+                                <td>201, 400</td>
+                            </tr>
+                            <tr>
+                                <td>DELETE  /1.0/kb/&lt;object_type&gt;/tags/&lt;object_id&gt;</td>
+                                <td>taglist</td>
+                                <td>Remove all tags associated with that object</td>
+                                <td>204, 400</td>
+                            </tr>
+                            <tr>
+                                <td>DELETE  /1.0/kb/&lt;object_type&gt;/tags/&lt;object_id&gt;</td>
+                                <td></td>
+                                <td>Remove all tags associated with that object</td>
+                                <td>204, 400</td>
+                            </tr>
+                            <tr>
+                                <td>GET /1.0/kb/&lt;object_type&gt;/tags</td>
+                                <td>taglist</td>
+                                <td>Retrieve all objects which have those tag</td>
+                                <td>200, 404</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h2>Custom Field</h2>
+                <div class="api_table">
+                    <table class="table table-striped table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Resource</th>
+                                <th>Query params</th>
+                                <th>Description</th>
+                                <th>Return codes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>GET /1.0/kb/&lt;object_type&gt;/custom_fields/&lt;object_id&gt;</td>
+                                <td></td>
+                                <td>Retrieve the custom fields associated with that object</td>
+                                <td>200, 204</td>
+                            </tr>
+                            <tr>
+                                <td>PUT /1.0/kb/&lt;object_type&gt;/custom_fields/&lt;object_id&gt;</td>
+                                <td></td>
+                                <td>Modify the custom field associated to that object </td>
+                                <td>204, 400</td>
+                            </tr>
+                            <tr>
+                                <td>DELETE /1.0/kb/&lt;object_type&gt;/custom_fields/&lt;object_id&gt;</td>
+                                <td>name</td>
+                                <td>Remove the custom field</td>
+                                <td>204, 400</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h2>Account Timeline</h2>
+                <div class="api_table">
+                    <table class="table table-striped table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Resource</th>
+                                <th>Query params</th>
+                                <th>Description</th>
+                                <th>Return codes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>GET /1.0/kb/accounts/&lt;account_id&gt;/timeline</td>
+                                <td></td>
+                                <td>Retrieve account timeline for specified account_id</td>
+                                <td>200, 204</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h2>Bundle Timeline and Repair</h2>
+                <div class="api_table">
+                    <table class="table table-striped table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Resource</th>
+                                <th>Query params</th>
+                                <th>Description</th>
+                                <th>Return codes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>GET /1.0/kb/bundles/&lt;bundle_id&gt;/timeline</td>
+                                <td></td>
+                                <td>Retrieve bundle timeline for specified bundle_id</td>
+                                <td>200, 404</td>
+                            </tr>
+                            <tr>
+                                <td>PUT /1.0/kb/bundles/&lt;bundle_id&gt;/timeline</td>
+                                <td>dryRun, waitForBillingComplete, billingCompleteTimeout</td>
+                                <td>Repair a specific bundle by providing the set of new/deleted events</td>
+                                <td>201, 400, 408, 409</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h2>Payment</h2>
+                <div class="api_table">
+                    <table class="table table-striped table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Resource</th>
+                                <th>Query params</th>
+                                <th>Description</th>
+                                <th>Return codes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>GET /1.0/kb/invoices/&lt;invoice_id&gt;/payments</td>
+                                <td></td>
+                                <td>Retrieve status for payment matching the invoice specified by invoice_id</td>
+                                <td>200, 404</td>
+                            </tr>
+                            <tr>
+                                <td>POST /1.0/kb/invoices/&lt;invoice_id&gt;/payments</td>
+                                <td>externalPayment</td>
+                                <td>Trigger an instant payment to pay the invoice specified by invoice_id</td>
+                                <td>201, 400, 404</td>
+                            </tr>
+                            <tr>
+                                <td>GET /1.0/kb/accounts/&lt;account_id&gt;/payments</td>
+                                <td>last4CC, nameOnCC</td>
+                                <td>Retrieve payment for that account based on the query params</td>
+                                <td>200, 404</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h1>Payment Method</h1>
+                <div class="api_table">
+                    <table class="table table-striped table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Resource</th>
+                                <th>Query params</th>
+                                <th>Description</th>
+                                <th>Return codes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>PUT /1.0/kb/paymentMethods/&lt;payment_method_id&gt;</td>
+                                <td></td>
+                                <td>Update payment method properties</td>
+                                <td>200, 404</td>
+                            </tr>
+                            <tr>
+                                <td>DELETE /1.0/kb/paymentMethods/&lt;payment_method_id&gt;</td>
+                                <td></td>
+                                <td>Delete payment method properties</td>
+                                <td>200, 404</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h2>Refund</h2>
+                <div class="api_table">
+                    <table class="table table-striped table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Resource</th>
+                                <th>Query params</th>
+                                <th>Description</th>
+                                <th>Return codes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>GET /1.0/kb/accounts/&lt;account_id&gt;/refunds</td>
+                                <td></td>
+                                <td>Retrieve the refund information associated to that account</td>
+                                <td>200, 404</td>
+                            </tr>
+                            <tr>
+                                <td>GET /1.0/kb/payments/&lt;payment_id&gt;/refunds</td>
+                                <td></td>
+                                <td>Retrieve the refund information associated to that payment</td>
+                                <td>200, 404</td>
+                            </tr>
+                            <tr>
+                                <td>POST /1.0/kb/payments/&lt;payment_id&gt;/refunds</td>
+                                <td>refund_amount</td>
+                                <td>Trigger a refund against the specified payment</td>
+                                <td>201, 400, 404</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h2>Chargeback</h2>
+                <div class="api_table">
+                    <table class="table table-striped table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Resource</th>
+                                <th>Query params</th>
+                                <th>Description</th>
+                                <th>Return codes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>GET /1.0/kb/chargebacks/accounts/&lt;account_id&gt;</td>
+                                <td></td>
+                                <td>Retrieve the chargeback information associated to that account</td>
+                                <td>200, 204</td>
+                            </tr>
+                            <tr>
+                                <td>GET /1.0/kb/chargebacks/payments/&lt;payment_id&gt;</td>
+                                <td></td>
+                                <td>Retrieve the chargeback information associated to that payment</td>
+                                <td>200, 204</td>
+                            </tr>
+                            <tr>
+                                <td>POST /1.0/kb/chargebacks/payments/&lt;payment_id&gt;</td>
+                                <td></td>
+                                <td>Create a chargeback against a given payment</td>
+                                <td>201, 400, 404</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h2>Credit</h2>
+                <div class="api_table">
+                    <table class="table table-striped table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Resource</th>
+                                <th>Query params</th>
+                                <th>Description</th>
+                                <th>Return codes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>POST /1.0/kb/accounts/&lt;account_id&gt;</td>
+                                <td></td>
+                                <td>Create a credit for that account</td>
+                                <td>201, 400, 404</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h2>Invoice</h2>
+                <div class="api_table">
+                    <table class="table table-striped table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Resource</th>
+                                <th>Query params</th>
+                                <th>Description</th>
+                                <th>Return codes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>GET /1.0/kb/invoices/&lt;invoice_id&gt;</td>
+                                <td></td>
+                                <td>Retrieve the invoice specified with invoice_id</td>
+                                <td>200, 404</td>
+                            </tr>
+                            <tr>
+                                <td>GET /1.0/kb/invoices</td>
+                                <td>account_id</td>
+                                <td>Retrieve the invoices associated to that account</td>
+                                <td>200, 404</td>
+                            </tr>
+                            <tr>
+                                <td>POST /1.0/kb/invoices</td>
+                                <td>account_id,target_date,dry_run</td>
+                                <td>Create an invoice for that account</td>
+                                <td>201, 400, 404</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="ui">
+                <div class="page-header">
+                    <h1>UI</h1>
+                </div>
+                <p></p>
+            </section>
+        </div>
+    </div>
+</div>
