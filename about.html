@@ -3,91 +3,91 @@ layout: default
 ---
 
 <div class="container">
-<div class="row">
-    <div class="span3 bs-docs-sidebar">
-        <ul class="nav nav-list bs-docs-sidenav affix">
-            <li><a href="#what_is_killbill"><i class="icon-chevron-right"></i>What is Killbill?</a></li>
-            <li><a href="#overview"><i class="icon-chevron-right"></i>Quick overview of the Abstractions</a></li>
-            <li><a href="#features"><i class="icon-chevron-right"></i>Features</a></li>
-            <li><a href="#state"><i class="icon-chevron-right"></i>State of the project</a></li>
-        </ul>
+    <div class="row">
+        <div class="span3 bs-docs-sidebar">
+            <ul class="nav nav-list bs-docs-sidenav affix">
+                <li><a href="#what_is_killbill"><i class="icon-chevron-right"></i>What is Killbill?</a></li>
+                <li><a href="#overview"><i class="icon-chevron-right"></i>Quick overview of the Abstractions</a></li>
+                <li><a href="#features"><i class="icon-chevron-right"></i>Features</a></li>
+                <li><a href="#state"><i class="icon-chevron-right"></i>State of the project</a></li>
+            </ul>
+        </div>
+        <div class="span9">
+            <section id="what_is_killbill">
+                <div class="page-header">
+                    <h1>What is Killbill?</h1>
+                </div>
+                <p class="lead">Killbill is project aimed at handling online subscription management and its associated billing component. We started this project as part of <a href="http://www.ning.com">Ning</a> to replace our existing billing system. We decided to open source the project so others can also benefit from it.</p>
+                <p>The core of the project is a library that takes as an input a powerful catalog and offers a set of APIs to manage accounts and their subscriptions. The system detects subscriptions events (creation/cancellation/change) to automatically create new invoices and attempt making payments. In addition to the core library, there is also a web server module that offers a set of REST endpoints, an administrative UI, and some client libraries (php, java, ruby, javascript) offering a complete stack.</p>
+                <p>The payment system is architected as a plugin framework where one can add its own plugin-- for instance a Paypal plugin or a plugin for some specific payment gateways. By default the system comes with a noop plugin that does not do anything.</p>
+            </section>
+            <section id="overview">
+                <div class="page-header">
+                    <h1>Quick overview of the Abstractions</h1>
+                </div>
+                <p class="lead">A user can create a <b>Subscription</b> by specifying a <b>Plan</b>. The set of existing plans are configured in a catalog, where each plan has a set of <b>Phase</b>s. Existing currently supported phases are trials, discounts, evergreen and each phase is defined with some attributes such as a set of prices and a length. Subscriptions have a type; currently supported types are BP (base pan), AO (addon) and standalone. Subscriptions are grouped together in a <b>Bundle</b> to allow specifying business rules across a group of subscriptions. An example is to create one BP along with multiple AOs in a bundle and specify that upon BP cancellation AO should also be cancelled.</p>
+            </section>
+            <section id="features">
+                <div class="page-header">
+                    <h1>Features</h1>
+                </div>
+                <h2>Catalog</h2>
+                    <ul>
+                        <li>Allow to specify the descriptions of the Plans available in the system.</li>
+                        <li>Versioned Catalog, where Plans can be added, old Plans deprecated, prices updated.</li>                            
+                        <li>Allow to specify the business logics associated with cancellation, or change of plans; an example is for instance to specify whether a cancellation should occur immediately triggering some proration logics or occurring at the end of its term (EOT) to avoid any proration. <a href="" >see catalog rules (TODO)</a></li>
+                        <li>Allow to specify Billing alignments to decide which subscriptions should be billed together; an example is to create an invoice at the account level where each subscriptions on this account appear in one invoice.</li>
+                        <li>Allow to specify Plan alignments; an example of such alignment allows to define whether changing from one plan to another one will end up restarting from the very first phase of the second plan or not <a href="" >see catalog alignment rules (TODO)</a> </li> 
+                        <li>Multiple Currencies</li>                            
+                    </ul>
+                <h2>Account Management</h2>
+                    <ul>
+                        <li>Creation of new accounts</li>
+                        <li>Update of account information</li>
+                        <li>Deletion of account</li>
+                    </ul>
+                <h2>Subscription Management</h2>
+                    <ul>
+                        <li>Creation of new subscriptions</li>
+                        <li>Change of Plan for a given subscription</li>
+                        <li>Cancellation of a subscription</li>
+                    </ul>
+                <h2>Invoicing</h2>
+                    <ul>
+                        <li>Automatic invoicing</li>
+                        <li>Allows to credit account</li>    
+                        <li>Generation of custom html invoice through custom template</li>
+                        <li>Email invoices optional</li>                                
+                    </ul>
+                <h2>Payments</h2>                        
+                    <ul>
+                        <li>Ability to add a payment method</li>
+                        <li>Ability to change a payment method</li>
+                        <li>Ability to set a default payment method</li>
+                        <li>Support for external iFrame for credit card specification</li>
+                        <li>Allow to contact any third party payment provider through custom plugins</li>
+                        <li>Build-in payment retry in case of system failures</li>
+                        <li>Allows external payments</li>
+                        <li>Allows full or partial refund</li>
+                        <li>Support for chargedbacks</li>
+                    </ul>
+                <h2>Overdue (Dunning)</h2>                                                
+                    <ul>
+                        <li>Credit card failures are retried using configurable policies</li>
+                        <li>Custom actions upon payment failures are configurable</li>
+                    </ul>
+                <h2>Analytics</h2>                                                
+                    <ul>
+                        <li>Built-in analytics metrics such as MRR (monthly recurring revenue)</li>
+                        <li>Ability to build custom metrics</li>
+                    </ul>                   
+            </section>
+            <section id="state">
+                <div class="page-header">
+                    <h1>State of the project</h1>
+                </div>
+                <p>The project is currently running in production.</p>
+            </section>
+        </div>
     </div>
-    <div class="span9">
-        <section id="what_is_killbill">
-            <div class="page-header">
-                <h1>What is Killbill?</h1>
-            </div>
-            <p class="lead">Killbill is project aimed at handling online subscription management and its associated billing component. We started this project as part of <a href="http://www.ning.com">Ning</a> to replace our existing billing system. We decided to open source the project so others can also benefit from it.</p>
-            <p>The core of the project is a library that takes as an input a powerful catalog and offers a set of APIs to manage accounts and their subscriptions. The system detects subscriptions events (creation/cancellation/change) to automatically create new invoices and attempt making payments. In addition to the core library, there is also a web server module that offers a set of REST endpoints, an administrative UI, and some client libraries (php, java, ruby, javascript) offering a complete stack.</p>
-            <p>The payment system is architected as a plugin framework where one can add its own plugin-- for instance a Paypal plugin or a plugin for some specific payment gateways. By default the system comes with a noop plugin that does not do anything.</p>
-        </section>
-        <section id="overview">
-            <div class="page-header">
-                <h1>Quick overview of the Abstractions</h1>
-            </div>
-            <p class="lead">A user can create a <b>Subscription</b> by specifying a <b>Plan</b>. The set of existing plans are configured in a catalog, where each plan has a set of <b>Phase</b>s. Existing currently supported phases are trials, discounts, evergreen and each phase is defined with some attributes such as a set of prices and a length. Subscriptions have a type; currently supported types are BP (base pan), AO (addon) and standalone. Subscriptions are grouped together in a <b>Bundle</b> to allow specifying business rules across a group of subscriptions. An example is to create one BP along with multiple AOs in a bundle and specify that upon BP cancellation AO should also be cancelled.</p>
-        </section>
-        <section id="features">
-            <div class="page-header">
-                <h1>Features</h1>
-            </div>
-            <h2>Catalog</h2>
-                <ul>
-                    <li>Allow to specify the descriptions of the Plans available in the system.</li>
-                    <li>Versioned Catalog, where Plans can be added, old Plans deprecated, prices updated.</li>                            
-                    <li>Allow to specify the business logics associated with cancellation, or change of plans; an example is for instance to specify whether a cancellation should occur immediately triggering some proration logics or occurring at the end of its term (EOT) to avoid any proration. <a href="" >see catalog rules (TODO)</a></li>
-                    <li>Allow to specify Billing alignments to decide which subscriptions should be billed together; an example is to create an invoice at the account level where each subscriptions on this account appear in one invoice.</li>
-                    <li>Allow to specify Plan alignments; an example of such alignment allows to define whether changing from one plan to another one will end up restarting from the very first phase of the second plan or not <a href="" >see catalog alignment rules (TODO)</a> </li> 
-                    <li>Multiple Currencies</li>                            
-                </ul>
-            <h2>Account Management</h2>
-                <ul>
-                    <li>Creation of new accounts</li>
-                    <li>Update of account information</li>
-                    <li>Deletion of account</li>
-                </ul>
-            <h2>Subscription Management</h2>
-                <ul>
-                    <li>Creation of new subscriptions</li>
-                    <li>Change of Plan for a given subscription</li>
-                    <li>Cancellation of a subscription</li>
-                </ul>
-            <h2>Invoicing</h2>
-                <ul>
-                    <li>Automatic invoicing</li>
-                    <li>Allows to credit account</li>    
-                    <li>Generation of custom html invoice through custom template</li>
-                    <li>Email invoices optional</li>                                
-                </ul>
-            <h2>Payments</h2>                        
-                <ul>
-                    <li>Ability to add a payment method</li>
-                    <li>Ability to change a payment method</li>
-                    <li>Ability to set a default payment method</li>
-                    <li>Support for external iFrame for credit card specification</li>
-                    <li>Allow to contact any third party payment provider through custom plugins</li>
-                    <li>Build-in payment retry in case of system failures</li>
-                    <li>Allows external payments</li>
-                    <li>Allows full or partial refund</li>
-                    <li>Support for chargedbacks</li>
-                </ul>
-            <h2>Overdue (Dunning)</h2>                                                
-                <ul>
-                    <li>Credit card failures are retried using configurable policies</li>
-                    <li>Custom actions upon payment failures are configurable</li>
-                </ul>
-            <h2>Analytics</h2>                                                
-                <ul>
-                    <li>Built-in analytics metrics such as MRR (monthly recurring revenue)</li>
-                    <li>Ability to build custom metrics</li>
-                </ul>                   
-        </section>
-        <section id="state">
-            <div class="page-header">
-                <h1>State of the project</h1>
-            </div>
-            <p>The project is currently running in production.</p>
-        </section>
-    </div>
-</div>
 </div>
