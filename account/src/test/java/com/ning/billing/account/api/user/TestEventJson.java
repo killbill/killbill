@@ -24,11 +24,11 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.AccountTestSuite;
-import com.ning.billing.account.api.AccountChangeEvent;
 import com.ning.billing.account.api.ChangedField;
 import com.ning.billing.account.api.DefaultBillCycleDay;
 import com.ning.billing.account.api.DefaultChangedField;
 import com.ning.billing.account.api.user.DefaultAccountCreationEvent.DefaultAccountData;
+import com.ning.billing.util.events.AccountChangeInternalEvent;
 import com.ning.billing.util.jackson.ObjectMapper;
 
 public class TestEventJson extends AccountTestSuite {
@@ -39,7 +39,7 @@ public class TestEventJson extends AccountTestSuite {
         final List<ChangedField> changes = new ArrayList<ChangedField>();
         changes.add(new DefaultChangedField("fieldXX", "valueX", "valueXXX"));
         changes.add(new DefaultChangedField("fieldYY", "valueY", "valueYYY"));
-        final AccountChangeEvent e = new DefaultAccountChangeEvent(UUID.randomUUID(), changes, UUID.randomUUID());
+        final AccountChangeInternalEvent e = new DefaultAccountChangeEvent(UUID.randomUUID(), changes, UUID.randomUUID());
 
         final String json = mapper.writeValueAsString(e);
 

@@ -17,31 +17,31 @@
 package com.ning.billing.analytics;
 
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.account.api.AccountChangeEvent;
-import com.ning.billing.account.api.AccountCreationEvent;
-import com.ning.billing.entitlement.api.timeline.RepairEntitlementEvent;
-import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
-import com.ning.billing.entitlement.api.user.RequestedSubscriptionEvent;
-import com.ning.billing.invoice.api.InvoiceAdjustmentEvent;
-import com.ning.billing.invoice.api.InvoiceCreationEvent;
-import com.ning.billing.invoice.api.NullInvoiceEvent;
-import com.ning.billing.overdue.OverdueChangeEvent;
-import com.ning.billing.payment.api.PaymentErrorEvent;
-import com.ning.billing.payment.api.PaymentInfoEvent;
-import com.ning.billing.util.bus.BusEvent;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.UserType;
-import com.ning.billing.util.tag.api.ControlTagCreationEvent;
-import com.ning.billing.util.tag.api.ControlTagDefinitionCreationEvent;
-import com.ning.billing.util.tag.api.ControlTagDefinitionDeletionEvent;
-import com.ning.billing.util.tag.api.ControlTagDeletionEvent;
-import com.ning.billing.util.tag.api.UserTagCreationEvent;
-import com.ning.billing.util.tag.api.UserTagDefinitionCreationEvent;
-import com.ning.billing.util.tag.api.UserTagDefinitionDeletionEvent;
-import com.ning.billing.util.tag.api.UserTagDeletionEvent;
+import com.ning.billing.util.events.AccountChangeInternalEvent;
+import com.ning.billing.util.events.AccountCreationInternalEvent;
+import com.ning.billing.util.events.BusInternalEvent;
+import com.ning.billing.util.events.ControlTagCreationInternalEvent;
+import com.ning.billing.util.events.ControlTagDefinitionCreationInternalEvent;
+import com.ning.billing.util.events.ControlTagDefinitionDeletionInternalEvent;
+import com.ning.billing.util.events.ControlTagDeletionInternalEvent;
+import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
+import com.ning.billing.util.events.InvoiceAdjustmentInternalEvent;
+import com.ning.billing.util.events.InvoiceCreationInternalEvent;
+import com.ning.billing.util.events.NullInvoiceInternalEvent;
+import com.ning.billing.util.events.OverdueChangeInternalEvent;
+import com.ning.billing.util.events.PaymentErrorInternalEvent;
+import com.ning.billing.util.events.PaymentInfoInternalEvent;
+import com.ning.billing.util.events.RepairEntitlementInternalEvent;
+import com.ning.billing.util.events.RequestedSubscriptionInternalEvent;
+import com.ning.billing.util.events.UserTagCreationInternalEvent;
+import com.ning.billing.util.events.UserTagDefinitionCreationInternalEvent;
+import com.ning.billing.util.events.UserTagDefinitionDeletionInternalEvent;
+import com.ning.billing.util.events.UserTagDeletionInternalEvent;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
@@ -74,30 +74,30 @@ public class AnalyticsListener {
     }
 
     @Subscribe
-    public void handleEffectiveSubscriptionTransitionChange(final EffectiveSubscriptionEvent eventEffective) throws AccountApiException, EntitlementUserApiException {
+    public void handleEffectiveSubscriptionTransitionChange(final EffectiveSubscriptionInternalEvent eventEffective) throws AccountApiException, EntitlementUserApiException {
         // The event is used as a trigger to rebuild all transitions for this bundle
         bstDao.rebuildTransitionsForBundle(eventEffective.getBundleId(), createCallContext(eventEffective));
     }
 
     @Subscribe
-    public void handleRequestedSubscriptionTransitionChange(final RequestedSubscriptionEvent eventRequested) throws AccountApiException, EntitlementUserApiException {
+    public void handleRequestedSubscriptionTransitionChange(final RequestedSubscriptionInternalEvent eventRequested) throws AccountApiException, EntitlementUserApiException {
         // The event is used as a trigger to rebuild all transitions for this bundle
         bstDao.rebuildTransitionsForBundle(eventRequested.getBundleId(), createCallContext(eventRequested));
     }
 
     @Subscribe
-    public void handleRepairEntitlement(final RepairEntitlementEvent event) {
+    public void handleRepairEntitlement(final RepairEntitlementInternalEvent event) {
         // In case of repair, just rebuild all transitions
         bstDao.rebuildTransitionsForBundle(event.getBundleId(), createCallContext(event));
     }
 
     @Subscribe
-    public void handleAccountCreation(final AccountCreationEvent event) {
+    public void handleAccountCreation(final AccountCreationInternalEvent event) {
         bacDao.accountUpdated(event.getId(), createCallContext(event));
     }
 
     @Subscribe
-    public void handleAccountChange(final AccountChangeEvent event) {
+    public void handleAccountChange(final AccountChangeInternalEvent event) {
         if (!event.hasChanges()) {
             return;
         }
@@ -106,24 +106,24 @@ public class AnalyticsListener {
     }
 
     @Subscribe
-    public void handleInvoiceCreation(final InvoiceCreationEvent event) {
+    public void handleInvoiceCreation(final InvoiceCreationInternalEvent event) {
         // The event is used as a trigger to rebuild all invoices and invoice items for this account
         invoiceDao.rebuildInvoicesForAccount(event.getAccountId(), createCallContext(event));
     }
 
     @Subscribe
-    public void handleNullInvoice(final NullInvoiceEvent event) {
+    public void handleNullInvoice(final NullInvoiceInternalEvent event) {
         // Ignored for now
     }
 
     @Subscribe
-    public void handleInvoiceAdjustment(final InvoiceAdjustmentEvent event) {
+    public void handleInvoiceAdjustment(final InvoiceAdjustmentInternalEvent event) {
         // The event is used as a trigger to rebuild all invoices and invoice items for this account
         invoiceDao.rebuildInvoicesForAccount(event.getAccountId(), createCallContext(event));
     }
 
     @Subscribe
-    public void handlePaymentInfo(final PaymentInfoEvent paymentInfo) {
+    public void handlePaymentInfo(final PaymentInfoInternalEvent paymentInfo) {
         bipDao.invoicePaymentPosted(paymentInfo.getAccountId(),
                                     paymentInfo.getPaymentId(),
                                     paymentInfo.getExtFirstPaymentRefId(),
@@ -133,7 +133,7 @@ public class AnalyticsListener {
     }
 
     @Subscribe
-    public void handlePaymentError(final PaymentErrorEvent paymentError) {
+    public void handlePaymentError(final PaymentErrorInternalEvent paymentError) {
         bipDao.invoicePaymentPosted(paymentError.getAccountId(),
                                     paymentError.getPaymentId(),
                                     null,
@@ -143,51 +143,51 @@ public class AnalyticsListener {
     }
 
     @Subscribe
-    public void handleOverdueChange(final OverdueChangeEvent changeEvent) {
+    public void handleOverdueChange(final OverdueChangeInternalEvent changeEvent) {
         bosDao.overdueStatusChanged(changeEvent.getOverdueObjectType(), changeEvent.getOverdueObjectId(), createCallContext(changeEvent));
     }
 
     @Subscribe
-    public void handleControlTagCreation(final ControlTagCreationEvent event) {
+    public void handleControlTagCreation(final ControlTagCreationInternalEvent event) {
         tagDao.tagAdded(event.getObjectType(), event.getObjectId(), event.getTagDefinition().getName(), createCallContext(event));
     }
 
     @Subscribe
-    public void handleControlTagDeletion(final ControlTagDeletionEvent event) {
+    public void handleControlTagDeletion(final ControlTagDeletionInternalEvent event) {
         tagDao.tagRemoved(event.getObjectType(), event.getObjectId(), event.getTagDefinition().getName(), createCallContext(event));
     }
 
     @Subscribe
-    public void handleUserTagCreation(final UserTagCreationEvent event) {
+    public void handleUserTagCreation(final UserTagCreationInternalEvent event) {
         tagDao.tagAdded(event.getObjectType(), event.getObjectId(), event.getTagDefinition().getName(), createCallContext(event));
     }
 
     @Subscribe
-    public void handleUserTagDeletion(final UserTagDeletionEvent event) {
+    public void handleUserTagDeletion(final UserTagDeletionInternalEvent event) {
         tagDao.tagRemoved(event.getObjectType(), event.getObjectId(), event.getTagDefinition().getName(), createCallContext(event));
     }
 
     @Subscribe
-    public void handleControlTagDefinitionCreation(final ControlTagDefinitionCreationEvent event) {
+    public void handleControlTagDefinitionCreation(final ControlTagDefinitionCreationInternalEvent event) {
         // Ignored for now
     }
 
     @Subscribe
-    public void handleControlTagDefinitionDeletion(final ControlTagDefinitionDeletionEvent event) {
+    public void handleControlTagDefinitionDeletion(final ControlTagDefinitionDeletionInternalEvent event) {
         // Ignored for now
     }
 
     @Subscribe
-    public void handleUserTagDefinitionCreation(final UserTagDefinitionCreationEvent event) {
+    public void handleUserTagDefinitionCreation(final UserTagDefinitionCreationInternalEvent event) {
         // Ignored for now
     }
 
     @Subscribe
-    public void handleUserTagDefinitionDeletion(final UserTagDefinitionDeletionEvent event) {
+    public void handleUserTagDefinitionDeletion(final UserTagDefinitionDeletionInternalEvent event) {
         // Ignored for now
     }
 
-    private InternalCallContext createCallContext(final BusEvent event) {
+    private InternalCallContext createCallContext(final BusInternalEvent event) {
         return internalCallContextFactory.createInternalCallContext("AnalyticsService", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
     }
 }

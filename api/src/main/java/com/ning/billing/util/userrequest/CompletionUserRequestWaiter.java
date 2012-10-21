@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -22,9 +22,7 @@ import com.ning.billing.account.api.AccountChangeEvent;
 import com.ning.billing.account.api.AccountCreationEvent;
 import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.invoice.api.InvoiceCreationEvent;
-import com.ning.billing.invoice.api.NullInvoiceEvent;
-import com.ning.billing.payment.api.PaymentErrorEvent;
-import com.ning.billing.payment.api.PaymentInfoEvent;
+import com.ning.billing.payment.api.PaymentEvent;
 import com.ning.billing.util.bus.BusEvent;
 
 public interface CompletionUserRequestWaiter {
@@ -39,9 +37,9 @@ public interface CompletionUserRequestWaiter {
 
     public void onInvoiceCreation(final InvoiceCreationEvent curEvent);
 
-    public void onEmptyInvoice(final NullInvoiceEvent curEvent);
+    public void onEmptyInvoice(final InvoiceCreationEvent curEvent);
 
-    public void onPaymentInfo(final PaymentInfoEvent curEvent);
+    public void onPaymentInfo(final PaymentEvent curEvent);
 
-    public void onPaymentError(final PaymentErrorEvent curEvent);
+    public void onPaymentError(final PaymentEvent curEvent);
 }

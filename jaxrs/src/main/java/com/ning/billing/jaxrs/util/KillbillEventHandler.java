@@ -20,7 +20,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.google.common.eventbus.Subscribe;
-import com.ning.billing.util.bus.BusEvent;
+
+import com.ning.billing.util.events.BusInternalEvent;
 import com.ning.billing.util.userrequest.CompletionUserRequest;
 import com.ning.billing.util.userrequest.CompletionUserRequestNotifier;
 
@@ -55,7 +56,7 @@ public class KillbillEventHandler {
      * Killbill server event handler
      */
     @Subscribe
-    public void handleEntitlementevents(final BusEvent event) {
+    public void handleEntitlementevents(final BusInternalEvent event) {
         final List<CompletionUserRequestNotifier> runningWaiters = new ArrayList<CompletionUserRequestNotifier>();
         synchronized (activeWaiters) {
             runningWaiters.addAll(activeWaiters);

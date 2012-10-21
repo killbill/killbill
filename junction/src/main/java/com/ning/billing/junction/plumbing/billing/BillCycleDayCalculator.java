@@ -37,11 +37,11 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
-import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -60,7 +60,7 @@ public class BillCycleDayCalculator {
         this.entitlementApi = entitlementApi;
     }
 
-    protected BillCycleDay calculateBcd(final SubscriptionBundle bundle, final Subscription subscription, final EffectiveSubscriptionEvent transition, final Account account, final InternalCallContext context)
+    protected BillCycleDay calculateBcd(final SubscriptionBundle bundle, final Subscription subscription, final EffectiveSubscriptionInternalEvent transition, final Account account, final InternalCallContext context)
             throws CatalogApiException, AccountApiException, EntitlementUserApiException {
 
         final Catalog catalog = catalogService.getFullCatalog();
@@ -103,8 +103,7 @@ public class BillCycleDayCalculator {
                 Plan basePlan = baseSub.getCurrentPlan();
                 if (basePlan == null) {
                     // The BP has been cancelled
-                    final EffectiveSubscriptionEvent previousTransition = baseSub.getPreviousTransition();
-                    basePlan = catalog.findPlan(previousTransition.getPreviousPlan(), previousTransition.getEffectiveTransitionTime(), previousTransition.getSubscriptionStartDate());
+                    basePlan = baseSub.getLastActivePlan();
                 }
                 result = calculateBcdFromSubscription(baseSub, basePlan, account, catalog);
                 break;
@@ -126,7 +125,7 @@ public class BillCycleDayCalculator {
         // Retrieve the initial phase type for that subscription
         // TODO - this should be extracted somewhere, along with this code above
         final PhaseType initialPhaseType;
-        final List<EffectiveSubscriptionEvent> transitions = subscription.getAllTransitions();
+        final List<EffectiveSubscriptionInternalEvent> transitions =  entitlementApi.getAllTransitions(subscription);
         if (transitions.size() == 0) {
             initialPhaseType = null;
         } else {

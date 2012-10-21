@@ -23,15 +23,15 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ning.billing.invoice.api.InvoiceAdjustmentEvent;
 import com.ning.billing.ovedue.notification.OverdueCheckNotificationKey;
-import com.ning.billing.payment.api.PaymentErrorEvent;
-import com.ning.billing.payment.api.PaymentInfoEvent;
-import com.ning.billing.util.bus.BusEvent;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.events.BusInternalEvent;
+import com.ning.billing.util.events.InvoiceAdjustmentInternalEvent;
+import com.ning.billing.util.events.PaymentErrorInternalEvent;
+import com.ning.billing.util.events.PaymentInfoInternalEvent;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
@@ -51,20 +51,20 @@ public class OverdueListener {
     }
 
     @Subscribe
-    public void handlePaymentInfoEvent(final PaymentInfoEvent event) {
+    public void handlePaymentInfoEvent(final PaymentInfoInternalEvent event) {
         log.info(String.format("Received PaymentInfo event %s", event.toString()));
         dispatcher.processOverdueForAccount(event.getAccountId(), createCallContext(event));
     }
 
     @Subscribe
-    public void handlePaymentErrorEvent(final PaymentErrorEvent event) {
+    public void handlePaymentErrorEvent(final PaymentErrorInternalEvent event) {
         log.info(String.format("Received PaymentError event %s", event.toString()));
         final UUID accountId = event.getAccountId();
         dispatcher.processOverdueForAccount(accountId, createCallContext(event));
     }
 
     @Subscribe
-    public void handleInvoiceAdjustmentEvent(final InvoiceAdjustmentEvent event) {
+    public void handleInvoiceAdjustmentEvent(final InvoiceAdjustmentInternalEvent event) {
         log.info(String.format("Received InvoiceAdjustment event %s", event.toString()));
         final UUID accountId = event.getAccountId();
         dispatcher.processOverdueForAccount(accountId, createCallContext(event));
@@ -76,7 +76,7 @@ public class OverdueListener {
         dispatcher.processOverdue(notificationKey.getType(), notificationKey.getUuidKey(), createCallContext(null));
     }
 
-    private InternalCallContext createCallContext(@Nullable final BusEvent event) {
+    private InternalCallContext createCallContext(@Nullable final BusInternalEvent event) {
         return internalCallContextFactory.createInternalCallContext("OverdueService", CallOrigin.INTERNAL, UserType.SYSTEM,
                                                                     event == null ? null : event.getUserToken());
     }

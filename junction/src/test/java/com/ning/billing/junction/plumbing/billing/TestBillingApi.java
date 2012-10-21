@@ -52,7 +52,6 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
-import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
@@ -70,6 +69,7 @@ import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
 import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 import com.ning.billing.util.svcapi.junction.BillingEvent;
@@ -93,7 +93,7 @@ public class TestBillingApi extends JunctionTestSuite {
 
     private CatalogService catalogService;
 
-    private List<EffectiveSubscriptionEvent> effectiveSubscriptionTransitions;
+    private List<EffectiveSubscriptionInternalEvent> effectiveSubscriptionTransitions;
     private EntitlementInternalApi entitlementApi;
 
     private final BlockingCalculator blockCalculator = new BlockingCalculator(null) {
@@ -127,7 +127,7 @@ public class TestBillingApi extends JunctionTestSuite {
 
         bundles.add(bundle);
 
-        effectiveSubscriptionTransitions = new LinkedList<EffectiveSubscriptionEvent>();
+        effectiveSubscriptionTransitions = new LinkedList<EffectiveSubscriptionInternalEvent>();
         final List<Subscription> subscriptions = new LinkedList<Subscription>();
 
         final DateTime subscriptionStartDate = clock.getUTCNow().minusDays(3);
@@ -356,7 +356,7 @@ public class TestBillingApi extends JunctionTestSuite {
         final DateTime then = now.minusDays(1);
         final PriceList nextPriceList = catalogService.getFullCatalog().findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME, now);
 
-        final EffectiveSubscriptionEvent t = new MockEffectiveSubscriptionEvent(
+        final EffectiveSubscriptionInternalEvent t = new MockEffectiveSubscriptionEvent(
                 eventId, subId, bunId, then, now, null, null, null, null, SubscriptionState.ACTIVE,
                 nextPlan.getName(), nextPhase.getName(),
                 nextPriceList.getName(), 1L, null,

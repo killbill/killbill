@@ -24,10 +24,10 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.entitlement.EntitlementTestSuite;
 import com.ning.billing.entitlement.api.timeline.DefaultRepairEntitlementEvent;
-import com.ning.billing.entitlement.api.timeline.RepairEntitlementEvent;
 import com.ning.billing.entitlement.api.user.DefaultEffectiveSubscriptionEvent;
-import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
+import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
+import com.ning.billing.util.events.RepairEntitlementInternalEvent;
 import com.ning.billing.util.jackson.ObjectMapper;
 
 public class TestEventJson extends EntitlementTestSuite {
@@ -36,7 +36,7 @@ public class TestEventJson extends EntitlementTestSuite {
     @Test(groups = "fast")
     public void testSubscriptionEvent() throws Exception {
 
-        final EffectiveSubscriptionEvent e = new DefaultEffectiveSubscriptionEvent(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), new DateTime(), new DateTime(),
+        final EffectiveSubscriptionInternalEvent e = new DefaultEffectiveSubscriptionEvent(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), new DateTime(), new DateTime(),
                                                                                    SubscriptionState.ACTIVE, "pro", "TRIAL", "DEFAULT", SubscriptionState.CANCELLED, null, null, null, 3L, UUID.randomUUID(), SubscriptionTransitionType.CANCEL, 0, new DateTime());
 
         final String json = mapper.writeValueAsString(e);
@@ -48,7 +48,7 @@ public class TestEventJson extends EntitlementTestSuite {
 
     @Test(groups = "fast")
     public void testRepairEntitlementEvent() throws Exception {
-        final RepairEntitlementEvent e = new DefaultRepairEntitlementEvent(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), new DateTime());
+        final RepairEntitlementInternalEvent e = new DefaultRepairEntitlementEvent(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), new DateTime());
 
         final String json = mapper.writeValueAsString(e);
 

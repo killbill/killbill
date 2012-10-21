@@ -34,11 +34,9 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
-import com.ning.billing.invoice.api.InvoiceCreationEvent;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoiceNotifier;
 import com.ning.billing.invoice.api.user.DefaultInvoiceCreationEvent;
@@ -48,11 +46,13 @@ import com.ning.billing.invoice.generator.InvoiceDateUtils;
 import com.ning.billing.invoice.generator.InvoiceGenerator;
 import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.invoice.model.RecurringInvoiceItem;
-import com.ning.billing.util.bus.BusEvent;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.events.BusInternalEvent;
+import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
+import com.ning.billing.util.events.InvoiceCreationInternalEvent;
 import com.ning.billing.util.globallocker.GlobalLock;
 import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.globallocker.GlobalLocker.LockerType;
@@ -106,7 +106,7 @@ public class InvoiceDispatcher {
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
-    public void processSubscription(final EffectiveSubscriptionEvent transition,
+    public void processSubscription(final EffectiveSubscriptionInternalEvent transition,
                                     final CallContext context) throws InvoiceApiException {
         final UUID subscriptionId = transition.getSubscriptionId();
         final DateTime targetDate = transition.getEffectiveTransitionTime();
@@ -171,7 +171,7 @@ public class InvoiceDispatcher {
             if (invoice == null) {
                 log.info("Generated null invoice.");
                 if (!dryRun) {
-                    final BusEvent event = new DefaultNullInvoiceEvent(accountId, clock.getUTCToday(), context.getUserToken());
+                    final BusInternalEvent event = new DefaultNullInvoiceEvent(accountId, clock.getUTCToday(), context.getUserToken());
                     postEvent(event, accountId, internalCallContext);
                 }
             } else {
@@ -191,7 +191,7 @@ public class InvoiceDispatcher {
                     final List<InvoiceItem> recurringInvoiceItems = invoice.getInvoiceItems(RecurringInvoiceItem.class);
                     setChargedThroughDates(account.getBillCycleDay(), account.getTimeZone(), fixedPriceInvoiceItems, recurringInvoiceItems, context);
 
-                    final InvoiceCreationEvent event = new DefaultInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
+                    final InvoiceCreationInternalEvent event = new DefaultInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
                                                                                        invoice.getBalance(), invoice.getCurrency(),
                                                                                        context.getUserToken());
 
@@ -231,7 +231,7 @@ public class InvoiceDispatcher {
         }
     }
 
-    private void postEvent(final BusEvent event, final UUID accountId, final InternalCallContext context) {
+    private void postEvent(final BusInternalEvent event, final UUID accountId, final InternalCallContext context) {
         try {
             eventBus.post(event, context);
         } catch (EventBusException e) {

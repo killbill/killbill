@@ -53,6 +53,7 @@ import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.entity.EntityBase;
+import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 
 public class SubscriptionData extends EntityBase implements Subscription {
 
@@ -156,7 +157,7 @@ public class SubscriptionData extends EntityBase implements Subscription {
 
     @Override
     public DateTime getEndDate() {
-        final EffectiveSubscriptionEvent latestTransition = getPreviousTransition();
+        final EffectiveSubscriptionInternalEvent latestTransition = getPreviousTransition();
         if (latestTransition.getNextState() == SubscriptionState.CANCELLED) {
             return latestTransition.getEffectiveTransitionTime();
         }
@@ -239,7 +240,7 @@ public class SubscriptionData extends EntityBase implements Subscription {
     }
 
     @Override
-    public EffectiveSubscriptionEvent getPreviousTransition() {
+    public EffectiveSubscriptionInternalEvent getPreviousTransition() {
         final SubscriptionTransitionData data = getPreviousTransitionData();
         if (data == null) {
             return null;
@@ -348,12 +349,12 @@ public class SubscriptionData extends EntityBase implements Subscription {
     }
 
     @Override
-    public List<EffectiveSubscriptionEvent> getBillingTransitions() {
+    public List<EffectiveSubscriptionInternalEvent> getBillingTransitions() {
 
         if (transitions == null) {
             return Collections.emptyList();
         }
-        final List<EffectiveSubscriptionEvent> result = new ArrayList<EffectiveSubscriptionEvent>();
+        final List<EffectiveSubscriptionInternalEvent> result = new ArrayList<EffectiveSubscriptionInternalEvent>();
         final SubscriptionTransitionDataIterator it = new SubscriptionTransitionDataIterator(
                 clock, transitions, Order.ASC_FROM_PAST, Kind.BILLING,
                 Visibility.ALL, TimeLimit.ALL);
@@ -363,7 +364,7 @@ public class SubscriptionData extends EntityBase implements Subscription {
         return result;
     }
 
-    public EffectiveSubscriptionEvent getTransitionFromEvent(final EntitlementEvent event, final int seqId) {
+    public EffectiveSubscriptionInternalEvent getTransitionFromEvent(final EntitlementEvent event, final int seqId) {
         if (transitions == null || event == null) {
             return null;
         }
@@ -392,12 +393,12 @@ public class SubscriptionData extends EntityBase implements Subscription {
     }
 
     @Override
-    public List<EffectiveSubscriptionEvent> getAllTransitions() {
+    public List<EffectiveSubscriptionInternalEvent> getAllTransitions() {
         if (transitions == null) {
             return Collections.emptyList();
         }
 
-        final List<EffectiveSubscriptionEvent> result = new ArrayList<EffectiveSubscriptionEvent>();
+        final List<EffectiveSubscriptionInternalEvent> result = new ArrayList<EffectiveSubscriptionInternalEvent>();
         final SubscriptionTransitionDataIterator it = new SubscriptionTransitionDataIterator(clock, transitions, Order.ASC_FROM_PAST, Kind.ALL, Visibility.ALL, TimeLimit.ALL);
         while (it.hasNext()) {
             result.add(new DefaultEffectiveSubscriptionEvent(it.next(), alignStartDate));

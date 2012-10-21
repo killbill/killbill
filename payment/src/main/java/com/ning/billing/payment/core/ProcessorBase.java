@@ -33,10 +33,10 @@ import com.ning.billing.payment.dao.PaymentMethodModelDao;
 import com.ning.billing.payment.plugin.api.PaymentPluginApi;
 import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
 import com.ning.billing.util.api.TagApiException;
-import com.ning.billing.util.bus.BusEvent;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.util.events.BusInternalEvent;
 import com.ning.billing.util.globallocker.GlobalLock;
 import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.globallocker.GlobalLocker.LockerType;
@@ -125,7 +125,7 @@ public abstract class ProcessorBase {
         return getPaymentProviderPlugin(paymentMethodId, context);
     }
 
-    protected void postPaymentEvent(final BusEvent ev, final UUID accountId, final InternalCallContext context) {
+    protected void postPaymentEvent(final BusInternalEvent ev, final UUID accountId, final InternalCallContext context) {
         if (ev == null) {
             return;
         }

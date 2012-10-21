@@ -33,10 +33,10 @@ import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.svcsapi.bus.Bus;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.events.TagDefinitionInternalEvent;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.DefaultTagDefinition;
 import com.ning.billing.util.tag.TagDefinition;
-import com.ning.billing.util.tag.api.TagDefinitionEvent;
 import com.ning.billing.util.tag.api.user.TagEventBuilder;
 
 import com.google.common.base.Function;
@@ -137,7 +137,7 @@ public class DefaultTagDefinitionDao implements TagDefinitionDao {
                     tagDefinitionSqlDao.create(tagDefinition, context);
 
                     // Post an event to the bus
-                    final TagDefinitionEvent tagDefinitionEvent;
+                    final TagDefinitionInternalEvent tagDefinitionEvent;
                     if (tagDefinition.isControlTag()) {
                         tagDefinitionEvent = tagEventBuilder.newControlTagDefinitionCreationEvent(tagDefinition.getId(), tagDefinition, context.getUserToken());
                     } else {
@@ -192,7 +192,7 @@ public class DefaultTagDefinitionDao implements TagDefinitionDao {
                     tagDefinitionSqlDao.deleteTagDefinition(definitionId.toString(), context);
 
                     // Post an event to the Bus
-                    final TagDefinitionEvent tagDefinitionEvent;
+                    final TagDefinitionInternalEvent tagDefinitionEvent;
                     if (tagDefinition.isControlTag()) {
                         tagDefinitionEvent = tagEventBuilder.newControlTagDefinitionDeletionEvent(tagDefinition.getId(), tagDefinition, context.getUserToken());
                     } else {

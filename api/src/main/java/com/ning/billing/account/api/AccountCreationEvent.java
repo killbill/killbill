@@ -13,16 +13,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
 package com.ning.billing.account.api;
 
-import java.util.UUID;
+public interface AccountCreationEvent {
 
-import com.ning.billing.util.bus.BusEvent;
-
-public interface AccountCreationEvent extends BusEvent {
-
-    public UUID getId();
-
-    public AccountData getData();
 }

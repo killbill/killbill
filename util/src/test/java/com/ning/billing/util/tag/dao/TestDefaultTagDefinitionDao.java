@@ -31,11 +31,11 @@ import org.testng.annotations.Test;
 import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.svcsapi.bus.Bus;
-import com.ning.billing.util.bus.BusEvent;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.events.BusInternalEvent;
+import com.ning.billing.util.events.TagDefinitionInternalEvent;
 import com.ning.billing.util.tag.MockTagStoreModuleSql;
 import com.ning.billing.util.tag.TagDefinition;
-import com.ning.billing.util.tag.api.TagDefinitionEvent;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
@@ -94,11 +94,11 @@ public class TestDefaultTagDefinitionDao extends UtilTestSuiteWithEmbeddedDB {
         // Verify we caught an event on the bus
         Assert.assertEquals(eventsListener.getEvents().size(), 1);
         Assert.assertEquals(eventsListener.getTagDefinitionEvents().size(), 1);
-        final TagDefinitionEvent tagDefinitionFirstEventReceived = eventsListener.getTagDefinitionEvents().get(0);
+        final TagDefinitionInternalEvent tagDefinitionFirstEventReceived = eventsListener.getTagDefinitionEvents().get(0);
         Assert.assertEquals(eventsListener.getEvents().get(0), tagDefinitionFirstEventReceived);
         Assert.assertEquals(tagDefinitionFirstEventReceived.getTagDefinitionId(), createdTagDefinition.getId());
         Assert.assertEquals(tagDefinitionFirstEventReceived.getTagDefinition(), createdTagDefinition);
-        Assert.assertEquals(tagDefinitionFirstEventReceived.getBusEventType(), BusEvent.BusEventType.USER_TAGDEFINITION_CREATION);
+        Assert.assertEquals(tagDefinitionFirstEventReceived.getBusEventType(), BusInternalEvent.BusEventType.USER_TAGDEFINITION_CREATION);
         Assert.assertEquals(tagDefinitionFirstEventReceived.getUserToken(), internalCallContext.getUserToken());
 
         // Delete the tag definition
@@ -110,34 +110,34 @@ public class TestDefaultTagDefinitionDao extends UtilTestSuiteWithEmbeddedDB {
         // Verify we caught an event on the bus
         Assert.assertEquals(eventsListener.getEvents().size(), 2);
         Assert.assertEquals(eventsListener.getTagDefinitionEvents().size(), 2);
-        final TagDefinitionEvent tagDefinitionSecondEventReceived = eventsListener.getTagDefinitionEvents().get(1);
+        final TagDefinitionInternalEvent tagDefinitionSecondEventReceived = eventsListener.getTagDefinitionEvents().get(1);
         Assert.assertEquals(eventsListener.getEvents().get(1), tagDefinitionSecondEventReceived);
         Assert.assertEquals(tagDefinitionSecondEventReceived.getTagDefinitionId(), createdTagDefinition.getId());
         Assert.assertEquals(tagDefinitionSecondEventReceived.getTagDefinition(), createdTagDefinition);
-        Assert.assertEquals(tagDefinitionSecondEventReceived.getBusEventType(), BusEvent.BusEventType.USER_TAGDEFINITION_DELETION);
+        Assert.assertEquals(tagDefinitionSecondEventReceived.getBusEventType(), BusInternalEvent.BusEventType.USER_TAGDEFINITION_DELETION);
         Assert.assertEquals(tagDefinitionSecondEventReceived.getUserToken(), internalCallContext.getUserToken());
     }
 
     private static final class EventsListener {
 
-        private final List<BusEvent> events = new ArrayList<BusEvent>();
-        private final List<TagDefinitionEvent> tagDefinitionEvents = new ArrayList<TagDefinitionEvent>();
+        private final List<BusInternalEvent> events = new ArrayList<BusInternalEvent>();
+        private final List<TagDefinitionInternalEvent> tagDefinitionEvents = new ArrayList<TagDefinitionInternalEvent>();
 
         @Subscribe
-        public synchronized void processEvent(final BusEvent event) {
+        public synchronized void processEvent(final BusInternalEvent event) {
             events.add(event);
         }
 
         @Subscribe
-        public synchronized void processTagDefinitionEvent(final TagDefinitionEvent tagDefinitionEvent) {
+        public synchronized void processTagDefinitionEvent(final TagDefinitionInternalEvent tagDefinitionEvent) {
             tagDefinitionEvents.add(tagDefinitionEvent);
         }
 
-        public List<BusEvent> getEvents() {
+        public List<BusInternalEvent> getEvents() {
             return events;
         }
 
-        public List<TagDefinitionEvent> getTagDefinitionEvents() {
+        public List<TagDefinitionInternalEvent> getTagDefinitionEvents() {
             return tagDefinitionEvents;
         }
     }

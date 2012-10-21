@@ -25,7 +25,8 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
-import com.ning.billing.util.bus.BusEvent.BusEventType;
+import com.ning.billing.util.events.BusInternalEvent;
+import com.ning.billing.util.events.BusInternalEvent.BusEventType;
 import com.ning.billing.util.svcsapi.bus.Bus;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -50,7 +51,7 @@ public abstract class TestEventBusBase extends UtilTestSuiteWithEmbeddedDB {
         eventBus.stop();
     }
 
-    public static class MyEvent implements BusEvent {
+    public static class MyEvent implements BusInternalEvent {
         private final String name;
         private final Long value;
         private final UUID userToken;
@@ -103,7 +104,7 @@ public abstract class TestEventBusBase extends UtilTestSuiteWithEmbeddedDB {
         }
     }
 
-    public static final class MyOtherEvent implements BusEvent {
+    public static final class MyOtherEvent implements BusInternalEvent {
 
         private final String name;
         private final Double value;

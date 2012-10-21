@@ -18,13 +18,13 @@ package com.ning.billing.invoice.api.user;
 
 import java.util.UUID;
 
-import com.ning.billing.invoice.api.InvoiceAdjustmentEvent;
+import com.ning.billing.util.events.InvoiceAdjustmentInternalEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class DefaultInvoiceAdjustmentEvent implements InvoiceAdjustmentEvent {
+public class DefaultInvoiceAdjustmentEvent implements InvoiceAdjustmentInternalEvent {
 
     private final UUID invoiceId;
     private final UUID accountId;

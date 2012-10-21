@@ -18,8 +18,8 @@ package com.ning.billing.util.svcsapi.bus;
 
 import org.skife.jdbi.v2.sqlobject.mixins.Transmogrifier;
 
-import com.ning.billing.util.bus.BusEvent;
 import com.ning.billing.util.callcontext.InternalCallContext;
+import com.ning.billing.util.events.BusInternalEvent;
 
 import com.google.common.eventbus.Subscribe;
 
@@ -84,7 +84,7 @@ public interface Bus {
      * @param context call context. account record id and tenant id are expected to be populated
      * @throws EventBusException if bus not been started yet
      */
-    public void post(BusEvent event, InternalCallContext context) throws EventBusException;
+    public void post(BusInternalEvent event, InternalCallContext context) throws EventBusException;
 
     /**
      * Post an event from within a transaction.
@@ -95,5 +95,5 @@ public interface Bus {
      * @param context call context. account record id and tenant id are expected to be populated
      * @throws EventBusException if bus not been started yet
      */
-    public void postFromTransaction(BusEvent event, Transmogrifier dao, InternalCallContext context) throws EventBusException;
+    public void postFromTransaction(BusInternalEvent event, Transmogrifier dao, InternalCallContext context) throws EventBusException;
 }

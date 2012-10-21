@@ -31,7 +31,6 @@ import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.AccountCreationEvent;
 import com.ning.billing.account.api.AccountUserApi;
 import com.ning.billing.account.api.user.DefaultAccountCreationEvent;
 import com.ning.billing.analytics.AnalyticsTestModule;
@@ -56,7 +55,6 @@ import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.Product;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.DefaultEffectiveSubscriptionEvent;
-import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
@@ -65,7 +63,6 @@ import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.invoice.api.Invoice;
-import com.ning.billing.invoice.api.InvoiceCreationEvent;
 import com.ning.billing.invoice.api.user.DefaultInvoiceCreationEvent;
 import com.ning.billing.invoice.dao.InvoiceDao;
 import com.ning.billing.invoice.model.DefaultInvoice;
@@ -73,7 +70,6 @@ import com.ning.billing.invoice.model.FixedPriceInvoiceItem;
 import com.ning.billing.mock.MockAccountBuilder;
 import com.ning.billing.mock.MockPlan;
 import com.ning.billing.payment.api.DefaultPaymentInfoEvent;
-import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.payment.api.PaymentMethod;
 import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.payment.dao.PaymentAttemptModelDao;
@@ -81,6 +77,10 @@ import com.ning.billing.payment.dao.PaymentDao;
 import com.ning.billing.payment.dao.PaymentModelDao;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;
+import com.ning.billing.util.events.AccountCreationInternalEvent;
+import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
+import com.ning.billing.util.events.InvoiceCreationInternalEvent;
+import com.ning.billing.util.events.PaymentInfoInternalEvent;
 import com.ning.billing.util.svcsapi.bus.Bus;
 
 import com.google.inject.Inject;
@@ -127,12 +127,12 @@ public class TestAnalyticsService extends AnalyticsTestSuiteWithEmbeddedDB {
     @Inject
     private BusinessAccountSqlDao accountSqlDao;
 
-    private EffectiveSubscriptionEvent transition;
+    private EffectiveSubscriptionInternalEvent transition;
     private BusinessSubscriptionTransition expectedTransition;
 
-    private AccountCreationEvent accountCreationNotification;
-    private InvoiceCreationEvent invoiceCreationNotification;
-    private PaymentInfoEvent paymentInfoNotification;
+    private AccountCreationInternalEvent accountCreationNotification;
+    private InvoiceCreationInternalEvent invoiceCreationNotification;
+    private PaymentInfoInternalEvent paymentInfoNotification;
 
     @Inject
     private CatalogService catalogService;

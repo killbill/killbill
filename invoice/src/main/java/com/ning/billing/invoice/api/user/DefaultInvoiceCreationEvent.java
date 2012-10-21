@@ -20,13 +20,13 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.invoice.api.InvoiceCreationEvent;
+import com.ning.billing.util.events.InvoiceCreationInternalEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class DefaultInvoiceCreationEvent implements InvoiceCreationEvent {
+public class DefaultInvoiceCreationEvent implements InvoiceCreationInternalEvent {
 
     private final UUID invoiceId;
     private final UUID accountId;

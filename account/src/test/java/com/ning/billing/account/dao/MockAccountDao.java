@@ -23,7 +23,6 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.AccountChangeEvent;
 import com.ning.billing.account.api.user.DefaultAccountChangeEvent;
 import com.ning.billing.account.api.user.DefaultAccountCreationEvent;
 import com.ning.billing.util.svcsapi.bus.Bus;
@@ -31,6 +30,7 @@ import com.ning.billing.util.svcsapi.bus.Bus.EventBusException;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.entity.EntityPersistenceException;
+import com.ning.billing.util.events.AccountChangeInternalEvent;
 
 import com.google.inject.Inject;
 
@@ -94,7 +94,7 @@ public class MockAccountDao implements AccountDao {
     public void update(final Account account, final InternalCallContext context) {
         final Account currentAccount = accounts.put(account.getId(), account);
 
-        final AccountChangeEvent changeEvent = new DefaultAccountChangeEvent(account.getId(), null, currentAccount, account);
+        final AccountChangeInternalEvent changeEvent = new DefaultAccountChangeEvent(account.getId(), null, currentAccount, account);
         if (changeEvent.hasChanges()) {
             try {
                 eventBus.post(changeEvent, context);

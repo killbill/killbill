@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -20,14 +20,14 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 
-import com.ning.billing.account.api.AccountChangeEvent;
-import com.ning.billing.account.api.AccountCreationEvent;
-import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
-import com.ning.billing.invoice.api.InvoiceCreationEvent;
-import com.ning.billing.invoice.api.NullInvoiceEvent;
-import com.ning.billing.payment.api.PaymentErrorEvent;
-import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.util.bus.BusEvent;
+import com.ning.billing.util.events.AccountChangeInternalEvent;
+import com.ning.billing.util.events.AccountCreationInternalEvent;
+import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
+import com.ning.billing.util.events.InvoiceCreationInternalEvent;
+import com.ning.billing.util.events.NullInvoiceInternalEvent;
+import com.ning.billing.util.events.PaymentErrorInternalEvent;
+import com.ning.billing.util.events.PaymentInfoInternalEvent;
 
 public abstract class CompletionUserRequestBase implements CompletionUserRequest {
 
@@ -97,25 +97,25 @@ public abstract class CompletionUserRequestBase implements CompletionUserRequest
 
         switch (curEvent.getBusEventType()) {
             case ACCOUNT_CREATE:
-                onAccountCreation((AccountCreationEvent) curEvent);
+                onAccountCreation((AccountCreationInternalEvent) curEvent);
                 break;
             case ACCOUNT_CHANGE:
-                onAccountChange((AccountChangeEvent) curEvent);
+                onAccountChange((AccountChangeInternalEvent) curEvent);
                 break;
             case SUBSCRIPTION_TRANSITION:
-                onSubscriptionTransition((EffectiveSubscriptionEvent) curEvent);
+                onSubscriptionTransition((EffectiveSubscriptionInternalEvent) curEvent);
                 break;
             case INVOICE_EMPTY:
-                onEmptyInvoice((NullInvoiceEvent) curEvent);
+                onEmptyInvoice((NullInvoiceInternalEvent) curEvent);
                 break;
             case INVOICE_CREATION:
-                onInvoiceCreation((InvoiceCreationEvent) curEvent);
+                onInvoiceCreation((InvoiceCreationInternalEvent) curEvent);
                 break;
             case PAYMENT_INFO:
-                onPaymentInfo((PaymentInfoEvent) curEvent);
+                onPaymentInfo((PaymentInfoInternalEvent) curEvent);
                 break;
             case PAYMENT_ERROR:
-                onPaymentError((PaymentErrorEvent) curEvent);
+                onPaymentError((PaymentErrorInternalEvent) curEvent);
                 break;
             default:
                 throw new RuntimeException("Unexpected event type " + curEvent.getBusEventType());
@@ -123,34 +123,34 @@ public abstract class CompletionUserRequestBase implements CompletionUserRequest
     }
 
     /*
-     * 
+     *
      * Default no-op implementation so as to not have to implement all callbacks
      */
     @Override
-    public void onAccountCreation(final AccountCreationEvent curEvent) {
+    public void onAccountCreation(final AccountCreationInternalEvent curEvent) {
     }
 
     @Override
-    public void onAccountChange(final AccountChangeEvent curEvent) {
+    public void onAccountChange(final AccountChangeInternalEvent curEvent) {
     }
 
     @Override
-    public void onSubscriptionTransition(final EffectiveSubscriptionEvent curEventEffective) {
+    public void onSubscriptionTransition(final EffectiveSubscriptionInternalEvent curEventEffective) {
     }
 
     @Override
-    public void onEmptyInvoice(final NullInvoiceEvent curEvent) {
+    public void onEmptyInvoice(final NullInvoiceInternalEvent curEvent) {
     }
 
     @Override
-    public void onInvoiceCreation(final InvoiceCreationEvent curEvent) {
+    public void onInvoiceCreation(final InvoiceCreationInternalEvent curEvent) {
     }
 
     @Override
-    public void onPaymentInfo(final PaymentInfoEvent curEvent) {
+    public void onPaymentInfo(final PaymentInfoInternalEvent curEvent) {
     }
 
     @Override
-    public void onPaymentError(final PaymentErrorEvent curEvent) {
+    public void onPaymentError(final PaymentErrorInternalEvent curEvent) {
     }
 }

@@ -21,16 +21,16 @@ import java.util.List;
 import java.util.UUID;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.AccountChangeEvent;
 import com.ning.billing.account.api.ChangedField;
 import com.ning.billing.account.api.DefaultChangedField;
+import com.ning.billing.util.events.AccountChangeInternalEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
-public class DefaultAccountChangeEvent implements AccountChangeEvent {
+public class DefaultAccountChangeEvent implements AccountChangeInternalEvent {
 
     private final UUID userToken;
     private final List<ChangedField> changedFields;

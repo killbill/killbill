@@ -37,6 +37,7 @@ import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.events.BusInternalEvent;
 import com.ning.billing.util.queue.PersistentQueueBase;
 import com.ning.billing.util.svcsapi.bus.Bus;
 
@@ -117,7 +118,7 @@ public class PersistentBus extends PersistentQueueBase implements Bus {
 
         int result = 0;
         for (final BusEventEntry cur : events) {
-            final BusEvent evt = deserializeEvent(cur.getBusEventClass(), cur.getBusEventJson());
+            final BusInternalEvent evt = deserializeEvent(cur.getBusEventClass(), cur.getBusEventJson());
             result++;
             // STEPH exception handling is done by GUAVA-- logged a bug Issue-780
             eventBusDelegate.post(evt);
@@ -156,7 +157,7 @@ public class PersistentBus extends PersistentQueueBase implements Bus {
     }
 
     @Override
-    public void post(final BusEvent event, final InternalCallContext context) throws EventBusException {
+    public void post(final BusInternalEvent event, final InternalCallContext context) throws EventBusException {
         dao.inTransaction(new Transaction<Void, PersistentBusSqlDao>() {
             @Override
             public Void inTransaction(final PersistentBusSqlDao transactional,
@@ -168,13 +169,13 @@ public class PersistentBus extends PersistentQueueBase implements Bus {
     }
 
     @Override
-    public void postFromTransaction(final BusEvent event, final Transmogrifier transmogrifier, final InternalCallContext context)
+    public void postFromTransaction(final BusInternalEvent event, final Transmogrifier transmogrifier, final InternalCallContext context)
             throws EventBusException {
         final PersistentBusSqlDao transactional = transmogrifier.become(PersistentBusSqlDao.class);
         postFromTransaction(event, context, transactional);
     }
 
-    private void postFromTransaction(final BusEvent event, final InternalCallContext context, final PersistentBusSqlDao transactional) {
+    private void postFromTransaction(final BusInternalEvent event, final InternalCallContext context, final PersistentBusSqlDao transactional) {
         try {
             final String json = objectMapper.writeValueAsString(event);
             final BusEventEntry entry = new BusEventEntry(hostname, event.getClass().getName(), json, context.getAccountRecordId(), context.getTenantRecordId());

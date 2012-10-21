@@ -44,6 +44,7 @@ import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
 import com.ning.billing.entitlement.api.user.SubscriptionStatusDryRun.DryRunChangeReason;
 import com.ning.billing.entitlement.glue.MockEngineModuleSql;
 import com.ning.billing.util.clock.DefaultClock;
+import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -361,7 +362,7 @@ public class TestUserApiAddOn extends TestApiBase {
             assertEquals(aoSubscription.getBundleStartDate(), baseSubscription.getBundleStartDate());
 
             // CHECK next AO PHASE EVENT IS INDEED A MONTH AFTER BP STARTED => BUNDLE ALIGNMENT
-            EffectiveSubscriptionEvent aoPendingTranstion = aoSubscription.getPendingTransition();
+            EffectiveSubscriptionInternalEvent aoPendingTranstion = aoSubscription.getPendingTransition();
 
             if (expAlignement == PlanAlignmentCreate.START_OF_BUNDLE) {
                 assertEquals(aoPendingTranstion.getEffectiveTransitionTime(), baseSubscription.getStartDate().plusMonths(1));

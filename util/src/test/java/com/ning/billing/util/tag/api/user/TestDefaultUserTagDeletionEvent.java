@@ -22,8 +22,8 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.util.UtilTestSuite;
-import com.ning.billing.util.bus.BusEvent;
 import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.util.events.BusInternalEvent;
 import com.ning.billing.util.jackson.ObjectMapper;
 import com.ning.billing.util.tag.DefaultTagDefinition;
 import com.ning.billing.util.tag.TagDefinition;
@@ -42,7 +42,7 @@ public class TestDefaultUserTagDeletionEvent extends UtilTestSuite {
         final UUID userToken = UUID.randomUUID();
 
         final DefaultUserTagDeletionEvent event = new DefaultUserTagDeletionEvent(tagId, objectId, objectType, tagDefinition, userToken);
-        Assert.assertEquals(event.getBusEventType(), BusEvent.BusEventType.USER_TAG_DELETION);
+        Assert.assertEquals(event.getBusEventType(), BusInternalEvent.BusEventType.USER_TAG_DELETION);
 
         Assert.assertEquals(event.getTagId(), tagId);
         Assert.assertEquals(event.getObjectId(), objectId);

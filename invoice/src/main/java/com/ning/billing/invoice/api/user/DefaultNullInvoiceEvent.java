@@ -20,13 +20,13 @@ import java.util.UUID;
 
 import org.joda.time.LocalDate;
 
-import com.ning.billing.invoice.api.NullInvoiceEvent;
+import com.ning.billing.util.events.NullInvoiceInternalEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class DefaultNullInvoiceEvent implements NullInvoiceEvent {
+public class DefaultNullInvoiceEvent implements NullInvoiceInternalEvent {
 
     private final UUID accountId;
     private final LocalDate processingDate;

@@ -13,18 +13,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
 package com.ning.billing.account.api;
 
-import java.util.List;
-import java.util.UUID;
+public interface AccountChangeEvent {
 
-import com.ning.billing.util.bus.BusEvent;
-
-public interface AccountChangeEvent extends BusEvent {
-    public UUID getAccountId();
-
-    public List<ChangedField> getChangedFields();
-
-    public boolean hasChanges();
 }

@@ -24,12 +24,12 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ning.billing.entitlement.api.timeline.RepairEntitlementEvent;
-import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
-import com.ning.billing.invoice.api.InvoiceAdjustmentEvent;
-import com.ning.billing.invoice.api.InvoiceCreationEvent;
-import com.ning.billing.payment.api.PaymentErrorEvent;
-import com.ning.billing.payment.api.PaymentInfoEvent;
+import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
+import com.ning.billing.util.events.InvoiceAdjustmentInternalEvent;
+import com.ning.billing.util.events.InvoiceCreationInternalEvent;
+import com.ning.billing.util.events.PaymentErrorInternalEvent;
+import com.ning.billing.util.events.PaymentInfoInternalEvent;
+import com.ning.billing.util.events.RepairEntitlementInternalEvent;
 
 import com.google.common.base.Joiner;
 import com.google.common.eventbus.Subscribe;
@@ -79,14 +79,14 @@ public class TestApiListener {
     }
 
     @Subscribe
-    public void handleEntitlementEvents(final RepairEntitlementEvent event) {
+    public void handleEntitlementEvents(final RepairEntitlementInternalEvent event) {
         log.info(String.format("Got RepairEntitlementEvent event %s", event.toString()));
         assertEqualsNicely(NextEvent.REPAIR_BUNDLE);
         notifyIfStackEmpty();
     }
 
     @Subscribe
-    public void handleEntitlementEvents(final EffectiveSubscriptionEvent eventEffective) {
+    public void handleEntitlementEvents(final EffectiveSubscriptionInternalEvent eventEffective) {
         log.info(String.format("Got subscription event %s", eventEffective.toString()));
         switch (eventEffective.getTransitionType()) {
         case TRANSFER:
@@ -131,28 +131,28 @@ public class TestApiListener {
     }
 
     @Subscribe
-    public void handleInvoiceEvents(final InvoiceCreationEvent event) {
+    public void handleInvoiceEvents(final InvoiceCreationInternalEvent event) {
         log.info(String.format("Got Invoice event %s", event.toString()));
         assertEqualsNicely(NextEvent.INVOICE);
         notifyIfStackEmpty();
     }
 
     @Subscribe
-    public void handleInvoiceAdjustmentEvents(final InvoiceAdjustmentEvent event) {
+    public void handleInvoiceAdjustmentEvents(final InvoiceAdjustmentInternalEvent event) {
         log.info(String.format("Got Invoice adjustment event %s", event.toString()));
         assertEqualsNicely(NextEvent.INVOICE_ADJUSTMENT);
         notifyIfStackEmpty();
     }
 
     @Subscribe
-    public void handlePaymentEvents(final PaymentInfoEvent event) {
+    public void handlePaymentEvents(final PaymentInfoInternalEvent event) {
         log.info(String.format("Got PaymentInfo event %s", event.toString()));
         assertEqualsNicely(NextEvent.PAYMENT);
         notifyIfStackEmpty();
     }
 
     @Subscribe
-    public void handlePaymentErrorEvents(final PaymentErrorEvent event) {
+    public void handlePaymentErrorEvents(final PaymentErrorInternalEvent event) {
         log.info(String.format("Got PaymentError event %s", event.toString()));
         assertEqualsNicely(NextEvent.PAYMENT_ERROR);
         notifyIfStackEmpty();

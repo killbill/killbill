@@ -21,17 +21,17 @@ import java.util.UUID;
 import org.joda.time.DateTimeZone;
 
 import com.ning.billing.account.api.Account;
-import com.ning.billing.account.api.AccountCreationEvent;
 import com.ning.billing.account.api.AccountData;
 import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.account.api.DefaultBillCycleDay;
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.util.events.AccountCreationInternalEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class DefaultAccountCreationEvent implements AccountCreationEvent {
+public class DefaultAccountCreationEvent implements AccountCreationInternalEvent {
 
     private final UUID userToken;
     private final UUID id;

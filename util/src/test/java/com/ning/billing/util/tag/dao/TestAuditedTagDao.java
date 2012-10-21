@@ -33,14 +33,14 @@ import com.ning.billing.dbi.MysqlTestingHelper;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.svcsapi.bus.Bus;
-import com.ning.billing.util.bus.BusEvent;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.util.events.BusInternalEvent;
+import com.ning.billing.util.events.TagInternalEvent;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.MockTagStoreModuleSql;
 import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;
-import com.ning.billing.util.tag.api.TagEvent;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
@@ -175,13 +175,13 @@ public class TestAuditedTagDao extends UtilTestSuiteWithEmbeddedDB {
         // Verify we caught an event on the bus -  we got 2 total (one for the tag definition, one for the tag)
         Assert.assertEquals(eventsListener.getEvents().size(), 2);
         Assert.assertEquals(eventsListener.getTagEvents().size(), 1);
-        final TagEvent tagFirstEventReceived = eventsListener.getTagEvents().get(0);
+        final TagInternalEvent tagFirstEventReceived = eventsListener.getTagEvents().get(0);
         Assert.assertEquals(eventsListener.getEvents().get(1), tagFirstEventReceived);
         Assert.assertEquals(tagFirstEventReceived.getObjectId(), objectId);
         Assert.assertEquals(tagFirstEventReceived.getObjectType(), objectType);
         Assert.assertEquals(tagFirstEventReceived.getTagDefinition().getName(), createdTagDefinition.getName());
         Assert.assertEquals(tagFirstEventReceived.getTagDefinition().getDescription(), createdTagDefinition.getDescription());
-        Assert.assertEquals(tagFirstEventReceived.getBusEventType(), BusEvent.BusEventType.USER_TAG_CREATION);
+        Assert.assertEquals(tagFirstEventReceived.getBusEventType(), BusInternalEvent.BusEventType.USER_TAG_CREATION);
         Assert.assertEquals(tagFirstEventReceived.getUserToken(), internalCallContext.getUserToken());
 
         // Delete the tag
@@ -193,36 +193,36 @@ public class TestAuditedTagDao extends UtilTestSuiteWithEmbeddedDB {
         // Verify we caught an event on the bus
         Assert.assertEquals(eventsListener.getEvents().size(), 3);
         Assert.assertEquals(eventsListener.getTagEvents().size(), 2);
-        final TagEvent tagSecondEventReceived = eventsListener.getTagEvents().get(1);
+        final TagInternalEvent tagSecondEventReceived = eventsListener.getTagEvents().get(1);
         Assert.assertEquals(eventsListener.getEvents().get(2), tagSecondEventReceived);
         Assert.assertEquals(tagSecondEventReceived.getObjectId(), objectId);
         Assert.assertEquals(tagSecondEventReceived.getObjectType(), objectType);
         Assert.assertEquals(tagSecondEventReceived.getTagDefinition().getName(), createdTagDefinition.getName());
         Assert.assertEquals(tagSecondEventReceived.getTagDefinition().getDescription(), createdTagDefinition.getDescription());
-        Assert.assertEquals(tagSecondEventReceived.getBusEventType(), BusEvent.BusEventType.USER_TAG_DELETION);
+        Assert.assertEquals(tagSecondEventReceived.getBusEventType(), BusInternalEvent.BusEventType.USER_TAG_DELETION);
         Assert.assertEquals(tagSecondEventReceived.getUserToken(), internalCallContext.getUserToken());
     }
 
     private static final class EventsListener {
 
-        private final List<BusEvent> events = new ArrayList<BusEvent>();
-        private final List<TagEvent> tagEvents = new ArrayList<TagEvent>();
+        private final List<BusInternalEvent> events = new ArrayList<BusInternalEvent>();
+        private final List<TagInternalEvent> tagEvents = new ArrayList<TagInternalEvent>();
 
         @Subscribe
-        public synchronized void processEvent(final BusEvent event) {
+        public synchronized void processEvent(final BusInternalEvent event) {
             events.add(event);
         }
 
         @Subscribe
-        public synchronized void processTagDefinitionEvent(final TagEvent tagEvent) {
+        public synchronized void processTagDefinitionEvent(final TagInternalEvent tagEvent) {
             tagEvents.add(tagEvent);
         }
 
-        public List<BusEvent> getEvents() {
+        public List<BusInternalEvent> getEvents() {
             return events;
         }
 
-        public List<TagEvent> getTagEvents() {
+        public List<TagInternalEvent> getTagEvents() {
             return tagEvents;
         }
     }

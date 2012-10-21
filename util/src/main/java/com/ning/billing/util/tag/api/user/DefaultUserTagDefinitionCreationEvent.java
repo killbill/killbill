@@ -18,14 +18,14 @@ package com.ning.billing.util.tag.api.user;
 
 import java.util.UUID;
 
+import com.ning.billing.util.events.UserTagDefinitionCreationInternalEvent;
 import com.ning.billing.util.tag.TagDefinition;
-import com.ning.billing.util.tag.api.UserTagDefinitionCreationEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class DefaultUserTagDefinitionCreationEvent implements UserTagDefinitionCreationEvent {
+public class DefaultUserTagDefinitionCreationEvent implements UserTagDefinitionCreationInternalEvent {
     private final UUID tagDefinitionId;
     private final TagDefinition tagDefinition;
     private final UUID userToken;

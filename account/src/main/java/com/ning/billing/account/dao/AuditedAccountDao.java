@@ -29,8 +29,6 @@ import org.slf4j.LoggerFactory;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.account.api.AccountChangeEvent;
-import com.ning.billing.account.api.AccountCreationEvent;
 import com.ning.billing.account.api.user.DefaultAccountChangeEvent;
 import com.ning.billing.account.api.user.DefaultAccountCreationEvent;
 import com.ning.billing.util.ChangeType;
@@ -43,6 +41,8 @@ import com.ning.billing.util.dao.EntityAudit;
 import com.ning.billing.util.dao.EntityHistory;
 import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.EntityPersistenceException;
+import com.ning.billing.util.events.AccountChangeInternalEvent;
+import com.ning.billing.util.events.AccountCreationInternalEvent;
 
 import com.google.inject.Inject;
 
@@ -116,7 +116,7 @@ public class AuditedAccountDao implements AccountDao {
                     final EntityAudit audit = new EntityAudit(TableName.ACCOUNT_HISTORY, historyRecordId, ChangeType.INSERT);
                     accountSqlDao.insertAuditFromTransaction(audit, rehydratedContext);
 
-                    final AccountCreationEvent creationEvent = new DefaultAccountCreationEvent(account, rehydratedContext.getUserToken());
+                    final AccountCreationInternalEvent creationEvent = new DefaultAccountCreationEvent(account, rehydratedContext.getUserToken());
                     try {
                         eventBus.postFromTransaction(creationEvent, transactionalDao, rehydratedContext);
                     } catch (EventBusException e) {
@@ -161,7 +161,7 @@ public class AuditedAccountDao implements AccountDao {
                     final EntityAudit audit = new EntityAudit(TableName.ACCOUNT_HISTORY, historyRecordId, ChangeType.UPDATE);
                     accountSqlDao.insertAuditFromTransaction(audit, context);
 
-                    final AccountChangeEvent changeEvent = new DefaultAccountChangeEvent(accountId, context.getUserToken(), currentAccount, account);
+                    final AccountChangeInternalEvent changeEvent = new DefaultAccountChangeEvent(accountId, context.getUserToken(), currentAccount, account);
                     if (changeEvent.hasChanges()) {
                         try {
                             eventBus.postFromTransaction(changeEvent, transactional, context);
@@ -210,7 +210,7 @@ public class AuditedAccountDao implements AccountDao {
                     final EntityAudit audit = new EntityAudit(TableName.ACCOUNT_HISTORY, historyRecordId, ChangeType.UPDATE);
                     accountSqlDao.insertAuditFromTransaction(audit, context);
 
-                    final AccountChangeEvent changeEvent = new DefaultAccountChangeEvent(accountId, context.getUserToken(), currentAccount, account);
+                    final AccountChangeInternalEvent changeEvent = new DefaultAccountChangeEvent(accountId, context.getUserToken(), currentAccount, account);
                     if (changeEvent.hasChanges()) {
                         try {
                             eventBus.postFromTransaction(changeEvent, transactional, context);

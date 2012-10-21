@@ -22,11 +22,12 @@ import org.joda.time.DateTime;
 
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
 import com.ning.billing.entitlement.events.EntitlementEvent;
+import com.ning.billing.util.events.RequestedSubscriptionInternalEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class DefaultRequestedSubscriptionEvent extends DefaultSubscriptionEvent implements RequestedSubscriptionEvent {
+public class DefaultRequestedSubscriptionEvent extends DefaultSubscriptionEvent implements RequestedSubscriptionInternalEvent {
     public DefaultRequestedSubscriptionEvent(final SubscriptionTransitionData in, final DateTime startDate) {
         super(in, startDate);
     }

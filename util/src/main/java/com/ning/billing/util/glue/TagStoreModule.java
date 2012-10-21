@@ -17,9 +17,9 @@
 package com.ning.billing.util.glue;
 
 import com.ning.billing.util.api.TagUserApi;
+import com.ning.billing.util.svcapi.tag.DefaultTagInternalApi;
 import com.ning.billing.util.svcapi.tag.TagInternalApi;
 import com.ning.billing.util.tag.api.DefaultTagUserApi;
-import com.ning.billing.util.tag.api.svcs.DefaultTagInternalApi;
 import com.ning.billing.util.tag.dao.AuditedTagDao;
 import com.ning.billing.util.tag.dao.DefaultTagDefinitionDao;
 import com.ning.billing.util.tag.dao.TagDao;

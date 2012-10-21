@@ -30,12 +30,12 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.overdue.OverdueChangeEvent;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.OverdueTestBase;
 import com.ning.billing.overdue.config.OverdueConfig;
 import com.ning.billing.util.svcsapi.bus.Bus;
 import com.ning.billing.util.config.XMLLoader;
+import com.ning.billing.util.events.OverdueChangeInternalEvent;
 import com.ning.billing.util.svcapi.junction.DefaultBlockingState;
 
 import com.google.inject.Inject;
@@ -85,11 +85,11 @@ public class TestOverdueStateApplicator extends OverdueTestBase {
         await().atMost(10, SECONDS).until(new Callable<Boolean>() {
             @Override
             public Boolean call() throws Exception {
-                final List<OverdueChangeEvent> events = listener.getEventsReceived();
+                final List<OverdueChangeInternalEvent> events = listener.getEventsReceived();
                 return events.size() == 1;
             }
         });
-        final List<OverdueChangeEvent> events = listener.getEventsReceived();
+        final List<OverdueChangeInternalEvent> events = listener.getEventsReceived();
         Assert.assertEquals(1, events.size());
         Assert.assertEquals(state, events.get(0).getNextOverdueStateName());
         listener.clearEventsReceived();

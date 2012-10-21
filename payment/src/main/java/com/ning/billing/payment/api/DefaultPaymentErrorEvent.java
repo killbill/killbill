@@ -23,9 +23,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.ning.billing.util.entity.EntityBase;
+import com.ning.billing.util.events.PaymentErrorInternalEvent;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "error")
-public class DefaultPaymentErrorEvent extends EntityBase implements PaymentErrorEvent {
+public class DefaultPaymentErrorEvent extends EntityBase implements PaymentErrorInternalEvent {
 
     private final String message;
     private final UUID accountId;

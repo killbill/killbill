@@ -23,13 +23,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
-import com.ning.billing.entitlement.api.timeline.RepairEntitlementEvent;
-import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallContextFactory;
 import com.ning.billing.util.callcontext.CallOrigin;
 import com.ning.billing.util.callcontext.UserType;
+import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
+import com.ning.billing.util.events.RepairEntitlementInternalEvent;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
@@ -47,7 +47,7 @@ public class InvoiceListener {
     }
 
     @Subscribe
-    public void handleRepairEntitlementEvent(final RepairEntitlementEvent repairEvent) {
+    public void handleRepairEntitlementEvent(final RepairEntitlementInternalEvent repairEvent) {
         try {
             // TODO retrieve tenantId?
             final CallContext context = factory.createCallContext(null, "RepairBundle", CallOrigin.INTERNAL, UserType.SYSTEM, repairEvent.getUserToken());
@@ -58,7 +58,7 @@ public class InvoiceListener {
     }
 
     @Subscribe
-    public void handleSubscriptionTransition(final EffectiveSubscriptionEvent transition) {
+    public void handleSubscriptionTransition(final EffectiveSubscriptionInternalEvent transition) {
         try {
             //  Skip future uncancel event
             //  Skip events which are marked as not being the last one

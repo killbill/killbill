@@ -19,46 +19,46 @@ package com.ning.billing.util.tag.api.user;
 import java.util.UUID;
 
 import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.util.events.ControlTagCreationInternalEvent;
+import com.ning.billing.util.events.ControlTagDefinitionCreationInternalEvent;
+import com.ning.billing.util.events.ControlTagDefinitionDeletionInternalEvent;
+import com.ning.billing.util.events.ControlTagDeletionInternalEvent;
+import com.ning.billing.util.events.UserTagCreationInternalEvent;
+import com.ning.billing.util.events.UserTagDefinitionCreationInternalEvent;
+import com.ning.billing.util.events.UserTagDefinitionDeletionInternalEvent;
+import com.ning.billing.util.events.UserTagDeletionInternalEvent;
 import com.ning.billing.util.tag.TagDefinition;
-import com.ning.billing.util.tag.api.ControlTagCreationEvent;
-import com.ning.billing.util.tag.api.ControlTagDefinitionCreationEvent;
-import com.ning.billing.util.tag.api.ControlTagDefinitionDeletionEvent;
-import com.ning.billing.util.tag.api.ControlTagDeletionEvent;
-import com.ning.billing.util.tag.api.UserTagCreationEvent;
-import com.ning.billing.util.tag.api.UserTagDefinitionCreationEvent;
-import com.ning.billing.util.tag.api.UserTagDefinitionDeletionEvent;
-import com.ning.billing.util.tag.api.UserTagDeletionEvent;
 
 public class TagEventBuilder {
-    public UserTagDefinitionCreationEvent newUserTagDefinitionCreationEvent(final UUID tagDefinitionId, final TagDefinition tagDefinition, final UUID userToken) {
+    public UserTagDefinitionCreationInternalEvent newUserTagDefinitionCreationEvent(final UUID tagDefinitionId, final TagDefinition tagDefinition, final UUID userToken) {
         return new DefaultUserTagDefinitionCreationEvent(tagDefinitionId, tagDefinition, userToken);
     }
 
-    public UserTagDefinitionDeletionEvent newUserTagDefinitionDeletionEvent(final UUID tagDefinitionId, final TagDefinition tagDefinition, final UUID userToken) {
+    public UserTagDefinitionDeletionInternalEvent newUserTagDefinitionDeletionEvent(final UUID tagDefinitionId, final TagDefinition tagDefinition, final UUID userToken) {
         return new DefaultUserTagDefinitionDeletionEvent(tagDefinitionId, tagDefinition, userToken);
     }
 
-    public ControlTagDefinitionCreationEvent newControlTagDefinitionCreationEvent(final UUID tagDefinitionId, final TagDefinition tagDefinition, final UUID userToken) {
+    public ControlTagDefinitionCreationInternalEvent newControlTagDefinitionCreationEvent(final UUID tagDefinitionId, final TagDefinition tagDefinition, final UUID userToken) {
         return new DefaultControlTagDefinitionCreationEvent(tagDefinitionId, tagDefinition, userToken);
     }
 
-    public ControlTagDefinitionDeletionEvent newControlTagDefinitionDeletionEvent(final UUID tagDefinitionId, final TagDefinition tagDefinition, final UUID userToken) {
+    public ControlTagDefinitionDeletionInternalEvent newControlTagDefinitionDeletionEvent(final UUID tagDefinitionId, final TagDefinition tagDefinition, final UUID userToken) {
         return new DefaultControlTagDefinitionDeletionEvent(tagDefinitionId, tagDefinition, userToken);
     }
 
-    public UserTagCreationEvent newUserTagCreationEvent(final UUID tagId, final UUID objectId, final ObjectType objectType, final TagDefinition tagDefinition, final UUID userToken) {
+    public UserTagCreationInternalEvent newUserTagCreationEvent(final UUID tagId, final UUID objectId, final ObjectType objectType, final TagDefinition tagDefinition, final UUID userToken) {
         return new DefaultUserTagCreationEvent(tagId, objectId, objectType, tagDefinition, userToken);
     }
 
-    public UserTagDeletionEvent newUserTagDeletionEvent(final UUID tagId, final UUID objectId, final ObjectType objectType, final TagDefinition tagDefinition, final UUID userToken) {
+    public UserTagDeletionInternalEvent newUserTagDeletionEvent(final UUID tagId, final UUID objectId, final ObjectType objectType, final TagDefinition tagDefinition, final UUID userToken) {
         return new DefaultUserTagDeletionEvent(tagId, objectId, objectType, tagDefinition, userToken);
     }
 
-    public ControlTagCreationEvent newControlTagCreationEvent(final UUID tagId, final UUID objectId, final ObjectType objectType, final TagDefinition tagDefinition, final UUID userToken) {
+    public ControlTagCreationInternalEvent newControlTagCreationEvent(final UUID tagId, final UUID objectId, final ObjectType objectType, final TagDefinition tagDefinition, final UUID userToken) {
         return new DefaultControlTagCreationEvent(tagId, objectId, objectType, tagDefinition, userToken);
     }
 
-    public ControlTagDeletionEvent newControlTagDeletionEvent(final UUID tagId, final UUID objectId, final ObjectType objectType, final TagDefinition tagDefinition, final UUID userToken) {
+    public ControlTagDeletionInternalEvent newControlTagDeletionEvent(final UUID tagId, final UUID objectId, final ObjectType objectType, final TagDefinition tagDefinition, final UUID userToken) {
         return new DefaultControlTagDeletionEvent(tagId, objectId, objectType, tagDefinition, userToken);
     }
 }

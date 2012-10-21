@@ -22,8 +22,8 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.util.UtilTestSuite;
-import com.ning.billing.util.bus.BusEvent;
 import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.util.events.BusInternalEvent;
 import com.ning.billing.util.jackson.ObjectMapper;
 import com.ning.billing.util.tag.DefaultTagDefinition;
 import com.ning.billing.util.tag.TagDefinition;
@@ -42,7 +42,7 @@ public class TestDefaultControlTagCreationEvent extends UtilTestSuite {
         final UUID userToken = UUID.randomUUID();
 
         final DefaultControlTagCreationEvent event = new DefaultControlTagCreationEvent(tagId, objectId, objectType, tagDefinition, userToken);
-        Assert.assertEquals(event.getBusEventType(), BusEvent.BusEventType.CONTROL_TAG_CREATION);
+        Assert.assertEquals(event.getBusEventType(), BusInternalEvent.BusEventType.CONTROL_TAG_CREATION);
 
         Assert.assertEquals(event.getTagId(), tagId);
         Assert.assertEquals(event.getObjectId(), objectId);

@@ -43,11 +43,11 @@ import com.ning.billing.util.dao.Mapper;
 import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.collection.dao.UpdatableEntityCollectionSqlDao;
+import com.ning.billing.util.events.TagInternalEvent;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.DefaultTagDefinition;
 import com.ning.billing.util.tag.Tag;
 import com.ning.billing.util.tag.TagDefinition;
-import com.ning.billing.util.tag.api.TagEvent;
 import com.ning.billing.util.tag.api.user.TagEventBuilder;
 
 import com.google.inject.Inject;
@@ -123,7 +123,7 @@ public class AuditedTagDao extends AuditedCollectionDaoBase<Tag, Tag> implements
                 tagSqlDao.insertAuditFromTransaction(entityAudits, context);
 
                 // Post an event to the Bus
-                final TagEvent tagEvent;
+                final TagInternalEvent tagEvent;
                 if (tagDefinition.isControlTag()) {
                     tagEvent = tagEventBuilder.newControlTagCreationEvent(tag.getId(), objectId, objectType, tagDefinition, context.getUserToken());
                 } else {
@@ -173,7 +173,7 @@ public class AuditedTagDao extends AuditedCollectionDaoBase<Tag, Tag> implements
                     tagSqlDao.insertAuditFromTransaction(entityAudits, context);
 
                     // Post an event to the Bus
-                    final TagEvent tagEvent;
+                    final TagInternalEvent tagEvent;
                     if (tagDefinition.isControlTag()) {
                         tagEvent = tagEventBuilder.newControlTagDeletionEvent(tag.getId(), objectId, objectType, tagDefinition, context.getUserToken());
                     } else {

@@ -30,11 +30,11 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.util.callcontext.CallContext;
+import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 
 import com.google.common.collect.ImmutableList;
 
@@ -46,9 +46,9 @@ public class MockSubscription implements Subscription {
     private Plan plan;
     private final PlanPhase phase;
     private final DateTime startDate;
-    private final List<EffectiveSubscriptionEvent> transitions;
+    private final List<EffectiveSubscriptionInternalEvent> transitions;
 
-    public MockSubscription(final UUID id, final UUID bundleId, final Plan plan, final DateTime startDate, final List<EffectiveSubscriptionEvent> transitions) {
+    public MockSubscription(final UUID id, final UUID bundleId, final Plan plan, final DateTime startDate, final List<EffectiveSubscriptionInternalEvent> transitions) {
         this.id = id;
         this.bundleId = bundleId;
         this.state = SubscriptionState.ACTIVE;
@@ -65,7 +65,7 @@ public class MockSubscription implements Subscription {
         this.plan = plan;
         this.phase = phase;
         this.startDate = new DateTime(DateTimeZone.UTC);
-        this.transitions = ImmutableList.<EffectiveSubscriptionEvent>of();
+        this.transitions = ImmutableList.<EffectiveSubscriptionInternalEvent>of();
     }
 
     Subscription sub = Mockito.mock(Subscription.class);
@@ -176,22 +176,22 @@ public class MockSubscription implements Subscription {
     }
 
     @Override
-    public EffectiveSubscriptionEvent getPendingTransition() {
+    public EffectiveSubscriptionInternalEvent getPendingTransition() {
         return sub.getPendingTransition();
     }
 
     @Override
-    public EffectiveSubscriptionEvent getPreviousTransition() {
+    public EffectiveSubscriptionInternalEvent getPreviousTransition() {
         return sub.getPreviousTransition();
     }
 
     @Override
-    public List<EffectiveSubscriptionEvent> getBillingTransitions() {
+    public List<EffectiveSubscriptionInternalEvent> getBillingTransitions() {
         return transitions;
     }
 
     @Override
-    public List<EffectiveSubscriptionEvent> getAllTransitions() {
+    public List<EffectiveSubscriptionInternalEvent> getAllTransitions() {
         return transitions;
     }
 

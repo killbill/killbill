@@ -34,13 +34,13 @@ import com.ning.billing.analytics.model.BusinessSubscriptionTransition;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
-import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
-import com.ning.billing.entitlement.api.user.SubscriptionEvent;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
+import com.ning.billing.util.events.SubscriptionInternalEvent;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 
@@ -98,7 +98,7 @@ public class BusinessSubscriptionTransitionDao {
 
                 final ArrayList<BusinessSubscriptionTransition> transitions = new ArrayList<BusinessSubscriptionTransition>();
                 for (final Subscription subscription : subscriptions) {
-                    for (final EffectiveSubscriptionEvent event : subscription.getAllTransitions()) {
+                    for (final EffectiveSubscriptionInternalEvent event : entitlementApi.getAllTransitions(subscription)) {
                         final BusinessSubscriptionEvent businessEvent = getBusinessSubscriptionFromEvent(event);
                         if (businessEvent == null) {
                             continue;
@@ -151,7 +151,7 @@ public class BusinessSubscriptionTransitionDao {
         });
     }
 
-    private BusinessSubscriptionEvent getBusinessSubscriptionFromEvent(final SubscriptionEvent event) throws AccountApiException, EntitlementUserApiException {
+    private BusinessSubscriptionEvent getBusinessSubscriptionFromEvent(final SubscriptionInternalEvent event) throws AccountApiException, EntitlementUserApiException {
         switch (event.getTransitionType()) {
             // A subscription enters either through migration or as newly created subscription
             case MIGRATE_ENTITLEMENT:
@@ -178,36 +178,36 @@ public class BusinessSubscriptionTransitionDao {
         }
     }
 
-    private BusinessSubscriptionEvent subscriptionMigrated(final SubscriptionEvent created) throws AccountApiException, EntitlementUserApiException {
+    private BusinessSubscriptionEvent subscriptionMigrated(final SubscriptionInternalEvent created) throws AccountApiException, EntitlementUserApiException {
         return BusinessSubscriptionEvent.subscriptionMigrated(created.getNextPlan(), catalogService.getFullCatalog(), created.getEffectiveTransitionTime(), created.getSubscriptionStartDate());
     }
 
-    private BusinessSubscriptionEvent subscriptionCreated(final SubscriptionEvent created) throws AccountApiException, EntitlementUserApiException {
+    private BusinessSubscriptionEvent subscriptionCreated(final SubscriptionInternalEvent created) throws AccountApiException, EntitlementUserApiException {
         return BusinessSubscriptionEvent.subscriptionCreated(created.getNextPlan(), catalogService.getFullCatalog(), created.getEffectiveTransitionTime(), created.getSubscriptionStartDate());
     }
 
-    private BusinessSubscriptionEvent subscriptionRecreated(final SubscriptionEvent recreated) throws AccountApiException, EntitlementUserApiException {
+    private BusinessSubscriptionEvent subscriptionRecreated(final SubscriptionInternalEvent recreated) throws AccountApiException, EntitlementUserApiException {
         return BusinessSubscriptionEvent.subscriptionRecreated(recreated.getNextPlan(), catalogService.getFullCatalog(), recreated.getEffectiveTransitionTime(), recreated.getSubscriptionStartDate());
     }
 
-    private BusinessSubscriptionEvent subscriptionTransfered(final SubscriptionEvent transfered) throws AccountApiException, EntitlementUserApiException {
+    private BusinessSubscriptionEvent subscriptionTransfered(final SubscriptionInternalEvent transfered) throws AccountApiException, EntitlementUserApiException {
         return BusinessSubscriptionEvent.subscriptionTransfered(transfered.getNextPlan(), catalogService.getFullCatalog(), transfered.getEffectiveTransitionTime(), transfered.getSubscriptionStartDate());
     }
 
-    private BusinessSubscriptionEvent subscriptionCancelled(final SubscriptionEvent cancelled) throws AccountApiException, EntitlementUserApiException {
+    private BusinessSubscriptionEvent subscriptionCancelled(final SubscriptionInternalEvent cancelled) throws AccountApiException, EntitlementUserApiException {
         // cancelled.getNextPlan() is null here - need to look at the previous one to create the correct event name
         return BusinessSubscriptionEvent.subscriptionCancelled(cancelled.getPreviousPlan(), catalogService.getFullCatalog(), cancelled.getEffectiveTransitionTime(), cancelled.getSubscriptionStartDate());
     }
 
-    private BusinessSubscriptionEvent subscriptionChanged(final SubscriptionEvent changed) throws AccountApiException, EntitlementUserApiException {
+    private BusinessSubscriptionEvent subscriptionChanged(final SubscriptionInternalEvent changed) throws AccountApiException, EntitlementUserApiException {
         return BusinessSubscriptionEvent.subscriptionChanged(changed.getNextPlan(), catalogService.getFullCatalog(), changed.getEffectiveTransitionTime(), changed.getSubscriptionStartDate());
     }
 
-    private BusinessSubscriptionEvent subscriptionPhaseChanged(final SubscriptionEvent phaseChanged) throws AccountApiException, EntitlementUserApiException {
+    private BusinessSubscriptionEvent subscriptionPhaseChanged(final SubscriptionInternalEvent phaseChanged) throws AccountApiException, EntitlementUserApiException {
         return BusinessSubscriptionEvent.subscriptionPhaseChanged(phaseChanged.getNextPlan(), phaseChanged.getNextState(), catalogService.getFullCatalog(), phaseChanged.getEffectiveTransitionTime(), phaseChanged.getSubscriptionStartDate());
     }
 
-    private BusinessSubscription createNextBusinessSubscription(final EffectiveSubscriptionEvent event, final BusinessSubscriptionEvent businessEvent, final Currency currency) {
+    private BusinessSubscription createNextBusinessSubscription(final EffectiveSubscriptionInternalEvent event, final BusinessSubscriptionEvent businessEvent, final Currency currency) {
         final BusinessSubscription nextSubscription;
         if (BusinessSubscriptionEvent.EventType.CANCEL.equals(businessEvent.getEventType()) ||
             BusinessSubscriptionEvent.EventType.SYSTEM_CANCEL.equals(businessEvent.getEventType())) {
@@ -221,7 +221,7 @@ public class BusinessSubscriptionTransitionDao {
         return nextSubscription;
     }
 
-    private BusinessSubscription createPreviousBusinessSubscription(final EffectiveSubscriptionEvent event,
+    private BusinessSubscription createPreviousBusinessSubscription(final EffectiveSubscriptionInternalEvent event,
                                                                     final BusinessSubscriptionEvent businessEvent,
                                                                     final ArrayList<BusinessSubscriptionTransition> transitions,
                                                                     final Currency currency) {
@@ -238,7 +238,7 @@ public class BusinessSubscriptionTransitionDao {
                                         catalogService.getFullCatalog());
     }
 
-    private BusinessSubscriptionTransition getPreviousBusinessSubscriptionTransitionForEvent(final EffectiveSubscriptionEvent event,
+    private BusinessSubscriptionTransition getPreviousBusinessSubscriptionTransitionForEvent(final EffectiveSubscriptionInternalEvent event,
                                                                                              final ArrayList<BusinessSubscriptionTransition> transitions) {
         BusinessSubscriptionTransition transition = null;
         for (final BusinessSubscriptionTransition candidate : transitions) {

@@ -153,6 +153,12 @@ public class BlockingSubscription implements Subscription {
     }
 
     @Override
+    public Plan getLastActivePlan() {
+        return subscription.getLastActivePlan();
+    }
+
+
+    @Override
     public PriceList getCurrentPriceList() {
         return subscription.getCurrentPriceList();
     }

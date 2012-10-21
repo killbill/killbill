@@ -13,34 +13,15 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
 package com.ning.billing.util.bus;
 
 import java.util.UUID;
 
 public interface BusEvent {
-    public enum BusEventType {
-        ACCOUNT_CREATE,
-        ACCOUNT_CHANGE,
-        SUBSCRIPTION_TRANSITION,
-        BUNDLE_REPAIR,
-        INVOICE_EMPTY,
-        INVOICE_CREATION,
-        INVOICE_ADJUSTMENT,
-        PAYMENT_INFO,
-        PAYMENT_ERROR,
-        CONTROL_TAG_CREATION,
-        CONTROL_TAG_DELETION,
-        USER_TAG_CREATION,
-        USER_TAG_DELETION,
-        CONTROL_TAGDEFINITION_CREATION,
-        CONTROL_TAGDEFINITION_DELETION,
-        USER_TAGDEFINITION_CREATION,
-        USER_TAGDEFINITION_DELETION,
-        OVERDUE_CHANGE
-    }
-
-    public BusEventType getBusEventType();
 
     public UUID getUserToken();
+
+    public UUID getAccountId();
+
+    public UUID getTenantId();
 }

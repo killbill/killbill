@@ -25,21 +25,26 @@ import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 
 
 public interface EntitlementInternalApi {
 
-    public List<SubscriptionBundle> getBundlesForAccount(UUID accountId, InternalTenantContext context);
+    public List<SubscriptionBundle> getBundlesForAccount(final UUID accountId, final InternalTenantContext context);
 
-    public List<Subscription> getSubscriptionsForBundle(UUID bundleId, InternalTenantContext context);
+    public List<Subscription> getSubscriptionsForBundle(final UUID bundleId, final InternalTenantContext context);
 
-    public Subscription getBaseSubscription(UUID bundleId, InternalTenantContext context) throws EntitlementUserApiException;
+    public Subscription getBaseSubscription(final UUID bundleId, final InternalTenantContext context) throws EntitlementUserApiException;
 
-    public Subscription getSubscriptionFromId(UUID id, InternalTenantContext context) throws EntitlementUserApiException;
+    public Subscription getSubscriptionFromId(final UUID id, final InternalTenantContext context) throws EntitlementUserApiException;
 
-    public SubscriptionBundle getBundleFromId(UUID id, InternalTenantContext context) throws EntitlementUserApiException;
+    public SubscriptionBundle getBundleFromId(final UUID id, final InternalTenantContext context) throws EntitlementUserApiException;
 
-    public UUID getAccountIdFromSubscriptionId(UUID subscriptionId, InternalTenantContext context) throws EntitlementUserApiException;
+    public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId, final InternalTenantContext context) throws EntitlementUserApiException;
 
-    public void setChargedThroughDate(UUID subscriptionId, LocalDate localChargedThruDate, InternalCallContext context);
+    public void setChargedThroughDate(final UUID subscriptionId, final LocalDate localChargedThruDate, final InternalCallContext context);
+
+    public List<EffectiveSubscriptionInternalEvent> getAllTransitions(final Subscription subscription);
+
+    public List<EffectiveSubscriptionInternalEvent> getBillingTransitions(final Subscription subscription);
 }

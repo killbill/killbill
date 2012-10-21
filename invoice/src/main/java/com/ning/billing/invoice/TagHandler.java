@@ -27,8 +27,8 @@ import com.ning.billing.util.callcontext.DefaultCallContext;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.util.events.ControlTagDeletionInternalEvent;
 import com.ning.billing.util.tag.ControlTagType;
-import com.ning.billing.util.tag.api.ControlTagDeletionEvent;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
@@ -48,7 +48,7 @@ public class TagHandler {
     }
 
     @Subscribe
-    public void process_AUTO_INVOICING_OFF_removal(final ControlTagDeletionEvent event) {
+    public void process_AUTO_INVOICING_OFF_removal(final ControlTagDeletionInternalEvent event) {
         if (event.getTagDefinition().getName().equals(ControlTagType.AUTO_INVOICING_OFF.toString()) && event.getObjectType() ==  ObjectType.ACCOUNT) {
             final UUID accountId = event.getObjectId();
             processUnpaid_AUTO_INVOICING_OFF_invoices(accountId, event.getUserToken());

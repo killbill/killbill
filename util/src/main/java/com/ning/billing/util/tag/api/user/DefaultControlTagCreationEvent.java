@@ -19,14 +19,14 @@ package com.ning.billing.util.tag.api.user;
 import java.util.UUID;
 
 import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.util.events.ControlTagCreationInternalEvent;
 import com.ning.billing.util.tag.TagDefinition;
-import com.ning.billing.util.tag.api.ControlTagCreationEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class DefaultControlTagCreationEvent implements ControlTagCreationEvent {
+public class DefaultControlTagCreationEvent implements ControlTagCreationInternalEvent {
     private final UUID tagId;
     private final UUID objectId;
     private final ObjectType objectType;

@@ -45,19 +45,14 @@ import com.ning.billing.catalog.api.ActionPolicy;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
-import com.ning.billing.invoice.api.InvoiceCreationEvent;
-import com.ning.billing.invoice.api.NullInvoiceEvent;
 import com.ning.billing.jaxrs.json.CustomFieldJson;
 import com.ning.billing.jaxrs.json.SubscriptionJsonNoEvents;
 import com.ning.billing.jaxrs.util.Context;
 import com.ning.billing.jaxrs.util.JaxrsUriBuilder;
 import com.ning.billing.jaxrs.util.KillbillEventHandler;
-import com.ning.billing.payment.api.PaymentErrorEvent;
-import com.ning.billing.payment.api.PaymentInfoEvent;
 import com.ning.billing.util.api.AuditUserApi;
 import com.ning.billing.util.api.CustomFieldUserApi;
 import com.ning.billing.util.api.TagApiException;
@@ -65,6 +60,11 @@ import com.ning.billing.util.api.TagDefinitionApiException;
 import com.ning.billing.util.api.TagUserApi;
 import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
+import com.ning.billing.util.events.InvoiceCreationInternalEvent;
+import com.ning.billing.util.events.NullInvoiceInternalEvent;
+import com.ning.billing.util.events.PaymentErrorInternalEvent;
+import com.ning.billing.util.events.PaymentInfoInternalEvent;
 import com.ning.billing.util.userrequest.CompletionUserRequestBase;
 
 import com.google.inject.Inject;
@@ -279,19 +279,19 @@ public class SubscriptionResource extends JaxRsResourceBase {
         }
 
         @Override
-        public void onSubscriptionTransition(final EffectiveSubscriptionEvent curEventEffective) {
+        public void onSubscriptionTransition(final EffectiveSubscriptionInternalEvent curEventEffective) {
             log.info(String.format("Got event SubscriptionTransition token = %s, type = %s, remaining = %d ",
                                    curEventEffective.getUserToken(), curEventEffective.getTransitionType(), curEventEffective.getRemainingEventsForUserOperation()));
         }
 
         @Override
-        public void onEmptyInvoice(final NullInvoiceEvent curEvent) {
+        public void onEmptyInvoice(final NullInvoiceInternalEvent curEvent) {
             log.info(String.format("Got event EmptyInvoiceNotification token = %s ", curEvent.getUserToken()));
             notifyForCompletion();
         }
 
         @Override
-        public void onInvoiceCreation(final InvoiceCreationEvent curEvent) {
+        public void onInvoiceCreation(final InvoiceCreationInternalEvent curEvent) {
             log.info(String.format("Got event InvoiceCreationNotification token = %s ", curEvent.getUserToken()));
             if (curEvent.getAmountOwed().compareTo(BigDecimal.ZERO) <= 0) {
                 notifyForCompletion();
@@ -299,13 +299,13 @@ public class SubscriptionResource extends JaxRsResourceBase {
         }
 
         @Override
-        public void onPaymentInfo(final PaymentInfoEvent curEvent) {
+        public void onPaymentInfo(final PaymentInfoInternalEvent curEvent) {
             log.info(String.format("Got event PaymentInfo token = %s ", curEvent.getUserToken()));
             notifyForCompletion();
         }
 
         @Override
-        public void onPaymentError(final PaymentErrorEvent curEvent) {
+        public void onPaymentError(final PaymentErrorInternalEvent curEvent) {
             log.info(String.format("Got event PaymentError token = %s ", curEvent.getUserToken()));
             notifyForCompletion();
         }

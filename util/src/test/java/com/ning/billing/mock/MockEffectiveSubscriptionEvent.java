@@ -21,14 +21,14 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
-import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.Subscription.SubscriptionState;
+import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class MockEffectiveSubscriptionEvent implements EffectiveSubscriptionEvent {
+public class MockEffectiveSubscriptionEvent implements EffectiveSubscriptionInternalEvent {
 
     private final Long totalOrdering;
     private final UUID subscriptionId;

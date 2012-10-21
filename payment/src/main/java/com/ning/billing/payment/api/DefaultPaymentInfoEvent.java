@@ -25,8 +25,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ning.billing.util.entity.EntityBase;
+import com.ning.billing.util.events.PaymentInfoInternalEvent;
 
-public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoEvent {
+public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoInternalEvent {
 
     private final UUID accountId;
     private final UUID invoiceId;

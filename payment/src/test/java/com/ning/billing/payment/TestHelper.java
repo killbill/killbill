@@ -25,7 +25,6 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.api.Invoice;
 import com.ning.billing.invoice.api.InvoiceApiException;
-import com.ning.billing.invoice.api.InvoiceCreationEvent;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePaymentApi;
 import com.ning.billing.mock.api.MockBillCycleDay;
@@ -41,6 +40,7 @@ import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.TenantContext;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.events.InvoiceCreationInternalEvent;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcsapi.bus.Bus;
 import com.ning.billing.util.svcsapi.bus.Bus.EventBusException;
@@ -93,7 +93,7 @@ public class TestHelper {
         }
 
         Mockito.when(invoicePaymentApi.getInvoice(Mockito.eq(invoice.getId()), Mockito.<TenantContext>any())).thenReturn(invoice);
-        final InvoiceCreationEvent event = new MockInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
+        final InvoiceCreationInternalEvent event = new MockInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
                                                                         invoice.getBalance(), invoice.getCurrency(),
                                                                         invoice.getInvoiceDate(),
                                                                         context.getUserToken());

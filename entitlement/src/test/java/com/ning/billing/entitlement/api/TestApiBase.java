@@ -67,7 +67,6 @@ import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi.Entitl
 import com.ning.billing.entitlement.api.migration.EntitlementMigrationApi.EntitlementSubscriptionMigrationCase;
 import com.ning.billing.entitlement.api.timeline.EntitlementTimelineApi;
 import com.ning.billing.entitlement.api.transfer.EntitlementTransferApi;
-import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.EntitlementUserApi;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
@@ -84,6 +83,7 @@ import com.ning.billing.util.svcsapi.bus.BusService;
 import com.ning.billing.util.bus.DefaultBusService;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.ClockMock;
+import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 import com.ning.billing.util.glue.RealImplementation;
 import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 
@@ -397,8 +397,8 @@ public abstract class TestApiBase extends EntitlementTestSuiteWithEmbeddedDB imp
         }
     }
 
-    protected void printSubscriptionTransitions(final List<EffectiveSubscriptionEvent> transitions) {
-        for (final EffectiveSubscriptionEvent cur : transitions) {
+    protected void printSubscriptionTransitions(final List<EffectiveSubscriptionInternalEvent> transitions) {
+        for (final EffectiveSubscriptionInternalEvent cur : transitions) {
             log.debug("Transition " + cur);
         }
     }

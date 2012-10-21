@@ -24,9 +24,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.ning.billing.junction.api.Blockable;
 import com.ning.billing.junction.api.Blockable.Type;
-import com.ning.billing.overdue.OverdueChangeEvent;
+import com.ning.billing.util.events.OverdueChangeInternalEvent;
 
-public class DefaultOverdueChangeEvent implements OverdueChangeEvent {
+public class DefaultOverdueChangeEvent implements OverdueChangeInternalEvent {
     private final UUID overdueObjectId;
     private final Blockable.Type overdueObjectType;
     private final String previousOverdueStateName;

@@ -40,7 +40,6 @@ import com.ning.billing.junction.api.BlockingApiException;
 import com.ning.billing.ovedue.notification.OverdueCheckPoster;
 import com.ning.billing.overdue.OverdueApiException;
 import com.ning.billing.overdue.OverdueCancellationPolicicy;
-import com.ning.billing.overdue.OverdueChangeEvent;
 import com.ning.billing.overdue.OverdueService;
 import com.ning.billing.overdue.OverdueState;
 import com.ning.billing.overdue.config.api.BillingState;
@@ -52,6 +51,7 @@ import com.ning.billing.util.email.DefaultEmailSender;
 import com.ning.billing.util.email.EmailApiException;
 import com.ning.billing.util.email.EmailConfig;
 import com.ning.billing.util.email.EmailSender;
+import com.ning.billing.util.events.OverdueChangeInternalEvent;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 import com.ning.billing.util.svcapi.junction.BlockingInternalApi;
@@ -135,7 +135,7 @@ public class OverdueStateApplicator<T extends Blockable> {
         }
     }
 
-    private OverdueChangeEvent createOverdueEvent(final T overdueable, final String previousOverdueStateName, final String nextOverdueStateName) throws BlockingApiException {
+    private OverdueChangeInternalEvent createOverdueEvent(final T overdueable, final String previousOverdueStateName, final String nextOverdueStateName) throws BlockingApiException {
         return new DefaultOverdueChangeEvent(overdueable.getId(), Blockable.Type.get(overdueable), previousOverdueStateName, nextOverdueStateName, null);
     }
 

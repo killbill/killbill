@@ -25,9 +25,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.invoice.api.InvoiceCreationEvent;
+import com.ning.billing.util.events.InvoiceCreationInternalEvent;
 
-public class MockInvoiceCreationEvent implements InvoiceCreationEvent {
+public class MockInvoiceCreationEvent implements InvoiceCreationInternalEvent {
 
     private final UUID invoiceId;
     private final UUID accountId;

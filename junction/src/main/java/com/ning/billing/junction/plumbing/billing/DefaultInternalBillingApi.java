@@ -30,11 +30,11 @@ import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.account.api.MutableAccountData;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
-import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.dao.ObjectType;
+import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 import com.ning.billing.util.svcapi.junction.BillingEvent;
@@ -137,7 +137,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
 
     private void addBillingEventsForSubscription(final List<Subscription> subscriptions, final SubscriptionBundle bundle, final Account account, final InternalCallContext context, final DefaultBillingEventSet result) {
         for (final Subscription subscription : subscriptions) {
-            for (final EffectiveSubscriptionEvent transition : subscription.getBillingTransitions()) {
+            for (final EffectiveSubscriptionInternalEvent transition : entitlementApi.getBillingTransitions(subscription)) {
                 try {
                     final BillCycleDay bcd = bcdCalculator.calculateBcd(bundle, subscription, transition, account, context);
 

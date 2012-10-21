@@ -21,12 +21,13 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
+import com.ning.billing.util.events.SubscriptionInternalEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public abstract class DefaultSubscriptionEvent implements SubscriptionEvent {
+public abstract class DefaultSubscriptionEvent implements SubscriptionInternalEvent {
     private final Long totalOrdering;
     private final UUID subscriptionId;
     private final UUID bundleId;

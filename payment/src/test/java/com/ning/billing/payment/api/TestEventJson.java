@@ -24,6 +24,8 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.ning.billing.payment.PaymentTestSuite;
+import com.ning.billing.util.events.PaymentErrorInternalEvent;
+import com.ning.billing.util.events.PaymentInfoInternalEvent;
 import com.ning.billing.util.jackson.ObjectMapper;
 
 public class TestEventJson extends PaymentTestSuite {
@@ -31,7 +33,7 @@ public class TestEventJson extends PaymentTestSuite {
 
     @Test(groups = "fast")
     public void testPaymentErrorEvent() throws Exception {
-        final PaymentErrorEvent e = new DefaultPaymentErrorEvent(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "no message", UUID.randomUUID());
+        final PaymentErrorInternalEvent e = new DefaultPaymentErrorEvent(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "no message", UUID.randomUUID());
         final String json = mapper.writeValueAsString(e);
 
         final Class<?> claz = Class.forName(DefaultPaymentErrorEvent.class.getName());
@@ -41,7 +43,7 @@ public class TestEventJson extends PaymentTestSuite {
 
     @Test(groups = "fast")
     public void testPaymentInfoEvent() throws Exception {
-        final PaymentInfoEvent e = new DefaultPaymentInfoEvent(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), new BigDecimal(12.9), new Integer(13), PaymentStatus.SUCCESS, "ext-ref1-12345", "ext-ref2-12345", UUID.randomUUID(), new DateTime());
+        final PaymentInfoInternalEvent e = new DefaultPaymentInfoEvent(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), new BigDecimal(12.9), new Integer(13), PaymentStatus.SUCCESS, "ext-ref1-12345", "ext-ref2-12345", UUID.randomUUID(), new DateTime());
         final String json = mapper.writeValueAsString(e);
 
         final Class<?> clazz = Class.forName(DefaultPaymentInfoEvent.class.getName());

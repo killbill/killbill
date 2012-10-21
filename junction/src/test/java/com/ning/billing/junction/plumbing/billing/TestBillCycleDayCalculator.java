@@ -32,7 +32,6 @@ import com.ning.billing.catalog.api.Catalog;
 import com.ning.billing.catalog.api.CatalogApiException;
 import com.ning.billing.catalog.api.CatalogService;
 import com.ning.billing.catalog.api.Plan;
-import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.junction.JunctionTestSuite;
@@ -54,10 +53,8 @@ public class TestBillCycleDayCalculator extends JunctionTestSuite {
 
         // Create a Bundle associated with a subscription
         final SubscriptionBundle bundle = Mockito.mock(SubscriptionBundle.class);
-        final EffectiveSubscriptionEvent previousTransition = Mockito.mock(EffectiveSubscriptionEvent.class);
         final Subscription subscription = Mockito.mock(Subscription.class);
         Mockito.when(subscription.getStartDate()).thenReturn(bpStartDateUTC);
-        Mockito.when(subscription.getPreviousTransition()).thenReturn(previousTransition);
         // subscription.getCurrentPlan() will return null as expected (cancelled BP)
         Mockito.when(entitlementApi.getBaseSubscription(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
 

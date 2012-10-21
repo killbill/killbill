@@ -22,7 +22,6 @@ import org.slf4j.LoggerFactory;
 import com.ning.billing.ErrorCode;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
-import com.ning.billing.invoice.api.InvoiceCreationEvent;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.core.PaymentProcessor;
 import com.ning.billing.util.callcontext.CallContext;
@@ -32,6 +31,7 @@ import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.events.InvoiceCreationInternalEvent;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 
 import com.google.common.eventbus.Subscribe;
@@ -58,7 +58,7 @@ public class InvoiceHandler {
     }
 
     @Subscribe
-    public void processInvoiceEvent(final InvoiceCreationEvent event) {
+    public void processInvoiceEvent(final InvoiceCreationInternalEvent event) {
 
         log.info("Received invoice creation notification for account {} and invoice {}",
                  event.getAccountId(), event.getInvoiceId());

@@ -25,8 +25,8 @@ import org.testng.annotations.Test;
 
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.invoice.InvoiceTestSuite;
-import com.ning.billing.invoice.api.InvoiceCreationEvent;
-import com.ning.billing.invoice.api.NullInvoiceEvent;
+import com.ning.billing.util.events.InvoiceCreationInternalEvent;
+import com.ning.billing.util.events.NullInvoiceInternalEvent;
 import com.ning.billing.util.jackson.ObjectMapper;
 
 public class TestEventJson extends InvoiceTestSuite {
@@ -35,7 +35,7 @@ public class TestEventJson extends InvoiceTestSuite {
 
     @Test(groups = "fast")
     public void testInvoiceCreationEvent() throws Exception {
-        final InvoiceCreationEvent e = new DefaultInvoiceCreationEvent(UUID.randomUUID(), UUID.randomUUID(), new BigDecimal(12.0), Currency.USD, UUID.randomUUID());
+        final InvoiceCreationInternalEvent e = new DefaultInvoiceCreationEvent(UUID.randomUUID(), UUID.randomUUID(), new BigDecimal(12.0), Currency.USD, UUID.randomUUID());
         final String json = mapper.writeValueAsString(e);
 
         final Object obj = mapper.readValue(json, DefaultInvoiceCreationEvent.class);
@@ -44,7 +44,7 @@ public class TestEventJson extends InvoiceTestSuite {
 
     @Test(groups = "fast")
     public void testEmptyInvoiceEvent() throws Exception {
-        final NullInvoiceEvent e = new DefaultNullInvoiceEvent(UUID.randomUUID(), new LocalDate(), UUID.randomUUID());
+        final NullInvoiceInternalEvent e = new DefaultNullInvoiceEvent(UUID.randomUUID(), new LocalDate(), UUID.randomUUID());
         final String json = mapper.writeValueAsString(e);
 
         final Object obj = mapper.readValue(json, DefaultNullInvoiceEvent.class);

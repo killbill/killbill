@@ -45,7 +45,6 @@ import com.ning.billing.payment.api.DefaultPaymentErrorEvent;
 import com.ning.billing.payment.api.DefaultPaymentInfoEvent;
 import com.ning.billing.payment.api.Payment;
 import com.ning.billing.payment.api.PaymentApiException;
-import com.ning.billing.payment.api.PaymentErrorEvent;
 import com.ning.billing.payment.api.PaymentStatus;
 import com.ning.billing.payment.dao.PaymentAttemptModelDao;
 import com.ning.billing.payment.dao.PaymentDao;
@@ -59,10 +58,11 @@ import com.ning.billing.payment.provider.PaymentProviderPluginRegistry;
 import com.ning.billing.payment.retry.AutoPayRetryService.AutoPayRetryServiceScheduler;
 import com.ning.billing.payment.retry.FailedPaymentRetryService.FailedPaymentRetryServiceScheduler;
 import com.ning.billing.payment.retry.PluginFailureRetryService.PluginFailureRetryServiceScheduler;
-import com.ning.billing.util.bus.BusEvent;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.Clock;
+import com.ning.billing.util.events.BusInternalEvent;
+import com.ning.billing.util.events.PaymentErrorInternalEvent;
 import com.ning.billing.util.globallocker.GlobalLocker;
 import com.ning.billing.util.svcapi.account.AccountInternalApi;
 import com.ning.billing.util.svcapi.tag.TagInternalApi;
@@ -212,7 +212,7 @@ public class PaymentProcessor extends ProcessorBase {
             // This event will be caught by overdue to refresh the overdue state, if needed.
             // Note that at this point, we don't know the exact invoice balance (see getAndValidatePaymentAmount() below).
             // This means that events will be posted for null and zero dollar invoices (e.g. trials).
-            final PaymentErrorEvent event = new DefaultPaymentErrorEvent(account.getId(), invoiceId, null,
+            final PaymentErrorInternalEvent event = new DefaultPaymentErrorEvent(account.getId(), invoiceId, null,
                                                                          ErrorCode.PAYMENT_NO_DEFAULT_PAYMENT_METHOD.toString(), context.getUserToken());
             postPaymentEvent(event, account.getId(), context);
             throw e;
@@ -418,7 +418,7 @@ public class PaymentProcessor extends ProcessorBase {
         }
 
         PaymentModelDao payment = null;
-        BusEvent event = null;
+        BusInternalEvent event = null;
         PaymentStatus paymentStatus;
         try {
 
