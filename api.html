@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Killbilling, Open-Source subscription management system</title>
+
+    <!--[if lt IE 9]>
+    <script src="http://html5shim.googlecode.com/svn/trunk/html5.js" type="text/javascript"></script>
+    <![endif]-->
+
+    <link rel=stylesheet type="text/css" href="stylesheets/bootstrap.min.css">
+    <link rel=stylesheet type="text/css" href="stylesheets/prettify.css">
+    <link rel=stylesheet type="text/css" href="stylesheets/killbill.css">
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="javascripts/prettify.js"></script>
+    <script src="javascripts/bootstrap-dropdown.js"></script>
+
+    <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-32705710-1']);
+    _gaq.push(['_trackPageview']);
+    (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+        </script>
+    </head>
+
+    <body onload="prettyPrint();">
+        <div class="topbar" data-dropdown="dropdown">
+            <div class="topbar-inner">
+                <div class="container-fluid">
+                    <a class="brand" href="index.html">Killbilling</a>
+                    <ul class="nav">
+                        <li><a href="start.html">Getting started</a></li>
+                        <li><a href="admin.html">Admin Guide</a></li>
+                        <li><a href="dev.html">Developer Guide</a></li>
+                        <li class="active"><a href="api.html">API</a></li>
+                        <li><a href="architecture.html">Architecture</a></li>
+                    </ul>
+                    <ul class="nav secondary-nav">
+                        <li><a href="http://webchat.freenode.net/?channels" target="_blank">#killbilling</a></li>
+                        <li><a href="http://groups.google.com/group/killbilling-users" target="_blank">User Mailing-List</a></li>
+                        <li><a href="http://groups.google.com/group/killbilling-dev" target="_blank">Dev Mailing-List</a></li>
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle">Github projects</a>
+                            <ul class="dropdown-menu">
+                                <li><a href="http://github.com/killbilling/killbill-library" target="_blank">killbill-library</a></li>
+                                <li><a href="http://github.com/killbilling/killbill-server" target="_blank">killbill-server</a></li>
+                                <li><a href="http://github.com/killbilling/killbill-client-php" target="_blank">killbill-client-php</a></li>
+                                <li><a href="http://github.com/killbilling/killbill-client-js" target="_blank">killbill-client-js</a></li>
+                                <li><a href="http://github.com/killbilling/killbill-client-ruby" target="_blank">killbill-client-ruby</a></li>
+                                <li><a href="http://github.com/killbilling/killbill-client-python" target="_blank">killbill-client-python</a></li>
+                                <li><a href="http://github.com/killbilling/killbill-client-java" target="_blank">killbill-client-java</a></li>
+                                <li><a href="http://github.com/killbilling/killbill-admin-ui" target="_blank">killbill-admin-ui</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container-fluid">
+            <div class="sidebar">
+                <div class="well">
+                    <h5>HTTP API</h5>
+                    <ul>
+                        <li><a href="#account">Account</a></li>
+                        <li><a href="#bundle">Bundle</a></li>
+                        <li><a href="#subscription">Subscription</a></li>
+                        <li><a href="#tag">Tag</a></li>
+                        <li><a href="#custom_field">Custom Field</a></li>
+                        <li><a href="#account_timeline">Account Timeline</a></li>
+                        <li><a href="#bundle_timeline">Bundle Timeline and Repair</a></li>
+                        <li><a href="#payment">Payment</a></li>
+                        <li><a href="#payment_method">Payment Method</a></li>
+                        <li><a href="#refund">Refund</a></li>
+                        <li><a href="#chargeback">Chargeback</a></li>
+                        <li><a href="#credit">Credit</a></li>
+                        <li><a href="#invoice">Invoice</a></li>
+                        <li><a href="#catalog">Catalog</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="content">
+                <p>Note: in the current version, there is no authentification mechanism. We provide, however, a way for the client to pass context information through the use of specific HTTP headers:
+                <ul>
+                    <li>X-Killbill-CreatedBy</li>
+                    <li>X-Killbill-Reason</li>
+                    <li>X-Killbill-Comment</li>
+                </ul>
+                Each POST/PUT/DELETE needs at least a non null X-Killbill-CreatedBy header; failure to do so will return a 400 (BAD_REQUEST) error code.
+                </p>
+                <section id="account">
+                    <div class="page-header">
+                        <h1>Account</h1>
+                    </div>
+                    <div class="row">
+                        <div class="api_table">
+                            <table class="table table-striped table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Resource</th>
+                                        <th>Query params</th>
+                                        <th>Description</th>
+                                        <th>Return codes</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>GET /1.0/kb/accounts/&lt;account_id&gt;</td>
+                                        <td></td>
+                                        <td>Retrieve account specified by account_id</td>
+                                        <td>200, 204, 400</td>
+                                    </tr>
+                                    <tr>
+                                        <td>GET /1.0/kb/accounts/&lt;account_id&gt;/bundles</td>
+                                        <td></td>
+                                        <td>Retrieve bundles associated with account specified by account_id</td>
+                                        <td>200, 204, 400</td>
+                                    </tr>
+                                    <tr>
+                                        <td>GET /1.0/kb/accounts/&lt;account_id&gt;/paymentMethods</td>
+                                        <td>withPluginInfo</td>
+                                        <td>Retrieves the payment methods by account_id</td>
+                                        <td>200, 204, 400</td>
+                                    </tr>
+                                    <tr>
+                                        <td>GET /1.0/kb/accounts</td>
+                                        <td>external_key</td>
+                                        <td>Retrieves account specified by external_key</td>
+                                        <td>200, 204, 400</td>
+                                    </tr>
+                                    <tr>
+                                        <td>POST /1.0/kb/accounts</td>
+                                        <td></td>
+                                        <td>Create account</td>
+                                        <td>201, 400</td>
+                                    </tr>
+                                    <tr>
+                                        <td>PUT /1.0/kb/accounts/&lt;account_id&gt;</td>
+                                        <td></td>
+                                        <td>Update account</td>
+                                        <td>200, 204, 400</td>
+                                    </tr>
+                                    <tr>
+                                        <td>DELETE /1.0/kb/accounts/&lt;account_id&gt;</td>
+                                        <td></td>
+                                        <td>Delete account specified by account_id – cancel all subscriptions</td>
+                                        <td>204, 400</td>
+                                    </tr>
+                                    <tr>
+                                        <td>POST /1.0/kb/accounts/&lt;account_id&gt;/paymentMethods</td>
+                                        <td>isDefault</td>
+                                        <td>Creates a new payment method for the account specified account_id</td>
+                                        <td>201, 400</td>
+                                    </tr>
+                                    <tr>
+                                        <td>PUT /1.0/kb/accounts/&lt;account_id&gt;/paymentMethods/payment_method_id/setDefault</td>
+                                        <td></td>
+                                        <td>Set paymentMethod as default for the account specified account_id</td>
+                                        <td>200, 400</td>
+                                    </tr>
+                                    <tr>
+                                        <td>GET /1.0/kb/accounts/&lt;account_id&gt;/emails</td>
+                                        <td></td>
+                                        <td></td>
+                                        <td>200, 400</td>
+                                    </tr>
+                                    <tr>
+                                        <td>POST /1.0/kb/accounts/&lt;account_id&gt;/emails</td>
+                                        <td></td>
+                                        <td>Get the list of emails associated with an account</td>
+                                        <td>201, 400</td>
+                                    </tr>
+                                    <tr>
+                                        <td>DELETE /1.0/kb/accounts/&lt;account_id&gt;/emails/<email></td>
+                                        <td></td>
+                                        <td>Remove an email associated with an account</td>
+                                        <td>200, 400</td>
+                                    </tr>
+                                    <tr>
+                                        <td>GET /1.0/kb/accounts/&lt;account_id&gt;/emailNotifications</td>
+                                        <td></td>
+                                        <td>Check whether email notifications are turned on for this account</td>
+                                        <td>200, 404</td>
+                                    </tr>
+                                    <tr>
+                                        <td>PUT /1.0/kb/accounts/&lt;account_id&gt;/emailNotifications</td>
+                                        <td></td>
+                                        <td>Update email notifications for this account</td>
+                                        <td>200, 404</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+                <section id="bundle">
+                    <div class="page-header">
+                        <h1>Bundle</h1>
+                    </div>
+                    <div class="row">
+                        <div class="api_table">
+                            <table class="table table-striped table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Resource</th>
+                                        <th>Query params</th>
+                                        <th>Description</th>
+                                        <th>Return codes</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>GET /1.0/kb/bundles/&lt;bundle_id&gt;</td>
+                                        <td></td>
+                                        <td>Retrieve bundle specified by bundle_id</td>
+                                        <td>200, 204, 400</td>
+                                    </tr>
+                                    <tr>
+                                        <td>GET /1.0/kb/bundles/&lt;bundle_id&gt;/subscriptions</td>
+                                        <td></td>
+                                        <td>Retrieve subscriptions associated with bundle specified by bundle_id</td>
+                                        <td>200, 204, 400</td>
+                                    </tr>
+                                    <tr>
+                                        <td>GET /1.0/kb/bundles</td>
+                                        <td>external_key</td>
+                                        <td>Retrieve bundle specified by external_key</td>
+                                        <td>200, 204, 400</td>
+                                    </tr>
+                                    <tr>
+                                        <td>POST /1.0/kb/bundles</td>
+                                        <td></td>
+                                        <td>Create bundle</td>
+                                        <td>201, 400, 404</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+                <section id="subscription">
+                    <div class="page-header">
+                        <h1>Subscription</h1>
+                    </div>
+                    <div class="row">
+                        <div class="api_table">
+                            <table class="table table-striped table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Resource</th>
+                                        <th>Query params</th>
+                                        <th>Description</th>
+                                        <th>Return codes</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>GET /1.0/kb/subscriptions/&lt;subscription_id&gt;</td>
+                                        <td></td>
+                                        <td>Retrieve the current subscription state</td>
+                                        <td>200, 204, 400</td>
+                                    </tr>
+                                    <tr>
+                                        <td>POST /1.0/kb/subscriptions</td>
+                                        <td>requested_date,call_completion,call_timeout_sec</td>
+                                        <td>Create a new subscription</td>
+                                        <td>201, 400</td>
+                                    </tr>
+                                    <tr>
+                                        <td>PUT /1.0/kb/subscriptions/&lt;subscription_id&gt;</td>
+                                        <td>requested_date,call_completion,call_timeout_sec</td>
+                                        <td>Change subscription</td>
+                                        <td>200, 204, 400</td>
+                                    </tr>
+                                    <tr>
+                                        <td>PUT /1.0/kb/subscriptions/&lt;subscription_id&gt;/uncancel</td>
+                                        <td></td>
+                                        <td>Uncancel a future cancelled subscription</td>
+                                        <td>200, 204, 400</td>
+                                    </tr>
+                                    <tr>
+                                        <td>DELETE /1.0/kb/subscriptions/&lt;subscription_id&gt;</td>
+                                        <td>requested_date,call_completion,call_timeout_sec</td>
+                                        <td>Cancel subscription specified by subscription_id</td>
+                                        <td>200, 204, 400</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+                <section id="tag">
+                    <div class="page-header">
+                        <h1>Tag</h1>
+                    </div>
+                    <div class="row">
+                        <div class="api_table">
+                            <table class="table table-striped table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Resource</th>
+                                        <th>Query params</th>
+                                        <th>Description</th>
+                                        <th>Return codes</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>GET /1.0/kb/tag_definitions</td>
+                                        <td></td>
+                                        <td>Retrieve all tag definitions </td>
+                                        <td>200, 204</td>
+                                    </tr>
+                                    <tr>
+                                        <td>POST /1.0/kb/tag_definitions/&lt;tag_name&gt;</td>
+                                        <td></td>
+                                        <td>Create a new tag definition</td>
+                                        <td>201, 400</td>
+                                    </tr>
+                                    <tr>
+                                        <td>DELETE /1.0/kb/tag_definitions/&lt;tag_name&gt;</td>
+                                        <td>force_if_used</td>
+                                        <td>Remove the tag definition</td>
+                                        <td>204, 400</td>
+                                    </tr>
+                                    <tr>
+                                        <td>GET /1.0/kb/&lt;object_type&gt;/tags/&lt;object_id&gt;/tags</td>
+                                        <td></td>
+                                        <td>Retrieve the tags associated with that object</td>
+                                        <td>200, 404</td>
+                                    </tr>
+                                    <tr>
+                                        <td>POST /1.0/kb/&lt;object_type&gt;/tags/&lt;object_id&gt;</td>
+                                        <td>taglist</td>
+                                        <td>Attach a list of tags to that object</td>
+                                        <td>201, 400</td>
+                                    </tr>
+                                    <tr>
+                                        <td>DELETE  /1.0/kb/&lt;object_type&gt;/tags/&lt;object_id&gt;</td>
+                                        <td>taglist</td>
+                                        <td>Remove all tags associated with that object</td>
+                                        <td>204, 400</td>
+                                    </tr>
+                                    <tr>
+                                        <td>DELETE  /1.0/kb/&lt;object_type&gt;/tags/&lt;object_id&gt;</td>
+                                        <td></td>
+                                        <td>Remove all tags associated with that object</td>
+                                        <td>204, 400</td>
+                                    </tr>
+                                    <tr>
+                                        <td>GET /1.0/kb/&lt;object_type&gt;/tags</td>
+                                        <td>taglist</td>
+                                        <td>Retrieve all objects which have those tag</td>
+                                        <td>200, 404</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+                <section id="custom_field">
+                    <div class="page-header">
+                        <h1>Custom Field</h1>
+                    </div>
+                    <div class="row">
+                        <div class="api_table">
+                            <table class="table table-striped table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Resource</th>
+                                        <th>Query params</th>
+                                        <th>Description</th>
+                                        <th>Return codes</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>GET /1.0/kb/&lt;object_type&gt;/custom_fields/&lt;object_id&gt;</td>
+                                        <td></td>
+                                        <td>Retrieve the custom fields associated with that object</td>
+                                        <td>200, 204</td>
+                                    </tr>
+                                    <tr>
+                                        <td>PUT /1.0/kb/&lt;object_type&gt;/custom_fields/&lt;object_id&gt;</td>
+                                        <td></td>
+                                        <td>Modify the custom field associated to that object </td>
+                                        <td>204, 400</td>
+                                    </tr>
+                                    <tr>
+                                        <td>DELETE /1.0/kb/&lt;object_type&gt;/custom_fields/&lt;object_id&gt;</td>
+                                        <td>name</td>
+                                        <td>Remove the custom field</td>
+                                        <td>204, 400</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+                <section id="account_timeline">
+                    <div class="page-header">
+                        <h1>Account Timeline</h1>
+                    </div>
+                    <div class="row">
+                        <div class="api_table">
+                            <table class="table table-striped table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Resource</th>
+                                        <th>Query params</th>
+                                        <th>Description</th>
+                                        <th>Return codes</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>GET /1.0/kb/accounts/&lt;account_id&gt;/timeline</td>
+                                        <td></td>
+                                        <td>Retrieve account timeline for specified account_id</td>
+                                        <td>200, 204</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+                <section id="bundle_timeline">
+                    <div class="page-header">
+                        <h1>Bundle Timeline and Repair</h1>
+                    </div>
+                    <div class="row">
+                        <div class="api_table">
+                            <table class="table table-striped table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Resource</th>
+                                        <th>Query params</th>
+                                        <th>Description</th>
+                                        <th>Return codes</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>GET /1.0/kb/bundles/&lt;bundle_id&gt;/timeline</td>
+                                        <td></td>
+                                        <td>Retrieve bundle timeline for specified bundle_id</td>
+                                        <td>200, 404</td>
+                                    </tr>
+                                    <tr>
+                                        <td>PUT /1.0/kb/bundles/&lt;bundle_id&gt;/timeline</td>
+                                        <td>dryRun, waitForBillingComplete, billingCompleteTimeout</td>
+                                        <td>Repair a specific bundle by providing the set of new/deleted events</td>
+                                        <td>201, 400, 408, 409</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+                <section id="payment">
+                    <div class="page-header">
+                        <h1>Payment</h1>
+                    </div>
+                    <div class="row">
+                        <div class="api_table">
+                            <table class="table table-striped table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Resource</th>
+                                        <th>Query params</th>
+                                        <th>Description</th>
+                                        <th>Return codes</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>GET /1.0/kb/invoices/&lt;invoice_id&gt;/payments</td>
+                                        <td></td>
+                                        <td>Retrieve status for payment matching the invoice specified by invoice_id</td>
+                                        <td>200, 404</td>
+                                    </tr>
+                                    <tr>
+                                        <td>POST /1.0/kb/invoices/&lt;invoice_id&gt;/payments</td>
+                                        <td>externalPayment</td>
+                                        <td>Trigger an instant payment to pay the invoice specified by invoice_id</td>
+                                        <td>201, 400, 404</td>
+                                    </tr>
+                                    <tr>
+                                        <td>GET /1.0/kb/accounts/&lt;account_id&gt;/payments</td>
+                                        <td>last4CC, nameOnCC</td>
+                                        <td>Retrieve payment for that account based on the query params</td>
+                                        <td>200, 404</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+                <section id="payment_method">
+                    <div class="page-header">
+                        <h1>Payment Method</h1>
+                    </div>
+                    <div class="row">
+                        <div class="api_table">
+                            <table class="table table-striped table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Resource</th>
+                                        <th>Query params</th>
+                                        <th>Description</th>
+                                        <th>Return codes</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>PUT /1.0/kb/paymentMethods/&lt;payment_method_id&gt;</td>
+                                        <td></td>
+                                        <td>Update payment method properties</td>
+                                        <td>200, 404</td>
+                                    </tr>
+                                    <tr>
+                                        <td>DELETE /1.0/kb/paymentMethods/&lt;payment_method_id&gt;</td>
+                                        <td></td>
+                                        <td>Delete payment method properties</td>
+                                        <td>200, 404</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+                <section id="refund">
+                    <div class="page-header">
+                        <h1>Refund</h1>
+                    </div>
+                    <div class="row">
+                        <div class="api_table">
+                            <table class="table table-striped table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Resource</th>
+                                        <th>Query params</th>
+                                        <th>Description</th>
+                                        <th>Return codes</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>GET /1.0/kb/accounts/&lt;account_id&gt;/refunds</td>
+                                        <td></td>
+                                        <td>Retrieve the refund information associated to that account</td>
+                                        <td>200, 404</td>
+                                    </tr>
+                                    <tr>
+                                        <td>GET /1.0/kb/payments/&lt;payment_id&gt;/refunds</td>
+                                        <td></td>
+                                        <td>Retrieve the refund information associated to that payment</td>
+                                        <td>200, 404</td>
+                                    </tr>
+                                    <tr>
+                                        <td>POST /1.0/kb/payments/&lt;payment_id&gt;/refunds</td>
+                                        <td>refund_amount</td>
+                                        <td>Trigger a refund against the specified payment</td>
+                                        <td>201, 400, 404</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+                <section id="chargeback">
+                    <div class="page-header">
+                        <h1>Chargeback</h1>
+                    </div>
+                    <div class="row">
+                        <div class="api_table">
+                            <table class="table table-striped table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Resource</th>
+                                        <th>Query params</th>
+                                        <th>Description</th>
+                                        <th>Return codes</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>GET /1.0/kb/chargebacks/accounts/&lt;account_id&gt;</td>
+                                        <td></td>
+                                        <td>Retrieve the chargeback information associated to that account</td>
+                                        <td>200, 204</td>
+                                    </tr>
+                                    <tr>
+                                        <td>GET /1.0/kb/chargebacks/payments/&lt;payment_id&gt;</td>
+                                        <td></td>
+                                        <td>Retrieve the chargeback information associated to that payment</td>
+                                        <td>200, 204</td>
+                                    </tr>
+                                    <tr>
+                                        <td>POST /1.0/kb/chargebacks/payments/&lt;payment_id&gt;</td>
+                                        <td></td>
+                                        <td>Create a chargeback against a given payment</td>
+                                        <td>201, 400, 404</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+                <section id="credit">
+                    <div class="page-header">
+                        <h1>Credit</h1>
+                    </div>
+                    <div class="row">
+                        <div class="api_table">
+                            <table class="table table-striped table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Resource</th>
+                                        <th>Query params</th>
+                                        <th>Description</th>
+                                        <th>Return codes</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>POST /1.0/kb/accounts/&lt;account_id&gt;</td>
+                                        <td></td>
+                                        <td>Create a credit for that account</td>
+                                        <td>201, 400, 404</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+                <section id="invoice">
+                    <div class="page-header">
+                        <h1>Invoice</h1>
+                    </div>
+                    <div class="row">
+                        <div class="api_table">
+                            <table class="table table-striped table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Resource</th>
+                                        <th>Query params</th>
+                                        <th>Description</th>
+                                        <th>Return codes</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>GET /1.0/kb/invoices/&lt;invoice_id&gt;</td>
+                                        <td></td>
+                                        <td>Retrieve the invoice specified with invoice_id</td>
+                                        <td>200, 404</td>
+                                    </tr>
+                                    <tr>
+                                        <td>GET /1.0/kb/invoices</td>
+                                        <td>account_id</td>
+                                        <td>Retrieve the invoices associated to that account</td>
+                                        <td>200, 404</td>
+                                    </tr>
+                                    <tr>
+                                        <td>POST /1.0/kb/invoices</td>
+                                        <td>account_id,target_date,dry_run</td>
+                                        <td>Create an invoice for that account</td>
+                                        <td>201, 400, 404</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+                <section id="catalog">
+                    <div class="page-header">
+                        <h1>Catalog</h1>
+                    </div>
+                    <div class="row">
+                        <div class="api_table">
+                            <table class="table table-striped table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Resource</th>
+                                        <th>Query params</th>
+                                        <th>Description</th>
+                                        <th>Return codes</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>GET /1.0/kb/catalog</td>
+                                        <td></td>
+                                        <td>Retrieve the current catalog XML</td>
+                                        <td>200</td>
+                                    </tr>
+                                    <tr>
+                                        <td>GET /1.0/kb/catalog/availableAddons</td>
+                                        <td>baseProductName</td>
+                                        <td>Retrieve the add ons available for that product</td>
+                                        <td>200, 404</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </body>
+</html>

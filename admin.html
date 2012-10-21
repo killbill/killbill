@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Killbilling, Open-Source subscription management system</title>
+
+    <!--[if lt IE 9]>
+    <script src="http://html5shim.googlecode.com/svn/trunk/html5.js" type="text/javascript"></script>
+    <![endif]-->
+
+    <link rel=stylesheet type="text/css" href="stylesheets/bootstrap.min.css">
+    <link rel=stylesheet type="text/css" href="stylesheets/prettify.css">
+    <link rel=stylesheet type="text/css" href="stylesheets/killbill.css">
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="javascripts/prettify.js"></script>
+    <script src="javascripts/bootstrap-dropdown.js"></script>
+
+    <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-32705710-1']);
+    _gaq.push(['_trackPageview']);
+    (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+        </script>
+    </head>
+
+    <body onload="prettyPrint();">
+        <div class="topbar" data-dropdown="dropdown">
+            <div class="topbar-inner">
+                <div class="container-fluid">
+                    <a class="brand" href="index.html">Killbilling</a>
+                    <ul class="nav">
+                        <li><a href="start.html">Getting started</a></li>
+                        <li class="active"><a href="admin.html">Admin Guide</a></li>
+                        <li><a href="dev.html">Developer Guide</a></li>
+                        <li><a href="api.html">API</a></li>
+                        <li><a href="architecture.html">Architecture</a></li>
+                    </ul>
+                    <ul class="nav secondary-nav">
+                        <li><a href="http://webchat.freenode.net/?channels" target="_blank">#killbilling</a></li>
+                        <li><a href="http://groups.google.com/group/killbilling-users" target="_blank">User Mailing-List</a></li>
+                        <li><a href="http://groups.google.com/group/killbilling-dev" target="_blank">Dev Mailing-List</a></li>
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle">Github projects</a>
+                            <ul class="dropdown-menu">
+                                <li><a href="http://github.com/killbilling/killbill-library" target="_blank">killbill-library</a></li>
+                                <li><a href="http://github.com/killbilling/killbill-server" target="_blank">killbill-server</a></li>
+                                <li><a href="http://github.com/killbilling/killbill-client-php" target="_blank">killbill-client-php</a></li>
+                                <li><a href="http://github.com/killbilling/killbill-client-js" target="_blank">killbill-client-js</a></li>
+                                <li><a href="http://github.com/killbilling/killbill-client-ruby" target="_blank">killbill-client-ruby</a></li>
+                                <li><a href="http://github.com/killbilling/killbill-client-python" target="_blank">killbill-client-python</a></li>
+                                <li><a href="http://github.com/killbilling/killbill-client-java" target="_blank">killbill-client-java</a></li>
+                                <li><a href="http://github.com/killbilling/killbill-admin-ui" target="_blank">killbill-admin-ui</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container-fluid">
+            <div class="sidebar">
+                <div class="well">
+                    <h5>Admin Guide</h5>
+                    <ul>
+                        <li><a href="#requirements">Requirements</a></li>
+                        <li><a href="#dependencies">Dependencies</a></li>
+                        <li><a href="#system_configuration">System configuration</a></li>
+                        <li><a href="#business_rules_configuration">Business rules configuration</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="content">
+                <section id="requirements">
+                    <div class="page-header">
+                        <h1>Requirements</h1>
+                    </div>
+                    <h2>Runtime</h2>
+                    <div class="row">
+                        <div class="span">
+                            <ul>
+                                <li>Java JRE: killbill has been tested against OpenJDK6 (1.6.0_23), OpenJDK7 (1.7.0_147-icedtea) and Oracle JDK7 (Oracle JDK7)</li>
+                                <li>Container (optional): killbill has been tested against Jetty 7.5.1 (Servlet ~3.0), Jetty 8.1.3 (Servlet 3.0) and Tomcat 7.0 (Servlet 3.0). JBoss AS 7.1 (Java EE 6, full profile) support is experimental.</li>
+                                <li>MySQL database: 5.5 or later recommended</li>
+                                <li>Killbill should not have any other system dependency, although it was only tested under Ubuntu 10.0.4, Ubuntu 12.0.4 and Mac OSX 10.6.8</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <h2>Compile</h2>
+                    <div class="row">
+                        <div class="span">
+                            <ul>
+                                <li>Java SDK: killbill has been compiled and tested against OpenJDK6 (1.6.0_23), OpenJDK7 (1.7.0_147-icedtea) and Oracle JDK7 (Oracle JDK7)</li>
+                                <li>Maven: 3.0.3 or later preferred, but 2.2.1 (and later) is also supported</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="dependencies">
+                    <div class="page-header">
+                        <h1>Dependencies</h1>
+                    </div>
+                    <h2>Library</h2>
+                    <p>Note: Killbill uses maven and Maven Central to handle dependencies management.</p>
+                    <div class="row">
+                        <div class="span12">
+                            <ul>
+                                <li><a href="https://github.com/brianm/config-magic/"target="_blank">config-magic</a></li>
+                                <li><a href="http://code.google.com/p/guava-libraries"target="_blank">Guava</a>, several of Google's core libraries</li>
+                                <li><a href="http://wiki.fasterxml.com/JacksonHome"target="_blank">Jackson</a>, a Java library for processing JSON data format</li>
+                                <li><a href="http://www.jdbi.org/"target="_blank">jdbi</a>, a SQL convenience library for Java</li>
+                                <li><a href="http://jcp.org/en/jsr/detail?id=330"target="_blank">JSR-330</a>, Dependency Injection for Java (Killbill currently still has an explicit dependency on Google Guice, but shouldn't require it)</li>
+                                <li><a href="https://github.com/ning/mogwee-executors/"target="_blank">mogwee-executors</a></li>
+                                <li><a href="http://www.slf4j.org/"target="_blank">slf4j</a>, a Simple Logging Facade for Java</li>
+                                <li><a href="https://github.com/samskivert/jmustache"target="_blank">jmustache</a>, a Java implementation of the Mustache templating language</li>
+                                <li>org.apache.commons:commons-email</li>
+                                <li><a href="http://joda.sourceforge.net/"target="_blank">Joda-Time</a>, library for advanced date and time in Java</li>
+                                <li>org.antlr:stringtemplate</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <h2>Container</h2>
+                    <div class="row">
+                        <div class="span12">
+                            <ul>
+                                <li><a href="http://jcp.org/en/jsr/detail?id=311" target="_blank">JSR 311</a> JAX-RS: The Java API for RESTful Web Services
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="system_configuration">
+                    <div class="page-header">
+                        <h1>System configuration</h1>
+                    </div>
+                    <table class="table table-striped table-bordered table-condensed">
+                        <thead>
+                            <tr>
+                                <th>Property</th>
+                                <th>Default</th>
+                                <th>Description</th>
+                                <th>Required?</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>killbill.catalog.uri</td>
+                                <td>jar:///com/ning/billing/irs/catalog/Catalog.xml</td>
+                                <td>Catalog location. Either in the classpath or in the filesystem</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>killbill.entitlement.engine.notifications.sleep</td>
+                                <td>500</td>
+                                <td>Sleep time in milliseconds for the entitlement notifications</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>killbill.entitlement.engine.notifications.off</td>
+                                <td>false</td>
+                                <td>Whether the entitlement notification queue should be disabled (useful for testing)</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>killbill.invoice.engine.notifications.sleep</td>
+                                <td>500</td>
+                                <td>Sleep time in milliseconds for the invoice notifications</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>killbill.invoice.engine.notifications.off</td>
+                                <td>false</td>
+                                <td>Whether the invoice notification queue should be disabled (useful for testing)</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>killbill.invoice.maxNumberOfMonthsInFuture</td>
+                                <td>36</td>
+                                <td>Maximum target date to consider when generating an invoice</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>killbill.invoice.emailNotificationsEnabled</td>
+                                <td>false</td>
+                                <td>Whether to send email notifications on invoice creation (for configured accounts)</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>killbill.mail.smtp.host</td>
+                                <td><em>null</em></td>
+                                <td>MTA host used for email notifications</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>killbill.mail.smtp.port</td>
+                                <td><em>null</em></td>
+                                <td>MTA port used for email notifications</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>killbill.mail.smtp.auth</td>
+                                <td>false</td>
+                                <td>Whether to authenticate against the MTA</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>killbill.mail.smtp.user</td>
+                                <td><em>null</em></td>
+                                <td>Username to use to authenticate against the MTA</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>killbill.mail.smtp.password</td>
+                                <td><em>null</em></td>
+                                <td>Password to use to authenticate against the MTA</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>killbill.mail.from</td>
+                                <td>support@example.com</td>
+                                <td>Default From: field for email notifications</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>killbill.overdue.uri</td>
+                                <td>jar:///com/ning/billing/irs/overdue/Config.xml</td>
+                                <td>Overdue configuration location. Either in the classpath or in the filesystem</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>killbill.overdue.engine.notifications.sleep</td>
+                                <td>500</td>
+                                <td>Sleep time in milliseconds for the overdue notifications</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>killbill.overdue.engine.notifications.off</td>
+                                <td>false</td>
+                                <td>Whether the overdue notification queue should be disabled (useful for testing)</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>killbill.payment.engine.notifications.sleep</td>
+                                <td>500</td>
+                                <td>Sleep time in milliseconds for the payment notifications</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>killbill.payment.engine.notifications.off</td>
+                                <td>false</td>
+                                <td>Whether the payment notification queue should be disabled (useful for testing)</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>killbill.payment.provider.default</td>
+                                <td>noop</td>
+                                <td>Default payment provider to use</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>killbill.payment.retry.days</td>
+                                <td>8,8,8</td>
+                                <td>Schedule to use to retry payments</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>killbill.payment.failure.retry.start.sec</td>
+                                <td>300</td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>killbill.payment.failure.retry.multiplier</td>
+                                <td>2</td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>killbill.payment.failure.retry.max.attempts</td>
+                                <td>8</td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>killbill.payment.failure.retry.multiplier</td>
+                                <td>2</td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+
+                
+                <section id="business_rules_configuration">
+                    <div class="page-header">
+                        <h1>Business rules configuration</h1>
+                    </div>
+                    <h2>Catalog</h2>
+                    <div class="row">
+                        <div class="span12">
+                        </div>
+                    </div>
+                    <h2>Overdue</h2>
+                    <div class="row">
+                        <div class="span12">
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </body>
+</html>
