@@ -187,6 +187,11 @@ public class DefaultEntitlementTransferApi implements EntitlementTransferApi {
 
         try {
             final DateTime effectiveTransferDate = transferDate == null ? clock.getUTCNow() : transferDate;
+            if (effectiveTransferDate.isAfter(clock.getUTCNow())) {
+                // The transfer event for the migrated bundle will be the first one, which cannot be in the future
+                // (entitlement always expects the first event to be in the past)
+                throw new EntitlementTransferApiException(ErrorCode.ENT_TRANSFER_INVALID_EFF_DATE, effectiveTransferDate);
+            }
 
             final SubscriptionBundle bundle = dao.getSubscriptionBundleFromAccountAndKey(sourceAccountId, bundleKey, internalCallContext);
             if (bundle == null) {

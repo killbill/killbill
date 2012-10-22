@@ -82,6 +82,9 @@ public enum ErrorCode {
     ENT_BUNDLE_IS_OVERDUE_BLOCKED(1090, "Changes to this bundle are blocked by overdue enforcement (%s :  %s)"),
     ENT_ACCOUNT_IS_OVERDUE_BLOCKED(1091, "Changes to this account are blocked by overdue enforcement (%s)"),
 
+    /* Transfer */
+    ENT_TRANSFER_INVALID_EFF_DATE(1106, "Invalid effective date for transfer: %s"),
+
     /*
     *
     * Range 2000 : CATALOG
