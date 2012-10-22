@@ -23,53 +23,6 @@ import com.ning.billing.catalog.api.Duration;
 import com.ning.billing.catalog.api.TimeUnit;
 
 public class MockDuration {
-    public static Duration MONHTLY() {
-        return new Duration() {
-            @Override
-            public TimeUnit getUnit() {
-                return TimeUnit.MONTHS;
-            }
-
-            @Override
-            public int getNumber() {
-                return 1;
-            }
-
-            @Override
-            public DateTime addToDateTime(final DateTime dateTime) {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public Period toJodaPeriod() {
-                throw new UnsupportedOperationException();
-            }
-        };
-    }
-
-    public static Duration YEARLY() {
-        return new Duration() {
-            @Override
-            public TimeUnit getUnit() {
-                return TimeUnit.YEARS;
-            }
-
-            @Override
-            public int getNumber() {
-                return 1;
-            }
-
-            @Override
-            public DateTime addToDateTime(final DateTime dateTime) {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public Period toJodaPeriod() {
-                throw new UnsupportedOperationException();
-            }
-        };
-    }
 
     public static Duration UNLIMITED() {
         return new Duration() {
