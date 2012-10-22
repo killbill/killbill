@@ -293,6 +293,18 @@
         </resources>
         <plugins>
             <plugin>
+                <groupId>io.tesla.jettyconsole</groupId>
+                <artifactId>jetty-console-maven-plugin</artifactId>
+                <version>1.47</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>createconsole</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
                 <version>1.4</version>
