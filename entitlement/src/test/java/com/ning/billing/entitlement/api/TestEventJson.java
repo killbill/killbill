@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -37,7 +37,8 @@ public class TestEventJson extends EntitlementTestSuite {
     public void testSubscriptionEvent() throws Exception {
 
         final EffectiveSubscriptionInternalEvent e = new DefaultEffectiveSubscriptionEvent(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), new DateTime(), new DateTime(),
-                                                                                   SubscriptionState.ACTIVE, "pro", "TRIAL", "DEFAULT", SubscriptionState.CANCELLED, null, null, null, 3L, UUID.randomUUID(), SubscriptionTransitionType.CANCEL, 0, new DateTime());
+                                                                                   SubscriptionState.ACTIVE, "pro", "TRIAL", "DEFAULT", SubscriptionState.CANCELLED, null, null, null, 3L,
+                                                                                   UUID.randomUUID(), SubscriptionTransitionType.CANCEL, 0, new DateTime(), 1L, 1L);
 
         final String json = mapper.writeValueAsString(e);
 
@@ -48,7 +49,7 @@ public class TestEventJson extends EntitlementTestSuite {
 
     @Test(groups = "fast")
     public void testRepairEntitlementEvent() throws Exception {
-        final RepairEntitlementInternalEvent e = new DefaultRepairEntitlementEvent(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), new DateTime());
+        final RepairEntitlementInternalEvent e = new DefaultRepairEntitlementEvent(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), new DateTime(), 1L, 1L);
 
         final String json = mapper.writeValueAsString(e);
 

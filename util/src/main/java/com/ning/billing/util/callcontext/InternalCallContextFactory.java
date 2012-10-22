@@ -85,8 +85,8 @@ public class InternalCallContextFactory {
      */
     public InternalCallContext createInternalCallContext(final UUID objectId, final ObjectType objectType, final CallContext context) {
         // The context may come from a user API - for security, check we're not doing cross-tenants operations
-        final Long tenantRecordIdFromObject = retrieveTenantRecordIdFromObject(objectId, objectType);
-        final Long tenantRecordIdFromContext = getTenantRecordId(context);
+        //final Long tenantRecordIdFromObject = retrieveTenantRecordIdFromObject(objectId, objectType);
+        //final Long tenantRecordIdFromContext = getTenantRecordId(context);
         //Preconditions.checkState(tenantRecordIdFromContext.equals(tenantRecordIdFromObject),
         //                         "tenant of the pointed object (%s) and the context (%s) don't match!", tenantRecordIdFromObject, tenantRecordIdFromContext);
 

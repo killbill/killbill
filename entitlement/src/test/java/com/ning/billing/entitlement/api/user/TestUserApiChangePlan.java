@@ -40,7 +40,6 @@ import com.ning.billing.entitlement.api.TestApiBase;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.events.user.ApiEvent;
 import com.ning.billing.util.clock.DefaultClock;
-import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 import com.ning.billing.util.svcapi.entitlement.EntitlementBillingApiException;
 
 public abstract class TestUserApiChangePlan extends TestApiBase {
@@ -459,7 +458,7 @@ public abstract class TestUserApiChangePlan extends TestApiBase {
             subscription = (SubscriptionData) entitlementApi.getSubscriptionFromId(subscription.getId(), callContext);
 
             final DateTime expectedNextPhaseDate = subscription.getStartDate().plusDays(30).plusMonths(6);
-            final EffectiveSubscriptionInternalEvent nextPhase = subscription.getPendingTransition();
+            final SubscriptionTransitionData nextPhase = subscription.getPendingTransitionData();
             final DateTime nextPhaseEffectiveDate = nextPhase.getEffectiveTransitionTime();
 
             assertEquals(nextPhaseEffectiveDate, expectedNextPhaseDate);

@@ -44,7 +44,7 @@ public interface EntitlementInternalApi {
 
     public void setChargedThroughDate(final UUID subscriptionId, final LocalDate localChargedThruDate, final InternalCallContext context);
 
-    public List<EffectiveSubscriptionInternalEvent> getAllTransitions(final Subscription subscription);
+    public List<EffectiveSubscriptionInternalEvent> getAllTransitions(final Subscription subscription, final InternalTenantContext context);
 
-    public List<EffectiveSubscriptionInternalEvent> getBillingTransitions(final Subscription subscription);
+    public List<EffectiveSubscriptionInternalEvent> getBillingTransitions(final Subscription subscription, final InternalTenantContext context);
 }

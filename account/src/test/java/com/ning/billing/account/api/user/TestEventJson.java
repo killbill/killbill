@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -39,7 +39,7 @@ public class TestEventJson extends AccountTestSuite {
         final List<ChangedField> changes = new ArrayList<ChangedField>();
         changes.add(new DefaultChangedField("fieldXX", "valueX", "valueXXX"));
         changes.add(new DefaultChangedField("fieldYY", "valueY", "valueYYY"));
-        final AccountChangeInternalEvent e = new DefaultAccountChangeEvent(UUID.randomUUID(), changes, UUID.randomUUID());
+        final AccountChangeInternalEvent e = new DefaultAccountChangeEvent(UUID.randomUUID(), changes, UUID.randomUUID(), 1L, 45L);
 
         final String json = mapper.writeValueAsString(e);
 
@@ -52,10 +52,12 @@ public class TestEventJson extends AccountTestSuite {
     public void testAccountCreationEvent() throws Exception {
         final DefaultAccountData data = new DefaultAccountData("dsfdsf", "bobo", 3, "bobo@yahoo.com", new DefaultBillCycleDay(12), "USD", UUID.randomUUID(),
                                                                "UTC", "US", "21 avenue", "", "Gling", "San Franciso", "CA", "94110", "USA", "4126789887", false, false);
-        final DefaultAccountCreationEvent e = new DefaultAccountCreationEvent(data, UUID.randomUUID(), UUID.randomUUID());
+        final DefaultAccountCreationEvent e = new DefaultAccountCreationEvent(data, UUID.randomUUID(), UUID.randomUUID(),  1L, 45L);
         final String json = mapper.writeValueAsString(e);
 
-        final Object obj = mapper.readValue(json, DefaultAccountCreationEvent.class);
+        final DefaultAccountCreationEvent obj = mapper.readValue(json, DefaultAccountCreationEvent.class);
         Assert.assertTrue(obj.equals(e));
+        Assert.assertEquals(obj.getAccountRecordId(), new Long(1L));
+        Assert.assertEquals(obj.getTenantRecordId(), new Long(45L));
     }
 }

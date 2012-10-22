@@ -24,13 +24,14 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.ChangedField;
 import com.ning.billing.account.api.DefaultChangedField;
 import com.ning.billing.util.events.AccountChangeInternalEvent;
+import com.ning.billing.util.events.DefaultBusInternalEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
-public class DefaultAccountChangeEvent implements AccountChangeInternalEvent {
+public class DefaultAccountChangeEvent extends DefaultBusInternalEvent implements AccountChangeInternalEvent {
 
     private final UUID userToken;
     private final List<ChangedField> changedFields;
@@ -39,13 +40,18 @@ public class DefaultAccountChangeEvent implements AccountChangeInternalEvent {
     @JsonCreator
     public DefaultAccountChangeEvent(@JsonProperty("userToken") final UUID userToken,
                                      @JsonProperty("changeFields") final List<ChangedField> changedFields,
-                                     @JsonProperty("accountId") final UUID accountId) {
+                                     @JsonProperty("accountId") final UUID accountId,
+                                     @JsonProperty("accountRecordId") final Long accountRecordId,
+                                     @JsonProperty("tenantRecordId") final Long tenantRecordId) {
+        super(userToken, accountRecordId, tenantRecordId);
         this.userToken = userToken;
         this.accountId = accountId;
         this.changedFields = changedFields;
     }
 
-    public DefaultAccountChangeEvent(final UUID id, final UUID userToken, final Account oldData, final Account newData) {
+    public DefaultAccountChangeEvent(final UUID id, final UUID userToken, final Account oldData, final Account newData,
+            final Long accountRecordId, final Long tenantRecordId) {
+        super(userToken, accountRecordId, tenantRecordId);
         this.accountId = id;
         this.userToken = userToken;
         this.changedFields = calculateChangedFields(oldData, newData);
@@ -181,4 +187,17 @@ public class DefaultAccountChangeEvent implements AccountChangeInternalEvent {
             inputList.add(new DefaultChangedField(key, oldData, newData));
         }
     }
+
+    @Override
+    public Long getTenantRecordId() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Long getAccountRecordId() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
 }

@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -363,6 +363,16 @@ public class MockEffectiveSubscriptionEvent implements EffectiveSubscriptionInte
             return false;
         }
         return true;
+    }
+
+    @Override
+    public Long getTenantRecordId() {
+        return 1L;
+    }
+
+    @Override
+    public Long getAccountRecordId() {
+        return 1L;
     }
 
 }

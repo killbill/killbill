@@ -176,26 +176,6 @@ public class MockSubscription implements Subscription {
     }
 
     @Override
-    public EffectiveSubscriptionInternalEvent getPendingTransition() {
-        return sub.getPendingTransition();
-    }
-
-    @Override
-    public EffectiveSubscriptionInternalEvent getPreviousTransition() {
-        return sub.getPreviousTransition();
-    }
-
-    @Override
-    public List<EffectiveSubscriptionInternalEvent> getBillingTransitions() {
-        return transitions;
-    }
-
-    @Override
-    public List<EffectiveSubscriptionInternalEvent> getAllTransitions() {
-        return transitions;
-    }
-
-    @Override
     public DateTime getFutureEndDate() {
         return null;
     }
@@ -231,5 +211,11 @@ public class MockSubscription implements Subscription {
 
     public void setPlan(final Plan plan) {
         this.plan = plan;
+    }
+
+    @Override
+    public Plan getLastActivePlan() {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

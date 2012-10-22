@@ -91,9 +91,9 @@ public class TestTransfer extends TestApiBase {
             assertEquals(subscription.getCurrentPlan().getName(), "assault-rifle-annual");
             assertEquals(subscription.getChargedThroughDate(), startDate.plusYears(1));
             // WE should see MIGRATE_ENTITLEMENT and then MIGRATE_BILLING in the future
-            assertEquals(subscription.getBillingTransitions().size(), 1);
-            assertEquals(subscription.getBillingTransitions().get(0).getTransitionType(), SubscriptionTransitionType.MIGRATE_BILLING);
-            assertTrue(subscription.getBillingTransitions().get(0).getEffectiveTransitionTime().compareTo(clock.getUTCNow()) > 0);
+            assertEquals(entitlementInternalApi.getBillingTransitions(subscription, internalCallContext).size(), 1);
+            assertEquals(entitlementInternalApi.getBillingTransitions(subscription, internalCallContext).get(0).getTransitionType(), SubscriptionTransitionType.MIGRATE_BILLING);
+            assertTrue(entitlementInternalApi.getBillingTransitions(subscription, internalCallContext).get(0).getEffectiveTransitionTime().compareTo(clock.getUTCNow()) > 0);
             assertListenerStatus();
 
 
@@ -110,8 +110,8 @@ public class TestTransfer extends TestApiBase {
             final Subscription oldBaseSubscription = entitlementApi.getBaseSubscription(bundle.getId(), callContext);
             assertTrue(oldBaseSubscription.getState() == SubscriptionState.CANCELLED);
             // The MIGRATE_BILLING event should have been invalidated
-            assertEquals(oldBaseSubscription.getBillingTransitions().size(), 1);
-            assertEquals(oldBaseSubscription.getBillingTransitions().get(0).getTransitionType(), SubscriptionTransitionType.CANCEL);
+            assertEquals(entitlementInternalApi.getBillingTransitions(oldBaseSubscription, internalCallContext).size(), 1);
+            assertEquals(entitlementInternalApi.getBillingTransitions(oldBaseSubscription, internalCallContext).get(0).getTransitionType(), SubscriptionTransitionType.CANCEL);
 
         } catch (EntitlementMigrationApiException e) {
             Assert.fail("", e);
@@ -132,7 +132,7 @@ public class TestTransfer extends TestApiBase {
         // CREATE BP
         final Subscription baseSubscription = createSubscription(baseProduct, baseTerm, basePriceList);
 
-        final DateTime evergreenPhaseDate = baseSubscription.getPendingTransition().getEffectiveTransitionTime();
+        final DateTime evergreenPhaseDate = ((SubscriptionData) baseSubscription).getPendingTransitionData().getEffectiveTransitionTime();
 
         // MOVE A LITTLE, STILL IN TRIAL
         clock.addDays(20);
@@ -162,8 +162,8 @@ public class TestTransfer extends TestApiBase {
         assertTrue(((SubscriptionData) newBaseSubscription).getAlignStartDate().compareTo(((SubscriptionData) oldBaseSubscription).getAlignStartDate()) == 0);
 
         // CHECK NEXT PENDING PHASE IS ALIGNED WITH OLD SUBSCRIPTION START DATE
-        assertEquals(newBaseSubscription.getAllTransitions().size(), 2);
-        assertTrue(newBaseSubscription.getAllTransitions().get(1).getEffectiveTransitionTime().compareTo(evergreenPhaseDate) == 0);
+        assertEquals(entitlementInternalApi.getAllTransitions(newBaseSubscription, internalCallContext).size(), 2);
+        assertTrue(entitlementInternalApi.getAllTransitions(newBaseSubscription, internalCallContext).get(1).getEffectiveTransitionTime().compareTo(evergreenPhaseDate) == 0);
 
         final Plan newPlan = newBaseSubscription.getCurrentPlan();
         assertEquals(newPlan.getProduct().getName(), baseProduct);
@@ -186,7 +186,7 @@ public class TestTransfer extends TestApiBase {
 
         entitlementInternalApi.setChargedThroughDate(baseSubscription.getId(), ctd.toLocalDate(), internalCallContext);
 
-        final DateTime evergreenPhaseDate = baseSubscription.getPendingTransition().getEffectiveTransitionTime();
+        final DateTime evergreenPhaseDate = ((SubscriptionData) baseSubscription).getPendingTransitionData().getEffectiveTransitionTime();
 
         // MOVE A LITTLE, STILL IN TRIAL
         clock.addDays(20);
@@ -211,8 +211,8 @@ public class TestTransfer extends TestApiBase {
         assertTrue(((SubscriptionData) newBaseSubscription).getAlignStartDate().compareTo(((SubscriptionData) oldBaseSubscription).getAlignStartDate()) == 0);
 
         // CHECK NEXT PENDING PHASE IS ALIGNED WITH OLD SUBSCRIPTION START DATE
-        assertEquals(newBaseSubscription.getAllTransitions().size(), 2);
-        assertTrue(newBaseSubscription.getAllTransitions().get(1).getEffectiveTransitionTime().compareTo(evergreenPhaseDate) == 0);
+        assertEquals(entitlementInternalApi.getAllTransitions(newBaseSubscription, internalCallContext).size(), 2);
+        assertTrue(entitlementInternalApi.getAllTransitions(newBaseSubscription, internalCallContext).get(1).getEffectiveTransitionTime().compareTo(evergreenPhaseDate) == 0);
 
         final Plan newPlan = newBaseSubscription.getCurrentPlan();
         assertEquals(newPlan.getProduct().getName(), baseProduct);
@@ -261,7 +261,7 @@ public class TestTransfer extends TestApiBase {
         assertTrue(((SubscriptionData) newBaseSubscription).getAlignStartDate().compareTo(((SubscriptionData) baseSubscription).getAlignStartDate()) == 0);
 
         // CHECK ONLY ONE PHASE EXISTS
-        assertEquals(newBaseSubscription.getAllTransitions().size(), 1);
+        assertEquals(entitlementInternalApi.getAllTransitions(newBaseSubscription, internalCallContext).size(), 1);
 
         final Plan newPlan = newBaseSubscription.getCurrentPlan();
         assertEquals(newPlan.getProduct().getName(), baseProduct);
@@ -310,7 +310,7 @@ public class TestTransfer extends TestApiBase {
         assertTrue(((SubscriptionData) newBaseSubscription).getAlignStartDate().compareTo(((SubscriptionData) baseSubscription).getAlignStartDate()) == 0);
 
         // CHECK ONLY ONE PHASE EXISTS
-        assertEquals(newBaseSubscription.getAllTransitions().size(), 1);
+        assertEquals(entitlementInternalApi.getAllTransitions(newBaseSubscription, internalCallContext).size(), 1);
 
         Plan newPlan = newBaseSubscription.getCurrentPlan();
         assertEquals(newPlan.getProduct().getName(), baseProduct);
@@ -344,8 +344,8 @@ public class TestTransfer extends TestApiBase {
         assertEquals(newPlan.getProduct().getName(), newBaseProduct1);
         assertEquals(newBaseSubscriptionWithCtd.getCurrentPhase().getPhaseType(), PhaseType.EVERGREEN);
 
-        assertNotNull(newBaseSubscriptionWithCtd.getPendingTransition());
-        assertEquals(newBaseSubscriptionWithCtd.getPendingTransition().getEffectiveTransitionTime(), newCtd);
+        assertNotNull(((SubscriptionData) newBaseSubscriptionWithCtd).getPendingTransitionData());
+        assertEquals(((SubscriptionData) newBaseSubscriptionWithCtd).getPendingTransitionData().getEffectiveTransitionTime(), newCtd);
     }
 
     @Test(groups = "slow")
@@ -403,15 +403,15 @@ public class TestTransfer extends TestApiBase {
             if (curProduct.getName().equals(baseProduct)) {
                 foundBP = true;
                 assertTrue(((SubscriptionData) cur).getAlignStartDate().compareTo(((SubscriptionData) baseSubscription).getAlignStartDate()) == 0);
-                assertNull(cur.getPendingTransition());
+                assertNull(((SubscriptionData) cur).getPendingTransitionData());
             } else if (curProduct.getName().equals(aoProduct1)) {
                 foundAO1 = true;
                 assertTrue(((SubscriptionData) cur).getAlignStartDate().compareTo((aoSubscription1).getAlignStartDate()) == 0);
-                assertNull(cur.getPendingTransition());
+                assertNull(((SubscriptionData) cur).getPendingTransitionData());
             } else if (curProduct.getName().equals(aoProduct2)) {
                 foundAO2 = true;
                 assertTrue(((SubscriptionData) cur).getAlignStartDate().compareTo((aoSubscription2).getAlignStartDate()) == 0);
-                assertNotNull(cur.getPendingTransition());
+                assertNotNull(((SubscriptionData) cur).getPendingTransitionData());
             } else {
                 Assert.fail("Unexpected product " + curProduct.getName());
             }

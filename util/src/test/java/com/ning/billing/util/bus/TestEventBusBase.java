@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -27,6 +27,7 @@ import org.testng.annotations.BeforeClass;
 import com.ning.billing.util.UtilTestSuiteWithEmbeddedDB;
 import com.ning.billing.util.events.BusInternalEvent;
 import com.ning.billing.util.events.BusInternalEvent.BusEventType;
+import com.ning.billing.util.events.DefaultBusInternalEvent;
 import com.ning.billing.util.svcsapi.bus.Bus;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -51,21 +52,21 @@ public abstract class TestEventBusBase extends UtilTestSuiteWithEmbeddedDB {
         eventBus.stop();
     }
 
-    public static class MyEvent implements BusInternalEvent {
+    public static class MyEvent extends DefaultBusInternalEvent implements BusInternalEvent {
         private final String name;
         private final Long value;
-        private final UUID userToken;
         private final String type;
 
         @JsonCreator
         public MyEvent(@JsonProperty("name") final String name,
                        @JsonProperty("value") final Long value,
                        @JsonProperty("token") final UUID token,
-                       @JsonProperty("type") final String type) {
-
+                       @JsonProperty("type") final String type,
+                       @JsonProperty("accountRecordId") final Long accountRecordId,
+                       @JsonProperty("tenantRecordId") final Long tenantRecordId) {
+            super(token, accountRecordId, tenantRecordId);
             this.name = name;
             this.value = value;
-            this.userToken = token;
             this.type = type;
         }
 
@@ -73,11 +74,6 @@ public abstract class TestEventBusBase extends UtilTestSuiteWithEmbeddedDB {
         @Override
         public BusEventType getBusEventType() {
             return BusEventType.valueOf(type);
-        }
-
-        @Override
-        public UUID getUserToken() {
-            return userToken;
         }
 
         public String getName() {
@@ -99,27 +95,29 @@ public abstract class TestEventBusBase extends UtilTestSuiteWithEmbeddedDB {
         public MyEventWithException(@JsonProperty("name") final String name,
                                     @JsonProperty("value") final Long value,
                                     @JsonProperty("token") final UUID token,
-                                    @JsonProperty("type") final String type) {
-            super(name, value, token, type);
+                                    @JsonProperty("type") final String type,
+                                    @JsonProperty("accountRecordId") final Long accountRecordId,
+                                    @JsonProperty("tenantRecordId") final Long tenantRecordId) {
+            super(name, value, token, type, accountRecordId, tenantRecordId);
         }
     }
 
-    public static final class MyOtherEvent implements BusInternalEvent {
+    public static final class MyOtherEvent extends DefaultBusInternalEvent implements BusInternalEvent {
 
         private final String name;
         private final Double value;
-        private final UUID userToken;
         private final String type;
 
         @JsonCreator
         public MyOtherEvent(@JsonProperty("name") final String name,
                             @JsonProperty("value") final Double value,
                             @JsonProperty("token") final UUID token,
-                            @JsonProperty("type") final String type) {
-
+                            @JsonProperty("type") final String type,
+                            @JsonProperty("accountRecordId") final Long accountRecordId,
+                            @JsonProperty("tenantRecordId") final Long tenantRecordId) {
+            super(token, accountRecordId, tenantRecordId);
             this.name = name;
             this.value = value;
-            this.userToken = token;
             this.type = type;
         }
 
@@ -129,10 +127,6 @@ public abstract class TestEventBusBase extends UtilTestSuiteWithEmbeddedDB {
             return BusEventType.valueOf(type);
         }
 
-        @Override
-        public UUID getUserToken() {
-            return userToken;
-        }
 
         public String getName() {
             return name;
@@ -148,6 +142,9 @@ public abstract class TestEventBusBase extends UtilTestSuiteWithEmbeddedDB {
     }
 
     public static class MyEventHandlerException extends RuntimeException {
+
+        private static final long serialVersionUID = 156337823L;
+
         public MyEventHandlerException(final String msg) {
             super(msg);
         }
@@ -202,7 +199,7 @@ public abstract class TestEventBusBase extends UtilTestSuiteWithEmbeddedDB {
             final MyEventHandler handler = new MyEventHandler(1);
             eventBus.register(handler);
 
-            eventBus.post(new MyEventWithException("my-event", 1L, UUID.randomUUID(), BusEventType.ACCOUNT_CHANGE.toString()), internalCallContext);
+            eventBus.post(new MyEventWithException("my-event", 1L, UUID.randomUUID(), BusEventType.ACCOUNT_CHANGE.toString(), 1L, 1L), internalCallContext);
 
             Thread.sleep(50000);
         } catch (Exception ignored) {
@@ -216,7 +213,7 @@ public abstract class TestEventBusBase extends UtilTestSuiteWithEmbeddedDB {
             eventBus.register(handler);
 
             for (int i = 0; i < nbEvents; i++) {
-                eventBus.post(new MyEvent("my-event", (long) i, UUID.randomUUID(), BusEventType.ACCOUNT_CHANGE.toString()), internalCallContext);
+                eventBus.post(new MyEvent("my-event", (long) i, UUID.randomUUID(), BusEventType.ACCOUNT_CHANGE.toString(), 1L, 1L), internalCallContext);
             }
 
             final boolean completed = handler.waitForCompletion(10000);
@@ -232,9 +229,9 @@ public abstract class TestEventBusBase extends UtilTestSuiteWithEmbeddedDB {
             eventBus.register(handler);
 
             for (int i = 0; i < 5; i++) {
-                eventBus.post(new MyOtherEvent("my-other-event", (double) i, UUID.randomUUID(), BusEventType.BUNDLE_REPAIR.toString()), internalCallContext);
+                eventBus.post(new MyOtherEvent("my-other-event", (double) i, UUID.randomUUID(), BusEventType.BUNDLE_REPAIR.toString(), 1L, 1L), internalCallContext);
             }
-            eventBus.post(new MyEvent("my-event", 11l, UUID.randomUUID(), BusEventType.ACCOUNT_CHANGE.toString()), internalCallContext);
+            eventBus.post(new MyEvent("my-event", 11l, UUID.randomUUID(), BusEventType.ACCOUNT_CHANGE.toString(), 1L, 1L), internalCallContext);
 
             final boolean completed = handler.waitForCompletion(10000);
             Assert.assertEquals(completed, true);

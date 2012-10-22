@@ -25,12 +25,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.user.DefaultAccountChangeEvent;
 import com.ning.billing.account.api.user.DefaultAccountCreationEvent;
-import com.ning.billing.util.svcsapi.bus.Bus;
-import com.ning.billing.util.svcsapi.bus.Bus.EventBusException;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.entity.EntityPersistenceException;
 import com.ning.billing.util.events.AccountChangeInternalEvent;
+import com.ning.billing.util.svcsapi.bus.Bus;
+import com.ning.billing.util.svcsapi.bus.Bus.EventBusException;
 
 import com.google.inject.Inject;
 
@@ -54,7 +54,7 @@ public class MockAccountDao implements AccountDao {
         accounts.put(account.getId(), account);
 
         try {
-            eventBus.post(new DefaultAccountCreationEvent(account, null), context);
+            eventBus.post(new DefaultAccountCreationEvent(account, null, 1L, 1L), context);
         } catch (EventBusException ex) {
             throw new RuntimeException(ex);
         }
@@ -94,7 +94,7 @@ public class MockAccountDao implements AccountDao {
     public void update(final Account account, final InternalCallContext context) {
         final Account currentAccount = accounts.put(account.getId(), account);
 
-        final AccountChangeInternalEvent changeEvent = new DefaultAccountChangeEvent(account.getId(), null, currentAccount, account);
+        final AccountChangeInternalEvent changeEvent = new DefaultAccountChangeEvent(account.getId(), null, currentAccount, account, 1L, 1L);
         if (changeEvent.hasChanges()) {
             try {
                 eventBus.post(changeEvent, context);

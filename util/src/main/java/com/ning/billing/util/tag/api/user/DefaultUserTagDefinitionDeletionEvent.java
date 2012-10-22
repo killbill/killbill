@@ -18,6 +18,7 @@ package com.ning.billing.util.tag.api.user;
 
 import java.util.UUID;
 
+import com.ning.billing.util.events.DefaultBusInternalEvent;
 import com.ning.billing.util.events.UserTagDefinitionDeletionInternalEvent;
 import com.ning.billing.util.tag.TagDefinition;
 
@@ -25,18 +26,20 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class DefaultUserTagDefinitionDeletionEvent implements UserTagDefinitionDeletionInternalEvent {
+public class DefaultUserTagDefinitionDeletionEvent extends DefaultBusInternalEvent implements UserTagDefinitionDeletionInternalEvent {
+
     private final UUID tagDefinitionId;
     private final TagDefinition tagDefinition;
-    private final UUID userToken;
 
     @JsonCreator
     public DefaultUserTagDefinitionDeletionEvent(@JsonProperty("tagDefinitionId") final UUID tagDefinitionId,
                                                  @JsonProperty("tagDefinition") final TagDefinition tagDefinition,
-                                                 @JsonProperty("userToken") final UUID userToken) {
+                                                 @JsonProperty("userToken") final UUID userToken,
+                                                 @JsonProperty("accountRecordId") final Long accountRecordId,
+                                                 @JsonProperty("tenantRecordId") final Long tenantRecordId) {
+        super(userToken, accountRecordId, tenantRecordId);
         this.tagDefinitionId = tagDefinitionId;
         this.tagDefinition = tagDefinition;
-        this.userToken = userToken;
     }
 
     @Override
@@ -55,10 +58,6 @@ public class DefaultUserTagDefinitionDeletionEvent implements UserTagDefinitionD
         return BusEventType.USER_TAGDEFINITION_DELETION;
     }
 
-    @Override
-    public UUID getUserToken() {
-        return userToken;
-    }
 
     @Override
     public String toString() {
@@ -66,7 +65,6 @@ public class DefaultUserTagDefinitionDeletionEvent implements UserTagDefinitionD
         sb.append("DefaultUserTagDefinitionDeletionEvent");
         sb.append("{tagDefinition=").append(tagDefinition);
         sb.append(", tagDefinitionId=").append(tagDefinitionId);
-        sb.append(", userToken=").append(userToken);
         sb.append('}');
         return sb.toString();
     }
@@ -88,10 +86,6 @@ public class DefaultUserTagDefinitionDeletionEvent implements UserTagDefinitionD
         if (tagDefinitionId != null ? !tagDefinitionId.equals(that.tagDefinitionId) : that.tagDefinitionId != null) {
             return false;
         }
-        if (userToken != null ? !userToken.equals(that.userToken) : that.userToken != null) {
-            return false;
-        }
-
         return true;
     }
 
@@ -99,7 +93,6 @@ public class DefaultUserTagDefinitionDeletionEvent implements UserTagDefinitionD
     public int hashCode() {
         int result = tagDefinitionId != null ? tagDefinitionId.hashCode() : 0;
         result = 31 * result + (tagDefinition != null ? tagDefinition.hashCode() : 0);
-        result = 31 * result + (userToken != null ? userToken.hashCode() : 0);
         return result;
     }
 }

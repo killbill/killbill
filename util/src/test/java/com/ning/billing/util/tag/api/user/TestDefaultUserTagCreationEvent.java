@@ -41,7 +41,7 @@ public class TestDefaultUserTagCreationEvent extends UtilTestSuite {
         final TagDefinition tagDefinition = new DefaultTagDefinition(tagDefinitionId, tagDefinitionName, tagDefinitionDescription, controlTag);
         final UUID userToken = UUID.randomUUID();
 
-        final DefaultUserTagCreationEvent event = new DefaultUserTagCreationEvent(tagId, objectId, objectType, tagDefinition, userToken);
+        final DefaultUserTagCreationEvent event = new DefaultUserTagCreationEvent(tagId, objectId, objectType, tagDefinition, userToken, 1L, 1L);
         Assert.assertEquals(event.getBusEventType(), BusInternalEvent.BusEventType.USER_TAG_CREATION);
 
         Assert.assertEquals(event.getTagId(), tagId);
@@ -54,9 +54,9 @@ public class TestDefaultUserTagCreationEvent extends UtilTestSuite {
         Assert.assertEquals(event.getUserToken(), userToken);
 
         Assert.assertEquals(event, event);
-        Assert.assertEquals(event, new DefaultUserTagCreationEvent(tagId, objectId, objectType, tagDefinition, userToken));
+        Assert.assertEquals(event, new DefaultUserTagCreationEvent(tagId, objectId, objectType, tagDefinition, userToken, 1L, 1L));
         Assert.assertTrue(event.equals(event));
-        Assert.assertTrue(event.equals(new DefaultUserTagCreationEvent(tagId, objectId, objectType, tagDefinition, userToken)));
+        Assert.assertTrue(event.equals(new DefaultUserTagCreationEvent(tagId, objectId, objectType, tagDefinition, userToken, 1L, 1L)));
     }
 
     @Test(groups = "fast")
@@ -73,7 +73,7 @@ public class TestDefaultUserTagCreationEvent extends UtilTestSuite {
         final TagDefinition tagDefinition = new DefaultTagDefinition(tagDefinitionId, tagDefinitionName, tagDefinitionDescription, controlTag);
         final UUID userToken = UUID.randomUUID();
 
-        final DefaultUserTagCreationEvent event = new DefaultUserTagCreationEvent(tagId, objectId, objectType, tagDefinition, userToken);
+        final DefaultUserTagCreationEvent event = new DefaultUserTagCreationEvent(tagId, objectId, objectType, tagDefinition, userToken, 1L, 1L);
 
         final String json = objectMapper.writeValueAsString(event);
         final DefaultUserTagCreationEvent fromJson = objectMapper.readValue(json, DefaultUserTagCreationEvent.class);

@@ -33,7 +33,6 @@ import com.ning.billing.ErrorCode;
 import com.ning.billing.util.ChangeType;
 import com.ning.billing.util.api.TagApiException;
 import com.ning.billing.util.api.TagDefinitionApiException;
-import com.ning.billing.util.svcsapi.bus.Bus;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.dao.AuditedCollectionDaoBase;
@@ -44,6 +43,7 @@ import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.dao.TableName;
 import com.ning.billing.util.entity.collection.dao.UpdatableEntityCollectionSqlDao;
 import com.ning.billing.util.events.TagInternalEvent;
+import com.ning.billing.util.svcsapi.bus.Bus;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.DefaultTagDefinition;
 import com.ning.billing.util.tag.Tag;
@@ -125,9 +125,9 @@ public class AuditedTagDao extends AuditedCollectionDaoBase<Tag, Tag> implements
                 // Post an event to the Bus
                 final TagInternalEvent tagEvent;
                 if (tagDefinition.isControlTag()) {
-                    tagEvent = tagEventBuilder.newControlTagCreationEvent(tag.getId(), objectId, objectType, tagDefinition, context.getUserToken());
+                    tagEvent = tagEventBuilder.newControlTagCreationEvent(tag.getId(), objectId, objectType, tagDefinition, context);
                 } else {
-                    tagEvent = tagEventBuilder.newUserTagCreationEvent(tag.getId(), objectId, objectType, tagDefinition, context.getUserToken());
+                    tagEvent = tagEventBuilder.newUserTagCreationEvent(tag.getId(), objectId, objectType, tagDefinition, context);
                 }
                 try {
                     bus.postFromTransaction(tagEvent, tagSqlDao, context);
@@ -175,9 +175,9 @@ public class AuditedTagDao extends AuditedCollectionDaoBase<Tag, Tag> implements
                     // Post an event to the Bus
                     final TagInternalEvent tagEvent;
                     if (tagDefinition.isControlTag()) {
-                        tagEvent = tagEventBuilder.newControlTagDeletionEvent(tag.getId(), objectId, objectType, tagDefinition, context.getUserToken());
+                        tagEvent = tagEventBuilder.newControlTagDeletionEvent(tag.getId(), objectId, objectType, tagDefinition, context);
                     } else {
-                        tagEvent = tagEventBuilder.newUserTagDeletionEvent(tag.getId(), objectId, objectType, tagDefinition, context.getUserToken());
+                        tagEvent = tagEventBuilder.newUserTagDeletionEvent(tag.getId(), objectId, objectType, tagDefinition, context);
                     }
                     try {
                         bus.postFromTransaction(tagEvent, tagSqlDao, context);

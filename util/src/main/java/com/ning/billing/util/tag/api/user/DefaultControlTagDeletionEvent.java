@@ -20,30 +20,32 @@ import java.util.UUID;
 
 import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.events.ControlTagDeletionInternalEvent;
+import com.ning.billing.util.events.DefaultBusInternalEvent;
 import com.ning.billing.util.tag.TagDefinition;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class DefaultControlTagDeletionEvent implements ControlTagDeletionInternalEvent {
+public class DefaultControlTagDeletionEvent extends DefaultBusInternalEvent implements ControlTagDeletionInternalEvent {
     private final UUID tagId;
     final UUID objectId;
     final ObjectType objectType;
     final TagDefinition tagDefinition;
-    final UUID userToken;
 
     @JsonCreator
     public DefaultControlTagDeletionEvent(@JsonProperty("tagId") final UUID tagId,
                                           @JsonProperty("objectId") final UUID objectId,
                                           @JsonProperty("objectType") final ObjectType objectType,
                                           @JsonProperty("tagDefinition") final TagDefinition tagDefinition,
-                                          @JsonProperty("userToken") final UUID userToken) {
+                                          @JsonProperty("userToken") final UUID userToken,
+                                          @JsonProperty("accountRecordId") final Long accountRecordId,
+                                          @JsonProperty("tenantRecordId") final Long tenantRecordId) {
+        super(userToken, accountRecordId, tenantRecordId);
         this.tagId = tagId;
         this.objectId = objectId;
         this.objectType = objectType;
         this.tagDefinition = tagDefinition;
-        this.userToken = userToken;
     }
 
     @Override
@@ -72,10 +74,6 @@ public class DefaultControlTagDeletionEvent implements ControlTagDeletionInterna
         return BusEventType.CONTROL_TAG_DELETION;
     }
 
-    @Override
-    public UUID getUserToken() {
-        return userToken;
-    }
 
     @Override
     public String toString() {
@@ -85,7 +83,6 @@ public class DefaultControlTagDeletionEvent implements ControlTagDeletionInterna
         sb.append(", tagId=").append(tagId);
         sb.append(", objectType=").append(objectType);
         sb.append(", tagDefinition=").append(tagDefinition);
-        sb.append(", userToken=").append(userToken);
         sb.append('}');
         return sb.toString();
     }
@@ -113,10 +110,6 @@ public class DefaultControlTagDeletionEvent implements ControlTagDeletionInterna
         if (tagId != null ? !tagId.equals(that.tagId) : that.tagId != null) {
             return false;
         }
-        if (userToken != null ? !userToken.equals(that.userToken) : that.userToken != null) {
-            return false;
-        }
-
         return true;
     }
 
@@ -126,7 +119,6 @@ public class DefaultControlTagDeletionEvent implements ControlTagDeletionInterna
         result = 31 * result + (objectId != null ? objectId.hashCode() : 0);
         result = 31 * result + (objectType != null ? objectType.hashCode() : 0);
         result = 31 * result + (tagDefinition != null ? tagDefinition.hashCode() : 0);
-        result = 31 * result + (userToken != null ? userToken.hashCode() : 0);
         return result;
     }
 }

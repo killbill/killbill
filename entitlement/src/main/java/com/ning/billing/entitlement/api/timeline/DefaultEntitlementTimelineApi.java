@@ -39,6 +39,7 @@ import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionBundleData;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
+import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.entitlement.events.EntitlementEvent;
 import com.ning.billing.entitlement.glue.DefaultEntitlementModule;
@@ -46,7 +47,6 @@ import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.TenantContext;
-import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -350,7 +350,7 @@ public class DefaultEntitlementTimelineApi implements EntitlementTimelineApi {
         if (nbDeleted != deletedEvents.size()) {
             for (final SubscriptionTimeline.DeletedEvent d : deletedEvents) {
                 boolean found = false;
-                for (final EffectiveSubscriptionInternalEvent cur : data.getAllTransitions()) {
+                for (final SubscriptionTransitionData cur : data.getAllTransitions()) {
                     if (cur.getId().equals(d.getEventId())) {
                         found = true;
                     }

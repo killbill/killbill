@@ -16,6 +16,8 @@
 
 package com.ning.billing.analytics.api;
 
+import static org.testng.Assert.fail;
+
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.SQLException;
@@ -84,8 +86,6 @@ import com.ning.billing.util.events.PaymentInfoInternalEvent;
 import com.ning.billing.util.svcsapi.bus.Bus;
 
 import com.google.inject.Inject;
-
-import static org.testng.Assert.fail;
 
 @Guice(modules = {AnalyticsTestModule.class})
 public class TestAnalyticsService extends AnalyticsTestSuiteWithEmbeddedDB {
@@ -203,7 +203,7 @@ public class TestAnalyticsService extends AnalyticsTestSuiteWithEmbeddedDB {
                 priceList,
                 TOTAL_ORDERING,
                 null,
-                true), null);
+                true), null, 1L, 1L);
         expectedTransition = new BusinessSubscriptionTransition(
                 TOTAL_ORDERING,
                 transition.getBundleId(),
@@ -219,7 +219,7 @@ public class TestAnalyticsService extends AnalyticsTestSuiteWithEmbeddedDB {
     }
 
     private void createAccountCreationEvent(final Account account) {
-        accountCreationNotification = new DefaultAccountCreationEvent(account, null);
+        accountCreationNotification = new DefaultAccountCreationEvent(account, null, 1L, 1L);
     }
 
     private void createInvoiceAndPaymentCreationEvents(final Account account) {

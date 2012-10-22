@@ -59,7 +59,6 @@ import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.clock.DefaultClock;
 import com.ning.billing.util.dao.ObjectType;
-import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 
 import com.google.inject.Inject;
 
@@ -365,7 +364,7 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
             throw new EntitlementUserApiException(ErrorCode.ENT_INVALID_REQUESTED_FUTURE_DATE, requestedDate.toString());
         }
 
-        final EffectiveSubscriptionInternalEvent previousTransition = subscription.getPreviousTransition();
+        final SubscriptionTransitionData  previousTransition = subscription.getPreviousTransitionData();
         if (previousTransition != null && previousTransition.getEffectiveTransitionTime().isAfter(requestedDate)) {
             throw new EntitlementUserApiException(ErrorCode.ENT_INVALID_REQUESTED_DATE,
                                                   requestedDate.toString(), previousTransition.getEffectiveTransitionTime());

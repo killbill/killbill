@@ -21,13 +21,14 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import com.ning.billing.entitlement.api.SubscriptionTransitionType;
+import com.ning.billing.util.events.DefaultBusInternalEvent;
 import com.ning.billing.util.events.SubscriptionInternalEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public abstract class DefaultSubscriptionEvent implements SubscriptionInternalEvent {
+public abstract class DefaultSubscriptionEvent extends DefaultBusInternalEvent implements SubscriptionInternalEvent {
     private final Long totalOrdering;
     private final UUID subscriptionId;
     private final UUID bundleId;
@@ -43,11 +44,10 @@ public abstract class DefaultSubscriptionEvent implements SubscriptionInternalEv
     private final String nextPlan;
     private final String nextPhase;
     private final Integer remainingEventsForUserOperation;
-    private final UUID userToken;
     private final SubscriptionTransitionType transitionType;
     private final DateTime startDate;
 
-    public DefaultSubscriptionEvent(final SubscriptionTransitionData in, final DateTime startDate) {
+    public DefaultSubscriptionEvent(final SubscriptionTransitionData in, final DateTime startDate, final Long accountRecordId, final Long tenantRecordId) {
         this(in.getId(),
              in.getSubscriptionId(),
              in.getBundleId(),
@@ -65,7 +65,9 @@ public abstract class DefaultSubscriptionEvent implements SubscriptionInternalEv
              in.getUserToken(),
              in.getTransitionType(),
              in.getRemainingEventsForUserOperation(),
-             startDate);
+             startDate,
+             accountRecordId,
+             tenantRecordId);
     }
 
     @JsonCreator
@@ -86,7 +88,10 @@ public abstract class DefaultSubscriptionEvent implements SubscriptionInternalEv
                                     @JsonProperty("userToken") final UUID userToken,
                                     @JsonProperty("transitionType") final SubscriptionTransitionType transitionType,
                                     @JsonProperty("remainingEventsForUserOperation") final Integer remainingEventsForUserOperation,
-                                    @JsonProperty("startDate") final DateTime startDate) {
+                                    @JsonProperty("startDate") final DateTime startDate,
+                                    @JsonProperty("accountRecordId") final Long accountRecordId,
+                                    @JsonProperty("tenantRecordId") final Long tenantRecordId) {
+        super(userToken, accountRecordId, tenantRecordId);
         this.eventId = eventId;
         this.subscriptionId = subscriptionId;
         this.bundleId = bundleId;
@@ -101,7 +106,6 @@ public abstract class DefaultSubscriptionEvent implements SubscriptionInternalEv
         this.nextPriceList = nextPriceList;
         this.nextPhase = nextPhase;
         this.totalOrdering = totalOrdering;
-        this.userToken = userToken;
         this.transitionType = transitionType;
         this.remainingEventsForUserOperation = remainingEventsForUserOperation;
         this.startDate = startDate;
@@ -170,11 +174,6 @@ public abstract class DefaultSubscriptionEvent implements SubscriptionInternalEv
     }
 
     @Override
-    public UUID getUserToken() {
-        return userToken;
-    }
-
-    @Override
     public Integer getRemainingEventsForUserOperation() {
         return remainingEventsForUserOperation;
     }
@@ -224,7 +223,7 @@ public abstract class DefaultSubscriptionEvent implements SubscriptionInternalEv
         sb.append(", nextPlan='").append(nextPlan).append('\'');
         sb.append(", nextPhase='").append(nextPhase).append('\'');
         sb.append(", remainingEventsForUserOperation=").append(remainingEventsForUserOperation);
-        sb.append(", userToken=").append(userToken);
+        sb.append(", userToken=").append(getUserToken());
         sb.append(", transitionType=").append(transitionType);
         sb.append(", startDate=").append(startDate);
         sb.append('}');
@@ -293,10 +292,6 @@ public abstract class DefaultSubscriptionEvent implements SubscriptionInternalEv
         if (transitionType != that.transitionType) {
             return false;
         }
-        if (userToken != null ? !userToken.equals(that.userToken) : that.userToken != null) {
-            return false;
-        }
-
         return true;
     }
 
@@ -317,7 +312,6 @@ public abstract class DefaultSubscriptionEvent implements SubscriptionInternalEv
         result = 31 * result + (nextPlan != null ? nextPlan.hashCode() : 0);
         result = 31 * result + (nextPhase != null ? nextPhase.hashCode() : 0);
         result = 31 * result + (remainingEventsForUserOperation != null ? remainingEventsForUserOperation.hashCode() : 0);
-        result = 31 * result + (userToken != null ? userToken.hashCode() : 0);
         result = 31 * result + (transitionType != null ? transitionType.hashCode() : 0);
         result = 31 * result + (startDate != null ? startDate.hashCode() : 0);
         return result;

@@ -27,8 +27,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class DefaultEffectiveSubscriptionEvent extends DefaultSubscriptionEvent implements EffectiveSubscriptionInternalEvent {
-    public DefaultEffectiveSubscriptionEvent(final SubscriptionTransitionData in, final DateTime startDate) {
-        super(in, startDate);
+    public DefaultEffectiveSubscriptionEvent(final SubscriptionTransitionData in, final DateTime startDate, final Long accountRecordId, final Long tenantRecordId) {
+        super(in, startDate, accountRecordId, tenantRecordId);
     }
 
     @JsonCreator
@@ -49,9 +49,11 @@ public class DefaultEffectiveSubscriptionEvent extends DefaultSubscriptionEvent 
                                              @JsonProperty("userToken") final UUID userToken,
                                              @JsonProperty("transitionType") final SubscriptionTransitionType transitionType,
                                              @JsonProperty("remainingEventsForUserOperation") final Integer remainingEventsForUserOperation,
-                                             @JsonProperty("startDate") final DateTime startDate) {
+                                             @JsonProperty("startDate") final DateTime startDate,
+                                             @JsonProperty("accountRecordId") final Long accountRecordId,
+                                             @JsonProperty("tenantRecordId") final Long tenantRecordId) {
         super(eventId, subscriptionId, bundleId, requestedTransitionTime, effectiveTransitionTime, previousState, previousPlan,
               previousPhase, previousPriceList, nextState, nextPlan, nextPhase, nextPriceList, totalOrdering, userToken,
-              transitionType, remainingEventsForUserOperation, startDate);
+              transitionType, remainingEventsForUserOperation, startDate, accountRecordId, tenantRecordId);
     }
 }

@@ -18,6 +18,7 @@ package com.ning.billing.util.tag.api.user;
 
 import java.util.UUID;
 
+import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.dao.ObjectType;
 import com.ning.billing.util.events.ControlTagCreationInternalEvent;
 import com.ning.billing.util.events.ControlTagDefinitionCreationInternalEvent;
@@ -30,35 +31,35 @@ import com.ning.billing.util.events.UserTagDeletionInternalEvent;
 import com.ning.billing.util.tag.TagDefinition;
 
 public class TagEventBuilder {
-    public UserTagDefinitionCreationInternalEvent newUserTagDefinitionCreationEvent(final UUID tagDefinitionId, final TagDefinition tagDefinition, final UUID userToken) {
-        return new DefaultUserTagDefinitionCreationEvent(tagDefinitionId, tagDefinition, userToken);
+    public UserTagDefinitionCreationInternalEvent newUserTagDefinitionCreationEvent(final UUID tagDefinitionId, final TagDefinition tagDefinition, final InternalCallContext context) {
+        return new DefaultUserTagDefinitionCreationEvent(tagDefinitionId, tagDefinition, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
     }
 
-    public UserTagDefinitionDeletionInternalEvent newUserTagDefinitionDeletionEvent(final UUID tagDefinitionId, final TagDefinition tagDefinition, final UUID userToken) {
-        return new DefaultUserTagDefinitionDeletionEvent(tagDefinitionId, tagDefinition, userToken);
+    public UserTagDefinitionDeletionInternalEvent newUserTagDefinitionDeletionEvent(final UUID tagDefinitionId, final TagDefinition tagDefinition, final InternalCallContext context) {
+        return new DefaultUserTagDefinitionDeletionEvent(tagDefinitionId, tagDefinition, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
     }
 
-    public ControlTagDefinitionCreationInternalEvent newControlTagDefinitionCreationEvent(final UUID tagDefinitionId, final TagDefinition tagDefinition, final UUID userToken) {
-        return new DefaultControlTagDefinitionCreationEvent(tagDefinitionId, tagDefinition, userToken);
+    public ControlTagDefinitionCreationInternalEvent newControlTagDefinitionCreationEvent(final UUID tagDefinitionId, final TagDefinition tagDefinition, final InternalCallContext context) {
+        return new DefaultControlTagDefinitionCreationEvent(tagDefinitionId, tagDefinition, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
     }
 
-    public ControlTagDefinitionDeletionInternalEvent newControlTagDefinitionDeletionEvent(final UUID tagDefinitionId, final TagDefinition tagDefinition, final UUID userToken) {
-        return new DefaultControlTagDefinitionDeletionEvent(tagDefinitionId, tagDefinition, userToken);
+    public ControlTagDefinitionDeletionInternalEvent newControlTagDefinitionDeletionEvent(final UUID tagDefinitionId, final TagDefinition tagDefinition, final InternalCallContext context) {
+        return new DefaultControlTagDefinitionDeletionEvent(tagDefinitionId, tagDefinition, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
     }
 
-    public UserTagCreationInternalEvent newUserTagCreationEvent(final UUID tagId, final UUID objectId, final ObjectType objectType, final TagDefinition tagDefinition, final UUID userToken) {
-        return new DefaultUserTagCreationEvent(tagId, objectId, objectType, tagDefinition, userToken);
+    public UserTagCreationInternalEvent newUserTagCreationEvent(final UUID tagId, final UUID objectId, final ObjectType objectType, final TagDefinition tagDefinition, final InternalCallContext context) {
+        return new DefaultUserTagCreationEvent(tagId, objectId, objectType, tagDefinition, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
     }
 
-    public UserTagDeletionInternalEvent newUserTagDeletionEvent(final UUID tagId, final UUID objectId, final ObjectType objectType, final TagDefinition tagDefinition, final UUID userToken) {
-        return new DefaultUserTagDeletionEvent(tagId, objectId, objectType, tagDefinition, userToken);
+    public UserTagDeletionInternalEvent newUserTagDeletionEvent(final UUID tagId, final UUID objectId, final ObjectType objectType, final TagDefinition tagDefinition, final InternalCallContext context) {
+        return new DefaultUserTagDeletionEvent(tagId, objectId, objectType, tagDefinition, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
     }
 
-    public ControlTagCreationInternalEvent newControlTagCreationEvent(final UUID tagId, final UUID objectId, final ObjectType objectType, final TagDefinition tagDefinition, final UUID userToken) {
-        return new DefaultControlTagCreationEvent(tagId, objectId, objectType, tagDefinition, userToken);
+    public ControlTagCreationInternalEvent newControlTagCreationEvent(final UUID tagId, final UUID objectId, final ObjectType objectType, final TagDefinition tagDefinition, final InternalCallContext context) {
+        return new DefaultControlTagCreationEvent(tagId, objectId, objectType, tagDefinition, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
     }
 
-    public ControlTagDeletionInternalEvent newControlTagDeletionEvent(final UUID tagId, final UUID objectId, final ObjectType objectType, final TagDefinition tagDefinition, final UUID userToken) {
-        return new DefaultControlTagDeletionEvent(tagId, objectId, objectType, tagDefinition, userToken);
+    public ControlTagDeletionInternalEvent newControlTagDeletionEvent(final UUID tagId, final UUID objectId, final ObjectType objectType, final TagDefinition tagDefinition, final InternalCallContext context) {
+        return new DefaultControlTagDeletionEvent(tagId, objectId, objectType, tagDefinition, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId() );
     }
 }

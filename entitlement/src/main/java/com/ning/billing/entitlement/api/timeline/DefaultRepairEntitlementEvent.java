@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -19,15 +19,15 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.util.events.DefaultBusInternalEvent;
 import com.ning.billing.util.events.RepairEntitlementInternalEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class DefaultRepairEntitlementEvent implements RepairEntitlementInternalEvent {
+public class DefaultRepairEntitlementEvent extends DefaultBusInternalEvent implements RepairEntitlementInternalEvent {
 
-    private final UUID userToken;
     private final UUID bundleId;
     private final UUID accountId;
     private final DateTime effectiveDate;
@@ -37,8 +37,10 @@ public class DefaultRepairEntitlementEvent implements RepairEntitlementInternalE
     public DefaultRepairEntitlementEvent(@JsonProperty("userToken") final UUID userToken,
                                          @JsonProperty("accountId") final UUID accountId,
                                          @JsonProperty("bundleId") final UUID bundleId,
-                                         @JsonProperty("effectiveDate") final DateTime effectiveDate) {
-        this.userToken = userToken;
+                                         @JsonProperty("effectiveDate") final DateTime effectiveDate,
+                                         @JsonProperty("accountRecordId") final Long accountRecordId,
+                                         @JsonProperty("tenantRecordId") final Long tenantRecordId) {
+        super(userToken, accountRecordId, tenantRecordId);
         this.bundleId = bundleId;
         this.accountId = accountId;
         this.effectiveDate = effectiveDate;
@@ -48,11 +50,6 @@ public class DefaultRepairEntitlementEvent implements RepairEntitlementInternalE
     @Override
     public BusEventType getBusEventType() {
         return BusEventType.BUNDLE_REPAIR;
-    }
-
-    @Override
-    public UUID getUserToken() {
-        return userToken;
     }
 
     @Override
@@ -80,8 +77,6 @@ public class DefaultRepairEntitlementEvent implements RepairEntitlementInternalE
                 + ((bundleId == null) ? 0 : bundleId.hashCode());
         result = prime * result
                 + ((effectiveDate == null) ? 0 : effectiveDate.hashCode());
-        result = prime * result
-                + ((userToken == null) ? 0 : userToken.hashCode());
         return result;
     }
 
@@ -118,13 +113,7 @@ public class DefaultRepairEntitlementEvent implements RepairEntitlementInternalE
         } else if (effectiveDate.compareTo(other.effectiveDate) != 0) {
             return false;
         }
-        if (userToken == null) {
-            if (other.userToken != null) {
-                return false;
-            }
-        } else if (!userToken.equals(other.userToken)) {
-            return false;
-        }
         return true;
     }
+
 }

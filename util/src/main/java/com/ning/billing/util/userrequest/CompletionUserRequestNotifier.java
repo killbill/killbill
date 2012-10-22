@@ -13,8 +13,16 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.ning.billing.account.api;
+package com.ning.billing.util.userrequest;
 
-public interface AccountChangeEvent {
 
+import com.ning.billing.util.events.BusInternalEvent;
+
+
+
+public interface CompletionUserRequestNotifier {
+
+    public void notifyForCompletion();
+
+    public void onBusEvent(BusInternalEvent curEvent);
 }

@@ -20,9 +20,9 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 
-import com.ning.billing.util.bus.BusEvent;
 import com.ning.billing.util.events.AccountChangeInternalEvent;
 import com.ning.billing.util.events.AccountCreationInternalEvent;
+import com.ning.billing.util.events.BusInternalEvent;
 import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 import com.ning.billing.util.events.InvoiceCreationInternalEvent;
 import com.ning.billing.util.events.NullInvoiceInternalEvent;
@@ -33,7 +33,7 @@ public abstract class CompletionUserRequestBase implements CompletionUserRequest
 
     private static final long NANO_TO_MILLI_SEC = (1000L * 1000L);
 
-    private final List<BusEvent> events;
+    private final List<BusInternalEvent> events;
 
     private final UUID userToken;
     private long timeoutMilliSec;
@@ -43,13 +43,13 @@ public abstract class CompletionUserRequestBase implements CompletionUserRequest
 
 
     public CompletionUserRequestBase(final UUID userToken) {
-        this.events = new LinkedList<BusEvent>();
+        this.events = new LinkedList<BusInternalEvent>();
         this.userToken = userToken;
         this.isCompleted = false;
     }
 
     @Override
-    public List<BusEvent> waitForCompletion(final long timeoutMilliSec) throws InterruptedException, TimeoutException {
+    public List<BusInternalEvent> waitForCompletion(final long timeoutMilliSec) throws InterruptedException, TimeoutException {
 
         this.timeoutMilliSec = timeoutMilliSec;
         initialTimeMilliSec = currentTimeMillis();
@@ -86,7 +86,7 @@ public abstract class CompletionUserRequestBase implements CompletionUserRequest
     }
 
     @Override
-    public void onBusEvent(final BusEvent curEvent) {
+    public void onBusEvent(final BusInternalEvent curEvent) {
         // Check if this is for us..
         if (curEvent.getUserToken() == null ||
                 !curEvent.getUserToken().equals(userToken)) {

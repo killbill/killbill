@@ -18,6 +18,8 @@ package com.ning.billing.entitlement.api.svcs;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
@@ -25,16 +27,22 @@ import org.joda.time.LocalTime;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.entitlement.api.SubscriptionFactory;
+import com.ning.billing.entitlement.api.user.DefaultEffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.DefaultSubscriptionFactory.SubscriptionBuilder;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.entitlement.api.user.SubscriptionBundle;
 import com.ning.billing.entitlement.api.user.SubscriptionData;
+import com.ning.billing.entitlement.api.user.SubscriptionTransitionData;
 import com.ning.billing.entitlement.engine.dao.EntitlementDao;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.events.EffectiveSubscriptionInternalEvent;
 import com.ning.billing.util.svcapi.entitlement.EntitlementInternalApi;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
 public class DefaultEntitlementInternalApi implements EntitlementInternalApi {
@@ -106,5 +114,28 @@ public class DefaultEntitlementInternalApi implements EntitlementInternalApi {
                 .setChargedThroughDate(chargedThroughDate)
                 .setPaidThroughDate(subscription.getPaidThroughDate());
         dao.updateChargedThroughDate(new SubscriptionData(builder), context);
+    }
+
+    @Override
+    public List<EffectiveSubscriptionInternalEvent> getAllTransitions(final Subscription subscription, final InternalTenantContext context) {
+        final List<SubscriptionTransitionData> transitions = ((SubscriptionData) subscription).getAllTransitions();
+        return convertEffectiveSubscriptionInternalEventFromSubscriptionTransitions(subscription, context, transitions);
+    }
+
+    @Override
+    public List<EffectiveSubscriptionInternalEvent> getBillingTransitions(Subscription subscription, final InternalTenantContext context) {
+        final List<SubscriptionTransitionData> transitions = ((SubscriptionData) subscription).getBillingTransitions();
+        return convertEffectiveSubscriptionInternalEventFromSubscriptionTransitions(subscription, context, transitions);
+    }
+
+    private List<EffectiveSubscriptionInternalEvent> convertEffectiveSubscriptionInternalEventFromSubscriptionTransitions(final Subscription subscription,
+            final InternalTenantContext context, final List<SubscriptionTransitionData> transitions) {
+        return ImmutableList.<EffectiveSubscriptionInternalEvent>copyOf(Collections2.transform(transitions, new Function<SubscriptionTransitionData, EffectiveSubscriptionInternalEvent>() {
+            @Override
+            @Nullable
+            public EffectiveSubscriptionInternalEvent apply(@Nullable SubscriptionTransitionData input) {
+                return new DefaultEffectiveSubscriptionEvent(input, ((SubscriptionData) subscription).getAlignStartDate(), context.getAccountRecordId(), context.getTenantRecordId());
+            }
+        }));
     }
 }

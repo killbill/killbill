@@ -30,10 +30,10 @@ import org.slf4j.LoggerFactory;
 
 import com.ning.billing.ErrorCode;
 import com.ning.billing.util.api.TagDefinitionApiException;
-import com.ning.billing.util.svcsapi.bus.Bus;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.events.TagDefinitionInternalEvent;
+import com.ning.billing.util.svcsapi.bus.Bus;
 import com.ning.billing.util.tag.ControlTagType;
 import com.ning.billing.util.tag.DefaultTagDefinition;
 import com.ning.billing.util.tag.TagDefinition;
@@ -139,9 +139,9 @@ public class DefaultTagDefinitionDao implements TagDefinitionDao {
                     // Post an event to the bus
                     final TagDefinitionInternalEvent tagDefinitionEvent;
                     if (tagDefinition.isControlTag()) {
-                        tagDefinitionEvent = tagEventBuilder.newControlTagDefinitionCreationEvent(tagDefinition.getId(), tagDefinition, context.getUserToken());
+                        tagDefinitionEvent = tagEventBuilder.newControlTagDefinitionCreationEvent(tagDefinition.getId(), tagDefinition, context);
                     } else {
-                        tagDefinitionEvent = tagEventBuilder.newUserTagDefinitionCreationEvent(tagDefinition.getId(), tagDefinition, context.getUserToken());
+                        tagDefinitionEvent = tagEventBuilder.newUserTagDefinitionCreationEvent(tagDefinition.getId(), tagDefinition, context);
                     }
                     try {
                         bus.postFromTransaction(tagDefinitionEvent, tagDefinitionSqlDao, context);
@@ -194,9 +194,9 @@ public class DefaultTagDefinitionDao implements TagDefinitionDao {
                     // Post an event to the Bus
                     final TagDefinitionInternalEvent tagDefinitionEvent;
                     if (tagDefinition.isControlTag()) {
-                        tagDefinitionEvent = tagEventBuilder.newControlTagDefinitionDeletionEvent(tagDefinition.getId(), tagDefinition, context.getUserToken());
+                        tagDefinitionEvent = tagEventBuilder.newControlTagDefinitionDeletionEvent(tagDefinition.getId(), tagDefinition, context);
                     } else {
-                        tagDefinitionEvent = tagEventBuilder.newUserTagDefinitionDeletionEvent(tagDefinition.getId(), tagDefinition, context.getUserToken());
+                        tagDefinitionEvent = tagEventBuilder.newUserTagDefinitionDeletionEvent(tagDefinition.getId(), tagDefinition, context);
                     }
                     try {
                         bus.postFromTransaction(tagDefinitionEvent, tagDefinitionSqlDao, context);

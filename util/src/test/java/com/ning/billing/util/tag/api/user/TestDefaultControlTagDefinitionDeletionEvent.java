@@ -37,7 +37,7 @@ public class TestDefaultControlTagDefinitionDeletionEvent extends UtilTestSuite 
         final TagDefinition tagDefinition = new DefaultTagDefinition(tagDefinitionId, tagDefinitionName, tagDefinitionDescription, controlTag);
         final UUID userToken = UUID.randomUUID();
 
-        final DefaultControlTagDefinitionDeletionEvent event = new DefaultControlTagDefinitionDeletionEvent(tagDefinitionId, tagDefinition, userToken);
+        final DefaultControlTagDefinitionDeletionEvent event = new DefaultControlTagDefinitionDeletionEvent(tagDefinitionId, tagDefinition, userToken, 1L, 1L);
         Assert.assertEquals(event.getBusEventType(), BusInternalEvent.BusEventType.CONTROL_TAGDEFINITION_DELETION);
 
         Assert.assertEquals(event.getTagDefinitionId(), tagDefinitionId);
@@ -48,9 +48,9 @@ public class TestDefaultControlTagDefinitionDeletionEvent extends UtilTestSuite 
         Assert.assertEquals(event.getUserToken(), userToken);
 
         Assert.assertEquals(event, event);
-        Assert.assertEquals(event, new DefaultControlTagDefinitionDeletionEvent(tagDefinitionId, tagDefinition, userToken));
+        Assert.assertEquals(event, new DefaultControlTagDefinitionDeletionEvent(tagDefinitionId, tagDefinition, userToken, 1L, 1L));
         Assert.assertTrue(event.equals(event));
-        Assert.assertTrue(event.equals(new DefaultControlTagDefinitionDeletionEvent(tagDefinitionId, tagDefinition, userToken)));
+        Assert.assertTrue(event.equals(new DefaultControlTagDefinitionDeletionEvent(tagDefinitionId, tagDefinition, userToken, 1L, 1L)));
     }
 
     @Test(groups = "fast")
@@ -64,7 +64,7 @@ public class TestDefaultControlTagDefinitionDeletionEvent extends UtilTestSuite 
         final TagDefinition tagDefinition = new DefaultTagDefinition(tagDefinitionId, tagDefinitionName, tagDefinitionDescription, controlTag);
         final UUID userToken = UUID.randomUUID();
 
-        final DefaultControlTagDefinitionDeletionEvent event = new DefaultControlTagDefinitionDeletionEvent(tagDefinitionId, tagDefinition, userToken);
+        final DefaultControlTagDefinitionDeletionEvent event = new DefaultControlTagDefinitionDeletionEvent(tagDefinitionId, tagDefinition, userToken, 1L, 1L);
 
         final String json = objectMapper.writeValueAsString(event);
         final DefaultControlTagDefinitionDeletionEvent fromJson = objectMapper.readValue(json, DefaultControlTagDefinitionDeletionEvent.class);

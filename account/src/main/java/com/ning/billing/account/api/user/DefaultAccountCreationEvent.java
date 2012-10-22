@@ -26,41 +26,38 @@ import com.ning.billing.account.api.BillCycleDay;
 import com.ning.billing.account.api.DefaultBillCycleDay;
 import com.ning.billing.catalog.api.Currency;
 import com.ning.billing.util.events.AccountCreationInternalEvent;
+import com.ning.billing.util.events.DefaultBusInternalEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class DefaultAccountCreationEvent implements AccountCreationInternalEvent {
+public class DefaultAccountCreationEvent  extends DefaultBusInternalEvent implements AccountCreationInternalEvent {
 
-    private final UUID userToken;
     private final UUID id;
     private final AccountData data;
 
     @JsonCreator
     public DefaultAccountCreationEvent(@JsonProperty("data") final DefaultAccountData data,
                                        @JsonProperty("userToken") final UUID userToken,
-                                       @JsonProperty("id") final UUID id) {
+                                       @JsonProperty("id") final UUID id,
+                                       @JsonProperty("accountRecordId") final Long accountRecordId,
+                                       @JsonProperty("tenantRecordId") final Long tenantRecordId) {
+        super(userToken, accountRecordId, tenantRecordId);
         this.id = id;
-        this.userToken = userToken;
         this.data = data;
     }
 
-    public DefaultAccountCreationEvent(final Account data, final UUID userToken) {
+    public DefaultAccountCreationEvent(final Account data, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
+        super(userToken, accountRecordId, tenantRecordId);
         this.id = data.getId();
         this.data = new DefaultAccountData(data);
-        this.userToken = userToken;
     }
 
     @JsonIgnore
     @Override
     public BusEventType getBusEventType() {
         return BusEventType.ACCOUNT_CREATE;
-    }
-
-    @Override
-    public UUID getUserToken() {
-        return userToken;
     }
 
     @Override
@@ -80,8 +77,6 @@ public class DefaultAccountCreationEvent implements AccountCreationInternalEvent
         int result = 1;
         result = prime * result + ((data == null) ? 0 : data.hashCode());
         result = prime * result + ((id == null) ? 0 : id.hashCode());
-        result = prime * result
-                + ((userToken == null) ? 0 : userToken.hashCode());
         return result;
     }
 
@@ -109,13 +104,6 @@ public class DefaultAccountCreationEvent implements AccountCreationInternalEvent
                 return false;
             }
         } else if (!id.equals(other.id)) {
-            return false;
-        }
-        if (userToken == null) {
-            if (other.userToken != null) {
-                return false;
-            }
-        } else if (!userToken.equals(other.userToken)) {
             return false;
         }
         return true;
