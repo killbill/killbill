@@ -21,11 +21,12 @@ import java.util.UUID;
 
 import org.joda.time.LocalDate;
 
+import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.util.events.InvoiceCreationInternalEvent;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.ning.billing.catalog.api.Currency;
-import com.ning.billing.util.events.InvoiceCreationInternalEvent;
 
 public class MockInvoiceCreationEvent implements InvoiceCreationInternalEvent {
 
@@ -161,5 +162,13 @@ public class MockInvoiceCreationEvent implements InvoiceCreationInternalEvent {
         return true;
     }
 
+    @Override
+    public Long getTenantRecordId() {
+        return 1L;
+    }
 
+    @Override
+    public Long getAccountRecordId() {
+        return 1L;
+    }
 }

@@ -18,25 +18,27 @@ package com.ning.billing.invoice.api.user;
 
 import java.util.UUID;
 
+import com.ning.billing.util.events.DefaultBusInternalEvent;
 import com.ning.billing.util.events.InvoiceAdjustmentInternalEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class DefaultInvoiceAdjustmentEvent implements InvoiceAdjustmentInternalEvent {
+public class DefaultInvoiceAdjustmentEvent extends DefaultBusInternalEvent implements InvoiceAdjustmentInternalEvent {
 
     private final UUID invoiceId;
     private final UUID accountId;
-    private final UUID userToken;
 
     @JsonCreator
     public DefaultInvoiceAdjustmentEvent(@JsonProperty("invoiceId") final UUID invoiceId,
                                          @JsonProperty("accountId") final UUID accountId,
-                                         @JsonProperty("userToken") final UUID userToken) {
+                                         @JsonProperty("userToken") final UUID userToken,
+                                         @JsonProperty("accountRecordId") final Long accountRecordId,
+                                         @JsonProperty("tenantRecordId") final Long tenantRecordId) {
+        super(userToken, accountRecordId, tenantRecordId);
         this.invoiceId = invoiceId;
         this.accountId = accountId;
-        this.userToken = userToken;
     }
 
     @Override
@@ -55,10 +57,6 @@ public class DefaultInvoiceAdjustmentEvent implements InvoiceAdjustmentInternalE
         return BusEventType.INVOICE_ADJUSTMENT;
     }
 
-    @Override
-    public UUID getUserToken() {
-        return userToken;
-    }
 
     @Override
     public String toString() {
@@ -66,7 +64,6 @@ public class DefaultInvoiceAdjustmentEvent implements InvoiceAdjustmentInternalE
         sb.append("DefaultInvoiceAdjustmentEvent");
         sb.append("{invoiceId=").append(invoiceId);
         sb.append(", accountId=").append(accountId);
-        sb.append(", userToken=").append(userToken);
         sb.append('}');
         return sb.toString();
     }
@@ -88,10 +85,6 @@ public class DefaultInvoiceAdjustmentEvent implements InvoiceAdjustmentInternalE
         if (invoiceId != null ? !invoiceId.equals(that.invoiceId) : that.invoiceId != null) {
             return false;
         }
-        if (userToken != null ? !userToken.equals(that.userToken) : that.userToken != null) {
-            return false;
-        }
-
         return true;
     }
 
@@ -99,7 +92,6 @@ public class DefaultInvoiceAdjustmentEvent implements InvoiceAdjustmentInternalE
     public int hashCode() {
         int result = invoiceId != null ? invoiceId.hashCode() : 0;
         result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
-        result = 31 * result + (userToken != null ? userToken.hashCode() : 0);
         return result;
     }
 }

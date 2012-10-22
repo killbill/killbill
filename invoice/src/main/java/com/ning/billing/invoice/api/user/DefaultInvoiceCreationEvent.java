@@ -20,31 +20,33 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 import com.ning.billing.catalog.api.Currency;
+import com.ning.billing.util.events.DefaultBusInternalEvent;
 import com.ning.billing.util.events.InvoiceCreationInternalEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class DefaultInvoiceCreationEvent implements InvoiceCreationInternalEvent {
+public class DefaultInvoiceCreationEvent extends DefaultBusInternalEvent implements InvoiceCreationInternalEvent {
 
     private final UUID invoiceId;
     private final UUID accountId;
     private final BigDecimal amountOwed;
     private final Currency currency;
-    private final UUID userToken;
 
     @JsonCreator
     public DefaultInvoiceCreationEvent(@JsonProperty("invoiceId") final UUID invoiceId,
                                        @JsonProperty("accountId") final UUID accountId,
                                        @JsonProperty("amountOwed") final BigDecimal amountOwed,
                                        @JsonProperty("currency") final Currency currency,
-                                       @JsonProperty("userToken") final UUID userToken) {
+                                       @JsonProperty("userToken") final UUID userToken,
+                                       @JsonProperty("accountRecordId") final Long accountRecordId,
+                                       @JsonProperty("tenantRecordId") final Long tenantRecordId) {
+        super(userToken, accountRecordId, tenantRecordId);
         this.invoiceId = invoiceId;
         this.accountId = accountId;
         this.amountOwed = amountOwed;
         this.currency = currency;
-        this.userToken = userToken;
     }
 
     @JsonIgnore
@@ -53,10 +55,6 @@ public class DefaultInvoiceCreationEvent implements InvoiceCreationInternalEvent
         return BusEventType.INVOICE_CREATION;
     }
 
-    @Override
-    public UUID getUserToken() {
-        return userToken;
-    }
 
     @Override
     public UUID getInvoiceId() {
@@ -94,8 +92,6 @@ public class DefaultInvoiceCreationEvent implements InvoiceCreationInternalEvent
         if (amountOwed != null ? !amountOwed.equals(that.amountOwed) : that.amountOwed != null) return false;
         if (currency != that.currency) return false;
         if (invoiceId != null ? !invoiceId.equals(that.invoiceId) : that.invoiceId != null) return false;
-        if (userToken != null ? !userToken.equals(that.userToken) : that.userToken != null) return false;
-
         return true;
     }
 
@@ -105,7 +101,6 @@ public class DefaultInvoiceCreationEvent implements InvoiceCreationInternalEvent
         result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
         result = 31 * result + (amountOwed != null ? amountOwed.hashCode() : 0);
         result = 31 * result + (currency != null ? currency.hashCode() : 0);
-        result = 31 * result + (userToken != null ? userToken.hashCode() : 0);
         return result;
     }
 }

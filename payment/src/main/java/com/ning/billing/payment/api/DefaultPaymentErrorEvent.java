@@ -18,42 +18,45 @@ package com.ning.billing.payment.api;
 
 import java.util.UUID;
 
+import com.ning.billing.util.events.DefaultBusInternalEvent;
+import com.ning.billing.util.events.PaymentErrorInternalEvent;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.ning.billing.util.entity.EntityBase;
-import com.ning.billing.util.events.PaymentErrorInternalEvent;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "error")
-public class DefaultPaymentErrorEvent extends EntityBase implements PaymentErrorInternalEvent {
+public class DefaultPaymentErrorEvent extends DefaultBusInternalEvent implements PaymentErrorInternalEvent {
 
+    private final UUID id;
     private final String message;
     private final UUID accountId;
     private final UUID invoiceId;
     private final UUID paymentId;
-    private final UUID userToken;
 
 
     @JsonCreator
-    public DefaultPaymentErrorEvent(@JsonProperty("id") final UUID id,
+    public DefaultPaymentErrorEvent(@JsonProperty("id") final UUID id, /* not used */
                                     @JsonProperty("accountId") final UUID accountId,
                                     @JsonProperty("invoiceId") final UUID invoiceId,
                                     @JsonProperty("paymentId") final UUID paymentId,
                                     @JsonProperty("message") final String message,
-                                    @JsonProperty("userToken") final UUID userToken) {
-        super(id);
+                                    @JsonProperty("userToken") final UUID userToken,
+                                    @JsonProperty("accountRecordId") final Long accountRecordId,
+                                    @JsonProperty("tenantRecordId") final Long tenantRecordId) {
+        super(userToken, accountRecordId, tenantRecordId);
+        this.id = id;
         this.message = message;
         this.accountId = accountId;
         this.invoiceId = invoiceId;
         this.paymentId = paymentId;
-        this.userToken = userToken;
     }
 
 
     public DefaultPaymentErrorEvent(final UUID accountId,
-                                    final UUID invoiceId, final UUID paymentId, final String message, final UUID userToken) {
-        this(UUID.randomUUID(), accountId, invoiceId, paymentId, message, userToken);
+                                    final UUID invoiceId, final UUID paymentId, final String message, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
+        this(UUID.randomUUID(), accountId, invoiceId, paymentId, message, userToken, accountRecordId, tenantRecordId);
     }
 
 
@@ -63,10 +66,6 @@ public class DefaultPaymentErrorEvent extends EntityBase implements PaymentError
         return BusEventType.PAYMENT_ERROR;
     }
 
-    @Override
-    public UUID getUserToken() {
-        return userToken;
-    }
 
     @Override
     public String getMessage() {
@@ -100,8 +99,6 @@ public class DefaultPaymentErrorEvent extends EntityBase implements PaymentError
         result = prime * result + ((message == null) ? 0 : message.hashCode());
         result = prime * result
                 + ((paymentId == null) ? 0 : paymentId.hashCode());
-        result = prime * result
-                + ((userToken == null) ? 0 : userToken.hashCode());
         return result;
     }
 
@@ -146,13 +143,6 @@ public class DefaultPaymentErrorEvent extends EntityBase implements PaymentError
         } else if (!paymentId.equals(other.paymentId)) {
             return false;
         }
-        if (userToken == null) {
-            if (other.userToken != null) {
-                return false;
-            }
-        } else if (!userToken.equals(other.userToken)) {
-            return false;
-        }
         return true;
     }
 
@@ -161,6 +151,6 @@ public class DefaultPaymentErrorEvent extends EntityBase implements PaymentError
     public String toString() {
         return "DefaultPaymentErrorEvent [message=" + message + ", accountId="
                 + accountId + ", invoiceId=" + invoiceId + ", paymentId="
-                + paymentId + ", userToken=" + userToken + "]";
+                + paymentId + ", userToken=" + getUserToken() + "]";
     }
 }

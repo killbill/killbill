@@ -21,9 +21,8 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import com.ning.billing.payment.api.PaymentStatus;
-import com.ning.billing.util.entity.Entity;
 
-public interface PaymentInfoInternalEvent extends Entity, BusInternalEvent {
+public interface PaymentInfoInternalEvent extends BusInternalEvent {
 
     public UUID getPaymentId();
 

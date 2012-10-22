@@ -145,7 +145,7 @@ public class TestBillCycleDayCalculator extends JunctionTestSuite {
         final Account account = Mockito.mock(Account.class);
         Mockito.when(account.getTimeZone()).thenReturn(accountTimeZone);
 
-        final BillCycleDay bcd = billCycleDayCalculator.calculateBcdFromSubscription(subscription, plan, account, Mockito.mock(Catalog.class));
+        final BillCycleDay bcd = billCycleDayCalculator.calculateBcdFromSubscription(subscription, plan, account, Mockito.mock(Catalog.class), internalCallContext);
         Assert.assertEquals(bcd.getDayOfMonthUTC(), bcdUTC);
         Assert.assertEquals(bcd.getDayOfMonthLocal(), bcdLocal);
     }

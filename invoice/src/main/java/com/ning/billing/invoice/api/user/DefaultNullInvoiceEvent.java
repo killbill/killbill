@@ -20,26 +20,27 @@ import java.util.UUID;
 
 import org.joda.time.LocalDate;
 
+import com.ning.billing.util.events.DefaultBusInternalEvent;
 import com.ning.billing.util.events.NullInvoiceInternalEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class DefaultNullInvoiceEvent implements NullInvoiceInternalEvent {
+public class DefaultNullInvoiceEvent extends DefaultBusInternalEvent implements NullInvoiceInternalEvent {
 
     private final UUID accountId;
     private final LocalDate processingDate;
-    private final UUID userToken;
 
     @JsonCreator
     public DefaultNullInvoiceEvent(@JsonProperty("accountId") final UUID accountId,
                                    @JsonProperty("processingDate") final LocalDate processingDate,
-                                   @JsonProperty("userToken") final UUID userToken) {
-        super();
+                                   @JsonProperty("userToken") final UUID userToken,
+                                   @JsonProperty("accountRecordId") final Long accountRecordId,
+                                   @JsonProperty("tenantRecordId") final Long tenantRecordId) {
+        super(userToken, accountRecordId, tenantRecordId);
         this.accountId = accountId;
         this.processingDate = processingDate;
-        this.userToken = userToken;
     }
 
     @JsonIgnore
@@ -48,10 +49,6 @@ public class DefaultNullInvoiceEvent implements NullInvoiceInternalEvent {
         return BusEventType.INVOICE_EMPTY;
     }
 
-    @Override
-    public UUID getUserToken() {
-        return userToken;
-    }
 
     @Override
     public UUID getAccountId() {
@@ -68,7 +65,6 @@ public class DefaultNullInvoiceEvent implements NullInvoiceInternalEvent {
         sb.append("DefaultNullInvoiceEvent");
         sb.append("{accountId=").append(accountId);
         sb.append(", processingDate=").append(processingDate);
-        sb.append(", userToken=").append(userToken);
         sb.append('}');
         return sb.toString();
     }
@@ -81,8 +77,6 @@ public class DefaultNullInvoiceEvent implements NullInvoiceInternalEvent {
                  + ((accountId == null) ? 0 : accountId.hashCode());
         result = prime * result
                  + ((processingDate == null) ? 0 : processingDate.hashCode());
-        result = prime * result
-                 + ((userToken == null) ? 0 : userToken.hashCode());
         return result;
     }
 
@@ -110,13 +104,6 @@ public class DefaultNullInvoiceEvent implements NullInvoiceInternalEvent {
                 return false;
             }
         } else if (processingDate.compareTo(other.processingDate) != 0) {
-            return false;
-        }
-        if (userToken == null) {
-            if (other.userToken != null) {
-                return false;
-            }
-        } else if (!userToken.equals(other.userToken)) {
             return false;
         }
         return true;

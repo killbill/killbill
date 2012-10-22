@@ -137,7 +137,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
 
     private void addBillingEventsForSubscription(final List<Subscription> subscriptions, final SubscriptionBundle bundle, final Account account, final InternalCallContext context, final DefaultBillingEventSet result) {
         for (final Subscription subscription : subscriptions) {
-            for (final EffectiveSubscriptionInternalEvent transition : entitlementApi.getBillingTransitions(subscription)) {
+            for (final EffectiveSubscriptionInternalEvent transition : entitlementApi.getBillingTransitions(subscription, context)) {
                 try {
                     final BillCycleDay bcd = bcdCalculator.calculateBcd(bundle, subscription, transition, account, context);
 

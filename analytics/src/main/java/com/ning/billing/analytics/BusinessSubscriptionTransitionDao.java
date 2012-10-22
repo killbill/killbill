@@ -98,7 +98,8 @@ public class BusinessSubscriptionTransitionDao {
 
                 final ArrayList<BusinessSubscriptionTransition> transitions = new ArrayList<BusinessSubscriptionTransition>();
                 for (final Subscription subscription : subscriptions) {
-                    for (final EffectiveSubscriptionInternalEvent event : entitlementApi.getAllTransitions(subscription)) {
+                    // TODO remove API call from within transaction, although this is NOT a real issue as this call wil not hit the DB
+                    for (final EffectiveSubscriptionInternalEvent event : entitlementApi.getAllTransitions(subscription, context)) {
                         final BusinessSubscriptionEvent businessEvent = getBusinessSubscriptionFromEvent(event);
                         if (businessEvent == null) {
                             continue;

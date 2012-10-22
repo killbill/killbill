@@ -16,7 +16,6 @@
 
 package com.ning.billing.junction.plumbing.api;
 
-import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -28,7 +27,6 @@ import com.ning.billing.catalog.api.PlanPhase;
 import com.ning.billing.catalog.api.PlanPhaseSpecifier;
 import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.ProductCategory;
-import com.ning.billing.entitlement.api.user.EffectiveSubscriptionEvent;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
 import com.ning.billing.junction.api.BlockingApiException;
@@ -181,26 +179,6 @@ public class BlockingSubscription implements Subscription {
     @Override
     public ProductCategory getCategory() {
         return subscription.getCategory();
-    }
-
-    @Override
-    public EffectiveSubscriptionEvent getPendingTransition() {
-        return subscription.getPendingTransition();
-    }
-
-    @Override
-    public EffectiveSubscriptionEvent getPreviousTransition() {
-        return subscription.getPreviousTransition();
-    }
-
-    @Override
-    public List<EffectiveSubscriptionEvent> getBillingTransitions() {
-        return subscription.getBillingTransitions();
-    }
-
-    @Override
-    public List<EffectiveSubscriptionEvent> getAllTransitions() {
-        return subscription.getAllTransitions();
     }
 
     @Override

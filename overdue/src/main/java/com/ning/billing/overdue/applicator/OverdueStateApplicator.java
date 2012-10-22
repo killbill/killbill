@@ -129,14 +129,14 @@ public class OverdueStateApplicator<T extends Blockable> {
         }
 
         try {
-            bus.post(createOverdueEvent(overdueable, previousOverdueStateName, nextOverdueState.getName()), context);
+            bus.post(createOverdueEvent(overdueable, previousOverdueStateName, nextOverdueState.getName(), context), context);
         } catch (Exception e) {
             log.error("Error posting overdue change event to bus", e);
         }
     }
 
-    private OverdueChangeInternalEvent createOverdueEvent(final T overdueable, final String previousOverdueStateName, final String nextOverdueStateName) throws BlockingApiException {
-        return new DefaultOverdueChangeEvent(overdueable.getId(), Blockable.Type.get(overdueable), previousOverdueStateName, nextOverdueStateName, null);
+    private OverdueChangeInternalEvent createOverdueEvent(final T overdueable, final String previousOverdueStateName, final String nextOverdueStateName, final InternalCallContext context) throws BlockingApiException {
+        return new DefaultOverdueChangeEvent(overdueable.getId(), Blockable.Type.get(overdueable), previousOverdueStateName, nextOverdueStateName, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
     }
 
     protected void storeNewState(final T blockable, final OverdueState<T> nextOverdueState, final InternalCallContext context) throws OverdueException {

@@ -171,7 +171,8 @@ public class InvoiceDispatcher {
             if (invoice == null) {
                 log.info("Generated null invoice.");
                 if (!dryRun) {
-                    final BusInternalEvent event = new DefaultNullInvoiceEvent(accountId, clock.getUTCToday(), context.getUserToken());
+                    final BusInternalEvent event = new DefaultNullInvoiceEvent(accountId, clock.getUTCToday(), context.getUserToken(),
+                            internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());
                     postEvent(event, accountId, internalCallContext);
                 }
             } else {
@@ -193,7 +194,9 @@ public class InvoiceDispatcher {
 
                     final InvoiceCreationInternalEvent event = new DefaultInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
                                                                                        invoice.getBalance(), invoice.getCurrency(),
-                                                                                       context.getUserToken());
+                                                                                       context.getUserToken(),
+                                                                                       internalCallContext.getAccountRecordId(),
+                                                                                       internalCallContext.getTenantRecordId());
 
                     if (isRealInvoiceWithItems) {
                         postEvent(event, accountId, internalCallContext);

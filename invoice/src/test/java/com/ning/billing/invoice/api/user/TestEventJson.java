@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -35,7 +35,7 @@ public class TestEventJson extends InvoiceTestSuite {
 
     @Test(groups = "fast")
     public void testInvoiceCreationEvent() throws Exception {
-        final InvoiceCreationInternalEvent e = new DefaultInvoiceCreationEvent(UUID.randomUUID(), UUID.randomUUID(), new BigDecimal(12.0), Currency.USD, UUID.randomUUID());
+        final InvoiceCreationInternalEvent e = new DefaultInvoiceCreationEvent(UUID.randomUUID(), UUID.randomUUID(), new BigDecimal(12.0), Currency.USD, UUID.randomUUID(), 1L, 1L);
         final String json = mapper.writeValueAsString(e);
 
         final Object obj = mapper.readValue(json, DefaultInvoiceCreationEvent.class);
@@ -44,7 +44,7 @@ public class TestEventJson extends InvoiceTestSuite {
 
     @Test(groups = "fast")
     public void testEmptyInvoiceEvent() throws Exception {
-        final NullInvoiceInternalEvent e = new DefaultNullInvoiceEvent(UUID.randomUUID(), new LocalDate(), UUID.randomUUID());
+        final NullInvoiceInternalEvent e = new DefaultNullInvoiceEvent(UUID.randomUUID(), new LocalDate(), UUID.randomUUID(), 1L, 1L);
         final String json = mapper.writeValueAsString(e);
 
         final Object obj = mapper.readValue(json, DefaultNullInvoiceEvent.class);

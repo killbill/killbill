@@ -235,10 +235,10 @@ public class TestAnalyticsService extends AnalyticsTestSuiteWithEmbeddedDB {
 
         // It doesn't really matter what the events contain - the listener will go back to the db
         invoiceCreationNotification = new DefaultInvoiceCreationEvent(invoice.getId(), account.getId(),
-                                                                      INVOICE_AMOUNT, ACCOUNT_CURRENCY, null);
+                                                                      INVOICE_AMOUNT, ACCOUNT_CURRENCY, null, 1L, 1L);
 
         paymentInfoNotification = new DefaultPaymentInfoEvent(account.getId(), invoices.get(0).getId(), null, invoices.get(0).getBalance(), -1,
-                                                              PaymentStatus.UNKNOWN, null, null, null, clock.getUTCNow());
+                                                              PaymentStatus.UNKNOWN, null, null, null, clock.getUTCNow(), 1L, 1L);
 
         final PaymentModelDao paymentInfo = new PaymentModelDao(account.getId(), invoice.getId(), account.getPaymentMethodId(),
                                                                 BigDecimal.ONE, Currency.USD, clock.getUTCNow(), PaymentStatus.SUCCESS);

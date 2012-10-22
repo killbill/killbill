@@ -95,7 +95,7 @@ public class BillCycleDayCalculator {
             case ACCOUNT:
                 result = account.getBillCycleDay();
                 if (result == null || result.getDayOfMonthUTC() == 0) {
-                    result = calculateBcdFromSubscription(subscription, plan, account, catalog);
+                    result = calculateBcdFromSubscription(subscription, plan, account, catalog, context);
                 }
                 break;
             case BUNDLE:
@@ -105,10 +105,10 @@ public class BillCycleDayCalculator {
                     // The BP has been cancelled
                     basePlan = baseSub.getLastActivePlan();
                 }
-                result = calculateBcdFromSubscription(baseSub, basePlan, account, catalog);
+                result = calculateBcdFromSubscription(baseSub, basePlan, account, catalog, context);
                 break;
             case SUBSCRIPTION:
-                result = calculateBcdFromSubscription(subscription, plan, account, catalog);
+                result = calculateBcdFromSubscription(subscription, plan, account, catalog, context);
                 break;
         }
 
@@ -120,12 +120,12 @@ public class BillCycleDayCalculator {
     }
 
     @VisibleForTesting
-    BillCycleDay calculateBcdFromSubscription(final Subscription subscription, final Plan plan, final Account account, final Catalog catalog)
+    BillCycleDay calculateBcdFromSubscription(final Subscription subscription, final Plan plan, final Account account, final Catalog catalog, final InternalCallContext context)
             throws AccountApiException, CatalogApiException {
         // Retrieve the initial phase type for that subscription
         // TODO - this should be extracted somewhere, along with this code above
         final PhaseType initialPhaseType;
-        final List<EffectiveSubscriptionInternalEvent> transitions =  entitlementApi.getAllTransitions(subscription);
+        final List<EffectiveSubscriptionInternalEvent> transitions =  entitlementApi.getAllTransitions(subscription, context);
         if (transitions.size() == 0) {
             initialPhaseType = null;
         } else {

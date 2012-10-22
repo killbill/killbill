@@ -21,13 +21,14 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
+import com.ning.billing.util.events.DefaultBusInternalEvent;
+import com.ning.billing.util.events.PaymentInfoInternalEvent;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.ning.billing.util.entity.EntityBase;
-import com.ning.billing.util.events.PaymentInfoInternalEvent;
 
-public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoInternalEvent {
+public class DefaultPaymentInfoEvent extends DefaultBusInternalEvent implements PaymentInfoInternalEvent {
 
     private final UUID accountId;
     private final UUID invoiceId;
@@ -41,7 +42,7 @@ public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoIn
     private final String extSecondPaymentRefId;
 
     @JsonCreator
-    public DefaultPaymentInfoEvent(@JsonProperty("id") final UUID id,
+    public DefaultPaymentInfoEvent(@JsonProperty("id") final UUID id, /* not used */
                                    @JsonProperty("accountId") final UUID accountId,
                                    @JsonProperty("invoiceId") final UUID invoiceId,
                                    @JsonProperty("paymentId") final UUID paymentId,
@@ -51,8 +52,10 @@ public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoIn
                                    @JsonProperty("extFirstPaymentRefId") final String extFirstPaymentRefId,
                                    @JsonProperty("extSecondPaymentRefId") final String extSecondPaymentRefId,
                                    @JsonProperty("userToken") final UUID userToken,
-                                   @JsonProperty("effectiveDate") final DateTime effectiveDate) {
-        super(id);
+                                   @JsonProperty("effectiveDate") final DateTime effectiveDate,
+                                   @JsonProperty("accountRecordId") final Long accountRecordId,
+                                   @JsonProperty("tenantRecordId") final Long tenantRecordId) {
+        super(userToken, accountRecordId, tenantRecordId);
         this.accountId = accountId;
         this.invoiceId = invoiceId;
         this.paymentId = paymentId;
@@ -68,12 +71,14 @@ public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoIn
 
     public DefaultPaymentInfoEvent(final UUID accountId, final UUID invoiceId,
                                    final UUID paymentId, final BigDecimal amount, final Integer paymentNumber,
-                                   final PaymentStatus status, final String extFirstPaymentRefId, final String extSecondPaymentRefId, final UUID userToken, final DateTime effectiveDate) {
-        this(UUID.randomUUID(), accountId, invoiceId, paymentId, amount, paymentNumber, status, extFirstPaymentRefId, extSecondPaymentRefId, userToken, effectiveDate);
+                                   final PaymentStatus status, final String extFirstPaymentRefId, final String extSecondPaymentRefId, final UUID userToken,
+                                   final DateTime effectiveDatefinal, Long accountRecordId, final Long tenantRecordId) {
+        this(UUID.randomUUID(), accountId, invoiceId, paymentId, amount, paymentNumber, status, extFirstPaymentRefId, extSecondPaymentRefId, userToken,
+                effectiveDatefinal, accountRecordId, tenantRecordId);
     }
 
     public DefaultPaymentInfoEvent(final DefaultPaymentInfoEvent src) {
-        this(src.id,
+        this(UUID.randomUUID(),
              src.accountId,
              src.invoiceId,
              src.paymentId,
@@ -83,7 +88,9 @@ public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoIn
              src.extFirstPaymentRefId,
              src.extSecondPaymentRefId,
              src.userToken,
-             src.effectiveDate);
+             src.effectiveDate,
+             src.getAccountRecordId(),
+             src.getTenantRecordId());
     }
 
 
@@ -96,12 +103,6 @@ public class DefaultPaymentInfoEvent extends EntityBase implements PaymentInfoIn
     @Override
     public UUID getUserToken() {
         return userToken;
-    }
-
-
-    @Override
-    public UUID getId() {
-        return id;
     }
 
     @Override

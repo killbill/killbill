@@ -84,7 +84,7 @@ public class TestBusinessSubscriptionTransitionRecorder extends AnalyticsTestSui
 
         final Subscription subscription = Mockito.mock(Subscription.class);
         Mockito.when(subscription.getId()).thenReturn(subscriptionId);
-        Mockito.when(entitlementApi.getAllTransitions(subscription)).thenReturn(ImmutableList.<EffectiveSubscriptionInternalEvent>of(eventEffective));
+        Mockito.when(entitlementApi.getAllTransitions(subscription, internalCallContext)).thenReturn(ImmutableList.<EffectiveSubscriptionInternalEvent>of(eventEffective));
 
         Mockito.when(entitlementApi.getSubscriptionsForBundle(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(ImmutableList.<Subscription>of(subscription));
 

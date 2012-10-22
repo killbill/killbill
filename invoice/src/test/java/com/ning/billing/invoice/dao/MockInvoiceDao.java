@@ -34,9 +34,9 @@ import com.ning.billing.invoice.api.InvoiceApiException;
 import com.ning.billing.invoice.api.InvoiceItem;
 import com.ning.billing.invoice.api.InvoicePayment;
 import com.ning.billing.invoice.api.user.DefaultInvoiceCreationEvent;
-import com.ning.billing.util.svcsapi.bus.Bus;
 import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalTenantContext;
+import com.ning.billing.util.svcsapi.bus.Bus;
 
 import com.google.inject.Inject;
 
@@ -59,7 +59,7 @@ public class MockInvoiceDao implements InvoiceDao {
         try {
             eventBus.post(new DefaultInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
                                                           invoice.getBalance(), invoice.getCurrency(),
-                                                          null), context);
+                                                          null, 1L, 1L), context);
         } catch (Bus.EventBusException ex) {
             throw new RuntimeException(ex);
         }
