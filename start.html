@@ -6,110 +6,144 @@ layout: default
     <div class="row">
         <div class="span3 bs-docs-sidebar">
             <ul class="nav nav-list bs-docs-sidenav affix">
-                <li><a href="#common-steps">Common steps</a></li>
-                <li><a href="#installation-in-jetty">Installation in Jetty</a></li>
-                <li><a href="#installation-in-tomcat">Installation in Tomcat</a></li>
-                <li><a href="#installation-in-glassfish">Installation in GlassFish</a></li>
+                <li><a href="#5_minutes">Killbill in 5 minutes</a></li>
+                <li><a href="#prod_deployment">Production deployment</a></li>
+                <ul class="nav nav-list bs-docs-sidenav affix">
+                    <li><a href="#common_steps">Common steps</a></li>
+                    <li><a href="#installation_in_jetty">Installation in Jetty</a></li>
+                    <li><a href="#installation_in_tomcat">Installation in Tomcat</a></li>
+                    <li><a href="#installation_in_glassfish">Installation in GlassFish</a></li>
+                </ul>
             </ul>
         </div>
 
         <div class="span8">
-            <section id="common-steps">
+            <section id="5_minutes">
                 <div class="page-header">
-                    <h1>Common steps</h1>
+                    <h1>Killbill in 5 minutes</h1>
                 </div>
-
-                <h2>Download the latest version of Killbill server</h2>
-                <p>Releases are available in Maven Central. Among other packaging formats, we provide a war with all dependencies. You can get the latest version <a href="http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.ning.billing%22%20AND%20a%3A%22killbill-server%22" target="_blank">here</a> (download the jar-with-dependencies war artifact).</p>
-
-                <h2>Setup the database</h2>
-                <p>Create the database killbill will use and apply the schema using the <strong>db-helper</strong> script provided in the bin/ directory of the killbill source tree.</p>
+                <p class="lead">We provide an executable war to quickly get started with Killbill. The only external dependency is a MySQL database with the latest schema applied.</p>
+                <p>In order to start Killbill:
+                    <ol>
+                        <li>Setup a MySQL user and schema for Killbill and apply the DDL:
+                            <pre>
+echo "create database killbill;
+create user killbill;
+grant all on killbill.*
+          to killbill@localhost
+          identified by 'killbill';" | mysql -uroot -p
+curl 'https://gist.github.com/3931646' | mysql -ukillbill -pkillbill killbill</pre></li>
+                        <li>Download the <strong>killbill-server-x.y.z-jetty-console.war</strong> artifact from <a href="http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.ning.billing%22%20AND%20a%3A%22killbill-server%22" target="_blank">Maven Central</a>.</li>
+                        <li>Double click on the downloaded binary and click <strong>start</strong>. You can also start it on the command line via <pre>java -jar killbill-server-x.y.z-jetty-console.war</pre></li>
+                        <li>You're all set!</li>
+                    </ol>
+                </p>
             </section>
 
-            <section id="installation-in-jetty">
+            <section id="prod_deployment">
                 <div class="page-header">
-                    <h1>Installation in Jetty</h1>
+                    <h1>Production deployment</h1>
                 </div>
+                <p class="lead">When deploying Killbill to a production environment, you'll likely want to use your own container and deploy the Killbill war instead. Below are instructions for various containers. If you're unsure which one to use and/or don't have any preference, we recommend Jetty.</p>
 
-                <h2>Download the Jetty container</h2>
-                <p>If you don't have it yet, you can download the Jetty container <a href="http://download.eclipse.org/jetty/" target="_blank">here</a>. If you're unsure which version to use, we recommend <strong>8.1.7.v20120910</strong>. Make sure you can unpack and start Jetty as describe <a href="http://wiki.eclipse.org/Jetty/Howto/Install_Jetty" target="_blank">here</a>.</p>
+                <section id="common_steps">
+                    <div class="page-header">
+                        <h2>Common steps</h2>
+                    </div>
 
-                <p>Jetty ships with examples you can safely remove:
-                    <ul>
-                        <li>contexts/javadoc.xml</li>
-                        <li>contexts/test.d/override-web.xml</li>
-                        <li>contexts/test.xml</li>
-                        <li>webapps/spdy.war</li>
-                        <li>webapps/test.war</li>
-                    </ul>
-                </p>
+                    <h3>Download the latest version of Killbill server</h3>
+                    <p>Releases are available in Maven Central. Among other packaging formats, we provide a war with all dependencies. You can get the latest version <a href="http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.ning.billing%22%20AND%20a%3A%22killbill-server%22" target="_blank">here</a> (download the jar-with-dependencies war artifact).</p>
 
-                <h2>Deploy Killbill in Jetty</h2>
-                <p>Place the downloaded Killbill war under <strong>webapps/root.war</strong> in the Jetty folder.</p>
-                <p>Update the start.ini file with Killbill specific configuration. Here is a working example (make sure to update the first three properties using your database credentials):
-                    <pre>
-# Killbill properties
--Dcom.ning.jetty.jdbi.url=jdbc:mysql://127.0.0.1:3306/killbill
--Dcom.ning.jetty.jdbi.user=killbill
--Dcom.ning.jetty.jdbi.password=killbill
--Dkillbill.catalog.uri=catalog.xml
--Dkillbill.overdue.uri=overdue.xml
--Dkillbill.payment.retry.days=8,8,8
--Duser.timezone=UTC
--Dkillbill.payment.engine.notifications.sleep=5000
--Dkillbill.invoice.engine.notifications.sleep=5000
--Dkillbill.entitlement.engine.notifications.sleep=5000
--Dkillbill.billing.util.persistent.bus.sleep=5000
--Dkillbill.billing.util.persistent.bus.nbThreads=1
+                    <h3>Setup the database</h3>
+                    <p>Create the database killbill will use and apply the schema which can be found <a href="https://gist.github.com/3931646">here</a> using the <strong>db-helper</strong> script provided in the bin/ directory of the killbill source tree.</p>
+                </section>
+
+                <section id="installation_in_jetty">
+                    <div class="page-header">
+                        <h2>Installation in Jetty</h2>
+                    </div>
+
+                    <h3>Download the Jetty container</h3>
+                    <p>If you don't have it yet, you can download the Jetty container <a href="http://download.eclipse.org/jetty/" target="_blank">here</a>. If you're unsure which version to use, we recommend <strong>8.1.7.v20120910</strong>. Make sure you can unpack and start Jetty as describe <a href="http://wiki.eclipse.org/Jetty/Howto/Install_Jetty" target="_blank">here</a>.</p>
+
+                    <p>Jetty ships with examples you can safely remove:
+                        <ul>
+                            <li>contexts/javadoc.xml</li>
+                            <li>contexts/test.d/override-web.xml</li>
+                            <li>contexts/test.xml</li>
+                            <li>webapps/spdy.war</li>
+                            <li>webapps/test.war</li>
+                        </ul>
+                    </p>
+
+                    <h3>Deploy Killbill in Jetty</h3>
+                    <p>Place the downloaded Killbill war under <strong>webapps/root.war</strong> in the Jetty folder.</p>
+                    <p>Update the start.ini file with Killbill specific configuration. Here is a working example (make sure to update the first three properties using your database credentials):
+                        <pre>
+    # Killbill properties
+    -Dcom.ning.jetty.jdbi.url=jdbc:mysql://127.0.0.1:3306/killbill
+    -Dcom.ning.jetty.jdbi.user=killbill
+    -Dcom.ning.jetty.jdbi.password=killbill
+    -Dkillbill.catalog.uri=catalog.xml
+    -Dkillbill.overdue.uri=overdue.xml
+    -Dkillbill.payment.retry.days=8,8,8
+    -Duser.timezone=UTC
+    -Dkillbill.payment.engine.notifications.sleep=5000
+    -Dkillbill.invoice.engine.notifications.sleep=5000
+    -Dkillbill.entitlement.engine.notifications.sleep=5000
+    -Dkillbill.billing.util.persistent.bus.sleep=5000
+    -Dkillbill.billing.util.persistent.bus.nbThreads=1
 
 
-# Start classpath OPTIONS
-OPTIONS=Server,resources,ext,plus,annotations
+    # Start classpath OPTIONS
+    OPTIONS=Server,resources,ext,plus,annotations
 
-# Configuration files
-etc/jetty.xml
-etc/jetty-annotations.xml
-etc/jetty-deploy.xml
-etc/jetty-webapps.xml</pre>
-                </p>
-                <p>You should now be all set! Killbill can be started via the command <pre>java -jar start.jar</pre></p>
+    # Configuration files
+    etc/jetty.xml
+    etc/jetty-annotations.xml
+    etc/jetty-deploy.xml
+    etc/jetty-webapps.xml</pre>
+                    </p>
+                    <p>You should now be all set! Killbill can be started via the command <pre>java -jar start.jar</pre></p>
 
-                <h2>Enable SSL</h2>
-                <p>The following command generates a key pair and certificate directly into a keystore: <pre>keytool -keystore keystore -alias jetty -genkey -keyalg RSA</pre>Save the keystore file under the etc directory of the Jetty distribution.</p>
-                <p>In your start.ini file, add the <pre>etc/jetty-ssl.xml</pre> configuration file and edit this file to update the <strong>KeyStorePassword</strong>, <strong>KeyManagerPassword</strong> and <strong>TrustStorePassword</strong> directives with the passwords you specified when you ran the keytool command.</p>
-                <p>Killbill should now be available over SSL. For more details, see the Jetty guide <a href="http://wiki.eclipse.org/Jetty/Howto/Configure_SSL" target="_blank">here</a>.</p>
-            </section>
+                    <h3>Enable SSL</h3>
+                    <p>The following command generates a key pair and certificate directly into a keystore: <pre>keytool -keystore keystore -alias jetty -genkey -keyalg RSA</pre>Save the keystore file under the etc directory of the Jetty distribution.</p>
+                    <p>In your start.ini file, add the <pre>etc/jetty-ssl.xml</pre> configuration file and edit this file to update the <strong>KeyStorePassword</strong>, <strong>KeyManagerPassword</strong> and <strong>TrustStorePassword</strong> directives with the passwords you specified when you ran the keytool command.</p>
+                    <p>Killbill should now be available over SSL. For more details, see the Jetty guide <a href="http://wiki.eclipse.org/Jetty/Howto/Configure_SSL" target="_blank">here</a>.</p>
+                </section>
 
-            <section id="installation-in-tomcat">
-                <div class="page-header">
-                    <h1>Installation in Tomcat</h1>
-                </div>
-            </section>
+                <section id="installation_in_tomcat">
+                    <div class="page-header">
+                        <h2>Installation in Tomcat</h2>
+                    </div>
+                    <p>TODO</p>
+                </section>
 
-            <section id="installation-in-glassfish">
-                <div class="page-header">
-                    <h1>Installation in GlassFish</h1>
-                </div>
-                <h2>Download the GlassFish container</h2>
-                <p>If you don't have it yet, you can download the GlassFish container <a href="http://glassfish.java.net/" target="_blank">here</a>. If you're unsure which version to use, we recommend <strong>3.1.2.2</strong>.</p>
+                <section id="installation_in_glassfish">
+                    <div class="page-header">
+                        <h2>Installation in GlassFish</h2>
+                    </div>
+                    <h3>Download the GlassFish container</h3>
+                    <p>If you don't have it yet, you can download the GlassFish container <a href="http://glassfish.java.net/" target="_blank">here</a>. If you're unsure which version to use, we recommend <strong>3.1.2.2</strong>.</p>
 
-                <h2>Deploy Killbill in GlassFish</h2>
-                <p>Configure GlassFish with your Killbill specific configuration in <strong>domains/domain1/config/domain.xml</strong> (make sure to update the first three properties using your database credentials):
-                    <pre>
-&lt;jvm-options&gt;-Dcom.ning.jetty.jdbi.url=jdbc:mysql://127.0.0.1:3306/killbill&lt;/jvm-options&gt;
-&lt;jvm-options&gt;-Dcom.ning.jetty.jdbi.user=killbill&lt;/jvm-options&gt;
-&lt;jvm-options&gt;-Dcom.ning.jetty.jdbi.password=killbill&lt;/jvm-options&gt;
-&lt;jvm-options&gt;-Dkillbill.catalog.uri=catalog.xml&lt;/jvm-options&gt;
-&lt;jvm-options&gt;-Dkillbill.overdue.uri=overdue.xml&lt;/jvm-options&gt;
-&lt;jvm-options&gt;-Dkillbill.payment.retry.days=8,8,8&lt;/jvm-options&gt;
-&lt;jvm-options&gt;-Duser.timezone=UTC&lt;/jvm-options&gt;
-&lt;jvm-options&gt;-Dkillbill.payment.engine.notifications.sleep=5000&lt;/jvm-options&gt;
-&lt;jvm-options&gt;-Dkillbill.invoice.engine.notifications.sleep=5000&lt;/jvm-options&gt;
-&lt;jvm-options&gt;-Dkillbill.entitlement.engine.notifications.sleep=5000&lt;/jvm-options&gt;
-&lt;jvm-options&gt;-Dkillbill.billing.util.persistent.bus.sleep=5000&lt;/jvm-options&gt;
-&lt;jvm-options&gt;-Dkillbill.billing.util.persistent.bus.nbThreads=1&lt;/jvm-options&gt;</pre>
-                </p>
-                <p>In the glassfish directory of the unzipped GlasshFish distribution, run the following command: <pre>./bin/asadmin start-domain ; ./bin/asadmin deploy --contextroot "/" /path/to/killbill.war</pre> You should now be all set!</p>
+                    <h3>Deploy Killbill in GlassFish</h3>
+                    <p>Configure GlassFish with your Killbill specific configuration in <strong>domains/domain1/config/domain.xml</strong> (make sure to update the first three properties using your database credentials):
+                        <pre>
+    &lt;jvm-options&gt;-Dcom.ning.jetty.jdbi.url=jdbc:mysql://127.0.0.1:3306/killbill&lt;/jvm-options&gt;
+    &lt;jvm-options&gt;-Dcom.ning.jetty.jdbi.user=killbill&lt;/jvm-options&gt;
+    &lt;jvm-options&gt;-Dcom.ning.jetty.jdbi.password=killbill&lt;/jvm-options&gt;
+    &lt;jvm-options&gt;-Dkillbill.catalog.uri=catalog.xml&lt;/jvm-options&gt;
+    &lt;jvm-options&gt;-Dkillbill.overdue.uri=overdue.xml&lt;/jvm-options&gt;
+    &lt;jvm-options&gt;-Dkillbill.payment.retry.days=8,8,8&lt;/jvm-options&gt;
+    &lt;jvm-options&gt;-Duser.timezone=UTC&lt;/jvm-options&gt;
+    &lt;jvm-options&gt;-Dkillbill.payment.engine.notifications.sleep=5000&lt;/jvm-options&gt;
+    &lt;jvm-options&gt;-Dkillbill.invoice.engine.notifications.sleep=5000&lt;/jvm-options&gt;
+    &lt;jvm-options&gt;-Dkillbill.entitlement.engine.notifications.sleep=5000&lt;/jvm-options&gt;
+    &lt;jvm-options&gt;-Dkillbill.billing.util.persistent.bus.sleep=5000&lt;/jvm-options&gt;
+    &lt;jvm-options&gt;-Dkillbill.billing.util.persistent.bus.nbThreads=1&lt;/jvm-options&gt;</pre>
+                    </p>
+                    <p>In the glassfish directory of the unzipped GlasshFish distribution, run the following command: <pre>./bin/asadmin start-domain ; ./bin/asadmin deploy --contextroot "/" /path/to/killbill.war</pre> You should now be all set!</p>
+                </section>
             </section>
         </div>
     </div>
