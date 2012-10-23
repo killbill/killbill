@@ -40,7 +40,7 @@ layout: default
                     <li>REFUND_ADJ: Invoice level adjustment (against a posted payment). This item is always negative</li>
                     <li>CREDIT_ADJ: Invoice level adjustment (credits), either at the account level (on its own invoice) or against an existing invoice. This item is always negative</li>
                     <li>REPAIR_ADJ: Internal adjustment, generated automatically by the system for an invoice on which the subscription was modified (immediate cancellation or change). The items is always negative</li>
-                    <li>CBA_ADJ: Internal adjustment, generated automatically by the system for an invoice which became negative (account level credits). Positive when generating credits, negative when consuming account level credits. The sum of CBA items for an account should always be positive or null</li>
+                    <li>CBA_ADJ: Internal adjustment, generated automatically by the system for an invoice which became negative (account level credits). Positive when generating credits, negative when consuming account level credits. The sum of CBA items for an account should always be positive or zero</li>
                 </ul>
             </p>
 
