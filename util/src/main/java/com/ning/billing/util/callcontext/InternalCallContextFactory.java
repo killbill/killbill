@@ -283,9 +283,10 @@ public class InternalCallContextFactory {
         }
         return tenantRecordId;
     }
-
+/*
     // TODO - remove
     public InternalCallContext createInternalCallContext(final String userName, final CallOrigin callOrigin, final UserType userType, final UUID userToken) {
         return createInternalCallContext(INTERNAL_TENANT_RECORD_ID, null, userName, callOrigin, userType, userToken);
     }
+    */
 }

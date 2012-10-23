@@ -56,11 +56,13 @@ public class InternalCallContext extends InternalTenantContext {
              callContext.getUpdatedDate());
     }
 
+
+/*
     public CallContext toCallContext() {
         // TODO - can't go back to CallContext (need to extract internal APIs first)
         return new DefaultCallContext(null, userName, callOrigin, userType, reasonCode, comment, userToken, createdDate, updatedDate);
     }
-
+*/
     public UUID getUserToken() {
         return userToken;
     }
