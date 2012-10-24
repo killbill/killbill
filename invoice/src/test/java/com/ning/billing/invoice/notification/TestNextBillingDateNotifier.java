@@ -51,8 +51,6 @@ import com.ning.billing.invoice.glue.InvoiceModuleWithMocks;
 import com.ning.billing.invoice.template.formatters.DefaultInvoiceFormatterFactory;
 import com.ning.billing.lifecycle.KillbillService;
 import com.ning.billing.mock.glue.MockJunctionModule;
-import com.ning.billing.util.callcontext.CallContextFactory;
-import com.ning.billing.util.callcontext.DefaultCallContextFactory;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
 import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.clock.Clock;
@@ -88,13 +86,13 @@ public class TestNextBillingDateNotifier extends InvoiceTestSuiteWithEmbeddedDB 
         int eventCount = 0;
         UUID latestSubscriptionId = null;
 
-        public InvoiceListenerMock(final CallContextFactory factory, final InvoiceDispatcher dispatcher) {
-            super(factory, dispatcher);
+        public InvoiceListenerMock(final InternalCallContextFactory internalCallContextFactory, final InvoiceDispatcher dispatcher) {
+            super(internalCallContextFactory, dispatcher);
         }
 
         @Override
         public void handleNextBillingDateEvent(final UUID subscriptionId,
-                                               final DateTime eventDateTime) {
+                                               final DateTime eventDateTime, final Long accountRecordId, final Long tenantRecordId) {
             eventCount++;
             latestSubscriptionId = subscriptionId;
         }
@@ -160,9 +158,8 @@ public class TestNextBillingDateNotifier extends InvoiceTestSuiteWithEmbeddedDB 
         final EntitlementInternalApi entitlementUserApi = Mockito.mock(EntitlementInternalApi.class);
         Mockito.when(entitlementUserApi.getSubscriptionFromId(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
 
-        final CallContextFactory factory = new DefaultCallContextFactory(clock);
-        listener = new InvoiceListenerMock(factory, dispatcher);
         internalCallContextFactory = g.getInstance(InternalCallContextFactory.class);
+        listener = new InvoiceListenerMock(internalCallContextFactory, dispatcher);
         notifier = new DefaultNextBillingDateNotifier(notificationQueueService, g.getInstance(InvoiceConfig.class), entitlementUserApi,
                                                       listener, internalCallContextFactory);
     }

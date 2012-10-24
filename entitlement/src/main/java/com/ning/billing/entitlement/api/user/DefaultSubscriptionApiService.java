@@ -364,7 +364,7 @@ public class DefaultSubscriptionApiService implements SubscriptionApiService {
             throw new EntitlementUserApiException(ErrorCode.ENT_INVALID_REQUESTED_FUTURE_DATE, requestedDate.toString());
         }
 
-        final SubscriptionTransitionData  previousTransition = subscription.getPreviousTransitionData();
+        final SubscriptionTransition  previousTransition = subscription.getPreviousTransition();
         if (previousTransition != null && previousTransition.getEffectiveTransitionTime().isAfter(requestedDate)) {
             throw new EntitlementUserApiException(ErrorCode.ENT_INVALID_REQUESTED_DATE,
                                                   requestedDate.toString(), previousTransition.getEffectiveTransitionTime());

@@ -96,4 +96,8 @@ public interface Subscription extends Entity, Blockable {
     public DateTime getPaidThroughDate();
 
     public ProductCategory getCategory();
+
+    public SubscriptionTransition getPendingTransition();
+
+    public SubscriptionTransition getPreviousTransition();
 }

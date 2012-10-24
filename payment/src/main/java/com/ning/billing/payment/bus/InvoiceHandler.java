@@ -24,11 +24,9 @@ import com.ning.billing.account.api.Account;
 import com.ning.billing.account.api.AccountApiException;
 import com.ning.billing.payment.api.PaymentApiException;
 import com.ning.billing.payment.core.PaymentProcessor;
-import com.ning.billing.util.callcontext.CallContext;
 import com.ning.billing.util.callcontext.CallOrigin;
-import com.ning.billing.util.callcontext.DefaultCallContext;
+import com.ning.billing.util.callcontext.InternalCallContext;
 import com.ning.billing.util.callcontext.InternalCallContextFactory;
-import com.ning.billing.util.callcontext.InternalTenantContext;
 import com.ning.billing.util.callcontext.UserType;
 import com.ning.billing.util.clock.Clock;
 import com.ning.billing.util.events.InvoiceCreationInternalEvent;
@@ -65,11 +63,9 @@ public class InvoiceHandler {
 
         final Account account;
         try {
-            // API_FIX
-            final CallContext context = new DefaultCallContext(null, "PaymentRequestProcessor", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken(), clock);
-            final InternalTenantContext internalContext = internalCallContextFactory.createInternalCallContext(event.getAccountId(), context);
+            final InternalCallContext internalContext =  internalCallContextFactory.createInternalCallContext(event.getTenantRecordId(), event.getAccountRecordId(), "PaymentRequestProcessor", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
             account = accountApi.getAccountById(event.getAccountId(), internalContext);
-            paymentProcessor.createPayment(account, event.getInvoiceId(), null, internalCallContextFactory.createInternalCallContext(event.getAccountId(), context), false, false);
+            paymentProcessor.createPayment(account, event.getInvoiceId(), null, internalContext, false, false);
         } catch (AccountApiException e) {
             log.error("Failed to process invoice payment", e);
         } catch (PaymentApiException e) {

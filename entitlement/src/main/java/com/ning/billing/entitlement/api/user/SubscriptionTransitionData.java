@@ -29,7 +29,7 @@ import com.ning.billing.entitlement.events.EntitlementEvent.EventType;
 import com.ning.billing.entitlement.events.user.ApiEventType;
 import com.ning.billing.entitlement.exceptions.EntitlementError;
 
-public class SubscriptionTransitionData /* implements SubscriptionEvent */ {
+public class SubscriptionTransitionData implements SubscriptionTransition {
     private final Long totalOrdering;
     private final UUID subscriptionId;
     private final UUID bundleId;
@@ -116,42 +116,52 @@ public class SubscriptionTransitionData /* implements SubscriptionEvent */ {
         return eventId;
     }
 
+    @Override
     public UUID getSubscriptionId() {
         return subscriptionId;
     }
 
+    @Override
     public UUID getBundleId() {
         return bundleId;
     }
 
+    @Override
     public SubscriptionState getPreviousState() {
         return previousState;
     }
 
+    @Override
     public Plan getPreviousPlan() {
         return previousPlan;
     }
 
+    @Override
     public PlanPhase getPreviousPhase() {
         return previousPhase;
     }
 
+    @Override
     public Plan getNextPlan() {
         return nextPlan;
     }
 
+    @Override
     public PlanPhase getNextPhase() {
         return nextPhase;
     }
 
+    @Override
     public SubscriptionState getNextState() {
         return nextState;
     }
 
+    @Override
     public PriceList getPreviousPriceList() {
         return previousPriceList;
     }
 
+    @Override
     public PriceList getNextPriceList() {
         return nextPriceList;
     }
@@ -164,6 +174,7 @@ public class SubscriptionTransitionData /* implements SubscriptionEvent */ {
         return remainingEventsForUserOperation;
     }
 
+    @Override
     public SubscriptionTransitionType getTransitionType() {
         return toSubscriptionTransitionType(eventType, apiEventType);
     }
@@ -179,10 +190,12 @@ public class SubscriptionTransitionData /* implements SubscriptionEvent */ {
         }
     }
 
+    @Override
     public DateTime getRequestedTransitionTime() {
         return requestedTransitionTime;
     }
 
+    @Override
     public DateTime getEffectiveTransitionTime() {
         return effectiveTransitionTime;
     }

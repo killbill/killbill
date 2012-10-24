@@ -29,6 +29,7 @@ import com.ning.billing.catalog.api.PriceList;
 import com.ning.billing.catalog.api.ProductCategory;
 import com.ning.billing.entitlement.api.user.EntitlementUserApiException;
 import com.ning.billing.entitlement.api.user.Subscription;
+import com.ning.billing.entitlement.api.user.SubscriptionTransition;
 import com.ning.billing.junction.api.BlockingApiException;
 import com.ning.billing.junction.api.BlockingState;
 import com.ning.billing.junction.block.BlockingChecker;
@@ -207,6 +208,16 @@ public class BlockingSubscription implements Subscription {
     @Override
     public String getLastActiveBillingPeriod() {
         return subscription.getLastActiveBillingPeriod();
+    }
+
+    @Override
+    public SubscriptionTransition getPendingTransition() {
+        return subscription.getPendingTransition();
+    }
+
+    @Override
+    public SubscriptionTransition getPreviousTransition() {
+        return subscription.getPendingTransition();
     }
 
     public Subscription getDelegateSubscription() {
