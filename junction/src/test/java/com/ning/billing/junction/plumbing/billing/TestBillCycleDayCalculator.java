@@ -55,6 +55,7 @@ public class TestBillCycleDayCalculator extends JunctionTestSuite {
         final SubscriptionBundle bundle = Mockito.mock(SubscriptionBundle.class);
         final Subscription subscription = Mockito.mock(Subscription.class);
         Mockito.when(subscription.getStartDate()).thenReturn(bpStartDateUTC);
+
         // subscription.getCurrentPlan() will return null as expected (cancelled BP)
         Mockito.when(entitlementApi.getBaseSubscription(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
 
@@ -63,6 +64,7 @@ public class TestBillCycleDayCalculator extends JunctionTestSuite {
         Mockito.when(plan.dateOfFirstRecurringNonZeroCharge(bpStartDateUTC, null)).thenReturn(bpStartDateUTC);
         final Catalog catalog = Mockito.mock(Catalog.class);
         Mockito.when(catalog.findPlan(Mockito.anyString(), Mockito.<DateTime>any(), Mockito.<DateTime>any())).thenReturn(plan);
+        Mockito.when(subscription.getLastActivePlan()).thenReturn(plan);
 
         final Account account = Mockito.mock(Account.class);
         Mockito.when(account.getTimeZone()).thenReturn(accountTimeZone);

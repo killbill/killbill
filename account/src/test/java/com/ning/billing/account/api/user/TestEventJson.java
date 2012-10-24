@@ -57,7 +57,5 @@ public class TestEventJson extends AccountTestSuite {
 
         final DefaultAccountCreationEvent obj = mapper.readValue(json, DefaultAccountCreationEvent.class);
         Assert.assertTrue(obj.equals(e));
-        Assert.assertEquals(obj.getAccountRecordId(), new Long(1L));
-        Assert.assertEquals(obj.getTenantRecordId(), new Long(45L));
     }
 }

@@ -98,7 +98,7 @@ public class TestOverdueCheckNotifier extends OverdueTestSuiteWithEmbeddedDB {
         }
 
         @Override
-        public void handleNextOverdueCheck(final OverdueCheckNotificationKey key) {
+        public void handleNextOverdueCheck(final OverdueCheckNotificationKey key, final Long accountRecordId, final Long tenantRecordId) {
             eventCount++;
             latestSubscriptionId = key.getUuidKey();
         }

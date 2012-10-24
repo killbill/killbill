@@ -44,7 +44,7 @@ public class TestTagEventBuilder extends UtilTestSuite {
         final String tagDefinitionDescription = UUID.randomUUID().toString();
         final boolean controlTag = true;
         final TagDefinition tagDefinition = new DefaultTagDefinition(tagDefinitionId, tagDefinitionName, tagDefinitionDescription, controlTag);
-        final UUID userToken = UUID.randomUUID();
+        final UUID userToken = internalCallContext.getUserToken();
 
         final TagEventBuilder tagEventBuilder = new TagEventBuilder();
         final TagDefinitionInternalEvent event = tagEventBuilder.newUserTagDefinitionCreationEvent(tagDefinitionId, tagDefinition, internalCallContext);
@@ -63,7 +63,7 @@ public class TestTagEventBuilder extends UtilTestSuite {
         final String tagDefinitionDescription = UUID.randomUUID().toString();
         final boolean controlTag = true;
         final TagDefinition tagDefinition = new DefaultTagDefinition(tagDefinitionId, tagDefinitionName, tagDefinitionDescription, controlTag);
-        final UUID userToken = UUID.randomUUID();
+        final UUID userToken = internalCallContext.getUserToken();
 
         final TagEventBuilder tagEventBuilder = new TagEventBuilder();
         final TagDefinitionInternalEvent event = tagEventBuilder.newUserTagDefinitionDeletionEvent(tagDefinitionId, tagDefinition, internalCallContext);
@@ -82,7 +82,7 @@ public class TestTagEventBuilder extends UtilTestSuite {
         final String tagDefinitionDescription = UUID.randomUUID().toString();
         final boolean controlTag = true;
         final TagDefinition tagDefinition = new DefaultTagDefinition(tagDefinitionId, tagDefinitionName, tagDefinitionDescription, controlTag);
-        final UUID userToken = UUID.randomUUID();
+        final UUID userToken = internalCallContext.getUserToken();
 
         final TagEventBuilder tagEventBuilder = new TagEventBuilder();
         final TagDefinitionInternalEvent event = tagEventBuilder.newControlTagDefinitionCreationEvent(tagDefinitionId, tagDefinition, internalCallContext);
@@ -101,7 +101,7 @@ public class TestTagEventBuilder extends UtilTestSuite {
         final String tagDefinitionDescription = UUID.randomUUID().toString();
         final boolean controlTag = true;
         final TagDefinition tagDefinition = new DefaultTagDefinition(tagDefinitionId, tagDefinitionName, tagDefinitionDescription, controlTag);
-        final UUID userToken = UUID.randomUUID();
+        final UUID userToken = internalCallContext.getUserToken();
 
         final TagEventBuilder tagEventBuilder = new TagEventBuilder();
         final TagDefinitionInternalEvent event = tagEventBuilder.newControlTagDefinitionDeletionEvent(tagDefinitionId, tagDefinition, internalCallContext);
@@ -123,7 +123,7 @@ public class TestTagEventBuilder extends UtilTestSuite {
         final String tagDefinitionDescription = UUID.randomUUID().toString();
         final boolean controlTag = true;
         final TagDefinition tagDefinition = new DefaultTagDefinition(tagDefinitionId, tagDefinitionName, tagDefinitionDescription, controlTag);
-        final UUID userToken = UUID.randomUUID();
+        final UUID userToken = internalCallContext.getUserToken();
 
         final TagEventBuilder tagEventBuilder = new TagEventBuilder();
         final TagInternalEvent event = tagEventBuilder.newUserTagCreationEvent(tagId, objectId, objectType, tagDefinition, internalCallContext);
@@ -145,7 +145,7 @@ public class TestTagEventBuilder extends UtilTestSuite {
         final String tagDefinitionDescription = UUID.randomUUID().toString();
         final boolean controlTag = true;
         final TagDefinition tagDefinition = new DefaultTagDefinition(tagDefinitionId, tagDefinitionName, tagDefinitionDescription, controlTag);
-        final UUID userToken = UUID.randomUUID();
+        final UUID userToken = internalCallContext.getUserToken();
 
         final TagEventBuilder tagEventBuilder = new TagEventBuilder();
         final TagInternalEvent event = tagEventBuilder.newUserTagDeletionEvent(tagId, objectId, objectType, tagDefinition, internalCallContext);
@@ -167,7 +167,7 @@ public class TestTagEventBuilder extends UtilTestSuite {
         final String tagDefinitionDescription = UUID.randomUUID().toString();
         final boolean controlTag = true;
         final TagDefinition tagDefinition = new DefaultTagDefinition(tagDefinitionId, tagDefinitionName, tagDefinitionDescription, controlTag);
-        final UUID userToken = UUID.randomUUID();
+        final UUID userToken = internalCallContext.getUserToken();
 
         final TagEventBuilder tagEventBuilder = new TagEventBuilder();
         final TagInternalEvent event = tagEventBuilder.newControlTagCreationEvent(tagId, objectId, objectType, tagDefinition, internalCallContext);
@@ -189,7 +189,7 @@ public class TestTagEventBuilder extends UtilTestSuite {
         final String tagDefinitionDescription = UUID.randomUUID().toString();
         final boolean controlTag = true;
         final TagDefinition tagDefinition = new DefaultTagDefinition(tagDefinitionId, tagDefinitionName, tagDefinitionDescription, controlTag);
-        final UUID userToken = UUID.randomUUID();
+        final UUID userToken = internalCallContext.getUserToken();
 
         final TagEventBuilder tagEventBuilder = new TagEventBuilder();
         final TagInternalEvent event = tagEventBuilder.newControlTagDeletionEvent(tagId, objectId, objectType, tagDefinition, internalCallContext);

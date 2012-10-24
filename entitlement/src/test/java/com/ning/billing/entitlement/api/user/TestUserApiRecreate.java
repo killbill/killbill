@@ -16,6 +16,10 @@
 
 package com.ning.billing.entitlement.api.user;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
+
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,10 +29,6 @@ import com.ning.billing.api.TestApiListener.NextEvent;
 import com.ning.billing.catalog.api.BillingPeriod;
 import com.ning.billing.catalog.api.PriceListSet;
 import com.ning.billing.entitlement.api.TestApiBase;
-
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
 
 public abstract class TestUserApiRecreate extends TestApiBase {
     private static final Logger log = LoggerFactory.getLogger(TestUserApiRecreate.class);

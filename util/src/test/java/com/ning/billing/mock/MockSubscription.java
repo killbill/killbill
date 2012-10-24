@@ -177,45 +177,40 @@ public class MockSubscription implements Subscription {
 
     @Override
     public DateTime getFutureEndDate() {
-        return null;
+        return sub.getFutureEndDate();
     }
 
     @Override
     public SubscriptionSourceType getSourceType() {
-        return null;
+        return sub.getSourceType();
     }
 
     @Override
     public String getLastActiveProductName() {
-        // TODO Auto-generated method stub
-        return null;
+        return sub.getLastActiveProductName();
     }
 
     @Override
     public String getLastActivePriceListName() {
-        // TODO Auto-generated method stub
-        return null;
+        return sub.getLastActivePriceListName();
     }
 
     @Override
     public String getLastActiveCategoryName() {
-        // TODO Auto-generated method stub
-        return null;
+        return sub.getLastActiveCategoryName();
     }
 
     @Override
     public String getLastActiveBillingPeriod() {
-        // TODO Auto-generated method stub
         return null;
-    }
-
-    public void setPlan(final Plan plan) {
-        this.plan = plan;
     }
 
     @Override
     public Plan getLastActivePlan() {
-        // TODO Auto-generated method stub
-        return null;
+        return sub.getLastActivePlan();
+    }
+
+    public void setPlan(final Plan plan) {
+        this.plan = plan;
     }
 }

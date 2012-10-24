@@ -77,7 +77,7 @@ public class DefaultOverdueCheckNotifier implements OverdueCheckNotifier {
                     }
 
                     final OverdueCheckNotificationKey key = (OverdueCheckNotificationKey) notificationKey;
-                    processEvent(key, eventDate);
+                    listener.handleNextOverdueCheck(key, accountRecordId, tenantRecordId);
                 } catch (IllegalArgumentException e) {
                     log.error("The key returned from the NextBillingNotificationQueue is not a valid UUID", e);
                 }
@@ -110,9 +110,5 @@ public class DefaultOverdueCheckNotifier implements OverdueCheckNotifier {
                 log.error("Error deleting a queue by its own name - this should never happen", e);
             }
         }
-    }
-
-    private void processEvent(final OverdueCheckNotificationKey key, final DateTime eventDateTime) {
-        listener.handleNextOverdueCheck(key);
     }
 }

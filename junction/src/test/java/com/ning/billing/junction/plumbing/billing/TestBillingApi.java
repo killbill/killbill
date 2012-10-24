@@ -141,7 +141,8 @@ public class TestBillingApi extends JunctionTestSuite {
         Mockito.when(entitlementApi.getSubscriptionFromId(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
         Mockito.when(entitlementApi.getBundleFromId(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(bundle);
         Mockito.when(entitlementApi.getBaseSubscription(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
-
+        Mockito.when(entitlementApi.getBillingTransitions(Mockito.<Subscription>any(), Mockito.<InternalTenantContext>any())).thenReturn(effectiveSubscriptionTransitions);
+        Mockito.when(entitlementApi.getAllTransitions(Mockito.<Subscription>any(), Mockito.<InternalTenantContext>any())).thenReturn(effectiveSubscriptionTransitions);
         tagApi = mock(TagInternalApi.class);
 
         bcdCalculator = new BillCycleDayCalculator(catalogService, entitlementApi);

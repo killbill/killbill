@@ -114,8 +114,8 @@ public class SubscriptionData extends EntityBase implements Subscription {
 
     @Override
     public SubscriptionState getState() {
-        return (getPendingTransitionData() == null) ? null
-                : getPendingTransitionData().getNextState();
+        return (getPreviousTransitionData()  == null) ? null
+                : getPreviousTransitionData().getNextState();
     }
 
     @Override
