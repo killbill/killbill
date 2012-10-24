@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2010-2011 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
@@ -108,9 +108,9 @@ public class PersistentBus extends PersistentQueueBase implements Bus {
 
     @Override
     public int doProcessEvents() {
-        // Note: retrieving and clearing bus events is not done per tenant (yet?)
-        final InternalCallContext context = internalCallContextFactory.createInternalCallContext("PersistentBus", CallOrigin.INTERNAL, UserType.SYSTEM, null);
 
+        // TODO Retrieving and clearing bus events is not done per tenant so pass default INTERNAL_TENANT_RECORD_ID; not sure this is something we want to do anyway ?
+        final InternalCallContext context = internalCallContextFactory.createInternalCallContext(InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID, null, "PersistentBus", CallOrigin.INTERNAL, UserType.SYSTEM, null);
         final List<BusEventEntry> events = getNextBusEvent(context);
         if (events.size() == 0) {
             return 0;
@@ -118,11 +118,13 @@ public class PersistentBus extends PersistentQueueBase implements Bus {
 
         int result = 0;
         for (final BusEventEntry cur : events) {
-            final BusInternalEvent evt = deserializeEvent(cur.getBusEventClass(), cur.getBusEventJson());
+            final String jsonWithAccountAndTenantRecorId = tweakJsonToIncludeAccountAndTenantRecordId(cur.getBusEventJson(), cur.getAccountRecordId(), cur.getTenantRecordId());
+            final BusInternalEvent evt = deserializeEvent(cur.getBusEventClass(), jsonWithAccountAndTenantRecorId);
             result++;
             // STEPH exception handling is done by GUAVA-- logged a bug Issue-780
             eventBusDelegate.post(evt);
-            dao.clearBusEvent(cur.getId(), hostname, context);
+            final InternalCallContext rehydratedContext = internalCallContextFactory.createInternalCallContext(cur.getTenantRecordId(), cur.getAccountRecordId(), context);
+            dao.clearBusEvent(cur.getId(), hostname, rehydratedContext);
         }
         return result;
     }
@@ -184,4 +186,17 @@ public class PersistentBus extends PersistentQueueBase implements Bus {
             log.error("Failed to post BusEvent " + event, e);
         }
     }
+
+
+    private String tweakJsonToIncludeAccountAndTenantRecordId(final String input, final Long accountRecordId, final Long tenantRecordId) {
+        int lastIndexPriorFinalBracket = input.lastIndexOf("}");
+        final StringBuilder tmp = new StringBuilder(input.substring(0, lastIndexPriorFinalBracket));
+        tmp.append(",\"accountRecordId\":");
+        tmp.append(accountRecordId);
+        tmp.append(",\"tenantRecordId\":");
+        tmp.append(tenantRecordId);
+        tmp.append("}");
+        return tmp.toString();
+    }
+
 }

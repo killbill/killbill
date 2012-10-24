@@ -71,7 +71,7 @@ public class TimelineAggregator {
 
     private final ScheduledExecutorService aggregatorThread = Executors.newSingleThreadScheduledExecutor();
 
-    private Map<String, AtomicLong> aggregatorCounters = new LinkedHashMap<String, AtomicLong>();
+    private final Map<String, AtomicLong> aggregatorCounters = new LinkedHashMap<String, AtomicLong>();
 
     private final AtomicBoolean isAggregating = new AtomicBoolean(false);
 
@@ -426,6 +426,7 @@ public class TimelineAggregator {
     }
 
     private InternalCallContext createCallContext() {
-        return internalCallContextFactory.createInternalCallContext("TimelineAggregator", CallOrigin.INTERNAL, UserType.SYSTEM, null);
+        // TODO add teantRecordId and accountRecordId
+        return internalCallContextFactory.createInternalCallContext(InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID, null, "TimelineAggregator", CallOrigin.INTERNAL, UserType.SYSTEM, null);
     }
 }

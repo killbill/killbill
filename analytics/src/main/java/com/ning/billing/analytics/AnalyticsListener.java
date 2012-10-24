@@ -188,6 +188,6 @@ public class AnalyticsListener {
     }
 
     private InternalCallContext createCallContext(final BusInternalEvent event) {
-        return internalCallContextFactory.createInternalCallContext("AnalyticsService", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
+        return internalCallContextFactory.createInternalCallContext(event.getTenantRecordId(), event.getAccountRecordId(), "AnalyticsService", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
     }
 }

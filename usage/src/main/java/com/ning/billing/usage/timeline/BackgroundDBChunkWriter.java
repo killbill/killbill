@@ -67,7 +67,7 @@ public class BackgroundDBChunkWriter {
     private final AtomicBoolean shuttingDown = new AtomicBoolean();
     private List<PendingChunkMap> pendingChunks = new ArrayList<PendingChunkMap>();
     private DateTime lastWriteTime = new DateTime();
-    private AtomicBoolean doingWritesNow = new AtomicBoolean();
+    private final AtomicBoolean doingWritesNow = new AtomicBoolean();
     private final ScheduledExecutorService backgroundWriteThread = Executors.newSingleThreadScheduledExecutor();
 
     private final AtomicLong maybePerformBackgroundWritesCount = new AtomicLong();
@@ -223,6 +223,7 @@ public class BackgroundDBChunkWriter {
     }
 
     private InternalCallContext createCallContext() {
-        return internalCallContextFactory.createInternalCallContext("ChunkWriter", CallOrigin.INTERNAL, UserType.SYSTEM, null);
+        // TODO information about accountRecordId and tenatRecordId
+        return internalCallContextFactory.createInternalCallContext(InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID, null, "ChunkWriter", CallOrigin.INTERNAL, UserType.SYSTEM, null);
     }
 }

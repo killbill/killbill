@@ -16,6 +16,8 @@
 
 package com.ning.billing.payment.core;
 
+import static com.ning.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR_NAMED;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -63,8 +65,6 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.name.Named;
-
-import static com.ning.billing.payment.glue.PaymentModule.PLUGIN_EXECUTOR_NAMED;
 
 public class RefundProcessor extends ProcessorBase {
 
@@ -234,7 +234,7 @@ public class RefundProcessor extends ProcessorBase {
             throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_REFUND, refundId);
         }
 
-        if (completePluginCompletedRefund(filteredInput)) {
+        if (completePluginCompletedRefund(filteredInput, context)) {
             result = paymentDao.getRefund(refundId, context);
         }
         return new DefaultRefund(result.getId(), result.getCreatedDate(), result.getUpdatedDate(),
@@ -245,7 +245,7 @@ public class RefundProcessor extends ProcessorBase {
     public List<Refund> getAccountRefunds(final Account account, final InternalTenantContext context)
             throws PaymentApiException {
         List<RefundModelDao> result = paymentDao.getRefundsForAccount(account.getId(), context);
-        if (completePluginCompletedRefund(result)) {
+        if (completePluginCompletedRefund(result, context)) {
             result = paymentDao.getRefundsForAccount(account.getId(), context);
         }
         final List<RefundModelDao> filteredInput = filterUncompletedPluginRefund(result);
@@ -255,7 +255,7 @@ public class RefundProcessor extends ProcessorBase {
     public List<Refund> getPaymentRefunds(final UUID paymentId, final InternalTenantContext context)
             throws PaymentApiException {
         List<RefundModelDao> result = paymentDao.getRefundsForPayment(paymentId, context);
-        if (completePluginCompletedRefund(result)) {
+        if (completePluginCompletedRefund(result, context)) {
             result = paymentDao.getRefundsForPayment(paymentId, context);
         }
         final List<RefundModelDao> filteredInput = filterUncompletedPluginRefund(result);
@@ -282,7 +282,7 @@ public class RefundProcessor extends ProcessorBase {
         }));
     }
 
-    private boolean completePluginCompletedRefund(final List<RefundModelDao> refunds) throws PaymentApiException {
+    private boolean completePluginCompletedRefund(final List<RefundModelDao> refunds, final InternalTenantContext tenantContext) throws PaymentApiException {
 
         final Collection<RefundModelDao> refundsToBeFixed = Collections2.filter(refunds, new Predicate<RefundModelDao>() {
             @Override
@@ -295,7 +295,7 @@ public class RefundProcessor extends ProcessorBase {
         }
 
         try {
-            final InternalCallContext context = internalCallContextFactory.createInternalCallContext("RefundProcessor", CallOrigin.INTERNAL, UserType.SYSTEM, null);
+            final InternalCallContext context = internalCallContextFactory.createInternalCallContext(tenantContext.getTenantRecordId(), tenantContext.getAccountRecordId(), "RefundProcessor", CallOrigin.INTERNAL, UserType.SYSTEM, null);
             final Account account = accountInternalApi.getAccountById(refundsToBeFixed.iterator().next().getAccountId(), context);
             new WithAccountLock<Void>().processAccountWithLock(locker, account.getExternalKey(), new WithAccountLockCallback<Void>() {
 

@@ -17,6 +17,8 @@ package com.ning.billing.util.events;
 
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 public abstract class DefaultBusInternalEvent implements BusInternalEvent {
 
     private final UUID userToken;
@@ -34,11 +36,13 @@ public abstract class DefaultBusInternalEvent implements BusInternalEvent {
         return userToken;
     }
 
+    @JsonIgnore
     @Override
     public Long getTenantRecordId() {
         return tenantRecordId;
     }
 
+    @JsonIgnore
     @Override
     public Long getAccountRecordId() {
         return accountRecordId;

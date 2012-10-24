@@ -77,7 +77,7 @@ public class OverdueListener {
     }
 
     private InternalCallContext createCallContext(@Nullable final BusInternalEvent event) {
-        return internalCallContextFactory.createInternalCallContext("OverdueService", CallOrigin.INTERNAL, UserType.SYSTEM,
+        return internalCallContextFactory.createInternalCallContext(event.getTenantRecordId(), event.getAccountRecordId(), "OverdueService", CallOrigin.INTERNAL, UserType.SYSTEM,
                                                                     event == null ? null : event.getUserToken());
     }
 }

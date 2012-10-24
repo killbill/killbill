@@ -187,17 +187,4 @@ public class DefaultAccountChangeEvent extends DefaultBusInternalEvent implement
             inputList.add(new DefaultChangedField(key, oldData, newData));
         }
     }
-
-    @Override
-    public Long getTenantRecordId() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public Long getAccountRecordId() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
 }

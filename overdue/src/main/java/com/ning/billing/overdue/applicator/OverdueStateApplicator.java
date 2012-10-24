@@ -194,6 +194,7 @@ public class OverdueStateApplicator<T extends Blockable> {
             final List<Subscription> toBeCancelled = new LinkedList<Subscription>();
             computeSubscriptionsToCancel(blockable, toBeCancelled, context);
             for (final Subscription cur : toBeCancelled) {
+                // STEPH Need conversion toCallContext because we are calling a public API through the Subscription object
                 cur.cancelWithPolicy(clock.getUTCNow(), actionPolicy, context.toCallContext());
             }
         } catch (EntitlementUserApiException e) {
